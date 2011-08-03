@@ -1,0 +1,61 @@
+/*
+Copyright (C) 2007, 2010 - Bit-Blot
+
+This file is part of Aquaria.
+
+Aquaria is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+See the GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program; if not, write to the Free Software
+Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+*/
+
+#include <Winver.h>
+#include <Windows.h>
+
+#include "resource.h" // Might as well use what's there, even though it's questionable.
+#include "custom-fields.h"
+
+// Version information
+1 VERSIONINFO
+FILEVERSION AQUARIA_RC_FILEVERSION
+PRODUCTVERSION AQUARIA_RC_PRODUCTVERSION
+FILEOS VOS__WINDOWS32
+FILETYPE VFT_APP
+
+BEGIN
+BLOCK "StringFileInfo"
+BEGIN
+	BLOCK "100904B0"
+	BEGIN
+		VALUE "Comments", AQUARIA_RC_COMMENTS
+		VALUE "CompanyName", "Bit Blot"
+		VALUE "FileDescription", "Aquaria"
+		VALUE "FileVersion", AQUARIA_RC_FILEVERSION_STRING
+		VALUE "InternalName", "Aquaria"
+		VALUE "LegalCopyright", "© 2007-2011 Bit Blot, LLC"
+		VALUE "OriginalFilename", "Aquaria.exe"
+		VALUE "ProductName", "Aquaria"
+		VALUE "ProductVersion", AQUARIA_RC_PRODUCTVERSION_STRING
+	END
+END
+
+BLOCK "VarFileInfo"
+BEGIN
+	VALUE "Translation", 0x1009, 1200
+END
+END
+
+// Icon
+101 ICON "Aquaria.ico"
+
+

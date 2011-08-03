@@ -1,0 +1,11 @@
+Aquaria's game data are not under the same license as the source code.
+Redistribution of the game data is forbidden. Please buy a copy of the game
+to obtain the data files.
+
+The game can be legally obtained in several ways at the time of this writing,
+including Steam, the Humble Indie Bundle, Ambrosia Software, etc.
+
+   http://www.bit-blot.com/aquaria/buy.html
+
+The source code to the game is licensed under the GNU GPL2.
+
