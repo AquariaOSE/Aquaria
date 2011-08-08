@@ -2998,6 +2998,9 @@ void SceneEditor::doPrevElement()
 	if (curElement < 0)
 		curElement = dsq->game->elementTemplates.size()-1;
 
+    if(curElement < 0)
+        return;
+
 	if (dsq->game->elementTemplates[curElement].idx < 1024)
 	{
 		//int idx = dsq->game->elementTemplates[curElement].idx;
