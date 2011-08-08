@@ -23,6 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 #include "StatsAndAchievements.h"
 
+#ifdef _MSC_VER
+#define snprintf _snprintf
+#endif
+
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(x) (sizeof (x) / sizeof ((x)[0]))
 #endif
