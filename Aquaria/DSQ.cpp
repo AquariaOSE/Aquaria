@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "GridRender.h"
 #include "AutoMap.h"
 #include "PackRead.h"
+#include "Protect.h"
 
 #include "RoundedRect.h"
 #include "TTFFont.h"
@@ -901,6 +902,21 @@ void DSQ::setVersionLabelText() {
 
 	#ifdef AQUARIA_CUSTOM_BUILD_ID
 	os << AQUARIA_CUSTOM_BUILD_ID;
+	#endif
+
+	std::string regName;
+
+	#if AQUARIA_NODRM
+	#elif AQUARIA_FULL
+		os << " Registered to ";
+		
+		if (!getRegistrationName(regName))
+			exit(1);
+
+		os << regName;
+	#elif !defined(AQUARIA_DEMO)
+		os << " Registered to ";
+		os << "Review Copy";
 	#endif
 
 	versionLabel->setText(os.str());

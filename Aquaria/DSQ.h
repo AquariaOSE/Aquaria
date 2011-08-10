@@ -340,6 +340,8 @@ enum SongType
 
 const int numForms			= 7;
 
+bool getRegistrationName(std::string &name);
+
 enum FormType
 {
 	FORM_NONE			= -1,
