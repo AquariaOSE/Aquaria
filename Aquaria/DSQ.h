@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __dsq__
 #define __dsq__
 
-#include "AquariaCompileConfig.h"
 #include "../BBGE/Core.h"
 #include "../BBGE/Quad.h"
 #include "Element.h"
@@ -362,10 +361,6 @@ enum FormUpgradeType
 	FORMUPGRADE_BEAST		,
 	FORMUPGRADE_MAX
 };
-
-// defined by windows includes
-#undef INPUT_MOUSE
-#undef INPUT_KEYBOARD
 
 enum InputMode
 {

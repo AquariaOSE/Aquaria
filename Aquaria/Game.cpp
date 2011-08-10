@@ -7812,7 +7812,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 		Vector p = controlHint_mouseLeft->position + Vector(-100,0);
 
 		os.seekp(0);
-		os << "song/songslot-" << dsq->continuity.getSongSlotByType(songType) << '\0';
+		os << "song/songslot-" << dsq->continuity.getSongSlotByType(songType);
 		Quad *q = new Quad(os.str(), p);
 		q->followCamera = 1;
 		q->scale = Vector(0.7, 0.7);
@@ -7827,7 +7827,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 			int note = song->notes[i];
 
 			os.seekp(0);
-			os << "song/notebutton-" << note << '\0';
+			os << "song/notebutton-" << note; 
 			Quad *q = new Quad(os.str(), p);
 			q->color = dsq->getNoteColor(note)*0.5f + Vector(1, 1, 1)*0.5f;
 			q->followCamera = 1;
