@@ -25,6 +25,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
 
+    #ifdef _MSC_VER
+        #define strtof (float)strtod
+        #define snprintf _snprintf
+    #endif
+#endif
+
+#include "BBGECompileConfig.h"
+
+#ifdef BBGE_BUILD_WINDOWS
+
 	//#include "iprof/prof.h"
 	//#define BBGE_PROF(x) Prof(x)
 
@@ -78,6 +88,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef BBGE_BUILD_SDL
 
 	#include "SDL.h"
+    #undef main // SDL defines main to SDL_main. This is the only place where SDL.h is included, so this is ok.
 
 #endif
 

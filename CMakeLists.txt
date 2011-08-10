@@ -12,16 +12,15 @@ IF(APPLE)
     SET(MACOSX TRUE)
 ENDIF(APPLE)
 
-OPTION(AQUARIA_BETAEXPIRE "This build should expire in 30 days." FALSE)
-IF(AQUARIA_BETAEXPIRE)
-    EXECUTE_PROCESS(
-        COMMAND date +%s
-        OUTPUT_VARIABLE BUILD_TIMESTAMP
-        ERROR_QUIET
-        OUTPUT_STRIP_TRAILING_WHITESPACE
-    )
-    ADD_DEFINITIONS(-DBETAEXPIRE=${BUILD_TIMESTAMP})
-ENDIF(AQUARIA_BETAEXPIRE)
+# HACK: in case mingw is not correctly detected, fix this.
+IF(${CMAKE_GENERATOR} MATCHES ".*[mM][iI][nN][gG][wW].*") # really ugly hack to match "mingw" case-insensitive
+    set(MINGW 1)
+    message(STATUS "!! Using MinGW hack !!")
+ENDIF()
+
+IF(WIN32)
+    OPTION(AQUARIA_NO_CONSOLE "No console window?" FALSE)
+ENDIF(WIN32)
 
 # No Steamworks SDK for Linux at the moment. Roll our own achievements.
 ADD_DEFINITIONS(-DBBGE_BUILD_ACHIEVEMENTS_INTERNAL=1)
@@ -134,17 +133,15 @@ if (NOT SDL_FOUND)
         set(SDLDIR "${EXTLIBDIR}/SDL12")
         set(SDL_INCLUDE_DIR "${SDLDIR}/include")
         message(STATUS "Using internal copy of SDL")
-        set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib;${SDLDIR}/lib/macosx/libSDLmain.a")
+        set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib")
     elseif(WIN32)
+        set(SDLDIR "${EXTLIBDIR}/SDL12")
+        set(SDL_INCLUDE_DIR "${SDLDIR}/include" CACHE PATH "SDL include directory" FORCE)
+        message(STATUS "Using internal copy of SDL")
         if(MSVC)
-            set(SDLDIR "${EXTLIBDIR}/SDL12")
-            set(SDL_INCLUDE_DIR "${SDLDIR}/include" CACHE PATH "SDL include directory" FORCE)
-            message(STATUS "Using internal copy of SDL")
-            set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE INTERNAL "")
-            set(SDL_LIBRARY_TEMP "${SDLDIR}/lib/win32/SDL.lib" CACHE INTERNAL "")
-            set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY_TEMP} CACHE STRING "Where the SDL library can be found")
+            set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL.lib" CACHE PATH "Where the SDL library can be found")
         else(MSVC)
-            message(SEND_ERROR "We don't have a prebuilt SDL for this environment.")
+            set(SDL_LIBRARY "${SDLDIR}/lib/win32/libSDL.dll.a" CACHE PATH "Where the SDL library can be found")
         endif(MSVC)
     else(MACOSX)
         message(SEND_ERROR "We don't have a prebuilt SDL for this platform.")
@@ -159,14 +156,10 @@ if(NOT AQUARIA_INTERNAL_OPENAL)
 endif(NOT AQUARIA_INTERNAL_OPENAL)
 if (NOT OPENAL_FOUND)
     if(WIN32)
-        if(MSVC)
-            set(OPENALDIR "${EXTLIBDIR}/AL")
-            set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
-            message(STATUS "Using internal copy of OpenAL")
-            set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
-        else(MSVC)
-            message(SEND_ERROR "We don't have a prebuilt OpenAL for this environment.")
-        endif(MSVC)
+        set(OPENALDIR "${EXTLIBDIR}/AL")
+        set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
+        message(STATUS "Using internal copy of OpenAL")
+        set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
     else(WIN32)
         message(SEND_ERROR "We don't have a prebuilt OpenAL for this platform.")
     endif(WIN32)
@@ -185,8 +178,6 @@ INCLUDE_DIRECTORIES(${OGGVORBIS_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
 
-# !!! FIXME: don't use fmod!
-#INCLUDE_DIRECTORIES("${BBGEDIR}/fmodapi42604linux64/api/inc")
 
 # Custom build ID: e.g. "-custom", " (my very own build)"
 SET(AQUARIA_CUSTOM_BUILD_ID "" CACHE STRING
@@ -196,9 +187,11 @@ if (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
 endif (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
 
 # Aquaria/BBGE specific defines...
+
 ADD_DEFINITIONS(-DGL_GLEXT_LEGACY=1)
 ADD_DEFINITIONS(-DHAVE_PUTENV=1)
 ADD_DEFINITIONS(-DTIXML_USE_STL=1)
+ADD_DEFINITIONS(-DBBGE_SKIP_CONFIG_HEADERS=1) # if this is not defined, it will use .h files to set the necessary defines
 ADD_DEFINITIONS(-DBBGE_BUILD_SDL=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_FRAMEBUFFER=1)
 #ADD_DEFINITIONS(-DBBGE_BUILD_SHADERS=1)
@@ -220,7 +213,10 @@ ENDIF(MACOSX)
 
 IF(WIN32)
     ADD_DEFINITIONS(-DBBGE_BUILD_WINDOWS=1)
-	SET(EXETYPE WIN32)
+    IF(AQUARIA_NO_CONSOLE)
+        SET(EXETYPE WIN32)
+        ADD_DEFINITIONS(-DAQUARIA_WIN32_NOCONSOLE=1)
+    ENDIF(AQUARIA_NO_CONSOLE)
 ENDIF(WIN32)
 
 
@@ -421,6 +417,13 @@ SET(BBGE_SRCS_UNUSED
     ${BBGEDIR}/PackRead.cpp
     ${BBGEDIR}/PointSprites.cpp
 )
+
+IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR MINGW)
+SET_SOURCE_FILES_PROPERTIES(
+    ${BBGEDIR}/FmodOpenALBridge.cpp
+    PROPERTIES COMPILE_FLAGS "-fpermissive"
+)
+ENDIF()
 
 SET(FTGL_SRCS
     ${FTGLSRCDIR}/FTCharmap.cpp
