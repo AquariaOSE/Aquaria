@@ -409,6 +409,7 @@ void ActionMapper::onUpdate (float dt)
 					}
 					if (core->loopDone) goto out;
 				}
+				if (cleared) { cleared = false; goto out; } // actionData has been cleared, stop iteration
 			}
 		}
 	}
