@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Particles.h"
 
 #include <time.h>
+#include <iostream>
 
 #ifdef BBGE_BUILD_UNIX
 #include <limits.h>
@@ -852,15 +853,19 @@ void Core::debugLog(const std::string &s)
 {
 	if (debugLogActive)
 	{
-		static std::ofstream out((debugLogPath + "debug.log").c_str());
-		out << s << std::endl;	
+		_logOut << s << std::endl;
 	}
+#ifdef _DEBUG
+	std::cout << s << std::endl;
+#endif
 }
 
 const float SORT_DELAY = 10;
 Core::Core(const std::string &filesystem, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
 : ActionMapper(), StateManager(), appName(appName)
 {
+	_logOut.open((debugLogPath + "debug.log").c_str());
+	sound = NULL;
 	screenCapScale = Vector(1,1,1);
 	timeUpdateType = TIMEUPDATE_DYNAMIC;
 
@@ -1153,6 +1158,8 @@ Core::~Core()
 		delete sound;
 		sound = 0;
 	}
+	debugLog("~Core()");
+	_logOut.close();
 	core = 0;
 }
 
@@ -4201,17 +4208,7 @@ void Core::instantQuit()
 
 bool Core::exists(const std::string &filename)
 {
-	if (filename.empty()) return false;
-	FILE *file;
-	file=fopen(adjustFilenameCase(filename).c_str(),"r");
-
-	if (file)
-	{
-		fclose(file);
-		return true;
-	}
-	else
-		return false;
+	return ::exists(filename, false); // defined in Base.cpp
 }
 
 Resource* Core::findResource(const std::string &name)

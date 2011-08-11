@@ -1382,6 +1382,8 @@ protected:
 	__int64 lastTime, curTime, freq;
 #endif
 
+	std::ofstream _logOut;
+
 #ifdef BBGE_BUILD_SDL
 	int nowTicks, thenTicks;
 #endif
