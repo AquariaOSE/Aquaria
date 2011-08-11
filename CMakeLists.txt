@@ -15,7 +15,7 @@ ENDIF(APPLE)
 # HACK: in case mingw is not correctly detected, fix this.
 IF(${CMAKE_GENERATOR} MATCHES ".*[mM][iI][nN][gG][wW].*") # really ugly hack to match "mingw" case-insensitive
     set(MINGW 1)
-    message(STATUS "!! Using MinGW hack !!")
+    message(STATUS "MinGW detection hack - we are using MinGW")
 ENDIF()
 
 IF(WIN32)
