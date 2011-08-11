@@ -32,9 +32,7 @@ GLuint emptyTexture()											// Create An Empty Texture
 
 	// Create Storage Space For Texture Data (128x128x4)
 	data = (unsigned int*)new GLuint[((quality * quality)* 4 * sizeof(unsigned int))];
-#ifdef BBGE_BUILD_WINDOWS
-	ZeroMemory(data,((quality * quality)* 4 * sizeof(unsigned int)));	// Clear Storage Memory
-#endif
+	memset(data, 0, ((quality * quality)* 4 * sizeof(unsigned int)));	// Clear Storage Memory
 
 #ifdef BBGE_BUILD_OPENGL
 	glGenTextures(1, &txtnumber);								// Create 1 Texture

@@ -1797,7 +1797,7 @@ void Core::setSDLGLAttributes()
 #define GLAPIENTRY
 #endif
 
-#if BBGE_BUILD_OPENGL_DYNAMIC
+#ifdef BBGE_BUILD_OPENGL_DYNAMIC
 #define GL_FUNC(ret,fn,params,call,rt) \
     extern "C" { \
         static ret (GLAPIENTRY *p##fn) params = NULL; \

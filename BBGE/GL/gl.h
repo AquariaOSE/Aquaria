@@ -35,9 +35,18 @@ extern "C" {
 #define APIENTRY
 #endif
 
-#ifndef WIN32
+// BBGE HACK:
+// Because Win32 uses __declspec(dllimport) for OpenGL function imports,
+// although Core.cpp defines its own functions using the same names, which are just accessing
+// OpenGL function pointers acquired elsewhere, this leads to inconsistent linkage between
+// declaration in gl.h and the actual function definition in Core.cpp.
+// So, we use this little hack to disable external linkage globally.
+#undef WINGDIAPI
+#define WINGDIAPI extern
+
+/*#ifndef WIN32
 #define WINGDIAPI
-#endif
+#endif*/
 
 #ifndef GLAPI
 # ifdef _WIN32
