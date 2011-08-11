@@ -12,12 +12,6 @@ IF(APPLE)
     SET(MACOSX TRUE)
 ENDIF(APPLE)
 
-# HACK: in case mingw is not correctly detected, fix this.
-IF(${CMAKE_GENERATOR} MATCHES ".*[mM][iI][nN][gG][wW].*") # really ugly hack to match "mingw" case-insensitive
-    set(MINGW 1)
-    message(STATUS "MinGW detection hack - we are using MinGW")
-ENDIF()
-
 IF(WIN32)
     OPTION(AQUARIA_NO_CONSOLE "No console window?" FALSE)
 ENDIF(WIN32)
@@ -128,21 +122,23 @@ OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" FALSE)
 if(NOT AQUARIA_INTERNAL_SDL)
     find_package(SDL)
 endif(NOT AQUARIA_INTERNAL_SDL)
-if (NOT SDL_FOUND)
+if (NOT SDL_FOUND OR NOT SDLMAIN_FOUND)
     if(MACOSX)
         set(SDLDIR "${EXTLIBDIR}/SDL12")
         set(SDL_INCLUDE_DIR "${SDLDIR}/include")
         message(STATUS "Using internal copy of SDL")
-        set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib")
+        set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib;${SDLDIR}/lib/macosx/libSDLmain.a")
     elseif(WIN32)
         set(SDLDIR "${EXTLIBDIR}/SDL12")
         set(SDL_INCLUDE_DIR "${SDLDIR}/include" CACHE PATH "SDL include directory" FORCE)
         message(STATUS "Using internal copy of SDL")
-        set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL.lib" CACHE PATH "Where the SDL library can be found")
+        set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE FILEPATH "Where the SDLmain library can be found" FORCE)
+        set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL.lib" CACHE FILEPATH "Where the SDL library can be found" FORCE)
+        set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
     else(MACOSX)
         message(SEND_ERROR "We don't have a prebuilt SDL for this platform.")
     endif(MACOSX)
-endif (NOT SDL_FOUND)
+endif (NOT SDL_FOUND OR NOT SDLMAIN_FOUND)
 
 ### OpenAL
 
@@ -216,7 +212,6 @@ IF(WIN32)
     ADD_DEFINITIONS(-DBBGE_BUILD_WINDOWS=1)
     IF(AQUARIA_NO_CONSOLE)
         SET(EXETYPE WIN32)
-        ADD_DEFINITIONS(-DAQUARIA_WIN32_NOCONSOLE=1)
     ENDIF(AQUARIA_NO_CONSOLE)
 ENDIF(WIN32)
 
@@ -419,7 +414,7 @@ SET(BBGE_SRCS_UNUSED
     ${BBGEDIR}/PointSprites.cpp
 )
 
-IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX OR MINGW)
+IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 SET_SOURCE_FILES_PROPERTIES(
     ${BBGEDIR}/FmodOpenALBridge.cpp
     PROPERTIES COMPILE_FLAGS "-fpermissive"

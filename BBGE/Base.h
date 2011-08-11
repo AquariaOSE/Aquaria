@@ -88,7 +88,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef BBGE_BUILD_SDL
 
 	#include "SDL.h"
-    #undef main // SDL defines main to SDL_main. This is the only place where SDL.h is included, so this is ok.
 
 #endif
 

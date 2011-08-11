@@ -65,7 +65,7 @@ static void CheckConfig(void)
 }
 
 
-#if defined(BBGE_BUILD_WINDOWS) && defined(AQUARIA_WIN32_NOCONSOLE)
+#if defined(BBGE_BUILD_WINDOWS) && !defined(BBGE_BUILD_SDL)
 	int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 						HINSTANCE	hPrevInstance,		// Previous Instance
 						LPSTR		lpCmdLine,			// Command Line Parameters
@@ -80,7 +80,7 @@ static void CheckConfig(void)
 
 #else
 
-	int main(int argc,char *argv[])
+	extern "C" int main(int argc,char *argv[])
 	{
 		std::string dsqParam = ""; // fileSystem
 

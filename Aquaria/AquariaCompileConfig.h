@@ -12,11 +12,6 @@
 
     #define AQUARIA_CUSTOM_BUILD_ID ""
 
-    // no console window in release mode (note for MSVC: use together with linker SubSystem setting)
-    #ifdef NDEBUG
-    #  define AQUARIA_WIN32_NOCONSOLE
-    #endif
-
 #endif
 
 
