@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/BitmapFont.h"
 #include "../BBGE/Quad.h"
 #include "../BBGE/ActionMapper.h"
-#include "../ExternalLibs/tinyxml.h"
+#include "tinyxml.h"
 #include "../BBGE/Slider.h"
 #include "../BBGE/DebugFont.h"
 #include "../BBGE/TTFFont.h"

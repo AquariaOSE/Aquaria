@@ -159,9 +159,10 @@ endif (NOT OPENAL_FOUND)
 
 ################ End of external libraries
 
-INCLUDE_DIRECTORIES(${BBGEDIR})
-INCLUDE_DIRECTORIES(${BBGEDIR}/GL)
+INCLUDE_DIRECTORIES(${EXTLIBDIR})
+INCLUDE_DIRECTORIES(${EXTLIBDIR}/GL)
 INCLUDE_DIRECTORIES(${EXTLIBDIR}/glpng/zlib)
+INCLUDE_DIRECTORIES(${BBGEDIR})
 INCLUDE_DIRECTORIES(${SRCDIR})
 INCLUDE_DIRECTORIES(${FTGLDIR}/include)
 INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
@@ -373,8 +374,11 @@ SET(BBGE_SRCS
     ${BBGEDIR}/TTFFont.cpp
     ${BBGEDIR}/Vector.cpp
     ${BBGEDIR}/FmodOpenALBridge.cpp
+    ${BBGEDIR}/tinyxml.cpp
+    ${BBGEDIR}/tinyxmlerror.cpp
+    ${BBGEDIR}/tinyxmlparser.cpp
+    ${BBGEDIR}/glfont2.cpp
     ${COCOA_SRCS}
-    ${EXTLIBDIR}/glfont2/glfont2.cpp
     ${EXTLIBDIR}/glpng/glpng.c
     ${EXTLIBDIR}/glpng/png/png.c
     ${EXTLIBDIR}/glpng/png/pngerror.c
@@ -397,9 +401,6 @@ SET(BBGE_SRCS
     ${EXTLIBDIR}/glpng/zlib/trees.c
     ${EXTLIBDIR}/glpng/zlib/uncompr.c
     ${EXTLIBDIR}/glpng/zlib/zutil.c
-    ${EXTLIBDIR}/tinyxml.cpp
-    ${EXTLIBDIR}/tinyxmlerror.cpp
-    ${EXTLIBDIR}/tinyxmlparser.cpp
 )
 
 # Apparently not used at the moment. Listed here just for completeness.
