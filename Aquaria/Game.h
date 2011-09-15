@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #pragma once
 
-#include "tinyxml.h"
+#include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/DebugFont.h"
 #include "../ExternalLibs/glpng.h"
 

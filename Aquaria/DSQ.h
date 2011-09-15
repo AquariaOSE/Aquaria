@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/BitmapFont.h"
 #include "../BBGE/ScreenTransition.h"
 #include "../BBGE/Precacher.h"
-#include "tinyxml.h"
+#include "../ExternalLibs/tinyxml.h"
 #include "AquariaMenuItem.h"
 #include "ScriptInterface.h"
 
