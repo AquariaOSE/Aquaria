@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SoundManager.h"
 #include "Core.h"
 #include "Base.h"
-#include "PackRead.h"
 
 #if defined(BBGE_BUILD_FMODEX)
     #ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
@@ -134,20 +133,14 @@ FMOD_RESULT F_CALLBACK myopen(const char *name, int unicode, unsigned int *files
 {
     if (name)
     {
-        FILE *fp;
-
-        fp = fopen(name, "rb");
-        if (!fp)
-        {
+        ttvfs::VFSFile *vf = core->vfs.GetFile(name);
+        if(!vf)
             return FMOD_ERR_FILE_NOTFOUND;
-        }
 
-        fseek(fp, 0, SEEK_END);
-        *filesize = ftell(fp);
-        fseek(fp, 0, SEEK_SET);
-
+        vf->open();
+        *filesize = vf->size();
+        *handle = (void*)vf;
         *userdata = (void *)0x12345678;
-        *handle = fp;
     }
 
     return FMOD_OK;
@@ -160,7 +153,9 @@ FMOD_RESULT F_CALLBACK myclose(void *handle, void *userdata)
         return FMOD_ERR_INVALID_PARAM;
     }
 
-    fclose((FILE *)handle);
+    ttvfs::VFSFile *vf = (ttvfs::VFSFile*)handle;
+    vf->close();
+    core->addVFSFileForDrop(vf);
 
     return FMOD_OK;
 }
@@ -174,7 +169,8 @@ FMOD_RESULT F_CALLBACK myread(void *handle, void *buffer, unsigned int sizebytes
 
     if (bytesread)
     {
-        *bytesread = (int)fread(buffer, 1, sizebytes, (FILE *)handle);
+        ttvfs::VFSFile *vf = (ttvfs::VFSFile*)handle;
+        *bytesread = vf->read((char*)buffer, sizebytes);
     
         if (*bytesread < sizebytes)
         {
@@ -192,7 +188,8 @@ FMOD_RESULT F_CALLBACK myseek(void *handle, unsigned int pos, void *userdata)
         return FMOD_ERR_INVALID_PARAM;
     }
 
-    fseek((FILE *)handle, pos, SEEK_SET);
+    ttvfs::VFSFile *vf = (ttvfs::VFSFile*)handle;
+    vf->seek(pos);
 
     return FMOD_OK;
 }
@@ -332,7 +329,7 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 		debugLog("err_output_createbuffer, speaker mode");
 		result = SoundCore::system->setSpeakerMode(FMOD_SPEAKERMODE_STEREO);
         if (checkError()) goto get_out;
-
+        
 		debugLog("init 2");
         result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0, defaultDevice); /* Replace with whatever channel count and flags you use! */
 		if (checkError()) goto get_out;

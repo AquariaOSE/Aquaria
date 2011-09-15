@@ -34,6 +34,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Base.h"
 #include "Core.h"
 
+#include "VFSFile.h"
+
 #include "FmodOpenALBridge.h"
 
 #include "al.h"
@@ -53,7 +55,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class OggDecoder {
 public:
     // Create a decoder that streams from a file.
-    OggDecoder(FILE *fp);
+    OggDecoder(ttvfs::VFSFile *fp);
 
     // Create a decoder that streams from a memory buffer.
     OggDecoder(const void *data, long data_size);
@@ -98,7 +100,7 @@ private:
 
     // Data source.  If fp != NULL, the source is that file; otherwise, the
     // source is the buffer pointed to by "data" with size "data_size" bytes.
-    FILE *fp;
+    ttvfs::VFSFile *fp;
     const char *data;
     long data_size;
     long data_pos;  // Current read position for memory buffers
@@ -129,22 +131,38 @@ private:
 // ov_open_callbacks() call.  Note that we rename the fseek() wrapper
 // to avoid an identifier collision when building with more recent
 // versions of libvorbis.
-static int BBGE_ov_header_fseek_wrap(FILE *f,ogg_int64_t off,int whence){
+static int BBGE_ov_header_fseek_wrap(void *f,ogg_int64_t off,int whence){
   if(f==NULL)return(-1);
-#ifdef __MINGW32__
-  return fseeko64(f,off,whence);
-#elif defined (_WIN32)
-  return _fseeki64(f,off,whence);
-#else
-  return fseek(f,off,whence);
-#endif
+  ttvfs::VFSFile *vf = (ttvfs::VFSFile*)f;
+  switch(whence)
+  {
+    case SEEK_SET: return vf->seek(off);
+    case SEEK_CUR: return vf->seekRel(off);
+    case SEEK_END: return vf->seek(vf->size() - off);
+  }
+  return -1;
 }
-static int noclose(FILE *f) {return 0;}
+static size_t BBGE_ov_fread_wrap(void *ptr, size_t s, size_t count, void *f)
+{
+    if(f==NULL)return(-1);
+    ttvfs::VFSFile *vf = (ttvfs::VFSFile*)f;
+    size_t done = vf->read(ptr, s * count);
+    return done / s;
+}
+
+static long BBGE_ov_ftell_wrap(void *f)
+{
+    if(f==NULL)return(-1);
+    ttvfs::VFSFile *vf = (ttvfs::VFSFile*)f;
+    return vf->getpos();
+}
+
+static int noclose(void *f) {return 0;}
 static const ov_callbacks local_OV_CALLBACKS_NOCLOSE = {
-  (size_t (*)(void *, size_t, size_t, void *))  fread,
+  (size_t (*)(void *, size_t, size_t, void *))  BBGE_ov_fread_wrap,
   (int (*)(void *, ogg_int64_t, int))           BBGE_ov_header_fseek_wrap,
   (int (*)(void *))                             noclose,  // NULL doesn't work in libvorbis-1.1.2
-  (long (*)(void *))                            ftell
+  (long (*)(void *))                            BBGE_ov_ftell_wrap
 };
 
 // Memory I/O callback set.
@@ -156,7 +174,7 @@ static const ov_callbacks ogg_memory_callbacks = {
 };
 
 
-OggDecoder::OggDecoder(FILE *fp)
+OggDecoder::OggDecoder(ttvfs::VFSFile *fp)
 {
     for (int i = 0; i < NUM_BUFFERS; i++)
     {
@@ -517,9 +535,9 @@ static ALenum GVorbisFormat = AL_NONE;
 class OpenALSound
 {
 public:
-    OpenALSound(FILE *_fp, const bool _looping);
+    OpenALSound(ttvfs::VFSFile *_fp, const bool _looping);
     OpenALSound(void *_data, long _size, const bool _looping);
-    FILE *getFile() const { return fp; }
+    ttvfs::VFSFile *getFile() const { return fp; }
     const void *getData() const { return data; }
     long getSize() const { return size; }
     bool isLooping() const { return looping; }
@@ -527,20 +545,21 @@ public:
     void reference() { refcount++; }
 
 private:
-    FILE * const fp;
+    ttvfs::VFSFile * const fp;
     void * const data;  // Only used if fp==NULL
     const long size;    // Only used if fp==NULL
     const bool looping;
     int refcount;
 };
 
-OpenALSound::OpenALSound(FILE *_fp, const bool _looping)
+OpenALSound::OpenALSound(ttvfs::VFSFile *_fp, const bool _looping)
     : fp(_fp)
     , data(NULL)
     , size(0)
     , looping(_looping)
     , refcount(1)
 {
+    fp->ref++;
 }
 
 OpenALSound::OpenALSound(void *_data, long _size, const bool _looping)
@@ -559,7 +578,11 @@ FMOD_RESULT OpenALSound::release()
     if (refcount <= 0)
     {
 	if (fp)
-	    fclose(fp);
+    {
+        fp->close();
+        fp->dropBuf(true); // just in case there is a buffer...
+        fp->ref--;
+    }
 	else
 	    free(data);
         delete this;
@@ -1044,8 +1067,6 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
 {
     assert(!exinfo);
 
-    FMOD_RESULT retval = FMOD_ERR_INTERNAL;
-
     // !!! FIXME: if it's not Ogg, we don't have a decoder. I'm lazy.  :/
     char *fname = (char *) alloca(strlen(name_or_data) + 16);
     strcpy(fname, name_or_data);
@@ -1053,50 +1074,39 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
     if (ptr) *ptr = '\0';
     strcat(fname, ".ogg");
 
-    // just in case...
-    #undef fopen
-    FILE *io = fopen(core->adjustFilenameCase(fname).c_str(), "rb");
-    if (io == NULL)
+    ttvfs::VFSFile *vf = core->vfs.GetFile(fname);
+    if(!vf)
         return FMOD_ERR_INTERNAL;
 
-    if (mode & FMOD_CREATESTREAM)
+    if(mode & FMOD_CREATESTREAM)
     {
-        *sound = (Sound *) new OpenALSound(io, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
-        retval = FMOD_OK;
-    }
-    else
-    {
-        fseek(io, 0, SEEK_END);
-        long size = ftell(io);
-        if (fseek(io, 0, SEEK_SET) != 0)
-        {
-            debugLog("Seek error on " + std::string(fname));
-            fclose(io);
-            return FMOD_ERR_INTERNAL;
-        }
+        // does it make sense to try to stream from anything else than an actual file on disk?
+        // Files inside containers are always loaded into memory, unless on-the-fly partial decompression is implemented...
+        // A typical ogg is < 3 MB in size, if that is preloaded and then decoded over time it should still be a big gain.
+        if(!vf->isopen())
+            vf->open(NULL, "rb");
+        else
+            vf->seek(0);
 
-        void *data = malloc(size);
-        if (data == NULL)
-        {
-            debugLog("Out of memory for " + std::string(fname));
-            fclose(io);
-            return FMOD_ERR_INTERNAL;
-        }
-
-        long nread = fread(data, 1, size, io);
-        fclose(io);
-        if (nread != size)
-        {
-            debugLog("Failed to read data from " + std::string(fname));
-            free(data);
-            return FMOD_ERR_INTERNAL;
-        }
-
-        *sound = (Sound *) new OpenALSound(data, size, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
-        retval = FMOD_OK;
+        *sound = (Sound *) new OpenALSound(vf, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
+        return FMOD_OK;
     }
 
-    return retval;
+    // if we are here, create & preload & pre-decode full buffer
+    vf->getBuf(); // force early size detection
+    void *data = malloc(vf->size()); // because release() will use free() ...
+    if (!(data && vf->getBuf()))
+    {
+        debugLog("Out of memory for " + std::string(fname));
+        vf->close();
+        vf->dropBuf(true);
+        return FMOD_ERR_INTERNAL;
+    }
+    memcpy(data, vf->getBuf(), vf->size());
+    core->addVFSFileForDrop(vf);
+    *sound = (Sound *) new OpenALSound(data, vf->size(), (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
+
+    return FMOD_OK;
 }
 
 ALBRIDGE(System,createStream,(const char *name_or_data, FMOD_MODE mode, FMOD_CREATESOUNDEXINFO *exinfo, Sound **sound),(name_or_data,mode,exinfo,sound))

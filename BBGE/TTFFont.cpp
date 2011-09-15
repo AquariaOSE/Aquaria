@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#include "Core.h"
 #include "TTFFont.h"
 
 
@@ -46,8 +47,17 @@ void TTFFont::destroy()
 
 void TTFFont::load(const std::string &str, int sz)
 {
-	font = new FTGLTextureFont(str.c_str());
-	font->FaceSize(sz);
+    ttvfs::VFSFile *vf = core->vfs.GetFile(str.c_str());
+    if(!vf)
+    {
+        font = new FTGLTextureFont(str.c_str()); // file not in VFS, just pretend nothing happened
+        font->FaceSize(sz);
+        return;
+    }
+
+    const unsigned char *buf = (const unsigned char*)vf->getBuf();
+    create(buf, vf->size(), sz); // this copies the buffer internally
+    core->addVFSFileForDrop(vf); // so we can delete our own
 }
 
 void TTFFont::create(const unsigned char *data, unsigned long datalen, int sz)

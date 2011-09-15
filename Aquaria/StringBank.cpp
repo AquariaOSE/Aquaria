@@ -29,7 +29,7 @@ void StringBank::load(const std::string &file)
     //debugLog("StringBank::load("+file+")");
 	stringMap.clear();
 
-	std::ifstream in(file.c_str());
+	VFSTextStdStreamIn in(file.c_str());
 
 	std::string line;
 	int idx;

@@ -170,6 +170,8 @@ INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OGGVORBIS_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs)
+INCLUDE_DIRECTORIES(${EXTLIBDIR}/lvpa)
 
 
 # Custom build ID: e.g. "-custom", " (my very own build)"
@@ -378,6 +380,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/tinyxmlerror.cpp
     ${BBGEDIR}/tinyxmlparser.cpp
     ${BBGEDIR}/glfont2.cpp
+    ${BBGEDIR}/VFSFileStream.cpp
     ${COCOA_SRCS}
     ${EXTLIBDIR}/glpng/glpng.c
     ${EXTLIBDIR}/glpng/png/png.c
@@ -557,6 +560,9 @@ SET(LUA_SRCS
     ${LUASRCDIR}/lmathlib.c
 )
 
+ADD_SUBDIRECTORY(ExternalLibs/ttvfs)
+
+SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ttvfs)
 
 IF(MACOSX)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Carbon")

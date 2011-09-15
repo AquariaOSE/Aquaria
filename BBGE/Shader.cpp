@@ -18,10 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#include "Core.h"
 #include "Shader.h"
-#ifdef BBGE_BUILD_WINDOWS
-	#include <sys/stat.h>
-#endif
 
 #ifdef BBGE_BUILD_SHADERS
 	// GL_ARB_shader_objects
@@ -88,40 +86,16 @@ void Shader::setValue(float x, float y, float z, float w)
 unsigned char *readShaderFile( const char *fileName )
 {
 	debugLog("readShaderFile()");
-#ifdef BBGE_BUILD_WINDOWS
-    FILE *file = fopen( fileName, "r" );
 
-    if( file == NULL )
-    {
-        errorLog("Cannot open shader file!");
-		return 0;
-    }
+    ttvfs::VFSFile *vf = core->vfs.GetFile(fileName);
+    if(!vf)
+        return NULL;
 
-    struct _stat fileStats;
-
-    if( _stat( fileName, &fileStats ) != 0 )
-    {
-        errorLog("Cannot get file stats for shader file!");
-        return 0;
-    }
-
-
-    unsigned char *buffer = new unsigned char[fileStats.st_size];
-
-	int bytes = fread( buffer, 1, fileStats.st_size, file );
-
-    buffer[bytes] = 0;
-
-	fclose( file );
-
-	debugLog("End readShaderFile()");
-
-	return buffer;
-	
-#else
-	debugLog("End readShaderFile()");
-	return 0;
-#endif
+    vf->getBuf();
+    unsigned char *buf = new unsigned char[vf->size() + 1];
+    memcpy(buf, vf->getBuf(), vf->size() + 1);
+    core->addVFSFileForDrop(vf);
+    return buf;
 }
 
 void Shader::reload()

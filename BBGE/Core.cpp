@@ -4193,6 +4193,10 @@ void Core::shutdown()
 		SDL_Quit();
 	debugLog("OK");
 #endif
+
+	debugLog("Unloading VFS...");
+	vfs.Clear();
+	debugLog("OK");
 }
 
 //util funcs
@@ -4528,6 +4532,33 @@ void Core::clearGarbage()
 
 		i++;
 	}
+
+    // delete leftover buffers from VFS
+    // FG: TODO: better do that periodically, and not every loop?
+    for(std::set<ttvfs::VFSFile*>::iterator it = vfsFilesToClear.begin(); it != vfsFilesToClear.end(); ++it)
+    {
+        (*it)->dropBuf(true);
+        (*it)->ref--;
+    }
+    vfsFilesToClear.clear();
+}
+
+void Core::addVFSFileForDrop(ttvfs::VFSFile *vf)
+{
+    // HACK: because of save/poot.tmp caching and other stuff, we have to clear this always
+    // TODO: after getting rid of pack/unpackFile, this will be safer and can be done properly
+    if(strstr(vf->name(), "poot") || strstr(vf->name(), ".tmp"))
+    {
+        vf->dropBuf(true);
+        return;
+    }
+
+    std::set<ttvfs::VFSFile*>::iterator it = vfsFilesToClear.find(vf);
+    if(it == vfsFilesToClear.end())
+    {
+        vf->ref++;
+        vfsFilesToClear.insert(vf);
+    }
 }
 
 bool Core::canChangeState()
@@ -4858,3 +4889,69 @@ int Core::tgaSaveSeries(char		*filename,
 //	ilutGLScreenie();
  }
 
+#include "VFSTools.h"
+
+static void _DumpVFS(const std::string a)
+{
+    std::string fn = "vfsdump-" + a + ".txt";
+    std::ofstream out(fn.c_str());
+    core->vfs.debugDumpTree(out);
+    out.close();
+}
+
+void Core::setupVFS(const char *extradir /* = NULL */)
+{
+    debugLog("Init VFS...");
+    if(!ttvfs::checkCompat())
+    {
+        errorLog("VFS incompatible!");
+        exit(1);
+    }
+    vfs.LoadFileSysRoot();
+    vfs.Prepare();
+
+//#ifdef _DEBUG
+//    _DumpVFS("begin");
+//#endif
+
+
+#ifdef BBGE_BUILD_UNIX
+    // Load _mods dir from home folder into the data of the existing _mods dir, additionally.
+    // This does also change the internal path, so that files created using this dir's fullname() will
+    // automatically be created in the home directory.
+    ttvfs::VFSDir *moddir = vfs.GetDir("_mods", true);
+    std::string umods = getUserDataFolder() + "/_mods";
+    moddir->load(umods.c_str());
+
+    std::ostringstream os;
+    os << "VFS: Mounted _mods as: '" << vfs.GetDir("_mods")->fullname() << "'";
+    debugLog(os.str());
+
+    // Note: the original code to load/save mods is not yet changed.
+    // This will happen in a later patch.
+#endif
+
+    if(extradir)
+    {
+        std::string msg("VFS extra dir: ");
+        msg += extradir;
+        debugLog(msg);
+        if(vfs.GetDir(extradir))
+            vfs.Mount(extradir, "");
+        else
+            vfs.MountExternalPath(extradir, "");
+        debugLog("extra dir added.");
+    }
+
+    // Example: everything in _patch dir will be mounted in the game's root dir
+    // -- place any files/folders there to override those the game uses.
+    // TODO: remove this later! - When the community datafile update is organized and everything.
+    vfs.Mount("_patch", "", true);  
+
+
+    debugLog("VFS init done!");
+
+//#ifdef _DEBUG
+//    _DumpVFS("done");
+//#endif
+}

@@ -24,12 +24,13 @@ GameplayVariables *vars = 0;
 
 void GameplayVariables::load()
 {
-	std::ifstream inFile("data/variables.txt");
+	VFSTextStreamIn inFile("data/variables.txt");
 	if(!inFile)
 	{
 		core->messageBox("error", "Variables data not found! Aborting...");
 		exit(1);
 	}
+
 	std::string s;
 	inFile >> s >> maxSlowSwimSpeed;
 	inFile >> s >> maxSwimSpeed;

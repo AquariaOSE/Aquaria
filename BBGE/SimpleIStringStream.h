@@ -93,7 +93,7 @@ class SimpleIStringStream {
 
   public:
 	/* Reuse flag passed to StringStream(char *,int). */
-	enum {
+	enum Mode {
 		/* Make a copy of the buffer (default action). */
 		COPY,
 		/* Use the passed-in string pointer as is.  Requires the string
@@ -212,7 +212,7 @@ class SimpleIStringStream {
 
 	/*-------------------------------------------------------------------*/
 
-  private:
+  protected:
 	char *buffer;       // The buffer we're parsing.
 	char *position;     // Our current position in the buffer.
 	bool freeOnDestroy; // Should we free the buffer when we're destroyed?

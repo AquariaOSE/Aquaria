@@ -51,6 +51,8 @@ BUILD_LINUX
 #include "FrameBuffer.h"
 #include "Shader.h"
 
+#include "VFSIncludes.h"
+
 class ParticleEffect;
 
 class ParticleManager;
@@ -1400,6 +1402,14 @@ protected:
 	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}
+
+    // VFS related
+private:
+    std::set<ttvfs::VFSFile*> vfsFilesToClear; // used for dropBuf() delaying
+public:
+    ttvfs::VFSHelper vfs;
+    void setupVFS(const char *extradir = NULL);
+    void addVFSFileForDrop(ttvfs::VFSFile *vf);
 };
 
 extern Core *core;

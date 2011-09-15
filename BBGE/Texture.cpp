@@ -468,6 +468,20 @@ void Texture::loadPNG(const std::string &file)
 {
 	if (file.empty()) return;
 
+    ttvfs::VFSFile *vf = core->vfs.GetFile(file.c_str());
+    const char *memptr = vf ? (const char*)vf->getBuf() : NULL;
+    if(!memptr)
+    {
+        debugLog("Can't load PNG file: " + file);
+        width = 64;
+        height = 64;
+        Texture::textureError = TEXERR_FILENOTFOUND;
+        //exit(1);
+        return;
+    }
+
+    int memsize = vf->size();
+
 #ifdef BBGE_BUILD_OPENGL
 
 
@@ -483,11 +497,11 @@ void Texture::loadPNG(const std::string &file)
 
 	if (filter == GL_NEAREST)
 	{
-		textures[0] = pngBind(file.c_str(), PNG_NOMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, filter, filter);
+		textures[0] = pngBindMem(memptr, memsize, PNG_NOMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, filter, filter);
 	}
 	else
 	{
-		textures[0] = pngBind(file.c_str(), PNG_BUILDMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, filter);
+		textures[0] = pngBindMem(memptr, memsize, PNG_BUILDMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, filter);
 	}
 
 
@@ -515,9 +529,9 @@ void Texture::loadPNG(const std::string &file)
 		Texture::textureError = TEXERR_FILENOTFOUND;
 		//exit(1);
 	}
-
-
 #endif
+
+    core->addVFSFileForDrop(vf);
 }
 
 // internal load functions

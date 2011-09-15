@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Base.h"
 #include "Core.h"
+#include "VFSDir.h"
 
 #ifdef BBGE_BUILD_WINDOWS
 	#include <shellapi.h>
@@ -272,30 +273,28 @@ std::string upperCase(const std::string &s1)
 	return ret;
 }
 
-bool exists(const std::string &f, bool makeFatal)
+bool exists(const std::string &f, bool makeFatal /* = false */, bool skipVFS /* = false */)
 {
-	/*
-	if (!PHYSFS_exists(f.c_str()))
-	{
-	*/
-	/*
-        std::ostringstream os;
-        os << "checking to see if [" << f << "] exists";
-        debugLog(os.str());
-        */
+    if (f.empty())
+        return false;
 
-		FILE *file = fopen(core->adjustFilenameCase(f).c_str(), "rb");
-		if (!file)
+    if(!skipVFS)
+    {
+        if(core->vfs.GetFile(core->adjustFilenameCase(f).c_str()))
+            return true;
+    }
+
+	FILE *file = fopen(core->adjustFilenameCase(f).c_str(), "rb");
+	if (!file)
+	{
+		if (makeFatal)
 		{
-			if (makeFatal)
-			{
-				errorLog(std::string("Could not open [" + f + "]"));
-				exit(0);
-			}
-			return false;
+			errorLog(std::string("Could not open [" + f + "]"));
+			exit(0);
 		}
-		fclose(file);
-	//}
+		return false;
+	}
+	fclose(file);
 	return true;
 }
 
@@ -448,107 +447,20 @@ void debugLog(const std::string &s)
 // delete[] when no longer needed.
 char *readFile(std::string path, unsigned long *size_ret)
 {
-	FILE *f = fopen(path.c_str(), "rb");
-	if (!f)
-		return NULL;
-
-	long fileSize;
-	if (fseek(f, 0, SEEK_END) != 0
-	 || (fileSize = ftell(f)) < 0
-	 || fseek(f, 0, SEEK_SET) != 0)
-	{
-		debugLog(path + ": Failed to get file size");
-		fclose(f);
-		return NULL;
-	}
-
-	char *buffer = new char[fileSize + 1];
-	if (!buffer)
-	{
-		std::ostringstream os;
-		os << path << ": Not enough memory for file ("
-		   << (fileSize+1) << " bytes)";
-		debugLog(os.str());
-		fclose(f);
-		return NULL;
-	}
-
-	long bytesRead = fread(buffer, 1, fileSize, f);
-	if (bytesRead != fileSize)
-	{
-		std::ostringstream os;
-		os << path << ": Failed to read file (only got "
-		   << bytesRead << " of " << fileSize << " bytes)";
-		debugLog(os.str());
-		fclose(f);
-		return NULL;
-	}
-
-	fclose(f);
-	if (size_ret)
-		*size_ret = fileSize;
-	buffer[fileSize] = 0;
-	return buffer;
-}
-
-/*
-void pForEachFile(std::string path, std::string type, void callback(const std::string &filename, int param), int param)
-{
-	char **rc = PHYSFS_enumerateFiles(path.c_str());
-	char **i;
-
-	for (i = rc; *i != NULL; i++)
-	{
-		std::string s(*i);
-		int p=0;
-		if ((p=s.find('.'))!=std::string::npos)
-		{
-			std::string ext = s.susbtr(p, s.getLength2D());
-			if (ext == type)
-			{
-				callback(fielnameafhghaha
-			}
-		}
-	}
-
- PHYSFS_freeList(rc);
-}
-*/
-
-void doSingleFile(const std::string &path, const std::string &type, std::string filename, void callback(const std::string &filename, int param), int param)
-{
-	if (filename.size()>4)
-	{
-		std::string search = filename;
-		stringToLower(search);
-		std::string filetype = filename.substr(search.size()-4, search.size());
-		//stringToUpper(filetype);
-		//debugLog("comparing: " + filetype + " and: " + type);
-		//if (filetype==type)
-		debugLog("checking:" + search + " for type:" + type);
-		if (search.find(type)!=std::string::npos)
-		{
-			debugLog("callback");
-			callback(path+filename, param);
-		}
-		else
-		{
-			debugLog("not the same");
-		}
-	}
-}
-
-std::string stripEndlineForUnix(const std::string &in)
-{
-	std::string out;
-	for (int i = 0; i < in.size(); i++)
-	{
-		if (int(in[i]) != 13)
-		{
-			out+= in[i];
-		}
-	}
-	return out;
+    ttvfs::VFSFile *vf = core->vfs.GetFile(path.c_str());
+    if(!vf)
+        return NULL;
+    vf->getBuf(); // force size calc early
+    // we can never know how the memory was allocated;
+    // because the buffer is expected to be deleted with delete[],
+    // it has to be explicitly copied to memory allocated with new[].
+    unsigned long s = vf->size();
+    char *buf = new char[s + 1];
+    memcpy(buf, vf->getBuf(), s + 1);
+    core->addVFSFileForDrop(vf);
+    if(size_ret)
+        *size_ret = s;
+    return buf;
 }
 
 void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param)
@@ -560,167 +472,29 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 	//HACK: MAC:
 	debugLog("forEachFile - path: " + path + " type: " + type);
 
-#if defined(BBGE_BUILD_UNIX)
-	DIR *dir=0;
-	dir = opendir(path.c_str());
-	if (dir)
-	{
-	    dirent *file=0;
-		while ( (file=readdir(dir)) != NULL )
-		{
-		    if (file->d_name && strlen(file->d_name) > 4)
-		    {
-                debugLog(file->d_name);
-                char *extension=strrchr(file->d_name,'.');
-                if (extension)
-                {
-                    debugLog(extension);
-                    if (extension!=NULL)
-                    {
-                        if (strcasecmp(extension,type.c_str())==0)
-                        {
-                            callback(path + std::string(file->d_name), param);
-                        }
-                    }
-                }
-		    }
-		}
-		closedir(dir);
-	}
-	else
-	{
-	    debugLog("FAILED TO OPEN DIR");
-	}
-#endif
-
-#ifdef BBGE_BUILD_WINDOWS
-    BOOL            fFinished;
-    HANDLE          hList;
-    TCHAR           szDir[MAX_PATH+1];
-    WIN32_FIND_DATA FileData;
-
-	int end = path.size()-1;
-	if (path[end] != '/')
-		path[end] += '/';
-
-    // Get the proper directory path
-	// \\ %s\\*
-
-
-
-	if (type.find('.')==std::string::npos)
-	{
-		type = "." + type;
-	}
-
-
-	//std::string add = "%s*" + type;
-
-	//sprintf(szDir, "%s*", path.c_str());
-	sprintf(szDir, "%s\\*", path.c_str());
-
-	stringToUpper(type);
-
-    // Get the first file
-    hList = FindFirstFile(szDir, &FileData);
-    if (hList == INVALID_HANDLE_VALUE)
+    ttvfs::VFSDir *vd = core->vfs.GetDir(path.c_str(), false);
+    if(!vd)
     {
-        //printf("No files found\n\n");
-		debugLog("No files of type " + type + " found in path " + path);
+        debugLog("Path '" + path + "' does not exist");
+        return;
     }
-    else
+
+    for(ttvfs::ConstFileIter it = vd->fileIter(); it != vd->fileIterEnd(); ++it)
     {
-        // Traverse through the directory structure
-        fFinished = FALSE;
-        while (!fFinished)
+        const ttvfs::VFSFile *f = it->second;
+        const char *e = strrchr(f->name(), '.');
+        if (e)
         {
-            // Check the object is a directory or not
-            //printf("%*s%s\n", indent, "", FileData.cFileName);
-			std::string filename = FileData.cFileName;
-			//debugLog("found: " + filename);
-			if (filename.size()>4)
-			{
-
-				std::string filetype = filename.substr(filename.size()-4, filename.size());
-				stringToUpper(filetype);
-				//debugLog("comparing: " + filetype + " and: " + type);
-				if (filetype==type)
-				{
-					callback(path+filename, param);
-				}
-			}
-
-
-            if (!FindNextFile(hList, &FileData))
-            {
-				/*
-                if (GetLastError() == ERROR_NO_MORE_FILES)
-                {
-                    fFinished = TRUE;
-                }
-				*/
-				fFinished = TRUE;
-            }
+            std::string exs(e);
+            stringToLower(exs);
+            if(exs != type)
+                continue;
         }
+        else if(type.size())
+            continue;
+
+        callback(path + f->name(), param);
     }
-
-    FindClose(hList);
-#endif
-}
-
-std::vector<std::string> getFileList(std::string path, std::string type, int param)
-{
-	std::vector<std::string> list;
-
-#ifdef BBGE_BUILD_WINDOWS
-    BOOL            fFinished;
-    HANDLE          hList;
-    TCHAR           szDir[MAX_PATH+1];
-    WIN32_FIND_DATA FileData;
-
-    // Get the proper directory path
-    sprintf(szDir, "%s\\*", path.c_str());
-
-
-    // Get the first file
-    hList = FindFirstFile(szDir, &FileData);
-    if (hList == INVALID_HANDLE_VALUE)
-    {
-        printf("No files found\n\n");
-    }
-    else
-    {
-        // Traverse through the directory structure
-        fFinished = FALSE;
-        while (!fFinished)
-        {
-            // Check the object is a directory or not
-            //printf("%*s%s\n", indent, "", FileData.cFileName);
-			std::string filename = FileData.cFileName;
-			if (filename.size()>4 && filename.substr(filename.size()-4, filename.size())==type)
-			{
-				//callback(path+filename, param);
-				list.push_back (filename);
-			}
-
-
-            if (!FindNextFile(hList, &FileData))
-            {
-				/*
-                if (GetLastError() == ERROR_NO_MORE_FILES)
-                {
-                    fFinished = TRUE;
-                }
-				*/
-				fFinished = TRUE;
-            }
-        }
-    }
-
-    FindClose(hList);
-#endif
-
-	return list;
 }
 
 std::string msg(const std::string &message)

@@ -172,28 +172,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	almb = armb = 0;
 	bar_left = bar_right = bar_up = bar_down = barFade_left = barFade_right = 0;
 	
-	// do copy stuff
-#ifdef BBGE_BUILD_UNIX
-	std::string fn;
-	fn = getPreferencesFolder() + "/" + userSettingsFilename;
-	if (!exists(fn))
-		Linux_CopyTree(core->adjustFilenameCase(userSettingsFilename).c_str(), core->adjustFilenameCase(fn).c_str());
-
-	fn = getUserDataFolder() + "/_mods";
-	if (!exists(fn))
-		Linux_CopyTree(core->adjustFilenameCase("_mods").c_str(), core->adjustFilenameCase(fn).c_str());
-#endif
-
-
-#if defined(BBGE_BUILD_UNIX)
-	std::string p1 = getUserDataFolder();
-	std::string p2 = getUserDataFolder() + "/save";
-	mkdir(p1.c_str(), S_IRWXU);
-	mkdir(p2.c_str(), S_IRWXU);
-	
-	//debugLogPath = ;
-#endif
-	
 	difficulty = DIFF_NORMAL;
 
 	/*
@@ -231,9 +209,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	achievement_box = 0;
 #endif
 
-	vars = &v;
-	v.load();
-
 #ifdef AQUARIA_BUILD_CONSOLE
 	console = 0;
 #endif
@@ -254,25 +229,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 
 	for (int i = 0; i < 16; i++)
 		firstElementOnLayer[i] = 0;
-
-	addStateInstance(game = new Game);
-	addStateInstance(new GameOver);
-#ifdef AQUARIA_BUILD_SCENEEDITOR
-	addStateInstance(new AnimationEditor);
-#endif
-	addStateInstance(new Intro2);
-	addStateInstance(new BitBlotLogo);
-#ifdef AQUARIA_BUILD_SCENEEDITOR
-	addStateInstance(new ParticleEditor);
-#endif
-	addStateInstance(new Credits);
-	addStateInstance(new Intro);
-	addStateInstance(new Nag);
-
-	//addStateInstance(new Logo);
-	//addStateInstance(new SCLogo);
-	//addStateInstance(new IntroText);
-	//addStateInstance(new Intro);
 
 	//stream = 0;
 }
@@ -343,7 +299,7 @@ void DSQ::newGame()
 
 void DSQ::loadElementEffects()
 {
- 	std::ifstream inFile("data/elementeffects.txt");
+ 	VFSTextStdStreamIn inFile("data/elementeffects.txt");
 	elementEffects.clear();
 	std::string line;
 	while (std::getline(inFile, line))
@@ -915,6 +871,55 @@ static bool sdlVideoModeOK(const int w, const int h, const int bpp)
 
 void DSQ::init()
 {
+    setupVFS(getenv("AQUARIA_DATA_PATH"));
+
+    // FG: TODO: do the moving & copying below with VFS code, and leave the original file system alone!
+
+    // do copy stuff
+#ifdef BBGE_BUILD_UNIX
+    std::string fn;
+    fn = getPreferencesFolder() + "/" + userSettingsFilename;
+    if (!exists(fn))
+        Linux_CopyTree(core->adjustFilenameCase(userSettingsFilename).c_str(), core->adjustFilenameCase(fn).c_str());
+
+    fn = getUserDataFolder() + "/_mods";
+    if (!exists(fn))
+        Linux_CopyTree(core->adjustFilenameCase("_mods").c_str(), core->adjustFilenameCase(fn).c_str());
+#endif
+
+
+#if defined(BBGE_BUILD_UNIX)
+    std::string p1 = getUserDataFolder();
+    std::string p2 = getUserDataFolder() + "/save";
+    mkdir(p1.c_str(), S_IRWXU);
+    mkdir(p2.c_str(), S_IRWXU);
+
+    //debugLogPath = ;
+#endif
+
+    vars = &v;
+    v.load();
+
+    addStateInstance(game = new Game);
+    addStateInstance(new GameOver);
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+    addStateInstance(new AnimationEditor);
+#endif
+    addStateInstance(new Intro2);
+    addStateInstance(new BitBlotLogo);
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+    addStateInstance(new ParticleEditor);
+#endif
+    addStateInstance(new Credits);
+    addStateInstance(new Intro);
+    addStateInstance(new Nag);
+
+    //addStateInstance(new Logo);
+    //addStateInstance(new SCLogo);
+    //addStateInstance(new IntroText);
+    //addStateInstance(new Intro);
+
+
 	core->settings.runInBackground = true;
 
 	weird = 0;
@@ -2165,6 +2170,13 @@ ModEntry* DSQ::getSelectedModEntry()
 void DSQ::loadMods()
 {
 	modEntries.clear();
+
+    // force VFS to reload _mods dir
+    if(ttvfs::VFSDir *vd = vfs.GetDir("_mods"))
+    {
+        vd->load();
+        vfs.Reload();
+    }
 	
 	forEachFile(mod.getBaseModPath(), ".xml", loadModsCallback, 0);
 	selectedMod = 0;
@@ -3675,7 +3687,7 @@ void DSQ::onPlayVoice()
 	if (user.audio.subtitles)
 	{
 		std::string fn = "scripts/vox/" + sound->lastVoice + ".txt";
-		std::ifstream inf(fn.c_str());
+		VFSTextStdStreamIn inf(fn.c_str());
 		if (inf.is_open())
 		{
 			std::string dia;
@@ -3767,31 +3779,6 @@ std::string DSQ::getDialogueFilename(const std::string &f)
 {
 	return "dialogue/" + languagePack + "/" + f + ".txt";
 }
-
-void DSQ::jumpToSection(std::ifstream &inFile, const std::string &section)
-{
-	if (section.empty()) return;
-	std::string file = dsq->getDialogueFilename(dialogueFile);
-	if (!exists(file))
-	{
-		debugLog("Could not find dialogue [" + file + "]");
-		return;
-	}
-	inFile.open(core->adjustFilenameCase(file).c_str());
-	std::string s;
-	while (std::getline(inFile, s))
-	{
-		if (!s.empty())
-		{
-			if (s.find("[")!=std::string::npos && s.find(section) != std::string::npos)
-			{
-				return;
-			}
-		}
-	}
-	debugLog("could not find section [" + section + "]");
-}
-
 
 void DSQ::runGesture(const std::string &line)
 {

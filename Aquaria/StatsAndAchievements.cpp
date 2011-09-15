@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Game.h"
 #include "Avatar.h"
 #include "StatsAndAchievements.h"
+#include <VFSFile.h>
 
 #ifndef ARRAYSIZE
 #define ARRAYSIZE(x) (sizeof (x) / sizeof ((x)[0]))
@@ -171,46 +172,50 @@ void StatsAndAchievements::RunFrame()
 		requestedStats = true;
 
 		const size_t max_achievements = ARRAYSIZE(g_rgAchievements);
-		FILE *io = NULL;
 
-		// Get generic achievement data...
-		io = fopen("data/achievements.txt", "r");
-		char line[1024];
-		for (size_t i = 0; i < max_achievements; i++)
-		{
-			if (!io || (fgets(line, sizeof (line), io) == NULL))
-				snprintf(line, sizeof (line), "Achievement #%d", (int) i);
-			else
-			{
-				for (char *ptr = (line + strlen(line)) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
-					*ptr = '\0';
-			}
-			line[sizeof (g_rgAchievements[i].name) - 1] = '\0';  // just in case.
-			strcpy(g_rgAchievements[i].name, line);
+        char *achtxt = "";
+        VFSTextStdStreamIn in("data/achievements.txt");
+        std::string line;
 
-			if (!io || (fgets(line, sizeof (line), io) == NULL))
-				snprintf(line, sizeof (line), "[Description of Achievement #%d is missing!]", (int) i);
-			else
-			{
-				for (char *ptr = (line + strlen(line)) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
-					*ptr = '\0';
-			}
-			line[sizeof (g_rgAchievements[i].desc) - 1] = '\0';  // just in case.
-			strcpy(g_rgAchievements[i].desc, line);
+        // HACK: prepare fields in case data are missing
+        for(int i = 0; i < max_achievements; ++i)
+        {
+            g_rgAchievements[i].iconImage = 0;
+            g_rgAchievements[i].name[sizeof (g_rgAchievements[i].name) - 1] = '\0';  // just in case.
+            g_rgAchievements[i].desc[sizeof (g_rgAchievements[i].desc) - 1] = '\0';
+            snprintf(g_rgAchievements[i].name, sizeof(g_rgAchievements[i].name), "Achievement #%d", i);
+            snprintf(g_rgAchievements[i].desc, sizeof(g_rgAchievements[i].desc), "[Description of Achievement #%d is missing!]", i);
+        }
 
-			// unsupported at the moment.
-			g_rgAchievements[i].iconImage = 0;
-		}
+        // read 2 lines per achievement
+        int x = 0;
+        int ach = 0;
+        while(std::getline(in, line))
+        {
+            for (char *ptr = const_cast<char*>(line.c_str() + line.length()) - 1; (ptr >= line) && ((*ptr == '\r') || (*ptr == '\n')); ptr--)
+                *ptr = '\0';
 
-		if (io != NULL)
-			fclose(io);
+            switch(x)
+            {
+                case 0:
+                    strncpy(g_rgAchievements[ach].name, line.c_str(), sizeof(g_rgAchievements[ach].name) - 1);
+                    ++x;
+                    break;
+
+                case 1:
+                    strncpy(g_rgAchievements[ach].desc, line.c_str(), sizeof(g_rgAchievements[ach].desc) - 1);
+                    x = 0;
+                    ++ach;
+            }
+        }
 
 		// See what this specific player has achieved...
+        // FG: TODO: use VFS here!
 
 		unsigned char *buf = new unsigned char[max_achievements];
 		size_t br = 0;
 		const std::string fname(core->getUserDataFolder() + "/achievements.bin");
-		io = fopen(fname.c_str(), "rb");
+		FILE *io = fopen(fname.c_str(), "rb");
 		if (io == NULL)
 			statsValid = true;  // nothing to report.
 		else

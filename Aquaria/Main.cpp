@@ -41,10 +41,10 @@ static void StartAQConfig()
 {
 #if defined(BBGE_BUILD_WINDOWS)
 #if defined(AQUARIA_DEMO) || defined(AQUARIA_FULL)
-    if (!exists("ran", false))
+    if (!exists("ran", false, true))
     {
         MakeRan();
-        if(exists("aqconfig.exe", false))
+        if(exists("aqconfig.exe", false, true))
         {
             ShellExecute(NULL, "open", "aqconfig.exe", NULL, NULL, SW_SHOWNORMAL);
             exit(0);
@@ -58,7 +58,7 @@ static void StartAQConfig()
 static void CheckConfig(void)
 {
 #ifdef BBGE_BUILD_WINDOWS
-    bool hasCfg = exists("usersettings.xml", false);
+    bool hasCfg = exists("usersettings.xml", false, true);
     if(!hasCfg)
         StartAQConfig();
 #endif

@@ -22,6 +22,8 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
+// hacked VFS support into this version.
+
 #include <ctype.h>
 
 #ifdef TIXML_USE_STL
@@ -30,6 +32,8 @@ distribution.
 #endif
 
 #include "tinyxml.h"
+
+#include "Core.h"
 
 FILE* TiXmlFOpen( const char* filename, const char* mode );
 
@@ -923,12 +927,11 @@ bool TiXmlDocument::LoadFile( const char* _filename, TiXmlEncoding encoding )
 	value = filename;
 
 	// reading in binary mode so that tinyxml can normalize the EOL
-	FILE* file = TiXmlFOpen( value.c_str (), "rb" );	
+	ttvfs::VFSFile* file = core->vfs.GetFile(value.c_str());
 
 	if ( file )
 	{
 		bool result = LoadFile( file, encoding );
-		fclose( file );
 		return result;
 	}
 	else
@@ -938,7 +941,7 @@ bool TiXmlDocument::LoadFile( const char* _filename, TiXmlEncoding encoding )
 	}
 }
 
-bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
+bool TiXmlDocument::LoadFile( ttvfs::VFSFile* file, TiXmlEncoding encoding )
 {
 	if ( !file ) 
 	{
@@ -951,10 +954,15 @@ bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
 	location.Clear();
 
 	// Get the file size, so we can pre-allocate the string. HUGE speed impact.
-	long length = 0;
-	fseek( file, 0, SEEK_END );
-	length = ftell( file );
-	fseek( file, 0, SEEK_SET );
+    char* buf = (char*)file->getBuf();
+
+    if ( !buf ) 
+    {
+        SetError( TIXML_ERROR_OPENING_FILE, 0, 0, TIXML_ENCODING_UNKNOWN );
+        return false;
+    }
+
+	long length = file->size();
 
 	// Strange case, but good to handle up front.
 	if ( length <= 0 )
@@ -983,15 +991,6 @@ bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
 		data += buf;
 	}
 	*/
-
-	char* buf = new char[ length+1 ];
-	buf[0] = 0;
-
-	if ( fread( buf, length, 1, file ) != 1 ) {
-		delete [] buf;
-		SetError( TIXML_ERROR_OPENING_FILE, 0, 0, TIXML_ENCODING_UNKNOWN );
-		return false;
-	}
 
 	// Process the buffer in place to normalize new lines. (See comment above.)
 	// Copies from the 'p' to 'q' pointer, where p can advance faster if
@@ -1031,13 +1030,16 @@ bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
 
 	Parse( buf, 0, encoding );
 
-	delete [] buf;
+    core->addVFSFileForDrop(file);
+
 	return !Error();
 }
 
 
 bool TiXmlDocument::SaveFile( const char * filename ) const
 {
+    // FG: TODO: use VFS stuff here as well
+
 	// The old c stuff lives on...
 	FILE* fp = TiXmlFOpen( filename, "w" );
 	if ( fp )
