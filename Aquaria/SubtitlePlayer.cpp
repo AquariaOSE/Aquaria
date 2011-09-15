@@ -61,7 +61,7 @@ void SubtitlePlayer::go(const std::string &subs)
 		}
 	}
 
-	VFSTextStdStreamIn in(f.c_str());
+	std::ifstream in(f.c_str());
 	std::string line;
 	while (std::getline(in, line))
 	{

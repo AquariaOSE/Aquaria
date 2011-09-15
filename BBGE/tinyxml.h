@@ -53,11 +53,6 @@ distribution.
 	#define TIXML_STRING		TiXmlString
 #endif
 
-namespace ttvfs
-{
-    class VFSFile;
-}
-
 // Deprecated library function hell. Compilers want to use the
 // new safe versions. This probably doesn't fully address the problem,
 // but it gets closer. There are too many compilers for me to fully
@@ -1422,7 +1417,7 @@ public:
 		will be interpreted as an XML file. TinyXML doesn't stream in XML from the current
 		file location. Streaming may be added in the future.
 	*/
-	bool LoadFile( ttvfs::VFSFile*, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
+	bool LoadFile( FILE*, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
 	/// Save a file using the given FILE*. Returns true if successful.
 	bool SaveFile( FILE* ) const;
 

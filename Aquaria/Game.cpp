@@ -39,7 +39,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "StatsAndAchievements.h"
 
 #include "ToolTip.h"
-#include <VFSFile.h>
 
 std::vector<std::string> allowedMaps;
 
@@ -254,7 +253,7 @@ void FoodHolder::setIngredient(IngredientData *i, bool effects)
 		if (effects)
 		{
 			core->sound->playSfx("Wok");
-
+			
 			ing->scale.ensureData();
 			ing->scale.data->path.clear();
 			ing->scale.data->path.addPathNode(Vector(1,1),0);
@@ -2517,7 +2516,7 @@ void Game::loadEntityTypeList()
 // and group list!
 {
 	entityTypeList.clear();
-	VFSTextStdStreamIn in("scripts/entities/entities.txt");
+	std::ifstream in("scripts/entities/entities.txt");
 	std::string line;
 	if(!in)
 	{
@@ -2550,7 +2549,7 @@ void Game::loadEntityTypeList()
 		fn = dsq->mod.getPath() + "entitygroups.txt";
 	}
 
-	VFSTextStdStreamIn in2(fn.c_str());
+	std::ifstream in2(fn.c_str());
 
 	int curGroup=0;
 	while (std::getline(in2, line))
@@ -5404,7 +5403,7 @@ void Game::findMaxCameraValues()
 
 void Game::setWarpAreaSceneName(WarpArea &warpArea)
 {
-	VFSTextStdStreamIn in("data/warpAreas.txt");
+	std::ifstream in("data/warpAreas.txt");
 	std::string color, area1, dir1, area2, dir2;
 	std::string line;
 	while (std::getline(in, line))
@@ -7934,9 +7933,9 @@ void Game::onFlipTest()
 
 void appendFileToString(std::string &string, const std::string &file)
 {
-	VFSTextStdStreamIn inf(file.c_str());
+	std::ifstream inf(file.c_str());
 
-	if (inf)
+	if (inf.is_open())
 	{
 		while (!inf.eof())
 		{
@@ -10946,7 +10945,7 @@ void Game::loadElementTemplates(std::string pack)
 		tileCache.clean();
 	}
 
-	VFSTextStdStreamIn in(fn.c_str());
+	std::ifstream in(fn.c_str());
 	std::string line;
 	while (std::getline(in, line))
 	{

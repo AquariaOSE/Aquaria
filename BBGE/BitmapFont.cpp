@@ -100,7 +100,7 @@ void BitmapText::autoKern()
 void BitmapText::loadSpacingMap(const std::string &file)
 {
 	spacingMap.clear();
-	VFSTextStdStreamIn inFile(file.c_str());
+	std::ifstream inFile(file.c_str());
 	std::string line;
 	while (std::getline(inFile, line))
 	{

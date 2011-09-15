@@ -123,7 +123,7 @@ void Precacher::precacheTex(const std::string &tex)
 void Precacher::precacheList(const std::string &list, void progressCallback())
 {
 	loadProgressCallback = progressCallback;
-	VFSTextStdStreamIn in(list.c_str());
+	std::ifstream in(list.c_str());
 	std::string t;
 	while (std::getline(in, t))
 	{

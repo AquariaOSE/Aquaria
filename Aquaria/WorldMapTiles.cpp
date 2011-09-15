@@ -246,7 +246,7 @@ void WorldMap::load(const std::string &file)
 
 	std::string line;
 
-	VFSTextStdStreamIn in(file.c_str());
+	std::ifstream in(file.c_str());
 	
 	while (std::getline(in, line))
 	{
@@ -261,7 +261,6 @@ void WorldMap::load(const std::string &file)
 
 void WorldMap::save(const std::string &file)
 {
-    // FG: TODO: use VFS here!
 	std::ofstream out(file.c_str());
 	
 	for (int i = 0; i < worldMapTiles.size(); i++)

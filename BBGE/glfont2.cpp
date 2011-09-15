@@ -20,13 +20,33 @@ using namespace std;
 #include <OpenGL/gl.h>
 */
 #include "Base.h"
-#include "Core.h"
-#include "lvpa/ByteBuffer.h"
+
+#include "SDL_endian.h"
 
 //glFont header
 #include "glfont2.h"
 using namespace glfont;
 
+static int read_int(ifstream &input)
+{
+	int buffer;
+	
+	input.read((char *)&buffer, 4);
+	return SDL_SwapLE32(buffer);
+}
+
+static float read_float(ifstream &input)
+{
+	union
+	{
+		int i;
+		float f; 
+	} buffer;
+	
+	input.read((char *)&buffer.i, 4);
+	buffer.i = SDL_SwapLE32(buffer.i);
+	return buffer.f;
+}
 
 //*******************************************************************
 //GLFont Class Implementation
@@ -50,6 +70,7 @@ GLFont::~GLFont ()
 //*******************************************************************
 bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 {
+	ifstream input;
 	int num_chars, num_tex_bytes;
 	char *tex_bytes;
 
@@ -57,24 +78,19 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	Destroy();
 
 	//Open input file
-    ttvfs::VFSFile *vf = core->vfs.GetFile(file_name);
-    if(!vf)
-        return false;
+	input.open(file_name, ios::in | ios::binary);
+	if (!input)
+		return false;
 
-    lvpa::ByteBuffer bb;
-    bb.append(vf->getBuf(), vf->size());
-    core->addVFSFileForDrop(vf);
-    lvpa::uint32 dummy;
-
-    // Read the header from file
-    header.tex = tex;
-    bb >> dummy; // skip tex field
-    bb >> header.tex_width;
-    bb >> header.tex_height;
-    bb >> header.start_char;
-    bb >> header.end_char;
-    bb >> dummy; // skip chars field
-
+	// Read the header from file
+	header.tex = tex;
+	input.seekg(4, ios::cur); // skip tex field
+	header.tex_width = read_int(input);
+	header.tex_height = read_int(input);
+	header.start_char = read_int(input);
+	header.end_char = read_int(input);
+	input.seekg(4, ios::cur); // skip chars field
+	
 	std::ostringstream os;
 	os << "tex_width: " << header.tex_width << " tex_height: " << header.tex_height;
 	debugLog(os.str());
@@ -87,19 +103,18 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	//Read character array
 	for (int i = 0; i < num_chars; i++)
 	{
-        bb >> header.chars[i].dx;
-        bb >> header.chars[i].dy;
-        bb >> header.chars[i].tx1;
-        bb >> header.chars[i].ty1;
-        bb >> header.chars[i].tx2;
-        bb >> header.chars[i].ty2;
+		header.chars[i].dx = read_float(input);
+		header.chars[i].dy = read_float(input);
+		header.chars[i].tx1 = read_float(input);
+		header.chars[i].ty1 = read_float(input);
+		header.chars[i].tx2 = read_float(input);
+		header.chars[i].ty2 = read_float(input);
 	}
 
 	//Read texture pixel data
 	num_tex_bytes = header.tex_width * header.tex_height * 2;
 	tex_bytes = new char[num_tex_bytes];
-	//input.read(tex_bytes, num_tex_bytes);
-    bb.read(tex_bytes, num_tex_bytes);
+	input.read(tex_bytes, num_tex_bytes);
 
 
 	//Build2DMipmaps(3, header.tex_width, header.tex_height, GL_UNSIGNED_BYTE, tex_bytes, 1);
@@ -134,6 +149,9 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 
 	//Free texture pixels memory
 	delete[] tex_bytes;
+
+	//Close input file
+	input.close();
 
 	//Return successfully
 	return true;

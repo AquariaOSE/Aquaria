@@ -192,11 +192,13 @@ void stringToLower(std::string &s);
 void stringToLowerUserData(std::string &s);
 void glColor3_256(int r, int g, int b);
 float sqr(float x);
-bool exists(const std::string &f, bool makeFatal = false, bool skipVFS = false);
+bool exists(const std::string &f, bool makeFatal = false);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
 char *readFile(std::string path, unsigned long *size_ret = 0);
 void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param);
+std::string stripEndlineForUnix(const std::string &in);
+std::vector<std::string> getFileList(std::string path, std::string type, int param);
 #ifdef HAVE_STRCASECMP
 static inline int nocasecmp(const std::string &s1, const std::string &s2)
 	{ return strcasecmp(s1.c_str(), s2.c_str()); }
@@ -222,6 +224,19 @@ Vector colorRGB(int r, int g, int b);
 	typedef unsigned int GLuint;
 #endif
 GLuint generateEmptyTexture(int res);
+
+//void pForEachFile(std::string path, std::string type, void callback(const std::string &filename, int param), int param);
+
+/*
+void pfread(void *buffer, PHYSFS_uint32 size, PHYSFS_uint32 objs, PHYSFS_file *handle);
+void pfseek(PHYSFS_file *handle,PHYSFS_uint64 byte,int origin);
+void pfclose(PHYSFS_file *handle);
+
+
+PHYSFS_file *openRead(const std::string &f);
+std::string pLoadStream(const std::string &filename);
+void pSaveStream(const std::string &filename, std::ostringstream &os);
+*/
 
 void drawCircle(float radius, int steps=1);
 bool isVectorInRect(const Vector &vec, const Vector &coord1, const Vector &coord2);

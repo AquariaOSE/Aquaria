@@ -529,7 +529,7 @@ luaFunc(indexWarnGlobal)
 			std::ostringstream os;
 			os << "WARNING: " << ar.short_src << ":" << ar.currentline
 			   << ": script tried to get/call undefined global variable "
-			   << varname;
+			   << lua_tostring(L, -2);
 			errorLog(os.str());
 		}
 
@@ -614,19 +614,7 @@ luaFunc(dofile_caseinsensitive)
 	// This is Lua's dofile(), with some tweaks.  --ryan.
 	std::string fname(core->adjustFilenameCase(luaL_checkstring(L, 1)));
 	int n = lua_gettop(L);
-
-    int result = -1;
-    ttvfs::VFSFile *vf = core->vfs.GetFile(fname.c_str());
-    if(vf)
-    {
-        const char *buf = (const char*)vf->getBuf();
-        result = luaL_loadbuffer(L, buf, vf->size(), fname.c_str());
-        vf->dropBuf(true);
-    }
-
-    if(result)
-        lua_error(L);
-
+	if (luaL_loadfile(L, fname.c_str()) != 0) lua_error(L);
 	lua_call(L, 0, LUA_MULTRET);
 	return lua_gettop(L) - n;
 }
@@ -8953,20 +8941,11 @@ Script *ScriptInterface::openScript(const std::string &file)
 		lua_getglobal(baseState, "v");
 
 		// Load the file itself.  This leaves the Lua chunk on the stack.
-        int result = -1;
-        ttvfs::VFSFile *vf = core->vfs.GetFile(realFile.c_str());
-        if(vf)
-        {
-            const char *buf = (const char*)vf->getBuf();
-            result = luaL_loadbuffer(baseState, buf, vf->size(), realFile.c_str());
-            vf->dropBuf(true);
-        }
-        
+		int result = luaL_loadfile(baseState, realFile.c_str());
 		if (result != 0)
 		{
-			const char *msg = lua_tostring(baseState, -1);
-			debugLog("Error loading script [" + realFile + "]: " + (msg ? msg : "unk error")); // loading from buffer does not push a string on the stack
-			//lua_pop(baseState, 2);
+			debugLog("Error loading script [" + realFile + "]: " + lua_tostring(baseState, -1));
+			lua_pop(baseState, 2);
 			return NULL;
 		}
 

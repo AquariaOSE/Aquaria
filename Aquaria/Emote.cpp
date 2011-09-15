@@ -31,7 +31,7 @@ Emote::Emote()
 void Emote::load(const std::string &file)
 {
 	emotes.clear();
-	VFSTextStdStreamIn in(file.c_str());
+	std::ifstream in(file.c_str());
 	std::string line;
 
 	while (std::getline(in, line))

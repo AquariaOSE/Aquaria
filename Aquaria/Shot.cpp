@@ -25,8 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../BBGE/MathFunctions.h"
 
-#include <VFSFile.h>
-
 Shot::Shots Shot::shots;
 Shot::ShotBank Shot::shotBank;
 
@@ -66,7 +64,7 @@ ShotData::ShotData()
 	ignoreShield = false;
 }
 
-template <typename T> void readEquals2(T &in)
+void readEquals2(std::ifstream &in)
 {
 	std::string temp;
 	in >> temp;
@@ -95,7 +93,7 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 	}
 
 	debugLog(usef);
-	VFSTextStreamIn inf(usef.c_str());
+	std::ifstream inf(usef.c_str());
 	std::string token;
 	while (inf >> token)
 	{
