@@ -206,11 +206,10 @@ class StringBank
 {
 public:
 	StringBank();
-	void load();
+	void load(const std::string &file);
 
 	std::string get(int idx);
 protected:
-    void _load(const std::string &file);
 
 	typedef std::map<int, std::string> StringMap;
 	StringMap stringMap;
@@ -261,7 +260,6 @@ public:
 
 	bool isActive();
 	bool isDebugMenu();
-    bool hasWorldMap();
 
 	std::string getPath();
 	std::string getName();
@@ -271,7 +269,6 @@ public:
 protected:
 	bool shuttingDown;
 	bool active;
-    bool hasMap;
 	int doRecache;
 	int debugMenu;
 	int enqueueModStart;
@@ -584,8 +581,8 @@ protected:
 struct WorldMap
 {
 	WorldMap();
-	void load();
-	void save();
+	void load(const std::string &file);
+	void save(const std::string &file);
 	void hideMap();
 	void revealMap(const std::string &name);
 	WorldMapTile *getWorldMapTile(const std::string &name);
@@ -598,9 +595,6 @@ struct WorldMap
 	int gw, gh;
 	typedef std::vector<WorldMapTile> WorldMapTiles;
 	WorldMapTiles worldMapTiles;
-
-private:
-    void _load(const std::string &file);
 };
 
 class Path;

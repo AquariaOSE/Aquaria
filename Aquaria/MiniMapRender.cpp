@@ -359,7 +359,7 @@ void MiniMapRender::onUpdate(float dt)
 						}
 					}
 
-					if (!btn && !radarHide && (!dsq->mod.isActive() || dsq->mod.hasWorldMap()))
+					if (!btn && !dsq->mod.isActive() && !radarHide)
 					{
 						if (dsq->game->worldMapRender->isOn())
 						{

@@ -102,7 +102,6 @@ protected:
 	unsigned char *savedTexData;
 	bool mb;
 	Vector lastMousePosition; // See FIXME in WorldMapRender.cpp  --achurch
-    void updateEditor();
 };
 
 class PathRender : public RenderObject

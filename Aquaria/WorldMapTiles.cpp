@@ -240,21 +240,13 @@ WorldMap::WorldMap()
 	gw=gh=0;
 }
 
-void WorldMap::load()
-{
-    if (!dsq->mod.isActive())
-        _load("data/worldmap.txt");
-    else
-        _load(dsq->mod.getPath() + "data/worldmap.txt");
-}
-
-void WorldMap::_load(const std::string &file)
+void WorldMap::load(const std::string &file)
 {
 	worldMapTiles.clear();
 
 	std::string line;
 
-    std::ifstream in(file.c_str());
+	std::ifstream in(file.c_str());
 	
 	while (std::getline(in, line))
 	{
@@ -267,30 +259,15 @@ void WorldMap::_load(const std::string &file)
 	}
 }
 
-void WorldMap::save()
+void WorldMap::save(const std::string &file)
 {
-    std::string fn;
-
-    if (dsq->mod.isActive())
-        fn = dsq->mod.getPath() + "data/worldmap.txt";
-    else
-        fn = "data/worldmap.txt";
-
-    std::ofstream out(fn.c_str());
-
-    if (out)
-    {
-	    for (int i = 0; i < worldMapTiles.size(); i++)
-	    {
-		    WorldMapTile *t = &worldMapTiles[i];
-		    out << t->index << " " << t->stringIndex << " " << t->name << " " << t->layer << " " << t->scale << " " << t->gridPos.x << " " << t->gridPos.y << " " << t->prerevealed << " " << t->scale2 << std::endl;
-	    }
-        dsq->screenMessage("Saved worldmap data to " + fn);
-    }
-    else
-    {
-        dsq->screenMessage("Unable to save worldmap to " + fn);
-    }
+	std::ofstream out(file.c_str());
+	
+	for (int i = 0; i < worldMapTiles.size(); i++)
+	{
+		WorldMapTile *t = &worldMapTiles[i];
+		out << t->index << " " << t->name << " " << t->layer << " " << t->scale << " " << t->gridPos.x << " " << t->gridPos.y << " " << t->prerevealed << " " << t->scale2 << std::endl;
+	}
 }
 
 void WorldMap::revealMap(const std::string &name)

@@ -3203,12 +3203,12 @@ void Continuity::reset()
 
 	loadTreasureData();
 
-	stringBank.load();
+	stringBank.load("data/stringbank.txt");
 
 	gems.clear();
 	beacons.clear();
 
-	worldMap.load();
+	worldMap.load("data/worldmap.txt");
 
 	ingredients.clear();
 	
