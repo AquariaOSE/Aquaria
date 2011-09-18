@@ -972,35 +972,45 @@ void SceneEditor::toggleWarpAreaRender()
 		//warpAreaRender->alpha.interpolateTo(1, 0.2);
 }
 
+
+void SceneEditor::setGridPattern(int gi)
+{
+    if (selectedElements.size())
+        for (int i = 0; i < selectedElements.size(); ++i)
+            selectedElements[i]->setElementEffectByIndex(gi);
+    else if (editingElement)
+        editingElement->setElementEffectByIndex(gi);
+}
+
 void SceneEditor::setGridPattern0()
-{	if (editingElement)	editingElement->setElementEffectByIndex(-1); }
+{	setGridPattern(-1); }
 
 void SceneEditor::setGridPattern1()
-{	if (editingElement)	editingElement->setElementEffectByIndex(0);	}
+{	setGridPattern(0);	}
 
 void SceneEditor::setGridPattern2()
-{	if (editingElement)	editingElement->setElementEffectByIndex(1);	}
+{	setGridPattern(1);	}
 
 void SceneEditor::setGridPattern3()
-{	if (editingElement)	editingElement->setElementEffectByIndex(2);	}
+{	setGridPattern(2);	}
 
 void SceneEditor::setGridPattern4()
-{	if (editingElement)	editingElement->setElementEffectByIndex(3);	}
+{	setGridPattern(3);	}
 
 void SceneEditor::setGridPattern5()
-{	if (editingElement)	editingElement->setElementEffectByIndex(4);	}
+{	setGridPattern(4);	}
 
 void SceneEditor::setGridPattern6()
-{	if (editingElement)	editingElement->setElementEffectByIndex(5);	}
+{	setGridPattern(5);	}
 
 void SceneEditor::setGridPattern7()
-{	if (editingElement)	editingElement->setElementEffectByIndex(6);	}
+{	setGridPattern(6);	}
 
 void SceneEditor::setGridPattern8()
-{	if (editingElement)	editingElement->setElementEffectByIndex(7);	}
+{	setGridPattern(7);	}
 
 void SceneEditor::setGridPattern9()
-{	if (editingElement)	editingElement->setElementEffectByIndex(8);	}
+{	setGridPattern(8);	}
 
 void SceneEditor::moveToFront()
 {
@@ -2860,7 +2870,7 @@ void SceneEditor::nextElement()
 		return;
 	}
 
-	if (core->getShiftState())
+	if (core->getAltState())
 	{
 		debugLog("rebuilding level!");
 		dsq->game->reconstructGrid(true);
@@ -3126,7 +3136,7 @@ void SceneEditor::placeElement()
 		{
 			// new path
 			Path *p = new Path;
-			p->name = "NewPath";
+			p->name = "";
 			PathNode n;
 			n.position = dsq->getGameCursorPosition();
 			p->nodes.push_back(n);
@@ -3534,9 +3544,19 @@ void SceneEditor::update(float dt)
 		else if (isActing(ACTION_ZOOMIN))
 			zoom *= (1 + spd*dt);
 		else if (core->mouse.scrollWheelChange < 0)
-			zoom /= 1.05f;
+		{
+			if (core->getShiftState() && !core->getCtrlState()) // hackish: to prevent accidental recache()
+				nextElement();
+			else
+				zoom /= 1.05f;
+		}
 		else if (core->mouse.scrollWheelChange > 0)
-			zoom *= 1.05f;
+		{
+			if (core->getShiftState() && !core->getCtrlState()) // hackish: to prevent accidental entity selection
+				prevElement();
+			else
+				zoom *= 1.05f;
+		}
 		if (zoom.x < 0.04f)
 			zoom.x = zoom.y = 0.04f;
 		core->globalScale = zoom;

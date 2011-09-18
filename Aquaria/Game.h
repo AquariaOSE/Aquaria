@@ -516,6 +516,7 @@ protected:
 	void changeShape();
 	int skinMinX, skinMinY, skinMaxX, skinMaxY;
 
+	void setGridPattern(int gi);
 	void setGridPattern0();
 	void setGridPattern1();
 	void setGridPattern2();
