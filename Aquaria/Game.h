@@ -152,7 +152,7 @@ public:
 	ParticleEffect healEmitter;
 protected:
 	float lifeSpan;
-	bool used, gone;
+	bool used;
 	float amount;
 	void onUpdate(float dt);
 };
@@ -679,7 +679,6 @@ public:
 	bool collideCircleVsLine(Entity *ent, Vector start, Vector end, float radius);
 	bool collideCircleVsLineAngle(Entity *ent, float angle, float startLen, float endLen, float radius, Vector basePos);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius);
-	CollideData collideCircleWithAllEntities(Vector pos, float r, Entity *me=0, int spellType=0, bool checkAvatarFlag=false);//, bool checkSpellFlag=0, bool checkHitEntitiesFlag=1);
 	void handleShotCollisions(Entity *e, bool hasShield=false);
 	void handleShotCollisionsSkeletal(Entity *e);
 	void handleShotCollisionsHair(Entity *e, int num = 0);
@@ -741,9 +740,9 @@ public:
 	MiniMapHint miniMapHint;
 	void updateMiniMapHintPosition();
 	EntitySaveData *getEntitySaveDataForEntity(Entity *e, Vector pos);
-	Entity *createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, BehaviorType = BT_NORMAL, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
-	Entity *createEntity(const std::string &type, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, BehaviorType = BT_NORMAL, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
-	Entity *establishEntity(Entity *e, int id=0, Vector position=Vector(0,0), int rot=0, bool createSaveData=false, std::string name="", EntityType = ET_ENEMY, BehaviorType = BT_NORMAL, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
+	Entity *createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
+	Entity *createEntity(const std::string &type, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
+	Entity *establishEntity(Entity *e, int id=0, Vector position=Vector(0,0), int rot=0, bool createSaveData=false, std::string name="", EntityType = ET_ENEMY, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
 	void setCameraFollow(RenderObject *r);
 	void setCameraFollowEntity(Entity *e);
 	void setMenuDescriptionText(const std::string &text);

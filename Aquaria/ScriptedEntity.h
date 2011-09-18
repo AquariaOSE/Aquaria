@@ -27,7 +27,7 @@ struct lua_State;
 class ScriptedEntity : public CollideEntity, public Segmented
 {
 public:
-	ScriptedEntity(const std::string &scriptName, Vector position, EntityType et = ET_ENEMY, BehaviorType bt = BT_NORMAL);
+	ScriptedEntity(const std::string &scriptName, Vector position, EntityType et = ET_ENEMY);
 	void init();
 	void postInit();
 	void destroy();
@@ -42,7 +42,6 @@ public:
 	typedef std::map<std::string, RenderObject*> PartMap;
 	PartMap partMap;
 	bool surfaceMoveDir;
-	Vector lastWallOffset;
 	void activate();
 	void warpSegments();
 	void lightFlare();
@@ -103,16 +102,10 @@ protected:
 	bool animKeyFunc;
 	//void onPathEnd();
 	
-	float motherDelay;
-	float eggSpawnRate;
-	int eggDataIdx;
-	
 	void onExitTimer();
-	void onHitEntity(const CollideData &c);
 	float myTimer;
 	void onHitWall();
 	bool reverseSegments;
-	int moneyAmount, expType;
 	Script *script;
 	void onUpdate(float dt);
 	void onEnterState(int action);

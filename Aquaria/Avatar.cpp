@@ -4553,6 +4553,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	pullTarget = 0;
 	revertTimer = 0;
 	currentSongIdx = -1;
+    leaches = 0;
 
 
 	debugLog("Avatar vars->");
@@ -5985,11 +5986,6 @@ int Avatar::getBeamWidth()
 		c++;
 	}
 	return c * TILE_SIZE;
-}
-
-void Avatar::onGetEXP(unsigned int exp)
-{
-	dsq->continuity.exp += exp;
 }
 
 void Avatar::onEnterState(int action)

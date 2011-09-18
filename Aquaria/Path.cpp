@@ -288,6 +288,7 @@ void Path::refreshScript()
 {
 	amount = 0;
     content.clear();
+    label.clear();
 
 	// HACK: clean up
 	/*+ dsq->game->sceneName + "_"*/
@@ -297,9 +298,8 @@ void Path::refreshScript()
 
 	stringToLower(name);
 
-    std::string label;
     {
-        SimpleIStringStream is(name);
+        SimpleIStringStream is(name.c_str(), SimpleIStringStream::REUSE);
         is >> label >> content >> amount;
     }
 

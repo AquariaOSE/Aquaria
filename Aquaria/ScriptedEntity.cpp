@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 bool ScriptedEntity::runningActivation = false;
 
-ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, EntityType et, BehaviorType bt) : CollideEntity(), Segmented(2, 26)
+ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, EntityType et) : CollideEntity(), Segmented(2, 26)
 {	
 	crushDelay = 0;
 	autoSkeletalSpriteUpdate = true;
@@ -41,21 +41,14 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	preUpdateFunc = true;
 	//runningActivation = false;
 
-	expType = -1;
-	eggSpawnRate = 10;
-	motherDelay = 0;
-
 	setEntityType(et);
-	setBehaviorType(bt);
-	eggDataIdx = -1;
-	//behavior = BT_NORMAL;
 	myTimer = 0;
 	layer = LR_ENTITIES;
 	surfaceMoveDir = 1;
 	this->position = position;
 	numSegments = 0;
 	reverseSegments = false;
-	manaBallAmount = moneyAmount = 1;
+	manaBallAmount = 1;
 	this->name = scriptName;
 
 	std::string file;
@@ -83,7 +76,7 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	script = dsq->scriptInterface.openScript(file);
 	if (!script)
 	{
-		errorLog("Could not load script [" + file + "]");
+		debugLog("Could not load script [" + file + "]");
 	}
 }
 
@@ -250,8 +243,7 @@ void ScriptedEntity::setupEntity(const std::string &tex, int lcode)
 		setTexture(tex);
 
 	updateCull = -1;
-	manaBallAmount = moneyAmount = 0;
-	expType = -1;
+	manaBallAmount = 0;
 	setState(STATE_IDLE);
 
 	this->layer = dsq->getEntityLayerToLayer(lcode);
@@ -261,7 +253,6 @@ void ScriptedEntity::setupBasicEntity(std::string texture, int health, int manaB
 {
 	//this->updateCull = updateCull;
 	updateCull = -1;
-	this->collideWithEntity = hitEntity;
 
 	if (texture.empty())
 		renderQuad = false;
@@ -271,11 +262,8 @@ void ScriptedEntity::setupBasicEntity(std::string texture, int health, int manaB
 	this->collideRadius = collideRadius;
 	setState(state);
 	this->manaBallAmount = manaBall;
-	this->exp = exp;
-	this->moneyAmount = money;
 	width = w;
 	height = h;
-	this->expType = expType;
 
 	setEntityLayer(layer);
 }
@@ -782,16 +770,6 @@ bool ScriptedEntity::damage(const DamageData &d)
 	return false;
 }
 
-void ScriptedEntity::onHitEntity(const CollideData &c)
-{
-	CollideEntity::onHitEntity(c);
-
-	if (script)
-	{
-		script->call("hitEntity", this, c.entity, c.bone);
-	}
-}
-
 void ScriptedEntity::songNote(int note)
 {
 	Entity::songNote(note);
@@ -996,14 +974,14 @@ void ScriptedEntity::onEnterState(int action)
 	case STATE_DEAD:
 		if (!isGoingToBeEaten())
 		{			
-			doDeathEffects(manaBallAmount, moneyAmount);
+			doDeathEffects(manaBallAmount);
 			dsq->spawnParticleEffect(deathParticleEffect, position);
 			onDieNormal();
 		}
 		else
 		{
 			// eaten
-			doDeathEffects(0, 0);
+			doDeathEffects(0);
 			onDieEaten();
 		}
 		destroySegments(1);

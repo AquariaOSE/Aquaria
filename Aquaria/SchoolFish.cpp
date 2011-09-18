@@ -117,7 +117,7 @@ void SchoolFish::onEnterState(int action)
 		oldFlockID = flock ? flock->flockID : -1;
 		removeFromFlock();
 
-		doDeathEffects(0,0,0);
+		doDeathEffects(0, false);
 
 		/*
 		alpha = 0;

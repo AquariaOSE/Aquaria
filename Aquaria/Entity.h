@@ -150,14 +150,12 @@ struct DamageData
 		attacker = 0;
 		bone = 0;
 		damageType = DT_TOUCH;
-		mult = 0;
 		form = (FormType)0;
 		shot = 0;
 		effectTime = 0;
 		useTimer = true;
 	}
 	FormType form;
-	float mult;
 	DamageType damageType;
 	Entity *attacker;
 	Bone *bone;
@@ -166,33 +164,6 @@ struct DamageData
 	Shot *shot;
 	float effectTime;
 	bool useTimer;
-};
-
-struct CollideData
-{
-public:
-	CollideData()
-	{
-		collision = false;
-		entity = 0;
-		bone = 0;
-		pushTime = 0;
-		damage = 0;
-	}
-	int damage;
-	Vector pushVector;
-	float pushTime;
-	bool collision;
-	Vector edgePoint;
-	Entity *entity;
-	Bone *bone;
-};
-
-
-enum MovementPatternType
-{
-	MOVEMENT_NONE		= -1,
-	MOVEMENT_CIRCLE		= 0,
 };
 
 enum EntityType
@@ -213,13 +184,6 @@ enum EntityProperty
 	EP_BATTERY			=2,
 	EP_BLOCKER			=3,
 	EP_MAX				=4
-};
-
-enum BehaviorType
-{
-	BT_NORMAL		=0,
-	BT_MOTHER		=1,
-	BT_ACTIVEPET	=2
 };
 
 enum BounceType
@@ -265,8 +229,6 @@ public:
 	void heal(float a, int type=0);
 
 	void push(const Vector &vec, float time, int maxSpeed, float dmg);
-	bool canStickInStream;
-	bool isStuckIn;
 
 	bool canSetState(int state);
 	
@@ -279,7 +241,6 @@ public:
 
 	virtual bool damage(const DamageData &d);
 
-	virtual bool hitEntity(Entity *e, const CollideData &c);
 	virtual void songNote(int note);
 	virtual void songNoteDone(int note, float len);
 	virtual void lightFlare(){}
@@ -299,17 +260,13 @@ public:
 
 	ActivationType activationType;
 	int activationRange;
-	bool canTalkWhileMoving;
 	Entity *followEntity;
 	Entity *ridingOnEntity;
 	bool canBeTargetedByAvatar;
 	virtual void saveExtraData(TiXmlElement *xml){}
 	virtual void loadExtraData(TiXmlElement *xml){}
 	Vector startPos;
-	int wantManaBall;
-	ManaBall *manaBallTarget;
 	virtual void onMessage(const std::string &msg){}
-	unsigned int exp;
 	void getEXP(unsigned int exp);
 	void rotateToVec(Vector addVec, float time, int offsetAngle=0);
 	virtual void applyVariation(int variation){}
@@ -317,15 +274,11 @@ public:
 	void popBubble();
 	void sound(const std::string &sound, float freq=1, float fadeOut=0);
 	void soundFreq(const std::string &sound, float freq=1, float fadeOut=0);
-	void shock();
-	void endShock();
 
 	void freeze(float time);
 
 	int leaches;
-	bool collideWithEntity;
 	virtual void onSceneFlipped() {}
-	bool flipScene;
 
 	bool isNearObstruction(int sz, int type=0, TileVector *hitTile=0);
 
@@ -352,9 +305,6 @@ public:
 		STATE_FOLLOW		=23,
 		STATE_TITLE			=24
 	};
-	int itemUseRange;
-	void itemUsedOnMe(Entity *user, int item);
-	Entity *notify;
 	virtual void onNotify(Entity *notify){}
 	//void followPath(Path *p, int spd, int loop, bool deleteOnEnd = false);
 	void followPath(Path *p, int speedType, int dir, bool deleteOnEnd = false);
@@ -394,9 +344,7 @@ public:
 	SkeletalSprite skeletalSprite;
 
 	void setEntityType(EntityType et);
-	void setBehaviorType(BehaviorType bt);
 	EntityType getEntityType();
-	BehaviorType getBehaviorType();
 	bool isOpposedTo(Entity *e);
 	bool isCollideAgainst(Entity *e);
 	void flipToTarget(Vector pos);
@@ -411,7 +359,6 @@ public:
 	Timer burstTimer;
 	void revive(int a);
 	void setName(const std::string &name);
-	Path *getNode();
 	void doFriction(float dt);
 	void doFriction(float dt, int len);
 
@@ -465,12 +412,10 @@ public:
 	void setDamageTarget(DamageType dt, bool v);
 	bool isDamageTarget(DamageType dt);
 
-	typedef std::map<DamageType, bool> DisabledDamageTypes;
-
+	typedef std::set<DamageType> DisabledDamageTypes;
 
 	int targetRange;
 	int getTargetRange() { return targetRange; }
-
 
 	Vector getEnergyShotTargetPosition();
 	int getRandomTargetPoint();
@@ -616,16 +561,13 @@ protected:
 	float slowingToStopPathTimer, slowingToStopPath;
 
 	void movementDetails(Vector v);
-	float ondulateTimer;
 	Entity *watchingEntity;
-	Path node;
 	virtual void onPathEnd();
 	bool swimPath;
 	bool deleteOnPathEnd;
 	int overideMaxSpeedValue;
 	float overideMaxSpeedTime;
 	InterpolatedVector multColor;
-	BehaviorType behaviorType;
 	EntityType entityType;
 	std::vector<Entity*> attachedEntities;
 	std::vector<Vector> attachedEntitiesOffsets;
@@ -635,24 +577,17 @@ protected:
 	int followingPathLoop;
 
 
-	virtual void onItemUsedOnMe(Entity *user, int item){}
 	virtual void onFreeze(){}
-	void doMovementPattern(Entity *target, MovementPatternType type, int minDist, int maxDist, int spd1, int spd2, float dt);
-
 
 	//Entity *target;
 	std::vector<Entity*>targets;
 	virtual void onAlwaysUpdate(float dt){}
 	virtual void onUpdateFrozen(float dt){}
 	float frozenTimer;
-	float shockTimer;
-	Quad *shockQuad;
 	Quad *bubble;
 
-	virtual void onGetEXP(unsigned int exp){}
-	void doDeathEffects(int manaBallEnergy=0, int money=0, bool die=true);
+	void doDeathEffects(int manaBallEnergy=0, bool die=true);
 
-	Vector getAvatarDiff();
 	Vector currentColor;
 	bool takeDamage;
 	void onEnterState(int action);

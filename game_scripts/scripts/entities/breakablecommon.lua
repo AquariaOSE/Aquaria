@@ -35,7 +35,7 @@ v.spawnTimes = 1
 v.sfxVol = 1
 
 function v.commonInit(me, fle, cr, h, num, snd, ignoreSets, stimes, svol)
-	if svol ~= 0 then
+	if svol and svol ~= 0 then
 		v.sfxVol = svol
 	end
 	

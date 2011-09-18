@@ -240,36 +240,21 @@ Entity::Entity() : StateMachine(), DFSprite()
 	swimPath = false;
 	currentEntityTarget = 0;
 	deleteOnPathEnd = false;
-	shockTimer = 0;
 	overideMaxSpeedValue= 0;
 	overideMaxSpeedTime=0;
 	followingPath = 0;
 	multColor = Vector(1,1,1);
 	collideRadius = 24;
 	entityType = EntityType(0);
-	behaviorType = BehaviorType(0);
 	targets.resize(10);
 	attachedTo = 0;
 	currentPathNode = -1;
-	notify = 0;
-	itemUseRange = 400;
-	flipScene = true;
-	collideWithEntity = false;
 	//target = 0;
-	leaches = 0;
 	frozenTimer = 0;
-	shockTimer = 0;
-	shockQuad = 0;
-	exp = 0;
-	manaBallTarget = 0;
-	wantManaBall = 0;
 	canBeTargetedByAvatar = false;
-	canTalkWhileMoving = false;
 	activationRange = 0;
 	activationType = ACT_NONE;
 	currentColor = Vector(1,1,1);
-	isStuckIn = false;
-	canStickInStream = false;
 	pushDamage = 0;
 
 	//debugLog("dsq->addEntity()");
@@ -498,11 +483,6 @@ void Entity::setName(const std::string &name)
 	this->name = name;
 }
 
-Path *Entity::getNode()
-{
-	return &node;
-}
-
 void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 {
 	//Path *p = dsq->game->getPathByName(name);
@@ -561,7 +541,6 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	position.data->path.clear();
 	position.stop();
 
-	ondulateTimer = 0;
 	swimPath = swim;
 	debugLog("Generating path to: " + path->name);
 	dsq->pathFinding.generatePath(this, TileVector(start), TileVector(dest));
@@ -723,22 +702,6 @@ void Entity::warpToPathStart()
 	if (followingPath && !followingPath->nodes.empty())
 		position = followingPath->nodes[0].position;
 }
-
-void Entity::itemUsedOnMe(Entity *user, int item)
-{
-	onItemUsedOnMe(user, item);
-}
-
-Vector Entity::getAvatarDiff()
-{
-	return dsq->game->avatar->position - this->position;
-}
-
-/*
-void Entity::onCollide(Entity *e)
-{
-}
-*/
 
 void Entity::watchEntity(Entity *e)
 {
@@ -997,36 +960,12 @@ void Entity::revive(int a)
 	//health += a;
 }
 
-void Entity::doMovementPattern(Entity *target, MovementPatternType type, int minDist, int maxDist, int spd1, int spd2, float dt)
-{
-	Vector v = target->position - position;
-	int dist = v.getSquaredLength2D();
-	if (dist < sqr(minDist))
-	{
-		Vector sub = v;
-		sub.setLength2D(spd1);
-		Vector mov = v;
-		Vector para(mov.y, -mov.x);
-
-		vel -= (mov+para)*dt;
-	}
-	else if (dist > sqr(minDist) && dist < sqr(maxDist))
-	{
-		v.setLength2D(spd2 * dt);
-		vel += v;
-	}
-	else
-	{
-		vel -= vel*dt*0.5f;
-	}
-}
-
 bool Entity::isGoingToBeEaten()
 {
 	return (eatType != EAT_NONE && (lastDamage.damageType == DT_AVATAR_BITE || lastDamage.damageType == DT_AVATAR_PETBITE));
 }
 
-void Entity::doDeathEffects(int manaBallEnergy, int money, bool die)
+void Entity::doDeathEffects(int manaBallEnergy, bool die)
 {
 	if (deathScene || !isGoingToBeEaten())
 	{
@@ -1784,7 +1723,10 @@ void Entity::clearDamageTargets()
 
 void Entity::setDamageTarget(DamageType dt, bool v)
 {
-	disabledDamageTypes[dt] = !v;
+    if (v)
+	    disabledDamageTypes.erase(dt);
+    else
+        disabledDamageTypes.insert(dt);
 }
 
 void Entity::setEatType(EatType et, const std::string &file)
@@ -1800,23 +1742,22 @@ void Entity::setEatType(EatType et, const std::string &file)
 
 void Entity::setAllDamageTargets(bool v)
 {
-	for (int i = DT_ENEMY; i < DT_ENEMY_REALMAX; i++)
-	{
-		disabledDamageTypes[(DamageType)i] = !v;
-	}
-	for (int i = DT_AVATAR; i < DT_AVATAR_REALMAX; i++)
-	{
-		disabledDamageTypes[(DamageType)i] = !v;
-	}
-	for (int i = DT_AVATAR_MAX; i < DT_REALMAX; i++)
-	{
-		disabledDamageTypes[(DamageType)i] = !v;
-	}
+    if (v)
+        clearDamageTargets(); // clear all disabled -> all allowed now
+    if (v)
+    {
+	    for (int i = DT_ENEMY; i < DT_ENEMY_REALMAX; i++)
+		    setDamageTarget(DamageType(i), v);
+	    for (int i = DT_AVATAR; i < DT_AVATAR_REALMAX; i++)
+		    setDamageTarget(DamageType(i), v);
+	    for (int i = DT_AVATAR_MAX; i < DT_REALMAX; i++)
+		    setDamageTarget(DamageType(i), v);
+    }
 }
 
 bool Entity::isDamageTarget(DamageType dt)
 {
-	return !disabledDamageTypes[dt];
+	return disabledDamageTypes.find(dt) == disabledDamageTypes.end();
 }
 
 float Entity::getHealthPerc()
@@ -1969,20 +1910,12 @@ void Entity::onUpdate(float dt)
 		}
 	}
 
-	if (node.nodes.empty())
-	{
-		node.addNode(0);
-	}
-	node.nodes[0].position = position;
-
 	DFSprite::onUpdate(dt);
 
 	Vector v = position - lastPos;
 	lastMove = v;
 	if (position.isFollowingPath() && swimPath)
 	{
-		ondulateTimer += dt;
-
 		movementDetails(v);
 	}
 	else
@@ -2011,8 +1944,6 @@ void Entity::onUpdate(float dt)
 
 	if (bubble)
 		bubble->position = this->position;
-	if (shockQuad)
-		shockQuad->position = this->position;
 
 	/*
 	if (frozenTimer > 0)
@@ -2025,15 +1956,6 @@ void Entity::onUpdate(float dt)
 		}
 	}
 	*/
-	if (shockTimer > 0)
-	{
-		shockTimer -= dt;
-		if (shockTimer <= 0)
-		{
-			shockTimer = 0;
-			endShock();
-		}
-	}
 
 	if (followingPath && currentPathNode != -1 && life == 1)
 	{
@@ -2475,7 +2397,6 @@ void Entity::push(const Vector &vec, float time, int maxSpeed, float dmg)
 {
 	if (!this->isEntityDead())
 	{
-		isStuckIn = false;
 		pushDamage = dmg;
 		if (maxSpeed == 0)
 		{
@@ -2518,35 +2439,6 @@ int Entity::getMaxSpeed()
 		return maxSpeed;
 }
 
-void Entity::shock()
-{
-	shockTimer = 0.33;
-	if (shockQuad)
-	{
-		//shockQuad->setLife(1);
-	}
-	else
-	{
-		/*
-		shockQuad = new Quad;
-		shockQuad->setTexture("shock-hit");
-		shockQuad->alpha = 0;
-		shockQuad->position = this->position;
-		*/
-		/*
-		//shockQuad->setLife(1);
-		//shockQuad->setDecayRate(1);
-		//shockQuad->fadeAlphaWithLife = 0.5;
-		*/
-		/*
-		shockQuad->setBlendType(BLEND_ADDITIVE);
-		shockQuad->alpha.interpolateTo(1, 0.5);
-		shockQuad->rotation.interpolateTo(Vector(0,0,360*5), 0.5, -1);
-		core->getTopStateData()->addRenderObject(shockQuad, LR_PARTICLES);
-		*/
-	}
-}
-
 void Entity::songNote(int note)
 {
 }
@@ -2564,19 +2456,6 @@ void Entity::sound(const std::string &sound, float freq, float fadeOut)
 {
 	//core->sound->playPositionalSfx2D(sound, position, freq, fadeOut);
 	dsq->playPositionalSfx(sound, position, 1, fadeOut);
-}
-
-void Entity::endShock()
-{
-	offset.x = 0;
-	if (shockQuad)
-	{
-
-		shockQuad->setLife(1);
-		shockQuad->setDecayRate(4);
-		shockQuad->fadeAlphaWithLife = 1;
-		shockQuad = 0;
-	}
 }
 
 Vector Entity::getEnergyShotTargetPosition()
@@ -2610,19 +2489,9 @@ void Entity::setEntityType(EntityType et)
 	entityType = et;
 }
 
-void Entity::setBehaviorType(BehaviorType bt)
-{
-	behaviorType = bt;
-}
-
 EntityType Entity::getEntityType()
 {
 	return entityType;
-}
-
-BehaviorType Entity::getBehaviorType()
-{
-	return behaviorType;
 }
 
 /* types:
@@ -2764,7 +2633,6 @@ void Entity::onEnterState(int action)
 		{
 			sound("Gulp");
 		}
-		endShock();
 		popBubble();
 		//dsq->game->avatar->entityDied(this);
 		Shot::targetDied(this);
@@ -2908,11 +2776,6 @@ bool Entity::onDamage(int amount, Spell *spell, Entity *attacker)
 	return true;
 }
 */
-
-void Entity::getEXP(unsigned int exp)
-{
-	onGetEXP(exp);
-}
 
 bool Entity::isHit()
 {
@@ -3104,14 +2967,9 @@ bool Entity::damage(const DamageData &dmgData)
 				this->multColor.interpolateTo(Vector(1, 0.1, 0.1), 0.1, 4, 1);
 		}
 
-		if (d.mult != 0)
-			health -= d.damage * d.mult;
-		else
-			health -= d.damage;
+		health -= d.damage;
 		if (health <= 0)
 		{
-			if (d.attacker)
-				d.attacker->getEXP(exp);
 			health = 0;
 			entityDead = true;
 			if (deathScene)
@@ -3133,11 +2991,6 @@ void Entity::clampToHit()
 	position = dsq->game->lastCollidePosition + dist;
 	setv(EV_CRAWLING, 1);
 	//setCrawling(true);
-}
-
-bool Entity::hitEntity(Entity *e, const CollideData &c)
-{
-	return true;
 }
 
 /*

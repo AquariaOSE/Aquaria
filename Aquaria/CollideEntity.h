@@ -33,7 +33,6 @@ public:
 	void entityDied(Entity *e);
 protected:	
 	virtual void onHitWall(){}
-	virtual void onHitEntity(const CollideData &c){}
 	void onUpdateFrozen(float dt);
 	
 	virtual void onBounce() {}

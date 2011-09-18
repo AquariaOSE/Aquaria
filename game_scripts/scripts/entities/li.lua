@@ -1213,7 +1213,7 @@ function enterState(me, state)
 		
 		entity_setNaijaReaction(me, "")
 		-- FIXME: There's no "shock" expression; what was intended?  --achurch
-		expression(me, shock, 1)
+		--expression(me, shock, 1) -- removed for now to prevent warnings in strict mode --fg
 		
 		entity_clearVel(me)
 		entity_clearVel(v.n)

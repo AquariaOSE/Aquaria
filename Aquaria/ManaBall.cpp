@@ -40,7 +40,6 @@ ManaBall::ManaBall(Vector pos, float amount) : Quad()
 	lifeSpan = 15;
 	setBlendType(BLEND_ADD);
 	used = false;
-	gone = false;
 	addChild(&healEmitter, PM_STATIC);
 
 	if (dsq->difficulty == DSQ::DIFF_EASY)
@@ -52,15 +51,6 @@ ManaBall::ManaBall(Vector pos, float amount) : Quad()
 void ManaBall::destroy()
 {
 	Quad::destroy();
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e)
-		{
-			if (e->manaBallTarget == this)
-				e->manaBallTarget = 0;
-		}
-	}
 }
 
 bool ManaBall::isUsed()
@@ -79,15 +69,6 @@ void ManaBall::use(Entity *entity)
 	scale.startPath(1);
 	setLife(1.1);
 	used = true;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e)
-		{
-			if (e->manaBallTarget == this)
-				e->manaBallTarget = 0;
-		}
-	}
 }
 
 void ManaBall::onUpdate(float dt)
@@ -102,7 +83,6 @@ void ManaBall::onUpdate(float dt)
 		if (lifeSpan <= 0)
 		{
 			lifeSpan = 0;
-			gone = true;
 			this->scale.interpolateTo(Vector(0,0),1);
 			setLife(1);
 			setDecayRate(1);
@@ -111,23 +91,6 @@ void ManaBall::onUpdate(float dt)
 		}
 	}
 
-	if (!gone && !used)
-	{
-		FOR_ENTITIES(i)
-		{
-			Entity *e = *i;
-			if (e)
-			{
-				if (e->wantManaBall)
-				{
-					if ((e->position - this->position).getSquaredLength2D() < sqr(e->wantManaBall))
-					{
-						e->manaBallTarget = this;
-					}
-				}
-			}
-		}
-	}
 	if (dsq->game->avatar)
 	{
 		if (!used)

@@ -3126,9 +3126,9 @@ void SceneEditor::placeElement()
 	else if (editType == ET_ENTITIES)
 	{
 		if (!selectedEntity.nameBased)
-			dsq->game->createEntity(selectedEntity.index, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, BT_NORMAL, 0, 0, true);
+			dsq->game->createEntity(selectedEntity.index, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, 0, 0, true);
 		else
-			dsq->game->createEntity(selectedEntity.name, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, BT_NORMAL, 0, 0, true);
+			dsq->game->createEntity(selectedEntity.name, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, 0, 0, true);
 	}
 	else if (editType == ET_PATHS)
 	{

@@ -3844,9 +3844,9 @@ void DSQ::runGesture(const std::string &line)
 	}
 }
 
-bool DSQ::runScript(const std::string &name, const std::string &function)
+bool DSQ::runScript(const std::string &name, const std::string &function, bool ignoremissing /* = false */)
 {
-	if (!scriptInterface.runScript(name, function))
+	if (!scriptInterface.runScript(name, function, ignoremissing))
 	{
 		debugLog("Could not find script file [" + name + "]");
 	}

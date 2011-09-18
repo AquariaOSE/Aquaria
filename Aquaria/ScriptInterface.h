@@ -81,10 +81,10 @@ public:
 	void collectGarbage();
 	void shutdown();
 
-	Script *openScript(const std::string &file);
+	Script *openScript(const std::string &file, bool ignoremissing = false);
 	void closeScript(Script *script);
 
-	bool runScript(const std::string &file, const std::string &func);
+	bool runScript(const std::string &file, const std::string &func, bool ignoremissing = false);
 	bool runScriptNum(const std::string &file, const std::string &func, int num);
 
 protected:

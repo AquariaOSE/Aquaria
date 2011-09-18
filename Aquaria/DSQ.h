@@ -1367,7 +1367,7 @@ public:
 	void doLoadMenu();
 	void onExitSaveSlotMenu();
 	ScriptInterface scriptInterface;
-	bool runScript(const std::string &name, const std::string &func="");
+	bool runScript(const std::string &name, const std::string &func="", bool ignoremissing = false);
 	bool runScriptNum(const std::string &name, const std::string &func="", float num=0);
 	void collectScriptGarbage();
 
