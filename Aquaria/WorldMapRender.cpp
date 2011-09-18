@@ -1029,59 +1029,61 @@ void WorldMapRender::onUpdate(float dt)
 			internalOffset += mouseChange / scale.x;
 		}
 
-		
-		float scrollSpeed = 2.0f;
-		float amt = (400*dt)/scale.x;
-		if (isActing(ACTION_SWIMLEFT))
-		{
-			internalOffset += Vector(amt, 0);
-		}
-		if (isActing(ACTION_SWIMRIGHT))
-		{
-			internalOffset += Vector(-amt, 0);
-		}
-		if (isActing(ACTION_SWIMDOWN))
-		{
-			if (core->getShiftState())
-			{
-				scale.stop();
-				scale -= Vector(scrollSpeed*dt, scrollSpeed*dt);
-			}
-			else
-			{
-				internalOffset += Vector(0, -amt);
-			}
-		}
-		if (isActing(ACTION_SWIMUP))
-		{
-			if (core->getShiftState())
-			{
-				scale.stop();
-				scale += Vector(scrollSpeed*dt, scrollSpeed*dt);
-			}
-			else
-			{
-				internalOffset += Vector(0, amt);
-			}	
-		}
+		if(!editorActive)
+        {
+		    float scrollSpeed = 2.0f;
+		    float amt = (400*dt)/scale.x;
+		    if (isActing(ACTION_SWIMLEFT))
+		    {
+			    internalOffset += Vector(amt, 0);
+		    }
+		    if (isActing(ACTION_SWIMRIGHT))
+		    {
+			    internalOffset += Vector(-amt, 0);
+		    }
+		    if (isActing(ACTION_SWIMDOWN))
+		    {
+			    if (core->getShiftState())
+			    {
+				    scale.stop();
+				    scale -= Vector(scrollSpeed*dt, scrollSpeed*dt);
+			    }
+			    else
+			    {
+				    internalOffset += Vector(0, -amt);
+			    }
+		    }
+		    if (isActing(ACTION_SWIMUP))
+		    {
+			    if (core->getShiftState())
+			    {
+				    scale.stop();
+				    scale += Vector(scrollSpeed*dt, scrollSpeed*dt);
+			    }
+			    else
+			    {
+				    internalOffset += Vector(0, amt);
+			    }	
+		    }
 
-		if (core->joystickEnabled)
-		{
-			if (isActing(ACTION_SECONDARY))
-			{
-				if (core->joystick.position.y >= 0.6f)
-					scale.interpolateTo(scale / 1.2f, 0.1f);
-				else if (core->joystick.position.y <= -0.6f)
-					scale.interpolateTo(scale * 1.2f, 0.1f);
-			}
-			else
-			{
-				// The negative multiplier is deliberate -- it makes the
-				// map scroll as though the joystick was controlling the
-				// cursor (which is fixed in the center of the screen).
-				internalOffset += core->joystick.position * (-400*dt / scale.x);
-			}
-		}
+		    if (core->joystickEnabled)
+		    {
+			    if (isActing(ACTION_SECONDARY))
+			    {
+				    if (core->joystick.position.y >= 0.6f)
+					    scale.interpolateTo(scale / 1.2f, 0.1f);
+				    else if (core->joystick.position.y <= -0.6f)
+					    scale.interpolateTo(scale * 1.2f, 0.1f);
+			    }
+			    else
+			    {
+				    // The negative multiplier is deliberate -- it makes the
+				    // map scroll as though the joystick was controlling the
+				    // cursor (which is fixed in the center of the screen).
+				    internalOffset += core->joystick.position * (-400*dt / scale.x);
+			    }
+		    }
+        }
 
 		if (activeTile && activeTile->layer == 1)
 		{
@@ -1136,11 +1138,22 @@ void WorldMapRender::onUpdate(float dt)
 
 					if (core->getShiftState())
 					{
+                        if (core->getCtrlState())
+                            a2 *= 10.0f;
 						if (core->getKeyState(KEY_UP))
 							activeTile->scale2 += -a2;
 						if (core->getKeyState(KEY_DOWN))
 							activeTile->scale2 += a2;
 					}
+                    else if (core->getAltState())
+                    {
+                        if (core->getCtrlState())
+                            a2 *= 10.0f;
+                        if (core->getKeyState(KEY_UP))
+                            activeTile->scale += -a2;
+                        if (core->getKeyState(KEY_DOWN))
+                            activeTile->scale += a2;
+                    }
 					else
 					{
 						if (core->getCtrlState())
@@ -1159,19 +1172,23 @@ void WorldMapRender::onUpdate(float dt)
 
 					if (core->getKeyState(KEY_F2))
 					{
-						dsq->continuity.worldMap.save("data/WorldMap.txt");
+						dsq->continuity.worldMap.save();
 					}
 
 					activeQuad->position = activeTile->gridPos;
 					activeQuad->scale = Vector(0.25f*activeTile->scale2, 0.25f*activeTile->scale2);
+                    if(activeQuad->texture)
+                        activeQuad->setWidthHeight(activeQuad->texture->width*activeTile->scale, // FG: HACK force resize proper
+                                                   activeQuad->texture->height*activeTile->scale);
 				}
+                updateEditor();
 			}
 		}
 	}
 	else
 	{
 #ifdef AQUARIA_BUILD_MAPVIS
-		if (!dsq->isInCutscene() && dsq->game->avatar && activeTile)
+		if (!dsq->isInCutscene() && dsq->game->avatar && activeTile && !dsq->game->sceneEditor.isOn())
 		{
 			const float screenWidth  = core->getVirtualWidth()  * core->invGlobalScale;
 			const float screenHeight = core->getVirtualHeight() * core->invGlobalScale;
@@ -1231,11 +1248,16 @@ Vector WorldMapRender::getAvatarWorldMapPosition()
 
 Vector WorldMapRender::getWorldToTile(WorldMapTile *tile, Vector position, bool fromCenter, bool tilePos)
 {
+    const float sizew = (float)tile->q->texture->width;
+    const float halfw = sizew / 2.0f;
+    const float sizeh = (float)tile->q->texture->height;
+    const float halfh = sizeh / 2.0f;
 	Vector p;
-	p = (position/TILE_SIZE) / (256*tile->scale);
-	p *= 256*tile->scale*0.25f*tile->scale2;
+	p = Vector((position.x/TILE_SIZE) / (sizew*tile->scale), (position.y/TILE_SIZE) / (sizeh*tile->scale));
+	p.x *= sizew*tile->scale*0.25f*tile->scale2;
+    p.y *= sizeh*tile->scale*0.25f*tile->scale2;
 	if (fromCenter)
-		p -= Vector((128*tile->scale)*(0.25f*tile->scale2), (128*tile->scale)*(0.25f*tile->scale2));
+		p -= Vector((halfw*tile->scale)*(0.25f*tile->scale2), (halfh*tile->scale)*(0.25f*tile->scale2));
 	if (tilePos)
 		p += tile->gridPos;
 	return p;
@@ -1298,7 +1320,7 @@ void WorldMapRender::toggle(bool turnON)
 	if (dsq->game->miniMapRender->isRadarHide()) return;
 	if (alpha.isInterpolating()) return;
 
-	if (dsq->mod.isActive()) return;
+	if (dsq->mod.isActive() && !dsq->mod.hasWorldMap()) return;
 	
 	if (dsq->isNested()) return;
 
@@ -1489,6 +1511,18 @@ void WorldMapRender::createGemHint(const std::string &gfx)
 	}
 }
 
+void WorldMapRender::updateEditor()
+{
+    std::ostringstream os;
+    os << "EDITING... ";
+    if(activeTile)
+    {
+        os << "x=" << activeTile->gridPos.x << "; y=" << activeTile->gridPos.y << std::endl;
+        os << "scale=" << activeTile->scale << "; scale2=" << activeTile->scale2;
+    }
+    areaLabel->setText(os.str());
+}
+
 void WorldMapRender::action (int id, int state)
 {
 	if (isOn())
@@ -1505,7 +1539,7 @@ void WorldMapRender::action (int id, int state)
 
 				if (editorActive)
 				{
-					areaLabel->setText("EDITING...");
+                    updateEditor();
 				}
 			}
 		}
