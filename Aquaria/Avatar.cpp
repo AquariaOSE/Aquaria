@@ -3175,6 +3175,7 @@ void Avatar::formAbility(int ability)
 			q->scale = Vector(0,0);
 			q->scale.interpolateTo(Vector(2,2), 0.1);
 			dsq->game->addRenderObject(q, LR_ELEMENTS13);
+			q->moveToFront();
 
 			FOR_ENTITIES(i)
 			{

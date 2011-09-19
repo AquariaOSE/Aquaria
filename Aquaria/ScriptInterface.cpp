@@ -3915,6 +3915,7 @@ luaFunc(createQuad)
 	else
 		layer = (LR_PARTICLES+1) - LR_ELEMENTS1;
 	dsq->game->addRenderObject(q, LR_ELEMENTS1+(layer-1));
+	q->moveToFront();
 
 	luaReturnPtr(q);
 }
