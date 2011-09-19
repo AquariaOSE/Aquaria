@@ -2499,35 +2499,25 @@ void SceneEditor::action(int id, int state)
 	}
 	else if (editType == ET_ELEMENTS && state && id >= ACTION_BGLAYER1 && id < ACTION_BGLAYEREND)
 	{
-		/*
-		std::string copy = action;
-		copy = copy.substr(std::string("bgLayer").length(), action.length());
-		std::istringstream is(copy);
-		int v;
-		is >> v;
-		this->bgLayer = v-1;
-		*/
-
-		int v = id - ACTION_BGLAYER1;
-		this->bgLayer = v;
+		int newLayer = id - ACTION_BGLAYER1;
 
 		updateText();
 
 		if (core->getAltState())
 		{
-			dsq->game->setElementLayerVisible(bgLayer, !dsq->game->isElementLayerVisible(bgLayer));
-			//core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer)->visible = !core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer)->visible;
+			dsq->game->setElementLayerVisible(newLayer, !dsq->game->isElementLayerVisible(newLayer));
+			return; // do not switch to the layer that was just hidden
 		}
 		else if (core->getShiftState() && (editingElement || !selectedElements.empty()))
 		{
-			moveElementToLayer(editingElement, bgLayer);
-			//editingElement->bgLayer
-			//editingElement->bgLayer = this->bgLayer;
+			moveElementToLayer(editingElement, newLayer);
 		}
 		else
 		{
 			selectedElements.clear();
 		}
+
+		this->bgLayer = newLayer;
 
 	}
 	/*

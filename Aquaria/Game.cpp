@@ -6442,7 +6442,7 @@ void Game::applyState()
 	dsq->overlay->color = 0;
 
 
-	for (i = LR_ELEMENTS1; i <= LR_ELEMENTS12; i++)
+	for (i = LR_ELEMENTS1; i <= LR_ELEMENTS12; i++) // LR_ELEMENTS13 is darkness, stop before that
 	{
 		dsq->game->setElementLayerVisible(i-LR_ELEMENTS1, true);
 	}
@@ -6453,7 +6453,7 @@ void Game::applyState()
 	cameraConstrained = true;
 	// reset parallax
 	RenderObjectLayer *l = 0;
-	for (i = LR_ELEMENTS10; i <= LR_ELEMENTS12; i++)
+	for (i = LR_ELEMENTS10; i <= LR_ELEMENTS16; i++)
 	{
 		l = &dsq->renderObjectLayers[i];
 		l->followCamera = 0;
