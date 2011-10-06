@@ -1744,14 +1744,14 @@ void Entity::setAllDamageTargets(bool v)
 {
     if (v)
         clearDamageTargets(); // clear all disabled -> all allowed now
-    if (v)
+    else
     {
 	    for (int i = DT_ENEMY; i < DT_ENEMY_REALMAX; i++)
-		    setDamageTarget(DamageType(i), v);
+		    disabledDamageTypes.insert(DamageType(i));
 	    for (int i = DT_AVATAR; i < DT_AVATAR_REALMAX; i++)
-		    setDamageTarget(DamageType(i), v);
+		    disabledDamageTypes.insert(DamageType(i));
 	    for (int i = DT_AVATAR_MAX; i < DT_REALMAX; i++)
-		    setDamageTarget(DamageType(i), v);
+		    disabledDamageTypes.insert(DamageType(i));
     }
 }
 
