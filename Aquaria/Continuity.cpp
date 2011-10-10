@@ -2883,6 +2883,8 @@ void Continuity::loadFile(int slot)
 		dsq->game->sceneToLoad = startData->Attribute("scene");
 		//dsq->game->transitionToScene();
 	}
+
+    loadSongBank();
 }
 
 void Continuity::setNaijaModel(std::string model)
