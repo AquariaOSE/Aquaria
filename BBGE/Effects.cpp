@@ -23,113 +23,28 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Effects.h"
 #include "Core.h"
 
-int quality = 64;
-GLuint		blurTexture;
-GLuint emptyTexture()											// Create An Empty Texture
-{
-	GLuint txtnumber=0;											// Texture ID
-	unsigned int* data;											// Stored Data
-
-	// Create Storage Space For Texture Data (128x128x4)
-	data = (unsigned int*)new GLuint[((quality * quality)* 4 * sizeof(unsigned int))];
-	memset(data, 0, ((quality * quality)* 4 * sizeof(unsigned int)));	// Clear Storage Memory
-
-#ifdef BBGE_BUILD_OPENGL
-	glGenTextures(1, &txtnumber);								// Create 1 Texture
-	glBindTexture(GL_TEXTURE_2D, txtnumber);					// Bind The Texture
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, 4, quality, quality, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, data);						// Build Texture Using Information In data
-#endif
-
-	delete [] data;												// Release data
-
-	return txtnumber;											// Return The Texture ID
-}
-
 PostProcessingFX::PostProcessingFX()
 {
-	renderLayerStart = 1;
-	renderLayerEnd = 19;
-
-#ifdef BBGE_BUILD_OPENGL
-	format = GL_LUMINANCE;
-#endif
-	//GL_INTENSITY
-	//GL_RGB
-	//GL_LUMINANCE
 	blendType = 0;
 	layer = renderLayer = 0;
 	intensity = 0.1;
+    blurTimes = 12;
 	radialBlurColor = Vector(1,1,1);
 	for (int i = 0; i < FXT_MAX; i++)
 		enabled[i] = false;
 }
 
-void PostProcessingFX::init(FXTypes type)
+void PostProcessingFX::init()
 {
-	enabled[(int)type] = true;
-	if (type == FXT_RADIALBLUR)
-		blurTexture = emptyTexture();
 }
+
 
 void PostProcessingFX::update(float dt)
 {
 }
 
-void PostProcessingFX::setRenderLayerRange(int start, int end)
-{
-	renderLayerStart = start;
-	renderLayerEnd = end;
-}
-
 void PostProcessingFX::preRender()
 {
-	for (int i = 0; i < FXT_MAX; i++)
-	{
-		if (enabled[i])
-		{
-			
-			FXTypes type = (FXTypes)i;
-			switch(type)
-			{
-			case FXT_RADIALBLUR:
-				if (core->frameBuffer.isInited())
-				{
-				}
-				else
-				{
-#ifdef BBGE_BUILD_OPENGL
-					glViewport(0,0,quality,quality);									// Set Our Viewport (Match Texture Size;
-					glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);			// Clear The Screen And Depth Buffer
-					core->render(renderLayerStart, renderLayerEnd);							
-					glBindTexture(GL_TEXTURE_2D,blurTexture);
-					glCopyTexImage2D(GL_TEXTURE_2D, 0, format, 0, 0, quality, quality, 0);
-
-					glViewport(0, 0, core->width, core->height);
-					
-
-					/*
-					glBindTexture(GL_TEXTURE_2D,blurTexture);					// Bind To The Blur Texture
-
-					// Copy Our ViewPort To The Blur Texture (From 0,0 To 128,128... No Border)
-					glCopyTexImage2D(GL_TEXTURE_2D, 0, format, 0, 0, quality, quality, 0);
-					*/
-					//GL_INTENSITY
-					//GL_RGB
-					//GL_LUMINANCE
-
-					//glClearColor(0.0f, 0.0f, 0.5f, 0.5);						// Set The Clear Color To Medium Blue
-					//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);			// Clear The Screen And Depth Buffer
-
-#endif
-				}				
-			break;
-			}
-			
-		}
-	}
 }
 
 void PostProcessingFX::toggle(FXTypes type)
@@ -154,6 +69,9 @@ void PostProcessingFX::disable(FXTypes type)
 
 void PostProcessingFX::render()
 {
+    if(!core->frameBuffer.isEnabled())
+        return;
+
 	for (int i = 0; i < FXT_MAX; i++)
 	{
 		if (enabled[i])
@@ -164,79 +82,73 @@ void PostProcessingFX::render()
 			switch(type)
 			{
 			case FXT_RADIALBLUR:
-				/*
-				float percentX = (float)core->width/(float)quality;
-				float percentY = (float)core->height/(float)quality;
-				*/
-				/*
-				float percentX = (float)quality/(float)core->width;
-				float percentY = (float)quality/(float)core->height;
-				*/
-				float percentX = 1.0;
-				float percentY = 1.0;
 
-				/*
-				std::ostringstream os;
-				os << "p(" << percentX << ", " << percentY << ")";
-				debugLog(os.str());
-				*/
+                float windowW = core->getWindowWidth();
+                float windowH = core->getWindowHeight();
+                float textureW = core->frameBuffer.getWidth();
+                float textureH = core->frameBuffer.getHeight();
 
-				glLoadIdentity();
-				int times = 12;
+                float alpha = intensity;
+
+                float offX   = -(core->getVirtualOffX() * windowW / core->getVirtualWidth());
+                float offY   = -(core->getVirtualOffY() * windowH / core->getVirtualHeight());
+
+                float width2 = windowW / 2;
+                float height2 = windowH / 2;
+
+                float pw = float(windowW)/float(textureW);
+                float ph = float(windowH)/float(textureH);
+
+                glLoadIdentity();
+
+
+                glTranslatef(width2 + offX, height2 + offY, 0);
+
+                glEnable(GL_TEXTURE_2D);
+
+                core->frameBuffer.bindTexture();
+
+                glEnable(GL_BLEND);
+
+                if (blendType == 1)
+                    glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+                else
+                    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+
+                float percentX = pw, percentY = ph;
+
 				float inc = 0.01;
 				float spost = 0.0f;											// Starting Texture Coordinate Offset
-				float alphainc = 0.9f / times;								// Fade Speed For Alpha Blending
-				//float alpha = 0.1f;											// Starting Alpha Value
-				float alpha = intensity;
-
-				glEnable(GL_TEXTURE_2D);									// Enable 2D Texture Mapping
-				if (blendType == 1)
-					glBlendFunc(GL_SRC_ALPHA,GL_ONE);					// Set Blending Mode
-				else
-					glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);					// Set Blending Mode
-				glEnable(GL_BLEND);			// Enable Blending
-				if (core->frameBuffer.isInited())
-					core->frameBuffer.bindTexture();
-				else
-					glBindTexture(GL_TEXTURE_2D,blurTexture);					// Bind To The Blur Texture
-
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE); 
-				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-
-				alphainc = alpha / times;									// alphainc=0.2f / Times To Render Blur
+				float alphadec = alpha / blurTimes;
 
 				glBegin(GL_QUADS);											// Begin Drawing Quads
-					for (int num = 0;num < times;num++)						// Number Of Times To Render Blur
+					for (int num = 0;num < blurTimes; num++)						// Number Of Times To Render Blur
 					{
 						glColor4f(radialBlurColor.x, radialBlurColor.y, radialBlurColor.z, alpha);					// Set The Alpha Value (Starts At 0.2)
-						glTexCoord2f(0+spost,percentY-spost);						// Texture Coordinate	( 0, 1 )
-						glVertex2f(0,0);									// First Vertex		(   0,   0 )
 
-						glTexCoord2f(0+spost,0+spost);						// Texture Coordinate	( 0, 0 )
-						glVertex2f(0,core->height);									// Second Vertex	(   0, 480 )
+                        glTexCoord2d(spost, spost);
+                        glVertex3f(-width2, height2,  0.0);
 
-						glTexCoord2f(percentX-spost,0+spost);						// Texture Coordinate	( 1, 0 )
-						glVertex2f(core->width,core->height);								// Third Vertex		( 640, 480 )
+                        glTexCoord2d(percentX-spost, spost);
+                        glVertex3f( width2, height2,  0.0);
 
-						glTexCoord2f(percentX-spost,percentY-spost);						// Texture Coordinate	( 1, 1 )
-						glVertex2f(core->width,0);									// Fourth Vertex	( 640,   0 )
+                        glTexCoord2d(percentX-spost, percentY-spost);
+                        glVertex3f( width2,  -height2,  0.0);
+
+                        glTexCoord2d(spost, percentY-spost);
+                        glVertex3f(-width2,  -height2,  0.0);
 
 						spost += inc;										// Gradually Increase spost (Zooming Closer To Texture Center)
-						alpha = alpha - alphainc;							// Gradually Decrease alpha (Gradually Fading Image Out)
+						alpha -= alphadec;							// Gradually Decrease alpha (Gradually Fading Image Out)
 					}
-				glEnd();				
+				glEnd();
 
-				glDisable(GL_BLEND);
-				glBindTexture(GL_TEXTURE_2D,0);
-				glColor4f(1,1,1,1);
-				//glDisable(GL_TEXTURE_2D);
 
-				// Done Drawing Quads
-				/*
-				glDisable(GL_TEXTURE_2D);									// Disable 2D Texture Mapping
-				glDisable(GL_BLEND);										// Disable Blending
-				glBindTexture(GL_TEXTURE_2D,0);								// Unbind The Blur Texture
-				*/
+                glColor4f(1,1,1,1);
+                glBindTexture(GL_TEXTURE_2D, 0);
+                RenderObject::lastTextureApplied = 0;
+
+
 			break;
 			}
 			glPopMatrix();
