@@ -895,7 +895,7 @@ void Continuity::clearIngredientData()
 	ingredientData.clear();
 }
 
-void Continuity::loadIngredientData()
+void Continuity::loadIngredientData(const std::string &file)
 {
 	std::string line, name, gfx, type, effects;
 
@@ -916,7 +916,7 @@ void Continuity::loadIngredientData()
 	clearIngredientData();
 	recipes.clear();
 
-	std::ifstream in("data/ingredients.txt");
+	std::ifstream in(file.c_str());
 
 	bool recipes = false;
 	while (std::getline(in, line))
@@ -3218,7 +3218,21 @@ void Continuity::reset()
 	
 	foodSortType = 0;
 
-	loadIngredientData();
+	//load ingredients
+
+	ingredientDescriptions.clear();
+	ingredientData.clear();
+	recipes.clear();
+
+	if(dsq->mod.isActive())
+	{
+		//load mod ingredients
+		loadIngredientData(dsq->mod.getPath() + "data/ingredients.txt");
+	}
+
+	//load ingredients for the main game
+	if(ingredientData.empty() && recipes.empty())
+		loadIngredientData("data/ingredients.txt");
 
 	loadPetData();
 

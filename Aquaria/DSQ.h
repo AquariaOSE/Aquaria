@@ -1083,7 +1083,7 @@ public:
 
 	void applyIngredientEffects(IngredientData *data);
 
-	void loadIngredientData();
+	void loadIngredientData(const std::string &file);
 	bool hasIngredients() const { return !ingredients.empty(); }
 	IngredientDatas::size_type ingredientCount() const { return ingredients.size(); }
 	IngredientType getIngredientTypeFromName(const std::string &name) const;
