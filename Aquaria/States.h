@@ -214,7 +214,7 @@ public:
 	SkeletalSprite *editSprite;
 	Bone *editingBone;
 	int boneEdit;
-	DebugFont *text;
+	DebugFont *text, *text2;
 	int ignoreBone;
 
 	void ignoreBone0();
