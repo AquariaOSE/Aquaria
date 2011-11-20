@@ -30,7 +30,7 @@ void StringBank::load()
 
 	_load("data/stringbank.txt");
 	if (dsq->mod.isActive())
-		_load(dsq->mod.getPath() + "data/stringbank.txt");
+		_load(dsq->mod.getPath() + "stringbank.txt");
 }
 
 void StringBank::_load(const std::string &file)

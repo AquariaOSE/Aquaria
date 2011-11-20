@@ -245,7 +245,7 @@ void WorldMap::load()
 	if (!dsq->mod.isActive())
 		_load("data/worldmap.txt");
 	else
-		_load(dsq->mod.getPath() + "data/worldmap.txt");
+		_load(dsq->mod.getPath() + "worldmap.txt");
 }
 
 void WorldMap::_load(const std::string &file)
@@ -272,7 +272,7 @@ void WorldMap::save()
 	std::string fn;
 
 	if (dsq->mod.isActive())
-		fn = dsq->mod.getPath() + "data/worldmap.txt";
+		fn = dsq->mod.getPath() + "worldmap.txt";
 	else
 		fn = "data/worldmap.txt";
 
