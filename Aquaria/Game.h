@@ -501,7 +501,6 @@ public:
 
 	void checkForRebuild();
 	void createAquarian();
-	void dumpObs();
 
 	DebugButton *btnMenu;
 protected:

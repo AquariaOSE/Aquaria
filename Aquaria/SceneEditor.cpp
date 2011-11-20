@@ -707,8 +707,6 @@ void SceneEditor::init()
 
 	addAction(MakeFunctionEvent(SceneEditor, createAquarian), KEY_F, 0);
 
-	addAction(MakeFunctionEvent(SceneEditor, dumpObs), KEY_F8, 0);
-
 
 	/*
 	// OLD CRAP
@@ -3908,33 +3906,6 @@ void SceneEditor::prevEntityType()
 	{
 		prevEntityPage();
 	}
-}
-
-void SceneEditor::dumpObs()
-{
-	TileVector tv;
-	const uint32 A = 0xFF000000;
-#define COL(c) (((0x ## c)) | A)
-	const uint32 coltab[5] =
-	{
-		COL(FFFFFF),
-		COL(FFFFFF),
-		COL(000000),
-		COL(FFFFFF),
-		COL(FFFFFF),
-	};
-	unsigned char *data = new unsigned char[MAX_GRID * MAX_GRID * sizeof(uint32)];
-	uint32 *ptr = (uint32*)data;
-	for(tv.y = MAX_GRID - 1; ; --tv.y)
-	{
-		for(tv.x = 0; tv.x < MAX_GRID; ++tv.x)
-			*ptr++ = coltab[game->getGrid(tv)];
-		if(tv.y == 0)
-			break;
-	}
-	std::string outfn = dsq->getUserDataFolder() + "/griddump-" + game->sceneName + ".tga";
-	core->tgaSave(outfn.c_str(), MAX_GRID, MAX_GRID, 32, data);
-	dsq->screenMessage("Saved grid image to " + outfn);
 }
 
 
