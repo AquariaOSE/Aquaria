@@ -39,6 +39,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <Carbon/Carbon.h>
 #endif
 
+#if BBGE_BUILD_WINDOWS
+#include <shlobj.h>
+#endif
+
 #ifdef BBGE_BUILD_SDL
 	#include "SDL_syswm.h"
 	static SDL_Surface *gScreen=0;
@@ -860,6 +864,39 @@ void Core::debugLog(const std::string &s)
 #endif
 }
 
+#ifdef BBGE_BUILD_WINDOWS
+static bool checkWritable(const std::string& path, bool warn, bool critical)
+{
+	bool writeable = false;
+	std::string f = path + "/~chk_wrt.tmp";
+	FILE *fh = fopen(f.c_str(), "w");
+	if(fh)
+	{
+		writeable = fwrite("abcdef", 5, 1, fh) == 1;
+		fclose(fh);
+		unlink(f.c_str());
+	}
+	if(!writeable)
+	{
+		if(warn)
+		{
+			std::ostringstream os;
+			os << "Trying to use \"" << path << "\" as user data path, but it is not writeable.\n"
+				<< "Please make sure the game is allowed to write to that directory.\n"
+				<< "You can move the game to another location and run it there,\n"
+				<< "or try running it as administrator, that may help as well.";
+			if(critical)
+				os << "\n\nWill now exit.";
+			MessageBoxA(NULL, os.str().c_str(), "Need to write but can't!", MB_OK | MB_ICONERROR);
+		}
+		if(critical)
+			exit(1);
+	}
+	return writeable;
+}
+#endif
+
+
 const float SORT_DELAY = 10;
 Core::Core(const std::string &filesystem, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
 : ActionMapper(), StateManager(), appName(appName)
@@ -896,6 +933,40 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	mkdir(prefpath.c_str(), 0700);
 #else
 	debugLogPath = "";
+	userDataFolder = ".";
+
+	#ifdef BBGE_BUILD_WINDOWS
+	{
+		if(checkWritable(userDataFolder, true, true)) // working dir?
+		{
+			puts("Using working directory as user directory.");
+		}
+		// TODO: we may want to use a user-specific path under windows as well
+		// if the code below gets actually used, pass 2x false to checkWritable() above.
+		// not sure about this right now -- FG
+		/*else
+		{
+			puts("Working directory is not writeable...");
+			char pathbuf[MAX_PATH];
+			if(SHGetSpecialFolderPathA(NULL, &pathbuf[0], CSIDL_APPDATA, 0))
+			{
+				userDataFolder = pathbuf;
+				userDataFolder += '/';
+				userDataFolder += userDataSubFolder;
+				for(uint32 i = 0; i < userDataFolder.length(); ++i)
+					if(userDataFolder[i] == '\\')
+						userDataFolder[i] = '/';
+				debugLogPath = userDataFolder + "/";
+				puts(("Using \"" + userDataFolder + "\" as user directory.").c_str());
+				CreateDirectoryA(userDataFolder.c_str(), NULL);
+				checkWritable(userDataFolder, true, true);
+			}
+			else
+				puts("Failed to retrieve appdata path, using working dir."); // too bad, but can't do anything about it
+		}
+		*/
+	}
+	#endif
 #endif
 
 	_logOut.open((debugLogPath + "debug.log").c_str());
@@ -4248,7 +4319,10 @@ std::string Core::getInternalTextureName(const std::string &name)
 	return n;
 }
 
-#define ISPATHROOT(x) (x[0] == '.' || x[0] == '/')
+// This handles unix/win32 relative paths: ./rel/path
+// Unix abs paths: /home/user/...
+// Win32 abs paths: C:/Stuff/.. and also C:\Stuff\...
+#define ISPATHROOT(x) (x[0] == '.' || x[0] == '/' || ((x).length() > 1 && x[1] == ':'))
 
 std::string Core::getTextureLoadName(const std::string &texture)
 {

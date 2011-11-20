@@ -184,14 +184,13 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 		Linux_CopyTree(core->adjustFilenameCase("_mods").c_str(), core->adjustFilenameCase(fn).c_str());
 #endif
 
-
-#if defined(BBGE_BUILD_UNIX)
 	std::string p1 = getUserDataFolder();
 	std::string p2 = getUserDataFolder() + "/save";
+#if defined(BBGE_BUILD_UNIX)
 	mkdir(p1.c_str(), S_IRWXU);
 	mkdir(p2.c_str(), S_IRWXU);
-	
-	//debugLogPath = ;
+#elif defined(BBGE_BUILD_WINDOWS)
+	CreateDirectoryA(p2.c_str(), NULL);
 #endif
 	
 	difficulty = DIFF_NORMAL;
@@ -4918,11 +4917,7 @@ void DSQ::clearEntities()
 
 std::string DSQ::getSaveDirectory()
 {
-#if defined(BBGE_BUILD_WINDOWS)
-	return "save";
-#elif defined(BBGE_BUILD_UNIX)
 	return getUserDataFolder() + "/save";
-#endif
 }
 
 void DSQ::spawnParticleEffect(const std::string &name, Vector position, float rotz, float t, int layer, float follow)

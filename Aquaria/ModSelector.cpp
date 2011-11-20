@@ -56,11 +56,7 @@ void ModSelector::refreshTexture()
 	if (e)
 	{
 		std::string texToLoad = e->path + "/" + "mod-icon";
-	#if defined(BBGE_BUILD_UNIX)
-		texToLoad = dsq->getUserDataFolder() + "/_mods/" + texToLoad;
-	#else
-		texToLoad = "./_mods/" + texToLoad;
-	#endif
+		texToLoad = dsq->mod.getBaseModPath() + texToLoad;
 		setTexture(texToLoad);
 		width = 256;
 		height = 256;
