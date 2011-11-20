@@ -24,10 +24,18 @@ StringBank::StringBank()
 {
 }
 
-void StringBank::load(const std::string &file)
+void StringBank::load()
 {
-    //debugLog("StringBank::load("+file+")");
 	stringMap.clear();
+
+	_load("data/stringbank.txt");
+	if (dsq->mod.isActive())
+		_load(dsq->mod.getPath() + "data/stringbank.txt");
+}
+
+void StringBank::_load(const std::string &file)
+{
+	//debugLog("StringBank::load("+file+")");
 
 	std::ifstream in(file.c_str());
 
