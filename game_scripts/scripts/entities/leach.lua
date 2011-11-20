@@ -114,7 +114,7 @@ function enterState(me)
 	elseif entity_getState(me)==STATE_ATTACHED then
 		entity_setEntityType(me, ET_NEUTRAL)
 		entity_setMaxSpeed(me, 0)
-		avatar_incrLeaches()
+		entity_incrTargetLeaches(me)
 		entity_sound(me, "Leach")
 		v.attachBone = entity_getNearestBoneToPosition(entity_getTarget(me), entity_getPosition(me))
 		--[[
@@ -132,7 +132,7 @@ end
 function exitState(me)
 	if entity_getState(me)==STATE_ATTACHED then
 --		entity_setState(STATE_IDLE)
-		avatar_decrLeaches()
+		entity_decrTargetLeaches(me)
 	elseif entity_isState(me, STATE_FLYOFF) then
 		entity_setState(me, STATE_IDLE)
 	end

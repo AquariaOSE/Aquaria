@@ -46,6 +46,7 @@ function v.commonInit(me)
 	entity_setActivationType(me, AT_NONE)
 	entity_setUpdateCull(me, 1024)
 	entity_alpha(me, 0)
+	entity_setAllDamageTargets(me, false)
 end
 
 function update(me, dt)

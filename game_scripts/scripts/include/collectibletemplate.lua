@@ -43,7 +43,7 @@ function v.commonInit(me, gfx, flag, cst)
 		v.back = true
 	end
 	
-	v.isCostume = cst
+	v.isCostume = cst or false
 end
 
 function v.commonUpdate(me, dt)
