@@ -28,6 +28,7 @@ v.savedOrb = false
 function init(me)
 	setupEntity(me, "OrbHolder", -2)
 	entity_setActivationType(me, AT_NONE)	
+	entity_setAllDamageTargets(me, false)
 end
 
 function update(me, dt)

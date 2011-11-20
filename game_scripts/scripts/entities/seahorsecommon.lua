@@ -566,13 +566,13 @@ function exitState(me)
 end
 
 function shiftWorlds(me, old, new)
-    if v.riding then
-        if new == WT_SPIRIT then
-            entity_setRiding(v.n, 0)
-            cam_toEntity(v.n)
-        elseif new == WT_NORMAL then
-            entity_setRiding(v.n, me)
-            cam_toEntity(me)
-        end
-    end
+	if v.riding then
+		if new == WT_SPIRIT then
+			entity_setRiding(v.n, 0)
+			cam_toEntity(v.n)
+		elseif new == WT_NORMAL then
+			entity_setRiding(v.n, me)
+			cam_toEntity(me)
+		end
+	end
 end

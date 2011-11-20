@@ -517,10 +517,10 @@ void SongIcon::onUpdate(float dt)
 				rippleTimer = 0.5f - (note/7.0f)*0.4f;
 
 				if (core->afterEffectManager)
-                {
+				{
 					core->afterEffectManager->addEffect(new ShockEffect(position - Vector(400, 300) + Vector(core->width/2, core->height/2),
-                        core->screenCenter,0.009f,0.015f,18,0.2f, 0.9f + (note*0.08f) ));
-                }
+					core->screenCenter,0.009f,0.015f,18,0.2f, 0.9f + (note*0.08f) ));
+				}
 			}
 		}
 	}
@@ -4557,7 +4557,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	pullTarget = 0;
 	revertTimer = 0;
 	currentSongIdx = -1;
-    leaches = 0;
+	leaches = 0;
 
 
 	debugLog("Avatar vars->");

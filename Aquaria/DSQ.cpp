@@ -1241,9 +1241,9 @@ This build is not yet final, and as such there are a couple things lacking. They
 	dsq->darkLayer.toggle(0);
 	debugLog("done");
 
-    debugLog("post FX init");
-    dsq->postProcessingFx.init();
-    debugLog("done");
+	debugLog("post FX init");
+	dsq->postProcessingFx.init();
+	debugLog("done");
 
 
 #ifdef AQUARIA_BUILD_CONSOLE

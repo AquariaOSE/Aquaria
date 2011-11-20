@@ -6983,10 +6983,8 @@ void Game::applyState()
 
 	core->sort();
 
-	if (dsq->mod.isActive())
-		dsq->runScript(dsq->mod.getPath() + "scripts/premap_" + sceneName + ".lua", "init", true);
-	else
-		dsq->runScript("scripts/maps/premap_"+sceneName+".lua", "init", true);
+
+	dsq->runScript("scripts/maps/premap_"+sceneName+".lua", "init", true);
 
 	std::string musicToPlay = this->musicToPlay;
 	if (!overrideMusic.empty())
@@ -7078,10 +7076,7 @@ void Game::applyState()
 	dsq->subtitlePlayer.show(0.25);
 
 	if (verbose) debugLog("loading map init script");
-	if (dsq->mod.isActive())
-		dsq->runScript(dsq->mod.getPath() + "scripts/map_" + sceneName + ".lua", "init", true);
-	else
-		dsq->runScript("scripts/maps/map_"+sceneName+".lua", "init", true);
+	dsq->runScript("scripts/maps/map_"+sceneName+".lua", "init", true);
 
 	if (!dsq->doScreenTrans && (dsq->overlay->alpha != 0 && !dsq->overlay->alpha.isInterpolating()))
 	{

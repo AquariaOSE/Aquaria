@@ -2429,15 +2429,19 @@ void SceneEditor::moveElementToLayer(Element *e, int bgLayer)
 		{
 			Element *e = selectedElements[i];
 			core->removeRenderObject(e, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-			core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
+			dsq->removeElement(e);
 			e->bgLayer = bgLayer;
+			dsq->addElement(e);
+			core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
 		}
 	}
 	else if (e)
 	{
 		core->removeRenderObject(e, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-		core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
+		dsq->removeElement(e);
 		e->bgLayer = bgLayer;
+		dsq->addElement(e);
+		core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
 	}
 }
 
@@ -2998,8 +3002,8 @@ void SceneEditor::doPrevElement()
 	if (curElement < 0)
 		curElement = dsq->game->elementTemplates.size()-1;
 
-    if(curElement < 0)
-        return;
+	if (curElement < 0)
+		return;
 
 	if (dsq->game->elementTemplates[curElement].idx < 1024)
 	{

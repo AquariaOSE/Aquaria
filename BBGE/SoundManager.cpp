@@ -326,15 +326,15 @@ SoundManager::SoundManager(const std::string &defaultDevice)
     }
 
 	debugLog("init");
-    result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0, defaultDevice);    /* Replace with whatever channel count and flags you use! */
+    result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0);    /* Replace with whatever channel count and flags you use! */
     if (result == FMOD_ERR_OUTPUT_CREATEBUFFER)         /* Ok, the speaker mode selected isn't supported by this soundcard.  Switch it back to stereo... */
     {
 		debugLog("err_output_createbuffer, speaker mode");
 		result = SoundCore::system->setSpeakerMode(FMOD_SPEAKERMODE_STEREO);
         if (checkError()) goto get_out;
-
+        
 		debugLog("init 2");
-        result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0, defaultDevice); /* Replace with whatever channel count and flags you use! */
+        result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0); /* Replace with whatever channel count and flags you use! */
 		if (checkError()) goto get_out;
     }
 

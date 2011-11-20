@@ -66,6 +66,17 @@ void initInputCodeMap()
 	inputCodeMap["KEY_9"] = KEY_9;
 	inputCodeMap["KEY_0"] = KEY_0;
 
+	inputCodeMap["KEY_NUMPAD1"] = KEY_NUMPAD1;
+	inputCodeMap["KEY_NUMPAD2"] = KEY_NUMPAD2;
+	inputCodeMap["KEY_NUMPAD3"] = KEY_NUMPAD3;
+	inputCodeMap["KEY_NUMPAD4"] = KEY_NUMPAD4;
+	inputCodeMap["KEY_NUMPAD5"] = KEY_NUMPAD5;
+	inputCodeMap["KEY_NUMPAD6"] = KEY_NUMPAD6;
+	inputCodeMap["KEY_NUMPAD7"] = KEY_NUMPAD7;
+	inputCodeMap["KEY_NUMPAD8"] = KEY_NUMPAD8;
+	inputCodeMap["KEY_NUMPAD9"] = KEY_NUMPAD9;
+	inputCodeMap["KEY_NUMPAD0"] = KEY_NUMPAD0;
+
 	inputCodeMap["KEY_F1"] = KEY_F1;
 	inputCodeMap["KEY_F2"] = KEY_F2;
 	inputCodeMap["KEY_F3"] = KEY_F3;

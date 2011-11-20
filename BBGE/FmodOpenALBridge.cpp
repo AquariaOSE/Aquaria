@@ -980,7 +980,7 @@ class OpenALSystem
 public:
     OpenALSystem();
     ~OpenALSystem();
-    FMOD_RESULT init(int maxchannels, const FMOD_INITFLAGS flags, const void *extradriverdata, std::string defaultDevice);
+    FMOD_RESULT init(int maxchannels, const FMOD_INITFLAGS flags, const void *extradriverdata);
     FMOD_RESULT update();
     FMOD_RESULT release();
     FMOD_RESULT getVersion(unsigned int *version);
@@ -1130,25 +1130,12 @@ FMOD_RESULT OpenALSystem::getVersion(unsigned int *version)
     return FMOD_OK;
 }
 
-ALBRIDGE(System,init,(int maxchannels, FMOD_INITFLAGS flags, void *extradriverdata, std::string defaultDevice),(maxchannels,flags,extradriverdata, defaultDevice))
-FMOD_RESULT OpenALSystem::init(int maxchannels, const FMOD_INITFLAGS flags, const void *extradriverdata, std::string defaultDevice)
+ALBRIDGE(System,init,(int maxchannels, FMOD_INITFLAGS flags, void *extradriverdata),(maxchannels,flags,extradriverdata))
+FMOD_RESULT OpenALSystem::init(int maxchannels, const FMOD_INITFLAGS flags, const void *extradriverdata)
 {
-	ALCdevice *dev = NULL;
-
-	if (!defaultDevice.empty())
-	{
-		dev = alcOpenDevice(defaultDevice.c_str());  // Try to use device specified in user config
-	}
-
-	if (!dev)
-	{
-		dev = alcOpenDevice(NULL); // Fall back to system default device
-	}
-
+    ALCdevice *dev = alcOpenDevice(NULL);
     if (!dev)
-	{
         return FMOD_ERR_INTERNAL;
-	}
 
     // OpenAL doesn't provide a way to request sources that can be either
     // mono or stereo, so we need to request both separately (thus allocating

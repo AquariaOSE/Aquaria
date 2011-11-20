@@ -34,7 +34,7 @@ class PostProcessingFX
 {
 public:
 	PostProcessingFX();
-    void init();
+	void init();
 	void update(float dt);
 	void preRender();
 	void render();
@@ -45,9 +45,9 @@ public:
 
 	// blur
 	Vector radialBlurColor;
-    int blurTimes;
+	int blurTimes;
 
-    /// misc
+	/// misc
 	int renderLayer;
 	int layer;
 	float intensity;

@@ -90,6 +90,8 @@ function v.commonInit(me, id)
 	entity_setState(me, STATE_IDLE)
 	
 	entity_setEntityLayer(me, -1)
+    
+	entity_setAllDamageTargets(me, false)
 end
 
 function postInit(me)

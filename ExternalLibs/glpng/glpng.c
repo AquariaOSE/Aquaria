@@ -30,7 +30,7 @@
 #include "gl.h"
 #include <stdlib.h>
 #include <math.h>
-#include "png/png.h"
+#include <png.h>
 
 /* Used to decide if GL/gl.h supports the paletted extension */
 #ifdef GL_COLOR_INDEX1_EXT
@@ -114,8 +114,6 @@ static void Resize(int components, const png_bytep d1, int w1, int h1, png_bytep
 	}
 }
 
-#ifdef SUPPORTS_PALETTE_EXT
-#ifdef _WIN32
 static int ExtSupported(const char *x) {
 	static const GLubyte *ext = NULL;
 	const char *c;
@@ -132,8 +130,6 @@ static int ExtSupported(const char *x) {
 
 	return 0;
 }
-#endif
-#endif
 
 #define GET(o) ((int)*(data + (o)))
 
@@ -281,7 +277,11 @@ int APIENTRY pngLoadRawF(FILE *fp, pngRawInfo *pinfo) {
 	endinfo = png_create_info_struct(png);
 
 	// DH: added following lines
+#ifdef LIBPNG_NEW_API
+	if (setjmp(png_jmpbuf(png)))
+#else
 	if (setjmp(png->jmpbuf))
+#endif
 	{
 		png_destroy_read_struct(&png, &info, &endinfo);
 		return 0;
@@ -385,7 +385,11 @@ int APIENTRY pngLoadF(FILE *fp, int mipmap, int trans, pngInfo *pinfo) {
 	endinfo = png_create_info_struct(png);
 
 	// DH: added following lines
+#ifdef LIBPNG_NEW_API
+	if (setjmp(png_jmpbuf(png)))
+#else
 	if (setjmp(png->jmpbuf))
+#endif
 	{
 		png_destroy_read_struct(&png, &info, &endinfo);
 		return 0;
@@ -567,7 +571,7 @@ int APIENTRY pngLoadF(FILE *fp, int mipmap, int trans, pngInfo *pinfo) {
 			#define ALPHA *q
 
 			switch (trans) {
-				case PNG_CALLBACK:
+				case PNG_CALLBACKT:
 					FORSTART
 						ALPHA = AlphaCallback((unsigned char) r, (unsigned char) g, (unsigned char) b);
 					FOREND
@@ -623,14 +627,11 @@ int APIENTRY pngLoadF(FILE *fp, int mipmap, int trans, pngInfo *pinfo) {
 					FOREND
 					break;
 
-//HACK: disabling this for now
-/*
 				case PNG_BLEND7:
 					FORSTART
 						a = r*r+g*g+b*b;
-						if (a > 255*255) ALPHA = 255; else ALPHA = (int) (sqrt(float(a)));
+						if (a > 255*255) ALPHA = 255; else ALPHA = (int) sqrt(a);
 					FOREND
-*/
 					break;
 			}
 

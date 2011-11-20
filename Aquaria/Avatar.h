@@ -354,7 +354,7 @@ public:
 	
 	void revert();
 
-    int leaches;
+	int leaches;
 	
 protected:
 	void setSongIconPositions();

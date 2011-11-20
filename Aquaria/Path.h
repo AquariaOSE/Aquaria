@@ -80,7 +80,7 @@ public:
 	void songNoteDone(int note, float len);
 	bool hasScript();
 	std::string name; // full node string
-    std::string label; // first part only (the actual node name)
+	std::string label; // first part only (the actual node name)
 	std::vector<PathNode>nodes;
 	void removeNode(int idx);
 	void addNode(int idx);

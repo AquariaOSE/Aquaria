@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AutoMap.h"
 #include "GridRender.h"
 
-#include "tinyxml.h"
+#include "../ExternalLibs/tinyxml.h"
 
 #define MAX_EATS			8
 
@@ -1982,14 +1982,14 @@ void Continuity::applyWorldEffects(WorldType type, bool transition, bool affectM
 	if (type == WT_SPIRIT)
 	{
 
-        if(dsq->user.video.blur)
-        {
-		    core->postProcessingFx.blendType = 1;
-		    core->postProcessingFx.intensity = 0.2f;
-		    core->postProcessingFx.layer = LR_AFTER_EFFECTS;//LR_AFTER_EFFECTS;
-		    core->postProcessingFx.renderLayer = LR_AFTER_EFFECTS;
-		    core->postProcessingFx.enable(FXT_RADIALBLUR);
-        }
+		if(dsq->user.video.blur)
+		{
+			core->postProcessingFx.blendType = 1;
+			core->postProcessingFx.intensity = 0.2f;
+			core->postProcessingFx.layer = LR_AFTER_EFFECTS;//LR_AFTER_EFFECTS;
+			core->postProcessingFx.renderLayer = LR_AFTER_EFFECTS;
+			core->postProcessingFx.enable(FXT_RADIALBLUR);
+		}
 
 		dsq->game->avatar->canWarp = false;
 
@@ -2886,7 +2886,7 @@ void Continuity::loadFile(int slot)
 		//dsq->game->transitionToScene();
 	}
 
-    loadSongBank();
+	loadSongBank();
 }
 
 void Continuity::setNaijaModel(std::string model)
@@ -3207,12 +3207,12 @@ void Continuity::reset()
 
 	loadTreasureData();
 
-	stringBank.load();
+	stringBank.load("data/stringbank.txt");
 
 	gems.clear();
 	beacons.clear();
 
-	worldMap.load();
+	worldMap.load("data/worldmap.txt");
 
 	ingredients.clear();
 	
@@ -3227,7 +3227,7 @@ void Continuity::reset()
 	if(dsq->mod.isActive())
 	{
 		//load mod ingredients
-		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
+		loadIngredientData(dsq->mod.getPath() + "data/ingredients.txt");
 	}
 
 	//load ingredients for the main game

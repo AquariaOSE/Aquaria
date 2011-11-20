@@ -28,7 +28,7 @@ PostProcessingFX::PostProcessingFX()
 	blendType = 0;
 	layer = renderLayer = 0;
 	intensity = 0.1;
-    blurTimes = 12;
+	blurTimes = 12;
 	radialBlurColor = Vector(1,1,1);
 	for (int i = 0; i < FXT_MAX; i++)
 		enabled[i] = false;
@@ -69,8 +69,8 @@ void PostProcessingFX::disable(FXTypes type)
 
 void PostProcessingFX::render()
 {
-    if(!core->frameBuffer.isEnabled())
-        return;
+	if(!core->frameBuffer.isEnabled())
+		return;
 
 	for (int i = 0; i < FXT_MAX; i++)
 	{
@@ -83,39 +83,39 @@ void PostProcessingFX::render()
 			{
 			case FXT_RADIALBLUR:
 
-                float windowW = core->getWindowWidth();
-                float windowH = core->getWindowHeight();
-                float textureW = core->frameBuffer.getWidth();
-                float textureH = core->frameBuffer.getHeight();
+				float windowW = core->getWindowWidth();
+				float windowH = core->getWindowHeight();
+				float textureW = core->frameBuffer.getWidth();
+				float textureH = core->frameBuffer.getHeight();
 
-                float alpha = intensity;
+				float alpha = intensity;
 
-                float offX   = -(core->getVirtualOffX() * windowW / core->getVirtualWidth());
-                float offY   = -(core->getVirtualOffY() * windowH / core->getVirtualHeight());
+				float offX   = -(core->getVirtualOffX() * windowW / core->getVirtualWidth());
+				float offY   = -(core->getVirtualOffY() * windowH / core->getVirtualHeight());
 
-                float width2 = windowW / 2;
-                float height2 = windowH / 2;
+				float width2 = windowW / 2;
+				float height2 = windowH / 2;
 
-                float pw = float(windowW)/float(textureW);
-                float ph = float(windowH)/float(textureH);
+				float pw = float(windowW)/float(textureW);
+				float ph = float(windowH)/float(textureH);
 
-                glLoadIdentity();
+				glLoadIdentity();
 
 
-                glTranslatef(width2 + offX, height2 + offY, 0);
+				glTranslatef(width2 + offX, height2 + offY, 0);
 
-                glEnable(GL_TEXTURE_2D);
+				glEnable(GL_TEXTURE_2D);
 
-                core->frameBuffer.bindTexture();
+				core->frameBuffer.bindTexture();
 
-                glEnable(GL_BLEND);
+				glEnable(GL_BLEND);
 
-                if (blendType == 1)
-                    glBlendFunc(GL_SRC_ALPHA,GL_ONE);
-                else
-                    glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
+				if (blendType == 1)
+					glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+				else
+					glBlendFunc(GL_SRC_ALPHA,GL_ONE_MINUS_SRC_ALPHA);
 
-                float percentX = pw, percentY = ph;
+				float percentX = pw, percentY = ph;
 
 				float inc = 0.01;
 				float spost = 0.0f;											// Starting Texture Coordinate Offset
@@ -126,17 +126,17 @@ void PostProcessingFX::render()
 					{
 						glColor4f(radialBlurColor.x, radialBlurColor.y, radialBlurColor.z, alpha);					// Set The Alpha Value (Starts At 0.2)
 
-                        glTexCoord2d(spost, spost);
-                        glVertex3f(-width2, height2,  0.0);
+						glTexCoord2d(spost, spost);
+						glVertex3f(-width2, height2,  0.0);
 
-                        glTexCoord2d(percentX-spost, spost);
-                        glVertex3f( width2, height2,  0.0);
+						glTexCoord2d(percentX-spost, spost);
+						glVertex3f( width2, height2,  0.0);
 
-                        glTexCoord2d(percentX-spost, percentY-spost);
-                        glVertex3f( width2,  -height2,  0.0);
+						glTexCoord2d(percentX-spost, percentY-spost);
+						glVertex3f( width2,  -height2,  0.0);
 
-                        glTexCoord2d(spost, percentY-spost);
-                        glVertex3f(-width2,  -height2,  0.0);
+						glTexCoord2d(spost, percentY-spost);
+						glVertex3f(-width2,  -height2,  0.0);
 
 						spost += inc;										// Gradually Increase spost (Zooming Closer To Texture Center)
 						alpha -= alphadec;							// Gradually Decrease alpha (Gradually Fading Image Out)
@@ -144,9 +144,9 @@ void PostProcessingFX::render()
 				glEnd();
 
 
-                glColor4f(1,1,1,1);
-                glBindTexture(GL_TEXTURE_2D, 0);
-                RenderObject::lastTextureApplied = 0;
+				glColor4f(1,1,1,1);
+				glBindTexture(GL_TEXTURE_2D, 0);
+				RenderObject::lastTextureApplied = 0;
 
 
 			break;

@@ -35,6 +35,7 @@ function v.commonInit(me, tex, snd, sz, flipDir)
 	setupEntity(me, tex, -2)
 	entity_scale(me, sz, sz)
 	entity_setActivationType(me, AT_NONE)
+	entity_setAllDamageTargets(me, false)
 	entity_setFillGrid(me, true)
 	v.sound = snd
 	loadSound(v.sound)

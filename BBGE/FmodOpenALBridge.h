@@ -158,7 +158,7 @@ namespace FMOD
         FMOD_RESULT getDriverCaps(int id, FMOD_CAPS *caps, int *minfrequency, int *maxfrequency, FMOD_SPEAKERMODE *controlpanelspeakermode);
         FMOD_RESULT getMasterChannelGroup(ChannelGroup **channelgroup);
         FMOD_RESULT getVersion(unsigned int *version);
-        FMOD_RESULT init(int maxchannels, FMOD_INITFLAGS flags, void *extradriverdata, std::string defaultDevice);
+        FMOD_RESULT init(int maxchannels, FMOD_INITFLAGS flags, void *extradriverdata);
         FMOD_RESULT playSound(FMOD_CHANNELINDEX channelid, Sound *sound, bool paused, Channel **channel);
         FMOD_RESULT setDSPBufferSize(unsigned int bufferlength, int numbuffers);
         FMOD_RESULT setFileSystem(FMOD_FILE_OPENCALLBACK useropen, FMOD_FILE_CLOSECALLBACK userclose, FMOD_FILE_READCALLBACK userread, FMOD_FILE_SEEKCALLBACK userseek, int blockalign);

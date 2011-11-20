@@ -1723,10 +1723,10 @@ void Entity::clearDamageTargets()
 
 void Entity::setDamageTarget(DamageType dt, bool v)
 {
-    if (v)
-	    disabledDamageTypes.erase(dt);
-    else
-        disabledDamageTypes.insert(dt);
+	if (v)
+		disabledDamageTypes.erase(dt);
+	else
+		disabledDamageTypes.insert(dt);
 }
 
 void Entity::setEatType(EatType et, const std::string &file)
@@ -1742,17 +1742,17 @@ void Entity::setEatType(EatType et, const std::string &file)
 
 void Entity::setAllDamageTargets(bool v)
 {
-    if (v)
-        clearDamageTargets(); // clear all disabled -> all allowed now
-    else
-    {
-	    for (int i = DT_ENEMY; i < DT_ENEMY_REALMAX; i++)
-		    disabledDamageTypes.insert(DamageType(i));
-	    for (int i = DT_AVATAR; i < DT_AVATAR_REALMAX; i++)
-		    disabledDamageTypes.insert(DamageType(i));
-	    for (int i = DT_AVATAR_MAX; i < DT_REALMAX; i++)
-		    disabledDamageTypes.insert(DamageType(i));
-    }
+	if (v)
+		clearDamageTargets(); // clear all disabled -> all allowed now
+	else
+	{
+		for (int i = DT_ENEMY; i < DT_ENEMY_REALMAX; i++)
+			disabledDamageTypes.insert(DamageType(i));
+		for (int i = DT_AVATAR; i < DT_AVATAR_REALMAX; i++)
+			disabledDamageTypes.insert(DamageType(i));
+		for (int i = DT_AVATAR_MAX; i < DT_REALMAX; i++)
+			disabledDamageTypes.insert(DamageType(i));
+	}
 }
 
 bool Entity::isDamageTarget(DamageType dt)

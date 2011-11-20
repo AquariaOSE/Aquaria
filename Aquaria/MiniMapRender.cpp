@@ -243,7 +243,7 @@ void MiniMapRender::onUpdate(float dt)
 	RenderObject::onUpdate(dt);	
 
 	position.x = core->getVirtualWidth() - core->getVirtualOffX() - getMiniMapWidth()/2;
-	position.y = core->getVirtualHeight() - getMiniMapHeight()/2;
+	position.y = 600 - getMiniMapHeight()/2;
 	position.z = 2.9;
 
 	waterSin += dt * (bitSizeLookupPeriod / (2*PI));
@@ -359,7 +359,7 @@ void MiniMapRender::onUpdate(float dt)
 						}
 					}
 
-					if (!btn && !radarHide && (!dsq->mod.isActive() || dsq->mod.hasWorldMap()))
+					if (!btn && !dsq->mod.isActive() && !radarHide)
 					{
 						if (dsq->game->worldMapRender->isOn())
 						{

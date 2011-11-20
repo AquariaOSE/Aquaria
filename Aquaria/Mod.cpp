@@ -58,17 +58,11 @@ void Mod::clear()
 	active = false;
 	doRecache = 0;
 	debugMenu = false;
-    hasMap = false;
 }
 
 bool Mod::isDebugMenu()
 {
 	return debugMenu;
-}
-
-bool Mod::hasWorldMap()
-{
-    return hasMap;
 }
 
 void Mod::loadModXML(TiXmlDocument *d, std::string modName)
@@ -118,12 +112,6 @@ void Mod::load(const std::string &p)
 			if (props->Attribute("debugMenu")) {
 				props->Attribute("debugMenu", &debugMenu);
 			}
-
-            if (props->Attribute("hasWorldMap")) {
-                int t;
-                props->Attribute("hasWorldMap", &t);
-                hasMap = t;
-            }
 		}
 	}
 
