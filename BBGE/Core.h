@@ -1310,6 +1310,9 @@ public:
 	void pollEvents();
 
 	CoreSettings settings;
+
+	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
+
 protected:
 
 	std::string fpsDebugString;
@@ -1397,7 +1400,6 @@ protected:
 
 	
 	int tgaSaveSeries(char	*filename,  short int width, short int height, unsigned char pixelDepth, unsigned char *imageData);
-	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}
 };

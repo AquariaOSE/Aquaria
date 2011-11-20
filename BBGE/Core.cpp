@@ -4777,6 +4777,7 @@ int Core::tgaSave(	const char	*filename,
 // open file and check for errors
 	file = fopen(adjustFilenameCase(filename).c_str(), "wb");
 	if (file == NULL) {
+		delete [] imageData;
 		return (int)false;
 	}
 
@@ -4802,6 +4803,7 @@ int Core::tgaSave(	const char	*filename,
 		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1)
 	{
 		fclose(file);
+		delete [] imageData;
 		return (int)false;
 	}
 
@@ -4818,10 +4820,12 @@ int Core::tgaSave(	const char	*filename,
 			width * height * mode, file) != width * height * mode)
 	{
 		fclose(file);
+		delete [] imageData;
 		return (int)false;
 	}
 
 	fclose(file);
+	delete [] imageData;
 
 	return (int)true;
 }
