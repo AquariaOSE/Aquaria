@@ -44,15 +44,14 @@ Bone *lastSelectedBone = 0;
 void AnimationEditor::constrainMouse()
 {
 	Vector mp=core->mouse.position;
-	if (mp.x < 200)	mp.x = 200;
-	if (mp.x > 600)	mp.x = 600;
-	if (mp.y < 100)	mp.y = 100;
-	if (mp.y > 500)	mp.y = 500;
-	core->setMousePosition(mp);
+	bool doit = false;
+	if (mp.x < 200)	{ mp.x = 200; doit = true; }
+	if (mp.x > 600)	{ mp.x = 600; doit = true; }
+	if (mp.y < 100)	{ mp.y = 100; doit = true; }
+	if (mp.y > 500)	{ mp.y = 500; doit = true; }
 
-	std::ostringstream os;
-	os << "mp(" << mp.x << ", " << mp.y << ")";
-	debugLog(os.str());
+	if(doit)
+		core->setMousePosition(mp);
 }
 
 KeyframeWidget::KeyframeWidget(int key) : Quad()
@@ -407,6 +406,11 @@ void AnimationEditor::applyState()
 	text->setFontSize(6);
 	addRenderObject(text, LR_HUD);
 
+	text2 = new DebugFont();
+	text2->position = Vector(200,510);
+	text2->setFontSize(6);
+	addRenderObject(text2, LR_HUD);
+
 	editSprite->setSelectedBone(0);
 
 	dsq->overlay->alpha.interpolateTo(0, 0.5);
@@ -656,12 +660,23 @@ void AnimationEditor::update(float dt)
 		os << " keyTime: " << k->t;
 	}
 
+	Vector ebdata;
+
 	if (editingBone)
 	{
 		os << " bone: " << editingBone->name;
-
+		ebdata.x = editingBone->position.x;
+		ebdata.y = editingBone->position.y;
+		ebdata.z = editingBone->rotation.z;
 	}
 	text->setText(os.str());
+
+	char t2buf[256];
+	sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f, idx: %d", ebdata.x, ebdata.y,
+		ebdata.z, editSprite->getSelectedBoneIdx());
+	text2->setText(t2buf);
+
+
 
 	if (core->mouse.buttons.middle)
 	{
@@ -737,7 +752,7 @@ void AnimationEditor::update(float dt)
 	}
 	if (editingBone && boneEdit == 1)
 	{
-		editingBone->position = core->mouse.position - editSprite->position + cursorOffset + core->getVirtualOffX();
+		editingBone->position = core->mouse.position - editSprite->position + cursorOffset;
 		constrainMouse();
 	}
 	if (editingBone && boneEdit == 2)
