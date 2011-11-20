@@ -258,7 +258,7 @@ float sqr(float x)
 }
 
 int randAngle360();
-Vector randVector(int magnitude);
+Vector randVector(float magnitude);
 std::string splitCamelCase(const std::string &input);
 std::string removeSpaces(const std::string &input);
 int randRange(int r1, int r2);
