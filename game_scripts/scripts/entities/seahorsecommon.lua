@@ -571,8 +571,17 @@ function shiftWorlds(me, old, new)
 			entity_setRiding(v.n, 0)
 			cam_toEntity(v.n)
 		elseif new == WT_NORMAL then
-			entity_setRiding(v.n, me)
-			cam_toEntity(me)
+			if entity_isEntityInRange(me, v.n, 64) then
+				entity_setRiding(v.n, me)
+				cam_toEntity(me)
+			else
+				overrideZoom(0)
+				v.riding = false
+				entity_stopAllAnimations(v.n)
+				entity_idle(v.n)
+				entity_setRiding(v.n, 0)
+				entity_setMaxSpeedLerp(me, 1, 1)
+			end
 		end
 	end
 end

@@ -631,6 +631,13 @@ function shiftWorlds(me, old, new)
 		entity_setPosition(me, x+1, y+1)
 		]]--
 	end
+
+	-- resuming the hug after spirit return is not easily possible,
+	-- as the game has additional code that repositions Li then.
+	-- so we just end the hug; this allows moving in spirit form. -- FG
+	if entity_isState(me, STATE_HUG) then
+		endHug(me)
+	end
 end
 
 function song(me, song)
