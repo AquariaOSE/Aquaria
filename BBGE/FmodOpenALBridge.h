@@ -145,6 +145,7 @@ namespace FMOD
         FMOD_RESULT setPriority(int priority);
         FMOD_RESULT stop();
         FMOD_RESULT setPaused(bool paused);
+        FMOD_RESULT setPan(float pan);
     };
 
     class System

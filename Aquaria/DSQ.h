@@ -1429,7 +1429,8 @@ public:
 	bool voiceOversEnabled;
 	int recentSaveSlot;
 
-	void playPositionalSfx(const std::string &name, const Vector &position, float freq=1.0, float fadeOut=0);
+	PlaySfx calcPositionalSfx(const Vector &position, float maxdist = 0);
+	void playPositionalSfx(const std::string &name, const Vector &position, float freq=1.0f, float fadeOut=0);
 
 	void playMenuSelectSfx();
 

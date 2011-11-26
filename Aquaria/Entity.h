@@ -273,7 +273,6 @@ public:
 
 	void popBubble();
 	void sound(const std::string &sound, float freq=1, float fadeOut=0);
-	void soundFreq(const std::string &sound, float freq=1, float fadeOut=0);
 
 	void freeze(float time);
 

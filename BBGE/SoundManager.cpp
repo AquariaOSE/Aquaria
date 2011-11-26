@@ -1147,6 +1147,13 @@ void *SoundManager::playSfx(const PlaySfx &play)
 		checkError();
 	}
 
+	channel->setPan(play.pan);
+
+	float freq = play.freq;
+	if (freq <= 0)
+		freq = 1;
+	channel->setFrequency(freq);
+
 	result = channel->setPaused(false);
 	checkError();
 

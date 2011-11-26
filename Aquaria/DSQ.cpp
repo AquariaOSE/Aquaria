@@ -2178,52 +2178,44 @@ void DSQ::playMenuSelectSfx()
 	core->sound->playSfx("MenuSelect");
 }
 
-void DSQ::playPositionalSfx(const std::string &sfx, const Vector &position, float f, float fadeOut)
+PlaySfx DSQ::calcPositionalSfx(const Vector &position, float maxdist)
 {
-	if (f == 0)
-		f = 1;
+	PlaySfx sfx;
+	sfx.vol = 0;
 	if (dsq->game && dsq->game->avatar)
 	{
 		Vector diff = position - dsq->game->avatar->position;
-		if (diff.isLength2DIn(1024))
+
+		// TODO: this might be cooler if finetuned for different aspect ratios.
+		// This value is suitable enough for widescreen in default zoom, at least -- FG
+		if (maxdist <= 0)
+			maxdist = 1024;
+
+		float dist = diff.getLength2D();
+		if (dist < maxdist)
 		{
-
-			//sound->playSfx(sfx);
-
-			int dist = diff.getLength2D();
-			// HACK: grr
-			int vol = 1.0f - int((dist*1.0f) / 2000.0f);
-			//int vol = 1;
-			//int vol = 255;
-			int pan = (diff.x)/1024.0f;
-			if (pan < -1)
-				pan = -1;
-			if (pan > 1)
-				pan = 1;
-
-
-			/*
-			std::ostringstream os;
-			os << "vol: " << vol << " pan: " << pan;
-			debugLog(os.str());
-			*/
-
-
-			void *c = sound->playSfx(sfx, vol, pan, f);
-
-			if (fadeOut != 0)
-			{
-				sound->fadeSfx(c, SFT_OUT, fadeOut);
-			}
-			/*
-			if (c && fadeOut != 0)
-			{
-				BASS_ChannelSlideAttributes(c,-1,-2,-101,fadeOut*1000);
-			}
-			*/
-
-
+			sfx.vol = 1.0f - (dist / maxdist);
+			sfx.pan = (diff.x / maxdist) * 2.0f;
+			if (sfx.pan < -1)
+				sfx.pan = -1;
+			if (sfx.pan > 1)
+				sfx.pan = 1;
 		}
+	}
+	return sfx;
+}
+
+void DSQ::playPositionalSfx(const std::string &name, const Vector &position, float f, float fadeOut)
+{
+	PlaySfx sfx = calcPositionalSfx(position);
+
+	sfx.freq = f;
+	sfx.name = name;
+
+	void *c = sound->playSfx(sfx);
+	if (fadeOut != 0)
+	{
+		sound->fadeSfx(c, SFT_OUT, fadeOut);
 	}
 }
 

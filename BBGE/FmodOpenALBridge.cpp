@@ -583,6 +583,7 @@ public:
     FMOD_RESULT isPlaying(bool *isplaying);
     FMOD_RESULT setChannelGroup(ChannelGroup *channelgroup);
     FMOD_RESULT stop();
+    FMOD_RESULT setPan(const float pan);
     void setGroupVolume(const float _volume);
     void setSourceName(const ALuint _sid) { sid = _sid; }
     ALuint getSourceName() const { return sid; }
@@ -804,6 +805,14 @@ ALBRIDGE(Channel,setPriority,(int priority),(priority))
 FMOD_RESULT OpenALChannel::setPriority(int _priority)
 {
     priority = _priority;
+    return FMOD_OK;
+}
+
+ALBRIDGE(Channel,setPan,(float volume),(volume))
+FMOD_RESULT OpenALChannel::setPan(const float pan)
+{
+    alSource3f(sid, AL_POSITION, pan, 0, 0);
+    SANITY_CHECK_OPENAL_CALL();
     return FMOD_OK;
 }
 

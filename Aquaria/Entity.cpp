@@ -2447,15 +2447,9 @@ void Entity::songNoteDone(int note, float len)
 {
 }
 
-void Entity::soundFreq(const std::string &sound, float freq, float fadeOut)
-{
-	dsq->playPositionalSfx(sound, position, freq, fadeOut);
-}
-
 void Entity::sound(const std::string &sound, float freq, float fadeOut)
 {
-	//core->sound->playPositionalSfx2D(sound, position, freq, fadeOut);
-	dsq->playPositionalSfx(sound, position, 1, fadeOut);
+	dsq->playPositionalSfx(sound, position, freq, fadeOut);
 }
 
 Vector Entity::getEnergyShotTargetPosition()
