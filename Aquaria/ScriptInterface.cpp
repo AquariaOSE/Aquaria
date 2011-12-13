@@ -1421,7 +1421,13 @@ luaFunc(entity_sound)
 	Entity *e = entity(L);
 	if (e && !dsq->isSkippingCutscene())
 	{
-		e->sound(lua_tostring(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
+		float freq = lua_tonumber(L, 3);
+		// HACK: most old scripts still use a freq value of ~1000 as normal pitch.
+		// Pitch values this high produce a barely audible click only,
+		// so a cheap hack like this fixes it without changing older scripts. -- FG
+		if (freq >= 100)
+			freq *= 0.001f;
+		e->sound(lua_tostring(L, 2), freq, lua_tonumber(L, 4));
 	}
 	luaReturnNum(0);
 }

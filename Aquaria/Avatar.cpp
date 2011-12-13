@@ -6054,10 +6054,7 @@ void Avatar::splash(bool down)
 
 	if (down)
 	{
-		int freq = 1000;
-		if (rolling)
-			freq = 900;
-		sound("splash-into", freq);
+		sound("splash-into", rolling ? 0.9f : 1.0f);
 		//dsq->postProcessingFx.disable(FXT_RADIALBLUR);
 		if (_isUnderWater && core->afterEffectManager)
 			core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.08,0.05,22,0.2f, 1.2));

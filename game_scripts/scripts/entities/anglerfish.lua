@@ -234,7 +234,7 @@ function animationKey(me, key)
 			]]--
 		elseif key == 3 then
 			
-			entity_sound(me, "Bite", 400 + math.random(100))
+			entity_sound(me, "Bite", 700 + math.random(100))
 			entity_moveTowardsTarget(me, 1, 8000)
 		end
 	end

@@ -2186,10 +2186,13 @@ PlaySfx DSQ::calcPositionalSfx(const Vector &position, float maxdist)
 	{
 		Vector diff = position - dsq->game->avatar->position;
 
-		// TODO: this might be cooler if finetuned for different aspect ratios.
-		// This value is suitable enough for widescreen in default zoom, at least -- FG
+		// Aspect-ratio-adjustment:
+		// Just multiplying the cut-off distance with aspect increases it too much on widescreen,
+		// so only a part of it is aspect-corrected to make it sound better.
+		// Aspect is most likely >= 5/4 here, which results in a higher value than
+		// the default of 1024; this is intended. -- FG
 		if (maxdist <= 0)
-			maxdist = 1024;
+			maxdist = 724 + (300 * aspect);
 
 		float dist = diff.getLength2D();
 		if (dist < maxdist)
