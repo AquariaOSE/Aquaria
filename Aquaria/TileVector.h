@@ -37,14 +37,19 @@ public:
 
 	TileVector() : x(0),y(0) {}
 
-	Vector worldVector() const
+	inline Vector worldVector() const
+	{
+		return worldVector(x, y);
+	}
+
+	inline static Vector worldVector(int x, int y)
 	{
 		return Vector(x*TILE_SIZE+TILE_SIZE/2, y*TILE_SIZE+TILE_SIZE/2);
 	}
 
-	bool isZero() const
+	inline bool isZero() const
 	{
-		return (x==0 && y==0);
+		return !(x | y);
 	}
 
 	int x,y;

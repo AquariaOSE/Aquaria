@@ -94,6 +94,7 @@ GL_FUNC(void,glTexCoord2f,(GLfloat s, GLfloat t),(s,t),)
 GL_FUNC(void,glTexCoord2d,(GLdouble s, GLdouble t),(s,t),)
 GL_FUNC(void,glVertex2f,(GLfloat x, GLfloat y),(x,y),)
 GL_FUNC(void,glVertex3f,(GLfloat x, GLfloat y, GLfloat z),(x,y,z),)
+GL_FUNC(void,glVertex3i,(GLint x, GLint y, GLint z),(x,y,z),)
 
 // stuff GLU needs...
 GL_FUNC(void,glGetIntegerv,(GLenum pname, GLint *params),(pname,params),)
