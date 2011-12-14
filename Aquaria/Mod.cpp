@@ -184,7 +184,8 @@ void Mod::start()
 
 	core->sound->stopMusic();
 	
-	enqueueModStart = 1;	
+	enqueueModStart = 1;
+	dsq->recentSaveSlot = -1;
 }
 
 void Mod::applyStart()

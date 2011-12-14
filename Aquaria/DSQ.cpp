@@ -2930,6 +2930,7 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 void DSQ::title(bool fade)
 {
 	core->settings.runInBackground = false;
+	recentSaveSlot = -1;
 
 	dsq->overlay->color = 0;
 	dsq->overlay->alpha.interpolateTo(1, 1);
