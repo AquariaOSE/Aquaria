@@ -268,19 +268,6 @@ void VectorPath::append(const VectorPath &path)
 		pathNodes.push_back(path.pathNodes[i]);
 }
 
-void VectorPath::subdivide()
-{
-	/*
-	std::vector<VectorPathNode> copy = pathNodes;
-	pathNodes.clear();
-	for (int i = 0; i < copy.size(); i++)
-	{
-		if (i < 4)
-		pathNodes.push_back(i);
-	}
-	*/
-}
-
 void VectorPath::cut(int n)
 {
 	std::vector<VectorPathNode> copy = pathNodes;
@@ -302,7 +289,7 @@ void VectorPath::removeNode(int t)
 	}
 }
 
-Vector VectorPath::getValue(float percent)
+Vector VectorPath::getValue(float usePercent)
 {
 	if (pathNodes.empty())
 	{
@@ -310,11 +297,9 @@ Vector VectorPath::getValue(float percent)
 		return Vector(0,0,0);
 	}
 
-	float usePercent = percent;
-	VectorPathNode *from = 0, *target = 0;
-	from = &pathNodes[0];
-	int i = 0;
-	for (i = 0; i < pathNodes.size(); i++)
+	VectorPathNode *target = 0;
+	VectorPathNode *from = &pathNodes[0];
+	for (int i = 0; i < pathNodes.size(); ++i)
 	{
 		if (pathNodes[i].percent >= usePercent)
 		{
@@ -460,28 +445,11 @@ float InterpolatedVector::interpolateTo(Vector vec, float timePeriod, int loopTy
 	data->loopType = loopType;
 	data->pingPong = pingPong;
 
-	
-	if (!data->trigger)
-	{
-		if (flag != IS_LOOPING)
-		{
-			data->startOfInterpolationEvent.call();
-			data->endOfInterpolationEvent.set(0);
-		}
-		data->interpolating = true;
-	}
-	else
-		data->pendingInterpolation = true;
+	data->interpolating = true;
 
 	return data->timePeriod;
 }
 
-void InterpolatedVector::setInterpolationTrigger(InterpolatedVector *trigger, bool triggerFlag)
-{
-	InterpolatedVectorData *data = ensureData();
-	data->trigger = trigger;
-	data->triggerFlag = triggerFlag;
-}
 void InterpolatedVector::stop()
 {
 	if (data)
@@ -498,33 +466,7 @@ void InterpolatedVector::startPath(float time, float ease)
 	data->followingPath = true;
 	data->loopType = 0;
 	data->pingPong = false;
-	data->speedPath = false;
-	data->endOfPathEvent.set(0);
 	// get the right values to start off with
-	updatePath(0);
-	data->timeSpeedEase = ease;
-	if (ease > 0)
-	{		
-		data->timeSpeedMultiplier = 0;
-	}
-	else
-	{
-		data->timeSpeedMultiplier = 1;
-	}
-}
-
-void InterpolatedVector::startSpeedPath(float speed)
-{
-	InterpolatedVectorData *data = ensureData();
-
-	data->ease = false;
-	data->currentPathNode = 0;
-	data->pathTimer = 0;
-	data->pathSpeed = speed;
-	data->followingPath = true;
-	data->loopType = 0;	
-	data->pingPong = false;
-	data->speedPath = true;
 	updatePath(0);
 }
 
@@ -543,109 +485,46 @@ void InterpolatedVector::resumePath()
 void InterpolatedVector::updatePath(float dt)
 {
 	InterpolatedVectorData *data = ensureData();
-
-	if (!data->speedPath)
+	if (data->pathTimer > data->pathTime)
 	{
-		if (data->pathTimer > data->pathTime)
+		Vector value = data->path.getPathNode(data->path.getNumPathNodes()-1)->value;
+		this->x = value.x;
+		this->y = value.y;
+		this->z = value.z;
+		if (data->loopType != 0)
 		{
-			Vector value = data->path.getPathNode(data->path.getNumPathNodes()-1)->value;
-			this->x = value.x;
-			this->y = value.y;
-			this->z = value.z;
-			if (data->loopType != 0)
-			{
-	    			if (data->loopType > 0)
-    					data->loopType -= 1;
+			if (data->loopType > 0)
+				data->loopType -= 1;
 
-				int oldLoopType = data->loopType;
-				
-				if (data->pingPong)
-				{
-					// flip path
-					data->path.flip();
-					startPath(data->pathTime);
-					data->loopType = oldLoopType;
-				}
-				else
-				{
-					startPath(data->pathTime);
-					data->loopType = oldLoopType;
-				}
+			int oldLoopType = data->loopType;
+
+			if (data->pingPong)
+			{
+				// flip path
+				data->path.flip();
+				startPath(data->pathTime);
+				data->loopType = oldLoopType;
 			}
 			else
 			{
-				stopPath();
-				data->endOfPathEvent.call();
+				startPath(data->pathTime);
+				data->loopType = oldLoopType;
 			}
 		}
 		else
 		{
-			data->pathTimer += dt * data->pathTimeMultiplier;
-				
-			//	;//dt*data->timeSpeedMultiplier;
-			float perc = data->pathTimer/data->pathTime;
-			Vector value = data->path.getValue(perc);
-			this->x = value.x;
-			this->y = value.y;
-			this->z = value.z;
-
-			
-
-			/*
-			std::ostringstream os;
-			os << "nodes: " << data->path.getNumPathNodes() << " pathTimer: " << data->pathTimer << " pathTime: " << data->pathTime << " perc: " << perc << " p(" << x << ", " << y << ")";
-			debugLog(os.str());
-			*/
-			/*
-			float diff = data->pathTime - data->pathTimer;
-			if (data->timeSpeedEase > 0)
-			{
-				float secs = 1.0f/data->timeSpeedEase;
-				if (diff <= secs)
-				{
-					data->timeSpeedMultiplier -= dt*data->timeSpeedEase;
-					if (data->timeSpeedMultiplier < 0.1f)
-						data->timeSpeedMultiplier = 0.1f;
-				}
-			}
-			if (data->timeSpeedMultiplier < 1)
-			{
-				data->timeSpeedMultiplier += dt*data->timeSpeedEase;
-				if (data->timeSpeedMultiplier >= 1)
-					data->timeSpeedMultiplier = 1;
-			}
-			*/
-			
+			stopPath();
 		}
 	}
 	else
 	{
-		if (!isInterpolating())
-		{
-			data->currentPathNode++;
-			VectorPathNode *node = data->path.getPathNode(data->currentPathNode);
-			/*
-			if (node)
-			{
-				
-			}
-			else
-			{
-				stopPath();
-				data->endOfPathEvent.call();
-			}
-			*/
-			if (node)
-			{
-				interpolateTo(node->value, (node->value - Vector(this->x, this->y, this->z)).getLength3D()*(1.0f/data->pathSpeed));
-			}
-			else
-			{
-				// handle looping etc
-				stopPath();
-				data->endOfPathEvent.call();
-			}
-		}
+		data->pathTimer += dt * data->pathTimeMultiplier;
+
+		float perc = data->pathTimer/data->pathTime;
+		Vector value = data->path.getValue(perc);
+		this->x = value.x;
+		this->y = value.y;
+		this->z = value.z;
 	}
 }
 
@@ -674,9 +553,9 @@ void InterpolatedVector::doInterpolate(float dt)
 	}
 	*/
 	data->timePassed += dt;
- 	if (data->timePassed >= data->timePeriod)
+	if (data->timePassed >= data->timePeriod)
 	{
-	        this->x = data->target.x;
+		this->x = data->target.x;
 		this->y = data->target.y;
 		this->z = data->target.z;
 		data->interpolating = false;
@@ -697,11 +576,6 @@ void InterpolatedVector::doInterpolate(float dt)
 				this->z = data->from.z;
 				interpolateTo (data->target, data->timePeriod, data->loopType, data->pingPong, data->ease, IS_LOOPING);
 			}
-		}
-		else
-		{
-			data->endOfInterpolationEvent.call();
-			data->endOfInterpolationEvent.set(0);
 		}
 
 	}
