@@ -9092,8 +9092,9 @@ void Avatar::onUpdate(float dt)
 
 
 						int hw = collideCircle;
+						Vector fix;
 
-						if (dsq->game->collideCircleWithGrid(position, hw))
+						if (dsq->game->collideCircleWithGrid(position, hw, &fix))
 						{
 							if (dsq->game->lastCollideTileType == OT_HURT
 								&& dsq->continuity.getWorldType() != WT_SPIRIT

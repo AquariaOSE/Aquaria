@@ -46,7 +46,11 @@ void Segmented::destroySegments(float life)
 	for (int i = 0; i < segments.size(); i++)
 	{
 		segments[i]->setLife(life);
-		segments[i]->setDecayRate(1.0f);
+		segments[i]->setDecayRate(1.0);
+
+		//segments[i]->setLife(1.0);
+		//segments[i]->setDecayRate(1.0/life);
+		//segments[i]->setDecayRate(1.0/life);
 		segments[i]->fadeAlphaWithLife = true;
 	}
 	segments.clear();
@@ -80,7 +84,7 @@ void Segmented::updateSegment(int i, const Vector &diff)
 
 	float angle;
 	MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
-	segments[i]->rotation.interpolateTo(Vector(0,0,angle), 0.2f);
+	segments[i]->rotation.interpolateTo(Vector(0,0,angle), 0.2);
 }
 
 void Segmented::updateAlpha(float a)
@@ -101,25 +105,46 @@ void Segmented::warpSegments(const Vector &position)
 
 void Segmented::updateSegments(const Vector &position, bool reverse)
 {
+	/*
+	if (lastPositions.empty())
+	{
+		for (int i = 0; i < segments.size(); i++)
+		{
+			segments[i]->position = position;
+		}
+		lastPositions.resize(numSegments);
+		for (int i = 0; i < numSegments; i++)
+		{
+			lastPositions.push_back(position);
+		}
+	}
+	*/
 	const int top = segments.size()-1;
-	const Vector *lastPosition = &position;
+	Vector lastPosition = position;
 	if (!reverse)
 	{
 		for (int i = 0; i <= top; i++)
 		{
-			const Vector diff = *lastPosition - segments[i]->position;
+			const Vector diff = lastPosition - segments[i]->position;
 			updateSegment(i, diff);
-			lastPosition = &segments[i]->position;
+			lastPosition = segments[i]->position;
 		}
 	}
 	else
 	{
 		for (int i = top; i >= 0; i--)
 		{
-			const Vector diff = *lastPosition - segments[i]->position;
+			const Vector diff = lastPosition - segments[i]->position;
 			updateSegment(i, diff);
-			lastPosition = &segments[i]->position;
+			lastPosition = segments[i]->position;
 		}
 	}
+	/*
+	for (int i = lastPositions.size()-1; i > 0; i--)
+	{
+		lastPositions[i] = lastPositions[i-1];
+	}
+	lastPositions[0] = position;
+	*/
 }
 

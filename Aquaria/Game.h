@@ -636,8 +636,7 @@ public:
 
 	std::string getSelectedChoice() { return selectedChoice; }
 
-	int getGrid(const TileVector &tile) const;
-	int getGridRaw(unsigned int x, unsigned int y) const;
+	int getGrid(const TileVector &tile);
 	const signed char *getGridColumn(int tileX);
 	void setGrid(const TileVector &tile, int v);
 	bool isObstructed(const TileVector &tile, int t = -1);
@@ -670,8 +669,8 @@ public:
 
 	void registerSporeDrop(const Vector &pos, int t);
 
-	bool collideBoxWithGrid(const Vector& position, int w, int h);
-	bool collideCircleWithGrid(const Vector& position, int r);
+	bool collideBoxWithGrid(Vector position, int w, int h);
+	bool collideCircleWithGrid(Vector position, int r, Vector *fill=0);
 
 	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc=0);
 
@@ -1215,13 +1214,7 @@ extern Game *game;
 // INLINE FUNCTIONS
 
 inline
-int Game::getGridRaw(unsigned int x, unsigned int y) const
-{
-	return grid[x][y];
-}
-
-inline
-int Game::getGrid(const TileVector &tile) const
+int Game::getGrid(const TileVector &tile)
 {
 	if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return 1;
 	return grid[tile.x][tile.y];

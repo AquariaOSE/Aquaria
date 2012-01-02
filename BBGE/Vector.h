@@ -435,6 +435,7 @@ public:
 	void realPercentageCalc();
 	void removeNodes(int startInclusive, int endInclusive);
 	float getSubSectionLength(int startIncl, int endIncl);
+	void subdivide();
 protected:
 	std::vector <VectorPathNode> pathNodes;
 };
@@ -445,34 +446,52 @@ struct InterpolatedVectorData
 {
 	InterpolatedVectorData()
 	{
+		trigger = 0;
+		triggerFlag = false;
+		pendingInterpolation = false;
 		interpolating = false;
 		pingPong = false;
 		loopType = 0;
 		pathTimer = 0;
 		pathTime = 0;
 		pathSpeed = 1;
+		currentPathNode = 0;
 		pathTimeMultiplier = 1;
 		timePassed = 0;
 		timePeriod = 0;
+		timeSpeedMultiplier = 1;
+		timeSpeedEase = 0;
 		//fakeTimePassed = 0;
+		speedPath = false;
 		ease = false;
 		followingPath = false;
 	}
 
-	Vector from;
-	Vector target;
-
-	VectorPath path;
-
-	int loopType;
-
-	float pathTimer, pathTime;
-	float pathSpeed;
-	float pathTimeMultiplier;
-	float timePassed, timePeriod;
+	InterpolatedVector *trigger;
+	bool triggerFlag;
+	bool pendingInterpolation;
 
 	bool interpolating;
 	bool pingPong;
+	int loopType;
+
+	EventPtr endOfInterpolationEvent;
+	EventPtr startOfInterpolationEvent;
+	EventPtr endOfPathEvent;
+
+	VectorPath path;
+	float pathTimer, pathTime;
+	float pathSpeed;
+	int currentPathNode;
+	float pathTimeMultiplier;
+
+	float timePassed, timePeriod;
+	Vector target;
+	Vector from;
+
+	float timeSpeedMultiplier, timeSpeedEase;
+	//float fakeTimePassed;
+	bool speedPath;
 	bool ease;
 	bool followingPath;
 };
@@ -511,6 +530,7 @@ public:
 		return *this;
 	}
 
+	void setInterpolationTrigger(InterpolatedVector *trigger, bool triggerFlag);
 	enum InterpolateToFlag { NONE=0, IS_LOOPING };
 	float interpolateTo (Vector vec, float timePeriod, int loopType = 0, bool pingPong = false, bool ease = false, InterpolateToFlag flag = NONE);
 	void inline update(float dt)
@@ -518,6 +538,16 @@ public:
 		if (!data)
 			return;
 
+		if (data->pendingInterpolation && data->trigger)
+		{
+			if (data->trigger->isInterpolating() == data->triggerFlag)
+			{
+				data->interpolating = true;
+				data->pendingInterpolation = false;
+			}
+			else
+				return;
+		}
 		if (isFollowingPath())
 		{
 			updatePath(dt);

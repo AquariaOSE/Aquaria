@@ -11161,72 +11161,47 @@ Vector Game::getClosestPointOnLine(Vector a, Vector b, Vector p)
    return a + V;
 }
 
-bool Game::collideCircleWithGrid(const Vector& position, int r)
+bool Game::collideCircleWithGrid(Vector position, int r, Vector *fill)
 {
-	TileVector t(position);
+	Vector tile = position;
+	TileVector t(tile);
+	tile.x = t.x;
+	tile.y = t.y;
 
-	const float hsz = TILE_SIZE/2;
-	const int xrange = (r/TILE_SIZE)+1;
-	const int yrange = (r/TILE_SIZE)+1;
+	float hsz = TILE_SIZE/2;
+	int xrange=1,yrange=1;
+	xrange = (r/TILE_SIZE)+1;
+	yrange = (r/TILE_SIZE)+1;
 
-	// quick early check if out of bounds
-	const int xstart = t.x-xrange;
-	const int ystart = t.y-yrange;
-	if (xstart < 0 || ystart < 0)
+	for (int x = tile.x-xrange; x <= tile.x+xrange; x++)
 	{
-		lastCollideTileType = (ObsType)1;
-		lastCollidePosition = TileVector::worldVector(xstart, ystart);
-		return true;
-	}
-
-	const int r2 = sqr(r);
-	const int xmax = t.x+xrange;
-	const int ymax = t.y+yrange;
-
-	for (int x = xstart; x <= xmax; x++)
-	{
-		if (x >= MAX_GRID)
+		for (int y = tile.y-yrange; y <= tile.y+yrange; y++)
 		{
-			lastCollideTileType = (ObsType)1;
-			lastCollidePosition = TileVector::worldVector(x, ystart);
-			return true;
-		}
-
-		for (int y = ystart; y <= ymax; y++)
-		{
-			if (y >= MAX_GRID)
-			{
-				lastCollideTileType = (ObsType)1;
-				lastCollidePosition = TileVector::worldVector(x, y);
-				return true;
-			}
-
-			int v = getGridRaw(x, y); // known to be in bounds
+			int v = this->getGrid(TileVector(x, y));
 			if (v != 0)
 			{
-				lastCollidePosition = TileVector::worldVector(x, y);
+				//if (tile.x == x && tile.y == y) return true;
+				TileVector t(x, y);
+				lastCollidePosition = t.worldVector();
+				//if (tile.x == x && tile.y == y) return true;
 				float rx = (x*TILE_SIZE)+TILE_SIZE/2;
 				float ry = (y*TILE_SIZE)+TILE_SIZE/2;
 
+				float rSqr;
 				lastCollideTileType = (ObsType)v;
 
-				float yp = sqr(position.y - (ry+hsz));
-				float xp = sqr(position.x - (rx+hsz));
+				rSqr = sqr(position.x - (rx+hsz)) + sqr(position.y - (ry+hsz));
+				if (rSqr < sqr(r))	return true;
 
-				if (xp + yp < r2)
-					return true;
+				rSqr = sqr(position.x - (rx-hsz)) + sqr(position.y - (ry+hsz));
+				if (rSqr < sqr(r))	return true;
 
-				float xm = sqr(position.x - (rx-hsz));
+				rSqr = sqr(position.x - (rx-hsz)) + sqr(position.y - (ry-hsz));
+				if (rSqr < sqr(r))	return true;
 
-				if (xm + yp < r2)
-					return true;
+				rSqr = sqr(position.x - (rx+hsz)) + sqr(position.y - (ry-hsz));
+				if (rSqr < sqr(r))	return true;
 
-				float ym = sqr(position.y - (ry-hsz));
-				if (xm + ym < r2)
-					return true;
-
-				if (xp < ym)
-					return true;
 
 				if (position.x > rx-hsz && position.x < rx+hsz)
 				{
@@ -11235,6 +11210,7 @@ bool Game::collideCircleWithGrid(const Vector& position, int r)
 						return true;
 					}
 				}
+
 
 				if (position.y > ry-hsz && position.y < ry+hsz)
 				{
@@ -11250,7 +11226,7 @@ bool Game::collideCircleWithGrid(const Vector& position, int r)
 	return false;
 }
 
-bool Game::collideBoxWithGrid(const Vector& position, int hw, int hh)
+bool Game::collideBoxWithGrid(Vector position, int hw, int hh)
 {
 	Vector tile = position;
 	TileVector t(tile);

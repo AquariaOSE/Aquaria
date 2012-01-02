@@ -221,7 +221,7 @@ public:
 	inline Vector getFollowCameraPosition() const;
 
 	void lookAt(const Vector &pos, float t, float minAngle, float maxAngle, float offset=0);
-	inline RenderObject *getParent() const {return parent;}
+	RenderObject *getParent() const {return parent;}
 	void applyBlendType();
 	void fhTo(bool fh);
 	void addDeathNotify(RenderObject *r);

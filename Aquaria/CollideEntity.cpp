@@ -206,6 +206,7 @@ void CollideEntity::updateMovement(float dt)
 
 		const int hw = collideRadius;
 		bool freeRange = false;
+		Vector fix;
 
 		if (isv(EV_COLLIDELEVEL,1))
 		{
@@ -215,7 +216,7 @@ void CollideEntity::updateMovement(float dt)
 			bool doesFreeRange = !isPullable();
 			if (doesFreeRange)
 			{
-				if (dsq->game->collideCircleWithGrid(position, hw))
+				if (dsq->game->collideCircleWithGrid(position, hw, &fix))
 				{
 					// starting in a collision state
 					freeRange = true;
@@ -231,7 +232,7 @@ void CollideEntity::updateMovement(float dt)
 		{
 			if (getState() == STATE_PUSH)
 			{
-				if (!freeRange && dsq->game->collideCircleWithGrid(position, hw))
+				if (!freeRange && dsq->game->collideCircleWithGrid(position, hw, &fix))
 				{
 					position = lastPosition;
 					collided = true;
@@ -240,7 +241,7 @@ void CollideEntity::updateMovement(float dt)
 			}
 			else
 			{			
-				if (!freeRange && ((!canLeaveWater && !isUnderWater() && wasUnderWater) || dsq->game->collideCircleWithGrid(position, hw)))
+				if (!freeRange && ((!canLeaveWater && !isUnderWater() && wasUnderWater) || dsq->game->collideCircleWithGrid(position, hw, &fix)))
 				{
 					position = lastPosition;
 					onHitWall();

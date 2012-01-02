@@ -297,7 +297,7 @@ Vector RenderObject::getInvRotPosition(const Vector &vec)
 }
 
 void RenderObject::matrixChain()
-{
+{	
 	if (parent)
 		parent->matrixChain();
 	
@@ -1256,8 +1256,35 @@ void RenderObject::onUpdate(float dt)
 	// left that above for safety since I'm not certain.  --achurch
 	if (isHidden()) return;
 
-	position += velocity * dt;
-	velocity += gravity * dt;
+	/*
+	width.update(dt);
+	height.update(dt);
+	*/
+
+
+	/*
+	if (!parent && !children.empty() && shareAlphaWithChildren)
+	{
+		propogateAlpha();
+	}
+	*/
+
+
+	/*
+	if (flipTimer.updateCheck(dt))
+	{
+		if (flipState == 0)
+		{
+			_fh = !_fh;
+			flipState = 1;
+		}
+	}
+	*/
+
+	if (!velocity.isZero())
+		position += velocity * dt;
+	if (!gravity.isZero())
+		velocity += gravity * dt;
 	position.update(dt);
 	velocity.update(dt);
 	scale.update(dt);
