@@ -608,7 +608,7 @@ void SceneEditor::init()
 	text->setFontSize(6);
 
 	text->followCamera = 1;
-	text->position = Vector(200,20,4.5);
+	text->position = Vector(125,20,4.5);
 	//text->setAlign(ALIGN_CENTER);
 	dsq->game->addRenderObject(text, LR_HUD);
 	text->alpha = 0;
@@ -2584,6 +2584,11 @@ void SceneEditor::loadScene()
 	{
 		reloadScene();
 	}
+
+	// HACK: reload stuff when (re-) loading a map this way
+	particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
+	Shot::loadShotBank(dsq->shotBank1, dsq->shotBank2);
+	dsq->game->loadEntityTypeList();
 }
 
 void SceneEditor::saveScene()
@@ -3334,7 +3339,7 @@ void SceneEditor::updateText()
 	switch(editType)
 	{
 	case ET_ELEMENTS:
-		os << "elements";
+		os << "elements (" << dsq->getNumElements() << ")";
 		if (selectedElements.size() > 1)
 		{
 			os << " - " << selectedElements.size() << " selected";
@@ -3352,11 +3357,12 @@ void SceneEditor::updateText()
 				ElementTemplate *et = game->getElementTemplateByIdx(e->templateIdx);
 				if (et)
 					os << " gfx: " << et->gfx;
+				os << " efx: " << (e->getElementEffectIndex() + 1); // +1 so that it resembles the layout on numpad
 			}
 		}
 	break;
 	case ET_ENTITIES:
-		os << "entities";
+		os << "entities (" << dsq->entities.size() << ")";
 		if (editingEntity)
 		{
 			os << " id: " << editingEntity->getID() << " name: " << editingEntity->name << " flag: " << dsq->continuity.getEntityFlag(dsq->game->sceneName, editingEntity->getID());
@@ -3365,7 +3371,7 @@ void SceneEditor::updateText()
 		}
 	break;
 	case ET_PATHS:
-		os << "paths si[" << selectedIdx << "]";
+		os << "paths (" << dsq->game->getNumPaths()<<  ") si[" << selectedIdx << "]";
 		if (getSelectedPath())
 			os << " name: " << getSelectedPath()->name;
 	break;
