@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 CollideEntity::CollideEntity() : Entity()
 {
+	addType(SCO_COLLIDE_ENTITY);
 	this->canBeTargetedByAvatar = true;
 	weight = 0;
 	bounceAmount = 0.5f;

@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/Quad.h"
 #include "Entity.h"
 
-class Web : public RenderObject
+class Web : public ScriptObject, public RenderObject
 {
 public:
 	Web();

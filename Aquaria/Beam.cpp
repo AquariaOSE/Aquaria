@@ -28,6 +28,7 @@ Beam::Beams Beam::beams;
 
 Beam::Beam(Vector pos, float angle) : Quad()
 {
+	addType(SCO_BEAM);
 	cull = false;
 	trace();
 	//rotation.z = angle;

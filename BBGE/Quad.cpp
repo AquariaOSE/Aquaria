@@ -918,6 +918,7 @@ void Quad::onSetTexture()
 
 PauseQuad::PauseQuad() : Quad(), pauseLevel(0)
 {
+	addType(SCO_PAUSEQUAD);
 }
 
 void PauseQuad::onUpdate(float dt)

@@ -196,7 +196,8 @@ void Mod::applyStart()
 	core->clearGarbage();
 	recache();
 	dsq->continuity.reset();
-	
+	dsq->scriptInterface.reset();
+
 	// load the mod-init.lua file
 	// which is in the root of the mod's folder
 	// e.g. _mods/recachetest/
@@ -265,6 +266,7 @@ void Mod::stop()
 	core->settings.runInBackground = false;
 	debugMenu = false;
 	shuttingDown = false;
+	dsq->scriptInterface.reset();
 }
 
 void Mod::update(float dt)

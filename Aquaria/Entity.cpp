@@ -167,6 +167,7 @@ bool Entity::canSetBoneLock()
 
 Entity::Entity() : StateMachine(), DFSprite()
 {
+	addType(SCO_ENTITY);
 	poison = 0.0f;
 	calledEntityDied = false;
 	wasUnderWater = true;

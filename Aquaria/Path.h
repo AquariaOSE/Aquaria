@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../BBGE/Base.h"
 #include "../BBGE/Particles.h"
+#include "../BBGE/ScriptObject.h"
 #include "ScriptInterface.h"
 
 #undef PATH_MAX  // May be set by a system header.
@@ -67,7 +68,7 @@ enum PathShape
 	PATHSHAPE_CIRCLE	= 1
 };
 
-class Path
+class Path : public ScriptObject
 {
 public:
 	Path();

@@ -42,6 +42,7 @@ void SkeletalKeyframe::copyAllButTime(SkeletalKeyframe *copy)
 
 Bone::Bone() : Quad()
 {
+	addType(SCO_BONE);
 	fileRenderQuad = true;
 	skeleton = 0;
 	generateCollisionMask = true;

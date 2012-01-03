@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define __quad__
 
 #include "RenderObject.h"
+#include "ScriptObject.h"
 
 class QuadLight
 {
@@ -149,7 +150,7 @@ private:
 	void initQuad();
 };
 
-class PauseQuad : public Quad
+class PauseQuad : public ScriptObject, public Quad
 {
 public:
 	PauseQuad();

@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "CollideEntity.h"
 #include "Segmented.h"
 #include "../BBGE/Particles.h"
+#include "../BBGE/ScriptObject.h"
 
 struct ShotData
 {
@@ -69,7 +70,7 @@ struct ShotData
 	
 };
 
-class Shot : public Quad, public Segmented
+class Shot : public ScriptObject, public Quad, public Segmented
 {
 public:
 	//Shot(DamageType damageType, Entity *firer, Vector pos, Entity *target, std::string tex="", float homingness=1000, int maxSpeed=400, int segments=10, float segMin=0.1, float segMax=5, float damage = 1, float lifeTime = 0);
@@ -136,7 +137,7 @@ protected:
 	void onUpdate(float dt);
 };
 
-class Beam : public Quad
+class Beam : public ScriptObject, public Quad
 {
 public:
 	Beam(Vector pos, float angle);

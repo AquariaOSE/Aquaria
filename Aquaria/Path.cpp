@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 Path::Path()
 {
+	addType(SCO_PATH);
 	localWarpType = LOCALWARP_NONE;
 	effectOn = true;
 	time = 0;

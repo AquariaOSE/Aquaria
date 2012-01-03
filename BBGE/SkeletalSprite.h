@@ -37,7 +37,7 @@ enum AnimationCommand
 class ParticleEffect;
 class SkeletalSprite;
 
-class Bone : public Quad
+class Bone : public ScriptObject, public Quad
 {
 public:
 	Bone();

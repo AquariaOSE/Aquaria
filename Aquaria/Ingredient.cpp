@@ -40,6 +40,7 @@ bool IngredientData::hasIET(IngredientEffectType iet)
 Ingredient::Ingredient(const Vector &pos, IngredientData *data, int amount)
  : Entity(),  data(data), amount(amount), gone(false), used(false)
 {
+	addType(SCO_INGREDIENT);
 	entityType = ET_INGREDIENT;
 	position = pos;
 	lifeSpan = 30;

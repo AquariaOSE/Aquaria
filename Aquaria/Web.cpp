@@ -27,6 +27,7 @@ Web::Webs Web::webs;
 
 Web::Web() : RenderObject()
 {
+	addType(SCO_WEB);
 	webs.push_back(this);
 	cull = false;
 	parentEntity = 0;

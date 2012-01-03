@@ -323,6 +323,7 @@ Shot::Shot(DamageType damageType, Entity *firer, Vector pos, Entity *target, std
 
 Shot::Shot() : Quad(), Segmented(0,0)
 {
+	addType(SCO_SHOT);
 	extraDamage= 0;
 	waveTimer = rand()%314;
 	emitter = 0;

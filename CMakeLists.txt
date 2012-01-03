@@ -362,6 +362,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Resource.cpp
     ${BBGEDIR}/RoundedRect.cpp
     ${BBGEDIR}/ScreenTransition.cpp
+    ${BBGEDIR}/ScriptObject.cpp
     ${BBGEDIR}/Shader.cpp
     ${BBGEDIR}/SkeletalSprite.cpp
     ${BBGEDIR}/Slider.cpp
