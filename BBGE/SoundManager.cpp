@@ -1375,6 +1375,9 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 			checkError();
 		}
 
+		musicChannel->setFrequency(1); // in case the channel was used by a pitch-shifted sound before
+		musicChannel->setPan(0);
+
 		result = musicChannel->setPaused(false);		// This is where the sound really starts.
 		checkError();
 	}
