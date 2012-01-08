@@ -106,7 +106,7 @@ function enterState(me)
 			quad_alpha(v.glow, 1, 0.5)
 		end
 		if v.eyes ~= 0 then
-			quad_alpha(v.eyes, 1, 0.5)
+			bone_alpha(v.eyes, 1, 0.5)
 		end
 		entity_animate(me, "idle", -1)
 	elseif entity_isState(me, STATE_RUNAWAY) then
@@ -117,7 +117,7 @@ function enterState(me)
 		end
 		
 		quad_alpha(v.glow, 0, 3)
-		quad_alpha(v.eyes, 0, 3)
+		bone_alpha(v.eyes, 0, 3)
 		entity_animate(me, "runAway", -1)
 	end
 end
