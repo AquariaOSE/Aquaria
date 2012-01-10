@@ -46,7 +46,7 @@ void SubtitlePlayer::go(const std::string &subs)
 	if (dsq->mod.isActive())
 	{
 		f = dsq->mod.getPath() + "audio/" + subs + ".txt";
-		stringToLower(f);
+		f = core->adjustFilenameCase(f);
 		if (exists(f))
 			checkAfter = false;
 	}
@@ -54,7 +54,7 @@ void SubtitlePlayer::go(const std::string &subs)
 	if (checkAfter)
 	{
 		f = "scripts/vox/" + subs + ".txt";
-		stringToLower(f);
+		f = core->adjustFilenameCase(f);
 		if (!exists(f))
 		{
 			debugLog("Could not find subs file [" + subs + "]");

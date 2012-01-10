@@ -277,11 +277,7 @@ int APIENTRY pngLoadRawF(FILE *fp, pngRawInfo *pinfo) {
 	endinfo = png_create_info_struct(png);
 
 	// DH: added following lines
-#ifdef LIBPNG_NEW_API
 	if (setjmp(png_jmpbuf(png)))
-#else
-	if (setjmp(png->jmpbuf))
-#endif
 	{
 		png_destroy_read_struct(&png, &info, &endinfo);
 		return 0;
@@ -385,11 +381,7 @@ int APIENTRY pngLoadF(FILE *fp, int mipmap, int trans, pngInfo *pinfo) {
 	endinfo = png_create_info_struct(png);
 
 	// DH: added following lines
-#ifdef LIBPNG_NEW_API
 	if (setjmp(png_jmpbuf(png)))
-#else
-	if (setjmp(png->jmpbuf))
-#endif
 	{
 		png_destroy_read_struct(&png, &info, &endinfo);
 		return 0;

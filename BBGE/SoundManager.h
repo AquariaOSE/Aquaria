@@ -105,7 +105,7 @@ struct PlaySfx
 	PlaySfx() : priority(0.5), handle(0), pan(0), vol(1), fade(SFT_NONE), time(0), freq(1), loops(0), channel(BBGE_AUDIO_NOCHANNEL) {}
 
 	std::string name;
-	int handle;
+	intptr_t handle;
 	float pan;
 	float vol;
 	float time;
@@ -129,7 +129,7 @@ public:
 	void loadSoundCache(const std::string &spath="sfx/cache/", const std::string &ftype=".ogg", void progressCallback()=NULL);
 
 	void stopAllSfx();
-	
+
 	void clearLocalSounds();
 
 	void setVoicePath2(const std::string &voicePath2) { this->voicePath2 = voicePath2; }
@@ -217,7 +217,7 @@ public:
 	bool enabled;
 
 	bool checkError();
-	
+
 	void error(const std::string &errMsg);
 
 	EventPtr event_playVoice, event_stopVoice;
@@ -234,7 +234,7 @@ public:
 
 	std::string reverbKeyword;
 private:
-	
+
 	std::string voicePath2;
 
 	float overrideVoiceFader;

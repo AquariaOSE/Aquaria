@@ -148,7 +148,7 @@ OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" FALSE)
 if(NOT AQUARIA_INTERNAL_SDL)
     find_package(SDL)
 endif(NOT AQUARIA_INTERNAL_SDL)
-if(NOT SDL_FOUND OR ((MACOSX OR WIN32) AND (NOT SDLMAIN_FOUND)))
+if(NOT SDL_FOUND)
     if(MACOSX)
         set(SDLDIR "${EXTLIBDIR}/SDL12")
         set(SDL_INCLUDE_DIR "${SDLDIR}/include")
@@ -164,7 +164,7 @@ if(NOT SDL_FOUND OR ((MACOSX OR WIN32) AND (NOT SDLMAIN_FOUND)))
     else(MACOSX)
         message(SEND_ERROR "We don't have a prebuilt SDL for this platform.")
     endif(MACOSX)
-endif(NOT SDL_FOUND OR ((MACOSX OR WIN32) AND (NOT SDLMAIN_FOUND)))
+endif(NOT SDL_FOUND)
 
 ### OpenAL
 
