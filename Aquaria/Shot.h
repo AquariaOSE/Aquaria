@@ -109,13 +109,13 @@ public:
 	void setAimVector(const Vector &aim);
 	void setTarget(Entity *target);
 	void setTargetPoint(int pt);
-	float getDamage();
-	int getCollideRadius();
-	DamageType getDamageType();
+	float getDamage() const;
+	int getCollideRadius() const;
+	DamageType getDamageType() const;
 	ShotData *shotData;
 	void updatePosition();
-	bool isHitEnts();
-	bool isObstructed();
+	bool isHitEnts() const;
+	bool isObstructed(float dt) const;
 
 	float extraDamage;
 protected:

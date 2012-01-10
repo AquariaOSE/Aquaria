@@ -586,7 +586,7 @@ void Shot::targetDied(Entity *target)
 	*/
 }
 
-bool Shot::isHitEnts()
+bool Shot::isHitEnts() const
 {
 	if (!shotData || shotData->hitEnts)
 	{
@@ -684,14 +684,14 @@ void Shot::noSegs()
 	}
 }
 
-int Shot::getCollideRadius()
+int Shot::getCollideRadius() const
 {
 	if (shotData)
 		return shotData->collideRadius;
 	return 0;
 }
 
-float Shot::getDamage()
+float Shot::getDamage() const
 {
 	if (shotData)
 	{
@@ -700,7 +700,7 @@ float Shot::getDamage()
 	return 0;
 }
 
-DamageType Shot::getDamageType()
+DamageType Shot::getDamageType() const
 {
 	if (shotData)
 	{
@@ -733,11 +733,11 @@ void Shot::setTargetPoint(int pt)
 	targetPt = pt;
 }
 
-bool Shot::isObstructed()
+bool Shot::isObstructed(float dt) const
 {
 	if (shotData->wallHitRadius == 0)
 	{
-		TileVector t(position);
+		TileVector t(position + velocity * dt);
 		if (dsq->game->isObstructed(t)
 			|| dsq->game->isObstructed(TileVector(t.x+1, t.y))
 			|| dsq->game->isObstructed(TileVector(t.x-1, t.y))
@@ -858,33 +858,37 @@ void Shot::onUpdate(float dt)
 		diff.z = 0;
 		if (shotData->hitWalls)
 		{
-			if (isObstructed())
+			if (isObstructed(dt))
 			{
 				switch(shotData->bounceType)
 				{
 				case BOUNCE_REAL:
 				{
-					if (!shotData->bounceSfx.empty())
+					// Should have been checked in last onUpdate()
+					// If it is stuck now, it must have been fired from a bad position,
+					// the obstruction map changed, or it was a bouncing beast form shot,
+					// fired from avatar head - which may be inside a wall.
+					// In any of these cases, there is nowhere to bounce, so we let the shot die. -- FG
+					if (!isObstructed(0))
 					{
-						dsq->playPositionalSfx(shotData->bounceSfx, position);
-					}
-					float len = velocity.getLength2D();
-					Vector I = velocity/len;
-					Vector N = dsq->game->getWallNormal(position);
+						if (!shotData->bounceSfx.empty())
+						{
+							dsq->playPositionalSfx(shotData->bounceSfx, position);
+						}
+						float len = velocity.getLength2D();
+						Vector I = velocity/len;
+						Vector N = dsq->game->getWallNormal(position);
 
-					if (!N.isZero())
-					{
-						//2*(-I dot N)*N + I
-						velocity = 2*(-I.dot(N))*N + I;
-						velocity *= len;
+						if (!N.isZero())
+						{
+							//2*(-I dot N)*N + I
+							velocity = 2*(-I.dot(N))*N + I;
+							velocity *= len;
+						}
+						break;
 					}
-					Vector test = position+velocity;
-					if (dsq->game->isObstructed(test))
-					{
-						suicide();
-					}
+					// fall through
 				}
-				break;
 				default:
 				{
 					suicide();

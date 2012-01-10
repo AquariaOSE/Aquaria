@@ -640,7 +640,7 @@ public:
 	int getGridRaw(unsigned int x, unsigned int y) const;
 	const signed char *getGridColumn(int tileX);
 	void setGrid(const TileVector &tile, int v);
-	bool isObstructed(const TileVector &tile, int t = -1);
+	bool isObstructed(const TileVector &tile, int t = -1) const;
 
 	void clearPointers();
 
@@ -1246,7 +1246,7 @@ void Game::setGrid(const TileVector &tile, int v)
 }
 
 inline
-bool Game::isObstructed(const TileVector &tile, int t)
+bool Game::isObstructed(const TileVector &tile, int t) const
 {
 	if (t == -1)
 		return (getGrid(tile) != 0);
