@@ -84,7 +84,7 @@ void GridRender::onRender()
 	break;
 	}
 
-	int obsType = this->obsType;
+	const signed char obsType = this->obsType;
 	Vector camPos = core->cameraPos;
 	camPos.x -= core->getVirtualOffX() * (core->invGlobalScale);
 	const TileVector ct(camPos);
