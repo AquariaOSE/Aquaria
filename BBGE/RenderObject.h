@@ -233,7 +233,6 @@ public:
 	//-------------------------------- Methods above, fields below
 
 	static bool renderCollisionShape;
-	static bool integerizePositionForRender;
 	static bool renderPaths;
 	static int lastTextureApplied;
 	static bool lastTextureRepeat;
@@ -274,8 +273,6 @@ public:
 	bool shareAlphaWithChildren;
 	bool shareColorWithChildren;
 
-	bool renderBorders;
-
 	bool cull;
 	int updateCull;
 	int layer;
@@ -302,7 +299,6 @@ public:
 
 	CollideRects collisionRects;
 	int collisionMaskRadius;
-	int touchDamage;
 
 	float alphaMod;
 
@@ -370,8 +366,6 @@ protected:
 	StateData *stateData;
 	float decayRate;
 	float maxLife;
-
-	static InterpolatedVector savePosition;
 };
 
 #endif

@@ -1250,7 +1250,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	console = new DebugFont;
 	//(&dsq->smallFont);
 	{
-		console->position = Vector(10,400);
+		console->position = Vector(10 - virtualOffX,400);
 		console->followCamera = 1;
 		console->alpha = 0;
 		//console->setAlign(ALIGN_LEFT);
@@ -1272,7 +1272,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 		{
 			//cmDebug->position = Vector(450,250);
 			//cmDebug->position = Vector(500,350);
-			cmDebug->position = Vector(50,50);
+			cmDebug->position = Vector(20 - virtualOffX,50);
 			cmDebug->followCamera = 1;
 			cmDebug->alpha = 0;
 			//cmDebug->setAlign(ALIGN_LEFT);
@@ -1492,24 +1492,15 @@ This build is not yet final, and as such there are a couple things lacking. They
 		fpsText->color = Vector(1,1,1);
 		fpsText->setFontSize(6);
 		//fpsText->position = Vector(10,15+200);
-		fpsText->position = Vector(10,560);
+		fpsText->position = Vector(10 - virtualOffX,580);
 		fpsText->position.z = 5;
 		//fpsText->position += Vector(0,-200);
 		//fpsText->setAlign(ALIGN_LEFT);
 		fpsText->setText("FPS");
-		fpsText->alphaMod = 0; // 0.5
+		fpsText->alpha= 0;
 		//fpsText->followCamera = 1;
 	}
 	addRenderObject(fpsText, LR_DEBUG_TEXT);
-
-	if (isDeveloperKeys())
-	{
-		fpsText->alpha = 1;
-	}
-	else
-	{
-		fpsText->alpha = 0;
-	}
 
 	precacher.precacheList("data/precache.txt", loadBitForTexPrecache);
 
@@ -1577,11 +1568,11 @@ This build is not yet final, and as such there are a couple things lacking. They
 	sound->playSfx("defense", 0.5);
 	sound->playSfx("visionwakeup");
 	*/
-
+#if defined(AQUARIA_FULL) || defined(AQUARIA_DEMO)
 	float trans = 0.5;
 	overlay->alpha.interpolateTo(1, trans);
 	core->main(trans);
-
+#endif
 	removeRenderObject(loading);
 	loading = 0;
 	removeRenderObject(sidel);
@@ -1603,8 +1594,11 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	bindInput();
 
-	//title();
+#if defined(AQUARIA_FULL) || defined(AQUARIA_DEMO)
 	enqueueJumpState("BitBlotLogo");
+#else
+	title();
+#endif
 }
 
 void DSQ::recreateBlackBars()
@@ -2030,6 +2024,7 @@ void DSQ::toggleConsole()
 		{
 			console->alpha.interpolateTo(1, 0.1);
 			cmDebug->alpha.interpolateTo(1, 0.1);
+			fpsText->alpha.interpolateTo(1, 0.1);
 			if (profRender)
 				profRender->alpha.interpolateTo(1, 0.1);
 			RenderObject::renderPaths = true;
@@ -2038,6 +2033,7 @@ void DSQ::toggleConsole()
 		{
 			console->alpha.interpolateTo(0, 0.1);
 			cmDebug->alpha.interpolateTo(0, 0.1);
+			fpsText->alpha.interpolateTo(0, 0.1);
 			if (profRender)
 				profRender->alpha.interpolateTo(0, 0.1);
 			RenderObject::renderPaths = false;
@@ -4462,12 +4458,12 @@ void DSQ::onUpdate(float dt)
 		os << " ca: " << ca << " ma: " << ma << std::endl;
 		os << dsq->sound->getVolumeString() << std::endl;
 		os << core->globalResolutionScale.x << ", " << core->globalResolutionScale.y << std::endl;
-		
+		os << "Lua mem: " << scriptInterface.gcGetStats() << " KB" << std::endl;
 
 		cmDebug->setText(os.str());
 	}
 
-	if (isDeveloperKeys() && fpsText)
+	if (isDeveloperKeys() && fpsText && cmDebug && cmDebug->alpha == 1)
 	{
 		std::ostringstream os;
 		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount;
@@ -4798,9 +4794,14 @@ void DSQ::modifyDt(float &dt)
 	if (isDeveloperKeys())
 	{
 		if (core->getKeyState(KEY_G))
-			dt = 0.075f;
+			dt *= 4;
 		else if (core->getKeyState(KEY_F))
-			dt *= 0.6f;
+		{
+			if (core->getShiftState())
+				dt *= 0.1f;
+			else
+				dt *= 0.6;
+		}
 		else if (core->getKeyState(KEY_H))
 			dt = FRAME_TIME;
 		else

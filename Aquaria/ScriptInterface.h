@@ -81,6 +81,7 @@ public:
 	void init();
 	void reset();
 	void collectGarbage();
+	int gcGetStats();
 	void shutdown();
 
 	Script *openScript(const std::string &file, bool ignoremissing = false);

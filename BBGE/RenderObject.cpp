@@ -25,7 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h>
 
 bool	RenderObject::renderCollisionShape			= false;
-bool	RenderObject::integerizePositionForRender	= false;
 int		RenderObject::lastTextureApplied			= 0;
 bool	RenderObject::lastTextureRepeat				= false;
 bool	RenderObject::renderPaths					= false;
@@ -34,8 +33,6 @@ const bool RENDEROBJECT_SHAREATTRIBUTES				= true;
 const bool RENDEROBJECT_FASTTRANSFORM				= false;
 
 RenderObjectLayer *RenderObject::rlayer				= 0;
-
-InterpolatedVector RenderObject::savePosition;
 
 void RenderObject::toggleAlpha(float t)
 {
@@ -176,7 +173,6 @@ RenderObject::RenderObject()
 	motionBlurFrameOffset = 0;
 	motionBlur = false;
 	idx = -1;
-	renderBorders = false;
 #ifdef BBGE_BUILD_DIRECTX
 	useDXTransform = false;
 #endif
@@ -218,7 +214,6 @@ RenderObject::RenderObject()
 	colorIsSaved = false;
 	shareAlphaWithChildren = false;
 	shareColorWithChildren = false;
-	touchDamage = 0;	
 	motionBlurTransitionTimer = 0;
 }
 
@@ -496,18 +491,26 @@ void RenderObject::disableMotionBlur()
 
 bool RenderObject::isfhr()
 {
-	if (parent)
-		return parent->isfhr();
-	else
-		return this->isfh();
+	RenderObject *p = this;
+	bool fh = false;
+	do
+		if (p->isfh())
+			fh = !fh;
+	while ((p = p->parent));
+	return fh;
+
 }
 
 bool RenderObject::isfvr()
 {
-	if (parent)
-		return parent->isfvr();
-	else
-		return this->isfv();
+	RenderObject *p = this;
+	bool fv = false;
+	do
+		if (p->isfv())
+			fv = !fv;
+	while ((p = p->parent));
+	return fv;
+
 }
 
 bool RenderObject::hasRenderPass(const int pass)
@@ -888,11 +891,6 @@ void RenderObject::renderCall()
 
 
 	position -= offset;
-
-	if (integerizePositionForRender)
-	{
-		position = savePosition;
-	}
 }
 
 void RenderObject::renderCollision()

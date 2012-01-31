@@ -1503,16 +1503,6 @@ luaFunc(entity_setFillGrid)
 	luaReturnNum(0);
 }
 
-luaFunc(entity_setTouchDamage)
-{
-	Entity *e = entity(L);
-	if (e)
-	{
-		e->touchDamage = lua_tonumber(L, 2);
-	}
-	luaReturnNum(0);
-}
-
 luaFunc(entity_setCollideRadius)
 {
 	Entity *e = entity(L);
@@ -4617,16 +4607,6 @@ luaFunc(bone_setTexture)
 	if (b)
 	{
 		b->setTexture(lua_tostring(L, 2));
-	}
-	luaReturnNum(0);
-}
-
-luaFunc(bone_setTouchDamage)
-{
-	Bone *b = bone(L);
-	if (b)
-	{
-		b->touchDamage = lua_tonumber(L, 2);
 	}
 	luaReturnNum(0);
 }
@@ -8064,7 +8044,6 @@ static const struct {
 
 	luaRegister(entity_setCollideRadius),
 	luaRegister(entity_getCollideRadius),
-	luaRegister(entity_setTouchDamage),
 
 	luaRegister(entity_isEntityInRange),
 	luaRegister(entity_isPositionInRange),
@@ -8125,7 +8104,6 @@ static const struct {
 
 	luaRegister(bone_alpha),
 
-	luaRegister(bone_setTouchDamage),
 	luaRegister(bone_getNormal),
 	luaRegister(bone_getPosition),
 	luaRegister(bone_getScale),
@@ -9023,6 +9001,11 @@ int ScriptInterface::destroyLuaThread(const std::string &file, lua_State *thread
 void ScriptInterface::collectGarbage()
 {
 	lua_gc(baseState, LUA_GCCOLLECT, 0);
+}
+
+int ScriptInterface::gcGetStats()
+{
+	return lua_gc(baseState, LUA_GCCOUNT, 0);
 }
 
 void ScriptInterface::shutdown()

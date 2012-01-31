@@ -318,16 +318,19 @@ void Quad::destroy()
 
 bool Quad::isCoordinateInside(Vector coord, int minSize)
 {
-	int hw = fabsf((width)*getRealScale().x)*0.5f;
-	int hh = fabsf((height)*getRealScale().y)*0.5f;
+	Vector realscale = getRealScale();
+	int hw = fabsf((width)*realscale.x)*0.5f;
+	int hh = fabsf((height)*realscale.y)*0.5f;
 	if (hw < minSize)
 		hw = minSize;
 	if (hh < minSize)
 		hh = minSize;
 
-	if (coord.x >= getRealPosition().x - hw && coord.x <= getRealPosition().x + hw)
+	Vector pos = getRealPosition();
+
+	if (coord.x >= pos.x - hw && coord.x <= pos.x + hw)
 	{
-		if (coord.y >= getRealPosition().y - hh && coord.y <= getRealPosition().y + hh)
+		if (coord.y >= pos.y - hh && coord.y <= pos.y + hh)
 		{
 			return true;
 		}
