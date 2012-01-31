@@ -28,8 +28,28 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef AQUARIA_BUILD_SCENEEDITOR  // Through end of file
 
 
-const int TIMELINE_GRIDSIZE		= 10;
-const float TIMELINE_UNIT		= 0.1;
+int TIMELINE_GRIDSIZE		= 10;
+float TIMELINE_UNIT			= 0.1;
+float TIMELINE_UNIT_STEP	= 0.01;
+const int KEYFRAME_POS_Y	= 570;
+
+class TimelineRender : public RenderObject
+{
+	void onRender()
+	{
+#ifdef BBGE_BUILD_OPENGL
+		glLineWidth(1);
+		glBegin(GL_LINES);
+		glColor4f(1, 1, 1, 1);
+		for (int x = 0; x < 800; x += TIMELINE_GRIDSIZE)
+		{
+			glVertex3f(x, -5, 0);
+			glVertex3f(x, 5, 0);
+		}
+		glEnd();
+#endif
+	}
+};
 
 AnimationEditor *ae = 0;
 
@@ -57,7 +77,7 @@ void AnimationEditor::constrainMouse()
 KeyframeWidget::KeyframeWidget(int key) : Quad()
 {
 	setTexture("keyframe");
-	setWidthHeight(TIMELINE_GRIDSIZE, TIMELINE_GRIDSIZE*2);
+	setWidthHeight(15, 30);
 	b = new BitmapText(&dsq->smallFont);
 	b->position = Vector(1, -15);
 	b->setFontSize(12);
@@ -146,7 +166,7 @@ void KeyframeWidget::onUpdate(float dt)
 		ae->reorderKeys();
 		return;
 	}
-	position.y = 570;
+	position.y = KEYFRAME_POS_Y;
 }
 
 void AnimationEditor::cycleLerpType()
@@ -186,11 +206,14 @@ AnimationEditor::AnimationEditor() : StateObject()
 	registerState(this, "AnimationEditor");
 }
 
-void AnimationEditor::resetScale()
+void AnimationEditor::resetScaleOrSave()
 {
 	if (dsq->isNested()) return;
 
-	editSprite->scale = Vector(1,1);
+	if (core->getCtrlState())
+		saveFile();
+	else
+		editSprite->scale = Vector(1,1);
 }
 
 void AnimationEditor::applyState()
@@ -199,9 +222,9 @@ void AnimationEditor::applyState()
 	core->cameraPos = Vector(0,0);
 	editingStrip = false;
 	selectedStripPoint = 0;
-	selectionLocked = true;
+	mouseSelection = true;
 	editingFile = "Naija";
-	ignoreBone = -1;
+	renderBorders = false;
 	ae = this;
 	StateObject::applyState();
 	boneEdit = 0;
@@ -229,7 +252,7 @@ void AnimationEditor::applyState()
 
 	addAction(MakeFunctionEvent(AnimationEditor, deleteKey), KEY_DELETE, 0);
 
-	addAction(MakeFunctionEvent(AnimationEditor, resetScale), KEY_S, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, resetScaleOrSave), KEY_S, 0);
 
 	addAction(MakeFunctionEvent(AnimationEditor, quit), KEY_F12, 0);
 
@@ -258,6 +281,15 @@ void AnimationEditor::applyState()
 	addAction(MakeFunctionEvent(AnimationEditor, prevAnim), KEY_PGUP, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, nextAnim), KEY_PGDN, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, animateOrStop), KEY_RETURN, 0);
+
+	addAction(MakeFunctionEvent(AnimationEditor, toggleRenderBorders), KEY_B, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, toggleMouseSelection), KEY_M, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, showAllBones), KEY_A, 0);
+
+	addAction(MakeFunctionEvent(AnimationEditor, decrTimelineUnit), KEY_U, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineUnit), KEY_I, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, decrTimelineGrid), KEY_O, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineGrid), KEY_P, 0);
 
 
 
@@ -365,11 +397,61 @@ void AnimationEditor::applyState()
 	newAnim->event.set(MakeFunctionEvent(AnimationEditor, newAnim));
 	addRenderObject(newAnim, LR_MENU);
 
+	DebugButton *tm = new DebugButton(0, 0, 150);
+	tm->label->setText("SelMode (M)");
+	tm->position = Vector(640, 210);
+	tm->event.set(MakeFunctionEvent(AnimationEditor, toggleMouseSelection));
+	addRenderObject(tm, LR_MENU);
+
+	DebugButton *rb = new DebugButton(0, 0, 150);
+	rb->label->setText("ShowJoints (B)");
+	rb->position = Vector(640, 240);
+	rb->event.set(MakeFunctionEvent(AnimationEditor, toggleRenderBorders));
+	addRenderObject(rb, LR_MENU);
+
+	DebugButton *sa = new DebugButton(0, 0, 150);
+	sa->label->setText("ShowAll (A)");
+	sa->position = Vector(640, 270);
+	sa->event.set(MakeFunctionEvent(AnimationEditor, showAllBones));
+	addRenderObject(sa, LR_MENU);
+
 	DebugButton *a4 = new DebugButton(0, 0, 150);
 	a4->label->setText("deleteKey");
-	a4->position = Vector(640, 400);
+	a4->position = Vector(640, 340);
 	a4->event.set(MakeFunctionEvent(AnimationEditor, deleteKey));
 	addRenderObject(a4, LR_MENU);
+
+	unitsize = new DebugFont(10, "Unitsize");
+	unitsize->position = Vector(650, 400);
+	addRenderObject(unitsize, LR_MENU);
+
+	DebugButton *unitdown = new DebugButton(0, 0, 70);
+	unitdown->label->setText("Down");
+	unitdown->position = Vector(640, 420);
+	unitdown->event.set(MakeFunctionEvent(AnimationEditor, decrTimelineUnit));
+	addRenderObject(unitdown, LR_MENU);
+
+	DebugButton *unitup = new DebugButton(0, 0, 70);
+	unitup->label->setText("Up");
+	unitup->position = Vector(640+80, 420);
+	unitup->event.set(MakeFunctionEvent(AnimationEditor, incrTimelineUnit));
+	addRenderObject(unitup, LR_MENU);
+
+	gridsize = new DebugFont(10, "Gridsize");
+	gridsize->position = Vector(650, 450);
+	addRenderObject(gridsize, LR_MENU);
+
+	DebugButton *griddown = new DebugButton(0, 0, 70);
+	griddown->label->setText("Down");
+	griddown->position = Vector(640, 470);
+	griddown->event.set(MakeFunctionEvent(AnimationEditor, decrTimelineGrid));
+	addRenderObject(griddown, LR_MENU);
+
+	DebugButton *gridup = new DebugButton(0, 0, 70);
+	gridup->label->setText("Up");
+	gridup->position = Vector(640+80, 470);
+	gridup->event.set(MakeFunctionEvent(AnimationEditor, incrTimelineGrid));
+	addRenderObject(gridup, LR_MENU);
 
 	DebugButton *save = new DebugButton(0, 0, 150);
 	save->label->setText("Save");
@@ -382,12 +464,6 @@ void AnimationEditor::applyState()
 	load->position = Vector(640, 50);
 	load->event.set(MakeFunctionEvent(AnimationEditor, loadFile));
 	addRenderObject(load, LR_MENU);
-
-	DebugButton *ignore = new DebugButton(0, 0, 150);
-	ignore->label->setText("ignoreBone0");
-	ignore->position = Vector(10, 450);
-	ignore->event.set(MakeFunctionEvent(AnimationEditor, ignoreBone0));
-	addRenderObject(ignore, LR_MENU);
 
 	DebugButton *reverseAnim = new DebugButton(0, 0, 150);
 	reverseAnim->label->setText("reverseAnim");
@@ -411,6 +487,10 @@ void AnimationEditor::applyState()
 	text2->setFontSize(6);
 	addRenderObject(text2, LR_HUD);
 
+	TimelineRender *tr = new TimelineRender();
+	tr->position = Vector(0, KEYFRAME_POS_Y);
+	addRenderObject(tr, LR_BLACKGROUND);
+
 	editSprite->setSelectedBone(0);
 
 	dsq->overlay->alpha.interpolateTo(0, 0.5);
@@ -420,6 +500,9 @@ void AnimationEditor::applyState()
 	dsq->resetTimer();
 
 	dsq->toggleCursor(true, 0.1);
+
+	updateTimelineGrid();
+	updateTimelineUnit();
 }
 
 void AnimationEditor::clearUndoHistory()
@@ -551,26 +634,21 @@ void AnimationEditor::removeState()
 	core->cameraPos = Vector(0,0);
 }
 
-void AnimationEditor::lockSelection()
+void AnimationEditor::toggleMouseSelection()
 {
 	if (dsq->isNested()) return;
 
-	if (selectionLocked)
-	{
-		selectionLocked = false;
-	}
-	else
-	{
-		selectionLocked = true;
-		editSprite->setSelectedBone(0);
-	}
+	if (editSprite && mouseSelection)
+		editSprite->updateSelectedBoneColor();
+
+	mouseSelection = !mouseSelection;
 }
 
 void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 {
 	if (dsq->isNested()) return;
 
-	Bone *sel = editSprite->getSelectedBone(ignoreBone, false);
+	Bone *sel = editSprite->getSelectedBone(false);
 	if (sel)
 	{
 		BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(sel->boneIdx);
@@ -664,19 +742,16 @@ void AnimationEditor::update(float dt)
 
 	if (editingBone)
 	{
-		os << " bone: " << editingBone->name;
+		os << " bone: " << editingBone->name << " [idx " << editingBone->boneIdx << "]";
 		ebdata.x = editingBone->position.x;
 		ebdata.y = editingBone->position.y;
 		ebdata.z = editingBone->rotation.z;
 	}
 	text->setText(os.str());
 
-	char t2buf[256];
-	sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f, idx: %d", ebdata.x, ebdata.y,
-		ebdata.z, editSprite->getSelectedBoneIdx());
+	char t2buf[128];
+	sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f  strip: %d", ebdata.x, ebdata.y, ebdata.z, selectedStripPoint);
 	text2->setText(t2buf);
-
-
 
 	if (core->mouse.buttons.middle)
 	{
@@ -722,7 +797,7 @@ void AnimationEditor::update(float dt)
 	if (boneEdit == 0)
 	{
 		if (editSprite)
-			editingBone = editSprite->getSelectedBone(ignoreBone, !selectionLocked);
+			updateEditingBone();
 		if (editingBone)
 		{
 			/*
@@ -752,12 +827,28 @@ void AnimationEditor::update(float dt)
 	}
 	if (editingBone && boneEdit == 1)
 	{
-		editingBone->position = core->mouse.position - editSprite->position + cursorOffset;
+		Vector add = core->mouse.change;
+		// adjust relative mouse movement to absolute bone rotation
+		if (editingBone->getParent())
+		{
+			float rot = editingBone->getParent()->getAbsoluteRotation().z;
+			if (editingBone->getParent()->isfhr())
+			{
+				add.x = -add.x;
+				add.rotate2D360(rot);
+			}
+			else
+				add.rotate2D360(360 - rot);
+		}
+		editingBone->position += add;
 		constrainMouse();
 	}
 	if (editingBone && boneEdit == 2)
 	{
-		editingBone->rotation.z = rotOffset + (core->mouse.position.x - cursorOffset.x)/2;
+		if (editingBone->getParent() && editingBone->getParent()->isfhr())
+			editingBone->rotation.z = rotOffset + (cursorOffset.x - core->mouse.position.x)/2;
+		else
+			editingBone->rotation.z = rotOffset + (core->mouse.position.x - cursorOffset.x)/2;
 		constrainMouse();
 	}
 	if (boneEdit == 0)
@@ -768,8 +859,6 @@ void AnimationEditor::update(float dt)
 			if (k)
 				editSprite->setTime(k->t);
 			editSprite->updateBones();
-			if (!selectionLocked)
-				editSprite->getSelectedBone(ignoreBone);
 		}
 	}
 }
@@ -802,7 +891,7 @@ void AnimationEditor::nextKey()
 	if (editingStrip)
 	{
 		selectedStripPoint++;
-		if (selectedStripPoint >= editSprite->getSelectedBone(0, 0)->changeStrip.size())
+		if (selectedStripPoint >= editSprite->getSelectedBone(false)->changeStrip.size())
 			selectedStripPoint --;
 	}
 	else
@@ -902,12 +991,12 @@ void AnimationEditor::editStripKey()
 
 	if (editingStrip)
 	{
+		selectedStripPoint = 0;
 		editingStrip = false;
 		bgGrad->makeVertical(Vector(0.4, 0.4, 0.4), Vector(0.8, 0.8, 0.8));
 	}
 	else
 	{
-		selectedStripPoint = 0;
 		editingStrip = true;
 		bgGrad->makeVertical(Vector(0.4, 0.4, 0.6), Vector(0.8, 0.8, 1));
 	}
@@ -952,7 +1041,7 @@ void AnimationEditor::animateOrStop()
 void AnimationEditor::lmbd()
 {
 	pushUndo();
-	editingBone = editSprite->getSelectedBone(ignoreBone, !selectionLocked);
+	updateEditingBone();
 	if (editingBone /*&& (editSprite->position - core->mouse.position).isLength2DIn(400)*/
 		/*&& core->mouse.position.x > 200 && core->mouse.position.y < 560*/
 		&& core->mouse.position.x > 400-200 && core->mouse.position.x < 400+200
@@ -1003,7 +1092,7 @@ void AnimationEditor::lmbu()
 void AnimationEditor::rmbd()
 {
 	pushUndo();
-	editingBone = editSprite->getSelectedBone(ignoreBone, !selectionLocked);
+	updateEditingBone();
 	if (editingBone)
 	{
 		//cursorOffset = editingBone->position + editSprite->position - core->mouse.position;
@@ -1017,7 +1106,7 @@ void AnimationEditor::clearRot()
 {
 	if (dsq->isNested()) return;
 
-	editingBone = editSprite->getSelectedBone(ignoreBone, !selectionLocked);
+	updateEditingBone();
 	if (editingBone)
 	{
 		applyRotation();
@@ -1028,7 +1117,7 @@ void AnimationEditor::clearPos()
 {
 	if (dsq->isNested()) return;
 
-	editingBone = editSprite->getSelectedBone(ignoreBone, !selectionLocked);
+	updateEditingBone();
 	if (editingBone)
 	{
 		BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
@@ -1044,7 +1133,7 @@ void AnimationEditor::toggleHideBone()
 {
 	if (!dsq->isNested())
 	{
-		editingBone = editSprite->getSelectedBone(ignoreBone, !selectionLocked);
+		updateEditingBone();
 		if (editingBone)
 		{
 			editingBone->renderQuad = !editingBone->renderQuad;
@@ -1081,7 +1170,7 @@ void AnimationEditor::mmbd()
 
 void AnimationEditor::cloneBoneAhead()
 {
-	editingBone = editSprite->getSelectedBone(ignoreBone, !selectionLocked);
+	updateEditingBone();
 	if (editingBone && currentKey >= 0)
 	{
 		SkeletalKeyframe *s1 = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
@@ -1107,6 +1196,7 @@ void AnimationEditor::cloneBoneAhead()
 void AnimationEditor::saveFile()
 {
 	editSprite->saveSkeletal(editingFile);
+	dsq->screenMessage("Saved anim: " + editingFile);
 }
 
 void AnimationEditor::loadFile()
@@ -1118,6 +1208,10 @@ void AnimationEditor::loadFile()
 	editSprite->loadSkeletal(editingFile);
 	currentKey = 0;
 	rebuildKeyframeWidgets();
+
+	// disable strip edit mode if still active
+	if (editingStrip)
+		editStripKey();
 }
 
 void AnimationEditor::goToTitle()
@@ -1157,16 +1251,6 @@ void AnimationEditor::prevAnim()
 		currentKey = 0;
 		rebuildKeyframeWidgets();
 	}
-}
-
-void AnimationEditor::ignoreBone0()
-{
-	if (dsq->isNested()) return;
-
-	if (ignoreBone == -1)
-		ignoreBone = 0;
-	else
-		ignoreBone = -1;
 }
 
 void AnimationEditor::reverseAnim()
@@ -1223,6 +1307,80 @@ void AnimationEditor::moveNextWidgets(float dt)
 	}
 	
 }
+
+void AnimationEditor::toggleRenderBorders()
+{
+	renderBorders = !renderBorders;
+	updateRenderBorders();
+}
+
+void AnimationEditor::updateRenderBorders()
+{
+	if (!editSprite)
+		return;
+
+	for (size_t i = 0; i < editSprite->bones.size(); ++i)
+	{
+		editSprite->bones[i]->renderBorder = renderBorders;
+		editSprite->bones[i]->renderCenter = renderBorders;
+		editSprite->bones[i]->borderAlpha = 0.8f;
+	}
+}
+
+void AnimationEditor::updateEditingBone()
+{
+	if (!editingStrip)
+		editingBone = editSprite->getSelectedBone(mouseSelection);
+}
+
+void AnimationEditor::showAllBones()
+{
+	for (size_t i = 0; i < editSprite->bones.size(); ++i)
+		editSprite->bones[i]->renderQuad = true;
+}
+
+void AnimationEditor::incrTimelineUnit()
+{
+	TIMELINE_UNIT += TIMELINE_UNIT_STEP;
+	updateTimelineUnit();
+}
+
+void AnimationEditor::decrTimelineUnit()
+{
+	float t = TIMELINE_UNIT - TIMELINE_UNIT_STEP;
+	if (t >= TIMELINE_UNIT_STEP)
+		TIMELINE_UNIT = t;
+	updateTimelineUnit();
+}
+
+void AnimationEditor::updateTimelineUnit()
+{
+	std::ostringstream os;
+	os << "Unit: " << TIMELINE_UNIT;
+	unitsize->setText(os.str());
+}
+
+void AnimationEditor::incrTimelineGrid()
+{
+	TIMELINE_GRIDSIZE++;
+	updateTimelineGrid();
+}
+
+void AnimationEditor::decrTimelineGrid()
+{
+	int t = TIMELINE_GRIDSIZE - 1;
+	if (t > 0)
+		TIMELINE_GRIDSIZE = t;
+	updateTimelineGrid();
+}
+
+void AnimationEditor::updateTimelineGrid()
+{
+	std::ostringstream os;
+	os << "Grid: " << TIMELINE_GRIDSIZE;
+	gridsize->setText(os.str());
+}
+
 
 
 #endif  // AQUARIA_BUILD_SCENEEDITOR

@@ -223,7 +223,7 @@ public:
 
 	void setTimeMultiplier(float t, int layer=0);	
 
-	Bone* getSelectedBone(int ignoreBone=-1, bool mouseBased = true);
+	Bone* getSelectedBone(bool mouseBased = true);
 	Animation *getCurrentAnimation(int layer=0);
 
 	

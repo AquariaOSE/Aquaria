@@ -1852,25 +1852,28 @@ void SkeletalSprite::setTimeMultiplier(float t, int layer)
 	animLayers[layer].timeMultiplier = t;
 }
 
-Bone* SkeletalSprite::getSelectedBone(int ignore, bool mouseBased)
+Bone* SkeletalSprite::getSelectedBone(bool mouseBased)
 {
 	if (!loaded) return 0;
 	if (mouseBased)
 	{
-		int closestDist = -1;
+		float closestDist = HUGE_VALF;
 		Bone *b = 0;
 		Vector p = core->mouse.position;
 		for (int i = 0; i < bones.size(); i++)
 		{
-			bones[i]->color = Vector(1,1,1);
-			if (bones[i]->boneIdx != ignore && bones[i]->isCoordinateInside(p))
+			if (bones[i]->renderQuad || core->getShiftState())
 			{
-				int dist = ((bones[i]->position+this->position) - p).getSquaredLength2D();
-
-				if (dist <= closestDist || closestDist == -1)
+				bones[i]->color = Vector(1,1,1);
+				if (bones[i]->renderQuad && bones[i]->isCoordinateInsideWorld(p))
 				{
-					closestDist = dist;
-					b = bones[i];
+					float dist = (bones[i]->getWorldPosition() - p).getSquaredLength2D();
+					if (dist <= closestDist)
+					{
+						closestDist = dist;
+						b = bones[i];
+						selectedBone = i;
+					}
 				}
 			}
 		}

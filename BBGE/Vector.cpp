@@ -25,13 +25,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 /*************************************************************************/
 
-void Vector::rotate2D360(int angle)
+void Vector::rotate2D360(float angle)
 {
-	//float len = this->getLength2D();
-	float a = MathFunctions::toRadians(angle);
-	float oldx = x, oldy = y;
-	x = cosf(a)*oldx - sinf(a)*oldy;
-	y = -(sinf(a)*oldx + cosf(a)*oldy);
+	rotate2DRad(angle * (PI / 180.0f));
 }
 
 void Vector::rotate2DRad(float rad)
@@ -40,7 +36,6 @@ void Vector::rotate2DRad(float rad)
 	x = cosf(rad)*ox - sinf(rad)*oy;
 	y = sinf(rad)*ox + cosf(rad)*oy;
 }
-
 
 Vector getRotatedVector(const Vector &vec, float rot)
 {

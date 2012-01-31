@@ -185,7 +185,7 @@ public:
 	void zoomIn();
 	void zoomOut();
 
-	void resetScale();
+	void resetScaleOrSave();
 
 	void clearRot();
 	void clearPos();
@@ -215,9 +215,6 @@ public:
 	Bone *editingBone;
 	int boneEdit;
 	DebugFont *text, *text2;
-	int ignoreBone;
-
-	void ignoreBone0();
 
 	void goToTitle();
 
@@ -236,11 +233,11 @@ public:
 	void moveBoneStripPoint(const Vector &mov);
 
 	void editStripKey();
-	void lockSelection();
+	void toggleMouseSelection();
 	void selectPrevBone();
 	void selectNextBone();
 
-	bool selectionLocked;
+	bool mouseSelection;
 
 	SkeletalKeyframe buffer;
 
@@ -248,6 +245,19 @@ public:
 	int selectedStripPoint;
 
 	void reverseAnim();
+
+	void toggleRenderBorders();
+	void updateRenderBorders();
+	bool renderBorders;
+	void updateEditingBone();
+	void showAllBones();
+	void incrTimelineUnit();
+	void decrTimelineUnit();
+	void updateTimelineUnit();
+	void incrTimelineGrid();
+	void decrTimelineGrid();
+	void updateTimelineGrid();
+	DebugFont *gridsize, *unitsize;
 };
 
 class Credits : public StateObject

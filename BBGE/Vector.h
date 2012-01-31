@@ -402,7 +402,7 @@ public:
 	 }
 #endif
 	 void rotate2DRad(float rad);
-	 void rotate2D360(int angle);
+	 void rotate2D360(float angle);
 };
 
 
