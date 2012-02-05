@@ -242,7 +242,8 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 		r->setIdx(size);
 		for (int i = size+1; i < newSize; i++)
 			renderObjects[i] = 0;
-		firstFreeIdx = curIdx;
+		if (firstFreeIdx > curIdx)
+			firstFreeIdx = curIdx;
 	}
 	else
 	{
@@ -261,13 +262,10 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 		}
 		renderObjects[lastUsed] = r;
 		r->setIdx(lastUsed);
-		firstFreeIdx = curIdx;
+		firstFreeIdx = 0;
+		// Known to have at least one NULL-element
 		while (renderObjects[firstFreeIdx])
-		{
 			firstFreeIdx++;
-			if(firstFreeIdx >= size)
-				firstFreeIdx = 0;
-		}
 	}
 #endif  // RLT_FIXED
 #ifdef RLT_DYNAMIC
