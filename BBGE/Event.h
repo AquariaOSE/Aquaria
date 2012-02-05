@@ -30,6 +30,7 @@ class Event
 {
 public:
 	Event() { data = 0; }
+	virtual ~Event() {}
 	virtual void act()=0;
 	void *data;
 };

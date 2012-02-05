@@ -58,6 +58,11 @@ void Beam::setDamage(float dmg)
 	damageData.damage = dmg;
 }
 
+void Beam::setFirer(Entity *e)
+{
+	damageData.attacker = e;
+}
+
 void Beam::onEndOfLife()
 {
 	beams.remove(this);

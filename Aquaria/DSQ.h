@@ -1377,7 +1377,7 @@ public:
 	bool runScriptNum(const std::string &name, const std::string &func="", float num=0);
 	void collectScriptGarbage();
 
-	void spawnParticleEffect(const std::string &name, Vector position, float rot=0, float t=0, int layer=LR_PARTICLES, float follow=0);
+	ParticleEffect *spawnParticleEffect(const std::string &name, Vector position, float rot=0, float t=0, int layer=LR_PARTICLES, float follow=0);
 	void spawnAllIngredients(const Vector &position);
 
 	std::string getDialogueFilename(const std::string &f);

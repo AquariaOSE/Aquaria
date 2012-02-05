@@ -21,8 +21,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma once
 
 #include "Core.h"
+#include "BaseText.h"
 
-class DebugFont : public RenderObject
+class DebugFont : public BaseText
 {
 public:
 	DebugFont(int initFontSize=0, const std::string &initText="");

@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //#include "DrawText.h"
 #include "RenderObject.h"
+#include "BaseText.h"
 
 #include "../ExternalLibs/glfont2/glfont2.h"
 
@@ -49,7 +50,7 @@ struct BmpFont
 	Texture *overrideTexture;
 };
 
-class BitmapText : public RenderObject
+class BitmapText : public BaseText
 {
 public:
 	BitmapText(BmpFont *bmpFont);

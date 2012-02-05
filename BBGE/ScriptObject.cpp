@@ -25,16 +25,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 static const char *scriptObjTypeNames[] =
 {
-	/* (1 << 0) */ "Entity",
-	/* (1 << 1) */ "Ingredient",
-	/* (1 << 2) */ "CollideEntity",
-	/* (1 << 3) */ "ScriptedEntity",
-	/* (1 << 4) */ "Beam",
-	/* (1 << 5) */ "Shot",
-	/* (1 << 6) */ "Web",
-	/* (1 << 7) */ "Bone",
-	/* (1 << 8) */ "Path/Node",
-	/* (1 << 9) */ "PauseQuad",
+	/* (1 << 0) */ "RenderObject",
+	/* (1 << 1) */ "Entity",
+	/* (1 << 2) */ "Ingredient",
+	/* (1 << 3) */ "CollideEntity",
+	/* (1 << 4) */ "ScriptedEntity",
+	/* (1 << 5) */ "Beam",
+	/* (1 << 6) */ "Shot",
+	/* (1 << 7) */ "Web",
+	/* (1 << 8) */ "Bone",
+	/* (1 << 9) */ "Path/Node",
+	/* (1 <<10) */ "Quad",
+	/* (1 <<11) */ "Text",
 	NULL
 };
 

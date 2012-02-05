@@ -72,7 +72,7 @@ void BmpFont::load(const std::string &file, float scale, bool loadTexture)
 }
 
 Texture *fontTextureTest = 0;
-BitmapText::BitmapText(BmpFont *bmpFont) : RenderObject()
+BitmapText::BitmapText(BmpFont *bmpFont)
 {
 	this->bmpFont = bmpFont;
 	bfePass =0;

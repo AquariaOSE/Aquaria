@@ -99,15 +99,12 @@ function init(me)
 	entity_initSkeletal(me, "EnergyBoss")
 	entity_setState(me, STATE_IDLE)
 	entity_setCull(me, false)
-	entity_setCollideWithAvatar(me, true)
 	
 	entity_setName(me, "EnergyBoss")
 	
 	--entity_flipHorizontal(me)
 		
 	entity_scale(me, 1.5, 1.5)
-	entity_setTouchDamage(me, 1)
-	--entity_setTouchPush(me, 1)
 	
 	entity_setWeight(me, 800)
 	

@@ -59,6 +59,8 @@ public:
 	bool call(const char *name, void *param1, void *param2, void *param3, void *param4);
 	// boolean = function(pointer, pointer, pointer, number, number, number, number, pointer)
 	bool call(const char *name, void *param1, void *param2, void *param3, float param4, float param5, float param6, float param7, void *param8, bool *ret1);
+	// function(pointer, ...) - anything that is already on the stack is forwarded. Results are left on the stack.
+	bool callVariadic(const char *name, lua_State *L, int nparams, void *param);
 
 	lua_State *getLuaState() {return L;}
 	const std::string &getFile() {return file;}

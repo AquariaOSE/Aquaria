@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "DebugFont.h"
 
-DebugFont::DebugFont(int initSz, const std::string &initText) : RenderObject()
+DebugFont::DebugFont(int initSz, const std::string &initText)
 {
 	align = ALIGN_LEFT;
 	followCamera = 1;

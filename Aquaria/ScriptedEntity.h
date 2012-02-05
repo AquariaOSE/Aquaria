@@ -47,7 +47,7 @@ public:
 	void lightFlare();
 	void entityDied(Entity *e);
 	void message(const std::string &msg, int v);
-	void message(const std::string &msg, void *v);
+	void messageVariadic(lua_State *L, int nparams);
 	
 	static bool runningActivation;
 
@@ -110,4 +110,5 @@ protected:
 	void onUpdate(float dt);
 	void onEnterState(int action);
 	void onExitState(int action);
+	virtual void deathNotify(RenderObject *r);
 };

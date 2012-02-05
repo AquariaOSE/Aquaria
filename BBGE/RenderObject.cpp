@@ -156,6 +156,7 @@ void RenderObject::clearColorMult()
 
 RenderObject::RenderObject()
 {
+	addType(SCO_RENDEROBJECT);
 	useOldDT = false;
 
 	updateAfterParent = false;
@@ -1008,13 +1009,6 @@ void RenderObject::addDeathNotify(RenderObject *r)
 {
 	deathNotifications.remove(r);
 	deathNotifications.push_back(r);
-	r->addDeathNotifyInternal(this);
-}
-
-void RenderObject::addDeathNotifyInternal(RenderObject *r)
-{
-	deathNotifications.remove(r);
-	deathNotifications.push_back(r);
 }
 
 void RenderObject::deathNotify(RenderObject *r)
@@ -1387,7 +1381,7 @@ void RenderObject::addChild(RenderObject *r, ParentManaged pm, RenderBeforeParen
 	if (r->parent)
 	{
 		errorLog("Engine does not support multiple parents");
-		exit(0);
+		return;
 	}
 
 	if (order == CHILD_BACK)

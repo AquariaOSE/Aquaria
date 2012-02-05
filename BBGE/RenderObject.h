@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Base.h"
 #include "Texture.h"
 #include "Flags.h"
+#include "ScriptObject.h"
 
 class Core;
 class StateData;
@@ -72,7 +73,7 @@ typedef std::vector<RectShape> CollideRects;
 
 class RenderObjectLayer;
 
-class RenderObject
+class RenderObject : public ScriptObject
 {
 public:
 	friend class Core;
@@ -315,7 +316,6 @@ protected:
 	virtual void deathNotify(RenderObject *r);
 	virtual void onEndOfLife() {}
 
-	void addDeathNotifyInternal(RenderObject *r);
 	// spread parentManagedStatic flag to the entire child tree
 	void propogateParentManagedStatic();
 	void propogateAlpha();

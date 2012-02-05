@@ -225,7 +225,6 @@ Entity::Entity() : StateMachine(), DFSprite()
 	fillGridFromQuad = false;
 	dropChance = 0;
 	inCurrent = false;
-	collideWithAvatar = false;
 	entityProperties.resize(EP_MAX);
 	for (int i = 0; i < entityProperties.size(); i++)
 	{
@@ -525,10 +524,6 @@ void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 		followingPathLoop = loop;
 		*/
 	}
-}
-
-void Entity::message(const std::string &msg, int v)
-{
 }
 
 void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)

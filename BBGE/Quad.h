@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define __quad__
 
 #include "RenderObject.h"
-#include "ScriptObject.h"
 
 class QuadLight
 {
@@ -70,9 +69,9 @@ public:
 	void spawnChildClone(float t);
 	void burn();
 	void unburn();
-	void setWidthHeight(int w, int h=-1);
-	void setWidth(int w);
-	void setHeight(int h);
+	void setWidthHeight(float w, float h=-1);
+	void setWidth(float w);
+	void setHeight(float h);
 	int getWidth() const {return int(width);}
 	int getHeight() const {return int(height);}
 	
@@ -150,7 +149,7 @@ private:
 	void initQuad();
 };
 
-class PauseQuad : public ScriptObject, public Quad
+class PauseQuad : public Quad
 {
 public:
 	PauseQuad();

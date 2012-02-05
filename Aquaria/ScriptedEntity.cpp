@@ -96,14 +96,14 @@ void ScriptedEntity::message(const std::string &msg, int v)
 	Entity::message(msg, v);
 }
 
-void ScriptedEntity::message(const std::string &msg, void *v)
+void ScriptedEntity::messageVariadic(lua_State *L, int nparams)
 {
 	if (script)
 	{
-		if (!script->call("msg", this, msg.c_str(), v))
+		if (!script->callVariadic("msg", L, nparams, this))
 			luaDebugMsg("msg", script->getLastError());
 	}
-	Entity::message(msg, v);
+	Entity::messageVariadic(L, nparams);
 }
 
 void ScriptedEntity::warpSegments()
@@ -459,7 +459,6 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 			Entity *followEntity = dsq->game->avatar;
 			if (followEntity && dsq->game->avatar->pullTarget == this)
 			{
-				collideWithAvatar = false;
 				//debugLog("followentity!");
 				Vector dist = followEntity->position - this->position;
 				if (dist.isLength2DIn(followEntity->collideRadius + collideRadius + 16))
@@ -1018,5 +1017,15 @@ void ScriptedEntity::onExitState(int action)
 	}
 
 	CollideEntity::onExitState(action);
+}
+
+void ScriptedEntity::deathNotify(RenderObject *r)
+{
+	if (script)
+	{
+		if (!script->call("deathNotify", this, r))
+			luaDebugMsg("deathNotify", script->getLastError());
+	}
+	CollideEntity::deathNotify(r);
 }
 

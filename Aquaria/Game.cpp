@@ -8500,17 +8500,17 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, fl
 	return closest;
 }
 
-bool Game::collideCircleVsLine(Entity *ent, Vector start, Vector end, float radius)
+bool Game::collideCircleVsLine(RenderObject *r, Vector start, Vector end, float radius)
 {
 	bool collision = false;
-	if (isTouchingLine(start, end, ent->position, radius+ent->collideRadius, &lastCollidePosition))
+	if (isTouchingLine(start, end, r->position, radius+r->collideRadius, &lastCollidePosition))
 	{
 		collision = true;
 	}
 	return collision;
 }
 
-bool Game::collideCircleVsLineAngle(Entity *ent, float angle, float startLen, float endLen, float radius, Vector basePos)
+bool Game::collideCircleVsLineAngle(RenderObject *r, float angle, float startLen, float endLen, float radius, Vector basePos)
 {
 	bool collision = false;
 	float rads = MathFunctions::toRadians(angle);
@@ -8518,7 +8518,7 @@ bool Game::collideCircleVsLineAngle(Entity *ent, float angle, float startLen, fl
 	float cosv = cosf(rads);
 	Vector start=Vector(sinv,cosv)*startLen + basePos;
 	Vector end=Vector(sinv,cosv)*endLen + basePos;
-	if (isTouchingLine(start, end, ent->position, radius+ent->collideRadius, &lastCollidePosition))
+	if (isTouchingLine(start, end, r->position, radius+r->collideRadius, &lastCollidePosition))
 	{
 		collision = true;
 	}

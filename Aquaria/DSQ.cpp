@@ -4917,23 +4917,18 @@ std::string DSQ::getSaveDirectory()
 	return getUserDataFolder() + "/save";
 }
 
-void DSQ::spawnParticleEffect(const std::string &name, Vector position, float rotz, float t, int layer, float follow)
+ParticleEffect *DSQ::spawnParticleEffect(const std::string &name, Vector position, float rotz, float t, int layer, float follow)
 {
-	/*
-	ScriptedParticleEffect *e = new ScriptedParticleEffect(name);
-	e->position = position;
-	core->getTopStateData()->addRenderObject(e, LR_PARTICLES);
-	*/
 	if (t!=0)
 	{
 		PECue p(name, position, rotz, t);
 		pecue.push_back(p);
+		return NULL;
 	}
-	else
-	{
-		ParticleEffect *e = core->createParticleEffect(name, position, layer, rotz);
-		e->followCamera = follow;
-	}
+
+	ParticleEffect *e = core->createParticleEffect(name, position, layer, rotz);
+	e->followCamera = follow;
+	return e;
 }
 
 void DSQ::spawnAllIngredients(const Vector &position)

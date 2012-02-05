@@ -290,6 +290,7 @@ void Quad::initQuad()
 
 Quad::Quad() : RenderObject()
 {
+	addType(SCO_QUAD);
 	borderAlpha = 0.5;
 	//debugLog("Quad::Quad()");
 	initQuad();
@@ -889,7 +890,7 @@ void Quad::onUpdate(float dt)
 	}
 }
 
-void Quad::setWidthHeight(int w, int h)
+void Quad::setWidthHeight(float w, float h)
 {
 	if (h == -1)
 		height = w;
@@ -898,12 +899,12 @@ void Quad::setWidthHeight(int w, int h)
 	width = w;
 }
 
-void Quad::setWidth(int w)
+void Quad::setWidth(float w)
 {
 	width = w;
 }
 
-void Quad::setHeight(int h)
+void Quad::setHeight(float h)
 {
 	height = h;
 }
@@ -921,7 +922,6 @@ void Quad::onSetTexture()
 
 PauseQuad::PauseQuad() : Quad(), pauseLevel(0)
 {
-	addType(SCO_PAUSEQUAD);
 }
 
 void PauseQuad::onUpdate(float dt)

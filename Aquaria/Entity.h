@@ -194,7 +194,7 @@ enum BounceType
 	BOUNCE_REAL		= 1
 };
 
-class Entity : public ScriptObject, public DFSprite, public StateMachine
+class Entity : public DFSprite, public StateMachine
 {
 public:
 	Entity();
@@ -233,8 +233,9 @@ public:
 
 	bool canSetState(int state);
 	
-	virtual void message(const std::string &msg, int v);
-	virtual void message(const std::string &msg, void *v) {}
+	virtual void message(const std::string &msg, int v) {}
+	virtual void messageVariadic(lua_State *L, int nparams) {}
+
 	bool isUnderWater(const Vector &o=Vector());
 
 	//virtual void onHitBySpell(Spell *spell) {}
@@ -267,7 +268,6 @@ public:
 	virtual void saveExtraData(TiXmlElement *xml){}
 	virtual void loadExtraData(TiXmlElement *xml){}
 	Vector startPos;
-	virtual void onMessage(const std::string &msg){}
 	void getEXP(unsigned int exp);
 	void rotateToVec(Vector addVec, float time, int offsetAngle=0);
 	virtual void applyVariation(int variation){}
@@ -377,7 +377,6 @@ public:
 
 	void setEntityProperty(EntityProperty ep, bool value=true);
 	bool isEntityProperty(EntityProperty ep);
-	bool collideWithAvatar;
 	virtual void song(SongType songType){}
 	bool updateCurrents(float dt);
 	void updateVel2(float dt, bool override=false);

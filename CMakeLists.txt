@@ -573,6 +573,7 @@ ENDIF(MSVC)
 
 SET(LUA_SRCS
     ${LUASRCDIR}/lapi.c
+    ${LUASRCDIR}/ldblib.c
     ${LUASRCDIR}/ldebug.c
     ${LUASRCDIR}/ldo.c
     ${LUASRCDIR}/ldump.c

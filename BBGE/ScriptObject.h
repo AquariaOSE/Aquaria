@@ -26,16 +26,18 @@ enum ScriptObjectType
 
 	// If you change this enum, do not forget to adjust the string array in the cpp,
 	// and to add additional compile time assertions to ScriptInterface.cpp as necessary!
-	SCO_ENTITY            = 0x0001,
-	SCO_INGREDIENT        = 0x0002,
-	SCO_COLLIDE_ENTITY    = 0x0004,
-	SCO_SCRIPTED_ENTITY   = 0x0008,
-	SCO_BEAM              = 0x0010,
-	SCO_SHOT              = 0x0020,
-	SCO_WEB               = 0x0040,
-	SCO_BONE              = 0x0080,
-	SCO_PATH              = 0x0100,
-	SCO_PAUSEQUAD         = 0x0200,
+	SCO_RENDEROBJECT      = 0x0001,
+	SCO_ENTITY            = 0x0002,
+	SCO_INGREDIENT        = 0x0004,
+	SCO_COLLIDE_ENTITY    = 0x0008,
+	SCO_SCRIPTED_ENTITY   = 0x0010,
+	SCO_BEAM              = 0x0020,
+	SCO_SHOT              = 0x0040,
+	SCO_WEB               = 0x0080,
+	SCO_BONE              = 0x0100,
+	SCO_PATH              = 0x0200,
+	SCO_QUAD              = 0x0400,
+	SCO_TEXT              = 0x0800,
 
 	SCO_FORCE_32BIT = 0xFFFFFFFF
 };
@@ -59,7 +61,12 @@ public:
 
 	inline bool isType(ScriptObjectType bt) const
 	{
-		return (_objtype & bt) != 0;
+		return (_objtype & bt) == bt;
+	}
+
+	inline bool isExactType(ScriptObjectType bt) const
+	{
+		return _objtype  == bt;
 	}
 
 	inline std::string getTypeString() const

@@ -70,7 +70,7 @@ struct ShotData
 	
 };
 
-class Shot : public ScriptObject, public Quad, public Segmented
+class Shot : public Quad, public Segmented
 {
 public:
 	//Shot(DamageType damageType, Entity *firer, Vector pos, Entity *target, std::string tex="", float homingness=1000, int maxSpeed=400, int segments=10, float segMin=0.1, float segMax=5, float damage = 1, float lifeTime = 0);
@@ -137,7 +137,7 @@ protected:
 	void onUpdate(float dt);
 };
 
-class Beam : public ScriptObject, public Quad
+class Beam : public Quad
 {
 public:
 	Beam(Vector pos, float angle);
@@ -153,7 +153,7 @@ public:
 	DamageData damageData;
 
 	void setDamage(float dmg);
-
+	void setFirer(Entity *e);
 	void setBeamWidth(int w);
 protected:
 	int beamWidth;
