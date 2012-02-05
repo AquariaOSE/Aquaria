@@ -40,6 +40,96 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	PFNGLUNIFORM1IARBPROC            glUniform1iARB            = NULL;
 #endif
 
+bool Shader::_wasInited = false;
+bool Shader::_useShaders = false;
+
+void Shader::staticInit()
+{
+	if (_wasInited)
+		return;
+
+	_wasInited = true;
+	debugLog("Initializing shaders...");
+
+#if defined(BBGE_BUILD_SHADERS) && defined(BBGE_BUILD_OPENGL)
+	char *ext = (char*)glGetString( GL_EXTENSIONS );
+
+	if( strstr( ext, "GL_ARB_shading_language_100" ) == NULL )
+	{
+		//This extension string indicates that the OpenGL Shading Language,
+		// version 1.00, is supported.
+		debugLog("GL_ARB_shading_language_100 extension was not found");
+		/*
+		MessageBox(NULL,"GL_ARB_shading_language_100 extension was not found",
+		"ERROR",MB_OK|MB_ICONEXCLAMATION);
+		*/
+		goto end;
+	}
+
+	if( strstr( ext, "GL_ARB_shader_objects" ) == NULL )
+	{
+		debugLog("GL_ARB_shader_objects extension was not found");
+		goto end;
+	}
+	else
+	{
+#ifdef BBGE_BUILD_GLFW
+		glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)glfwGetProcAddress("glCreateProgramObjectARB");
+		glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)glfwGetProcAddress("glDeleteObjectARB");
+		glUseProgramObjectARB     = (PFNGLUSEPROGRAMOBJECTARBPROC)glfwGetProcAddress("glUseProgramObjectARB");
+		glCreateShaderObjectARB   = (PFNGLCREATESHADEROBJECTARBPROC)glfwGetProcAddress("glCreateShaderObjectARB");
+		glShaderSourceARB         = (PFNGLSHADERSOURCEARBPROC)glfwGetProcAddress("glShaderSourceARB");
+		glCompileShaderARB        = (PFNGLCOMPILESHADERARBPROC)glfwGetProcAddress("glCompileShaderARB");
+		glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)glfwGetProcAddress("glGetObjectParameterivARB");
+		glAttachObjectARB         = (PFNGLATTACHOBJECTARBPROC)glfwGetProcAddress("glAttachObjectARB");
+		glGetInfoLogARB           = (PFNGLGETINFOLOGARBPROC)glfwGetProcAddress("glGetInfoLogARB");
+		glLinkProgramARB          = (PFNGLLINKPROGRAMARBPROC)glfwGetProcAddress("glLinkProgramARB");
+		glGetUniformLocationARB   = (PFNGLGETUNIFORMLOCATIONARBPROC)glfwGetProcAddress("glGetUniformLocationARB");
+		glUniform4fARB            = (PFNGLUNIFORM4FARBPROC)glfwGetProcAddress("glUniform4fARB");
+		glUniform1iARB            = (PFNGLUNIFORM1IARBPROC)glfwGetProcAddress("glUniform1iARB");
+#endif
+
+#ifdef BBGE_BUILD_SDL
+		glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
+		glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)SDL_GL_GetProcAddress("glDeleteObjectARB");
+		glUseProgramObjectARB     = (PFNGLUSEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glUseProgramObjectARB");
+		glCreateShaderObjectARB   = (PFNGLCREATESHADEROBJECTARBPROC)SDL_GL_GetProcAddress("glCreateShaderObjectARB");
+		glShaderSourceARB         = (PFNGLSHADERSOURCEARBPROC)SDL_GL_GetProcAddress("glShaderSourceARB");
+		glCompileShaderARB        = (PFNGLCOMPILESHADERARBPROC)SDL_GL_GetProcAddress("glCompileShaderARB");
+		glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)SDL_GL_GetProcAddress("glGetObjectParameterivARB");
+		glAttachObjectARB         = (PFNGLATTACHOBJECTARBPROC)SDL_GL_GetProcAddress("glAttachObjectARB");
+		glGetInfoLogARB           = (PFNGLGETINFOLOGARBPROC)SDL_GL_GetProcAddress("glGetInfoLogARB");
+		glLinkProgramARB          = (PFNGLLINKPROGRAMARBPROC)SDL_GL_GetProcAddress("glLinkProgramARB");
+		glGetUniformLocationARB   = (PFNGLGETUNIFORMLOCATIONARBPROC)SDL_GL_GetProcAddress("glGetUniformLocationARB");
+		glUniform4fARB            = (PFNGLUNIFORM4FARBPROC)SDL_GL_GetProcAddress("glUniform4fARB");
+		glUniform1iARB            = (PFNGLUNIFORM1IARBPROC)SDL_GL_GetProcAddress("glUniform1iARB");
+#endif
+
+		if( !glCreateProgramObjectARB || !glDeleteObjectARB || !glUseProgramObjectARB ||
+			!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB || 
+			!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB || 
+			!glLinkProgramARB || !glGetUniformLocationARB || !glUniform4fARB ||
+			!glUniform1iARB )
+		{
+			glCreateProgramObjectARB = 0;
+			debugLog("One or more GL_ARB_shader_objects functions were not found");
+			goto end;
+		}
+	}
+
+	// everything fine when we are here
+	_useShaders = true;
+
+#endif
+
+end:
+
+	if (_useShaders)
+		debugLog("Shader support enabled.");
+	else
+		debugLog("Shader support not enabled.");
+}
+
 Shader::Shader()
 {
 	loaded = false;
@@ -58,6 +148,8 @@ Shader::Shader()
 Shader::~Shader()
 {
 #ifdef BBGE_BUILD_SHADERS
+	if (!_useShaders)
+		return;
 	if (g_vertexShader)
 		glDeleteObjectARB( g_vertexShader );
 	if (g_fragmentShader)
@@ -132,8 +224,10 @@ void Shader::reload()
 void Shader::bind()
 {
 #ifdef BBGE_BUILD_SHADERS
+	if (!_useShaders)
+		return;
 	glUseProgramObjectARB( g_programObj );
-    if( g_location_texture != -1 )
+	if( g_location_texture != -1 )
 		glUniform1iARB( g_location_texture, 0 );
 	if ( g_location_mode )
 		glUniform1iARB( g_location_mode, mode);
@@ -145,15 +239,22 @@ void Shader::bind()
 void Shader::unbind()
 {
 #ifdef BBGE_BUILD_SHADERS
+	if (!_useShaders)
+		return;
 	glUseProgramObjectARB( NULL );
 #endif
 }
 
 void Shader::load(const std::string &file, const std::string &fragFile)
 {
-	debugLog("Shader::load("+file+", "+fragFile+")");
+	staticInit();
 	loaded = false;
+
 #ifdef BBGE_BUILD_SHADERS
+	if(!_useShaders)
+		return;
+
+	debugLog("Shader::load("+file+", "+fragFile+")");
 
 	g_location_texture	= 0;
 	g_location_mode		= 0;
@@ -170,79 +271,6 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 		// functions that we wish to use...
 		//
 
-		debugLog("Shader::load 2");
-		char *ext = (char*)glGetString( GL_EXTENSIONS );
-
-		if( strstr( ext, "GL_ARB_shading_language_100" ) == NULL )
-		{
-			//This extension string indicates that the OpenGL Shading Language,
-			// version 1.00, is supported.
-			debugLog("GL_ARB_shading_language_100 extension was not found");
-			/*
-			MessageBox(NULL,"GL_ARB_shading_language_100 extension was not found",
-				"ERROR",MB_OK|MB_ICONEXCLAMATION);
-			*/
-			return;
-		}
-
-		debugLog("Shader::load 3");
-		if( strstr( ext, "GL_ARB_shader_objects" ) == NULL )
-		{
-			debugLog("GL_ARB_shader_objects extension was not found");
-			return;
-		}
-		else
-		{
-			// only do this once if it works
-			if (!glCreateProgramObjectARB)
-			{
-#ifdef BBGE_BUILD_GLFW
-				glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)glfwGetProcAddress("glCreateProgramObjectARB");
-				glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)glfwGetProcAddress("glDeleteObjectARB");
-				glUseProgramObjectARB     = (PFNGLUSEPROGRAMOBJECTARBPROC)glfwGetProcAddress("glUseProgramObjectARB");
-				glCreateShaderObjectARB   = (PFNGLCREATESHADEROBJECTARBPROC)glfwGetProcAddress("glCreateShaderObjectARB");
-				glShaderSourceARB         = (PFNGLSHADERSOURCEARBPROC)glfwGetProcAddress("glShaderSourceARB");
-				glCompileShaderARB        = (PFNGLCOMPILESHADERARBPROC)glfwGetProcAddress("glCompileShaderARB");
-				glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)glfwGetProcAddress("glGetObjectParameterivARB");
-				glAttachObjectARB         = (PFNGLATTACHOBJECTARBPROC)glfwGetProcAddress("glAttachObjectARB");
-				glGetInfoLogARB           = (PFNGLGETINFOLOGARBPROC)glfwGetProcAddress("glGetInfoLogARB");
-				glLinkProgramARB          = (PFNGLLINKPROGRAMARBPROC)glfwGetProcAddress("glLinkProgramARB");
-				glGetUniformLocationARB   = (PFNGLGETUNIFORMLOCATIONARBPROC)glfwGetProcAddress("glGetUniformLocationARB");
-				glUniform4fARB            = (PFNGLUNIFORM4FARBPROC)glfwGetProcAddress("glUniform4fARB");
-				glUniform1iARB            = (PFNGLUNIFORM1IARBPROC)glfwGetProcAddress("glUniform1iARB");
-#endif
-
-#ifdef BBGE_BUILD_SDL
-				glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
-				glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)SDL_GL_GetProcAddress("glDeleteObjectARB");
-				glUseProgramObjectARB     = (PFNGLUSEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glUseProgramObjectARB");
-				glCreateShaderObjectARB   = (PFNGLCREATESHADEROBJECTARBPROC)SDL_GL_GetProcAddress("glCreateShaderObjectARB");
-				glShaderSourceARB         = (PFNGLSHADERSOURCEARBPROC)SDL_GL_GetProcAddress("glShaderSourceARB");
-				glCompileShaderARB        = (PFNGLCOMPILESHADERARBPROC)SDL_GL_GetProcAddress("glCompileShaderARB");
-				glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)SDL_GL_GetProcAddress("glGetObjectParameterivARB");
-				glAttachObjectARB         = (PFNGLATTACHOBJECTARBPROC)SDL_GL_GetProcAddress("glAttachObjectARB");
-				glGetInfoLogARB           = (PFNGLGETINFOLOGARBPROC)SDL_GL_GetProcAddress("glGetInfoLogARB");
-				glLinkProgramARB          = (PFNGLLINKPROGRAMARBPROC)SDL_GL_GetProcAddress("glLinkProgramARB");
-				glGetUniformLocationARB   = (PFNGLGETUNIFORMLOCATIONARBPROC)SDL_GL_GetProcAddress("glGetUniformLocationARB");
-				glUniform4fARB            = (PFNGLUNIFORM4FARBPROC)SDL_GL_GetProcAddress("glUniform4fARB");
-				glUniform1iARB            = (PFNGLUNIFORM1IARBPROC)SDL_GL_GetProcAddress("glUniform1iARB");
-#endif
-
-				if( !glCreateProgramObjectARB || !glDeleteObjectARB || !glUseProgramObjectARB ||
-					!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB || 
-					!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB || 
-					!glLinkProgramARB || !glGetUniformLocationARB || !glUniform4fARB ||
-					!glUniform1iARB )
-				{
-					glCreateProgramObjectARB = 0;
-					debugLog("One or more GL_ARB_shader_objects functions were not found");
-					return;
-				}
-			}
-		}
-
-		debugLog("Shader::load 4");
-
 		const char *vertexShaderStrings[1];
 		const char *fragmentShaderStrings[1];
 		GLint bVertCompiled;
@@ -254,7 +282,7 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 		// Create the vertex shader...
 		//
 
-		debugLog("Shader::load 5");
+		debugLog("Shader::load 2");
 
 		g_vertexShader = glCreateShaderObjectARB( GL_VERTEX_SHADER_ARB );
 
@@ -280,7 +308,7 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 		// Create the fragment shader...
 		//
 
-		debugLog("Shader::load 6");
+		debugLog("Shader::load 3");
 
 		g_fragmentShader = glCreateShaderObjectARB( GL_FRAGMENT_SHADER_ARB );
 
@@ -301,7 +329,7 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 			return;
 		}
 
-		debugLog("Shader::load 7");
+		debugLog("Shader::load 4");
 
 		//
 		// Create a program object and attach the two compiled shaders...
@@ -326,7 +354,7 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 		glLinkProgramARB( g_programObj );
 		glGetObjectParameterivARB( g_programObj, GL_OBJECT_LINK_STATUS_ARB, &bLinked );
 
-		debugLog("Shader::load 8");
+		debugLog("Shader::load 5");
 
 		if( bLinked == false )
 		{
@@ -341,13 +369,13 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 		// Locate some parameters by name so we can set them later...
 		//
 
-		debugLog("Shader::load 9");
+		debugLog("Shader::load 6");
 
 		g_location_texture = glGetUniformLocationARB( g_programObj, "tex" );
 		g_location_mode = glGetUniformLocationARB( g_programObj, "mode" );
 		g_location_value = glGetUniformLocationARB( g_programObj, "value" );
 
-		debugLog("Shader::load 10");
+		debugLog("Shader::load 7");
 
 		loaded = true;
 	}

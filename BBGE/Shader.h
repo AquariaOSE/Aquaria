@@ -47,4 +47,8 @@ protected:
 	int mode;
 	float vx, vy, vz, vw;
 	bool loaded;
+
+	static void staticInit();
+	static bool _wasInited;
+	static bool _useShaders;
 };
