@@ -499,7 +499,7 @@ Entity *entity(lua_State *L, int slot = 1)
 	ENSURE_TYPE(ent, SCO_ENTITY);
 	if (!ent)
 	{
-		scriptError("Entity Invalid Pointer");
+		scriptDebug(L, "Entity Invalid Pointer");
 	}
 	return ent;
 }
@@ -519,7 +519,7 @@ Bone *bone(lua_State *L, int slot = 1)
 	ENSURE_TYPE(b, SCO_BONE);
 	if (!b)
 	{
-		scriptError("Bone Invalid Pointer");
+		scriptDebug(L, "Bone Invalid Pointer");
 	}
 	return b;
 }

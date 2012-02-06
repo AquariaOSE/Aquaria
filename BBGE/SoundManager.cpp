@@ -1546,7 +1546,7 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	}
 
 	int loc = f.find_last_of('/');
-	int loc2 = f.find('.');
+	int loc2 = f.rfind('.');
 	if (loc != std::string::npos && loc2 != std::string::npos)
 	{
 		name = f.substr(loc+1, loc2-(loc+1));
