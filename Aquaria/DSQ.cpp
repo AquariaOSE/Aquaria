@@ -2208,6 +2208,16 @@ void DSQ::playPositionalSfx(const std::string &name, const Vector &position, flo
 {
 	PlaySfx sfx = calcPositionalSfx(position);
 
+	// FIXME: Right now, positional sound effects never update their relative position to the
+	// listener, which means that if they are spawned too far away to be audible, it is not possible
+	// that they ever get audible at all. Additionally, the current scripting API only provides
+	// functions to fade sounds OUT, not to set their volume arbitrarily.
+	// Because audio thread creation is costly, drop sounds that can not be heard.
+	// This needs to be removed once proper audio source/listener positioning is implemented,
+	// or the scripting interface gets additional functions to mess with sound. -- FG
+	if (sfx.vol <= 0)
+		return;
+
 	sfx.freq = f;
 	sfx.name = name;
 

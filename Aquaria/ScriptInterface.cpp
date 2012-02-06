@@ -2346,6 +2346,11 @@ luaFunc(entity_playSfx)
 		float fadeOut = lua_tonumber(L, 6);
 		if(vol > 0)
 			sfx.vol *= vol;
+
+		// FIXME: See comment in DSQ::playPositionalSfx() -- FG
+		if (sfx.vol <= 0)
+			luaReturnPtr(NULL);
+
 		h = core->sound->playSfx(sfx);
 		if (fadeOut != 0)
 		{
@@ -5135,6 +5140,10 @@ luaFunc(playSfx)
 	{
 		sfx.vol = vol;
 	}
+
+	// FIXME: See comment in DSQ::playPositionalSfx() -- FG
+	if (sfx.vol <= 0)
+		luaReturnPtr(NULL);
 
 	sfx.name = getString(L, 1);
 	sfx.freq = freq;
