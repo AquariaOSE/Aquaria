@@ -596,13 +596,20 @@ typedef std::vector<QuadList> QuadArray;
 
 typedef std::list<Element*> ElementUpdateList;
 
+// Note: although this is a bitmask, only one of these values may be set at a time!
 enum ObsType
 {
-	OT_EMPTY		= 0,
-	OT_INVISIBLE	= 1,
-	OT_BLACK		= 2,
-	OT_INVISIBLEIN	= 3,
-	OT_HURT			= 4
+	OT_EMPTY		= 0x00,
+
+	// immutable
+	OT_BLACK		= 0x01,
+	OT_BLACKINVIS	= 0x02,  // same as OT_BLACK, but not drawn
+	OT_MASK_BLACK	= OT_BLACK | OT_BLACKINVIS,
+
+	// set by entities or tiles
+	OT_INVISIBLE	= 0x04,
+	OT_INVISIBLEIN	= 0x08,
+	OT_HURT			= 0x10,
 };
 
 struct EntitySaveData
@@ -641,6 +648,7 @@ public:
 	const signed char *getGridColumn(int tileX);
 	void setGrid(const TileVector &tile, int v);
 	bool isObstructed(const TileVector &tile, int t = -1) const;
+	void trimGrid();
 
 	void clearPointers();
 
@@ -652,6 +660,7 @@ public:
 	bool loadScene(std::string scene);
 
 	void clearGrid(int v = 0);
+	void clearDynamicGrid();
 
 	void toggleWorldMap();
 
@@ -976,7 +985,7 @@ public:
 	void createGradient();
 
 	std::string saveMusic;
-	GridRender *gridRender, *gridRender2, *gridRender3;
+	GridRender *gridRender, *gridRender2, *gridRender3, *edgeRender;
 	void toggleGridRender();
 	ElementUpdateList elementUpdateList;
 
@@ -1189,7 +1198,6 @@ protected:
 
 
 	signed char grid[MAX_GRID][MAX_GRID];
-	signed char baseGrid[MAX_GRID][MAX_GRID];
 
 
 	Quad *bg, *bg2;
@@ -1223,7 +1231,7 @@ int Game::getGridRaw(unsigned int x, unsigned int y) const
 inline
 int Game::getGrid(const TileVector &tile) const
 {
-	if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return 1;
+	if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return OT_INVISIBLE;
 	return grid[tile.x][tile.y];
 }
 
@@ -1246,10 +1254,7 @@ void Game::setGrid(const TileVector &tile, int v)
 }
 
 inline
-bool Game::isObstructed(const TileVector &tile, int t) const
+bool Game::isObstructed(const TileVector &tile, int t /* = -1 */) const
 {
-	if (t == -1)
-		return (getGrid(tile) != 0);
-	return getGrid(tile) == t;
+	return (getGrid(tile) & t);
 }
-

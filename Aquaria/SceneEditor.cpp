@@ -518,7 +518,7 @@ void SceneEditor::openMainMenu()
 	addMainMenuItem("EDIT TILES                             (F5)",			106);
 	addMainMenuItem("EDIT ENTITIES                          (F6)",			107);
 	addMainMenuItem("EDIT NODES                             (F7)",			108);
-	addMainMenuItem("REGEN COLLISIONS                  (SHIFT-R)",		    103);
+	addMainMenuItem("REGEN COLLISIONS                    (ALT-R)",			103);
 	addMainMenuItem("RECACHE TEXTURES					(CTRL-R)",			130);
 //	addMainMenuItem("REFRESH DATAFILES					   (F11)",			117);
 	addMainMenuItem("REGEN ROCK FROM MAPTEMPLATE       (F11+F12)",			116);
@@ -1949,12 +1949,12 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 			float rot=0;
 			bool addTile = false;
 			TileVector t(x,y);
-			if (dsq->game->isObstructed(t,OT_BLACK)
+			if (dsq->game->isObstructed(t, OT_MASK_BLACK)
 				&& (
-				!dsq->game->isObstructed(TileVector(x+1,y),OT_BLACK) ||
-				!dsq->game->isObstructed(TileVector(x-1,y),OT_BLACK) ||
-				!dsq->game->isObstructed(TileVector(x,y-1),OT_BLACK) ||
-				!dsq->game->isObstructed(TileVector(x,y+1),OT_BLACK)
+				!dsq->game->isObstructed(TileVector(x+1,y), OT_MASK_BLACK) ||
+				!dsq->game->isObstructed(TileVector(x-1,y), OT_MASK_BLACK) ||
+				!dsq->game->isObstructed(TileVector(x,y-1), OT_MASK_BLACK) ||
+				!dsq->game->isObstructed(TileVector(x,y+1), OT_MASK_BLACK)
 				)
 				)
 			{
@@ -1967,7 +1967,7 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 				{
 				*/
 				float dist=0;
-				wallNormal = dsq->game->getWallNormal(t.worldVector(), 5, &dist, OT_BLACK);
+				wallNormal = dsq->game->getWallNormal(t.worldVector(), 5, &dist, OT_MASK_BLACK);
 				offset = wallNormal*(-TILE_SIZE*0.6f);
 				MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), wallNormal, rot);
 				rot = 180-(360-rot);
@@ -3919,22 +3919,12 @@ void SceneEditor::prevEntityType()
 void SceneEditor::dumpObs()
 {
 	TileVector tv;
-	const uint32 A = 0xFF000000;
-#define COL(c) (((0x ## c)) | A)
-	const uint32 coltab[5] =
-	{
-		COL(FFFFFF),
-		COL(FFFFFF),
-		COL(000000),
-		COL(FFFFFF),
-		COL(FFFFFF),
-	};
 	unsigned char *data = new unsigned char[MAX_GRID * MAX_GRID * sizeof(uint32)];
 	uint32 *ptr = (uint32*)data;
 	for(tv.y = MAX_GRID - 1; ; --tv.y)
 	{
 		for(tv.x = 0; tv.x < MAX_GRID; ++tv.x)
-			*ptr++ = coltab[game->getGrid(tv)];
+			*ptr++ = game->isObstructed(tv, OT_MASK_BLACK) ? 0xFF000000 : 0xFFFFFFFF;
 		if(tv.y == 0)
 			break;
 	}

@@ -349,7 +349,6 @@ static void scriptDebug(lua_State *L, const std::string& msg)
 void compile_time_assertions()
 {
 #define oo(cls) offsetof(cls, _objtype)
-#define compile_assert(pred) switch(0){case 0:case (pred):;}
 	compile_assert(oo(Path) == oo(RenderObject));
 	compile_assert(oo(Path) == oo(Entity));
 	compile_assert(oo(Path) == oo(Ingredient));
@@ -364,7 +363,6 @@ void compile_time_assertions()
 	compile_assert(oo(Path) == oo(Avatar));
 	compile_assert(oo(Path) == oo(BaseText));
 #undef oo
-#undef compile_assert
 }
 
 template <typename T>

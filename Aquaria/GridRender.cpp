@@ -77,6 +77,9 @@ void GridRender::onRender()
 	case OT_BLACK:
 		core->setColor(0, 0, 0, 1);
 	break;
+	case OT_BLACKINVIS:
+		core->setColor(0.3, 0, 0.6, alpha.getValue());
+	break;
 	case OT_HURT:
 		core->setColor(1, 1, 0, alpha.getValue());
 	break;

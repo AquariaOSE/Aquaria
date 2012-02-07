@@ -97,6 +97,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include "glext.h"
 #endif
 
+#define compile_assert(pred) switch(0){case 0:case (pred):;}
 
 #ifdef _MSC_VER
 #pragma warning(disable:4786)

@@ -2176,15 +2176,29 @@ std::string Game::getNoteName(int n, const std::string &pre)
 	return os.str();
 }
 
+void Game::clearDynamicGrid()
+{
+	// just to be sure in case the grid/type sizes change,
+	// otherwise there is a chance to write a few bytes over the end of the buffer -- FG
+	compile_assert(sizeof(grid) % sizeof(uint32) == 0);
+
+	signed char *gridstart = &grid[0][0];
+	uint32 *gridend = (uint32*)(gridstart + sizeof(grid));
+	uint32 *gridptr = (uint32*)gridstart;
+	// mask out non-black bytes (which are those set by entites or tiles),
+	// use full uint32 rounds instead of single-bytes to speed things up.
+	const unsigned int mask = OT_MASK_BLACK | (OT_MASK_BLACK << 8) | (OT_MASK_BLACK << 16) | (OT_MASK_BLACK << 24);
+	do
+	{
+		*gridptr &= mask;
+		++gridptr;
+	}
+	while(gridptr < gridend);
+}
+
 void Game::reconstructEntityGrid()
 {
-	for (int x = 0; x < MAX_GRID; x++)
-	{
-		for (int y = 0; y < MAX_GRID; y++)
-		{
-			grid[x][y] = baseGrid[x][y];
-		}
-	}
+	clearDynamicGrid();
 
 	FOR_ENTITIES(i)
 	{
@@ -2203,37 +2217,6 @@ void Game::reconstructGrid(bool force)
 	{
 		Element *e = dsq->getElement(i);
 		e->fillGrid();
-		/*
-		Element *e = dsq->getElement(i);
-		if (e->getElementType() == Element::BOX)
-		{
-			int w = e->getWidth()/TILE_SIZE;
-			int h = e->getHeight()/TILE_SIZE;
-			TileVector t(e->position);
-
-			if (h <= 1)
-			{
-				for (int tx = t.x-w/2; tx < t.x+w/2; tx++)
-				{
-					setGrid(TileVector(tx, t.y), 1);
-				}
-			}
-			else
-			{
-				for (int tx = t.x-w/2; tx < t.x+w/2; tx++)
-				{
-					for (int ty = t.y-h/2; ty < t.y+h/2; ty++)
-					{
-						setGrid(TileVector(tx, ty), 1);
-					}
-				}
-			}
-		}
-		else if (e->templateIdx != -1 && e->bgLayer == 0)
-		{
-			setGrid(&elementTemplates[e->templateIdx], e->position, e->rotation.z);
-		}
-		*/
 	}
 
 	ObsRow *o;
@@ -2246,21 +2229,35 @@ void Game::reconstructGrid(bool force)
 		}
 	}
 
-	for (int x = 0; x < MAX_GRID; x++)
-	{
-		for (int y = 0; y < MAX_GRID; y++)
-		{
-			baseGrid[x][y] = grid[x][y];
-		}
-	}
-
 	FOR_ENTITIES(i)
 	{
 		Entity *e = *i;
 		e->fillGrid();
 	}
 
+	trimGrid();
+
 	dsq->pathFinding.generateZones();
+}
+
+void Game::trimGrid()
+{
+	// Prevent the left- and rightmost column of black tiles
+	// from beeing drawn. (The maps were designed with this mind...)
+	for (int x = 0; x < MAX_GRID; x++)
+	{
+		const signed char *curCol   = dsq->game->getGridColumn(x);
+		const signed char *leftCol  = dsq->game->getGridColumn(x-1);
+		const signed char *rightCol = dsq->game->getGridColumn(x+1);
+		for (int y = 0; y < MAX_GRID; y++)
+		{
+			if (curCol[y] & OT_MASK_BLACK)
+			{
+				if (!(leftCol[y] & OT_MASK_BLACK) || !(rightCol[y] & OT_MASK_BLACK))
+					setGrid(TileVector(x, y), OT_BLACKINVIS);
+			}
+		}
+	}
 }
 
 float Game::getCoverage(Vector pos, int sampleArea)
@@ -6773,6 +6770,10 @@ void Game::applyState()
 	addRenderObject(gridRender3, LR_DEBUG_TEXT);
 	gridRender3->alpha = 0;
 
+	edgeRender = new GridRender(OT_BLACKINVIS);
+	addRenderObject(edgeRender, LR_DEBUG_TEXT);
+	edgeRender->alpha = 0;
+
 	waterSurfaceRender = new WaterSurfaceRender();
 	//waterSurfaceRender->setRenderPass(-1);
 	addRenderObject(waterSurfaceRender, LR_WATERSURFACE);
@@ -8786,12 +8787,14 @@ void Game::toggleGridRender()
 		gridRender->alpha.interpolateTo(0.5, t);
 		gridRender2->alpha.interpolateTo(0.5, t);
 		gridRender3->alpha.interpolateTo(0.5, t);
+		edgeRender->alpha.interpolateTo(0.5, t);
 	}
 	else if (gridRender->alpha == 0.5)
 	{
 		gridRender->alpha.interpolateTo(0, t);
 		gridRender2->alpha.interpolateTo(0, t);
 		gridRender3->alpha.interpolateTo(0, t);
+		edgeRender->alpha.interpolateTo(0, t);
 	}
 }
 
@@ -10872,13 +10875,10 @@ void Game::loadElementTemplates(std::string pack)
 
 void Game::clearGrid(int v)
 {
-	for (int x = 0; x < MAX_GRID; x++)
-	{
-		for (int y = 0; y < MAX_GRID; y++)
-		{
-			grid[x][y] = v;
-		}
-	}
+	// ensure that grid is really a byte-array
+	compile_assert(sizeof(grid) == MAX_GRID * MAX_GRID);
+
+	memset(grid, v, sizeof(grid));
 }
 
 void Game::resetFromTitle()
