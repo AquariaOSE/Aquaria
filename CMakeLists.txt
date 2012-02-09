@@ -376,6 +376,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/LightCone.cpp
     ${BBGEDIR}/Light.cpp
     ${BBGEDIR}/Math.cpp
+    ${BBGEDIR}/MT.cpp
     ${BBGEDIR}/ParticleEffect.cpp
     ${BBGEDIR}/ParticleManager.cpp
     ${BBGEDIR}/Particles.cpp
