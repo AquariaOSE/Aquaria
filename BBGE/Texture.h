@@ -59,6 +59,7 @@ public:
 	int width, height;
 
 	static ImageTGA *TGAload(const char* filename);
+	static ImageTGA *TGAloadMem(void *mem, int size);
 	
 	static bool useMipMaps;
 	bool repeat;
@@ -84,10 +85,12 @@ public:
 	void read(int tx, int ty, int w, int h, unsigned char *pixels);
 protected:
 	std::string loadName;
-	int layer;
+
 	// internal load functions
 	void loadPNG(const std::string &file);
 	void loadTGA(const std::string &file);
+	void loadZGA(const std::string &file);
+	void loadTGA(ImageTGA *tga);
 
 	int ow, oh;
 	

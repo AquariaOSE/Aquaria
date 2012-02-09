@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Texture.h"
 #include "Core.h"
 #include "../ExternalLibs/glpng.h"
+#include "ByteBuffer.h"
 
 #include <assert.h>
 
@@ -69,7 +70,6 @@ Texture::Texture() : Resource()
 	repeat = false;
 	pngSetStandardOrientation(0);
 	imageData = 0;
-	layer = 0;
 
 	ow = oh = -1;
 }
@@ -388,19 +388,7 @@ void Texture::load(std::string file)
 		}
 		else if (post == "zga")
 		{
-			if (core->getUserDataFolder().empty())
-			{
-				unpackFile(file, "poot.tmp");
-				loadTGA("poot.tmp");
-				remove("poot.tmp");
-			}
-			else
-			{
-				unpackFile(file, core->getUserDataFolder() + "/poot.tmp");
-				loadTGA(core->getUserDataFolder() + "/poot.tmp");
-				remove((core->getUserDataFolder() + "/poot.tmp").c_str());
-			}
-
+			loadZGA(file);
 		}
 		else if (post == "tga")
 		{
@@ -448,11 +436,6 @@ void Texture::apply(bool repeatOverride)
 
 void Texture::unbind()
 {
-}
-
-void Texture::setLayer(int layer)
-{
-	this->layer = layer;
 }
 
 #ifdef BBGE_BUILD_OPENGL
@@ -523,59 +506,43 @@ void Texture::loadPNG(const std::string &file)
 // internal load functions
 void Texture::loadTGA(const std::string &file)
 {
-#ifdef BBGE_BUILD_GLFW
-	GLFWimage image;
-	glfwReadImage(file.c_str(), &image, 0);
-	width = image.Width;
-	height = image.Height;
-	glfwFreeImage(&image);
+	loadTGA(TGAload(file.c_str()));
+}
 
+void Texture::loadZGA(const std::string &file)
+{
+	unsigned long size = 0;
+	char *buf = readCompressedFile(file, &size);
+	ImageTGA *tga = TGAloadMem(buf, size);
+	if (!tga)
+	{
+		debugLog("Can't load ZGA File: " + file);
+		return;
+	}
+	loadTGA(tga);
+}
 
-	glGenTextures(1, &id);
-	glBindTexture(GL_TEXTURE_2D, id);
+void Texture::loadTGA(ImageTGA *imageTGA)
+{
+	if (!imageTGA)
+		return;
 
-	glfwLoadTexture2D(file.c_str(), 0);
-
+	glGenTextures(1, &textures[0]);
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,filter);	// Linear Filtering
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,filter);	// Linear Filtering
-#endif
 
+	if (imageTGA->channels==3)
+		glTexImage2D(GL_TEXTURE_2D, 0, 3, imageTGA->sizeX, imageTGA->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, imageTGA->data);
+	else if (imageTGA->channels==4)
+		glTexImage2D(GL_TEXTURE_2D, 0, 4,imageTGA->sizeX, imageTGA->sizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageTGA->data);
 
-	/*
-	glfwLoadTexture2D(file.c_str(), 0);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,filter);	// Linear Filtering
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,filter);	// Linear Filtering
 	width = imageTGA->sizeX;
 	height = imageTGA->sizeY;
-	*/
 
-#ifdef BBGE_BUILD_SDL
-	ImageTGA *imageTGA;
-
-	if ((imageTGA = TGAload(file.c_str())) != 0)
-	{
-		glGenTextures(1, &textures[0]);
-		glBindTexture(GL_TEXTURE_2D, textures[0]);
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,filter);	// Linear Filtering
-		glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,filter);	// Linear Filtering
-
-		if (imageTGA->channels==3)
-			glTexImage2D(GL_TEXTURE_2D, 0, 3, imageTGA->sizeX, imageTGA->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, imageTGA->data);
-		else if (imageTGA->channels==4)
-		{
-			//errorLog("4 channels");
-			glTexImage2D(GL_TEXTURE_2D, 0, 4,imageTGA->sizeX, imageTGA->sizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageTGA->data);
-		}
-		width = imageTGA->sizeX;
-		height = imageTGA->sizeY;
-	}
-	if (imageTGA)
-	{
-		if (imageTGA->data)
-			delete[] (imageTGA->data);
-		free (imageTGA);
-	}
-#endif
+	if (imageTGA->data)
+		delete[] (imageTGA->data);
+	free (imageTGA);
 }
 
 
@@ -589,36 +556,37 @@ typedef uint16_t WORD;
 #endif
 
 
-static int fread_int(FILE *file, int size)
-{
-	int buffer;
-	
-	//input.read((char *)&buffer, 4);
-	if (fread(&buffer, size, 1, file) != 1)
-		return 0;
-#ifdef BBGE_BUILD_SDL
-	return SDL_SwapLE32(buffer);
-#else
-	return buffer;
-#endif
-}
-
 #ifdef BBGE_BUILD_WINDOWS
 	#define byte char
 #endif
 
 ImageTGA *Texture::TGAload(const char *filename)
 {
-/*
-	//HACK: function isn't macosx friendly
-	return 0;
-*/
+	unsigned long size = 0;
+	char *rawbuf = readFile(filename, &size);
+	ImageTGA *tga = TGAloadMem(rawbuf, size);
+	if (rawbuf)
+		delete [] rawbuf;
+	if (!tga)
+	{
+		debugLog("Can't load TGA File!");
+		return NULL;
+	}
+	return tga;
+}
+
+ImageTGA *Texture::TGAloadMem(void *mem, int size)
+{
+	if (!mem || size < 20)
+		return NULL;
+
+	ByteBuffer bb(mem, size, ByteBuffer::REUSE);
+
 	ImageTGA *pImageData = NULL;		// This stores our important image data
 	WORD width = 0, height = 0;			// The dimensions of the image
 	byte length = 0;					// The length in bytes to the pixels
 	byte imageType = 0;					// The image type (RLE, RGB, Alpha...)
 	byte bits = 0;						// The bits per pixel for the image (16, 24, 32)
-	FILE *pFile = NULL;					// The file pointer
 	int channels = 0;					// The channels of the image (3 = RGA : 4 = RGBA)
 	int stride = 0;						// The stride (channels * width)
 	int i = 0;							// A counter
@@ -636,41 +604,25 @@ ImageTGA *Texture::TGAload(const char *filename)
 	// 32-bit textures are very similar, so there's no need to do anything special.
 	// We do, however, read in an extra bit for each color.
 
-	// Open a file pointer to the targa file and check if it was found and opened
-
-	if((pFile = fopen(core->adjustFilenameCase(filename).c_str(), "rb")) == NULL)  //, "rb" // openRead(fn)
-	{
-		// Display an error message saying the file was not found, then return NULL
-		debugLog("Unable to load TGA File!");
-		return NULL;
-	}
 
 	// Allocate the structure that will hold our eventual image data (must free it!)
 	pImageData = (ImageTGA*)malloc(sizeof(ImageTGA));
 
 	// Read in the length in bytes from the header to the pixel data
-	//fread(&length, sizeof(byte), 1, pFile);
-	length = fread_int(pFile, sizeof(byte));
+	bb >> length;
 
 	// Jump over one byte
-	fseek(pFile,1,SEEK_CUR);
+	bb.skipRead(1);
 
 	// Read in the imageType (RLE, RGB, etc...)
 	//fread(&imageType, sizeof(byte), 1, pFile);
-	imageType = fread_int(pFile, sizeof(byte));
+	bb >> imageType;
 
 	// Skip past general information we don't care about
-	fseek(pFile, 9, SEEK_CUR);
+	bb.skipRead(9);
 
 	// Read the width, height and bits per pixel (16, 24 or 32)
-	/*
-	fread(&width,  sizeof(WORD), 1, pFile);
-	fread(&height, sizeof(WORD), 1, pFile);
-	fread(&bits,   sizeof(byte), 1, pFile);
-	*/
-	width = fread_int(pFile, sizeof(WORD));
-	height = fread_int(pFile, sizeof(WORD));
-	bits = fread_int(pFile, sizeof(byte));
+	bb >> width >> height >> bits;
 	
 	/*
 	std::ostringstream os;
@@ -679,7 +631,7 @@ ImageTGA *Texture::TGAload(const char *filename)
 	*/
 
 	// Now we move the file pointer to the pixel data
-	fseek(pFile, length + 1, SEEK_CUR);
+	bb.skipRead(length + 1);
 
 	// Check if the image is RLE compressed or not
 	if(imageType != TGA_RLE)
@@ -700,8 +652,9 @@ ImageTGA *Texture::TGAload(const char *filename)
 				unsigned char *pLine = &(pImageData->data[stride * y]);
 
 				// Read in the current line of pixels
-				if (fread(pLine, stride, 1, pFile) != 1)
+				if (bb.readable() < stride)
 					break;
+				bb.read(pLine, stride);
 
 				// Go through all of the pixels and swap the B and R values since TGA
 				// files are stored as BGR instead of RGB (or use GL_BGR_EXT verses GL_RGB)
@@ -729,8 +682,9 @@ ImageTGA *Texture::TGAload(const char *filename)
 			for(int i = 0; i < width*height; i++)
 			{
 				// Read in the current pixel
-				if (fread(&pixels, sizeof(unsigned short), 1, pFile) != 1)
+				if (bb.readable() < sizeof(unsigned char))
 					break;
+				bb >> pixels;
 
 				// To convert a 16-bit pixel into an R, G, B, we need to
 				// do some masking and such to isolate each color value.
@@ -787,8 +741,7 @@ ImageTGA *Texture::TGAload(const char *filename)
 		while(i < width*height)
 		{
 			// Read in the current color count + 1
-			if (fread(&rleID, sizeof(byte), 1, pFile) != 1)
-				break;
+			bb >> rleID;
 
 			// Check if we don't have an encoded string of colors
 			if(rleID < 128)
@@ -800,8 +753,9 @@ ImageTGA *Texture::TGAload(const char *filename)
 				while(rleID)
 				{
 					// Read in the current color
-					if (fread(pColors, sizeof(byte) * channels, 1, pFile) != 1)
+					if (bb.readable() < channels)
 						break;
+					bb.read(pColors, channels);
 
 					// Store the current pixel in our image array
 					pImageData->data[colorsRead + 0] = pColors[2];
@@ -826,8 +780,9 @@ ImageTGA *Texture::TGAload(const char *filename)
 				rleID -= 127;
 
 				// Read in the current color, which is the same for a while
-				if (fread(pColors, sizeof(byte) * channels, 1, pFile) != 1)
+				if (bb.readable() < channels)
 					break;
+				bb.read(pColors, channels);
 
 				// Go and read as many pixels as are the same
 				while(rleID)
@@ -855,9 +810,6 @@ ImageTGA *Texture::TGAload(const char *filename)
 		// Free up pColors
 		delete[] pColors;
 	}
-
-	// Close the file pointer that opened the file
-	fclose(pFile);
 
 	// Fill in our tImageTGA structure to pass back
 	pImageData->channels = channels;

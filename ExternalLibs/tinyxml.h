@@ -22,6 +22,9 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
+// EDIT:
+// - added LoadMem() function
+
 
 #ifndef TINYXML_INCLUDED
 #define TINYXML_INCLUDED
@@ -1420,6 +1423,8 @@ public:
 	bool LoadFile( FILE*, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
 	/// Save a file using the given FILE*. Returns true if successful.
 	bool SaveFile( FILE* ) const;
+
+	bool LoadMem( char *buf, long length, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
 
 	#ifdef TIXML_USE_STL
 	bool LoadFile( const std::string& filename, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING )			///< STL std::string version.

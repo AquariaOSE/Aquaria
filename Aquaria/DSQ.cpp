@@ -3212,6 +3212,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 				tgaSave(tempfile.c_str(), scrShotWidth, scrShotHeight, 32, scrShotData);
 				scrShotData = 0;  // deleted by tgaSave()
 
+				// FIXME: Get rid of tempfile and compress in-memory
 				packFile(dsq->getSaveDirectory() + "/poot-s.tmp", os.str(),9);
 				remove((dsq->getSaveDirectory() + "/poot-s.tmp").c_str());
 			}

@@ -1001,86 +1001,6 @@ int unpackFile(const std::string &sourcef, const std::string &destf)
     return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 
-int encode[8] = {16, 32, 8, 4, 2, 1, 3, 5 };
-
-void crunchFile(const std::string &file, const std::string &out, bool deleteOriginal)
-{
-	FILE *f = fopen(core->adjustFilenameCase(file).c_str(), "rb"), *o = fopen(core->adjustFilenameCase(out).c_str(), "wb");
-
-	if (f && o)
-	{
-		char buf=0;
-		int rot = 0, add = 0;
-
-		while (true)
-		{
-			if (fread(&buf, sizeof(char), 1, f) != 1)
-				break;
-
-			buf += encode[rot] + add;
-
-			if (fwrite(&buf, sizeof(char), 1, o) != 1)
-			{
-				errorLog("Failed to write to " + out);
-				break;
-			}
-
-			rot++;
-			if (rot>=8)
-			{ rot=0; add++; }
-		}
-
-		fclose(f);
-		f=0;
-
-		fclose(o);
-		o=0;
-	}
-
-	if (f) fclose(f);
-	if (o) fclose(o);
-
-	if (deleteOriginal)
-		remove(file.c_str());
-}
-
-void uncrunchFile(const std::string &file, const std::string &out)
-{
-	FILE *f = fopen(core->adjustFilenameCase(file).c_str(), "rb"), *o = fopen(core->adjustFilenameCase(out).c_str(), "wb");
-
-	if (f && o)
-	{
-		char buf=0;
-		int rot=0, add=0;
-		while (true)
-		{
-			if (fread(&buf, sizeof(char), 1, f) != 1)
-				break;
-
-			buf -= encode[rot] + add;
-
-			if (fwrite(&buf, sizeof(char), 1, o) != 1)
-			{
-				errorLog("Failed to write to " + out);
-				break;
-			}
-
-			rot++;
-			if (rot>=8)
-			{ rot=0; add++; }
-		}
-
-		fclose(f);
-		f=0;
-
-		fclose(o);
-		o=0;
-	}
-
-	if (f) fclose(f);
-	if (o) fclose(o);
-}
-
 void openURL(const std::string &url)
 {
 #ifdef BBGE_BUILD_WINDOWS
@@ -1137,4 +1057,29 @@ std::string spacesToUnderscores(const std::string &str)
 	for (int i = 0; i < s.size(); i++)
 		if (s[i] == ' ') s[i] = '_';
 	return s;
+}
+
+
+
+#include "DeflateCompressor.h"
+
+char *readCompressedFile(std::string path, unsigned long *size_ret)
+{
+	unsigned long size = 0;
+	char *buf = readFile(path, &size);
+	ZlibCompressor z; // allocates with new[] by default
+	z.init(buf, size, ByteBuffer::TAKE_OVER);
+	z.Compressed(true);
+	z.Decompress();
+	if(!z.Compressed())
+	{
+		if (size_ret)
+			*size_ret = z.size();
+		z.wpos(z.size());
+		z << '\0'; // be sure the buffer is null-terminated
+		buf = (char*)z.ptr();
+		z._setPtr(NULL);
+		return buf;
+	}
+	return NULL;
 }

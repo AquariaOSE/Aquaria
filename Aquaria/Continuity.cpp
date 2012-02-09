@@ -2468,6 +2468,9 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 	doc.InsertEndChild(startData);
 
+
+	// FIXME: Patch TinyXML to write out a string and compress in-memory
+
 	doc.SaveFile(dsq->getSaveDirectory() + "/poot.tmp");
 
 	packFile(dsq->getSaveDirectory() + "/poot.tmp", getSaveFileName(slot, "aqs"), 9);
@@ -2483,40 +2486,22 @@ std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
 
 void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 {
-	bool tmp = false;
-
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
-
-	if (!exists(teh_file, false))
+	if (exists(teh_file))
 	{
-		teh_file = dsq->continuity.getSaveFileName(slot, "sav");
-
-		if (!exists(teh_file, false))
-		{
-			teh_file = dsq->continuity.getSaveFileName(slot, "xml");
-		}
-		else
-		{
-			uncrunchFile(teh_file, dsq->getSaveDirectory() + "/poot2.tmp");
-			unpackFile(dsq->getSaveDirectory() + "/poot2.tmp", dsq->getSaveDirectory() + "/poot.tmp");
-			remove((dsq->getSaveDirectory() + "/poot2.tmp").c_str());
-
-			teh_file = dsq->getSaveDirectory() + "/poot.tmp";
-			tmp = true;
-		}
-	}
-	else
-	{
-		unpackFile(teh_file, dsq->getSaveDirectory() + "/poot.tmp");
-
-		teh_file = dsq->getSaveDirectory() + "/poot.tmp";
-		tmp = true;
+		unsigned long size = 0;
+		char *buf = readCompressedFile(teh_file, &size);
+		if (!doc.LoadMem(buf, size))
+			errorLog("Failed to load save data: " + teh_file);
+		return;
 	}
 
-	doc.LoadFile(teh_file);
-
-	if (tmp)
-		remove(teh_file.c_str());
+	teh_file = dsq->continuity.getSaveFileName(slot, "xml");
+	if (exists(teh_file))
+	{
+		if (!doc.LoadFile(teh_file))
+			errorLog("Failed to load save data: " + teh_file);
+	}
 }
 
 void Continuity::loadFile(int slot)
