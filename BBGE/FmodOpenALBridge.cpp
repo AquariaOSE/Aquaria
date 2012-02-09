@@ -360,7 +360,7 @@ void OggDecoder::decode_loop(OggDecoder *this_)
     while (!this_->stop_thread)
     {
 #ifdef BBGE_BUILD_SDL
-        SDL_Delay(1);
+        SDL_Delay(10);
 #endif
 
         int processed = 0;
@@ -375,6 +375,12 @@ void OggDecoder::decode_loop(OggDecoder *this_)
         }
     }
 }
+
+#if (defined(BBGE_BUILD_SDL) && (SDL_BYTEORDER == SDL_BIG_ENDIAN))
+#define BBGE_BIGENDIAN 1
+#else
+#define BBGE_BIGENDIAN 0
+#endif
 
 void OggDecoder::queue(ALuint buffer)
 {
@@ -391,7 +397,8 @@ void OggDecoder::queue(ALuint buffer)
         int bitstream_unused;
         const int nread = ov_read(
             &vf, pcm_buffer + pcm_size, buffer_size - pcm_size,
-            /*bigendianp*/ 0, /*word*/ 2, /*sgned*/ 1, &bitstream_unused
+            /*bigendianp*/ BBGE_BIGENDIAN, /*word*/ 2, /*sgned*/ 1,
+            &bitstream_unused
         );
         if (nread == 0 || nread == OV_EOF)
         {
@@ -512,8 +519,6 @@ namespace FMOD {
         if (!this) return FMOD_ERR_INTERNAL; \
         return ((OpenAL##cls *) this)->method args; \
     }
-
-static ALenum GVorbisFormat = AL_NONE;
 
 // FMOD::Sound implementation ...
 
@@ -1214,17 +1219,6 @@ FMOD_RESULT OpenALSystem::init(int maxchannels, const FMOD_INITFLAGS flags, cons
     printf("AL_VERSION: %s\n", (char *) alGetString(AL_VERSION));
     printf("AL_EXTENSIONS: %s\n", (char *) alGetString(AL_EXTENSIONS));
     #endif
-
-    SANITY_CHECK_OPENAL_CALL();
-
-    GVorbisFormat = AL_NONE;
-    if (alIsExtensionPresent("AL_EXT_vorbis"))
-        GVorbisFormat = alGetEnumValue("AL_FORMAT_VORBIS_EXT");
-
-#if 0  // Disabled output: every bug report thinks this is the culprit. --ryan.
-    if (GVorbisFormat == AL_NONE)
-        fprintf(stderr, "WARNING: no AL_EXT_vorbis support. We'll use more RAM.\n");
-#endif
 
     SANITY_CHECK_OPENAL_CALL();
 
