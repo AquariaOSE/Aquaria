@@ -3170,7 +3170,7 @@ void Entity::fillGrid()
 {
 	if (fillGridFromQuad)
 	{
-		dsq->game->fillGridFromQuad(this, OT_INVISIBLE);
+		dsq->game->fillGridFromQuad(this, OT_INVISIBLEENT);
 	}
 }
 

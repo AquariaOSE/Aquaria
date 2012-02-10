@@ -363,6 +363,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/DarkLayer.cpp
     ${BBGEDIR}/Datafile.cpp
     ${BBGEDIR}/DebugFont.cpp
+    ${BBGEDIR}/DeflateCompressor.cpp
     ${BBGEDIR}/DFSprite.cpp
     ${BBGEDIR}/Effects.cpp
     ${BBGEDIR}/Emitter.cpp

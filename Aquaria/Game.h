@@ -606,10 +606,13 @@ enum ObsType
 	OT_BLACKINVIS	= 0x02,  // same as OT_BLACK, but not drawn
 	OT_MASK_BLACK	= OT_BLACK | OT_BLACKINVIS,
 
-	// set by entities or tiles
+	// set by tiles
 	OT_INVISIBLE	= 0x04,
 	OT_INVISIBLEIN	= 0x08,
 	OT_HURT			= 0x10,
+
+	// set by entities
+	OT_INVISIBLEENT = 0x20,
 };
 
 struct EntitySaveData
@@ -660,7 +663,7 @@ public:
 	bool loadScene(std::string scene);
 
 	void clearGrid(int v = 0);
-	void clearDynamicGrid();
+	void clearDynamicGrid(unsigned char maskbyte = OT_MASK_BLACK);
 
 	void toggleWorldMap();
 
@@ -985,7 +988,7 @@ public:
 	void createGradient();
 
 	std::string saveMusic;
-	GridRender *gridRender, *gridRender2, *gridRender3, *edgeRender;
+	GridRender *gridRender, *gridRender2, *gridRender3, *edgeRender, *gridRenderEnt;
 	void toggleGridRender();
 	ElementUpdateList elementUpdateList;
 

@@ -549,7 +549,7 @@ Quad *getQuad(lua_State *L, int slot = 1)
 	Quad *q = (Quad*)lua_touserdata(L, slot);
 	ENSURE_TYPE(q, SCO_QUAD);
 	if (!q)
-		errorLog("Invalid Quad");
+		scriptDebug(L, "Invalid Quad");
 	return q;
 }
 
@@ -559,7 +559,7 @@ BaseText *getText(lua_State *L, int slot = 1)
 	BaseText *q = (BaseText*)lua_touserdata(L, slot);
 	ENSURE_TYPE(q, SCO_TEXT);
 	if (!q)
-		errorLog("Invalid Text");
+		scriptDebug(L, "Invalid Text");
 	return q;
 }
 

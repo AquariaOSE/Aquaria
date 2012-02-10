@@ -74,6 +74,9 @@ void GridRender::onRender()
 	case OT_INVISIBLEIN:
 		core->setColor(1, 0.5, 0, alpha.getValue());
 	break;
+	case OT_INVISIBLEENT:
+		core->setColor(0, 1, 0.5, alpha.getValue());
+	break;
 	case OT_BLACK:
 		core->setColor(0, 0, 0, 1);
 	break;
