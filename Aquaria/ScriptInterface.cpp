@@ -673,7 +673,7 @@ luaFunc(indexWarnInstance)
 		os << "WARNING: " << luaFormatStackInfo(L)
 		   << ": script tried to get/call undefined instance variable "
 		   << lua_tostring(L, -2);
-		errorLog(os.str());
+		scriptError(os.str());
 	}
 	lua_remove(L, -2);
 
