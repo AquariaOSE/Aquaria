@@ -169,7 +169,7 @@ void DeflateCompressor::Decompress(void)
         if(origsize != rs)
         {
             char errbuf[256];
-            sprintf(errbuf, "DeflateCompressor: Inflate error! result=%d cursize=%u origsize=%u realsize=%u",size(),origsize,rs);
+            sprintf(errbuf, "DeflateCompressor: Inflate error! cursize=%u origsize=%u realsize=%u",size(),origsize,rs);
             errorLog(errbuf);
             delete [] target;
             return;

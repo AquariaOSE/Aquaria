@@ -155,7 +155,7 @@ void *ThreadPool::u_createThread()
 	th = SDL_CreateThread(threadpool_runner, this);
 #endif
 	if (!th)
-		return false;
+		return NULL;
 	u_addThread(th);
 	return th;
 }

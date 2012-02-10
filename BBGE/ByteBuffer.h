@@ -17,6 +17,34 @@
 // ****
 
 
+namespace ByteBufferTools
+{
+	template<size_t T> inline void convert(char *val)
+	{
+		std::swap(*val, *(val + T - 1));
+		convert<T - 2>(val + 1);
+	}
+	template<> inline void convert<0>(char *) {}
+	template<> inline void convert<1>(char *) {}
+
+	template<typename T> inline void EndianConvert(T *val)
+	{
+		convert<sizeof(T)>((char *)(val));
+	}
+
+#if BB_IS_BIG_ENDIAN
+	template<typename T> inline void ToLittleEndian(T& val) { EndianConvert<T>(&val); }
+	template<typename T> inline void ToBigEndian(T&) { }
+#else
+	template<typename T> inline void ToLittleEndian(T&) { }
+	template<typename T> inline void ToBigEndian(T& val) { EndianConvert<T>(&val); }
+#endif
+
+	template<typename T> void ToLittleEndian(T*);   // will generate link error
+	template<typename T> void ToBigEndian(T*);      // will generate link error
+
+};
+
 #define BB_MAKE_WRITE_OP(T) inline ByteBuffer& operator<<(T val) { append<T>(val); return *this; }
 #define BB_MAKE_READ_OP(T) inline ByteBuffer& operator>>(T &val) { val = read<T>(); return *this; }
 
@@ -285,7 +313,7 @@ public:
 		if(pos + sizeof(T) > size())
 			BYTEBUFFER_EXCEPT(this, "read", sizeof(T));
 		T val = *((T const*)(_buf + pos));
-		ToLittleEndian<T>(val);
+		ByteBufferTools::ToLittleEndian<T>(val);
 		return val;
 	}
 
@@ -321,7 +349,7 @@ public:
 
 	template <typename T> void append(T value)
 	{
-		ToLittleEndian<T>(value);
+		ByteBufferTools::ToLittleEndian<T>(value);
 		_enlargeIfReq(_wpos + sizeof(T));
 		*((T*)(_buf + _wpos)) = value;
 		_wpos += sizeof(T);
@@ -354,7 +382,7 @@ public:
 		if(pos >= size())
 			BYTEBUFFER_EXCEPT(this, "put", sizeof(T));
 
-		ToLittleEndian<T>(value);
+		ByteBufferTools::ToLittleEndian<T>(value);
 		*((T*)(_buf + pos)) = value;
 	}
 
@@ -435,34 +463,6 @@ protected:
 		}
 	}
 
-	template<size_t T> inline static void convert(char *val)
-	{
-		std::swap(*val, *(val + T - 1));
-		convert<T - 2>(val + 1);
-	}
-	template<> inline static void convert<0>(char *) {}
-	template<> inline static void convert<1>(char *) {}
-
-	template<typename T> inline static void EndianConvert(T *val)
-	{
-		convert<sizeof(T)>((char *)(val));
-	}
-
-#if BB_IS_BIG_ENDIAN
-	template<typename T> inline static void ToLittleEndian(T& val) { EndianConvert<T>(&val); }
-	template<typename T> inline static void ToBigEndian(T&) { }
-#else
-	template<typename T> inline static void ToLittleEndian(T&) { }
-	template<typename T> inline static void ToBigEndian(T& val) { EndianConvert<T>(&val); }
-#endif
-
-	template<typename T> static void ToLittleEndian(T*);   // will generate link error
-	template<typename T> static void ToBigEndian(T*);      // will generate link error
-
-	inline static void ToLittleEndian(uint8&) { }
-	inline static void ToLittleEndian(int8&)  { }
-	inline static void ToBigEndian(uint8&) { }
-	inline static void ToBigEndian( int8&) { }
 
 };
 
