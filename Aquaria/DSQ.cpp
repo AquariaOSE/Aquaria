@@ -128,7 +128,7 @@ static void Linux_CopyTree(const char *src, const char *dst)
 float titTimer = 0;
 
 const int saveSlotPageSize = 4;
-int maxPages = 7;
+int maxPages = 15;
 #ifdef AQUARIA_BUILD_CONSOLE
 const int MAX_CONSOLELINES	= 14;
 #endif
