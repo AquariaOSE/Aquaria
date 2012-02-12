@@ -42,8 +42,6 @@ BUILD_LINUX
 
 #include "DarkLayer.h"
 
-#include "MT.h"
-
 /*
 #ifdef BBGE_BUILD_WINDOWS
 	#include "Joystick.h"
@@ -1314,8 +1312,6 @@ public:
 	CoreSettings settings;
 
 	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
-
-	ThreadPool threadpool;
 
 protected:
 

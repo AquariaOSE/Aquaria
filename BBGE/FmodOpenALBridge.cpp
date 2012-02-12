@@ -33,7 +33,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Base.h"
 #include "Core.h"
-#include "MT.h"
 
 #include "FmodOpenALBridge.h"
 
@@ -109,7 +108,7 @@ private:
     int freq;
 
 #ifdef BBGE_BUILD_SDL
-    Runnable *thread;
+    SDL_Thread *thread;
 #else
     #warning Threads not supported, music may cut out on area changes!
     // ... because the stream runs out of decoded data while the area is
@@ -283,12 +282,11 @@ bool OggDecoder::start(ALuint source, bool loop)
 
 #ifdef BBGE_BUILD_SDL
     stop_thread = false;
-    thread = new FunctionRunnable(false, (void (*)(void *))decode_loop, this);
-    if (!core->threadpool.addJob(thread))
+    thread = SDL_CreateThread((int (*)(void *))decode_loop, this);
+    if (!thread)
     {
-        delete thread;
-        thread = NULL;
-        debugLog("Failed to add Ogg Vorbis decoder to thread pool");
+        debugLog("Failed to create Ogg Vorbis decode thread: "
+                 + std::string(SDL_GetError()));
     }
 #endif
 
@@ -324,8 +322,7 @@ void OggDecoder::stop()
     if (thread)
     {
         stop_thread = true;
-        thread->wait();
-        delete thread;
+        SDL_WaitThread(thread, NULL);
         thread = NULL;
     }
 #endif
@@ -1310,9 +1307,10 @@ FMOD_RESULT OpenALSystem::release()
         for (int i = 0; i < num_channels; i++)
         {
             const ALuint sid = channels[i].getSourceName();
-            channels[i].stop();
             channels[i].setSourceName(0);
             channels[i].setSound(NULL);
+            alSourceStop(sid);
+            alSourcei(sid, AL_BUFFER, 0);
             alDeleteSources(1, &sid);
         }
         ALCdevice *dev = alcGetContextsDevice(ctx);
