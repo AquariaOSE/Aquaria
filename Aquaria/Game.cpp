@@ -2538,7 +2538,7 @@ void Game::loadEntityTypeList()
 	entityGroups.clear();
 
 	std::string fn = "scripts/entities/entitygroups.txt";
-	if (editorLock == EDITORLOCK_USER && dsq->mod.isActive())
+	if (dsq->mod.isActive())
 	{
 		fn = dsq->mod.getPath() + "entitygroups.txt";
 	}
@@ -6644,7 +6644,7 @@ void Game::applyState()
 
 
 #ifdef AQUARIA_BUILD_SCENEEDITOR
-	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
+	if (dsq->canOpenEditor())
 	{
 		sceneEditor.init();
 	}
@@ -7141,7 +7141,7 @@ void Game::bindInput()
 
 
 #ifdef AQUARIA_BUILD_SCENEEDITOR
-	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
+	if (dsq->canOpenEditor())
 	{
 		//addAction(MakeFunctionEvent(Game, toggleSceneEditor), KEY_TAB, 0);
 		addAction(ACTION_TOGGLESCENEEDITOR, KEY_TAB);
@@ -7185,7 +7185,7 @@ void Game::bindInput()
 	dsq->user.control.actionSet.importAction(this, "FoodRight",		ACTION_FOODRIGHT);
 	dsq->user.control.actionSet.importAction(this, "FoodDrop",		ACTION_FOODDROP);
 
-	if (dsq->isDeveloperKeys() || dsq->mod.isActive())
+	if (dsq->canOpenEditor())
 	{
 		//addAction(MakeFunctionEvent(Game, toggleMiniMapRender), KEY_M, 0);
 		addAction(ACTION_TOGGLEGRID, KEY_F9);

@@ -59,6 +59,7 @@ void Mod::clear()
 	doRecache = 0;
 	debugMenu = false;
 	hasMap = false;
+	blockEditor = false;
 }
 
 bool Mod::isDebugMenu()
@@ -69,6 +70,11 @@ bool Mod::isDebugMenu()
 bool Mod::hasWorldMap()
 {
 	return hasMap;
+}
+
+bool Mod::isEditorBlocked()
+{
+	return blockEditor;
 }
 
 void Mod::loadModXML(TiXmlDocument *d, std::string modName)
@@ -123,6 +129,11 @@ void Mod::load(const std::string &p)
 				int t;
 				props->Attribute("hasWorldMap", &t);
 				hasMap = t;
+			}
+			if (props->Attribute("blockEditor")) {
+				int t;
+				props->Attribute("blockEditor", &t);
+				blockEditor = t;
 			}
 		}
 	}

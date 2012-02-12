@@ -4047,6 +4047,15 @@ bool DSQ::isDeveloperKeys()
 	return developerKeys;
 }
 
+bool DSQ::canOpenEditor() const
+{
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+	return dsq->isDeveloperKeys() || (dsq->mod.isActive() && !dsq->mod.isEditorBlocked());
+#else
+	return false;
+#endif
+}
+
 bool DSQ::isQuitFlag()
 {
 	return watchQuitFlag;

@@ -162,14 +162,6 @@ enum AquariaActions
 	ACTION_TOGGLEHELPSCREEN
 };
 
-enum EditorLock
-{
-	EDITORLOCK_NONE		= 0,
-	EDITORLOCK_USER		= 1
-};
-
-const EditorLock editorLock = EDITORLOCK_USER;
-
 typedef std::list<Entity*> EntityList;
 typedef std::vector<Entity*> EntityContainer;
 
@@ -262,6 +254,7 @@ public:
 	bool isActive();
 	bool isDebugMenu();
 	bool hasWorldMap();
+	bool isEditorBlocked();
 
 	std::string getPath();
 	std::string getName();
@@ -272,6 +265,7 @@ protected:
 	bool shuttingDown;
 	bool active;
 	bool hasMap;
+	bool blockEditor;
 	int doRecache;
 	int debugMenu;
 	int enqueueModStart;
@@ -1418,6 +1412,7 @@ public:
 	void toggleCursor(bool v, float t = -1);
 
 	bool isDeveloperKeys();
+	bool canOpenEditor() const;
 
 	void loadElementEffects();
 	ElementEffect getElementEffectByIndex(int e);

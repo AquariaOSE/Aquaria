@@ -1127,7 +1127,7 @@ void WorldMapRender::onUpdate(float dt)
 		else if (-internalOffset.y > yMax + 150/scale.x)
 			internalOffset.y = -(yMax + 150/scale.x);
 
-		if (dsq->isDeveloperKeys() || dsq->mod.isActive())
+		if (dsq->canOpenEditor())
 		{
 			if (editorActive)
 			{
@@ -1533,7 +1533,7 @@ void WorldMapRender::action (int id, int state)
 		}
 		if (id == ACTION_TOGGLEWORLDMAPEDITOR && !state)
 		{
-			if (dsq->isDeveloperKeys() || dsq->mod.isActive())
+			if (dsq->canOpenEditor())
 			{
 				editorActive = !editorActive;
 
