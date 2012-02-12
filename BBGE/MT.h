@@ -1,6 +1,7 @@
 #ifndef BBGE_MT_H
 #define BBGE_MT_H
 
+#include <cstddef>
 #include <queue>
 #include <map>
 
