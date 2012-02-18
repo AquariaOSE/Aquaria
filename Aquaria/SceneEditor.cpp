@@ -927,8 +927,14 @@ void SceneEditor::enterName()
 		Path *p = getSelectedPath();
 		if (p)
 		{
-			p->name = dsq->getUserInputString("PathName", p->name);
-			p->refreshScript();
+			std::string newname = dsq->getUserInputString("PathName", p->name);
+			bool changed = newname != p->name;
+			p->name = newname;
+			if (changed)
+			{
+				p->refreshScript();
+				p->init();
+			}
 		}
 	}
 }
@@ -3224,6 +3230,7 @@ void SceneEditor::cloneSelectedElement()
 
 			dsq->game->addPath(newp);
 			selectedIdx = dsq->game->getNumPaths()-1;
+			newp->init();
 		}
 	}
 

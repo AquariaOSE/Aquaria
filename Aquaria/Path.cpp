@@ -225,6 +225,7 @@ void Path::destroy()
 
 Path::~Path()
 {
+	destroy();
 }
 
 bool Path::hasScript()
@@ -288,21 +289,20 @@ void Path::parseWarpNodeData(const std::string &dataString)
 void Path::refreshScript()
 {
 	amount = 0;
-    content.clear();
-    label.clear();
+	content.clear();
+	label.clear();
 
-	// HACK: clean up
-	/*+ dsq->game->sceneName + "_"*/
-	script = 0;
+	destroy();
+
 	warpMap = warpNode = "";
 	toFlip = -1;
 
 	stringToLower(name);
 
-    {
-        SimpleIStringStream is(name.c_str(), SimpleIStringStream::REUSE);
-        is >> label >> content >> amount;
-    }
+	{
+		SimpleIStringStream is(name.c_str(), SimpleIStringStream::REUSE);
+		is >> label >> content >> amount;
+	}
 
 	std::string scr;
 	if (dsq->mod.isActive())
@@ -423,30 +423,14 @@ void Path::refreshScript()
 		std::string dummy, warpTypeStr;
 		SimpleIStringStream is(name);
 		is >> dummy >> warpMap >> warpTypeStr;
-        // warpType is just char, which does not automatically skip spaces like strings would
-        warpType = warpTypeStr.length() ? warpTypeStr[0] : 0;
+		// warpType is just char, which does not automatically skip spaces like strings would
+		warpType = warpTypeStr.length() ? warpTypeStr[0] : 0;
 
 		if (warpMap.find("vedha")!=std::string::npos)
 		{
 			naijaHome = true;
 		}
-		//debugLog(label + " " + warpMap + " " + warpType);
-		/*
-		std::string parse = name;
-		int pos = 0;
-
-		pos = parse.find('_');
-		parse = parse.substr(pos+1, parse.getLength2D());
-
-		pos = parse.find('_');
-		warpMap = parse.substr(0, pos-1);
-		parse = parse.substr(pos+1, parse.getLength2D());
-
-		pos = parse.find('_');
-		std::string
-		*/
 		pathType = PATH_WARP;
-
 	}
 	else if (label == "se")
 	{
