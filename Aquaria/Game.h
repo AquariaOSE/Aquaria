@@ -73,7 +73,6 @@ struct RecipeMenu
 	std::vector<RecipeMenuEntry*> recipeMenuEntries;
 };
 
-class JetStream;
 class Avatar;
 class Gradient;
 class CurrentRender;
@@ -133,14 +132,6 @@ enum EditTypes
 	ET_MAX
 };
 #endif
-
-class FollowSym : public Quad
-{
-public:
-	FollowSym();
-protected:
-	void onUpdate(float dt);
-};
 
 class ManaBall : public Quad
 {
@@ -739,8 +730,6 @@ public:
 
 	TiXmlDocument *saveFile;
 
-	std::vector<JetStream*> jetStreams;
-	FollowSym *followSym;
 	Vector positionToAvatar;
 	float getCoverage(Vector pos, int sampleArea = 5);
 
@@ -800,7 +789,6 @@ public:
 	Path *getNearestPath(const Vector &pos, PathType pathType=PATH_NONE);
 	Path *getNearestPath(Path *p, std::string name);
 
-	std::string avatarTransit;
 #ifdef AQUARIA_BUILD_SCENEEDITOR
 	SceneEditor sceneEditor;
 	bool isSceneEditorActive() {return sceneEditor.isOn();}

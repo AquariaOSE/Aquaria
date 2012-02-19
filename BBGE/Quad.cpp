@@ -23,30 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <assert.h>
 
-std::vector<QuadLight> QuadLight::quadLights;
-
-bool Quad::flipTY = true;
-
-int Quad::_w2 = 0;
-int Quad::_h2 = 0;
-
-QuadLight::QuadLight(Vector position, Vector color, int dist)
-{
-	this->dist = dist;
-	this->color = color;
-	this->position = position;
-}
-
-void QuadLight::clearQuadLights()
-{
-	quadLights.clear();
-}
-
-void QuadLight::addQuadLight(const QuadLight &quadLight)
-{
-	quadLights.push_back(quadLight);
-}
-
 Vector Quad::renderBorderColor = Vector(1,1,1);
 
 Quad::Quad(const std::string &tex, const Vector &pos)
@@ -267,12 +243,8 @@ void Quad::initQuad()
 	//debugLog("Quad::initQuad()");
 
 	repeatingTextureToFill = false;
-	_w2 = _h2 = 0;
 	
 	drawGrid = 0;
-
-	lightingColor = Vector(1,1,1);
-	quadLighting = false;
 
 	renderBorder = false;
 	renderCenter = true;
@@ -439,108 +411,80 @@ void Quad::renderGrid()
 	const float blue  = this->color.z;
 	const float alpha = this->alpha.x * this->alphaMod;
 
-	if (core->mode == Core::MODE_2D)
+	/*
+	glDisable(GL_BLEND);
+	glDisable(GL_CULL_FACE);
+	*/
+	glBegin(GL_QUADS);
+	float u0 = baseX;
+	float u1 = u0 + incX;
+	for (int i = 0; i < (xDivs-1); i++, u0 = u1, u1 += incX)
 	{
-		/*
-		glDisable(GL_BLEND);
-		glDisable(GL_CULL_FACE);
-		*/
-		glBegin(GL_QUADS);
-		float u0 = baseX;
-		float u1 = u0 + incX;
-		for (int i = 0; i < (xDivs-1); i++, u0 = u1, u1 += incX)
+		float v0 = 1 - percentY + baseY;
+		float v1 = v0 + incY;
+		for (int j = 0; j < (yDivs-1); j++, v0 = v1, v1 += incY)
 		{
-			float v0 = 1 - percentY + baseY;
-			float v1 = v0 + incY;
-			for (int j = 0; j < (yDivs-1); j++, v0 = v1, v1 += incY)
+			if (drawGrid[i][j].z != 0 || drawGrid[i][j+1].z != 0 || drawGrid[i+1][j].z != 0 || drawGrid[i+1][j+1].z != 0)
 			{
-				if (drawGrid[i][j].z != 0 || drawGrid[i][j+1].z != 0 || drawGrid[i+1][j].z != 0 || drawGrid[i+1][j+1].z != 0)
-				{
 
-					glColor4f(red, green, blue, alpha*drawGrid[i][j].z);
-					glTexCoord2f(u0, v0);
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u0-baseX, v0-baseY);
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0);
+				glColor4f(red, green, blue, alpha*drawGrid[i][j].z);
+				glTexCoord2f(u0, v0);
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u0-baseX, v0-baseY);
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0);
+				glVertex2f(w*drawGrid[i][j].x,		h*drawGrid[i][j].y);
+				//
+				glColor4f(red, green, blue, alpha*drawGrid[i][j+1].z);
+				glTexCoord2f(u0, v1);
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u0-baseX, v1-baseY);
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,(float)(screenHeight/(yDivs-1))/16);
+				glVertex2f(w*drawGrid[i][j+1].x,		h*drawGrid[i][j+1].y);
+				//
+				glColor4f(red, green, blue, alpha*drawGrid[i+1][j+1].z);
+				glTexCoord2f(u1, v1);
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u1-baseX, v1-baseY);
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,(float)(screenHeight/(yDivs-1))/16);
+				glVertex2f(w*drawGrid[i+1][j+1].x,	h*drawGrid[i+1][j+1].y);
+				//
+				glColor4f(red, green, blue, alpha*drawGrid[i+1][j].z);
+				glTexCoord2f(u1, v0);
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u1-baseX, v0-baseY);
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,0);
+				glVertex2f(w*drawGrid[i+1][j].x,		h*drawGrid[i+1][j].y);
+			}
+		}
+	}
+	glEnd();
+
+	// debug points
+	if (RenderObject::renderCollisionShape)
+	{
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glPointSize(2);
+		glColor3f(1,0,0);
+		glBegin(GL_POINTS);
+			for (int i = 0; i < (xDivs-1); i++)
+			{
+				for (int j = 0; j < (yDivs-1); j++)
+				{
 					glVertex2f(w*drawGrid[i][j].x,		h*drawGrid[i][j].y);
-					//
-					glColor4f(red, green, blue, alpha*drawGrid[i][j+1].z);
-					glTexCoord2f(u0, v1);
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u0-baseX, v1-baseY);
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,(float)(screenHeight/(yDivs-1))/16);
 					glVertex2f(w*drawGrid[i][j+1].x,		h*drawGrid[i][j+1].y);
-					//
-					glColor4f(red, green, blue, alpha*drawGrid[i+1][j+1].z);
-					glTexCoord2f(u1, v1);
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u1-baseX, v1-baseY);
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,(float)(screenHeight/(yDivs-1))/16);
 					glVertex2f(w*drawGrid[i+1][j+1].x,	h*drawGrid[i+1][j+1].y);
-					//
-					glColor4f(red, green, blue, alpha*drawGrid[i+1][j].z);
-					glTexCoord2f(u1, v0);
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u1-baseX, v0-baseY);
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,0);
 					glVertex2f(w*drawGrid[i+1][j].x,		h*drawGrid[i+1][j].y);
 				}
 			}
-		}
 		glEnd();
-
-		// debug points
-		if (RenderObject::renderCollisionShape)
-		{
-			glBindTexture(GL_TEXTURE_2D, 0);
-			glPointSize(2);
-			glColor3f(1,0,0);
-			glBegin(GL_POINTS);
-				for (int i = 0; i < (xDivs-1); i++)
-				{
-					for (int j = 0; j < (yDivs-1); j++)
-					{
-						glVertex2f(w*drawGrid[i][j].x,		h*drawGrid[i][j].y);
-						glVertex2f(w*drawGrid[i][j+1].x,		h*drawGrid[i][j+1].y);
-						glVertex2f(w*drawGrid[i+1][j+1].x,	h*drawGrid[i+1][j+1].y);
-						glVertex2f(w*drawGrid[i+1][j].x,		h*drawGrid[i+1][j].y);
-					}
-				}
-			glEnd();
-			if (texture)
-				glBindTexture(GL_TEXTURE_2D, texture->textures[0]);
-		}
+		if (texture)
+			glBindTexture(GL_TEXTURE_2D, texture->textures[0]);
 	}
 #endif
 }
 
-Vector oldQuadColor;
-
-void Quad::render()
-{
-	if (lightingColor.x != 1.0f || lightingColor.y != 1.0f || lightingColor.z != 1.0f)
-	{
-		oldQuadColor = color;
-		color *= lightingColor;
-		RenderObject::render();
-		color = oldQuadColor;
-	}
-	else
-	{
-		RenderObject::render();
-	}
-}
-
 void Quad::repeatTextureToFill(bool on)
 {
-	if (on)
-	{
-		repeatingTextureToFill = true;
-		repeatTexture = true;
-		refreshRepeatTextureToFill();
-	}
-	else
-	{
-		repeatingTextureToFill = false;
-		repeatTexture = false;
-		refreshRepeatTextureToFill();
-	}
+	repeatingTextureToFill = on;
+	repeatTexture = on;
+	refreshRepeatTextureToFill();
+
 }
 
 void Quad::onRender()
@@ -549,8 +493,8 @@ void Quad::onRender()
 
 #ifdef BBGE_BUILD_OPENGL
 
-	_w2 = width/2;
-	_h2 = height/2;
+	float _w2 = width/2.0f;
+	float _h2 = height/2.0f;
 
 	if (!strip.empty())
 	{
@@ -563,23 +507,8 @@ void Quad::onRender()
 
 		if (!stripVert)
 		{
-			Vector pl, pr;
 			for (int i = 0; i < strip.size(); i++)
 			{
-				//glNormal3f( 0.0f, 0.0f, 1.0f);
-
-				if (i == strip.size()-1)
-				{
-				}
-				else //if (i == 0)
-				{
-					Vector diffVec = strip[i+1] - strip[i];
-
-					diffVec.setLength2D(_h2);
-					pl = diffVec.getPerpendicularLeft();
-					pr = diffVec.getPerpendicularRight();
-				}
-
 				glTexCoord2f(texBits*i, 0);
 				glVertex2f(strip[i].x*width-_w2,  strip[i].y*_h2*10 - _h2);
 				glTexCoord2f(texBits*i, 1);
@@ -602,51 +531,27 @@ void Quad::onRender()
 	}
 	else
 	{
-		if (core->mode == Core::MODE_2D)
+		if (!drawGrid)
 		{
-			if (!drawGrid)
+			glBegin(GL_QUADS);
 			{
-				if (Quad::flipTY)
-				{
-					glBegin(GL_QUADS);
-					{
-						glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-						glVertex2f(-_w2, +_h2);
+				glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
+				glVertex2f(-_w2, +_h2);
 
-						glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-						glVertex2f(+_w2, +_h2);
+				glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
+				glVertex2f(+_w2, +_h2);
 
-						glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-						glVertex2f(+_w2, -_h2);
+				glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
+				glVertex2f(+_w2, -_h2);
 
-						glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-						glVertex2f(-_w2, -_h2);
-					}
-					glEnd();
-				}
-				else
-				{
-					glBegin(GL_QUADS);
-					{
-						glTexCoord2f(upperLeftTextureCoordinates.x, upperLeftTextureCoordinates.y);
-						glVertex2f(-_w2, +_h2);
-
-						glTexCoord2f(lowerRightTextureCoordinates.x, upperLeftTextureCoordinates.y);
-						glVertex2f(+_w2, +_h2);
-
-						glTexCoord2f(lowerRightTextureCoordinates.x, lowerRightTextureCoordinates.y);
-						glVertex2f(+_w2, -_h2);
-
-						glTexCoord2f(upperLeftTextureCoordinates.x, lowerRightTextureCoordinates.y);
-						glVertex2f(-_w2, -_h2);
-					}
-					glEnd();
-				}
+				glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
+				glVertex2f(-_w2, -_h2);
 			}
-			else
-			{
-				renderGrid();
-			}
+			glEnd();
+		}
+		else
+		{
+			renderGrid();
 		}
 	}
 
@@ -820,24 +725,6 @@ void Quad::flipVertical()
 	RenderObject::flipVertical();
 }
 
-void Quad::calculateQuadLighting()
-{
-	Vector total;
-	int c=0;
-	for (int i = 0; i < QuadLight::quadLights.size(); i++)
-	{
-		QuadLight *q = &QuadLight::quadLights[i];
-		Vector dist = q->position - position;
-		if (dist.isLength2DIn(q->dist))
-		{
-			total += q->color;
-			c++;
-		}
-	}
-	if (c > 0)
-		lightingColor = total/c;
-}
-
 void Quad::refreshRepeatTextureToFill()
 {
 	if (repeatingTextureToFill)
@@ -883,11 +770,6 @@ void Quad::onUpdate(float dt)
 	{
 		updateGrid(dt);
 	}
-
-	if (quadLighting)
-	{
-		calculateQuadLighting();
-	}
 }
 
 void Quad::setWidthHeight(float w, float h)
@@ -915,8 +797,6 @@ void Quad::onSetTexture()
 	{
 		width = this->texture->width;
 		height = this->texture->height;
-		_w2 = this->texture->width/2.0f;
-		_h2 = this->texture->height/2.0f;
 	}
 }
 

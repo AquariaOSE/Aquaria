@@ -983,7 +983,6 @@ public:
 	//bool createGlWindow(char* title, int width, int height, int bits, bool fullscreenflag);
 	bool createWindow(int width, int height, int bits, bool fullscreen, std::string windowTitle="");
 	//void setWindowTitle(const std::string &title); // func not yet written
-	void resize3D();			
 	void clearBuffers();	
 	void render(int startLayer=-1, int endLayer=-1, bool useFrameBufferIfAvail=true);
 	void showBuffer();
@@ -1023,7 +1022,6 @@ public:
 	void toggleScreenMode(int t=0);
 
 	void enable2D(int pixelScaleX=0, int pixelScaleY=0, bool forcePixelScale=false);
-	void enable3D();
 	void addRenderObject(RenderObject *o, int layer=0);
 	void switchRenderObjectLayer(RenderObject *o, int toLayer);
 	void addResource(Resource *r);
@@ -1123,8 +1121,6 @@ public:
 
 	int width, height;
 
-	int mode;
-
 	enum Modes { MODE_NONE=-1, MODE_3D=0, MODE_2D };
 
 	InterpolatedVector globalScale;
@@ -1139,9 +1135,6 @@ public:
 
 	int fps;
 	bool loopDone;
-
-
-	std::vector<Light> lights;
 
 	Mouse mouse;
 

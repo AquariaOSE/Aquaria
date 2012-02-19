@@ -58,7 +58,6 @@ TexErr Texture::textureError = TEXERR_OK;
 
 Texture::Texture() : Resource()
 {
-	components = 0;
 #ifdef BBGE_BUILD_OPENGL
 	textures[0] = 0;
 #endif
@@ -68,6 +67,7 @@ Texture::Texture() : Resource()
 	width = height = 0;
 
 	repeat = false;
+	repeating = false;
 	pngSetStandardOrientation(0);
 	imageData = 0;
 
@@ -291,20 +291,14 @@ void Texture::reload()
 	Resource::reload();
 
 	debugLog("RELOADING TEXTURE: " + name + " with loadName " + loadName + "...");
-	if (true)
-	{
-		unload();
-		load(loadName);
 
-		if (ow != -1 && oh != -1)
-		{
-			width = ow;
-			height = oh;
-		}
-	}
-	else
+	unload();
+	load(loadName);
+
+	if (ow != -1 && oh != -1)
 	{
-		debugLog("name was too short, didn't load");
+		width = ow;
+		height = oh;
 	}
 	debugLog("DONE");
 }
@@ -419,13 +413,21 @@ void Texture::apply(bool repeatOverride)
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	if (repeat || repeatOverride)
 	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		if (!repeating)
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+			repeating = true;
+		}
 	}
 	else
 	{
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		if (repeating)
+		{
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+			repeating = false;
+		}
 	}
 #endif
 #ifdef BBGE_BUILD_DIRECTX
@@ -473,18 +475,6 @@ void Texture::loadPNG(const std::string &file)
 		textures[0] = pngBind(file.c_str(), PNG_BUILDMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, filter);
 	}
 
-
-	if (info.Alpha)
-		components = 4;
-	else
-		components = 3;
-	/*
-	pngRawInfo rawinfo;
-	bool success = pngLoadRaw(file.c_str(), &rawinfo);
-	glBindTexture(GL_TEXTURE_2D, id);
-	gluBuild2DMipmaps( GL_TEXTURE_2D, 3, rawinfo.Width, rawinfo.Height,
-                GL_RGB, GL_UNSIGNED_BYTE, rawinfo.Data);
-	*/
 	if (textures[0] != 0)
 	{
 		width = info.Width;

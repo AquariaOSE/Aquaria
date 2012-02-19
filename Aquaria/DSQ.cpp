@@ -1057,11 +1057,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	debugLog("Init Graphics Library...");
 		initGraphicsLibrary(user.video.resx, user.video.resy, fullscreen, user.video.vsync, user.video.bits);
-#ifdef BBGE_BUILD_WIDESCREEN
 		core->enable2DWide(user.video.resx, user.video.resy);
-#else
-		core->enable2D(800, 600, 1);
-#endif
 		core->initFrameBuffer();
 	debugLog("OK");
 
@@ -2245,6 +2241,7 @@ void DSQ::shutdown()
 
 	core->particleManager->clearParticleBank();
 	Shot::clearShotBank();
+	SkeletalSprite::clearCache();
 
 
 	cursor->setTexturePointer(0, RenderObject::NO_ADD_REF);

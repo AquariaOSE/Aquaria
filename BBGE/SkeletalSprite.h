@@ -259,6 +259,7 @@ public:
 	std::string filenameLoaded;
 
 	static std::string animationPath, skinPath, secondaryAnimationPath;
+	static void clearCache();
 	
 protected:
 	bool frozen;

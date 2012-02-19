@@ -189,9 +189,6 @@ public:
 
 	const RenderObject &operator=(const RenderObject &r);
 
-	void enableProjectCollision();
-	void disableProjectCollision();
-
 	void toggleCull(bool value);
 	
 	void safeKill();
@@ -293,8 +290,6 @@ public:
 
 	int collideRadius;
 	Vector collidePosition;
-	bool useCollisionMask;
-	//Vector collisionMaskHalfVector;
 	std::vector<Vector> collisionMask;
 	std::vector<Vector> transformedCollisionMask;
 

@@ -62,9 +62,8 @@ public:
 	static ImageTGA *TGAloadMem(void *mem, int size);
 	
 	static bool useMipMaps;
-	bool repeat;
+	bool repeat, repeating;
 
-	int components;
 #ifdef BBGE_BUILD_OPENGL
 	static GLint filter;
 	static GLint format;

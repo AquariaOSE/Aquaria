@@ -23,19 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "RenderObject.h"
 
-class QuadLight
-{
-public:
-	QuadLight(Vector position, Vector color, int dist);
-	Vector position, color;
-	int dist;
-
-	static std::vector<QuadLight> quadLights;
-
-	static void addQuadLight(const QuadLight &quadLight);
-	static void clearQuadLights();
-};
-
 class OutlineRect : public RenderObject
 {
 public:
@@ -78,7 +65,6 @@ public:
 	void setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);	
 	void setDrawGridAlpha(int x, int y, float alpha);
 	void calculateQuadLighting();
-	void render();
 	void repeatTextureToFill(bool on);
 	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatingTextureToFill; }
@@ -88,8 +74,6 @@ public:
 	float getStripSegmentSize();
 	void resetStrip();
 	Vector ** getDrawGrid() { return drawGrid; }
-
-	static bool flipTY;
 	
 	void reloadDevice();
 
@@ -110,7 +94,6 @@ public:
 
 	char autoWidth, autoHeight;  // char to save space
 	
-	bool quadLighting;
 	bool renderQuad, renderBorder, renderCenter;
 	bool stripVert;
 	std::vector<Vector>strip;
@@ -121,7 +104,6 @@ public:
 
 protected:
 	bool repeatingTextureToFill;
-	Vector lightingColor;
 	float gridTimer;
 	int xDivs, yDivs;
 	Vector ** drawGrid;
@@ -138,7 +120,6 @@ protected:
 	float drawGridTimeMultiplier;
 	bool drawGridOut;
 	
-	static int _w2, _h2;
 	static Vector renderBorderColor;
 	
 	void onSetTexture();

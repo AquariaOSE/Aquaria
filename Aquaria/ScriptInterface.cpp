@@ -2672,23 +2672,6 @@ luaFunc(entity_followPath)
 	luaReturnNil();
 }
 
-luaFunc(entity_warpToPathStart)
-{
-	ScriptedEntity *e = scriptedEntity(L);
-	std::string s;
-	if (lua_isstring(L, 2))
-		s = lua_tostring(L, 2);
-	if (s.empty())
-		e->warpToPathStart();
-	else
-	{
-		//e->followPath(s, 0, 0);
-		e->warpToPathStart();
-		e->stopFollowingPath();
-	}
-	luaReturnNil();
-}
-
 luaFunc(getIngredientGfx)
 {
 	luaReturnStr(dsq->continuity.getIngredientGfx(getString(L, 1)).c_str());
@@ -7482,7 +7465,6 @@ static const struct {
 	luaRegister(entity_setAnimLayerTimeMult),
 
 	luaRegister(entity_setCurrentTarget),
-	luaRegister(entity_warpToPathStart),
 	luaRegister(entity_stopInterpolating),
 
 	luaRegister(entity_followPath),

@@ -30,6 +30,21 @@ std::string SkeletalSprite::skinPath					= "skins/";
 
 std::string SkeletalSprite::secondaryAnimationPath		= "";
 
+static std::map<std::string, TiXmlDocument> skelCache;
+
+static TiXmlDocument& _retrieveSkeletalXML(const std::string& name)
+{
+	TiXmlDocument& doc = skelCache[name];
+	if (!doc.RootElement())
+		doc.LoadFile(name);
+	return doc;
+}
+
+void SkeletalSprite::clearCache()
+{
+	skelCache.clear();
+}
+
 
 void SkeletalKeyframe::copyAllButTime(SkeletalKeyframe *copy)
 {
@@ -842,7 +857,8 @@ void SkeletalSprite::saveSkeletal(const std::string &fn)
 		file = animationPath + filename + ".xml";
 
 	int i = 0;
-	TiXmlDocument xml;
+	TiXmlDocument& xml = _retrieveSkeletalXML(file);
+	xml.Clear();
 
 	TiXmlElement animationLayers("AnimationLayers");
 	for (i = 0; i < animLayers.size(); i++)
@@ -1141,8 +1157,6 @@ Animation *SkeletalSprite::getAnimation(std::string anim)
 
 void SkeletalSprite::loadSkin(const std::string &fn)
 {
-	TiXmlDocument d;
-
 	std::string file;
 
 	if (!secondaryAnimationPath.empty())
@@ -1162,7 +1176,7 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 		errorLog("Could not load skin[" + file + "]");
 		return;
 	}
-	d.LoadFile(file);
+	TiXmlDocument& d = _retrieveSkeletalXML(file);
 
 	TiXmlElement *bonesXml = d.FirstChildElement("Bones");
 	if (bonesXml)
@@ -1294,7 +1308,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 
 	loaded = true;
 	
-	TiXmlDocument xml;
+	TiXmlDocument& xml = _retrieveSkeletalXML(file);
 	xml.LoadFile(file.c_str());
 
 	TiXmlElement *bones = xml.FirstChildElement("Bones");

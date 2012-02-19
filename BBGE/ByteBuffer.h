@@ -102,7 +102,7 @@ public:
 	sprintf(errbuf, "Exception in ByteBuffer: '%s', rpos: %u, wpos: %u, cursize: %u, sizeparam: %u", \
 	__e.action, __e.rpos, __e.wpos, __e.cursize, __e.sizeparam); errorLog(errbuf); abort(); }
 #else
-#define BYTEBUFFER_EXCEPT(bb, desc, sz) throw ByteBufferException(bb, desc, sz)
+#define BYTEBUFFER_EXCEPT(bb, desc, sz) throw Exception(bb, desc, sz)
 #endif
 
 protected:

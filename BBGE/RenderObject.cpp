@@ -168,7 +168,6 @@ RenderObject::RenderObject()
 	alphaMod = 1;
 	collisionMaskRadius = 0;
 	collideRadius = 0;
-	useCollisionMask = false;
 	motionBlurTransition = false;
 	motionBlurFrameOffsetCounter = 0;
 	motionBlurFrameOffset = 0;
@@ -634,12 +633,6 @@ void RenderObject::renderCall()
 					glRotatef(180, 0, 1, 0);
 				}
 
-				if (core->mode == Core::MODE_3D)
-				{
-					glRotatef(rotation.x+rotationOffset.x, 1, 0, 0);
-					glRotatef(rotation.y+rotationOffset.y, 0, 1, 0);
-				}
-
 				glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
 #endif
 #ifdef BBGE_BUILD_DIRECTX
@@ -664,11 +657,6 @@ void RenderObject::renderCall()
 				{
 					glDisable(GL_CULL_FACE);
 					glRotatef(180, 0, 1, 0);
-				}
-				if (core->mode == Core::MODE_3D)
-				{
-					glRotatef(rotation.x+rotationOffset.x, 1, 0, 0);
-					glRotatef(rotation.y+rotationOffset.y, 0, 1, 0);
 				}
 				glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
 #endif
@@ -723,12 +711,6 @@ void RenderObject::renderCall()
 #endif
 #ifdef BBGE_BUILD_OPENGL
 
-			if (core->mode == Core::MODE_3D)
-			{
-				glRotatef(rotation.x+rotationOffset.x, 1, 0, 0);
-				glRotatef(rotation.y+rotationOffset.y, 0, 1, 0);
-			}
-
 			glRotatef(rotation.z+rotationOffset.z, 0, 0, 1); 
 			if (isfh())
 			{
@@ -753,10 +735,7 @@ void RenderObject::renderCall()
 				
 #ifdef BBGE_BUILD_OPENGL	
 		glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, beforeScaleOffset.z);
-		if (core->mode == Core::MODE_3D)
-			glScalef(scale.x, scale.y, scale.z);
-		else
-			glScalef(scale.x, scale.y, 1);
+		glScalef(scale.x, scale.y, 1);
 		glTranslatef(internalOffset.x, internalOffset.y, internalOffset.z);
 #endif
 #ifdef BBGE_BUILD_DIRECTX

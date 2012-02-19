@@ -232,7 +232,6 @@ Entity::Entity() : StateMachine(), DFSprite()
 	}
 	entityTypeIdx = -1;
 	damageTime = vars->entityDamageTime;
-	pushAvatar= false;
 	slowingToStopPathTimer = 0;
 	slowingToStopPath = 0;
 	followPos = 0;
@@ -240,21 +239,16 @@ Entity::Entity() : StateMachine(), DFSprite()
 	swimPath = false;
 	currentEntityTarget = 0;
 	deleteOnPathEnd = false;
-	overideMaxSpeedValue= 0;
-	overideMaxSpeedTime=0;
-	followingPath = 0;
 	multColor = Vector(1,1,1);
 	collideRadius = 24;
 	entityType = EntityType(0);
 	targets.resize(10);
 	attachedTo = 0;
-	currentPathNode = -1;
 	//target = 0;
 	frozenTimer = 0;
 	canBeTargetedByAvatar = false;
 	activationRange = 0;
 	activationType = ACT_NONE;
-	currentColor = Vector(1,1,1);
 	pushDamage = 0;
 
 	//debugLog("dsq->addEntity()");
@@ -262,7 +256,6 @@ Entity::Entity() : StateMachine(), DFSprite()
 	dsq->addEntity(this);
 	maxSpeed = oldMaxSpeed = 300;
 	entityDead = false;
-	takeDamage = true;
 	health = maxHealth = 5;
 	invincibleBreak = false;
 	activationRadius = 40;
@@ -485,7 +478,6 @@ void Entity::setName(const std::string &name)
 
 void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 {
-	//Path *p = dsq->game->getPathByName(name);
 	if (p)
 	{
 		deleteOnPathEnd = deleteOnEnd;
@@ -514,15 +506,6 @@ void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 		debugLog("Starting");
 		position.data->path.getPathNode(0)->value = position;
 		position.startPath(time);//, 1.0f/2.0f);
-		//swimPath = true;
-		/*
-		currentPathNode = 1;
-		followingPath = p;
-		setMaxSpeed(spd);
-		pathDefaultMaxSpeed = spd;
-		lastPathMaxSpeed = spd;
-		followingPathLoop = loop;
-		*/
 	}
 }
 
@@ -538,16 +521,16 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	position.stop();
 
 	swimPath = swim;
-	debugLog("Generating path to: " + path->name);
+	//debugLog("Generating path to: " + path->name);
 	dsq->pathFinding.generatePath(this, TileVector(start), TileVector(dest));
 	int sz = position.data->path.getNumPathNodes();
 	position.data->path.addPathNode(path->nodes[0].position, 1);
 	VectorPath old = position.data->path;
-	std::ostringstream os;
+	/*std::ostringstream os;
 	os << "Path length: " << sz;
-	debugLog(os.str());
+	debugLog(os.str());*/
 
-	debugLog("Regenerating section");
+	//debugLog("Regenerating section");
 
 	//int ms = sz % 12;
 	/*
@@ -561,19 +544,19 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	*/
 	this->vel = 0;
 
-	debugLog("Molesting Path");
+	//debugLog("Molesting Path");
 
 	dsq->pathFinding.molestPath(position.data->path);
 	//position.data->path.realPercentageCalc();
 	//position.data->path.cut(4);
 
-	debugLog("forcing path to minimum 2 nodes");
+	//debugLog("forcing path to minimum 2 nodes");
 	dsq->pathFinding.forceMinimumPath(position.data->path, start, dest);
-	debugLog("Done");
+	//debugLog("Done");
 
-	debugLog("Calculating Time");
+	//debugLog("Calculating Time");
 	float time = position.data->path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
-	debugLog("Starting");
+	//debugLog("Starting");
 	position.data->path.getPathNode(0)->value = position;
 	position.startPath(time);//, 1.0f/2.0f);
 
@@ -582,10 +565,10 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 		position.endOfPathEvent.set(MakeFunctionEvent(Entity, safeKill));
 	*/
 
-	debugLog("Set delete on Path end");
+	//debugLog("Set delete on Path end");
 	deleteOnPathEnd = dieOnPathEnd;
 
-	debugLog("End of Generate Path");
+	//debugLog("End of Generate Path");
 
 	//position.startSpeedPath(dsq->continuity.getSpeedType(speedType));
 	//position.startPath(((position.data->path.getNumPathNodes()*TILE_SIZE*4)-2)/dsq->continuity.getSpeedType(speedType));
@@ -624,7 +607,6 @@ void Entity::setNodeGroupActive(int group, bool v)
 
 void Entity::stopFollowingPath()
 {
-	followingPath = 0;
 	position.stopPath();
 }
 
@@ -691,12 +673,6 @@ void Entity::setTargetEntity(Entity *e, int t)
 bool Entity::hasTarget(int t)
 {
 	return (targets[t]!=0);
-}
-
-void Entity::warpToPathStart()
-{
-	if (followingPath && !followingPath->nodes.empty())
-		position = followingPath->nodes[0].position;
 }
 
 void Entity::watchEntity(Entity *e)
@@ -1396,7 +1372,7 @@ bool Entity::pathBurst(bool wallJump)
 
 bool Entity::isFollowingPath()
 {
-	return followingPath != 0 || position.isFollowingPath();
+	return position.isFollowingPath();
 }
 
 void Entity::onPathEnd()
@@ -1820,15 +1796,6 @@ void Entity::onUpdate(float dt)
 
 	//vel2=0;
 	Vector lastPos = position;
-	if (overideMaxSpeedTime > 0)
-	{
-		overideMaxSpeedTime-= dt;
-		if (overideMaxSpeedTime < 0)
-		{
-			overideMaxSpeedTime = 0;
-			overideMaxSpeedValue = 0;
-		}
-	}
 
 	if (ridingOnEntity)
 	{
@@ -1952,56 +1919,6 @@ void Entity::onUpdate(float dt)
 		}
 	}
 	*/
-
-	if (followingPath && currentPathNode != -1 && life == 1)
-	{
-		PathNode *node = &followingPath->nodes[currentPathNode];
-		Vector v = node->position - this->position;
-		v.setLength2D(1000*dt);
-		vel += v;
-
-
-		int ms = pathDefaultMaxSpeed;
-		if (node->maxSpeed != -1)
-		{
-			ms = node->maxSpeed;
-		}
-		if (ms != lastPathMaxSpeed)
-		{
-			float distFromNode = 0, distBetweenNodes = 0;
-			distFromNode = (node->position - this->position).getLength2D();
-			if (currentPathNode > 0)
-			{
-				PathNode *previousNode = &followingPath->nodes[currentPathNode-1];
-				distBetweenNodes = (node->position - previousNode->position).getLength2D();
-			}
-			setMaxSpeed(lastPathMaxSpeed + (ms - lastPathMaxSpeed)*(1.0f-(distFromNode/distBetweenNodes)));
-		}
-		//setMaxSpeed(ms);
-		Vector diffVec = (node->position - this->position);
-		if (diffVec.getSquaredLength2D() < sqr(200))
-		{
-			currentPathNode ++;
-			lastPathMaxSpeed = ms;
-			if (currentPathNode >= followingPath->nodes.size())
-			{
-				if (followingPathLoop == -1)
-				{
-					warpToPathStart();
-					currentPathNode = 1;
-				}
-				else
-				{
-					if (deleteOnPathEnd)
-						this->safeKill();
-					position.interpolateTo(followingPath->nodes[followingPath->nodes.size()-1].position, 0.5);
-					//position = followingPath->nodes[followingPath->nodes.size()-1].position;
-					vel = 0;
-					followingPath = 0;
-				}
-			}
-		}
-	}
 
 	if (getState() == STATE_PUSH)
 	{
@@ -2415,24 +2332,9 @@ void Entity::setMaxSpeed(int ms)
 	maxSpeed = oldMaxSpeed = ms;
 }
 
-void Entity::overideMaxSpeed(int ms, float time)
-{
-	overideMaxSpeedTime = time;
-	overideMaxSpeedValue = ms;
-}
-
-void Entity::disableOverideMaxSpeed()
-{
-	overideMaxSpeedValue =0;
-	overideMaxSpeedTime = 0;
-}
-
 int Entity::getMaxSpeed()
 {
-	if (overideMaxSpeedValue)
-		return overideMaxSpeedValue;
-	else
-		return maxSpeed;
+	return maxSpeed;
 }
 
 void Entity::songNote(int note)
@@ -2450,10 +2352,6 @@ void Entity::sound(const std::string &sound, float freq, float fadeOut)
 
 Vector Entity::getEnergyShotTargetPosition()
 {
-	if (!energyShotTargetPosition.isZero())
-	{
-		return energyShotTargetPosition;
-	}
 	return getWorldPosition();
 }
 
@@ -2883,7 +2781,7 @@ bool Entity::damage(const DamageData &dmgData)
 	if (d.damageType == DT_NONE)
 		return false;
 	//if () return true;
-	if (!takeDamage || isEntityDead())
+	if (isEntityDead())
 	{
 		//DUPE: same as below
 		//HACK: hackish

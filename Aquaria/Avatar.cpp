@@ -3996,7 +3996,6 @@ void Avatar::lockToWallCommon()
 	dsq->spawnParticleEffect("LockToWall", position);
 	stopBurst();
 	stopRoll();
-	disableOverideMaxSpeed();
 	core->sound->playSfx("LockToWall", 1.0, 0);//, (1000+rand()%100)/1000.0f);
 	//bursting = false;
 	animatedBurst = false;
@@ -4307,7 +4306,6 @@ void Avatar::lockToWall()
 void Avatar::applyTripEffects()
 {
 	color.interpolateTo(BLIND_COLOR, 0.5);
-	currentColor = BLIND_COLOR;
 
 	tripper->alpha.interpolateTo(1, 8);
 
@@ -4334,7 +4332,6 @@ void Avatar::applyTripEffects()
 void Avatar::removeTripEffects()
 {
 	color.interpolateTo(Vector(1,1,1),0.5);
-	currentColor = Vector(1,1,1);
 	tripper->alpha.interpolateTo(0, 4);
 
 	if (dsq->loops.trip != BBGE_AUDIO_NOCHANNEL)
@@ -4350,7 +4347,6 @@ void Avatar::applyBlindEffects()
 
 	// character black
 	color.interpolateTo(BLIND_COLOR, 0.5);
-	currentColor = BLIND_COLOR;
 	blinder->alpha.interpolateTo(1, 0.5);
 
 	blinder->rotation.z = 0;
@@ -4364,7 +4360,6 @@ void Avatar::applyBlindEffects()
 void Avatar::removeBlindEffects()
 {
 	color.interpolateTo(Vector(1,1,1),0.5);
-	currentColor = Vector(1,1,1);
 	blinder->alpha.interpolateTo(0, 0.5);
 	//dsq->toggleMuffleSound(0);
 }

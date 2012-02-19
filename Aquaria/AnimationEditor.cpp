@@ -1201,6 +1201,7 @@ void AnimationEditor::saveFile()
 
 void AnimationEditor::loadFile()
 {
+	SkeletalSprite::clearCache();
 	lastSelectedBone = 0;
 	editingBone = 0;
 	clearUndoHistory();

@@ -277,7 +277,6 @@ public:
 
 	void freeze(float time);
 
-	int leaches;
 	virtual void onSceneFlipped() {}
 
 	bool isNearObstruction(int sz, int type=0, TileVector *hitTile=0);
@@ -308,10 +307,7 @@ public:
 	virtual void onNotify(Entity *notify){}
 	//void followPath(Path *p, int spd, int loop, bool deleteOnEnd = false);
 	void followPath(Path *p, int speedType, int dir, bool deleteOnEnd = false);
-	void warpToPathStart();
-	int currentPathNode;
 	Entity *attachedTo;
-	Path *followingPath;
 	bool touchAvatarDamage(int radius, float dmg, const Vector &override=Vector(-1,-1,-1), int speed=0, float pushTime = 0, Vector collidePos = Vector(0,0,0));
 
 	void moveTowards(Vector p, float dt, int spd);
@@ -372,7 +368,6 @@ public:
 	void slowToStopPath(float t);
 	bool isSlowingToStopPath();
 	Vector lastMove;
-	int pushAvatar;
 	float damageTime;
 
 	void setEntityProperty(EntityProperty ep, bool value=true);
@@ -419,7 +414,6 @@ public:
 	Vector getEnergyShotTargetPosition();
 	int getRandomTargetPoint();
 
-	Vector energyShotTargetPosition;
 	Vector ridingOnEntityOffset;
 	void moveOutOfWall();
 	bool isSittingOnInvisibleIn();
@@ -458,7 +452,6 @@ public:
 	bool checkSplash(const Vector &override=Vector(0,0,0));
 	EatData eatData;
 	InterpolatedVector flipScale;
-	SkeletalSprite copySkel;
 	bool beautyFlip;
 	void attachLance();
 	void setInvincible(bool inv);
@@ -564,17 +557,10 @@ protected:
 	virtual void onPathEnd();
 	bool swimPath;
 	bool deleteOnPathEnd;
-	int overideMaxSpeedValue;
-	float overideMaxSpeedTime;
 	InterpolatedVector multColor;
 	EntityType entityType;
 	std::vector<Entity*> attachedEntities;
 	std::vector<Vector> attachedEntitiesOffsets;
-
-	int pathDefaultMaxSpeed;
-	int lastPathMaxSpeed;
-	int followingPathLoop;
-
 
 	virtual void onFreeze(){}
 
@@ -587,8 +573,6 @@ protected:
 
 	void doDeathEffects(int manaBallEnergy=0, bool die=true);
 
-	Vector currentColor;
-	bool takeDamage;
 	void onEnterState(int action);
 	void onExitState(int action);
 	//virtual bool onDamage(int amount, Spell *spell, Entity *attacker);

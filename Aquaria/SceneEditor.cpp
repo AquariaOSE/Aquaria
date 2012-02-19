@@ -2394,8 +2394,6 @@ void SceneEditor::removeEntity()
 void SceneEditor::placeAvatar()
 {
 	dsq->game->avatar->position = dsq->getGameCursorPosition();
-	QuadLight::clearQuadLights();
-	QuadLight::addQuadLight(QuadLight(Vector(dsq->game->avatar->position), Vector(1, 0, 0), 1200));
 }
 
 void SceneEditor::scaleElementUp()

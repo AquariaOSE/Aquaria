@@ -215,7 +215,6 @@ ADD_DEFINITIONS(-DBBGE_BUILD_FRAMEBUFFER=1)
 #ADD_DEFINITIONS(-DBBGE_BUILD_SHADERS=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL_DYNAMIC=1)
-ADD_DEFINITIONS(-DBBGE_BUILD_WIDESCREEN=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_FMOD_OPENAL_BRIDGE=1)
 
 IF(AQUARIA_DEVELOPER_BUILD)
@@ -384,8 +383,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Interpolator.cpp
     ${BBGEDIR}/Joystick.cpp
     ${BBGEDIR}/LensFlare.cpp
-    ${BBGEDIR}/LightCone.cpp
-    ${BBGEDIR}/Light.cpp
     ${BBGEDIR}/Math.cpp
     ${BBGEDIR}/ParticleEffect.cpp
     ${BBGEDIR}/ParticleManager.cpp
@@ -454,6 +451,8 @@ SET(BBGE_SRCS_UNUSED
     ${BBGEDIR}/CShim.cpp
     ${BBGEDIR}/Cutscene.cpp
     ${BBGEDIR}/FileVars.cpp
+    ${BBGEDIR}/Light.cpp
+    ${BBGEDIR}/LightCone.cpp
     ${BBGEDIR}/Model.cpp
     ${BBGEDIR}/OggStream.cpp
     ${BBGEDIR}/PackRead.cpp

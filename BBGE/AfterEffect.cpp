@@ -215,68 +215,28 @@ void AfterEffectManager::capture()
 }
 void AfterEffectManager::render()
 {
-	//if (!core->frameBuffer.isInited() && numEffects==0) return;	
 #ifdef BBGE_BUILD_OPENGL
-	if (active || core->frameBuffer.isInited())
-	{
-		glPushMatrix();
-		//glDisable(GL_BLEND);
-		//glEnable(GL_BLEND);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glDisable (GL_ALPHA_TEST);
-		glDisable(GL_BLEND);
+	glPushMatrix();
+	//glDisable(GL_BLEND);
+	//glEnable(GL_BLEND);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	//glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+	glDisable (GL_ALPHA_TEST);
+	glDisable(GL_BLEND);
 
-		capture();
-		glTranslatef(core->cameraPos.x, core->cameraPos.y, 0);
-		glScalef(core->invGlobalScale, core->invGlobalScale,0);
-		/*
-		static float angle=0;
-		angle += 0.03f;
-		*/
-		//glRotatef(angle, 0, 0, 1);
-		//glColor4f(1,1,1,0.75);
-		glColor4f(1,1,1,1);
-		if (core->mode == Core::MODE_2D)
-		{
-			renderGrid();
-		//	renderGridPoints();
-		}
-		glPopMatrix();
-	}
-	else
-	{
-		glPushMatrix();
-		//glDisable(GL_BLEND);
-		//glEnable(GL_BLEND);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-		glDisable (GL_ALPHA_TEST);
-		glDisable(GL_BLEND);
-
-		capture();
-		glTranslatef(core->cameraPos.x, core->cameraPos.y, 0);
-		glScalef(core->invGlobalScale, core->invGlobalScale,0);
-		/*
-		static float angle;
-		angle += 0.03f;
-		*/
-		//glRotatef(angle, 0, 0, 1);
-		//glColor4f(1,1,1,0.75);
-		glColor4f(1,1,1,1);
-		if (core->mode == Core::MODE_2D)
-		{
-			renderGrid();
-		//	renderGridPoints();
-		}
-		glPopMatrix();
-	}
+	capture();
+	glTranslatef(core->cameraPos.x, core->cameraPos.y, 0);
+	glScalef(core->invGlobalScale, core->invGlobalScale,0);
 	/*
-	else
-	{
-		core->frameBuffer.endCapture();
-	}
+	static float angle;
+	angle += 0.03f;
 	*/
+	//glRotatef(angle, 0, 0, 1);
+	//glColor4f(1,1,1,0.75);
+	glColor4f(1,1,1,1);
+	renderGrid();
+	//renderGridPoints();
+	glPopMatrix();
 #endif
 }
 
@@ -360,67 +320,64 @@ void AfterEffectManager::renderGrid()
 	int offx = -core->getVirtualOffX();
 	int offy = -core->getVirtualOffY();
 
-	if (core->mode == Core::MODE_2D)
+	//float div = xDivs;
+	for (int i = 0; i < (xDivs-1); i++)
 	{
-		//float div = xDivs;
-		for (int i = 0; i < (xDivs-1); i++)
-		{
-			for (int j = 0; j < (yDivs-1); j++)
-			{				
-				glBegin(GL_QUADS);		
-					//glColor3f(i/div, i/div, i/div);
-					glTexCoord2f(i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0);
-					glVertex2f(offx + vw*drawGrid[i][j].x,		offy + vh*drawGrid[i][j].y);
-					glTexCoord2f(i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,(float)(screenHeight/(yDivs-1))/16);
-					glVertex2f(offx + vw*drawGrid[i][j+1].x,		offy + vh*drawGrid[i][j+1].y);
-					glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);	
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);	
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,(float)(screenHeight/(yDivs-1))/16);			
-					glVertex2f(offx + vw*drawGrid[i+1][j+1].x,	offy + vh*drawGrid[i+1][j+1].y);
-					glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);	
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);	
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,0);			
-					glVertex2f(offx + vw*drawGrid[i+1][j].x,		offy + vh*drawGrid[i+1][j].y);				
-				glEnd();
-			}
+		for (int j = 0; j < (yDivs-1); j++)
+		{				
+			glBegin(GL_QUADS);		
+				//glColor3f(i/div, i/div, i/div);
+				glTexCoord2f(i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0);
+				glVertex2f(offx + vw*drawGrid[i][j].x,		offy + vh*drawGrid[i][j].y);
+				glTexCoord2f(i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,(float)(screenHeight/(yDivs-1))/16);
+				glVertex2f(offx + vw*drawGrid[i][j+1].x,		offy + vh*drawGrid[i][j+1].y);
+				glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);	
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);	
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,(float)(screenHeight/(yDivs-1))/16);			
+				glVertex2f(offx + vw*drawGrid[i+1][j+1].x,	offy + vh*drawGrid[i+1][j+1].y);
+				glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);	
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);	
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,0);			
+				glVertex2f(offx + vw*drawGrid[i+1][j].x,		offy + vh*drawGrid[i+1][j].y);				
+			glEnd();
 		}
-
-		// uncomment to render grid points
-		/*
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glPointSize(2);
-		glColor4f(1, 0, 0, 0.5);
-		for (int i = 0; i < (xDivs-1); i++)
-		{
-			for (int j = 0; j < (yDivs-1); j++)
-			{				
-				glBegin(GL_POINTS);		
-					//glColor3f(i/div, i/div, i/div);
-					glTexCoord2f(i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0);
-					glVertex2f(800*drawGrid[i][j].x,		600*drawGrid[i][j].y);
-					glTexCoord2f(i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,(float)(screenHeight/(yDivs-1))/16);
-					glVertex2f(800*drawGrid[i][j+1].x,		600*drawGrid[i][j+1].y);
-					glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);	
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);	
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,(float)(screenHeight/(yDivs-1))/16);			
-					glVertex2f(800*drawGrid[i+1][j+1].x,	600*drawGrid[i+1][j+1].y);
-					glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);	
-						//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);	
-						//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,0);			
-					glVertex2f(800*drawGrid[i+1][j].x,		600*drawGrid[i+1][j].y);				
-				glEnd();
-			}
-		}	
-		*/
 	}
+
+	// uncomment to render grid points
+	/*
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glPointSize(2);
+	glColor4f(1, 0, 0, 0.5);
+	for (int i = 0; i < (xDivs-1); i++)
+	{
+		for (int j = 0; j < (yDivs-1); j++)
+		{				
+			glBegin(GL_POINTS);		
+				//glColor3f(i/div, i/div, i/div);
+				glTexCoord2f(i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0);
+				glVertex2f(800*drawGrid[i][j].x,		600*drawGrid[i][j].y);
+				glTexCoord2f(i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,(float)(screenHeight/(yDivs-1))/16);
+				glVertex2f(800*drawGrid[i][j+1].x,		600*drawGrid[i][j+1].y);
+				glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);	
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);	
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,(float)(screenHeight/(yDivs-1))/16);			
+				glVertex2f(800*drawGrid[i+1][j+1].x,	600*drawGrid[i+1][j+1].y);
+				glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);	
+					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);	
+					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,0);			
+				glVertex2f(800*drawGrid[i+1][j].x,		600*drawGrid[i+1][j].y);				
+			glEnd();
+		}
+	}	
+	*/
 
 	//glDisable(GL_TEXTURE_2D);
 	RenderObject::lastTextureApplied = 0;

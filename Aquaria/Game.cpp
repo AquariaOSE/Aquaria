@@ -2845,7 +2845,6 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 			q->collideRadius = overrideCollideRadius;
 		else
 			q->collideRadius = TILE_SIZE/2;
-		q->useCollisionMask = true;
 		q->collisionMask.clear();
 		std::vector<TileVector> obs;
 		TileVector tpos(q->position);
@@ -4295,7 +4294,6 @@ bool Game::loadSceneXML(std::string scene)
 	addProgress();
 
 	clearObsRows();
-	jetStreams.clear();
 	warpAreas.clear();
 	TiXmlElement *lensFlare = doc.FirstChildElement("LensFlare");
 	while (lensFlare)
@@ -6481,10 +6479,8 @@ void Game::applyState()
 	//dsq->getRenderObjectLayer(LR_ELEMENTS5)->update = false;
 
 	backgroundImageRepeat = 1;
-	jetStreams.clear();
 	grad = 0;
 	maxZoom = -1;
-	followSym = 0;
 	saveFile = 0;
 	deathTimer = 0.9;
 	runGameOverScript = false;
@@ -6495,6 +6491,7 @@ void Game::applyState()
 	elementTemplatePack ="";
 	clearGrid();
 	clearPointers();
+	SkeletalSprite::clearCache();
 
 
 	StateObject::applyState();
@@ -10975,9 +10972,6 @@ void Game::removeState()
 	controlHint_ignoreClear = false;
 	clearControlHint();
 	dsq->overlay->color = 0;
-
-	if (dsq->game->avatar->attachedTo)
-		avatarTransit = dsq->game->avatar->attachedTo->name;
 
 	//dsq->overlay->alpha = 0;
 	dsq->overlay->alpha.interpolateTo(1, fadeTime);

@@ -135,8 +135,6 @@ void Core::reloadDevice()
 
 void Core::resetGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 {
-	int lastMode = mode;
-
 	if (fullscreen == -1)
 		fullscreen = _fullscreen;
 
@@ -159,19 +157,7 @@ void Core::resetGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 
 	initGraphicsLibrary(w, h, fullscreen, vsync, bpp);
 	
-	switch(lastMode)
-	{
-	case MODE_2D:
-#ifdef BBGE_BUILD_WIDESCREEN
-		enable2DWide(w, h);
-#else
-		enable2D(virtualWidth, virtualHeight, true);
-#endif
-	break;
-	case MODE_3D:
-		enable3D();
-	break;
-	}
+	enable2DWide(w, h);
 
 	reloadResources();
 	reloadDevice();
@@ -1032,7 +1018,6 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	nestedMains = 0;
 	afterEffectManager = 0;
 	loopDone = false;
-	mode = 0;
 	core = this;
 
 	#ifdef BBGE_BUILD_WINDOWS
@@ -1050,12 +1035,6 @@ Core::Core(const std::string &filesystem, int numRenderLayers, const std::string
 	//1.3333334f;
 
 	globalResolutionScale = globalScale = Vector(1,1,1);
-
-	lights.resize(8);
-	for (int i = 0; i < lights.size(); i++)
-	{
-		lights[i].num = i;
-	}
 
 	initRenderObjectLayers(numRenderLayers);
 
@@ -1805,14 +1784,6 @@ void Core::onUpdate(float dt)
 		afterEffectManager->update(dt);
 	}
 
-	for (int i = 0; i < lights.size(); i++)
-	{
-		if (lights[i].enabled)
-		{
-			lights[i].update(dt);
-		}
-	}
-
 	if (!sortFlag)
 	{
 		if (sortTimer>0)
@@ -1906,13 +1877,11 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 {	
 	static bool didOnce = false;
 	
-//#ifdef BBGE_BUILD_WIDESCREEN
 	aspectX = width;
 	aspectY = height;
 
 	aspect = (aspectX/aspectY);
 
-//#endif
 	
 
 	this->width = width;
@@ -2135,7 +2104,6 @@ void Core::shutdownGraphicsLibrary(bool killVideo)
 #endif
 
 	_hasFocus = false;
-	mode = MODE_NONE;
 
 	lib_graphics = false;
 
@@ -2341,70 +2309,6 @@ bbgePerspective(float fovy, float aspect, float zNear, float zFar)
     glMultMatrixf(&m[0][0]);
 }
 
-
-
-// don't want to support resizing
-void Core::resize3D()
-{
-	glViewport(0,0,width,height);						// Reset The Current Viewport
-
-	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
-	glLoadIdentity();									// Reset The Projection Matrix
-
-	// Calculate The Aspect Ratio Of The Window
-	bbgePerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
-
-	glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix
-	glLoadIdentity();									// Reset The Modelview Matrix
-
-
-/*
-
-	//width/height = aspect;
-	if (aspect)
-	{
-		width = int(float(height)*aspect);
-	}
-
-	this->width = width;
-	this->height = height;
-	if (height==0)										// Prevent A Divide By Zero By
-	{
-		height=1;										// Making Height Equal One
-	}
-
-#ifdef BBGE_BUILD_OPENGL
-	glViewport(0,0,width,height);						// Reset The Current Viewport
-
-	glMatrixMode(GL_PROJECTION);						// Select The Projection Matrix
-	glLoadIdentity();									// Reset The Projection Matrix
-
-#ifdef BBGE_BUILD_GLFW
-	if (mode == MODE_3D)
-		// Calculate The Aspect Ratio Of The Window
-		gluPerspective(45.0f,(GLfloat)width/(GLfloat)height,0.1f,100.0f);
-#endif
-
-	glMatrixMode(GL_MODELVIEW);							// Select The Modelview Matrix
-	glLoadIdentity();									// Reset The Modelview Matrix
-
-	if (this->mode == Core::MODE_2D)
-		enable2D();
-	onResetScene();
-
-	//if (!fullscreen)
-	//{
-
-		//DWORD dwExStyle=WS_EX_APPWINDOW | WS_EX_WINDOWEDGE;			// Window Extended Style
-		//DWORD dwStyle=WS_OVERLAPPEDWINDOW;
-		//RECT r = {0,0,width,height};
-		//AdjustWindowRectEx(&r,dwStyle,false,dwExStyle);
-	//}
-
-#endif
-*/
-}
-
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 {
 	/*
@@ -2462,13 +2366,6 @@ void Core::enable2DWide(int rx, int ry)
 		//vh = MAX(vh, baseVirtualHeight);
 		core->enable2D(baseVirtualWidth, vh, 1);
 	}
-
-	//else
-	//{
-	//	int vh = int(float(baseVirtualWidth) * (float(ry)/float(rx)));
-	//	vh = MAX(vh, baseVirtualHeight);
-	//	core->enable2D(baseVirtualWidth, vh, 1);
-	//}
 }
 
 static void bbgeOrtho2D(float left, float right, float bottom, float top)
@@ -2498,8 +2395,6 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 		return;
 	}
 	*/
-
-	mode = MODE_2D;
 	
 #ifdef BBGE_BUILD_OPENGL
 
@@ -2509,15 +2404,6 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
     glMatrixMode(GL_PROJECTION);
     //glPushMatrix();
     glLoadIdentity();
-
-//#ifdef BBGE_BUILD_WIDESCREEN
-	//int offx=0,offy=0;
-	// hackish
-
-	//float vw = float((viewPort[2] * baseVirtualHeight)) / float(viewPort[3]);
-	//float vw = float(aspectX * viewPort[3]) / float(aspectY);
-	//- baseVirtualWidth;
-	//offx = float(vw)*0.1f;
 
 	float vw=0,vh=0;
 
@@ -2702,47 +2588,6 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 	//setupRenderPositionAndScale();
 
 	
-}
-
-void Core::enable3D()
-{
-	if (mode == MODE_3D) return;
-	else if (mode == MODE_2D)
-	{
-		/*
-#ifdef BBGE_BUILD_OPENGL
-		glMatrixMode(GL_PROJECTION);
-		glPopMatrix();
-		glMatrixMode(GL_MODELVIEW);
-		glPopMatrix();
-#endif
-		*/
-	}
-	mode = MODE_3D;
-
-	glClearDepth(1.0);								// Depth Buffer Setup
-
-	glLoadIdentity();
-	resize3D();
-
-	
-
-	/*
-    int viewPort[4];
-    glGetIntegerv(GL_VIEWPORT, viewPort);
-
-    glMatrixMode(GL_PROJECTION);
-    glPushMatrix();
-    glLoadIdentity();
-
-	//glOrtho(0.0f,viewPort[2],viewPort[3],0.0f,-1000.0f,1000.0f);
-	glOrtho(0.0f,viewPort[2],viewPort[3],0.0f,-1.0f,1.0f);
-    //glOrtho(0, viewPort[2], 0, viewPort[3], -100, 100);
-
-    glMatrixMode(GL_MODELVIEW);
-    glPushMatrix();
-    glLoadIdentity();
-	*/
 }
 
 void Core::quitNestedMain()
@@ -3963,16 +3808,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 	}
 
 	setupRenderPositionAndScale();
-	bool e = false;
-	for (int i = 0; i < lights.size(); i++)
-	{
-		lights[i].apply();
-		if (lights[i].enabled)	e = true;
-	}
-	if (e)
-		glEnable(GL_LIGHTING);
-	else
-		glDisable(GL_LIGHTING);
 #endif
 
 #ifdef BBGE_BUILD_DIRECTX
@@ -4050,20 +3885,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 		RenderObject::rlayer = r;
 		if (r->visible)
 		{
-			if (r->mode != mode)
-			{
-				switch(r->mode)
-				{
-				case MODE_2D:
-					enable2DWide(width, height);
-					glLoadIdentity();
-					setupRenderPositionAndScale();
-				break;
-				case MODE_3D:
-					enable3D();
-				break;
-				}
-			}
 			if (r->startPass == r->endPass)
 			{
 				r->renderPass(RenderObject::RENDER_ALL);
