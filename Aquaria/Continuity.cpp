@@ -2709,7 +2709,7 @@ void Continuity::loadFile(int slot)
 
 		
 #ifdef AQUARIA_BUILD_MAPVIS
-		if (worldMap->Attribute("va"))
+		if (worldMap->Attribute("va") && dsq->continuity.worldMap.getNumWorldMapTiles())
 		{
 			std::istringstream is(worldMap->Attribute("va"));
 
