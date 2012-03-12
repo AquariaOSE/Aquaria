@@ -555,8 +555,8 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 {
 	if (path.empty()) return;
 
-    stringToLowerUserData(path);
-    stringToLower(type);
+	path = core->adjustFilenameCase(path);
+	stringToLower(type);
 	//HACK: MAC:
 	debugLog("forEachFile - path: " + path + " type: " + type);
 

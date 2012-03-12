@@ -64,7 +64,7 @@ ShotData::ShotData()
 	ignoreShield = false;
 }
 
-void readEquals2(std::ifstream &in)
+template <typename T> void readEquals2(T &in)
 {
 	std::string temp;
 	in >> temp;
@@ -93,7 +93,10 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 	}
 
 	debugLog(usef);
-	std::ifstream inf(usef.c_str());
+	char *data = readFile(core->adjustFilenameCase(usef).c_str());
+	if (!data)
+		return;
+	SimpleIStringStream inf(data, SimpleIStringStream::TAKE_OVER);
 	std::string token;
 	while (inf >> token)
 	{
@@ -241,7 +244,6 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 
 
 	}
-	inf.close();
 }
 
 void Shot::fire(bool playSfx)
