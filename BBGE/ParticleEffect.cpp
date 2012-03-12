@@ -96,6 +96,7 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 
 	clearEmitters();
 
+	usef = core->adjustFilenameCase(usef);
 	debugLog(usef);
 	char *buffer = readFile(usef);
 	if (!buffer)
