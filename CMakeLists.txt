@@ -294,7 +294,6 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/Avatar.cpp
     ${SRCDIR}/Beam.cpp
     ${SRCDIR}/BitBlotLogo.cpp
-    ${SRCDIR}/BoxElement.cpp
     ${SRCDIR}/CollideEntity.cpp
     ${SRCDIR}/Continuity.cpp
     ${SRCDIR}/Credits.cpp
@@ -348,6 +347,7 @@ SET(AQUARIA_SRCS
 
 # Apparently not used at the moment. Listed here just for completeness.
 SET(AQUARIA_SRCS_UNUSED
+    ${SRCDIR}/BoxElement.cpp
     ${SRCDIR}/BubbleRender.cpp
     ${SRCDIR}/FFTNotes.cpp
     ${SRCDIR}/StarRenderer.cpp
@@ -370,10 +370,8 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Core.cpp
     ${BBGEDIR}/Cube.cpp
     ${BBGEDIR}/DarkLayer.cpp
-    ${BBGEDIR}/Datafile.cpp
     ${BBGEDIR}/DebugFont.cpp
     ${BBGEDIR}/DeflateCompressor.cpp
-    ${BBGEDIR}/DFSprite.cpp
     ${BBGEDIR}/Effects.cpp
     ${BBGEDIR}/Emitter.cpp
     ${BBGEDIR}/Event.cpp
@@ -450,6 +448,8 @@ SET(BBGE_SRCS_UNUSED
     ${BBGEDIR}/BloomEffect.cpp
     ${BBGEDIR}/CShim.cpp
     ${BBGEDIR}/Cutscene.cpp
+    ${BBGEDIR}/Datafile.cpp
+    ${BBGEDIR}/DFSprite.cpp
     ${BBGEDIR}/FileVars.cpp
     ${BBGEDIR}/Light.cpp
     ${BBGEDIR}/LightCone.cpp

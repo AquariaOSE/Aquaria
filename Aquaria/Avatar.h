@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../BBGE/Particles.h"
 #include "../BBGE/BitmapFont.h"
-#include "../BBGE/DFSprite.h"
 
 #include "DSQ.h"
 #include "Hair.h"
@@ -156,7 +155,6 @@ public:
 	bool isCharging();
 	void slowToRest();
 	void debugMsg(const std::string &msg);
-	DFSprite *burstBar;
 	void setBlind(float time);
 	void onBlindTest();
 

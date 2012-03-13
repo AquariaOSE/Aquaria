@@ -25,22 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 class Avatar;
 
-class ElementActivationRange
-{
-public:
-	ElementActivationRange();
-	void isVectorInRange();
-	enum Type
-	{
-		CIRCLE,
-		RECT
-	};
-	float radius;
-	Type getType();
-protected:
-	Type type;
-};
-
 
 enum ElementFlag
 {
@@ -61,26 +45,18 @@ enum ElementFlag
 class Element : public Quad
 {
 public:
-	enum Type
-	{
-		UNDEFINED,
-		BOX
-	};
-
-	Element(Type elementType);
+	Element();
 	~Element();
 	void destroy();
 	//void interact(Interaction::Type interactionType, Avatar *avatar);
 	bool canSeeAvatar(Avatar *avatar);
 	void update(float dt);
 	bool isActive();
-	Type getElementType();
 	//InteractionContainer interactions;
 	int templateIdx;
 	int bgLayer;
 	Element *bgLayerNext;
 	float getSortDepth();
-	bool dontSave;
 	void render();
 	//Flags elementFlags;
 	ElementFlag elementFlag;
@@ -89,8 +65,6 @@ public:
 	int getElementEffectIndex();
 	void setElementEffectByIndex(int e);
 	void setElementActive(bool v) { elementActive = v; }
-	float parallax;
-	float angleFromGroupCenter, distFromGroupCenter, oldRotation;
 protected:
 	void setGridFromWavy();
 	float wavyAngleOffset, wavyMagnitude, wavyLerpIn;
@@ -101,10 +75,8 @@ protected:
 	void updateEffects(float dt);
 	int elementEffectIndex, elementEffectType;
 	bool elementActive;
-	ElementActivationRange activationRange;
-	Type type;
 };
-
+/*
 class BoxElement : public Element
 {
 public:
@@ -113,6 +85,7 @@ public:
 protected:
 	int ww,hh;
 };
+*/
 
 typedef std::vector<Element*> ElementContainer;
 

@@ -250,7 +250,7 @@ void ScriptedEntity::setupEntity(const std::string &tex, int lcode)
 	this->layer = dsq->getEntityLayerToLayer(lcode);
 }
 
-void ScriptedEntity::setupBasicEntity(std::string texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer)
+void ScriptedEntity::setupBasicEntity(const std::string& texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer)
 {
 	//this->updateCull = updateCull;
 	updateCull = -1;

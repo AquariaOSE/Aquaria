@@ -22,25 +22,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Game.h"
 #include "Avatar.h"
 
-ElementActivationRange::ElementActivationRange() : radius(64), type(CIRCLE)
-{	
-}
-
-ElementActivationRange::Type ElementActivationRange::getType()
-{
-	return type;
-}
-
-Element::Element(Element::Type elementType) : Quad(), type(elementType)
+Element::Element() : Quad()
 {
 	elementFlag = EF_NONE;
-	angleFromGroupCenter = distFromGroupCenter = 0;
 	wavyFlip = false;
-	parallax = 1;
 	elementEffectIndex = -1;
 	elementActive = true;
 	bgLayer = 0;
-	dontSave = false;
 
 	wavyAngleOffset=0;
 	wavyMagnitude=0;
@@ -52,7 +40,6 @@ Element::Element(Element::Type elementType) : Quad(), type(elementType)
 	wavyRadius = 0;
 	wavyMin = 0;
 	wavyMax = 0;
-	oldRotation = 0;
 	templateIdx = -1;
 
 	setStatic(true);
@@ -427,11 +414,6 @@ void Element::fillGrid()
 			dsq->game->fillGridFromQuad(this, OT_INVISIBLEIN, false); 
 		}
 	}
-}
-
-Element::Type Element::getElementType()
-{
-	return type;
 }
 
 // override this functionality as needed

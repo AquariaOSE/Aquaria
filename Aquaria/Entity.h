@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #pragma once
 
-#include "../BBGE/DFSprite.h"
+#include "../BBGE/AnimatedSprite.h"
 #include "../BBGE/StateMachine.h"
 #include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/SkeletalSprite.h"
@@ -194,7 +194,7 @@ enum BounceType
 	BOUNCE_REAL		= 1
 };
 
-class Entity : public DFSprite, public StateMachine
+class Entity : public AnimatedSprite, public StateMachine
 {
 public:
 	Entity();
