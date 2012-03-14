@@ -234,7 +234,7 @@ public:
 	bool canSetState(int state);
 	
 	virtual void message(const std::string &msg, int v) {}
-	virtual void messageVariadic(lua_State *L, int nparams) {}
+	virtual int messageVariadic(lua_State *L, int nparams) { return 0; }
 
 	bool isUnderWater(const Vector &o=Vector());
 

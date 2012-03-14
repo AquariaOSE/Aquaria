@@ -96,14 +96,17 @@ void ScriptedEntity::message(const std::string &msg, int v)
 	Entity::message(msg, v);
 }
 
-void ScriptedEntity::messageVariadic(lua_State *L, int nparams)
+int ScriptedEntity::messageVariadic(lua_State *L, int nparams)
 {
 	if (script)
 	{
-		if (!script->callVariadic("msg", L, nparams, this))
+		int res = script->callVariadic("msg", L, nparams, this);
+		if (res < 0)
 			luaDebugMsg("msg", script->getLastError());
+		else
+			return res;
 	}
-	Entity::messageVariadic(L, nparams);
+	return Entity::messageVariadic(L, nparams);
 }
 
 void ScriptedEntity::warpSegments()

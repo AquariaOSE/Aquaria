@@ -2889,8 +2889,8 @@ luaFunc(entity_isBeingPulled)
 luaFunc(avatar_setPullTarget)
 {
 	Entity *e = 0;
-	if (lua_tonumber(L, 1) != 0)
-		e = entity(L);
+	if (lua_isuserdata(L, 1))
+		e = entity(L, 1);
 
 	if (dsq->game->avatar->pullTarget != 0)
 		dsq->game->avatar->pullTarget->stopPull();
@@ -4202,10 +4202,10 @@ luaFunc(entity_msg)
 	Entity *e = entity(L);
 	if (e)
 	{
-		int top = lua_gettop(L);
 		// pass everything on the stack except the entity pointer
-		e->messageVariadic(L, top - 1);
-		return lua_gettop(L) - top; // return everything that was pushed on our stack
+		int res = e->messageVariadic(L, lua_gettop(L) - 1);
+		if (res >= 0)
+			return res;
 	}
 	luaReturnNil();
 }
@@ -9177,42 +9177,27 @@ bool Script::call(const char *name, void *param1, void *param2, void *param3, fl
 	return true;
 }
 
-bool Script::callVariadic(const char *name, lua_State *fromL, int nparams, void *param)
+int Script::callVariadic(const char *name, lua_State *fromL, int nparams, void *param)
 {
-	lookupFunc(name);                         // [f]
-	luaPushPointer(L, param);                 // [f, p]
+	int oldtop = lua_gettop(L);
+	
+	lookupFunc(name);
+	luaPushPointer(L, param);
 
-	if (L != fromL)
-	{
-		// clone topmost nparams elements, they will be popped by xmove
-		for (int i = 0; i < nparams; ++i)
-			lua_pushvalue(fromL, -nparams);
+	// If both stacks are the same, we already pushed 2 more entries to the stack.
+	int pos = (L == fromL) ? -(nparams+2) : -nparams;
+	for (int i = 0; i < nparams; ++i)
+		lua_pushvalue(fromL, pos);
 
-		// Move them to the other stack
-		lua_xmove(fromL, L, nparams);         // [f, p, ...]
-	}
-	else
-	{
-		// Same stack, insert pointer param below the parameters which are already there
-		lua_insert(L, -(nparams + 2));
-		// and the function, now below the pointer param
-		lua_insert(L, -(nparams + 2));
-	}
+	// Move them to the other stack. Ignored if L == fromL.
+	lua_xmove(fromL, L, nparams);
 
 	// Do the call
-	bool success = doCall(nparams + 1, LUA_MULTRET);
+	if (!doCall(nparams + 1, LUA_MULTRET))
+		return -1;
 
-	// after returning from the call, push everything that is left on the stack
-	// (= what the function returned) back onto the caller's stack, if not already there.
-	if (success && L != fromL)
-	{
-		// clone elements again
-		int count = lua_gettop(L);
-		for (int i = 0; i < count; ++i)
-			lua_pushvalue(L, -count);
+	nparams = lua_gettop(L) - oldtop;
+	lua_xmove(L, fromL, nparams);
 
-		lua_xmove(L, fromL, count);
-	}
-
-	return success;
+	return nparams;
 }
