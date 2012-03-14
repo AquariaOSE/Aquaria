@@ -123,7 +123,7 @@ function update(me, dt)
 				v.grabbedEnt = v.n
 				entity_setState(me, STATE_TRAP)
 				
-			elseif entity_isEntityInRange(me, v.li, grabRange) then
+			elseif v.li ~= 0 and entity_isEntityInRange(me, v.li, grabRange) then
 				v.grabbedEnt = v.li
 				entity_setState(me, STATE_TRAP)
 				

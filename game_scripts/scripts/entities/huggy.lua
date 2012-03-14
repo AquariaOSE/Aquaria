@@ -206,11 +206,13 @@ function enterState(me)
 		esetv(me, EV_LOOKAT,1)
 		entity_animate(me, "idle", LOOP_INF)
 		entity_setMaxSpeed(me, 400)
+		entity_setUpdateCull(me, 1500)
 		
 	elseif entity_getState(me)==STATE_ATTACHED then
 		entity_setEntityType(me, ET_NEUTRAL)
 		esetv(me, EV_LOOKAT,0)
 		entity_setMaxSpeed(me, 0)
+		entity_setUpdateCull(me, -1)
 		entity_animate(me, "attached", LOOP_INF)
 		entity_sound(me, "Leach")
 		v.attachBone = entity_getNearestBoneToPosition(entity_getTarget(me), entity_getPosition(me))

@@ -174,7 +174,7 @@ function hitSurface(me)
 end
 
 function damage(me, attacker, bone, damageType, dmg)
-	if v.parasite and bone_isName(bone,"Parasite") then
+	if v.parasite and bone ~= 0 and bone_isName(bone,"Parasite") then
 		bone_damageFlash(bone)
 		v.paraHits = v.paraHits - dmg
 		if v.paraHits <= 0 then
