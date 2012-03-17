@@ -740,7 +740,7 @@ void SkeletalSprite::animate(const std::string &animation, int loop, int layer)
 	animLayers[layer].animate(animation, loop);
 }
 
-float SkeletalSprite::transitionAnimate(std::string anim, float time, int loop, int layer)
+float SkeletalSprite::transitionAnimate(const std::string& anim, float time, int loop, int layer)
 {
 	AnimationLayer *animLayer = getAnimationLayer(layer);
 	if (animLayer)

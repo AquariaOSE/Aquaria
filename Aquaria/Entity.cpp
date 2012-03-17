@@ -165,7 +165,7 @@ bool Entity::canSetBoneLock()
 	return true;
 }
 
-Entity::Entity() : StateMachine(), DFSprite()
+Entity::Entity()
 {
 	addType(SCO_ENTITY);
 	poison = 0.0f;
@@ -1266,7 +1266,7 @@ void Entity::update(float dt)
 		//skeletalSprite.setFreeze(true);
 
 		if (frozenTimer == 0 || getState() == STATE_PUSH)
-			DFSprite::update(dt);
+			AnimatedSprite::update(dt);
 		onAlwaysUpdate(dt);
 
 		// always, always update:
@@ -1873,7 +1873,7 @@ void Entity::onUpdate(float dt)
 		}
 	}
 
-	DFSprite::onUpdate(dt);
+	AnimatedSprite::onUpdate(dt);
 
 	Vector v = position - lastPos;
 	lastMove = v;
@@ -2971,7 +2971,7 @@ void Entity::render()
 		blurShader.bind();
 		set = true;
 	}
-	DFSprite::render();
+	AnimatedSprite::render();
 	//if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating())
 	if (set)
 		blurShader.unbind();

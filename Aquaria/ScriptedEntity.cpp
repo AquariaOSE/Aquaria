@@ -96,14 +96,17 @@ void ScriptedEntity::message(const std::string &msg, int v)
 	Entity::message(msg, v);
 }
 
-void ScriptedEntity::messageVariadic(lua_State *L, int nparams)
+int ScriptedEntity::messageVariadic(lua_State *L, int nparams)
 {
 	if (script)
 	{
-		if (!script->callVariadic("msg", L, nparams, this))
+		int res = script->callVariadic("msg", L, nparams, this);
+		if (res < 0)
 			luaDebugMsg("msg", script->getLastError());
+		else
+			return res;
 	}
-	Entity::messageVariadic(L, nparams);
+	return Entity::messageVariadic(L, nparams);
 }
 
 void ScriptedEntity::warpSegments()
@@ -250,7 +253,7 @@ void ScriptedEntity::setupEntity(const std::string &tex, int lcode)
 	this->layer = dsq->getEntityLayerToLayer(lcode);
 }
 
-void ScriptedEntity::setupBasicEntity(std::string texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer)
+void ScriptedEntity::setupBasicEntity(const std::string& texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer)
 {
 	//this->updateCull = updateCull;
 	updateCull = -1;

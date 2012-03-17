@@ -1898,7 +1898,7 @@ Element* Game::createElement(int idx, Vector position, int bgLayer, RenderObject
 	if (!et)
 		et = this->getElementTemplateByIdx(idx);
 
-	Element *element = new Element(Element::UNDEFINED);
+	Element *element = new Element();
 	if (et)
 	{
 		element->setTexture(et->gfx);
@@ -4951,7 +4951,7 @@ bool Game::loadSceneXML(std::string scene)
 
 		saveFile->InsertEndChild(newSF);
 	}
-
+	/*
 	TiXmlElement *boxElement = doc.FirstChildElement("BoxElement");
 	while (boxElement)
 	{
@@ -4962,7 +4962,7 @@ bool Game::loadSceneXML(std::string scene)
 		dsq->addElement(b);
 		boxElement = boxElement->NextSiblingElement("BoxElement");
 	}
-
+	*/
 	TiXmlElement *simpleElements = doc.FirstChildElement("SE");
 	while (simpleElements)
 	{
@@ -5620,12 +5620,7 @@ void Game::saveScene(std::string scene)
 	for (i = 0; i < dsq->getNumElements(); i++)
 	{
 		Element *e = dsq->getElement(i);
-		if (!e->dontSave)
-		{
-			if (e->getElementType() == Element::BOX) {}
-			else
-				simpleElements[e->bgLayer] << e->templateIdx << " " << int(e->position.x) << " " << int(e->position.y) << " " << int(e->rotation.z) << " " << e->scale.x << " " << e->scale.y << " " << int(e->isfh()) << " " << int(e->isfv()) << " " << e->elementFlag << " " << e->getElementEffectIndex() << " " << e->isRepeatingTextureToFill() << " ";
-		}
+		simpleElements[e->bgLayer] << e->templateIdx << " " << int(e->position.x) << " " << int(e->position.y) << " " << int(e->rotation.z) << " " << e->scale.x << " " << e->scale.y << " " << int(e->isfh()) << " " << int(e->isfv()) << " " << e->elementFlag << " " << e->getElementEffectIndex() << " " << e->isRepeatingTextureToFill() << " ";
 	}
 
 	if (dsq->game->entitySaveData.size() > 0)

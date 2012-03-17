@@ -1307,7 +1307,6 @@ public:
 	int getNumElements() const {return elements.size();}
 	Element *getElement(int idx) const {return elements[idx];}
 	Element *getFirstElementOnLayer(int layer) const {return layer<0 || layer>15 ? 0 : firstElementOnLayer[layer];}
-	Element *getElementWithType(Element::Type type);
 	void clearElements();
 	// Used only by scene editor:
 	void removeElement(int idx);
@@ -1353,7 +1352,7 @@ public:
 	void toggleInputMode();
 	void shakeCamera(float mag, float time);
 	Vector avStart;
-	Entity *getEntityByName(std::string name);
+	Entity *getEntityByName(const std::string &name);
 	Entity *getEntityByNameNoCase(std::string name);
 
 	void doSavePoint(const Vector &position);

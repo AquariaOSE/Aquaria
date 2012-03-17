@@ -4664,8 +4664,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	text = 0;
 
-	burstBar = 0;
-
 	/*
 	chargeGraphic = new Particle;
 	{
@@ -9286,15 +9284,6 @@ void Avatar::onUpdate(float dt)
 			if (ignoreInputDelay < 0)
 				ignoreInputDelay = 0;
 		}
-
-		if (burstBar && burstBar->alpha == 1)
-		{
-			float amount = burst;
-			if (amount > 1) amount = 1;
-			if (amount < 0) amount = 0;
-			burstBar->frame = (19-(amount*19));
-		}
-		//checkSpecial();
 	}
 
 	//fuuugly

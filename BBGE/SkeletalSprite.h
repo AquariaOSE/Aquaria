@@ -217,7 +217,7 @@ public:
 	void stopAnimation(int layer=0);
 	void stopAllAnimations();
 
-	float transitionAnimate(std::string anim, float time, int loop=0, int layer=0);
+	float transitionAnimate(const std::string& anim, float time, int loop=0, int layer=0);
 
 	bool isAnimating(int layer=0);
 

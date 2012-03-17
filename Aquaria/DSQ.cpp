@@ -125,12 +125,10 @@ static void Linux_CopyTree(const char *src, const char *dst)
 #endif
 
 
-float titTimer = 0;
-
 const int saveSlotPageSize = 4;
 int maxPages = 15;
 #ifdef AQUARIA_BUILD_CONSOLE
-const int MAX_CONSOLELINES	= 14;
+const int MAX_CONSOLELINES	= 18;
 #endif
 
 DSQ *dsq = 0;
@@ -2476,7 +2474,7 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 	}
 }
 
-Entity *DSQ::getEntityByName(std::string name)
+Entity *DSQ::getEntityByName(const std::string& name)
 {
 	Entity *e = 0;
 	FOR_ENTITIES(i)
@@ -4736,61 +4734,6 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 	*/
 	}
 }
-
-// get the closest, active, in range element to the vector
-/*
-Element *DSQ::getElementAtVector(const Vector &vec)
-{
-	Element *returnElement = 0;
-	int smallestDistance = 9999;
-	for (int i = 0; i < elements.size(); i++)
-	{
-		if (elements[i]->isActive() && elements[i]->getTotalInteractions() > 0)
-		{
-			int distanceToElementI = elements[i]->getFakeDistanceFromCenterToVector(vec);
-			if (elements[i]->isVectorInActivationRange(vec) && distanceToElementI < smallestDistance)
-			{
-				smallestDistance = distanceToElementI;
-				returnElement = elements[i];
-			}
-		}
-	}
-	return returnElement;
-}
-*/
-
-Element *DSQ::getElementWithType(Element::Type type)
-{
-	for (int i = 0; i < elements.size(); i++)
-	{
-		if (elements[i]->getElementType() == type)
-		{
-			return elements[i];
-		}
-	}
-	return 0;
-}
-
-/*
-Element *DSQ::getClosestElementWithType(Element::Type type, Element *e)
-{
-	Element *returnElement = 0;
-	long smallestDistance = 999999;
-	for (int i = 0; i < elements.size(); i++)
-	{
-		if (elements[i]->isActive() && elements[i]->getElementType() == type)
-		{
-			long distanceToElementI = elements[i]->getFakeDistanceFromCenterToVector(e->position);
-			if (distanceToElementI < smallestDistance)
-			{
-				smallestDistance = distanceToElementI;
-				returnElement = elements[i];
-			}
-		}
-	}
-	return returnElement;
-}
-*/
 
 void DSQ::addElement(Element *e)
 {
