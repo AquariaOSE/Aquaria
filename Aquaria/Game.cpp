@@ -5806,7 +5806,7 @@ Entity* Game::setActivePet(int flag)
 
 void Game::createLi()
 {
-	int liFlag = dsq->continuity.getFlag(1000);
+	int liFlag = dsq->continuity.getFlag(FLAG_LI);
 	std::ostringstream os;
 	os << "liFlag: " << liFlag;
 	debugLog(os.str());

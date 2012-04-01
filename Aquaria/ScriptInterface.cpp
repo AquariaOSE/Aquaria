@@ -3233,16 +3233,30 @@ luaFunc(entity_initStrands)
 
 luaFunc(entity_initSkeletal)
 {
-	ScriptedEntity *e = scriptedEntity(L);
-	e->renderQuad = false;
-	e->setWidthHeight(128, 128);
-	e->skeletalSprite.loadSkeletal(getString(L, 2));
-	const char *s = lua_tostring(L, 3);
-	if (s && *s)
-		e->skeletalSprite.loadSkin(s);
+	Entity *e = entity(L);
+	if (e)
+	{
+		e->renderQuad = false;
+		e->setWidthHeight(128, 128);
+		e->skeletalSprite.loadSkeletal(getString(L, 2));
+		const char *s = lua_tostring(L, 3);
+		if (s && *s)
+			e->skeletalSprite.loadSkin(s);
+	}
 	luaReturnNil();
 }
 
+luaFunc(entity_loadSkin)
+{
+	Entity *e = entity(L);
+	if (e && e->skeletalSprite.isLoaded())
+	{
+		const char *s = lua_tostring(L, 2);
+		if (s && *s)
+			e->skeletalSprite.loadSkin(s);
+	}
+	luaReturnNil();
+}
 
 luaFunc(entity_idle)
 {
@@ -7099,21 +7113,24 @@ luaFunc(createBitmapText)
 luaFunc(text_setText)
 {
 	BaseText *txt = getText(L);
-	txt->setText(getString(L, 2));
+	if (txt)
+		txt->setText(getString(L, 2));
 	luaReturnNil();
 }
 
 luaFunc(text_setFontSize)
 {
 	BaseText *txt = getText(L);
-	txt->setFontSize(lua_tointeger(L, 2));
+	if (txt)
+		txt->setFontSize(lua_tointeger(L, 2));
 	luaReturnNil();
 }
 
 luaFunc(text_setWidth)
 {
 	BaseText *txt = getText(L);
-	txt->setWidth(lua_tointeger(L, 2));
+	if (txt)
+		txt->setWidth(lua_tointeger(L, 2));
 	luaReturnNil();
 }
 
@@ -7408,6 +7425,7 @@ static const struct {
 	luaRegister(entity_initSegments),
 	luaRegister(entity_warpSegments),
 	luaRegister(entity_initSkeletal),
+	luaRegister(entity_loadSkin),
 	luaRegister(entity_initStrands),
 
 	luaRegister(entity_hurtTarget),
