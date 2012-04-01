@@ -69,7 +69,6 @@ Texture::Texture() : Resource()
 	repeat = false;
 	repeating = false;
 	pngSetStandardOrientation(0);
-	imageData = 0;
 
 	ow = oh = -1;
 }
@@ -318,6 +317,7 @@ void Texture::load(std::string file)
 	file = core->adjustFilenameCase(file);
 
 	loadName = file;
+	repeating = false;
 
 	size_t pos = file.find_last_of('.');
 

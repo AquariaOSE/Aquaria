@@ -73,9 +73,7 @@ public:
 #ifdef BBGE_BUILD_DIRECTX
 	LPDIRECT3DTEXTURE9 d3dTexture;
 #endif
-	//void setImageData(imageData);
-	// HACK:
-	unsigned char *imageData;
+
 	void reload();
 
 	static TexErr textureError;
