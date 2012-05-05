@@ -965,13 +965,15 @@ void RenderObject::renderCollision()
 	}
 	else if (collideRadius > 0)
 	{
-		/*
 		glPushMatrix();
+		glLoadIdentity();
+		core->setupRenderPositionAndScale();
 		glBindTexture(GL_TEXTURE_2D, 0);
-		//glScalef(-scale.x, -scale.y, 0);
-		glTranslatef(-offset.x, -offset.y,0);
+		glTranslatef(position.x+offset.x, position.y+offset.y, 0);
+		//glScalef(scale.x, scale.y, 0);
+		glTranslatef(internalOffset.x, internalOffset.y, 0);
 		glEnable(GL_BLEND);
-		glTranslatef(collidePosition.x, collidePosition.y,0);
+		//glTranslatef(collidePosition.x, collidePosition.y,0);
 		//glEnable(GL_ALPHA_TEST);
 		//glAlphaFunc(GL_GREATER, 0);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -980,7 +982,6 @@ void RenderObject::renderCollision()
 		glDisable(GL_BLEND);
 		glTranslatef(offset.x, offset.y,0);
 		glPopMatrix();
-		*/
 	}
 }
 

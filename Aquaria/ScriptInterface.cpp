@@ -5672,7 +5672,7 @@ luaFunc(entity_pullEntities)
 	if (e)
 	{
 		Vector pos(lua_tonumber(L, 2), lua_tonumber(L, 3));
-		int range = lua_tonumber(L, 4);
+		float range = lua_tonumber(L, 4);
 		float len = lua_tonumber(L, 5);
 		float dt = lua_tonumber(L, 6);
 		FOR_ENTITIES(i)
