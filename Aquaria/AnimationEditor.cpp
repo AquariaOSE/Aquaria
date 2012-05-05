@@ -1311,6 +1311,8 @@ void AnimationEditor::moveNextWidgets(float dt)
 
 void AnimationEditor::toggleRenderBorders()
 {
+	if (dsq->isNested()) return;
+
 	renderBorders = !renderBorders;
 	updateRenderBorders();
 }
@@ -1336,18 +1338,24 @@ void AnimationEditor::updateEditingBone()
 
 void AnimationEditor::showAllBones()
 {
+	if (dsq->isNested()) return;
+
 	for (size_t i = 0; i < editSprite->bones.size(); ++i)
 		editSprite->bones[i]->renderQuad = true;
 }
 
 void AnimationEditor::incrTimelineUnit()
 {
+	if (dsq->isNested()) return;
+
 	TIMELINE_UNIT += TIMELINE_UNIT_STEP;
 	updateTimelineUnit();
 }
 
 void AnimationEditor::decrTimelineUnit()
 {
+	if (dsq->isNested()) return;
+
 	float t = TIMELINE_UNIT - TIMELINE_UNIT_STEP;
 	if (t >= TIMELINE_UNIT_STEP)
 		TIMELINE_UNIT = t;
@@ -1363,12 +1371,16 @@ void AnimationEditor::updateTimelineUnit()
 
 void AnimationEditor::incrTimelineGrid()
 {
+	if (dsq->isNested()) return;
+
 	TIMELINE_GRIDSIZE++;
 	updateTimelineGrid();
 }
 
 void AnimationEditor::decrTimelineGrid()
 {
+	if (dsq->isNested()) return;
+
 	int t = TIMELINE_GRIDSIZE - 1;
 	if (t > 0)
 		TIMELINE_GRIDSIZE = t;
