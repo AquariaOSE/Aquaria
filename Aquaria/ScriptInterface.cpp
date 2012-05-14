@@ -863,6 +863,12 @@ luaFunc(obj_getRotation)
 	luaReturnNum(r ? r->rotation.z : 0.0f);
 }
 
+luaFunc(obj_getRotationOffset)
+{
+	RenderObject *r = robj(L);
+	luaReturnNum(r ? r->rotationOffset.z : 0.0f);
+}
+
 luaFunc(obj_offset)
 {
 	RenderObject *r = robj(L);
@@ -885,6 +891,15 @@ luaFunc(obj_internalOffset)
 			lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
 	}
 	luaReturnNil();
+}
+
+luaFunc(obj_getInternalOffset)
+{
+	RenderObject *r = robj(L);
+	Vector io;
+	if (r)
+		io = r->internalOffset;
+	luaReturnVec2(io.x, io.y);
 }
 
 luaFunc(obj_getPosition)
@@ -1440,10 +1455,12 @@ luaFunc(quad_setHeight)
 	RO_FUNC(getter, prefix,  rotate			) \
 	RO_FUNC(getter, prefix,  rotateOffset	) \
 	RO_FUNC(getter, prefix,  getRotation	) \
+	RO_FUNC(getter, prefix,  getRotationOffset) \
 	RO_FUNC(getter, prefix,  isRotating		) \
 	RO_FUNC(getter, prefix,  offset			) \
 	RO_FUNC(getter, prefix,  getOffset		) \
 	RO_FUNC(getter, prefix,  internalOffset	) \
+	RO_FUNC(getter, prefix,  getInternalOffset) \
 	RO_FUNC(getter, prefix,  getPosition	) \
 	RO_FUNC(getter, prefix,  x				) \
 	RO_FUNC(getter, prefix,  y				) \
@@ -3308,6 +3325,18 @@ luaFunc(entity_animate)
 		ret = skel->transitionAnimate(getString(L, 2), transition, lua_tointeger(L, 3), lua_tointeger(L, 4));
 	}
 	luaReturnNum(ret);
+}
+
+luaFunc(entity_stopAnimation)
+{
+	SkeletalSprite *skel = getSkeletalSprite(entity(L));
+	if (skel)
+	{
+		AnimationLayer *animlayer = skel->getAnimationLayer(lua_tointeger(L, 2));
+		if (animlayer)
+			animlayer->stopAnimation();
+	}
+	luaReturnNil();
 }
 
 // entity, x, y, time, ease, relative
@@ -6260,13 +6289,13 @@ luaFunc(toggleVersionLabel)
 luaFunc(setVersionLabelText)
 {
 	dsq->setVersionLabelText();
-	luaReturnPtr(NULL);
+	luaReturnNil();
 }
 
 luaFunc(setCutscene)
 {
 	dsq->setCutscene(getBool(L, 1), getBool(L, 2));
-	luaReturnPtr(NULL);
+	luaReturnNil();
 }
 
 luaFunc(isInCutscene)
@@ -6802,7 +6831,7 @@ luaFunc(entity_setWeight)
 {
 	CollideEntity *e = collideEntity(L);
 	if (e)
-		e->weight = lua_tointeger(L, 2);
+		e->weight = lua_tonumber(L, 2);
 	luaReturnNil();
 }
 
@@ -6897,6 +6926,13 @@ luaFunc(isObstructed)
 	int x = lua_tonumber(L, 1);
 	int y = lua_tonumber(L, 2);
 	luaReturnBool(dsq->game->isObstructed(TileVector(Vector(x,y))));
+}
+
+luaFunc(getObstruction)
+{
+	int x = lua_tonumber(L, 1);
+	int y = lua_tonumber(L, 2);
+	luaReturnInt(dsq->game->getGrid(TileVector(Vector(x,y))));
 }
 
 luaFunc(isObstructedBlock)
@@ -7471,6 +7507,7 @@ static const struct {
 	luaRegister(entity_doCollisionAvoidance),
 	luaRegister(entity_animate),
 	luaRegister(entity_setAnimLayerTimeMult),
+	luaRegister(entity_stopAnimation),
 
 	luaRegister(entity_setCurrentTarget),
 	luaRegister(entity_stopInterpolating),
@@ -7628,6 +7665,7 @@ static const struct {
 	luaRegister(castSong),
 	luaRegister(isObstructed),
 	luaRegister(isObstructedBlock),
+	luaRegister(getObstruction),
 
 	luaRegister(isFlag),
 
@@ -8643,6 +8681,12 @@ static const struct {
 	luaConstant(INPUT_MOUSE),
 	luaConstant(INPUT_JOYSTICK),
 	luaConstant(INPUT_KEYBOARD),
+
+	luaConstant(ANIMLAYER_FLOURISH),
+	luaConstant(ANIMLAYER_OVERRIDE),
+	luaConstant(ANIMLAYER_ARMOVERRIDE),
+	luaConstant(ANIMLAYER_UPPERBODYIDLE),
+	luaConstant(ANIMLAYER_HEADOVERRIDE),
 };
 
 //============================================================================================
