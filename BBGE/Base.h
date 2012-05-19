@@ -120,6 +120,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma warning(disable:4189) // UqqqqSEFUL: local variable is initialized but not referenced
 #endif
 
+#undef GetCharWidth
+
 #include <string.h>
 
 #include <string>

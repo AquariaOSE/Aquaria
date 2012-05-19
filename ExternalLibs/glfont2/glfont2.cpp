@@ -19,7 +19,6 @@ using namespace std;
 #endif
 #include <OpenGL/gl.h>
 */
-#include "Base.h"
 
 #include "SDL_endian.h"
 
@@ -90,10 +89,6 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	header.start_char = read_int(input);
 	header.end_char = read_int(input);
 	input.seekg(4, ios::cur); // skip chars field
-	
-	std::ostringstream os;
-	os << "tex_width: " << header.tex_width << " tex_height: " << header.tex_height;
-	debugLog(os.str());
 	
 	//Allocate space for character array
 	num_chars = header.end_char - header.start_char + 1;

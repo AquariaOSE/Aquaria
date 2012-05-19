@@ -59,6 +59,16 @@ enum EnableInputType
 	AVATARINPUT_MAX
 };
 
+enum AvatarAnimLayers
+{
+	ANIMLAYER_FLOURISH		= 3,
+	ANIMLAYER_OVERRIDE		= 4,
+	ANIMLAYER_ARMOVERRIDE	= 5,
+	ANIMLAYER_UPPERBODYIDLE	= 6,
+	ANIMLAYER_HEADOVERRIDE	= 7,
+	ANIMLAYER_MAX
+};
+
 class SongIconParticle : public Quad
 {
 public:

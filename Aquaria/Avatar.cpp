@@ -44,8 +44,6 @@ bool lastJumpOutFromWaterBubble = false;
 bool useSpiritDistance = true;
 bool inSpiritWorld = false;
 
-const int LAYER_FLOURISH = 3;
-
 const float MULT_DMG_CRABCOSTUME = 0.75;
 const float MULT_DMG_FISHFORM = 1.5;
 const float MULT_DMG_SEAHORSEARMOR = 0.6;
@@ -134,9 +132,6 @@ bool _isUnderWater;
 
 //HRECORD avatarRecord = 0;
 
-#define ANIMLAYER_OVERRIDE			4
-#define ANIMLAYER_UPPERBODYIDLE		6
-#define ANIMLAYER_HEADOVERRIDE		7
 
 Vector Target::getWorldPosition()
 {
@@ -843,7 +838,7 @@ void Avatar::startFlourish()
 		flourishTimer.start(fanim->getAnimationLength()-0.2f);
 		flourishPowerTimer.start(fanim->getAnimationLength()*0.5f);
 	}
-	skeletalSprite.transitionAnimate(anim, 0.1, 0, LAYER_FLOURISH);
+	skeletalSprite.transitionAnimate(anim, 0.1, 0, ANIMLAYER_FLOURISH);
 	flourish = true;
 
 	float rotz = rotationOffset.z;
@@ -2688,7 +2683,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 
 		
 
-		skeletalSprite.transitionAnimate("fireBlast", 0.1, 0, 5);
+		skeletalSprite.transitionAnimate("fireBlast", 0.1, 0, ANIMLAYER_ARMOVERRIDE);
 		s->position = p;
 		//s->damageType = dt;
 		/*
@@ -2918,7 +2913,7 @@ void Avatar::formAbility(int ability)
 					else
 						doShock("EnergyTendril");
 					if (!state.lockedToWall)
-						skeletalSprite.animate("energyChargeAttack", 0, 6);
+						skeletalSprite.animate("energyChargeAttack", 0, ANIMLAYER_UPPERBODYIDLE);
 
 					/*
 					if (core->afterEffectManager)
@@ -3311,7 +3306,7 @@ void Avatar::doShock(const std::string &shotName)
 	int thits = getNumShots();
 
 	/*
-	if (skeletalSprite.getAnimationLayer(LAYER_FLOURISH)->getCurrentAnimation())
+	if (skeletalSprite.getAnimationLayer(ANIMLAYER_FLOURISH)->getCurrentAnimation())
 	{
 		thits = maxTendrilHits;
 	}
@@ -8889,7 +8884,7 @@ void Avatar::onUpdate(float dt)
 
 					std::ostringstream os;
 					os << "swimExtra-" << anim;
-					skeletalSprite.transitionAnimate(os.str(), 0.5, 0, 6);
+					skeletalSprite.transitionAnimate(os.str(), 0.5, 0, ANIMLAYER_UPPERBODYIDLE);
 				}
 			}
 		}

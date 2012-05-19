@@ -1981,7 +1981,8 @@ void DSQ::setInputMode(InputMode mode)
 
 void DSQ::toggleRenderCollisionShapes()
 {
-	RenderObject::renderCollisionShape = !RenderObject::renderCollisionShape;
+	if (core->getCtrlState() && core->getShiftState())
+		RenderObject::renderCollisionShape = !RenderObject::renderCollisionShape;
 }
 
 void DSQ::takeScreenshot()
@@ -4137,13 +4138,11 @@ void DSQ::bindInput()
 #endif
 	if (isDeveloperKeys())
 	{
-#if defined(BBGE_BUILD_WINDOWS) || defined(BBGE_BUILD_UNIX)
-		addAction(MakeFunctionEvent(DSQ, instantQuit), KEY_Q, 1);
 #ifdef AQUARIA_BUILD_CONSOLE
 		addAction(MakeFunctionEvent(DSQ, toggleConsole), KEY_TILDE, 0);
 #endif
-#endif
-		addAction(MakeFunctionEvent(DSQ, toggleRenderCollisionShapes), KEY_CAPSLOCK, 0);
+		addAction(MakeFunctionEvent(DSQ, instantQuit), KEY_Q, 1);
+		addAction(MakeFunctionEvent(DSQ, toggleRenderCollisionShapes), KEY_RETURN, 0);
 	}
 	addAction(MakeFunctionEvent(DSQ, debugMenu), KEY_BACKSPACE, 0);
 #if BBGE_BUILD_SDL
@@ -4879,6 +4878,8 @@ std::string DSQ::getSaveDirectory()
 
 ParticleEffect *DSQ::spawnParticleEffect(const std::string &name, Vector position, float rotz, float t, int layer, float follow)
 {
+	if (name.empty())
+		return NULL;
 	if (t!=0)
 	{
 		PECue p(name, position, rotz, t);

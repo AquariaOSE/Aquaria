@@ -3370,9 +3370,12 @@ void SceneEditor::updateText()
 		os << "entities (" << dsq->entities.size() << ")";
 		if (editingEntity)
 		{
-			os << " id: " << editingEntity->getID() << " name: " << editingEntity->name << " flag: " << dsq->continuity.getEntityFlag(dsq->game->sceneName, editingEntity->getID());
-			os << " groupID: " << editingEntity->getGroupID() << " ";
-			os << " state: " << editingEntity->getState();
+			os << " id: " << editingEntity->getID()
+				<< " name: " << editingEntity->name
+				<< " flag:" << dsq->continuity.getEntityFlag(dsq->game->sceneName, editingEntity->getID())
+				<< " fh:" << editingEntity->isfh()
+				<< " fv:" << editingEntity->isfv()
+				<< " state:" << editingEntity->getState();
 		}
 	break;
 	case ET_PATHS:
