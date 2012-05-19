@@ -20,6 +20,8 @@ using namespace std;
 #include <OpenGL/gl.h>
 */
 
+#include "GL/gl.h"
+
 #include "SDL_endian.h"
 
 //glFont header
