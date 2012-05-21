@@ -66,6 +66,8 @@ void Intro2::applyState()
 
 	//addAction(MakeFunctionEvent(Intro2, skipIntro), KEY_ESCAPE, 0);
 
+	dsq->subtitlePlayer.show(0.5f);
+
 	core->resetCamera();
 	
 	dsq->jiggleCursor();
