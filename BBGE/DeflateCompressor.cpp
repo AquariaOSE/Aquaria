@@ -1,6 +1,5 @@
 #include "Base.h"
 
-#include <zutil.h>
 #include <zlib.h>
 
 #include "DeflateCompressor.h"
@@ -39,7 +38,7 @@ void DeflateCompressor::compress(void* dst, uint32 *dst_size, const void* src, u
     c_stream.zfree = (free_func)Z_NULL;
     c_stream.opaque = (voidpf)Z_NULL;
 
-    if (Z_OK != deflateInit2(&c_stream, level, Z_DEFLATED, wbits, DEF_MEM_LEVEL, Z_DEFAULT_STRATEGY))
+    if (Z_OK != deflateInit2(&c_stream, level, Z_DEFLATED, wbits, 8, Z_DEFAULT_STRATEGY))
     {
         *dst_size = 0;
         return;
