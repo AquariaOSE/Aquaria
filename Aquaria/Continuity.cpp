@@ -3209,15 +3209,20 @@ void Continuity::reset()
 	ingredientData.clear();
 	recipes.clear();
 
+	std::string fname;
+
 	if(dsq->mod.isActive())
 	{
 		//load mod ingredients
-		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
+		fname = dsq->user.localisePath(dsq->mod.getPath() + "ingredients.txt", dsq->mod.getPath());
+		loadIngredientData(fname);
 	}
 
 	//load ingredients for the main game
-	if(ingredientData.empty() && recipes.empty())
-		loadIngredientData("data/ingredients.txt");
+	if(ingredientData.empty() && recipes.empty()) {
+		fname = dsq->user.localisePath("data/ingredients.txt");
+		loadIngredientData(fname);
+	}
 
 	loadPetData();
 

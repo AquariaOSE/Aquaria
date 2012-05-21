@@ -28,9 +28,13 @@ void StringBank::load()
 {
 	stringMap.clear();
 
-	_load("data/stringbank.txt");
-	if (dsq->mod.isActive())
-		_load(dsq->mod.getPath() + "stringbank.txt");
+	std::string fname = dsq->user.localisePath("data/stringbank.txt");
+	_load(fname);
+
+	if (dsq->mod.isActive()) {
+		fname = dsq->user.localisePath(dsq->mod.getPath() + "stringbank.txt", dsq->mod.getPath());
+		_load(fname);
+	}
 }
 
 void StringBank::_load(const std::string &file)

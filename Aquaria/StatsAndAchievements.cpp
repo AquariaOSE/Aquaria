@@ -174,7 +174,8 @@ void StatsAndAchievements::RunFrame()
 		FILE *io = NULL;
 
 		// Get generic achievement data...
-		io = fopen("data/achievements.txt", "r");
+		std::string fname = dsq->user.localisePath("data/achievements.txt");
+		io = fopen(fname.c_str(), "r");
 		char line[1024];
 		for (size_t i = 0; i < max_achievements; i++)
 		{
@@ -209,7 +210,7 @@ void StatsAndAchievements::RunFrame()
 
 		unsigned char *buf = new unsigned char[max_achievements];
 		size_t br = 0;
-		const std::string fname(core->getUserDataFolder() + "/achievements.bin");
+		fname = (core->getUserDataFolder() + "/achievements.bin");
 		io = fopen(fname.c_str(), "rb");
 		if (io == NULL)
 			statsValid = true;  // nothing to report.

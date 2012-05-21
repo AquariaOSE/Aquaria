@@ -77,8 +77,10 @@ class UserSettings
 public:
 	struct System
 	{
-		System() { debugLogOn = 0; }
+		System() { debugLogOn = 0; isSystemLocale = false; }
 		int debugLogOn;
+		bool isSystemLocale;
+		std::string locale;
 	} system;
 
 	struct Audio
@@ -175,4 +177,8 @@ public:
 	void load(bool doApply=true, const std::string &overrideFile="");
 	void save();
 	void apply();
+	std::string localisePath(const std::string &path, const std::string &modpath="");
+
+private:
+	void getSystemLocale();
 };
