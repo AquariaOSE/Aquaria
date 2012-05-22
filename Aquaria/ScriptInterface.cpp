@@ -319,24 +319,37 @@ static inline void luaPushPointer(lua_State *L, void *ptr)
 		lua_pushnumber(L, 0);
 }
 
-static std::string luaFormatStackInfo(lua_State *L)
+static std::string luaFormatStackInfo(lua_State *L, int level = 1)
 {
 	lua_Debug ar;
-	if (lua_getstack(L, 1, &ar))
-		lua_getinfo(L, "Sl", &ar);
+	std::ostringstream os;
+	if (lua_getstack(L, level, &ar) && lua_getinfo(L, "Sln", &ar))
+	{
+		os << ar.short_src << ":" << ar.currentline
+			<< " ([" << ar.what << "] "  << ar.namewhat << " " << (ar.name ? ar.name : "(?)") << ")";
+	}
 	else
 	{
-		snprintf(ar.short_src, sizeof(ar.short_src), "???");
-		ar.currentline = 0;
+		os << "???:0";
 	}
-	std::ostringstream os;
-	os << ar.short_src << ":" << ar.currentline;
+
 	return os.str();
 }
 
 static void scriptDebug(lua_State *L, const std::string& msg)
 {
 	debugLog(luaFormatStackInfo(L) + ": " + msg);
+}
+
+static void scriptError(lua_State *L, const std::string& msg)
+{
+	lua_Debug dummy;
+	std::ostringstream os;
+	os << msg;
+	for (int level = 0; lua_getstack(L, level, &dummy); ++level)
+		os << '\n' << luaFormatStackInfo(L, level);
+
+	scriptError(os.str());
 }
 
 
@@ -374,11 +387,10 @@ static void ensureType(lua_State *L, T *& ptr, ScriptObjectType ty)
 		if (!so->isType(ty))
 		{
 			std::ostringstream os;
-			os << "WARNING: " << luaFormatStackInfo(L)
-				<< ": script passed wrong pointer to function (expected type: "
+			os << "WARNING: script passed wrong pointer to function (expected type: "
 				<< ScriptObject::getTypeString(ty) << "; got: "
 				<< so->getTypeString() << ')';
-			scriptError(os.str());
+			scriptError(L, os.str());
 
 			ptr = NULL; // note that the pointer is passed by reference
 		}
@@ -618,11 +630,9 @@ luaFunc(indexWarnGlobal)
 
 		if (doWarn)
 		{
-			std::ostringstream os;
-			os << "WARNING: " << luaFormatStackInfo(L)
-			   << ": script tried to get/call undefined global variable "
-			   << varname;
-			scriptError(os.str());
+			std::string s = "WARNING: script tried to get/call undefined global variable ";
+			s += varname;
+			scriptError(L, s);
 		}
 
 		lua_pop(L, 1);
@@ -647,11 +657,10 @@ luaFunc(newindexWarnGlobal)
 	if (doWarn)
 	{
 		std::ostringstream os;
-		os << "WARNING: " << luaFormatStackInfo(L)
-		   << ": script set global "
-		   << (lua_type(L, -2) == LUA_TFUNCTION ? "function" : "variable")
+		os << "WARNING: script set global "
+		   << lua_typename(L, -2)
 		   << " " << varname;
-		scriptError(os.str());
+		scriptError(L, os.str());
 	}
 
 	lua_pop(L, 1);
@@ -670,10 +679,9 @@ luaFunc(indexWarnInstance)
 	if (lua_isnil(L, -1))
 	{
 		std::ostringstream os;
-		os << "WARNING: " << luaFormatStackInfo(L)
-		   << ": script tried to get/call undefined instance variable "
-		   << lua_tostring(L, -2);
-		scriptError(os.str());
+		os << "WARNING: script tried to get/call undefined instance variable "
+		   << getString(L, -2);
+		scriptError(L, os.str());
 	}
 	lua_remove(L, -2);
 
