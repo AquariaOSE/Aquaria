@@ -42,6 +42,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ogg/ogg.h"
 #include "vorbis/vorbisfile.h"
 
+#include "MT.h"
+
 #ifndef _DEBUG
 //#define _DEBUG 1
 #endif
@@ -79,7 +81,13 @@ public:
     static int mem_seek(void *datasource, ogg_int64_t offset, int whence);
     static long mem_tell(void *datasource);
 
+    static void startDecoderThread();
+    static void stopDecoderThread();
+
 private:
+
+    void _stop();
+
     // Decoding loop, run in a separate thread (if threads are available).
     static void decode_loop(OggDecoder *this_);
 
@@ -107,19 +115,27 @@ private:
     ALenum format;
     int freq;
 
-#ifdef BBGE_BUILD_SDL
-    SDL_Thread *thread;
-#else
-    #warning Threads not supported, music may cut out on area changes!
-    // ... because the stream runs out of decoded data while the area is
-    // still loading, so OpenAL aborts playback.
-#endif
-    volatile bool stop_thread;
+    bool thread; // true if played by background thread
 
     bool playing;
     bool loop;
     bool eof;  // End of file _or_ unrecoverable error encountered
+    bool stopped; // true if enqueued deletion
     unsigned int samples_done;  // Number of samples played and dequeued
+
+#ifdef BBGE_BUILD_SDL
+    static SDL_Thread *decoderThread;
+    static LockedQueue<OggDecoder*> decoderQ;
+    static volatile bool stop_thread;
+    static std::list<OggDecoder*> decoderList; // used by decoder thread only
+
+#else
+#warning Threads not supported, music may cut out on area changes!
+// ... because the stream runs out of decoded data while the area is
+// still loading, so OpenAL aborts playback.
+#endif
+
+    static void detachDecoder(OggDecoder *);
 };
 
 // File I/O callback set (OV_CALLBACKS_NOCLOSE from libvorbis 1.2.0).
@@ -155,6 +171,88 @@ static const ov_callbacks ogg_memory_callbacks = {
     OggDecoder::mem_tell
 };
 
+#ifdef BBGE_BUILD_SDL
+SDL_Thread *OggDecoder::decoderThread = NULL;
+LockedQueue<OggDecoder*> OggDecoder::decoderQ;
+volatile bool OggDecoder::stop_thread;
+std::list<OggDecoder*> OggDecoder::decoderList;
+#endif
+
+void OggDecoder::startDecoderThread()
+{
+#ifdef BBGE_BUILD_SDL
+    stop_thread = false;
+    decoderThread = SDL_CreateThread((int (*)(void *))decode_loop, NULL);
+    if (!decoderThread)
+    {
+        debugLog("Failed to create Ogg Vorbis decode thread: "
+                 + std::string(SDL_GetError()));
+    }
+#endif
+}
+
+void OggDecoder::stopDecoderThread()
+{
+#ifdef BBGE_BUILD_SDL
+    if (decoderThread)
+    {
+        stop_thread = true;
+        debugLog("Waiting for decoder thread to exit...");
+        SDL_WaitThread(decoderThread, NULL);
+        decoderThread = NULL;
+    }
+#endif
+}
+
+void OggDecoder::detachDecoder(OggDecoder *ogg)
+{
+#ifdef BBGE_BUILD_SDL
+    if(decoderThread)
+    {
+        ogg->thread = true;
+        decoderQ.push(ogg);
+    }
+#endif
+}
+
+void OggDecoder::decode_loop(OggDecoder *this_)
+{
+    while (!this_->stop_thread)
+    {
+#ifdef BBGE_BUILD_SDL
+        SDL_Delay(10);
+#endif
+        // Transfer decoder to this background thread
+        OggDecoder *ogg;
+        while(decoderQ.pop(ogg))
+            decoderList.push_back(ogg);
+
+        for(std::list<OggDecoder*>::iterator it = decoderList.begin(); it != decoderList.end(); )
+        {
+            ogg = *it;
+            if (ogg->playing)
+            {
+                int processed = 0;
+                alGetSourcei(ogg->source, AL_BUFFERS_PROCESSED, &processed);
+                for (int i = 0; i < processed; i++)
+                {
+                    ogg->samples_done += BUFFER_LENGTH;
+                    ALuint buffer = 0;
+                    alSourceUnqueueBuffers(ogg->source, 1, &buffer);
+                    if (buffer)
+                        ogg->queue(buffer);
+                }
+                ++it;
+            }
+            else
+            {
+                delete ogg;
+                decoderList.erase(it++);
+            }
+        }
+    }
+}
+
 
 OggDecoder::OggDecoder(FILE *fp)
 {
@@ -167,14 +265,12 @@ OggDecoder::OggDecoder(FILE *fp)
     this->data = NULL;
     this->data_size = 0;
     this->data_pos = 0;
-#ifdef BBGE_BUILD_SDL
-    this->thread = NULL;
-#endif
-    this->stop_thread = true;
+    this->thread = false;
     this->playing = false;
     this->loop = false;
     this->eof = false;
     this->samples_done = 0;
+    this->stopped = false;
 }
 
 OggDecoder::OggDecoder(const void *data, long data_size)
@@ -188,20 +284,17 @@ OggDecoder::OggDecoder(const void *data, long data_size)
     this->data = (const char *)data;
     this->data_size = data_size;
     this->data_pos = 0;
-#ifdef BBGE_BUILD_SDL
-    this->thread = NULL;
-#endif
-    this->stop_thread = true;
+    this->thread = false;
     this->playing = false;
     this->loop = false;
     this->eof = false;
     this->samples_done = 0;
+    this->stopped = false;
 }
 
 OggDecoder::~OggDecoder()
 {
-    if (playing)
-        stop();
+    _stop();
 
     for (int i = 0; i < NUM_BUFFERS; i++)
     {
@@ -280,27 +373,15 @@ bool OggDecoder::start(ALuint source, bool loop)
     for (int i = 0; i < NUM_BUFFERS; i++)
         queue(buffers[i]);
 
-#ifdef BBGE_BUILD_SDL
-    stop_thread = false;
-    thread = SDL_CreateThread((int (*)(void *))decode_loop, this);
-    if (!thread)
-    {
-        debugLog("Failed to create Ogg Vorbis decode thread: "
-                 + std::string(SDL_GetError()));
-    }
-#endif
+    detachDecoder(this);
 
     return true;
 }
 
 void OggDecoder::update()
 {
-    if (!playing)
+    if (!playing || thread)
         return;
-#ifdef BBGE_BUILD_SDL
-    if (thread)
-        return;
-#endif
 
     int processed = 0;
     alGetSourcei(source, AL_BUFFERS_PROCESSED, &processed);
@@ -315,17 +396,18 @@ void OggDecoder::update()
 
 void OggDecoder::stop()
 {
-    if (!playing)
-        return;
-
-#ifdef BBGE_BUILD_SDL
     if (thread)
-    {
-        stop_thread = true;
-        SDL_WaitThread(thread, NULL);
-        thread = NULL;
-    }
-#endif
+        playing = false; // The background thread will take care of deletion then.
+    else
+        delete this;
+}
+
+void OggDecoder::_stop()
+{
+    playing = false;
+
+    if (stopped)
+        return;
 
     ov_clear(&vf);
 
@@ -342,6 +424,7 @@ void OggDecoder::stop()
         alDeleteBuffers(1, &buffers[i]);
         buffers[i] = 0;
     }
+    stopped = true;
 }
 
 double OggDecoder::position()
@@ -350,27 +433,6 @@ double OggDecoder::position()
     alGetSourcei(source, AL_SAMPLE_OFFSET, &samples_played);
     samples_played += samples_done;
     return (double)samples_played / (double)freq;
-}
-
-void OggDecoder::decode_loop(OggDecoder *this_)
-{
-    while (!this_->stop_thread)
-    {
-#ifdef BBGE_BUILD_SDL
-        SDL_Delay(10);
-#endif
-
-        int processed = 0;
-        alGetSourcei(this_->source, AL_BUFFERS_PROCESSED, &processed);
-        for (int i = 0; i < processed; i++)
-        {
-            this_->samples_done += BUFFER_LENGTH;
-            ALuint buffer = 0;
-            alSourceUnqueueBuffers(this_->source, 1, &buffer);
-            if (buffer)
-                this_->queue(buffer);
-        }
-    }
 }
 
 #if (defined(BBGE_BUILD_SDL) && (SDL_BYTEORDER == SDL_BIG_ENDIAN))
@@ -675,16 +737,16 @@ void OpenALChannel::setGroupVolume(const float _volume)
 bool OpenALChannel::start(OpenALSound *sound)
 {
     if (decoder)
-	delete decoder;
+        delete decoder;
     if (sound->getFile())
-	decoder = new OggDecoder(sound->getFile());
+        decoder = new OggDecoder(sound->getFile());
     else
-	decoder = new OggDecoder(sound->getData(), sound->getSize());
+        decoder = new OggDecoder(sound->getData(), sound->getSize());
     if (!decoder->start(sid, sound->isLooping()))
     {
-	delete decoder;
-	decoder = NULL;
-	return false;
+        delete decoder;
+        decoder = NULL;
+        return false;
     }
     return true;
 }
@@ -693,8 +755,8 @@ void OpenALChannel::update()
 {
     if (inuse)
     {
-	if (decoder)
-	    decoder->update();
+        if (decoder)
+            decoder->update();
         ALint state = 0;
         alGetSourceiv(sid, AL_SOURCE_STATE, &state);
         SANITY_CHECK_OPENAL_CALL();
@@ -967,8 +1029,8 @@ FMOD_RESULT OpenALChannel::stop()
 {
     if (decoder)
     {
-	delete decoder;
-	decoder = NULL;
+        decoder->stop();
+        decoder = NULL;
     }
     alSourceStop(sid);
     SANITY_CHECK_OPENAL_CALL();
@@ -1248,6 +1310,9 @@ FMOD_RESULT OpenALSystem::init(int maxchannels, const FMOD_INITFLAGS flags, cons
     std::stringstream ss;
     ss << "Using " << num_channels << " sound channels.";
     debugLog(ss.str());
+
+    OggDecoder::startDecoderThread();
+
     return FMOD_OK;
 }
 
@@ -1301,6 +1366,8 @@ FMOD_RESULT OpenALSystem::playSound(FMOD_CHANNELINDEX channelid, Sound *_sound, 
 ALBRIDGE(System,release,(),())
 FMOD_RESULT OpenALSystem::release()
 {
+    OggDecoder::stopDecoderThread();
+
     ALCcontext *ctx = alcGetCurrentContext();
     if (ctx)
     {
