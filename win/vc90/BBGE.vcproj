@@ -352,6 +352,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\MT.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\MT.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\OpenGLStubs.h"
 				>
 			</File>
