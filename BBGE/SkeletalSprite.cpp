@@ -1169,7 +1169,7 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 		file = animationPath + skinPath + fn + ".xml";
 	}
 
-	stringToLower(file);
+	file = core->adjustFilenameCase(file);
 
 	if (!exists(file,1))
 	{
@@ -1305,6 +1305,8 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 		filenameLoaded = "";
 		return;
 	}
+
+	file = core->adjustFilenameCase(file);
 
 	loaded = true;
 	
