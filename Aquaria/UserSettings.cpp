@@ -614,12 +614,17 @@ void UserSettings::getSystemLocale()
 		}
 	}
 #else
-	system.locale = getenv("LANG");
+	// FIXME: Apparently this is not set when starting the game via the UI on OSX.
+	const char *lang = (const char *)getenv("LANG");
+	if (lang && *lang)
+	{
+		system.locale = lang;
 
-	size_t found = system.locale.find('.');
+		size_t found = system.locale.find('.');
 
-	if (found != string::npos)
-		system.locale.resize(found);
+		if (found != string::npos)
+			system.locale.resize(found);
+	}
 #endif
 	if (system.locale.empty())
 		debugLog("could not establish system locale");
