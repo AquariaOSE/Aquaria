@@ -4484,6 +4484,7 @@ void DSQ::onUpdate(float dt)
 		os << " | p: " << core->processedRenderObjectCount << " | t: " << core->totalRenderObjectCount;
 		os << " | s: " << dsq->continuity.seconds;
 		os << " | evQ: " << core->eventQueue.getSize();
+		os << " | sndQ: " << core->dbg_numThreadDecoders;
 		/*
 		os << " | s: " << dsq->continuity.seconds;
 		os << " cr: " << core->cullRadius;

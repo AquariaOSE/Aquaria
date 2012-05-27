@@ -77,10 +77,11 @@ struct ScreenMode
 
 struct CoreSettings
 {
-	CoreSettings() { renderOn = true; updateOn = true; runInBackground = false; }
+	CoreSettings() { renderOn = true; updateOn = true; runInBackground = false; prebufferSounds = false; }
 	bool renderOn;
 	bool runInBackground;
 	bool updateOn; // NOT IMPLEMENTED YET
+	bool prebufferSounds;
 };
 
 enum CoreFlags
@@ -1305,6 +1306,8 @@ public:
 	CoreSettings settings;
 
 	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
+
+	volatile int dbg_numThreadDecoders;
 
 protected:
 

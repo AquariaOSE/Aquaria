@@ -250,6 +250,8 @@ void OggDecoder::decode_loop(OggDecoder *this_)
                 decoderList.erase(it++);
             }
         }
+
+        core->dbg_numThreadDecoders = decoderList.size();
     }
 }
 
@@ -584,14 +586,17 @@ namespace FMOD {
 class OpenALSound
 {
 public:
-    OpenALSound(FILE *_fp, const bool _looping);
-    OpenALSound(void *_data, long _size, const bool _looping);
+    OpenALSound(FILE *_fp, const bool _looping); // ctor for ogg streamed from file
+    OpenALSound(void *_data, long _size, const bool _looping); // ctor for ogg streamed from memory
+    OpenALSound(ALuint _bid, const bool _looping); // ctor for raw samples already assigned an opanAL buffer ID
     FILE *getFile() const { return fp; }
     const void *getData() const { return data; }
     long getSize() const { return size; }
     bool isLooping() const { return looping; }
+    bool isRaw() const { return raw; }
     FMOD_RESULT release();
     void reference() { refcount++; }
+    ALuint getBufferName() const { return bid; }
 
 private:
     FILE * const fp;
@@ -599,6 +604,8 @@ private:
     const long size;    // Only used if fp==NULL
     const bool looping;
     int refcount;
+    const bool raw; // true if buffer holds raw PCM data
+    ALuint bid; // only used if raw == true
 };
 
 OpenALSound::OpenALSound(FILE *_fp, const bool _looping)
@@ -607,6 +614,8 @@ OpenALSound::OpenALSound(FILE *_fp, const bool _looping)
     , size(0)
     , looping(_looping)
     , refcount(1)
+    , raw(false)
+    , bid(0)
 {
 }
 
@@ -616,6 +625,19 @@ OpenALSound::OpenALSound(void *_data, long _size, const bool _looping)
     , size(_size)
     , looping(_looping)
     , refcount(1)
+    , raw(false)
+    , bid(0)
+{
+}
+
+OpenALSound::OpenALSound(ALuint _bid, const bool _looping)
+    : fp(NULL)
+    , data(NULL)
+    , size(0)
+    , looping(_looping)
+    , refcount(1)
+    , raw(true)
+    , bid(_bid)
 {
 }
 
@@ -625,10 +647,17 @@ FMOD_RESULT OpenALSound::release()
     refcount--;
     if (refcount <= 0)
     {
-	if (fp)
-	    fclose(fp);
-	else
-	    free(data);
+        if(raw)
+        {
+            alDeleteBuffers(1, &bid);
+        }
+        else
+        {
+            if (fp)
+                fclose(fp);
+            else
+                free(data);
+        }
         delete this;
     }
     return FMOD_OK;
@@ -738,15 +767,23 @@ bool OpenALChannel::start(OpenALSound *sound)
 {
     if (decoder)
         delete decoder;
-    if (sound->getFile())
-        decoder = new OggDecoder(sound->getFile());
-    else
-        decoder = new OggDecoder(sound->getData(), sound->getSize());
-    if (!decoder->start(sid, sound->isLooping()))
+    if (sound->isRaw())
     {
-        delete decoder;
-        decoder = NULL;
-        return false;
+        alSourcei(sid, AL_BUFFER, sound->getBufferName());
+        alSourcei(sid, AL_LOOPING, sound->isLooping() ? AL_TRUE : AL_FALSE);
+    }
+    else
+    {
+        if (sound->getFile())
+            decoder = new OggDecoder(sound->getFile());
+        else
+            decoder = new OggDecoder(sound->getData(), sound->getSize());
+        if (!decoder->start(sid, sound->isLooping()))
+        {
+            delete decoder;
+            decoder = NULL;
+            return false;
+        }
     }
     return true;
 }
@@ -1014,6 +1051,9 @@ FMOD_RESULT DSP::setParameter(int index, float value)
 
 void OpenALChannel::setSound(OpenALSound *_sound)
 {
+    if(sound == _sound)
+        return;
+
     if (sound)
         sound->release();
 
@@ -1115,6 +1155,58 @@ FMOD_RESULT OpenALSystem::createDSPByType(const FMOD_DSP_TYPE type, DSP **dsp)
     return FMOD_ERR_INTERNAL;
 }
 
+static void *decode_to_pcm(FILE *io, ALenum &format, ALsizei &size, ALuint &freq)
+{
+    ALubyte *retval = NULL;
+
+    // Uncompress and feed to the AL.
+    OggVorbis_File vf;
+    memset(&vf, '\0', sizeof (vf));
+    if (ov_open(io, &vf, NULL, 0) == 0)
+    {
+        int bitstream = 0;
+        vorbis_info *info = ov_info(&vf, -1);
+        size = 0;
+        format = (info->channels == 1) ? AL_FORMAT_MONO16 : AL_FORMAT_STEREO16;
+        freq = info->rate;
+
+        if ((info->channels != 1) && (info->channels != 2))
+        {
+            ov_clear(&vf);
+            return NULL;
+        }
+
+        char buf[1024 * 16];
+        long rc = 0;
+        size_t allocated = 64 * 1024;
+        retval = (ALubyte *) malloc(allocated);
+        while ( (rc = ov_read(&vf, buf, sizeof (buf), BBGE_BIGENDIAN, 2, 1, &bitstream)) != 0 )
+        {
+            if (rc > 0)
+            {
+                size += rc;
+                if (size >= allocated)
+                {
+                    allocated *= 2;
+                    ALubyte *tmp = (ALubyte *) realloc(retval, allocated);
+                    if (tmp == NULL)
+                    {
+                        free(retval);
+                        retval = NULL;
+                        break;
+                    }
+                    retval = tmp;
+                }
+                memcpy(retval + (size - rc), buf, rc);
+            }
+        }
+        ov_clear(&vf);
+        return retval;
+    }
+    return NULL;
+}
+
+
 ALBRIDGE(System,createSound,(const char *name_or_data, FMOD_MODE mode, FMOD_CREATESOUNDEXINFO *exinfo, Sound **sound),(name_or_data,mode,exinfo,sound))
 FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE mode, const FMOD_CREATESOUNDEXINFO *exinfo, Sound **sound)
 {
@@ -1137,11 +1229,32 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
 
     if (mode & FMOD_CREATESTREAM)
     {
+        // Create streaming file handle decoder
         *sound = (Sound *) new OpenALSound(io, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
         retval = FMOD_OK;
     }
+    else if(core->settings.prebufferSounds)
+    {
+        // Pre-decode the sound file and store the raw PCM buffer
+        ALenum format = AL_NONE;
+        ALsizei size = 0;
+        ALuint freq = 0;
+        void *data = decode_to_pcm(io, format, size, freq);
+        fclose(io);
+
+        ALuint bid = 0;
+        alGenBuffers(1, &bid);
+        if (bid != 0)
+        {
+            alBufferData(bid, format, data, size, freq);
+            *sound = (Sound *) new OpenALSound(bid, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
+            retval = FMOD_OK;
+        }
+        free(data);
+    }
     else
     {
+        // Create streaming memory decoder
         fseek(io, 0, SEEK_END);
         long size = ftell(io);
         if (fseek(io, 0, SEEK_SET) != 0)

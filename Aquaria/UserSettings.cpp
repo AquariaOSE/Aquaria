@@ -87,12 +87,17 @@ void UserSettings::save()
 			}
 			xml_audio.InsertEndChild(xml_volume);
 
-
 			TiXmlElement xml_device("Device");
 			{
 				xml_device.SetAttribute("name", audio.deviceName);
 			}
 			xml_audio.InsertEndChild(xml_device);
+
+			TiXmlElement xml_prebuf("Prebuffer");
+			{
+				xml_prebuf.SetAttribute("on", audio.prebuffer);
+			}
+			xml_audio.InsertEndChild(xml_prebuf);
 		}
 		doc.InsertEndChild(xml_audio);
 
@@ -393,6 +398,12 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		{
 			audio.deviceName = xml_device->Attribute("name");
 		}
+
+		TiXmlElement *xml_prebuf = xml_audio->FirstChildElement("Prebuffer");
+		if (xml_prebuf)
+		{
+			xml_prebuf->Attribute("on", &audio.prebuffer);
+		}
 	}
 	TiXmlElement *xml_video = doc.FirstChildElement("Video");
 	if (xml_video)
@@ -547,6 +558,8 @@ void UserSettings::apply()
 	}
 	
 	dsq->bindInput();
+
+	core->settings.prebufferSounds = audio.prebuffer;
 #endif
 }
 
