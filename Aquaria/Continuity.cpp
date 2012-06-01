@@ -123,7 +123,7 @@ IngredientData *Continuity::getIngredientHeldByName(const std::string &name) con
 }
 
 IngredientType Continuity::getIngredientTypeFromName(const std::string &name) const
-{	
+{
 	if (name == "Meat")
 		return IT_MEAT;
 	else if (name == "Oil")
@@ -254,7 +254,7 @@ void Continuity::initFoodSort()
 	sortByType.push_back(FoodSortOrder(IT_ICECHUNK));
 	sortByType.push_back(FoodSortOrder(IT_BONE));
 	sortByType.push_back(FoodSortOrder(IT_FOOD));
-	
+
 	sortByHeal.clear();
 	sortByHeal.push_back(FoodSortOrder(IT_NONE, IET_MAXHP));
 	for (int i = 10; i >= -10; i--)
@@ -264,7 +264,7 @@ void Continuity::initFoodSort()
 	}
 	sortByHeal.push_back(FoodSortOrder(IT_NONE, IET_DEFENSE));
 	sortByHeal.push_back(FoodSortOrder(IT_NONE, IET_SPEED));
-	
+
 	sortByIngredients.clear();
 	for (int i = 0; i < IT_INGREDIENTSEND; i++)
 	{
@@ -275,9 +275,9 @@ void Continuity::initFoodSort()
 void Continuity::sortFood()
 {
 	std::vector<FoodSortOrder> sortOrder;
-	
+
 	bool doSort = true;
-	
+
 	switch (dsq->continuity.foodSortType)
 	{
 	/*
@@ -302,7 +302,7 @@ void Continuity::sortFood()
 
 	if (doSort)
 	{
-		
+
 
 		std::vector<IngredientData*> sort;
 
@@ -482,7 +482,7 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 	IngredientEffectType useType = fx.type;
 
 	std::ostringstream os;
-	
+
 	switch(useType)
 	{
 	case IET_HP:
@@ -519,7 +519,7 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 	case IET_REGEN:
 		os << dsq->continuity.stringBank.get(206) << " " << fx.magnitude;
 		return os.str();
-	break; 
+	break;
 	case IET_TRIP:
 		return dsq->continuity.stringBank.get(207);
 	break;
@@ -657,7 +657,7 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 		{
 
 			debugLog("ingredient effect: defense");
-			
+
 			if (fx.magnitude <= 1)
 				dsq->continuity.setDefenseMultiplier(0.75, defenseTime);
 			else if (fx.magnitude == 2)
@@ -674,7 +674,7 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 		break;
 		case IET_SPEED:
 		{
-			
+
 			dsq->continuity.setSpeedMultiplier(1.0f + fx.magnitude*0.5f, speedTime);
 			debugLog("ingredient effect: speed");
 
@@ -826,7 +826,7 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 		break;
 		case IET_LI:
 		{
-			// this should do nothing, its just here to catch the ingredient effect so it doesn't 
+			// this should do nothing, its just here to catch the ingredient effect so it doesn't
 			// give the "default:" error message
 			// this item should only affect li if naija drops it and li eats it.
 		}
@@ -1154,7 +1154,7 @@ void Continuity::loadIntoSongBank(const std::string &file)
 				s.notes.push_back(note);
 			}
 		}
-		
+
 		if (song->Attribute("script"))
 		{
 			s.script = atoi(song->Attribute("script"));
@@ -1843,7 +1843,7 @@ void Continuity::update(float dt)
 						d.useTimer = 0;
 						d.damageType = DT_ENEMY_ACTIVEPOISON;
 						dsq->game->avatar->damage(d);
-						
+
 						dsq->spawnParticleEffect("PoisonBubbles", dsq->game->avatar->position);
 					}
 				}
@@ -2265,7 +2265,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	dsq->user.save();
 
 	TiXmlDocument doc;
-	
+
 	TiXmlElement version("Version");
 	{
 		version.SetAttribute("major",		VERSION_MAJOR);
@@ -2304,14 +2304,14 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		{
 			os << (*i).name << " " << (*i).pos.x << " " << (*i).pos.y << " ";
 			os << (*i).canMove << " ";
-			
+
 			hasUserString = !(*i).userString.empty();
-			
+
 			os << hasUserString << " ";
-			
+
 			if (hasUserString)
 				os << spacesToUnderscores((*i).userString) << " ";
-			
+
 			/*
 			std::ostringstream os2;
 			os2 << "Saving a Gem called [" << (*i).name << "] with userString [" << (*i).userString << "] pos (" << (*i).pos.x << ", " << (*i).pos.y << ")\n";
@@ -2361,7 +2361,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 			os << dsq->continuity.voiceOversPlayed[i] << " ";
 		}
-		vox.SetAttribute("v", os.str());	
+		vox.SetAttribute("v", os.str());
 	}
 	doc.InsertEndChild(vox);
 
@@ -2510,9 +2510,16 @@ void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 	{
 		unsigned long size = 0;
 		char *buf = readCompressedFile(teh_file, &size);
-		if (!buf || !doc.LoadMem(buf, size))
-			errorLog("Failed to load save data: " + teh_file);
-		return;
+		if (!buf)
+		{
+			errorLog("Failed to decompress save file: " + teh_file);
+			return;
+		}
+		if (!doc.LoadMem(buf, size))
+		{
+			errorLog("Failed to load save data: " + teh_file + " -- Error: " + doc.ErrorDesc());
+			return;
+		}
 	}
 
 	teh_file = dsq->continuity.getSaveFileName(slot, "xml");
@@ -2652,18 +2659,18 @@ void Continuity::loadFile(int slot)
 			while (is >> g.name)
 			{
 				hasUserString=false;
-				
+
 				is >> g.pos.x >> g.pos.y;
 				is >> g.canMove;
 				is >> hasUserString;
-				
+
 				if (hasUserString)
 					is >> g.userString;
-				
+
 				std::ostringstream os;
 				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
 				debugLog(os.str());
-				
+
 				g.userString = underscoresToSpaces(g.userString);
 				this->gems.push_back(g);
 			}
@@ -2672,39 +2679,39 @@ void Continuity::loadFile(int slot)
 		{
 			std::string s = gems->Attribute("c");
 			std::istringstream is(s);
-			
+
 			int num = 0;
 			is >> num;
-			
+
 			bool hasUserString = false;
 			GemData g;
-			
+
 			std::ostringstream os;
 			os << "continuity num: [" << num << "]" << std::endl;
 			os << "data: [" << s << "]" << std::endl;
 			debugLog(os.str());
-			
+
 			for (int i = 0; i < num; i++)
 			{
 				g.pos = Vector(0,0,0);
 				g.canMove = false;
 				g.userString = "";
-				
+
 				hasUserString=false;
-				
+
 				is >> g.name;
 				is >> g.pos.x >> g.pos.y;
 				is >> g.canMove;
 				is >> hasUserString;
-				
+
 				if (hasUserString)
 					is >> g.userString;
 				else
 					g.userString = "";
-				
+
 				g.userString = underscoresToSpaces(g.userString);
 				this->gems.push_back(g);
-				
+
 				std::ostringstream os;
 				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
 				debugLog(os.str());
@@ -2726,7 +2733,7 @@ void Continuity::loadFile(int slot)
 			}
 		}
 
-		
+
 #ifdef AQUARIA_BUILD_MAPVIS
 		if (worldMap->Attribute("va") && dsq->continuity.worldMap.getNumWorldMapTiles())
 		{
@@ -2817,7 +2824,7 @@ void Continuity::loadFile(int slot)
 		if (startData->Attribute("rec"))
 		{
 			std::istringstream is(startData->Attribute("rec"));
-			
+
 			for (int i = 0; i < recipes.size(); i++)
 			{
 				bool known = false;
@@ -2930,10 +2937,10 @@ int Continuity::getEntityFlag(const std::string &sceneName, int id)
 {
 	std::ostringstream os;
 	os << sceneName << ":" << id;
-	
+
 	std::ostringstream os2;
 	os2 << hash(os.str());
-	
+
 	return entityFlags[os2.str()];
 }
 
@@ -2941,10 +2948,10 @@ void Continuity::setEntityFlag(const std::string &sceneName, int id, int v)
 {
 	std::ostringstream os;
 	os << sceneName << ":" << id;
-	
+
 	std::ostringstream os2;
 	os2 << hash(os.str());
-	
+
 	entityFlags[os2.str()] = v;
 }
 
@@ -2952,10 +2959,10 @@ void Continuity::setPathFlag(Path *p, int v)
 {
 	std::ostringstream os;
 	os << "p:" << dsq->game->sceneName << ":" << p->nodes[0].position.x << ":" << p->nodes[0].position.y << ":" << removeSpaces(p->name);
-	
+
 	std::ostringstream os2;
 	os2 << hash(os.str());
-	
+
 	entityFlags[os2.str()] = v;
 }
 
@@ -3177,7 +3184,7 @@ void Continuity::reset()
 
 	lastMenuPage = MENUPAGE_NONE;
 	lastOptionsMenuPage = MENUPAGE_NONE;
-	
+
 	if (dsq->game)
 	{
 		dsq->game->currentMenuPage = MENUPAGE_NONE;
@@ -3219,7 +3226,7 @@ void Continuity::reset()
 	worldMap.load();
 
 	ingredients.clear();
-	
+
 	foodSortType = 0;
 
 	//load ingredients
@@ -3299,7 +3306,7 @@ void Continuity::reset()
 	{
 		learnSong(SONG_SHIELDAURA);
 	}
-	
+
 	initFoodSort();
 
 	core->resetTimer();

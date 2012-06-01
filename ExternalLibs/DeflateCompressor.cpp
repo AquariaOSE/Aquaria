@@ -6,8 +6,6 @@
 // for weird gcc/mingw hackfix below
 #include <string.h>
 
-#define PRINTFAIL(s, ...) fprintf(stderr, (s "\n"), __VA_ARGS__)
-
 
 DeflateCompressor::DeflateCompressor()
 :   _windowBits(-MAX_WBITS), // negative, because we want a raw deflate stream, and not zlib-wrapped
@@ -24,7 +22,7 @@ ZlibCompressor::ZlibCompressor()
 }
 
 GzipCompressor::GzipCompressor()
-: DeflateCompressor()  
+: DeflateCompressor()
 {
     _windowBits = MAX_WBITS + 16; // this makes zlib wrap a minimal gzip header around the stream
     _forceCompress = true; // we want this for gzip
@@ -57,18 +55,15 @@ void DeflateCompressor::compress(void* dst, uint32 *dst_size, const void* src, u
         case Z_STREAM_END:
             break; // all good
         case Z_OK:
-            PRINTFAIL("ZLIB: Output buffer not large enough");
             *dst_size = 0;
             return;
         default:
-            PRINTFAIL("ZLIB: Error %d", ret);
             *dst_size = 0;
             return;
     }
 
     if (Z_OK != deflateEnd(&c_stream))
     {
-        PRINTFAIL("Can't compress (zlib: deflateEnd)");
         *dst_size = 0;
         return;
     }
@@ -118,7 +113,7 @@ void DeflateCompressor::Compress(uint8 level)
         return;
 
     char *buf;
-    
+
 
     uint32 oldsize = size();
     uint32 newsize = compressBound(oldsize) + 30; // for optional gzip header
@@ -163,7 +158,6 @@ void DeflateCompressor::Decompress(void)
         decompress((void*)target, &origsize, (const void*)contents(), size(), _windowBits);
         if(origsize != rs)
         {
-            PRINTFAIL("DeflateCompressor: Inflate error! cursize=%u origsize=%u realsize=%u",size(),origsize,rs);
             delete [] target;
             return;
         }
@@ -242,7 +236,7 @@ void GzipCompressor::Decompress(void)
     rpos(size() - sizeof(uint32)); // according to RFC 1952, input size are the last 4 bytes at the end of the file, in little endian
     *this >> t;
     _real_size = t;
-    
+
     // !! NOTE: this fixes a gcc/mingw bug where _real_size would be set incorrectly
 #if __GNUC__
     char xx[20];
