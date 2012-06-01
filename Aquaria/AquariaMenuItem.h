@@ -43,6 +43,8 @@ public:
 	int guiInputLevel;
 	static int currentGuiInputLevel;
 	bool hasInput();
+	static AquariaGuiElement *currentFocus;
+	static AquariaGuiElement *getClosestGuiElement(const Vector& pos);
 protected:
 	typedef std::list<AquariaGuiElement*> GuiElements;
 	static GuiElements guiElements;
@@ -80,10 +82,11 @@ public:
 	void useGlow(const std::string &tex, int w, int h);
 	void useSound(const std::string &tex);
 	
-	bool isCursorInMenuItem();
+	virtual bool isCursorInMenuItem();
 	Vector getGuiPosition();
 	bool isGuiVisible();
 	int shareAlpha;
+
 protected:
 
 	std::string useSfx;

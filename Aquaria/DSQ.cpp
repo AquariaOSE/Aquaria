@@ -37,6 +37,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "RoundedRect.h"
 #include "TTFFont.h"
+#include "ModSelector.h"
+#include "Network.h"
+
 
 #ifdef BBGE_BUILD_OPENGL
 	#include <sys/stat.h>
@@ -170,27 +173,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	almb = armb = 0;
 	bar_left = bar_right = bar_up = bar_down = barFade_left = barFade_right = 0;
 	
-	// do copy stuff
-#ifdef BBGE_BUILD_UNIX
-	std::string fn;
-	fn = getPreferencesFolder() + "/" + userSettingsFilename;
-	if (!exists(fn))
-		Linux_CopyTree(core->adjustFilenameCase(userSettingsFilename).c_str(), core->adjustFilenameCase(fn).c_str());
-
-	fn = getUserDataFolder() + "/_mods";
-	if (!exists(fn))
-		Linux_CopyTree(core->adjustFilenameCase("_mods").c_str(), core->adjustFilenameCase(fn).c_str());
-#endif
-
-	std::string p1 = getUserDataFolder();
-	std::string p2 = getUserDataFolder() + "/save";
-#if defined(BBGE_BUILD_UNIX)
-	mkdir(p1.c_str(), S_IRWXU);
-	mkdir(p2.c_str(), S_IRWXU);
-#elif defined(BBGE_BUILD_WINDOWS)
-	CreateDirectoryA(p2.c_str(), NULL);
-#endif
-	
 	difficulty = DIFF_NORMAL;
 
 	/*
@@ -214,7 +196,7 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	subtext = 0;
 	subbox = 0;
 	menuSelectDelay = 0;
-	modSelector = 0;
+	modSelectorScr = 0;
 	blackout = 0;
 	useMic = false;
 	autoSingMenuOpen = false;
@@ -227,9 +209,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	achievement_text = 0;
 	achievement_box = 0;
 #endif
-
-	vars = &v;
-	v.load();
 
 #ifdef AQUARIA_BUILD_CONSOLE
 	console = 0;
@@ -251,25 +230,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 
 	for (int i = 0; i < 16; i++)
 		firstElementOnLayer[i] = 0;
-
-	addStateInstance(game = new Game);
-	addStateInstance(new GameOver);
-#ifdef AQUARIA_BUILD_SCENEEDITOR
-	addStateInstance(new AnimationEditor);
-#endif
-	addStateInstance(new Intro2);
-	addStateInstance(new BitBlotLogo);
-#ifdef AQUARIA_BUILD_SCENEEDITOR
-	addStateInstance(new ParticleEditor);
-#endif
-	addStateInstance(new Credits);
-	addStateInstance(new Intro);
-	addStateInstance(new Nag);
-
-	//addStateInstance(new Logo);
-	//addStateInstance(new SCLogo);
-	//addStateInstance(new IntroText);
-	//addStateInstance(new Intro);
 
 	//stream = 0;
 }
@@ -950,6 +910,49 @@ This build is not yet final, and as such there are a couple things lacking. They
 	// steam callbacks are inited here
 	dsq->continuity.init();
 
+	vars = &v;
+	v.load();
+
+	// do copy stuff
+#ifdef BBGE_BUILD_UNIX
+	std::string fn;
+	fn = getPreferencesFolder() + "/" + userSettingsFilename;
+	if (!exists(fn))
+		Linux_CopyTree(core->adjustFilenameCase(userSettingsFilename).c_str(), core->adjustFilenameCase(fn).c_str());
+
+	fn = getUserDataFolder() + "/_mods";
+	if (!exists(fn))
+		Linux_CopyTree(core->adjustFilenameCase("_mods").c_str(), core->adjustFilenameCase(fn).c_str());
+#endif
+
+	std::string p1 = getUserDataFolder();
+	std::string p2 = getUserDataFolder() + "/save";
+#if defined(BBGE_BUILD_UNIX)
+	mkdir(p1.c_str(), S_IRWXU);
+	mkdir(p2.c_str(), S_IRWXU);
+#elif defined(BBGE_BUILD_WINDOWS)
+	CreateDirectoryA(p2.c_str(), NULL);
+#endif
+
+	addStateInstance(game = new Game);
+	addStateInstance(new GameOver);
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+	addStateInstance(new AnimationEditor);
+#endif
+	addStateInstance(new Intro2);
+	addStateInstance(new BitBlotLogo);
+#ifdef AQUARIA_BUILD_SCENEEDITOR
+	addStateInstance(new ParticleEditor);
+#endif
+	addStateInstance(new Credits);
+	addStateInstance(new Intro);
+	addStateInstance(new Nag);
+
+	//addStateInstance(new Logo);
+	//addStateInstance(new SCLogo);
+	//addStateInstance(new IntroText);
+	//addStateInstance(new Intro);
+
 	//packReadInfo("mus.dat");
 
 	this->setBaseTextureDirectory("gfx/");
@@ -1090,37 +1093,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	user.apply();
 
-	/*
-
-	sound->loadLocalSound("bbfloppy");
-
-	Quad *disk = new Quad("bitblot/disk", Vector(400, 300));
-	disk->alpha = 0;
-	disk->alpha.interpolateTo(1, 0.5);
-	disk->scale = Vector(0.6, 0.6);
-	addRenderObject(disk, LR_HUD);
-
-	debugLog("core->main");
-	core->main(0.5);
-	debugLog("end of core->main");
-
-	disk->position.interpolateTo(Vector(400,560), 0.5);
-	
-	core->main(0.4);
-
-	sound->playSfx("bbfloppy");
-
-	core->main(0.1);
-
-	*/
-	
-
-	/*
-	loading = new Quad("loading", Vector(400,300));
-	loading->followCamera = 1;
-	loading->alpha = 0.01;
-	addRenderObject(loading, LR_HUD);
-	*/
+	applyPatches();
 
 	loading = new Quad("loading/juice", Vector(400,300));
 	loading->alpha = 1.0;
@@ -2096,7 +2069,7 @@ void DSQ::toggleMuffleSound(bool toggle)
 	*/
 }
 
-void loadModsCallback(const std::string &filename, intptr_t param)
+void DSQ::loadModsCallback(const std::string &filename, intptr_t param)
 {
 	//errorLog(filename);
 	int pos = filename.find_last_of('/')+1;
@@ -2104,9 +2077,36 @@ void loadModsCallback(const std::string &filename, intptr_t param)
 	std::string name = filename.substr(pos, pos2-pos);
 	ModEntry m;
 	m.path = name;
+	m.id = dsq->modEntries.size();
+
+	TiXmlDocument d;
+	if(!Mod::loadModXML(&d, name))
+	{
+		std::ostringstream os;
+		os << "Failed to load mod xml: " << filename << " -- Error: " << d.ErrorDesc();
+		dsq->debugLog(os.str());
+		return;
+	}
+
+	m.type = Mod::getTypeFromXML(d.FirstChildElement("AquariaMod"));
+
 	dsq->modEntries.push_back(m);
 
-	debugLog("Loaded ModEntry [" + m.path + "]");
+	std::ostringstream ss;
+	ss << "Loaded ModEntry [" << m.path << "] -> " << m.id << "  | type " << m.type;
+
+	dsq->debugLog(ss.str());
+}
+
+void DSQ::loadModPackagesCallback(const std::string &filename, intptr_t param)
+{
+	bool ok = dsq->mountModPackage(filename);
+
+	std::ostringstream ss;
+	ss << "Mount Mod Package '" << filename << "' : " << (ok ? "ok" : "FAIL");
+	dsq->debugLog(ss.str());
+
+	// they will be enumerated by the following loadModsCallback round
 }
 
 void DSQ::startSelectedMod()
@@ -2127,28 +2127,6 @@ void DSQ::startSelectedMod()
 	}
 }
 
-void DSQ::selectNextMod()
-{
-	selectedMod ++;
-
-	if (selectedMod >= modEntries.size())
-		selectedMod = 0;
-
-	if (modSelector)
-		modSelector->refreshTexture();
-}
-
-void DSQ::selectPrevMod()
-{
-	selectedMod --;
-
-	if (selectedMod < 0)
-		selectedMod = modEntries.size()-1;
-
-	if (modSelector)
-		modSelector->refreshTexture();
-}
-
 ModEntry* DSQ::getSelectedModEntry()
 {
 	if (!modEntries.empty() && selectedMod >= 0 && selectedMod < modEntries.size())
@@ -2159,9 +2137,130 @@ ModEntry* DSQ::getSelectedModEntry()
 void DSQ::loadMods()
 {
 	modEntries.clear();
-	
+
+#ifdef BBGE_BUILD_VFS
+
+	// first load the packages, then enumerate XMLs
+	forEachFile(mod.getBaseModPath(), ".aqmod", loadModPackagesCallback, 0);
+	forEachFile(mod.getBaseModPath(), ".zip", loadModPackagesCallback, 0);
+#endif
+
 	forEachFile(mod.getBaseModPath(), ".xml", loadModsCallback, 0);
 	selectedMod = 0;
+}
+
+void DSQ::applyPatches()
+{
+#ifndef AQUARIA_DEMO
+#ifdef BBGE_BUILD_VFS
+
+	// This is to allow files in patches to override files in mods on non-win32 systems (theoretically)
+	if(!vfs.GetDir("_mods"))
+	{
+		vfs.MountExternalPath(mod.getBaseModPath().c_str(), "_mods");
+	}
+
+	// user wants mods, but not yet loaded
+	if(activePatches.size() && modEntries.empty())
+		loadMods();
+
+	for (std::set<std::string>::iterator it = activePatches.begin(); it != activePatches.end(); ++it)
+		for(int i = 0; i < modEntries.size(); ++i)
+			if(modEntries[i].type == MODTYPE_PATCH)
+				if(!nocasecmp(modEntries[i].path.c_str(), it->c_str()))
+					applyPatch(modEntries[i].path);
+#endif
+#endif
+}
+
+
+#ifdef BBGE_BUILD_VFS
+
+static void refr_pushback(ttvfs::VFSDir *vd, void *user)
+{
+    std::list<ttvfs::VFSDir*> *li = (std::list<ttvfs::VFSDir*>*)user;
+    li->push_back(vd);
+}
+
+static void refr_insert(VFILE *vf, void *user)
+{
+    // texture names are like: "naija/naija2-frontleg3" - no .png extension, and no gfx/ path
+    std::set<std::string>*files = (std::set<std::string>*)user;
+    std::string t = vf->fullname();
+    size_t dotpos = t.rfind('.');
+    size_t pathstart = t.find("gfx/");
+    if(dotpos == std::string::npos || pathstart == std::string::npos || dotpos < pathstart)
+        return; // whoops
+
+    files->insert(t.substr(pathstart + 4, dotpos - (pathstart + 4)));
+}
+
+
+// this thing is rather heuristic... but works for normal mod paths
+// there is apparently nothing else except Textures that is a subclass of Resource,
+// thus directly using "gfx" subdir should be fine...
+void DSQ::refreshResourcesForPatch(const std::string& name)
+{
+	ttvfs::VFSDir *vd = vfs.GetDir((mod.getBaseModPath() + name + "/gfx").c_str()); // only textures are resources, anyways
+	if(!vd)
+		return;
+
+	std::list<ttvfs::VFSDir*> left;
+	std::set<std::string> files;
+	left.push_back(vd);
+
+	do
+	{
+		vd = left.front();
+		left.pop_front();
+		vd->forEachDir(refr_pushback, &left);
+		vd->forEachFile(refr_insert, &files);
+	}
+	while(left.size());
+
+	std::ostringstream os;
+	os << "refreshResourcesForPatch - " << files.size() << " to refresh";
+	debugLog(os.str());
+
+	for(int i = 0; i < dsq->resources.size(); ++i)
+	{
+		Resource *r = dsq->resources[i];
+		if(files.find(r->name) != files.end())
+			r->reload();
+	}
+}
+#else
+void DSQ::refreshResourcesForPatch(const std::string& name) {}
+#endif
+
+void DSQ::applyPatch(const std::string& name)
+{
+#ifdef BBGE_BUILD_VFS
+#ifdef AQUARIA_DEMO
+	return;
+#endif
+
+	std::string src = mod.getBaseModPath();
+	src += name;
+	debugLog("Apply patch: " + src);
+	vfs.Mount(src.c_str(), "", true);
+
+	activePatches.insert(name);
+	refreshResourcesForPatch(name);
+#endif
+}
+
+void DSQ::unapplyPatch(const std::string& name)
+{
+#ifdef BBGE_BUILD_VFS
+	std::string src = mod.getBaseModPath();
+	src += name;
+	debugLog("Unapply patch: " + src);
+	vfs.Unmount(src.c_str(), "");
+
+	activePatches.erase(name);
+	refreshResourcesForPatch(name);
+#endif
 }
 
 void DSQ::playMenuSelectSfx()
@@ -2225,6 +2324,8 @@ void DSQ::playPositionalSfx(const std::string &name, const Vector &position, flo
 
 void DSQ::shutdown()
 {
+	Network::shutdown();
+
 	scriptInterface.shutdown();
 	precacher.clean();
 	/*
@@ -2681,11 +2782,6 @@ void DSQ::doModSelect()
 	modIsSelected = false;
 
 	dsq->loadMods();
-	
-	selectedMod = user.data.lastSelectedMod;
-	
-	if (selectedMod >= modEntries.size() || selectedMod < 0)
-		selectedMod = 0;
 
 	createModSelector();
 
@@ -2699,7 +2795,6 @@ void DSQ::doModSelect()
 		
 	if (modIsSelected)
 	{
-		user.data.lastSelectedMod = selectedMod;
 		dsq->startSelectedMod();
 	}
 
@@ -2723,66 +2818,66 @@ void DSQ::createModSelector()
 	blackout->alpha.interpolateTo(1, 0.2);
 	addRenderObject(blackout, LR_MENU);
 
-	menu.resize(4);
+	modSelectorScr = new ModSelectorScreen();
+	modSelectorScr->position = Vector(400,300);
+	modSelectorScr->setWidth(getVirtualWidth()); // just to be sure
+	modSelectorScr->setHeight(getVirtualHeight());
+	modSelectorScr->autoWidth = AUTO_VIRTUALWIDTH;
+	modSelectorScr->autoHeight = AUTO_VIRTUALHEIGHT;
+	modSelectorScr->init();
+	addRenderObject(modSelectorScr, LR_MENU);
+}
 
-	menu[0] = new Quad("Cancel", Vector(750,580));
-	menu[0]->followCamera = 1;
-	addRenderObject(menu[0], LR_MENU);
+bool DSQ::modIsKnown(const std::string& name)
+{
+	std::string nlower = name;
+	stringToLower(nlower);
 
+	for(int i = 0; i < modEntries.size(); ++i)
+	{
+		std::string elower = modEntries[i].path;
+		stringToLower(elower);
+		if(nlower == elower)
+			return true;
+	}
+	return false;
+}
 
-	AquariaMenuItem *a = new AquariaMenuItem();
-	//menu[0]->setLabel("Cancel");
-	a->useGlow("glow", 200, 50);
-	a->event.set(MakeFunctionEvent(DSQ,onExitSaveSlotMenu));
-	a->position = Vector(750, 580);
-	addRenderObject(a, LR_MENU);
-	menu[1] = a;
-	AquariaMenuItem *m1 = a;
+bool DSQ::mountModPackage(const std::string& pkg)
+{
+#ifdef BBGE_BUILD_VFS
+	ttvfs::VFSDir *vd = vfs.AddArchive(pkg.c_str(), false, mod.getBaseModPath().c_str());
+	if (!vd)
+	{
+		debugLog("Package: Unable to load " + pkg);
+		return false;
+	}
+	debugLog("Package: Mounted " + pkg + " as archive in _mods");
+	return true;
+#else
+	debugLog("Package: Can't mount " + pkg + ", VFS support disabled");
+	return false;
+#endif
+}
 
+#ifdef BBGE_BUILD_VFS
+static void _CloseSubdirCallback(ttvfs::VFSDir *vd, void*)
+{
+	vd->close();
+	ttvfs::VFSBase *origin = vd->getOrigin();
+	if(origin)
+		origin->close();
+}
+#endif
 
-	a = new AquariaMenuItem();
-	a->useQuad("gui/arrow-left");
-	a->useGlow("glow", 100, 50);
-	a->useSound("Click");
-	a->event.set(MakeFunctionEvent(DSQ, selectPrevMod));
-	a->position = Vector(150, 300);
-	addRenderObject(a, LR_MENU);
-
-	menu[2] = a;
-
-	AquariaMenuItem *m2 = a;
-
-	a = new AquariaMenuItem();
-	a->useQuad("gui/arrow-right");
-	a->useGlow("glow", 100, 50);
-	a->useSound("Click");
-	a->event.set(MakeFunctionEvent(DSQ, selectNextMod));
-	a->position = Vector(650, 300);
-	addRenderObject(a, LR_MENU);
-
-	menu[3] = a;
-
-	AquariaMenuItem *m3 = a;
-
-	modSelector = new ModSelector();
-	modSelector->position = Vector(400,300);
-	modSelector->alpha = 0;
-	modSelector->alpha.interpolateTo(1, 0.4);
-	modSelector->followCamera = 1;
-	addRenderObject(modSelector, LR_MENU);
-
-	modSelector->setFocus(true);
-
-	m2->setDirMove(DIR_RIGHT, modSelector);
-	modSelector->setDirMove(DIR_RIGHT, m3);
-	modSelector->setDirMove(DIR_LEFT, m2);
-	m2->setDirMove(DIR_LEFT, modSelector);
-
-	modSelector->setDirMove(DIR_DOWN, m1);
-	m2->setDirMove(DIR_DOWN, m1);
-	m3->setDirMove(DIR_DOWN, m1);
-
-	m1->setDirMove(DIR_UP, modSelector);
+// This just closes some file handles, nothing fancy
+void DSQ::unloadMods()
+{
+#ifdef BBGE_BUILD_VFS
+	ttvfs::VFSDir *mods = vfs.GetDir(mod.getBaseModPath().c_str());
+	if(mods)
+		mods->forEachDir(_CloseSubdirCallback);
+#endif
 }
 
 void DSQ::applyParallaxUserSettings()
@@ -2802,13 +2897,17 @@ void DSQ::clearModSelector()
 		blackout = 0;
 	}
 
-	if (modSelector)
+	if(modSelectorScr)
 	{
-		modSelector->setLife(1);
-		modSelector->setDecayRate(2);
-		modSelector->fadeAlphaWithLife = 1;
-		modSelector = 0;
+		modSelectorScr->close();
+		modSelectorScr->setLife(1);
+		modSelectorScr->setDecayRate(2);
+		modSelectorScr->fadeAlphaWithLife = 1;
+		modSelectorScr = 0;
 	}
+
+	// This just closes some file handles, nothing fancy
+	unloadMods();
 
 	clearMenu();
 }
@@ -2955,6 +3054,9 @@ void DSQ::title(bool fade)
 	{
 		mod.shutdown();
 	}
+
+	// Will be re-loaded on demand
+	unloadMods();
 	
 	// VERY important
 	dsq->continuity.reset();
@@ -3193,10 +3295,6 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 			{
 				std::ostringstream os;
 				os << dsq->getSaveDirectory() << "/screen-" << numToZeroString(selectedSaveSlot->getSlotIndex(), 4) << ".zga";
-				std::string tempfile = dsq->getSaveDirectory() + "/poot-s.tmp";
-
-				//saveCenteredScreenshotTGA(tempfile, scrShotWidth);
-				//saveSizedScreenshotTGA(tempfile,512,1);
 
 				// Cut off top and bottom to get a 4:3 aspect ratio.
 				int adjHeight = (scrShotWidth * 3.0f) / 4.0f;
@@ -3205,12 +3303,8 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 				int adjOffset = scrShotWidth * ((scrShotHeight-adjHeight)/2) * 4;
 				memmove(scrShotData, scrShotData + adjOffset, adjImageSize);
 				memset(scrShotData + adjImageSize, 0, imageDataSize - adjImageSize);
-				tgaSave(tempfile.c_str(), scrShotWidth, scrShotHeight, 32, scrShotData);
+				zgaSave(os.str().c_str(), scrShotWidth, scrShotHeight, 32, scrShotData);
 				scrShotData = 0;  // deleted by tgaSave()
-
-				// FIXME: Get rid of tempfile and compress in-memory
-				packFile(dsq->getSaveDirectory() + "/poot-s.tmp", os.str(),9);
-				remove((dsq->getSaveDirectory() + "/poot-s.tmp").c_str());
 			}
 
 			PlaySfx sfx;
@@ -3302,6 +3396,10 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 	bgLabel->scale.interpolateTo(Vector(1,1), t);
 	addRenderObject(bgLabel, LR_CONFIRM);
 
+	const int GUILEVEL_CONFIRM = 200;
+
+	AquariaGuiElement::currentGuiInputLevel = GUILEVEL_CONFIRM;
+
 	dsq->main(t);
 
 	float t2 = 0.05;
@@ -3319,10 +3417,6 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 	no->alpha.interpolateTo(1, t2);
 	addRenderObject(no, LR_CONFIRM);
 	*/
-
-	const int GUILEVEL_CONFIRM = 200;
-
-	AquariaGuiElement::currentGuiInputLevel = GUILEVEL_CONFIRM;
 
 	AquariaMenuItem *yes=0;
 	AquariaMenuItem *no=0;
@@ -3414,8 +3508,16 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 
 	bgLabel->safeKill();
 	txt->safeKill();
-	if (yes)	yes->safeKill();
-	if (no)		no->safeKill();
+	if (yes)
+	{
+		yes->setFocus(false);
+		yes->safeKill();
+	}
+	if (no)
+	{
+		no->setFocus(false);
+		no->safeKill();
+	}
 
 	bool ret = (confirmDone == 1);
 
@@ -3770,7 +3872,7 @@ std::string DSQ::getDialogueFilename(const std::string &f)
 	return "dialogue/" + languagePack + "/" + f + ".txt";
 }
 
-void DSQ::jumpToSection(std::ifstream &inFile, const std::string &section)
+void DSQ::jumpToSection(InStream &inFile, const std::string &section)
 {
 	if (section.empty()) return;
 	std::string file = dsq->getDialogueFilename(dialogueFile);
@@ -4553,6 +4655,8 @@ void DSQ::onUpdate(float dt)
 
 
 	lockMouse();
+
+	Network::update();
 }
 
 void DSQ::lockMouse()

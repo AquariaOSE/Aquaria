@@ -24,7 +24,7 @@ GameplayVariables *vars = 0;
 
 void GameplayVariables::load()
 {
-	std::ifstream inFile("data/variables.txt");
+	InStream inFile("data/variables.txt");
 	if(!inFile)
 	{
 		core->messageBox("error", "Variables data not found! Aborting...");

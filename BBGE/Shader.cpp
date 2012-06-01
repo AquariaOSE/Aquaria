@@ -181,7 +181,7 @@ unsigned char *readShaderFile( const char *fileName )
 {
 	debugLog("readShaderFile()");
 #ifdef BBGE_BUILD_WINDOWS
-    FILE *file = fopen( fileName, "r" );
+    FILE *file = fopen( fileName, "r" ); // FIXME: should this code ever be re-activated, adjust to VFS! -- fg
 
     if( file == NULL )
     {

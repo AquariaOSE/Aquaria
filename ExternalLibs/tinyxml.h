@@ -24,6 +24,7 @@ distribution.
 
 // EDIT:
 // - added LoadMem() function
+// - added VFS stuff
 
 
 #ifndef TINYXML_INCLUDED
@@ -35,11 +36,13 @@ distribution.
 #pragma warning( disable : 4786 )
 #endif
 
+#include "FileAPI.h"
+
 #include <ctype.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <assert.h>
+#include <stdio.h>
 
 // Help out windows:
 #if defined( _DEBUG ) && !defined( DEBUG )
@@ -1420,7 +1423,7 @@ public:
 		will be interpreted as an XML file. TinyXML doesn't stream in XML from the current
 		file location. Streaming may be added in the future.
 	*/
-	bool LoadFile( FILE*, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
+	bool LoadFile( VFILE*, TiXmlEncoding encoding = TIXML_DEFAULT_ENCODING );
 	/// Save a file using the given FILE*. Returns true if successful.
 	bool SaveFile( FILE* ) const;
 

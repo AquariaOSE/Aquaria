@@ -28,6 +28,8 @@ bool AquariaGuiElement::canDirMoveGlobal = true;
 
 int AquariaGuiElement::currentGuiInputLevel = 0;
 
+AquariaGuiElement *AquariaGuiElement::currentFocus = 0;
+
 AquariaGuiElement::AquariaGuiElement()
 {
 	for (int i = 0; i < DIR_MAX; i++)
@@ -78,6 +80,7 @@ void AquariaGuiElement::setFocus(bool v)
 	
 	if (v)
 	{
+		currentFocus = this;
 		if (dsq->inputMode == INPUT_JOYSTICK)
 			core->setMousePosition(getGuiPosition());
 
@@ -91,6 +94,8 @@ void AquariaGuiElement::setFocus(bool v)
 			}
 		}
 	}
+	else if(this == currentFocus)
+		currentFocus = 0;
 }
 
 void AquariaGuiElement::updateMovement(float dt)
@@ -244,6 +249,27 @@ void AquariaGuiElement::updateMovement(float dt)
 			}
 		}
 	}
+}
+
+AquariaGuiElement *AquariaGuiElement::getClosestGuiElement(const Vector& pos)
+{
+	AquariaGuiElement *gui = 0, *closest = 0;
+	float minlen = 0;
+	for (GuiElements::iterator i = guiElements.begin(); i != guiElements.end(); i++)
+	{
+		gui = (*i);
+		if (gui->isGuiVisible() && gui->hasInput())
+		{
+			Vector dist = gui->getGuiPosition() - pos;
+			float len = dist.getSquaredLength2D();
+			if(!closest || len < minlen)
+			{
+				closest = gui;
+				minlen = len;
+			}
+		}
+	}
+	return closest;
 }
 
 
@@ -810,6 +836,7 @@ AquariaMenuItem::AquariaMenuItem() : Quad(), ActionMapper(), AquariaGuiElement()
 
 void AquariaMenuItem::destroy()
 {
+	setFocus(false);
 	Quad::destroy();
 	AquariaGuiElement::clean();
 }
@@ -978,9 +1005,10 @@ bool AquariaMenuItem::isCursorInMenuItem()
 	{
 		std::swap(hw, hh);
 	}
-	if (v.y > position.y - hh && v.y < position.y + hh)
+	Vector pos = getWorldPosition();
+	if (v.y > pos.y - hh && v.y < pos.y + hh)
 	{
-		if (v.x > position.x - hw && v.x < position.x + hw)
+		if (v.x > pos.x - hw && v.x < pos.x + hw)
 		{
 			return true;
 		}

@@ -229,17 +229,26 @@ protected:
 	bool vis, hidden;
 };
 
+enum ModType
+{
+	MODTYPE_MOD,
+	MODTYPE_PATCH,
+};
+
 struct ModEntry
 {
+	unsigned int id; // index in vector
+	ModType type;
 	std::string path;
 };
+
+class ModSelectorScreen;
 
 class Mod
 {
 public:
 	Mod();
 	void clear();
-	void loadModXML(TiXmlDocument *d, std::string modName);
 	void setActive(bool v);
 	void start();
 	void stop();
@@ -261,6 +270,10 @@ public:
 	
 	void shutdown();
 	bool isShuttingDown();
+
+	static bool loadModXML(TiXmlDocument *d, std::string modName);
+	static ModType getTypeFromXML(TiXmlElement *xml);
+
 protected:
 	bool shuttingDown;
 	bool active;
@@ -273,18 +286,6 @@ protected:
 
 	std::string name;
 	std::string path;
-};
-
-class ModSelector : public AquariaGuiQuad
-{
-public:
-	ModSelector();
-	void refreshTexture();
-protected:
-	bool refreshing;
-	BitmapText *label;
-	void onUpdate(float dt);
-	bool mouseDown;
 };
 
 class AquariaScreenTransition : public ScreenTransition
@@ -1394,7 +1395,7 @@ public:
 	void takeScreenshot();
 	void takeScreenshotKey();
 
-	void jumpToSection(std::ifstream &inFile, const std::string &section);
+	void jumpToSection(InStream &inFile, const std::string &section);
 
 	PathFinding pathFinding;
 	void runGesture(const std::string &line);
@@ -1458,6 +1459,11 @@ public:
 
 	void createModSelector();
 	void clearModSelector();
+	bool mountModPackage(const std::string&);
+	bool modIsKnown(const std::string& name);
+	void unloadMods();
+	static void loadModsCallback(const std::string &filename, intptr_t param);
+	static void loadModPackagesCallback(const std::string &filename, intptr_t param);
 
 	bool doScreenTrans;
 
@@ -1485,14 +1491,18 @@ public:
 	Mod mod;
 
 	void loadMods();
+	void applyPatches();
+	void refreshResourcesForPatch(const std::string& name);
+	void applyPatch(const std::string& name);
+	void unapplyPatch(const std::string& name);
+	bool isPatchActive(const std::string& name) { return activePatches.find(name) != activePatches.end(); }
 
 	std::vector<ModEntry> modEntries;
+	std::set<std::string> activePatches;
 	int selectedMod;
-	ModSelector *modSelector;
+	ModSelectorScreen *modSelectorScr;
 
 	void startSelectedMod();
-	void selectNextMod();
-	void selectPrevMod();
 	ModEntry* getSelectedModEntry();
 
 #ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL

@@ -171,15 +171,15 @@ void StatsAndAchievements::RunFrame()
 		requestedStats = true;
 
 		const size_t max_achievements = ARRAYSIZE(g_rgAchievements);
-		FILE *io = NULL;
+		VFILE *io = NULL;
 
 		// Get generic achievement data...
 		std::string fname = dsq->user.localisePath("data/achievements.txt");
-		io = fopen(fname.c_str(), "r");
+		io = vfopen(fname.c_str(), "r");
 		char line[1024];
 		for (size_t i = 0; i < max_achievements; i++)
 		{
-			if (!io || (fgets(line, sizeof (line), io) == NULL))
+			if (!io || (vfgets(line, sizeof (line), io) == NULL))
 				snprintf(line, sizeof (line), "Achievement #%d", (int) i);
 			else
 			{
@@ -189,7 +189,7 @@ void StatsAndAchievements::RunFrame()
 			line[sizeof (g_rgAchievements[i].name) - 1] = '\0';  // just in case.
 			strcpy(g_rgAchievements[i].name, line);
 
-			if (!io || (fgets(line, sizeof (line), io) == NULL))
+			if (!io || (vfgets(line, sizeof (line), io) == NULL))
 				snprintf(line, sizeof (line), "[Description of Achievement #%d is missing!]", (int) i);
 			else
 			{
@@ -204,20 +204,20 @@ void StatsAndAchievements::RunFrame()
 		}
 
 		if (io != NULL)
-			fclose(io);
+			vfclose(io);
 
 		// See what this specific player has achieved...
 
 		unsigned char *buf = new unsigned char[max_achievements];
 		size_t br = 0;
 		fname = (core->getUserDataFolder() + "/achievements.bin");
-		io = fopen(fname.c_str(), "rb");
-		if (io == NULL)
+		FILE *u = fopen(fname.c_str(), "rb");
+		if (u == NULL)
 			statsValid = true;  // nothing to report.
 		else
 		{
-			br = fread(buf, sizeof (buf[0]), max_achievements, io);
-			fclose(io);
+			br = fread(buf, sizeof (buf[0]), max_achievements, u);
+			fclose(u);
 		}
 
 		if (br == max_achievements)

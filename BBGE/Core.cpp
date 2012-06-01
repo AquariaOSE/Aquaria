@@ -1252,6 +1252,8 @@ bool Core::isShuttingDown()
 
 void Core::init()
 {
+	setupFileAccess();
+
 	flags.set(CF_CLEARBUFFERS);
 	quitNestedMainFlag = false;
 #ifdef BBGE_BUILD_GLFW
@@ -2880,7 +2882,7 @@ void Core::main(float runTime)
 			*/
 		}
 
-#if (!defined(_DEBUG) || defined(BBGE_BUILD_UNIX)) && defined(BBGE_BUILD_SDL)
+#if !defined(_DEBUG) && defined(BBGE_BUILD_SDL)
 		if (verbose) debugLog("checking window active");
 
 		if (lib_graphics && (wasInactive || !settings.runInBackground))
@@ -4078,6 +4080,11 @@ void Core::shutdown()
 	debugLog("OK");
 #endif
 
+#ifdef BBGE_BUILD_VFS
+	debugLog("Unload VFS...");
+		vfs.Clear();
+	debugLog("OK");
+#endif
 
 
 #ifdef BBGE_BUILD_SDL
@@ -4757,3 +4764,103 @@ int Core::tgaSaveSeries(char		*filename,
 //	ilutGLScreenie();
  }
 
+
+ #include "DeflateCompressor.h"
+
+ // saves an array of pixels as a TGA image (frees the image data passed in)
+int Core::zgaSave(	const char	*filename,
+		short int	w,
+		short int	h,
+		unsigned char	depth,
+		unsigned char	*imageData) {
+
+	ByteBuffer::uint8 type,mode,aux, pixelDepth = depth;
+	ByteBuffer::uint8 cGarbage = 0;
+	ByteBuffer::uint16 iGarbage = 0;
+	ByteBuffer::uint16 width = w, height = h;
+
+// open file and check for errors
+	FILE *file = fopen(adjustFilenameCase(filename).c_str(), "wb");
+	if (file == NULL) {
+		delete [] imageData;
+		return (int)false;
+	}
+
+// compute image type: 2 for RGB(A), 3 for greyscale
+	mode = pixelDepth / 8;
+	if ((pixelDepth == 24) || (pixelDepth == 32))
+		type = 2;
+	else
+		type = 3;
+
+// convert the image data from RGB(A) to BGR(A)
+	if (mode >= 3)
+	for (int i=0; i < width * height * mode ; i+= mode) {
+		aux = imageData[i];
+		imageData[i] = imageData[i+2];
+		imageData[i+2] = aux;
+	}
+
+	ZlibCompressor z;
+	z.SetForceCompression(true);
+	z.reserve(width * height * mode + 30);
+	z	<< cGarbage
+		<< cGarbage
+		<< type
+		<< iGarbage
+		<< iGarbage
+		<< cGarbage
+		<< iGarbage
+		<< iGarbage
+		<< width
+		<< height
+		<< pixelDepth
+		<< cGarbage;
+
+	z.append(imageData, width * height * mode);
+	z.Compress(3);
+
+// save the image data
+	if (fwrite(z.contents(), 1, z.size(), file) != z.size())
+	{
+		fclose(file);
+		delete [] imageData;
+		return (int)false;
+	}
+
+	fclose(file);
+	delete [] imageData;
+
+	return (int)true;
+}
+
+
+
+#include "ttvfs_zip/VFSZipArchiveLoader.h"
+
+void Core::setupFileAccess()
+{
+#ifdef BBGE_BUILD_VFS
+	debugLog("Init VFS...");
+
+	if(!ttvfs::checkCompat())
+		exit(1);
+
+	vfs.AddArchiveLoader(new ttvfs::VFSZipArchiveLoader);
+
+	if(!vfs.LoadFileSysRoot(false))
+	{
+		errorLog("Failed to setup file access");
+		exit(1);
+	}
+	
+	vfs.Prepare();
+
+	// TODO: mount and other stuff
+
+	//vfs.AddArchive("aqfiles.zip", false, "");
+
+
+	debugLog("Done");
+#endif
+}

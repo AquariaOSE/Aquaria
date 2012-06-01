@@ -254,7 +254,7 @@ void WorldMap::_load(const std::string &file)
 
 	std::string line;
 
-	std::ifstream in(file.c_str());
+	InStream in(file.c_str());
 	
 	while (std::getline(in, line))
 	{

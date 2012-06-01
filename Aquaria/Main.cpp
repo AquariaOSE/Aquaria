@@ -58,7 +58,7 @@ static void StartAQConfig()
 static void CheckConfig(void)
 {
 #ifdef BBGE_BUILD_WINDOWS
-    bool hasCfg = exists("usersettings.xml", false);
+    bool hasCfg = exists("usersettings.xml", false, true);
     if(!hasCfg)
         StartAQConfig();
 #endif

@@ -1306,6 +1306,7 @@ public:
 	CoreSettings settings;
 
 	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
+	int zgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
 
 	volatile int dbg_numThreadDecoders;
 
@@ -1398,6 +1399,8 @@ protected:
 	int tgaSaveSeries(char	*filename,  short int width, short int height, unsigned char pixelDepth, unsigned char *imageData);
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}
+
+	void setupFileAccess();
 };
 
 extern Core *core;

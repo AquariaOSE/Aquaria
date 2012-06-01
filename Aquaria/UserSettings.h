@@ -162,10 +162,9 @@ public:
 
 	struct Data
 	{
-		Data() { savePage=0; saveSlot=0; lastSelectedMod=0; }
+		Data() { savePage=0; saveSlot=0; }
 		int savePage;
 		int saveSlot;
-		int lastSelectedMod;
 	} data;
 
 	struct Version
@@ -173,6 +172,11 @@ public:
 		Version() { settingsVersion=1; }
 		int settingsVersion;
 	} version;
+
+	struct Network
+	{
+		std::string masterServer;
+	} network;
 
 	void loadDefaults(bool doApply=true);
 	void load(bool doApply=true, const std::string &overrideFile="");

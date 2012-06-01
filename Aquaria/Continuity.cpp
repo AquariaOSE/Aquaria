@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ScriptedEntity.h"
 #include "AutoMap.h"
 #include "GridRender.h"
+#include "DeflateCompressor.h"
 
 #include "../ExternalLibs/tinyxml.h"
 
@@ -870,7 +871,7 @@ void Continuity::loadTreasureData()
 	std::string line, gfx;
 	int num, use;
 	float sz;
-	std::ifstream in2("data/treasures.txt");
+	InStream in2("data/treasures.txt");
 	while (std::getline(in2, line))
 	{
 		std::istringstream is(line);
@@ -903,7 +904,7 @@ void Continuity::loadIngredientData(const std::string &file)
 
 	/*
 	int num;
-	std::ifstream in2("data/ingredientdescriptions.txt");
+	InStream in2("data/ingredientdescriptions.txt");
 	while (std::getline(in2, line))
 	{
 		IngredientDescription desc;
@@ -916,7 +917,7 @@ void Continuity::loadIngredientData(const std::string &file)
 	clearIngredientData();
 	recipes.clear();
 
-	std::ifstream in(file.c_str());
+	InStream in(file.c_str());
 
 	bool recipes = false;
 	while (std::getline(in, line))
@@ -1241,7 +1242,7 @@ void Continuity::loadEatBank()
 {
 	eats.clear();
 
-	std::ifstream inf("data/eats.txt");
+	InStream inf("data/eats.txt");
 
 	EatData curData;
 	std::string read;
@@ -2183,7 +2184,7 @@ void Continuity::setActivePet(int flag)
 void Continuity::loadPetData()
 {
 	petData.clear();
-	std::ifstream in("data/pets.txt");
+	InStream in("data/pets.txt");
 	std::string read;
 	while (std::getline(in, read))
 	{
@@ -2469,12 +2470,30 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	doc.InsertEndChild(startData);
 
 
-	// FIXME: Patch TinyXML to write out a string and compress in-memory
+	std::string fn = core->adjustFilenameCase(getSaveFileName(slot, "aqs"));
+	FILE *fh = fopen(fn.c_str(), "wb");
+	if(!fh)
+	{
+		debugLog("FAILED TO SAVE GAME");
+		return;
+	}
 
-	doc.SaveFile(dsq->getSaveDirectory() + "/poot.tmp");
-
-	packFile(dsq->getSaveDirectory() + "/poot.tmp", getSaveFileName(slot, "aqs"), 9);
-	remove((dsq->getSaveDirectory() + "/poot.tmp").c_str());
+	TiXmlPrinter printer;
+	doc.Accept( &printer );
+	const char* xmlstr = printer.CStr();
+	ZlibCompressor z;
+	z.init((void*)xmlstr, printer.Size(), ZlibCompressor::REUSE);
+	z.SetForceCompression(true);
+	z.Compress(3);
+	std::ostringstream os;
+	os << "Writing " << z.size() << " bytes to save file " << fn;
+	debugLog(os.str());
+	size_t written = fwrite(z.contents(), 1, z.size(), fh);
+	if (written != z.size())
+	{
+		debugLog("FAILED TO WRITE SAVE FILE COMPLETELY");
+	}
+	fclose(fh);
 }
 
 std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
@@ -2491,7 +2510,7 @@ void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 	{
 		unsigned long size = 0;
 		char *buf = readCompressedFile(teh_file, &size);
-		if (!doc.LoadMem(buf, size))
+		if (!buf || !doc.LoadMem(buf, size))
 			errorLog("Failed to load save data: " + teh_file);
 		return;
 	}
@@ -3267,7 +3286,7 @@ void Continuity::reset()
 	health = maxHealth;
 
 	speedTypes.clear();
-	std::ifstream inFile("data/speedtypes.txt");
+	InStream inFile("data/speedtypes.txt");
 	int n, spd;
 	while (inFile >> n)
 	{

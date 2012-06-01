@@ -41,7 +41,7 @@ void StringBank::_load(const std::string &file)
 {
 	//debugLog("StringBank::load("+file+")");
 
-	std::ifstream in(file.c_str());
+	InStream in(file.c_str());
 
 	std::string line;
 	int idx;

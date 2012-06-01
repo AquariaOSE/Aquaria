@@ -22,6 +22,8 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
+// see tinyxml.h for changes
+
 #include <ctype.h>
 
 #ifdef TIXML_USE_STL
@@ -923,12 +925,12 @@ bool TiXmlDocument::LoadFile( const char* _filename, TiXmlEncoding encoding )
 	value = filename;
 
 	// reading in binary mode so that tinyxml can normalize the EOL
-	FILE* file = TiXmlFOpen( value.c_str (), "rb" );	
+	VFILE* file = vfopen( value.c_str (), "rb" );
 
 	if ( file )
 	{
 		bool result = LoadFile( file, encoding );
-		fclose( file );
+		vfclose( file );
 		return result;
 	}
 	else
@@ -938,7 +940,7 @@ bool TiXmlDocument::LoadFile( const char* _filename, TiXmlEncoding encoding )
 	}
 }
 
-bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
+bool TiXmlDocument::LoadFile( VFILE* file, TiXmlEncoding encoding )
 {
 	if ( !file ) 
 	{
@@ -952,9 +954,13 @@ bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
 
 	// Get the file size, so we can pre-allocate the string. HUGE speed impact.
 	long length = 0;
+#ifdef BBGE_BUILD_VFS
+	length = file->size();
+#else
 	fseek( file, 0, SEEK_END );
 	length = ftell( file );
 	fseek( file, 0, SEEK_SET );
+#endif
 
 	// Strange case, but good to handle up front.
 	if ( length <= 0 )
@@ -984,14 +990,24 @@ bool TiXmlDocument::LoadFile( FILE* file, TiXmlEncoding encoding )
 	}
 	*/
 
+#ifdef BBGE_BUILD_VFS
+	char *buf = (char*)file->getBuf();
+	file->dropBuf(false);
+	if (!buf)
+	{
+		SetError( TIXML_ERROR_OPENING_FILE, 0, 0, TIXML_ENCODING_UNKNOWN );
+		return false;
+	}
+#else
 	char* buf = new char[ length+1 ];
 	buf[0] = 0;
 
-	if ( fread( buf, length, 1, file ) != 1 ) {
+	if ( vfread( buf, length, 1, file ) != 1 ) {
 		delete [] buf;
 		SetError( TIXML_ERROR_OPENING_FILE, 0, 0, TIXML_ENCODING_UNKNOWN );
 		return false;
 	}
+#endif
 
 	return LoadMem(buf, length, encoding);
 }

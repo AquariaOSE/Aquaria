@@ -294,11 +294,11 @@ void Texture::reload()
 	unload();
 	load(loadName);
 
-	if (ow != -1 && oh != -1)
+	/*if (ow != -1 && oh != -1)
 	{
 		width = ow;
 		height = oh;
-	}
+	}*/
 	debugLog("DONE");
 }
 
@@ -466,6 +466,31 @@ void Texture::loadPNG(const std::string &file)
 			pngType = PNG_LUMINANCEALPHA;
 	}
 
+#ifdef BBGE_BUILD_VFS
+	ttvfs::VFSFile *vf = vfs.GetFile(file.c_str());
+	const char *memptr = vf ? (const char*)vf->getBuf() : NULL;
+	if(!memptr)
+	{
+		debugLog("Can't load PNG file: " + file);
+		width = 64;
+		height = 64;
+		Texture::textureError = TEXERR_FILENOTFOUND;
+		//exit(1);
+		return;
+	}
+
+	int memsize = vf->size();
+	if (filter == GL_NEAREST)
+	{
+		textures[0] = pngBindMem(memptr, memsize, PNG_NOMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, filter, filter);
+	}
+	else
+	{
+		textures[0] = pngBindMem(memptr, memsize, PNG_BUILDMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, filter);
+	}
+	vf->dropBuf(true);
+
+#else
 	if (filter == GL_NEAREST)
 	{
 		textures[0] = pngBind(file.c_str(), PNG_NOMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, filter, filter);
@@ -474,6 +499,7 @@ void Texture::loadPNG(const std::string &file)
 	{
 		textures[0] = pngBind(file.c_str(), PNG_BUILDMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, filter);
 	}
+#endif
 
 	if (textures[0] != 0)
 	{

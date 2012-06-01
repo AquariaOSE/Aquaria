@@ -2510,7 +2510,7 @@ void Game::loadEntityTypeList()
 // and group list!
 {
 	entityTypeList.clear();
-	std::ifstream in("scripts/entities/entities.txt");
+	InStream in("scripts/entities/entities.txt");
 	std::string line;
 	if(!in)
 	{
@@ -2543,7 +2543,7 @@ void Game::loadEntityTypeList()
 		fn = dsq->mod.getPath() + "entitygroups.txt";
 	}
 
-	std::ifstream in2(fn.c_str());
+	InStream in2(fn.c_str());
 
 	int curGroup=0;
 	while (std::getline(in2, line))
@@ -5395,7 +5395,7 @@ void Game::findMaxCameraValues()
 
 void Game::setWarpAreaSceneName(WarpArea &warpArea)
 {
-	std::ifstream in("data/warpAreas.txt");
+	InStream in("data/warpAreas.txt");
 	std::string color, area1, dir1, area2, dir2;
 	std::string line;
 	while (std::getline(in, line))
@@ -7932,7 +7932,7 @@ void Game::onFlipTest()
 
 void appendFileToString(std::string &string, const std::string &file)
 {
-	std::ifstream inf(file.c_str());
+	InStream inf(file.c_str());
 
 	if (inf.is_open())
 	{
@@ -10843,7 +10843,7 @@ void Game::loadElementTemplates(std::string pack)
 		tileCache.clean();
 	}
 
-	std::ifstream in(fn.c_str());
+	InStream in(fn.c_str());
 	std::string line;
 	while (std::getline(in, line))
 	{

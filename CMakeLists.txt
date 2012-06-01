@@ -14,6 +14,7 @@ ENDIF(APPLE)
 
 OPTION(AQUARIA_DEVELOPER_BUILD "Developer Build?" FALSE)
 OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
+OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional features." TRUE)
 
 # No Steamworks SDK for Linux at the moment. Roll our own achievements.
 ADD_DEFINITIONS(-DBBGE_BUILD_ACHIEVEMENTS_INTERNAL=1)
@@ -195,6 +196,8 @@ INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OGGVORBIS_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${EXTLIBDIR})
+INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs)
 
 
 # Custom build ID: e.g. "-custom", " (my very own build)"
@@ -216,6 +219,9 @@ ADD_DEFINITIONS(-DBBGE_BUILD_FRAMEBUFFER=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL_DYNAMIC=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_FMOD_OPENAL_BRIDGE=1)
+IF(AQUARIA_USE_VFS)
+    ADD_DEFINITIONS(-DBBGE_BUILD_VFS=1)
+ENDIF(AQUARIA_USE_VFS)
 
 IF(AQUARIA_DEVELOPER_BUILD)
     message(STATUS "Developer build.")
@@ -246,9 +252,7 @@ ENDIF(MACOSX)
 
 IF(WIN32)
     ADD_DEFINITIONS(-DBBGE_BUILD_WINDOWS=1)
-    IF(AQUARIA_NO_CONSOLE)
-        SET(EXETYPE WIN32)
-    ENDIF(AQUARIA_NO_CONSOLE)
+    SET(EXETYPE WIN32)
     SET(OPTIONAL_SRCS ${OPTIONAL_SRCS} aquaria.rc)
 ENDIF(WIN32)
 
@@ -317,6 +321,8 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/MiniMapRender.cpp
     ${SRCDIR}/Mod.cpp
     ${SRCDIR}/ModSelector.cpp
+    ${SRCDIR}/ModDownloader.cpp
+    ${SRCDIR}/Network.cpp
     ${SRCDIR}/ParticleEditor.cpp
     ${SRCDIR}/Path.cpp
     ${SRCDIR}/PathFinding.cpp
@@ -371,7 +377,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Cube.cpp
     ${BBGEDIR}/DarkLayer.cpp
     ${BBGEDIR}/DebugFont.cpp
-    ${BBGEDIR}/DeflateCompressor.cpp
     ${BBGEDIR}/Effects.cpp
     ${BBGEDIR}/Emitter.cpp
     ${BBGEDIR}/Event.cpp
@@ -410,11 +415,15 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Vector.cpp
     ${BBGEDIR}/FmodOpenALBridge.cpp
     ${COCOA_SRCS}
+    ${EXTLIBDIR}/DeflateCompressor.cpp
+    ${EXTLIBDIR}/FileAPI.cpp
     ${EXTLIBDIR}/glfont2/glfont2.cpp
     ${EXTLIBDIR}/glpng/glpng.c
     ${EXTLIBDIR}/tinyxml.cpp
     ${EXTLIBDIR}/tinyxmlerror.cpp
     ${EXTLIBDIR}/tinyxmlparser.cpp
+    ${EXTLIBDIR}/FileAPI.cpp
+    ${EXTLIBDIR}/minihttp.cpp
 )
 
 SET(ZLIB_SRCS
@@ -602,6 +611,13 @@ SET(LUA_SRCS
     ${LUASRCDIR}/lcode.c
     ${LUASRCDIR}/lmathlib.c
 )
+
+IF(AQUARIA_USE_VFS)
+    ADD_SUBDIRECTORY(${EXTLIBDIR}/ttvfs)
+    ADD_SUBDIRECTORY(${EXTLIBDIR}/ttvfs_zip)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "ttvfs")
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "ttvfs_zip")
+ENDIF(AQUARIA_USE_VFS)
 
 
 IF(MACOSX)

@@ -137,6 +137,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Rect.h"
 
 #include "math.h"
+#include "FileAPI.h"
+
+// dumb win32 includes/defines cleanup
+#undef GetCharWidth
+
 
 enum Align { ALIGN_CENTER=0, ALIGN_LEFT };
 
@@ -195,10 +200,10 @@ void stringToLower(std::string &s);
 void stringToLowerUserData(std::string &s);
 void glColor3_256(int r, int g, int b);
 float sqr(float x);
-bool exists(const std::string &f, bool makeFatal = false);
+bool exists(const std::string &f, bool makeFatal = false, bool skipVFS = false);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
-char *readFile(std::string path, unsigned long *size_ret = 0);
+char *readFile(const std::string& path, unsigned long *size_ret = 0);
 char *readCompressedFile(std::string path, unsigned long *size_ret = 0);
 void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param);
 std::string stripEndlineForUnix(const std::string &in);
@@ -280,8 +285,8 @@ enum LerpType
 
 float lerp(const float &v1, const float &v2, float dt, int lerpType);
 
-int packFile(const std::string &sourcef, const std::string &destf, int level);
-int unpackFile(const std::string &sourcef, const std::string &destf);
+//int packFile(const std::string &sourcef, const std::string &destf, int level);
+//int unpackFile(const std::string &sourcef, const std::string &destf);
 
 void openURL(const std::string &url);
 

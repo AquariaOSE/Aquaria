@@ -440,21 +440,3 @@ void ActionMapper::removeAllActions()
 	}
 	actionData.clear();
 }
-//
-//void ActionMapper::loadActionSet(const std::string &fn)
-//{
-//	std::ifstream in(std::string("actionSets/"+fn+".txt").c_str());
-//	std::string key;
-//	std::string action;
-//	while (in >> key)
-//	{
-//		in >> action;
-//		if (key != " " && !key.empty() && key.size()==1)
-//		{
-//			char ckey = key[0];
-//			addAction(action, ckey);
-//			//msg (action+" key:"+ckey);
-//		}
-//	}
-//	in.close();
-//}

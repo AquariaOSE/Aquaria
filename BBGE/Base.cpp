@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Base.h"
 #include "Core.h"
+#include <algorithm>
 
 #ifdef BBGE_BUILD_WINDOWS
 	#include <shellapi.h>
@@ -272,31 +273,35 @@ std::string upperCase(const std::string &s1)
 	return ret;
 }
 
-bool exists(const std::string &f, bool makeFatal)
+bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 {
-	/*
-	if (!PHYSFS_exists(f.c_str()))
-	{
-	*/
-	/*
-        std::ostringstream os;
-        os << "checking to see if [" << f << "] exists";
-        debugLog(os.str());
-        */
+	bool e = false;
 
-		FILE *file = fopen(core->adjustFilenameCase(f).c_str(), "rb");
-		if (!file)
+#ifdef BBGE_BUILD_VFS
+	if (!skipVFS)
+	{
+		e = !!vfs.GetFile(f.c_str());
+	}
+	else
+#endif
+	if (!e)
+	{
+		std::string tmp = core->adjustFilenameCase(f);
+		FILE *file = fopen(tmp.c_str(), "rb");
+		if (file)
 		{
-			if (makeFatal)
-			{
-				errorLog(std::string("Could not open [" + f + "]"));
-				exit(0);
-			}
-			return false;
+			e = true;
+			fclose(file);
 		}
-		fclose(file);
-	//}
-	return true;
+	}
+
+	if (makeFatal && !e)
+	{
+		errorLog(std::string("Could not open [" + f + "]"));
+		exit(0);
+	}
+
+	return e;
 }
 
 void drawCircle(float radius, int stepSize)
@@ -446,13 +451,22 @@ void debugLog(const std::string &s)
 // also obtain the data length by passing a pointer to an unsigned long
 // as the (optional) second parameter.  The buffer should be freed with
 // delete[] when no longer needed.
-char *readFile(std::string path, unsigned long *size_ret)
+char *readFile(const std::string& path, unsigned long *size_ret)
 {
+	long fileSize;
+#ifdef BBGE_BUILD_VFS
+	VFILE *vf = vfs.GetFile(path.c_str());
+	if (!vf)
+		return NULL;
+	fileSize = vf->size();
+	char *buffer = (char*)vf->getBuf(NULL, NULL);
+	vf->dropBuf(false);
+#else
 	FILE *f = fopen(path.c_str(), "rb");
 	if (!f)
 		return NULL;
 
-	long fileSize;
+
 	if (fseek(f, 0, SEEK_END) != 0
 	 || (fileSize = ftell(f)) < 0
 	 || fseek(f, 0, SEEK_SET) != 0)
@@ -483,11 +497,12 @@ char *readFile(std::string path, unsigned long *size_ret)
 		fclose(f);
 		return NULL;
 	}
-
 	fclose(f);
+	buffer[fileSize] = 0;
+#endif
+
 	if (size_ret)
 		*size_ret = fileSize;
-	buffer[fileSize] = 0;
 	return buffer;
 }
 
@@ -551,13 +566,56 @@ std::string stripEndlineForUnix(const std::string &in)
 	return out;
 }
 
+#ifdef BBGE_BUILD_VFS
+
+struct vfscallback_s
+{
+    std::string *path;
+    const char *ext;
+    intptr_t param;
+    void (*callback)(const std::string &filename, intptr_t param);
+};
+
+void forEachFile_vfscallback(VFILE *vf, void *user)
+{
+    vfscallback_s *d = (vfscallback_s*)user;
+    if(d->ext)
+    {
+        const char *e = strrchr(vf->name(), '.');
+        if(e && nocasecmp(d->ext, e))
+            return;
+    }
+    d->callback(*(d->path) + vf->name(), d->param);
+}
+
+#endif
+
 void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param)
 {
 	if (path.empty()) return;
 
-	path = core->adjustFilenameCase(path);
+
+#ifdef BBGE_BUILD_VFS
+	ttvfs::VFSDir *vd = vfs.GetDir(path.c_str(), true); // add to tree if it wasn't loaded before
+	if(!vd)
+	{
+		debugLog("Path '" + path + "' does not exist");
+		return;
+	}
+	vd->load(false);
+	vfscallback_s dat;
+	dat.path = &path;
+	dat.ext = type.length() ? type.c_str() : NULL;
+	dat.param = param;
+	dat.callback = callback;
+	vd->forEachFile(forEachFile_vfscallback, &dat, true);
+
+	return;
+	// -------------------------------------
+#endif
+
 	stringToLower(type);
-	//HACK: MAC:
+	path = core->adjustFilenameCase(path);
 	debugLog("forEachFile - path: " + path + " type: " + type);
 
 #if defined(BBGE_BUILD_UNIX)
@@ -856,6 +914,8 @@ float lerp(const float &v1, const float &v2, float dt, int lerpType)
 }
 
 
+#if 0
+
 #include <zlib.h>
 #include <assert.h>
 
@@ -1000,6 +1060,7 @@ int unpackFile(const std::string &sourcef, const std::string &destf)
 
     return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
+#endif
 
 void openURL(const std::string &url)
 {

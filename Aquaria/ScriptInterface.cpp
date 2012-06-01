@@ -713,6 +713,26 @@ static bool findFile_helper(const char *rawname, std::string &fname)
 	return exists(fname);
 }
 
+static int loadFile_helper(lua_State *L, const char *fn)
+{
+#ifdef BBGE_BUILD_VFS
+	VFILE *vf = vfs.GetFile(fn);
+	if (!vf)
+	{
+		lua_pushfstring(L, "cannot open %s", fn);
+		return LUA_ERRFILE;
+	}
+	else
+	{
+		int result = luaL_loadbuffer(L, (const char*)vf->getBuf(), vf->size(), fn);
+		vf->dropBuf(true);
+		return result;
+	}
+#else
+	return luaL_loadfile(L, fn);
+#endif
+}
+
 luaFunc(dofile_caseinsensitive)
 {
 	// This is Lua's dofile(), with some tweaks.  --ryan.
@@ -720,7 +740,7 @@ luaFunc(dofile_caseinsensitive)
 	findFile_helper(luaL_checkstring(L, 1), fname);
 
 	int n = lua_gettop(L);
-	if (luaL_loadfile(L, fname.c_str()) != 0)
+	if (loadFile_helper(L, fname.c_str()) != 0)
 		lua_error(L);
 	lua_call(L, 0, LUA_MULTRET);
 	return lua_gettop(L) - n;
@@ -732,7 +752,7 @@ luaFunc(loadfile_caseinsensitive)
 	std::string fname;
 	findFile_helper(luaL_checkstring(L, 1), fname);
 
-	if (luaL_loadfile(L, fname.c_str()) == 0)  /* OK? */
+	if (loadFile_helper(L, fname.c_str()) == 0)  /* OK? */
 		return 1;
 	else
 	{
@@ -763,7 +783,7 @@ MakeTypeCheckFunc(isText, SCO_TEXT)
 #undef MakeTypeCheckFunc
 
 // special, because it would return true on almost everything that is RenderObject based.
-// Instead, return true only for stuff created with createQuad() 
+// Instead, return true only for stuff created with createQuad()
 luaFunc(isQuad)
 {
 	RenderObject *r = robj(L);
@@ -2192,7 +2212,7 @@ luaFunc(getWorldType)
 {
 	luaReturnNum((int)dsq->continuity.getWorldType());
 }
-	
+
 luaFunc(getNearestNodeByType)
 {
 	int x = lua_tonumber(L, 1);
@@ -2703,7 +2723,7 @@ luaFunc(spawnIngredient)
 	if (times == 0) times = 1;
 	bool out = getBool(L, 5);
 	Entity *e = dsq->game->spawnIngredient(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), times, out);
-	
+
 	luaReturnPtr(e);
 }
 
@@ -2728,8 +2748,8 @@ luaFunc(spawnParticleEffect)
 	if (!layer)
 		layer = LR_PARTICLES;
 	float follow = lua_tonumber(L, 7);
-	ParticleEffect *pe = dsq->spawnParticleEffect(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), 
-		rot, t, layer, follow); 
+	ParticleEffect *pe = dsq->spawnParticleEffect(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)),
+		rot, t, layer, follow);
 	luaReturnPtr(pe);
 }
 
@@ -5896,7 +5916,7 @@ luaFunc(entity_isPositionInRange)
 	if (e)
 	{
 		if ((e->position - Vector(x,y)).isLength2DIn(lua_tonumber(L, 4)))
-		{ 
+		{
 			v = true;
 		}
 	}
@@ -7101,7 +7121,7 @@ luaFunc(setLiPower)
 {
 	float m = lua_tonumber(L, 1);
 	float t = lua_tonumber(L, 2);
-	dsq->continuity.setLiPower(m, t); 
+	dsq->continuity.setLiPower(m, t);
 	luaReturnNil();
 }
 
@@ -7118,10 +7138,10 @@ luaFunc(getPetPower)
 luaFunc(appendUserDataPath)
 {
 	std::string path = getString(L, 1);
-	
+
 	if (!dsq->getUserDataFolder().empty())
 		path = dsq->getUserDataFolder() + "/" + path;
-	
+
 	luaReturnStr(path.c_str());
 }
 
@@ -8928,7 +8948,7 @@ Script *ScriptInterface::openScript(const std::string &file, bool ignoremissing 
 		lua_getglobal(baseState, "v");
 
 		// Load the file itself.  This leaves the Lua chunk on the stack.
-		int result = luaL_loadfile(baseState, realFile.c_str());
+		int result = loadFile_helper(baseState, realFile.c_str());
 		if (result != 0)
 		{
 			if(result != LUA_ERRFILE || (result == LUA_ERRFILE && !ignoremissing))
@@ -9250,7 +9270,7 @@ bool Script::call(const char *name, void *param1, void *param2, void *param3, fl
 int Script::callVariadic(const char *name, lua_State *fromL, int nparams, void *param)
 {
 	int oldtop = lua_gettop(L);
-	
+
 	lookupFunc(name);
 	luaPushPointer(L, param);
 

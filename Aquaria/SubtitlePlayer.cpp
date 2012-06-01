@@ -63,7 +63,7 @@ void SubtitlePlayer::go(const std::string &subs)
 		}
 	}
 
-	std::ifstream in(f.c_str());
+	InStream in(f.c_str());
 	std::string line;
 	while (std::getline(in, line))
 	{

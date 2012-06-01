@@ -95,19 +95,6 @@ public:
 		unlock();
 		return e;
 	}
-	bool popIfPossible(T& e)
-	{
-		lock();
-		if(!_q.empty())
-		{
-			e = _q.front();
-			_q.pop();
-			unlock();
-			return true;
-		}
-		unlock();
-		return false;
-	}
 
 private:
 	std::queue<T> _q;
