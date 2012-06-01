@@ -228,10 +228,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\ByteBuffer.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\BBGE\Collision.cpp"
 				>
 			</File>
@@ -265,14 +261,6 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\DebugFont.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\DeflateCompressor.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\DeflateCompressor.h"
 				>
 			</File>
 			<File

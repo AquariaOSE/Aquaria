@@ -358,7 +358,23 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\ModDownloader.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\ModDownloader.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\ModSelector.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\Network.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\Network.h"
 				>
 			</File>
 			<File
