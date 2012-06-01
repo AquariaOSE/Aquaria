@@ -1,17 +1,24 @@
 #ifndef BYTEBUFFER_H
 #define BYTEBUFFER_H
 
+#include <stdlib.h>
 #include <string.h> // for memcpy
+#include <stdio.h>
+#include <string>
 
 
 // ** compatibility stuff for BBGE .... **
 
-#include "Base.h"
 
 #define BYTEBUFFER_NO_EXCEPTIONS
 
-#if (defined(BBGE_BUILD_SDL) && (SDL_BYTEORDER == SDL_BIG_ENDIAN))
-#  define BB_IS_BIG_ENDIAN
+// from SDL headers
+#if defined(__hppa__) || \
+	defined(__m68k__) || defined(mc68000) || defined(_M_M68K) || \
+	(defined(__MIPS__) && defined(__MISPEB__)) || \
+	defined(__ppc__) || defined(__POWERPC__) || defined(_M_PPC) || \
+	defined(__sparc__)
+#define BB_IS_BIG_ENDIAN 1
 #endif
 
 // ****
@@ -98,9 +105,9 @@ public:
 	};
 
 #ifdef BYTEBUFFER_NO_EXCEPTIONS
-#define BYTEBUFFER_EXCEPT(bb, desc, sz) { Exception __e(bb, desc, sz); char errbuf[256]; \
-	sprintf(errbuf, "Exception in ByteBuffer: '%s', rpos: %u, wpos: %u, cursize: %u, sizeparam: %u", \
-	__e.action, __e.rpos, __e.wpos, __e.cursize, __e.sizeparam); errorLog(errbuf); abort(); }
+#define BYTEBUFFER_EXCEPT(bb, desc, sz) { Exception __e(bb, desc, sz); \
+	fprintf(stderr, "Exception in ByteBuffer: '%s', rpos: %u, wpos: %u, cursize: %u, sizeparam: %u", \
+	__e.action, __e.rpos, __e.wpos, __e.cursize, __e.sizeparam);  abort(); }
 #else
 #define BYTEBUFFER_EXCEPT(bb, desc, sz) throw Exception(bb, desc, sz)
 #endif

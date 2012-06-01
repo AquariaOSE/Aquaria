@@ -97,9 +97,11 @@ extern int APIENTRY pngLoadRawF(FILE *file, pngRawInfo *rawinfo);
 
 extern int APIENTRY pngLoad(const char *filename, int mipmap, int trans, pngInfo *info);
 extern int APIENTRY pngLoadF(FILE *file, int mipmap, int trans, pngInfo *info);
+extern int APIENTRY pngLoadMem(const char *mem, int size, int mipmap, int trans, pngInfo *info);
 
 extern unsigned int APIENTRY pngBind(const char *filename, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter);
 extern unsigned int APIENTRY pngBindF(FILE *file, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter);
+extern unsigned int APIENTRY pngBindMem(const char *mem, int size, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter);
 
 extern void APIENTRY pngSetStencil(unsigned char red, unsigned char green, unsigned char blue);
 extern void APIENTRY pngSetAlphaCallback(unsigned char (*callback)(unsigned char red, unsigned char green, unsigned char blue));

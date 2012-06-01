@@ -8,13 +8,13 @@ class DeflateCompressor : public ByteBuffer
 {
 public:
     DeflateCompressor();
-    DeflateCompressor(void *buf, uint32 size, Mode mode = COPY, delete_func del = NULL, uint32 extra = 0);
     virtual ~DeflateCompressor() {}
     virtual void Compress(uint8 level = 1);
     virtual void Decompress(void);
 
     bool Compressed(void) const { return _iscompressed; }
     void Compressed(bool b) { _iscompressed = b; }
+    void SetForceCompression(bool f) { _forceCompress = f; }
     uint32 RealSize(void) const { return _iscompressed ? _real_size : size(); }
     void RealSize(uint32 realsize) { _real_size = realsize; }
     void clear(void) // not required to be strictly virtual; be careful not to mess up static types!
