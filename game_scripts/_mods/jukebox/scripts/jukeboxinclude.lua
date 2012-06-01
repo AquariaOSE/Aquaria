@@ -83,14 +83,14 @@ DEFAULT_WATERLEVEL = 0
 OVERRIDE_WATERLEVEL = {
 	["ancienttest"] = -2700,
 }
---]]
+]]
 
-function jukebox_initButton(me)
+rawset(_G, "jukebox_initButton", function(me)
 	node_setCursorActivation(me, true)
 	node_setCatchActions(me, true)
-end
+end)
 
-function jukebox_doButtonAction(me, action, state, transitions, isdefault)
+rawset(_G, "jukebox_doButtonAction", function(me, action, state, transitions, isdefault)
 	if isNestedMain() then return end
 	if getNodeToActivate() == me and state == 1 then
 		local name = transitions[action]
@@ -110,13 +110,13 @@ function jukebox_doButtonAction(me, action, state, transitions, isdefault)
 		return false
 	end
 	return true
-end
+end)
 
-function jukebox_getSong()
+rawset(_G, "jukebox_getSong", function()
     return getStory()
-end
+end)
 
-function jukebox_playSong(index)
+rawset(_G, "jukebox_playSong", function(index)
 	setStory(index)
 	local songName = SONG_LIST[index]
 	setControlHint("Now playing: "..songName)
@@ -126,5 +126,5 @@ function jukebox_playSong(index)
 	local waterLevel = getWaterLevel()
 	local newWaterLevel = OVERRIDE_WATERLEVEL[songName] or DEFAULT_WATERLEVEL
 	if newWaterLevel ~= waterLevel then setWaterLevel(newWaterLevel) end
-	--]]
-end
+	]]
+end)
