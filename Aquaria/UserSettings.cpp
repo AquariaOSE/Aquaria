@@ -39,6 +39,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include <unistd.h>
 #endif
 
+#ifdef BBGE_BUILD_MACOSX
+	#include <CFLocale.h>
+#endif
+
 void UserSettings::save()
 {
 	//initInputCodeMap();
@@ -641,9 +645,35 @@ void UserSettings::getSystemLocale()
 			system.locale += ctry;
 		}
 	}
+#elif BBGE_BUILD_MACOSX
+	CFLocaleRef locale = CFLocaleCopyCurrent();
+	CFTypeRef type;
+	CFStringRef buf;
+
+	type = CFLocaleGetValue(locale, kCFLocaleLanguageCode);
+
+	if ((buf = CFLocaleCopyDisplayNameForPropertyValue(locale, kCFLocaleLanguageCode, type)) != NULL)
+	{
+		system.locale = buf;
+		CFRelease(buf);
+		CFRelease(type);
+
+		type = CFLocaleGetValue(locale, kCFLocaleCountryCode);
+
+		if ((buf = CFLocaleCopyDisplayNameForPropertyValue(locale, kCFLocaleCountryCode, type)) != NULL)
+		{
+			system.locale += "_";
+			system.locale += buf;
+			CFRelease(buf);
+		}
+
+		CFRelease(type);
+	}
+
+	CFRelease(locale);
 #else
-	// FIXME: Apparently this is not set when starting the game via the UI on OSX.
 	const char *lang = (const char *)getenv("LANG");
+
 	if (lang && *lang)
 	{
 		system.locale = lang;
