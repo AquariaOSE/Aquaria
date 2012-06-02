@@ -571,7 +571,7 @@ void ModIcon::loadEntry(const ModEntry& entry)
 
 	dsq->mod.loadModXML(&d, entry.path);
 
-	std::string ds = "No Description";
+	std::string ds = dsq->continuity.stringBank.get(2009);
 
 	TiXmlElement *top = d.FirstChildElement("AquariaMod");
 	if (top)
@@ -737,13 +737,13 @@ void ModIconOnline::onClick()
 			if(hasPkgOnDisk())
 			{
 				if(hasUpdate)
-					proceed = dsq->confirm("Download update?"); // TODO: -> stringbank
+					proceed = dsq->confirm(dsq->continuity.stringBank.get(2024));
 				else
-					proceed = dsq->confirm("Mod already exists. Re-download?");
+					proceed = dsq->confirm(dsq->continuity.stringBank.get(2025));
 			}
 			else
 			{
-				dsq->confirm("This mod was installed manually,\nnot messing with it.", "", true);
+				dsq->confirm(dsq->continuity.stringBank.get(2026), "", true);
 				proceed = false;
 			}
 
@@ -825,7 +825,7 @@ void MenuIconBar::init()
 
 	
 	ico = new MenuIcon(0);
-	ico->label = "\nBrowse installed mods"; // TODO: -> stringbank
+	ico->label = dsq->continuity.stringBank.get(2027);
 	ico->useQuad("modselect/hdd");
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
@@ -834,7 +834,7 @@ void MenuIconBar::init()
 
 	MenuIcon *prev = ico;
 	ico = new MenuIcon(1);
-	ico->label = "\nBrowse & enable/disable installed patches";
+	ico->label = dsq->continuity.stringBank.get(2028);
 	ico->useQuad("modselect/patch");
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
@@ -844,7 +844,7 @@ void MenuIconBar::init()
 
 	prev = ico;
 	ico = new MenuIcon(2);
-	ico->label = "\nBrowse mods online";
+	ico->label = dsq->continuity.stringBank.get(2029);
 	ico->useQuad("modselect/globe");
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
@@ -855,7 +855,7 @@ void MenuIconBar::init()
 
 	prev = ico;
 	ico = new MenuIcon(3);
-	ico->label = "\nReturn to title";
+	ico->label = dsq->continuity.stringBank.get(2030);
 	ico->useQuad("gui/wok-drop");
 	ico->repeatTextureToFill(false);
 	y += ico->quad->height;

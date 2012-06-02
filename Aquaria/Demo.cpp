@@ -146,7 +146,7 @@ void Demo::update(float dt)
 		if (getQuitKey())
 		{
 			toggleRecord(false);
-			dsq->centerMessage("Stopped Recording");
+			dsq->centerMessage(dsq->continuity.stringBank.get(2010));
 		}
 	}
 	else if (mode == DEMOMODE_PLAYBACK)
@@ -180,7 +180,7 @@ void Demo::update(float dt)
 
 		if (getQuitKey() || (!frames.empty() && frame >= frames.size())) {	
 			togglePlayback(false);
-			dsq->centerMessage("Stopped Playback");
+			dsq->centerMessage(dsq->continuity.stringBank.get(2011));
 		}
 
 		

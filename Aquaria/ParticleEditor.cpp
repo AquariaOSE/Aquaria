@@ -132,7 +132,7 @@ void ParticleEditor::load()
 {
 	particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
 	emitter->stop();
-	std::string pname = dsq->getUserInputString("Particle Name:");
+	std::string pname = dsq->getUserInputString(dsq->continuity.stringBank.get(2018));
 	lastLoadedParticle = pname;
 	emitter->load(pname);
 	emitter->start();

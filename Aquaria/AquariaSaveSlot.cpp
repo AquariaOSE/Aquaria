@@ -65,7 +65,7 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	if (description.length() > 0)
 	{
 		std::ostringstream os;
-		os << "Slot ";
+		os << dsq->continuity.stringBank.get(2002) << " ";
 		if (dsq->isDeveloperKeys())
 			os << slot;
 		else
@@ -79,7 +79,7 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	else
 	{
 		std::ostringstream os;
-		os << "Slot " << (slot+1) << " - Empty";
+		os << dsq->continuity.stringBank.get(2002) << " " << (slot+1) << " - " << dsq->continuity.stringBank.get(2003);
 		text1->setText(os.str());
 		glowText->setText(os.str());
 		empty = true;
@@ -220,7 +220,7 @@ void AquariaSaveSlot::onUpdate(float dt)
 				else if ((!core->mouse.buttons.left && !core->mouse.buttons.right) && mbDown)
 				{
 					mbDown = false;
-					if (text1->getText().find("Empty")!=std::string::npos && dsq->saveSlotMode == SSM_LOAD)
+					if (text1->getText().find(dsq->continuity.stringBank.get(2003))!=std::string::npos && dsq->saveSlotMode == SSM_LOAD)
 					{
 					
 					}

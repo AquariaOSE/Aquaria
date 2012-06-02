@@ -224,7 +224,7 @@ void ModDL::NotifyModlist(ModlistRequest *rq, NetEvent ev, size_t recvd, size_t 
 			scr->globeIcon->alpha.stop();
 			scr->globeIcon->alpha.interpolateTo(1, 0.5f, 0, false, true);
 			scr->globeIcon->quad->color.interpolateTo(Vector(0.5f, 0.5f, 0.5f), 0.3f);
-			scr->dlText.setText("Unable to retrieve online mod list.\nCheck your connection and try again."); // TODO: put into stringbank
+			scr->dlText.setText(dsq->continuity.stringBank.get(2021));
 			scr->dlText.alpha = 0;
 			scr->dlText.alpha.ensureData();
 			scr->dlText.alpha.data->path.addPathNode(0, 0);
@@ -257,7 +257,7 @@ void ModDL::NotifyModlist(ModlistRequest *rq, NetEvent ev, size_t recvd, size_t 
 		{
 			scr->dlText.alpha.stopPath();
 			scr->dlText.alpha.interpolateTo(1, 0.5f);
-			scr->dlText.setText("Server error!\nBad XML, please contact server admin.\nURL: " + rq->url); // TODO: -> stringbank
+			scr->dlText.setText(dsq->continuity.stringBank.get(2022) + " " + rq->url);
 		}
 	}
 }
@@ -484,7 +484,7 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 	if(!ico)
 	{
 		if(ev == NE_FINISH)
-			dsq->centerMessage("Finished downloading mod " + rq->modname, 420); // TODO: -> stringbank
+			dsq->centerMessage(dsq->continuity.stringBank.get(2023) + " " + rq->modname, 420);
 		return;
 	}
 

@@ -27,7 +27,7 @@ void GameplayVariables::load()
 	InStream inFile("data/variables.txt");
 	if(!inFile)
 	{
-		core->messageBox("error", "Variables data not found! Aborting...");
+		core->messageBox(dsq->continuity.stringBank.get(2008), dsq->continuity.stringBank.get(2017));
 		exit(1);
 	}
 	std::string s;

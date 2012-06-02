@@ -554,7 +554,7 @@ void DSQ::debugMenu()
 		{
 			core->frameOutputMode = false;
 			dsq->game->togglePause(true);
-			std::string s = dsq->getUserInputString("1: Refresh\n2: Heal\n3: Reset Cont.\n5: Set Invincible\n6: Set Flag\n8: All Songs\n9: All Ups\nS: learn song #\nF: Find Entity\nC: Set Costume\n0: Learn MArea Songs\nR: Record Demo\nP: Playback Demo\nT: Rewind Demo\nU: Ouput Demo Frames\nB: Unload Resources\nA: Reload Resources\nM: AutoMap\nJ: JumpState\nQ: QuitNestedMain", "");
+			std::string s = dsq->getUserInputString(dsq->continuity.stringBank.get(2012), "");
 			stringToUpper(s);
 
 			/*
@@ -748,7 +748,7 @@ void DSQ::debugMenu()
 				{
 					std::ostringstream os;
 					os << dsq->game->avatar->health;
-					std::istringstream is(dsq->getUserInputString("health", os.str()));
+					std::istringstream is(dsq->getUserInputString(dsq->continuity.stringBank.get(2013), os.str()));
 					float h = 0;
 					is >> h;
 					dsq->game->avatar->health = h;
@@ -1186,6 +1186,8 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	loadBit(LOAD_FONTS);
 
+	dsq->continuity.stringBank.load();
+
 	setTexturePointers();
 
 	cursor = new Quad;
@@ -1317,14 +1319,14 @@ This build is not yet final, and as such there are a couple things lacking. They
 	addRenderObject(cutscene_bg, LR_SUBTITLES);
 
 	cutscene_text = new BitmapText(&dsq->font);
-	cutscene_text->setText("~Paused~");
+	cutscene_text->setText(dsq->continuity.stringBank.get(2004));
 	cutscene_text->position = Vector(400,300-16);
 	cutscene_text->alpha.x = 0;
 	cutscene_text->followCamera = 1;
 	addRenderObject(cutscene_text, LR_SUBTITLES);
 
 	cutscene_text2 = new BitmapText(&dsq->smallFont);
-	cutscene_text2->setText("Press 'S' to Skip");
+	cutscene_text2->setText(dsq->continuity.stringBank.get(2005));
 	cutscene_text2->position = Vector(400,300+10);
 	cutscene_text2->alpha.x = 0;
 	cutscene_text2->followCamera = 1;
@@ -1774,7 +1776,7 @@ void DSQ::setFilter(int ds)
 
 void DSQ::setStory()
 {
-	std::string flagString = getUserInputString("Enter Flag to Set", "0");
+	std::string flagString = getUserInputString(dsq->continuity.stringBank.get(2014), "0");
 	int flag = 0;
 	std::istringstream is(flagString);
 	is >> flag;
@@ -1782,7 +1784,7 @@ void DSQ::setStory()
 	core->main(0.2);
 	std::ostringstream os;
 	os << dsq->continuity.getFlag(flag);
-	flagString = getUserInputString("Enter Value to Set Flag To", os.str());
+	flagString = getUserInputString(dsq->continuity.stringBank.get(2015), os.str());
 	int value = 0;
 	std::istringstream is2(flagString);
 	is2 >> value;
@@ -2917,7 +2919,7 @@ void DSQ::clearModSelector()
 void DSQ::updateSaveSlotPageCount()
 {
 	std::ostringstream os;
-	os << "Page " << user.data.savePage+1 << "/" << maxPages+1;
+	os << dsq->continuity.stringBank.get(2006) << " " << user.data.savePage+1 << "/" << maxPages+1;
 	saveSlotPageCount->setText(os.str());
 }
 

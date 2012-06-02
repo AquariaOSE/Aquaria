@@ -435,7 +435,7 @@ void RecipeMenu::createPage(int p)
 	dsq->game->addRenderObject(description, scroll->layer);
 
 	std::ostringstream os2;
-	os2 << "Page " << currentPage+1 << "/" << getNumPages()+1;
+	os2 << dsq->continuity.stringBank.get(2006) << " " << currentPage+1 << "/" << getNumPages()+1;
 	page->setText(os2.str());
 
 	debugLog("done: " + os2.str());

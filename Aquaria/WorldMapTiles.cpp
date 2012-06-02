@@ -285,11 +285,11 @@ void WorldMap::save()
 			WorldMapTile *t = &worldMapTiles[i];
 			out << t->index << " " << t->stringIndex << " " << t->name << " " << t->layer << " " << t->scale << " " << t->gridPos.x << " " << t->gridPos.y << " " << t->prerevealed << " " << t->scale2 << std::endl;
 		}
-		dsq->screenMessage("Saved worldmap data to " + fn);
+		dsq->screenMessage(dsq->continuity.stringBank.get(2019) + " " + fn);
 	}
 	else
 	{
-		dsq->screenMessage("Unable to save worldmap to " + fn);
+		dsq->screenMessage(dsq->continuity.stringBank.get(2020) + " " + fn);
 	}
 }
 

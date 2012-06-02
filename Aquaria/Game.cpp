@@ -2514,7 +2514,7 @@ void Game::loadEntityTypeList()
 	std::string line;
 	if(!in)
 	{
-		core->messageBox("error", "Entity data not found! Aborting...");
+		core->messageBox(dsq->continuity.stringBank.get(2008), dsq->continuity.stringBank.get(2016));
 		exit(1);
 	}
 	while (std::getline(in, line))
@@ -3882,7 +3882,7 @@ void Game::createInGameMenu()
 	recipeMenu.header = new BitmapText(&dsq->font);
 	recipeMenu.header->color = 0;
 	recipeMenu.header->followCamera = 1;
-	recipeMenu.header->setText("Recipes");
+	recipeMenu.header->setText(dsq->continuity.stringBank.get(2007));
 	recipeMenu.header->alpha = 0;
 	recipeMenu.header->position = Vector(scrollx, 5); //10
 	addRenderObject(recipeMenu.header, LR_RECIPES);
@@ -3891,7 +3891,7 @@ void Game::createInGameMenu()
 	recipeMenu.page->color = 0;
 	recipeMenu.page->followCamera = 1;
 	recipeMenu.page->position = Vector(scrollx, 400);
-	recipeMenu.page->setText("Page");
+	recipeMenu.page->setText(dsq->continuity.stringBank.get(2006));
 	recipeMenu.page->alpha = 0;
 	addRenderObject(recipeMenu.page, LR_RECIPES);
 	
