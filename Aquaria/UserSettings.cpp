@@ -658,7 +658,6 @@ void UserSettings::getSystemLocale()
 	}
 #elif BBGE_BUILD_MACOSX
 	CFLocaleRef locale = CFLocaleCopyCurrent();
-	CFArrayRef langs = CFLocaleCopyPreferredLanguages();
 	CFStringRef buf;
 
 	if ((buf = (CFStringRef)CFLocaleGetValue(locale, kCFLocaleLanguageCode)) != NULL)
@@ -666,7 +665,7 @@ void UserSettings::getSystemLocale()
 		system.locale = _CFToStdString(buf);
 		CFRelease(buf);
 
-		if ((buf = (CFStringRef)CFArrayGetValueAtIndex(langs, 0)) != NULL)
+		if ((buf = (CFStringRef)CFLocaleGetValue(locale, kCFLocaleCountryCode)) != NULL)
 		{
 			system.locale += "_";
 			system.locale += _CFToStdString(buf);
@@ -675,7 +674,7 @@ void UserSettings::getSystemLocale()
 	}
 
 	CFRelease(locale);
-	CFRelease(langs);
+
 #else
 	const char *lang = (const char *)getenv("LANG");
 
