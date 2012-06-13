@@ -1958,54 +1958,56 @@ void Game::clearObsRows()
 
 void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 {
-	/*
-	if (obsType == OT_INVISIBLEIN)
-		obsType = OT_INVISIBLE;
-	*/
 #ifdef BBGE_BUILD_OPENGL
 	if (q->texture)
 	{
-		std::vector<TileVector> obs, obsCopy;
+		std::vector<TileVector> obs;
 		TileVector tpos(q->position);
-		//int tw = int((q->getWidth()*q->scale.x)/TILE_SIZE);
-		//int th = int((q->getHeight()*q->scale.y)/TILE_SIZE);
-		int w2 = int(q->getWidth()*q->scale.x)/2;
-		int h2 = int(q->getHeight()*q->scale.y)/2;
+		int widthscale = q->getWidth()*q->scale.x;
+		int heightscale = q->getHeight()*q->scale.y;
+		int w2 = widthscale/2;
+		int h2 = heightscale/2;
 		w2/=TILE_SIZE;
 		h2/=TILE_SIZE;
 		tpos.x -= w2;
 		tpos.y -= h2;
 		GLuint id = q->texture->textures[0];
-		float w, h, c=4;
+		int w = 0, h = 0;
 		glBindTexture(GL_TEXTURE_2D, id);
-		glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-		glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-		//glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-		int size = w*h*c;
-		unsigned char *data=0;
-		int sz = size*sizeof(unsigned char);
-		data = (unsigned char*)malloc(sz);
-		if (c == 4)
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		else if (c == 3)
-			glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		else
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+		//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
+		int size = w*h*4;
+		if(size <= 0)
+			return;
+		unsigned char *data = (unsigned char*)malloc(size + 6);
+		memcpy(data + size, "SAFE", 5);
+		if (!data)
 		{
-			if (data)
-				free(data);
+			errorLog("Game::fillGridFromQuad allocation failure");
+			return;
+		}
+		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		// Not sure but this might be the case with nouveau drivers on linux... still investigating. -- fg
+		if(memcmp(data + size, "SAFE", 5))
+		{
+			errorLog("Game::fillGridFromQuad(): Broken graphics driver! Wrote past end of buffer!");
+			free(data); // in case we are here, this will most likely cause a crash.
 			return;
 		}
 
-		for (int tx = 0; tx < (q->getWidth()*q->scale.x); tx+=TILE_SIZE)
+		int szx = TILE_SIZE/q->scale.x;
+		int szy = TILE_SIZE/q->scale.y;
+		if (szx < 1) szx = 1;
+		if (szy < 1) szy = 1;
+
+		for (int tx = 0; tx < widthscale; tx+=TILE_SIZE)
 		{
-			for (int ty = 0; ty < (q->getHeight()*q->scale.y); ty+=TILE_SIZE)
+			for (int ty = 0; ty < heightscale; ty+=TILE_SIZE)
 			{
 				int num = 0;
-				int szx = TILE_SIZE/q->scale.x;
-				int szy = TILE_SIZE/q->scale.y;
-				if (szx < 1) szx = 1;
-				if (szy < 1) szy = 1;
-
 				for (int x = 0; x < szx; x++)
 				{
 					for (int y = 0; y < szy; y++)
@@ -2016,19 +2018,14 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 						int py = int(ty/q->scale.y) + y;
 						if (px < w && py < h)
 						{
-							if (c==3)
-								num++;
+							int p = (py*w*4) + px*4;
+							if (data[p+3] >= 254)
+							{
+								num ++;
+							}
 							else
 							{
-								int p = (py*w*c) + px*c;
-								if (data[p+3] >= 254)
-								{
-									num ++;
-								}
-								else
-								{
-									break;
-								}
+								break;
 							}
 						}
 					}
@@ -2044,18 +2041,21 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			}
 		}
 
+		if (data)
+		{
+			free(data);
+			data = 0;
+		}
 
 		if (trim)
 		{
-			obsCopy = obs;
+			std::vector<TileVector> obsCopy = obs;
 			obs.clear();
 
 			int sides = 0;
-			bool added;
 			for (int i = 0; i < obsCopy.size(); i++)
 			{
 				sides = 0;
-				added = false;
 				for (int j = 0; j < obsCopy.size(); j++)
 				{
 					if (i != j)
@@ -2072,42 +2072,18 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 						if (sides>=4)
 						{
 							obs.push_back(obsCopy[i]);
-							added = true;
-							//debugLog("added");
 							break;
 						}
 					}
 				}
-				/*
-				if (!added)
-				{
-					debugLog("not added");
-				}
-				*/
 			}
 		}
 
-		glBindTexture(GL_TEXTURE_2D, 0);
-		if (data)
-			free(data);
-		int rot = q->rotation.z;
-		while (rot > 360)
-			rot -= 360;
-		while (rot < 0)
-			rot += 360;
-		//rot = int(float(rot-45)/90.0f);
-		//int obsType = OT_INVISIBLEIN;
+
+		glPushMatrix();
+
 		for (int i = 0; i < obs.size(); i++)
 		{
-			/*
-			Vector p = q->getWorldCollidePosition(Vector(obs[i].x-w2, obs[i].y-h2));
-			TileVector tvec(tpos.x+w2+p.x, tpos.y+h2+p.y);
-			if (dsq->game->getGrid(tvec) == OT_EMPTY)
-				dsq->game->setGrid(tvec, obsType);
-			*/
-
-
-			glPushMatrix();
 			glLoadIdentity();
 
 			glRotatef(q->rotation.z, 0, 0, 1);
@@ -2129,37 +2105,9 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			if (dsq->game->getGrid(tvec) == OT_EMPTY)
 				dsq->game->setGrid(tvec, obsType);
 
-			glPopMatrix();
-
-			/*
-			// clockwise
-			if ((rot >= 0 && rot < 45) || rot >= 315)
-			{
-				// normal
-				dsq->game->setGrid(TileVector(tpos.x+obs[i].x, tpos.y+obs[i].y), obsType);
-			}
-			else if (rot >= 45 && rot < 135)
-			{
-				TileVector tpos(q->position);
-				tpos.x -= h2;
-				tpos.y -= w2;
-				dsq->game->setGrid(TileVector(tpos.x+(th-obs[i].y), tpos.y+obs[i].x), obsType);
-			}
-			else if (rot >= 135 && rot < 225)
-			{
-				// flip y
-				dsq->game->setGrid(TileVector(tpos.x+(tw-obs[i].x), tpos.y+(th-obs[i].y)), obsType);
-			}
-			else if (rot >= 225 && rot < 315)
-			{
-				TileVector tpos(q->position);
-				tpos.x -= h2;
-				tpos.y -= w2;
-				dsq->game->setGrid(TileVector(tpos.x+obs[i].y, tpos.y+(tw-obs[i].x)), obsType);
-			}
-			*/
 		}
-    }
+		glPopMatrix();
+	}
 #endif
 }
 
@@ -5496,6 +5444,9 @@ bool Game::loadScene(std::string scene)
 
 void Game::saveScene(std::string scene)
 {
+	if (!this->saveFile)
+		return;
+
 	std::string fn = getSceneFilename(scene);
 
 	TiXmlDocument saveFile(*this->saveFile);
