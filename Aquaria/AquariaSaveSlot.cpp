@@ -220,11 +220,7 @@ void AquariaSaveSlot::onUpdate(float dt)
 				else if ((!core->mouse.buttons.left && !core->mouse.buttons.right) && mbDown)
 				{
 					mbDown = false;
-					if (text1->getText().find(dsq->continuity.stringBank.get(2003))!=std::string::npos && dsq->saveSlotMode == SSM_LOAD)
-					{
-					
-					}
-					else
+					if (!(empty && dsq->saveSlotMode == SSM_LOAD))
 					{
 						selected = true;
 						// pick this file

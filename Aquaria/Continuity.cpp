@@ -1200,11 +1200,11 @@ void Continuity::loadSongBank()
 	songSlotNames.clear();
 	songBank.clear();
 
-	loadIntoSongBank("data/songs.xml");
+	loadIntoSongBank(dsq->user.localisePath("data/songs.xml"));
 
 	if (dsq->mod.isActive())
 	{
-		loadIntoSongBank(dsq->mod.getPath() + "scripts/songs.xml");
+		loadIntoSongBank(dsq->user.localisePath(dsq->mod.getPath() + "scripts/songs.xml", dsq->mod.getPath()));
 	}
 }
 
