@@ -40,16 +40,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #ifdef BBGE_BUILD_MACOSX
-    #include <Carbon/Carbon.h>
+	#include <Carbon/Carbon.h>
 	#include <CoreFoundation/CFLocale.h>
-    #include <CoreFoundation/CFString.h>
-    
+	#include <CoreFoundation/CFString.h>
+
 // veeery clunky.
 static std::string _CFToStdString(CFStringRef cs)
 {
-    char buf[1024];
-    CFStringGetCString(cs, &buf[0], 2048, kCFStringEncodingUTF8);
-    return &buf[0];
+	char buf[1024];
+	CFStringGetCString(cs, &buf[0], 2048, kCFStringEncodingUTF8);
+	return &buf[0];
 }
 
 #endif
@@ -658,7 +658,6 @@ void UserSettings::getSystemLocale()
 	}
 #elif BBGE_BUILD_MACOSX
 	CFLocaleRef locale = CFLocaleCopyCurrent();
-    CFArrayRef langs = CFLocaleCopyPreferredLanguages();
 	CFStringRef buf;
 
 	if ((buf = (CFStringRef)CFLocaleGetValue(locale, kCFLocaleLanguageCode)) != NULL)
@@ -666,7 +665,7 @@ void UserSettings::getSystemLocale()
 		system.locale = _CFToStdString(buf);
 		CFRelease(buf);
 
-		if ((buf = (CFStringRef)CFArrayGetValueAtIndex(langs, 0)) != NULL)
+		if ((buf = (CFStringRef)CFLocaleGetValue(locale, kCFLocaleCountryCode)) != NULL)
 		{
 			system.locale += "_";
 			system.locale += _CFToStdString(buf);
@@ -675,7 +674,7 @@ void UserSettings::getSystemLocale()
 	}
 
 	CFRelease(locale);
-    CFRelease(langs);
+
 #else
 	const char *lang = (const char *)getenv("LANG");
 

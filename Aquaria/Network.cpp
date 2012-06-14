@@ -103,7 +103,7 @@ protected:
 			data->fp = fopen(data->tempFilename.c_str(), "wb");
 			if(!data->fp)
 			{
-				fprintf(stderr, "SOCKET: Failed to save %u bytes, file not open");
+				fprintf(stderr, "SOCKET: Failed to save %u bytes, file not open", size);
 				data->fail = true;
 				// TODO: and now?
 				return;
