@@ -1494,14 +1494,8 @@ void loadCacheSoundsCallback (const std::string &filename, intptr_t param)
 	}
 	if (fileType==".ogg")
 	{
-
-		std::string f = filename;
-		stringToLower(f);
-
-		debugLog("trying to load sound " + f);
-
-		sm->loadSoundIntoBank(f, "", "");
-
+		debugLog("trying to load sound " + filename);
+		sm->loadSoundIntoBank(filename, "", "");
 	}
 }
 
@@ -1521,21 +1515,18 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 
 	// WARNING: local sounds should go here!
 
-    debugLog(filename);
+	debugLog(filename);
 	if (slt == SFXLOAD_LOCAL && !audioPath2.empty())
 	{
-		f = audioPath2 + filename + format;
-		stringToLower(f);
+		f = core->adjustFilenameCase(audioPath2 + filename + format);
 		if (!exists(f))
 		{
-			f = path + filename + format;
-			stringToLower(f);
+			f = core->adjustFilenameCase(path + filename + format);
 		}
 	}
 	else
 	{
-		f = path + filename + format;
-		stringToLower(f);
+		f = core->adjustFilenameCase(path + filename + format);
 	}
 
 	bool loop = false;
@@ -1556,6 +1547,8 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	    debugLog("returning 0");
 		return Buffer();
 	}
+
+	stringToLower(name);
 
 #ifdef BBGE_BUILD_FMODEX
 
