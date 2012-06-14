@@ -925,15 +925,13 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 	
 	if (!voicePath2.empty())
 	{
-		fn = voicePath2 + name + fileType;
-		stringToLower(fn);
+		fn = core->adjustFilenameCase(voicePath2 + name + fileType);
 		if (exists(fn))	checkOther = false;
 	}
 
 	if (checkOther)
 	{
-		fn = voicePath + name + fileType;
-		stringToLower(fn);
+		fn = core->adjustFilenameCase(voicePath + name + fileType);
 		if (!exists(fn))
 		{
 			debugLog("Could not find voice file [" + fn + "]");
@@ -1281,26 +1279,24 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 	if (!name.empty() && name[0] == '.')
 	{
 		fn = name;
-		stringToLower(fn);
 	}
 	else
 	{
 		if (!audioPath2.empty())
 		{
 			fn = audioPath2 + name + fileType;
-			stringToLower(fn);
 			if (!exists(fn))
 			{
 				fn = musicPath + name + fileType;
-				stringToLower(fn);
 			}
 		}
 		else
 		{
 			fn = musicPath + name + fileType;
-			stringToLower(fn);
 		}
 	}
+
+	fn = core->adjustFilenameCase(fn);
 
 	lastMusic = name;
 	stringToLower(lastMusic);
