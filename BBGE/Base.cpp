@@ -458,9 +458,9 @@ char *readFile(const std::string& path, unsigned long *size_ret)
 	VFILE *vf = vfs.GetFile(path.c_str());
 	if (!vf)
 		return NULL;
-	fileSize = vf->size();
 	char *buffer = (char*)vf->getBuf(NULL, NULL);
-	vf->dropBuf(false);
+	fileSize = vf->size();
+	vf->dropBuf(false); // unlink buffer from file
 #else
 	FILE *f = fopen(path.c_str(), "rb");
 	if (!f)
@@ -1128,6 +1128,8 @@ char *readCompressedFile(std::string path, unsigned long *size_ret)
 {
 	unsigned long size = 0;
 	char *buf = readFile(path, &size);
+	if(!buf)
+		return NULL;
 	ZlibCompressor z; // allocates with new[] by default
 	z.init(buf, size, ByteBuffer::TAKE_OVER);
 	z.Compressed(true);

@@ -18,10 +18,11 @@
 #   include <windows.h>
 #else
 #   include <sys/dir.h>
-#   include <sys/stat.h>
-#   include <sys/types.h>
 #   include <unistd.h>
 #endif
+
+#include <sys/types.h>
+#include <sys/stat.h>
 
 VFS_NAMESPACE_START
 
@@ -259,16 +260,24 @@ bool CreateDirRec(const char *dir)
 
 vfspos GetFileSize(const char* fn)
 {
-    if(!fn || !*fn)
+#ifdef VFS_LARGEFILE_SUPPORT
+# ifdef _MSC_VER
+    struct _stat64 st;
+    if(_stat64(fn, &st))
         return 0;
-    void *fp = real_fopen(fn, "rb");
-    if(!fp)
+    return st.st_size;
+# else // _MSC_VER
+    struct stat64 st;
+    if(stat64(fn, &st))
         return 0;
-    real_fseek(fp, 0, SEEK_END);
-    vfspos s = real_ftell(fp);
-    real_fclose(fp);
-
-    return s == npos ? 0 : s;
+    return st.st_size;
+# endif
+#else // VFS_LARGEFILE_SUPPORT
+    struct stat st;
+    if(stat(fn, &st))
+        return 0;
+    return st.st_size;
+#endif
 }
 
 std::string FixSlashes(const std::string& s)

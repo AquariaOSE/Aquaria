@@ -1977,8 +1977,8 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
 		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
 		//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-		int size = w*h*4;
-		if(size <= 0)
+		unsigned int size = w*h*4;
+		if (!size || w <= 0 || h <= 0)
 			return;
 		unsigned char *data = (unsigned char*)malloc(size + 6);
 		memcpy(data + size, "SAFE", 5);
@@ -2014,12 +2014,12 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 					{
 						// starting position =
 						// tx / scale.x
-						int px = int(tx/q->scale.x) + x;
-						int py = int(ty/q->scale.y) + y;
-						if (px < w && py < h)
+						unsigned int px = int(tx/q->scale.x) + x;
+						unsigned int py = int(ty/q->scale.y) + y;
+						if (px < unsigned(w) && py < unsigned(h))
 						{
-							int p = (py*w*4) + px*4;
-							if (data[p+3] >= 254)
+							unsigned int p = (py*unsigned(w)*4) + (px*4) + 3; // position of alpha component
+							if (p < size && data[p] >= 254)
 							{
 								num ++;
 							}
@@ -2794,32 +2794,27 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 		else
 			q->collideRadius = TILE_SIZE/2;
 		q->collisionMask.clear();
-		std::vector<TileVector> obs;
 		TileVector tpos(q->position);
-		int w2 = int(q->getWidth()*q->scale.x)>>1;
-		int h2 = int(q->getHeight()*q->scale.y)>>1;
+		int widthscale = q->getWidth()*q->scale.x;
+		int heightscale = q->getHeight()*q->scale.y;
+		int w2 = widthscale/2;
+		int h2 = heightscale/2;
 		w2/=TILE_SIZE;
 		h2/=TILE_SIZE;
 		tpos.x -= w2;
 		tpos.y -= h2;
 		GLuint id = q->texture->textures[0];
-		float w, h, c=4;
+		int w = 0, h = 0;
 		glBindTexture(GL_TEXTURE_2D, id);
-		glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-		glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-		//glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-		int size = w*h*c;
-		unsigned char *data=0;
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+		//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
 
-		int sz = size*sizeof(unsigned char);
+		unsigned int size = w*h*4;
+		if (!size || w <= 0 || h <= 0)
+			return;
 
-		/*
-		std::ostringstream os;
-		os << "size: " << sz;
-		debugLog(os.str());
-		*/
-
-		data = (unsigned char*)malloc(sz);
+		unsigned char *data = (unsigned char*)malloc(size);
 
 		if (!data)
 		{
@@ -2832,15 +2827,16 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 
 		Vector collisionMaskHalfVector = Vector(q->getWidth()/2, q->getHeight()/2);
 
-		for (int tx = 0; tx < (q->getWidth()*q->scale.x); tx+=TILE_SIZE)
+		int szx = TILE_SIZE/q->scale.x;
+		int szy = TILE_SIZE/q->scale.y;
+		if (szx < 1) szx = 1;
+		if (szy < 1) szy = 1;
+
+		for (int tx = 0; tx < widthscale; tx+=TILE_SIZE)
 		{
-			for (int ty = 0; ty < (q->getHeight()*q->scale.y); ty+=TILE_SIZE)
+			for (int ty = 0; ty < heightscale; ty+=TILE_SIZE)
 			{
 				int num = 0;
-				int szx = TILE_SIZE/q->scale.x;
-				int szy = TILE_SIZE/q->scale.y;
-				if (szx < 1) szx = 1;
-				if (szy < 1) szy = 1;
 
 				for (int x = 0; x < szx; x++)
 				{
@@ -2848,18 +2844,12 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 					{
 						// starting position =
 						// tx / scale.x
-						int px = int(tx/q->scale.x) + x;
-						int py = int(ty/q->scale.y) + y;
-						if (px < w && py < h)
+						unsigned int px = int(tx/q->scale.x) + x;
+						unsigned int py = int(ty/q->scale.y) + y;
+						if (px < unsigned(w) && py < unsigned(h))
 						{
-							int p = (py*w*c) + px*c;
-							/*
-							std::ostringstream os;
-							os << "data(" << int(data[p]) << ", " << int(data[p+1]);
-							os << ", " << int(data[p+2]) << ", " << int(data[p+3]) << ")";
-							debugLog(os.str());
-							*/
-							if (int(data[p+3]) >= 250)
+							unsigned int p = (py*unsigned(w)*4) + (px*4) + 3; // position of alpha component
+							if (p < size && data[p] >= 250)
 							{
 								num ++;
 							}
@@ -2869,9 +2859,6 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 				if (num >= int((szx*szy)*0.25f))
 				{
 					TileVector tile(int((tx+TILE_SIZE/2)/TILE_SIZE), int((ty+TILE_SIZE/2)/TILE_SIZE));
-
-					obs.push_back(tile);
-
 					// + Vector(0,TILE_SIZE)
 					q->collisionMask.push_back(tile.worldVector() - collisionMaskHalfVector);
 				}
@@ -2903,7 +2890,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 		q->collisionMaskRadius = 512;
 
 		glBindTexture(GL_TEXTURE_2D, 0);
-		if (data)	free(data);
+		free(data);
 		/*
 		int rot = rotation.z;
 		while (rot > 360)

@@ -194,34 +194,31 @@ void Texture::destroy()
 int Texture::getPixelWidth()
 {
 #ifdef BBGE_BUILD_OPENGL
-	float w, h, c;
+	int w = 0, h = 0;
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-	int size = w*h*c;
-	unsigned char *data=0;
-	data = (unsigned char*)malloc(size*sizeof(char));
-	if (c == 4)
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	/*
-	else if (c == 3)
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	*/
-	else
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+	//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
+	unsigned int size = w*h*4;
+	if (!size || w <= 0 || h <= 0)
+		return 0;
+
+	unsigned char *data = (unsigned char*)malloc(size*sizeof(char));
+	if (!data)
 	{
-		if (data)
-			free(data);
+		debugLog("Texture::getPixelWidth() malloc failed");
 		return 0;
 	}
 
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
 	int smallestx = -1, largestx = -1;
-	for (int x = 0; x < w; x++)
+	for (unsigned int x = 0; x < unsigned(w); x++)
 	{
-		for (int y = 0; y < h; y++)
+		for (unsigned int y = 0; y < unsigned(h); y++)
 		{
-			int p = (y*w*c) + x*c;
-			if (data[p+3] >= 254)
+			unsigned int p = (y*unsigned(w)*4) + (x*4) + 3;
+			if (p < size && data[p] >= 254)
 			{
 				if (smallestx == -1 || x < smallestx)
 					smallestx = x;
@@ -241,33 +238,28 @@ int Texture::getPixelWidth()
 int Texture::getPixelHeight()
 {
 #ifdef BBGE_BUILD_OPENGL
-	float w, h, c;
+	int w = 0, h = 0;
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-	glGetTexLevelParameterfv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-	int size = w*h*c;
-	unsigned char *data=0;
-	data = (unsigned char*)malloc(size*sizeof(char));
-	if (c == 4)
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-	/*
-	else if (c == 3)
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-	*/
-	else
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+	//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
+	unsigned int size = w*h*4;
+	if (!size || w <= 0 || h <= 0)
+		return 0;
+	unsigned char *data = (unsigned char*)malloc(size*sizeof(char));
+	if (!data)
 	{
-		if (data)
-			free(data);
+		debugLog("Texture::getPixelHeight() malloc failed");
 		return 0;
 	}
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	int smallesty = -1, largesty = -1;
-	for (int x = 0; x < w; x++)
+	for (unsigned int x = 0; x < unsigned(w); x++)
 	{
-		for (int y = 0; y < h; y++)
+		for (unsigned int y = 0; y < unsigned(h); y++)
 		{
-			int p = (y*w*c) + x*c;
-			if (data[p+3] >= 254)
+			int p = (y*unsigned(w)*4) + (x*4) + 3;
+			if (p < size && data[p] >= 254)
 			{
 				if (smallesty == -1 || y < smallesty)
 					smallesty = y;
@@ -277,8 +269,7 @@ int Texture::getPixelHeight()
 		}
 	}
 	glBindTexture(GL_TEXTURE_2D, 0);
-	if (data)
-		free(data);
+	free(data);
 	return largesty - smallesty;
 #elif defined(BBGE_BUILD_DIRECTX)
 	return 0;

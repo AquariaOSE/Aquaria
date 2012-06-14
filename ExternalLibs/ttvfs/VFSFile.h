@@ -73,7 +73,7 @@ public:
     virtual const void *getBuf(allocator_func alloc = NULL, delete_func del = NULL);
 
     /** If del is true, delete internal buffer. If false, unregister internal buffer from the file,
-        but do not delete. Use free() or an appropriate deletion function later. */
+        but do not delete. Use delete[] or an appropriate deletion function later. */
     virtual void dropBuf(bool del);
 
     /** Basic RTTI, for debugging purposes */
@@ -117,7 +117,6 @@ public:
 protected:
     
     void *_fh; // FILE*
-    vfspos _size;
     void *_buf;
 };
 
