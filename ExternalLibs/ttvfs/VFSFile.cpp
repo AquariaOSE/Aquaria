@@ -76,7 +76,7 @@ void VFSFile::dropBuf(bool del)
 }
 
 VFSFileReal::VFSFileReal(const char *name /* = NULL */)
-: VFSFile(name), _fh(NULL), _size(npos), _buf(NULL)
+: VFSFile(name), _fh(NULL), _buf(NULL)
 {
 }
 
@@ -94,14 +94,8 @@ bool VFSFileReal::open(const char *mode /* = NULL */)
     dropBuf(true);
 
     _fh = real_fopen(fullname(), mode ? mode : "rb");
-    if(!_fh)
-        return false;
 
-    real_fseek((FILE*)_fh, 0, SEEK_END);
-    _size = getpos();
-    real_fseek((FILE*)_fh, 0, SEEK_SET);
-
-    return true;
+    return !!_fh;
 }
 
 bool VFSFileReal::isopen(void) const
@@ -177,13 +171,7 @@ unsigned int VFSFileReal::write(const void *src, unsigned int bytes)
 
 vfspos VFSFileReal::size(void)
 {
-    VFS_GUARD_OPT(this);
-    if(_size != npos)
-        return _size;
-    open();
-    close();
-    // now size is known.
-    return _size;
+    return GetFileSize(fullname());
 }
 
 // ------------- VFSFileMem -----------------------
