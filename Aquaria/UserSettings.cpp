@@ -274,12 +274,6 @@ void UserSettings::save()
 		}
 		doc.InsertEndChild(xml_net);
 
-		TiXmlElement xml_debug("Debug");
-		{
-			xml_debug.SetAttribute("textureMemoryMultiplier", debug.textureMemoryMultiplier);
-		}
-		doc.InsertEndChild(xml_debug);
-
 	}
 
 #if defined(BBGE_BUILD_UNIX)
@@ -566,12 +560,6 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			network.masterServer = serv;
 	}
 
-	TiXmlElement *xml_debug = doc.FirstChildElement("Debug");
-	if (xml_debug)
-	{
-		xml_debug->Attribute("textureMemoryMultiplier", &debug.textureMemoryMultiplier);
-	}
-
 	if (system.locale.empty())
 		getSystemLocale();
 	else
@@ -617,9 +605,6 @@ void UserSettings::apply()
 	dsq->bindInput();
 
 	core->settings.prebufferSounds = audio.prebuffer;
-
-	if (debug.textureMemoryMultiplier >= 1)
-		Texture::textureMemoryMultiplier = debug.textureMemoryMultiplier;
 
 #endif
 }
