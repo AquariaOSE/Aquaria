@@ -821,7 +821,7 @@ static unsigned int clp2(unsigned int x)
 unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int *sizeparam)
 {
 	unsigned char *data = NULL;
-	unsigned int size = 0;
+	unsigned int size = 0, allocsize = 0;
 	int tw = 0, th = 0;
 	int w = 0, h = 0;
 
@@ -848,12 +848,13 @@ unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int
 		h = h > th ? h : th;
 	}
 
-	size = w * h * 4 * textureMemoryMultiplier;
+	size = w * h * 4;
 	if (!size)
 		goto fail;
 
-	data = (unsigned char*)malloc(size + 32);
-	memcpy(data + size, "SAFE", 5);
+	allocsize = size * textureMemoryMultiplier;
+
+	data = (unsigned char*)malloc(allocsize + 32);
 	if (!data)
 	{
 		std::ostringstream os;
@@ -861,11 +862,12 @@ unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int
 		errorLog(os.str());
 		goto fail;
 	}
+	memcpy(data + allocsize, "SAFE", 5);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Not sure but this might be the case with nouveau drivers on linux... still investigating. -- fg
-	if(memcmp(data + size, "SAFE", 5))
+	if(memcmp(data + allocsize, "SAFE", 5))
 	{
 		errorLog("Texture::getBufferAndSize(): Broken graphics driver! Wrote past end of buffer!");
 		free(data); // in case we are here, this will most likely cause a crash.
