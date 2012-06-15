@@ -1903,6 +1903,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 	//  putenv(), which takes a (char *), and freaks out newer GCC releases
 	//  when you try to pass a (const!) string literal here...  --ryan.
 	SDL_putenv((char *) "SDL_VIDEO_CENTERED=1");
+	SDL_putenv((char *) "LIBGL_DEBUG=verbose"); // temp, to track errors on linux with nouveau drivers.
 
 	if (recreate)
 	{

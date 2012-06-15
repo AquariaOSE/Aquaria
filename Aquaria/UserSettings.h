@@ -178,6 +178,12 @@ public:
 		std::string masterServer;
 	} network;
 
+	struct Debug
+	{
+		Debug() { textureMemoryMultiplier = 1; }
+		int textureMemoryMultiplier;
+	} debug;
+
 	void loadDefaults(bool doApply=true);
 	void load(bool doApply=true, const std::string &overrideFile="");
 	void save();

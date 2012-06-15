@@ -1971,30 +1971,13 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 		h2/=TILE_SIZE;
 		tpos.x -= w2;
 		tpos.y -= h2;
-		GLuint id = q->texture->textures[0];
+
 		int w = 0, h = 0;
-		glBindTexture(GL_TEXTURE_2D, id);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-		//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-		unsigned int size = w*h*4;
-		if (!size || w <= 0 || h <= 0)
-			return;
-		unsigned char *data = (unsigned char*)malloc(size + 6);
-		memcpy(data + size, "SAFE", 5);
+		unsigned int size = 0;
+		unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
-			errorLog("Game::fillGridFromQuad allocation failure");
-			return;
-		}
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		// Not sure but this might be the case with nouveau drivers on linux... still investigating. -- fg
-		if(memcmp(data + size, "SAFE", 5))
-		{
-			errorLog("Game::fillGridFromQuad(): Broken graphics driver! Wrote past end of buffer!");
-			free(data); // in case we are here, this will most likely cause a crash.
+			debugLog("Failed to get buffer in Game::fillGridFromQuad()");
 			return;
 		}
 
@@ -2041,11 +2024,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			}
 		}
 
-		if (data)
-		{
-			free(data);
-			data = 0;
-		}
+		free(data);
 
 		if (trim)
 		{
@@ -2803,25 +2782,15 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 		h2/=TILE_SIZE;
 		tpos.x -= w2;
 		tpos.y -= h2;
-		GLuint id = q->texture->textures[0];
+
 		int w = 0, h = 0;
-		glBindTexture(GL_TEXTURE_2D, id);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-		//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-
-		unsigned int size = w*h*4;
-		if (!size || w <= 0 || h <= 0)
-			return;
-
-		unsigned char *data = (unsigned char*)malloc(size);
-
+		unsigned int size = 0;
+		unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
-			debugLog("Could not malloc in Game::generateCollisionMask");
+			debugLog("Failed to get buffer in Game::generateCollisionMask()");
 			return;
 		}
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 		q->collisionMaskRadius = 0;
 
@@ -2865,6 +2834,10 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 			}
 		}
 
+		q->collisionMaskRadius = 512;
+
+		free(data);
+
 
 		/*
 		for (int i = 0; i < q->collisionMask.size(); i++)
@@ -2887,10 +2860,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 			q->collisionMaskRadius = h2*2;
 		*/
 		//q->collisionMaskRadius = sqrtf(sqr(w2)+sqr(h2));
-		q->collisionMaskRadius = 512;
 
-		glBindTexture(GL_TEXTURE_2D, 0);
-		free(data);
 		/*
 		int rot = rotation.z;
 		while (rot > 360)
