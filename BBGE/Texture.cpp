@@ -820,6 +820,11 @@ static unsigned int clp2(unsigned int x)
 
 unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int *sizeparam)
 {
+	unsigned char *data = NULL;
+	unsigned int size = 0;
+	int tw = 0, th = 0;
+	int w = 0, h = 0;
+
 	// This can't happen. If it does we're doomed.
 	if(width <= 0 || height <= 0)
 		goto fail;
@@ -827,13 +832,13 @@ unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 
 	// As returned by graphics driver
-	int w = 0, h = 0;
+
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
 
 	// As we know it - but round to nearest power of 2 OpenGL does this internally anyways.
-	int tw = clp2(width); // known to be > 0.
-	int th = clp2(height);
+	tw = clp2(width); // known to be > 0.
+	th = clp2(height);
 
 	if (w != tw || h != th)
 	{
@@ -843,11 +848,11 @@ unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int
 		h = h > th ? h : th;
 	}
 
-	unsigned int size = w * h * 4 * textureMemoryMultiplier;
+	size = w * h * 4 * textureMemoryMultiplier;
 	if (!size)
 		goto fail;
 
-	unsigned char *data = (unsigned char*)malloc(size + 32);
+	data = (unsigned char*)malloc(size + 32);
 	memcpy(data + size, "SAFE", 5);
 	if (!data)
 	{
