@@ -2028,8 +2028,9 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 
 		if (trim)
 		{
-			std::vector<TileVector> obsCopy = obs;
-			obs.clear();
+			std::vector<TileVector> obsCopy;
+			obsCopy.swap(obs);
+			// obs now empty
 
 			int sides = 0;
 			for (int i = 0; i < obsCopy.size(); i++)

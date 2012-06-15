@@ -82,7 +82,6 @@ public:
 	void read(int tx, int ty, int w, int h, unsigned char *pixels);
 
 	unsigned char *getBufferAndSize(int *w, int *h, unsigned int *size); // returned memory must be free()'d
-	static int textureMemoryMultiplier; // 1. More for buggy drivers.
 
 protected:
 	std::string loadName;

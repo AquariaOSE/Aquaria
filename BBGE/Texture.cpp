@@ -56,8 +56,6 @@ bool Texture::useMipMaps = true;
 
 TexErr Texture::textureError = TEXERR_OK;
 
-int Texture::textureMemoryMultiplier = 1;
-
 Texture::Texture() : Resource()
 {
 #ifdef BBGE_BUILD_OPENGL
@@ -821,7 +819,7 @@ static unsigned int clp2(unsigned int x)
 unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int *sizeparam)
 {
 	unsigned char *data = NULL;
-	unsigned int size = 0, allocsize = 0;
+	unsigned int size = 0;
 	int tw = 0, th = 0;
 	int w = 0, h = 0;
 
@@ -836,13 +834,18 @@ unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
 
-	// As we know it - but round to nearest power of 2 OpenGL does this internally anyways.
+	// As we know it - but round to nearest power of 2 - OpenGL does this internally anyways.
 	tw = clp2(width); // known to be > 0.
 	th = clp2(height);
 
 	if (w != tw || h != th)
 	{
-		debugLog("Texture::getBufferAndSize() WARNING: width/height disagree");
+		std::ostringstream os;
+		os << "Texture::getBufferAndSize() WARNING: width/height disagree: ";
+		os << "Driver says (" << w << ", " << h << "); ";
+		os << "Texture says (" << width << ", " << height << "); ";
+		os << "Rounded to (" << tw << ", " << th << ")";
+		debugLog(os.str());
 		// choose max. for size calculation
 		w = w > tw ? w : tw;
 		h = h > th ? h : th;
@@ -852,9 +855,7 @@ unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int
 	if (!size)
 		goto fail;
 
-	allocsize = size * textureMemoryMultiplier;
-
-	data = (unsigned char*)malloc(allocsize + 32);
+	data = (unsigned char*)malloc(size + 32);
 	if (!data)
 	{
 		std::ostringstream os;
@@ -862,12 +863,12 @@ unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int
 		errorLog(os.str());
 		goto fail;
 	}
-	memcpy(data + allocsize, "SAFE", 5);
+	memcpy(data + size, "SAFE", 5);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	// Not sure but this might be the case with nouveau drivers on linux... still investigating. -- fg
-	if(memcmp(data + allocsize, "SAFE", 5))
+	if(memcmp(data + size, "SAFE", 5))
 	{
 		errorLog("Texture::getBufferAndSize(): Broken graphics driver! Wrote past end of buffer!");
 		free(data); // in case we are here, this will most likely cause a crash.
