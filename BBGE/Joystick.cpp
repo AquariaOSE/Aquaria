@@ -68,8 +68,9 @@ bool tryXInput()
 #endif
 
 #ifdef __LINUX__
-#include <unistd.h>
 #include <sys/types.h>
+#include <stdint.h>
+#include <unistd.h>
 #include <fcntl.h>
 #include <linux/input.h>
 #include <errno.h>
