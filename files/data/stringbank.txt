@@ -204,3 +204,5 @@
 2028 |Browse & enable/disable installed patches
 2029 |Browse mods online
 2030 |Return to title
+2031 Any
+2032 [Achievements]

@@ -26,8 +26,7 @@ namespace RecipeMenuNamespace
 
 	std::string processFoodName(std::string name)
 	{
-		name = splitCamelCase(name);
-		int p = name.find(' ');
+		size_t p = name.find(' ');
 		if (p != std::string::npos)
 		{
 			name[p] = '\n';
@@ -62,7 +61,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 		text->color = 0;
 		text->position = result->position + Vector(0, 18);
 		
-		text->setText(processFoodName(data->name));
+		text->setText(processFoodName(data->displayName));
 		addChild(text, PM_POINTER);
 	}
 
@@ -99,7 +98,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 				text->scale = Vector(0.7, 0.7);
 				text->color = 0;
 				text->position = ing[c]->position + Vector(0, 18);
-				text->setText(processFoodName(data->name));
+				text->setText(processFoodName(data->displayName));
 				addChild(text, PM_POINTER);
 				
 				if (c < size)
@@ -132,15 +131,16 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 
 			std::string typeName = recipe->types[i].typeName;
 
-			int loc = typeName.find("Type");
+			size_t loc = typeName.find("Type");
 			if (loc != std::string::npos)
 			{
 				typeName = typeName.substr(0, loc) + typeName.substr(loc+4, typeName.size());
 			}
 
+			typeName = dsq->continuity.getIngredientDisplayName(typeName);
 
-			if (typeName != "Anything")
-				typeName = std::string("Any\n") + typeName;
+			if (recipe->types[i].type != IT_ANYTHING)
+				typeName = dsq->continuity.stringBank.get(2031) + "\n" + typeName;
 			else
 				typeName = std::string("\n") + typeName;
 

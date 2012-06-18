@@ -635,7 +635,7 @@ void FoodSlot::onUpdate(float dt)
 		if ((core->mouse.position - getWorldPosition()).isLength2DIn(16))
 		//if (isCursorIn())
 		{
-			dsq->game->foodLabel->setText(splitCamelCase(ingredient->name));
+			dsq->game->foodLabel->setText(ingredient->displayName);
 			dsq->game->foodLabel->alpha.interpolateTo(1, 0.2);
 
 			dsq->game->foodDescription->setText(dsq->continuity.getIngredientAffectsString(ingredient));
@@ -7946,7 +7946,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 #endif
 
 		// !!! FIXME: this is such a hack.
-		data += "\n\n[Achievements]\n\n";
+		data += "\n\n" + dsq->continuity.stringBank.get(2032) + "\n\n";
 		dsq->continuity.statsAndAchievements->appendStringData(data);
 
 		helpBG = new Quad;
@@ -11182,7 +11182,7 @@ void Game::learnedRecipe(Recipe *r, bool effects)
 	if (nocasecmp(dsq->getTopStateData()->name,"Game")==0 && !applyingState)
 	{
 		std::ostringstream os;
-		os << dsq->continuity.stringBank.get(23) << " "  << splitCamelCase(r->result) << " " << dsq->continuity.stringBank.get(24);
+		os << dsq->continuity.stringBank.get(23) << " "  << r->resultDisplayName << " " << dsq->continuity.stringBank.get(24);
 		IngredientData *data = dsq->continuity.getIngredientDataByName(r->result);
 		if (data)
 		{

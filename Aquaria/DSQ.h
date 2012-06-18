@@ -696,10 +696,10 @@ struct IngredientEffect
 class IngredientData
 {
 public:
-	IngredientData(const std::string &name, const std::string &gfx, IngredientType type)
-		: name(name), gfx(gfx), amount(0), held(0), type(type), marked(0), sorted(false) {}
+	IngredientData(const std::string &name, const std::string &gfx, IngredientType type);
 	int getIndex() const;
 	const std::string name, gfx;
+	std::string displayName;
 	const IngredientType type;
 	int amount;
 	int held;
@@ -747,6 +747,7 @@ public:
 	std::vector<RecipeType> types;
 	std::vector<RecipeName> names;
 	std::string result;
+	std::string resultDisplayName;
 
 	int index;
 
@@ -1079,9 +1080,11 @@ public:
 	void applyIngredientEffects(IngredientData *data);
 
 	void loadIngredientData(const std::string &file);
+	void loadIngredientDisplayNames(const std::string& file);
 	bool hasIngredients() const { return !ingredients.empty(); }
 	IngredientDatas::size_type ingredientCount() const { return ingredients.size(); }
 	IngredientType getIngredientTypeFromName(const std::string &name) const;
+	std::string getIngredientDisplayName(const std::string& name) const;
 
 	void removeEmptyIngredients();
 	void spawnAllIngredients(const Vector &position);
@@ -1130,7 +1133,6 @@ public:
 	IngredientDescriptions ingredientDescriptions;
 
 	std::string getIngredientAffectsString(IngredientData *data);
-	std::string getIngredientDescription(IngredientEffectType type);
 
 	WorldMap worldMap;
 
@@ -1176,6 +1178,9 @@ private:
 
 	IngredientDatas ingredients; // held ingredients
 	IngredientDatas ingredientData; // all possible ingredients
+
+	typedef std::map<std::string,std::string> IngredientNameMap;
+	IngredientNameMap ingredientDisplayNames;
 };
 
 class Profile
