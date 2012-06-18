@@ -14,8 +14,11 @@
 // -------------------------
 
 
-
 #include <string>
+
+#ifndef _WIN32
+#  include <stdint.h>
+#endif
 
 namespace minihttp
 {
