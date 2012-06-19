@@ -1,88 +1,88 @@
-Anything Что Угодно
-ArcanePoultice Чудесная Припарка
+Anything Что угодно
+ArcanePoultice Тайная припарка
 Berry Ягода
-BerryIceCream Ягодное Мороженое
+BerryIceCream Ягодное мороженое
 Bulb Клубень
-ButterySeaLoaf Рыбий Хлеб С Маслом
-ColdBorscht Холодный Борщ
-ColdSoup Холодный Суп
+ButterySeaLoaf Масляный морской хлеб
+ColdBorscht Холодный борщ
+ColdSoup Холодный суп
 Cake Кекс
-CrabCake Крабовый Пирожок
-CrabMeat Крабовое Мясо
-DivineSoup Божественный Суп
-DumboIceCream Коктейль
-EelOil Жир Угря
+CrabCake Крабовый кекс
+CrabMeat Крабовое мясо
+DivineSoup Божественный суп
+DumboIceCream Мороженое Дамбо
+EelOil Жир угря
 Egg Яйцо
-FishMeat Рыба
-FishOil РыбийЖир
-GlowingEgg Блестящая Икринка
-HandRoll Маленький Ролл
-HealingPoultice Целебная Припарка
-HeartySoup Душистый Суп
-HotBorscht Горячий Борщ
-HotSoup Горячий Суп
-IceChunk Осколок Льда
+FishMeat Мясо рыбы
+FishOil Рыбий жир
+GlowingEgg Светящаяся икринка
+HandRoll Ручной рулет
+HealingPoultice Целебная припарка
+HeartySoup Суп здоровья
+HotBorscht Горячий борщ
+HotSoup Горячий суп
+IceChunk Осколок льда
 IceCream Мороженое
-JellyOil Желе Медузы
-LeadershipRoll Ролл Цезарь
+JellyOil Желе медузы
+LeadershipRoll Рулет лидерства
 Leaf Лист
 LeafPoultice Припарка
-LeechingPoultice Аптекарская Припарка
-LegendaryCake Легендарный Кекс
+LeechingPoultice Припарка высасывания
+LegendaryCake Легендарный кекс
 Loaf Хлеб
-LoafOfLife Чудо-Хлеб
-LongLifeSoup СупДолголетия
-MagicSoup Волшебный Суп
+LoafOfLife Хлеб жизни
+LongLifeSoup Суп долголетия
+MagicSoup Волшебный суп
 Meat Мясо
 Mushroom Гриб
 Oil Жир
 Part Часть
-Perogi Пирожки
-PlantBulb Вкусный Клубень
-PlantLeaf Лист Водоросли
-PlumpPerogi Большие Пирожки
-PoisonLoaf Ядовитый Хлеб
-PoisonSoup Ядовитый Суп
+Perogi Пирог
+PlantBulb Клубень растения
+PlantLeaf Лист растения
+PlumpPerogi Пухлый пирог
+PoisonLoaf Ядовитый хлеб
+PoisonSoup Ядовитый суп
 Poultice Припарка
-RainbowMushroom Радужный Гриб
-RainbowSoup Радужный Суп
-RedBerry Красная Ягода
-RedBulb Красный Клубень
-Roll Ролл
-RottenCake Протухший Кекс
-RottenLoaf Протухший Хлеб
-RottenMeat Тухлое Мясо
-RoyalSoup Королевский Суп
-RubberyMeat Жесткое Мясо
-RukhEgg ЯйцоПтицыРух
-SeaCake Морской Кекс
-SeaLoaf Рыбий Хлеб
-SharkFin Акулий Плавник
-SharkFinSoup Суп Из Плавников
-SightPoultice Глазные Капли
-SmallBone Маленькая Кость
-SmallEgg Маленькая Икринка
-SmallEye Маленький Глаз
-SmallTentacle Маленькое Щупальце
+RainbowMushroom Радужный гриб
+RainbowSoup Радужный суп
+RedBerry Красная ягода
+RedBulb Красный клубень
+Roll Рулет
+RottenCake Гнилой кекс
+RottenLoaf Гнилой хлеб
+RottenMeat Тухлое мясо
+RoyalSoup Королевский суп
+RubberyMeat Жесткое мясо
+RukhEgg Яйцо птицы Рух
+SeaCake Морской кекс
+SeaLoaf Морской хлеб
+SharkFin Акулий плавник
+SharkFinSoup Суп из акульего плавника
+SightPoultice Припарка зрения
+SmallBone Маленькая кость
+SmallEgg Икра
+SmallEye Маленький глаз
+SmallTentacle Маленькое щупальце
 Soup Суп
-SpecialBulb Особый Клубень
-SpecialCake Особый Кекс
-SpicyMeat Острое Мясо
-SpicyRoll Пряный Ролл
-SpicySoup Острый Суп
-SpiderEgg Паучье Яйцо
-SpiderRoll Паучий Ролл
-SwampCake Болотный Кекс
-SwordfishSteak Стейк Из Рыбы-Меч
-TastyCake Вкусный Кекс
-TastyRoll Вкусный Ролл
-ToughCake Черствый Кекс
-TurtleMeat Мясо Черепахи
-TurtleSoup Черепаховый Суп
-Vedha'sCure-All Золотая Панацея
-VedhaSeaCrisp Морской Деликатес
-VeggieCake Зеленый Кекс
-VeggieIceCream Зеленое Мороженое
-VeggieSoup Зеленый Суп
-VolcanoRoll Вулканический Ролл
-Zuuna'sPerogi Пирожки Зууны
+SpecialBulb Особый клубень
+SpecialCake Особый кекс
+SpicyMeat Пряное мясо
+SpicyRoll Пряный рулет
+SpicySoup Пряный суп
+SpiderEgg Паучье яйцо
+SpiderRoll Паучий рулет
+SwampCake Болотный кекс
+SwordfishSteak Стейк рыбы-меч
+TastyCake Вкусный кекс
+TastyRoll Вкусный рулет
+ToughCake Черствый кекс
+TurtleMeat Черепашье мясо
+TurtleSoup Черепаший суп
+Vedha'sCure-All Всеисцеляющая припарка Веды
+VedhaSeaCrisp Морские чипсы Веды
+VeggieCake Овощной кекс
+VeggieIceCream Овощное мороженое
+VeggieSoup Овощной суп
+VolcanoRoll Вулканический рулет
+Zuuna'sPerogi Пирог Зууны
