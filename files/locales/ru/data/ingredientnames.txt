@@ -1,0 +1,88 @@
+Anything Что Угодно
+ArcanePoultice Чудесная Припарка
+Berry Ягода
+BerryIceCream Ягодное Мороженое
+Bulb Клубень
+ButterySeaLoaf Рыбий Хлеб С Маслом
+ColdBorscht Холодный Борщ
+ColdSoup Холодный Суп
+Cake Кекс
+CrabCake Крабовый Пирожок
+CrabMeat Крабовое Мясо
+DivineSoup Божественный Суп
+DumboIceCream Коктейль
+EelOil Жир Угря
+Egg Яйцо
+FishMeat Рыба
+FishOil РыбийЖир
+GlowingEgg Блестящая Икринка
+HandRoll Маленький Ролл
+HealingPoultice Целебная Припарка
+HeartySoup Душистый Суп
+HotBorscht Горячий Борщ
+HotSoup Горячий Суп
+IceChunk Осколок Льда
+IceCream Мороженое
+JellyOil Желе Медузы
+LeadershipRoll Ролл Цезарь
+Leaf Лист
+LeafPoultice Припарка
+LeechingPoultice Аптекарская Припарка
+LegendaryCake Легендарный Кекс
+Loaf Хлеб
+LoafOfLife Чудо-Хлеб
+LongLifeSoup СупДолголетия
+MagicSoup Волшебный Суп
+Meat Мясо
+Mushroom Гриб
+Oil Жир
+Part Часть
+Perogi Пирожки
+PlantBulb Вкусный Клубень
+PlantLeaf Лист Водоросли
+PlumpPerogi Большие Пирожки
+PoisonLoaf Ядовитый Хлеб
+PoisonSoup Ядовитый Суп
+Poultice Припарка
+RainbowMushroom Радужный Гриб
+RainbowSoup Радужный Суп
+RedBerry Красная Ягода
+RedBulb Красный Клубень
+Roll Ролл
+RottenCake Протухший Кекс
+RottenLoaf Протухший Хлеб
+RottenMeat Тухлое Мясо
+RoyalSoup Королевский Суп
+RubberyMeat Жесткое Мясо
+RukhEgg ЯйцоПтицыРух
+SeaCake Морской Кекс
+SeaLoaf Рыбий Хлеб
+SharkFin Акулий Плавник
+SharkFinSoup Суп Из Плавников
+SightPoultice Глазные Капли
+SmallBone Маленькая Кость
+SmallEgg Маленькая Икринка
+SmallEye Маленький Глаз
+SmallTentacle Маленькое Щупальце
+Soup Суп
+SpecialBulb Особый Клубень
+SpecialCake Особый Кекс
+SpicyMeat Острое Мясо
+SpicyRoll Пряный Ролл
+SpicySoup Острый Суп
+SpiderEgg Паучье Яйцо
+SpiderRoll Паучий Ролл
+SwampCake Болотный Кекс
+SwordfishSteak Стейк Из Рыбы-Меч
+TastyCake Вкусный Кекс
+TastyRoll Вкусный Ролл
+ToughCake Черствый Кекс
+TurtleMeat Мясо Черепахи
+TurtleSoup Черепаховый Суп
+Vedha'sCure-All Золотая Панацея
+VedhaSeaCrisp Морской Деликатес
+VeggieCake Зеленый Кекс
+VeggieIceCream Зеленое Мороженое
+VeggieSoup Зеленый Суп
+VolcanoRoll Вулканический Ролл
+Zuuna'sPerogi Пирожки Зууны
