@@ -241,6 +241,7 @@ public:
 	BB_MAKE_WRITE_OP(float);
 	BB_MAKE_WRITE_OP(double);
 	BB_MAKE_WRITE_OP(int);
+	BB_MAKE_WRITE_OP(unsigned int);
 
 	ByteBuffer &operator<<(bool value)
 	{
@@ -272,6 +273,7 @@ public:
 	BB_MAKE_READ_OP(float);
 	BB_MAKE_READ_OP(double);
 	BB_MAKE_READ_OP(int);
+	BB_MAKE_READ_OP(unsigned int);
 
 	ByteBuffer &operator>>(bool &value)
 	{

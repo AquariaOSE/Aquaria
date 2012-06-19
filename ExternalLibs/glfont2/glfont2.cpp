@@ -74,7 +74,7 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	vfclose(fh);
 #endif
 
-	int dummy;
+	ByteBuffer::uint32 dummy;
 
 	// Read the header from file
 	header.tex = tex;
@@ -197,7 +197,7 @@ int GLFont::GetEndChar (void)
 	return header.end_char;
 }
 //*******************************************************************
-void GLFont::GetCharSize (int c, std::pair<int, int> *size)
+void GLFont::GetCharSize (unsigned int c, std::pair<int, int> *size)
 {
 	//Make sure character is in range
 	if (c < header.start_char || c > header.end_char)
@@ -218,7 +218,7 @@ void GLFont::GetCharSize (int c, std::pair<int, int> *size)
 	}
 }
 //*******************************************************************
-int GLFont::GetCharWidth (int c)
+int GLFont::GetCharWidth (unsigned int c)
 {
 	//Make sure in range
 	if (c < header.start_char || c > header.end_char)
@@ -242,7 +242,7 @@ int GLFont::GetCharWidth (int c)
 	}
 }
 //*******************************************************************
-int GLFont::GetCharHeight (int c)
+int GLFont::GetCharHeight (unsigned int c)
 {
 	//Make sure in range
 	if (c < header.start_char || c > header.end_char)
@@ -268,7 +268,7 @@ void GLFont::Begin (void)
 void GLFont::GetStringSize (const std::string &text, std::pair<int, int> *size)
 {
 	unsigned int i;
-	char c;
+	unsigned char c;
 	GLFontChar *glfont_char;
 	float width;
 	
@@ -282,7 +282,7 @@ void GLFont::GetStringSize (const std::string &text, std::pair<int, int> *size)
 	for (i = 0; i < text.size(); i++)
 	{
 		//Make sure character is in range
-		c = (char)text[i];
+		c = (unsigned char)text[i];
 		
 		if (c < header.start_char || c > header.end_char)
 			continue;

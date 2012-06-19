@@ -220,7 +220,6 @@ static inline int nocasecmp(const char *s1, const char *s2)
 #else
 int nocasecmp(const std::string &s1, const std::string &s2);
 #endif
-std::string upperCase(const std::string &s1);
 Vector getNearestPointOnLine(Vector start, Vector end, Vector point);
 bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius=1, Vector* closest=0);
 void sizePowerOf2Texture(int &v);

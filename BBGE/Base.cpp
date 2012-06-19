@@ -141,7 +141,7 @@ unsigned hash(const std::string &string)
     unsigned hash = 5381;
 
     for (int i = 0; i < string.size(); i++)
-        hash = ((hash << 5) + hash) + string[i];
+        hash = ((hash << 5) + hash) + (unsigned char)string[i];
 
     return hash;
 }
@@ -197,26 +197,32 @@ bool isVectorInRect(const Vector &vec, const Vector &coord1, const Vector &coord
 	return (vec.x > coord1.x && vec.x < coord2.x && vec.y > coord1.y && vec.y < coord2.y);
 }
 
+static char charToUpper(char c)
+{
+	if (c >= 'a' && c <= 'z') c = c - 'a' + 'A';
+	if ((unsigned char)c >= 0xE0 && (unsigned char)c <= 0xFF)
+		c = c - 0xE0 + 0xC0;
+	return c;
+}
+
+static char charToLower(char c)
+{
+	if (c >= 'A' && c <= 'Z') c = c-'A' + 'a';
+	if ((unsigned char)c >= 0xC0 && (unsigned char)c <= 0xDF)
+		c = c-0xC0+0xE0;
+	return c;
+}
+
 void stringToUpper(std::string &s)
 {
 	for (int i = 0; i < s.size(); i++)
-	{
-		if (s[i] >= 'a' && s[i] <= 'z')
-		{
-			s[i] = s[i]-'a' + 'A';
-		}
-	}
+		s[i] = charToUpper(s[i]);
 }
 
 void stringToLower(std::string &s)
 {
 	for (int i = 0; i < s.size(); i++)
-	{
-		if (s[i] >= 'A' && s[i] <= 'Z')
-		{
-			s[i] = s[i]-'A' + 'a';
-		}
-	}
+		s[i] = charToLower(s[i]);
 }
 
 void stringToLowerUserData(std::string &s)
@@ -246,9 +252,9 @@ int nocasecmp(const std::string &s1, const std::string &s2)
   //stop when either string's end has been reached
   while ( (it1!=s1.end()) && (it2!=s2.end()) )
   {
-    if(::toupper(*it1) != ::toupper(*it2)) //letters differ?
+    if(charToUpper(*it1) != charToUpper(*it2)) //letters differ?
      // return -1 to indicate smaller than, 1 otherwise
-      return (::toupper(*it1)  < ::toupper(*it2)) ? -1 : 1;
+      return (charToUpper(*it1)  < charToUpper(*it2)) ? -1 : 1;
     //proceed to the next character in each string
     ++it1;
     ++it2;
@@ -260,18 +266,6 @@ int nocasecmp(const std::string &s1, const std::string &s2)
     return (size1<size2) ? -1 : 1;
 }
 #endif  // #if !HAVE_STRCASECMP
-
-std::string upperCase(const std::string &s1)
-{
-	std::string ret;
-	std::string::const_iterator it1=s1.begin();
-	while (it1 != s1.end())
-	{
-		ret += ::toupper(*it1);
-		++it1;
-	}
-	return ret;
-}
 
 bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 {
