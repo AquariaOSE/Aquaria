@@ -5755,6 +5755,33 @@ luaFunc(entity_pullEntities)
 	luaReturnNil();
 }
 
+// Note that this overrides the generic obj_delete function for entities.
+// (It's registered as "entity_delete" to Lua)
+// There is at least one known case where this is necessary:
+// Avatar::pullTarget does a life check to drop the pointer;
+// If it's instantly deleted, this will cause a crash.
+luaFunc(entity_delete_override)
+{
+	Entity *e = entity(L);
+	if (e)
+	{
+		float time = lua_tonumber(L, 2);
+		if (time == 0)
+		{
+			e->alpha = 0;
+			e->setLife(0);
+			e->setDecayRate(1);
+		}
+		else
+		{
+			e->fadeAlphaWithLife = true;
+			e->setLife(1);
+			e->setDecayRate(1.0f/time);
+		}
+	}
+	luaReturnInt(0);
+}
+
 luaFunc(entity_isRidingOnEntity)
 {
 	Entity *e = entity(L);
@@ -7415,6 +7442,7 @@ static const struct {
 	luaRegister(entity_getVectorToEntity),
 
 	luaRegister(entity_getDistanceToTarget),
+	{ "entity_delete", l_entity_delete_override },
 	luaRegister(entity_move),
 
 	luaRegister(entity_getID),

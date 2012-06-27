@@ -74,16 +74,14 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	vfclose(fh);
 #endif
 
-	int dummy;
-
 	// Read the header from file
 	header.tex = tex;
-	bb >> dummy; // skip tex field
-	bb >> header.tex_width;
-	bb >> header.tex_height;
-	bb >> header.start_char;
-	bb >> header.end_char;
-	bb >> dummy; // skip chars field
+	bb.skipRead(4); // skip tex field
+	header.tex_width = bb.read<ByteBuffer::uint32>();
+	header.tex_height = bb.read<ByteBuffer::uint32>();
+	header.start_char = bb.read<ByteBuffer::uint32>();
+	header.end_char = bb.read<ByteBuffer::uint32>();
+	bb.skipRead(4); // skip chars field
 
 	//Allocate space for character array
 	num_chars = header.end_char - header.start_char + 1;
@@ -197,7 +195,7 @@ int GLFont::GetEndChar (void)
 	return header.end_char;
 }
 //*******************************************************************
-void GLFont::GetCharSize (int c, std::pair<int, int> *size)
+void GLFont::GetCharSize (unsigned int c, std::pair<int, int> *size)
 {
 	//Make sure character is in range
 	if (c < header.start_char || c > header.end_char)
@@ -218,7 +216,7 @@ void GLFont::GetCharSize (int c, std::pair<int, int> *size)
 	}
 }
 //*******************************************************************
-int GLFont::GetCharWidth (int c)
+int GLFont::GetCharWidth (unsigned int c)
 {
 	//Make sure in range
 	if (c < header.start_char || c > header.end_char)
@@ -242,7 +240,7 @@ int GLFont::GetCharWidth (int c)
 	}
 }
 //*******************************************************************
-int GLFont::GetCharHeight (int c)
+int GLFont::GetCharHeight (unsigned int c)
 {
 	//Make sure in range
 	if (c < header.start_char || c > header.end_char)
@@ -268,7 +266,7 @@ void GLFont::Begin (void)
 void GLFont::GetStringSize (const std::string &text, std::pair<int, int> *size)
 {
 	unsigned int i;
-	char c;
+	unsigned char c;
 	GLFontChar *glfont_char;
 	float width;
 	
@@ -282,7 +280,7 @@ void GLFont::GetStringSize (const std::string &text, std::pair<int, int> *size)
 	for (i = 0; i < text.size(); i++)
 	{
 		//Make sure character is in range
-		c = (char)text[i];
+		c = (unsigned char)text[i];
 		
 		if (c < header.start_char || c > header.end_char)
 			continue;
