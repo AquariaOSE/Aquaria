@@ -7442,7 +7442,6 @@ static const struct {
 	luaRegister(entity_getVectorToEntity),
 
 	luaRegister(entity_getDistanceToTarget),
-	{ "entity_delete", l_entity_delete_override },
 	luaRegister(entity_move),
 
 	luaRegister(entity_getID),
@@ -8075,6 +8074,7 @@ static const struct {
 	// -- overrides / special cases--
 
 	{"bone_getPosition", l_bone_getWorldPosition},
+	{ "entity_delete", l_entity_delete_override },
 
 	// -- deprecated/compatibility related functions below here --
 
