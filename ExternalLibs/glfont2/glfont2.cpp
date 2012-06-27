@@ -74,16 +74,14 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	vfclose(fh);
 #endif
 
-	ByteBuffer::uint32 dummy;
-
 	// Read the header from file
 	header.tex = tex;
-	bb >> dummy; // skip tex field
-	bb >> header.tex_width;
-	bb >> header.tex_height;
-	bb >> header.start_char;
-	bb >> header.end_char;
-	bb >> dummy; // skip chars field
+	bb.skipRead(4); // skip tex field
+	header.tex_width = bb.read<ByteBuffer::uint32>();
+	header.tex_height = bb.read<ByteBuffer::uint32>();
+	header.start_char = bb.read<ByteBuffer::uint32>();
+	header.end_char = bb.read<ByteBuffer::uint32>();
+	bb.skipRead(4); // skip chars field
 
 	//Allocate space for character array
 	num_chars = header.end_char - header.start_char + 1;

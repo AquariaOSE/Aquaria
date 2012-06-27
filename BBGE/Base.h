@@ -139,6 +139,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "math.h"
 #include "FileAPI.h"
 
+#ifdef BBGE_BUILD_LINUX
+#  include <sys/types.h>
+#  include <stdint.h>
+#endif
+
 // dumb win32 includes/defines cleanup
 #undef GetCharWidth
 
