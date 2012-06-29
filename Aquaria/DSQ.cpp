@@ -2167,9 +2167,7 @@ void DSQ::applyPatches()
 		vfs.MountExternalPath(mod.getBaseModPath().c_str(), "_mods");
 	}
 
-	// user wants mods, but not yet loaded
-	if(activePatches.size() && modEntries.empty())
-		loadMods();
+	loadMods();
 
 	for (std::set<std::string>::iterator it = activePatches.begin(); it != activePatches.end(); ++it)
 		for(int i = 0; i < modEntries.size(); ++i)
