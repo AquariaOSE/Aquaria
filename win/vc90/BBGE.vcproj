@@ -123,6 +123,7 @@
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="false"
 				EnableEnhancedInstructionSet="2"
+				FloatingPointModel="2"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -329,6 +330,14 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\LensFlare.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Localization.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Localization.h"
 				>
 			</File>
 			<File
