@@ -281,9 +281,6 @@ void Texture::load(std::string file)
 		return;
 	}
 
-	stringToLowerUserData(file);
-	file = core->adjustFilenameCase(file);
-
 	loadName = file;
 	repeating = false;
 
@@ -298,26 +295,28 @@ void Texture::load(std::string file)
 			pos = std::string::npos;
 	}
 
-	if (core->debugLogTextures)
+	/*if (core->debugLogTextures)
 	{
 		std::ostringstream os;
 		os << "pos [" << pos << "], file :" << file;
 		debugLog(os.str());
+	}*/
+
+	bool found = exists(file);
+
+	if(!found && exists(file + ".png"))
+	{
+		found = true;
+		file += ".png";
 	}
 
-    bool found = exists(file);
-
-    if(!found && exists(file + ".png"))
-    {
-        found = true;
-        file += ".png";
-    }
-
-    // .tga/.zga are never used as game graphics anywhere except save slot thumbnails.
-    // if so, their file names are passed exact, not with a missing extension
+	// .tga/.zga are never used as game graphics anywhere except save slot thumbnails.
+	// if so, their file names are passed exact, not with a missing extension
 
 	if (found)
 	{
+		file = localisePath(file);
+
 		/*
 		std::ostringstream os;
 		os << "Loading texture [" << file << "]";

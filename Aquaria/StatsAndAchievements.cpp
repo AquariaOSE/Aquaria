@@ -174,7 +174,7 @@ void StatsAndAchievements::RunFrame()
 		VFILE *io = NULL;
 
 		// Get generic achievement data...
-		std::string fname = dsq->user.localisePath("data/achievements.txt");
+		std::string fname = localisePath("data/achievements.txt");
 		io = vfopen(fname.c_str(), "r");
 		char line[1024];
 		for (size_t i = 0; i < max_achievements; i++)

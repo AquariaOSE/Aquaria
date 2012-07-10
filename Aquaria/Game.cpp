@@ -7919,29 +7919,29 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 
 // These say "Mac" but we use them on Linux, too.
 #if defined(BBGE_BUILD_UNIX)
-		std::string fname = dsq->user.localisePath("data/help_header_mac.txt");
+		std::string fname = localisePath("data/help_header_mac.txt");
 		appendFileToString(data, fname);
 #else
-		std::string fname = dsq->user.localisePath("data/help_header.txt");
+		std::string fname = localisePath("data/help_header.txt");
 		appendFileToString(data, fname);
 #endif
 		if (dsq->continuity.hasSong(SONG_BIND)) {
-			fname = dsq->user.localisePath("data/help_bindsong.txt");
+			fname = localisePath("data/help_bindsong.txt");
 			appendFileToString(data, fname);
 		}
 		if (dsq->continuity.hasSong(SONG_ENERGYFORM)) {
-			fname = dsq->user.localisePath("data/help_energyform.txt");
+			fname = localisePath("data/help_energyform.txt");
 			appendFileToString(data, fname);
 		}
-		fname = dsq->user.localisePath("data/help_start.txt");
+		fname = localisePath("data/help_start.txt");
 		appendFileToString(data, fname);
 		
 // These say "Mac" but we use them on Linux, too.
 #if defined(BBGE_BUILD_UNIX)
-		fname = dsq->user.localisePath("data/help_end_mac.txt");
+		fname = localisePath("data/help_end_mac.txt");
 		appendFileToString(data, fname);
 #else
-		fname = dsq->user.localisePath("data/help_end.txt");
+		fname = localisePath("data/help_end.txt");
 		appendFileToString(data, fname);
 #endif
 

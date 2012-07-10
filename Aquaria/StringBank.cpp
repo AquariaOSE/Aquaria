@@ -34,11 +34,11 @@ void StringBank::load()
 		_load(dsq->mod.getPath() + "stringbank.txt");
 
 	// Then, load localized ones. If some entries in these are missing, the default for each is taken.
-	std::string fname = dsq->user.localisePath("data/stringbank.txt");
+	std::string fname = localisePath("data/stringbank.txt");
 	_load(fname);
 
 	if (dsq->mod.isActive()) {
-		fname = dsq->user.localisePath(dsq->mod.getPath() + "stringbank.txt", dsq->mod.getPath());
+		fname = localisePath(dsq->mod.getPath() + "stringbank.txt", dsq->mod.getPath());
 		_load(fname);
 	}
 }
