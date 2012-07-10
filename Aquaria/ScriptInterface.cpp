@@ -988,6 +988,14 @@ luaFunc(obj_setTexture)
 	luaReturnNil();
 }
 
+luaFunc(obj_getTexture)
+{
+    RenderObject *r = robj(L);
+    if (r && r->texture)
+        luaReturnStr(r->texture->name.c_str());
+    luaReturnStr("");
+}
+
 luaFunc(obj_delete)
 {
 	RenderObject *r = robj(L);
@@ -1490,6 +1498,7 @@ luaFunc(quad_setHeight)
 	RO_FUNC(getter, prefix,  internalOffset	) \
 	RO_FUNC(getter, prefix,  getInternalOffset) \
 	RO_FUNC(getter, prefix,  getPosition	) \
+	RO_FUNC(getter, prefix,  getTexture		) \
 	RO_FUNC(getter, prefix,  x				) \
 	RO_FUNC(getter, prefix,  y				) \
 	RO_FUNC(getter, prefix,  setBlendType	) \

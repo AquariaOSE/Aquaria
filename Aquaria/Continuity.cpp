@@ -2543,6 +2543,7 @@ void Continuity::loadFile(int slot)
 {
 	dsq->user.save();
 	this->reset();
+	knowsSong.clear(); // Adds shield song by default, which interferes with mods that don't start with it
 
 	TiXmlDocument doc;
 	loadFileData(slot, doc);

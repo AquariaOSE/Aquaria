@@ -89,7 +89,7 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 		return false;
 
 	//Read character array
-	for (int i = 0; i < num_chars; i++)
+	for (unsigned int i = 0; i < num_chars; i++)
 	{
 		bb >> header.chars[i].dx;
 		bb >> header.chars[i].dy;
