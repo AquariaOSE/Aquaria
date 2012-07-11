@@ -49,13 +49,11 @@ void UserSettings::save()
 			}
 			xml_system.InsertEndChild(xml_debugLog);
 
-			if (!system.isSystemLocale) {
-				TiXmlElement xml_locale("Locale");
-				{
-					xml_locale.SetAttribute("name", system.locale);
-				}
-				xml_system.InsertEndChild(xml_locale);
+			TiXmlElement xml_locale("Locale");
+			{
+				xml_locale.SetAttribute("name", system.locale);
 			}
+			xml_system.InsertEndChild(xml_locale);
 		}
 		doc.InsertEndChild(xml_system);
 

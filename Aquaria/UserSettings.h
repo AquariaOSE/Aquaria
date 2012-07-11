@@ -77,9 +77,8 @@ class UserSettings
 public:
 	struct System
 	{
-		System() { debugLogOn = 0; isSystemLocale = false; }
+		System() { debugLogOn = 0; }
 		int debugLogOn;
-		bool isSystemLocale;
 		std::string locale;
 	} system;
 
