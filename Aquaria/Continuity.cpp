@@ -1209,11 +1209,11 @@ void Continuity::loadSongBank()
 	songSlotNames.clear();
 	songBank.clear();
 
-	loadIntoSongBank(dsq->user.localisePath("data/songs.xml"));
+	loadIntoSongBank(localisePath("data/songs.xml"));
 
 	if (dsq->mod.isActive())
 	{
-		loadIntoSongBank(dsq->user.localisePath(dsq->mod.getPath() + "scripts/songs.xml", dsq->mod.getPath()));
+		loadIntoSongBank(localisePath(dsq->mod.getPath() + "scripts/songs.xml", dsq->mod.getPath()));
 	}
 }
 
@@ -2543,6 +2543,7 @@ void Continuity::loadFile(int slot)
 {
 	dsq->user.save();
 	this->reset();
+	knowsSong.clear(); // Adds shield song by default, which interferes with mods that don't start with it
 
 	TiXmlDocument doc;
 	loadFileData(slot, doc);
@@ -2906,7 +2907,9 @@ void Continuity::loadFile(int slot)
 		//dsq->game->transitionToScene();
 	}
 
+	// Possibly mod-specific data the the continuity reset didn't catch
 	loadSongBank();
+	this->worldMap.load();
 }
 
 void Continuity::setNaijaModel(std::string model)
@@ -3244,12 +3247,12 @@ void Continuity::reset()
 
 	loadIngredientDisplayNames("data/ingredientnames.txt");
 
-	std::string fname = dsq->user.localisePath("data/ingredientnames.txt");
+	std::string fname = localisePath("data/ingredientnames.txt");
 	loadIngredientDisplayNames(fname);
 
 	if(dsq->mod.isActive())
 	{
-		fname = dsq->user.localisePath(dsq->mod.getPath() + "ingredientnames.txt", dsq->mod.getPath());
+		fname = localisePath(dsq->mod.getPath() + "ingredientnames.txt", dsq->mod.getPath());
 		loadIngredientDisplayNames(fname);
 	}
 
@@ -3260,13 +3263,13 @@ void Continuity::reset()
 	if(dsq->mod.isActive())
 	{
 		//load mod ingredients
-		fname = dsq->user.localisePath(dsq->mod.getPath() + "ingredients.txt", dsq->mod.getPath());
+		fname = localisePath(dsq->mod.getPath() + "ingredients.txt", dsq->mod.getPath());
 		loadIngredientData(fname);
 	}
 
 	//load ingredients for the main game
 	if(ingredientData.empty() && recipes.empty()) {
-		fname = dsq->user.localisePath("data/ingredients.txt");
+		fname = localisePath("data/ingredients.txt");
 		loadIngredientData(fname);
 	}
 

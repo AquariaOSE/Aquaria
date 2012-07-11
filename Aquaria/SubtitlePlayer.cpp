@@ -46,7 +46,7 @@ void SubtitlePlayer::go(const std::string &subs)
 	if (dsq->mod.isActive())
 	{
 		f = dsq->mod.getPath() + "audio/" + subs + ".txt";
-		f = dsq->user.localisePath(f, dsq->mod.getPath());
+		f = localisePath(f, dsq->mod.getPath());
 		f = core->adjustFilenameCase(f);
 		if (exists(f))
 			checkAfter = false;
@@ -55,7 +55,7 @@ void SubtitlePlayer::go(const std::string &subs)
 	if (checkAfter)
 	{
 		f = "scripts/vox/" + subs + ".txt";
-		f = dsq->user.localisePath(f);
+		f = localisePath(f);
 		f = core->adjustFilenameCase(f);
 		if (!exists(f))
 		{

@@ -175,3 +175,33 @@
 1030 Пещера короля медуз
 2000 Сохранить игру
 2001 Загрузить игру
+2002 Слот
+2003 Пусто
+2004 ~Пауза~
+2005 'S' - пропустить
+2006 Стр.
+2007 Рецепты
+2008 error
+2009 No Description
+2010 Stopped Recording
+2011 Stopped Playback
+2013 health
+2014 Enter Flag to Set
+2015 Enter Value to Set Flag To
+2016 Entity data not found! Aborting...
+2017 Variables data not found! Aborting...
+2018 Particle Name:
+2019 Saved worldmap data to
+2020 Unable to save worldmap to
+2021 Unable to retrieve online mod list.|Check your connection and try again.
+2022 Server error!|Bad XML, please contact server admin.|URL:
+2023 Finished downloading mod
+2024 Download update?
+2025 Mod already exists. Re-download?
+2026 This mod was installed manually,|not messing with it.
+2027 |Browse installed mods
+2028 |Browse & enable/disable installed patches
+2029 |Browse mods online
+2030 |Return to title
+2031 Что
+2032 [Achievements]

@@ -28,31 +28,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include "../ExternalLibs/tinyxml.h"
 #endif
 
-#ifdef BBGE_BUILD_WINDOWS
-	#define WIN32_LEAN_AND_MEAN
-	#include <windows.h>
-#endif
-
-#ifdef BBGE_BUILD_UNIX
-	#include <sys/types.h>
-	#include <sys/stat.h>
-	#include <unistd.h>
-#endif
-
-#ifdef BBGE_BUILD_MACOSX
-	#include <Carbon/Carbon.h>
-	#include <CoreFoundation/CFLocale.h>
-	#include <CoreFoundation/CFString.h>
-
-// veeery clunky.
-static std::string _CFToStdString(CFStringRef cs)
-{
-	char buf[1024];
-	CFStringGetCString(cs, &buf[0], 2048, kCFStringEncodingUTF8);
-	return &buf[0];
-}
-
-#endif
 
 void UserSettings::save()
 {
@@ -74,13 +49,11 @@ void UserSettings::save()
 			}
 			xml_system.InsertEndChild(xml_debugLog);
 
-			if (!system.isSystemLocale) {
-				TiXmlElement xml_locale("Locale");
-				{
-					xml_locale.SetAttribute("name", system.locale);
-				}
-				xml_system.InsertEndChild(xml_locale);
+			TiXmlElement xml_locale("Locale");
+			{
+				xml_locale.SetAttribute("name", system.locale);
 			}
+			xml_system.InsertEndChild(xml_locale);
 		}
 		doc.InsertEndChild(xml_system);
 
@@ -560,11 +533,6 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			network.masterServer = serv;
 	}
 
-	if (system.locale.empty())
-		getSystemLocale();
-	else
-		debugLog("use user config locale: " + system.locale);
-
 	//clearInputCodeMap();
 
 	if (doApply)
@@ -606,93 +574,18 @@ void UserSettings::apply()
 
 	core->settings.prebufferSounds = audio.prebuffer;
 
-#endif
-}
-
-std::string UserSettings::localisePath(const std::string &path, const std::string &modpath)
-{
 	if (system.locale.empty())
-		return path;
-
-	const std::string fname = path.substr(modpath.length());
-
-	/* we first try with complete locale name, i.e "locales/en_US/" */
-	std::string localisedPath = modpath + "locales/" + system.locale + "/" + fname;
-
-	if (exists(localisedPath.c_str()))
-		return localisedPath;
-
-	/* ok didn't work, let's retry with only language part of locale name, i.e "locales/en/" */
-	const size_t found = system.locale.find('_');
-
-	/* hmm, seems like we didn't have a full locale name anyway, use original path */
-	if (found == string::npos)
-		return path;
-
-	localisedPath = modpath + "locales/" + system.locale.substr(0,found) + "/" + fname;
-
-	/* hooray we found a file! */
-	if (exists(localisedPath.c_str()))
-		return localisedPath;
-
-	/* seems like we don't have a localized version of the file available, use original path */
-	return path;
-}
-
-void UserSettings::getSystemLocale()
-{
-	system.isSystemLocale = true;
-
-#ifdef BBGE_BUILD_WINDOWS
-	LCID lcid = GetThreadLocale();
-
-	char buf[100];
-	char ctry[100];
-
-	if (GetLocaleInfo(lcid, LOCALE_SISO639LANGNAME, buf, sizeof buf) != 0)
 	{
-		system.locale = buf;
-
-		if (GetLocaleInfo(lcid, LOCALE_SISO3166CTRYNAME, ctry, sizeof ctry) != 0)
-		{
-			system.locale += "_";
-			system.locale += ctry;
-		}
+		std::string loc = getSystemLocale();
+		debugLog("Using autodetected system locale: " + loc);
+		setUsedLocale(loc);
 	}
-#elif BBGE_BUILD_MACOSX
-	CFLocaleRef locale = CFLocaleCopyCurrent();
-	CFStringRef buf;
-
-	if ((buf = (CFStringRef)CFLocaleGetValue(locale, kCFLocaleLanguageCode)) != NULL)
-	{
-		system.locale = _CFToStdString(buf);
-		CFRelease(buf);
-
-		if ((buf = (CFStringRef)CFLocaleGetValue(locale, kCFLocaleCountryCode)) != NULL)
-		{
-			system.locale += "_";
-			system.locale += _CFToStdString(buf);
-			CFRelease(buf);
-		}
-	}
-
-	CFRelease(locale);
-
-#else
-	const char *lang = (const char *)getenv("LANG");
-
-	if (lang && *lang)
-	{
-		system.locale = lang;
-
-		size_t found = system.locale.find('.');
-
-		if (found != string::npos)
-			system.locale.resize(found);
-	}
-#endif
-	if (system.locale.empty())
-		debugLog("could not establish system locale");
 	else
-		debugLog("use system locale: " + system.locale);
+	{
+		debugLog("Using user config locale: " + system.locale);
+		setUsedLocale(system.locale);
+	}
+
+#endif
 }
+

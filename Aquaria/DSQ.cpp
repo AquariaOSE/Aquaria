@@ -485,7 +485,7 @@ void DSQ::loadFonts()
 
 	destroyFonts();
 
-	std::string file = user.localisePath("data/font-small.glf");
+	std::string file = localisePath("data/font-small.glf");
 
 	font.load(file, 1, false);
 	font.fontTopColor = Vector(0.9,0.9,1);
@@ -513,7 +513,7 @@ void DSQ::loadFonts()
 	goldFont.overrideTexture = core->addTexture("font");
 
 
-	file = user.localisePath("data/font.ttf");
+	file = localisePath("data/font.ttf");
 
 	debugLog("ttf...");
 	arialFontData = (unsigned char *)readFile(file, &arialFontDataSize);
@@ -2167,9 +2167,7 @@ void DSQ::applyPatches()
 		vfs.MountExternalPath(mod.getBaseModPath().c_str(), "_mods");
 	}
 
-	// user wants mods, but not yet loaded
-	if(activePatches.size() && modEntries.empty())
-		loadMods();
+	loadMods();
 
 	for (std::set<std::string>::iterator it = activePatches.begin(); it != activePatches.end(); ++it)
 		for(int i = 0; i < modEntries.size(); ++i)
