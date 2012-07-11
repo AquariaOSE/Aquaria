@@ -2907,7 +2907,9 @@ void Continuity::loadFile(int slot)
 		//dsq->game->transitionToScene();
 	}
 
+	// Possibly mod-specific data the the continuity reset didn't catch
 	loadSongBank();
+	this->worldMap.load();
 }
 
 void Continuity::setNaijaModel(std::string model)
