@@ -129,15 +129,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 			text->scale = Vector(0.8, 0.8);
 			text->position = Vector(100*c, 0); //-20
 
-			std::string typeName = recipe->types[i].typeName;
-
-			size_t loc = typeName.find("Type");
-			if (loc != std::string::npos)
-			{
-				typeName = typeName.substr(0, loc) + typeName.substr(loc+4, typeName.size());
-			}
-
-			typeName = dsq->continuity.getIngredientDisplayName(typeName);
+			std::string typeName = dsq->continuity.getIngredientDisplayName(recipe->types[i].typeName);
 
 			if (recipe->types[i].type != IT_ANYTHING)
 				typeName = dsq->continuity.stringBank.get(2031) + "\n" + typeName;
