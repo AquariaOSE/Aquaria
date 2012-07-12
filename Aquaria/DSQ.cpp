@@ -485,33 +485,38 @@ void DSQ::loadFonts()
 
 	destroyFonts();
 
-	font.load("data/font-small.glf", 1, false);
+	std::string file = localisePath("data/font-small.glf");
+
+	font.load(file, 1, false);
 	font.fontTopColor = Vector(0.9,0.9,1);
 	font.fontBtmColor = Vector(0.5,0.8,1);
 	font.overrideTexture = core->addTexture("font");
 
-	smallFont.load("data/font-small.glf", 0.6, false);
+	smallFont.load(file, 0.6, false);
 	smallFont.fontTopColor = Vector(0.9,0.9,1);
 	smallFont.fontBtmColor = Vector(0.5,0.8,1);
 	smallFont.overrideTexture = core->addTexture("font");
 
-	smallFontRed.load("data/font-small.glf", 0.6, false);
+	smallFontRed.load(file, 0.6, false);
 	smallFontRed.fontTopColor = Vector(1,0.9,0.9);
 	smallFontRed.fontBtmColor = Vector(1,0.8,0.5);
 	smallFontRed.overrideTexture = core->addTexture("font");
 
-	subsFont.load("data/font-small.glf", 0.5, false);
+	subsFont.load(file, 0.5, false);
 	subsFont.fontTopColor = Vector(1,1,1);
 	subsFont.fontBtmColor = Vector(0.5,0.8,1);
 	subsFont.overrideTexture = core->addTexture("font");
 
-	goldFont.load("data/font-small.glf", 1, false);
+	goldFont.load(file, 1, false);
 	goldFont.fontTopColor = Vector(1,0.9,0.5);
 	goldFont.fontBtmColor = Vector(0.6,0.5,0.25);
 	goldFont.overrideTexture = core->addTexture("font");
 
+
+	file = localisePath("data/font.ttf");
+
 	debugLog("ttf...");
-	arialFontData = (unsigned char *)readFile("data/font.ttf", &arialFontDataSize);
+	arialFontData = (unsigned char *)readFile(file, &arialFontDataSize);
 	if (arialFontData)
 	{
 		fontArialSmall   .create(arialFontData, arialFontDataSize, 12);
@@ -2162,9 +2167,7 @@ void DSQ::applyPatches()
 		vfs.MountExternalPath(mod.getBaseModPath().c_str(), "_mods");
 	}
 
-	// user wants mods, but not yet loaded
-	if(activePatches.size() && modEntries.empty())
-		loadMods();
+	loadMods();
 
 	for (std::set<std::string>::iterator it = activePatches.begin(); it != activePatches.end(); ++it)
 		for(int i = 0; i < modEntries.size(); ++i)

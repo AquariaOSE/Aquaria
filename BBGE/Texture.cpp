@@ -195,22 +195,10 @@ int Texture::getPixelWidth()
 {
 #ifdef BBGE_BUILD_OPENGL
 	int w = 0, h = 0;
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-	//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-	unsigned int size = w*h*4;
-	if (!size || w <= 0 || h <= 0)
-		return 0;
-
-	unsigned char *data = (unsigned char*)malloc(size*sizeof(char));
+	unsigned int size = 0;
+	unsigned char *data = getBufferAndSize(&w, &h, &size);
 	if (!data)
-	{
-		debugLog("Texture::getPixelWidth() malloc failed");
 		return 0;
-	}
-
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 	int smallestx = -1, largestx = -1;
 	for (unsigned int x = 0; x < unsigned(w); x++)
@@ -227,7 +215,6 @@ int Texture::getPixelWidth()
 			}
 		}
 	}
-	glBindTexture(GL_TEXTURE_2D, 0);
 	free(data);
 	return largestx - smallestx;
 #elif defined(BBGE_BUILD_DIRECTX)
@@ -239,20 +226,11 @@ int Texture::getPixelHeight()
 {
 #ifdef BBGE_BUILD_OPENGL
 	int w = 0, h = 0;
-	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-	//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-	unsigned int size = w*h*4;
-	if (!size || w <= 0 || h <= 0)
-		return 0;
-	unsigned char *data = (unsigned char*)malloc(size*sizeof(char));
+	unsigned int size = 0;
+	unsigned char *data = getBufferAndSize(&w, &h, &size);
 	if (!data)
-	{
-		debugLog("Texture::getPixelHeight() malloc failed");
 		return 0;
-	}
-	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+
 	int smallesty = -1, largesty = -1;
 	for (unsigned int x = 0; x < unsigned(w); x++)
 	{
@@ -268,7 +246,6 @@ int Texture::getPixelHeight()
 			}
 		}
 	}
-	glBindTexture(GL_TEXTURE_2D, 0);
 	free(data);
 	return largesty - smallesty;
 #elif defined(BBGE_BUILD_DIRECTX)
@@ -304,9 +281,6 @@ void Texture::load(std::string file)
 		return;
 	}
 
-	stringToLowerUserData(file);
-	file = core->adjustFilenameCase(file);
-
 	loadName = file;
 	repeating = false;
 
@@ -321,26 +295,28 @@ void Texture::load(std::string file)
 			pos = std::string::npos;
 	}
 
-	if (core->debugLogTextures)
+	/*if (core->debugLogTextures)
 	{
 		std::ostringstream os;
 		os << "pos [" << pos << "], file :" << file;
 		debugLog(os.str());
+	}*/
+
+	bool found = exists(file);
+
+	if(!found && exists(file + ".png"))
+	{
+		found = true;
+		file += ".png";
 	}
 
-    bool found = exists(file);
-
-    if(!found && exists(file + ".png"))
-    {
-        found = true;
-        file += ".png";
-    }
-
-    // .tga/.zga are never used as game graphics anywhere except save slot thumbnails.
-    // if so, their file names are passed exact, not with a missing extension
+	// .tga/.zga are never used as game graphics anywhere except save slot thumbnails.
+	// if so, their file names are passed exact, not with a missing extension
 
 	if (found)
 	{
+		file = localisePath(file);
+
 		/*
 		std::ostringstream os;
 		os << "Loading texture [" << file << "]";
@@ -827,3 +803,86 @@ ImageTGA *Texture::TGAloadMem(void *mem, int size)
 	return pImageData;
 }
 
+// ceil to next power of 2
+static unsigned int clp2(unsigned int x)
+{
+	--x;
+	x |= (x >> 1);
+	x |= (x >> 2);
+	x |= (x >> 4);
+	x |= (x >> 8);
+	x |= (x >> 16);
+	return x + 1;
+}
+
+unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int *sizeparam)
+{
+	unsigned char *data = NULL;
+	unsigned int size = 0;
+	int tw = 0, th = 0;
+	int w = 0, h = 0;
+
+	// This can't happen. If it does we're doomed.
+	if(width <= 0 || height <= 0)
+		goto fail;
+
+	glBindTexture(GL_TEXTURE_2D, textures[0]);
+
+	// As returned by graphics driver
+
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
+	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
+
+	// As we know it - but round to nearest power of 2 - OpenGL does this internally anyways.
+	tw = clp2(width); // known to be > 0.
+	th = clp2(height);
+
+	if (w != tw || h != th)
+	{
+		std::ostringstream os;
+		os << "Texture::getBufferAndSize() WARNING: width/height disagree: ";
+		os << "Driver says (" << w << ", " << h << "); ";
+		os << "Texture says (" << width << ", " << height << "); ";
+		os << "Rounded to (" << tw << ", " << th << ")";
+		debugLog(os.str());
+		// choose max. for size calculation
+		w = w > tw ? w : tw;
+		h = h > th ? h : th;
+	}
+
+	size = w * h * 4;
+	if (!size)
+		goto fail;
+
+	data = (unsigned char*)malloc(size + 32);
+	if (!data)
+	{
+		std::ostringstream os;
+		os << "Game::fillGridFromQuad allocation failure, size = " << size;
+		errorLog(os.str());
+		goto fail;
+	}
+	memcpy(data + size, "SAFE", 5);
+	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	// Not sure but this might be the case with nouveau drivers on linux... still investigating. -- fg
+	if(memcmp(data + size, "SAFE", 5))
+	{
+		errorLog("Texture::getBufferAndSize(): Broken graphics driver! Wrote past end of buffer!");
+		free(data); // in case we are here, this will most likely cause a crash.
+		goto fail;
+	}
+
+	*wparam = w;
+	*hparam = h;
+	*sizeparam = size;
+	return data;
+
+
+fail:
+	*wparam = 0;
+	*hparam = 0;
+	*sizeparam = 0;
+	return NULL;
+}

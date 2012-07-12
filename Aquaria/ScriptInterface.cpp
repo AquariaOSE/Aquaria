@@ -988,6 +988,14 @@ luaFunc(obj_setTexture)
 	luaReturnNil();
 }
 
+luaFunc(obj_getTexture)
+{
+    RenderObject *r = robj(L);
+    if (r && r->texture)
+        luaReturnStr(r->texture->name.c_str());
+    luaReturnStr("");
+}
+
 luaFunc(obj_delete)
 {
 	RenderObject *r = robj(L);
@@ -1490,6 +1498,7 @@ luaFunc(quad_setHeight)
 	RO_FUNC(getter, prefix,  internalOffset	) \
 	RO_FUNC(getter, prefix,  getInternalOffset) \
 	RO_FUNC(getter, prefix,  getPosition	) \
+	RO_FUNC(getter, prefix,  getTexture		) \
 	RO_FUNC(getter, prefix,  x				) \
 	RO_FUNC(getter, prefix,  y				) \
 	RO_FUNC(getter, prefix,  setBlendType	) \
@@ -5755,6 +5764,33 @@ luaFunc(entity_pullEntities)
 	luaReturnNil();
 }
 
+// Note that this overrides the generic obj_delete function for entities.
+// (It's registered as "entity_delete" to Lua)
+// There is at least one known case where this is necessary:
+// Avatar::pullTarget does a life check to drop the pointer;
+// If it's instantly deleted, this will cause a crash.
+luaFunc(entity_delete_override)
+{
+	Entity *e = entity(L);
+	if (e)
+	{
+		float time = lua_tonumber(L, 2);
+		if (time == 0)
+		{
+			e->alpha = 0;
+			e->setLife(0);
+			e->setDecayRate(1);
+		}
+		else
+		{
+			e->fadeAlphaWithLife = true;
+			e->setLife(1);
+			e->setDecayRate(1.0f/time);
+		}
+	}
+	luaReturnInt(0);
+}
+
 luaFunc(entity_isRidingOnEntity)
 {
 	Entity *e = entity(L);
@@ -8047,6 +8083,7 @@ static const struct {
 	// -- overrides / special cases--
 
 	{"bone_getPosition", l_bone_getWorldPosition},
+	{ "entity_delete", l_entity_delete_override },
 
 	// -- deprecated/compatibility related functions below here --
 

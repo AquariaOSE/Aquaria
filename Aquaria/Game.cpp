@@ -635,7 +635,7 @@ void FoodSlot::onUpdate(float dt)
 		if ((core->mouse.position - getWorldPosition()).isLength2DIn(16))
 		//if (isCursorIn())
 		{
-			dsq->game->foodLabel->setText(splitCamelCase(ingredient->name));
+			dsq->game->foodLabel->setText(ingredient->displayName);
 			dsq->game->foodLabel->alpha.interpolateTo(1, 0.2);
 
 			dsq->game->foodDescription->setText(dsq->continuity.getIngredientAffectsString(ingredient));
@@ -1971,30 +1971,13 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 		h2/=TILE_SIZE;
 		tpos.x -= w2;
 		tpos.y -= h2;
-		GLuint id = q->texture->textures[0];
+
 		int w = 0, h = 0;
-		glBindTexture(GL_TEXTURE_2D, id);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-		//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-		unsigned int size = w*h*4;
-		if (!size || w <= 0 || h <= 0)
-			return;
-		unsigned char *data = (unsigned char*)malloc(size + 6);
-		memcpy(data + size, "SAFE", 5);
+		unsigned int size = 0;
+		unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
-			errorLog("Game::fillGridFromQuad allocation failure");
-			return;
-		}
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		// Not sure but this might be the case with nouveau drivers on linux... still investigating. -- fg
-		if(memcmp(data + size, "SAFE", 5))
-		{
-			errorLog("Game::fillGridFromQuad(): Broken graphics driver! Wrote past end of buffer!");
-			free(data); // in case we are here, this will most likely cause a crash.
+			debugLog("Failed to get buffer in Game::fillGridFromQuad()");
 			return;
 		}
 
@@ -2041,16 +2024,13 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			}
 		}
 
-		if (data)
-		{
-			free(data);
-			data = 0;
-		}
+		free(data);
 
 		if (trim)
 		{
-			std::vector<TileVector> obsCopy = obs;
-			obs.clear();
+			std::vector<TileVector> obsCopy;
+			obsCopy.swap(obs);
+			// obs now empty
 
 			int sides = 0;
 			for (int i = 0; i < obsCopy.size(); i++)
@@ -2803,25 +2783,15 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 		h2/=TILE_SIZE;
 		tpos.x -= w2;
 		tpos.y -= h2;
-		GLuint id = q->texture->textures[0];
+
 		int w = 0, h = 0;
-		glBindTexture(GL_TEXTURE_2D, id);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_WIDTH, &w);
-		glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
-		//glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_COMPONENTS, &c);// assume 4
-
-		unsigned int size = w*h*4;
-		if (!size || w <= 0 || h <= 0)
-			return;
-
-		unsigned char *data = (unsigned char*)malloc(size);
-
+		unsigned int size = 0;
+		unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
-			debugLog("Could not malloc in Game::generateCollisionMask");
+			debugLog("Failed to get buffer in Game::generateCollisionMask()");
 			return;
 		}
-		glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
 
 		q->collisionMaskRadius = 0;
 
@@ -2865,6 +2835,10 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 			}
 		}
 
+		q->collisionMaskRadius = 512;
+
+		free(data);
+
 
 		/*
 		for (int i = 0; i < q->collisionMask.size(); i++)
@@ -2887,10 +2861,7 @@ void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
 			q->collisionMaskRadius = h2*2;
 		*/
 		//q->collisionMaskRadius = sqrtf(sqr(w2)+sqr(h2));
-		q->collisionMaskRadius = 512;
 
-		glBindTexture(GL_TEXTURE_2D, 0);
-		free(data);
 		/*
 		int rot = rotation.z;
 		while (rot > 360)
@@ -7948,34 +7919,34 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 
 // These say "Mac" but we use them on Linux, too.
 #if defined(BBGE_BUILD_UNIX)
-		std::string fname = dsq->user.localisePath("data/help_header_mac.txt");
+		std::string fname = localisePath("data/help_header_mac.txt");
 		appendFileToString(data, fname);
 #else
-		std::string fname = dsq->user.localisePath("data/help_header.txt");
+		std::string fname = localisePath("data/help_header.txt");
 		appendFileToString(data, fname);
 #endif
 		if (dsq->continuity.hasSong(SONG_BIND)) {
-			fname = dsq->user.localisePath("data/help_bindsong.txt");
+			fname = localisePath("data/help_bindsong.txt");
 			appendFileToString(data, fname);
 		}
 		if (dsq->continuity.hasSong(SONG_ENERGYFORM)) {
-			fname = dsq->user.localisePath("data/help_energyform.txt");
+			fname = localisePath("data/help_energyform.txt");
 			appendFileToString(data, fname);
 		}
-		fname = dsq->user.localisePath("data/help_start.txt");
+		fname = localisePath("data/help_start.txt");
 		appendFileToString(data, fname);
 		
 // These say "Mac" but we use them on Linux, too.
 #if defined(BBGE_BUILD_UNIX)
-		fname = dsq->user.localisePath("data/help_end_mac.txt");
+		fname = localisePath("data/help_end_mac.txt");
 		appendFileToString(data, fname);
 #else
-		fname = dsq->user.localisePath("data/help_end.txt");
+		fname = localisePath("data/help_end.txt");
 		appendFileToString(data, fname);
 #endif
 
 		// !!! FIXME: this is such a hack.
-		data += "\n\n[Achievements]\n\n";
+		data += "\n\n" + dsq->continuity.stringBank.get(2032) + "\n\n";
 		dsq->continuity.statsAndAchievements->appendStringData(data);
 
 		helpBG = new Quad;
@@ -11211,7 +11182,7 @@ void Game::learnedRecipe(Recipe *r, bool effects)
 	if (nocasecmp(dsq->getTopStateData()->name,"Game")==0 && !applyingState)
 	{
 		std::ostringstream os;
-		os << dsq->continuity.stringBank.get(23) << " "  << splitCamelCase(r->result) << " " << dsq->continuity.stringBank.get(24);
+		os << dsq->continuity.stringBank.get(23) << " "  << r->resultDisplayName << " " << dsq->continuity.stringBank.get(24);
 		IngredientData *data = dsq->continuity.getIngredientDataByName(r->result);
 		if (data)
 		{

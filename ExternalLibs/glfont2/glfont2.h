@@ -36,9 +36,9 @@ private:
 	//glFont header structure
 	struct
 	{
-		int tex;
-		int tex_width, tex_height;
-		int start_char, end_char;
+		unsigned int tex;
+		unsigned int tex_width, tex_height;
+		unsigned int start_char, end_char;
 		GLFontChar *chars;
 	} header;
 
@@ -70,9 +70,9 @@ public:
 	int GetEndChar (void);
 
 	//Character size retrieval methods
-	void GetCharSize (int c, std::pair<int, int> *size);
-	int GetCharWidth (int c);
-	int GetCharHeight (int c);
+	void GetCharSize (unsigned int c, std::pair<int, int> *size);
+	int GetCharWidth (unsigned int c);
+	int GetCharHeight (unsigned int c);
 	
 	void GetStringSize (const std::string &text, std::pair<int, int> *size);
 

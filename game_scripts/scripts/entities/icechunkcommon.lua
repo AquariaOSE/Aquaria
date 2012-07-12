@@ -55,7 +55,7 @@ function v.commonInit(me, size)
 	512,							-- sprite height
 	1,								-- particle "explosion" type, maps to particleEffects.txt -1 = none
 	1,								-- 0/1 hit other entities off/on (uses collideRadius)
-	4000,							-- updateCull -1: disabled, default: 4000
+	4000							-- updateCull -1: disabled, default: 4000
 	)
 	
 	loadSound("IceChunkBreak")

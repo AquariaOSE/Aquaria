@@ -28,11 +28,17 @@ void StringBank::load()
 {
 	stringMap.clear();
 
-	std::string fname = dsq->user.localisePath("data/stringbank.txt");
+	// First, load the default string banks
+	_load("data/stringbank.txt");
+	if (dsq->mod.isActive())
+		_load(dsq->mod.getPath() + "stringbank.txt");
+
+	// Then, load localized ones. If some entries in these are missing, the default for each is taken.
+	std::string fname = localisePath("data/stringbank.txt");
 	_load(fname);
 
 	if (dsq->mod.isActive()) {
-		fname = dsq->user.localisePath(dsq->mod.getPath() + "stringbank.txt", dsq->mod.getPath());
+		fname = localisePath(dsq->mod.getPath() + "stringbank.txt", dsq->mod.getPath());
 		_load(fname);
 	}
 }

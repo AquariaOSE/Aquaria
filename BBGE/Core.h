@@ -39,6 +39,7 @@ BUILD_LINUX
 #include "Flags.h"
 //#include "Scripting.h"
 #include "Effects.h"
+#include "Localization.h"
 
 #include "DarkLayer.h"
 

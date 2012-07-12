@@ -386,6 +386,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Interpolator.cpp
     ${BBGEDIR}/Joystick.cpp
     ${BBGEDIR}/LensFlare.cpp
+    ${BBGEDIR}/Localization.cpp
     ${BBGEDIR}/Math.cpp
     ${BBGEDIR}/MT.cpp
     ${BBGEDIR}/ParticleEffect.cpp

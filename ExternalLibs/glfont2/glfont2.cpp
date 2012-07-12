@@ -47,7 +47,7 @@ GLFont::~GLFont ()
 //*******************************************************************
 bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 {
-	int num_chars, num_tex_bytes;
+	ByteBuffer::uint32 num_chars, num_tex_bytes;
 	char *tex_bytes;
 
 	//Destroy the old font if there was one, just to be safe
@@ -74,16 +74,14 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	vfclose(fh);
 #endif
 
-	int dummy;
-
 	// Read the header from file
 	header.tex = tex;
-	bb >> dummy; // skip tex field
-	bb >> header.tex_width;
-	bb >> header.tex_height;
-	bb >> header.start_char;
-	bb >> header.end_char;
-	bb >> dummy; // skip chars field
+	bb.skipRead(4); // skip tex field
+	header.tex_width = bb.read<ByteBuffer::uint32>();
+	header.tex_height = bb.read<ByteBuffer::uint32>();
+	header.start_char = bb.read<ByteBuffer::uint32>();
+	header.end_char = bb.read<ByteBuffer::uint32>();
+	bb.skipRead(4); // skip chars field
 
 	//Allocate space for character array
 	num_chars = header.end_char - header.start_char + 1;
@@ -91,7 +89,7 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 		return false;
 
 	//Read character array
-	for (int i = 0; i < num_chars; i++)
+	for (unsigned int i = 0; i < num_chars; i++)
 	{
 		bb >> header.chars[i].dx;
 		bb >> header.chars[i].dy;
@@ -104,8 +102,8 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	//Read texture pixel data
 	num_tex_bytes = header.tex_width * header.tex_height * 2;
 	tex_bytes = new char[num_tex_bytes];
-	//input.read(tex_bytes, num_tex_bytes);
-	bb.read(tex_bytes, num_tex_bytes);
+	// HACK: Aquaria uses override textures, so we can live with the truncation.
+	bb.read(tex_bytes, std::min(num_tex_bytes, bb.readable()));
 
 	//Build2DMipmaps(3, header.tex_width, header.tex_height, GL_UNSIGNED_BYTE, tex_bytes, 1);
 
@@ -197,7 +195,7 @@ int GLFont::GetEndChar (void)
 	return header.end_char;
 }
 //*******************************************************************
-void GLFont::GetCharSize (int c, std::pair<int, int> *size)
+void GLFont::GetCharSize (unsigned int c, std::pair<int, int> *size)
 {
 	//Make sure character is in range
 	if (c < header.start_char || c > header.end_char)
@@ -218,7 +216,7 @@ void GLFont::GetCharSize (int c, std::pair<int, int> *size)
 	}
 }
 //*******************************************************************
-int GLFont::GetCharWidth (int c)
+int GLFont::GetCharWidth (unsigned int c)
 {
 	//Make sure in range
 	if (c < header.start_char || c > header.end_char)
@@ -242,7 +240,7 @@ int GLFont::GetCharWidth (int c)
 	}
 }
 //*******************************************************************
-int GLFont::GetCharHeight (int c)
+int GLFont::GetCharHeight (unsigned int c)
 {
 	//Make sure in range
 	if (c < header.start_char || c > header.end_char)
@@ -268,7 +266,7 @@ void GLFont::Begin (void)
 void GLFont::GetStringSize (const std::string &text, std::pair<int, int> *size)
 {
 	unsigned int i;
-	char c;
+	unsigned char c;
 	GLFontChar *glfont_char;
 	float width;
 	
@@ -282,7 +280,7 @@ void GLFont::GetStringSize (const std::string &text, std::pair<int, int> *size)
 	for (i = 0; i < text.size(); i++)
 	{
 		//Make sure character is in range
-		c = (char)text[i];
+		c = (unsigned char)text[i];
 		
 		if (c < header.start_char || c > header.end_char)
 			continue;

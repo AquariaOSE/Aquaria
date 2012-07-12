@@ -168,6 +168,15 @@ IngredientType Continuity::getIngredientTypeFromName(const std::string &name) co
 	return IT_NONE;
 }
 
+std::string Continuity::getIngredientDisplayName(const std::string& name) const
+{
+	IngredientNameMap::const_iterator it = ingredientDisplayNames.find(name);
+	if (it != ingredientDisplayNames.end())
+		return it->second;
+
+	return splitCamelCase(name);
+}
+
 IngredientData *Continuity::getIngredientHeldByIndex(int idx) const
 {
 	if (idx < 0 || idx >= ingredients.size()) return 0;
@@ -191,6 +200,7 @@ void Recipe::clear()
 	types.clear();
 	names.clear();
 	result = "";
+	resultDisplayName = "";
 	known = false;
 }
 
@@ -857,13 +867,6 @@ std::string Continuity::getIngredientAffectsString(IngredientData *data)
 	return getAllIEString(data);
 }
 
-std::string Continuity::getIngredientDescription(IngredientEffectType type)
-{
-	int t = (int)type;
-	if (t < 0 || t >= ingredientDescriptions.size()) return "";
-	return ingredientDescriptions[t].text;
-}
-
 void Continuity::loadTreasureData()
 {
 	treasureData.clear();
@@ -899,20 +902,6 @@ void Continuity::clearIngredientData()
 void Continuity::loadIngredientData(const std::string &file)
 {
 	std::string line, name, gfx, type, effects;
-
-	ingredientDescriptions.clear();
-
-	/*
-	int num;
-	InStream in2("data/ingredientdescriptions.txt");
-	while (std::getline(in2, line))
-	{
-		IngredientDescription desc;
-		std::istringstream inLine(line);
-		inLine >> num >> desc.text;
-		ingredientDescriptions.push_back(desc);
-	}
-	*/
 
 	clearIngredientData();
 	recipes.clear();
@@ -1060,7 +1049,6 @@ void Continuity::loadIngredientData(const std::string &file)
 		Recipe r;
 		while (in >> name)
 		{
-			r.result = name;
 			if (name == "+")
 			{
 				continue;
@@ -1073,10 +1061,13 @@ void Continuity::loadIngredientData(const std::string &file)
 			else
 			{
 				if (quitNext)
+				{
 					r.result = name;
+					r.resultDisplayName = getIngredientDisplayName(name);
+				}
 				else
 				{
-					IngredientType it = dsq->continuity.getIngredientTypeFromName(name);
+					IngredientType it = getIngredientTypeFromName(name);
 					if (it == IT_NONE)
 					{
 						r.addName(name);
@@ -1099,6 +1090,24 @@ void Continuity::loadIngredientData(const std::string &file)
 		}
 	}
 	in.close();
+}
+
+void Continuity::loadIngredientDisplayNames(const std::string& file)
+{
+	InStream in(file);
+	if (!in)
+		return;
+
+	std::string line, name, text;
+	while (std::getline(in, line))
+	{
+		size_t pos = line.find(' ');
+		if (pos == std::string::npos)
+			continue;
+		name = line.substr(0, pos);
+		text = line.substr(pos + 1);
+		ingredientDisplayNames[name] = text;
+	}
 }
 
 void Continuity::learnFormUpgrade(FormUpgradeType form)
@@ -1200,11 +1209,11 @@ void Continuity::loadSongBank()
 	songSlotNames.clear();
 	songBank.clear();
 
-	loadIntoSongBank(dsq->user.localisePath("data/songs.xml"));
+	loadIntoSongBank(localisePath("data/songs.xml"));
 
 	if (dsq->mod.isActive())
 	{
-		loadIntoSongBank(dsq->user.localisePath(dsq->mod.getPath() + "scripts/songs.xml", dsq->mod.getPath()));
+		loadIntoSongBank(localisePath(dsq->mod.getPath() + "scripts/songs.xml", dsq->mod.getPath()));
 	}
 }
 
@@ -2534,6 +2543,7 @@ void Continuity::loadFile(int slot)
 {
 	dsq->user.save();
 	this->reset();
+	knowsSong.clear(); // Adds shield song by default, which interferes with mods that don't start with it
 
 	TiXmlDocument doc;
 	loadFileData(slot, doc);
@@ -2897,7 +2907,9 @@ void Continuity::loadFile(int slot)
 		//dsq->game->transitionToScene();
 	}
 
+	// Possibly mod-specific data the the continuity reset didn't catch
 	loadSongBank();
+	this->worldMap.load();
 }
 
 void Continuity::setNaijaModel(std::string model)
@@ -3231,23 +3243,32 @@ void Continuity::reset()
 
 	//load ingredients
 
+	ingredientDisplayNames.clear();
+
+	loadIngredientDisplayNames("data/ingredientnames.txt");
+
+	std::string fname = localisePath("data/ingredientnames.txt");
+	loadIngredientDisplayNames(fname);
+
+	if(dsq->mod.isActive())
+	{
+		fname = localisePath(dsq->mod.getPath() + "ingredientnames.txt", dsq->mod.getPath());
+		loadIngredientDisplayNames(fname);
+	}
+
 	ingredientDescriptions.clear();
 	ingredientData.clear();
 	recipes.clear();
 
-	std::string fname;
-
 	if(dsq->mod.isActive())
 	{
 		//load mod ingredients
-		fname = dsq->user.localisePath(dsq->mod.getPath() + "ingredients.txt", dsq->mod.getPath());
-		loadIngredientData(fname);
+		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
 	}
 
 	//load ingredients for the main game
 	if(ingredientData.empty() && recipes.empty()) {
-		fname = dsq->user.localisePath("data/ingredients.txt");
-		loadIngredientData(fname);
+		loadIngredientData("data/ingredients.txt");
 	}
 
 	loadPetData();
