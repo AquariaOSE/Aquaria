@@ -110,7 +110,7 @@ std::string getSystemLocale()
 
 		size_t found = localeStr.find('.');
 
-		if (found != string::npos)
+		if (found != std::string::npos)
 			localeStr.resize(found);
 	}
 #endif
