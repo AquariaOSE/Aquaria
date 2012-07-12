@@ -38,7 +38,7 @@ Mushroom Mushroom
 Oil Oil
 Part Part
 Perogi Perogi
-PerogiType Perogi Type
+PerogiType Perogi
 PlantBulb Plant Bulb
 PlantLeaf Plant Leaf
 PlumpPerogi Plump Perogi

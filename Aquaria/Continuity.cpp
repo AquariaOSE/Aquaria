@@ -3263,14 +3263,12 @@ void Continuity::reset()
 	if(dsq->mod.isActive())
 	{
 		//load mod ingredients
-		fname = localisePath(dsq->mod.getPath() + "ingredients.txt", dsq->mod.getPath());
-		loadIngredientData(fname);
+		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
 	}
 
 	//load ingredients for the main game
 	if(ingredientData.empty() && recipes.empty()) {
-		fname = localisePath("data/ingredients.txt");
-		loadIngredientData(fname);
+		loadIngredientData("data/ingredients.txt");
 	}
 
 	loadPetData();
