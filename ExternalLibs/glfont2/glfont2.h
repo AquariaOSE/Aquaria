@@ -70,9 +70,9 @@ public:
 	int GetEndChar (void);
 
 	//Character size retrieval methods
-	void GetCharSize (unsigned int c, std::pair<int, int> *size);
-	int GetCharWidth (unsigned int c);
-	int GetCharHeight (unsigned int c);
+	void GetCharSize (unsigned char c, std::pair<int, int> *size);
+	int GetCharWidth (unsigned char c);
+	int GetCharHeight (unsigned char c);
 	
 	void GetStringSize (const std::string &text, std::pair<int, int> *size);
 
@@ -86,21 +86,20 @@ public:
 		float y, const float *top_color, const float *bottom_color, float alpha, float lastAlpha)
 	{
 		unsigned int i;
-		T c;
 		GLFontChar *glfont_char;
 		float width, height;
 		
 		//Begin rendering quads
 		glBegin(GL_QUADS);
 		
-		int sz = text.size();
+		unsigned int sz = text.size();
 
 		float a = 0;
 		//Loop through characters
 		for (i = 0; i < sz; i++)
 		{
 			//Make sure character is in range
-			c = text[i];
+			unsigned int c = (unsigned char)text[i];
 			if (c < header.start_char || c > header.end_char)
 				continue;
 
