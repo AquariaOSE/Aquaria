@@ -21,8 +21,8 @@ typedef struct
     unsigned int chrs; /* chars cound, unused*/
 } GLFontHeader;
 
-#define CHR_SIZE_KOEFF_X 8.0f/256.0f
-#define CHR_SIZE_KOEFF_Y 8.5f/256.0f
+#define CHR_SIZE_KOEFF_X 8.8f/256.0f
+#define CHR_SIZE_KOEFF_Y 10.0f/256.0f
 
 int main(int argc, char **argv)
 {
