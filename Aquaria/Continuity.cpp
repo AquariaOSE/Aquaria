@@ -871,10 +871,21 @@ void Continuity::loadTreasureData()
 {
 	treasureData.clear();
 
-	std::string line, gfx;
+	std::string line, gfx, file;
 	int num, use;
 	float sz;
-	InStream in2("data/treasures.txt");
+	bool found = false;
+	if (dsq->mod.isActive())
+	{
+		file = dsq->mod.getPath() + "treasures.txt";
+		if(exists(file))
+			found = true;
+	}
+
+	if(!found)
+		file = "data/treasures.txt";
+
+	InStream in2(file.c_str());
 	while (std::getline(in2, line))
 	{
 		std::istringstream is(line);
@@ -2910,6 +2921,8 @@ void Continuity::loadFile(int slot)
 	// Possibly mod-specific data the the continuity reset didn't catch
 	loadSongBank();
 	this->worldMap.load();
+	loadTreasureData();
+	stringBank.load();
 }
 
 void Continuity::setNaijaModel(std::string model)
