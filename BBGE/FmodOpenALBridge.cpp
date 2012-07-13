@@ -568,6 +568,9 @@ namespace FMOD {
     #define SANITY_CHECK_OPENAL_CALL()
 #endif
 
+// HACK: works fairly well without it. Annoying to be thrown into the debugger because all channels are full.
+#undef SANITY_CHECK_OPENAL_CALL
+#define SANITY_CHECK_OPENAL_CALL()
 
 // simply nasty.
 #define ALBRIDGE(cls,method,params,args) \
