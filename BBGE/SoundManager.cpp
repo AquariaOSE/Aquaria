@@ -927,7 +927,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 	if (!voicePath2.empty())
 	{
 		fn = voicePath2 + name + fileType;
-		fn = localisePath(fn);
+		fn = localisePathInternalModpath(fn);
 		fn = core->adjustFilenameCase(fn);
 		if (exists(fn))	checkOther = false;
 	}
@@ -1524,7 +1524,7 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	if (slt == SFXLOAD_LOCAL && !audioPath2.empty())
 	{
 		f = audioPath2 + filename + format;
-		f = localisePath(f);
+		f = localisePathInternalModpath(f);
 		f = core->adjustFilenameCase(f);
 		if (!exists(f))
 		{

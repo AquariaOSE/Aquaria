@@ -98,6 +98,8 @@ void Mod::load(const std::string &p)
 	name = p;
 	path = baseModPath + p + "/";
 
+	setLocalisationModPath(path);
+
 	setActive(true);
 	
 	TiXmlDocument d;
@@ -138,11 +140,7 @@ void Mod::load(const std::string &p)
 		}
 	}
 
-#if defined(BBGE_BUILD_UNIX)
 	dsq->secondaryTexturePath = path + "graphics/";
-#else
-	dsq->secondaryTexturePath = "./" + path + "graphics/";
-#endif
 
 	dsq->sound->audioPath2 = path + "audio/";
 	dsq->sound->setVoicePath2(path + "audio/");
@@ -250,6 +248,7 @@ void Mod::setActive(bool a)
 	{
 		if (!active)
 		{
+			setLocalisationModPath("");
 			name = path = "";
 			dsq->secondaryTexturePath = "";
 			dsq->sound->audioPath2 = "";

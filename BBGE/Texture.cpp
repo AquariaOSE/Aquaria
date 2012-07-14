@@ -318,7 +318,7 @@ void Texture::load(std::string file)
 
 	if (found)
 	{
-		file = localisePath(file);
+		file = localisePathInternalModpath(file);
 		file = core->adjustFilenameCase(file);
 
 		/*
