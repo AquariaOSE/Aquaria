@@ -258,15 +258,15 @@ public:
 
 	void recache();
 	
-	std::string getBaseModPath();
+	const std::string& getBaseModPath() const;
 
 	bool isActive();
 	bool isDebugMenu();
 	bool hasWorldMap();
 	bool isEditorBlocked();
 
-	std::string getPath();
-	std::string getName();
+	const std::string& getPath() const;
+	const std::string& getName() const;
 	
 	void shutdown();
 	bool isShuttingDown();

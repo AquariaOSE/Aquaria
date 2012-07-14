@@ -535,6 +535,18 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 
 	//clearInputCodeMap();
 
+	if (system.locale.empty())
+	{
+		std::string loc = getSystemLocale();
+		debugLog("Using autodetected system locale: " + loc);
+		setUsedLocale(loc);
+	}
+	else
+	{
+		debugLog("Using user config locale: " + system.locale);
+		setUsedLocale(system.locale);
+	}
+
 	if (doApply)
 		apply();
 }
@@ -573,18 +585,6 @@ void UserSettings::apply()
 	dsq->bindInput();
 
 	core->settings.prebufferSounds = audio.prebuffer;
-
-	if (system.locale.empty())
-	{
-		std::string loc = getSystemLocale();
-		debugLog("Using autodetected system locale: " + loc);
-		setUsedLocale(loc);
-	}
-	else
-	{
-		debugLog("Using user config locale: " + system.locale);
-		setUsedLocale(system.locale);
-	}
 
 #endif
 }

@@ -82,7 +82,7 @@ bool Mod::loadModXML(TiXmlDocument *d, std::string modName)
 	return d->LoadFile(baseModPath + modName + ".xml");
 }
 
-std::string Mod::getBaseModPath()
+const std::string& Mod::getBaseModPath() const
 {
 	refreshBaseModPath();
 	
@@ -154,12 +154,12 @@ void Mod::load(const std::string &p)
 	particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
 }
 
-std::string Mod::getPath()
+const std::string& Mod::getPath() const
 {
 	return path;
 }
 
-std::string Mod::getName()
+const std::string& Mod::getName() const
 {
 	return name;
 }

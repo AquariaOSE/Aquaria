@@ -700,16 +700,17 @@ static bool findFile_helper(const char *rawname, std::string &fname)
 		return false;
 	if (dsq->mod.isActive())
 	{
-		fname += dsq->mod.getPath();
+		fname = dsq->mod.getPath();
 		if(fname[fname.length() - 1] != '/')
 			fname += '/';
 		fname += rawname;
+		fname = localisePath(fname, dsq->mod.getPath());
 		fname = core->adjustFilenameCase(fname);
 		if (exists(fname))
 			return true;
 	}
-
-	fname = core->adjustFilenameCase(rawname);
+	fname = localisePath(rawname);
+	fname = core->adjustFilenameCase(fname);
 	return exists(fname);
 }
 
