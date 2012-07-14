@@ -60,7 +60,7 @@ std::string localisePathInternalModpath(const std::string &path)
 
 std::string localisePath(const std::string &path, const std::string& modpath /* = "" */)
 {
-	if (s_locale.empty())
+	if (s_locale.empty() || s_locale == "-")
 		return path;
 
 	const std::string fname = path.substr(modpath.length());
