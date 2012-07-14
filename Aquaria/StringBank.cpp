@@ -71,7 +71,7 @@ void StringBank::_load(const std::string &file)
 	}
 }
 
-std::string StringBank::get(int idx)
+const std::string& StringBank::get(int idx)
 {
 	return stringMap[idx];
 }

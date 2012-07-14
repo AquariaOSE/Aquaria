@@ -200,7 +200,7 @@ public:
 	StringBank();
 	void load();
 
-	std::string get(int idx);
+	const std::string& get(int idx);
 protected:
 	void _load(const std::string &file);
 
