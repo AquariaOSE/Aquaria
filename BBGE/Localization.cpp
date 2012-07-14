@@ -32,7 +32,12 @@ void setUsedLocale(const std::string& s)
 	s_locale = s;
 }
 
-std::string localisePath(const std::string &path, const std::string &modpath /* = "" */)
+const char *getUsedLocale()
+{
+	return s_locale.c_str();
+}
+
+std::string localisePath(const std::string &path, const std::string& modpath /* = "" */)
 {
 	if (s_locale.empty())
 		return path;

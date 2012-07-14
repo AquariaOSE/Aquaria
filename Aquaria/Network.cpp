@@ -147,6 +147,10 @@ static void init()
 	os << AQUARIA_CUSTOM_BUILD_ID;
 #endif
 
+	const char *loc = getUsedLocale();
+	if(*loc)
+		os << "; Locale=" << loc;
+
 	userAgent = os.str();
 
 	if(!worker)

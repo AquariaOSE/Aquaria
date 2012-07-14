@@ -926,13 +926,17 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 	
 	if (!voicePath2.empty())
 	{
-		fn = core->adjustFilenameCase(voicePath2 + name + fileType);
+		fn = voicePath2 + name + fileType;
+		fn = localisePath(fn);
+		fn = core->adjustFilenameCase(fn);
 		if (exists(fn))	checkOther = false;
 	}
 
 	if (checkOther)
 	{
-		fn = core->adjustFilenameCase(voicePath + name + fileType);
+		fn = voicePath + name + fileType;
+		fn = localisePath(fn);
+		fn = core->adjustFilenameCase(fn);
 		if (!exists(fn))
 		{
 			debugLog("Could not find voice file [" + fn + "]");
@@ -1519,20 +1523,26 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	debugLog(filename);
 	if (slt == SFXLOAD_LOCAL && !audioPath2.empty())
 	{
-		f = core->adjustFilenameCase(audioPath2 + filename + format);
+		f = audioPath2 + filename + format;
+		f = localisePath(f);
+		f = core->adjustFilenameCase(f);
 		if (!exists(f))
 		{
-			f = core->adjustFilenameCase(path + filename + format);
+			f = path + filename + format;
+			f = localisePath(f);
+			f = core->adjustFilenameCase(f);
 		}
 	}
 	else
 	{
-		f = core->adjustFilenameCase(path + filename + format);
+		f = path + filename + format;
+		f = localisePath(f);
+		f = core->adjustFilenameCase(f);
 	}
 
 	bool loop = false;
 
-	if (f.find("loop")!=std::string::npos)
+	if (filename.find("loop")!=std::string::npos)
 	{
 		loop = true;
 	}
@@ -1545,7 +1555,7 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	}
 	else
 	{
-	    debugLog("returning 0");
+		debugLog("returning 0");
 		return Buffer();
 	}
 
