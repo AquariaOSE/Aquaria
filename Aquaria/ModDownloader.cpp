@@ -157,7 +157,7 @@ void ModDL::GetModlist(const std::string& url, bool allowChaining, bool first)
 	if(first)
 		knownServers.clear();
 	
-	// Prevent recursion, self-linling, or cycle linking.
+	// Prevent recursion, self-linking, or cycle linking.
 	// In theory, this allows setting up a server network
 	// where each server links to any servers it knows,
 	// without screwing up, but this isn't going to happen anyways.
@@ -203,7 +203,7 @@ void ModDL::GetModlist(const std::string& url, bool allowChaining, bool first)
 	{
 		scr->globeIcon->quad->color.interpolateTo(Vector(1,1,1), 0.3f);
 		scr->globeIcon->alpha.interpolateTo(0.5f, 0.2f, -1, true, true);
-		scr->dlText.setText("Retrieving online mod list...");
+		scr->dlText.setText(dsq->continuity.stringBank.get(2033));
 		scr->dlText.alpha.stopPath();
 		scr->dlText.alpha.interpolateTo(1, 0.1f);
 	}
