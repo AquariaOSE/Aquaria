@@ -8952,7 +8952,8 @@ void ScriptInterface::shutdown()
 
 Script *ScriptInterface::openScript(const std::string &file, bool ignoremissing /* = false */)
 {
-	std::string realFile = core->adjustFilenameCase(file);
+	std::string realFile = localisePath(file, dsq->mod.isActive() ? dsq->mod.getPath() : "");
+	realFile = core->adjustFilenameCase(realFile);
 	bool loadedScript = false;
 
 	lua_getglobal(baseState, "_scriptvars");
