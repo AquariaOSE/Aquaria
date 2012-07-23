@@ -8952,7 +8952,7 @@ void ScriptInterface::shutdown()
 
 Script *ScriptInterface::openScript(const std::string &file, bool ignoremissing /* = false */)
 {
-	std::string realFile = localisePath(file, dsq->mod.isActive() ? dsq->mod.getPath() : "");
+	std::string realFile = localisePathInternalModpath(file);
 	realFile = core->adjustFilenameCase(realFile);
 	bool loadedScript = false;
 
