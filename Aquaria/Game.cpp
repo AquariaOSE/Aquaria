@@ -4183,7 +4183,9 @@ bool Game::loadSceneXML(std::string scene)
 	{
 		//errorLog("Could not find [" + fn + "]");
 		//msg("Could not find map [" + fn + "]");
-		debugLog("Could not find map [" + fn + "]");
+		std::string s = "Could not find map [" + fn + "]";
+		debugLog(s);
+		dsq->screenMessage(s);
 		return false;
 	}
 	TiXmlDocument doc;
@@ -5401,10 +5403,10 @@ bool Game::loadScene(std::string scene)
 	*/
 }
 
-void Game::saveScene(std::string scene)
+bool Game::saveScene(std::string scene)
 {
 	if (!this->saveFile)
-		return;
+		return false;
 
 	std::string fn = getSceneFilename(scene);
 
@@ -5464,7 +5466,7 @@ void Game::saveScene(std::string scene)
 	saveFile->InsertEndChild(level);
 	*/
 
-	std::ostringstream obs, obsBinary;
+	std::ostringstream obs;
 	int i = 0;
 	for (i = 0; i < obsRows.size(); i++)
 	{
@@ -5596,7 +5598,13 @@ void Game::saveScene(std::string scene)
 	}
 	*/
 
-	saveFile.SaveFile(fn);
+	bool result =  saveFile.SaveFile(fn);
+	if (result)
+		debugLog("Successfully saved map: " + fn);
+	else
+		debugLog("Failed to save map: " + fn);
+
+	return result;
 }
 
 void Game::warpToArea(WarpArea *area)

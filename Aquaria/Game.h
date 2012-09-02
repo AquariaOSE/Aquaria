@@ -693,7 +693,7 @@ public:
 
 	ElementTemplate *getElementTemplateByIdx(int idx);
 
-	void saveScene(std::string scene);
+	bool saveScene(std::string scene);
 	typedef std::vector<WarpArea> WarpAreas;
 	WarpAreas warpAreas;
 
