@@ -300,7 +300,18 @@ void DSQ::newGame()
 
 void DSQ::loadElementEffects()
 {
- 	std::ifstream inFile("data/elementeffects.txt");
+	bool found = false;
+	std::string fn;
+	if (dsq->mod.isActive())
+	{
+		fn = dsq->mod.getPath() + "elementeffects.txt";
+		if(exists(fn))
+			found = true;
+	}
+	if(!found)
+		fn = "data/elementeffects.txt";
+
+	InStream inFile(fn.c_str());
 	elementEffects.clear();
 	std::string line;
 	while (std::getline(inFile, line))
