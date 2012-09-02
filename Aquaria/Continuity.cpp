@@ -2553,11 +2553,25 @@ void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 void Continuity::loadFile(int slot)
 {
 	dsq->user.save();
-	this->reset();
-	knowsSong.clear(); // Adds shield song by default, which interferes with mods that don't start with it
 
 	TiXmlDocument doc;
 	loadFileData(slot, doc);
+
+	TiXmlElement *startData = doc.FirstChildElement("StartData");
+	if (startData)
+	{
+		if (startData->Attribute("mod"))
+		{
+#ifdef AQUARIA_DEMO
+			exit(-1);
+#else
+			dsq->mod.load(startData->Attribute("mod"));
+#endif
+		}
+	}
+
+	this->reset();
+	knowsSong.clear(); // Adds shield song by default, which interferes with mods that don't start with it
 
 	int versionMajor=-1, versionMinor=-1, versionRevision=-1;
 	TiXmlElement *xmlVersion = doc.FirstChildElement("Version");
@@ -2797,7 +2811,6 @@ void Continuity::loadFile(int slot)
 		e2 = e2->NextSiblingElement("StringFlag");
 	}
 
-	TiXmlElement *startData = doc.FirstChildElement("StartData");
 	if (startData)
 	{
 		int x = atoi(startData->Attribute("x"));
@@ -2809,15 +2822,6 @@ void Continuity::loadFile(int slot)
 		if (startData->Attribute("naijaModel"))
 		{
 			//dsq->continuity.naijaModel = startData->Attribute("naijaModel");
-		}
-
-		if (startData->Attribute("mod"))
-		{
-#ifdef AQUARIA_DEMO
-			exit(-1);
-#else
-			dsq->mod.load(startData->Attribute("mod"));
-#endif
 		}
 
 		if (startData->Attribute("form"))
@@ -2917,12 +2921,6 @@ void Continuity::loadFile(int slot)
 		dsq->game->sceneToLoad = startData->Attribute("scene");
 		//dsq->game->transitionToScene();
 	}
-
-	// Possibly mod-specific data the the continuity reset didn't catch
-	loadSongBank();
-	this->worldMap.load();
-	loadTreasureData();
-	stringBank.load();
 }
 
 void Continuity::setNaijaModel(std::string model)
