@@ -7728,9 +7728,9 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 
 		Vector p = controlHint_mouseLeft->position + Vector(-100,0);
 
-		os.seekp(0);
-		os << "song/songslot-" << dsq->continuity.getSongSlotByType(songType) << '\0'; // ensure correct string termination across compilers
-		Quad *q = new Quad(os.str(), p);
+		char sbuf[32];
+		sprintf(sbuf, "song/songslot-%d", dsq->continuity.getSongSlotByType(songType));
+		Quad *q = new Quad(sbuf, p);
 		q->followCamera = 1;
 		q->scale = Vector(0.7, 0.7);
 		q->alpha = 0;
@@ -7743,9 +7743,8 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 		{
 			int note = song->notes[i];
 
-			os.seekp(0);
-			os << "song/notebutton-" << note << '\0';
-			Quad *q = new Quad(os.str(), p);
+			sprintf(sbuf, "song/notebutton-%d", note);
+			Quad *q = new Quad(sbuf, p);
 			q->color = dsq->getNoteColor(note)*0.5f + Vector(1, 1, 1)*0.5f;
 			q->followCamera = 1;
 			q->scale = Vector(1.0, 1.0);
