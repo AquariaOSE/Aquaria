@@ -108,6 +108,8 @@ void GridRender::onRender()
 		startY = 0;
 	if (endY >= MAX_GRID)
 		endY = MAX_GRID-1;
+	if (startY > endY)
+		return;
 	for (int x = startX; x <= endX; ++x)
 	{
 		const signed char *gridColumn = dsq->game->getGridColumn(x);
