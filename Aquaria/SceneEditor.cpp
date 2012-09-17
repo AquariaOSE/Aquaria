@@ -3107,9 +3107,9 @@ void SceneEditor::selectEnd()
 			for (int i = 0; i < dsq->game->elementTemplates.size(); i++)
 			{
 				ElementTemplate et = dsq->game->elementTemplates[i];
-				if (et.idx < 1024 && et.idx > largest)
+				if (et.idx < 1024 && i > largest)
 				{
-					largest = et.idx;
+					largest = i;
 				}
 			}
 			curElement = largest;
