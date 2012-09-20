@@ -9925,8 +9925,8 @@ void Game::constrainCamera()
 	cameraOffBounds = 0;
 	if (cameraConstrained)
 	{
-		int vw2 = core->getVirtualOffX()*core->invGlobalScale;
-		int vh2 = core->getVirtualOffY()*core->invGlobalScale;
+		float vw2 = core->getVirtualOffX()*core->invGlobalScale;
+		float vh2 = core->getVirtualOffY()*core->invGlobalScale;
 
 		if (dsq->cameraPos.x - vw2 < (cameraMin.x+1))
 		{
@@ -9940,9 +9940,11 @@ void Game::constrainCamera()
 			cameraOffBounds = 1;
 		}
 
-		int scrw, scrh;
-		scrw = core->getVirtualWidth()*core->invGlobalScale;
-		scrh = 600*core->invGlobalScale;
+		// The camera is positioned at (0, 0) screen coordinates, which, on widescreen resolutions,
+		// is *not* the upper left corner. Subtract the offset to get the real position.
+		// HACK: One column shows through after blackness ends, adding TILE_SIZE fixes this. -- fg
+		float scrw = (core->getVirtualWidth()-core->getVirtualOffX()+TILE_SIZE)*core->invGlobalScale;
+		float scrh = 600*core->invGlobalScale;
 
 		if (cameraMax.x != -1 && dsq->cameraPos.x + scrw >= cameraMax.x)
 		{
