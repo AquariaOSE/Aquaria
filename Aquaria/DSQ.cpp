@@ -994,11 +994,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	float asp = float(user.video.resx)/float(user.video.resy);
 
-	
-	if (asp >= 1.0f && asp < 1.8f)
-	{
-	}
-	else
+	if(asp < 1.0f)
 	{
 		std::ostringstream os;
 		os << "Aspect ratio for resolution [" << user.video.resx << ", " << user.video.resy << "] not supported.";
