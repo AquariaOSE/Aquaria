@@ -2571,7 +2571,6 @@ void Continuity::loadFile(int slot)
 	}
 
 	this->reset();
-	knowsSong.clear(); // Adds shield song by default, which interferes with mods that don't start with it
 
 	int versionMajor=-1, versionMinor=-1, versionRevision=-1;
 	TiXmlElement *xmlVersion = doc.FirstChildElement("Version");
@@ -3249,6 +3248,7 @@ void Continuity::reset()
 	worldMap.load();
 
 	ingredients.clear();
+	naijaEats.clear();
 
 	foodSortType = 0;
 
