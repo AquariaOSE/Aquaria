@@ -359,6 +359,7 @@ static void scriptError(lua_State *L, const std::string& msg)
 // memory location, be sure this is the case before running into undefined behavior later.
 // - The C++ standard allows offsetof() only on POD-types. Oh well, it probably works anyways.
 // If it does not compile for some reason, comment it out, hope for the best, and go ahead.
+#if !(defined(__GNUC__) && __GNUC__ <= 2)
 void compile_time_assertions()
 {
 #define oo(cls) offsetof(cls, _objtype)
@@ -377,6 +378,7 @@ void compile_time_assertions()
 	compile_assert(oo(Path) == oo(BaseText));
 #undef oo
 }
+#endif
 
 template <typename T>
 static void ensureType(lua_State *L, T *& ptr, ScriptObjectType ty)

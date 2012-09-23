@@ -18,7 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#pragma once
+#ifndef BBGE_VECTOR_H
+#define BBGE_VECTOR_H
 
 #include <math.h>
 #include <float.h>
@@ -64,13 +65,13 @@ public:
      }
 
      // vecector equality
-     const bool operator==(const Vector &vec) const
+     bool operator==(const Vector &vec) const
      {
           return ((x == vec.x) && (y == vec.y) && (z == vec.z));
      }
 
      // vecector inequality
-     const bool operator!=(const Vector &vec) const
+     bool operator!=(const Vector &vec) const
      {
           return !(*this == vec);
      }
@@ -106,10 +107,6 @@ public:
      {    
           return Vector(-x, -y, -z);
      }
-	 bool isZero()
-	 {
-		 return x == 0 && y == 0 && z == 0;
-	 }
 
      // vector decrement
      const Vector &operator-=(const Vector& vec)
@@ -201,12 +198,12 @@ public:
           return Vector(y*vec.z - z*vec.y, z*vec.x - x*vec.z, x*vec.y - y*vec.x);
      }
 
-	 Vector inline getPerpendicularLeft()
+	 inline Vector getPerpendicularLeft()
 	 {
 		 return Vector(-y, x);
 	 }
 
- 	 Vector inline getPerpendicularRight()
+	 inline Vector getPerpendicularRight()
 	 {
 		 return Vector(y, -x);
 	 }
@@ -218,41 +215,41 @@ public:
      }
 
      // dot product
-     const scalar_t inline dot(const Vector &vec) const
+     inline scalar_t dot(const Vector &vec) const
      {
           return x*vec.x + y*vec.y + z*vec.z;
      }
 
-	 const scalar_t inline dot2D(const Vector &vec) const
+	 inline scalar_t dot2D(const Vector &vec) const
 	 {
 		 return x*vec.x + y*vec.y;
 	 }
 
      // dot product
-     const scalar_t operator%(const Vector &vec) const
+     scalar_t operator%(const Vector &vec) const
      {
           return x*vec.x + y*vec.x + z*vec.z;
      }
 
 
      // length of vector
-     const scalar_t inline getLength3D() const
+     inline scalar_t getLength3D() const
      {
           return (scalar_t)sqrtf(x*x + y*y + z*z);
      }
-     const scalar_t inline getLength2D() const
+     inline scalar_t getLength2D() const
      {
           return (scalar_t)sqrtf(x*x + y*y);
      }
 
      // return the unit vector
-	 const Vector inline unitVector3D() const
+	 inline const Vector unitVector3D() const
 	 {
 		return (*this) * (1/getLength3D());
 	 }
 
      // normalize this vector
-	 void inline normalize3D()
+	 inline void normalize3D()
 	 {
 		if (x == 0 && y == 0 && z == 0)
 		{
@@ -264,7 +261,7 @@ public:
 			(*this) *= 1/getLength3D();
 		}
 	 }
-	 void inline normalize2D()
+	 inline void normalize2D()
 	 {
 		if (x == 0 && y == 0)
 		{
@@ -277,7 +274,7 @@ public:
 		}
 	 }
 
-     const scalar_t operator!() const
+     scalar_t operator!() const
      {
           return sqrtf(x*x + y*y + z*z);
      }
@@ -297,7 +294,7 @@ public:
      }
 	 */
 
-	 void inline setLength3D(const float l)
+	 inline void setLength3D(const float l)
 	 {
 		// IGNORE !!
 		if (l == 0)
@@ -312,7 +309,7 @@ public:
 			this->z *= (l/len);
 		}
 	 }
-	 void inline setLength2D(const float l)
+	 inline void setLength2D(const float l)
 	 {
 		float len = getLength2D();
 		if (len == 0)
@@ -328,24 +325,24 @@ public:
 	 }
 
      // return angle between two vectors
-     const float inline Angle(const Vector& normal) const
+     inline scalar_t Angle(const Vector& normal) const
      {
           return acosf(*this % normal);
      }
 
 	 /*
-	 const scalar_t inline cheatLen() const
+	 inline scalar_t cheatLen() const
 	 {
 			return (x*x + y*y + z*z);
 	 }
-	 const scalar_t inline cheatLen2D() const
+	 inline scalar_t cheatLen2D() const
 	 {
 		 return (x*x + y*y);
 	 }
-	 const scalar_t inline getCheatLength3D() const;
+	 inline scalar_t getCheatLength3D() const;
 	 */
 
-	 const bool inline isLength2DIn(float radius) const
+	 inline bool isLength2DIn(float radius) const
 	 {
 		return (x*x + y*y) <= (radius*radius);
 	 }
@@ -359,20 +356,20 @@ public:
      }
 	 */
 
-	 const void inline setZero()
+	 inline void setZero()
 	 {
 		this->x = this->y = this->z = 0;
 	 }
-	 const float inline getSquaredLength2D() const
+	 inline scalar_t getSquaredLength2D() const
 	 {
 		return (x*x) + (y*y);
 	 }
-	 const bool inline isZero() const
+	 inline bool isZero() const
 	 {
 		return x==0 && y==0 && z==0;
 	 }
 
-	 const bool inline isNan() const
+	 inline bool isNan() const
 	 {
 #ifdef BBGE_BUILD_WINDOWS
 		return _isnan(x) || _isnan(y) || _isnan(z);
@@ -383,11 +380,11 @@ public:
 #endif
 	 }
 
-	 void inline capLength2D(const float l)
+	 inline void capLength2D(const float l)
 	 {
 		if (!isLength2DIn(l))	setLength2D(l);
 	 }
-	 void inline capRotZ360()
+	 inline void capRotZ360()
 	 {
 		while (z > 360)
 			z -= 360;
@@ -573,3 +570,5 @@ public:
 Vector getRotatedVector(const Vector &vec, float rot);
 
 Vector lerp(const Vector &v1, const Vector &v2, float dt, int lerpType);
+
+#endif // BBGE_VECTOR_H

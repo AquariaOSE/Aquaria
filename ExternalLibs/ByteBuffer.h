@@ -6,6 +6,12 @@
 #include <stdio.h>
 #include <string>
 
+#if defined(__GNUC__) && __GNUC__ <= 2
+#  define BB_OLD_GNUC
+#  include <algorithm>
+#endif
+
+
 
 // ** compatibility stuff for BBGE .... **
 
@@ -26,7 +32,7 @@
 
 namespace ByteBufferTools
 {
-	template<size_t T> inline void convert(char *val)
+	template<int T> inline void convert(char *val)
 	{
 		std::swap(*val, *(val + T - 1));
 		convert<T - 2>(val + 1);
@@ -39,12 +45,21 @@ namespace ByteBufferTools
 		convert<sizeof(T)>((char *)(val));
 	}
 
+	inline void EndianConvertRT(char *p, unsigned int size)
+	{
+		std::reverse(p, p + size);
+	}
+
 #if BB_IS_BIG_ENDIAN
 	template<typename T> inline void ToLittleEndian(T& val) { EndianConvert<T>(&val); }
+	inline void ToLittleEndianRT(void *p, unsigned int size) { EndianConvertRT((char*)p, size); }
 	template<typename T> inline void ToBigEndian(T&) { }
+	inline void ToBigEndianRT(void *p, unsigned int size) { }
 #else
 	template<typename T> inline void ToLittleEndian(T&) { }
+	inline void ToLittleEndianRT(void *p, unsigned int size) { }
 	template<typename T> inline void ToBigEndian(T& val) { EndianConvert<T>(&val); }
+	inline void ToBigEndianRT(void *p, unsigned int size) { EndianConvertRT((char*)p, size); }
 #endif
 
 	template<typename T> void ToLittleEndian(T*);   // will generate link error
@@ -52,8 +67,13 @@ namespace ByteBufferTools
 
 };
 
-#define BB_MAKE_WRITE_OP(T) inline ByteBuffer& operator<<(T val) { append<T>(val); return *this; }
-#define BB_MAKE_READ_OP(T) inline ByteBuffer& operator>>(T &val) { val = read<T>(); return *this; }
+#ifdef BB_OLD_GNUC
+#  define BB_MAKE_WRITE_OP(T) inline ByteBuffer& operator<<(T val) { appendT(&val, sizeof(T)); return *this; }
+#  define BB_MAKE_READ_OP(T) inline ByteBuffer& operator>>(T &val) { readT(&val, sizeof(T)); return *this; }
+#else
+#  define BB_MAKE_WRITE_OP(T) inline ByteBuffer& operator<<(T val) { append<T>(val); return *this; }
+#  define BB_MAKE_READ_OP(T) inline ByteBuffer& operator>>(T &val) { val = read<T>(); return *this; }
+#endif
 
 class ByteBuffer
 {
@@ -241,23 +261,17 @@ public:
 	BB_MAKE_WRITE_OP(float);
 	BB_MAKE_WRITE_OP(double);
 
-	ByteBuffer &operator<<(bool value)
-	{
-		append<char>((char)value);
-		return *this;
-	}
-
 	ByteBuffer &operator<<(const char *str)
 	{
 		append((uint8 *)str, str ? strlen(str) : 0);
-		append((uint8)0);
+		appendByte(0);
 		return *this;
 	}
 
 	ByteBuffer &operator<<(const std::string &value)
 	{
 		append((uint8 *)value.c_str(), value.length());
-		append((uint8)0);
+		appendByte(0);
 		return *this;
 	}
 
@@ -271,22 +285,18 @@ public:
 	BB_MAKE_READ_OP(float);
 	BB_MAKE_READ_OP(double);
 
-	ByteBuffer &operator>>(bool &value)
+	inline uint8 operator[](uint32 pos) const
 	{
-		value = read<char>() > 0 ? true : false;
-		return *this;
-	}
-
-	uint8 operator[](uint32 pos)
-	{
-		return read<uint8>(pos);
+		if(pos >= size())
+			BYTEBUFFER_EXCEPT(this, "operator[]", 1);
+		return _buf[pos];
 	}
 
 	ByteBuffer &operator>>(std::string& value)
 	{
 		value.clear();
 		char c;
-		while(readable() && (c = read<char>()))
+		while(readable() && (c = readByte()))
 			value += c;
 		return *this;
 	}
@@ -313,6 +323,7 @@ public:
 		_rpos += sizeof(T);
 		return r;
 	}
+
 	template <typename T> T read(uint32 pos) const
 	{
 		if(pos + sizeof(T) > size())
@@ -320,6 +331,20 @@ public:
 		T val = *((T const*)(_buf + pos));
 		ByteBufferTools::ToLittleEndian<T>(val);
 		return val;
+	}
+
+	inline uint8 readByte()
+	{
+		if (_rpos < size())
+			return _buf[_rpos++];
+		BYTEBUFFER_EXCEPT(this, "readByte", 1);
+		return 0;
+	}
+
+	void readT(void *dest, uint32 len)
+	{
+		read(dest, len);
+		ByteBufferTools::ToLittleEndianRT(dest, len);
 	}
 
 	void read(void *dest, uint32 len)
@@ -352,7 +377,7 @@ public:
 	inline uint32 readable(void) const { return size() - rpos(); }
 	inline uint32 writable(void) const { return size() - wpos(); } // free space left before realloc will occur
 
-	template <typename T> void append(T value)
+	template <typename T> inline void append(T value)
 	{
 		ByteBufferTools::ToLittleEndian<T>(value);
 		_enlargeIfReq(_wpos + sizeof(T));
@@ -360,6 +385,21 @@ public:
 		_wpos += sizeof(T);
 		if(_size < _wpos)
 			_size = _wpos;
+	}
+
+	inline void appendByte(uint8 value)
+	{
+		_enlargeIfReq(_wpos + 1);
+		_buf[_wpos++] = value;
+		if(_size < _wpos)
+			_size = _wpos;
+	}
+
+	// GCC 2.95 fails with an internal error in the template function above
+	void appendT(const void *src, uint32 bytes)
+	{
+		append(src, bytes);
+		ByteBufferTools::ToLittleEndianRT(_buf + (_wpos - bytes), bytes);
 	}
 
 	void append(const void *src, uint32 bytes)
@@ -382,7 +422,7 @@ public:
 		memcpy(_buf + pos, src, bytes);
 	}
 
-	template <typename T> void put(uint32 pos, T value)
+	template <typename T> void put(uint32 pos, const T& value)
 	{
 		if(pos >= size())
 			BYTEBUFFER_EXCEPT(this, "put", sizeof(T));
