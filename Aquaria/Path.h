@@ -18,7 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#pragma once
+#ifndef AQ_PATH_H
+#define AQ_PATH_H
 
 #include "../BBGE/Base.h"
 #include "../BBGE/Particles.h"
@@ -149,3 +150,4 @@ public:
 	void parseWarpNodeData(const std::string &dataString);
 };
 
+#endif

@@ -18,7 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#pragma once
+#ifndef BBGE_BASE_H
+#define BBGE_BASE_H
 
 #ifdef BBGE_BUILD_WINDOWS
 
@@ -296,3 +297,5 @@ void openURL(const std::string &url);
 
 std::string underscoresToSpaces(const std::string &str);
 std::string spacesToUnderscores(const std::string &str);
+
+#endif

@@ -18,7 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#pragma once
+#ifndef DEBUGFONT_H
+#define DEBUGFONT_H
 
 #include "Core.h"
 #include "BaseText.h"
@@ -66,3 +67,4 @@ public:
 	virtual void buttonPress(DebugButton *db){}
 };
 
+#endif
