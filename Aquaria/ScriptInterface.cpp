@@ -658,7 +658,7 @@ luaFunc(newindexWarnGlobal)
 	{
 		std::ostringstream os;
 		os << "WARNING: script set global "
-		   << lua_typename(L, -2)
+		   << lua_typename(L, lua_type(L, -2))
 		   << " " << varname;
 		scriptError(L, os.str());
 	}
