@@ -5,10 +5,10 @@
 #include <string.h> // for memcpy
 #include <stdio.h>
 #include <string>
+#include <algorithm>
 
 #if defined(__GNUC__) && __GNUC__ <= 2
 #  define BB_OLD_GNUC
-#  include <algorithm>
 #endif
 
 
