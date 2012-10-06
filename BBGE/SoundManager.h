@@ -213,8 +213,6 @@ public:
 
 	void update(float dt);
 
-	std::string currentMusic;
-
 	bool enabled;
 
 	bool checkError();
