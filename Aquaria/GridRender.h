@@ -67,6 +67,12 @@ protected:
 	InterpolatedVector lerp;
 };
 
+enum WorldMapRevealMethod
+{
+	REVEAL_DEFAULT	= 0,
+	REVEAL_PARTIAL	= 1  // Not visited areas have zero alpha (invisible)
+};
+
 class WorldMapRender : public RenderObject, public ActionMapper
 {
 public:
@@ -86,6 +92,9 @@ public:
 	void removeGem(GemMover *gemMover);
 	void onToggleHelpScreen();
 	bool isCursorOffHud();
+
+	static void setRevealMethod(WorldMapRevealMethod m);
+
 protected:
 	Quad *addHintQuad1, *addHintQuad2;
 	AquariaMenuItem *helpButton;
