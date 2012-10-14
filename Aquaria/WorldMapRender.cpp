@@ -62,9 +62,9 @@ namespace WorldMapRenderNamespace
 	float xMin, yMin, xMax, yMax;
 
 	float zoomMin = 0.2;
-	float zoomMax = 1;
-	const float exteriorZoomMax = 1;
-	const float interiorZoomMax = 1.8;
+	float zoomMax = 3.0;
+	const float exteriorZoomMax = 3.0;
+	const float interiorZoomMax = 3.0;
 
 	bool editorActive=false;
 
@@ -295,6 +295,7 @@ public:
 		followCamera = 1;
 		blink = false;
 		blinkTimer = 0;
+		alphaMod = 0.66;
 		canMove = gemData->canMove;
 		//canMove = true;
 		//gemData->userString = "HI THERE!";
@@ -1538,7 +1539,7 @@ void WorldMapRender::createGemHint(const std::string &gfx)
 		doubleClickTimer = 0;
 		GemData *g = dsq->continuity.pickupGem(gfx, false);
 		g->canMove = 1;
-		g->pos = getAvatarWorldMapPosition() + Vector(0, -20);
+		g->pos = getAvatarWorldMapPosition();// + Vector(0, -20);
 		g->userString = useString;
 		addGem(g);
 		fixGems();
