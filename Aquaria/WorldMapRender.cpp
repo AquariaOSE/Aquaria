@@ -44,11 +44,12 @@ namespace WorldMapRenderNamespace
 
 	enum VisMethod
 	{
-		VIS_VERTEX		= 0,
-		VIS_WRITE		= 1
+		VIS_VERTEX		= 0, // Uses the RenderObject tile grid (RenderObject::setSegs()) to display visited areas
+		VIS_WRITE		= 1  // Uses render-to-texture instead
 	};
 
 	VisMethod visMethod = VIS_VERTEX;
+	WorldMapRevealMethod revMethod = REVEAL_DEFAULT;
 
 	std::vector<Quad *> tiles;
 
@@ -61,9 +62,9 @@ namespace WorldMapRenderNamespace
 	float xMin, yMin, xMax, yMax;
 
 	float zoomMin = 0.2;
-	float zoomMax = 1;
-	const float exteriorZoomMax = 1;
-	const float interiorZoomMax = 1.8;
+	float zoomMax = 3.0;
+	const float exteriorZoomMax = 3.0;
+	const float interiorZoomMax = 3.0;
 
 	bool editorActive=false;
 
@@ -83,6 +84,23 @@ GemMover *mover=0;
 WorldMapTile *activeTile=0;
 
 const float beaconSpawnBitTime = 0.05;
+
+
+void WorldMapRender::setRevealMethod(WorldMapRevealMethod m)
+{
+	switch(m)
+	{
+		case REVEAL_PARTIAL:
+			revMethod = REVEAL_PARTIAL;
+			baseMapSegAlpha = 0;
+			break;
+
+		default:
+			revMethod = REVEAL_DEFAULT;
+			baseMapSegAlpha = 0.4;
+	}
+}
+
 
 class WorldMapBoundQuad : public Quad
 {
@@ -277,6 +295,7 @@ public:
 		followCamera = 1;
 		blink = false;
 		blinkTimer = 0;
+		alphaMod = 0.66;
 		canMove = gemData->canMove;
 		//canMove = true;
 		//gemData->userString = "HI THERE!";
@@ -731,8 +750,6 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			q->alphaMod = 0;
 
 			tile->q = q;
-
-			setProperTileColor(tile);
 			
 			q->setWidthHeight(q->getWidth()*tile->scale, q->getHeight()*tile->scale);
 			q->scale = Vector(0.25f*tile->scale2, 0.25f*tile->scale2);
@@ -740,9 +757,17 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			if (tile == activeTile)
 				activeQuad = q;
 
-			if (activeQuad == q)
+			if (revMethod == REVEAL_PARTIAL || activeQuad == q)
 			{
 				setVis(tile);
+			}
+
+			setProperTileColor(tile);
+
+			if(activeQuad == q)
+			{
+				activeTile->q->color = Vector(1,1,1);
+				activeTile->q->alphaMod = 1;
 			}
 		
 			addChild(q, PM_POINTER);
@@ -861,7 +886,13 @@ void WorldMapRender::bindInput()
 
 void WorldMapRender::destroy()
 {
-	clearVis(activeTile);
+	//clearVis(activeTile);
+	for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+	{
+		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
+		clearVis(tile);
+	}
+
 	RenderObject::destroy();
 	delete[] savedTexData;
 }
@@ -973,7 +1004,8 @@ void WorldMapRender::onUpdate(float dt)
 						{
 							if ((activeTile != selectedTile) && selectedTile->q)
 							{
-								clearVis(activeTile);
+								if(revMethod == REVEAL_DEFAULT)
+									clearVis(activeTile);
 
 								activeTile = selectedTile;
 								activeQuad = activeTile->q;
@@ -1428,8 +1460,11 @@ void WorldMapRender::toggle(bool turnON)
 		{
 			if (activeTile != originalActiveTile)
 			{
-				clearVis(activeTile);
-				setVis(originalActiveTile);
+				if(revMethod == REVEAL_DEFAULT)
+				{
+					clearVis(activeTile);
+					setVis(originalActiveTile);
+				}
 				activeTile = originalActiveTile;
 				activeQuad = activeTile->q;
 			}
@@ -1504,7 +1539,7 @@ void WorldMapRender::createGemHint(const std::string &gfx)
 		doubleClickTimer = 0;
 		GemData *g = dsq->continuity.pickupGem(gfx, false);
 		g->canMove = 1;
-		g->pos = getAvatarWorldMapPosition() + Vector(0, -20);
+		g->pos = getAvatarWorldMapPosition();// + Vector(0, -20);
 		g->userString = useString;
 		addGem(g);
 		fixGems();

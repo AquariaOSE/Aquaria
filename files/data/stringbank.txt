@@ -206,3 +206,33 @@
 2030 |Return to title
 2031 Any
 2032 [Achievements]
+2033 Retrieving online mod list...
+2100 === for options menu ===
+2101 Action
+2102 Key 1
+2103 Key 2
+2104 Joystick
+2105 Left Mouse Equiv.
+2106 Right Mouse Equiv.
+2107 Action 1: Swim
+2108 Action 2: Sing/Ability
+2109 Swim Up
+2110 Swim Down
+2111 Swim Left
+2112 Swim Right
+2113 Roll
+2114 Revert
+2115 WorldMap/Recipes
+2116 Menu/Escape
+2117 Stick 1 X
+2118 Stick 1 Y
+2119 Stick 2 X
+2120 Stick 2 Y
+2121 Prev Page
+2122 Next Page
+2123 Food Menu Cook
+2124 Food Left
+2125 Food Right
+2126 Food Drop
+2127 Look
+2128 Help

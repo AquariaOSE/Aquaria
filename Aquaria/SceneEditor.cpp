@@ -2593,12 +2593,15 @@ void SceneEditor::loadScene()
 	particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
 	Shot::loadShotBank(dsq->shotBank1, dsq->shotBank2);
 	dsq->game->loadEntityTypeList();
+	dsq->loadElementEffects();
 }
 
 void SceneEditor::saveScene()
 {
-	dsq->screenMessage(dsq->game->sceneName + " Saved!");
-	dsq->game->saveScene(dsq->game->sceneName);
+	if(dsq->game->saveScene(dsq->game->sceneName))
+		dsq->screenMessage(dsq->game->sceneName + " Saved!");
+	else
+		dsq->screenMessage(dsq->game->sceneName + " FAILED to save!");
 }
 
 void SceneEditor::deleteSelectedElement()
@@ -3104,9 +3107,9 @@ void SceneEditor::selectEnd()
 			for (int i = 0; i < dsq->game->elementTemplates.size(); i++)
 			{
 				ElementTemplate et = dsq->game->elementTemplates[i];
-				if (et.idx < 1024 && et.idx > largest)
+				if (et.idx < 1024 && i > largest)
 				{
-					largest = et.idx;
+					largest = i;
 				}
 			}
 			curElement = largest;
@@ -3482,10 +3485,12 @@ void SceneEditor::update(float dt)
 			autoSaveTimer = 0;
 			std::ostringstream os;
 			os << "auto/AUTO_" << autoSaveFile << "_" << dsq->game->sceneName;
-			std::string m = "Map AutoSaved to " + os.str();
-			dsq->game->saveScene(os.str());
-			dsq->debugLog(m);
-			dsq->screenMessage(m);
+			if(dsq->game->saveScene(os.str()))
+			{
+				std::string m = "Map AutoSaved to " + os.str();
+				dsq->debugLog(m);
+				dsq->screenMessage(m);
+			}
 
 			autoSaveFile++;
 			if (autoSaveFile > vars->autoSaveFiles)

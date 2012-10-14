@@ -281,6 +281,9 @@ void Texture::load(std::string file)
 		return;
 	}
 
+	stringToLowerUserData(file);
+	file = core->adjustFilenameCase(file);
+
 	loadName = file;
 	repeating = false;
 
@@ -315,7 +318,8 @@ void Texture::load(std::string file)
 
 	if (found)
 	{
-		file = localisePath(file);
+		file = localisePathInternalModpath(file);
+		file = core->adjustFilenameCase(file);
 
 		/*
 		std::ostringstream os;
@@ -606,7 +610,7 @@ ImageTGA *Texture::TGAloadMem(void *mem, int size)
 
 	// Read the width, height and bits per pixel (16, 24 or 32)
 	bb >> width >> height >> bits;
-	
+
 	/*
 	std::ostringstream os;
 	os << "TGALoad: width: " << width << " height: " << height << " bits: " << bits;

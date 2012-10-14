@@ -118,7 +118,7 @@ bool InStream::open(const char *fn)
         vf->dropBuf(true);
         return true;
     }
-    setstate(std::ios_base::failbit);
+    setstate(std::ios::failbit);
     return false;
 }
 

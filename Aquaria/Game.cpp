@@ -3577,48 +3577,49 @@ void Game::createInGameMenu()
 	group_keyConfig->addChild(kcb, PM_POINTER);
 
 	int offy = -20;
+
+#define SB(x) dsq->continuity.stringBank.get(x)
 	
 	TTFText *header_action = new TTFText(&dsq->fontArialSmall);
-	header_action->setText("Action");
+	header_action->setText(SB(2101));
 	header_action->position = Vector(140, 80+offy);
 	group_keyConfig->addChild(header_action, PM_POINTER);
 	
 	TTFText *header_key1 = new TTFText(&dsq->fontArialSmall);
-	header_key1->setText("Key 1");
+	header_key1->setText(SB(2102));
 	header_key1->position = Vector(350, 80+offy);
 	header_key1->setAlign(ALIGN_CENTER);
 	group_keyConfig->addChild(header_key1, PM_POINTER);
 	
 	TTFText *header_key2 = new TTFText(&dsq->fontArialSmall);
-	header_key2->setText("Key 2");
+	header_key2->setText(SB(2103));
 	header_key2->position = Vector(475, 80+offy);
 	header_key2->setAlign(ALIGN_CENTER);
 	group_keyConfig->addChild(header_key2, PM_POINTER);
 	
 	TTFText *header_joy = new TTFText(&dsq->fontArialSmall);
-	header_joy->setText("Joystick");
+	header_joy->setText(SB(2104));
 	header_joy->position = Vector(600, 80+offy);
 	header_joy->setAlign(ALIGN_CENTER);
 	group_keyConfig->addChild(header_joy, PM_POINTER);
 
+	addKeyConfigLine(group_keyConfig, SB(2105), "lmb",					100+offy, 0, 0, 0);
+	addKeyConfigLine(group_keyConfig, SB(2106), "rmb",					120+offy, 0, 0, 0);
+	addKeyConfigLine(group_keyConfig, SB(2107), "PrimaryAction",		140+offy);
+	addKeyConfigLine(group_keyConfig, SB(2108), "SecondaryAction",		160+offy);
+	addKeyConfigLine(group_keyConfig, SB(2109), "SwimUp",				180+offy);
+	addKeyConfigLine(group_keyConfig, SB(2110), "SwimDown",				200+offy);
+	addKeyConfigLine(group_keyConfig, SB(2111), "SwimLeft",				220+offy);
+	addKeyConfigLine(group_keyConfig, SB(2112), "SwimRight",			240+offy);
+	addKeyConfigLine(group_keyConfig, SB(2113), "Roll",					260+offy);
+	addKeyConfigLine(group_keyConfig, SB(2114), "Revert",				280+offy);
+	addKeyConfigLine(group_keyConfig, SB(2115), "WorldMap",				300+offy);
+	addKeyConfigLine(group_keyConfig, SB(2116), "Escape",				320+offy, 1, 0, 0);
 
-	addKeyConfigLine(group_keyConfig, "Left Mouse Equiv.",			"lmb",					100+offy, 0, 0, 0);
-	addKeyConfigLine(group_keyConfig, "Right Mouse Equiv.",			"rmb",					120+offy, 0, 0, 0);
-	addKeyConfigLine(group_keyConfig, "Action 1: Swim",				"PrimaryAction",		140+offy);
-	addKeyConfigLine(group_keyConfig, "Action 2: Sing/Ability",		"SecondaryAction",		160+offy);
-	addKeyConfigLine(group_keyConfig, "Swim Up",					"SwimUp",				180+offy);
-	addKeyConfigLine(group_keyConfig, "Swim Down",					"SwimDown",				200+offy);
-	addKeyConfigLine(group_keyConfig, "Swim Left",					"SwimLeft",				220+offy);
-	addKeyConfigLine(group_keyConfig, "Swim Right",					"SwimRight",			240+offy);
-	addKeyConfigLine(group_keyConfig, "Roll",						"Roll",					260+offy);
-	addKeyConfigLine(group_keyConfig, "Revert",						"Revert",				280+offy);
-	addKeyConfigLine(group_keyConfig, "WorldMap/Recipes",			"WorldMap",				300+offy);
-	addKeyConfigLine(group_keyConfig, "Menu/Escape",				"Escape",				320+offy, 1, 0, 0);
-
-	AquariaKeyConfig* s1x = addAxesConfigLine(group_keyConfig, "Stick 1 X",					"s1ax",					340+offy,			0);
-	AquariaKeyConfig* s1y = addAxesConfigLine(group_keyConfig, "Stick 1 Y",					"s1ay",					340+offy,			130);
-	AquariaKeyConfig* s2x = addAxesConfigLine(group_keyConfig, "Stick 2 X",					"s2ax",					340+offy,			260);
-	AquariaKeyConfig* s2y = addAxesConfigLine(group_keyConfig, "Stick 2 Y",					"s2ay",					340+offy,			380);
+	AquariaKeyConfig* s1x = addAxesConfigLine(group_keyConfig, SB(2117), "s1ax", 340+offy, 0);
+	AquariaKeyConfig* s1y = addAxesConfigLine(group_keyConfig, SB(2118), "s1ay", 340+offy, 130);
+	AquariaKeyConfig* s2x = addAxesConfigLine(group_keyConfig, SB(2119), "s2ax", 340+offy, 260);
+	AquariaKeyConfig* s2y = addAxesConfigLine(group_keyConfig, SB(2120), "s2ay", 340+offy, 380);
 	
 	s1x->setDirMove(DIR_LEFT, s1x);
 	s1x->setDirMove(DIR_RIGHT, s1y);
@@ -3634,18 +3635,18 @@ void Game::createInGameMenu()
 
 	offy += 20;
 	
-	addKeyConfigLine(group_keyConfig, "Prev Page",					"PrevPage",				340+offy);
-	addKeyConfigLine(group_keyConfig, "Next Page",					"NextPage",				360+offy);
-	addKeyConfigLine(group_keyConfig, "Food Menu Cook",				"CookFood",				380+offy);
-	addKeyConfigLine(group_keyConfig, "Food Left",					"FoodLeft",				400+offy);
-	addKeyConfigLine(group_keyConfig, "Food Right",					"FoodRight",			420+offy);
-	addKeyConfigLine(group_keyConfig, "Food Drop",					"FoodDrop",			440+offy);
+	addKeyConfigLine(group_keyConfig, SB(2121), "PrevPage",		340+offy);
+	addKeyConfigLine(group_keyConfig, SB(2122), "NextPage",		360+offy);
+	addKeyConfigLine(group_keyConfig, SB(2123), "CookFood",		380+offy);
+	addKeyConfigLine(group_keyConfig, SB(2124), "FoodLeft",		400+offy);
+	addKeyConfigLine(group_keyConfig, SB(2125), "FoodRight",	420+offy);
+	addKeyConfigLine(group_keyConfig, SB(2126), "FoodDrop",		440+offy);
 
-	addKeyConfigLine(group_keyConfig, "Look",						"Look",					460+offy);
+	addKeyConfigLine(group_keyConfig, SB(2127), "Look",			460+offy);
 	
-	addKeyConfigLine(group_keyConfig, "Help",						"ToggleHelp",			480+offy);
+	addKeyConfigLine(group_keyConfig, SB(2128), "ToggleHelp",	480+offy);
 
-
+#undef SB
 
 	group_keyConfig->shareAlphaWithChildren = 1;
 	group_keyConfig->followCamera = 1;
@@ -4182,7 +4183,9 @@ bool Game::loadSceneXML(std::string scene)
 	{
 		//errorLog("Could not find [" + fn + "]");
 		//msg("Could not find map [" + fn + "]");
-		debugLog("Could not find map [" + fn + "]");
+		std::string s = "Could not find map [" + fn + "]";
+		debugLog(s);
+		dsq->screenMessage(s);
 		return false;
 	}
 	TiXmlDocument doc;
@@ -5400,10 +5403,10 @@ bool Game::loadScene(std::string scene)
 	*/
 }
 
-void Game::saveScene(std::string scene)
+bool Game::saveScene(std::string scene)
 {
 	if (!this->saveFile)
-		return;
+		return false;
 
 	std::string fn = getSceneFilename(scene);
 
@@ -5463,7 +5466,7 @@ void Game::saveScene(std::string scene)
 	saveFile->InsertEndChild(level);
 	*/
 
-	std::ostringstream obs, obsBinary;
+	std::ostringstream obs;
 	int i = 0;
 	for (i = 0; i < obsRows.size(); i++)
 	{
@@ -5595,7 +5598,13 @@ void Game::saveScene(std::string scene)
 	}
 	*/
 
-	saveFile.SaveFile(fn);
+	bool result =  saveFile.SaveFile(fn);
+	if (result)
+		debugLog("Successfully saved map: " + fn);
+	else
+		debugLog("Failed to save map: " + fn);
+
+	return result;
 }
 
 void Game::warpToArea(WarpArea *area)
@@ -6733,6 +6742,11 @@ void Game::applyState()
 
 	worldMapRender = 0;
 
+	if(dsq->mod.isActive() && dsq->mod.mapRevealMethod != REVEAL_UNSPECIFIED)
+		WorldMapRender::setRevealMethod(dsq->mod.mapRevealMethod);
+	else
+		WorldMapRender::setRevealMethod((WorldMapRevealMethod)dsq->user.video.worldMapRevealMethod);
+
 	worldMapRender = new WorldMapRender;
 	addRenderObject(worldMapRender, LR_WORLDMAP);
 	// to hide minimap
@@ -7719,9 +7733,9 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 
 		Vector p = controlHint_mouseLeft->position + Vector(-100,0);
 
-		os.seekp(0);
-		os << "song/songslot-" << dsq->continuity.getSongSlotByType(songType) << '\0'; // ensure correct string termination across compilers
-		Quad *q = new Quad(os.str(), p);
+		char sbuf[32];
+		sprintf(sbuf, "song/songslot-%d", dsq->continuity.getSongSlotByType(songType));
+		Quad *q = new Quad(sbuf, p);
 		q->followCamera = 1;
 		q->scale = Vector(0.7, 0.7);
 		q->alpha = 0;
@@ -7734,9 +7748,8 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 		{
 			int note = song->notes[i];
 
-			os.seekp(0);
-			os << "song/notebutton-" << note << '\0';
-			Quad *q = new Quad(os.str(), p);
+			sprintf(sbuf, "song/notebutton-%d", note);
+			Quad *q = new Quad(sbuf, p);
 			q->color = dsq->getNoteColor(note)*0.5f + Vector(1, 1, 1)*0.5f;
 			q->followCamera = 1;
 			q->scale = Vector(1.0, 1.0);
@@ -9917,8 +9930,8 @@ void Game::constrainCamera()
 	cameraOffBounds = 0;
 	if (cameraConstrained)
 	{
-		int vw2 = core->getVirtualOffX()*core->invGlobalScale;
-		int vh2 = core->getVirtualOffY()*core->invGlobalScale;
+		float vw2 = core->getVirtualOffX()*core->invGlobalScale;
+		float vh2 = core->getVirtualOffY()*core->invGlobalScale;
 
 		if (dsq->cameraPos.x - vw2 < (cameraMin.x+1))
 		{
@@ -9932,9 +9945,11 @@ void Game::constrainCamera()
 			cameraOffBounds = 1;
 		}
 
-		int scrw, scrh;
-		scrw = core->getVirtualWidth()*core->invGlobalScale;
-		scrh = 600*core->invGlobalScale;
+		// The camera is positioned at (0, 0) screen coordinates, which, on widescreen resolutions,
+		// is *not* the upper left corner. Subtract the offset to get the real position.
+		// HACK: One column shows through after blackness ends, adding TILE_SIZE fixes this. -- fg
+		float scrw = (core->getVirtualWidth()-core->getVirtualOffX()+TILE_SIZE)*core->invGlobalScale;
+		float scrh = 600*core->invGlobalScale;
 
 		if (cameraMax.x != -1 && dsq->cameraPos.x + scrw >= cameraMax.x)
 		{

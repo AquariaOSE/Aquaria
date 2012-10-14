@@ -18,7 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#pragma once
+#ifndef USERSETTINGS_H
+#define USERSETTINGS_H
 
 #include <string>
 
@@ -112,6 +113,7 @@ public:
 			vsync = 1;
 			darkbuffersize = 256;
 			displaylists = 0;
+			worldMapRevealMethod = 0;
 		}
 		int shader;
 		int blur;
@@ -122,6 +124,7 @@ public:
 		int parallaxOn0, parallaxOn1, parallaxOn2;
 		int numParticles;
 		int displaylists;
+		int worldMapRevealMethod;
 	} video;
 
 	struct Control
@@ -182,3 +185,5 @@ public:
 	void save();
 	void apply();
 };
+
+#endif

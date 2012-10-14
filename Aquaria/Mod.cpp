@@ -60,6 +60,7 @@ void Mod::clear()
 	debugMenu = false;
 	hasMap = false;
 	blockEditor = false;
+	mapRevealMethod = REVEAL_UNSPECIFIED;
 }
 
 bool Mod::isDebugMenu()
@@ -82,7 +83,7 @@ bool Mod::loadModXML(TiXmlDocument *d, std::string modName)
 	return d->LoadFile(baseModPath + modName + ".xml");
 }
 
-std::string Mod::getBaseModPath()
+const std::string& Mod::getBaseModPath() const
 {
 	refreshBaseModPath();
 	
@@ -97,6 +98,8 @@ void Mod::load(const std::string &p)
 
 	name = p;
 	path = baseModPath + p + "/";
+
+	setLocalisationModPath(path);
 
 	setActive(true);
 	
@@ -135,14 +138,15 @@ void Mod::load(const std::string &p)
 				props->Attribute("blockEditor", &t);
 				blockEditor = t;
 			}
+			if (props->Attribute("worldMapRevealMethod")) {
+				int t;
+				props->Attribute("worldMapRevealMethod", &t);
+				mapRevealMethod = (WorldMapRevealMethod)t;
+			}
 		}
 	}
 
-#if defined(BBGE_BUILD_UNIX)
 	dsq->secondaryTexturePath = path + "graphics/";
-#else
-	dsq->secondaryTexturePath = "./" + path + "graphics/";
-#endif
 
 	dsq->sound->audioPath2 = path + "audio/";
 	dsq->sound->setVoicePath2(path + "audio/");
@@ -156,12 +160,12 @@ void Mod::load(const std::string &p)
 	particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
 }
 
-std::string Mod::getPath()
+const std::string& Mod::getPath() const
 {
 	return path;
 }
 
-std::string Mod::getName()
+const std::string& Mod::getName() const
 {
 	return name;
 }
@@ -250,6 +254,8 @@ void Mod::setActive(bool a)
 	{
 		if (!active)
 		{
+			mapRevealMethod = REVEAL_UNSPECIFIED;
+			setLocalisationModPath("");
 			name = path = "";
 			dsq->secondaryTexturePath = "";
 			dsq->sound->audioPath2 = "";

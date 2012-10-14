@@ -138,6 +138,8 @@ std::string getInputCodeToString(int key)
 	return "";
 }
 
+// FIXME: Move stringbank to BBGE and move these strings into it. -- fg
+
 std::string getInputCodeToUserString(int key)
 {
 	for (InputCodeMap::iterator i = inputCodeMap.begin(); i != inputCodeMap.end(); i++)

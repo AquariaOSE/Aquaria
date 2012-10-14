@@ -18,7 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#pragma once
+#ifndef SIMPLEISTRINGSTREAM_H
+#define SIMPLEISTRINGSTREAM_H
 
 /*
  * This class implements a lightweight version of the std::istringstream
@@ -729,6 +730,8 @@ inline SimpleIStringStream &SimpleIStringStream::operator>>(std::string &target)
 
 #undef VERIFY_SETUP
 #undef VERIFY
+
+#endif // SIMPLEISTRINGSTREAM_H
 
 /*************************************************************************/
 /*************************************************************************/

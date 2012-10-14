@@ -144,6 +144,12 @@ void UserSettings::save()
 				xml_saveSlotScreens.SetAttribute("on", video.saveSlotScreens);
 			}
 			xml_video.InsertEndChild(xml_saveSlotScreens);
+
+			TiXmlElement xml_worldMap("WorldMap");
+			{
+				xml_worldMap.SetAttribute("revealMethod", video.worldMapRevealMethod);
+			}
+			xml_video.InsertEndChild(xml_worldMap);
 		}
 		doc.InsertEndChild(xml_video);
 
@@ -445,6 +451,8 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		}
 
 		readInt(xml_video, "SaveSlotScreens", "on", &video.saveSlotScreens);
+
+		readInt(xml_video, "WorldMap", "revealMethod", &video.worldMapRevealMethod);
 	}
 
 	TiXmlElement *xml_control = doc.FirstChildElement("Control");
@@ -535,6 +543,18 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 
 	//clearInputCodeMap();
 
+	if (system.locale.empty())
+	{
+		std::string loc = getSystemLocale();
+		debugLog("Using autodetected system locale: " + loc);
+		setUsedLocale(loc);
+	}
+	else
+	{
+		debugLog("Using user config locale: " + system.locale);
+		setUsedLocale(system.locale);
+	}
+
 	if (doApply)
 		apply();
 }
@@ -573,18 +593,6 @@ void UserSettings::apply()
 	dsq->bindInput();
 
 	core->settings.prebufferSounds = audio.prebuffer;
-
-	if (system.locale.empty())
-	{
-		std::string loc = getSystemLocale();
-		debugLog("Using autodetected system locale: " + loc);
-		setUsedLocale(loc);
-	}
-	else
-	{
-		debugLog("Using user config locale: " + system.locale);
-		setUsedLocale(system.locale);
-	}
 
 #endif
 }

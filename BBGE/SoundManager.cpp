@@ -90,6 +90,7 @@ namespace SoundCore
 
 	bool stopMusicOnFadeOut=false;
 	bool wasPlayingVoice=false;
+	bool playingMusicOnce=false;
 
 	typedef std::list<FadeCh> FadeChs;
 	FadeChs fadeChs;
@@ -466,7 +467,7 @@ void SoundManager::toggleEffectMusic(SoundEffectType effect, bool on)
 std::string SoundManager::getVolumeString()
 {
 	std::ostringstream os;
-	os << "sfxFader: " << this->sfxFader << " sfxVol: " << this->sfxVol << std::endl;
+	os << "sfxFader: " << this->sfxFader << " sfxVol: " << this->sfxVol << " [" << lastMusic << "]" << std::endl;
 	os << "musVol: " << musVol.y << " voxVol: " << voxVol.y << std::endl;
 
 	float musicChannelVol = -1;
@@ -657,21 +658,17 @@ void SoundManager::update(float dt)
 
 	if (musicChannel)
 	{
-		bool _isplaying = false;
-		result = musicChannel->isPlaying(&_isplaying);
-		checkError();
-		if (!_isplaying)
+		if (!isPlayingMusic())
 		{
-			result = musicChannel->stop();
-			checkError();
-			musicChannel = 0;
-
-			if (musicStream)
+			if(!playingMusicOnce && lastMusic.size())
 			{
-				result = musicStream->release();
-				checkError();
-				musicStream = 0;
-			}	
+				debugLog("music not playing, but it should be - force restart");
+				playMusic(lastMusic, SLT_LOOP, SFT_IN, 1, SCT_NORMAL); // FIXME: make sure this works with playMusicOnce()
+			}
+			else
+			{
+				stopMusic();
+			}
 		}
 	}
 
@@ -685,17 +682,7 @@ void SoundManager::update(float dt)
 
 		if (musVol.y <= 0 && stopMusicOnFadeOut)
 		{
-			result = musicChannel->stop();
-			checkError();
-			musicChannel = 0;
-
-			if (musicStream)
-			{
-				result = musicStream->release();
-				checkError();
-				musicStream = 0;
-			}
-
+			stopMusic();
 			stopMusicOnFadeOut = false;
 		}
 	}
@@ -791,7 +778,6 @@ void SoundManager::fadeMusic(SoundFadeType sft, float t)
 	case SFT_CROSS:
 	{
 #ifdef BBGE_BUILD_FMODEX
-
 		if (musicChannel2)
 		{
 			musicChannel2->stop();
@@ -926,13 +912,17 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 	
 	if (!voicePath2.empty())
 	{
-		fn = core->adjustFilenameCase(voicePath2 + name + fileType);
+		fn = voicePath2 + name + fileType;
+		fn = localisePathInternalModpath(fn);
+		fn = core->adjustFilenameCase(fn);
 		if (exists(fn))	checkOther = false;
 	}
 
 	if (checkOther)
 	{
-		fn = core->adjustFilenameCase(voicePath + name + fileType);
+		fn = voicePath + name + fileType;
+		fn = localisePath(fn);
+		fn = core->adjustFilenameCase(fn);
 		if (!exists(fn))
 		{
 			debugLog("Could not find voice file [" + fn + "]");
@@ -1338,9 +1328,11 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 	case SLT_OFF:
 	case SLT_NONE:
 		mode |= FMOD_LOOP_OFF;
+		playingMusicOnce = true;
 	break;
 	default:
 		mode |= FMOD_LOOP_NORMAL;
+		playingMusicOnce = false;
 	break;
 	}
 
@@ -1384,10 +1376,13 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 
 		result = musicChannel->setPaused(false);		// This is where the sound really starts.
 		checkError();
+		debugLog("music play: " + fn);
+	}
+	else
+	{
+		debugLog("Failed to create music stream: " + fn);
 	}
 #endif
-
-	debugLog("playmusic end");
 
 	return true;
 }
@@ -1395,7 +1390,6 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 
 void SoundManager::stopMusic()
 {
-
 #ifdef BBGE_BUILD_FMODEX
 	if (musicChannel)
 	{
@@ -1410,7 +1404,7 @@ void SoundManager::stopMusic()
 		musicChannel = 0;
 	}
 #endif
-
+	playingMusicOnce = false;
 	lastMusic = "";
 }
 
@@ -1514,27 +1508,32 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 
 	std::string f = filename, name;
 
+	// HACK: proper sound looping
+	bool loop = false;
+	stringToLower(f);
+	if (f.find("loop")!=std::string::npos)
+		loop = true;
+
 	// WARNING: local sounds should go here!
 
 	debugLog(filename);
 	if (slt == SFXLOAD_LOCAL && !audioPath2.empty())
 	{
-		f = core->adjustFilenameCase(audioPath2 + filename + format);
+		f = audioPath2 + filename + format;
+		f = localisePathInternalModpath(f);
+		f = core->adjustFilenameCase(f);
 		if (!exists(f))
 		{
-			f = core->adjustFilenameCase(path + filename + format);
+			f = path + filename + format;
+			f = localisePath(f);
+			f = core->adjustFilenameCase(f);
 		}
 	}
 	else
 	{
-		f = core->adjustFilenameCase(path + filename + format);
-	}
-
-	bool loop = false;
-
-	if (f.find("loop")!=std::string::npos)
-	{
-		loop = true;
+		f = path + filename + format;
+		f = localisePath(f);
+		f = core->adjustFilenameCase(f);
 	}
 
 	int loc = f.find_last_of('/');
@@ -1545,7 +1544,7 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	}
 	else
 	{
-	    debugLog("returning 0");
+		debugLog("returning 0");
 		return Buffer();
 	}
 

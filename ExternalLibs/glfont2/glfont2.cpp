@@ -195,7 +195,7 @@ int GLFont::GetEndChar (void)
 	return header.end_char;
 }
 //*******************************************************************
-void GLFont::GetCharSize (unsigned int c, std::pair<int, int> *size)
+void GLFont::GetCharSize (unsigned char c, std::pair<int, int> *size)
 {
 	//Make sure character is in range
 	if (c < header.start_char || c > header.end_char)
@@ -216,7 +216,7 @@ void GLFont::GetCharSize (unsigned int c, std::pair<int, int> *size)
 	}
 }
 //*******************************************************************
-int GLFont::GetCharWidth (unsigned int c)
+int GLFont::GetCharWidth (unsigned char c)
 {
 	//Make sure in range
 	if (c < header.start_char || c > header.end_char)
@@ -240,7 +240,7 @@ int GLFont::GetCharWidth (unsigned int c)
 	}
 }
 //*******************************************************************
-int GLFont::GetCharHeight (unsigned int c)
+int GLFont::GetCharHeight (unsigned char c)
 {
 	//Make sure in range
 	if (c < header.start_char || c > header.end_char)
@@ -266,7 +266,7 @@ void GLFont::Begin (void)
 void GLFont::GetStringSize (const std::string &text, std::pair<int, int> *size)
 {
 	unsigned int i;
-	unsigned char c;
+	unsigned int c;
 	GLFontChar *glfont_char;
 	float width;
 	

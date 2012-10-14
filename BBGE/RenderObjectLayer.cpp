@@ -314,7 +314,8 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 		for (int i = newSize - 1; i >= sizeDiff; i--)
 		{
 			renderObjects[i] = renderObjects[i - sizeDiff];
-			renderObjects[i]->setIdx(i);  // Known to be non-NULL.
+			if(renderObjects[i])
+				renderObjects[i]->setIdx(i);
 		}
 		for (int i = 0; i < newIdx; i++)
 			renderObjects[i] = 0;

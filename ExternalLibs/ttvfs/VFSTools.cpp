@@ -17,8 +17,12 @@
 #   define WIN32_LEAN_AND_MEAN
 #   include <windows.h>
 #else
+#  ifdef __HAIKU__
+#   include <dirent.h>
+#  else
 #   include <sys/dir.h>
-#   include <unistd.h>
+#  endif
+#  include <unistd.h>
 #endif
 
 #include <sys/types.h>
@@ -49,6 +53,7 @@ void makeUppercase(std::string& s)
 }
 
 #if !_WIN32
+#ifdef DT_DIR
 static bool _IsFile(const char *path, dirent *dp)
 {
     switch(dp->d_type)
@@ -93,6 +98,35 @@ static bool _IsDir(const char *path, dirent *dp)
     }
     return false;
 }
+
+#else // No DT_DIR, assume plain POSIX
+
+static bool _IsDir(const char *path, dirent *dp)
+{
+    const int len1 = strlen(path);
+    const int len2 = strlen(dp->d_name);
+
+    char *pathname = (char*)alloca(len1 + 1 + len2 + 1 + 13);
+    strcpy (pathname, path);
+
+    /* Avoid UNC-path "//name" on Cygwin.  */
+    if (len1 > 0 && pathname[len1 - 1] != '/')
+        strcat (pathname, "/");
+
+    strcat (pathname, dp->d_name);
+
+    struct stat st;
+    if (stat (pathname, &st))
+        return false;
+    return S_ISDIR (st.st_mode);
+}
+
+static bool _IsFile(const char *path, dirent *dp)
+{
+	return !_IsDir(path, dp);
+}
+#endif
+
 #endif
 
 // returns list of *plain* file names in given directory,

@@ -73,20 +73,20 @@ void ModSelectorScreen::move(int ud, bool instant /* = false */)
 		v.data->target.y += ch;
 		v.data->timePassed = 0;
 
-		if(v.data->target.y > 150)
-			v.data->target.y = 150;
-		else if(v.data->target.y < -grid->getUsedY() / 2)
-			v.data->target.y = -grid->getUsedY() / 2;
+		if(v.data->target.y > 200)
+			v.data->target.y = 200;
+		else if(v.data->target.y < -grid->getUsedY())
+			v.data->target.y = -grid->getUsedY();
 	}
 	else
 	{
 		Vector v2 = grid->position;
 		v2.y += ch; // scroll down == grid pos y gets negative (grid scrolls up)
 
-		if(v2.y > 150)
-			grid->position.interpolateTo(Vector(v2.x, 150), t);
-		else if(v2.y < -grid->getUsedY() / 2)
-			grid->position.interpolateTo(Vector(v2.x, -grid->getUsedY() / 2), t);
+		if(v2.y > 200)
+			grid->position.interpolateTo(Vector(v2.x, 200), t);
+		else if(v2.y < -grid->getUsedY())
+			grid->position.interpolateTo(Vector(v2.x, -grid->getUsedY()), t);
 		else
 			grid->position.interpolateTo(v2, t, 0, false, true);
 	}
@@ -99,7 +99,7 @@ void ModSelectorScreen::onUpdate(float dt)
 	// mouse wheel scroll
 	if(dsq->mouse.scrollWheelChange)
 	{
-		move(dsq->mouse.scrollWheelChange);
+		move(dsq->mouse.scrollWheelChange * 2);
 	}
 
 	if(subFadeT >= 0)
@@ -369,22 +369,11 @@ static void _FadeOutAll(RenderObject *r, float t)
 
 void ModSelectorScreen::close()
 {
-	/*for(int i = 0; i < panels.size(); ++i)
-		if(i != currentPanel)
-			panels[i]->setHidden(true);*/
-
 	const float t = 0.5f;
 	_FadeOutAll(this, t);
 	//panels[currentPanel]->scale.interpolateTo(Vector(0.9f, 0.9f), t); // HMM
 	dsq->user.save();
 	dsq->toggleVersionLabel(true);
-
-	// kinda hackish
-	/*dlText.setHidden(true);
-	arrowDown.glow->setHidden(true);
-	arrowUp.glow->setHidden(true);
-	subbox.setHidden(true);
-	subtext.setHidden(true);*/
 }
 
 JuicyProgressBar::JuicyProgressBar() : Quad(), txt(&dsq->smallFont)
@@ -450,7 +439,7 @@ void BasicIcon::onUpdate(float dt)
 				dsq->modSelectorScr->move(5, true);
 			else
 				dsq->modSelectorScr->move(-5, true);
-			core->main(FRAME_TIME); // HACK: this is necessary to correctly position the mouse on the object after mofing the panel
+			core->main(FRAME_TIME); // HACK: this is necessary to correctly position the mouse on the object after moving the panel
 			setFocus(true); // re-position mouse
 		}
 	}

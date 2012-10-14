@@ -232,7 +232,7 @@ void stringToLowerUserData(std::string &s)
 	const size_t len = userdata.length();
 	const bool match = (s.length() > len) &&
 	                   ((s[len] == '/') || (s[len] == '\\')) &&
-	                   (userdata.compare(0, len, s, 0, len) == 0);
+	                   !strncmp(userdata.c_str(), s.c_str(), len);
 	if (!match)
 		stringToLower(s);
 	else
