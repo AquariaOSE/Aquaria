@@ -60,6 +60,7 @@ void Mod::clear()
 	debugMenu = false;
 	hasMap = false;
 	blockEditor = false;
+	mapRevealMethod = REVEAL_UNSPECIFIED;
 }
 
 bool Mod::isDebugMenu()
@@ -136,6 +137,11 @@ void Mod::load(const std::string &p)
 				int t;
 				props->Attribute("blockEditor", &t);
 				blockEditor = t;
+			}
+			if (props->Attribute("worldMapRevealMethod")) {
+				int t;
+				props->Attribute("worldMapRevealMethod", &t);
+				mapRevealMethod = (WorldMapRevealMethod)t;
 			}
 		}
 	}
@@ -248,6 +254,7 @@ void Mod::setActive(bool a)
 	{
 		if (!active)
 		{
+			mapRevealMethod = REVEAL_UNSPECIFIED;
 			setLocalisationModPath("");
 			name = path = "";
 			dsq->secondaryTexturePath = "";

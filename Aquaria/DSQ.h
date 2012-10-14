@@ -177,6 +177,14 @@ enum MenuPage
 	MENUPAGE_PETS		= 3
 };
 
+enum WorldMapRevealMethod
+{
+	REVEAL_UNSPECIFIED = -1,
+	REVEAL_DEFAULT	= 0,
+	REVEAL_PARTIAL	= 1  // Not visited areas have zero alpha (invisible)
+};
+
+
 /*
 class Title;
 class GameOver;
@@ -273,6 +281,8 @@ public:
 
 	static bool loadModXML(TiXmlDocument *d, std::string modName);
 	static ModType getTypeFromXML(TiXmlElement *xml);
+
+	WorldMapRevealMethod mapRevealMethod;
 
 protected:
 	bool shuttingDown;

@@ -6742,6 +6742,11 @@ void Game::applyState()
 
 	worldMapRender = 0;
 
+	if(dsq->mod.isActive() && dsq->mod.mapRevealMethod != REVEAL_UNSPECIFIED)
+		WorldMapRender::setRevealMethod(dsq->mod.mapRevealMethod);
+	else
+		WorldMapRender::setRevealMethod((WorldMapRevealMethod)dsq->user.video.worldMapRevealMethod);
+
 	worldMapRender = new WorldMapRender;
 	addRenderObject(worldMapRender, LR_WORLDMAP);
 	// to hide minimap

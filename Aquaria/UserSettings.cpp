@@ -144,6 +144,12 @@ void UserSettings::save()
 				xml_saveSlotScreens.SetAttribute("on", video.saveSlotScreens);
 			}
 			xml_video.InsertEndChild(xml_saveSlotScreens);
+
+			TiXmlElement xml_worldMap("WorldMap");
+			{
+				xml_worldMap.SetAttribute("revealMethod", video.worldMapRevealMethod);
+			}
+			xml_video.InsertEndChild(xml_worldMap);
 		}
 		doc.InsertEndChild(xml_video);
 
@@ -445,6 +451,8 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		}
 
 		readInt(xml_video, "SaveSlotScreens", "on", &video.saveSlotScreens);
+
+		readInt(xml_video, "WorldMap", "revealMethod", &video.worldMapRevealMethod);
 	}
 
 	TiXmlElement *xml_control = doc.FirstChildElement("Control");

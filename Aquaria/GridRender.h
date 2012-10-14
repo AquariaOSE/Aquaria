@@ -67,12 +67,6 @@ protected:
 	InterpolatedVector lerp;
 };
 
-enum WorldMapRevealMethod
-{
-	REVEAL_DEFAULT	= 0,
-	REVEAL_PARTIAL	= 1  // Not visited areas have zero alpha (invisible)
-};
-
 class WorldMapRender : public RenderObject, public ActionMapper
 {
 public:

@@ -113,6 +113,7 @@ public:
 			vsync = 1;
 			darkbuffersize = 256;
 			displaylists = 0;
+			worldMapRevealMethod = 0;
 		}
 		int shader;
 		int blur;
@@ -123,6 +124,7 @@ public:
 		int parallaxOn0, parallaxOn1, parallaxOn2;
 		int numParticles;
 		int displaylists;
+		int worldMapRevealMethod;
 	} video;
 
 	struct Control
