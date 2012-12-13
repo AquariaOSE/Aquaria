@@ -6315,9 +6315,9 @@ luaFunc(entity_getNearestEntity)
 		Entity *e = *i;
 		if (e != me && e != ignore && e->isPresent() && e->isNormalLayer())
 		{
-			if (type == 0 || e->getEntityType() == type)
+			if (type == ET_NOTYPE || e->getEntityType() == type)
 			{
-				if (damageTarget == 0 || e->isDamageTarget((DamageType)damageTarget))
+				if (damageTarget == DT_NONE || e->isDamageTarget((DamageType)damageTarget))
 				{
 					if (!name || ((nocasecmp(e->name, name)==0) == nameCheck))
 					{
