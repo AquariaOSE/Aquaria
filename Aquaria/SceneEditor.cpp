@@ -2594,6 +2594,7 @@ void SceneEditor::loadScene()
 	Shot::loadShotBank(dsq->shotBank1, dsq->shotBank2);
 	dsq->game->loadEntityTypeList();
 	dsq->loadElementEffects();
+	dsq->continuity.loadSongBank();
 }
 
 void SceneEditor::saveScene()
@@ -3563,14 +3564,14 @@ void SceneEditor::update(float dt)
 			if (core->getShiftState() && !core->getCtrlState()) // hackish: to prevent accidental recache()
 				nextElement();
 			else
-				zoom /= 1.05f;
+				zoom /= 1.12f;
 		}
 		else if (core->mouse.scrollWheelChange > 0)
 		{
 			if (core->getShiftState() && !core->getCtrlState()) // hackish: to prevent accidental entity selection
 				prevElement();
 			else
-				zoom *= 1.05f;
+				zoom *= 1.12f;
 		}
 		if (zoom.x < 0.04f)
 			zoom.x = zoom.y = 0.04f;
