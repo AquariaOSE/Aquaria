@@ -8346,26 +8346,25 @@ bool Game::collideCircleVsCircle(Entity *a, Entity *b)
 	return (a->position - b->position).isLength2DIn(a->collideRadius + b->collideRadius);
 }
 
-bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc)
+bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc, int *colSegment)
 {
 	if (perc == 0)
 		perc = 1;
 	bool c = false;
-	if (a->hair)
+	if (a && a->hair)
 	{
-		if (a)
+		if (num == 0)
+			num = a->hair->hairNodes.size();
+		// HACK: minus 2
+		for (int i = 0; i < num; i++)
 		{
-			if (num == 0)
-				num = a->hair->hairNodes.size();
-			// HACK: minus 2
-			for (int i = 0; i < num; i++)
+			// + a->hair->position
+			c = ((a->hair->hairNodes[i].position) - pos2).isLength2DIn(a->hair->hairWidth*perc + radius);
+			if (c)
 			{
-				// + a->hair->position
-				c = ((a->hair->hairNodes[i].position) - pos2).isLength2DIn(a->hair->hairWidth*perc + radius);
-				if (c)
-				{
-					return true;
-				}
+				if (colSegment)
+					*colSegment = i;
+				return true;
 			}
 		}
 	}

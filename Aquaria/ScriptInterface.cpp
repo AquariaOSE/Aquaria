@@ -4140,9 +4140,16 @@ luaFunc(entity_collideHairVsCircle)
 		int num = lua_tonumber(L, 3);
 		// perc: percent of hairWidth to use as collide radius
 		float perc = lua_tonumber(L, 4);
-		col = dsq->game->collideHairVsCircle(e, num, e2->position, e2->collideRadius, perc);
+		int colSegment;
+		col = dsq->game->collideHairVsCircle(e, num, e2->position, e2->collideRadius, perc, &colSegment);
+		if(col)
+		{
+			lua_pushboolean(L, true);
+			lua_pushinteger(L, colSegment);
+			return 2;
+		}
 	}
-	luaReturnBool(col);
+	luaReturnBool(false);
 }
 
 luaFunc(entity_collideSkeletalVsCircleForListByName)
@@ -4276,7 +4283,12 @@ luaFunc(entity_updateSkeletal)
 {
 	Entity *e = entity(L);
 	if (e)
+	{
+		bool oldIgnore = e->skeletalSprite.ignoreUpdate;
+		e->skeletalSprite.ignoreUpdate = false;
 		e->skeletalSprite.update(lua_tonumber(L, 2));
+		e->skeletalSprite.ignoreUpdate = oldIgnore;
+	}
 	luaReturnNil();
 }
 

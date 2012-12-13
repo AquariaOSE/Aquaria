@@ -501,9 +501,9 @@ void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 				position.data->path.addPathNode(pn.position, float(i/float(p->nodes.size())));
 			}
 		}
-		debugLog("Calculating Time");
+		//debugLog("Calculating Time");
 		float time = position.data->path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
-		debugLog("Starting");
+		//debugLog("Starting");
 		position.data->path.getPathNode(0)->value = position;
 		position.startPath(time);//, 1.0f/2.0f);
 	}
@@ -1266,7 +1266,7 @@ void Entity::update(float dt)
 		//skeletalSprite.setFreeze(true);
 
 		if (frozenTimer == 0 || getState() == STATE_PUSH)
-			AnimatedSprite::update(dt);
+			Quad::update(dt);
 		onAlwaysUpdate(dt);
 
 		// always, always update:
@@ -1873,7 +1873,7 @@ void Entity::onUpdate(float dt)
 		}
 	}
 
-	AnimatedSprite::onUpdate(dt);
+	Quad::onUpdate(dt);
 
 	Vector v = position - lastPos;
 	lastMove = v;
@@ -2971,7 +2971,7 @@ void Entity::render()
 		blurShader.bind();
 		set = true;
 	}
-	AnimatedSprite::render();
+	Quad::render();
 	//if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating())
 	if (set)
 		blurShader.unbind();

@@ -373,7 +373,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/ActionMapper.cpp
     ${BBGEDIR}/ActionSet.cpp
     ${BBGEDIR}/AfterEffect.cpp
-    ${BBGEDIR}/AnimatedSprite.cpp
     ${BBGEDIR}/Base.cpp
     ${BBGEDIR}/BitmapFont.cpp
     ${BBGEDIR}/Collision.cpp
@@ -387,7 +386,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Flags.cpp
     ${BBGEDIR}/FrameBuffer.cpp
     ${BBGEDIR}/Gradient.cpp
-    ${BBGEDIR}/Interpolator.cpp
     ${BBGEDIR}/Joystick.cpp
     ${BBGEDIR}/LensFlare.cpp
     ${BBGEDIR}/Localization.cpp
@@ -460,12 +458,14 @@ SET(PNG_SRCS
 
 # Apparently not used at the moment. Listed here just for completeness.
 SET(BBGE_SRCS_UNUSED
+    ${BBGEDIR}/AnimatedSprite.cpp
     ${BBGEDIR}/BloomEffect.cpp
     ${BBGEDIR}/CShim.cpp
     ${BBGEDIR}/Cutscene.cpp
     ${BBGEDIR}/Datafile.cpp
     ${BBGEDIR}/DFSprite.cpp
     ${BBGEDIR}/FileVars.cpp
+    ${BBGEDIR}/Interpolator.cpp
     ${BBGEDIR}/Light.cpp
     ${BBGEDIR}/LightCone.cpp
     ${BBGEDIR}/Model.cpp

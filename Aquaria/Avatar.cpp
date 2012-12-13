@@ -4584,7 +4584,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	this->pushingOffWallEffect = 0;
 	lockToWallFallTimer  = 0;
 	swimming = false;
-	dodgeDelay = 0;
 	charging = false;
 	bursting = false;
 	animatedBurst = false;
@@ -4594,8 +4593,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	idleAnimDelay = 2;
 	splashDelay = 0;
 	avatar = this;
-
-	frame = 0;
 
 	particleDelay = 0;
 
@@ -5006,44 +5003,6 @@ void Avatar::setActiveSpell(Spells spell)
 }
 */
 
-void Avatar::dodge(std::string dir)
-{
-	if (bursting) return;
-	if (!canMove) return;
-	if (dodgeDelay == 0)
-	{
-		Vector mov;
-
-		if (dir == "right")
-			mov = Vector(1,0);
-		else if (dir == "left")
-			mov = Vector(-1, 0);
-		else if (dir == "down")
-			mov = Vector(0, 1);
-		else if (dir == "up")
-			mov = Vector(0, -1);
-
-		Vector lastPosition = position;
-		//position += mov * 80;
-
-		dodgeVec = mov * 8000;
-		vel += mov * vars->maxDodgeSpeed;
-		//dodgeEffectTimer = 0.125;
-		state.dodgeEffectTimer.start(/*0.125*/vars->dodgeTime);
-		/*
-		float vlen = vel.getLength2D();
-		mov |= 500;
-		vel += mov;
-		*/
-		/*
-		if (dsq->game->collideCircleWithGrid(position, 24))
-		{
-			position = lastPosition;
-		}
-		*/
-	}
-}
-
 void Avatar::startBackFlip()
 {
 	if (boneLock.on) return;
@@ -5280,29 +5239,6 @@ void Avatar::startWallBurst(bool useCursor)
 		else
 		{
 			//wallPushVec |= 10;
-		}
-	}
-}
-
-void Avatar::doDodgeInput(const std::string &action, int s)
-{
-	if (s)
-	{
-		if (tapped.empty())
-		{
-			tapped = action;
-			state.tapTimer.start(0.25);
-		}
-		else if (tapped == action)
-		{
-			if (state.tapTimer.isActive())
-				dodge(action);
-			tapped = "";
-			dodgeDelay = 1.0;
-		}
-		else
-		{
-			tapped = "";
 		}
 	}
 }
@@ -5983,13 +5919,7 @@ int Avatar::getBeamWidth()
 void Avatar::onEnterState(int action)
 {
 	Entity::onEnterState(action);
-	if (action == STATE_TRANSFORM)
-	{
-		animator.stop();
-		frame = 0;
-		animate(anim_fish);
-	}
-	else if (action == STATE_PUSH)
+	if (action == STATE_PUSH)
 	{
 		state.lockedToWall = false;
 		state.crawlingOnWall = false;
@@ -7983,10 +7913,6 @@ void Avatar::onUpdate(float dt)
 		{
 		}
 
-		if (state.tapTimer.updateCheck(dt))
-		{
-			tapped = "";
-		}
 		if (pushingOffWallEffect > 0)
 		{
 			pushingOffWallEffect -= dt;
@@ -8035,14 +7961,6 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 		*/
-		if (dodgeDelay > 0)
-		{
-			dodgeDelay -= dt;
-			if (dodgeDelay <= 0)
-			{
-				dodgeDelay = 0;
-			}
-		}
 
 		if (text)
 		{

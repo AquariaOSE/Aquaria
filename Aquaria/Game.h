@@ -677,7 +677,7 @@ public:
 	bool collideBoxWithGrid(const Vector& position, int w, int h);
 	bool collideCircleWithGrid(const Vector& position, int r);
 
-	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc=0);
+	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc=0, int *colSegment=0);
 
 	bool collideCircleVsCircle(Entity *a, Entity *b);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, Entity *circle);

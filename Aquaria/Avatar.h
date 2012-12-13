@@ -127,7 +127,6 @@ public:
 	float shotDelay;
 	//Timer shockTimer;
 	Timer useItemDelay;
-	Timer tapTimer;
 	Timer lockToWallDelay;
 	float spellCharge;
 	bool lockedToWall;
@@ -151,8 +150,6 @@ public:
 	virtual ~Avatar();
 	void destroy();
 	void action(int actionID, int state);
-	// anim data
-	AnimData anim_swim, anim_stopTransition, anim_idle, anim_idle2, anim_burst, anim_fish;
 	AvatarState state;
 	void setIgnoreInputDelay(float delay)
 	{
@@ -518,19 +515,10 @@ protected:
 
 	bool charging;
 
-	AnimData tongueAnim;
-
-	//Quad *chargeGraphic;
-
-
 	Vector lastPush;
 
-	std::string tapped;
-	float dodgeDelay;
 	float pushingOffWallEffect;
 	float lockToWallFallTimer;
-	void dodge(std::string dir);
-	void doDodgeInput(const std::string &action, int state);
 
 	Vector dodgeVec;
 	Vector wallPushVec, wallTurnVec;

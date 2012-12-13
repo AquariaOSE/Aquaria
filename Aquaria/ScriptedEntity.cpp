@@ -30,7 +30,6 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 {
 	addType(SCO_SCRIPTED_ENTITY);
 	crushDelay = 0;
-	autoSkeletalSpriteUpdate = true;
 	script = 0;
 	songNoteFunction = songNoteDoneFunction = true;
 	addChild(&pullEmitter, PM_STATIC);
@@ -83,7 +82,7 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 
 void ScriptedEntity::setAutoSkeletalUpdate(bool v)
 {
-	autoSkeletalSpriteUpdate = v;
+	skeletalSprite.ignoreUpdate = !v;
 }
 
 void ScriptedEntity::message(const std::string &msg, int v)
@@ -640,13 +639,8 @@ void ScriptedEntity::onUpdate(float dt)
 	}
 	*/
 
-	if (!autoSkeletalSpriteUpdate)
-		skeletalSprite.ignoreUpdate = true;
-
 	CollideEntity::onUpdate(dt);
 
-	if (!autoSkeletalSpriteUpdate)
-		skeletalSprite.ignoreUpdate = false;
 	//updateStrands(dt);
 
 	if (becomeSolidDelay)

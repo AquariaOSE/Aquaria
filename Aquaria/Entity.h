@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include "../BBGE/AnimatedSprite.h"
 #include "../BBGE/StateMachine.h"
 #include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/SkeletalSprite.h"
@@ -195,7 +194,7 @@ enum BounceType
 	BOUNCE_REAL		= 1
 };
 
-class Entity : public AnimatedSprite, public StateMachine
+class Entity : public Quad, public StateMachine
 {
 public:
 	Entity();
@@ -592,7 +591,7 @@ protected:
 	void updateBoneLock();
 
 	int pushMaxSpeed;
-
+	std::string currentAnim;
 	
 
 protected:

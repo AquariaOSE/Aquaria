@@ -93,7 +93,6 @@ protected:
 	void onDieEaten();
 	void luaDebugMsg(const std::string &func, const std::string &msg);
 	float crushDelay;
-	bool autoSkeletalSpriteUpdate;
 	int beforePullMaxSpeed;
 	bool songNoteFunction, preUpdateFunc;
 	bool songNoteDoneFunction;
