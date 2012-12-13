@@ -643,9 +643,6 @@ void SceneEditor::init()
 	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeftUp), MOUSE_BUTTON_LEFT, 0);
 	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRightUp), MOUSE_BUTTON_RIGHT, 0);
 
-	// removed in fc3
-	//addAction(MakeFunctionEvent(SceneEditor, bindNodeToEntity), KEY_B, 0);
-
 	addAction(MakeFunctionEvent(SceneEditor, alignHorz), KEY_C, 1);
 	addAction(MakeFunctionEvent(SceneEditor, alignVert), KEY_V, 1);
 
@@ -877,38 +874,6 @@ void SceneEditor::createAquarian()
 		dsq->game->createElement(v, startPos + Vector(64*i,0), this->bgLayer);
 	}
 	inCreateAqurian = false;
-}
-
-void SceneEditor::bindNodeToEntity()
-{
-	if (editType == ET_PATHS)
-	{
-		Path *p = getSelectedPath();
-		if (p)
-		{
-			std::istringstream is(dsq->getUserInputString("Enter group number"));
-			int group = 0;
-			is >> group;
-			Entity *e = getEntityAtCursor();
-			if (e)
-			{
-				e->removeNodeFromAllNodeGroups(p);
-				e->addNodeToNodeGroup(group, p);
-			}
-			else
-			{
-				debugLog("no entity at cursor");
-			}
-		}
-	}
-}
-
-void SceneEditor::addSpringPlant()
-{
-	/*
-	SpringPlant *s = new SpringPlant(dsq->getGameCursorPosition());
-	dsq->game->addRenderObject(s, LR_ENTITIES);
-	*/
 }
 
 Path *SceneEditor::getSelectedPath()
@@ -1472,7 +1437,6 @@ void SceneEditor::updateEntitySaveData(Entity *editingEntity)
 			os << "idx2: " << editingEntity->entityTypeIdx << " ";
 			os << "name: " << editingEntity->name;
 			//os << "state: " << editingEntity->getState();
-			os << "groupID: " << editingEntity->getGroupID();
 			debugLog(os.str());
 			//debugLog("changing entity save data");
 			d->x = editingEntity->position.x;
@@ -1484,7 +1448,6 @@ void SceneEditor::updateEntitySaveData(Entity *editingEntity)
 			debugLog(os2.str());
 			*/
 			d->rot = editingEntity->rotation.z;
-			d->group = editingEntity->getGroupID();
 		}
 		else
 		{
@@ -1633,25 +1596,6 @@ void SceneEditor::toggleElementHurt()
 		else
 			editingElement->elementFlag = EF_HURT;
 		dsq->game->reconstructGrid(true);
-	}
-}
-
-void SceneEditor::setGroup()
-{
-	if (editingEntity)
-	{
-		std::ostringstream os;
-		os << editingEntity->getGroupID();
-		Entity *backup = editingEntity;
-		std::string value = dsq->getUserInputString("Enter Group", os.str());
-		int group = 0;
-		if (!value.empty())
-		{
-			std::istringstream is(value);
-			is >> group;
-		}
-		backup->setGroupID(group);
-		updateEntitySaveData(backup);
 	}
 }
 
@@ -3135,9 +3079,9 @@ void SceneEditor::placeElement()
 	else if (editType == ET_ENTITIES)
 	{
 		if (!selectedEntity.nameBased)
-			dsq->game->createEntity(selectedEntity.index, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, 0, 0, true);
+			dsq->game->createEntity(selectedEntity.index, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, true);
 		else
-			dsq->game->createEntity(selectedEntity.name, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, 0, 0, true);
+			dsq->game->createEntity(selectedEntity.name, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, true);
 	}
 	else if (editType == ET_PATHS)
 	{

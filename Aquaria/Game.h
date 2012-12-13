@@ -418,7 +418,6 @@ public:
 	void closeMainMenu();
 
 	void setBackgroundGradient();
-	void addSpringPlant();
 
 	bool isOn();
 
@@ -472,12 +471,10 @@ public:
 	void moveLayer();
 	void moveElementToLayer(Element *e, int bgLayer);
 	void toggleElementRepeat();
-	void setGroup();
 	bool multiSelecting;
 	Vector multiSelectPoint;
 	std::vector <Element*> selectedElements;
 	void fixEntityIDs();
-	void bindNodeToEntity();
 
 	Vector groupCenter;
 	Vector getSelectedElementsCenter();
@@ -610,9 +607,9 @@ enum ObsType
 struct EntitySaveData
 {
 public:
-	EntitySaveData(Entity *e, int idx, int x, int y, int rot, int group, int id, const std::string &name) : e(e), idx(idx), x(x), y(y), rot(rot), group(group), id(id), name(name) {}
+	EntitySaveData(Entity *e, int idx, int x, int y, int rot, int id, const std::string &name) : e(e), idx(idx), x(x), y(y), rot(rot), id(id), name(name) {}
 	Entity *e;
-	int idx, x, y, rot, group, id;
+	int idx, x, y, rot, id;
 	std::string name;
 };
 
@@ -699,7 +696,6 @@ public:
 	WarpAreas warpAreas;
 
 	void postInitEntities();
-	Entity *getEntityInGroup(int gid, int iter);
 	EntityClass *getEntityClassForEntityType(const std::string &type);
 
 	void warpToArea(WarpArea *area);
@@ -744,9 +740,9 @@ public:
 	MiniMapHint miniMapHint;
 	void updateMiniMapHintPosition();
 	EntitySaveData *getEntitySaveDataForEntity(Entity *e, Vector pos);
-	Entity *createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
-	Entity *createEntity(const std::string &type, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
-	Entity *establishEntity(Entity *e, int id=0, Vector position=Vector(0,0), int rot=0, bool createSaveData=false, std::string name="", EntityType = ET_ENEMY, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
+	Entity *createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, bool doPostInit=false);
+	Entity *createEntity(const std::string &type, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, bool doPostInit=false);
+	Entity *establishEntity(Entity *e, int id=0, Vector position=Vector(0,0), int rot=0, bool createSaveData=false, std::string name="", EntityType = ET_ENEMY,bool doPostInit=false);
 	void setCameraFollow(RenderObject *r);
 	void setCameraFollowEntity(Entity *e);
 	void setMenuDescriptionText(const std::string &text);

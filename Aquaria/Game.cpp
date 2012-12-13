@@ -2532,7 +2532,7 @@ int Game::getIdxForEntityType(std::string type)
 	return -1;
 }
 
-Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
+Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
 {
 	std::string type;
 	for (int i = 0; i < dsq->game->entityTypeList.size(); i++)
@@ -2541,7 +2541,7 @@ Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool creat
 		if (ec->idx == idx)
 		{
 			type = ec->name;
-			return createEntity(type, id, position, rot, createSaveData, name, et, nodeGroups, gid, doPostInit);
+			return createEntity(type, id, position, rot, createSaveData, name, et, doPostInit);
 		}
 	}
 	return 0;
@@ -2580,7 +2580,7 @@ void Game::ensureLimit(Entity *e, int num, int state)
 	}
 }
 
-Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
+Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
 {
 	// e->layer must be set BEFORE calling this function!
 
@@ -2615,12 +2615,6 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 		}
 	}
 
-	// get node groups before calling init
-	if (nodeGroups)
-	{
-		e->nodeGroups = (*nodeGroups);
-	}
-
 	// NOTE: init cannot be called after "addRenderObject" for some unknown reason
 	e->init();
 
@@ -2628,8 +2622,6 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 	e->startPos = usePos;
 	if (!name.empty())
 		e->name = name;
-
-	e->setGroupID(gid);
 
 	e->rotation.z = rot;
 
@@ -2640,7 +2632,7 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 	if (createSaveData)
 	{
 		int idx = dsq->game->getIdxForEntityType(type);
-		entitySaveData.push_back(EntitySaveData(e, idx, usePos.x, usePos.y, rot, e->getGroupID(), e->getID(), e->name));
+		entitySaveData.push_back(EntitySaveData(e, idx, usePos.x, usePos.y, rot, e->getID(), e->name));
 	}
 
 	addRenderObject(e, e->layer);
@@ -2653,7 +2645,7 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 	return e;
 }
 
-Entity *Game::createEntity(const std::string &t, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
+Entity *Game::createEntity(const std::string &t, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
 {
 	std::string type = t;
 	stringToLower(type);
@@ -2663,7 +2655,7 @@ Entity *Game::createEntity(const std::string &t, int id, Vector position, int ro
 	e = new ScriptedEntity(type, position, et);
 
 
-	return establishEntity(e, id, position, rot, createSaveData, name, et, nodeGroups, gid, doPostInit);
+	return establishEntity(e, id, position, rot, createSaveData, name, et, doPostInit);
 }
 
 void Game::initEntities()
@@ -5109,110 +5101,11 @@ bool Game::loadSceneXML(std::string scene)
 	TiXmlElement *entitiesNode = doc.FirstChildElement("Entities");
 	while(entitiesNode)
 	{
-		if (entitiesNode->Attribute("d"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("d"));
-			int idx, x, y;
-			while (is >> idx)
-			{
-				is >> x >> y;
-				dsq->game->createEntity(idx, 0, Vector(x,y), 0, true, "");
-			}
-		}
-		if (entitiesNode->Attribute("e"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("e"));
-			int idx, x, y, rot;
-			while (is >> idx)
-			{
-				is >> x >> y >> rot;
-				if (idx == 32)
-				{
-					std::ostringstream os;
-					os << "read in rot as: " << rot;
-					debugLog(os.str());
-				}
-				dsq->game->createEntity(idx, 0, Vector(x,y), rot, true, "");
-			}
-		}
-		if (entitiesNode->Attribute("f"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("f"));
-			int idx, x, y, rot, group;
-			while (is >> idx)
-			{
-				is >> x >> y >> rot >> group;
-				Entity *e = dsq->game->createEntity(idx, 0, Vector(x,y), rot, true, "");
-				e->setGroupID(group);
-			}
-		}
-		if (entitiesNode->Attribute("g"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("g"));
-			int idx, x, y, rot, group, id;
-			while (is >> idx)
-			{
-				is >> x >> y >> rot >> group >> id;
-				Entity *e = dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "");
-				e->setGroupID(group);
-			}
-		}
-		if (entitiesNode->Attribute("h"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("h"));
-			int idx, x, y, rot, groupID, id;
-			Entity::NodeGroups *ng;
-			Entity::NodeGroups nodeGroups;
-			while (is >> idx)
-			{
-				int numNodeGroups = 0;
-				is >> x >> y >> rot >> groupID >> id;
-				is >> numNodeGroups;
-
-				ng = 0;
-				nodeGroups.clear();
-				if (numNodeGroups > 0)
-				{
-					ng = &nodeGroups;
-					for (int i = 0; i < numNodeGroups; i++)
-					{
-						int sz;
-						is >> sz;
-						for (int j = 0; j < sz; j++)
-						{
-							int idx;
-							is >> idx;
-							if (idx >= 0 && idx < getNumPaths())
-							{
-								nodeGroups[i].push_back(getPath(idx));
-							}
-						}
-					}
-				}
-
-				dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, ng, groupID);
-				// setting group ID
-			}
-		}
-		if (entitiesNode->Attribute("i"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("i"));
-			int idx, x, y, rot, groupID, id;
-			Entity::NodeGroups nodeGroups;
-			while (is >> idx)
-			{
-				is >> x >> y >> rot >> groupID >> id;
-
-				dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, 0, groupID);
-				// setting group ID
-			}
-		}
 		if (entitiesNode->Attribute("j"))
 		{
 			SimpleIStringStream is(entitiesNode->Attribute("j"));
 			int idx, x, y, rot, groupID, id;
 			std::string name;
-			Entity::NodeGroups nodeGroups;
 			while (is >> idx)
 			{
 				name="";
@@ -5221,10 +5114,9 @@ bool Game::loadSceneXML(std::string scene)
 				is >> x >> y >> rot >> groupID >> id;
 
 				if (!name.empty())
-					dsq->game->createEntity(name, id, Vector(x,y), rot, true, "", ET_ENEMY, 0, groupID);
+					dsq->game->createEntity(name, id, Vector(x,y), rot, true, "", ET_ENEMY);
 				else
-					dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, 0, groupID);
-				// setting group ID
+					dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY);
 			}
 		}
 		entitiesNode = entitiesNode->NextSiblingElement("Entities");
@@ -5339,22 +5231,6 @@ void Game::setWarpAreaSceneName(WarpArea &warpArea)
 	{
 		errorLog(warpArea.warpAreaType + " WarpArea for " + dsq->game->sceneName + " not found");
 	}
-}
-
-Entity *Game::getEntityInGroup(int gid, int iter)
-{
-	int c = 0;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e->getGroupID() == gid)
-		{
-			if (iter == c)
-				return e;
-			c++;
-		}
-	}
-	return 0;
 }
 
 bool Game::loadScene(std::string scene)
@@ -5552,8 +5428,8 @@ bool Game::saveScene(std::string scene)
 				else
 					os << "INVALID" << " ";
 			}
-
-			os << e->x << " " << e->y << " " << e->rot << " " << e->group << " " << e->id << " ";
+			// group ID no longer used
+			os << e->x << " " << e->y << " " << e->rot << " " << 0 << " " << e->id << " ";
 		}
 		entitiesNode.SetAttribute("j", os.str());
 		saveFile.InsertEndChild(entitiesNode);

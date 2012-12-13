@@ -217,7 +217,6 @@ Entity::Entity()
 	targetRange = 32;
 	//energyChargeTarget = energyShotTarget = true;
 	deathSound = "GenericDeath";
-	groupID = 0;
 	entityID = 0;
 	//assignUniqueID();
 	hair = 0;
@@ -347,50 +346,6 @@ bool Entity::checkSplash(const Vector &o)
 void Entity::setSpiritFreeze(bool v)
 {
 	spiritFreeze = v;
-}
-
-Vector Entity::getGroupCenter()
-{
-	Vector position;
-	int sz = 0;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e->getGroupID() == this->getGroupID())
-		{
-			position += e->position;
-			sz++;
-		}
-	}
-	position/=sz;
-	return position;
-}
-
-Vector Entity::getGroupHeading()
-{
-	Vector v;
-	int sz = 0;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e->getGroupID() == this->getGroupID())
-		{
-			v += e->vel;
-			sz++;
-		}
-	}
-	v/=sz;
-	return v;
-}
-
-int Entity::getGroupID()
-{
-	return groupID;
-}
-
-void Entity::setGroupID(int g)
-{
-	groupID = g;
 }
 
 void Entity::setEntityProperty(EntityProperty ep, bool value)
@@ -572,37 +527,6 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 
 	//position.startSpeedPath(dsq->continuity.getSpeedType(speedType));
 	//position.startPath(((position.data->path.getNumPathNodes()*TILE_SIZE*4)-2)/dsq->continuity.getSpeedType(speedType));
-}
-
-void Entity::addNodeToNodeGroup(int group, Path *p)
-{
-	nodeGroups[group].push_back(p);
-}
-
-void Entity::removeNodeFromAllNodeGroups(Path *p)
-{
-	for (int j = 0; j < nodeGroups.size(); j++)
-	{
-		for (int i = 0; i < nodeGroups[j].size(); i++)
-		{
-			if (nodeGroups[j][i] == p)
-			{
-				nodeGroups[j][i] = 0;
-			}
-		}
-	}
-}
-
-void Entity::setNodeGroupActive(int group, bool v)
-{
-	for (int i = 0; i < nodeGroups[group].size(); i++)
-	{
-		Path *p = nodeGroups[group][i];
-		if (p)
-		{
-			p->setActive(v);
-		}
-	}
 }
 
 void Entity::stopFollowingPath()
@@ -2453,24 +2377,6 @@ void Entity::moveTowardsTarget(float dt, int spd, int t)
 {
 	if (!targets[t]) return;
 	moveTowards(targets[t]->position, dt, spd);
-}
-
-void Entity::moveTowardsGroupCenter(float dt, int speed)
-{
-	if (getGroupID() != 0)
-	{
-		moveTowards(getGroupCenter(), dt, speed);
-	}
-}
-
-void Entity::moveTowardsGroupHeading(float dt, int speed)
-{
-	if (getGroupID() != 0)
-	{
-		Vector d = getGroupHeading() - position;
-		d.setLength2D(speed*dt);
-		vel += d;
-	}
 }
 
 void Entity::moveAroundTarget(float dt, int spd, int dir, int t)

@@ -2907,7 +2907,7 @@ luaFunc(entity_createEntity)
 	Entity *e = entity(L);
 	Entity *ret = NULL;
 	if (e)
-		ret = dsq->game->createEntity(dsq->getEntityTypeIndexByName(getString(L, 2)), 0, e->position, 0, false, "", ET_ENEMY, 0, 0, true);
+		ret = dsq->game->createEntity(dsq->getEntityTypeIndexByName(getString(L, 2)), 0, e->position, 0, false, "", ET_ENEMY, true);
 	luaReturnPtr(ret);
 }
 
@@ -3505,7 +3505,7 @@ luaFunc(createEntity)
 	int y = lua_tointeger(L, 4);
 
 	Entity *e = 0;
-	e = dsq->game->createEntity(type, 0, Vector(x, y), 0, false, name, ET_ENEMY, 0, 0, true);
+	e = dsq->game->createEntity(type, 0, Vector(x, y), 0, false, name, ET_ENEMY, true);
 
 	luaReturnPtr(e);
 }
@@ -6048,24 +6048,6 @@ luaFunc(entity_partSetSegs)
 	luaReturnNil();
 }
 
-luaFunc(getEntityInGroup)
-{
-	int gid = lua_tonumber(L, 1);
-	int iter = lua_tonumber(L, 2);
-	luaReturnPtr(dsq->game->getEntityInGroup(gid, iter));
-}
-
-luaFunc(entity_getGroupID)
-{
-	Entity *e = entity(L);
-	int id = 0;
-	if(e)
-	{
-		id = e->getGroupID();
-	}
-	luaReturnNum(id);
-}
-
 luaFunc(entity_getID)
 {
 	Entity *e = entity(L);
@@ -7290,8 +7272,6 @@ static const struct {
 	luaRegister(getWaterLevel),
 	luaRegister(setWaterLevel),
 
-	luaRegister(getEntityInGroup),
-
 	luaRegister(createQuad),
 
 	luaRegister(setupEntity),
@@ -7469,7 +7449,6 @@ static const struct {
 	luaRegister(entity_move),
 
 	luaRegister(entity_getID),
-	luaRegister(entity_getGroupID),
 
 	luaRegister(getEntityByID),
 

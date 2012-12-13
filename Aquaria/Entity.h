@@ -392,10 +392,6 @@ public:
 
 	InterpolatedVector maxSpeedLerp;
 	Hair *hair;
-	void setGroupID(int gid);
-	int getGroupID();
-	Vector getGroupCenter();
-	Vector getGroupHeading();
 
 	void assignUniqueID();
 	int entityID;
@@ -424,12 +420,6 @@ public:
 	bool isCrawling() { return crawling; }
 	*/
 	void flipToVel();
-	typedef std::vector<Path*> NodeGroup;
-	typedef std::map<int, NodeGroup> NodeGroups;
-	NodeGroups nodeGroups;
-	void addNodeToNodeGroup(int group, Path *p);
-	void setNodeGroupActive(int group, bool v);
-	void removeNodeFromAllNodeGroups(Path *p);
 	bool isInCurrent() { return inCurrent; }
 	void clearTargetPoints();
 	void addTargetPoint(const Vector &point);
@@ -546,7 +536,6 @@ protected:
 
 	//Vector backupPos, backupVel;
 	virtual void onIdle() {}
-	int groupID;
 	virtual void onHeal(int type){}
 	virtual void onDamage(DamageData &d){}
 	virtual void onHealthChange(float change){}

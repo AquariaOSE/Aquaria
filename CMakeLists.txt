@@ -348,7 +348,6 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/SubtitlePlayer.cpp
     ${SRCDIR}/ToolTip.cpp
     ${SRCDIR}/UserSettings.cpp
-    ${SRCDIR}/WaterFont.cpp
     ${SRCDIR}/WaterSurfaceRender.cpp
     ${SRCDIR}/Web.cpp
     ${SRCDIR}/WorldMapRender.cpp
@@ -361,6 +360,7 @@ SET(AQUARIA_SRCS_UNUSED
     ${SRCDIR}/BubbleRender.cpp
     ${SRCDIR}/FFTNotes.cpp
     ${SRCDIR}/StarRenderer.cpp
+    ${SRCDIR}/WaterFont.cpp
 )
 
 IF(MACOSX)
