@@ -2321,7 +2321,7 @@ luaFunc(entity_findNearestEntityOfType)
 	Entity *nearest = 0;
 	if (e)
 	{
-		int et = (EntityType)lua_tointeger(L, 2);
+		EntityType et = (EntityType)lua_tointeger(L, 2);
 		int maxRange = lua_tointeger(L, 3);
 		float smallestDist = HUGE_VALF;
 		Entity *closest = 0;
@@ -6284,8 +6284,13 @@ luaFunc(entity_getNearestEntity)
 	}
 
 	float range = lua_tointeger(L, 3);
-	int type = lua_tointeger(L, 4);
-	int damageTarget = lua_tointeger(L, 5);
+	EntityType type = ET_NOTYPE;
+	if (lua_isnumber(L, 4))
+		type = (EntityType)lua_tointeger(L, 4);
+
+	DamageType damageTarget = DT_NONE;
+	if (lua_isnumber(L, 5))
+		damageTarget = (DamageType)lua_tointeger(L, 5);
 	Entity *closest = 0;
 	Entity *ignore = 0;
 	if (lua_isuserdata(L, 6))
@@ -6297,9 +6302,9 @@ luaFunc(entity_getNearestEntity)
 		Entity *e = *i;
 		if (e != me && e != ignore && e->isPresent() && e->isNormalLayer())
 		{
-			if (type == 0 || e->getEntityType() == type)
+			if (type == ET_NONE || e->getEntityType() == type)
 			{
-				if (damageTarget == 0 || e->isDamageTarget((DamageType)damageTarget))
+				if (damageTarget == DT_NONE || e->isDamageTarget((DamageType)damageTarget))
 				{
 					if (!name || ((nocasecmp(e->name, name)==0) == nameCheck))
 					{
@@ -6486,7 +6491,7 @@ luaFunc(entity_switchLayer)
 		toLayer = dsq->getEntityLayerToLayer(lcode);
 
 		if (e->getEntityType() == ET_AVATAR)
-		toLayer = LR_ENTITIES;
+			toLayer = LR_ENTITIES;
 
 		core->switchRenderObjectLayer(e, toLayer);
 	}
