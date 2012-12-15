@@ -1614,12 +1614,15 @@ void Entity::moveOutOfWall()
 
 void Entity::clearDamageTargets()
 {
-	disabledDamageTypes.reset();
+	disabledDamageTypes.clear();
 }
 
 void Entity::setDamageTarget(DamageType dt, bool v)
 {
-	disabledDamageTypes.set(dt, !v);
+	if (v)
+		disabledDamageTypes.erase(dt);
+	else
+		disabledDamageTypes.insert(dt);
 }
 
 void Entity::setEatType(EatType et, const std::string &file)
@@ -1640,17 +1643,17 @@ void Entity::setAllDamageTargets(bool v)
 	else
 	{
 		for (int i = DT_ENEMY; i < DT_ENEMY_REALMAX; i++)
-			disabledDamageTypes.set(DamageType(i));
+			disabledDamageTypes.insert(DamageType(i));
 		for (int i = DT_AVATAR; i < DT_AVATAR_REALMAX; i++)
-			disabledDamageTypes.set(DamageType(i));
+			disabledDamageTypes.insert(DamageType(i));
 		for (int i = DT_AVATAR_MAX; i < DT_REALMAX; i++)
-			disabledDamageTypes.set(DamageType(i));
+			disabledDamageTypes.insert(DamageType(i));
 	}
 }
 
 bool Entity::isDamageTarget(DamageType dt)
 {
-	return disabledDamageTypes.test(dt);
+	return disabledDamageTypes.find(dt) == disabledDamageTypes.end();
 }
 
 float Entity::getHealthPerc()
