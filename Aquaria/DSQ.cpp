@@ -198,8 +198,6 @@ DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AM
 	menuSelectDelay = 0;
 	modSelectorScr = 0;
 	blackout = 0;
-	useMic = false;
-	autoSingMenuOpen = false;
 	inputMode = INPUT_MOUSE;
 	overlay = 0;
 	recentSaveSlot = -1;
@@ -4492,7 +4490,7 @@ void DSQ::onUpdate(float dt)
 		dsq->setInputMode(INPUT_MOUSE);
 	}
 
-	if (isDeveloperKeys())
+	/*if (isDeveloperKeys())
 	{
 		if (core->getCtrlState())
 		{
@@ -4505,7 +4503,7 @@ void DSQ::onUpdate(float dt)
 			if (core->getKeyState(KEY_DOWN))
 				core->adjustWindowPosition(0, 5);
 		}
-	}
+	}*/
 
 	if (isDeveloperKeys() && cmDebug && cmDebug->alpha == 1 && fpsText)
 	{
@@ -4534,8 +4532,7 @@ void DSQ::onUpdate(float dt)
 			os << "maxSpeed: " << dsq->game->avatar->currentMaxSpeed << " - ";
 			os << "lockedToWall: " << dsq->game->avatar->state.lockedToWall;
 			os << std::endl;
-			os << "crwlng: " << avatar->state.crawlingOnWall;
-			os << " swmng: " << avatar->isSwimming();
+			os << "swmng: " << avatar->isSwimming();
 			os << " dualFormCharge: " << continuity.dualFormCharge;
 			os << std::endl;
 			os << "vel(" << avatar->vel.x << ", " << avatar->vel.y << ") ";
@@ -4546,7 +4543,6 @@ void DSQ::onUpdate(float dt)
 			os << "inp: " << avatar->isInputEnabled() << std::endl;
 			os << "wallNormal(" << avatar->wallNormal.x << ", " << avatar->wallNormal.y << ")" << std::endl;
 			os << "burst: " << avatar->burst << " burstTimer: " << avatar->burstTimer << std::endl;
-			os << "inTummy: " << avatar->inTummy << " tummyAmount: " << avatar->tummyAmount << std::endl;
 			os << "inCurrent: " << avatar->isInCurrent() << std::endl;
 			os << "qsongCastDelay: " << avatar->quickSongCastDelay << std::endl;
 			os << "singing: " << dsq->game->avatar->singing << " blockSinging: " << dsq->game->avatar->isBlockSinging();

@@ -551,39 +551,6 @@ void Entity::flipToTarget(Vector pos)
 	}
 }
 
-bool Entity::isCollideAgainst(Entity *e)
-{
-	if (this == e) return false;
-	if (getEntityType()==ET_PET || getEntityType()==ET_AVATAR || getEntityType() == ET_NEUTRAL)
-	{
-		if (e->getEntityType()==ET_ENEMY || e->getEntityType()==ET_NEUTRAL)
-		{
-			return true;
-		}
-	}
-	if (getEntityType() == ET_ENEMY)
-	{
-		if (e->getEntityType()==ET_PET || e->getEntityType()==ET_AVATAR || e->getEntityType()==ET_NEUTRAL)
-			return true;
-	}
-	return false;
-}
-
-bool Entity::isOpposedTo(Entity *e)
-{
-	if (getEntityType()==ET_PET || getEntityType()==ET_AVATAR || getEntityType() == ET_NEUTRAL)
-	{
-		if (e->getEntityType()==ET_ENEMY || e->getEntityType()==ET_NEUTRAL)
-			return true;
-	}
-	if (getEntityType() == ET_ENEMY)
-	{
-		if (e->getEntityType()==ET_PET || e->getEntityType()==ET_AVATAR)
-			return true;
-	}
-	return false;
-}
-
 Entity* Entity::getTargetEntity(int t)
 {
 	return targets[t];

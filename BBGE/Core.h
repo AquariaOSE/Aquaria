@@ -1133,7 +1133,7 @@ public:
 
 	virtual void onPlayedVoice(const std::string &name){}
 
-	InterpolatedVector cameraPos, cameraRot;
+	InterpolatedVector cameraPos;
 
 	int fps;
 	bool loopDone;

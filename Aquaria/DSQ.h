@@ -1452,7 +1452,6 @@ public:
 	void rumble(float leftMotor, float rightMotor, float time);
 	void vision(std::string folder, int num, bool ignoreMusic = false);
 
-	bool useMic, autoSingMenuOpen;
 	void watch(float t, int canQuit = 0);
 
 	std::string lastVoiceFile;

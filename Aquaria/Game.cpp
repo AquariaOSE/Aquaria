@@ -4138,8 +4138,7 @@ void Game::toggleOverrideZoom(bool on)
 		if (!on && avatar->zoomOverriden == true)
 		{
 			dsq->globalScale.stop();
-			dsq->game->avatar->myZoom = dsq->globalScale;
-			//dsq->game->avatar->myZoom.interpolateTo(Vector(1,1), 1.0);
+			avatar->myZoom = dsq->globalScale;
 		}
 		avatar->zoomOverriden = on;
 	}
@@ -8400,8 +8399,6 @@ void Game::preLocalWarp(LocalWarpType localWarpType)
 	{
 		dsq->game->avatar->warpInLocal = Vector(0,0,0);
 	}
-
-	dsq->game->avatar->warpIn = !dsq->game->avatar->warpIn;
 	
 	dsq->screenTransition->capture();
 	core->resetTimer();

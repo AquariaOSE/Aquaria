@@ -341,8 +341,6 @@ public:
 
 	void setEntityType(EntityType et);
 	EntityType getEntityType();
-	bool isOpposedTo(Entity *e);
-	bool isCollideAgainst(Entity *e);
 	void flipToTarget(Vector pos);
 	bool isFollowingPath();
 	void stopFollowingPath();

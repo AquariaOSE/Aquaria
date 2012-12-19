@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define AVATAR_H
 
 #include "../BBGE/Particles.h"
-#include "../BBGE/BitmapFont.h"
 
 #include "DSQ.h"
 #include "Hair.h"
@@ -30,9 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Web.h"
 
-class SpringPlant;
-
-//class Item;
 class TileVector;
 class SongIcon;
 
@@ -106,20 +102,10 @@ protected:
 	void onUpdate(float dt);
 };
 
-class FormIcon : public Quad
-{
-public:
-	FormIcon();
-protected:
-	bool cursorIsIn;
-	void onUpdate(float dt);
-};
-
 class AvatarState
 {
 public:
 	AvatarState();
-	Timer dodgeEffectTimer;
 	Timer blindTimer;
 	float abilityDelay;
 	bool blind;
@@ -131,7 +117,6 @@ public:
 	float spellCharge;
 	bool lockedToWall;
 	float leachTimer;
-	bool crawlingOnWall;
 	bool nearWall;
 	float swimTimer, rollTimer;
 	float updateLookAtTime;
@@ -151,20 +136,13 @@ public:
 	void destroy();
 	void action(int actionID, int state);
 	AvatarState state;
-	void setIgnoreInputDelay(float delay)
-	{
-		ignoreInputDelay = delay;
-	}
 	float burst, burstTimer;
 	float burstDelay;
 	bool bursting;
 	BurstType lastBurstType;
 	//void damage(int amount);
 	bool isCharging();
-	void slowToRest();
-	void debugMsg(const std::string &msg);
 	void setBlind(float time);
-	void onBlindTest();
 
 	void revive();
 
@@ -182,10 +160,8 @@ public:
 	Entity *entityToActivate;
 	Path *pathToActivate;
 
-	Entity *lastEntityActivation;
 	void shift();
 	void applyWorldEffects(WorldType type);
-	Vector extraVel;
 
 	void toggleMovement(bool on);
 
@@ -220,16 +196,11 @@ public:
 	void changeForm(FormType form, bool effects=true, bool onInit=false, FormType lastForm=FORM_NONE);
 	void singNote(int note);
 	std::vector<SongIcon*> songIcons;
-	std::vector<FormIcon*> formIcons;
-	//std::vector<int> currentsong;
 	Song currentSong;
 	int currentSongIdx;
 
 	Entity *pullTarget;
-	bool pickingPullTarget;
 
-	void openPullTargetInterface();
-	void closePullTargetInterface();
 	void setNearestPullTarget();
 
 	void formAbility(int ability);
@@ -243,16 +214,11 @@ public:
 
 	bool canDie;
 
-	bool warpIn;
 	Vector warpInLocal;
 
 	float biteDelay, urchinDelay, jellyDelay;
 	bool movingOn;
 
-	int ropeState;
-	float ropeTimer;
-	Vector ropePos, ropeVel;
-	void fireRope();
 	void render();
 	void activateAura(AuraType aura);
 	void stopAura();
@@ -264,7 +230,6 @@ public:
 	void updateFormVisualEffects(float dt);
 	bool isSinging();
 	bool isLockable();
-	float stopTimer;
 	int getCursorQuadrant();
 	void onWarp();
 	int getBurstDistance();
@@ -275,16 +240,12 @@ public:
 	int rollDir;
 	std::string getBurstAnimName();
 	std::string getRollAnimName();
-	void startWallCrawl();
-	void stopWallCrawl();
 
 	void updateDualFormChargeEffects();
 
 	TileVector wallLockTile;
-	Vector wallNormal, lastWallNormal;
+	Vector wallNormal;
 
-	void openFormInterface();
-	void closeFormInterface();
 	void fallOffWall();
 
 	float fireDelay;
@@ -293,8 +254,6 @@ public:
 	AuraType activeAura;
 	float auraTimer;
 	bool fireAtNearestValidEntity(const std::string &shot);
-	EatType inTummy;
-	float tummyTimer;
 
 	void checkNearWall();
 	Vector getAim();
@@ -306,7 +265,6 @@ public:
 	void updatePosition();
 	float quickSongCastDelay;
 	void onAnimationKeyPassed(int key);
-	int tummyAmount;
 
 	bool isSwimming();
 
@@ -369,23 +327,17 @@ protected:
 	int curWebPoint;
 	void checkUpgradeForShot(Shot *s);
 	int getNumShots();
-	void updateCursorFromKeyboard();
 	void lockToWallCommon();
 	void onSetBoneLock();
 	void onUpdateBoneLock();
 
-
-
-	InterpolatedVector cursorPos;
 	void adjustHeadRot();
 	std::string lastHeadTexture;
 	void updateDualFormGlow(float dt);
 	Vector getTendrilAimVector(int i, int max);
 	void applyRidingPosition();
-	Vector lastWallJumpPos, lastWallJumpDir;
 	void stopWallJump();
 	void updateWallJump(float dt);
-	int wallJumps;
 	float wallBurstTimer;
 	float targetUpdateDelay;
 	std::vector<Target> targets;
@@ -410,7 +362,6 @@ protected:
 
 	int shieldPoints;
 
-	bool inFormInterface;
 	void onIdle();
 	void onHeal(int type);
 	ParticleEffect biteLeftEmitter, biteRightEmitter, swimEmitter, auraHitEmitter;
@@ -419,7 +370,6 @@ protected:
 	ParticleEffect *leftHandEmitter, *rightHandEmitter;
 	ParticleEffect *chargingEmitter, *chargeEmitter;
 	void updateCursor(float dt);
-	float canWarpDelay;
 	bool rolling;
 	int rollDidOne;
 	
@@ -427,19 +377,12 @@ protected:
 	void stopRoll();
 	int getQuadrantDirection(int lastQuad, int quad);
 	void updateRoll(float dt);
-	void updateTummy(float dt);
 	int lastQuad, lastQuadDir;
 	void onDamage(DamageData &d);
 	void updateHair(float dt);
 
 	void lostTarget(int i, Entity *e);
 
-	float doubleClickDelay;
-
-	float damageDelay;
-	bool didShockDamage;
-	void updateShock(float dt);
-	float shockTimer;
 	Vector shieldPosition;
 	void updateAura(float dt);
 
@@ -455,15 +398,12 @@ protected:
 	void clampVelocity();
 
 	bool canCharge(int ability);
-	int abilityCharging;
 	void formAbilityUpdate(float dt);
-	Entity *potentialPullTarget;
 	float revertTimer;
 
 	void endCharge();
 	Entity *activateEntity;
 	bool canMove;
-	float castShockTimer;
 
 	void onEnterState(int action);
 	void onExitState(int action);
@@ -472,27 +412,16 @@ protected:
 	void applyBlindEffects();
 	void removeBlindEffects();
 
-
-	//bool blind;
-	bool animatedBurst;
-
 	float zoomVel;
 	// implement "bobbing" in a lower class
 	int getBeamWidth();
 	Vector getWallNormal(TileVector t);
-	void onToggleDebugMessages();
-	float spellCastDelay;
-	float spellChargeMin;
 	bool checkWarpAreas();
-	void checkSpecial();
 	void toggleZoom();
 
 	float ignoreInputDelay;
-	float idleAnimDelay;
 	float splashDelay;
 	//Hair *hair;
-
-	BitmapText *text;
 
 	//Item *currentItem;
 	void onUpdate(float dt);
@@ -503,26 +432,19 @@ protected:
 	Quad *glow;
 	bool swimming;
 
-	void doRangePush(float dt);
-	void doRangePull(float dt);
-
 	void lmbd();
 	void lmbu();
 
 	void rmbd();
-	void rmbd2();
 	void rmbu();
 
 	bool charging;
-
-	Vector lastPush;
 
 	float pushingOffWallEffect;
 	float lockToWallFallTimer;
 
 	Vector dodgeVec;
 	Vector wallPushVec, wallTurnVec;
-	Vector lastLockToWallPos;
 
 
 

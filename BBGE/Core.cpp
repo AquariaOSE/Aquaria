@@ -1778,7 +1778,6 @@ void Core::onUpdate(float dt)
 	//script.update(dt);
 
 	cameraPos.update(dt);
-	cameraRot.update(dt);
 	globalScale.update(dt);
 
 	if (afterEffectManager)
@@ -3162,10 +3161,8 @@ void Core::clearBuffers()
 void Core::setupRenderPositionAndScale()
 {
 #ifdef BBGE_BUILD_OPENGL
-	//glRotatef(cameraRot.z, 0, 0, 1);
 	glScalef(globalScale.x*globalResolutionScale.x*screenCapScale.x, globalScale.y*globalResolutionScale.y*screenCapScale.y, globalScale.z*globalResolutionScale.z);
 	glTranslatef(-(cameraPos.x+cameraOffset.x), -(cameraPos.y+cameraOffset.y), -(cameraPos.z+cameraOffset.z));
-	//glRotatef(180, 0, 1, 0);
 #endif
 }
 
