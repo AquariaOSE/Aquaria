@@ -3318,12 +3318,16 @@ void SceneEditor::updateText()
 		os << "entities (" << dsq->entities.size() << ")";
 		if (editingEntity)
 		{
+			os.precision(1);
+			os << std::fixed;
 			os << " id: " << editingEntity->getID()
 				<< " name: " << editingEntity->name
 				<< " flag:" << dsq->continuity.getEntityFlag(dsq->game->sceneName, editingEntity->getID())
 				<< " fh:" << editingEntity->isfh()
 				<< " fv:" << editingEntity->isfv()
-				<< " state:" << editingEntity->getState();
+				<< " state:" << editingEntity->getState()
+				<< " et:" << editingEntity->getEntityType()
+				<< " hp:" << editingEntity->health << "/" << editingEntity->maxHealth;
 		}
 	break;
 	case ET_PATHS:
