@@ -8292,6 +8292,7 @@ static const struct {
 	luaConstant(OBSCHECK_RANGE),
 	luaConstant(OBSCHECK_4DIR),
 	luaConstant(OBSCHECK_DOWN),
+	luaConstant(OBSCHECK_8DIR),
 
 	luaConstant(EV_WALLOUT),
 	luaConstant(EV_WALLTRANS),
@@ -8416,6 +8417,8 @@ static const struct {
 	luaConstantFromClass(BLEND_DEFAULT,	RenderObject),
 	luaConstantFromClass(BLEND_ADD,		RenderObject),
 	{"BLEND_ADDITIVE",					RenderObject::BLEND_ADD},
+	luaConstantFromClass(BLEND_SUB,		RenderObject),
+	luaConstantFromClass(BLEND_MULT,	RenderObject),
 
 	{"ENDING_NAIJACAVE",				10},
 	{"ENDING_NAIJACAVEDONE",			11},
@@ -8751,6 +8754,11 @@ static const struct {
 	luaConstant(ANIMLAYER_ARMOVERRIDE),
 	luaConstant(ANIMLAYER_UPPERBODYIDLE),
 	luaConstant(ANIMLAYER_HEADOVERRIDE),
+
+	luaConstantFromClass(ANIM_NONE, Bone),
+	luaConstantFromClass(ANIM_POS, Bone),
+	luaConstantFromClass(ANIM_ROT, Bone),
+	luaConstantFromClass(ANIM_ALL, Bone),
 };
 
 //============================================================================================
