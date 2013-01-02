@@ -201,14 +201,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\AnimatedSprite.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\AnimatedSprite.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\BBGE\Base.cpp"
 				>
 			</File>
@@ -314,14 +306,6 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\Gradient.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\Interpolator.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\Interpolator.h"
 				>
 			</File>
 			<File
