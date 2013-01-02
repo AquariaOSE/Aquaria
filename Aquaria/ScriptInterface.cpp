@@ -1270,6 +1270,15 @@ luaFunc(obj_setRenderPass)
 	luaReturnNil();
 }
 
+luaFunc(obj_setRealRenderPass)
+{
+	RenderObject *r = robj(L);
+	int pass = lua_tointeger(L, 2);
+	if (r)
+		r->setRenderPass(pass);
+	luaReturnNil();
+}
+
 luaFunc(obj_fh)
 {
 	RenderObject *r = robj(L);
@@ -1467,6 +1476,14 @@ luaFunc(quad_setHeight)
 	luaReturnNil();
 }
 
+luaFunc(quad_setSegs)
+{
+	Quad *b = getQuad(L);
+	if (b)
+		b->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
+	luaReturnNil();
+}
+
 
 // --- standard set/get functions for each type, wrapping RenderObject functions ---
 
@@ -1544,6 +1561,7 @@ luaFunc(quad_setHeight)
 	RO_FUNC(getter, prefix,  setCullRadius	) \
 	RO_FUNC(getter, prefix,  setUpdateCull	) \
 	RO_FUNC(getter, prefix,  setRenderPass	) \
+	RO_FUNC(getter, prefix,  setRealRenderPass	) \
 	RO_FUNC(getter, prefix,  setPositionX	) \
 	RO_FUNC(getter, prefix,  setPositionY	) \
 	RO_FUNC(getter, prefix,  enableMotionBlur	) \
@@ -1558,7 +1576,8 @@ luaFunc(quad_setHeight)
 	Q_FUNC(getter, prefix,  setVisible		) \
 	Q_FUNC(getter, prefix,  isVisible		) \
 	Q_FUNC(getter, prefix,  setWidth		) \
-	Q_FUNC(getter, prefix,  setHeight		)
+	Q_FUNC(getter, prefix,  setHeight		) \
+	Q_FUNC(getter, prefix,  setSegs			)
 
 // This should reflect the internal class hierarchy,
 // e.g. a Beam is a Quad, so it can use quad_* functions
@@ -1571,7 +1590,7 @@ luaFunc(quad_setHeight)
 	MAKE_ROBJ_FUNCS(getWeb,   web	) \
 	MAKE_ROBJ_FUNCS(getText,  text	)
 
-// first time, create them. (There is a second use of this further down, with differet MK_* macros)
+// first time, create them. (There is a second use of this further down, with different MK_* macros)
 EXPAND_FUNC_PROTOTYPES
 
 
@@ -2836,22 +2855,6 @@ luaFunc(bone_lookAtEntity)
 		}
 		b->lookAt(pos, lua_tonumber(L, 3), lua_tonumber(L, 4),lua_tonumber(L, 5), lua_tonumber(L, 6));
 	}
-	luaReturnNil();
-}
-
-luaFunc(bone_setSegs)
-{
-	Bone *b = bone(L);
-	if (b)
-		b->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
-	luaReturnNil();
-}
-
-luaFunc(entity_setSegs)
-{
-	Entity *e = entity(L);
-	if (e)
-		e->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
 	luaReturnNil();
 }
 
@@ -6501,7 +6504,7 @@ luaFunc(entity_switchLayer)
 // entity numSegments segmentLength width texture
 luaFunc(entity_initHair)
 {
-	ScriptedEntity *se = scriptedEntity(L);
+	Entity *se = entity(L);
 	if (se)
 	{
 		se->initHair(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4), getString(L, 5));
@@ -6509,9 +6512,26 @@ luaFunc(entity_initHair)
 	luaReturnNil();
 }
 
+luaFunc(entity_getHair)
+{
+	Entity *e = entity(L);
+	luaReturnPtr(e ? e->hair : NULL);
+}
+
+luaFunc(entity_clearHair)
+{
+	Entity *e = entity(L);
+	if (e)
+	{
+		e->hair->safeKill();
+		e->hair = 0;
+	}
+	luaReturnNil();
+}
+
 luaFunc(entity_getHairPosition)
 {
-	ScriptedEntity *se = scriptedEntity(L);
+	Entity *se = entity(L);
 	float x=0;
 	float y=0;
 	int idx = lua_tonumber(L, 2);
@@ -6530,7 +6550,7 @@ luaFunc(entity_getHairPosition)
 // entity x y z
 luaFunc(entity_setHairHeadPosition)
 {
-	ScriptedEntity *se = scriptedEntity(L);
+	Entity *se = entity(L);
 	if (se)
 	{
 		se->setHairHeadPosition(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
@@ -6540,7 +6560,7 @@ luaFunc(entity_setHairHeadPosition)
 
 luaFunc(entity_updateHair)
 {
-	ScriptedEntity *se = scriptedEntity(L);
+	Entity *se = entity(L);
 	if (se)
 	{
 		se->updateHair(lua_tonumber(L, 2));
@@ -7385,8 +7405,6 @@ static const struct {
 	luaRegister(entity_setTargetRange),
 
 	luaRegister(bone_addSegment),
-	luaRegister(entity_setSegs),
-	luaRegister(bone_setSegs),
 
 	luaRegister(bone_setSegmentOffset),
 	luaRegister(bone_setSegmentProps),
@@ -7866,6 +7884,8 @@ static const struct {
 
 	luaRegister(entity_initHair),
 	luaRegister(entity_getHairPosition),
+	luaRegister(entity_getHair),
+	luaRegister(entity_clearHair),
 
 	luaRegister(entity_setHairHeadPosition),
 	luaRegister(entity_updateHair),

@@ -3096,3 +3096,39 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	return false;
 }
 
+void Entity::initHair(int numSegments, int segmentLength, int width, const std::string &tex)
+{
+	if (hair)
+	{
+		errorLog("Trying to init hair when hair is already present");
+	}
+	hair = new Hair(numSegments, segmentLength, width);
+	hair->setTexture(tex);
+	dsq->game->addRenderObject(hair, layer);
+}
+
+
+void Entity::setHairHeadPosition(const Vector &pos)
+{
+	if (hair)
+	{
+		hair->setHeadPosition(pos);
+	}
+}
+
+void Entity::updateHair(float dt)
+{
+	if (hair)
+	{
+		hair->updatePositions();
+	}
+}
+
+void Entity::exertHairForce(const Vector &force, float dt)
+{
+	if (hair)
+	{
+		hair->exertForce(force, dt);
+	}
+}
+

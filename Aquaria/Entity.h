@@ -481,6 +481,11 @@ public:
 
 	virtual bool canSetBoneLock();
 
+	void initHair(int numSegments, int segmentLength, int width, const std::string &tex);
+	void updateHair(float dt);
+	void setHairHeadPosition(const Vector &pos);
+	void exertHairForce(const Vector &force, float dt);
+
 protected:
 	bool calledEntityDied;
 	Path *waterBubble;
