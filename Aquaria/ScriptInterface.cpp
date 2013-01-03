@@ -1266,15 +1266,6 @@ luaFunc(obj_setRenderPass)
 	RenderObject *r = robj(L);
 	int pass = lua_tointeger(L, 2);
 	if (r)
-		r->setOverrideRenderPass(pass);
-	luaReturnNil();
-}
-
-luaFunc(obj_setRealRenderPass)
-{
-	RenderObject *r = robj(L);
-	int pass = lua_tointeger(L, 2);
-	if (r)
 		r->setRenderPass(pass);
 	luaReturnNil();
 }
@@ -1561,7 +1552,6 @@ luaFunc(quad_setSegs)
 	RO_FUNC(getter, prefix,  setCullRadius	) \
 	RO_FUNC(getter, prefix,  setUpdateCull	) \
 	RO_FUNC(getter, prefix,  setRenderPass	) \
-	RO_FUNC(getter, prefix,  setRealRenderPass	) \
 	RO_FUNC(getter, prefix,  setPositionX	) \
 	RO_FUNC(getter, prefix,  setPositionY	) \
 	RO_FUNC(getter, prefix,  enableMotionBlur	) \
@@ -3633,13 +3623,24 @@ luaFunc(entity_setEntityLayer)
 	luaReturnNil();
 }
 
+// Note that this overrides the generic obj_setRenderPass function for entities.
+// (It's registered as "entity_setRenderPass" to Lua)
+luaFunc(entity_setRenderPass_override)
+{
+	Entity *e = entity(L);
+	int pass = lua_tointeger(L, 2);
+	if (e)
+		e->setOverrideRenderPass(pass);
+	luaReturnNil();
+}
+
 // intended to be used for setting max health and refilling it all
 luaFunc(entity_setHealth)
 {
 	Entity *e = entity(L, 1);
 	if (e)
 		e->health = e->maxHealth = lua_tonumber(L, 2);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_changeHealth)
@@ -3647,7 +3648,7 @@ luaFunc(entity_changeHealth)
 	Entity *e = entity(L, 1);
 	if (e)
 		e->health += lua_tonumber(L, 2);
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_heal)
@@ -8103,6 +8104,7 @@ static const struct {
 
 	{"bone_getPosition", l_bone_getWorldPosition},
 	{ "entity_delete", l_entity_delete_override },
+	{ "entity_setRenderPass", l_entity_setRenderPass_override },
 
 	// -- deprecated/compatibility related functions below here --
 
