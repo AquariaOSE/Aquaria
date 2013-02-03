@@ -18,6 +18,9 @@ Follow these steps to build Aquaria.
 build-essential cmake liblua5.1-0-dev libogg-dev libvorbis-dev
 libopenal-dev libsdl1.2-dev
 
+For Lua, libogg, and libvorbis the included versions can be used instead,
+thus a system-wide install of these libs is not required.
+
 2- Create a sub-directory 'cmake-build' and move into it
 
 $ mkdir cmake-build
@@ -28,6 +31,9 @@ $ cd cmake-build
 $ cmake ..
 
 4- If you miss some dependencies, install them and run cmake again.
+   Due to windows lacking package management, it is recommended
+   to set all AQUARIA_INTERNAL_* cmake variables to TRUE for win32
+   builds, or for statically linked linux builds.
 
 5- run make
 
@@ -39,6 +45,7 @@ $ make
 
 $ cp aquaria ~/aquaria/
 $ cp -r ../games_scripts/* ~/aquaria
+$ cp -r ../files/* ~/aquaria
 
 You should *not* remove any file from the aquaria installation, just
 replace some of them with the versions included in this folder.
