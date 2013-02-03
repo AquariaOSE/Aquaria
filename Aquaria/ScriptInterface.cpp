@@ -1261,6 +1261,12 @@ luaFunc(obj_setLayer)
 	luaReturnNil();
 }
 
+luaFunc(obj_getLayer)
+{
+	RenderObject *r = robj(L);
+	luaReturnInt(r ? r->layer : 0);
+}
+
 luaFunc(obj_setRenderPass)
 {
 	RenderObject *r = robj(L);
@@ -1538,6 +1544,7 @@ luaFunc(quad_setSegs)
 	RO_FUNC(getter, prefix,  moveToFront	) \
 	RO_FUNC(getter, prefix,  moveToBack		) \
 	RO_FUNC(getter, prefix,  setLayer		) \
+	RO_FUNC(getter, prefix,  getLayer		) \
 	RO_FUNC(getter, prefix,  setRenderBeforeParent) \
 	RO_FUNC(getter, prefix,  addChild		) \
 	RO_FUNC(getter, prefix,  fh				) \
@@ -3344,6 +3351,21 @@ luaFunc(entity_setAnimLayerTimeMult)
 	luaReturnNum(t);
 }
 
+luaFunc(entity_getAnimLayerTimeMult)
+{
+	Entity *e = entity(L);
+	float t = 0;
+	if (e)
+	{
+		AnimationLayer *l = e->skeletalSprite.getAnimationLayer(lua_tointeger(L, 2));
+		if (l)
+		{
+			t = l->timeMultiplier.x;
+		}
+	}
+	luaReturnNum(t);
+}
+
 luaFunc(entity_animate)
 {
 	SkeletalSprite *skel = getSkeletalSprite(entity(L));
@@ -3370,6 +3392,19 @@ luaFunc(entity_stopAnimation)
 			animlayer->stopAnimation();
 	}
 	luaReturnNil();
+}
+
+luaFunc(entity_getAnimationLoop)
+{
+	int loop = 0;
+	SkeletalSprite *skel = getSkeletalSprite(entity(L));
+	if (skel)
+	{
+		AnimationLayer *animlayer = skel->getAnimationLayer(lua_tointeger(L, 2));
+		if (animlayer)
+			loop = animlayer->loop ? animlayer->loop : animlayer->enqueuedAnimationLoop;
+	}
+	luaReturnInt(loop);
 }
 
 // entity, x, y, time, ease, relative
@@ -7589,7 +7624,9 @@ static const struct {
 	luaRegister(entity_doCollisionAvoidance),
 	luaRegister(entity_animate),
 	luaRegister(entity_setAnimLayerTimeMult),
+	luaRegister(entity_getAnimLayerTimeMult),
 	luaRegister(entity_stopAnimation),
+	luaRegister(entity_getAnimationLoop),
 
 	luaRegister(entity_setCurrentTarget),
 	luaRegister(entity_stopInterpolating),
@@ -8776,11 +8813,6 @@ static const struct {
 	luaConstant(ANIMLAYER_ARMOVERRIDE),
 	luaConstant(ANIMLAYER_UPPERBODYIDLE),
 	luaConstant(ANIMLAYER_HEADOVERRIDE),
-
-	luaConstantFromClass(ANIM_NONE, Bone),
-	luaConstantFromClass(ANIM_POS, Bone),
-	luaConstantFromClass(ANIM_ROT, Bone),
-	luaConstantFromClass(ANIM_ALL, Bone),
 };
 
 //============================================================================================
