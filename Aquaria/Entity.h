@@ -351,7 +351,7 @@ public:
 	bool isHit();
 	bool pathBurst(bool wallJump = false);
 	Timer burstTimer;
-	void revive(int a);
+	void revive(float a);
 	void setName(const std::string &name);
 	void doFriction(float dt);
 	void doFriction(float dt, int len);

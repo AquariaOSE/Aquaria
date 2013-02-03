@@ -812,7 +812,7 @@ void Entity::heal(float a, int type)
 	}
 }
 
-void Entity::revive(int a)
+void Entity::revive(float a)
 {
 	entityDead = false;
 	health = 0;

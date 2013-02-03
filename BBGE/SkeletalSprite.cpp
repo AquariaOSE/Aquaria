@@ -461,7 +461,7 @@ void AnimationLayer::playAnimation(int idx, int loop)
 	//doNextKeyframe();
 }
 
-void AnimationLayer::enqueueAnimation(std::string anim, int loop)
+void AnimationLayer::enqueueAnimation(const std::string& anim, int loop)
 {
 	enqueuedAnimation = anim;
 	enqueuedAnimationLoop = loop;
@@ -514,7 +514,7 @@ Animation* AnimationLayer::getCurrentAnimation()
 	return &s->animations[currentAnimation];
 }
 
-bool AnimationLayer::createTransitionAnimation(std::string anim, float time)
+bool AnimationLayer::createTransitionAnimation(const std::string& anim, float time)
 {
 	//Animation *a = getCurrentAnimation();
 	Animation *to = s->getAnimation(anim);
@@ -555,6 +555,7 @@ void AnimationLayer::stopAnimation()
 	{
 		animate(enqueuedAnimation, enqueuedAnimationLoop);
 		enqueuedAnimation = "";
+		enqueuedAnimationLoop = 0;
 	}
 }
 
@@ -1145,7 +1146,7 @@ void SkeletalSprite::deleteBones()
 	bones.clear();
 }
 
-Animation *SkeletalSprite::getAnimation(std::string anim)
+Animation *SkeletalSprite::getAnimation(const std::string& anim)
 {
 	for (int i = 0; i < animations.size(); i++)
 	{
