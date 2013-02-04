@@ -478,6 +478,7 @@ public:
 	void setRidingData(const Vector &pos, float rot, bool fh);
 	bool isGoingToBeEaten();
 	void setPoison(float m, float t);
+	inline float getPoison() const { return poison; }
 
 	virtual bool canSetBoneLock();
 

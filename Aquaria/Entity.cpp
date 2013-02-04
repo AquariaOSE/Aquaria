@@ -1646,7 +1646,8 @@ void Entity::setPoison(float m, float t)
 {
 	poison = m;
 	poisonTimer.start(t);
-	poisonBitTimer.start(dsq->continuity.poisonBitTime);
+	if (poison)
+		poisonBitTimer.start(dsq->continuity.poisonBitTime);
 }
 
 void Entity::onUpdate(float dt)

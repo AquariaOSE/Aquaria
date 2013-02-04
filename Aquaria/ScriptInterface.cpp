@@ -1841,6 +1841,38 @@ luaFunc(shot_setAimVector)
 	luaReturnNil();
 }
 
+luaFunc(shot_getEffectTime)
+{
+	Shot *shot = getShot(L);
+	luaReturnNum((shot && shot->shotData) ? shot->shotData->effectTime : 0.0f);
+}
+
+luaFunc(shot_isIgnoreShield)
+{
+	Shot *shot = getShot(L);
+	luaReturnBool((shot && shot->shotData) ? shot->shotData->ignoreShield : false);
+}
+
+luaFunc(shot_getFirer)
+{
+	Shot *shot = getShot(L);
+	luaReturnPtr(shot ? shot->firer : NULL);
+}
+
+luaFunc(shot_setTarget)
+{
+	Shot *shot = getShot(L);
+	if(shot)
+		shot->setTarget(entity(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(shot_getTarget)
+{
+	Shot *shot = getShot(L);
+	luaReturnPtr(shot ? shot->target : NULL);
+}
+
 luaFunc(entity_setVel)
 {
 	Entity *e = entity(L);
@@ -2976,6 +3008,18 @@ luaFunc(getLastCollidePosition)
 {
 	luaReturnVec2(dsq->game->lastCollidePosition.x, dsq->game->lastCollidePosition.y);
 }
+
+luaFunc(getLastCollideTileType)
+{
+	luaReturnInt(dsq->game->lastCollideTileType);
+}
+
+luaFunc(collideCircleWithGrid)
+{
+	bool c = dsq->game->collideCircleWithGrid(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)), lua_tonumber(L, 3));
+	luaReturnBool(c);
+}
+
 
 luaFunc(entity_isNearGround)
 {
@@ -4238,10 +4282,13 @@ luaFunc(entity_debugText)
 luaFunc(entity_getHealth)
 {
 	Entity *e = entity(L);
-	if (e)
-		luaReturnNum(e->health);
-	else
-		luaReturnNum(0);
+	luaReturnNum(e ? e->health : 0);
+}
+
+luaFunc(entity_getMaxHealth)
+{
+	Entity *e = entity(L);
+	luaReturnNum(e ? e->maxHealth : 0);
 }
 
 luaFunc(entity_initSegments)
@@ -7136,6 +7183,20 @@ luaFunc(entity_setFlag)
 	luaReturnNil();
 }
 
+luaFunc(entity_setPoison)
+{
+	Entity *e = entity(L);
+	if(e)
+		e->setPoison(lua_tonumber(L, 2), lua_tonumber(L, 3));
+	luaReturnNil();
+}
+
+luaFunc(entity_getPoison)
+{
+	Entity *e = entity(L);
+	luaReturnNum(e ? e->getPoison() : 0.0f);
+}
+
 luaFunc(entity_getFlag)
 {
 	Entity *e = entity(L);
@@ -7540,6 +7601,7 @@ static const struct {
 	luaRegister(entity_partAlpha),
 
 	luaRegister(entity_getHealth),
+	luaRegister(entity_getMaxHealth),
 	luaRegister(entity_pushTarget),
 	luaRegister(entity_msg),
 	luaRegister(entity_updateMovement),
@@ -7886,6 +7948,11 @@ static const struct {
 
 	luaRegister(shot_setAimVector),
 	luaRegister(shot_setOut),
+	luaRegister(shot_getEffectTime),
+	luaRegister(shot_isIgnoreShield),
+	luaRegister(shot_getFirer),
+	luaRegister(shot_setTarget),
+	luaRegister(shot_getTarget),
 	luaRegister(entity_pathBurst),
 	luaRegister(entity_handleShotCollisions),
 	luaRegister(entity_handleShotCollisionsSkeletal),
@@ -8086,6 +8153,8 @@ static const struct {
 	luaRegister(entity_getNearestBoneToPosition),
 
 	luaRegister(entity_getNearestNode),
+	luaRegister(entity_setPoison),
+	luaRegister(entity_getPoison),
 
 	luaRegister(node_getNearestEntity),
 	luaRegister(node_getNearestNode),
@@ -8105,6 +8174,8 @@ static const struct {
 
 	luaRegister(getWallNormal),
 	luaRegister(getLastCollidePosition),
+	luaRegister(getLastCollideTileType),
+	luaRegister(collideCircleWithGrid),
 
 	luaRegister(getScreenVirtualOff),
 	luaRegister(getScreenSize),
@@ -8813,6 +8884,14 @@ static const struct {
 	luaConstant(ANIMLAYER_ARMOVERRIDE),
 	luaConstant(ANIMLAYER_UPPERBODYIDLE),
 	luaConstant(ANIMLAYER_HEADOVERRIDE),
+
+	luaConstant(OT_EMPTY),
+	luaConstant(OT_BLACK),
+	luaConstant(OT_BLACKINVIS),
+	luaConstant(OT_INVISIBLE),
+	luaConstant(OT_INVISIBLEIN),
+	luaConstant(OT_HURT),
+	luaConstant(OT_INVISIBLEENT),
 };
 
 //============================================================================================
