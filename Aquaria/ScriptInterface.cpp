@@ -2887,6 +2887,16 @@ luaFunc(bone_lookAtEntity)
 	luaReturnNil();
 }
 
+luaFunc(bone_lookAtPosition)
+{
+	Bone *b = bone(L);
+	if (b)
+	{
+		b->lookAt(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
+	}
+	luaReturnNil();
+}
+
 luaFunc(entity_resetTimer)
 {
 	ScriptedEntity *se = scriptedEntity(L);
@@ -7510,6 +7520,7 @@ static const struct {
 	luaRegister(bone_showFrame),
 
 	luaRegister(bone_lookAtEntity),
+	luaRegister(bone_lookAtPosition),
 
 	luaRegister(entity_partSetSegs),
 
@@ -8446,6 +8457,7 @@ static const struct {
 	luaConstant(EV_MINIMAP),
 	luaConstant(EV_SOULSCREAMRADIUS),
 	luaConstant(EV_WEBSLOW),
+	luaConstant(EV_NOAVOID),
 	luaConstant(EV_MAX),
 
 	{"EVT_NONE",				0},

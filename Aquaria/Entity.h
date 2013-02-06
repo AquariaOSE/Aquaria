@@ -70,7 +70,8 @@ enum EV
 	EV_MINIMAP				= 19,			// should the entity show up on the minimap?
 	EV_SOULSCREAMRADIUS		= 20,			// 0-n: size of radius for naija's dual form scream attack, -1: always hit
 	EV_WEBSLOW				= 21,			// 100 by default, multiplied by dt and then divided into vel
-	EV_MAX					= 22
+	EV_NOAVOID				= 22,			// if 1: doEntityAvoidance() will ignore this entity
+	EV_MAX					= 23
 };
 
 enum DamageType

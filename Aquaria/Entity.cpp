@@ -2788,7 +2788,7 @@ void Entity::doEntityAvoidance(float dt, int range, float mod, Entity *ignore)
 	{
 		Entity *e = *i;
 
-		if (e != this && e != ignore && e->ridingOnEntity != this)
+		if (e != this && e != ignore && e->ridingOnEntity != this && !e->getv(EV_NOAVOID))
 		{
 			diff = (this->position - e->position);
 			if (diff.isLength2DIn(range) && !diff.isZero())
