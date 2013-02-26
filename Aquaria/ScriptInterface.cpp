@@ -6379,7 +6379,7 @@ luaFunc(entity_getNearestEntity)
 		nameCheck = false;
 	}
 
-	float range = lua_tointeger(L, 3);
+	float range = lua_tonumber(L, 3);
 	EntityType type = ET_NOTYPE;
 	if (lua_isnumber(L, 4))
 		type = (EntityType)lua_tointeger(L, 4);
@@ -8218,6 +8218,8 @@ static const struct {
 
 	// obj_* are not in the define above
 	MAKE_ROBJ_FUNCS(_, obj)
+	// same for quad_* base functions
+	MAKE_QUAD_FUNCS(_, quad)
 
 	// -- overrides / special cases--
 
