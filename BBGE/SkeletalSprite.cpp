@@ -1172,7 +1172,7 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 
 	file = core->adjustFilenameCase(file);
 
-	if (!exists(file,1))
+	if (!exists(file))
 	{
 		errorLog("Could not load skin[" + file + "]");
 		return;
@@ -1304,6 +1304,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 	if (!exists(file))
 	{
 		filenameLoaded = "";
+		errorLog("Could not load skeletal[" + file + "]");
 		return;
 	}
 

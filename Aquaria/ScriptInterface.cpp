@@ -3369,6 +3369,15 @@ luaFunc(entity_loadSkin)
 	luaReturnNil();
 }
 
+luaFunc(entity_getSkeletalName)
+{
+	Entity *e = entity(L);
+	const char *s = "";
+	if (e && e->skeletalSprite.isLoaded())
+		s = e->skeletalSprite.filenameLoaded.c_str();
+	luaReturnStr(s);
+}
+
 luaFunc(entity_idle)
 {
 	Entity *e = entity(L);
@@ -7652,6 +7661,7 @@ static const struct {
 	luaRegister(entity_warpSegments),
 	luaRegister(entity_initSkeletal),
 	luaRegister(entity_loadSkin),
+	luaRegister(entity_getSkeletalName),
 	luaRegister(entity_initStrands),
 
 	luaRegister(entity_hurtTarget),
