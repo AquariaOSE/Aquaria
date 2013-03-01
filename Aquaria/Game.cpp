@@ -819,7 +819,7 @@ void TreasureSlot::onUpdate(float dt)
 				{
 					doubleClickTimer = 0;
 					
-					dsq->runScriptNum("scripts/global/menu-treasures.lua", "useTreasure", flag);
+					dsq->game->onUseTreasure(flag);
 				}
 				else
 				{
@@ -7152,8 +7152,16 @@ void Game::onUseTreasure()
 
 	if (selectedTreasureFlag != -1)
 	{
-		dsq->runScriptNum("scripts/global/menu-treasures.lua", "useTreasure", selectedTreasureFlag);
+		onUseTreasure(selectedTreasureFlag);
 	}
+}
+
+void Game::onUseTreasure(int flag)
+{
+	if(dsq->mod.isActive())
+		dsq->runScriptNum(dsq->mod.getPath() + "scripts/menu-treasures.lua", "useTreasure", flag);
+	else
+		dsq->runScriptNum("scripts/global/menu-treasures.lua", "useTreasure", flag);
 }
 
 Recipe *Game::findRecipe(const std::vector<IngredientData*> &list)

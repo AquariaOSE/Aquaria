@@ -6156,15 +6156,7 @@ luaFunc(entity_partSetSegs)
 luaFunc(entity_getID)
 {
 	Entity *e = entity(L);
-	int id = 0;
-	if (e)
-	{
-		id = e->getID();
-		std::ostringstream os;
-		os << "id: " << id;
-		debugLog(os.str());
-	}
-	luaReturnNum(id);
+	luaReturnNum(e ? e->getID() : 0);
 }
 
 luaFunc(getEntityByID)

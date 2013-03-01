@@ -939,6 +939,7 @@ public:
 	void onRecipes();
 	void updateCookList();
 	void onUseTreasure();
+	void onUseTreasure(int flag);
 
 	void onPrevFoodPage();
 	void onNextFoodPage();
