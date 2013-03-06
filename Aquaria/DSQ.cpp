@@ -4665,6 +4665,8 @@ void DSQ::onUpdate(float dt)
 	lockMouse();
 
 	Network::update();
+
+	Shot::clearShotGarbage();
 }
 
 void DSQ::lockMouse()

@@ -2921,7 +2921,7 @@ void Avatar::formAbility(int ability)
 			for (i = Shot::shots.begin(); i != Shot::shots.end(); i++)
 			{
 				Shot *s = (*i);
-				if (s->shotData && !s->shotData->invisible)
+				if (s->isActive() && s->shotData && !s->shotData->invisible)
 				{
 					if (!s->firer || s->firer->getEntityType()==ET_ENEMY)
 					{
@@ -4935,23 +4935,23 @@ void Avatar::updateAura(float dt)
 			*/
 			for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); ++i)
 			{
-				//&& (*i)->life > 0.2f
-				if ((*i) && dsq->game->isDamageTypeEnemy((*i)->getDamageType()) && (*i)->firer != this
-					&& (!(*i)->shotData || !(*i)->shotData->ignoreShield))
+				Shot *s = *i;
+				if (s->isActive() && dsq->game->isDamageTypeEnemy(s->getDamageType()) && s->firer != this
+					&& (!s->shotData || !s->shotData->ignoreShield))
 				{
 
-					Vector diff = (*i)->position - shieldPosition;
+					Vector diff = s->position - shieldPosition;
 					if (diff.getSquaredLength2D() < sqr(AURA_SHIELD_RADIUS))
 					{
-						shieldPoints -= (*i)->getDamage();
+						shieldPoints -= s->getDamage();
 						auraHitEmitter.start();
-						dsq->spawnParticleEffect("ReflectShot", (*i)->position);
+						dsq->spawnParticleEffect("ReflectShot", s->position);
 						core->sound->playSfx("Shield-Hit");
-						(*i)->position += diff;
-						//(*i)->target = 0;
-						diff.setLength2D((*i)->maxSpeed);
-						(*i)->velocity = diff;
-						(*i)->reflectFromEntity(this);
+						s->position += diff;
+						//s->target = 0;
+						diff.setLength2D(s->maxSpeed);
+						s->velocity = diff;
+						s->reflectFromEntity(this);
 					}
 				}
 			}

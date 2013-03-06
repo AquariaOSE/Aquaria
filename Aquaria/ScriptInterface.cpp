@@ -1811,6 +1811,22 @@ luaFunc(web_getNumPoints)
 	luaReturnInt(num);
 }
 
+luaFunc(getFirstShot)
+{
+	luaReturnPtr(Shot::getFirstShot());
+}
+
+luaFunc(getNextShot)
+{
+	luaReturnPtr(Shot::getNextShot());
+}
+
+luaFunc(shot_getName)
+{
+	Shot *s = getShot(L);
+	luaReturnStr(s ? s->getName() : "");
+}
+
 luaFunc(shot_setOut)
 {
 	Shot *shot = getShot(L);
@@ -1859,11 +1875,26 @@ luaFunc(shot_getFirer)
 	luaReturnPtr(shot ? shot->firer : NULL);
 }
 
+luaFunc(shot_setFirer)
+{
+	Shot *shot = getShot(L);
+	if(shot)
+	{
+		Entity *e = lua_isuserdata(L, 2) ? entity(L, 2) : NULL;
+		shot->firer = e;
+	}
+
+	luaReturnNil();
+}
+
 luaFunc(shot_setTarget)
 {
 	Shot *shot = getShot(L);
 	if(shot)
-		shot->setTarget(entity(L, 2));
+	{
+		Entity *e = lua_isuserdata(L, 2) ? entity(L, 2) : NULL;
+		shot->setTarget(e);
+	}
 	luaReturnNil();
 }
 
@@ -1871,6 +1902,32 @@ luaFunc(shot_getTarget)
 {
 	Shot *shot = getShot(L);
 	luaReturnPtr(shot ? shot->target : NULL);
+}
+
+luaFunc(shot_setExtraDamage)
+{
+	Shot *shot = getShot(L);
+	if(shot)
+		shot->extraDamage = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(shot_getExtraDamage)
+{
+	Shot *shot = getShot(L);
+	luaReturnNum(shot ? shot->extraDamage : 0.0f);
+}
+
+luaFunc(shot_getDamage)
+{
+	Shot *shot = getShot(L);
+	luaReturnNum(shot ? shot->getDamage() : 0.0f);
+}
+
+luaFunc(shot_getDamageType)
+{
+	Shot *shot = getShot(L);
+	luaReturnNum(shot ? shot->getDamageType() : DT_NONE);
 }
 
 luaFunc(entity_setVel)
@@ -5275,7 +5332,10 @@ luaFunc(entity_getRandomTargetPoint)
 
 luaFunc(playVisualEffect)
 {
-	dsq->playVisualEffect(lua_tonumber(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
+	Entity *target = NULL;
+	if(lua_isuserdata(L, 4))
+		target = entity(L, 4);
+	dsq->playVisualEffect(lua_tonumber(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), target);
 	luaReturnNil();
 }
 
@@ -7959,13 +8019,21 @@ static const struct {
 
 	luaRegister(createSpore),
 
+	luaRegister(getFirstShot),
+	luaRegister(getNextShot),
 	luaRegister(shot_setAimVector),
 	luaRegister(shot_setOut),
 	luaRegister(shot_getEffectTime),
 	luaRegister(shot_isIgnoreShield),
+	luaRegister(shot_setFirer),
 	luaRegister(shot_getFirer),
 	luaRegister(shot_setTarget),
 	luaRegister(shot_getTarget),
+	luaRegister(shot_setExtraDamage),
+	luaRegister(shot_getExtraDamage),
+	luaRegister(shot_getDamage),
+	luaRegister(shot_getDamageType),
+	luaRegister(shot_getName),
 	luaRegister(entity_pathBurst),
 	luaRegister(entity_handleShotCollisions),
 	luaRegister(entity_handleShotCollisionsSkeletal),

@@ -2912,7 +2912,7 @@ void Entity::doSpellAvoidance(float dt, int range, float mod)
 	{
 		Shot *s = (Shot*)(*i);
 
-		if ((s->position - this->position).getSquaredLength2D() < sqr(range))
+		if (s->isActive() && (s->position - this->position).getSquaredLength2D() < sqr(range))
 		{
 			for (int j = 0; j < ignoreShotDamageTypes.size(); j++)
 			{

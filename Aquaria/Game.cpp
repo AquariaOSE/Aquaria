@@ -6253,6 +6253,7 @@ void Game::applyState()
 		//core->afterEffectManager->addEffect(new RippleEffect());
 	}
 	Shot::shots.clear();
+	Shot::deleteShots.clear();
 	backdropQuad = 0;
 	clearObsRows();
 	inGameMenu = false;
@@ -8491,7 +8492,7 @@ void Game::handleShotCollisions(Entity *e, bool hasShield)
 	for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); i++)
 	{
 		Shot *shot = *i;
-		if (isEntityCollideWithShot(e, shot) && (!hasShield || (!shot->shotData || !shot->shotData->ignoreShield)))
+		if (shot->isActive() && isEntityCollideWithShot(e, shot) && (!hasShield || (!shot->shotData || !shot->shotData->ignoreShield)))
 		{
 			Vector collidePoint = e->position+e->offset;
 			if (e->getNumTargetPoints()>0)
@@ -8523,7 +8524,7 @@ void Game::handleShotCollisionsSkeletal(Entity *e)
 	for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); i++)
 	{
 		Shot *shot = *i;
-		if (isEntityCollideWithShot(e, shot))
+		if (shot->isActive() && isEntityCollideWithShot(e, shot))
 		{
 			Bone *b = collideSkeletalVsCircle(e, shot->position, shot->collideRadius);
 			if (b)
@@ -8540,7 +8541,7 @@ void Game::handleShotCollisionsHair(Entity *e, int num)
 	for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); i++)
 	{
 		Shot *shot = *i;
-		if (isEntityCollideWithShot(e, shot))
+		if (shot->isActive() && isEntityCollideWithShot(e, shot))
 		{
 			bool b = collideHairVsCircle(e, num, shot->position, 8);
 			if (b)
@@ -10886,6 +10887,7 @@ void Game::removeState()
 
 	debugLog("killAllShots");
 	Shot::killAllShots();
+	Shot::clearShotGarbage();
 	debugLog("killAllBeams");
 	Beam::killAllBeams();
 	debugLog("killAllWebs");
