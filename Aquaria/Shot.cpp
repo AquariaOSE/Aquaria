@@ -230,6 +230,8 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 				damageType = DT_ENEMY_CREATOR;
 			else if (bt == "DT_ENEMY_MANTISBOMB")
 				damageType = DT_ENEMY_MANTISBOMB;
+			else
+				damageType = (DamageType)atoi(bt.c_str());
 		}
 		else if (token == "Invisible")
 			inf >> invisible;

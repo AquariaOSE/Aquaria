@@ -6252,7 +6252,7 @@ void Game::applyState()
 		core->afterEffectManager->clear();
 		//core->afterEffectManager->addEffect(new RippleEffect());
 	}
-	Shot::shots.clear();
+	Shot::shots.clear(); // the shots were deleted elsewhere, drop any remaining pointers
 	Shot::deleteShots.clear();
 	backdropQuad = 0;
 	clearObsRows();
@@ -10887,7 +10887,7 @@ void Game::removeState()
 
 	debugLog("killAllShots");
 	Shot::killAllShots();
-	Shot::clearShotGarbage();
+	Shot::clearShotGarbage(); // make sure there are no pointers left (would lead to a crash on shutdown otherwise)
 	debugLog("killAllBeams");
 	Beam::killAllBeams();
 	debugLog("killAllWebs");
