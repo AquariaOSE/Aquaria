@@ -1521,6 +1521,7 @@ luaFunc(quad_setSegs)
 	RO_FUNC(getter, prefix,  setBlendType	) \
 	RO_FUNC(getter, prefix,  setTexture		) \
 	RO_FUNC(getter, prefix,  delete			) \
+	RO_FUNC(getter, prefix,  getLife		) \
 	RO_FUNC(getter, prefix,  setLife		) \
 	RO_FUNC(getter, prefix,  setDecayRate	) \
 	RO_FUNC(getter, prefix,  addDeathNotify	) \
