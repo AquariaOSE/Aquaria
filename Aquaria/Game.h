@@ -125,7 +125,6 @@ typedef std::vector<EntityGroup> EntityGroups;
 
 enum EditTypes
 {
-	ET_NONE			=-1,
 	ET_ELEMENTS		=0,
 	ET_ENTITIES		=1,
 	ET_PATHS		=2,
@@ -648,7 +647,6 @@ public:
 	void updatePreviewRecipe();
 
 	void transitionToScene(std::string scene);
-	void transitionToSceneUnder(std::string scene);
 	bool loadScene(std::string scene);
 
 	void clearGrid(int v = 0);
@@ -882,9 +880,6 @@ public:
 
 	int worldMapIndex;
 
-	void spawnSporeChildren();
-
-	bool creatingSporeChildren;
 	bool loadingScene;
 
 	WaterSurfaceRender *waterSurfaceRender;
@@ -1048,10 +1043,6 @@ protected:
 
 
 	void warpPrep();
-	void warpKey1();
-	void warpKey2();
-	void warpKey3();
-	void warpKey4();
 	bool shuttingDownGameState;
 	void onOptionsMenu();
 	bool optionsMenu, foodMenu, petMenu, treasureMenu, keyConfigMenu;

@@ -2431,22 +2431,6 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	return firedShot;
 }
 
-void Avatar::spawnSeed()
-{
-	// max spore children/seeds = 50
-	if (dsq->game->getNumberOfEntitiesNamed("SporeChild") < 4)
-	{
-		if (!dsq->game->isObstructed(TileVector(position)))
-		{
-			dsq->game->createEntity("SporeChild", 0, position, 0, 0, "");
-		}
-	}
-	else
-	{
-		// visual effect and/or sound effect
-	}
-}
-
 Vector Avatar::getFacing()
 {
 	if (vel.isLength2DIn(2) && rotation.z == 0)

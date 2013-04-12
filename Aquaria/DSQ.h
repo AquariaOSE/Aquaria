@@ -826,28 +826,6 @@ public:
 	void load();
 };
 
-enum CMStat
-{
-	CM_ID	=0,
-	CM_EGO,
-	CM_SEGO
-};
-
-class WordColoring
-{
-public:
-	std::string word;
-	Vector color;
-};
-
-struct SporeChildData
-{
-	SporeChildData() : state(0), entity(0), health(0) {}
-	int state;
-	int health;
-	Entity *entity;
-};
-
 const int FLAG_LI = 1000, FLAG_LICOMBAT = 1001;
 
 const int FLAG_COOKS			= 21;
@@ -1064,12 +1042,6 @@ public:
 
 	AuraType auraType;
 	float auraTimer;
-
-	SporeChildData *getSporeChildDataForEntity(Entity *e);
-	void registerSporeChildData(Entity *e);
-
-	std::vector<SporeChildData> sporeChildData;
-
 
 	EatData *getEatData(const std::string &name);
 	void loadEatBank();

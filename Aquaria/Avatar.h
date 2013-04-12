@@ -358,7 +358,6 @@ protected:
 	float fallGravityTimer;
 	Vector fallGravity;
 	int lastOutOfWaterMaxSpeed;
-	void spawnSeed();
 
 	int shieldPoints;
 

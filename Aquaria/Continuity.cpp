@@ -2997,40 +2997,6 @@ int Continuity::getPathFlag(Path *p)
 	return entityFlags[os2.str()];
 }
 
-SporeChildData *Continuity::getSporeChildDataForEntity(Entity *e)
-{
-	SporeChildData *scd=0;
-	for (int i = 0; i < sporeChildData.size(); i++)
-	{
-		if (sporeChildData[i].entity == e)
-		{
-			scd = &sporeChildData[i];
-			break;
-		}
-	}
-	return scd;
-}
-
-void Continuity::registerSporeChildData(Entity *e)
-{
-	if (!dsq->game->creatingSporeChildren)
-	{
-		SporeChildData *scd=0;
-		if (!(scd = getSporeChildDataForEntity(e)))
-		{
-			SporeChildData d;
-			sporeChildData.push_back(d);
-			scd = &sporeChildData[sporeChildData.size()-1];
-		}
-		if (scd)
-		{
-			scd->state = e->getState();
-			scd->health = e->health;
-			scd->entity = e;
-		}
-	}
-}
-
 class GemGet : public Quad
 {
 public:
@@ -3285,7 +3251,6 @@ void Continuity::reset()
 	loadPetData();
 
 	formUpgrades.clear();
-	sporeChildData.clear();
 
 	auraType = AURA_NONE;
 	for (int i = 0; i < MAX_FLAGS; i++)

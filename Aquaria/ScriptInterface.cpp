@@ -5240,16 +5240,6 @@ luaFunc(warpNaijaToSceneNode)
 	luaReturnNil();
 }
 
-luaFunc(registerSporeChildData)
-{
-	Entity *e = entity(L);
-	if (e)
-	{
-		dsq->continuity.registerSporeChildData(e);
-	}
-	luaReturnNil();
-}
-
 luaFunc(entity_setDamageTarget)
 {
 	Entity *e = entity(L);
@@ -6460,7 +6450,7 @@ luaFunc(entity_getNearestEntity)
 		Entity *e = *i;
 		if (e != me && e != ignore && e->isPresent() && e->isNormalLayer())
 		{
-			if (type == ET_NONE || e->getEntityType() == type)
+			if (type == ET_NOTYPE || e->getEntityType() == type)
 			{
 				if (damageTarget == DT_NONE || e->isDamageTarget((DamageType)damageTarget))
 				{
@@ -7773,7 +7763,6 @@ static const struct {
 	luaRegister(entity_sound),
 	luaRegister(entity_playSfx),
 
-	luaRegister(registerSporeChildData),
 	luaRegister(registerSporeDrop),
 
 	luaRegister(getIngredientGfx),

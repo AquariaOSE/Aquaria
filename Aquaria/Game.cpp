@@ -1867,18 +1867,6 @@ void Game::transitionToScene(std::string scene)
 	core->enqueueJumpState("Game", false);
 }
 
-void Game::transitionToSceneUnder(std::string scene)
-{
-	if (avatar)
-	{
-		avatar->onWarp();
-	}
-	sceneToLoad = scene;
-	stringToLower(sceneToLoad);
-	core->pushState("Game");
-}
-
-
 ElementTemplate *Game::getElementTemplateByIdx(int idx)
 {
 	for (int i = 0; i < elementTemplates.size(); i++)
@@ -2704,34 +2692,6 @@ EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e, Vector pos)
 		*/
 	}
 	return 0;
-}
-
-void Game::spawnSporeChildren()
-{
-	creatingSporeChildren = true;
-	SporeChildData *scd;
-	int sz = dsq->continuity.sporeChildData.size();
-	for (int i=0; i < sz; i++)
-	{
-		scd = &dsq->continuity.sporeChildData[i];
-		scd->entity = 0;
-	}
-	int c = 0;
-	for (int i=0; i < sz; i++)
-	{
-		scd = &dsq->continuity.sporeChildData[i];
-		Entity *e = dsq->game->createEntity("SporeChild", 0, avatar->position+Vector(0,2+c*2), 0, 0, "");
-		if (e)
-		{
-			e->setState(scd->state);
-			if (scd->health < 1)
-				scd->health = 1;
-			e->health = scd->health;
-			scd->entity = e;
-		}
-		c++;
-	}
-	creatingSporeChildren = false;
 }
 
 void Game::setTimerTextAlpha(float a, float t)
@@ -5767,46 +5727,6 @@ void Game::updateParticlePause()
 	}
 }
 
-void Game::warpKey1()
-{
-	if (core->getCtrlState())
-	{
-		dsq->game->avatar->heal(1000);
-		dsq->game->avatar->fhTo(true);
-		warpToSceneNode("OPENWATER02", "WARPKEY");
-	}
-}
-
-void Game::warpKey2()
-{
-	if (core->getCtrlState())
-	{
-		dsq->game->avatar->heal(1000);
-		dsq->game->avatar->fhTo(true);
-		warpToSceneNode("VEIL01", "WARPKEY");
-	}
-}
-
-void Game::warpKey3()
-{
-	if (core->getCtrlState())
-	{
-		dsq->game->avatar->heal(1000);
-		dsq->game->avatar->fhTo(true);
-		warpToSceneNode("FOREST03", "WARPKEY");
-	}
-}
-
-void Game::warpKey4()
-{
-	if (core->getCtrlState())
-	{
-		dsq->game->avatar->heal(1000);
-		dsq->game->avatar->fhTo(true);
-		warpToSceneNode("ABYSS01", "WARPKEY");
-	}
-}
-
 int game_collideParticle(Vector pos)
 {
 	bool aboveWaterLine = (pos.y <= dsq->game->waterLevel.x+20);
@@ -6759,9 +6679,6 @@ void Game::applyState()
 	}
 
 	toNode = "";
-
-
-	spawnSporeChildren();
 
 	createInGameMenu();
 	hideInGameMenu(false);
