@@ -986,8 +986,6 @@ public:
 
 	std::string naijaModel;
 
-	std::vector<WordColoring> wordColoring;
-
 	FormType form;
 
 	void learnFormUpgrade(FormUpgradeType form);
