@@ -4541,7 +4541,7 @@ void DSQ::onUpdate(float dt)
 			os << "rot: " << avatar->rotation.z << " rotoff: " << avatar->rotationOffset.z << std::endl;
 			os << "p(" << int(avatar->position.x) << ", " << int(avatar->position.y) << ")" << std::endl;
 			os << "inp: " << avatar->isInputEnabled() << std::endl;
-			os << "wallNormal(" << avatar->wallNormal.x << ", " << avatar->wallNormal.y << ")" << std::endl;
+			os << "wallNormal(" << avatar->wallNormal.x << ", " << avatar->wallNormal.y << ") collradius: " << avatar->collideRadius << std::endl;
 			os << "burst: " << avatar->burst << " burstTimer: " << avatar->burstTimer << std::endl;
 			os << "inCurrent: " << avatar->isInCurrent() << std::endl;
 			os << "qsongCastDelay: " << avatar->quickSongCastDelay << std::endl;

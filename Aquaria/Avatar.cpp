@@ -117,6 +117,9 @@ const float NOTE_ACCEPT_DISTANCE = 25;
 // we accept a note.
 const float NOTE_ACCEPT_ANGLE_OFFSET = 15;
 
+const int COLLIDE_RADIUS_NORMAL = 10;
+const int COLLIDE_RADIUS_FISH = 8;
+
 const int requiredDualFormCharge = 3;
 
 bool usingDigital = false;
@@ -1590,6 +1593,8 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 			return;
 		}
 		//rotationOffset.interpolateTo(Vector(0,0,0), 0.5);
+
+		collideRadius = COLLIDE_RADIUS_NORMAL;
 	}
 	break;
 	case FORM_SUN:
@@ -1720,6 +1725,8 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		refreshModel("FishForm", "");
 		//rotationOffset.interpolateTo(Vector(0,0,-90), 0.5);
 		//refreshModel("NaijaFish", "");
+		
+		collideRadius = COLLIDE_RADIUS_FISH;
 	}
 	break;
 	case FORM_SUN:
@@ -4117,6 +4124,10 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	refreshNormalForm();
 
+	if(dsq->continuity.form)
+		collideRadius = COLLIDE_RADIUS_FISH;
+	else
+		collideRadius = COLLIDE_RADIUS_NORMAL;
 }
 
 void Avatar::revert()
@@ -7059,15 +7070,6 @@ void Avatar::onUpdate(float dt)
 			vel2 = Vector(0,0,0);
 		}
 
-		//int collideCircle = 24;//24; // 48
-		int collideCircle = 10;
-		if (dsq->continuity.form == FORM_FISH)
-			collideCircle = 8;
-		// just for external access
-		// HACK: should always be using collide radius :| ?
-
-		//updateMovement
-		collideRadius = collideCircle;
 		if (!state.lockedToWall && !isFollowingPath() && !riding)
 		{
 /*collideCheck:*/
@@ -7119,10 +7121,7 @@ void Avatar::onUpdate(float dt)
 						//Vector testPosition = position + (vel *dt)*2;
 						position = newPosition;
 
-
-						int hw = collideCircle;
-
-						if (dsq->game->collideCircleWithGrid(position, hw))
+						if (dsq->game->collideCircleWithGrid(position, collideRadius))
 						{
 							if (dsq->game->lastCollideTileType == OT_HURT
 								&& dsq->continuity.getWorldType() != WT_SPIRIT
