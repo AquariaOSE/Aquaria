@@ -1457,6 +1457,18 @@ luaFunc(quad_setVisible)
 	luaReturnNil();
 }
 
+luaFunc(quad_getWidth)
+{
+	Quad *q = getQuad(L);
+	luaReturnNum(q ? q->width : 0.0f);
+}
+
+luaFunc(quad_getHeight)
+{
+	Quad *q = getQuad(L);
+	luaReturnNum(q ? q->height : 0.0f);
+}
+
 luaFunc(quad_setWidth)
 {
 	Quad *q = getQuad(L);
@@ -1575,6 +1587,8 @@ luaFunc(quad_setSegs)
 	Q_FUNC(getter, prefix,  isVisible		) \
 	Q_FUNC(getter, prefix,  setWidth		) \
 	Q_FUNC(getter, prefix,  setHeight		) \
+	Q_FUNC(getter, prefix,  getWidth		) \
+	Q_FUNC(getter, prefix,  getHeight		) \
 	Q_FUNC(getter, prefix,  setSegs			)
 
 // This should reflect the internal class hierarchy,
