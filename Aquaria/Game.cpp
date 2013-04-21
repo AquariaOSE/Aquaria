@@ -6921,6 +6921,18 @@ void Game::bindInput()
 	addAction(ACTION_MENUUP,	JOY1_STICK_UP);
 	addAction(ACTION_MENUDOWN,	JOY1_STICK_DOWN);
 
+	// To capture quick song keys via script
+	dsq->user.control.actionSet.importAction(this, "SongSlot1",		ACTION_SONGSLOT1);
+	dsq->user.control.actionSet.importAction(this, "SongSlot2",		ACTION_SONGSLOT2);
+	dsq->user.control.actionSet.importAction(this, "SongSlot3",		ACTION_SONGSLOT3);
+	dsq->user.control.actionSet.importAction(this, "SongSlot4",		ACTION_SONGSLOT4);
+	dsq->user.control.actionSet.importAction(this, "SongSlot5",		ACTION_SONGSLOT5);
+	dsq->user.control.actionSet.importAction(this, "SongSlot6",		ACTION_SONGSLOT6);
+	dsq->user.control.actionSet.importAction(this, "SongSlot7",		ACTION_SONGSLOT7);
+	dsq->user.control.actionSet.importAction(this, "SongSlot8",		ACTION_SONGSLOT8);
+	dsq->user.control.actionSet.importAction(this, "SongSlot9",		ACTION_SONGSLOT9);
+	dsq->user.control.actionSet.importAction(this, "SongSlot10",	ACTION_SONGSLOT10);
+
 
 	if (avatar)
 		avatar->bindInput();
