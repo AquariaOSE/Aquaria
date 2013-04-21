@@ -34,6 +34,7 @@ extern "C"
 #include "Entity.h"
 #include "Web.h"
 #include "GridRender.h"
+#include "AfterEffect.h"
 
 #include "../BBGE/MathFunctions.h"
 
@@ -1701,7 +1702,11 @@ luaFunc(hasFormUpgrade)
 	luaReturnBool(dsq->continuity.hasFormUpgrade((FormUpgradeType)lua_tointeger(L, 1)));
 }
 
-luaFunc(castSong)
+// this used to be castSong(), but that name is already taken by an interface function.
+// For compatibility, at the end of the Lua function table this is registered as
+// castSong() as well, so that scripts/mods not using the castSong() interface function
+// in songs.lua will work as expected. -- FG
+luaFunc(singSong)
 {
 	dsq->continuity.castSong(lua_tonumber(L, 1));
 	luaReturnNil();
@@ -5373,6 +5378,22 @@ luaFunc(playNoEffect)
 	luaReturnNil();
 }
 
+luaFunc(createShockEffect)
+{
+	if (core->afterEffectManager)
+	{
+		core->afterEffectManager->addEffect(new ShockEffect(
+			Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)), // position
+			Vector(lua_tonumber(L, 3), lua_tonumber(L, 4)), // original position
+			lua_tonumber(L, 5),   // amplitude
+			lua_tonumber(L, 6),   // amplitude decay
+			lua_tonumber(L, 7),   // frequency
+			lua_tonumber(L, 8),   // wave length
+			lua_tonumber(L, 9))); // time multiplier
+	}
+	luaReturnNil();
+}
+
 luaFunc(emote)
 {
 	int emote = lua_tonumber(L, 1);
@@ -7837,6 +7858,7 @@ static const struct {
 
 	luaRegister(playVisualEffect),
 	luaRegister(playNoEffect),
+	luaRegister(createShockEffect),
 
 	luaRegister(setOverrideMusic),
 
@@ -7949,7 +7971,7 @@ static const struct {
 	luaRegister(hasFormUpgrade),
 
 
-	luaRegister(castSong),
+	luaRegister(singSong),
 	luaRegister(isObstructed),
 	luaRegister(isObstructedBlock),
 	luaRegister(getObstruction),
@@ -8343,6 +8365,8 @@ static const struct {
 	{"entity_setInternalOffset", l_entity_internalOffset},
 
 	{"bone_setColor", l_bone_color},
+
+	{"castSong", l_singSong},
 
 };
 
