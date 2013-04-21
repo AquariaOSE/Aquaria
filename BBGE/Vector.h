@@ -500,11 +500,18 @@ public:
 		x = vec.x;
 		y = vec.y;
 		z = vec.z;
-		delete data;
 		if (vec.data)
-			data = new InterpolatedVectorData(*vec.data);
+		{
+			if (data)
+				*data = *vec.data;
+			else
+				data = new InterpolatedVectorData(*vec.data);
+		}
 		else
+		{
+			delete data;
 			data = NULL;
+		}
 		return *this;
 	}
 
