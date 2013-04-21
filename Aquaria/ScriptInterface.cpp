@@ -1702,10 +1702,7 @@ luaFunc(hasFormUpgrade)
 	luaReturnBool(dsq->continuity.hasFormUpgrade((FormUpgradeType)lua_tointeger(L, 1)));
 }
 
-// this used to be castSong(), but that name is already taken by an interface function.
-// For compatibility, at the end of the Lua function table this is registered as
-// castSong() as well, so that scripts/mods not using the castSong() interface function
-// in songs.lua will work as expected. -- FG
+// This used to be castSong(), but that name is already taken by an interface function. -- FG
 luaFunc(singSong)
 {
 	dsq->continuity.castSong(lua_tonumber(L, 1));
@@ -8365,8 +8362,6 @@ static const struct {
 	{"entity_setInternalOffset", l_entity_internalOffset},
 
 	{"bone_setColor", l_bone_color},
-
-	{"castSong", l_singSong},
 
 };
 
