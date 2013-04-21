@@ -3773,7 +3773,7 @@ luaFunc(entity_damage)
 	{
 		DamageData d;
 		//d.attacker = e;
-		d.attacker = entity(L, 2);
+		d.attacker = lua_isuserdata(L, 2) ? entity(L, 2) : NULL;
 		d.damage = lua_tonumber(L, 3);
 		d.damageType = (DamageType)lua_tointeger(L, 4);
 		didDamage = e->damage(d);
@@ -4814,9 +4814,7 @@ luaFunc(entity_moveTowardsAngle)
 {
 	Entity *e = entity(L);
 	if (e)
-	{
 		e->moveTowardsAngle(lua_tointeger(L, 2), lua_tonumber(L, 3), lua_tointeger(L, 4));
-	}
 	luaReturnNil();
 }
 
@@ -4824,9 +4822,7 @@ luaFunc(entity_moveAroundAngle)
 {
 	Entity *e = entity(L);
 	if (e)
-	{
 		e->moveTowardsAngle(lua_tointeger(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
-	}
 	luaReturnNil();
 }
 
@@ -4834,9 +4830,7 @@ luaFunc(entity_moveTowards)
 {
 	Entity *e = entity(L);
 	if (e)
-	{
 		e->moveTowards(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5));
-	}
 	luaReturnNil();
 }
 
@@ -4844,9 +4838,7 @@ luaFunc(entity_moveAround)
 {
 	Entity *e = entity(L);
 	if (e)
-	{
 		e->moveAround(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
-	}
 	luaReturnNil();
 }
 
@@ -4854,10 +4846,41 @@ luaFunc(entity_addVel2)
 {
 	Entity *e = entity(L);
 	if (e)
-	{
 		e->vel2 += Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
+	luaReturnNil();
+}
+
+luaFunc(entity_setVel2)
+{
+	Entity *e = entity(L);
+	if (e)
+	{
+		e->vel2 = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	}
 	luaReturnNil();
+}
+
+luaFunc(entity_getVel2Len)
+{
+	Entity *e = entity(L);
+	luaReturnNum(e ? e->vel2.getLength2D() : 0.0f);
+}
+
+luaFunc(entity_setVel2Len)
+{
+	Entity *e = entity(L);
+	if(e)
+		e->vel2.setLength2D(lua_tonumber(L, 2));
+	luaReturnNil();
+};
+
+luaFunc(entity_getVel2)
+{
+	Entity *e = entity(L);
+	Vector vel2;
+	if(e)
+		vel2 = e->vel2;
+	luaReturnVec2(vel2.x, vel2.y);
 }
 
 luaFunc(entity_isValidTarget)
@@ -6269,6 +6292,12 @@ luaFunc(node_setEffectOn)
 	if (p)
 		p->setEffectOn(getBool(L, 2));
 	luaReturnNil();
+}
+
+luaFunc(node_isEffectOn)
+{
+	Path *p = path(L, 1);
+	luaReturnBool(p ? p->effectOn : false);
 }
 
 luaFunc(node_activate)
@@ -8055,14 +8084,6 @@ static const struct {
 	luaRegister(entity_waitForPath),
 	luaRegister(entity_watchForPath),
 
-	luaRegister(entity_addVel),
-	luaRegister(entity_addVel2),
-	luaRegister(entity_addRandomVel),
-
-	luaRegister(entity_clearVel),
-	luaRegister(entity_clearVel2),
-
-
 	luaRegister(entity_revive),
 
 	luaRegister(entity_getTarget),
@@ -8119,6 +8140,7 @@ static const struct {
 	luaRegister(node_getAmount),
 	luaRegister(node_getSize),
 	luaRegister(node_setEffectOn),
+	luaRegister(node_isEffectOn),
 
 	luaRegister(toggleSteam),
 	luaRegister(toggleVersionLabel),
@@ -8221,6 +8243,13 @@ static const struct {
 	luaRegister(entity_isVelIn),
 	luaRegister(entity_clearVel),
 	luaRegister(entity_velTowards),
+
+	luaRegister(entity_setVel2),
+	luaRegister(entity_setVel2Len),
+	luaRegister(entity_getVel2Len),
+	luaRegister(entity_addVel2),
+	luaRegister(entity_getVel2),
+	luaRegister(entity_clearVel2),
 
 
 
