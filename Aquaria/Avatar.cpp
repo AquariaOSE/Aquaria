@@ -4124,7 +4124,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	refreshNormalForm();
 
-	if(dsq->continuity.form)
+	if(dsq->continuity.form == FORM_FISH)
 		collideRadius = COLLIDE_RADIUS_FISH;
 	else
 		collideRadius = COLLIDE_RADIUS_NORMAL;
