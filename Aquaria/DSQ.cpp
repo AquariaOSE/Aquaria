@@ -4590,7 +4590,7 @@ void DSQ::onUpdate(float dt)
 	if (isDeveloperKeys() && fpsText && cmDebug && cmDebug->alpha == 1)
 	{
 		std::ostringstream os;
-		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount;
+		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount << " | RC: " << Core::dbg_numRenderCalls;
 		os << " | p: " << core->processedRenderObjectCount << " | t: " << core->totalRenderObjectCount;
 		os << " | s: " << dsq->continuity.seconds;
 		os << " | evQ: " << core->eventQueue.getSize();

@@ -1310,6 +1310,7 @@ public:
 	int zgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
 
 	volatile int dbg_numThreadDecoders;
+	static unsigned int dbg_numRenderCalls;
 
 protected:
 
