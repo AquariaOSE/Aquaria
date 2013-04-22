@@ -436,6 +436,7 @@ public:
 	void setDieTimer(float v) { dieTimer = v; }
 	float getHealthPerc();
 	void setDeathScene(bool v);
+	bool isDeathScene() const { return deathScene; }
 	void generateCollisionMask(int ovrCollideRadius=0);
 	DamageData lastDamage;
 	bool checkSplash(const Vector &override=Vector(0,0,0));

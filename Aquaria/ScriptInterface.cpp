@@ -4564,6 +4564,18 @@ luaFunc(entity_getDistanceToTarget)
 	luaReturnNum(dist);
 }
 
+luaFunc(entity_getDistanceToPoint)
+{
+	Entity *e = entity(L);
+	float dist = 0;
+	if (e)
+	{
+		Vector p(lua_tonumber(L, 2), lua_tonumber(L, 3));
+		dist = (p - e->position).getLength2D();
+	}
+	luaReturnNum(dist);
+}
+
 luaFunc(entity_watchEntity)
 {
 	Entity *e = entity(L);
@@ -5202,6 +5214,12 @@ luaFunc(entity_setDeathScene)
 		e->setDeathScene(getBool(L, 2));
 	}
 	luaReturnNil();
+}
+
+luaFunc(entity_isDeathScene)
+{
+	Entity *e = entity(L);
+	luaReturnBool(e ? e->isDeathScene() : false);
 }
 
 luaFunc(entity_setCurrentTarget)
@@ -6546,6 +6564,20 @@ luaFunc(entity_getNearestEntity)
 	luaReturnPtr(closest);
 }
 
+luaFunc(getNearestEntity)
+{
+	Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	int radius = lua_tointeger(L, 3);
+	Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
+	EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
+	DamageType dt = lua_isnumber(L, 6) ? (DamageType)lua_tointeger(L, 6) : DT_NONE;
+	int lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
+	int lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
+
+	Entity *target = dsq->game->getNearestEntity(p, radius, ignore, ET_ENEMY, dt, lrStart, lrEnd);
+	luaReturnPtr(target);
+}
+
 luaFunc(findWall)
 {
 	int x = lua_tonumber(L, 1);
@@ -7049,21 +7081,21 @@ luaFunc(getMouseWorldPos)
 
 luaFunc(fade)
 {
-	dsq->overlay->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
+	dsq->overlay->color.interpolateTo(Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5)), lua_tonumber(L, 6));
 	dsq->overlay->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	luaReturnNil();
 }
 
 luaFunc(fade2)
 {
-	dsq->overlay2->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
+	dsq->overlay2->color.interpolateTo(Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5)), lua_tonumber(L, 6));
 	dsq->overlay2->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	luaReturnNil();
 }
 
 luaFunc(fade3)
 {
-	dsq->overlay3->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
+	dsq->overlay3->color.interpolateTo(Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5)), lua_tonumber(L, 6));
 	dsq->overlay3->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	luaReturnNil();
 }
@@ -7557,6 +7589,7 @@ static const struct {
 	luaRegister(entity_setBoneLock),
 	luaRegister(entity_setIngredient),
 	luaRegister(entity_setDeathScene),
+	luaRegister(entity_isDeathScene),
 
 	luaRegister(entity_setBeautyFlip),
 	luaRegister(entity_setInvincible),
@@ -7708,6 +7741,7 @@ static const struct {
 	luaRegister(entity_getVectorToEntity),
 
 	luaRegister(entity_getDistanceToTarget),
+	luaRegister(entity_getDistanceToPoint),
 	luaRegister(entity_move),
 
 	luaRegister(entity_getID),
@@ -8302,6 +8336,7 @@ static const struct {
 
 	luaRegister(entity_getNearestEntity),
 	luaRegister(entity_getNearestBoneToPosition),
+	luaRegister(getNearestEntity),
 
 	luaRegister(entity_getNearestNode),
 	luaRegister(entity_setPoison),
