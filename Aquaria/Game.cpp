@@ -6933,6 +6933,8 @@ void Game::bindInput()
 	dsq->user.control.actionSet.importAction(this, "SongSlot9",		ACTION_SONGSLOT9);
 	dsq->user.control.actionSet.importAction(this, "SongSlot10",	ACTION_SONGSLOT10);
 
+	dsq->user.control.actionSet.importAction(this, "Revert",		ACTION_REVERT);
+
 
 	if (avatar)
 		avatar->bindInput();

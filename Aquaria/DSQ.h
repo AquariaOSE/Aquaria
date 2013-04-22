@@ -122,6 +122,7 @@ enum AquariaActions
 	ACTION_ROLL,
 
 	ACTION_SLOW,						// currently unused
+	ACTION_REVERT,
 
 	ACTION_ZOOMIN		= 200,
 	ACTION_ZOOMOUT,

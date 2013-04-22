@@ -152,7 +152,7 @@ void Avatar::bindInput()
 	dsq->user.control.actionSet.importAction(this, "PrimaryAction", ACTION_PRIMARY);
 	dsq->user.control.actionSet.importAction(this, "SecondaryAction", ACTION_SECONDARY);
 
-	dsq->user.control.actionSet.importAction(this, "Revert", MakeFunctionEvent(Avatar, revert), 0);
+	dsq->user.control.actionSet.importAction(this, "Revert",		ACTION_REVERT);
 
 	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_SWIMUP);
 	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_SWIMDOWN);
@@ -4509,6 +4509,9 @@ void Avatar::action(int id, int state)
 {
 	if (id == ACTION_PRIMARY)	{ if (state) lmbd(); else lmbu(); }
 	if (id == ACTION_SECONDARY) { if (state) rmbd(); else rmbu(); }
+
+	if (id == ACTION_REVERT && !state)
+		revert();
 
 	if (id == ACTION_PRIMARY && state)// !state
 	{
