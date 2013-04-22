@@ -2693,6 +2693,11 @@ luaFunc(avatar_setBlockSinging)
 	luaReturnNil();
 }
 
+luaFunc(avatar_isBlockSinging)
+{
+	luaReturnBool(dsq->game->avatar->isBlockSinging());
+}
+
 luaFunc(avatar_fallOffWall)
 {
 	dsq->game->avatar->fallOffWall();
@@ -8049,6 +8054,7 @@ static const struct {
 
 	luaRegister(avatar_fallOffWall),
 	luaRegister(avatar_setBlockSinging),
+	luaRegister(avatar_isBlockSinging),
 
 
 	luaRegister(avatar_toggleMovement),
