@@ -3701,6 +3701,21 @@ luaFunc(unpause)
 	luaReturnNil();
 }
 
+luaFunc(isPaused)
+{
+	luaReturnBool(dsq->game->isPaused());
+}
+
+luaFunc(isInGameMenu)
+{
+	luaReturnBool(dsq->game->isInGameMenu());
+}
+
+luaFunc(isInEditor)
+{
+	luaReturnBool(dsq->game->isSceneEditorActive());
+}
+
 luaFunc(clearControlHint)
 {
 	dsq->game->clearControlHint();
@@ -7595,6 +7610,9 @@ static const struct {
 
 	luaRegister(pause),
 	luaRegister(unpause),
+	luaRegister(isPaused),
+	luaRegister(isInGameMenu),
+	luaRegister(isInEditor),
 
 
 	luaRegister(vector_normalize),
