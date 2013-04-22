@@ -312,7 +312,7 @@ struct Song
 	Song() { index=0; script=0; }
 	int index;
 	SongNotes notes;
-	bool script;
+	int script;
 };
 
 const int MAX_FLAGS				= 1024;

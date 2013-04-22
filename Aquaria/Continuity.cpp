@@ -1392,6 +1392,10 @@ void Continuity::castSong(int num)
 	effect->setPositionSnapTo(&dsq->game->avatar->position);
 	dsq->game->addRenderObject(effect, LR_PARTICLES);
 
+
+	// song->script == 0: internal handler only
+	// song->script == 1: script handler only
+	// song->script == 2: both
 	if (song->script)
 	{
 		if (dsq->mod.isActive())
@@ -1399,7 +1403,8 @@ void Continuity::castSong(int num)
 		else
 			dsq->runScriptNum("songs.lua", "castSong", num);
 	}
-	else
+
+	if (song->script != 1)
 	{
 		switch((SongType)num)
 		{

@@ -6851,22 +6851,9 @@ void Game::bindInput()
 #ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->canOpenEditor())
 	{
-		//addAction(MakeFunctionEvent(Game, toggleSceneEditor), KEY_TAB, 0);
 		addAction(ACTION_TOGGLESCENEEDITOR, KEY_TAB);
 	}
 #endif
-
-
-
-	/*
-	if (dsq->user.demo.warpKeys)
-	{
-		addAction(MakeFunctionEvent(Game, warpKey1), KEY_1, 1);
-		addAction(MakeFunctionEvent(Game, warpKey2), KEY_2, 1);
-		addAction(MakeFunctionEvent(Game, warpKey3), KEY_3, 1);
-		addAction(MakeFunctionEvent(Game, warpKey4), KEY_4, 1);
-	}
-	*/
 
 
 	dsq->user.control.actionSet.importAction(this, "PrimaryAction", ACTION_PRIMARY);
