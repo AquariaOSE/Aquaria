@@ -996,7 +996,6 @@ public:
 	FormUpgrades formUpgrades;
 
 	void loadSongBank();
-	int getSongBankSize();
 	void loadIntoSongBank(const std::string &file);
 	int checkSong(const Song &song);
 	int checkSongAssisted(const Song &song);

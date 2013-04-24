@@ -2112,18 +2112,22 @@ luaFunc(entity_setRidingData)
 luaFunc(entity_setBoneLock)
 {
 	Entity *e = entity(L);
-	Entity *e2 = entity(L, 2);
-	Bone *b = 0;
-	if (lua_isuserdata(L, 3))
-		b = bone(L, 3);
 	bool ret = false;
 	if (e)
 	{
 		BoneLock bl;
-		bl.entity = e2;
-		bl.bone = b;
-		bl.on = true;
-		bl.collisionMaskIndex = dsq->game->lastCollideMaskIndex;
+		if (lua_isuserdata(L, 2))
+		{
+			Entity *e2 = entity(L, 2);
+			Bone *b = 0;
+			if (lua_isuserdata(L, 3))
+				b = bone(L, 3);
+			
+			bl.entity = e2;
+			bl.bone = b;
+			bl.on = true;
+			bl.collisionMaskIndex = dsq->game->lastCollideMaskIndex;
+		}
 		ret = e->setBoneLock(bl);
 	}
 	luaReturnBool(ret);
@@ -2553,6 +2557,12 @@ luaFunc(entity_setFillGrid)
 	luaReturnNil();
 }
 
+luaFunc(entity_isFillGrid)
+{
+	Entity *e = entity(L);
+	luaReturnBool(e ? e->fillGridFromQuad : false);
+}
+
 luaFunc(entity_getAimVector)
 {
 	Entity *e = entity(L);
@@ -2729,6 +2739,16 @@ luaFunc(avatar_isShieldActive)
 {
 	bool v = (dsq->game->avatar->activeAura == AURA_SHIELD);
 	luaReturnBool(v);
+}
+
+luaFunc(avatar_setShieldActive)
+{
+	bool on = getBool(L, 1);
+	if (on)
+		dsq->game->avatar->activateAura(AURA_SHIELD);
+	else
+		dsq->game->avatar->stopAura();
+	luaReturnNil();
 }
 
 luaFunc(avatar_getStillTimer)
@@ -5049,6 +5069,12 @@ luaFunc(entity_setMaxSpeedLerp)
 	luaReturnNil();
 }
 
+luaFunc(entity_getMaxSpeedLerp)
+{
+	Entity *e = entity(L);
+	luaReturnNum(e ? e->maxSpeedLerp.x : 0.0f);
+}
+
 // note: this is a weaker setState than perform
 // this is so that things can override it
 // for example getting PUSH-ed (Force) or FROZEN (bubbled)
@@ -6163,6 +6189,12 @@ luaFunc(entity_getDistanceToEntity)
 		d = diff.getLength2D();
 	}
 	luaReturnNum(d);
+}
+
+luaFunc(entity_isEntityInside)
+{
+	Entity *e = entity(L);
+	luaReturnBool(e ? e->isEntityInside() : false);
 }
 
 // entity_istargetInRange
@@ -7844,6 +7876,7 @@ static const struct {
 
 	luaRegister(entity_isTargetInRange),
 	luaRegister(entity_getDistanceToEntity),
+	luaRegister(entity_isEntityInside),
 
 	luaRegister(entity_isInvincible),
 
@@ -7860,6 +7893,7 @@ static const struct {
 	luaRegister(entity_setMaxSpeed),
 	luaRegister(entity_getMaxSpeed),
 	luaRegister(entity_setMaxSpeedLerp),
+	luaRegister(entity_getMaxSpeedLerp),
 	luaRegister(entity_setState),
 	luaRegister(entity_getState),
 	luaRegister(entity_getEnqueuedState),
@@ -8050,6 +8084,7 @@ static const struct {
 	luaRegister(avatar_isRolling),
 	luaRegister(avatar_isOnWall),
 	luaRegister(avatar_isShieldActive),
+	luaRegister(avatar_setShieldActive),
 	luaRegister(avatar_getRollDirection),
 
 	luaRegister(avatar_fallOffWall),
@@ -8278,6 +8313,7 @@ static const struct {
 
 	luaRegister(entity_setTexture),
 	luaRegister(entity_setFillGrid),
+	luaRegister(entity_isFillGrid),
 
 	luaRegister(entity_push),
 

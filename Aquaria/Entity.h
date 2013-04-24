@@ -489,6 +489,8 @@ public:
 	void setHairHeadPosition(const Vector &pos);
 	void exertHairForce(const Vector &force, float dt);
 
+	bool isEntityInside();
+
 protected:
 	bool calledEntityDied;
 	Path *waterBubble;

@@ -759,32 +759,6 @@ void ScriptedEntity::songNoteDone(int note, float len)
 	}
 }
 
-bool ScriptedEntity::isEntityInside()
-{
-	bool v = false;
-	int avatars = 0;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e->getEntityType() == ET_AVATAR)
-			avatars ++;
-		if (e && e->life == 1 && e != this && e->ridingOnEntity != this)
-		{			
-			if (isCoordinateInside(e->position))
-			{				
-				/*
-				Vector diff = (e->position - position);
-				diff.setLength2D(100);
-				e->vel += diff;
-				*/
-				v = true;
-			}
-		}
-		
-	}
-	return v;
-}
-
 void ScriptedEntity::becomeSolid()
 {
 	//vel = 0;

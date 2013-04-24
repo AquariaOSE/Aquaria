@@ -317,6 +317,8 @@ public:
 	bool canSetBoneLock();
 	
 	void revert();
+	void doBindSong();
+	void doShieldSong();
 
 	int leaches;
 	

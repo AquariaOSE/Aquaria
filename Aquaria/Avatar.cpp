@@ -4686,6 +4686,35 @@ void Avatar::action(int id, int state)
 	}
 }
 
+void Avatar::doBindSong()
+{
+	if (pullTarget)
+	{
+		pullTarget->stopPull();
+		pullTarget = 0;
+		core->sound->playSfx("Denied");
+	}
+	else
+	{
+		dsq->game->bindIngredients();
+		setNearestPullTarget();
+		if (!pullTarget)
+		{
+			core->sound->playSfx("Denied");
+		}
+		else
+		{
+			core->sound->playSfx("Bind");
+		}
+	}
+}
+
+void Avatar::doShieldSong()
+{
+	core->sound->playSfx("Shield-On");
+	activateAura(AURA_SHIELD);
+}
+
 void Avatar::render()
 {
 

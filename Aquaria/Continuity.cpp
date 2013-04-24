@@ -1347,16 +1347,6 @@ Song *Continuity::getSongByIndex(int idx)
 	return &songBank[idx];
 }
 
-int Continuity::getSongBankSize()
-{
-	int c = 0;
-	for (SongMap::iterator i = songBank.begin(); i != songBank.end(); i++)
-	{
-		c++;
-	}
-	return c;
-}
-
 void Continuity::castSong(int num)
 {
 	if (!dsq->continuity.hasSong((SongType)num)) return;
@@ -1409,32 +1399,10 @@ void Continuity::castSong(int num)
 		switch((SongType)num)
 		{
 		case SONG_SHIELDAURA:
-			core->sound->playSfx("Shield-On");
-			dsq->game->avatar->activateAura(AURA_SHIELD);
+			dsq->game->avatar->doShieldSong();
 		break;
 		case SONG_BIND:
-			//debugLog("sang pull");
-			if (dsq->game->avatar->pullTarget)
-			{
-				dsq->game->avatar->pullTarget->stopPull();
-				dsq->game->avatar->pullTarget = 0;
-				core->sound->playSfx("Denied");
-			}
-			else
-			{
-				dsq->game->bindIngredients();
-				dsq->game->avatar->setNearestPullTarget();
-				if (!dsq->game->avatar->pullTarget)
-				{
-					core->sound->playSfx("Denied");
-				}
-				else
-				{
-					core->sound->playSfx("Bind");
-				}
-			}
-				//dsq->game->avatar->openPullTargetInterface();
-			//pickingPullTarget = true;
+			dsq->game->avatar->doBindSong();
 		break;
 		case SONG_ENERGYFORM:
 			dsq->game->avatar->changeForm(FORM_ENERGY);

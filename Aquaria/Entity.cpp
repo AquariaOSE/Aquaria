@@ -3133,3 +3133,14 @@ void Entity::exertHairForce(const Vector &force, float dt)
 	}
 }
 
+bool Entity::isEntityInside()
+{
+	FOR_ENTITIES(i)
+	{
+		Entity *e = *i;
+		if (e && e->life == 1 && e != this && e->ridingOnEntity != this && isCoordinateInside(e->position))
+			return true;
+
+	}
+	return false;
+}
