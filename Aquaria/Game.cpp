@@ -1234,7 +1234,7 @@ Game::Game() : StateObject()
 	loadEntityTypeList();
 
 	lastCollideMaskIndex = -1;
-
+	worldPaused = false;
 
 }
 
@@ -5719,7 +5719,7 @@ void Game::updateParticlePause()
 	{
 		core->particlesPaused = 2;
 	}
-	else if (dsq->continuity.getWorldType() == WT_SPIRIT)
+	else if (this->isWorldPaused())
 	{
 		core->particlesPaused = 1;
 	}

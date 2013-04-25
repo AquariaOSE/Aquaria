@@ -1001,6 +1001,9 @@ public:
 	void toggleHelpScreen(bool on, const std::string &label="");
 	void onToggleHelpScreen();
 
+	void setWorldPaused(bool b) { worldPaused = b; }
+	bool isWorldPaused() const { return worldPaused; }
+
 protected:
 
 	void onHelpUp();
@@ -1158,6 +1161,7 @@ protected:
 	std::vector<AquariaMenuItem*> menu;
 	Quad *menuBg, *menuBg2;
 	bool paused;
+	bool worldPaused;
 
 	Vector getClosestPointOnTriangle(Vector a, Vector b, Vector c, Vector p);
 	Vector getClosestPointOnLine(Vector a, Vector b, Vector p);

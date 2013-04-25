@@ -778,7 +778,7 @@ bool Shot::isObstructed(float dt) const
 void Shot::onUpdate(float dt)
 {
 	if (dsq->game->isPaused()) return;
-	if (dsq->continuity.getWorldType() != WT_NORMAL) return;
+	if (dsq->game->isWorldPaused()) return;
 	if (!shotData) return;
 
 

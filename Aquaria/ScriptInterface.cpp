@@ -377,6 +377,7 @@ void compile_time_assertions()
 	compile_assert(oo(Path) == oo(Quad));
 	compile_assert(oo(Path) == oo(Avatar));
 	compile_assert(oo(Path) == oo(BaseText));
+	compile_assert(oo(Path) == oo(PauseQuad));
 #undef oo
 }
 #endif
@@ -2351,6 +2352,17 @@ luaFunc(getWorldType)
 	luaReturnNum((int)dsq->continuity.getWorldType());
 }
 
+luaFunc(isWorldPaused)
+{
+	luaReturnBool(dsq->game->isWorldPaused());
+}
+
+luaFunc(setWorldPaused)
+{
+	dsq->game->setWorldPaused(getBool(L, 1));
+	luaReturnNil();
+}
+
 luaFunc(getNearestNodeByType)
 {
 	int x = lua_tonumber(L, 1);
@@ -2543,6 +2555,14 @@ luaFunc(entity_setSpiritFreeze)
 	{
 		e->setSpiritFreeze(getBool(L,2));
 	}
+	luaReturnNil();
+}
+
+luaFunc(node_setSpiritFreeze)
+{
+	Path *e = path(L);
+	if (e)
+		e->spiritFreeze = getBool(L,2);
 	luaReturnNil();
 }
 
@@ -4753,6 +4773,15 @@ luaFunc(createQuad)
 	q->moveToFront();
 
 	luaReturnPtr(q);
+}
+
+luaFunc(quad_setPauseLevel)
+{
+	Quad *q = getQuad(L);
+	ENSURE_TYPE(q, SCO_PAUSEQUAD);
+	if (q)
+		((PauseQuad*)q)->pauseLevel = lua_tointeger(L, 2);
+	luaReturnNil();
 }
 
 luaFunc(setupEntity)
@@ -7597,11 +7626,14 @@ static const struct {
 	luaRegister(getNoteName),
 
 	luaRegister(getWorldType),
+	luaRegister(setWorldPaused),
+	luaRegister(isWorldPaused),
 
 	luaRegister(getWaterLevel),
 	luaRegister(setWaterLevel),
 
 	luaRegister(createQuad),
+	luaRegister(quad_setPauseLevel),
 
 	luaRegister(setupEntity),
 	luaRegister(setActivePet),
@@ -7651,6 +7683,7 @@ static const struct {
 	luaRegister(entity_setEatType),
 
 	luaRegister(entity_setSpiritFreeze),
+	luaRegister(node_setSpiritFreeze),
 
 	luaRegister(entity_setCanLeaveWater),
 

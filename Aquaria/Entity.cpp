@@ -1142,9 +1142,9 @@ void Entity::update(float dt)
 	if (doUpdate && !dsq->game->isPaused())
 	{
 
-		if (getEntityType() == ET_ENEMY || getEntityType() == ET_NEUTRAL || getEntityType() == ET_PET)
+		if (!(getEntityType() == ET_AVATAR || getEntityType() == ET_INGREDIENT))
 		{
-			if (spiritFreeze && dsq->continuity.getWorldType() == WT_SPIRIT)
+			if (spiritFreeze && dsq->game->isWorldPaused())
 			{
 				// possible bug here because of return
 				return;
@@ -1382,7 +1382,7 @@ bool Entity::updateCurrents(float dt)
 	// why?
 	{
 		//Path *p = dsq->game->getNearestPath(position, PATH_CURRENT);
-		if (dsq->continuity.getWorldType() != WT_SPIRIT)
+		if (!dsq->game->isWorldPaused())
 		{
 			for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 			{

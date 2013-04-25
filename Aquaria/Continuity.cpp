@@ -1916,9 +1916,15 @@ void Continuity::shiftWorlds()
 {
 	WorldType lastWorld = worldType;
 	if (worldType == WT_NORMAL)
+	{
 		worldType = WT_SPIRIT;
+		dsq->game->setWorldPaused(true);
+	}
 	else if (worldType == WT_SPIRIT)
+	{
 		worldType = WT_NORMAL;
+		dsq->game->setWorldPaused(false);
+	}
 	FOR_ENTITIES(i)
 	{
 		Entity *e = *i;
@@ -2018,7 +2024,7 @@ void Continuity::applyWorldEffects(WorldType type, bool transition, bool affectM
 		dsq->game->avatar->enableInput();
 		*/
 	}
-	worldType = type;
+	//worldType = type;
 }
 
 void Continuity::eatBeast(const EatData &eatData)

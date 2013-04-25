@@ -109,7 +109,7 @@ void Ingredient::eat(Entity *e)
 void Ingredient::onUpdate(float dt)
 {
 	if (dsq->game->isPaused()) return;
-	if (dsq->continuity.getWorldType() == WT_SPIRIT) return;
+	if (dsq->game->isWorldPaused()) return;
 
 	Vector lastPosition = position;
 	Entity::onUpdate(dt);

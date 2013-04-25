@@ -160,7 +160,6 @@ public:
 	Entity *entityToActivate;
 	Path *pathToActivate;
 
-	void shift();
 	void applyWorldEffects(WorldType type);
 
 	void toggleMovement(bool on);

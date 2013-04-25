@@ -752,11 +752,6 @@ bool Avatar::isSinging()
 	return singing;
 }
 
-void Avatar::shift()
-{
-	dsq->continuity.shiftWorlds();
-}
-
 void Avatar::applyWorldEffects(WorldType type)
 {
 	static bool oldfh=false;
@@ -5275,7 +5270,7 @@ void Avatar::updateWallJump(float dt)
 
 void Avatar::updateRoll(float dt)
 {
-	if (!inputEnabled || dsq->continuity.getWorldType() == WT_SPIRIT)
+	if (!inputEnabled || dsq->game->isWorldPaused())
 	{
 		if (rolling)
 			stopRoll();
@@ -6205,7 +6200,7 @@ void Avatar::onUpdate(float dt)
 
 	//if (core->getNestedMains() == 1)
 	{
-		if (getState() != STATE_TRANSFORM && dsq->continuity.getWorldType() == WT_NORMAL)
+		if (getState() != STATE_TRANSFORM && !dsq->game->isWorldPaused())
 		{
 			formAbilityUpdate(dt);
 		}
@@ -6439,7 +6434,7 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 
-		if (!state.lockedToWall && _isUnderWater && dsq->continuity.getWorldType() == WT_NORMAL && canMove)
+		if (!state.lockedToWall && _isUnderWater && !dsq->game->isWorldPaused() && canMove)
 		{
 			if (bursting)
 			{
@@ -7156,7 +7151,7 @@ void Avatar::onUpdate(float dt)
 						if (dsq->game->collideCircleWithGrid(position, collideRadius))
 						{
 							if (dsq->game->lastCollideTileType == OT_HURT
-								&& dsq->continuity.getWorldType() != WT_SPIRIT
+								&& !dsq->game->isWorldPaused()
 								&& dsq->continuity.form != FORM_NATURE)
 							{
 								DamageData d;
