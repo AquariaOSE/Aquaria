@@ -123,6 +123,7 @@ enum DamageType
 	DT_CRUSH				= 1032,
 	DT_SPIKES				= 1033,
 	DT_STEAM				= 1034,
+	DT_WALLHURT				= 1035,
 	DT_REALMAX
 };
 

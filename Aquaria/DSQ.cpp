@@ -4564,6 +4564,10 @@ void DSQ::onUpdate(float dt)
 				os << " headRot: " << b->rotation.z;
 			os << std::endl;
 			os << "fh: " << dsq->game->avatar->isfh() << " fv: " << dsq->game->avatar->isfv() << std::endl;
+			os << "canActivate: " << dsq->game->avatar->canActivateStuff();
+			os << " canBurst: " << dsq->game->avatar->canBurst();
+			os << " canLTW: " << dsq->game->avatar->canLockToWall();
+			os << " canSAC: " << dsq->game->avatar->canSwimAgainstCurrents() << std::endl;
 		}
 
 		// DO NOT CALL AVATAR-> beyond this point

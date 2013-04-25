@@ -1419,7 +1419,7 @@ bool Entity::updateCurrents(float dt)
 			float useLen = len;
 			if (useLen < 500)
 				useLen = 500;
-			if (!(this->getEntityType() == ET_AVATAR && dsq->continuity.form == FORM_BEAST && dsq->game->avatar->bursting))
+			if (!(this->getEntityType() == ET_AVATAR && dsq->game->avatar->canSwimAgainstCurrents() && dsq->game->avatar->bursting))
 			{
 				doCollisionAvoidance(1, 4, 1, &vel2, useLen);
 			}
@@ -1439,7 +1439,7 @@ bool Entity::updateCurrents(float dt)
 			}
 		}
 	}
-	if (this->getEntityType() == ET_AVATAR && dsq->continuity.form == FORM_BEAST)
+	if (this->getEntityType() == ET_AVATAR && dsq->game->avatar->canSwimAgainstCurrents())
 	{
 		int cap = 100;
 		if (!vel.isZero())

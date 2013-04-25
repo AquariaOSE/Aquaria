@@ -1580,6 +1580,7 @@ luaFunc(quad_setSegs)
 	RO_FUNC(getter, prefix,  disableMotionBlur	) \
 	RO_FUNC(getter, prefix,  collideCircleVsLine) \
 	RO_FUNC(getter, prefix,  collideCircleVsLineAngle) \
+	RO_FUNC(getter, prefix,  getVectorToObj	) \
 	MK_ALIAS(prefix, fh, flipHorizontal	) \
 	MK_ALIAS(prefix, fv, flipVertical	)
 
@@ -2352,6 +2353,14 @@ luaFunc(getWorldType)
 	luaReturnNum((int)dsq->continuity.getWorldType());
 }
 
+luaFunc(setWorldType)
+{
+	WorldType wt = (WorldType)lua_tointeger(L, 1);
+	bool trans = getBool(L, 2);
+	dsq->continuity.applyWorldEffects(wt, trans, 1); // last arg is not used
+	luaReturnNil();
+}
+
 luaFunc(isWorldPaused)
 {
 	luaReturnBool(dsq->game->isWorldPaused());
@@ -2708,6 +2717,47 @@ luaFunc(avatar_setCanDie)
 
 	luaReturnNil();
 }
+
+// not naming this avatar_* because it rather belongs into the UI category...
+luaFunc(setCanActivate)
+{
+	dsq->game->avatar->setCanActivateStuff(getBool(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(avatar_setCanBurst)
+{
+	dsq->game->avatar->setCanBurst(getBool(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(avatar_canBurst)
+{
+	luaReturnBool(dsq->game->avatar->canBurst());
+}
+
+luaFunc(avatar_setCanLockToWall)
+{
+	dsq->game->avatar->setCanBurst(getBool(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(avatar_canLockToWall)
+{
+	luaReturnBool(dsq->game->avatar->canBurst());
+}
+
+luaFunc(avatar_setCanSwimAgainstCurrents)
+{
+	dsq->game->avatar->setCanSwimAgainstCurrents(getBool(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(avatar_canSwimAgainstCurrents)
+{
+	luaReturnBool(dsq->game->avatar->canSwimAgainstCurrents());
+}
+
 
 luaFunc(avatar_toggleCape)
 {
@@ -3771,6 +3821,12 @@ luaFunc(setSceneColor)
 {
 	dsq->game->sceneColor3.interpolateTo(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
 	luaReturnNil();
+}
+
+luaFunc(getSceneColor)
+{
+	const Vector& c = dsq->game->sceneColor3;
+	luaReturnVec3(c.x, c.y, c.z);
 }
 
 luaFunc(setCameraLerpDelay)
@@ -7626,6 +7682,7 @@ static const struct {
 	luaRegister(getNoteName),
 
 	luaRegister(getWorldType),
+	luaRegister(setWorldType),
 	luaRegister(setWorldPaused),
 	luaRegister(isWorldPaused),
 
@@ -7704,9 +7761,16 @@ static const struct {
 
 
 	luaRegister(avatar_setCanDie),
+	luaRegister(setCanActivate),
 	luaRegister(avatar_toggleCape),
 	luaRegister(avatar_setPullTarget),
 
+	luaRegister(avatar_setCanLockToWall),
+	luaRegister(avatar_canLockToWall),
+	luaRegister(avatar_setCanBurst),
+	luaRegister(avatar_canBurst),
+	luaRegister(avatar_setCanSwimAgainstCurrents),
+	luaRegister(avatar_canSwimAgainstCurrents),
 
 	luaRegister(avatar_clampPosition),
 	luaRegister(avatar_updatePosition),
@@ -8318,7 +8382,7 @@ static const struct {
 
 
 	luaRegister(setSceneColor),
-
+	luaRegister(getSceneColor),
 
 	luaRegister(entity_watchEntity),
 
@@ -9129,6 +9193,7 @@ static const struct {
 	luaConstant(DT_CRUSH),
 	luaConstant(DT_SPIKES),
 	luaConstant(DT_STEAM),
+	luaConstant(DT_WALLHURT),
 
 
 	luaConstant(FRAME_TIME),

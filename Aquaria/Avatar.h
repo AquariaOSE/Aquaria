@@ -283,6 +283,7 @@ public:
 	void endOfGameState();
 	bool canQuickSong();
 	bool canActivateStuff();
+	void setCanActivateStuff(bool on);
 	bool hasThingToActivate();
 
 	float biteTimer;
@@ -318,6 +319,15 @@ public:
 	void revert();
 	void doBindSong();
 	void doShieldSong();
+
+	bool canBurst() const { return _canBurst; }
+	void setCanBurst(bool b) { _canBurst = b; }
+
+	bool canLockToWall() const { return _canLockToWall; }
+	void setCanLockToWall(bool b) { _canLockToWall = b; }
+
+	bool canSwimAgainstCurrents() const { return _canSwimAgainstCurrents; }
+	void setCanSwimAgainstCurrents(bool b) { _canSwimAgainstCurrents = b; }
 
 	int leaches;
 	
@@ -451,7 +461,10 @@ protected:
 	void lockToWall();
 	void doShock(const std::string &shotName);
 
-	Vector lastLastPosition;
+	bool _canActivateStuff;
+	bool _canBurst;
+	bool _canLockToWall;
+	bool _canSwimAgainstCurrents;
 
 };
 

@@ -2024,7 +2024,7 @@ void Continuity::applyWorldEffects(WorldType type, bool transition, bool affectM
 		dsq->game->avatar->enableInput();
 		*/
 	}
-	//worldType = type;
+	worldType = type;
 }
 
 void Continuity::eatBeast(const EatData &eatData)
