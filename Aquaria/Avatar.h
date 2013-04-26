@@ -66,6 +66,13 @@ enum AvatarAnimLayers
 	ANIMLAYER_MAX
 };
 
+enum SeeMapMode
+{
+	SEE_MAP_NEVER = 0,
+	SEE_MAP_DEFAULT = 1,
+	SEE_MAP_ALWAYS = 2,
+}
+
 class SongIconParticle : public Quad
 {
 public:
@@ -334,6 +341,9 @@ public:
 
 	void setCollisionAvoidanceData(int range, float mod);
 
+	void setSeeMapMode(SeeMapMode mode) { _seeMapMode = mode; }
+	SeeMapMode getSeeMapMode() const { return _seeMapMode; }
+
 	int leaches;
 	
 protected:
@@ -471,6 +481,7 @@ protected:
 	bool _canLockToWall;
 	bool _canSwimAgainstCurrents;
 	bool _canCollideWithShots;
+	SeeMapMode _seeMapMode;
 
 	int _collisionAvoidRange;
 	float _collisionAvoidMod;

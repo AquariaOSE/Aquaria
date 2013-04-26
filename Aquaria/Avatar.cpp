@@ -4125,6 +4125,8 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	_collisionAvoidMod = COLLIDE_MOD_NORMAL;
 	_collisionAvoidRange = COLLIDE_RANGE_NORMAL;
+
+	_seeMapMode = SEE_MAP_DEFAULT;
 }
 
 void Avatar::revert()
@@ -4883,10 +4885,6 @@ void Avatar::clampVelocity()
 			withCurrent = true;
 		}
 	}
-
-
-
-
 
 	if (!inCurrent || (inCurrent && withCurrent))
 	{

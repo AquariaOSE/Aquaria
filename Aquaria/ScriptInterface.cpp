@@ -2725,6 +2725,12 @@ luaFunc(setCanActivate)
 	luaReturnNil();
 }
 
+luaFunc(setSeeMapMode)
+{
+	dsq->game->avatar->setSeeMapMode((SeeMapMode)lua_tointeger(L, 1));
+	luaReturnNil();
+}
+
 luaFunc(avatar_setCanBurst)
 {
 	dsq->game->avatar->setCanBurst(getBool(L, 1));
@@ -2774,7 +2780,6 @@ luaFunc(avatar_setCollisionAvoidanceData)
 	dsq->game->avatar->setCollisionAvoidanceData(lua_tointeger(L, 1), lua_tonumber(L, 2));
 	luaReturnNil();
 }
-
 
 luaFunc(avatar_toggleCape)
 {
@@ -9241,6 +9246,10 @@ static const struct {
 	luaConstant(OT_INVISIBLEIN),
 	luaConstant(OT_HURT),
 	luaConstant(OT_INVISIBLEENT),
+
+	luaConstant(SEE_MAP_NEVER),
+	luaConstant(SEE_MAP_DEFAULT),
+	luaConstant(SEE_MAP_ALWAYS),
 };
 
 //============================================================================================
