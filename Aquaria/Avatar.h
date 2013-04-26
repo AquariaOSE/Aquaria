@@ -329,6 +329,11 @@ public:
 	bool canSwimAgainstCurrents() const { return _canSwimAgainstCurrents; }
 	void setCanSwimAgainstCurrents(bool b) { _canSwimAgainstCurrents = b; }
 
+	bool canCollideWithShots() const { return _canCollideWithShots; }
+	void setCollideWithShots(bool b) { _canCollideWithShots = b; }
+
+	void setCollisionAvoidanceData(int range, float mod);
+
 	int leaches;
 	
 protected:
@@ -465,6 +470,10 @@ protected:
 	bool _canBurst;
 	bool _canLockToWall;
 	bool _canSwimAgainstCurrents;
+	bool _canCollideWithShots;
+
+	int _collisionAvoidRange;
+	float _collisionAvoidMod;
 
 };
 

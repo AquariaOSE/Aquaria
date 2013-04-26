@@ -120,6 +120,12 @@ const float NOTE_ACCEPT_ANGLE_OFFSET = 15;
 const int COLLIDE_RADIUS_NORMAL = 10;
 const int COLLIDE_RADIUS_FISH = 8;
 
+const int COLLIDE_RANGE_NORMAL = 2;
+const int COLLIDE_RANGE_FISH = 1;
+
+const float COLLIDE_MOD_NORMAL = 1.0f;
+const float COLLIDE_MOD_FISH = 0.1f;
+
 const int requiredDualFormCharge = 3;
 
 bool usingDigital = false;
@@ -1591,6 +1597,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 
 		collideRadius = COLLIDE_RADIUS_NORMAL;
 		setCanLockToWall(true);
+		setCollisionAvoidanceData(COLLIDE_RANGE_NORMAL, COLLIDE_MOD_NORMAL);
 	}
 	break;
 	case FORM_SUN:
@@ -1731,6 +1738,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		
 		collideRadius = COLLIDE_RADIUS_FISH;
 		setCanLockToWall(false);
+		setCollisionAvoidanceData(COLLIDE_RANGE_FISH, COLLIDE_MOD_FISH);
 	}
 	break;
 	case FORM_SUN:
@@ -4113,6 +4121,10 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	_canBurst = true;
 	_canLockToWall = true;
 	_canSwimAgainstCurrents = false;
+	_canCollideWithShots = true;
+
+	_collisionAvoidMod = COLLIDE_MOD_NORMAL;
+	_collisionAvoidRange = COLLIDE_RANGE_NORMAL;
 }
 
 void Avatar::revert()
@@ -5405,6 +5417,12 @@ bool Avatar::canActivateStuff()
 void Avatar::setCanActivateStuff(bool on)
 {
 	_canActivateStuff = on;
+}
+
+void Avatar::setCollisionAvoidanceData(int range, float mod)
+{
+	_collisionAvoidRange = range;
+	_collisionAvoidMod = mod;
 }
 
 bool Avatar::canQuickSong()
@@ -7073,13 +7091,9 @@ void Avatar::onUpdate(float dt)
 
 		}
 
-		if (!state.lockedToWall && !bursting && _isUnderWater && swimming && !isFollowingPath())
+		if (!state.lockedToWall && !bursting && _isUnderWater && swimming && !isFollowingPath() && _collisionAvoidRange > 0)
 		{
-			//debugLog("collision avoidance");
-			if (dsq->continuity.form == FORM_FISH)
-				doCollisionAvoidance(dt, 1, 0.1, 0, 800, OT_HURT);
-			else
-				doCollisionAvoidance(dt, 2, 1.0, 0, 800, OT_HURT);
+			doCollisionAvoidance(dt, _collisionAvoidRange, _collisionAvoidMod, 0, 800, OT_HURT);
 		}
 
 		if (!game->isShuttingDownGameState())
@@ -7312,7 +7326,8 @@ void Avatar::onUpdate(float dt)
 		rightHandEmitter->position = boneRightHand->getWorldCollidePosition(Vector(0,16));
 	}
 
-	dsq->game->handleShotCollisions(this, (activeAura == AURA_SHIELD));
+	if(canCollideWithShots())
+		dsq->game->handleShotCollisions(this, (activeAura == AURA_SHIELD));
 }
 
 

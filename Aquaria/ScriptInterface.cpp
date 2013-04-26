@@ -2758,6 +2758,23 @@ luaFunc(avatar_canSwimAgainstCurrents)
 	luaReturnBool(dsq->game->avatar->canSwimAgainstCurrents());
 }
 
+luaFunc(avatar_setCanCollideWithShots)
+{
+	dsq->game->avatar->setCollideWithShots(getBool(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(avatar_canCollideWithShots)
+{
+	luaReturnBool(dsq->game->avatar->canCollideWithShots());
+}
+
+luaFunc(avatar_setCollisionAvoidanceData)
+{
+	dsq->game->avatar->setCollisionAvoidanceData(lua_tointeger(L, 1), lua_tonumber(L, 2));
+	luaReturnNil();
+}
+
 
 luaFunc(avatar_toggleCape)
 {
@@ -7771,6 +7788,9 @@ static const struct {
 	luaRegister(avatar_canBurst),
 	luaRegister(avatar_setCanSwimAgainstCurrents),
 	luaRegister(avatar_canSwimAgainstCurrents),
+	luaRegister(avatar_setCanCollideWithShots),
+	luaRegister(avatar_canCollideWithShots),
+	luaRegister(avatar_setCollisionAvoidanceData),
 
 	luaRegister(avatar_clampPosition),
 	luaRegister(avatar_updatePosition),
