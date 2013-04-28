@@ -7784,6 +7784,7 @@ static const struct {
 
 	luaRegister(avatar_setCanDie),
 	luaRegister(setCanActivate),
+	luaRegister(setSeeMapMode),
 	luaRegister(avatar_toggleCape),
 	luaRegister(avatar_setPullTarget),
 

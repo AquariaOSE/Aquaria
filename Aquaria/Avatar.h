@@ -71,7 +71,7 @@ enum SeeMapMode
 	SEE_MAP_NEVER = 0,
 	SEE_MAP_DEFAULT = 1,
 	SEE_MAP_ALWAYS = 2,
-}
+};
 
 class SongIconParticle : public Quad
 {
