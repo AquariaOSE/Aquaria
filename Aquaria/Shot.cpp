@@ -342,6 +342,7 @@ Shot::Shot() : Quad(), Segmented(0,0)
 	fired = false;
 	target = 0;
 	dead = false;
+	enqueuedForDelete = false;
 	shotIdx = shots.size();
 	shots.push_back(this);
 }
@@ -487,13 +488,18 @@ void Shot::setLifeTime(float l)
 void Shot::onEndOfLife()
 {
 	destroySegments(0.2);
-	deleteShots.push_back(this);
 	dead = true;
 
 	if (emitter)
 	{
 		emitter->killParticleEffect();
 		emitter = 0;
+	}
+
+	if (!enqueuedForDelete)
+	{
+		enqueuedForDelete = true;
+		deleteShots.push_back(this);
 	}
 }
 
