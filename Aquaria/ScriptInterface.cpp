@@ -3758,6 +3758,19 @@ luaFunc(beam_setFirer)
 	luaReturnNil();
 }
 
+// Note the additional trace() call
+luaFunc(beam_setPosition_override)
+{
+	Beam *b = beam(L);
+	if (b)
+	{
+		b->position.interpolateTo(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)),
+			lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7));
+		b->trace();
+	}
+	luaReturnNil();
+}
+
 luaFunc(getStringBank)
 {
 	luaReturnStr(dsq->continuity.stringBank.get(lua_tointeger(L, 1)).c_str());
@@ -8566,6 +8579,7 @@ static const struct {
 	{"bone_getPosition", l_bone_getWorldPosition},
 	{ "entity_delete", l_entity_delete_override },
 	{ "entity_setRenderPass", l_entity_setRenderPass_override },
+	{ "beam_setPosition", l_beam_setPosition_override },
 
 	// -- deprecated/compatibility related functions below here --
 
