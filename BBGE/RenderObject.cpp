@@ -629,7 +629,7 @@ void RenderObject::renderCall()
 				glTranslatef(position.x, position.y, position.z);
 				if (isfh())
 				{
-					glDisable(GL_CULL_FACE);
+					//glDisable(GL_CULL_FACE);
 					glRotatef(180, 0, 1, 0);
 				}
 
@@ -655,7 +655,7 @@ void RenderObject::renderCall()
 				glTranslatef(pos.x, pos.y, pos.z);
 				if (isfh())
 				{
-					glDisable(GL_CULL_FACE);
+					//glDisable(GL_CULL_FACE);
 					glRotatef(180, 0, 1, 0);
 				}
 				glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
@@ -714,7 +714,7 @@ void RenderObject::renderCall()
 			glRotatef(rotation.z+rotationOffset.z, 0, 0, 1); 
 			if (isfh())
 			{
-				glDisable(GL_CULL_FACE);
+				//glDisable(GL_CULL_FACE);
 				glRotatef(180, 0, 1, 0);
 			}
 #endif

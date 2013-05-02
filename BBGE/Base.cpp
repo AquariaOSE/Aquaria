@@ -301,7 +301,7 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 void drawCircle(float radius, int stepSize)
 {
 #ifdef BBGE_BUILD_OPENGL
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 
 	glBegin(GL_POLYGON);
 	{
@@ -312,7 +312,7 @@ void drawCircle(float radius, int stepSize)
 	}
 	glEnd();
 
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 #endif
 }
 

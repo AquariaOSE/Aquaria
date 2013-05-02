@@ -150,7 +150,7 @@ void Web::onRender()
 	//glDisable(GL_BLEND);
 	
 	glLineWidth(4);
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBegin(GL_LINES);
