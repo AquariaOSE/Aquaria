@@ -892,7 +892,8 @@ public:
 	std::string getNoteName(int n, const std::string &pre="");
 
 	void selectEntityFromGroups();
-	InterpolatedVector cameraInterp, tintColor;
+	InterpolatedVector cameraInterp;
+	//InterpolatedVector tintColor;
 	float getWaterLevel();
 	void setMusicToPlay(const std::string &musicToPlay);
 	Vector lastCollidePosition;

@@ -30,28 +30,30 @@ public:
 	~Shader();
 	bool isLoaded();
 	void load(const std::string &file, const std::string &fragFile);
+	void loadSrc(const char *vertCode, const char *fragCode);
 	void reload();
+	void unload();
 	void bind();
 	void unbind();
-	void setMode(int mode);
-	void setValue(float x, float y, float z, float w);
-	std::string vertFile, fragFile;
+
+	// TODO: design a good API for this...
+	void setInt(const char *name, int x);
+	void setFloat(const char *name, float x);
+	void setFloat4(const char *name, float x, float y, float z, float w);
+
+
 protected:
+	std::string vertFile, fragFile;
 #ifdef BBGE_BUILD_OPENGL
 	GLuint g_programObj;
-	GLuint g_vertexShader;
-	GLuint g_fragmentShader;
-	GLuint g_location_texture;
-	GLuint g_location_mode;
-	GLuint g_location_value;
 #endif
-	int mode;
-	float vx, vy, vz, vw;
-	bool loaded;
 
+private:
 	static void staticInit();
 	static bool _wasInited;
 	static bool _useShaders;
+
+	static unsigned int _compileShader(int type, const char *src, char *errbuf, size_t errbufsize);
 };
 
 #endif

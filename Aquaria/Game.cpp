@@ -9972,7 +9972,7 @@ void Game::update(float dt)
 
 	if (avatar)
 	{
-		tintColor.update(dt);
+		/*tintColor.update(dt);
 		if (core->afterEffectManager)
 		{
 			if (tintColor.isInterpolating())
@@ -9981,7 +9981,7 @@ void Game::update(float dt)
 				core->afterEffectManager->setActiveShader(AS_NONE);
 
 			core->afterEffectManager->glowShader.setValue(tintColor.x, tintColor.y, tintColor.z, 1);
-		}
+		}*/
 
 		if (avatar->isRolling())
 			particleManager->addInfluence(ParticleInfluence(avatar->position, 300, 800, true));

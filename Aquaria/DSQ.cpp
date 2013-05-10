@@ -1532,10 +1532,10 @@ This build is not yet final, and as such there are a couple things lacking. They
 	renderObjectLayerOrder[LR_ENTITIES_MINUS3] = -1;
 	renderObjectLayerOrder[LR_ENTITIES_MINUS2] = -1;
 
-	if (!Entity::blurShader.isLoaded())
+	/*if (!Entity::blurShader.isLoaded())
 	{
 		//Entity::blurShader.load("data/shaders/stan.vert", "data/shaders/hoblur.frag");
-	}
+	}*/
 
 	setMousePosition(core->center);
 	
