@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "Shader.h"
+#include "algorithmx.h"
 
 #ifdef BBGE_BUILD_SHADERS
 	// GL_ARB_shader_objects
@@ -34,9 +35,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	PFNGLGETINFOLOGARBPROC           glGetInfoLogARB           = NULL;
 	PFNGLLINKPROGRAMARBPROC          glLinkProgramARB          = NULL;
 	PFNGLGETUNIFORMLOCATIONARBPROC   glGetUniformLocationARB   = NULL;
-	PFNGLUNIFORM4FARBPROC            glUniform4fARB            = NULL;
-	PFNGLUNIFORM1IARBPROC            glUniform1iARB            = NULL;
-	PFNGLUNIFORM1FARBPROC            glUniform1fARB            = NULL;
+	PFNGLGETACTIVEUNIFORMARBPROC     glGetActiveUniformARB     = NULL;
+	PFNGLUNIFORM1FVARBPROC           glUniform1fvARB            = NULL;
+	PFNGLUNIFORM2FVARBPROC           glUniform2fvARB            = NULL;
+	PFNGLUNIFORM3FVARBPROC           glUniform3fvARB            = NULL;
+	PFNGLUNIFORM4FVARBPROC           glUniform4fvARB            = NULL;
+	PFNGLUNIFORM1IVARBPROC           glUniform1ivARB            = NULL;
+	PFNGLUNIFORM2IVARBPROC           glUniform2ivARB            = NULL;
+	PFNGLUNIFORM3IVARBPROC           glUniform3ivARB            = NULL;
+	PFNGLUNIFORM4IVARBPROC           glUniform4ivARB            = NULL;
+
 #endif
 
 bool Shader::_wasInited = false;
@@ -84,16 +92,23 @@ void Shader::staticInit()
 		glGetInfoLogARB           = (PFNGLGETINFOLOGARBPROC)SDL_GL_GetProcAddress("glGetInfoLogARB");
 		glLinkProgramARB          = (PFNGLLINKPROGRAMARBPROC)SDL_GL_GetProcAddress("glLinkProgramARB");
 		glGetUniformLocationARB   = (PFNGLGETUNIFORMLOCATIONARBPROC)SDL_GL_GetProcAddress("glGetUniformLocationARB");
-		glUniform4fARB            = (PFNGLUNIFORM4FARBPROC)SDL_GL_GetProcAddress("glUniform4fARB");
-		glUniform1iARB            = (PFNGLUNIFORM1IARBPROC)SDL_GL_GetProcAddress("glUniform1iARB");
-		glUniform1fARB            = (PFNGLUNIFORM1FARBPROC)SDL_GL_GetProcAddress("glUniform1fARB");
+		glGetActiveUniformARB     = (PFNGLGETACTIVEUNIFORMARBPROC)SDL_GL_GetProcAddress("glGetActiveUniformARB");
+		glUniform1fvARB           = (PFNGLUNIFORM1FVARBPROC)SDL_GL_GetProcAddress("glUniform1fvARB");
+		glUniform2fvARB           = (PFNGLUNIFORM2FVARBPROC)SDL_GL_GetProcAddress("glUniform2fvARB");
+		glUniform3fvARB           = (PFNGLUNIFORM3FVARBPROC)SDL_GL_GetProcAddress("glUniform3fvARB");
+		glUniform4fvARB           = (PFNGLUNIFORM4FVARBPROC)SDL_GL_GetProcAddress("glUniform4fvARB");
+		glUniform1ivARB           = (PFNGLUNIFORM1IVARBPROC)SDL_GL_GetProcAddress("glUniform1ivARB");
+		glUniform2ivARB           = (PFNGLUNIFORM2IVARBPROC)SDL_GL_GetProcAddress("glUniform2ivARB");
+		glUniform3ivARB           = (PFNGLUNIFORM3IVARBPROC)SDL_GL_GetProcAddress("glUniform3ivARB");
+		glUniform4ivARB           = (PFNGLUNIFORM4IVARBPROC)SDL_GL_GetProcAddress("glUniform4ivARB");
 #endif
 
 		if( !glCreateProgramObjectARB || !glDeleteObjectARB || !glUseProgramObjectARB ||
 			!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB || 
 			!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB || 
-			!glLinkProgramARB || !glGetUniformLocationARB || !glUniform4fARB ||
-			!glUniform1iARB || !glUniform1fARB )
+			!glLinkProgramARB || !glGetUniformLocationARB || !glGetActiveUniformARB ||
+			!glUniform1fvARB || !glUniform2fvARB || !glUniform3fvARB || !glUniform4fvARB ||
+			!glUniform1ivARB || !glUniform2ivARB || !glUniform3ivARB || !glUniform4ivARB)
 		{
 			glCreateProgramObjectARB = 0;
 			debugLog("One or more GL_ARB_shader_objects functions were not found");
@@ -116,6 +131,10 @@ end:
 
 Shader::Shader()
 {
+	addType(SCO_SHADER);
+	numUniforms = -1;
+	uniformsDirty = false;
+
 #ifdef BBGE_BUILD_OPENGL
 	g_programObj = 0;
 #endif
@@ -139,7 +158,7 @@ void Shader::unload()
 #endif
 }
 
-bool Shader::isLoaded()
+bool Shader::isLoaded() const
 {
 	return g_programObj != 0;
 }
@@ -155,6 +174,7 @@ void Shader::bind()
 	if (!_useShaders)
 		return;
 	glUseProgramObjectARB(g_programObj);
+	_flushUniforms();
 #endif
 }
 
@@ -217,6 +237,7 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 
 void Shader::loadSrc(const char *vertCode, const char *fragCode)
 {
+	staticInit();
 	unload();
 
 	if(!_useShaders)
@@ -232,7 +253,7 @@ void Shader::loadSrc(const char *vertCode, const char *fragCode)
 	//
 	// Create the vertex shader...
 	//
-	if(vertCode && !(vertexShader = _compileShader(GL_VERTEX_SHADER_ARB, vertCode, str, sizeof(str))))
+	if(vertCode && *vertCode && !(vertexShader = _compileShader(GL_VERTEX_SHADER_ARB, vertCode, str, sizeof(str))))
 	{
 		std::ostringstream os;
 		os << "Vertex Shader Compile Error [" << vertFile << "]:\n" << str;
@@ -243,7 +264,7 @@ void Shader::loadSrc(const char *vertCode, const char *fragCode)
 	//
 	// Create the fragment shader...
 	//
-	if(fragCode && !(fragmentShader = _compileShader(GL_FRAGMENT_SHADER_ARB, fragCode, str, sizeof(str))))
+	if(fragCode && *fragCode && !(fragmentShader = _compileShader(GL_FRAGMENT_SHADER_ARB, fragCode, str, sizeof(str))))
 	{
 		std::ostringstream os;
 		os << "Fragment Shader Compile Error [" << fragFile << "]:\n" << str;
@@ -294,59 +315,131 @@ void Shader::loadSrc(const char *vertCode, const char *fragCode)
 		return;
 	}
 
+	_queryUniforms();
+
 #endif
 }
 
-// TODO: I'm not quite sure but i bet this sucks.
-// Design a good caching policy and simplify the implementation,
-// but keep shader dynamism and shaders generated at runtime in mind.
-// No idea if and how much runtime performance it costs
-// to query the uniform locations everytime.
-// -- FG
-
-static void shaderUniformError(const char *func, const char *var)
+void Shader::_setUniform(Uniform *u)
 {
-	GLint err = glGetError();
-	/*std::ostringstream os;
-	os << "Shader::" << func << "(" << var << ") -- undef uniform (Error: " << err << ")";
-	debugLog(os.str());*/
+	/*if(u->location == -1)
+	{
+		u->location = glGetUniformLocationARB(g_programObj, u->name);
+		if(u->location == -1)
+		{
+			u->dirty = false;
+			return;
+		}
+	}*/
+	switch(u->type)
+	{
+		case GL_FLOAT:          glUniform1fvARB(u->location, 1, u->data.f); break;
+		case GL_FLOAT_VEC2_ARB: glUniform2fvARB(u->location, 1, u->data.f); break;
+		case GL_FLOAT_VEC3_ARB: glUniform3fvARB(u->location, 1, u->data.f); break;
+		case GL_FLOAT_VEC4_ARB: glUniform4fvARB(u->location, 1, u->data.f); break;
+		case GL_INT:            glUniform1ivARB(u->location, 1, u->data.i); break;
+		case GL_INT_VEC2_ARB:   glUniform2ivARB(u->location, 1, u->data.i); break;
+		case GL_INT_VEC3_ARB:   glUniform3ivARB(u->location, 1, u->data.i); break;
+		case GL_INT_VEC4_ARB:   glUniform4ivARB(u->location, 1, u->data.i); break;
+	}
+	u->dirty = false;
 }
 
-void Shader::setInt(const char *name, int x)
+void Shader::_flushUniforms()
+{
+	if(!uniformsDirty)
+		return;
+	uniformsDirty = false;
+
+	for(size_t i = 0; i < uniforms.size(); ++i)
+	{
+		Uniform &u = uniforms[i];
+		if(u.dirty)
+			_setUniform(&u);
+	}
+}
+
+// for sorting
+bool Shader::_sortUniform(const Uniform& a, const char *bname)
+{
+	return strcmp(a.name, bname) < 0;
+}
+
+bool Shader::Uniform::operator< (const Uniform& b) const
+{
+	return Shader::_sortUniform(*this, &b.name[0]);
+}
+
+void Shader::_queryUniforms()
+{
+	glGetObjectParameterivARB(g_programObj, GL_OBJECT_ACTIVE_UNIFORMS_ARB , &numUniforms);
+
+	if (numUniforms <= 0)
+		return;
+
+	uniforms.reserve(numUniforms);
+
+	for (unsigned int i = 0; i < numUniforms; ++i)
+	{
+		Uniform u;
+		GLint size = 0;
+		GLenum type = 0;
+		glGetActiveUniformARB(g_programObj, i, sizeof(u.name), NULL, &size, &type, &u.name[0]);
+		if(!type || !size)
+			continue;
+		u.location = glGetUniformLocationARB(g_programObj, u.name);
+		if(u.location == -1)
+			continue;
+		u.dirty = false;
+		u.type = type;
+		memset(&u.data, 0, sizeof(u.data));
+
+		uniforms.push_back(u);
+	}
+
+	// sort to be able to do binary search later
+	std::sort(uniforms.begin(), uniforms.end());
+}
+
+int Shader::_getUniformIndex(const char *name)
+{
+	// binary search
+	UniformVec::iterator it = stdx_fg::lower_bound(uniforms.begin(), uniforms.end(), name, _sortUniform);
+	return int(it - uniforms.begin());
+}
+
+void Shader::setInt(const char *name, int x, int y /* = 0 */, int z /* = 0 */, int w /* = 0 */)
 {
 #if BBGE_BUILD_SHADERS
-	if(!g_programObj)
+	if(!g_programObj || numUniforms <= 0)
 		return;
-	GLint loc = glGetUniformLocationARB(g_programObj, name);
-	if(loc != -1)
-		glUniform1iARB(loc, x);
-	else
-		shaderUniformError("setInt", name);
+	int idx = _getUniformIndex(name);
+	if(unsigned(idx) >= uniforms.size())
+		return;
+	Uniform& u = uniforms[idx];
+	u.data.i[0] = x;
+	u.data.i[1] = y;
+	u.data.i[2] = z;
+	u.data.i[3] = w;
+	u.dirty = true;
+	uniformsDirty = true;
 #endif
 }
 
-void Shader::setFloat(const char *name, float x)
+void Shader::setFloat(const char *name, float x, float y /* = 0 */, float z /* = 0 */, float w /* = 0 */)
 {
 #if BBGE_BUILD_SHADERS
-	if(!g_programObj)
+	if(!g_programObj || numUniforms <= 0)
 		return;
-	GLint loc = glGetUniformLocationARB(g_programObj, name);
-	if(loc != -1)
-		glUniform1fARB(loc, x);
-	else
-		shaderUniformError("setFloat", name);
-#endif
-}
-
-void Shader::setFloat4(const char *name, float x, float y,  float z, float w)
-{
-#if BBGE_BUILD_SHADERS
-	if(!g_programObj)
+	int idx = _getUniformIndex(name);
+	if(unsigned(idx) >= uniforms.size())
 		return;
-	GLint loc = glGetUniformLocationARB(g_programObj, name);
-	if(loc != -1)
-		glUniform4fARB(loc, x, y, z, w);
-	else
-		shaderUniformError("setFloat4", name);
+	Uniform& u = uniforms[idx];
+	u.data.f[0] = x;
+	u.data.f[1] = y;
+	u.data.f[2] = z;
+	u.data.f[3] = w;
+	u.dirty = true;
+	uniformsDirty = true;
 #endif
 }
