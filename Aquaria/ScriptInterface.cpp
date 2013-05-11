@@ -361,7 +361,7 @@ static void scriptError(lua_State *L, const std::string& msg)
 // - The C++ standard allows offsetof() only on POD-types. Oh well, it probably works anyways.
 // If it does not compile for some reason, comment it out, hope for the best, and go ahead.
 #if !(defined(__GNUC__) && __GNUC__ <= 2)
-void compile_time_assertions()
+static void compile_time_assertions()
 {
 #define oo(cls) offsetof(cls, _objtype)
 	compile_assert(oo(Path) == oo(RenderObject));
@@ -378,6 +378,7 @@ void compile_time_assertions()
 	compile_assert(oo(Path) == oo(Avatar));
 	compile_assert(oo(Path) == oo(BaseText));
 	compile_assert(oo(Path) == oo(PauseQuad));
+	compile_assert(oo(Path) == oo(Shader));
 #undef oo
 }
 #endif
@@ -456,6 +457,12 @@ std::string getString(lua_State *L, int slot = 1)
 		sr = lua_tostring(L, slot);
 	}
 	return sr;
+}
+
+static inline
+const char *getCString(lua_State *L, int slot = 1)
+{
+	return lua_isstring(L, slot) ? lua_tostring(L, slot) : NULL;
 }
 
 static inline
@@ -576,6 +583,16 @@ BaseText *getText(lua_State *L, int slot = 1)
 	ENSURE_TYPE(q, SCO_TEXT);
 	if (!q)
 		scriptDebug(L, "Invalid Text");
+	return q;
+}
+
+static inline
+Shader *getShader(lua_State *L, int slot = 1)
+{
+	Shader *q = (Shader*)lua_touserdata(L, slot);
+	ENSURE_TYPE(q, SCO_SHADER);
+	if (!q)
+		scriptDebug(L, "Invalid Shader");
 	return q;
 }
 
@@ -7680,6 +7697,70 @@ luaFunc(text_setWidth)
 	luaReturnNil();
 }
 
+luaFunc(loadShader)
+{
+	const char *vertRaw = getCString(L, 1);
+	const char *fragRaw = getCString(L, 2);
+	std::string vert, frag;
+	if(vertRaw)
+		findFile_helper(vertRaw, vert);
+	if(fragRaw)
+		findFile_helper(fragRaw, frag);
+	Shader *sh = new Shader();
+	sh->load(vert, frag);
+	if(!sh->isLoaded())
+	{
+		delete sh;
+		sh = NULL;
+	}
+	luaReturnPtr(sh);
+}
+
+luaFunc(createShader)
+{
+	Shader *sh = new Shader();
+	sh->loadSrc(getCString(L, 1), getCString(L, 2));
+	if(!sh->isLoaded())
+	{
+		delete sh;
+		sh = NULL;
+	}
+	luaReturnPtr(sh);
+}
+
+luaFunc(shader_setAsAfterEffect)
+{
+	core->afterEffectManager->scriptShader = lua_isuserdata(L, 1) ? getShader(L, 1) : NULL;
+	luaReturnNil();
+}
+
+luaFunc(shader_setInt)
+{
+	Shader *sh = getShader(L, 1);
+	const char *name = getCString(L, 2);
+	if(sh && name)
+		sh->setInt(name, lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
+	luaReturnNil();
+}
+
+luaFunc(shader_setFloat)
+{
+	Shader *sh = getShader(L, 1);
+	const char *name = getCString(L, 2);
+	if(sh && name)
+		sh->setFloat(name, lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
+	luaReturnNil();
+}
+
+luaFunc(shader_delete)
+{
+	Shader *sh = getShader(L);
+	delete sh;
+	if(core->afterEffectManager->scriptShader == sh)
+		core->afterEffectManager->scriptShader = NULL;
+	luaReturnNil();
+}
+
 
 //--------------------------------------------------------------------------------------------
 
@@ -8549,6 +8630,13 @@ static const struct {
 	luaRegister(text_setText),
 	luaRegister(text_setFontSize),
 	luaRegister(text_setWidth),
+
+	luaRegister(loadShader),
+	luaRegister(createShader),
+	luaRegister(shader_setAsAfterEffect),
+	luaRegister(shader_setFloat),
+	luaRegister(shader_setInt),
+	luaRegister(shader_delete),
 
 	luaRegister(isQuad),
 	luaRegister(isNode),
