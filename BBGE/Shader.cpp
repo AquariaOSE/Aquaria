@@ -405,6 +405,9 @@ int Shader::_getUniformIndex(const char *name)
 {
 	// binary search
 	UniformVec::iterator it = stdx_fg::lower_bound(uniforms.begin(), uniforms.end(), name, _sortUniform);
+	// because lower_bound returns the first element that compares less, it might not be the correct one
+	if(it != uniforms.end() && strcmp(it->name, name))
+		return -1;
 	return int(it - uniforms.begin());
 }
 
