@@ -284,6 +284,7 @@ void Mod::stop()
 	debugMenu = false;
 	shuttingDown = false;
 	dsq->scriptInterface.reset();
+	dsq->game->setWorldPaused(false);
 }
 
 void Mod::update(float dt)

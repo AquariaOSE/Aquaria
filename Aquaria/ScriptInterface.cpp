@@ -361,7 +361,7 @@ static void scriptError(lua_State *L, const std::string& msg)
 // - The C++ standard allows offsetof() only on POD-types. Oh well, it probably works anyways.
 // If it does not compile for some reason, comment it out, hope for the best, and go ahead.
 #if !(defined(__GNUC__) && __GNUC__ <= 2)
-void compile_time_assertions()
+static void compile_time_assertions()
 {
 #define oo(cls) offsetof(cls, _objtype)
 	compile_assert(oo(Path) == oo(RenderObject));
@@ -377,6 +377,8 @@ void compile_time_assertions()
 	compile_assert(oo(Path) == oo(Quad));
 	compile_assert(oo(Path) == oo(Avatar));
 	compile_assert(oo(Path) == oo(BaseText));
+	compile_assert(oo(Path) == oo(PauseQuad));
+	compile_assert(oo(Path) == oo(Shader));
 #undef oo
 }
 #endif
@@ -455,6 +457,12 @@ std::string getString(lua_State *L, int slot = 1)
 		sr = lua_tostring(L, slot);
 	}
 	return sr;
+}
+
+static inline
+const char *getCString(lua_State *L, int slot = 1)
+{
+	return lua_isstring(L, slot) ? lua_tostring(L, slot) : NULL;
 }
 
 static inline
@@ -575,6 +583,16 @@ BaseText *getText(lua_State *L, int slot = 1)
 	ENSURE_TYPE(q, SCO_TEXT);
 	if (!q)
 		scriptDebug(L, "Invalid Text");
+	return q;
+}
+
+static inline
+Shader *getShader(lua_State *L, int slot = 1)
+{
+	Shader *q = (Shader*)lua_touserdata(L, slot);
+	ENSURE_TYPE(q, SCO_SHADER);
+	if (!q)
+		scriptDebug(L, "Invalid Shader");
 	return q;
 }
 
@@ -1579,6 +1597,7 @@ luaFunc(quad_setSegs)
 	RO_FUNC(getter, prefix,  disableMotionBlur	) \
 	RO_FUNC(getter, prefix,  collideCircleVsLine) \
 	RO_FUNC(getter, prefix,  collideCircleVsLineAngle) \
+	RO_FUNC(getter, prefix,  getVectorToObj	) \
 	MK_ALIAS(prefix, fh, flipHorizontal	) \
 	MK_ALIAS(prefix, fv, flipVertical	)
 
@@ -2112,18 +2131,22 @@ luaFunc(entity_setRidingData)
 luaFunc(entity_setBoneLock)
 {
 	Entity *e = entity(L);
-	Entity *e2 = entity(L, 2);
-	Bone *b = 0;
-	if (lua_isuserdata(L, 3))
-		b = bone(L, 3);
 	bool ret = false;
 	if (e)
 	{
 		BoneLock bl;
-		bl.entity = e2;
-		bl.bone = b;
-		bl.on = true;
-		bl.collisionMaskIndex = dsq->game->lastCollideMaskIndex;
+		if (lua_isuserdata(L, 2))
+		{
+			Entity *e2 = entity(L, 2);
+			Bone *b = 0;
+			if (lua_isuserdata(L, 3))
+				b = bone(L, 3);
+			
+			bl.entity = e2;
+			bl.bone = b;
+			bl.on = true;
+			bl.collisionMaskIndex = dsq->game->lastCollideMaskIndex;
+		}
 		ret = e->setBoneLock(bl);
 	}
 	luaReturnBool(ret);
@@ -2347,6 +2370,25 @@ luaFunc(getWorldType)
 	luaReturnNum((int)dsq->continuity.getWorldType());
 }
 
+luaFunc(setWorldType)
+{
+	WorldType wt = (WorldType)lua_tointeger(L, 1);
+	bool trans = getBool(L, 2);
+	dsq->continuity.applyWorldEffects(wt, trans, 1); // last arg is not used
+	luaReturnNil();
+}
+
+luaFunc(isWorldPaused)
+{
+	luaReturnBool(dsq->game->isWorldPaused());
+}
+
+luaFunc(setWorldPaused)
+{
+	dsq->game->setWorldPaused(getBool(L, 1));
+	luaReturnNil();
+}
+
 luaFunc(getNearestNodeByType)
 {
 	int x = lua_tonumber(L, 1);
@@ -2542,6 +2584,14 @@ luaFunc(entity_setSpiritFreeze)
 	luaReturnNil();
 }
 
+luaFunc(node_setSpiritFreeze)
+{
+	Path *e = path(L);
+	if (e)
+		e->spiritFreeze = getBool(L,2);
+	luaReturnNil();
+}
+
 luaFunc(entity_setFillGrid)
 {
 	Entity *e = entity(L);
@@ -2551,6 +2601,12 @@ luaFunc(entity_setFillGrid)
 		e->fillGridFromQuad = b;
 	}
 	luaReturnNil();
+}
+
+luaFunc(entity_isFillGrid)
+{
+	Entity *e = entity(L);
+	luaReturnBool(e ? e->fillGridFromQuad : false);
 }
 
 luaFunc(entity_getAimVector)
@@ -2679,6 +2735,69 @@ luaFunc(avatar_setCanDie)
 	luaReturnNil();
 }
 
+// not naming this avatar_* because it rather belongs into the UI category...
+luaFunc(setCanActivate)
+{
+	dsq->game->avatar->setCanActivateStuff(getBool(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(setSeeMapMode)
+{
+	dsq->game->avatar->setSeeMapMode((SeeMapMode)lua_tointeger(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(avatar_setCanBurst)
+{
+	dsq->game->avatar->setCanBurst(getBool(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(avatar_canBurst)
+{
+	luaReturnBool(dsq->game->avatar->canBurst());
+}
+
+luaFunc(avatar_setCanLockToWall)
+{
+	dsq->game->avatar->setCanBurst(getBool(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(avatar_canLockToWall)
+{
+	luaReturnBool(dsq->game->avatar->canBurst());
+}
+
+luaFunc(avatar_setCanSwimAgainstCurrents)
+{
+	dsq->game->avatar->setCanSwimAgainstCurrents(getBool(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(avatar_canSwimAgainstCurrents)
+{
+	luaReturnBool(dsq->game->avatar->canSwimAgainstCurrents());
+}
+
+luaFunc(avatar_setCanCollideWithShots)
+{
+	dsq->game->avatar->setCollideWithShots(getBool(L, 1));
+	luaReturnNil();
+}
+
+luaFunc(avatar_canCollideWithShots)
+{
+	luaReturnBool(dsq->game->avatar->canCollideWithShots());
+}
+
+luaFunc(avatar_setCollisionAvoidanceData)
+{
+	dsq->game->avatar->setCollisionAvoidanceData(lua_tointeger(L, 1), lua_tonumber(L, 2));
+	luaReturnNil();
+}
+
 luaFunc(avatar_toggleCape)
 {
 	dsq->game->avatar->toggleCape(getBool(L,1));
@@ -2691,6 +2810,11 @@ luaFunc(avatar_setBlockSinging)
 	bool b = getBool(L);
 	dsq->game->avatar->setBlockSinging(b);
 	luaReturnNil();
+}
+
+luaFunc(avatar_isBlockSinging)
+{
+	luaReturnBool(dsq->game->avatar->isBlockSinging());
 }
 
 luaFunc(avatar_fallOffWall)
@@ -2724,6 +2848,16 @@ luaFunc(avatar_isShieldActive)
 {
 	bool v = (dsq->game->avatar->activeAura == AURA_SHIELD);
 	luaReturnBool(v);
+}
+
+luaFunc(avatar_setShieldActive)
+{
+	bool on = getBool(L, 1);
+	if (on)
+		dsq->game->avatar->activateAura(AURA_SHIELD);
+	else
+		dsq->game->avatar->stopAura();
+	luaReturnNil();
 }
 
 luaFunc(avatar_getStillTimer)
@@ -3741,6 +3875,12 @@ luaFunc(setSceneColor)
 	luaReturnNil();
 }
 
+luaFunc(getSceneColor)
+{
+	const Vector& c = dsq->game->sceneColor3;
+	luaReturnVec3(c.x, c.y, c.z);
+}
+
 luaFunc(setCameraLerpDelay)
 {
 	dsq->game->cameraLerpDelay = lua_tonumber(L, 1);
@@ -4577,6 +4717,18 @@ luaFunc(entity_getDistanceToTarget)
 	luaReturnNum(dist);
 }
 
+luaFunc(entity_getDistanceToPoint)
+{
+	Entity *e = entity(L);
+	float dist = 0;
+	if (e)
+	{
+		Vector p(lua_tonumber(L, 2), lua_tonumber(L, 3));
+		dist = (p - e->position).getLength2D();
+	}
+	luaReturnNum(dist);
+}
+
 luaFunc(entity_watchEntity)
 {
 	Entity *e = entity(L);
@@ -4729,6 +4881,15 @@ luaFunc(createQuad)
 	q->moveToFront();
 
 	luaReturnPtr(q);
+}
+
+luaFunc(quad_setPauseLevel)
+{
+	Quad *q = getQuad(L);
+	ENSURE_TYPE(q, SCO_PAUSEQUAD);
+	if (q)
+		((PauseQuad*)q)->pauseLevel = lua_tointeger(L, 2);
+	luaReturnNil();
 }
 
 luaFunc(setupEntity)
@@ -5045,6 +5206,12 @@ luaFunc(entity_setMaxSpeedLerp)
 	luaReturnNil();
 }
 
+luaFunc(entity_getMaxSpeedLerp)
+{
+	Entity *e = entity(L);
+	luaReturnNum(e ? e->maxSpeedLerp.x : 0.0f);
+}
+
 // note: this is a weaker setState than perform
 // this is so that things can override it
 // for example getting PUSH-ed (Force) or FROZEN (bubbled)
@@ -5215,6 +5382,12 @@ luaFunc(entity_setDeathScene)
 		e->setDeathScene(getBool(L, 2));
 	}
 	luaReturnNil();
+}
+
+luaFunc(entity_isDeathScene)
+{
+	Entity *e = entity(L);
+	luaReturnBool(e ? e->isDeathScene() : false);
 }
 
 luaFunc(entity_setCurrentTarget)
@@ -6155,6 +6328,12 @@ luaFunc(entity_getDistanceToEntity)
 	luaReturnNum(d);
 }
 
+luaFunc(entity_isEntityInside)
+{
+	Entity *e = entity(L);
+	luaReturnBool(e ? e->isEntityInside() : false);
+}
+
 // entity_istargetInRange
 luaFunc(entity_isTargetInRange)
 {
@@ -6557,6 +6736,20 @@ luaFunc(entity_getNearestEntity)
 		}
 	}
 	luaReturnPtr(closest);
+}
+
+luaFunc(getNearestEntity)
+{
+	Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	int radius = lua_tointeger(L, 3);
+	Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
+	EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
+	DamageType dt = lua_isnumber(L, 6) ? (DamageType)lua_tointeger(L, 6) : DT_NONE;
+	int lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
+	int lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
+
+	Entity *target = dsq->game->getNearestEntity(p, radius, ignore, ET_ENEMY, dt, lrStart, lrEnd);
+	luaReturnPtr(target);
 }
 
 luaFunc(findWall)
@@ -7062,21 +7255,21 @@ luaFunc(getMouseWorldPos)
 
 luaFunc(fade)
 {
-	dsq->overlay->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
+	dsq->overlay->color.interpolateTo(Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5)), lua_tonumber(L, 6));
 	dsq->overlay->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	luaReturnNil();
 }
 
 luaFunc(fade2)
 {
-	dsq->overlay2->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
+	dsq->overlay2->color.interpolateTo(Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5)), lua_tonumber(L, 6));
 	dsq->overlay2->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	luaReturnNil();
 }
 
 luaFunc(fade3)
 {
-	dsq->overlay3->color = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5));
+	dsq->overlay3->color.interpolateTo(Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5)), lua_tonumber(L, 6));
 	dsq->overlay3->alpha.interpolateTo(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	luaReturnNil();
 }
@@ -7504,6 +7697,70 @@ luaFunc(text_setWidth)
 	luaReturnNil();
 }
 
+luaFunc(loadShader)
+{
+	const char *vertRaw = getCString(L, 1);
+	const char *fragRaw = getCString(L, 2);
+	std::string vert, frag;
+	if(vertRaw)
+		findFile_helper(vertRaw, vert);
+	if(fragRaw)
+		findFile_helper(fragRaw, frag);
+	Shader *sh = new Shader();
+	sh->load(vert, frag);
+	if(!sh->isLoaded())
+	{
+		delete sh;
+		sh = NULL;
+	}
+	luaReturnPtr(sh);
+}
+
+luaFunc(createShader)
+{
+	Shader *sh = new Shader();
+	sh->loadSrc(getCString(L, 1), getCString(L, 2));
+	if(!sh->isLoaded())
+	{
+		delete sh;
+		sh = NULL;
+	}
+	luaReturnPtr(sh);
+}
+
+luaFunc(shader_setAsAfterEffect)
+{
+	core->afterEffectManager->scriptShader = lua_isuserdata(L, 1) ? getShader(L, 1) : NULL;
+	luaReturnNil();
+}
+
+luaFunc(shader_setInt)
+{
+	Shader *sh = getShader(L, 1);
+	const char *name = getCString(L, 2);
+	if(sh && name)
+		sh->setInt(name, lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
+	luaReturnNil();
+}
+
+luaFunc(shader_setFloat)
+{
+	Shader *sh = getShader(L, 1);
+	const char *name = getCString(L, 2);
+	if(sh && name)
+		sh->setFloat(name, lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
+	luaReturnNil();
+}
+
+luaFunc(shader_delete)
+{
+	Shader *sh = getShader(L);
+	delete sh;
+	if(core->afterEffectManager->scriptShader == sh)
+		core->afterEffectManager->scriptShader = NULL;
+	luaReturnNil();
+}
+
 
 //--------------------------------------------------------------------------------------------
 
@@ -7541,11 +7798,15 @@ static const struct {
 	luaRegister(getNoteName),
 
 	luaRegister(getWorldType),
+	luaRegister(setWorldType),
+	luaRegister(setWorldPaused),
+	luaRegister(isWorldPaused),
 
 	luaRegister(getWaterLevel),
 	luaRegister(setWaterLevel),
 
 	luaRegister(createQuad),
+	luaRegister(quad_setPauseLevel),
 
 	luaRegister(setupEntity),
 	luaRegister(setActivePet),
@@ -7570,6 +7831,7 @@ static const struct {
 	luaRegister(entity_setBoneLock),
 	luaRegister(entity_setIngredient),
 	luaRegister(entity_setDeathScene),
+	luaRegister(entity_isDeathScene),
 
 	luaRegister(entity_setBeautyFlip),
 	luaRegister(entity_setInvincible),
@@ -7594,6 +7856,7 @@ static const struct {
 	luaRegister(entity_setEatType),
 
 	luaRegister(entity_setSpiritFreeze),
+	luaRegister(node_setSpiritFreeze),
 
 	luaRegister(entity_setCanLeaveWater),
 
@@ -7614,9 +7877,20 @@ static const struct {
 
 
 	luaRegister(avatar_setCanDie),
+	luaRegister(setCanActivate),
+	luaRegister(setSeeMapMode),
 	luaRegister(avatar_toggleCape),
 	luaRegister(avatar_setPullTarget),
 
+	luaRegister(avatar_setCanLockToWall),
+	luaRegister(avatar_canLockToWall),
+	luaRegister(avatar_setCanBurst),
+	luaRegister(avatar_canBurst),
+	luaRegister(avatar_setCanSwimAgainstCurrents),
+	luaRegister(avatar_canSwimAgainstCurrents),
+	luaRegister(avatar_setCanCollideWithShots),
+	luaRegister(avatar_canCollideWithShots),
+	luaRegister(avatar_setCollisionAvoidanceData),
 
 	luaRegister(avatar_clampPosition),
 	luaRegister(avatar_updatePosition),
@@ -7721,6 +7995,7 @@ static const struct {
 	luaRegister(entity_getVectorToEntity),
 
 	luaRegister(entity_getDistanceToTarget),
+	luaRegister(entity_getDistanceToPoint),
 	luaRegister(entity_move),
 
 	luaRegister(entity_getID),
@@ -7818,6 +8093,7 @@ static const struct {
 
 	luaRegister(entity_isTargetInRange),
 	luaRegister(entity_getDistanceToEntity),
+	luaRegister(entity_isEntityInside),
 
 	luaRegister(entity_isInvincible),
 
@@ -7834,6 +8110,7 @@ static const struct {
 	luaRegister(entity_setMaxSpeed),
 	luaRegister(entity_getMaxSpeed),
 	luaRegister(entity_setMaxSpeedLerp),
+	luaRegister(entity_getMaxSpeedLerp),
 	luaRegister(entity_setState),
 	luaRegister(entity_getState),
 	luaRegister(entity_getEnqueuedState),
@@ -8024,10 +8301,12 @@ static const struct {
 	luaRegister(avatar_isRolling),
 	luaRegister(avatar_isOnWall),
 	luaRegister(avatar_isShieldActive),
+	luaRegister(avatar_setShieldActive),
 	luaRegister(avatar_getRollDirection),
 
 	luaRegister(avatar_fallOffWall),
 	luaRegister(avatar_setBlockSinging),
+	luaRegister(avatar_isBlockSinging),
 
 
 	luaRegister(avatar_toggleMovement),
@@ -8223,7 +8502,7 @@ static const struct {
 
 
 	luaRegister(setSceneColor),
-
+	luaRegister(getSceneColor),
 
 	luaRegister(entity_watchEntity),
 
@@ -8251,6 +8530,7 @@ static const struct {
 
 	luaRegister(entity_setTexture),
 	luaRegister(entity_setFillGrid),
+	luaRegister(entity_isFillGrid),
 
 	luaRegister(entity_push),
 
@@ -8315,6 +8595,7 @@ static const struct {
 
 	luaRegister(entity_getNearestEntity),
 	luaRegister(entity_getNearestBoneToPosition),
+	luaRegister(getNearestEntity),
 
 	luaRegister(entity_getNearestNode),
 	luaRegister(entity_setPoison),
@@ -8349,6 +8630,13 @@ static const struct {
 	luaRegister(text_setText),
 	luaRegister(text_setFontSize),
 	luaRegister(text_setWidth),
+
+	luaRegister(loadShader),
+	luaRegister(createShader),
+	luaRegister(shader_setAsAfterEffect),
+	luaRegister(shader_setFloat),
+	luaRegister(shader_setInt),
+	luaRegister(shader_delete),
 
 	luaRegister(isQuad),
 	luaRegister(isNode),
@@ -9033,6 +9321,7 @@ static const struct {
 	luaConstant(DT_CRUSH),
 	luaConstant(DT_SPIKES),
 	luaConstant(DT_STEAM),
+	luaConstant(DT_WALLHURT),
 
 
 	luaConstant(FRAME_TIME),
@@ -9060,6 +9349,10 @@ static const struct {
 	luaConstant(OT_INVISIBLEIN),
 	luaConstant(OT_HURT),
 	luaConstant(OT_INVISIBLEENT),
+
+	luaConstant(SEE_MAP_NEVER),
+	luaConstant(SEE_MAP_DEFAULT),
+	luaConstant(SEE_MAP_ALWAYS),
 };
 
 //============================================================================================

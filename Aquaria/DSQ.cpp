@@ -1532,10 +1532,10 @@ This build is not yet final, and as such there are a couple things lacking. They
 	renderObjectLayerOrder[LR_ENTITIES_MINUS3] = -1;
 	renderObjectLayerOrder[LR_ENTITIES_MINUS2] = -1;
 
-	if (!Entity::blurShader.isLoaded())
+	/*if (!Entity::blurShader.isLoaded())
 	{
 		//Entity::blurShader.load("data/shaders/stan.vert", "data/shaders/hoblur.frag");
-	}
+	}*/
 
 	setMousePosition(core->center);
 	
@@ -4564,6 +4564,10 @@ void DSQ::onUpdate(float dt)
 				os << " headRot: " << b->rotation.z;
 			os << std::endl;
 			os << "fh: " << dsq->game->avatar->isfh() << " fv: " << dsq->game->avatar->isfv() << std::endl;
+			os << "canActivate: " << dsq->game->avatar->canActivateStuff();
+			os << " canBurst: " << dsq->game->avatar->canBurst();
+			os << " canLTW: " << dsq->game->avatar->canLockToWall();
+			os << " canSAC: " << dsq->game->avatar->canSwimAgainstCurrents() << std::endl;
 		}
 
 		// DO NOT CALL AVATAR-> beyond this point
@@ -4576,6 +4580,7 @@ void DSQ::onUpdate(float dt)
 		os << "altState: " << core->getKeyState(KEY_LALT) << " | " << core->getKeyState(KEY_RALT) << std::endl;
 		os << "PMFree: " << particleManager->getFree() << " Active: " << particleManager->getNumActive() << std::endl;
 		os << "cameraPos: (" << dsq->cameraPos.x << ", " << dsq->cameraPos.y << ")" << std::endl;
+		os << "worldType: " << continuity.getWorldType() << " worldPaused: " << game->isWorldPaused() << std::endl;
 		os << "voiceTime: " << dsq->sound->getVoiceTime() << " bNat: " << dsq->game->bNatural;
 		int ca, ma;
 		dsq->sound->getStats(&ca, &ma);
@@ -4590,7 +4595,7 @@ void DSQ::onUpdate(float dt)
 	if (isDeveloperKeys() && fpsText && cmDebug && cmDebug->alpha == 1)
 	{
 		std::ostringstream os;
-		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount;
+		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount << " | RC: " << Core::dbg_numRenderCalls;
 		os << " | p: " << core->processedRenderObjectCount << " | t: " << core->totalRenderObjectCount;
 		os << " | s: " << dsq->continuity.seconds;
 		os << " | evQ: " << core->eventQueue.getSize();

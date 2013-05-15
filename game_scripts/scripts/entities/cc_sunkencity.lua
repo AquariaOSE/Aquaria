@@ -220,7 +220,10 @@ function postInit(me)
 	updateLocation(me)	
 end
 
+-- Both exist. Different spelling. Yay for consistency.
+-- Keeping them both, should ensure behavior as it used to be, just without warnings. -- FG
 v.incutscene = false
+v.inCutScene = false
 
 local function cutsceneintro(me, node)
 	v.incutscene = true

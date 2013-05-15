@@ -130,7 +130,7 @@ HairNode *Hair::getHairNode(int idx)
 void Hair::onRender()
 {
 #ifdef BBGE_BUILD_OPENGL
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 
 	glBegin(GL_QUAD_STRIP);
 	float texBits = 1.0f / (hairNodes.size()-1);
@@ -192,7 +192,7 @@ void Hair::onRender()
 	}
 
 	*/
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 #endif
 }
 

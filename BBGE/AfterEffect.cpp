@@ -35,6 +35,7 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 	activeShader = AS_NONE;
 	numEffects = 0;
 	bRenderGridPoints = true;
+	scriptShader = 0;
 
 	screenWidth = core->getWindowWidth();
 	screenHeight = core->getWindowHeight();
@@ -245,6 +246,7 @@ void AfterEffectManager::setActiveShader(ActiveShader as)
 	activeShader = as;
 }
 
+
 void AfterEffectManager::renderGrid()
 {
 #ifdef BBGE_BUILD_OPENGL
@@ -278,10 +280,20 @@ void AfterEffectManager::renderGrid()
 			activeShader = &glowShader;
 		break;
 		}
+		
+		if(scriptShader)
+			activeShader = scriptShader;
+
 	}
 
 	if (activeShader)
+	{
+		//while(glGetError() != GL_NO_ERROR) {}
+
 		activeShader->bind();
+
+		activeShader->setInt("tex", 0);
+	}
 
 	screenWidth = core->getWindowWidth();
 	screenHeight = core->getWindowHeight();

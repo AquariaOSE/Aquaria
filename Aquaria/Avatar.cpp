@@ -120,6 +120,12 @@ const float NOTE_ACCEPT_ANGLE_OFFSET = 15;
 const int COLLIDE_RADIUS_NORMAL = 10;
 const int COLLIDE_RADIUS_FISH = 8;
 
+const int COLLIDE_RANGE_NORMAL = 2;
+const int COLLIDE_RANGE_FISH = 1;
+
+const float COLLIDE_MOD_NORMAL = 1.0f;
+const float COLLIDE_MOD_FISH = 0.1f;
+
 const int requiredDualFormCharge = 3;
 
 bool usingDigital = false;
@@ -744,17 +750,12 @@ void Avatar::toggleMovement(bool on)
 
 bool Avatar::isLockable()
 {
-	return (bursting || !_isUnderWater) && (boneLockDelay == 0) && (dsq->continuity.form != FORM_FISH);
+	return (bursting || !_isUnderWater) && (boneLockDelay == 0) && canLockToWall();
 }
 
 bool Avatar::isSinging()
 {
 	return singing;
-}
-
-void Avatar::shift()
-{
-	dsq->continuity.shiftWorlds();
 }
 
 void Avatar::applyWorldEffects(WorldType type)
@@ -1595,6 +1596,8 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		//rotationOffset.interpolateTo(Vector(0,0,0), 0.5);
 
 		collideRadius = COLLIDE_RADIUS_NORMAL;
+		setCanLockToWall(true);
+		setCollisionAvoidanceData(COLLIDE_RANGE_NORMAL, COLLIDE_MOD_NORMAL);
 	}
 	break;
 	case FORM_SUN:
@@ -1606,9 +1609,13 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		position = bodyPosition;
 		dsq->continuity.warpLiToAvatar();
 		spiritBeaconEmitter.start();
+		setCanActivateStuff(true);
+		setCanLockToWall(true);
+		setCanBurst(true);
+		setDamageTarget(DT_WALLHURT, true);
 	break;
 	case FORM_BEAST:
-		//dsq->game->sceneColor3.interpolateTo(Vector(1, 1, 1), 0.5);
+		setCanSwimAgainstCurrents(false);
 	break;
 	case FORM_DUAL:
 		if (dsq->continuity.hasLi())
@@ -1618,6 +1625,9 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 			dsq->game->li->setState(STATE_IDLE);
 		}
 	break;
+	case FORM_NATURE:
+		setDamageTarget(DT_WALLHURT, true);
+		break;
 	default:
 		if (leftHandEmitter && rightHandEmitter)
 		{
@@ -1727,6 +1737,8 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		//refreshModel("NaijaFish", "");
 		
 		collideRadius = COLLIDE_RADIUS_FISH;
+		setCanLockToWall(false);
+		setCollisionAvoidanceData(COLLIDE_RANGE_FISH, COLLIDE_MOD_FISH);
 	}
 	break;
 	case FORM_SUN:
@@ -1758,42 +1770,13 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 			hair->setTexture("Naija/Cape-NatureForm");
 			hair->alphaMod = 1.0;
 		}
-		/*
-		skeletalSprite.loadSkin("ChildTeira");
-		refreshModel();
-		*/
-		/*
-		if (dsq->game->sceneNatureForm == "forest")
-		{
-			debugLog("Forest Form");
-			dsq->continuity.form = FORM_NATURE_FOREST;
-		}
-		else if (dsq->game->sceneNatureForm == "sun")
-		{
-			dsq->continuity.form = FORM_NATURE_SUN;
-			debugLog("Sun Form");
-		}
-		else if (dsq->game->sceneNatureForm == "fire")
-		{
-			dsq->continuity.form = FORM_NATURE_FIRE;
-			debugLog("Fire Form");
-		}
-		else if (dsq->game->sceneNatureForm == "dark")
-		{
-			dsq->continuity.form = FORM_NATURE_DARK;
-			debugLog("Dark Form");
-		}
-		else if (dsq->game->sceneNatureForm == "rock" || dsq->game->sceneNatureForm.empty())
-		{
-			dsq->continuity.form = FORM_NATURE_ROCK;
-			debugLog("Rock Form");
-		}
-		*/
+		setDamageTarget(DT_WALLHURT, false);
 
 	break;
 	case FORM_BEAST:
 	{
 		refreshModel("Naija", "BeastForm");
+		setCanSwimAgainstCurrents(true);
 	}
 	break;
 	case FORM_SPIRIT:
@@ -1801,6 +1784,10 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		bodyOffset = offset;
 		fallOffWall();
 		dsq->continuity.shiftWorlds();
+		setCanActivateStuff(false);
+		setCanLockToWall(false);
+		setCanBurst(false);
+		setDamageTarget(DT_WALLHURT, false);
 
 		if (onInit)
 		{
@@ -3495,8 +3482,8 @@ void Avatar::lockToWallCommon()
 void Avatar::lockToWall()
 {
 	if (riding) return;
-	if (inCurrent && dsq->continuity.form != FORM_BEAST) return;
-	if (dsq->continuity.form == FORM_FISH || dsq->continuity.form == FORM_SPIRIT) return;
+	if (inCurrent && !canSwimAgainstCurrents()) return;
+	if (!canLockToWall()) return;
 	if (state.lockedToWall) return;
 	if (vel.x == 0 && vel.y == 0) return;
 	if (dsq->game->isPaused()) return;
@@ -3594,7 +3581,7 @@ void Avatar::lockToWall()
 		}
 	}
 
-	if (dsq->game->getGrid(t)==OT_HURT && dsq->continuity.form != FORM_NATURE)
+	if (dsq->game->getGrid(t)==OT_HURT && isDamageTarget(DT_WALLHURT))
 	{
 		good = false;
 	}
@@ -4128,6 +4115,18 @@ Avatar::Avatar() : Entity(), ActionMapper()
 		collideRadius = COLLIDE_RADIUS_FISH;
 	else
 		collideRadius = COLLIDE_RADIUS_NORMAL;
+
+	// defaults for normal form
+	_canActivateStuff = true;
+	_canBurst = true;
+	_canLockToWall = true;
+	_canSwimAgainstCurrents = false;
+	_canCollideWithShots = true;
+
+	_collisionAvoidMod = COLLIDE_MOD_NORMAL;
+	_collisionAvoidRange = COLLIDE_RANGE_NORMAL;
+
+	_seeMapMode = SEE_MAP_DEFAULT;
 }
 
 void Avatar::revert()
@@ -4324,7 +4323,7 @@ void Avatar::startBurstCommon()
 
 void Avatar::startBurst()
 {
-	if (!riding && dsq->continuity.form != FORM_SPIRIT && (joystickMove || getVectorToCursor().getSquaredLength2D() > sqr(BURST_DISTANCE))
+	if (!riding && canBurst() && (joystickMove || getVectorToCursor().getSquaredLength2D() > sqr(BURST_DISTANCE))
 		&& getState() != STATE_PUSH && (!skeletalSprite.getCurrentAnimation() || (skeletalSprite.getCurrentAnimation()->name != "spin"))
 		&& _isUnderWater && !isActing(ACTION_ROLL))
 	{
@@ -4686,6 +4685,35 @@ void Avatar::action(int id, int state)
 	}
 }
 
+void Avatar::doBindSong()
+{
+	if (pullTarget)
+	{
+		pullTarget->stopPull();
+		pullTarget = 0;
+		core->sound->playSfx("Denied");
+	}
+	else
+	{
+		dsq->game->bindIngredients();
+		setNearestPullTarget();
+		if (!pullTarget)
+		{
+			core->sound->playSfx("Denied");
+		}
+		else
+		{
+			core->sound->playSfx("Bind");
+		}
+	}
+}
+
+void Avatar::doShieldSong()
+{
+	core->sound->playSfx("Shield-On");
+	activateAura(AURA_SHIELD);
+}
+
 void Avatar::render()
 {
 
@@ -4857,10 +4885,6 @@ void Avatar::clampVelocity()
 			withCurrent = true;
 		}
 	}
-
-
-
-
 
 	if (!inCurrent || (inCurrent && withCurrent))
 	{
@@ -5246,7 +5270,7 @@ void Avatar::updateWallJump(float dt)
 
 void Avatar::updateRoll(float dt)
 {
-	if (!inputEnabled || dsq->continuity.getWorldType() == WT_SPIRIT)
+	if (!inputEnabled || dsq->game->isWorldPaused())
 	{
 		if (rolling)
 			stopRoll();
@@ -5385,7 +5409,18 @@ void Avatar::setWasUnderWater()
 
 bool Avatar::canActivateStuff()
 {
-	return dsq->continuity.form != FORM_SPIRIT;
+	return _canActivateStuff;
+}
+
+void Avatar::setCanActivateStuff(bool on)
+{
+	_canActivateStuff = on;
+}
+
+void Avatar::setCollisionAvoidanceData(int range, float mod)
+{
+	_collisionAvoidRange = range;
+	_collisionAvoidMod = mod;
 }
 
 bool Avatar::canQuickSong()
@@ -6176,7 +6211,7 @@ void Avatar::onUpdate(float dt)
 
 	//if (core->getNestedMains() == 1)
 	{
-		if (getState() != STATE_TRANSFORM && dsq->continuity.getWorldType() == WT_NORMAL)
+		if (getState() != STATE_TRANSFORM && !dsq->game->isWorldPaused())
 		{
 			formAbilityUpdate(dt);
 		}
@@ -6410,7 +6445,7 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 
-		if (!state.lockedToWall && _isUnderWater && dsq->continuity.getWorldType() == WT_NORMAL && canMove)
+		if (!state.lockedToWall && _isUnderWater && !dsq->game->isWorldPaused() && canMove)
 		{
 			if (bursting)
 			{
@@ -7054,13 +7089,9 @@ void Avatar::onUpdate(float dt)
 
 		}
 
-		if (!state.lockedToWall && !bursting && _isUnderWater && swimming && !isFollowingPath())
+		if (!state.lockedToWall && !bursting && _isUnderWater && swimming && !isFollowingPath() && _collisionAvoidRange > 0)
 		{
-			//debugLog("collision avoidance");
-			if (dsq->continuity.form == FORM_FISH)
-				doCollisionAvoidance(dt, 1, 0.1, 0, 800, OT_HURT);
-			else
-				doCollisionAvoidance(dt, 2, 1.0, 0, 800, OT_HURT);
+			doCollisionAvoidance(dt, _collisionAvoidRange, _collisionAvoidMod, 0, 800, OT_HURT);
 		}
 
 		if (!game->isShuttingDownGameState())
@@ -7118,7 +7149,6 @@ void Avatar::onUpdate(float dt)
 						else
 							omov -= mov;
 
-						lastLastPosition = position;
 						lastPosition = position;
 						Vector newPosition = position + mov;
 						//Vector testPosition = position + (vel *dt)*2;
@@ -7127,11 +7157,11 @@ void Avatar::onUpdate(float dt)
 						if (dsq->game->collideCircleWithGrid(position, collideRadius))
 						{
 							if (dsq->game->lastCollideTileType == OT_HURT
-								&& dsq->continuity.getWorldType() != WT_SPIRIT
-								&& dsq->continuity.form != FORM_NATURE)
+								&& isDamageTarget(DT_WALLHURT))
 							{
 								DamageData d;
 								d.damage = 1;
+								d.damageType = DT_WALLHURT;
 								damage(d);
 								vel2 = Vector(0,0,0);
 								//doCollisionAvoidance(1, 3, 1);
@@ -7294,7 +7324,8 @@ void Avatar::onUpdate(float dt)
 		rightHandEmitter->position = boneRightHand->getWorldCollidePosition(Vector(0,16));
 	}
 
-	dsq->game->handleShotCollisions(this, (activeAura == AURA_SHIELD));
+	if(canCollideWithShots())
+		dsq->game->handleShotCollisions(this, (activeAura == AURA_SHIELD));
 }
 
 
@@ -7314,7 +7345,7 @@ void Avatar::checkNearWall()
 		{
 			t.x = oT.x + v.x*i;
 			t.y = oT.y + v.y*i;
-			if (dsq->game->isObstructed(t) && dsq->game->getGrid(t) != OT_HURT)
+			if (dsq->game->isObstructed(t, ~OT_HURT))
 			{
 				obs = true;
 				break;

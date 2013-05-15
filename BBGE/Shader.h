@@ -22,36 +22,74 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define BBGE_SHADER_H
 
 #include "Base.h"
+#include "ScriptObject.h"
 
-class Shader
+class Shader : public ScriptObject
 {
 public:
 	Shader();
 	~Shader();
-	bool isLoaded();
+	bool isLoaded() const;
 	void load(const std::string &file, const std::string &fragFile);
+	void loadSrc(const char *vertCode, const char *fragCode);
 	void reload();
+	void unload();
 	void bind();
 	void unbind();
-	void setMode(int mode);
-	void setValue(float x, float y, float z, float w);
-	std::string vertFile, fragFile;
+
+	void setInt(const char *name, int x, int y = 0, int z = 0, int w = 0);
+	void setFloat(const char *name, float x, float y = 0, float z = 0, float w = 0);
+	// TODO: other setters needed?
+
+
 protected:
+	std::string vertFile, fragFile;
 #ifdef BBGE_BUILD_OPENGL
 	GLuint g_programObj;
-	GLuint g_vertexShader;
-	GLuint g_fragmentShader;
-	GLuint g_location_texture;
-	GLuint g_location_mode;
-	GLuint g_location_value;
+	int numUniforms;
 #endif
-	int mode;
-	float vx, vy, vz, vw;
-	bool loaded;
 
+private:
 	static void staticInit();
 	static bool _wasInited;
 	static bool _useShaders;
+
+	static unsigned int _compileShader(int type, const char *src, char *errbuf, size_t errbufsize);
+
+	struct Uniform
+	{
+		int location; // GL location variable
+		int type;
+		bool dirty; // need to flush if true
+		union
+		{
+			struct
+			{
+				int i[4];
+			};
+			struct
+			{
+				float f[4];
+			};
+		} data;
+		char name[32];
+
+		bool operator< (const Uniform&) const;
+	};
+
+	static bool _sortUniform(const Uniform& a, const char *bname);
+
+	void _queryUniforms();
+	void _flushUniforms();
+	void _registerUniform();
+
+	void _setUniform(Uniform *u);
+	int _getUniformIndex(const char *name);
+
+	typedef std::vector<Uniform> UniformVec;
+	UniformVec uniforms;
+
+	bool uniformsDirty;
 };
 
 #endif

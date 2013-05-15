@@ -1233,6 +1233,8 @@ Game::Game() : StateObject()
 
 	loadEntityTypeList();
 
+	lastCollideMaskIndex = -1;
+	worldPaused = false;
 
 }
 
@@ -5717,7 +5719,7 @@ void Game::updateParticlePause()
 	{
 		core->particlesPaused = 2;
 	}
-	else if (dsq->continuity.getWorldType() == WT_SPIRIT)
+	else if (this->isWorldPaused())
 	{
 		core->particlesPaused = 1;
 	}
@@ -8356,7 +8358,7 @@ void Game::registerSporeDrop(const Vector &pos, int t)
 
 bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 {
-	if (!shot->isHitEnts())
+	if (!shot->isHitEnts() || shot->firer == e)
 	{
 		return false;
 	}
@@ -8367,24 +8369,17 @@ bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 	}
 	if (e->getEntityType() == ET_ENEMY)
 	{
-		if (shot->firer != e)
+		if (shot->getDamageType() == DT_AVATAR_BITE)
 		{
-			if (shot->getDamageType() == DT_AVATAR_BITE)
+			Avatar::BittenEntities::iterator i;
+			for (i = avatar->bittenEntities.begin(); i != avatar->bittenEntities.end(); i++)
 			{
-				Avatar::BittenEntities::iterator i;
-				for (i = avatar->bittenEntities.begin(); i != avatar->bittenEntities.end(); i++)
+				if (e == (*i))
 				{
-					if (e == (*i))
-					{
-						return false;
-					}
+					return false;
 				}
-				return true;
 			}
-		}
-		else
-		{
-			return false;
+			return true;
 		}
 	}
 	else if (e->getEntityType() == ET_AVATAR)
@@ -9977,7 +9972,7 @@ void Game::update(float dt)
 
 	if (avatar)
 	{
-		tintColor.update(dt);
+		/*tintColor.update(dt);
 		if (core->afterEffectManager)
 		{
 			if (tintColor.isInterpolating())
@@ -9986,7 +9981,7 @@ void Game::update(float dt)
 				core->afterEffectManager->setActiveShader(AS_NONE);
 
 			core->afterEffectManager->glowShader.setValue(tintColor.x, tintColor.y, tintColor.z, 1);
-		}
+		}*/
 
 		if (avatar->isRolling())
 			particleManager->addInfluence(ParticleInfluence(avatar->position, 300, 800, true));

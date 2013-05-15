@@ -125,6 +125,7 @@ public:
 	int textureWidth, textureHeight;
 
 	Shader blurShader, bwShader, washoutShader, motionBlurShader, glowShader;
+	Shader *scriptShader;
 
 	Vector ** drawGrid;	
 

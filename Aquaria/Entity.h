@@ -123,6 +123,7 @@ enum DamageType
 	DT_CRUSH				= 1032,
 	DT_SPIKES				= 1033,
 	DT_STEAM				= 1034,
+	DT_WALLHURT				= 1035,
 	DT_REALMAX
 };
 
@@ -436,6 +437,7 @@ public:
 	void setDieTimer(float v) { dieTimer = v; }
 	float getHealthPerc();
 	void setDeathScene(bool v);
+	bool isDeathScene() const { return deathScene; }
 	void generateCollisionMask(int ovrCollideRadius=0);
 	DamageData lastDamage;
 	bool checkSplash(const Vector &override=Vector(0,0,0));
@@ -450,7 +452,7 @@ public:
 	//bool registerEntityDied;
 	bool clampToSurface(int tcheck=0, Vector usePos=Vector(0,0), TileVector hitTile=TileVector(0,0));
 	bool checkSurface(int tcheck, int state, float statet);
-	static Shader blurShader;
+	//static Shader blurShader;
 	std::string naijaReaction;
 	Vector lookAtPoint;
 	Vector getLookAtPoint();
@@ -488,6 +490,8 @@ public:
 	void setHairHeadPosition(const Vector &pos);
 	void exertHairForce(const Vector &force, float dt);
 
+	bool isEntityInside();
+
 protected:
 	bool calledEntityDied;
 	Path *waterBubble;
@@ -514,7 +518,7 @@ protected:
 	int lance;
 	Bone *lanceBone;
 	void updateLance(float dt);
-	InterpolatedVector blurShaderAnim;
+	//InterpolatedVector blurShaderAnim;
 
 
 	int fhScale, fvScale;

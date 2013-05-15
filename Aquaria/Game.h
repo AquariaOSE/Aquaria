@@ -892,7 +892,8 @@ public:
 	std::string getNoteName(int n, const std::string &pre="");
 
 	void selectEntityFromGroups();
-	InterpolatedVector cameraInterp, tintColor;
+	InterpolatedVector cameraInterp;
+	//InterpolatedVector tintColor;
 	float getWaterLevel();
 	void setMusicToPlay(const std::string &musicToPlay);
 	Vector lastCollidePosition;
@@ -1000,6 +1001,9 @@ public:
 
 	void toggleHelpScreen(bool on, const std::string &label="");
 	void onToggleHelpScreen();
+
+	void setWorldPaused(bool b) { worldPaused = b; }
+	bool isWorldPaused() const { return worldPaused; }
 
 protected:
 
@@ -1158,6 +1162,7 @@ protected:
 	std::vector<AquariaMenuItem*> menu;
 	Quad *menuBg, *menuBg2;
 	bool paused;
+	bool worldPaused;
 
 	Vector getClosestPointOnTriangle(Vector a, Vector b, Vector c, Vector p);
 	Vector getClosestPointOnLine(Vector a, Vector b, Vector p);

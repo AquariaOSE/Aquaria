@@ -258,11 +258,18 @@ void MiniMapRender::onUpdate(float dt)
 
 	if (dsq->darkLayer.isUsed() && dsq->game->avatar)
 	{
-		if (dsq->continuity.form != FORM_SUN && dsq->game->avatar->isInDarkness())
+		const SeeMapMode mapmode = dsq->game->avatar->getSeeMapMode();
+
+		if(mapmode == SEE_MAP_ALWAYS)
+			radarHide = false;
+		else if(mapmode == SEE_MAP_NEVER)
+			radarHide = true;
+		else if (dsq->continuity.form != FORM_SUN && dsq->game->avatar->isInDarkness())
 		{
 			radarHide = true;
 		}
-		else
+		
+		if(!radarHide)
 		{
 			for (Path *p = dsq->game->getFirstPathOfType(PATH_RADARHIDE); p; p = p->nextOfType)
 			{
@@ -273,6 +280,7 @@ void MiniMapRender::onUpdate(float dt)
 				}
 			}
 		}
+
 		float t = dt*2;
 		if (radarHide)
 		{

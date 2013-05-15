@@ -1840,11 +1840,13 @@ void Core::setSDLGLAttributes()
 #define GLAPIENTRY
 #endif
 
+unsigned int Core::dbg_numRenderCalls = 0;
+
 #ifdef BBGE_BUILD_OPENGL_DYNAMIC
 #define GL_FUNC(ret,fn,params,call,rt) \
     extern "C" { \
         static ret (GLAPIENTRY *p##fn) params = NULL; \
-        ret GLAPIENTRY fn params { rt p##fn call; } \
+        ret GLAPIENTRY fn params { ++Core::dbg_numRenderCalls; rt p##fn call; } \
     }
 #include "OpenGLStubs.h"
 #undef GL_FUNC
@@ -3005,6 +3007,8 @@ void Core::main(float runTime)
 			break;
 
 		updateCullData();
+
+		dbg_numRenderCalls = 0;
 
 		if (settings.renderOn)
 		{

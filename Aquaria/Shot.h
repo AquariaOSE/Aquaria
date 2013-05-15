@@ -128,7 +128,6 @@ public:
 protected:
 
 	float waveTimer;
-	bool fired;
 
 	void suicide();
 
@@ -141,6 +140,8 @@ protected:
 	void onEndOfLife();
 
 	bool dead;
+	bool fired;
+	bool enqueuedForDelete;
 	void onUpdate(float dt);
 
 private:

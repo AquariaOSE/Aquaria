@@ -53,12 +53,7 @@ Path::Path()
 	spawnEnemyNumber = 0;
 	spawnEnemyDistance = 0;
 	warpType = 0;
-	/*
-	rect.x1 = -10;
-	rect.x2 = 20;
-	rect.y1 = -256;
-	rect.y2 = 256;
-	*/
+	spiritFreeze = true;
 }
 
 void Path::clampPosition(Vector *pos, int radius)
@@ -484,7 +479,7 @@ void Path::init()
 
 void Path::update(float dt)
 {
-	if (!dsq->game->isPaused() && dsq->continuity.getWorldType() == WT_NORMAL)
+	if (!dsq->game->isPaused() && !(spiritFreeze && dsq->game->isWorldPaused()))
 	{
 		if (addEmitter && emitter)
 		{
@@ -523,7 +518,7 @@ void Path::update(float dt)
 		{
 			spawnedEntity = 0;
 		}
-		if (pathType == PATH_CURRENT && dsq->continuity.getWorldType() == WT_NORMAL)
+		if (pathType == PATH_CURRENT && !dsq->game->isWorldPaused())
 		{
 			animOffset -= currentMod*(dt/830);
 			/*
@@ -559,7 +554,7 @@ void Path::update(float dt)
 			}
 		}
 
-		if (pathType == PATH_STEAM && dsq->continuity.getWorldType() == WT_NORMAL && effectOn)
+		if (pathType == PATH_STEAM && !dsq->game->isWorldPaused() && effectOn)
 		{
 			animOffset -= 1000*0.00002f;
 

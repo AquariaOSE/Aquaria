@@ -41,7 +41,7 @@ void SteamRender::onUpdate(float dt)
 void SteamRender::onRender()
 {
 #ifdef BBGE_BUILD_OPENGL
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 	//int qs = 0;
 
 	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
@@ -121,7 +121,7 @@ void SteamRender::onRender()
 		}
 	}
 
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 #endif
 }
 

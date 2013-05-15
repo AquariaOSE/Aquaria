@@ -18,10 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
 #include "Shader.h"
-#ifdef BBGE_BUILD_WINDOWS
-	#include <sys/stat.h>
-#endif
+#include "algorithmx.h"
 
 #ifdef BBGE_BUILD_SHADERS
 	// GL_ARB_shader_objects
@@ -36,8 +35,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	PFNGLGETINFOLOGARBPROC           glGetInfoLogARB           = NULL;
 	PFNGLLINKPROGRAMARBPROC          glLinkProgramARB          = NULL;
 	PFNGLGETUNIFORMLOCATIONARBPROC   glGetUniformLocationARB   = NULL;
-	PFNGLUNIFORM4FARBPROC            glUniform4fARB            = NULL;
-	PFNGLUNIFORM1IARBPROC            glUniform1iARB            = NULL;
+	PFNGLGETACTIVEUNIFORMARBPROC     glGetActiveUniformARB     = NULL;
+	PFNGLUNIFORM1FVARBPROC           glUniform1fvARB            = NULL;
+	PFNGLUNIFORM2FVARBPROC           glUniform2fvARB            = NULL;
+	PFNGLUNIFORM3FVARBPROC           glUniform3fvARB            = NULL;
+	PFNGLUNIFORM4FVARBPROC           glUniform4fvARB            = NULL;
+	PFNGLUNIFORM1IVARBPROC           glUniform1ivARB            = NULL;
+	PFNGLUNIFORM2IVARBPROC           glUniform2ivARB            = NULL;
+	PFNGLUNIFORM3IVARBPROC           glUniform3ivARB            = NULL;
+	PFNGLUNIFORM4IVARBPROC           glUniform4ivARB            = NULL;
+
 #endif
 
 bool Shader::_wasInited = false;
@@ -73,22 +80,6 @@ void Shader::staticInit()
 	}
 	else
 	{
-#ifdef BBGE_BUILD_GLFW
-		glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)glfwGetProcAddress("glCreateProgramObjectARB");
-		glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)glfwGetProcAddress("glDeleteObjectARB");
-		glUseProgramObjectARB     = (PFNGLUSEPROGRAMOBJECTARBPROC)glfwGetProcAddress("glUseProgramObjectARB");
-		glCreateShaderObjectARB   = (PFNGLCREATESHADEROBJECTARBPROC)glfwGetProcAddress("glCreateShaderObjectARB");
-		glShaderSourceARB         = (PFNGLSHADERSOURCEARBPROC)glfwGetProcAddress("glShaderSourceARB");
-		glCompileShaderARB        = (PFNGLCOMPILESHADERARBPROC)glfwGetProcAddress("glCompileShaderARB");
-		glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)glfwGetProcAddress("glGetObjectParameterivARB");
-		glAttachObjectARB         = (PFNGLATTACHOBJECTARBPROC)glfwGetProcAddress("glAttachObjectARB");
-		glGetInfoLogARB           = (PFNGLGETINFOLOGARBPROC)glfwGetProcAddress("glGetInfoLogARB");
-		glLinkProgramARB          = (PFNGLLINKPROGRAMARBPROC)glfwGetProcAddress("glLinkProgramARB");
-		glGetUniformLocationARB   = (PFNGLGETUNIFORMLOCATIONARBPROC)glfwGetProcAddress("glGetUniformLocationARB");
-		glUniform4fARB            = (PFNGLUNIFORM4FARBPROC)glfwGetProcAddress("glUniform4fARB");
-		glUniform1iARB            = (PFNGLUNIFORM1IARBPROC)glfwGetProcAddress("glUniform1iARB");
-#endif
-
 #ifdef BBGE_BUILD_SDL
 		glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
 		glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)SDL_GL_GetProcAddress("glDeleteObjectARB");
@@ -101,15 +92,23 @@ void Shader::staticInit()
 		glGetInfoLogARB           = (PFNGLGETINFOLOGARBPROC)SDL_GL_GetProcAddress("glGetInfoLogARB");
 		glLinkProgramARB          = (PFNGLLINKPROGRAMARBPROC)SDL_GL_GetProcAddress("glLinkProgramARB");
 		glGetUniformLocationARB   = (PFNGLGETUNIFORMLOCATIONARBPROC)SDL_GL_GetProcAddress("glGetUniformLocationARB");
-		glUniform4fARB            = (PFNGLUNIFORM4FARBPROC)SDL_GL_GetProcAddress("glUniform4fARB");
-		glUniform1iARB            = (PFNGLUNIFORM1IARBPROC)SDL_GL_GetProcAddress("glUniform1iARB");
+		glGetActiveUniformARB     = (PFNGLGETACTIVEUNIFORMARBPROC)SDL_GL_GetProcAddress("glGetActiveUniformARB");
+		glUniform1fvARB           = (PFNGLUNIFORM1FVARBPROC)SDL_GL_GetProcAddress("glUniform1fvARB");
+		glUniform2fvARB           = (PFNGLUNIFORM2FVARBPROC)SDL_GL_GetProcAddress("glUniform2fvARB");
+		glUniform3fvARB           = (PFNGLUNIFORM3FVARBPROC)SDL_GL_GetProcAddress("glUniform3fvARB");
+		glUniform4fvARB           = (PFNGLUNIFORM4FVARBPROC)SDL_GL_GetProcAddress("glUniform4fvARB");
+		glUniform1ivARB           = (PFNGLUNIFORM1IVARBPROC)SDL_GL_GetProcAddress("glUniform1ivARB");
+		glUniform2ivARB           = (PFNGLUNIFORM2IVARBPROC)SDL_GL_GetProcAddress("glUniform2ivARB");
+		glUniform3ivARB           = (PFNGLUNIFORM3IVARBPROC)SDL_GL_GetProcAddress("glUniform3ivARB");
+		glUniform4ivARB           = (PFNGLUNIFORM4IVARBPROC)SDL_GL_GetProcAddress("glUniform4ivARB");
 #endif
 
 		if( !glCreateProgramObjectARB || !glDeleteObjectARB || !glUseProgramObjectARB ||
 			!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB || 
 			!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB || 
-			!glLinkProgramARB || !glGetUniformLocationARB || !glUniform4fARB ||
-			!glUniform1iARB )
+			!glLinkProgramARB || !glGetUniformLocationARB || !glGetActiveUniformARB ||
+			!glUniform1fvARB || !glUniform2fvARB || !glUniform3fvARB || !glUniform4fvARB ||
+			!glUniform1ivARB || !glUniform2ivARB || !glUniform3ivARB || !glUniform4ivARB)
 		{
 			glCreateProgramObjectARB = 0;
 			debugLog("One or more GL_ARB_shader_objects functions were not found");
@@ -132,88 +131,36 @@ end:
 
 Shader::Shader()
 {
-	loaded = false;
-	mode = 0;
+	addType(SCO_SHADER);
+	numUniforms = -1;
+	uniformsDirty = false;
+
 #ifdef BBGE_BUILD_OPENGL
-	g_vertexShader = 0;
-	g_fragmentShader = 0;
 	g_programObj = 0;
-	vx = vy = vz = vw = 0;
-	g_location_texture = 0;
-	g_location_mode = 0;
-	g_location_value = 0;
 #endif
 }
 
 Shader::~Shader()
 {
+	unload();
+}
+
+void Shader::unload()
+{
 #ifdef BBGE_BUILD_SHADERS
 	if (!_useShaders)
 		return;
-	if (g_vertexShader)
-		glDeleteObjectARB( g_vertexShader );
-	if (g_fragmentShader)
-		glDeleteObjectARB( g_fragmentShader );
 	if (g_programObj)
+	{
 		glDeleteObjectARB( g_programObj );
+		g_programObj = 0;
+	}
 #endif
 }
 
-bool Shader::isLoaded()
+bool Shader::isLoaded() const
 {
-	return loaded;
-}
-
-void Shader::setMode(int mode)
-{
-	this->mode = mode;
-}
-
-void Shader::setValue(float x, float y, float z, float w)
-{
-	vx = x;
-	vy = y;
-	vz = z;
-	vw = w;
-}
-
-unsigned char *readShaderFile( const char *fileName )
-{
-	debugLog("readShaderFile()");
-#ifdef BBGE_BUILD_WINDOWS
-    FILE *file = fopen( fileName, "r" ); // FIXME: should this code ever be re-activated, adjust to VFS! -- fg
-
-    if( file == NULL )
-    {
-        errorLog("Cannot open shader file!");
-		return 0;
-    }
-
-    struct _stat fileStats;
-
-    if( _stat( fileName, &fileStats ) != 0 )
-    {
-        errorLog("Cannot get file stats for shader file!");
-        return 0;
-    }
-
-
-    unsigned char *buffer = new unsigned char[fileStats.st_size];
-
-	int bytes = fread( buffer, 1, fileStats.st_size, file );
-
-    buffer[bytes] = 0;
-
-	fclose( file );
-
-	debugLog("End readShaderFile()");
-
-	return buffer;
-	
-#else
-	debugLog("End readShaderFile()");
-	return 0;
-#endif
+	return g_programObj != 0;
 }
 
 void Shader::reload()
@@ -226,13 +173,8 @@ void Shader::bind()
 #ifdef BBGE_BUILD_SHADERS
 	if (!_useShaders)
 		return;
-	glUseProgramObjectARB( g_programObj );
-	if( g_location_texture != -1 )
-		glUniform1iARB( g_location_texture, 0 );
-	if ( g_location_mode )
-		glUniform1iARB( g_location_mode, mode);
-	if ( g_location_value )
-		glUniform4fARB( g_location_value, vx, vy, vz, vw);
+	glUseProgramObjectARB(g_programObj);
+	_flushUniforms();
 #endif
 }
 
@@ -241,150 +183,266 @@ void Shader::unbind()
 #ifdef BBGE_BUILD_SHADERS
 	if (!_useShaders)
 		return;
-	glUseProgramObjectARB( NULL );
+	glUseProgramObjectARB(0);
 #endif
+}
+
+unsigned int Shader::_compileShader(int type, const char *src, char *errbuf, size_t errbufsize)
+{
+#ifdef BBGE_BUILD_SHADERS
+	GLint compiled = 0;
+	GLhandleARB handle = glCreateShaderObjectARB(type);
+
+	glShaderSourceARB( handle, 1, &src, NULL );
+	glCompileShaderARB( handle);
+
+	glGetObjectParameterivARB(handle, GL_OBJECT_COMPILE_STATUS_ARB, &compiled);
+	glGetInfoLogARB(handle, errbufsize, NULL, errbuf);
+	if(!compiled)
+	{
+		glDeleteObjectARB(handle);
+		handle = 0;
+	}
+	GLint err = glGetError();
+	if(err != GL_NO_ERROR)
+	{
+		std::ostringstream os;
+		os << "Shader::_compileShader: Unexpected error " << err;
+		errorLog(os.str());
+	}
+	return handle;
+#endif
+	return 0;
 }
 
 void Shader::load(const std::string &file, const std::string &fragFile)
 {
 	staticInit();
-	loaded = false;
-
-#ifdef BBGE_BUILD_SHADERS
 	if(!_useShaders)
 		return;
 
 	debugLog("Shader::load("+file+", "+fragFile+")");
 
-	g_location_texture	= 0;
-	g_location_mode		= 0;
-	g_location_value	= 0;
+	this->vertFile = file;
+	this->fragFile = fragFile;
 
-	try
-	{
+	char *vertCode = file.length()     ? readFile(file)     : NULL;
+	char *fragCode = fragFile.length() ? readFile(fragFile) : NULL;
 
-		debugLog("Shader::load 1");
-		this->vertFile = file;
-		this->fragFile = fragFile;
-		//
-		// If the required extension is present, get the addresses of its 
-		// functions that we wish to use...
-		//
+	loadSrc(vertCode, fragCode);
 
-		const char *vertexShaderStrings[1];
-		const char *fragmentShaderStrings[1];
-		GLint bVertCompiled;
-		GLint bFragCompiled;
-		GLint bLinked;
-		char str[4096];
-
-		//
-		// Create the vertex shader...
-		//
-
-		debugLog("Shader::load 2");
-
-		g_vertexShader = glCreateShaderObjectARB( GL_VERTEX_SHADER_ARB );
-
-		unsigned char *vertexShaderAssembly = readShaderFile( file.c_str() );
-		vertexShaderStrings[0] = (char*)vertexShaderAssembly;
-		glShaderSourceARB( g_vertexShader, 1, vertexShaderStrings, NULL );
-		glCompileShaderARB( g_vertexShader);
-		delete[] vertexShaderAssembly;
-
-		glGetObjectParameterivARB( g_vertexShader, GL_OBJECT_COMPILE_STATUS_ARB, 
-								&bVertCompiled );
-		if( bVertCompiled  == false )
-		//if (true)
-		{
-			glGetInfoLogARB(g_vertexShader, sizeof(str), NULL, str);
-			std::ostringstream os;
-			os << "Vertex Shader Compile Error: " << str;
-			debugLog(os.str());
-			return;
-		}
-
-		//
-		// Create the fragment shader...
-		//
-
-		debugLog("Shader::load 3");
-
-		g_fragmentShader = glCreateShaderObjectARB( GL_FRAGMENT_SHADER_ARB );
-
-		unsigned char *fragmentShaderAssembly = readShaderFile( fragFile.c_str() );
-		fragmentShaderStrings[0] = (char*)fragmentShaderAssembly;
-		glShaderSourceARB( g_fragmentShader, 1, fragmentShaderStrings, NULL );
-		glCompileShaderARB( g_fragmentShader );
-		delete[] fragmentShaderAssembly;
-
-		glGetObjectParameterivARB( g_fragmentShader, GL_OBJECT_COMPILE_STATUS_ARB, 
-								&bFragCompiled );
-		if( bFragCompiled == false )
-		{
-			glGetInfoLogARB( g_fragmentShader, sizeof(str), NULL, str );
-			std::ostringstream os;
-			os << "Fragment Shader Compile Error: " << str;
-			debugLog(os.str());
-			return;
-		}
-
-		debugLog("Shader::load 4");
-
-		//
-		// Create a program object and attach the two compiled shaders...
-		//
-		
-
-		g_programObj = glCreateProgramObjectARB();
-
-		if (!g_programObj || !g_vertexShader || !g_fragmentShader)
-		{
-			debugLog("programObj / vertexShader / fragmentShader problem");
-			return;
-		}
-
-		glAttachObjectARB( g_programObj, g_vertexShader );
-		glAttachObjectARB( g_programObj, g_fragmentShader );
-
-		//
-		// Link the program object and print out the info log...
-		//
-
-		glLinkProgramARB( g_programObj );
-		glGetObjectParameterivARB( g_programObj, GL_OBJECT_LINK_STATUS_ARB, &bLinked );
-
-		debugLog("Shader::load 5");
-
-		if( bLinked == false )
-		{
-			glGetInfoLogARB( g_programObj, sizeof(str), NULL, str );
-			std::ostringstream os;
-			os << "Shader Linking Error: " << str;
-			debugLog(os.str());
-			return;
-		}
-
-		//
-		// Locate some parameters by name so we can set them later...
-		//
-
-		debugLog("Shader::load 6");
-
-		g_location_texture = glGetUniformLocationARB( g_programObj, "tex" );
-		g_location_mode = glGetUniformLocationARB( g_programObj, "mode" );
-		g_location_value = glGetUniformLocationARB( g_programObj, "value" );
-
-		debugLog("Shader::load 7");
-
-		loaded = true;
-	}
-	catch(...)
-	{
-		debugLog("caught exception in shader::load");
-		loaded = false;
-	}
-#endif
-	debugLog("End Shader::load()");
+	delete [] vertCode;
+	delete [] fragCode;
 }
 
+void Shader::loadSrc(const char *vertCode, const char *fragCode)
+{
+	staticInit();
+	unload();
+
+	if(!_useShaders)
+		return;
+
+#ifdef BBGE_BUILD_SHADERS
+
+	char str[4096];
+
+	GLhandleARB vertexShader = 0;
+	GLhandleARB fragmentShader = 0;
+
+	//
+	// Create the vertex shader...
+	//
+	if(vertCode && *vertCode && !(vertexShader = _compileShader(GL_VERTEX_SHADER_ARB, vertCode, str, sizeof(str))))
+	{
+		std::ostringstream os;
+		os << "Vertex Shader Compile Error [" << vertFile << "]:\n" << str;
+		errorLog(os.str());
+		return;
+	}
+
+	//
+	// Create the fragment shader...
+	//
+	if(fragCode && *fragCode && !(fragmentShader = _compileShader(GL_FRAGMENT_SHADER_ARB, fragCode, str, sizeof(str))))
+	{
+		std::ostringstream os;
+		os << "Fragment Shader Compile Error [" << fragFile << "]:\n" << str;
+		errorLog(os.str());
+		return;
+	}
+
+	//
+	// Create a program object and attach the two compiled shaders...
+	//
+
+	g_programObj = glCreateProgramObjectARB();
+
+	if (!(g_programObj && (vertexShader || fragmentShader)))
+	{
+		errorLog("programObj / vertexShader / fragmentShader problem");
+		unload();
+		return;
+	}
+
+	//
+	// Link the program object and print out the info log...
+	//
+	if(vertexShader)
+		glAttachObjectARB( g_programObj, vertexShader );
+	if(fragmentShader)
+		glAttachObjectARB( g_programObj, fragmentShader );
+
+	glLinkProgramARB( g_programObj );
+
+	// Shader objects will be deleted as soon as the program object is deleted
+	if(vertexShader)
+		glDeleteObjectARB(vertexShader);
+	if(fragmentShader)
+		glDeleteObjectARB(fragmentShader);
+
+	GLint bLinked;
+	glGetObjectParameterivARB( g_programObj, GL_OBJECT_LINK_STATUS_ARB, &bLinked );
+
+
+	if(!bLinked)
+	{
+		glGetInfoLogARB( g_programObj, sizeof(str), NULL, str );
+		std::ostringstream os;
+		os << "Shader Linking Error: " << str;
+		errorLog(os.str());
+		unload();
+		return;
+	}
+
+	_queryUniforms();
+
+#endif
+}
+
+void Shader::_setUniform(Uniform *u)
+{
+	/*if(u->location == -1)
+	{
+		u->location = glGetUniformLocationARB(g_programObj, u->name);
+		if(u->location == -1)
+		{
+			u->dirty = false;
+			return;
+		}
+	}*/
+	switch(u->type)
+	{
+		case GL_FLOAT:          glUniform1fvARB(u->location, 1, u->data.f); break;
+		case GL_FLOAT_VEC2_ARB: glUniform2fvARB(u->location, 1, u->data.f); break;
+		case GL_FLOAT_VEC3_ARB: glUniform3fvARB(u->location, 1, u->data.f); break;
+		case GL_FLOAT_VEC4_ARB: glUniform4fvARB(u->location, 1, u->data.f); break;
+		case GL_INT:            glUniform1ivARB(u->location, 1, u->data.i); break;
+		case GL_INT_VEC2_ARB:   glUniform2ivARB(u->location, 1, u->data.i); break;
+		case GL_INT_VEC3_ARB:   glUniform3ivARB(u->location, 1, u->data.i); break;
+		case GL_INT_VEC4_ARB:   glUniform4ivARB(u->location, 1, u->data.i); break;
+	}
+	u->dirty = false;
+}
+
+void Shader::_flushUniforms()
+{
+	if(!uniformsDirty)
+		return;
+	uniformsDirty = false;
+
+	for(size_t i = 0; i < uniforms.size(); ++i)
+	{
+		Uniform &u = uniforms[i];
+		if(u.dirty)
+			_setUniform(&u);
+	}
+}
+
+// for sorting
+bool Shader::_sortUniform(const Uniform& a, const char *bname)
+{
+	return strcmp(a.name, bname) < 0;
+}
+
+bool Shader::Uniform::operator< (const Uniform& b) const
+{
+	return Shader::_sortUniform(*this, &b.name[0]);
+}
+
+void Shader::_queryUniforms()
+{
+	glGetObjectParameterivARB(g_programObj, GL_OBJECT_ACTIVE_UNIFORMS_ARB , &numUniforms);
+
+	if (numUniforms <= 0)
+		return;
+
+	uniforms.reserve(numUniforms);
+
+	for (unsigned int i = 0; i < numUniforms; ++i)
+	{
+		Uniform u;
+		GLint size = 0;
+		GLenum type = 0;
+		glGetActiveUniformARB(g_programObj, i, sizeof(u.name), NULL, &size, &type, &u.name[0]);
+		if(!type || !size)
+			continue;
+		u.location = glGetUniformLocationARB(g_programObj, u.name);
+		if(u.location == -1)
+			continue;
+		u.dirty = false;
+		u.type = type;
+		memset(&u.data, 0, sizeof(u.data));
+
+		uniforms.push_back(u);
+	}
+
+	// sort to be able to do binary search later
+	std::sort(uniforms.begin(), uniforms.end());
+}
+
+int Shader::_getUniformIndex(const char *name)
+{
+	// binary search
+	UniformVec::iterator it = stdx_fg::lower_bound(uniforms.begin(), uniforms.end(), name, _sortUniform);
+	// because lower_bound returns the first element that compares less, it might not be the correct one
+	if(it != uniforms.end() && strcmp(it->name, name))
+		return -1;
+	return int(it - uniforms.begin());
+}
+
+void Shader::setInt(const char *name, int x, int y /* = 0 */, int z /* = 0 */, int w /* = 0 */)
+{
+#if BBGE_BUILD_SHADERS
+	if(!g_programObj || numUniforms <= 0)
+		return;
+	int idx = _getUniformIndex(name);
+	if(unsigned(idx) >= uniforms.size())
+		return;
+	Uniform& u = uniforms[idx];
+	u.data.i[0] = x;
+	u.data.i[1] = y;
+	u.data.i[2] = z;
+	u.data.i[3] = w;
+	u.dirty = true;
+	uniformsDirty = true;
+#endif
+}
+
+void Shader::setFloat(const char *name, float x, float y /* = 0 */, float z /* = 0 */, float w /* = 0 */)
+{
+#if BBGE_BUILD_SHADERS
+	if(!g_programObj || numUniforms <= 0)
+		return;
+	int idx = _getUniformIndex(name);
+	if(unsigned(idx) >= uniforms.size())
+		return;
+	Uniform& u = uniforms[idx];
+	u.data.f[0] = x;
+	u.data.f[1] = y;
+	u.data.f[2] = z;
+	u.data.f[3] = w;
+	u.dirty = true;
+	uniformsDirty = true;
+#endif
+}

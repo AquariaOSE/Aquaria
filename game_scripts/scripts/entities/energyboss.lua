@@ -367,7 +367,7 @@ function update(me, dt)
 		end
 	end
 	if entity_isState(me, STATE_MOVING) and entity_x(me) >= node_x(v.maxMove) then
-		if entity_isInterpolating() then
+		if entity_isInterpolating(me) then
 			entity_animate(me, "idle")
 		end
 		entity_stopInterpolating(me)
@@ -400,7 +400,7 @@ function enterState(me)
 		entity_stopInterpolating(me)
 		entity_animate(me, "idle", LOOP_INF)
 	elseif entity_isState(me, STATE_ATTACK) then
-		playSfx("EnergyBoss-Attack", 900+math.random(200))
+		playSfx("EnergyBoss-Attack", (900+math.random(200)) / 1000)
 		local x, y = bone_getPosition(v.bone_jaw)
 		if entity_isPositionInRange(v.naija, x, y, 600)
 		and entity_y(v.naija) < y+64
@@ -441,12 +441,12 @@ function enterState(me)
 		end
 		v.attackDelay = 0
 		v.fireDelay = 0
-		playSfx("EnergyBoss-Hurt", 900+math.random(200))
+		playSfx("EnergyBoss-Hurt", (900+math.random(200)) / 1000)
 		entity_animate(me, "hurt")
 		entity_setPosition(me, entity_x(me)-500, entity_y(me), 1.6)
 	elseif entity_isState(me, STATE_HITBARRIER) then
 		entity_stopInterpolating(me)
-		playSfx("EnergyBoss-Die", 1100+math.random(200))
+		playSfx("EnergyBoss-Die", (1100+math.random(200)) / 1000)
 		entity_animate(me, "hitBarrier")	
 		
 		entity_spawnParticlesFromCollisionMask(me, "energyboss-hit", 4)
@@ -459,7 +459,7 @@ function enterState(me)
 		entity_setPosition(me, node_x(backNode), entity_y(me), -800)
 	elseif entity_isState(me, STATE_COLLAPSE) then
 		clearShots()
-		playSfx("EnergyBoss-Die", 1000)
+		playSfx("EnergyBoss-Die")
 		setFlag(FLAG_ENERGYBOSSDEAD, 1)	
 		entity_setDamageTarget(me, DT_AVATAR_ENERGYBLAST, false)
 		entity_setDamageTarget(me, DT_AVATAR_SHOCK, false)	
@@ -504,7 +504,7 @@ function enterState(me)
 		--end
 	elseif entity_isState(me, STATE_INTRO) then
 		v.awoken = true
-		playSfx("EnergyBoss-Die", 800)
+		playSfx("EnergyBoss-Die", 0.8)
 		shakeCamera(10, 3)
 		entity_stopInterpolating(me)
 		entity_animate(me, "roar")
