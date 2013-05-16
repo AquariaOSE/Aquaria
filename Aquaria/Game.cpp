@@ -8402,9 +8402,9 @@ void Game::handleShotCollisions(Entity *e, bool hasShield)
 {
 	BBGE_PROF(Game_handleShotCollisions);
 	bool isRegValid=true;
-	for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); i++)
+	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
-		Shot *shot = *i;
+		Shot *shot = Shot::shots[i];
 		if (shot->isActive() && isEntityCollideWithShot(e, shot) && (!hasShield || (!shot->shotData || !shot->shotData->ignoreShield)))
 		{
 			Vector collidePoint = e->position+e->offset;
@@ -8434,9 +8434,9 @@ bool Game::isDamageTypeEnemy(DamageType dt)
 void Game::handleShotCollisionsSkeletal(Entity *e)
 {
 	BBGE_PROF(Game_HSSKELETAL);
-	for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); i++)
+	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
-		Shot *shot = *i;
+		Shot *shot = Shot::shots[i];
 		if (shot->isActive() && isEntityCollideWithShot(e, shot))
 		{
 			Bone *b = collideSkeletalVsCircle(e, shot->position, shot->collideRadius);
@@ -8451,9 +8451,9 @@ void Game::handleShotCollisionsSkeletal(Entity *e)
 
 void Game::handleShotCollisionsHair(Entity *e, int num)
 {
-	for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); i++)
+	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
-		Shot *shot = *i;
+		Shot *shot = Shot::shots[i];
 		if (shot->isActive() && isEntityCollideWithShot(e, shot))
 		{
 			bool b = collideHairVsCircle(e, num, shot->position, 8);
