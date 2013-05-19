@@ -3746,6 +3746,16 @@ luaFunc(beam_setDamage)
 	luaReturnNil();
 }
 
+luaFunc(beam_setDamageType)
+{
+	Beam *b = beam(L);
+	if (b)
+	{
+		b->damageData.damageType = (DamageType)lua_tointeger(L, 2);
+	}
+	luaReturnNil();
+}
+
 luaFunc(beam_setBeamWidth)
 {
 	Beam *b = beam(L);
@@ -7950,6 +7960,7 @@ static const struct {
 	luaRegister(beam_setDamage),
 	luaRegister(beam_setBeamWidth),
 	luaRegister(beam_setFirer),
+	luaRegister(beam_setDamageType),
 
 	luaRegister(getStringBank),
 
