@@ -1074,14 +1074,33 @@ void AnimationEditor::applyTranslation()
 			{
 				int xdiff = editingBone->position.x - bcur->x;
 				int ydiff = editingBone->position.y - bcur->y;
-				// all bones mode
-				for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+				if(!core->getCtrlState())
 				{
-					BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
-					if (b)
+					// all bones in one anim mode
+					for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
 					{
-						b->x += xdiff;
-						b->y += ydiff;
+						BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+						if (b)
+						{
+							b->x += xdiff;
+							b->y += ydiff;
+						}
+					}
+				}
+				else
+				{
+					// all bones in all anims mode
+					for (int a = 0; a < editSprite->animations.size(); ++a)
+					{
+						for (int i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+						{
+							BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							if (b)
+							{
+								b->x += xdiff;
+								b->y += ydiff;
+							}
+						}
 					}
 				}
 			}
@@ -1187,12 +1206,30 @@ void AnimationEditor::rmbu()
 				if (bcur)
 				{
 					int rotdiff = editingBone->rotation.z - bcur->rot;
-					for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+					if (!core->getCtrlState())
 					{
-						BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
-						if (b)
+						for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
 						{
-							b->rot += rotdiff;
+							BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							if (b)
+							{
+								b->rot += rotdiff;
+							}
+						}
+					}
+					else
+					{
+						// all bones in all anims mode
+						for (int a = 0; a < editSprite->animations.size(); ++a)
+						{
+							for (int i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+							{
+								BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+								if (b)
+								{
+									b->rot += rotdiff;
+								}
+							}
 						}
 					}
 				}
