@@ -257,6 +257,7 @@ class Mod
 {
 public:
 	Mod();
+	~Mod();
 	void clear();
 	void setActive(bool v);
 	void start();
@@ -297,6 +298,7 @@ protected:
 
 	std::string name;
 	std::string path;
+	Precacher modcache;
 };
 
 class AquariaScreenTransition : public ScreenTransition

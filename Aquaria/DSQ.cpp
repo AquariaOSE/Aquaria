@@ -2334,6 +2334,8 @@ void DSQ::playPositionalSfx(const std::string &name, const Vector &position, flo
 
 void DSQ::shutdown()
 {
+	mod.stop();
+
 	Network::shutdown();
 
 	scriptInterface.shutdown();

@@ -39,6 +39,11 @@ Mod::Mod()
 	shuttingDown = false;
 }
 
+Mod::~Mod()
+{
+	modcache.clean();
+}
+
 /*
 queue for actual stop and recache
 which happens in game::applystate
@@ -181,6 +186,23 @@ void Mod::recache()
 		dsq->reloadResources();
 		
 		core->resetTimer();
+	}
+
+	if(active)
+	{
+		modcache.setBaseDir(dsq->secondaryTexturePath);
+		std::string fname = path;
+		if(fname[fname.length() - 1] != '/')
+			fname += '/';
+		fname += "precache.txt";
+		fname = localisePath(fname, dsq->mod.getPath());
+		fname = core->adjustFilenameCase(fname);
+		if (exists(fname))
+			modcache.precacheList(fname);
+	}
+	else
+	{
+		modcache.clean();
 	}
 }
 
