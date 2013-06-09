@@ -3023,19 +3023,19 @@ luaFunc(spawnParticleEffect)
 
 luaFunc(setNumSuckPositions)
 {
-	particleManager->setNumSuckPositions(lua_tointeger(L, 0));
+	particleManager->setNumSuckPositions(lua_tointeger(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(setSuckPosition)
 {
-	particleManager->setSuckPosition(lua_tointeger(L, 0), Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)));
+	particleManager->setSuckPosition(lua_tointeger(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
 	luaReturnNil();
 }
 
 luaFunc(getSuckPosition)
 {
-	Vector *v = particleManager->getSuckPosition(lua_tointeger(L, 0));
+	Vector *v = particleManager->getSuckPosition(lua_tointeger(L, 1));
 	if(v)
 		luaReturnVec2(v->x, v->y);
 	luaReturnVec2(0.0f, 0.0f);
