@@ -8179,7 +8179,7 @@ static const struct {
 
 	luaRegister(addInfluence),
 	luaRegister(setSuckPosition),
-	luaRegister(setSuckPosition);
+	luaRegister(setSuckPosition),
 	luaRegister(setNumSuckPositions),
 	luaRegister(setupBasicEntity),
 	luaRegister(playMusic),
