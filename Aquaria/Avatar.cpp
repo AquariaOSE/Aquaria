@@ -2158,7 +2158,8 @@ void Avatar::loseTargets()
 void Avatar::updateTargetQuads(float dt)
 {
 
-	particleManager->setSuckPosition(1, dsq->getGameCursorPosition());
+	const Vector cursorpos = dsq->getGameCursorPosition();
+	particleManager->setSuckPosition(1, cursorpos);
 
 	/*
 	for (int i = 0; i < targetQuads.size(); i++)
@@ -2189,7 +2190,8 @@ void Avatar::updateTargetQuads(float dt)
 			targets[i].pos = e->getTargetPoint(targets[i].targetPt);
 			if (i == 0)
 			{
-				particleManager->setSuckPosition(1, targets[i].pos);
+				particleManager->setSuckPosition(1, targets[i].pos); // suckpos 1 is overridden elsewhere later
+				particleManager->setSuckPosition(2, targets[i].pos);
 			}
 
 			/*
@@ -2202,7 +2204,7 @@ void Avatar::updateTargetQuads(float dt)
 		}
 		else
 		{
-			targetQuads[i]->position = dsq->getGameCursorPosition();
+			targetQuads[i]->position = cursorpos;
 			//targetQuads[i]->alpha.interpolateTo(0, 0.1);
 		}
 	}
@@ -2222,7 +2224,7 @@ void Avatar::updateTargetQuads(float dt)
 			debugLog(os.str());
 			*/
 
-			targetQuads[i]->position = dsq->getGameCursorPosition();
+			targetQuads[i]->position = cursorpos;
 			if (dsq->continuity.form == FORM_ENERGY && isInputEnabled())
 			{
 				if (dsq->inputMode == INPUT_JOYSTICK && targetQuads[i]->isRunning())
