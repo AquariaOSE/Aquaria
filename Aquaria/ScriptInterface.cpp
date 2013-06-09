@@ -3021,6 +3021,27 @@ luaFunc(spawnParticleEffect)
 	luaReturnPtr(pe);
 }
 
+luaFunc(setNumSuckPositions)
+{
+	particleManager->setNumSuckPositions(lua_tointeger(L, 0));
+	luaReturnNil();
+}
+
+luaFunc(setSuckPosition)
+{
+	particleManager->setSuckPosition(lua_tointeger(L, 0), Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)));
+	luaReturnNil();
+}
+
+luaFunc(getSuckPosition)
+{
+	Vector *v = particleManager->getSuckPosition(lua_tointeger(L, 0));
+	if(v)
+		luaReturnVec2(v->x, v->y);
+	luaReturnVec2(0.0f, 0.0f);
+}
+
+
 luaFunc(bone_showFrame)
 {
 	Bone *b = bone(L);
@@ -6958,7 +6979,7 @@ luaFunc(entity_getHair)
 luaFunc(entity_clearHair)
 {
 	Entity *e = entity(L);
-	if (e)
+	if (e && e->hair)
 	{
 		e->hair->safeKill();
 		e->hair = 0;
@@ -8157,6 +8178,9 @@ static const struct {
 	luaRegister(resetTimer),
 
 	luaRegister(addInfluence),
+	luaRegister(setSuckPosition),
+	luaRegister(setSuckPosition);
+	luaRegister(setNumSuckPositions),
 	luaRegister(setupBasicEntity),
 	luaRegister(playMusic),
 	luaRegister(playMusicStraight),
