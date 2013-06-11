@@ -865,6 +865,12 @@ luaFunc(obj_alphaMod)
 	luaReturnNil()
 }
 
+luaFunc(obj_getAlphaMod)
+{
+	RenderObject *r = robj(L);
+	luaReturnNum(r ? r->alphaMod : 0.0f);
+}
+
 luaFunc(obj_getAlpha)
 {
 	RenderObject *r = robj(L);
@@ -882,6 +888,16 @@ luaFunc(obj_color)
 	}
 	luaReturnNil();
 }
+
+luaFunc(obj_getColor)
+{
+	RenderObject *r = robj(L);
+	Vector c;
+	if(r)
+		c = r->color;
+	luaReturnVec3(c.x, c.y, c.z);
+}
+
 
 luaFunc(obj_rotate)
 {
@@ -1535,7 +1551,9 @@ luaFunc(quad_setSegs)
 	RO_FUNC(getter, prefix,  alpha			) \
 	RO_FUNC(getter, prefix,  alphaMod		) \
 	RO_FUNC(getter, prefix,  getAlpha		) \
+	RO_FUNC(getter, prefix,  getAlphaMod	) \
 	RO_FUNC(getter, prefix,  color			) \
+	RO_FUNC(getter, prefix,  getColor		) \
 	RO_FUNC(getter, prefix,  rotate			) \
 	RO_FUNC(getter, prefix,  rotateOffset	) \
 	RO_FUNC(getter, prefix,  getRotation	) \
@@ -2761,13 +2779,13 @@ luaFunc(avatar_canBurst)
 
 luaFunc(avatar_setCanLockToWall)
 {
-	dsq->game->avatar->setCanBurst(getBool(L, 1));
+	dsq->game->avatar->setCanLockToWall(getBool(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(avatar_canLockToWall)
 {
-	luaReturnBool(dsq->game->avatar->canBurst());
+	luaReturnBool(dsq->game->avatar->canLockToWall());
 }
 
 luaFunc(avatar_setCanSwimAgainstCurrents)
