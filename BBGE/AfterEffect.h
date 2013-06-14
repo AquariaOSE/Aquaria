@@ -72,16 +72,6 @@ public:
 	float time;
 };
 
-enum ActiveShader
-{
-	AS_NONE			= 0,
-	AS_BLUR			,
-	AS_BW			,	
-	AS_WASHOUT		,
-	AS_MOTIONBLUR	,
-	AS_GLOW
-};
-
 class AfterEffectManager
 {
 public:
@@ -96,7 +86,6 @@ public:
 
 	void resetGrid();
 
-	void capture();
 	void render();
 	void renderGrid();
 	void renderGridPoints();
@@ -111,12 +100,6 @@ public:
 
 	bool active;
 
-	void setActiveShader(ActiveShader as);
-
-#ifdef BBGE_BUILD_OPENGL
-	GLuint texture;
-#endif
-
 	bool bRenderGridPoints;
 
 	int numEffects;
@@ -124,12 +107,11 @@ public:
 	int screenWidth, screenHeight;
 	int textureWidth, textureHeight;
 
-	Shader blurShader, bwShader, washoutShader, motionBlurShader, glowShader;
-	Shader *scriptShader;
+	std::vector<Shader*> scriptShader;
 
 	Vector ** drawGrid;	
 
-	ActiveShader activeShader;
+	FrameBuffer backupBuffer;
 };
 
 

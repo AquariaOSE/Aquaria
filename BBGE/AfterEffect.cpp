@@ -32,10 +32,9 @@ Effect::Effect()
 AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 {
 	active = false;
-	activeShader = AS_NONE;
 	numEffects = 0;
 	bRenderGridPoints = true;
-	scriptShader = 0;
+	scriptShader.resize(10, 0);
 
 	screenWidth = core->getWindowWidth();
 	screenHeight = core->getWindowHeight();
@@ -44,46 +43,11 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 	this->yDivs = 0;
 
 	drawGrid = 0;
-	
-#ifdef BBGE_BUILD_OPENGL
-
 
 	this->xDivs = xDivs;
 	this->yDivs = yDivs;
-	//cameraPointer = nCameraPointer;
 
-	//Asssuming the resolutions values are > 256 and < 2048
-	//Set the texture heights and widths
-	if (core->frameBuffer.isInited())
-	{
-		textureWidth = core->frameBuffer.getWidth();
-		textureHeight = core->frameBuffer.getHeight();
-	}
-	else
-	{
-		if (screenWidth <= 512)
-			textureWidth = 512;
-		else if (screenWidth <= 1024)
-			textureWidth = 1024;
-		else
-			textureWidth = 2048;
-		if (screenHeight <= 512)
-			textureHeight = 512;
-		else if (screenHeight <= 1024)
-			textureHeight = 1024;
-		else
-			textureHeight = 2048;
-	}
-
-	//create our texture
-	glGenTextures(1,&texture);
-	glBindTexture(GL_TEXTURE_2D,texture);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	
-#endif
-	//BuildMip();
+	reloadDevice();
 
 	if (xDivs != 0 && yDivs != 0)
 	{
@@ -99,14 +63,6 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 
 void AfterEffectManager::loadShaders()
 {
-	/*
-	blurShader.load("data/shaders/stan.vert", "data/shaders/blur.frag");
-	bwShader.load("data/shaders/stan.vert", "data/shaders/bw.frag");
-	washoutShader.load("data/shaders/stan.vert", "data/shaders/washout.frag");
-	//motionBlurShader.load("data/shaders/stan.vert", "data/shaders/hoblur.frag");
-	motionBlurShader.load("data/shaders/stan.vert", "data/shaders/blur.frag");
-	glowShader.load("data/shaders/stan.vert", "data/shaders/glow.frag");
-	*/
 }
 
 AfterEffectManager::~AfterEffectManager()
@@ -191,29 +147,6 @@ void AfterEffectManager::destroyEffect(int id)
 	openSpots.push(id);
 }
 
-void AfterEffectManager::capture()
-{
-	/*
-#ifdef BBGE_BUILD_OPENGL
-	glBindTexture(GL_TEXTURE_2D,texture);
-	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, screenWidth, screenHeight);
-#endif
-	*/
-	if (core->frameBuffer.isInited())
-	{
-		core->frameBuffer.endCapture();
-		//core->enable2D(core->pixelScale);
-	}
-	else
-	{
-#ifdef BBGE_BUILD_OPENGL
-		glBindTexture(GL_TEXTURE_2D,texture);
-		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, screenWidth, screenHeight);
-#endif
-	}
-//glDisable(GL_TEXTURE_2D);
-
-}
 void AfterEffectManager::render()
 {
 #ifdef BBGE_BUILD_OPENGL
@@ -225,7 +158,7 @@ void AfterEffectManager::render()
 	glDisable (GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 
-	capture();
+	core->frameBuffer.endCapture();
 	glTranslatef(core->cameraPos.x, core->cameraPos.y, 0);
 	glScalef(core->invGlobalScale, core->invGlobalScale,0);
 	/*
@@ -241,48 +174,33 @@ void AfterEffectManager::render()
 #endif
 }
 
-void AfterEffectManager::setActiveShader(ActiveShader as)
-{
-	activeShader = as;
-}
-
-
 void AfterEffectManager::renderGrid()
 {
 #ifdef BBGE_BUILD_OPENGL
-	//glBindTexture(GL_TEXTURE_2D, texture);
+
+
+	int shadersOn = 0;
+	int firstShader = -1;
+	int lastShader = -1;
+	for (size_t i = 0; i < scriptShader.size(); ++i)
+	{
+		if(scriptShader[i])
+		{
+			++shadersOn;
+			if(firstShader < 0)
+				firstShader = i;
+			lastShader = i;
+		}
+	}
+
 	if (core->frameBuffer.isInited())
 		core->frameBuffer.bindTexture();
-	else
-		glBindTexture(GL_TEXTURE_2D, texture);
 
-	
-	
-	//bwShader.bind();
 	Shader *activeShader=0;
 	if (core->frameBuffer.isInited())
 	{
-		switch(this->activeShader)
-		{
-		case AS_BLUR:
-			activeShader = &blurShader;
-		break;
-		case AS_BW:
-			activeShader = &bwShader;
-		break;
-		case AS_WASHOUT:
-			activeShader = &washoutShader;
-		break;
-		case AS_MOTIONBLUR:
-			activeShader = &motionBlurShader;
-		break;
-		case AS_GLOW:
-			activeShader = &glowShader;
-		break;
-		}
-		
-		if(scriptShader)
-			activeShader = scriptShader;
+		if(scriptShader.size() && scriptShader[0])
+			activeShader = scriptShader[0];
 
 	}
 
@@ -359,6 +277,40 @@ void AfterEffectManager::renderGrid()
 		}
 	}
 
+	if (activeShader)
+		activeShader->unbind();
+
+	float width2 = float(vw)/2;
+	float height2 = float(vh)/2;
+
+	/*
+	for(size_t i = 1; i < scriptShader.size(); ++i)
+	{
+		if(scriptShader[i])
+		{
+			if (core->frameBuffer.isInited())
+				core->frameBuffer.startCapture();
+			
+			scriptShader[i]->bind();
+			scriptShader[i]->setInt("tex", 0);
+			glBegin(GL_QUADS);
+				glTexCoord2d(0.0f, 0.0f);
+				glVertex3f(-width2, height2,  0.0f);
+				glTexCoord2d(percentX, 0.0f);
+				glVertex3f( width2, height2,  0.0f);
+				glTexCoord2d(percentX, percentY);
+				glVertex3f( width2,  -height2,  0.0f);
+				glTexCoord2d(0.0f, percentY);
+				glVertex3f(-width2,  -height2,  0.0f);
+			glEnd();
+			scriptShader[i]->unbind();
+
+			capture();
+		}
+	}
+	*/
+
+
 	// uncomment to render grid points
 	/*
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -394,9 +346,6 @@ void AfterEffectManager::renderGrid()
 	//glDisable(GL_TEXTURE_2D);
 	RenderObject::lastTextureApplied = 0;
 	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	if (activeShader)
-		activeShader->unbind();
 
 	//bwShader.unbind();
 	//glActiveTextureARB(GL_TEXTURE0_ARB);
@@ -427,8 +376,7 @@ void AfterEffectManager::renderGridPoints()
 
 void AfterEffectManager::unloadDevice()
 {
-	if (texture)
-		glDeleteTextures(1,&texture);
+	backupBuffer.unloadDevice();
 }
 
 void AfterEffectManager::reloadDevice()
@@ -443,22 +391,16 @@ void AfterEffectManager::reloadDevice()
 	}
 	else
 	{
-		if (screenWidth <= 1024)
-			textureWidth = 1024;
-		else
-			textureWidth = 2048;
-		if (screenHeight <= 1024)
-			textureHeight = 1024;
-		else
-			textureHeight = 2048;
+		textureWidth = screenWidth;
+		sizePowerOf2Texture(textureWidth);
+		textureHeight = screenHeight;
+		sizePowerOf2Texture(textureHeight);
 	}
 
-	//create our texture
-	glGenTextures(1,&texture);
-	glBindTexture(GL_TEXTURE_2D,texture);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	if(backupBuffer.isInited())
+		backupBuffer.reloadDevice();
+	else
+		backupBuffer.init(-1, -1, true);
 }
 
 void AfterEffectManager::addEffect(Effect *e)

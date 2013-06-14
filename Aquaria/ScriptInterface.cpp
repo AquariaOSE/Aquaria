@@ -3995,6 +3995,8 @@ luaFunc(entity_damage)
 		d.attacker = lua_isuserdata(L, 2) ? entity(L, 2) : NULL;
 		d.damage = lua_tonumber(L, 3);
 		d.damageType = (DamageType)lua_tointeger(L, 4);
+		d.effectTime = lua_tonumber(L, 5);
+		d.useTimer = !getBool(L, 6);
 		didDamage = e->damage(d);
 	}
 	luaReturnBool(didDamage);
@@ -7779,7 +7781,9 @@ luaFunc(createShader)
 
 luaFunc(shader_setAsAfterEffect)
 {
-	core->afterEffectManager->scriptShader = lua_isuserdata(L, 1) ? getShader(L, 1) : NULL;
+	int idx = lua_tointeger(L, 2);
+	if(idx < core->afterEffectManager->scriptShader.size())
+		core->afterEffectManager->scriptShader[idx] = lua_isuserdata(L, 1) ? getShader(L, 1) : NULL;
 	luaReturnNil();
 }
 
@@ -7805,8 +7809,10 @@ luaFunc(shader_delete)
 {
 	Shader *sh = getShader(L);
 	delete sh;
-	if(core->afterEffectManager->scriptShader == sh)
-		core->afterEffectManager->scriptShader = NULL;
+	size_t sz = core->afterEffectManager->scriptShader.size();
+	for(size_t i = 0; i < sz; ++i)
+		if(core->afterEffectManager->scriptShader[i] == sh)
+			core->afterEffectManager->scriptShader[i] = NULL;
 	luaReturnNil();
 }
 
