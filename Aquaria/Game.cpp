@@ -10719,11 +10719,6 @@ void Game::removeState()
 
 	elementUpdateList.clear();
 
-	if (core->afterEffectManager)
-	{
-		//core->afterEffectManager->blurShader.setMode(0);
-		core->afterEffectManager->setActiveShader(AS_NONE);
-	}
 	dsq->setCursor(CURSOR_NORMAL);
 	dsq->darkLayer.toggle(0);
 	dsq->shakeCamera(0,0);

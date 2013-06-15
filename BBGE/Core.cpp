@@ -3852,10 +3852,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 		int i = renderObjectLayerOrder[c];
 		if (i == -1) continue;
 		if ((startLayer != -1 && endLayer != -1) && (i < startLayer || i > endLayer)) continue;
-		if (afterEffectManager && afterEffectManager->active && i == afterEffectManagerLayer)
-		{
-			afterEffectManager->render();
-		}
 
 		if (i == postProcessingFx.layer)
 		{
@@ -3883,6 +3879,11 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 			{
 				continue;
 			}
+		}
+
+		if (afterEffectManager && afterEffectManager->active && i == afterEffectManagerLayer)
+		{
+			afterEffectManager->render();
 		}
 
 		RenderObjectLayer *r = &renderObjectLayers[i];

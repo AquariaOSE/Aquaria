@@ -100,7 +100,6 @@ public:
 			numParticles = 2048;
 			parallaxOn0 = parallaxOn1 = parallaxOn2 = 1;
 			saveSlotScreens = 1;
-			shader = 0;
 			blur = 1;
 			noteEffects = 0;
 			fpsSmoothing = 30;
@@ -115,7 +114,6 @@ public:
 			displaylists = 0;
 			worldMapRevealMethod = 0;
 		}
-		int shader;
 		int blur;
 		int noteEffects;
 		int fpsSmoothing;

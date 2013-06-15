@@ -5742,38 +5742,6 @@ void Avatar::onUpdate(float dt)
 	}
 
 
-
-	// setup shader
-	if (core->afterEffectManager)
-	{
-
-		/*
-		if (!_isUnderWater)
-		{
-			core->afterEffectManager->setActiveShader(AS_WASHOUT);
-			//core->afterEffectManager->setActiveShader(AS_NONE);
-		}
-		else
-		*/
-		if (dsq->user.video.shader != AS_NONE)
-		{
-			core->afterEffectManager->setActiveShader((ActiveShader)dsq->user.video.shader);
-		}
-		else
-		{
-			if (damageTimer.isActive() && dsq->isShakingCamera())
-			{
-				if (dsq->user.video.blur)
-					core->afterEffectManager->setActiveShader(AS_BLUR);
-			}
-			else
-			{
-				core->afterEffectManager->setActiveShader(AS_NONE);
-			}
-
-		}
-	}
-
 	Entity::onUpdate(dt);
 
 	if (isEntityDead() && skeletalSprite.getCurrentAnimation()->name != "dead")

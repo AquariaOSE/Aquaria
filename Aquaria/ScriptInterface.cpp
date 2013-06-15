@@ -378,7 +378,6 @@ static void compile_time_assertions()
 	compile_assert(oo(Path) == oo(Avatar));
 	compile_assert(oo(Path) == oo(BaseText));
 	compile_assert(oo(Path) == oo(PauseQuad));
-	compile_assert(oo(Path) == oo(Shader));
 #undef oo
 }
 #endif
@@ -3995,6 +3994,8 @@ luaFunc(entity_damage)
 		d.attacker = lua_isuserdata(L, 2) ? entity(L, 2) : NULL;
 		d.damage = lua_tonumber(L, 3);
 		d.damageType = (DamageType)lua_tointeger(L, 4);
+		d.effectTime = lua_tonumber(L, 5);
+		d.useTimer = !getBool(L, 6);
 		didDamage = e->damage(d);
 	}
 	luaReturnBool(didDamage);
@@ -7748,6 +7749,7 @@ luaFunc(text_setWidth)
 
 luaFunc(loadShader)
 {
+	int handle = 0;
 	const char *vertRaw = getCString(L, 1);
 	const char *fragRaw = getCString(L, 2);
 	std::string vert, frag;
@@ -7755,58 +7757,68 @@ luaFunc(loadShader)
 		findFile_helper(vertRaw, vert);
 	if(fragRaw)
 		findFile_helper(fragRaw, frag);
-	Shader *sh = new Shader();
-	sh->load(vert, frag);
-	if(!sh->isLoaded())
-	{
-		delete sh;
-		sh = NULL;
-	}
-	luaReturnPtr(sh);
+
+	if(core->afterEffectManager)
+		handle = core->afterEffectManager->loadShaderFile(vert.c_str(), frag.c_str());
+
+	luaReturnInt(handle);
 }
 
 luaFunc(createShader)
 {
-	Shader *sh = new Shader();
-	sh->loadSrc(getCString(L, 1), getCString(L, 2));
-	if(!sh->isLoaded())
-	{
-		delete sh;
-		sh = NULL;
-	}
-	luaReturnPtr(sh);
+	int handle = 0;
+	if(core->afterEffectManager)
+		handle = core->afterEffectManager->loadShaderSrc(getCString(L, 1), getCString(L, 2));
+	luaReturnInt(handle);
 }
 
 luaFunc(shader_setAsAfterEffect)
 {
-	core->afterEffectManager->scriptShader = lua_isuserdata(L, 1) ? getShader(L, 1) : NULL;
+	int handle = lua_tointeger(L, 1);
+	int pos = lua_tointeger(L, 2);
+	bool done = false;
+
+	if(core->afterEffectManager)
+		done = core->afterEffectManager->setShaderPipelinePos(handle, pos);
+		
+	luaReturnBool(done);
+}
+
+luaFunc(shader_setNumAfterEffects)
+{
+	if(core->afterEffectManager)
+		core->afterEffectManager->setShaderPipelineSize(lua_tointeger(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(shader_setInt)
 {
-	Shader *sh = getShader(L, 1);
-	const char *name = getCString(L, 2);
-	if(sh && name)
-		sh->setInt(name, lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
+	if(core->afterEffectManager)
+	{
+		Shader *sh = core->afterEffectManager->getShaderPtr(lua_tointeger(L, 1));
+		const char *name = getCString(L, 2);
+		if(sh && name)
+			sh->setInt(name, lua_tointeger(L, 3), lua_tointeger(L, 4), lua_tointeger(L, 5), lua_tointeger(L, 6));
+	}
 	luaReturnNil();
 }
 
 luaFunc(shader_setFloat)
 {
-	Shader *sh = getShader(L, 1);
-	const char *name = getCString(L, 2);
-	if(sh && name)
-		sh->setFloat(name, lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
+	if(core->afterEffectManager)
+	{
+		Shader *sh = core->afterEffectManager->getShaderPtr(lua_tointeger(L, 1));
+		const char *name = getCString(L, 2);
+		if(sh && name)
+			sh->setFloat(name, lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
+	}
 	luaReturnNil();
 }
 
 luaFunc(shader_delete)
 {
-	Shader *sh = getShader(L);
-	delete sh;
-	if(core->afterEffectManager->scriptShader == sh)
-		core->afterEffectManager->scriptShader = NULL;
+	if(core->afterEffectManager)
+		core->afterEffectManager->unloadShader(lua_tointeger(L, 1));
 	luaReturnNil();
 }
 
@@ -8687,6 +8699,7 @@ static const struct {
 	luaRegister(loadShader),
 	luaRegister(createShader),
 	luaRegister(shader_setAsAfterEffect),
+	luaRegister(shader_setNumAfterEffects),
 	luaRegister(shader_setFloat),
 	luaRegister(shader_setInt),
 	luaRegister(shader_delete),

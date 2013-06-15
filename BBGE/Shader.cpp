@@ -131,7 +131,6 @@ end:
 
 Shader::Shader()
 {
-	addType(SCO_SHADER);
 	numUniforms = -1;
 	uniformsDirty = false;
 
@@ -192,6 +191,13 @@ unsigned int Shader::_compileShader(int type, const char *src, char *errbuf, siz
 #ifdef BBGE_BUILD_SHADERS
 	GLint compiled = 0;
 	GLhandleARB handle = glCreateShaderObjectARB(type);
+	if(!handle)
+	{
+		std::ostringstream os;
+		os << "Failed to create shader object of type " << type;
+		debugLog(os.str());
+		return 0;
+	}
 
 	glShaderSourceARB( handle, 1, &src, NULL );
 	glCompileShaderARB( handle);
