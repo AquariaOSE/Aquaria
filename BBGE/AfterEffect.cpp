@@ -63,6 +63,28 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 
 void AfterEffectManager::loadShaders()
 {
+	deleteShaders();
+
+	Shader *sh = new Shader();
+	sh->load("data/shaders/test.vert", "data/shaders/test.frag");
+	if(sh->isLoaded())
+		scriptShader[0] = sh;
+	else
+		delete sh;
+
+	sh = new Shader();
+	sh->load("data/shaders/test2.vert", "data/shaders/test2.frag");
+	if(sh->isLoaded())
+		scriptShader[1] = sh;
+	else
+		delete sh;
+
+	sh = new Shader();
+	sh->load("data/shaders/test3.vert", "data/shaders/test3.frag");
+	if(sh->isLoaded())
+		scriptShader[2] = sh;
+	else
+		delete sh;
 }
 
 AfterEffectManager::~AfterEffectManager()
@@ -77,6 +99,7 @@ AfterEffectManager::~AfterEffectManager()
 		delete[] drawGrid;
 	}
 	deleteEffects();
+	deleteShaders();
 }
 
 void AfterEffectManager::deleteEffects()
@@ -92,6 +115,18 @@ void AfterEffectManager::deleteEffects()
 	numEffects=0;
 	while (!openSpots.empty())
 		openSpots.pop();
+}
+
+void AfterEffectManager::deleteShaders()
+{
+	for(size_t i = 0; i < scriptShader.size(); ++i)
+	{
+		if(scriptShader[i])
+		{
+			delete scriptShader[i];
+			scriptShader[i] = 0;
+		}
+	}
 }
 
 void AfterEffectManager::clear()
@@ -149,24 +184,18 @@ void AfterEffectManager::destroyEffect(int id)
 
 void AfterEffectManager::render()
 {
+	assert(core->frameBuffer.isInited());
+
 #ifdef BBGE_BUILD_OPENGL
 	glPushMatrix();
-	//glDisable(GL_BLEND);
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
 	glDisable (GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 
 	core->frameBuffer.endCapture();
 	glTranslatef(core->cameraPos.x, core->cameraPos.y, 0);
 	glScalef(core->invGlobalScale, core->invGlobalScale,0);
-	/*
-	static float angle;
-	angle += 0.03f;
-	*/
-	//glRotatef(angle, 0, 0, 1);
-	//glColor4f(1,1,1,0.75);
+
 	glColor4f(1,1,1,1);
 	renderGrid();
 	//renderGridPoints();
@@ -178,77 +207,44 @@ void AfterEffectManager::renderGrid()
 {
 #ifdef BBGE_BUILD_OPENGL
 
-
-	int shadersOn = 0;
 	int firstShader = -1;
 	int lastShader = -1;
+	Shader *activeShader = 0;
 	for (size_t i = 0; i < scriptShader.size(); ++i)
 	{
 		if(scriptShader[i])
 		{
-			++shadersOn;
 			if(firstShader < 0)
+			{
 				firstShader = i;
+				activeShader = scriptShader[i];
+			}
 			lastShader = i;
 		}
-	}
-
-	if (core->frameBuffer.isInited())
-		core->frameBuffer.bindTexture();
-
-	Shader *activeShader=0;
-	if (core->frameBuffer.isInited())
-	{
-		if(scriptShader.size() && scriptShader[0])
-			activeShader = scriptShader[0];
-
-	}
-
-	if (activeShader)
-	{
-		//while(glGetError() != GL_NO_ERROR) {}
-
-		activeShader->bind();
-
-		activeShader->setInt("tex", 0);
 	}
 
 	screenWidth = core->getWindowWidth();
 	screenHeight = core->getWindowHeight();
 
-	/*
-	float percentX, percentY;
-	percentX = 1;
-	percentY = 0.5;
-	*/
-
-	/*
-	percentX = (float)textureWidth/(float)screenWidth;
-	percentY = (float)textureHeight/(float)screenHeight;
-	*/
-
 	float percentX, percentY;
 	percentX = (float)screenWidth/(float)textureWidth;
 	percentY = (float)screenHeight/(float)textureHeight;
-
-
-		/*
-		if (screenWidth <= textureWidth)
-		{
-			percentX = (float)screenWidth/(float)textureWidth;
-			percentY = (float)screenHeight/(float)textureHeight;
-		}
-		else
-		{
-			percentY = 10;
-		}
-		*/
-
 
 	int vw = core->getVirtualWidth();
 	int vh = core->getVirtualHeight();
 	int offx = -core->getVirtualOffX();
 	int offy = -core->getVirtualOffY();
+
+	core->frameBuffer.bindTexture();
+
+	if(activeShader)
+	{
+		activeShader->bind();
+		activeShader->setInt("tex", 0);
+
+		if(firstShader != lastShader)
+			backupBuffer.startCapture();
+	}
 
 	//float div = xDivs;
 	for (int i = 0; i < (xDivs-1); i++)
@@ -283,32 +279,48 @@ void AfterEffectManager::renderGrid()
 	float width2 = float(vw)/2;
 	float height2 = float(vh)/2;
 
-	/*
-	for(size_t i = 1; i < scriptShader.size(); ++i)
+
+	if(firstShader != lastShader)
 	{
-		if(scriptShader[i])
+		// From here on: secondary shader passes.
+		// We just outputted to the backup buffer...
+		FrameBuffer *fbIn = &core->frameBuffer;
+		FrameBuffer *fbOut = &backupBuffer;
+
+
+		for(int i = firstShader + 1; i <= lastShader; ++i)
 		{
-			if (core->frameBuffer.isInited())
-				core->frameBuffer.startCapture();
+			activeShader = scriptShader[i];
+			if(!activeShader)
+				continue;
+
+			// Swap and exchange framebuffers. The old output buffer serves as texture input for the other one
+			fbOut->endCapture();
+			std::swap(fbIn, fbOut);
+			fbIn->bindTexture();
+
+			// If this is the last pass, do not render to a frame buffer again
+			if(i != lastShader)
+				fbOut->startCapture();
+
+			activeShader->bind();
+			activeShader->setInt("tex", 0);
 			
-			scriptShader[i]->bind();
-			scriptShader[i]->setInt("tex", 0);
+			// note that offx, offy are negative here!
 			glBegin(GL_QUADS);
 				glTexCoord2d(0.0f, 0.0f);
-				glVertex3f(-width2, height2,  0.0f);
+				glVertex3f(offx, vh+offy,  0.0f);
 				glTexCoord2d(percentX, 0.0f);
-				glVertex3f( width2, height2,  0.0f);
+				glVertex3f( vw+offx, vh+offy,  0.0f);
 				glTexCoord2d(percentX, percentY);
-				glVertex3f( width2,  -height2,  0.0f);
+				glVertex3f( vw+offx,  offy,  0.0f);
 				glTexCoord2d(0.0f, percentY);
-				glVertex3f(-width2,  -height2,  0.0f);
+				glVertex3f(offx,  offy,  0.0f);
 			glEnd();
-			scriptShader[i]->unbind();
-
-			capture();
+			
+			activeShader->unbind();
 		}
 	}
-	*/
 
 
 	// uncomment to render grid points
@@ -377,6 +389,7 @@ void AfterEffectManager::renderGridPoints()
 void AfterEffectManager::unloadDevice()
 {
 	backupBuffer.unloadDevice();
+	deleteShaders();
 }
 
 void AfterEffectManager::reloadDevice()
@@ -401,6 +414,8 @@ void AfterEffectManager::reloadDevice()
 		backupBuffer.reloadDevice();
 	else
 		backupBuffer.init(-1, -1, true);
+
+	loadShaders();
 }
 
 void AfterEffectManager::addEffect(Effect *e)

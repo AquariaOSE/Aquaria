@@ -91,6 +91,7 @@ public:
 	void renderGridPoints();
 
 	void loadShaders();
+	void deleteShaders();
 
 	void unloadDevice();
 	void reloadDevice();
