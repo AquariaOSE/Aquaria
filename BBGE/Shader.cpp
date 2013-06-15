@@ -131,7 +131,6 @@ end:
 
 Shader::Shader()
 {
-	addType(SCO_SHADER);
 	numUniforms = -1;
 	uniformsDirty = false;
 

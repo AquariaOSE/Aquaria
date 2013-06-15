@@ -108,11 +108,23 @@ public:
 	int screenWidth, screenHeight;
 	int textureWidth, textureHeight;
 
-	std::vector<Shader*> scriptShader;
+	Vector ** drawGrid;
 
-	Vector ** drawGrid;	
+	// returns handle > 0 on success
+	int loadShaderFile(const char *vert, const char *frag);
+	int loadShaderSrc(const char *vert, const char *frag);
+	Shader *getShaderPtr(int handle);
+	void setShaderPipelineSize(size_t size);
+	bool setShaderPipelinePos(int handle, size_t pos);
+	void unloadShader(int handle);
 
+protected:
+	int _insertShader(Shader *sh);
+
+	std::vector<Shader*> shaderPipeline; // Shaders are applied in this order. Can contain the same pointer more than once.
+	std::vector<Shader*> loadedShaders;
 	FrameBuffer backupBuffer;
+
 };
 
 

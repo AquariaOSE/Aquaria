@@ -34,7 +34,7 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 	active = false;
 	numEffects = 0;
 	bRenderGridPoints = true;
-	scriptShader.resize(10, 0);
+	shaderPipeline.resize(10, 0);
 
 	screenWidth = core->getWindowWidth();
 	screenHeight = core->getWindowHeight();
@@ -65,26 +65,7 @@ void AfterEffectManager::loadShaders()
 {
 	deleteShaders();
 
-	Shader *sh = new Shader();
-	sh->load("data/shaders/test.vert", "data/shaders/test.frag");
-	if(sh->isLoaded())
-		scriptShader[0] = sh;
-	else
-		delete sh;
-
-	sh = new Shader();
-	sh->load("data/shaders/test2.vert", "data/shaders/test2.frag");
-	if(sh->isLoaded())
-		scriptShader[1] = sh;
-	else
-		delete sh;
-
-	sh = new Shader();
-	sh->load("data/shaders/test3.vert", "data/shaders/test3.frag");
-	if(sh->isLoaded())
-		scriptShader[2] = sh;
-	else
-		delete sh;
+	// ...Load shaders here...
 }
 
 AfterEffectManager::~AfterEffectManager()
@@ -119,12 +100,15 @@ void AfterEffectManager::deleteEffects()
 
 void AfterEffectManager::deleteShaders()
 {
-	for(size_t i = 0; i < scriptShader.size(); ++i)
+	for(size_t i = 0; i < shaderPipeline.size(); ++i)
+		shaderPipeline[i] = 0;
+
+	for(size_t i = 0; i < loadedShaders.size(); ++i)
 	{
-		if(scriptShader[i])
+		if(loadedShaders[i])
 		{
-			delete scriptShader[i];
-			scriptShader[i] = 0;
+			delete loadedShaders[i];
+			loadedShaders[i] = 0;
 		}
 	}
 }
@@ -210,14 +194,14 @@ void AfterEffectManager::renderGrid()
 	int firstShader = -1;
 	int lastShader = -1;
 	Shader *activeShader = 0;
-	for (size_t i = 0; i < scriptShader.size(); ++i)
+	for (size_t i = 0; i < shaderPipeline.size(); ++i)
 	{
-		if(scriptShader[i])
+		if(shaderPipeline[i])
 		{
 			if(firstShader < 0)
 			{
 				firstShader = i;
-				activeShader = scriptShader[i];
+				activeShader = shaderPipeline[i];
 			}
 			lastShader = i;
 		}
@@ -290,7 +274,7 @@ void AfterEffectManager::renderGrid()
 
 		for(int i = firstShader + 1; i <= lastShader; ++i)
 		{
-			activeShader = scriptShader[i];
+			activeShader = shaderPipeline[i];
 			if(!activeShader)
 				continue;
 
@@ -567,3 +551,79 @@ void RippleEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 		}
 	}
 }
+
+int AfterEffectManager::loadShaderFile(const char *vert, const char *frag)
+{
+	Shader *sh = new Shader();
+	sh->load(vert, frag);
+	if(!sh->isLoaded())
+	{
+		delete sh;
+		return 0;
+	}
+	return _insertShader(sh);
+}
+
+int AfterEffectManager::loadShaderSrc(const char *vert, const char *frag)
+{
+	Shader *sh = new Shader();
+	sh->loadSrc(vert, frag);
+	if(!sh->isLoaded())
+	{
+		delete sh;
+		return 0;
+	}
+	return _insertShader(sh);
+}
+
+Shader *AfterEffectManager::getShaderPtr(int handle)
+{
+	size_t idx = handle - 1;
+	return idx  < loadedShaders.size() ? loadedShaders[idx] : 0;
+}
+
+void AfterEffectManager::setShaderPipelineSize(size_t size)
+{
+	shaderPipeline.resize(size, 0);
+}
+
+bool AfterEffectManager::setShaderPipelinePos(int handle, size_t pos)
+{
+	if(pos < shaderPipeline.size())
+	{
+		shaderPipeline[pos] = getShaderPtr(handle);
+		return true;
+	}
+	return false;
+}
+
+// returns handle (= index + 1)
+int AfterEffectManager::_insertShader(Shader *sh)
+{
+	for(size_t i = 0; i < loadedShaders.size(); ++i)
+	{
+		if(!loadedShaders[i])
+		{
+			loadedShaders[i] = sh;
+			return i+1;
+		}
+	}
+	loadedShaders.push_back(sh);
+	return loadedShaders.size();
+}
+
+void AfterEffectManager::unloadShader(int handle)
+{
+	Shader *sh = getShaderPtr(handle);
+	if(!sh)
+		return;
+
+	for(size_t i = 0; i < shaderPipeline.size(); ++i)
+		if(shaderPipeline[i] == sh)
+			shaderPipeline[i] = 0;
+
+	size_t idx = handle - 1;
+	loadedShaders[idx] = 0;
+	delete sh;
+}
+
