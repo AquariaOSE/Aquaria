@@ -4876,7 +4876,10 @@ void Core::setupFileAccess()
 	//vfs.AddArchive("aqfiles.zip", false, "");
 
 	if(_extraDataDir.length())
+	{
+		debugLog("Mounting extra data dir: " + _extraDataDir);
 		vfs.MountExternalPath(_extraDataDir.c_str(), "", true, true);
+	}
 
 
 	debugLog("Done");
