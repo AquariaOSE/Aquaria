@@ -2154,7 +2154,6 @@ void DSQ::loadMods()
 
 	// first load the packages, then enumerate XMLs
 	forEachFile(mod.getBaseModPath(), ".aqmod", loadModPackagesCallback, 0);
-	forEachFile(mod.getBaseModPath(), ".zip", loadModPackagesCallback, 0);
 #endif
 
 	forEachFile(mod.getBaseModPath(), ".xml", loadModsCallback, 0);
