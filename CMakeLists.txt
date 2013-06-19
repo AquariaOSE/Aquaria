@@ -5,7 +5,7 @@ INCLUDE(CheckCCompilerFlag)
 INCLUDE(CheckFunctionExists)
 
 IF(NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "None Debug Release RelWithDebInfo MinSizeRel" FORCE)
+    SET(CMAKE_BUILD_TYPE Release CACHE STRING "None Debug Release RelWithDebInfo MinSizeRel" FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
 IF(APPLE)
@@ -15,6 +15,17 @@ ENDIF(APPLE)
 IF(CMAKE_SYSTEM_NAME STREQUAL "Haiku")
     SET(HAIKU TRUE)
 ENDIF()
+
+IF(WIN32)
+    SET(WIN32_TRUE TRUE)
+ELSE(WIN32)
+    SET(WIN32_TRUE FALSE)
+ENDIF(WIN32)
+
+# if no build type was provided, set a default one
+IF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
 
 OPTION(AQUARIA_DEVELOPER_BUILD "Developer Build?" FALSE)
 OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
@@ -42,7 +53,7 @@ SET(PNGDIR ${EXTLIBDIR}/glpng/png)
 
 ### zlib
 
-OPTION(AQUARIA_INTERNAL_ZLIB "Always use included zlib library" FALSE)
+OPTION(AQUARIA_INTERNAL_ZLIB "Always use included zlib library" TRUE)
 if(NOT AQUARIA_INTERNAL_ZLIB)
     find_package(ZLIB)
 endif(NOT AQUARIA_INTERNAL_ZLIB)
@@ -52,7 +63,7 @@ endif(NOT ZLIB_FOUND)
 
 ### PNG
 
-OPTION(AQUARIA_INTERNAL_PNG "Always use included PNG library" FALSE)
+OPTION(AQUARIA_INTERNAL_PNG "Always use included PNG library" TRUE)
 if(NOT AQUARIA_INTERNAL_PNG)
     find_package(PNG)
 endif(NOT AQUARIA_INTERNAL_PNG)
@@ -66,7 +77,7 @@ STRING(REGEX REPLACE "^.*PNG_LIBPNG_VER[^0-9]*([0-9]+).*$" "\\1" PNG_LIBPNG_VER 
 
 ### FreeType
 
-OPTION(AQUARIA_INTERNAL_FREETYPE "Always use included FreeType library" FALSE)
+OPTION(AQUARIA_INTERNAL_FREETYPE "Always use included FreeType library" TRUE)
 if(NOT AQUARIA_INTERNAL_FREETYPE)
     find_package(Freetype)
 endif(NOT AQUARIA_INTERNAL_FREETYPE)
@@ -76,7 +87,7 @@ endif(NOT FREETYPE_FOUND)
 
 ### Lua
 
-OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" FALSE)
+OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" TRUE)
 if(NOT AQUARIA_INTERNAL_LUA)
     find_package(Lua51)
 endif(NOT AQUARIA_INTERNAL_LUA)
@@ -86,7 +97,7 @@ endif(NOT LUA51_FOUND)
 
 ### Ogg/Vorbis
 
-OPTION(AQUARIA_INTERNAL_OGGVORBIS "Always use included Ogg/Vorbis libraries" FALSE)
+OPTION(AQUARIA_INTERNAL_OGGVORBIS "Always use included Ogg/Vorbis libraries" TRUE)
 if(NOT AQUARIA_INTERNAL_OGGVORBIS)
     # CMake doesn't seem to have a module for libogg or libvorbis yet, so
     # we roll our own based on existing find_package modules.
@@ -148,7 +159,7 @@ endif(NOT OGGVORBIS_FOUND)
 
 ### SDL
 
-OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" FALSE)
+OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" ${WIN32_TRUE})
 if(NOT AQUARIA_INTERNAL_SDL)
     find_package(SDL)
 endif(NOT AQUARIA_INTERNAL_SDL)
@@ -172,7 +183,7 @@ endif(NOT SDL_FOUND)
 
 ### OpenAL
 
-OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" FALSE)
+OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" ${WIN32_TRUE})
 if(NOT AQUARIA_INTERNAL_OPENAL)
     find_package(OpenAL)
 endif(NOT AQUARIA_INTERNAL_OPENAL)
@@ -289,6 +300,11 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     IF(AQUARIA_GCC_HAS_STACKPROT)
         ADD_DEFINITIONS(-fno-stack-protector)
     ENDIF(AQUARIA_GCC_HAS_STACKPROT)
+    
+    # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
+    # Exceptions are not used, excluding support for release builds adds less bulk as well.
+    set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "Flags used for release builds" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
 
     # !!! FIXME: probably not safe long-term.
     # CMake mailing list had this hack for getting rid of -rdynamic:
