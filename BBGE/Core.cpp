@@ -4863,8 +4863,16 @@ void Core::setupFileAccess()
 	
 	vfs.Prepare();
 
-	// TODO: mount and other stuff
 
+	ttvfs::VFSDir *override = vfs.GetDir("override");
+	if(override)
+	{
+		debugLog("Mounting override dir...");
+		override->load(true);
+		vfs.Mount("override", "", true);
+	}
+
+	// If we ever want to read from a container...
 	//vfs.AddArchive("aqfiles.zip", false, "");
 
 	if(_extraDataDir.length())
