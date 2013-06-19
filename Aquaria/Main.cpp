@@ -83,18 +83,31 @@ static void CheckConfig(void)
 	extern "C" int main(int argc,char *argv[])
 	{
 		std::string dsqParam = ""; // fileSystem
+		std::string extraDataDir = "";
 
+		const char *envPath = 0;
 #ifdef BBGE_BUILD_UNIX
-		const char *envPath = getenv("AQUARIA_DATA_PATH");
-		if (envPath != NULL)
+		envPath = getenv("AQUARIA_DATA_PATH");
+		if (envPath)
+		{
 			dsqParam = envPath;
+		}
 #endif
+#ifdef AQUARIA_DEFAULT_DATA_DIR
+		if(!envPath)
+			dsqParam = AQUARIA_DEFAULT_DATA_DIR;
+#endif
+#ifdef AQUARIA_EXTRA_DATA_DIR
+		if(!envPath)
+			extraDataDir = AQUARIA_EXTRA_DATA_DIR;
+#endif
+
 #endif
 
         CheckConfig();
 
         {
-            DSQ dsql(dsqParam);
+            DSQ dsql(dsqParam, extraDataDir);
             dsql.init();
             dsql.main();
             dsql.shutdown();

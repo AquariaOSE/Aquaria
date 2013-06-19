@@ -41,6 +41,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #if BBGE_BUILD_WINDOWS
 #include <shlobj.h>
+#include <direct.h>
 #endif
 
 #ifdef BBGE_BUILD_SDL
@@ -884,12 +885,13 @@ static bool checkWritable(const std::string& path, bool warn, bool critical)
 
 
 const float SORT_DELAY = 10;
-Core::Core(const std::string &filesystem, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
+Core::Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
 : ActionMapper(), StateManager(), appName(appName)
 {
 	sound = NULL;
 	screenCapScale = Vector(1,1,1);
 	timeUpdateType = TIMEUPDATE_DYNAMIC;
+	_extraDataDir = extraDataDir;
 
 	fixedFPS = 60;
 
@@ -1093,6 +1095,13 @@ void Core::initPlatform(const std::string &filesystem)
 	}
 #endif
 #ifdef BBGE_BUILD_WINDOWS
+	if(filesystem.length())
+	{
+		if(_chdir(filesystem.c_str()) != 0)
+		{
+			debugLog("chdir failed: " + filesystem);
+		}
+	}
 	// FIXME: filesystem not handled
 #endif
 }
@@ -4857,6 +4866,9 @@ void Core::setupFileAccess()
 	// TODO: mount and other stuff
 
 	//vfs.AddArchive("aqfiles.zip", false, "");
+
+	if(_extraDataDir.length())
+		vfs.MountExternalPath(_extraDataDir.c_str(), "", true, true);
 
 
 	debugLog("Done");

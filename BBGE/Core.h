@@ -973,7 +973,7 @@ public:
 		NO_DESTROY
 	};
 	// init
-	Core(const std::string &filesystem, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
+	Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
 	void initPlatform(const std::string &filesystem);
 	~Core();
 
@@ -1402,6 +1402,7 @@ protected:
 	virtual void onRender(){}
 
 	void setupFileAccess();
+	std::string _extraDataDir;
 };
 
 extern Core *core;

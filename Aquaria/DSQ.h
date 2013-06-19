@@ -1227,7 +1227,7 @@ enum NagType
 class DSQ : public Core
 {
 public:
-	DSQ(std::string fileSystem);
+	DSQ(const std::string& fileSystem, const std::string& extraDataDir);
 	~DSQ();
 
 	void init();
