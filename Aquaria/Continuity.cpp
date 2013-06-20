@@ -2361,6 +2361,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 		// This is the format used in the android version. Keeping this commented out for now,
 		// but it should be used instead of the code above in some time -- FG
+		/*
 		os.str("");
 		bool hasMapName = false;
 		os << this->gems.size() << " ";
@@ -2381,6 +2382,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 				os << spacesToUnderscores((*i).userString) << " ";
 		}
 		gems.SetAttribute("d", os.str());
+		*/
 
 	}
 	doc.InsertEndChild(gems);
