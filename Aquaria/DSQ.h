@@ -1102,6 +1102,8 @@ public:
 	Timer energyTimer, poisonTimer, poisonBitTimer;
 	Timer webTimer, webBitTimer, lightTimer, petPowerTimer;
 
+	float speedMult2;
+
 	void eatBeast(const EatData &eatData);
 	void removeNaijaEat(int idx);
 	void removeLastNaijaEat();

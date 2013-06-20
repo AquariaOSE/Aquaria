@@ -4911,13 +4911,9 @@ void Avatar::clampVelocity()
 	}
 
 
-	setMaxSpeed(currentMaxSpeed * useSpeedMult);
-	//float cheatLen = vel.getSquaredLength2D();
-	vel.capLength2D(getMaxSpeed());
-	/*
-	if (cheatLen > sqr(getMaxSpeed()))
-		vel.setLength2D(getMaxSpeed());
-	*/
+	setMaxSpeed(currentMaxSpeed * useSpeedMult * dsq->continuity.speedMult2);
+
+	vel.capLength2D(getMaxSpeed() * maxSpeedLerp.x);
 }
 
 void Avatar::activateAura(AuraType aura)

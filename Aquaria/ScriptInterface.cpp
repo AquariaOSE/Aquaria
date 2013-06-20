@@ -2898,6 +2898,28 @@ luaFunc(avatar_getSpellCharge)
 	luaReturnNum(dsq->game->avatar->state.spellCharge);
 }
 
+luaFunc(avatar_setSpeedMult)
+{
+	dsq->continuity.setSpeedMultiplier(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(avatar_setSpeedMult2)
+{
+	dsq->continuity.speedMult2 = lua_tonumber(L, 1);
+	luaReturnNil();
+}
+
+luaFunc(avatar_getSpeedMult)
+{
+	luaReturnNum(dsq->continuity.speedMult);
+}
+
+luaFunc(avatar_getSpeedMult2)
+{
+	luaReturnNum(dsq->continuity.speedMult2);
+}
+
 luaFunc(jumpState)
 {
 	dsq->enqueueJumpState(getString(L, 1), getBool(L, 2));
@@ -3208,6 +3230,11 @@ luaFunc(entity_checkSplash)
 	luaReturnBool(ret);
 }
 
+luaFunc(entity_isInCurrent)
+{
+	Entity *e = entity(L);
+	luaReturnBool(e ? e->isInCurrent() : false);
+}
 
 luaFunc(entity_isUnderWater)
 {
@@ -5607,6 +5634,12 @@ luaFunc(entity_getRandomTargetPoint)
 		idx = e->getRandomTargetPoint();
 	}
 	luaReturnNum(idx);
+}
+
+luaFunc(entity_getNumTargetPoints)
+{
+	Entity *e = entity(L);
+	luaReturnInt(e ? e->getNumTargetPoints() : 0);
 }
 
 luaFunc(playVisualEffect)
@@ -8066,9 +8099,11 @@ static const struct {
 
 	luaRegister(entity_isUnderWater),
 	luaRegister(entity_checkSplash),
+	luaRegister(entity_isInCurrent),
 
 	luaRegister(entity_getRandomTargetPoint),
 	luaRegister(entity_getTargetPoint),
+	luaRegister(entity_getNumTargetPoints),
 
 	luaRegister(entity_setTargetRange),
 
@@ -8452,6 +8487,11 @@ static const struct {
 	luaRegister(avatar_fallOffWall),
 	luaRegister(avatar_setBlockSinging),
 	luaRegister(avatar_isBlockSinging),
+
+	luaRegister(avatar_setSpeedMult),
+	luaRegister(avatar_setSpeedMult2),
+	luaRegister(avatar_getSpeedMult),
+	luaRegister(avatar_getSpeedMult2),
 
 
 	luaRegister(avatar_toggleMovement),

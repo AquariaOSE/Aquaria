@@ -3209,6 +3209,7 @@ void Continuity::reset()
 	//worldMapTiles.clear();
 
 	speedMult = biteMult = fishPoison = defenseMult = 1;
+	speedMult2 = 1;
 	poison = 0;
 	energyMult = 0;
 	light = petPower = 0;
