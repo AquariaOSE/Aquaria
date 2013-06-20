@@ -7221,11 +7221,13 @@ void Game::onCook()
 		const char *p2 = cookList[1]->name.c_str();
 		const char *p3 = cookList.size() >= 3 ? cookList[2]->name.c_str() : "";
 		std::string ingname;
-		cookingScript->call("cookFailure", p1, p2, p3, &ingname);
-		if(ingname.length())
-			data = dsq->continuity.getIngredientDataByName(ingname);
-		if(!data)
-			goto endcook;
+		if(cookingScript->call("cookFailure", p1, p2, p3, &ingname))
+		{
+			if(ingname.length())
+				data = dsq->continuity.getIngredientDataByName(ingname);
+			if(!data)
+				goto endcook;
+		}
 	}
 	
 	if(!data)
