@@ -61,7 +61,7 @@ bool Continuity::isIngredientFull(IngredientData *data)
 	{
 		if (nocasecmp(ingredients[i]->name, data->name)==0)
 		{
-			if (ingredients[i]->amount >= MAX_INGREDIENT_AMOUNT)
+			if (ingredients[i]->amount >= ingredients[i]->maxAmount)
 				return true;
 			else
 				return false;
@@ -70,22 +70,23 @@ bool Continuity::isIngredientFull(IngredientData *data)
 	return false;
 }
 
-void Continuity::pickupIngredient(IngredientData *d, int amount, bool effects)
+void Continuity::pickupIngredient(IngredientData *d, int amount, bool effects, bool learn)
 {
-	learnRecipe(d->name, effects);
+	if(learn)
+		learnRecipe(d->name, effects);
 
 	if (!getIngredientHeldByName(d->name))
 	{
 		ingredients.push_back(d);
 	}
 
-	if (d->amount < MAX_INGREDIENT_AMOUNT - amount)
+	if (d->amount < d->maxAmount - amount)
 	{
 		d->amount += amount;
 	}
 	else
 	{
-		d->amount = MAX_INGREDIENT_AMOUNT;
+		d->amount = d->maxAmount;
 	}
 }
 
@@ -607,8 +608,10 @@ std::string Continuity::getAllIEString(IngredientData *data)
 	return os.str();
 }
 
-void Continuity::applyIngredientEffects(IngredientData *data)
+// returns true if eaten
+bool Continuity::applyIngredientEffects(IngredientData *data)
 {
+	bool eaten = true;
 	float y =0;
 	for (int i = 0; i < data->effects.size(); i++)
 	{
@@ -841,28 +844,36 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 			// this item should only affect li if naija drops it and li eats it.
 		}
 		break;
+		case IET_SCRIPT:
+		{
+			// If this fails, it will still be eaten
+			if(dsq->game->cookingScript)
+				dsq->game->cookingScript->call("useIngredient", data->name.c_str(), &eaten);
+		}
 		default:
 		{
 			char str[256];
 			sprintf((char*)&str, "ingredient effect not defined, index[%d]", int(useType));
 			errorLog(str);
+			eaten = false;
 		}
 		break;
 		}
 	}
+	return eaten;
 }
 
 std::string Continuity::getIngredientAffectsString(IngredientData *data)
 {
-
-	/*
-	std::string str;
-	for (int i = 0; i < data->effects.size(); i++)
+	if(data->type == IET_SCRIPT)
 	{
-		str += splitCamelCase(getIngredientDescription(data->effects[i].type)) + "\n";
+		if(dsq->game->cookingScript)
+		{
+			std::string ret = "";
+			dsq->game->cookingScript->call("getIngredientString", data->name.c_str(), &ret);
+			return ret;
+		}
 	}
-	return str;
-	*/
 
 	return getAllIEString(data);
 }
@@ -920,6 +931,7 @@ void Continuity::loadIngredientData(const std::string &file)
 	InStream in(file.c_str());
 
 	bool recipes = false;
+	bool extradata = false;
 	while (std::getline(in, line))
 	{
 		std::istringstream inLine(line);
@@ -929,6 +941,11 @@ void Continuity::loadIngredientData(const std::string &file)
 		if (name == "==Recipes==")
 		{
 			recipes = true;
+			break;
+		}
+		else if(name == "==Extra==")
+		{
+			extradata = true;
 			break;
 		}
 		inLine >> gfx >> type;
@@ -944,7 +961,7 @@ void Continuity::loadIngredientData(const std::string &file)
 			if (p1 != std::string::npos && p2 != std::string::npos)
 			{
 				effects = effects.substr(p1+1, p2-(p1+1));
-				std::istringstream fxLine(effects);
+				SimpleIStringStream fxLine(effects.c_str(), SimpleIStringStream::REUSE);
 				std::string bit;
 				while (fxLine >> bit)
 				{
@@ -1032,6 +1049,10 @@ void Continuity::loadIngredientData(const std::string &file)
 					{
 						fx.type = IET_LI;
 					}
+					else if (bit.find("script") != std::string::npos)
+					{
+						fx.type = IET_SCRIPT;
+					}
 
 					int c = 0;
 					while (c < bit.size())
@@ -1050,6 +1071,31 @@ void Continuity::loadIngredientData(const std::string &file)
 		}
 
 		ingredientData.push_back(data);
+	}
+
+	if(extradata)
+	{
+		while (in >> line)
+		{
+			SimpleIStringStream inLine(line.c_str(), SimpleIStringStream::REUSE);
+			int maxAmount = MAX_INGREDIENT_AMOUNT;
+			int rotKind = 1;
+			inLine >> name >> maxAmount >> rotKind;
+			if (name == "==Recipes==")
+			{
+				recipes = true;
+				continue;
+			}
+			IngredientData *data = getIngredientDataByName(name);
+			if(!data)
+			{
+				errorLog("Specifying data for undefined ingredient: " + name);
+				continue;
+			}
+
+			data->maxAmount = maxAmount;
+			data->rotKind = rotKind;
+		}
 	}
 
 	if (recipes)

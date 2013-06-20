@@ -685,6 +685,7 @@ enum IngredientEffectType
 	IET_POISON		= 17,
 	IET_BLIND		= 18,
 	IET_ALLSTATUS	= 19,
+	IET_SCRIPT		= 20,
 	IET_MAX
 };
 
@@ -715,9 +716,11 @@ public:
 	std::string displayName;
 	const IngredientType type;
 	int amount;
+	int maxAmount;
 	int held;
 	int marked;
 	bool sorted;
+	bool rotKind;
 	bool hasIET(IngredientEffectType iet);
 
 	typedef std::vector<IngredientEffect> IngredientEffects;
@@ -1051,7 +1054,7 @@ public:
 	std::string getSongNameBySlot(int slot);
 	void toggleLiCombat(bool t);
 
-	void pickupIngredient(IngredientData *i, int amount, bool effects=true);
+	void pickupIngredient(IngredientData *i, int amount, bool effects=true, bool learn=true);
 	int indexOfIngredientData(const IngredientData* data) const;
 	IngredientData *getIngredientHeldByName(const std::string &name) const; // an ingredient that the player actually has; in the ingredients list
 	IngredientData *getIngredientDataByName(const std::string &name); // an ingredient in the general data list; ingredientData
@@ -1059,7 +1062,7 @@ public:
 	IngredientData *getIngredientHeldByIndex(int idx) const;
 	IngredientData *getIngredientDataByIndex(int idx);
 
-	void applyIngredientEffects(IngredientData *data);
+	bool applyIngredientEffects(IngredientData *data);
 
 	void loadIngredientData(const std::string &file);
 	void loadIngredientDisplayNames(const std::string& file);

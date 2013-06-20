@@ -394,7 +394,7 @@ void FoodSlot::refresh(bool effects)
 		{
 			std::ostringstream os;
 			if (i->amount > 1)
-				os << i->amount << "/" << MAX_INGREDIENT_AMOUNT;
+				os << i->amount << "/" << i->maxAmount;
 			label->setText(os.str());
 			setTexture("Ingredients/" + i->gfx);
 			renderQuad = true;
@@ -456,10 +456,13 @@ void FoodSlot::eatMe()
 
 		if (!ingredient->effects.empty())
 		{
-			ingredient->amount--;
-			dsq->continuity.applyIngredientEffects(ingredient);
-			dsq->continuity.removeEmptyIngredients();
-			dsq->game->refreshFoodSlots(true);
+			bool eaten = dsq->continuity.applyIngredientEffects(ingredient);
+			if(eaten)
+			{
+				ingredient->amount--;
+				dsq->continuity.removeEmptyIngredients();
+				dsq->game->refreshFoodSlots(true);
+			}
 		}
 		else
 		{
@@ -533,7 +536,7 @@ void FoodSlot::onUpdate(float dt)
 
 
 					Vector wp = getWorldPosition();
-					if ((dsq->game->lips->getWorldPosition() - getWorldPosition()).isLength2DIn(32))
+					if ((dsq->game->lips->getWorldPosition() - wp).isLength2DIn(32))
 					{
 						dsq->menuSelectDelay = 0.5;
 
@@ -548,7 +551,7 @@ void FoodSlot::onUpdate(float dt)
 						bool droppedIn = false;
 						for (int i = 0; i < foodHolders.size(); i++)
 						{
-							bool in = (foodHolders[i]->getWorldPosition() - getWorldPosition()).isLength2DIn(32);
+							bool in = (foodHolders[i]->getWorldPosition() - wp).isLength2DIn(32);
 							if (in)
 							{
 								droppedIn = true;
@@ -586,11 +589,6 @@ void FoodSlot::onUpdate(float dt)
 
 								label->alpha = 1;
 								grabTime = 0;
-
-								if (dsq->inputMode == INPUT_JOYSTICK)
-								{
-									dsq->game->adjustFoodSlotCursor();
-								}
 
 								return;
 							}
@@ -1235,6 +1233,8 @@ Game::Game() : StateObject()
 
 	lastCollideMaskIndex = -1;
 	worldPaused = false;
+
+	cookingScript = 0;
 
 }
 
@@ -5836,41 +5836,6 @@ float Game::getHalfTimer(float mod)
 	return halfTimer*mod;
 }
 
-void Game::adjustFoodSlotCursor()
-{
-	// using visible slots now, don't need this atm
-	return;
-	/*
-	for (int i = 0; i < foodSlots.size(); i++)
-	{
-		if (foodSlots[i]->isCursorIn())
-		{
-			if (!foodSlots[i]->getIngredient() || foodSlots[i]->getIngredient()->amount <= 0)
-			{
-				foodSlots[i]->setFocus(false);
-				i--;
-				while (i >= 0)
-				{
-					if (foodSlots[i]->getIngredient() && foodSlots[i]->getIngredient()->amount > 0)
-					{
-						//cursor->position = foodSlots[i]->getWorldPosition();
-						foodSlots[i]->setFocus(true);
-						break;
-					}
-					i--;
-				}
-				if (i <= -1)
-				{
-					menu[5]->setFocus(true);
-					//cursor->position = menu[5]->getWorldPosition();
-				}
-			}
-			break;
-		}
-	}
-	*/
-}
-
 void Game::action(int id, int state)
 {
 	for (int i = 0; i < paths.size(); i++)
@@ -5994,7 +5959,6 @@ void Game::action(int id, int state)
 							if (foodSlots[i]->isCursorIn() && foodSlots[i]->getIngredient())
 							{
 								foodSlots[i]->moveRight();
-								adjustFoodSlotCursor();
 								break;
 							}
 						}
@@ -6031,7 +5995,6 @@ void Game::action(int id, int state)
 							if (ingrIndex >= 0)
 							{
 								foodSlots[ingrIndex]->discard();
-								adjustFoodSlotCursor();
 							}
 						}
 					}
@@ -6709,6 +6672,14 @@ void Game::applyState()
 		musicToPlay = overrideMusic;
 	}
 
+	if(cookingScript)
+		dsq->scriptInterface.closeScript(cookingScript);
+
+	if (dsq->mod.isActive())
+		cookingScript = dsq->scriptInterface.openScript(dsq->mod.getPath() + "scripts/cooking.lua", true);
+	else
+		cookingScript = dsq->scriptInterface.openScript("scripts/global/cooking.lua", true);
+
 	//INFO: this used to be here to start fading out the music
 	// before the level had begun
 	/*
@@ -7244,7 +7215,20 @@ void Game::onCook()
 
 	if (r)
 		data = dsq->continuity.getIngredientDataByName(r->result);
-	else
+	else if(cookingScript)
+	{
+		const char *p1 = cookList[0]->name.c_str();
+		const char *p2 = cookList[1]->name.c_str();
+		const char *p3 = cookList.size() >= 3 ? cookList[2]->name.c_str() : "";
+		std::string ingname;
+		cookingScript->call("cookFailure", p1, p2, p3, &ingname);
+		if(ingname.length())
+			data = dsq->continuity.getIngredientDataByName(ingname);
+		if(!data)
+			goto endcook;
+	}
+	
+	if(!data)
 	{
 		dsq->sound->playSfx("Denied");
 		data = dsq->continuity.getIngredientDataByName("SeaLoaf");
@@ -7423,6 +7407,8 @@ void Game::onCook()
 		dsq->centerMessage(dsq->continuity.stringBank.get(27));
 	}
 	refreshFoodSlots(true);
+
+endcook:
 
 	AquariaGuiElement::canDirMoveGlobal = true;
 
@@ -8740,7 +8726,6 @@ void Game::refreshFoodSlots(bool effects)
 	{
 		foodSlots[i]->refresh(effects);
 	}
-	adjustFoodSlotCursor();
 }
 
 void Game::refreshTreasureSlots()

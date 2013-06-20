@@ -714,6 +714,8 @@ public:
 	Ingredient *getNearestIngredient(const Vector &pos, int radius);
 	Entity *getNearestEntity(const Vector &pos, int radius, Entity *ignore = 0, EntityType et=ET_NOTYPE, DamageType dt=DT_NONE, int lrStart=-1, int lrEnd=-1);
 
+	Script *cookingScript;
+
 	void spawnManaBall(Vector pos, float a);
 	bool updateMusic();
 	std::string overrideMusic;
