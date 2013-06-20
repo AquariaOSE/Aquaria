@@ -2461,6 +2461,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	startData.SetAttribute("scene", dsq->game->sceneName);
 	startData.SetAttribute("exp", dsq->continuity.exp);
 	startData.SetAttribute("h", dsq->continuity.maxHealth);
+	// ANDROID TODO: "ch" field
 	startData.SetAttribute("naijaModel", dsq->continuity.naijaModel);
 	startData.SetAttribute("costume", dsq->continuity.costume);
 	startData.SetAttribute("form", dsq->continuity.form);
@@ -2479,6 +2480,16 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	}
 	startData.SetAttribute("songs", os2.str());
 
+	// new format as used by android version
+	std::ostringstream ingrNames;
+	for (int i = 0; i < ingredients.size(); i++)
+	{
+		IngredientData *data = ingredients[i];
+		ingrNames << data->name << " " << data->amount << " ";
+	}
+	startData.SetAttribute("ingrNames", ingrNames.str());
+
+	// for compatibility with older versions
 	std::ostringstream ingrOs;
 	for (int i = 0; i < ingredients.size(); i++)
 	{
@@ -2551,6 +2562,9 @@ std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
 void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 {
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
+	if(!exists(teh_file))
+		teh_file = dsq->continuity.getSaveFileName(slot, "bin");
+
 	if (exists(teh_file))
 	{
 		unsigned long size = 0;
@@ -2810,7 +2824,9 @@ void Continuity::loadFile(int slot)
 
 				if (!tile)
 				{
-					errorLog("tile dummy");
+					std::ostringstream os;
+					os << "tile dummy: dropping data for worldmap tile index " << idx;
+					debugLog(os.str());
 					tile = &dummy;
 				}
 
@@ -2851,6 +2867,23 @@ void Continuity::loadFile(int slot)
 		if (startData->Attribute("form"))
 		{
 			dsq->continuity.form = FormType(atoi(startData->Attribute("form")));
+		}
+
+		if (startData->Attribute("ingrNames"))
+		{
+			std::istringstream is(startData->Attribute("ingrNames"));
+			std::string name;
+			while (is >> name)
+			{
+				int amount=0;
+				is >> amount;
+				IngredientData *data = getIngredientDataByName(name);
+				if (data)
+				{
+					data->amount = 0;
+					pickupIngredient(data, amount, false);
+				}
+			}
 		}
 
 		if (startData->Attribute("ingr"))
@@ -2915,6 +2948,8 @@ void Continuity::loadFile(int slot)
 				is >> intFlags[i];
 			}
 		}
+
+		// TODO ANDROID: "ch" field
 
 		if (startData->Attribute("h"))
 		{
