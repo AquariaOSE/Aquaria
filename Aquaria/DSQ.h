@@ -618,6 +618,7 @@ struct GemData
 	GemData() { canMove=false; }
 	std::string name;
 	std::string userString;
+	std::string mapName;
 	bool canMove;
 	Vector pos;
 };

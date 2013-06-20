@@ -2356,15 +2356,32 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 			if (hasUserString)
 				os << spacesToUnderscores((*i).userString) << " ";
-
-			/*
-			std::ostringstream os2;
-			os2 << "Saving a Gem called [" << (*i).name << "] with userString [" << (*i).userString << "] pos (" << (*i).pos.x << ", " << (*i).pos.y << ")\n";
-			os2 << os.str() << "\n";
-			debugLog(os2.str());
-			*/
 		}
 		gems.SetAttribute("c", os.str());
+
+		// This is the format used in the android version. Keeping this commented out for now,
+		// but it should be used instead of the code above in some time -- FG
+		os.str("");
+		bool hasMapName = false;
+		os << this->gems.size() << " ";
+		for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
+		{
+			os << (*i).name << " ";
+			hasMapName = !(*i).mapName.empty();
+			os << hasMapName << " ";
+			if(hasMapName)
+				os << (*i).mapName << " "; // warning: this will fail to load if the map name contains whitespace
+
+			os << (*i).pos.x << " " << (*i).pos.y << " ";
+			os << (*i).canMove << " ";
+
+			hasUserString = !(*i).userString.empty();
+			os << hasUserString << " ";
+			if (hasUserString)
+				os << spacesToUnderscores((*i).userString) << " ";
+		}
+		gems.SetAttribute("d", os.str());
+
 	}
 	doc.InsertEndChild(gems);
 
@@ -2748,6 +2765,7 @@ void Continuity::loadFile(int slot)
 				this->gems.push_back(g);
 			}
 		}
+		// num [name mapX mapY canMove hasUserString (userString)]
 		else if (gems->Attribute("c"))
 		{
 			std::string s = gems->Attribute("c");
@@ -2781,6 +2799,54 @@ void Continuity::loadFile(int slot)
 					is >> g.userString;
 				else
 					g.userString = "";
+
+				g.userString = underscoresToSpaces(g.userString);
+				this->gems.push_back(g);
+
+				std::ostringstream os;
+				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
+				debugLog(os.str());
+			}
+		}
+		// num [name hasMapName (mapName) mapX mapY canMove hasUserString (userString)]
+		else if (gems->Attribute("d"))
+		{
+			std::string s = gems->Attribute("d");
+			std::istringstream is(s);
+
+			int num = 0;
+			is >> num;
+
+			bool hasUserString = false;
+			bool hasMapName = false;
+			GemData g;
+
+			std::ostringstream os;
+			os << "continuity num: [" << num << "]" << std::endl;
+			os << "data: [" << s << "]" << std::endl;
+			debugLog(os.str());
+
+			for (int i = 0; i < num; i++)
+			{
+				g.pos = Vector(0,0,0);
+				g.canMove = false;
+				g.userString = "";
+				g.mapName = "";
+
+				hasUserString=false;
+				hasMapName = false;
+
+				is >> g.name;
+				is >> hasMapName;
+				if(hasMapName)
+					is >> g.mapName;
+
+				is >> g.pos.x >> g.pos.y;
+				is >> g.canMove;
+				is >> hasUserString;
+
+				if (hasUserString)
+					is >> g.userString;
 
 				g.userString = underscoresToSpaces(g.userString);
 				this->gems.push_back(g);
@@ -3134,6 +3200,7 @@ GemData *Continuity::pickupGem(std::string name, bool effects)
 {
 	GemData g;
 	g.name = name;
+	g.mapName = dsq->game->sceneName;
 	int sz = gems.size();
 
 	//HACK: (hacky) using effects to determine the starting position of the gem
