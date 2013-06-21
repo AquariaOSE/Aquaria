@@ -61,7 +61,7 @@ bool Continuity::isIngredientFull(IngredientData *data)
 	{
 		if (nocasecmp(ingredients[i]->name, data->name)==0)
 		{
-			if (ingredients[i]->amount >= MAX_INGREDIENT_AMOUNT)
+			if (ingredients[i]->amount >= ingredients[i]->maxAmount)
 				return true;
 			else
 				return false;
@@ -70,22 +70,23 @@ bool Continuity::isIngredientFull(IngredientData *data)
 	return false;
 }
 
-void Continuity::pickupIngredient(IngredientData *d, int amount, bool effects)
+void Continuity::pickupIngredient(IngredientData *d, int amount, bool effects, bool learn)
 {
-	learnRecipe(d->name, effects);
+	if(learn)
+		learnRecipe(d->name, effects);
 
 	if (!getIngredientHeldByName(d->name))
 	{
 		ingredients.push_back(d);
 	}
 
-	if (d->amount < MAX_INGREDIENT_AMOUNT - amount)
+	if (d->amount < d->maxAmount - amount)
 	{
 		d->amount += amount;
 	}
 	else
 	{
-		d->amount = MAX_INGREDIENT_AMOUNT;
+		d->amount = d->maxAmount;
 	}
 }
 
@@ -607,8 +608,10 @@ std::string Continuity::getAllIEString(IngredientData *data)
 	return os.str();
 }
 
-void Continuity::applyIngredientEffects(IngredientData *data)
+// returns true if eaten
+bool Continuity::applyIngredientEffects(IngredientData *data)
 {
+	bool eaten = true;
 	float y =0;
 	for (int i = 0; i < data->effects.size(); i++)
 	{
@@ -841,28 +844,37 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 			// this item should only affect li if naija drops it and li eats it.
 		}
 		break;
+		case IET_SCRIPT:
+		{
+			// If this fails, it will still be eaten
+			if(dsq->game->cookingScript)
+				dsq->game->cookingScript->call("useIngredient", data->name.c_str(), &eaten);
+		}
+		break;
 		default:
 		{
 			char str[256];
 			sprintf((char*)&str, "ingredient effect not defined, index[%d]", int(useType));
 			errorLog(str);
+			eaten = false;
 		}
 		break;
 		}
 	}
+	return eaten;
 }
 
 std::string Continuity::getIngredientAffectsString(IngredientData *data)
 {
-
-	/*
-	std::string str;
-	for (int i = 0; i < data->effects.size(); i++)
+	if(data->type == IET_SCRIPT)
 	{
-		str += splitCamelCase(getIngredientDescription(data->effects[i].type)) + "\n";
+		if(dsq->game->cookingScript)
+		{
+			std::string ret = "";
+			dsq->game->cookingScript->call("getIngredientString", data->name.c_str(), &ret);
+			return ret;
+		}
 	}
-	return str;
-	*/
 
 	return getAllIEString(data);
 }
@@ -910,6 +922,43 @@ void Continuity::clearIngredientData()
 	ingredientData.clear();
 }
 
+void Continuity::loadIngredientData()
+{
+	if(ingredients.size())
+	{
+		debugLog("Can't reload ingredient data, inventory is not empty");
+		return; // ... because otherwise there would be dangling pointers and it would crash.
+	}
+
+	clearIngredientData();
+	ingredientDescriptions.clear();
+	ingredientDisplayNames.clear();
+	recipes.clear();
+
+	loadIngredientDisplayNames("data/ingredientnames.txt");
+
+	std::string fname = localisePath("data/ingredientnames.txt");
+	loadIngredientDisplayNames(fname);
+
+	if(dsq->mod.isActive())
+	{
+		fname = localisePath(dsq->mod.getPath() + "ingredientnames.txt", dsq->mod.getPath());
+		loadIngredientDisplayNames(fname);
+	}
+
+	if(dsq->mod.isActive())
+	{
+		//load mod ingredients
+		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
+	}
+
+	//load ingredients for the main game
+	if(ingredientData.empty() && recipes.empty())
+	{
+		loadIngredientData("data/ingredients.txt");
+	}
+}
+
 void Continuity::loadIngredientData(const std::string &file)
 {
 	std::string line, name, gfx, type, effects;
@@ -920,6 +969,7 @@ void Continuity::loadIngredientData(const std::string &file)
 	InStream in(file.c_str());
 
 	bool recipes = false;
+	bool extradata = false;
 	while (std::getline(in, line))
 	{
 		std::istringstream inLine(line);
@@ -929,6 +979,11 @@ void Continuity::loadIngredientData(const std::string &file)
 		if (name == "==Recipes==")
 		{
 			recipes = true;
+			break;
+		}
+		else if(name == "==Extra==")
+		{
+			extradata = true;
 			break;
 		}
 		inLine >> gfx >> type;
@@ -1032,6 +1087,10 @@ void Continuity::loadIngredientData(const std::string &file)
 					{
 						fx.type = IET_LI;
 					}
+					else if (bit.find("script") != std::string::npos)
+					{
+						fx.type = IET_SCRIPT;
+					}
 
 					int c = 0;
 					while (c < bit.size())
@@ -1050,6 +1109,31 @@ void Continuity::loadIngredientData(const std::string &file)
 		}
 
 		ingredientData.push_back(data);
+	}
+
+	if(extradata)
+	{
+		while (std::getline(in, line))
+		{
+			SimpleIStringStream inLine(line.c_str(), SimpleIStringStream::REUSE);
+			int maxAmount = MAX_INGREDIENT_AMOUNT;
+			int rotKind = 1;
+			inLine >> name >> maxAmount >> rotKind;
+			if (name == "==Recipes==")
+			{
+				recipes = true;
+				break;
+			}
+			IngredientData *data = getIngredientDataByName(name);
+			if(!data)
+			{
+				errorLog("Specifying data for undefined ingredient: " + name);
+				continue;
+			}
+
+			data->maxAmount = maxAmount;
+			data->rotKind = rotKind;
+		}
 	}
 
 	if (recipes)
@@ -2310,15 +2394,34 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 			if (hasUserString)
 				os << spacesToUnderscores((*i).userString) << " ";
-
-			/*
-			std::ostringstream os2;
-			os2 << "Saving a Gem called [" << (*i).name << "] with userString [" << (*i).userString << "] pos (" << (*i).pos.x << ", " << (*i).pos.y << ")\n";
-			os2 << os.str() << "\n";
-			debugLog(os2.str());
-			*/
 		}
 		gems.SetAttribute("c", os.str());
+
+		// This is the format used in the android version. Keeping this commented out for now,
+		// but it should be used instead of the code above in some time -- FG
+		/*
+		os.str("");
+		bool hasMapName = false;
+		os << this->gems.size() << " ";
+		for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
+		{
+			os << (*i).name << " ";
+			hasMapName = !(*i).mapName.empty();
+			os << hasMapName << " ";
+			if(hasMapName)
+				os << (*i).mapName << " "; // warning: this will fail to load if the map name contains whitespace
+
+			os << (*i).pos.x << " " << (*i).pos.y << " ";
+			os << (*i).canMove << " ";
+
+			hasUserString = !(*i).userString.empty();
+			os << hasUserString << " ";
+			if (hasUserString)
+				os << spacesToUnderscores((*i).userString) << " ";
+		}
+		gems.SetAttribute("d", os.str());
+		*/
+
 	}
 	doc.InsertEndChild(gems);
 
@@ -2415,6 +2518,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	startData.SetAttribute("scene", dsq->game->sceneName);
 	startData.SetAttribute("exp", dsq->continuity.exp);
 	startData.SetAttribute("h", dsq->continuity.maxHealth);
+	// ANDROID TODO: "ch" field
 	startData.SetAttribute("naijaModel", dsq->continuity.naijaModel);
 	startData.SetAttribute("costume", dsq->continuity.costume);
 	startData.SetAttribute("form", dsq->continuity.form);
@@ -2433,6 +2537,16 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	}
 	startData.SetAttribute("songs", os2.str());
 
+	// new format as used by android version
+	std::ostringstream ingrNames;
+	for (int i = 0; i < ingredients.size(); i++)
+	{
+		IngredientData *data = ingredients[i];
+		ingrNames << data->name << " " << data->amount << " ";
+	}
+	startData.SetAttribute("ingrNames", ingrNames.str());
+
+	// for compatibility with older versions
 	std::ostringstream ingrOs;
 	for (int i = 0; i < ingredients.size(); i++)
 	{
@@ -2505,6 +2619,9 @@ std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
 void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 {
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
+	if(!exists(teh_file))
+		teh_file = dsq->continuity.getSaveFileName(slot, "bin");
+
 	if (exists(teh_file))
 	{
 		unsigned long size = 0;
@@ -2688,6 +2805,7 @@ void Continuity::loadFile(int slot)
 				this->gems.push_back(g);
 			}
 		}
+		// num [name mapX mapY canMove hasUserString (userString)]
 		else if (gems->Attribute("c"))
 		{
 			std::string s = gems->Attribute("c");
@@ -2721,6 +2839,54 @@ void Continuity::loadFile(int slot)
 					is >> g.userString;
 				else
 					g.userString = "";
+
+				g.userString = underscoresToSpaces(g.userString);
+				this->gems.push_back(g);
+
+				std::ostringstream os;
+				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
+				debugLog(os.str());
+			}
+		}
+		// num [name hasMapName (mapName) mapX mapY canMove hasUserString (userString)]
+		else if (gems->Attribute("d"))
+		{
+			std::string s = gems->Attribute("d");
+			std::istringstream is(s);
+
+			int num = 0;
+			is >> num;
+
+			bool hasUserString = false;
+			bool hasMapName = false;
+			GemData g;
+
+			std::ostringstream os;
+			os << "continuity num: [" << num << "]" << std::endl;
+			os << "data: [" << s << "]" << std::endl;
+			debugLog(os.str());
+
+			for (int i = 0; i < num; i++)
+			{
+				g.pos = Vector(0,0,0);
+				g.canMove = false;
+				g.userString = "";
+				g.mapName = "";
+
+				hasUserString=false;
+				hasMapName = false;
+
+				is >> g.name;
+				is >> hasMapName;
+				if(hasMapName)
+					is >> g.mapName;
+
+				is >> g.pos.x >> g.pos.y;
+				is >> g.canMove;
+				is >> hasUserString;
+
+				if (hasUserString)
+					is >> g.userString;
 
 				g.userString = underscoresToSpaces(g.userString);
 				this->gems.push_back(g);
@@ -2764,7 +2930,9 @@ void Continuity::loadFile(int slot)
 
 				if (!tile)
 				{
-					errorLog("tile dummy");
+					std::ostringstream os;
+					os << "tile dummy: dropping data for worldmap tile index " << idx;
+					debugLog(os.str());
 					tile = &dummy;
 				}
 
@@ -2805,6 +2973,23 @@ void Continuity::loadFile(int slot)
 		if (startData->Attribute("form"))
 		{
 			dsq->continuity.form = FormType(atoi(startData->Attribute("form")));
+		}
+
+		if (startData->Attribute("ingrNames"))
+		{
+			std::istringstream is(startData->Attribute("ingrNames"));
+			std::string name;
+			while (is >> name)
+			{
+				int amount=0;
+				is >> amount;
+				IngredientData *data = getIngredientDataByName(name);
+				if (data)
+				{
+					data->amount = 0;
+					pickupIngredient(data, amount, false);
+				}
+			}
 		}
 
 		if (startData->Attribute("ingr"))
@@ -2869,6 +3054,8 @@ void Continuity::loadFile(int slot)
 				is >> intFlags[i];
 			}
 		}
+
+		// TODO ANDROID: "ch" field
 
 		if (startData->Attribute("h"))
 		{
@@ -3053,6 +3240,7 @@ GemData *Continuity::pickupGem(std::string name, bool effects)
 {
 	GemData g;
 	g.name = name;
+	g.mapName = dsq->game->sceneName;
 	int sz = gems.size();
 
 	//HACK: (hacky) using effects to determine the starting position of the gem
@@ -3163,6 +3351,7 @@ void Continuity::reset()
 	//worldMapTiles.clear();
 
 	speedMult = biteMult = fishPoison = defenseMult = 1;
+	speedMult2 = 1;
 	poison = 0;
 	energyMult = 0;
 	light = petPower = 0;
@@ -3192,40 +3381,11 @@ void Continuity::reset()
 
 	worldMap.load();
 
-	ingredients.clear();
 	naijaEats.clear();
-
 	foodSortType = 0;
+	ingredients.clear();
 
-	//load ingredients
-
-	ingredientDisplayNames.clear();
-
-	loadIngredientDisplayNames("data/ingredientnames.txt");
-
-	std::string fname = localisePath("data/ingredientnames.txt");
-	loadIngredientDisplayNames(fname);
-
-	if(dsq->mod.isActive())
-	{
-		fname = localisePath(dsq->mod.getPath() + "ingredientnames.txt", dsq->mod.getPath());
-		loadIngredientDisplayNames(fname);
-	}
-
-	ingredientDescriptions.clear();
-	ingredientData.clear();
-	recipes.clear();
-
-	if(dsq->mod.isActive())
-	{
-		//load mod ingredients
-		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
-	}
-
-	//load ingredients for the main game
-	if(ingredientData.empty() && recipes.empty()) {
-		loadIngredientData("data/ingredients.txt");
-	}
+	loadIngredientData(); // must be after clearing ingredients
 
 	loadPetData();
 

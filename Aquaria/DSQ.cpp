@@ -614,6 +614,7 @@ void DSQ::debugMenu()
 						core->afterEffectManager->loadShaders();
 					}
 					dsq->user.load();
+					dsq->continuity.loadIngredientData();
 				}
 				else if (c == '2')
 				{
@@ -2154,7 +2155,6 @@ void DSQ::loadMods()
 
 	// first load the packages, then enumerate XMLs
 	forEachFile(mod.getBaseModPath(), ".aqmod", loadModPackagesCallback, 0);
-	forEachFile(mod.getBaseModPath(), ".zip", loadModPackagesCallback, 0);
 #endif
 
 	forEachFile(mod.getBaseModPath(), ".xml", loadModsCallback, 0);

@@ -76,6 +76,7 @@ static const char * const interfaceFunctions[] = {
 	"activate",
 	"animationKey",
 	"castSong",
+	"cookFailure",
 	"damage",
 	"deathNotify",
 	"dieEaten",
@@ -84,6 +85,7 @@ static const char * const interfaceFunctions[] = {
 	"entityDied",
 	"exitState",
 	"exitTimer",
+	"getIngredientString",
 	"hitEntity",
 	"hitSurface",
 	"init",
@@ -98,6 +100,7 @@ static const char * const interfaceFunctions[] = {
 	"songNoteDone",
 	"sporesDropped",
 	"update",
+	"useIngredient",
 	"useTreasure",
 	NULL
 };
@@ -2895,6 +2898,28 @@ luaFunc(avatar_getSpellCharge)
 	luaReturnNum(dsq->game->avatar->state.spellCharge);
 }
 
+luaFunc(avatar_setSpeedMult)
+{
+	dsq->continuity.setSpeedMultiplier(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(avatar_setSpeedMult2)
+{
+	dsq->continuity.speedMult2 = lua_tonumber(L, 1);
+	luaReturnNil();
+}
+
+luaFunc(avatar_getSpeedMult)
+{
+	luaReturnNum(dsq->continuity.speedMult);
+}
+
+luaFunc(avatar_getSpeedMult2)
+{
+	luaReturnNum(dsq->continuity.speedMult2);
+}
+
 luaFunc(jumpState)
 {
 	dsq->enqueueJumpState(getString(L, 1), getBool(L, 2));
@@ -2995,11 +3020,6 @@ luaFunc(entity_followPath)
 		e->followPath(p, speedType, dir);
 	}
 	luaReturnNil();
-}
-
-luaFunc(getIngredientGfx)
-{
-	luaReturnStr(dsq->continuity.getIngredientGfx(getString(L, 1)).c_str());
 }
 
 luaFunc(spawnIngredient)
@@ -3210,6 +3230,11 @@ luaFunc(entity_checkSplash)
 	luaReturnBool(ret);
 }
 
+luaFunc(entity_isInCurrent)
+{
+	Entity *e = entity(L);
+	luaReturnBool(e ? e->isInCurrent() : false);
+}
 
 luaFunc(entity_isUnderWater)
 {
@@ -5611,6 +5636,12 @@ luaFunc(entity_getRandomTargetPoint)
 	luaReturnNum(idx);
 }
 
+luaFunc(entity_getNumTargetPoints)
+{
+	Entity *e = entity(L);
+	luaReturnInt(e ? e->getNumTargetPoints() : 0);
+}
+
 luaFunc(playVisualEffect)
 {
 	Entity *target = NULL;
@@ -6728,6 +6759,13 @@ luaFunc(ing_hasIET)
 	luaReturnBool(has);
 }
 
+luaFunc(ing_getIngredientName)
+{
+	Ingredient *i = getIng(L, 1);
+	IngredientData *data = i ? i->getIngredientData() : 0;
+	luaReturnStr(data ? data->name.c_str() : "");
+}
+
 luaFunc(entity_getNearestEntity)
 {
 	Entity *me = entity(L);
@@ -7704,6 +7742,82 @@ luaFunc(getScreenSize)
 	luaReturnVec2(core->width, core->height);
 }
 
+luaFunc(inv_isFull)
+{
+	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
+	bool full = false;
+	if(data)
+		full = dsq->continuity.isIngredientFull(data);
+	luaReturnBool(full);
+}
+
+luaFunc(inv_getMaxAmount)
+{
+	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
+	luaReturnInt(data ? data->maxAmount : 0);
+}
+
+luaFunc(inv_getAmount)
+{
+	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
+	luaReturnInt(data ? data->amount : 0);
+}
+
+luaFunc(inv_add)
+{
+	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
+	if(data)
+		dsq->continuity.pickupIngredient(data, lua_tointeger(L, 2), false, false);
+	luaReturnNil();
+}
+
+luaFunc(inv_getGfx)
+{
+	luaReturnStr(dsq->continuity.getIngredientGfx(getString(L, 1)).c_str());
+}
+
+luaFunc(inv_remove)
+{
+	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
+	if(data && data->amount > 0)
+	{
+		data->amount--;
+		dsq->game->dropIngrNames.push_back(data->name);
+		dsq->continuity.removeEmptyIngredients();
+		if(dsq->game->isInGameMenu())
+			dsq->game->refreshFoodSlots(true);
+	}
+	luaReturnNil();
+}
+
+luaFunc(inv_getType)
+{
+	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
+	luaReturnInt(data ? data->type : 0);
+}
+
+luaFunc(inv_getDisplayName)
+{
+	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
+	luaReturnStr(data ? data->displayName.c_str() : "");
+}
+
+luaFunc(inv_pickupEffect)
+{
+	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
+	if(data)
+		dsq->game->pickupIngredientEffects(data);
+	luaReturnNil();
+}
+
+luaFunc(learnRecipe)
+{
+	std::string name = getString(L, 1);
+	bool show = getBool(L, 2);
+	dsq->continuity.learnRecipe(name, show);
+	luaReturnNil();
+}
+
 luaFunc(createDebugText)
 {
 	DebugFont *txt = new DebugFont(lua_tointeger(L, 2), getString(L, 1));
@@ -7876,6 +7990,7 @@ static const struct {
 	luaRegister(reconstructEntityGrid),
 
 	luaRegister(ing_hasIET),
+	luaRegister(ing_getIngredientName),
 
 	luaRegister(esetv),
 	luaRegister(esetvf),
@@ -7984,9 +8099,11 @@ static const struct {
 
 	luaRegister(entity_isUnderWater),
 	luaRegister(entity_checkSplash),
+	luaRegister(entity_isInCurrent),
 
 	luaRegister(entity_getRandomTargetPoint),
 	luaRegister(entity_getTargetPoint),
+	luaRegister(entity_getNumTargetPoints),
 
 	luaRegister(entity_setTargetRange),
 
@@ -8196,8 +8313,6 @@ static const struct {
 
 	luaRegister(registerSporeDrop),
 
-	luaRegister(getIngredientGfx),
-
 	luaRegister(spawnIngredient),
 	luaRegister(spawnAllIngredients),
 	luaRegister(spawnParticleEffect),
@@ -8372,6 +8487,11 @@ static const struct {
 	luaRegister(avatar_fallOffWall),
 	luaRegister(avatar_setBlockSinging),
 	luaRegister(avatar_isBlockSinging),
+
+	luaRegister(avatar_setSpeedMult),
+	luaRegister(avatar_setSpeedMult2),
+	luaRegister(avatar_getSpeedMult),
+	luaRegister(avatar_getSpeedMult2),
 
 
 	luaRegister(avatar_toggleMovement),
@@ -8690,6 +8810,17 @@ static const struct {
 	luaRegister(getScreenVirtualOff),
 	luaRegister(getScreenSize),
 
+	luaRegister(inv_isFull),
+	luaRegister(inv_getMaxAmount),
+	luaRegister(inv_getAmount),
+	luaRegister(inv_add),
+	luaRegister(inv_getGfx),
+	luaRegister(inv_remove),
+	luaRegister(inv_getType),
+	luaRegister(inv_getDisplayName),
+	luaRegister(inv_pickupEffect),
+	luaRegister(learnRecipe),
+
 	luaRegister(createDebugText),
 	luaRegister(createBitmapText),
 	luaRegister(text_setText),
@@ -8746,6 +8877,7 @@ static const struct {
 	{"entity_rotateTo", l_entity_rotate},
 	{"entity_setColor", l_entity_color},
 	{"entity_setInternalOffset", l_entity_internalOffset},
+	{"getIngredientGfx", l_inv_getGfx},
 
 	{"bone_setColor", l_bone_color},
 
@@ -9968,6 +10100,41 @@ bool Script::call(const char *name, void *param1, void *param2, void *param3, fl
 	if (!doCall(8, 1))
 		return false;
 	*ret1 = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
+
+bool Script::call(const char *name, const char *param, bool *ret)
+{
+	lookupFunc(name);
+	lua_pushstring(L, param);
+	if (!doCall(1, 1))
+		return false;
+	*ret = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
+
+bool Script::call(const char *name, const char *param, std::string *ret)
+{
+	lookupFunc(name);
+	lua_pushstring(L, param);
+	if (!doCall(1, 1))
+		return false;
+	*ret = getString(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
+
+bool Script::call(const char *name, const char *param1, const char *param2, const char *param3, std::string *ret)
+{
+	lookupFunc(name);
+	lua_pushstring(L, param1);
+	lua_pushstring(L, param2);
+	lua_pushstring(L, param3);
+	if (!doCall(3, 1))
+		return false;
+	*ret = getString(L, -1);
 	lua_pop(L, 1);
 	return true;
 }

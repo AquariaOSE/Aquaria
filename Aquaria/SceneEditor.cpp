@@ -3578,10 +3578,10 @@ void SceneEditor::update(float dt)
 					(dsq->getGameCursorPosition().y - cursorOffset.y)*factor);
 				//editingElement->scale=oldScale + add;
 				Vector sz = oldScale + add;
-				if (sz.x < 64)
-					sz.x = 64;
-				if (sz.y < 64)
-					sz.y = 64;
+				if (sz.x < 32)
+					sz.x = 32;
+				if (sz.y < 32)
+					sz.y = 32;
 				editingPath->rect.x1 = -sz.x/2;
 				editingPath->rect.x2 = sz.x/2;
 				editingPath->rect.y1 = -sz.y/2;
