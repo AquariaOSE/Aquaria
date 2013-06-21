@@ -3956,15 +3956,8 @@ void Core::clearResources()
 		{
 			deletedResources.push_back (resources[i]);
 			Resource *r = resources[i];
-			try
-			{
-				r->destroy();
-				delete r;
-			}
-			catch(...)
-			{
-				errorLog("Resource could not be deleted " + resourceNames[i]);
-			}
+			r->destroy();
+			delete r;
 		}
 	}
 	resourceNames.clear();

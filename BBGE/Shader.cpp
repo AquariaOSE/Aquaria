@@ -260,130 +260,122 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 	g_location_mode		= 0;
 	g_location_value	= 0;
 
-	try
+	debugLog("Shader::load 1");
+	this->vertFile = file;
+	this->fragFile = fragFile;
+	//
+	// If the required extension is present, get the addresses of its 
+	// functions that we wish to use...
+	//
+
+	const char *vertexShaderStrings[1];
+	const char *fragmentShaderStrings[1];
+	GLint bVertCompiled;
+	GLint bFragCompiled;
+	GLint bLinked;
+	char str[4096];
+
+	//
+	// Create the vertex shader...
+	//
+
+	debugLog("Shader::load 2");
+
+	g_vertexShader = glCreateShaderObjectARB( GL_VERTEX_SHADER_ARB );
+
+	unsigned char *vertexShaderAssembly = readShaderFile( file.c_str() );
+	vertexShaderStrings[0] = (char*)vertexShaderAssembly;
+	glShaderSourceARB( g_vertexShader, 1, vertexShaderStrings, NULL );
+	glCompileShaderARB( g_vertexShader);
+	delete[] vertexShaderAssembly;
+
+	glGetObjectParameterivARB( g_vertexShader, GL_OBJECT_COMPILE_STATUS_ARB, 
+							&bVertCompiled );
+	if( bVertCompiled  == false )
+	//if (true)
 	{
-
-		debugLog("Shader::load 1");
-		this->vertFile = file;
-		this->fragFile = fragFile;
-		//
-		// If the required extension is present, get the addresses of its 
-		// functions that we wish to use...
-		//
-
-		const char *vertexShaderStrings[1];
-		const char *fragmentShaderStrings[1];
-		GLint bVertCompiled;
-		GLint bFragCompiled;
-		GLint bLinked;
-		char str[4096];
-
-		//
-		// Create the vertex shader...
-		//
-
-		debugLog("Shader::load 2");
-
-		g_vertexShader = glCreateShaderObjectARB( GL_VERTEX_SHADER_ARB );
-
-		unsigned char *vertexShaderAssembly = readShaderFile( file.c_str() );
-		vertexShaderStrings[0] = (char*)vertexShaderAssembly;
-		glShaderSourceARB( g_vertexShader, 1, vertexShaderStrings, NULL );
-		glCompileShaderARB( g_vertexShader);
-		delete[] vertexShaderAssembly;
-
-		glGetObjectParameterivARB( g_vertexShader, GL_OBJECT_COMPILE_STATUS_ARB, 
-								&bVertCompiled );
-		if( bVertCompiled  == false )
-		//if (true)
-		{
-			glGetInfoLogARB(g_vertexShader, sizeof(str), NULL, str);
-			std::ostringstream os;
-			os << "Vertex Shader Compile Error: " << str;
-			debugLog(os.str());
-			return;
-		}
-
-		//
-		// Create the fragment shader...
-		//
-
-		debugLog("Shader::load 3");
-
-		g_fragmentShader = glCreateShaderObjectARB( GL_FRAGMENT_SHADER_ARB );
-
-		unsigned char *fragmentShaderAssembly = readShaderFile( fragFile.c_str() );
-		fragmentShaderStrings[0] = (char*)fragmentShaderAssembly;
-		glShaderSourceARB( g_fragmentShader, 1, fragmentShaderStrings, NULL );
-		glCompileShaderARB( g_fragmentShader );
-		delete[] fragmentShaderAssembly;
-
-		glGetObjectParameterivARB( g_fragmentShader, GL_OBJECT_COMPILE_STATUS_ARB, 
-								&bFragCompiled );
-		if( bFragCompiled == false )
-		{
-			glGetInfoLogARB( g_fragmentShader, sizeof(str), NULL, str );
-			std::ostringstream os;
-			os << "Fragment Shader Compile Error: " << str;
-			debugLog(os.str());
-			return;
-		}
-
-		debugLog("Shader::load 4");
-
-		//
-		// Create a program object and attach the two compiled shaders...
-		//
-		
-
-		g_programObj = glCreateProgramObjectARB();
-
-		if (!g_programObj || !g_vertexShader || !g_fragmentShader)
-		{
-			debugLog("programObj / vertexShader / fragmentShader problem");
-			return;
-		}
-
-		glAttachObjectARB( g_programObj, g_vertexShader );
-		glAttachObjectARB( g_programObj, g_fragmentShader );
-
-		//
-		// Link the program object and print out the info log...
-		//
-
-		glLinkProgramARB( g_programObj );
-		glGetObjectParameterivARB( g_programObj, GL_OBJECT_LINK_STATUS_ARB, &bLinked );
-
-		debugLog("Shader::load 5");
-
-		if( bLinked == false )
-		{
-			glGetInfoLogARB( g_programObj, sizeof(str), NULL, str );
-			std::ostringstream os;
-			os << "Shader Linking Error: " << str;
-			debugLog(os.str());
-			return;
-		}
-
-		//
-		// Locate some parameters by name so we can set them later...
-		//
-
-		debugLog("Shader::load 6");
-
-		g_location_texture = glGetUniformLocationARB( g_programObj, "tex" );
-		g_location_mode = glGetUniformLocationARB( g_programObj, "mode" );
-		g_location_value = glGetUniformLocationARB( g_programObj, "value" );
-
-		debugLog("Shader::load 7");
-
-		loaded = true;
+		glGetInfoLogARB(g_vertexShader, sizeof(str), NULL, str);
+		std::ostringstream os;
+		os << "Vertex Shader Compile Error: " << str;
+		debugLog(os.str());
+		return;
 	}
-	catch(...)
+
+	//
+	// Create the fragment shader...
+	//
+
+	debugLog("Shader::load 3");
+
+	g_fragmentShader = glCreateShaderObjectARB( GL_FRAGMENT_SHADER_ARB );
+
+	unsigned char *fragmentShaderAssembly = readShaderFile( fragFile.c_str() );
+	fragmentShaderStrings[0] = (char*)fragmentShaderAssembly;
+	glShaderSourceARB( g_fragmentShader, 1, fragmentShaderStrings, NULL );
+	glCompileShaderARB( g_fragmentShader );
+	delete[] fragmentShaderAssembly;
+
+	glGetObjectParameterivARB( g_fragmentShader, GL_OBJECT_COMPILE_STATUS_ARB, 
+							&bFragCompiled );
+	if( bFragCompiled == false )
 	{
-		debugLog("caught exception in shader::load");
-		loaded = false;
+		glGetInfoLogARB( g_fragmentShader, sizeof(str), NULL, str );
+		std::ostringstream os;
+		os << "Fragment Shader Compile Error: " << str;
+		debugLog(os.str());
+		return;
 	}
+
+	debugLog("Shader::load 4");
+
+	//
+	// Create a program object and attach the two compiled shaders...
+	//
+	
+
+	g_programObj = glCreateProgramObjectARB();
+
+	if (!g_programObj || !g_vertexShader || !g_fragmentShader)
+	{
+		debugLog("programObj / vertexShader / fragmentShader problem");
+		return;
+	}
+
+	glAttachObjectARB( g_programObj, g_vertexShader );
+	glAttachObjectARB( g_programObj, g_fragmentShader );
+
+	//
+	// Link the program object and print out the info log...
+	//
+
+	glLinkProgramARB( g_programObj );
+	glGetObjectParameterivARB( g_programObj, GL_OBJECT_LINK_STATUS_ARB, &bLinked );
+
+	debugLog("Shader::load 5");
+
+	if( bLinked == false )
+	{
+		glGetInfoLogARB( g_programObj, sizeof(str), NULL, str );
+		std::ostringstream os;
+		os << "Shader Linking Error: " << str;
+		debugLog(os.str());
+		return;
+	}
+
+	//
+	// Locate some parameters by name so we can set them later...
+	//
+
+	debugLog("Shader::load 6");
+
+	g_location_texture = glGetUniformLocationARB( g_programObj, "tex" );
+	g_location_mode = glGetUniformLocationARB( g_programObj, "mode" );
+	g_location_value = glGetUniformLocationARB( g_programObj, "value" );
+
+	debugLog("Shader::load 7");
+
+	loaded = true;
+
 #endif
 	debugLog("End Shader::load()");
 }

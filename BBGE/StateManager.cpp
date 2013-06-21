@@ -122,19 +122,10 @@ void StateData::eraseRenderObjects()
 	for (int i = 0; i < renderObjects.size(); i++)
 	{
 		RenderObject *r = renderObjects[i];
-		//try
+		if (r && !r->isDead())
 		{
-			if (r && !r->isDead())
-			{
-				core->enqueueRenderObjectDeletion(renderObjects[i]);
-			}
+			core->enqueueRenderObjectDeletion(renderObjects[i]);
 		}
-		/*
-		catch(...)
-		{
-			debugLog("Caught exception in StateData::eraseRenderObjects");
-		}
-		*/
 	}
 	renderObjects.clear();
 }
