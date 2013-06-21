@@ -850,6 +850,7 @@ bool Continuity::applyIngredientEffects(IngredientData *data)
 			if(dsq->game->cookingScript)
 				dsq->game->cookingScript->call("useIngredient", data->name.c_str(), &eaten);
 		}
+		break;
 		default:
 		{
 			char str[256];
@@ -921,6 +922,43 @@ void Continuity::clearIngredientData()
 	ingredientData.clear();
 }
 
+void Continuity::loadIngredientData()
+{
+	if(ingredients.size())
+	{
+		debugLog("Can't reload ingredient data, inventory is not empty");
+		return; // ... because otherwise there would be dangling pointers and it would crash.
+	}
+
+	clearIngredientData();
+	ingredientDescriptions.clear();
+	ingredientDisplayNames.clear();
+	recipes.clear();
+
+	loadIngredientDisplayNames("data/ingredientnames.txt");
+
+	std::string fname = localisePath("data/ingredientnames.txt");
+	loadIngredientDisplayNames(fname);
+
+	if(dsq->mod.isActive())
+	{
+		fname = localisePath(dsq->mod.getPath() + "ingredientnames.txt", dsq->mod.getPath());
+		loadIngredientDisplayNames(fname);
+	}
+
+	if(dsq->mod.isActive())
+	{
+		//load mod ingredients
+		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
+	}
+
+	//load ingredients for the main game
+	if(ingredientData.empty() && recipes.empty())
+	{
+		loadIngredientData("data/ingredients.txt");
+	}
+}
+
 void Continuity::loadIngredientData(const std::string &file)
 {
 	std::string line, name, gfx, type, effects;
@@ -961,7 +999,7 @@ void Continuity::loadIngredientData(const std::string &file)
 			if (p1 != std::string::npos && p2 != std::string::npos)
 			{
 				effects = effects.substr(p1+1, p2-(p1+1));
-				SimpleIStringStream fxLine(effects.c_str(), SimpleIStringStream::REUSE);
+				std::istringstream fxLine(effects);
 				std::string bit;
 				while (fxLine >> bit)
 				{
@@ -1075,7 +1113,7 @@ void Continuity::loadIngredientData(const std::string &file)
 
 	if(extradata)
 	{
-		while (in >> line)
+		while (std::getline(in, line))
 		{
 			SimpleIStringStream inLine(line.c_str(), SimpleIStringStream::REUSE);
 			int maxAmount = MAX_INGREDIENT_AMOUNT;
@@ -1084,7 +1122,7 @@ void Continuity::loadIngredientData(const std::string &file)
 			if (name == "==Recipes==")
 			{
 				recipes = true;
-				continue;
+				break;
 			}
 			IngredientData *data = getIngredientDataByName(name);
 			if(!data)
@@ -3343,40 +3381,11 @@ void Continuity::reset()
 
 	worldMap.load();
 
-	ingredients.clear();
 	naijaEats.clear();
-
 	foodSortType = 0;
+	ingredients.clear();
 
-	//load ingredients
-
-	ingredientDisplayNames.clear();
-
-	loadIngredientDisplayNames("data/ingredientnames.txt");
-
-	std::string fname = localisePath("data/ingredientnames.txt");
-	loadIngredientDisplayNames(fname);
-
-	if(dsq->mod.isActive())
-	{
-		fname = localisePath(dsq->mod.getPath() + "ingredientnames.txt", dsq->mod.getPath());
-		loadIngredientDisplayNames(fname);
-	}
-
-	ingredientDescriptions.clear();
-	ingredientData.clear();
-	recipes.clear();
-
-	if(dsq->mod.isActive())
-	{
-		//load mod ingredients
-		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
-	}
-
-	//load ingredients for the main game
-	if(ingredientData.empty() && recipes.empty()) {
-		loadIngredientData("data/ingredients.txt");
-	}
+	loadIngredientData(); // must be after clearing ingredients
 
 	loadPetData();
 

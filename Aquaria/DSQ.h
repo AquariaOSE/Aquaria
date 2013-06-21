@@ -1065,6 +1065,7 @@ public:
 
 	bool applyIngredientEffects(IngredientData *data);
 
+	void loadIngredientData();
 	void loadIngredientData(const std::string &file);
 	void loadIngredientDisplayNames(const std::string& file);
 	bool hasIngredients() const { return !ingredients.empty(); }

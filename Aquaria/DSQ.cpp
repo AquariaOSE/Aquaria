@@ -614,6 +614,7 @@ void DSQ::debugMenu()
 						core->afterEffectManager->loadShaders();
 					}
 					dsq->user.load();
+					dsq->continuity.loadIngredientData();
 				}
 				else if (c == '2')
 				{
