@@ -2991,8 +2991,7 @@ void Continuity::loadFile(int slot)
 				}
 			}
 		}
-
-		if (startData->Attribute("ingr"))
+		else if (startData->Attribute("ingr")) // use this only if ingrNames does not exist.
 		{
 			std::istringstream is(startData->Attribute("ingr"));
 			int idx;
