@@ -6977,7 +6977,11 @@ void Avatar::onUpdate(float dt)
 		{
 /*collideCheck:*/
 
-			if (!isSwimming() && vel.getLength2D() < sqr(2))
+			// Beware: This code may cause clamping vel to zero if the framerate is very high.
+			// Starting with zero vel, low difftimes will cause an addVec small enough that this
+			// check will always trigger, and vel will never get larger than zero.
+			// Under water and swimming check should hopefully prevent this from happening. -- FG
+			if (_isUnderWater && !isSwimming() && vel.getLength2D() < sqr(2))
 			{
 				vel = Vector(0,0,0);
 			}
