@@ -6467,13 +6467,9 @@ void Avatar::onUpdate(float dt)
 		if (getState() != STATE_PUSH && !state.lockedToWall && inputEnabled && _isUnderWater && canMove)
 		{
 			float a = 800*dt;
-			Vector lastVel = vel;
 			Vector addVec;
 
 			bool isMovingSlow = false;
-			static Vector lastMousePos;
-			Vector pos = lastMousePos - dsq->getGameCursorPosition();
-			static bool lastDown;
 
 			float len = 0;
 			
@@ -6481,8 +6477,6 @@ void Avatar::onUpdate(float dt)
 				_isUnderWater && !riding && !boneLock.on &&
 				(movingOn || ((dsq->inputMode == INPUT_JOYSTICK || dsq->inputMode== INPUT_KEYBOARD) || (core->mouse.buttons.left || bursting))))
 			{
-				//addVec = getVectorToCursorFr
-				//(dsq->inputMode != INPUT_JOYSTICK && dsq->inputMode != INPUT_KEYBOARD)
 				if (dsq->inputMode == INPUT_MOUSE || !this->singing)
 				{
 					addVec = getVectorToCursorFromScreenCentre();//getVectorToCursor();
@@ -6507,23 +6501,11 @@ void Avatar::onUpdate(float dt)
 							addVec = Vector(0,0,0);
 					}
 
-
-
-					/*
-					if (!core->mouse.buttons.left && bursting)
-					{
-						addVec = vel;
-					}
-					*/
-
 					if (!addVec.isLength2DIn(minMouse))
 					{
 						//if (core->mouse.buttons.left)
 						{
 							len = addVec.getLength2D();
-							// addVec is always overwritten below; I assume this is old code?  --achurch
-							//if (len > 200)
-							//	addVec.setLength2D(a *10);
 							if (len > 100)
 								addVec.setLength2D(a *2);
 							else
@@ -6557,31 +6539,11 @@ void Avatar::onUpdate(float dt)
 									stopBurst();
 								}
 							}
-							//vel = Vector(0,0,0);
 						}
 						addVec = Vector(0,0,0);
 					}
 				}
-
-				//addVec |= a;
-				/*
-				if (pos.getSquaredLength2D() > 10000)
-				{
-					startBurst();
-				}
-				*/
 			}
-			else
-			{
-			}
-			lastDown = core->mouse.buttons.left;
-
-			/*
-			std::ostringstream os;
-			os << "addVec(" << addVec.x << ", " << addVec.y << ")";
-			debugLog(os.str());
-			*/
-			lastMousePos = dsq->getGameCursorPosition();
 
 			if (!rolling && !state.backFlip && !flourish)
 			{
@@ -6614,20 +6576,6 @@ void Avatar::onUpdate(float dt)
 				}
 			}
 
-
-			/*
-			// HACK: joystick code / slow
-			if (addVec.x == 0 && addVec.y == 0)
-			{
-				float jpos[2];
-				glfwGetJoystickPos(GLFW_JOYSTICK_1, jpos, 2);
-				const float deadZone = 0.1;
-				if (fabsf(jpos[0]) > deadZone || fabsf(jpos[1]) > deadZone)
-					addVec = Vector(jpos[0]*a, -jpos[1]*a);
-			}
-			*/
-
-
 			// will not get here if not underwater
 			if (isLockable())
 				lockToWall();
@@ -6635,18 +6583,10 @@ void Avatar::onUpdate(float dt)
 			{
 				currentMaxSpeed=0;
 				vel += addVec;
-				//addVec |= a;
-				//float cheatLen = vel.getSquaredLength2D();
+
 				if (bursting)
 				{
 					Vector add = addVec;
-					/*
-					// HACK: this will let the player boost in one direction while turning to face another
-					if (!core->mouse.buttons.left)
-					{
-						add = vel;
-					}
-					*/
 					add.setLength2D(BURST_ACCEL*dt);
 					vel += add;
 
@@ -6664,33 +6604,16 @@ void Avatar::onUpdate(float dt)
 					{
 						if (isActing(ACTION_SLOW) || isMovingSlow)
 						{
-							/*
-							int spdRange = maxMouse - minMouse;
-							float p = (len - minMouse) / spdRange;
-							int spd = p * vars->maxSwimSpeed;// + minMouse
-							currentMaxSpeed = spd;
-							*/
 							currentMaxSpeed = vars->maxSlowSwimSpeed;
 						}
-						//else if (dsq->continuity.getWorldType() == WT_NORMAL)
 						else
 							currentMaxSpeed = vars->maxSwimSpeed;
-						/*
-						else
-							currentMaxSpeed = vars->maxDreamWorldSpeed;
-						*/
 					}
 				}
-
-				/*
-				if (dsq->continuity.form == FORM_SPIRIT)
-					currentMaxSpeed *= 0.5f;
-				*/
 
 				if (leaches > 0)
 				{
 					currentMaxSpeed -= leaches*60;
-				//	vel |= vel.getLength2D()-1*leaches;
 				}
 
 				if (state.blind)
@@ -6698,19 +6621,6 @@ void Avatar::onUpdate(float dt)
 
 				if (currentMaxSpeed < 0)
 					currentMaxSpeed = 1;
-
-				/*
-				if (inCurrent)
-				{
-					ropeState = 0;
-					currentMaxSpeed = 1200;
-				}
-				*/
-
-				//clampVelocity();
-
-
-				//float angle;
 
 				if (getState() == STATE_TRANSFORM)
 					rotateToVec(addVec, 0.1, 90);
@@ -6739,13 +6649,6 @@ void Avatar::onUpdate(float dt)
 					}
 					else
 					{
-						/*
-						if (bursting && !core->mouse.buttons.left)
-						{
-						}
-						else
-							rotateToVec(addVec, 0.1);
-						*/
 						if (!state.nearWall && !flourish)
 							rotateToVec(addVec, 0.1);
 					}
@@ -7074,7 +6977,7 @@ void Avatar::onUpdate(float dt)
 		{
 /*collideCheck:*/
 
-			if (vel.getLength2D() < sqr(2))
+			if (!isSwimming() && vel.getLength2D() < sqr(2))
 			{
 				vel = Vector(0,0,0);
 			}
