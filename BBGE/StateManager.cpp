@@ -288,7 +288,7 @@ void StateManager::registerStateObject(StateObject *stateObject, const std::stri
 	//getNameFromDerivedClassTypeName(c);
 	if (stateObject->name.empty())
 	{
-		fatalError("StateManager::registerStateObject - Empty name.");
+		exit_error("StateManager::registerStateObject - Empty name.");
 	}
 
 	if (!stateObjects[stateObject->name])

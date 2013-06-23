@@ -1175,8 +1175,6 @@ public:
 	void saveSizedScreenshotTGA(const std::string &filename, int sz, int crop34);
 	void saveCenteredScreenshotTGA(const std::string &filename, int sz);
 
-	virtual void msg(const std::string &message);
-
 	bool minimized;
 	std::string getEnqueuedJumpState();
 	int cullRadius;

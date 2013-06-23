@@ -257,11 +257,9 @@ bool isVectorInRect(const Vector &vec, const Vector &coord1, const Vector &coord
 
 std::string parseCommand(const std::string &line, const std::string &command);
 
-std::string msg(const std::string &message);
+void messageBox(const std::string &title, const std::string& msg);
 
-void msgVector(const std::string &name, const Vector &vec);
-
-void fatalError(const std::string &message);
+void exit_error(const std::string &message);
 
 unsigned hash(const std::string &string);
 

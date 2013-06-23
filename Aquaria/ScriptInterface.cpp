@@ -713,8 +713,8 @@ luaFunc(indexWarnInstance)
 
 luaFunc(panicHandler)
 {
-	errorLog(luaFormatStackInfo(L) + ": Lua PANIC: " + getString(L, -1));
-	exit(1);
+	std::string err = luaFormatStackInfo(L) + ": Lua PANIC: " + getString(L, -1);
+	exit_error(err);
 }
 
 static bool findFile_helper(const char *rawname, std::string &fname)

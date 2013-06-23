@@ -2659,7 +2659,7 @@ void Continuity::loadFile(int slot)
 		if (startData->Attribute("mod"))
 		{
 #ifdef AQUARIA_DEMO
-			exit(-1);
+			exit_error("The demo version does not support loading savegames from mods, sorry.");
 #else
 			dsq->mod.load(startData->Attribute("mod"));
 #endif

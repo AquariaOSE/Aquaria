@@ -922,11 +922,13 @@ This build is not yet final, and as such there are a couple things lacking. They
 	// steam gets inited in here
 	Core::init();
 
-	// steam callbacks are inited here
-	dsq->continuity.init();
+	dsq->continuity.stringBank.load();
 
 	vars = &v;
 	v.load();
+
+	// steam callbacks are inited here
+	dsq->continuity.init();
 
 	// do copy stuff
 #ifdef BBGE_BUILD_UNIX
@@ -997,8 +999,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	{
 		std::ostringstream os;
 		os << "Aspect ratio for resolution [" << user.video.resx << ", " << user.video.resy << "] not supported.";
-		errorLog(os.str());
-		exit(0);
+		exit_error(os.str());
 	}
 
 	setFilter(dsq_filter);
@@ -1041,7 +1042,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	if (!createWindow(user.video.resx, user.video.resy, user.video.bits, user.video.full, "Aquaria"))
 #endif
 	{
-		msg("Failed to create window");
+		exit_error("Failed to create window");
 		return;
 	}
 

@@ -41,6 +41,9 @@ void StringBank::load()
 		fname = localisePath(dsq->mod.getPath() + "stringbank.txt", dsq->mod.getPath());
 		_load(fname);
 	}
+
+	if(stringMap.empty())
+		exit_error("Failed to load data/stringbank.txt");
 }
 
 void StringBank::_load(const std::string &file)

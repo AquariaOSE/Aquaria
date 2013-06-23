@@ -2432,8 +2432,7 @@ void Game::loadEntityTypeList()
 	std::string line;
 	if(!in)
 	{
-		core->messageBox(dsq->continuity.stringBank.get(2008), dsq->continuity.stringBank.get(2016));
-		exit(1);
+		exit_error(dsq->continuity.stringBank.get(2008).c_str());
 	}
 	while (std::getline(in, line))
 	{
@@ -5213,7 +5212,7 @@ bool Game::loadScene(std::string scene)
 	}
 	if (i == allowedMaps.size())
 	{
-		exit(-1);
+		exit_error("Demo version refuses to load this map, sorry.");
 	}
 #endif
 
