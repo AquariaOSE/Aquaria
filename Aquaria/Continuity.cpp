@@ -2518,7 +2518,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	startData.SetAttribute("scene", dsq->game->sceneName);
 	startData.SetAttribute("exp", dsq->continuity.exp);
 	startData.SetAttribute("h", dsq->continuity.maxHealth);
-	// ANDROID TODO: "ch" field
+	startData.SetAttribute("ch", dsq->continuity.health);
 	startData.SetAttribute("naijaModel", dsq->continuity.naijaModel);
 	startData.SetAttribute("costume", dsq->continuity.costume);
 	startData.SetAttribute("form", dsq->continuity.form);
@@ -3054,11 +3054,9 @@ void Continuity::loadFile(int slot)
 			}
 		}
 
-		// TODO ANDROID: "ch" field
-
 		if (startData->Attribute("h"))
 		{
-			int read = atoi(startData->Attribute("h"));
+			float read = strtof(startData->Attribute("h"), NULL);
 			maxHealth = read;
 			health = read;
 			std::ostringstream os;
@@ -3071,6 +3069,21 @@ void Continuity::loadFile(int slot)
 				dsq->game->avatar->health = maxHealth;
 			}
 		}
+
+		if (startData->Attribute("ch"))
+		{
+			float h = strtof(startData->Attribute("ch"), NULL);
+			health = h;
+			std::ostringstream os;
+			os << "CurHealth read as: " << health;
+			debugLog(os.str());
+
+			if (dsq->game->avatar)
+			{
+				dsq->game->avatar->health = h;
+			}
+		}
+
 		if (startData->Attribute("seconds"))
 		{
 			std::istringstream is(startData->Attribute("seconds"));

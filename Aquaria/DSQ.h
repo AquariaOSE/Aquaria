@@ -951,7 +951,7 @@ public:
 
 	std::string getSaveFileName(int slot, const std::string &pfix);
 
-	int maxHealth;
+	float maxHealth;
 	float health;
 	bool hudVisible;
 	unsigned int exp;
