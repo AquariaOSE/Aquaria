@@ -844,7 +844,13 @@ void loadBitForTexPrecache()
 }
 
 
-void DSQ::setVersionLabelText() {
+void DSQ::setVersionLabelText()
+{
+#ifdef AQUARIA_OVERRIDE_VERSION_STRING
+	versionLabel->setText(AQUARIA_OVERRIDE_VERSION_STRING);
+	return;
+#endif
+
 	std::ostringstream os;
 	os << "Aquaria";
 

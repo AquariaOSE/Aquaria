@@ -146,6 +146,9 @@ static void init()
 #ifdef AQUARIA_CUSTOM_BUILD_ID
 	os << AQUARIA_CUSTOM_BUILD_ID;
 #endif
+#ifdef AQUARIA_OVERRIDE_VERSION_STRING
+	os << "|" << AQUARIA_OVERRIDE_VERSION_STRING;
+#endif
 
 	const char *loc = getUsedLocale();
 	if(*loc)

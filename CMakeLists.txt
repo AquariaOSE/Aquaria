@@ -222,6 +222,13 @@ if (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
   ADD_DEFINITIONS("-DAQUARIA_CUSTOM_BUILD_ID=\"${AQUARIA_CUSTOM_BUILD_ID}\"")
 endif (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
 
+# Custom version string override (displayed as-is instead of "Aquaria vx.x.x ..." on the title screen
+SET(AQUARIA_OVERRIDE_VERSION_STRING "" CACHE STRING
+    "Text to display instead of the Aquaria version ID on the title screen. (Overrides AQUARIA_CUSTOM_BUILD_ID as well)")
+if (NOT(AQUARIA_OVERRIDE_VERSION_STRING STREQUAL ""))
+  ADD_DEFINITIONS("-AQUARIA_OVERRIDE_VERSION_STRING=\"${AQUARIA_OVERRIDE_VERSION_STRING}\"")
+endif (NOT(AQUARIA_OVERRIDE_VERSION_STRING STREQUAL ""))
+
 # Custom data directories
 SET(AQUARIA_DEFAULT_DATA_DIR "" CACHE STRING
     "Default data directory (for package maintainers only)")
