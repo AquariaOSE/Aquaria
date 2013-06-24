@@ -394,7 +394,7 @@ void FoodSlot::refresh(bool effects)
 		{
 			std::ostringstream os;
 			if (i->amount > 1)
-				os << i->amount << "/" << MAX_INGREDIENT_AMOUNT;
+				os << i->amount << "/" << i->maxAmount;
 			label->setText(os.str());
 			setTexture("Ingredients/" + i->gfx);
 			renderQuad = true;
@@ -456,10 +456,13 @@ void FoodSlot::eatMe()
 
 		if (!ingredient->effects.empty())
 		{
-			ingredient->amount--;
-			dsq->continuity.applyIngredientEffects(ingredient);
-			dsq->continuity.removeEmptyIngredients();
-			dsq->game->refreshFoodSlots(true);
+			bool eaten = dsq->continuity.applyIngredientEffects(ingredient);
+			if(eaten)
+			{
+				ingredient->amount--;
+				dsq->continuity.removeEmptyIngredients();
+				dsq->game->refreshFoodSlots(true);
+			}
 		}
 		else
 		{
@@ -533,7 +536,7 @@ void FoodSlot::onUpdate(float dt)
 
 
 					Vector wp = getWorldPosition();
-					if ((dsq->game->lips->getWorldPosition() - getWorldPosition()).isLength2DIn(32))
+					if ((dsq->game->lips->getWorldPosition() - wp).isLength2DIn(32))
 					{
 						dsq->menuSelectDelay = 0.5;
 
@@ -548,7 +551,7 @@ void FoodSlot::onUpdate(float dt)
 						bool droppedIn = false;
 						for (int i = 0; i < foodHolders.size(); i++)
 						{
-							bool in = (foodHolders[i]->getWorldPosition() - getWorldPosition()).isLength2DIn(32);
+							bool in = (foodHolders[i]->getWorldPosition() - wp).isLength2DIn(32);
 							if (in)
 							{
 								droppedIn = true;
@@ -586,11 +589,6 @@ void FoodSlot::onUpdate(float dt)
 
 								label->alpha = 1;
 								grabTime = 0;
-
-								if (dsq->inputMode == INPUT_JOYSTICK)
-								{
-									dsq->game->adjustFoodSlotCursor();
-								}
 
 								return;
 							}
@@ -1233,6 +1231,10 @@ Game::Game() : StateObject()
 
 	loadEntityTypeList();
 
+	lastCollideMaskIndex = -1;
+	worldPaused = false;
+
+	cookingScript = 0;
 
 }
 
@@ -2430,8 +2432,7 @@ void Game::loadEntityTypeList()
 	std::string line;
 	if(!in)
 	{
-		core->messageBox(dsq->continuity.stringBank.get(2008), dsq->continuity.stringBank.get(2016));
-		exit(1);
+		exit_error(dsq->continuity.stringBank.get(2008).c_str());
 	}
 	while (std::getline(in, line))
 	{
@@ -5211,7 +5212,7 @@ bool Game::loadScene(std::string scene)
 	}
 	if (i == allowedMaps.size())
 	{
-		exit(-1);
+		exit_error("Demo version refuses to load this map, sorry.");
 	}
 #endif
 
@@ -5717,7 +5718,7 @@ void Game::updateParticlePause()
 	{
 		core->particlesPaused = 2;
 	}
-	else if (dsq->continuity.getWorldType() == WT_SPIRIT)
+	else if (this->isWorldPaused())
 	{
 		core->particlesPaused = 1;
 	}
@@ -5832,41 +5833,6 @@ float Game::getHalf2WayTimer(float mod)
 float Game::getHalfTimer(float mod)
 {
 	return halfTimer*mod;
-}
-
-void Game::adjustFoodSlotCursor()
-{
-	// using visible slots now, don't need this atm
-	return;
-	/*
-	for (int i = 0; i < foodSlots.size(); i++)
-	{
-		if (foodSlots[i]->isCursorIn())
-		{
-			if (!foodSlots[i]->getIngredient() || foodSlots[i]->getIngredient()->amount <= 0)
-			{
-				foodSlots[i]->setFocus(false);
-				i--;
-				while (i >= 0)
-				{
-					if (foodSlots[i]->getIngredient() && foodSlots[i]->getIngredient()->amount > 0)
-					{
-						//cursor->position = foodSlots[i]->getWorldPosition();
-						foodSlots[i]->setFocus(true);
-						break;
-					}
-					i--;
-				}
-				if (i <= -1)
-				{
-					menu[5]->setFocus(true);
-					//cursor->position = menu[5]->getWorldPosition();
-				}
-			}
-			break;
-		}
-	}
-	*/
 }
 
 void Game::action(int id, int state)
@@ -5992,7 +5958,6 @@ void Game::action(int id, int state)
 							if (foodSlots[i]->isCursorIn() && foodSlots[i]->getIngredient())
 							{
 								foodSlots[i]->moveRight();
-								adjustFoodSlotCursor();
 								break;
 							}
 						}
@@ -6029,7 +5994,6 @@ void Game::action(int id, int state)
 							if (ingrIndex >= 0)
 							{
 								foodSlots[ingrIndex]->discard();
-								adjustFoodSlotCursor();
 							}
 						}
 					}
@@ -6707,6 +6671,14 @@ void Game::applyState()
 		musicToPlay = overrideMusic;
 	}
 
+	if(cookingScript)
+		dsq->scriptInterface.closeScript(cookingScript);
+
+	if (dsq->mod.isActive())
+		cookingScript = dsq->scriptInterface.openScript(dsq->mod.getPath() + "scripts/cooking.lua", true);
+	else
+		cookingScript = dsq->scriptInterface.openScript("scripts/global/cooking.lua", true);
+
 	//INFO: this used to be here to start fading out the music
 	// before the level had begun
 	/*
@@ -7242,7 +7214,22 @@ void Game::onCook()
 
 	if (r)
 		data = dsq->continuity.getIngredientDataByName(r->result);
-	else
+	else if(cookingScript)
+	{
+		const char *p1 = cookList[0]->name.c_str();
+		const char *p2 = cookList[1]->name.c_str();
+		const char *p3 = cookList.size() >= 3 ? cookList[2]->name.c_str() : "";
+		std::string ingname;
+		if(cookingScript->call("cookFailure", p1, p2, p3, &ingname))
+		{
+			if(ingname.length())
+				data = dsq->continuity.getIngredientDataByName(ingname);
+			if(!data)
+				goto endcook;
+		}
+	}
+	
+	if(!data)
 	{
 		dsq->sound->playSfx("Denied");
 		data = dsq->continuity.getIngredientDataByName("SeaLoaf");
@@ -7421,6 +7408,8 @@ void Game::onCook()
 		dsq->centerMessage(dsq->continuity.stringBank.get(27));
 	}
 	refreshFoodSlots(true);
+
+endcook:
 
 	AquariaGuiElement::canDirMoveGlobal = true;
 
@@ -8356,7 +8345,7 @@ void Game::registerSporeDrop(const Vector &pos, int t)
 
 bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 {
-	if (!shot->isHitEnts())
+	if (!shot->isHitEnts() || shot->firer == e)
 	{
 		return false;
 	}
@@ -8367,24 +8356,17 @@ bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 	}
 	if (e->getEntityType() == ET_ENEMY)
 	{
-		if (shot->firer != e)
+		if (shot->getDamageType() == DT_AVATAR_BITE)
 		{
-			if (shot->getDamageType() == DT_AVATAR_BITE)
+			Avatar::BittenEntities::iterator i;
+			for (i = avatar->bittenEntities.begin(); i != avatar->bittenEntities.end(); i++)
 			{
-				Avatar::BittenEntities::iterator i;
-				for (i = avatar->bittenEntities.begin(); i != avatar->bittenEntities.end(); i++)
+				if (e == (*i))
 				{
-					if (e == (*i))
-					{
-						return false;
-					}
+					return false;
 				}
-				return true;
 			}
-		}
-		else
-		{
-			return false;
+			return true;
 		}
 	}
 	else if (e->getEntityType() == ET_AVATAR)
@@ -8745,7 +8727,6 @@ void Game::refreshFoodSlots(bool effects)
 	{
 		foodSlots[i]->refresh(effects);
 	}
-	adjustFoodSlotCursor();
 }
 
 void Game::refreshTreasureSlots()
@@ -9977,7 +9958,7 @@ void Game::update(float dt)
 
 	if (avatar)
 	{
-		tintColor.update(dt);
+		/*tintColor.update(dt);
 		if (core->afterEffectManager)
 		{
 			if (tintColor.isInterpolating())
@@ -9986,7 +9967,7 @@ void Game::update(float dt)
 				core->afterEffectManager->setActiveShader(AS_NONE);
 
 			core->afterEffectManager->glowShader.setValue(tintColor.x, tintColor.y, tintColor.z, 1);
-		}
+		}*/
 
 		if (avatar->isRolling())
 			particleManager->addInfluence(ParticleInfluence(avatar->position, 300, 800, true));
@@ -10724,11 +10705,6 @@ void Game::removeState()
 
 	elementUpdateList.clear();
 
-	if (core->afterEffectManager)
-	{
-		//core->afterEffectManager->blurShader.setMode(0);
-		core->afterEffectManager->setActiveShader(AS_NONE);
-	}
 	dsq->setCursor(CURSOR_NORMAL);
 	dsq->darkLayer.toggle(0);
 	dsq->shakeCamera(0,0);

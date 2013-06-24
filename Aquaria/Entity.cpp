@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ScriptedEntity.h"
 #include "Shot.h"
 
-Shader Entity::blurShader;
+//Shader Entity::blurShader;
 
 void Entity::stopPull()
 {
@@ -1080,7 +1080,7 @@ void Entity::onFHScale()
 	copySkel.alpha.interpolateTo(0, 0.5);
 	*/
 	//skeletalSprite.alpha.interpolateTo(1,sct);
-	blurShaderAnim.interpolateTo(Vector(blurMin,0,0), sct);
+	//blurShaderAnim.interpolateTo(Vector(blurMin,0,0), sct);
 	fhScale = 0;
 }
 
@@ -1105,8 +1105,8 @@ void Entity::onFH()
 
 		flipScale.interpolateTo(Vector(0.6, 1), sct);
 
-		blurShaderAnim = Vector(blurMin);
-		blurShaderAnim.interpolateTo(Vector(blurMax,0,0), sct/2);
+		//blurShaderAnim = Vector(blurMin);
+		//blurShaderAnim.interpolateTo(Vector(blurMax,0,0), sct/2);
 
 		fhScale = 1;
 	}
@@ -1142,9 +1142,9 @@ void Entity::update(float dt)
 	if (doUpdate && !dsq->game->isPaused())
 	{
 
-		if (getEntityType() == ET_ENEMY || getEntityType() == ET_NEUTRAL || getEntityType() == ET_PET)
+		if (!(getEntityType() == ET_AVATAR || getEntityType() == ET_INGREDIENT))
 		{
-			if (spiritFreeze && dsq->continuity.getWorldType() == WT_SPIRIT)
+			if (spiritFreeze && dsq->game->isWorldPaused())
 			{
 				// possible bug here because of return
 				return;
@@ -1382,7 +1382,7 @@ bool Entity::updateCurrents(float dt)
 	// why?
 	{
 		//Path *p = dsq->game->getNearestPath(position, PATH_CURRENT);
-		if (dsq->continuity.getWorldType() != WT_SPIRIT)
+		if (!dsq->game->isWorldPaused())
 		{
 			for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 			{
@@ -1419,7 +1419,7 @@ bool Entity::updateCurrents(float dt)
 			float useLen = len;
 			if (useLen < 500)
 				useLen = 500;
-			if (!(this->getEntityType() == ET_AVATAR && dsq->continuity.form == FORM_BEAST && dsq->game->avatar->bursting))
+			if (!(this->getEntityType() == ET_AVATAR && dsq->game->avatar->canSwimAgainstCurrents() && dsq->game->avatar->bursting))
 			{
 				doCollisionAvoidance(1, 4, 1, &vel2, useLen);
 			}
@@ -1439,7 +1439,7 @@ bool Entity::updateCurrents(float dt)
 			}
 		}
 	}
-	if (this->getEntityType() == ET_AVATAR && dsq->continuity.form == FORM_BEAST)
+	if (this->getEntityType() == ET_AVATAR && dsq->game->avatar->canSwimAgainstCurrents())
 	{
 		int cap = 100;
 		if (!vel.isZero())
@@ -1681,7 +1681,7 @@ void Entity::onUpdate(float dt)
 		break;
 		}
 
-		blurShaderAnim.update(dt);
+		//blurShaderAnim.update(dt);
 	}
 
 
@@ -2832,23 +2832,18 @@ void Entity::render()
 
 	// HACK: need to multiply base + etc
 	skeletalSprite.setColorMult(this->color, this->alpha.x);
-	bool set=false;
+	/*bool set=false;
 	if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating() && dsq->user.video.blur)
 	{
-		/*
-		std::ostringstream os;
-		os << "blurShaderAnim: " << blurShaderAnim.x;
-		debugLog(os.str());
-		*/
 		//swizzle
 		blurShader.setValue(color.x, color.y, color.z, blurShaderAnim.x);
 		blurShader.bind();
 		set = true;
-	}
+	}*/
 	Quad::render();
 	//if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating())
-	if (set)
-		blurShader.unbind();
+	//if (set)
+	//	blurShader.unbind();
 	renderBorder = false;
 	skeletalSprite.clearColorMult();
 	color = bcolor;
@@ -3133,3 +3128,14 @@ void Entity::exertHairForce(const Vector &force, float dt)
 	}
 }
 
+bool Entity::isEntityInside()
+{
+	FOR_ENTITIES(i)
+	{
+		Entity *e = *i;
+		if (e && e->life == 1 && e != this && e->ridingOnEntity != this && isCoordinateInside(e->position))
+			return true;
+
+	}
+	return false;
+}

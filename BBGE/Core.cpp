@@ -818,7 +818,7 @@ bool Core::getMetaState()
 
 void Core::errorLog(const std::string &s)
 {
-	messageBox("Message", s);
+	messageBox("Error!", s);
 	debugLog(s);
 }
 
@@ -828,16 +828,7 @@ void cocoaMessageBox(const std::string &title, const std::string &msg);
 
 void Core::messageBox(const std::string &title, const std::string &msg)
 {
-#ifdef BBGE_BUILD_WINDOWS
-	MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
-#elif defined(BBGE_BUILD_MACOSX)
-    cocoaMessageBox(title, msg);
-#elif defined(BBGE_BUILD_UNIX)
-	// !!! FIXME: probably don't want the whole GTK+ dependency in here...
-	fprintf(stderr, "%s: %s\n", title.c_str(), msg.c_str());
-#else
-#error Please define your platform.
-#endif
+	::messageBox(title, msg);
 }
 
 void Core::debugLog(const std::string &s)
@@ -1276,7 +1267,7 @@ void Core::init()
 
 	if((SDL_Init(0))==-1)
 	{
-		exit(0);
+		exit_error("Failed to init SDL");
 	}
 	
 #endif
@@ -1849,11 +1840,13 @@ void Core::setSDLGLAttributes()
 #define GLAPIENTRY
 #endif
 
+unsigned int Core::dbg_numRenderCalls = 0;
+
 #ifdef BBGE_BUILD_OPENGL_DYNAMIC
 #define GL_FUNC(ret,fn,params,call,rt) \
     extern "C" { \
         static ret (GLAPIENTRY *p##fn) params = NULL; \
-        ret GLAPIENTRY fn params { rt p##fn call; } \
+        ret GLAPIENTRY fn params { ++Core::dbg_numRenderCalls; rt p##fn call; } \
     }
 #include "OpenGLStubs.h"
 #undef GL_FUNC
@@ -1917,16 +1910,15 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 	{
 		if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
 		{
-			errorLog(std::string("SDL Error: ") + std::string(SDL_GetError()));
-			exit(0);
+			exit_error(std::string("SDL Error: ") + std::string(SDL_GetError()));
 		}
 
 #if BBGE_BUILD_OPENGL_DYNAMIC
 		if (SDL_GL_LoadLibrary(NULL) == -1)
 		{
-			errorLog(std::string("SDL_GL_LoadLibrary Error: ") + std::string(SDL_GetError()));
+			std::string err = std::string("SDL_GL_LoadLibrary Error: ") + std::string(SDL_GetError());
 			SDL_Quit();
-			exit(0);
+			exit_error(err);
 		}
 #endif
 	}
@@ -1950,9 +1942,8 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 		{
 			std::ostringstream os;
 			os << "Couldn't set resolution [" << width << "x" << height << "]\n" << SDL_GetError();
-			errorLog(os.str());
 			SDL_Quit();
-			exit(0);
+			exit_error(os.str());
 		}
 
 #if BBGE_BUILD_OPENGL_DYNAMIC
@@ -1960,9 +1951,8 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 		{
 			std::ostringstream os;
 			os << "Couldn't load OpenGL symbols we need\n";
-			errorLog(os.str());
 			SDL_Quit();
-			exit(0);
+			exit_error(os.str());
 		}
 #endif
 	}
@@ -2632,13 +2622,6 @@ void Core::setDockIcon(const std::string &ident)
 {
 }
 
-void Core::msg(const std::string &message)
-{
-#ifdef BBGE_BUILD_WINDOWS
-	MessageBox(0, message.c_str(), "Message", MB_OK);
-#endif
-}
-
 void Core::setMousePosition(const Vector &p)
 {
 	Vector lp = core->mouse.position;
@@ -3014,6 +2997,8 @@ void Core::main(float runTime)
 			break;
 
 		updateCullData();
+
+		dbg_numRenderCalls = 0;
 
 		if (settings.renderOn)
 		{
@@ -3857,10 +3842,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 		int i = renderObjectLayerOrder[c];
 		if (i == -1) continue;
 		if ((startLayer != -1 && endLayer != -1) && (i < startLayer || i > endLayer)) continue;
-		if (afterEffectManager && afterEffectManager->active && i == afterEffectManagerLayer)
-		{
-			afterEffectManager->render();
-		}
 
 		if (i == postProcessingFx.layer)
 		{
@@ -3888,6 +3869,11 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 			{
 				continue;
 			}
+		}
+
+		if (afterEffectManager && afterEffectManager->active && i == afterEffectManagerLayer)
+		{
+			afterEffectManager->render();
 		}
 
 		RenderObjectLayer *r = &renderObjectLayers[i];
@@ -4844,14 +4830,13 @@ void Core::setupFileAccess()
 	debugLog("Init VFS...");
 
 	if(!ttvfs::checkCompat())
-		exit(1);
+		exit_error("ttvfs not compatible");
 
 	vfs.AddArchiveLoader(new ttvfs::VFSZipArchiveLoader);
 
 	if(!vfs.LoadFileSysRoot(false))
 	{
-		errorLog("Failed to setup file access");
-		exit(1);
+		exit_error("Failed to setup file access");
 	}
 	
 	vfs.Prepare();

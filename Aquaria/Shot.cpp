@@ -342,6 +342,7 @@ Shot::Shot() : Quad(), Segmented(0,0)
 	fired = false;
 	target = 0;
 	dead = false;
+	enqueuedForDelete = false;
 	shotIdx = shots.size();
 	shots.push_back(this);
 }
@@ -487,13 +488,18 @@ void Shot::setLifeTime(float l)
 void Shot::onEndOfLife()
 {
 	destroySegments(0.2);
-	deleteShots.push_back(this);
 	dead = true;
 
 	if (emitter)
 	{
 		emitter->killParticleEffect();
 		emitter = 0;
+	}
+
+	if (!enqueuedForDelete)
+	{
+		enqueuedForDelete = true;
+		deleteShots.push_back(this);
 	}
 }
 
@@ -778,7 +784,7 @@ bool Shot::isObstructed(float dt) const
 void Shot::onUpdate(float dt)
 {
 	if (dsq->game->isPaused()) return;
-	if (dsq->continuity.getWorldType() != WT_NORMAL) return;
+	if (dsq->game->isWorldPaused()) return;
 	if (!shotData) return;
 
 

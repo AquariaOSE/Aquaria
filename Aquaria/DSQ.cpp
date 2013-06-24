@@ -615,6 +615,7 @@ void DSQ::debugMenu()
 						core->afterEffectManager->loadShaders();
 					}
 					dsq->user.load();
+					dsq->continuity.loadIngredientData();
 				}
 				else if (c == '2')
 				{
@@ -922,11 +923,13 @@ This build is not yet final, and as such there are a couple things lacking. They
 	// steam gets inited in here
 	Core::init();
 
-	// steam callbacks are inited here
-	dsq->continuity.init();
+	dsq->continuity.stringBank.load();
 
 	vars = &v;
 	v.load();
+
+	// steam callbacks are inited here
+	dsq->continuity.init();
 
 	// do copy stuff
 #ifdef BBGE_BUILD_UNIX
@@ -997,8 +1000,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	{
 		std::ostringstream os;
 		os << "Aspect ratio for resolution [" << user.video.resx << ", " << user.video.resy << "] not supported.";
-		errorLog(os.str());
-		exit(0);
+		exit_error(os.str());
 	}
 
 	setFilter(dsq_filter);
@@ -1041,7 +1043,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	if (!createWindow(user.video.resx, user.video.resy, user.video.bits, user.video.full, "Aquaria"))
 #endif
 	{
-		msg("Failed to create window");
+		exit_error("Failed to create window");
 		return;
 	}
 
@@ -1533,10 +1535,10 @@ This build is not yet final, and as such there are a couple things lacking. They
 	renderObjectLayerOrder[LR_ENTITIES_MINUS3] = -1;
 	renderObjectLayerOrder[LR_ENTITIES_MINUS2] = -1;
 
-	if (!Entity::blurShader.isLoaded())
+	/*if (!Entity::blurShader.isLoaded())
 	{
 		//Entity::blurShader.load("data/shaders/stan.vert", "data/shaders/hoblur.frag");
-	}
+	}*/
 
 	setMousePosition(core->center);
 	
@@ -2155,7 +2157,6 @@ void DSQ::loadMods()
 
 	// first load the packages, then enumerate XMLs
 	forEachFile(mod.getBaseModPath(), ".aqmod", loadModPackagesCallback, 0);
-	forEachFile(mod.getBaseModPath(), ".zip", loadModPackagesCallback, 0);
 #endif
 
 	forEachFile(mod.getBaseModPath(), ".xml", loadModsCallback, 0);
@@ -2335,6 +2336,8 @@ void DSQ::playPositionalSfx(const std::string &name, const Vector &position, flo
 
 void DSQ::shutdown()
 {
+	mod.stop();
+
 	Network::shutdown();
 
 	scriptInterface.shutdown();
@@ -4565,6 +4568,10 @@ void DSQ::onUpdate(float dt)
 				os << " headRot: " << b->rotation.z;
 			os << std::endl;
 			os << "fh: " << dsq->game->avatar->isfh() << " fv: " << dsq->game->avatar->isfv() << std::endl;
+			os << "canActivate: " << dsq->game->avatar->canActivateStuff();
+			os << " canBurst: " << dsq->game->avatar->canBurst();
+			os << " canLTW: " << dsq->game->avatar->canLockToWall();
+			os << " canSAC: " << dsq->game->avatar->canSwimAgainstCurrents() << std::endl;
 		}
 
 		// DO NOT CALL AVATAR-> beyond this point
@@ -4577,6 +4584,7 @@ void DSQ::onUpdate(float dt)
 		os << "altState: " << core->getKeyState(KEY_LALT) << " | " << core->getKeyState(KEY_RALT) << std::endl;
 		os << "PMFree: " << particleManager->getFree() << " Active: " << particleManager->getNumActive() << std::endl;
 		os << "cameraPos: (" << dsq->cameraPos.x << ", " << dsq->cameraPos.y << ")" << std::endl;
+		os << "worldType: " << continuity.getWorldType() << " worldPaused: " << game->isWorldPaused() << std::endl;
 		os << "voiceTime: " << dsq->sound->getVoiceTime() << " bNat: " << dsq->game->bNatural;
 		int ca, ma;
 		dsq->sound->getStats(&ca, &ma);
@@ -4591,7 +4599,7 @@ void DSQ::onUpdate(float dt)
 	if (isDeveloperKeys() && fpsText && cmDebug && cmDebug->alpha == 1)
 	{
 		std::ostringstream os;
-		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount;
+		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount << " | RC: " << Core::dbg_numRenderCalls;
 		os << " | p: " << core->processedRenderObjectCount << " | t: " << core->totalRenderObjectCount;
 		os << " | s: " << dsq->continuity.seconds;
 		os << " | evQ: " << core->eventQueue.getSize();

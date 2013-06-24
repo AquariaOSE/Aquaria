@@ -68,7 +68,6 @@ public:
 	typedef std::vector<Strand*> Strands;
 	Strands strands;
 	int strandSpacing;
-	bool isEntityInside();
 	void becomeSolid();
 
 	std::string deathParticleEffect;

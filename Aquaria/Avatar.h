@@ -66,6 +66,13 @@ enum AvatarAnimLayers
 	ANIMLAYER_MAX
 };
 
+enum SeeMapMode
+{
+	SEE_MAP_NEVER = 0,
+	SEE_MAP_DEFAULT = 1,
+	SEE_MAP_ALWAYS = 2,
+};
+
 class SongIconParticle : public Quad
 {
 public:
@@ -160,7 +167,6 @@ public:
 	Entity *entityToActivate;
 	Path *pathToActivate;
 
-	void shift();
 	void applyWorldEffects(WorldType type);
 
 	void toggleMovement(bool on);
@@ -284,6 +290,7 @@ public:
 	void endOfGameState();
 	bool canQuickSong();
 	bool canActivateStuff();
+	void setCanActivateStuff(bool on);
 	bool hasThingToActivate();
 
 	float biteTimer;
@@ -317,8 +324,28 @@ public:
 	bool canSetBoneLock();
 	
 	void revert();
+	void doBindSong();
+	void doShieldSong();
+
+	bool canBurst() const { return _canBurst; }
+	void setCanBurst(bool b) { _canBurst = b; }
+
+	bool canLockToWall() const { return _canLockToWall; }
+	void setCanLockToWall(bool b) { _canLockToWall = b; }
+
+	bool canSwimAgainstCurrents() const { return _canSwimAgainstCurrents; }
+	void setCanSwimAgainstCurrents(bool b) { _canSwimAgainstCurrents = b; }
+
+	bool canCollideWithShots() const { return _canCollideWithShots; }
+	void setCollideWithShots(bool b) { _canCollideWithShots = b; }
+
+	void setCollisionAvoidanceData(int range, float mod);
+
+	void setSeeMapMode(SeeMapMode mode) { _seeMapMode = mode; }
+	SeeMapMode getSeeMapMode() const { return _seeMapMode; }
 
 	int leaches;
+	float shieldPoints;
 	
 protected:
 	void setSongIconPositions();
@@ -358,8 +385,6 @@ protected:
 	float fallGravityTimer;
 	Vector fallGravity;
 	int lastOutOfWaterMaxSpeed;
-
-	int shieldPoints;
 
 	void onIdle();
 	void onHeal(int type);
@@ -450,7 +475,15 @@ protected:
 	void lockToWall();
 	void doShock(const std::string &shotName);
 
-	Vector lastLastPosition;
+	bool _canActivateStuff;
+	bool _canBurst;
+	bool _canLockToWall;
+	bool _canSwimAgainstCurrents;
+	bool _canCollideWithShots;
+	SeeMapMode _seeMapMode;
+
+	int _collisionAvoidRange;
+	float _collisionAvoidMod;
 
 };
 

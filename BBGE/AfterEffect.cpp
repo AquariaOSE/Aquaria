@@ -32,9 +32,9 @@ Effect::Effect()
 AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 {
 	active = false;
-	activeShader = AS_NONE;
 	numEffects = 0;
 	bRenderGridPoints = true;
+	shaderPipeline.resize(10, 0);
 
 	screenWidth = core->getWindowWidth();
 	screenHeight = core->getWindowHeight();
@@ -43,46 +43,11 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 	this->yDivs = 0;
 
 	drawGrid = 0;
-	
-#ifdef BBGE_BUILD_OPENGL
-
 
 	this->xDivs = xDivs;
 	this->yDivs = yDivs;
-	//cameraPointer = nCameraPointer;
 
-	//Asssuming the resolutions values are > 256 and < 2048
-	//Set the texture heights and widths
-	if (core->frameBuffer.isInited())
-	{
-		textureWidth = core->frameBuffer.getWidth();
-		textureHeight = core->frameBuffer.getHeight();
-	}
-	else
-	{
-		if (screenWidth <= 512)
-			textureWidth = 512;
-		else if (screenWidth <= 1024)
-			textureWidth = 1024;
-		else
-			textureWidth = 2048;
-		if (screenHeight <= 512)
-			textureHeight = 512;
-		else if (screenHeight <= 1024)
-			textureHeight = 1024;
-		else
-			textureHeight = 2048;
-	}
-
-	//create our texture
-	glGenTextures(1,&texture);
-	glBindTexture(GL_TEXTURE_2D,texture);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
-	
-#endif
-	//BuildMip();
+	reloadDevice();
 
 	if (xDivs != 0 && yDivs != 0)
 	{
@@ -98,14 +63,9 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 
 void AfterEffectManager::loadShaders()
 {
-	/*
-	blurShader.load("data/shaders/stan.vert", "data/shaders/blur.frag");
-	bwShader.load("data/shaders/stan.vert", "data/shaders/bw.frag");
-	washoutShader.load("data/shaders/stan.vert", "data/shaders/washout.frag");
-	//motionBlurShader.load("data/shaders/stan.vert", "data/shaders/hoblur.frag");
-	motionBlurShader.load("data/shaders/stan.vert", "data/shaders/blur.frag");
-	glowShader.load("data/shaders/stan.vert", "data/shaders/glow.frag");
-	*/
+	deleteShaders();
+
+	// ...Load shaders here...
 }
 
 AfterEffectManager::~AfterEffectManager()
@@ -120,6 +80,7 @@ AfterEffectManager::~AfterEffectManager()
 		delete[] drawGrid;
 	}
 	deleteEffects();
+	deleteShaders();
 }
 
 void AfterEffectManager::deleteEffects()
@@ -135,6 +96,21 @@ void AfterEffectManager::deleteEffects()
 	numEffects=0;
 	while (!openSpots.empty())
 		openSpots.pop();
+}
+
+void AfterEffectManager::deleteShaders()
+{
+	for(size_t i = 0; i < shaderPipeline.size(); ++i)
+		shaderPipeline[i] = 0;
+
+	for(size_t i = 0; i < loadedShaders.size(); ++i)
+	{
+		if(loadedShaders[i])
+		{
+			delete loadedShaders[i];
+			loadedShaders[i] = 0;
+		}
+	}
 }
 
 void AfterEffectManager::clear()
@@ -190,49 +166,20 @@ void AfterEffectManager::destroyEffect(int id)
 	openSpots.push(id);
 }
 
-void AfterEffectManager::capture()
-{
-	/*
-#ifdef BBGE_BUILD_OPENGL
-	glBindTexture(GL_TEXTURE_2D,texture);
-	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, screenWidth, screenHeight);
-#endif
-	*/
-	if (core->frameBuffer.isInited())
-	{
-		core->frameBuffer.endCapture();
-		//core->enable2D(core->pixelScale);
-	}
-	else
-	{
-#ifdef BBGE_BUILD_OPENGL
-		glBindTexture(GL_TEXTURE_2D,texture);
-		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, screenWidth, screenHeight);
-#endif
-	}
-//glDisable(GL_TEXTURE_2D);
-
-}
 void AfterEffectManager::render()
 {
+	assert(core->frameBuffer.isInited());
+
 #ifdef BBGE_BUILD_OPENGL
 	glPushMatrix();
-	//glDisable(GL_BLEND);
-	//glEnable(GL_BLEND);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	//glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+
 	glDisable (GL_ALPHA_TEST);
 	glDisable(GL_BLEND);
 
-	capture();
+	core->frameBuffer.endCapture();
 	glTranslatef(core->cameraPos.x, core->cameraPos.y, 0);
 	glScalef(core->invGlobalScale, core->invGlobalScale,0);
-	/*
-	static float angle;
-	angle += 0.03f;
-	*/
-	//glRotatef(angle, 0, 0, 1);
-	//glColor4f(1,1,1,0.75);
+
 	glColor4f(1,1,1,1);
 	renderGrid();
 	//renderGridPoints();
@@ -240,85 +187,48 @@ void AfterEffectManager::render()
 #endif
 }
 
-void AfterEffectManager::setActiveShader(ActiveShader as)
-{
-	activeShader = as;
-}
-
 void AfterEffectManager::renderGrid()
 {
 #ifdef BBGE_BUILD_OPENGL
-	//glBindTexture(GL_TEXTURE_2D, texture);
-	if (core->frameBuffer.isInited())
-		core->frameBuffer.bindTexture();
-	else
-		glBindTexture(GL_TEXTURE_2D, texture);
 
-	
-	
-	//bwShader.bind();
-	Shader *activeShader=0;
-	if (core->frameBuffer.isInited())
+	int firstShader = -1;
+	int lastShader = -1;
+	Shader *activeShader = 0;
+	for (size_t i = 0; i < shaderPipeline.size(); ++i)
 	{
-		switch(this->activeShader)
+		if(shaderPipeline[i])
 		{
-		case AS_BLUR:
-			activeShader = &blurShader;
-		break;
-		case AS_BW:
-			activeShader = &bwShader;
-		break;
-		case AS_WASHOUT:
-			activeShader = &washoutShader;
-		break;
-		case AS_MOTIONBLUR:
-			activeShader = &motionBlurShader;
-		break;
-		case AS_GLOW:
-			activeShader = &glowShader;
-		break;
+			if(firstShader < 0)
+			{
+				firstShader = i;
+				activeShader = shaderPipeline[i];
+			}
+			lastShader = i;
 		}
 	}
 
-	if (activeShader)
-		activeShader->bind();
-
 	screenWidth = core->getWindowWidth();
 	screenHeight = core->getWindowHeight();
-
-	/*
-	float percentX, percentY;
-	percentX = 1;
-	percentY = 0.5;
-	*/
-
-	/*
-	percentX = (float)textureWidth/(float)screenWidth;
-	percentY = (float)textureHeight/(float)screenHeight;
-	*/
 
 	float percentX, percentY;
 	percentX = (float)screenWidth/(float)textureWidth;
 	percentY = (float)screenHeight/(float)textureHeight;
 
-
-		/*
-		if (screenWidth <= textureWidth)
-		{
-			percentX = (float)screenWidth/(float)textureWidth;
-			percentY = (float)screenHeight/(float)textureHeight;
-		}
-		else
-		{
-			percentY = 10;
-		}
-		*/
-
-
 	int vw = core->getVirtualWidth();
 	int vh = core->getVirtualHeight();
 	int offx = -core->getVirtualOffX();
 	int offy = -core->getVirtualOffY();
+
+	core->frameBuffer.bindTexture();
+
+	if(activeShader)
+	{
+		activeShader->bind();
+		activeShader->setInt("tex", 0);
+
+		if(firstShader != lastShader)
+			backupBuffer.startCapture();
+	}
 
 	//float div = xDivs;
 	for (int i = 0; i < (xDivs-1); i++)
@@ -346,6 +256,56 @@ void AfterEffectManager::renderGrid()
 			glEnd();
 		}
 	}
+
+	if (activeShader)
+		activeShader->unbind();
+
+	float width2 = float(vw)/2;
+	float height2 = float(vh)/2;
+
+
+	if(firstShader != lastShader)
+	{
+		// From here on: secondary shader passes.
+		// We just outputted to the backup buffer...
+		FrameBuffer *fbIn = &core->frameBuffer;
+		FrameBuffer *fbOut = &backupBuffer;
+
+
+		for(int i = firstShader + 1; i <= lastShader; ++i)
+		{
+			activeShader = shaderPipeline[i];
+			if(!activeShader)
+				continue;
+
+			// Swap and exchange framebuffers. The old output buffer serves as texture input for the other one
+			fbOut->endCapture();
+			std::swap(fbIn, fbOut);
+			fbIn->bindTexture();
+
+			// If this is the last pass, do not render to a frame buffer again
+			if(i != lastShader)
+				fbOut->startCapture();
+
+			activeShader->bind();
+			activeShader->setInt("tex", 0);
+			
+			// note that offx, offy are negative here!
+			glBegin(GL_QUADS);
+				glTexCoord2d(0.0f, 0.0f);
+				glVertex3f(offx, vh+offy,  0.0f);
+				glTexCoord2d(percentX, 0.0f);
+				glVertex3f( vw+offx, vh+offy,  0.0f);
+				glTexCoord2d(percentX, percentY);
+				glVertex3f( vw+offx,  offy,  0.0f);
+				glTexCoord2d(0.0f, percentY);
+				glVertex3f(offx,  offy,  0.0f);
+			glEnd();
+			
+			activeShader->unbind();
+		}
+	}
+
 
 	// uncomment to render grid points
 	/*
@@ -382,9 +342,6 @@ void AfterEffectManager::renderGrid()
 	//glDisable(GL_TEXTURE_2D);
 	RenderObject::lastTextureApplied = 0;
 	glBindTexture(GL_TEXTURE_2D, 0);
-	
-	if (activeShader)
-		activeShader->unbind();
 
 	//bwShader.unbind();
 	//glActiveTextureARB(GL_TEXTURE0_ARB);
@@ -415,8 +372,8 @@ void AfterEffectManager::renderGridPoints()
 
 void AfterEffectManager::unloadDevice()
 {
-	if (texture)
-		glDeleteTextures(1,&texture);
+	backupBuffer.unloadDevice();
+	deleteShaders();
 }
 
 void AfterEffectManager::reloadDevice()
@@ -431,22 +388,18 @@ void AfterEffectManager::reloadDevice()
 	}
 	else
 	{
-		if (screenWidth <= 1024)
-			textureWidth = 1024;
-		else
-			textureWidth = 2048;
-		if (screenHeight <= 1024)
-			textureHeight = 1024;
-		else
-			textureHeight = 2048;
+		textureWidth = screenWidth;
+		sizePowerOf2Texture(textureWidth);
+		textureHeight = screenHeight;
+		sizePowerOf2Texture(textureHeight);
 	}
 
-	//create our texture
-	glGenTextures(1,&texture);
-	glBindTexture(GL_TEXTURE_2D,texture);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-	glTexImage2D(GL_TEXTURE_2D, 0, 3, textureWidth, textureHeight, 0, GL_RGB, GL_UNSIGNED_BYTE, NULL);
+	if(backupBuffer.isInited())
+		backupBuffer.reloadDevice();
+	else
+		backupBuffer.init(-1, -1, true);
+
+	loadShaders();
 }
 
 void AfterEffectManager::addEffect(Effect *e)
@@ -598,3 +551,79 @@ void RippleEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 		}
 	}
 }
+
+int AfterEffectManager::loadShaderFile(const char *vert, const char *frag)
+{
+	Shader *sh = new Shader();
+	sh->load(vert, frag);
+	if(!sh->isLoaded())
+	{
+		delete sh;
+		return 0;
+	}
+	return _insertShader(sh);
+}
+
+int AfterEffectManager::loadShaderSrc(const char *vert, const char *frag)
+{
+	Shader *sh = new Shader();
+	sh->loadSrc(vert, frag);
+	if(!sh->isLoaded())
+	{
+		delete sh;
+		return 0;
+	}
+	return _insertShader(sh);
+}
+
+Shader *AfterEffectManager::getShaderPtr(int handle)
+{
+	size_t idx = handle - 1;
+	return idx  < loadedShaders.size() ? loadedShaders[idx] : 0;
+}
+
+void AfterEffectManager::setShaderPipelineSize(size_t size)
+{
+	shaderPipeline.resize(size, 0);
+}
+
+bool AfterEffectManager::setShaderPipelinePos(int handle, size_t pos)
+{
+	if(pos < shaderPipeline.size())
+	{
+		shaderPipeline[pos] = getShaderPtr(handle);
+		return true;
+	}
+	return false;
+}
+
+// returns handle (= index + 1)
+int AfterEffectManager::_insertShader(Shader *sh)
+{
+	for(size_t i = 0; i < loadedShaders.size(); ++i)
+	{
+		if(!loadedShaders[i])
+		{
+			loadedShaders[i] = sh;
+			return i+1;
+		}
+	}
+	loadedShaders.push_back(sh);
+	return loadedShaders.size();
+}
+
+void AfterEffectManager::unloadShader(int handle)
+{
+	Shader *sh = getShaderPtr(handle);
+	if(!sh)
+		return;
+
+	for(size_t i = 0; i < shaderPipeline.size(); ++i)
+		if(shaderPipeline[i] == sh)
+			shaderPipeline[i] = 0;
+
+	size_t idx = handle - 1;
+	loadedShaders[idx] = 0;
+	delete sh;
+}
+

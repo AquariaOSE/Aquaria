@@ -714,6 +714,8 @@ public:
 	Ingredient *getNearestIngredient(const Vector &pos, int radius);
 	Entity *getNearestEntity(const Vector &pos, int radius, Entity *ignore = 0, EntityType et=ET_NOTYPE, DamageType dt=DT_NONE, int lrStart=-1, int lrEnd=-1);
 
+	Script *cookingScript;
+
 	void spawnManaBall(Vector pos, float a);
 	bool updateMusic();
 	std::string overrideMusic;
@@ -892,7 +894,8 @@ public:
 	std::string getNoteName(int n, const std::string &pre="");
 
 	void selectEntityFromGroups();
-	InterpolatedVector cameraInterp, tintColor;
+	InterpolatedVector cameraInterp;
+	//InterpolatedVector tintColor;
 	float getWaterLevel();
 	void setMusicToPlay(const std::string &musicToPlay);
 	Vector lastCollidePosition;
@@ -1000,6 +1003,9 @@ public:
 
 	void toggleHelpScreen(bool on, const std::string &label="");
 	void onToggleHelpScreen();
+
+	void setWorldPaused(bool b) { worldPaused = b; }
+	bool isWorldPaused() const { return worldPaused; }
 
 protected:
 
@@ -1158,6 +1164,7 @@ protected:
 	std::vector<AquariaMenuItem*> menu;
 	Quad *menuBg, *menuBg2;
 	bool paused;
+	bool worldPaused;
 
 	Vector getClosestPointOnTriangle(Vector a, Vector b, Vector c, Vector p);
 	Vector getClosestPointOnLine(Vector a, Vector b, Vector p);
