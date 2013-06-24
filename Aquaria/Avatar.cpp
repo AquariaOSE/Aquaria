@@ -4913,7 +4913,7 @@ void Avatar::clampVelocity()
 
 	setMaxSpeed(currentMaxSpeed * useSpeedMult * dsq->continuity.speedMult2);
 
-	vel.capLength2D(getMaxSpeed() * maxSpeedLerp.x);
+	vel.capLength2D(getMaxSpeed() /* * maxSpeedLerp.x*/);
 }
 
 void Avatar::activateAura(AuraType aura)
