@@ -244,6 +244,9 @@ void download(RequestData *rq)
 
 void update()
 {
+	if(!netUp)
+		return;
+
 	RequestDataHolder h;
 	while(notifyRequests.pop(h))
 		h.rq->notify(h.ev, h.recvd, h.total);

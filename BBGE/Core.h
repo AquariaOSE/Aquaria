@@ -1310,6 +1310,8 @@ public:
 	volatile int dbg_numThreadDecoders;
 	static unsigned int dbg_numRenderCalls;
 
+	virtual void onBackgroundUpdate();
+
 protected:
 
 	std::string fpsDebugString;

@@ -2727,6 +2727,13 @@ bool Core::isWindowFocus()
 	return true;
 }
 
+void Core::onBackgroundUpdate()
+{
+#if BBGE_BUILD_SDL
+	SDL_Delay(200);
+#endif
+}
+
 void Core::main(float runTime)
 {
 	bool verbose = coreVerboseDebug;
@@ -2911,7 +2918,7 @@ void Core::main(float runTime)
 					{
 						pollEvents();
 						//debugLog("app not in input focus");
-						SDL_Delay(200);
+						onBackgroundUpdate();
 
 						resetTimer();
 					}

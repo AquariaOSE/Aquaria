@@ -1563,6 +1563,9 @@ public:
 	void pauseCutscene(bool on);
 	bool canSkipCutscene();
 	bool isSkippingCutscene();
+
+	virtual void onBackgroundUpdate();
+
 protected:
 
 	Quad *cutscene_bg;

@@ -5133,16 +5133,9 @@ void DSQ::cutsceneEffects(bool on)
 	}
 }
 
-void pauseSound()
+void DSQ::onBackgroundUpdate()
 {
-	if (dsq && dsq->sound) {
-		dsq->sound->pause();
-	}
+	Network::update();
+	Core::onBackgroundUpdate();
 }
 
-void resumeSound()
-{
-	if (dsq && dsq->sound) {
-		dsq->sound->resume();
-	}
-}
