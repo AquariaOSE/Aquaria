@@ -85,7 +85,7 @@ static const char * const interfaceFunctions[] = {
 	"entityDied",
 	"exitState",
 	"exitTimer",
-	"getIngredientString",
+	"getIngredientEffectString",
 	"hitEntity",
 	"hitSurface",
 	"init",
@@ -715,6 +715,7 @@ luaFunc(panicHandler)
 {
 	std::string err = luaFormatStackInfo(L) + ": Lua PANIC: " + getString(L, -1);
 	exit_error(err);
+	return 0;
 }
 
 static bool findFile_helper(const char *rawname, std::string &fname)

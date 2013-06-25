@@ -591,6 +591,14 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 	case IET_LI:
 		return dsq->continuity.stringBank.get(227);
 	break;
+	case IET_SCRIPT:
+		if(dsq->game->cookingScript)
+		{
+			std::string ret = "";
+			dsq->game->cookingScript->call("getIngredientEffectString", data->name.c_str(), &ret);
+			return ret;
+		}
+	break;
 	}
 
 	return "";
@@ -866,16 +874,6 @@ bool Continuity::applyIngredientEffects(IngredientData *data)
 
 std::string Continuity::getIngredientAffectsString(IngredientData *data)
 {
-	if(data->type == IET_SCRIPT)
-	{
-		if(dsq->game->cookingScript)
-		{
-			std::string ret = "";
-			dsq->game->cookingScript->call("getIngredientString", data->name.c_str(), &ret);
-			return ret;
-		}
-	}
-
 	return getAllIEString(data);
 }
 
