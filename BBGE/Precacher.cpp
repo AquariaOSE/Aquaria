@@ -34,6 +34,11 @@ Precacher::~Precacher()
 		errorLog ("Precacher shutdown unclean");
 }
 
+void Precacher::setBaseDir(const std::string& dir)
+{
+	basedirOverride = dir;
+}
+
 void Precacher::clean()
 {
 	for (unsigned int i = 0; i < renderObjects.size(); i++)
@@ -88,6 +93,8 @@ void Precacher::precacheTex(const std::string &tex)
 	}
 	if (tex.empty()) return;
 
+	std::string basedir = basedirOverride.empty() ? core->getBaseTextureDirectory() : basedirOverride;
+
 	if (core->debugLogTextures)
 		debugLog("PRECACHING: " + tex);
 		
@@ -99,7 +106,7 @@ void Precacher::precacheTex(const std::string &tex)
 		int loc = tex.find('*');
 		std::string path  = tex.substr(0, loc);
 		std::string type = tex.substr(loc+1, tex.size());
-		path = core->getBaseTextureDirectory() + path;
+		path = basedir + path;
 		forEachFile(path, type, precacherCallback, (intptr_t)this);
 		return;
 	}
@@ -108,9 +115,9 @@ void Precacher::precacheTex(const std::string &tex)
 		if (loadProgressCallback)
 			loadProgressCallback();
 		std::string t = tex;
-		if (tex.find(core->getBaseTextureDirectory()) != std::string::npos)
+		if (tex.find(basedir) != std::string::npos)
 		{
-			t = tex.substr(core->getBaseTextureDirectory().size(), tex.size());
+			t = tex.substr(basedir.size(), tex.size());
 		}
 		Quad *q = new Quad;
 		q->setTexture(t);

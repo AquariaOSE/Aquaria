@@ -38,7 +38,6 @@ public:
 	void setEntityLayer(int layer);
 	void setupEntity(const std::string &tex, int layer=0);
 	void setupBasicEntity(const std::string& texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer);
-	void initHair(int numSegments, int segmentLength, int width, const std::string &tex);
 	void initSegments(int numSegments, int minDist, int maxDist, std::string bodyTex, std::string tailTex, int w, int h, float taper, bool reverseSegments);
 	void registerNewPart(RenderObject *r, const std::string &name);
 	typedef std::map<std::string, RenderObject*> PartMap;
@@ -69,12 +68,8 @@ public:
 	typedef std::vector<Strand*> Strands;
 	Strands strands;
 	int strandSpacing;
-	bool isEntityInside();
 	void becomeSolid();
 
-	void updateHair(float dt);
-	void setHairHeadPosition(const Vector &pos);
-	void exertHairForce(const Vector &force, float dt);
 	std::string deathParticleEffect;
 
 	ParticleEffect pullEmitter;
@@ -93,7 +88,6 @@ protected:
 	void onDieEaten();
 	void luaDebugMsg(const std::string &func, const std::string &msg);
 	float crushDelay;
-	bool autoSkeletalSpriteUpdate;
 	int beforePullMaxSpeed;
 	bool songNoteFunction, preUpdateFunc;
 	bool songNoteDoneFunction;

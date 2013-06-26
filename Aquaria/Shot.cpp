@@ -26,7 +26,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/MathFunctions.h"
 
 Shot::Shots Shot::shots;
+Shot::Shots Shot::deleteShots;
 Shot::ShotBank Shot::shotBank;
+unsigned int Shot::shotsIter = 0;
 
 std::string Shot::shotBankPath = "";
 
@@ -91,6 +93,9 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 	{
 		checkDamageTarget = true;
 	}
+
+	this->name = file;
+	stringToLower(this->name);
 
 	debugLog(usef);
 	char *data = readFile(core->adjustFilenameCase(usef).c_str());
@@ -225,6 +230,8 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 				damageType = DT_ENEMY_CREATOR;
 			else if (bt == "DT_ENEMY_MANTISBOMB")
 				damageType = DT_ENEMY_MANTISBOMB;
+			else
+				damageType = (DamageType)atoi(bt.c_str());
 		}
 		else if (token == "Invisible")
 			inf >> invisible;
@@ -335,6 +342,8 @@ Shot::Shot() : Quad(), Segmented(0,0)
 	fired = false;
 	target = 0;
 	dead = false;
+	enqueuedForDelete = false;
+	shotIdx = shots.size();
 	shots.push_back(this);
 }
 
@@ -479,11 +488,18 @@ void Shot::setLifeTime(float l)
 void Shot::onEndOfLife()
 {
 	destroySegments(0.2);
-	shots.remove(this);
+	dead = true;
+
 	if (emitter)
 	{
 		emitter->killParticleEffect();
 		emitter = 0;
+	}
+
+	if (!enqueuedForDelete)
+	{
+		enqueuedForDelete = true;
+		deleteShots.push_back(this);
 	}
 }
 
@@ -515,7 +531,7 @@ void Shot::onHitWall()
 	{
 		if (!shotData->spawnEntity.empty())
 		{
-			dsq->game->createEntity(shotData->spawnEntity, 0, position, 0, false, "", ET_ENEMY, 0, 0, true);
+			dsq->game->createEntity(shotData->spawnEntity, 0, position, 0, false, "", ET_ENEMY, true);
 				//(shotData->spawnEntity, 0, position, 0, false, "");
 			if (shotData->spawnEntity == "NatureFormFlowers")
 			{
@@ -531,23 +547,30 @@ void Shot::onHitWall()
 
 void Shot::killAllShots()
 {
-	std::queue<Shot*>shotDeleteQueue;
-	for (Shots::iterator i = shots.begin(); i != shots.end(); i++)
-	{
-		shotDeleteQueue.push(*i);
-	}
-	Shot *s = 0;
-	while (!shotDeleteQueue.empty())
-	{
-		s = shotDeleteQueue.front();
-		if (s)
-		{
-			s->safeKill();
-		}
-		shotDeleteQueue.pop();
-	}
-	shots.clear();
+	for (Shots::iterator i = shots.begin(); i != shots.end(); ++i)
+		(*i)->safeKill();
 }
+
+void Shot::clearShotGarbage()
+{
+	for(size_t i = 0; i < deleteShots.size(); ++i)
+	{
+		Shot *s = deleteShots[i];
+		const unsigned int idx = s->shotIdx;
+		// move last shot to deleted one and shorten vector
+		if(idx < shots.size() && shots[idx] == s)
+		{
+			Shot *lastshot = shots.back();
+			shots[idx] = lastshot;
+			lastshot->shotIdx = idx;
+			shots.pop_back();
+		}
+		else
+			errorLog("Shot::clearShotGarbage(): wrong index in shot vector");
+	}
+	deleteShots.clear();
+}
+
 
 void Shot::reflectFromEntity(Entity *e)
 {
@@ -761,7 +784,7 @@ bool Shot::isObstructed(float dt) const
 void Shot::onUpdate(float dt)
 {
 	if (dsq->game->isPaused()) return;
-	if (dsq->continuity.getWorldType() != WT_NORMAL) return;
+	if (dsq->game->isWorldPaused()) return;
 	if (!shotData) return;
 
 

@@ -32,11 +32,13 @@ public:
 	void precacheList(const std::string &list, void progressCallback() = NULL);
 	void clean();
 	void loadTextureRange(const std::string &file, const std::string &type, int start, int end);
+	void setBaseDir(const std::string& dir);
 
 	std::vector<RenderObject*> renderObjects;
 private:
 	bool cleaned;
 	void (*loadProgressCallback)();
+	std::string basedirOverride;
 };
 
 #endif

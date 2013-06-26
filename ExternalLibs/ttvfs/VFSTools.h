@@ -1,6 +1,9 @@
 // VFSTools.h - useful functions and misc stuff
 // For conditions of distribution and use, see copyright notice in VFS.h
 
+// Not all of these functions are used by ttvfs, but are added for user convenience.
+// Everyone needs some path/file mangling functions at some point.
+
 #ifndef VFS_TOOLS_H
 #define VFS_TOOLS_H
 
@@ -13,12 +16,10 @@ VFS_NAMESPACE_START
 
 typedef std::deque<std::string> StringList;
 
-std::string stringToUpper(const std::string& s);
-std::string stringToLower(const std::string& s);
-void makeUppercase(std::string& s);
-void makeLowercase(std::string& s);
+void stringToUpper(std::string& s);
+void stringToLower(std::string& s);
 void GetFileList(const char *, StringList& files);
-void GetDirList(const char *, StringList& dirs, bool recursive = false);
+void GetDirList(const char *, StringList& dirs, int depth = 0); // recursion depth: 0 = subdirs of current, 1 = subdirs one level down, ...,  -1 = deep recursion
 bool FileExists(const char *);
 bool IsDirectory(const char *);
 bool CreateDir(const char*);
@@ -30,7 +31,6 @@ const char *PathToFileName(const char *str);
 void MakeSlashTerminated(std::string& s);
 std::string StripFileExtension(const std::string& s);
 std::string StripLastPath(const std::string& s);
-void GetFileListRecursive(std::string dir, StringList& files, bool withQueriedDir = false);
 bool WildcardMatch(const char *str, const char *pattern);
 size_t strnNLcpy(char *dst, const char *src, unsigned int n = -1);
 char *fastcat(char *s, const char *add);

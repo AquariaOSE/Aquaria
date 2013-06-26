@@ -62,7 +62,7 @@ void CurrentRender::onRender()
 {
 #ifdef BBGE_BUILD_OPENGL
 	// note: Leave cull_face disabled!?
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 	//int qs = 0;
 	for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 	{
@@ -308,7 +308,7 @@ void CurrentRender::onRender()
 		//glEnd();
 
 	}
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 
 	/*
 	std::ostringstream os;

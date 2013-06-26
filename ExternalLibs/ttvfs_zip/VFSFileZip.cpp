@@ -163,9 +163,9 @@ const void *VFSFileZip::getBuf(allocator_func alloc /* = NULL */, delete_func de
         _delfunc = del;
 
         if(!zip_reader_reopen_vfsfile(_zip, 0))
-            return false; // can happen if the underlying zip file was deleted
+            return NULL; // can happen if the underlying zip file was deleted
         if(!mz_zip_reader_extract_to_mem(_zip, _zipstat.m_file_index, _buf, sz, 0))
-            return false; // this should not happen
+            return NULL; // this should not happen
 
         if(_mode.find("b") == std::string::npos) // text mode?
         {

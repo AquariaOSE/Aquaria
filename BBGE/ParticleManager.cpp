@@ -155,6 +155,9 @@ void ParticleManager::updateParticle(Particle *p, float dt)
 			if (suckPos)
 			{
 				Vector dir = (*suckPos) - p->emitter->getWorldCollidePosition(p->pos);
+				//HACK: what? ->
+				if (!p->emitter->data.spawnLocal && p->emitter->getParent())
+					dir += p->emitter->getParent()->position;
 				dir.setLength2D(p->emitter->data.suckStr);
 				p->vel += dir * dt;
 			}

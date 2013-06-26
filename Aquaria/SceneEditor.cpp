@@ -643,9 +643,6 @@ void SceneEditor::init()
 	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeftUp), MOUSE_BUTTON_LEFT, 0);
 	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRightUp), MOUSE_BUTTON_RIGHT, 0);
 
-	// removed in fc3
-	//addAction(MakeFunctionEvent(SceneEditor, bindNodeToEntity), KEY_B, 0);
-
 	addAction(MakeFunctionEvent(SceneEditor, alignHorz), KEY_C, 1);
 	addAction(MakeFunctionEvent(SceneEditor, alignVert), KEY_V, 1);
 
@@ -877,38 +874,6 @@ void SceneEditor::createAquarian()
 		dsq->game->createElement(v, startPos + Vector(64*i,0), this->bgLayer);
 	}
 	inCreateAqurian = false;
-}
-
-void SceneEditor::bindNodeToEntity()
-{
-	if (editType == ET_PATHS)
-	{
-		Path *p = getSelectedPath();
-		if (p)
-		{
-			std::istringstream is(dsq->getUserInputString("Enter group number"));
-			int group = 0;
-			is >> group;
-			Entity *e = getEntityAtCursor();
-			if (e)
-			{
-				e->removeNodeFromAllNodeGroups(p);
-				e->addNodeToNodeGroup(group, p);
-			}
-			else
-			{
-				debugLog("no entity at cursor");
-			}
-		}
-	}
-}
-
-void SceneEditor::addSpringPlant()
-{
-	/*
-	SpringPlant *s = new SpringPlant(dsq->getGameCursorPosition());
-	dsq->game->addRenderObject(s, LR_ENTITIES);
-	*/
 }
 
 Path *SceneEditor::getSelectedPath()
@@ -1472,7 +1437,6 @@ void SceneEditor::updateEntitySaveData(Entity *editingEntity)
 			os << "idx2: " << editingEntity->entityTypeIdx << " ";
 			os << "name: " << editingEntity->name;
 			//os << "state: " << editingEntity->getState();
-			os << "groupID: " << editingEntity->getGroupID();
 			debugLog(os.str());
 			//debugLog("changing entity save data");
 			d->x = editingEntity->position.x;
@@ -1484,7 +1448,6 @@ void SceneEditor::updateEntitySaveData(Entity *editingEntity)
 			debugLog(os2.str());
 			*/
 			d->rot = editingEntity->rotation.z;
-			d->group = editingEntity->getGroupID();
 		}
 		else
 		{
@@ -1633,25 +1596,6 @@ void SceneEditor::toggleElementHurt()
 		else
 			editingElement->elementFlag = EF_HURT;
 		dsq->game->reconstructGrid(true);
-	}
-}
-
-void SceneEditor::setGroup()
-{
-	if (editingEntity)
-	{
-		std::ostringstream os;
-		os << editingEntity->getGroupID();
-		Entity *backup = editingEntity;
-		std::string value = dsq->getUserInputString("Enter Group", os.str());
-		int group = 0;
-		if (!value.empty())
-		{
-			std::istringstream is(value);
-			is >> group;
-		}
-		backup->setGroupID(group);
-		updateEntitySaveData(backup);
 	}
 }
 
@@ -2594,6 +2538,7 @@ void SceneEditor::loadScene()
 	Shot::loadShotBank(dsq->shotBank1, dsq->shotBank2);
 	dsq->game->loadEntityTypeList();
 	dsq->loadElementEffects();
+	dsq->continuity.loadSongBank();
 }
 
 void SceneEditor::saveScene()
@@ -3134,9 +3079,9 @@ void SceneEditor::placeElement()
 	else if (editType == ET_ENTITIES)
 	{
 		if (!selectedEntity.nameBased)
-			dsq->game->createEntity(selectedEntity.index, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, 0, 0, true);
+			dsq->game->createEntity(selectedEntity.index, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, true);
 		else
-			dsq->game->createEntity(selectedEntity.name, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, 0, 0, true);
+			dsq->game->createEntity(selectedEntity.name, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, true);
 	}
 	else if (editType == ET_PATHS)
 	{
@@ -3373,12 +3318,16 @@ void SceneEditor::updateText()
 		os << "entities (" << dsq->entities.size() << ")";
 		if (editingEntity)
 		{
+			os.precision(1);
+			os << std::fixed;
 			os << " id: " << editingEntity->getID()
 				<< " name: " << editingEntity->name
 				<< " flag:" << dsq->continuity.getEntityFlag(dsq->game->sceneName, editingEntity->getID())
 				<< " fh:" << editingEntity->isfh()
 				<< " fv:" << editingEntity->isfv()
-				<< " state:" << editingEntity->getState();
+				<< " state:" << editingEntity->getState()
+				<< " et:" << editingEntity->getEntityType()
+				<< " hp:" << editingEntity->health << "/" << editingEntity->maxHealth;
 		}
 	break;
 	case ET_PATHS:
@@ -3563,14 +3512,14 @@ void SceneEditor::update(float dt)
 			if (core->getShiftState() && !core->getCtrlState()) // hackish: to prevent accidental recache()
 				nextElement();
 			else
-				zoom /= 1.05f;
+				zoom /= 1.12f;
 		}
 		else if (core->mouse.scrollWheelChange > 0)
 		{
 			if (core->getShiftState() && !core->getCtrlState()) // hackish: to prevent accidental entity selection
 				prevElement();
 			else
-				zoom *= 1.05f;
+				zoom *= 1.12f;
 		}
 		if (zoom.x < 0.04f)
 			zoom.x = zoom.y = 0.04f;
@@ -3629,10 +3578,10 @@ void SceneEditor::update(float dt)
 					(dsq->getGameCursorPosition().y - cursorOffset.y)*factor);
 				//editingElement->scale=oldScale + add;
 				Vector sz = oldScale + add;
-				if (sz.x < 64)
-					sz.x = 64;
-				if (sz.y < 64)
-					sz.y = 64;
+				if (sz.x < 32)
+					sz.x = 32;
+				if (sz.y < 32)
+					sz.y = 32;
 				editingPath->rect.x1 = -sz.x/2;
 				editingPath->rect.x2 = sz.x/2;
 				editingPath->rect.y1 = -sz.y/2;

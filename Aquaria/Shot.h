@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 struct ShotData
 {
 	ShotData();
-	std::string texture;
+	std::string texture, name;
 	std::string hitSfx, bounceSfx, fireSfx;
 	std::string hitPrt, trailPrt, firePrt, bouncePrt;
 	std::string spawnEntity;
@@ -79,11 +79,15 @@ public:
 	//void destroy();
 	void reflectFromEntity(Entity *e);
 	void setParticleEffect(const std::string &particleEffect);
-	typedef std::list<Shot*> Shots;
-	static Shots shots;
+	typedef std::vector<Shot*> Shots;
+	static Shots shots, deleteShots;
+	static unsigned int shotsIter; // for script
+	static Shot *getFirstShot() { shotsIter = 0; return getNextShot(); }
+	static Shot *getNextShot() { return shotsIter < shots.size() ? shots[shotsIter++] : NULL; }
 	static std::string shotBankPath;
 	static void targetDied(Entity *t);
 	static void killAllShots();
+	static void clearShotGarbage();
 	Entity *target, *firer;
 	int maxSpeed, targetPt;
 
@@ -117,12 +121,13 @@ public:
 	void updatePosition();
 	bool isHitEnts() const;
 	bool isObstructed(float dt) const;
+	inline bool isActive() const { return !dead; }
+	inline const char *getName() const { return shotData ? shotData->name.c_str() : ""; }
 
 	float extraDamage;
 protected:
 
 	float waveTimer;
-	bool fired;
 
 	void suicide();
 
@@ -135,7 +140,12 @@ protected:
 	void onEndOfLife();
 
 	bool dead;
+	bool fired;
+	bool enqueuedForDelete;
 	void onUpdate(float dt);
+
+private:
+	unsigned int shotIdx;
 };
 
 class Beam : public Quad

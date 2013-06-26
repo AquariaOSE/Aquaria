@@ -105,7 +105,7 @@ void RoundedRect::onRender()
 	//glBindTexture(GL_TEXTURE_2D, 0);
 	int w2 = width/2;
 	int h2 = height/2;
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 	float iter = 0.1f;
 
 	glBegin(GL_QUADS);
@@ -167,7 +167,7 @@ void RoundedRect::onRender()
 
 	glEnd();
 
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 }
 
 void RoundedRect::show()

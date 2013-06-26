@@ -1057,11 +1057,53 @@ void AnimationEditor::applyTranslation()
 {
 	if (editingBone)
 	{
-		BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-		if (b)
+		if (!core->getShiftState())
 		{
-			b->x = editingBone->position.x;
-			b->y = editingBone->position.y;
+			// one bone mode
+			BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+			if (b)
+			{
+				b->x = editingBone->position.x;
+				b->y = editingBone->position.y;
+			}
+		}
+		else
+		{
+			BoneKeyframe *bcur = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+			if (bcur)
+			{
+				int xdiff = editingBone->position.x - bcur->x;
+				int ydiff = editingBone->position.y - bcur->y;
+				if(!core->getCtrlState())
+				{
+					// all bones in one anim mode
+					for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+					{
+						BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+						if (b)
+						{
+							b->x += xdiff;
+							b->y += ydiff;
+						}
+					}
+				}
+				else
+				{
+					// all bones in all anims mode
+					for (int a = 0; a < editSprite->animations.size(); ++a)
+					{
+						for (int i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+						{
+							BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							if (b)
+							{
+								b->x += xdiff;
+								b->y += ydiff;
+							}
+						}
+					}
+				}
+			}
 		}
 	}
 }
@@ -1149,10 +1191,48 @@ void AnimationEditor::rmbu()
 	{
 		if (editingBone)
 		{
-			BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-			if (b)
+			if (!core->getShiftState())
 			{
-				b->rot = int(editingBone->rotation.z);
+				// one bone mode
+				BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+				if (b)
+				{
+					b->rot = int(editingBone->rotation.z);
+				}
+			}
+			else
+			{
+				BoneKeyframe *bcur = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+				if (bcur)
+				{
+					int rotdiff = editingBone->rotation.z - bcur->rot;
+					if (!core->getCtrlState())
+					{
+						for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+						{
+							BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							if (b)
+							{
+								b->rot += rotdiff;
+							}
+						}
+					}
+					else
+					{
+						// all bones in all anims mode
+						for (int a = 0; a < editSprite->animations.size(); ++a)
+						{
+							for (int i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+							{
+								BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+								if (b)
+								{
+									b->rot += rotdiff;
+								}
+							}
+						}
+					}
+				}
 			}
 		}
 	}

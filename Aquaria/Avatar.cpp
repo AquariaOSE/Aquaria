@@ -117,8 +117,14 @@ const float NOTE_ACCEPT_DISTANCE = 25;
 // we accept a note.
 const float NOTE_ACCEPT_ANGLE_OFFSET = 15;
 
-volatile int micNote = -1;
-bool openedFromMicInput = false;
+const int COLLIDE_RADIUS_NORMAL = 10;
+const int COLLIDE_RADIUS_FISH = 8;
+
+const int COLLIDE_RANGE_NORMAL = 2;
+const int COLLIDE_RANGE_FISH = 1;
+
+const float COLLIDE_MOD_NORMAL = 1.0f;
+const float COLLIDE_MOD_FISH = 0.1f;
 
 const int requiredDualFormCharge = 3;
 
@@ -152,7 +158,7 @@ void Avatar::bindInput()
 	dsq->user.control.actionSet.importAction(this, "PrimaryAction", ACTION_PRIMARY);
 	dsq->user.control.actionSet.importAction(this, "SecondaryAction", ACTION_SECONDARY);
 
-	dsq->user.control.actionSet.importAction(this, "Revert", MakeFunctionEvent(Avatar, revert), 0);
+	dsq->user.control.actionSet.importAction(this, "Revert",		ACTION_REVERT);
 
 	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_SWIMUP);
 	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_SWIMDOWN);
@@ -462,7 +468,7 @@ void SongIcon::onUpdate(float dt)
 	}
 	if (alpha.x == 1)
 	{
-		if ((!openedFromMicInput && isCoordinateInRadius(core->mouse.position, NOTE_ACCEPT_DISTANCE)) || micNote == note)
+		if (isCoordinateInRadius(core->mouse.position, NOTE_ACCEPT_DISTANCE))
 		{
 			//if (delay == 0)
 			if (true)
@@ -487,7 +493,7 @@ void SongIcon::onUpdate(float dt)
 				}
 			}
 		}
-		else if (openedFromMicInput || !isCoordinateInRadius(core->mouse.position, NOTE_ACCEPT_DISTANCE*1.25f))
+		else if (!isCoordinateInRadius(core->mouse.position, NOTE_ACCEPT_DISTANCE*1.25f))
 		{
 			if (cursorIsIn)
 			{
@@ -727,7 +733,6 @@ AvatarState::AvatarState()
 	wasUnderWater = true;
 	blind = false;
 	lockedToWall = false;
-	crawlingOnWall = false;
 	shotDelay = 0;
 	spellCharge = 0;
 	leachTimer = 0;
@@ -738,14 +743,6 @@ AvatarState::AvatarState()
 	blinkTimer = 0;
 }
 
-//    0  1  2  3  4  5  6  7  8  9
-const int	spellManaCost	[]	= { 0,    3,    1,    1,   2,    1,    4,    1,    1,    2};
-const float spellChargeMins	[]	= { 0,    1.25, 0,    0,   0.75, 0,    0.5,  0,    0,    3};
-//const float spellChargeMaxs	[]	= { 0.75, 1.5,  1.9,  1,   1,    1,    0.75, 1,    1,    3};
-const float spellCastDelays	[]	= { 0.05, 0.2,  0.4, 0.1, 0.1,  0.1,  0.2,  0.1,  0.1,  0.1 };
-
-bool avatarDebugEnabled = false;
-
 void Avatar::toggleMovement(bool on)
 {
 	canMove = on;
@@ -753,17 +750,12 @@ void Avatar::toggleMovement(bool on)
 
 bool Avatar::isLockable()
 {
-	return (bursting || !_isUnderWater) && (boneLockDelay == 0) && (dsq->continuity.form != FORM_FISH);
+	return (bursting || !_isUnderWater) && (boneLockDelay == 0) && canLockToWall();
 }
 
 bool Avatar::isSinging()
 {
 	return singing;
-}
-
-void Avatar::shift()
-{
-	dsq->continuity.shiftWorlds();
 }
 
 void Avatar::applyWorldEffects(WorldType type)
@@ -944,30 +936,6 @@ void Avatar::clampPosition()
 void Avatar::updatePosition()
 {
 	updateHair(0);
-}
-
-void Avatar::debugMsg(const std::string &msg)
-{
-	if (avatarDebugEnabled)
-	{
-		BitmapText *txt = new BitmapText(&dsq->font);
-		txt->setLife(2);
-		txt->setDecayRate(1);
-		txt->position = this->position;
-		txt->setText(msg);
-		txt->fadeAlphaWithLife = true;
-		core->getTopStateData()->addRenderObject(txt, LR_DEBUG_TEXT);
-	}
-}
-
-void Avatar::onBlindTest()
-{
-	setBlind(5);
-}
-
-void Avatar::onToggleDebugMessages()
-{
-	avatarDebugEnabled = !avatarDebugEnabled;
 }
 
 void Avatar::updateHair(float dt)
@@ -1451,170 +1419,9 @@ void Avatar::clearTargets()
 	}
 }
 
-void Avatar::slowToRest()
-{
-	vel.capLength2D(50);
-	/*
-	if (vel.getSquaredLength2D() > sqr(50))
-	{
-		vel.setLength2D(50);
-	}
-	*/
-	bursting = swimming = false;
-	skeletalSprite.stopAnimation(1);
-	rotation.interpolateTo(Vector(0,0,0), 0.2, 0, 0, 1);
-}
-
-/*
-#define SPECWIDTH 368
-#define SPECHEIGHT 127
-BYTE *specbuf = 0;
-*/
-
-volatile int curMicNote = -1, lastMicNote=-1;
-
-#ifdef BBGE_BUILD_RECORD
-	volatile float timeFromLastNote=0;
-	volatile float timerFreq;
-	volatile float lastLargest=0;
-	volatile bool inMe = false;
-	volatile __int64 lastTick = 0;
-#endif
-
-	/*
-BOOL CALLBACK recordCallback(HRECORD handle, const void *buf, DWORD len, DWORD user)
-{
-
-#ifdef BBGE_BUILD_RECORD
-	if (inMe) return TRUE;
-	inMe = true;
-
-	//if (!dsq->game->avatar->isSinging()) return FALSE;
-	//int x,y;
-
-	//timerFreq =
-	__int64 freq=0;
-	QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
-	__int64 curTime=0;
-	QueryPerformanceCounter((LARGE_INTEGER*)&curTime);
-	if (lastTick == 0)
-	{
-		lastTick = curTime;
-	}
-
-	float fft[4096]; // get the FFT data
-	BASS_ChannelGetData(handle,fft,BASS_DATA_FFT4096);
-
-	int v = 0;
-	int c = 0;
-	float largest = -1;
-
-	//128
-	//for (int i = 5; i < 13; i++)
-	for (int i = 12; i < 64; i++)
-	{
-		if (fft[i] > 0.01f && (fft[i] > largest || largest == -1))
-		{
-			largest = fft[i];
-			v = i;
-		}
-	}
-
-	int v2=0;
-	largest = -1;
-	// find the next largest
-
-	float dt = (float(curTime-lastTick)/float(freq));
-	lastTick = curTime;
-	int posMicNote=-1;
-	if (c != 0)
-		v /= float(c);
-	int ov = v;
-	float factor=1.0;
-	int octave = dsq->user.audio.octave;
-
-	int minNote = 12;///6;
-	int maxNote = minNote + 25; // 8
-	int octRange = 11;
-
-	minNote += (octRange)*octave;
-	maxNote += (octRange)*octave;
-
-	posMicNote = dsq->fftnotes.getNoteFromFFT(v, octave);
-
-	//if (lastLargest<largest || fabsf(largest-lastLargest) < 0.05f)
-	if (true)
-	{
-		lastLargest = largest;
-
-		float closeRange = 0.05;
-		// check for our e natural
-
-		if (posMicNote != -1)
-		{
-
-			curMicNote = posMicNote;
-		}
-		else
-		{
-			curMicNote = -1;
-		}
-	}
-	else
-	{
-		lastLargest -= dt;
-	}
-
-
-	timeFromLastNote += dt;
-	if (curMicNote != lastMicNote)
-		timeFromLastNote = 0;
-	if (timeFromLastNote > 0.0001f)
-	{
-		micNote = curMicNote;
-		timeFromLastNote = 0;
-	}
-	if (curMicNote == -1)
-		micNote = -1;
-	lastMicNote = curMicNote;
-
-	inMe = false;
-#endif
-	return TRUE;
-}
-*/
-
-/*
-
-class FoodIcon2 : public Quad
-{
-};
-
-class FoodIcon : public Quad
-{
-public:
-	FoodIcon(IngredientEffectType iet);
-
-	IngredientEffectType type;
-
-	void 
-};
-
-void Avatar::openFoodInterface()
-{
-	if (!singing && !pickingPullTarget && health > 0 && !isEntityDead() && !blockSinging)
-	{
-		// build it
-		foodIcons.clear();
-
-		foodIcons.resize(8);
-	}
-}
-*/
-
 void Avatar::openSingingInterface()
 {
-	if (!singing && !pickingPullTarget && health > 0 && !isEntityDead() && !blockSinging)
+	if (!singing && health > 0 && !isEntityDead() && !blockSinging)
 	{
 		//core->mouse.position = Vector(400,300);
 		if (dsq->inputMode != INPUT_MOUSE)
@@ -1635,19 +1442,10 @@ void Avatar::openSingingInterface()
 		}
 		currentSong.notes.clear();
 
-		//
 		songInterfaceTimer = 0;
 
 		dsq->game->songLineRender->clear();
 
-		//if (avatarRecord)
-		//{
-		//	if (dsq->useMic && !dsq->autoSingMenuOpen && dsq->user.audio.micOn)
-		//	{
-		//		//avatarRecord=BASS_RecordStart(44100,1,0,&recordCallback,0);
-		//		BASS_ChannelPlay(avatarRecord, false);
-		//	}
-		//}
 
 		if (dsq->inputMode == INPUT_JOYSTICK)
 		{
@@ -1685,48 +1483,6 @@ void Avatar::closeSingingInterface()
 		{
 			dsq->continuity.castSong(currentSongIdx);
 			currentSongIdx = SONG_NONE;
-		}
-
-		/*
-		if (avatarRecord)
-		{
-			if (dsq->useMic && !dsq->autoSingMenuOpen && dsq->user.audio.micOn)
-			{
-				//BASS_ChannelStop(avatarRecord);
-				BASS_ChannelPause(avatarRecord);
-				//BASS_RecordFree();
-				//avatarRecord = 0;
-
-			}
-		}
-		*/
-
-		lastMicNote = curMicNote = micNote = -1;
-	}
-}
-
-void Avatar::openFormInterface()
-{
-	if (!inFormInterface)
-	{
-		inFormInterface = true;
-
-		for(int i = 0; i < formIcons.size(); i++)
-		{
-			formIcons[i]->alpha.interpolateTo(1, 0.1);
-		}
-	}
-}
-
-void Avatar::closeFormInterface()
-{
-	if (inFormInterface)
-	{
-		inFormInterface = false;
-
-		for (int i = 0; i < formIcons.size(); i++)
-		{
-			formIcons[i]->alpha.interpolateTo(0, 0.1);
 		}
 	}
 }
@@ -1838,6 +1594,10 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 			return;
 		}
 		//rotationOffset.interpolateTo(Vector(0,0,0), 0.5);
+
+		collideRadius = COLLIDE_RADIUS_NORMAL;
+		setCanLockToWall(true);
+		setCollisionAvoidanceData(COLLIDE_RANGE_NORMAL, COLLIDE_MOD_NORMAL);
 	}
 	break;
 	case FORM_SUN:
@@ -1849,9 +1609,13 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		position = bodyPosition;
 		dsq->continuity.warpLiToAvatar();
 		spiritBeaconEmitter.start();
+		setCanActivateStuff(true);
+		setCanLockToWall(true);
+		setCanBurst(true);
+		setDamageTarget(DT_WALLHURT, true);
 	break;
 	case FORM_BEAST:
-		//dsq->game->sceneColor3.interpolateTo(Vector(1, 1, 1), 0.5);
+		setCanSwimAgainstCurrents(false);
 	break;
 	case FORM_DUAL:
 		if (dsq->continuity.hasLi())
@@ -1861,6 +1625,9 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 			dsq->game->li->setState(STATE_IDLE);
 		}
 	break;
+	case FORM_NATURE:
+		setDamageTarget(DT_WALLHURT, true);
+		break;
 	default:
 		if (leftHandEmitter && rightHandEmitter)
 		{
@@ -1874,7 +1641,6 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 	state.abilityDelay = 0;
 	formAbilityDelay = 0;
 	dsq->continuity.form = form;
-	ropeState = 0;
 	formTimer = 0;
 	if (effects)
 	{
@@ -1969,6 +1735,10 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		refreshModel("FishForm", "");
 		//rotationOffset.interpolateTo(Vector(0,0,-90), 0.5);
 		//refreshModel("NaijaFish", "");
+		
+		collideRadius = COLLIDE_RADIUS_FISH;
+		setCanLockToWall(false);
+		setCollisionAvoidanceData(COLLIDE_RANGE_FISH, COLLIDE_MOD_FISH);
 	}
 	break;
 	case FORM_SUN:
@@ -2000,42 +1770,13 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 			hair->setTexture("Naija/Cape-NatureForm");
 			hair->alphaMod = 1.0;
 		}
-		/*
-		skeletalSprite.loadSkin("ChildTeira");
-		refreshModel();
-		*/
-		/*
-		if (dsq->game->sceneNatureForm == "forest")
-		{
-			debugLog("Forest Form");
-			dsq->continuity.form = FORM_NATURE_FOREST;
-		}
-		else if (dsq->game->sceneNatureForm == "sun")
-		{
-			dsq->continuity.form = FORM_NATURE_SUN;
-			debugLog("Sun Form");
-		}
-		else if (dsq->game->sceneNatureForm == "fire")
-		{
-			dsq->continuity.form = FORM_NATURE_FIRE;
-			debugLog("Fire Form");
-		}
-		else if (dsq->game->sceneNatureForm == "dark")
-		{
-			dsq->continuity.form = FORM_NATURE_DARK;
-			debugLog("Dark Form");
-		}
-		else if (dsq->game->sceneNatureForm == "rock" || dsq->game->sceneNatureForm.empty())
-		{
-			dsq->continuity.form = FORM_NATURE_ROCK;
-			debugLog("Rock Form");
-		}
-		*/
+		setDamageTarget(DT_WALLHURT, false);
 
 	break;
 	case FORM_BEAST:
 	{
 		refreshModel("Naija", "BeastForm");
+		setCanSwimAgainstCurrents(true);
 	}
 	break;
 	case FORM_SPIRIT:
@@ -2043,6 +1784,10 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		bodyOffset = offset;
 		fallOffWall();
 		dsq->continuity.shiftWorlds();
+		setCanActivateStuff(false);
+		setCanLockToWall(false);
+		setCanBurst(false);
+		setDamageTarget(DT_WALLHURT, false);
 
 		if (onInit)
 		{
@@ -2092,33 +1837,10 @@ void Avatar::singNote(int note)
 {
 	currentSong.notes.push_back(note);
 	lastNote = note;
-	//int song = dsq->continuity.checkSong(currentSong);
-	//int song = dsq->continuity.checkSongAssisted(currentSong);
-	//int song = dsq->continuity.checkSongAssisted(currentSong);
-	/*
-	std::ostringstream os;
-	os << "sung note: " << note;
-	debugLog(os.str());
-	*/
-	//currentSongIdx = song;
-	/*
-	if (song != -1)
-	{
-	*/
-		/*
-		std::ostringstream os;
-		os << "Sung Song: " << song;
-		debugLog(os.str());
-		*/
-		// close in a few seconds
-		//closeSingingInterface();
-	//}
 }
 
 void Avatar::updateSingingInterface(float dt)
 {
-
-	//if (singing)
 	if (songIcons.size()>0 && songIcons[0]->alpha.x > 0)
 	{
 		if (dsq->inputMode != INPUT_JOYSTICK && !core->mouse.change.isZero())
@@ -2436,7 +2158,8 @@ void Avatar::loseTargets()
 void Avatar::updateTargetQuads(float dt)
 {
 
-	particleManager->setSuckPosition(1, dsq->getGameCursorPosition());
+	const Vector cursorpos = dsq->getGameCursorPosition();
+	particleManager->setSuckPosition(1, cursorpos);
 
 	/*
 	for (int i = 0; i < targetQuads.size(); i++)
@@ -2467,7 +2190,8 @@ void Avatar::updateTargetQuads(float dt)
 			targets[i].pos = e->getTargetPoint(targets[i].targetPt);
 			if (i == 0)
 			{
-				particleManager->setSuckPosition(1, targets[i].pos);
+				particleManager->setSuckPosition(1, targets[i].pos); // suckpos 1 is overridden elsewhere later
+				particleManager->setSuckPosition(2, targets[i].pos);
 			}
 
 			/*
@@ -2480,7 +2204,7 @@ void Avatar::updateTargetQuads(float dt)
 		}
 		else
 		{
-			targetQuads[i]->position = dsq->getGameCursorPosition();
+			targetQuads[i]->position = cursorpos;
 			//targetQuads[i]->alpha.interpolateTo(0, 0.1);
 		}
 	}
@@ -2500,7 +2224,7 @@ void Avatar::updateTargetQuads(float dt)
 			debugLog(os.str());
 			*/
 
-			targetQuads[i]->position = dsq->getGameCursorPosition();
+			targetQuads[i]->position = cursorpos;
 			if (dsq->continuity.form == FORM_ENERGY && isInputEnabled())
 			{
 				if (dsq->inputMode == INPUT_JOYSTICK && targetQuads[i]->isRunning())
@@ -2703,22 +2427,6 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	return firedShot;
 }
 
-void Avatar::spawnSeed()
-{
-	// max spore children/seeds = 50
-	if (dsq->game->getNumberOfEntitiesNamed("SporeChild") < 4)
-	{
-		if (!dsq->game->isObstructed(TileVector(position)))
-		{
-			dsq->game->createEntity("SporeChild", 0, position, 0, 0, "");
-		}
-	}
-	else
-	{
-		// visual effect and/or sound effect
-	}
-}
-
 Vector Avatar::getFacing()
 {
 	if (vel.isLength2DIn(2) && rotation.z == 0)
@@ -2902,12 +2610,6 @@ void Avatar::formAbility(int ability)
 			{
 				if (chargeLevelAttained == 2)
 				{
-					/*
-					shockTimer = 1;
-					damageDelay = 0.2;
-					didShockDamage = false;
-					*/
-					didShockDamage = false;
 					if (dsq->continuity.hasFormUpgrade(FORMUPGRADE_ENERGY2))
 						doShock("EnergyTendril2");
 					else
@@ -3199,7 +2901,7 @@ void Avatar::formAbility(int ability)
 			for (i = Shot::shots.begin(); i != Shot::shots.end(); i++)
 			{
 				Shot *s = (*i);
-				if (s->shotData && !s->shotData->invisible)
+				if (s->isActive() && s->shotData && !s->shotData->invisible)
 				{
 					if (!s->firer || s->firer->getEntityType()==ET_ENEMY)
 					{
@@ -3438,70 +3140,6 @@ void Avatar::doShock(const std::string &shotName)
 	{
 		targets.clear();
 	}
-
-
-	/*
-	// old method
-	for (int i = 0; i < entitiesToHit.size(); i++)
-	{
-		Entity *e = entitiesToHit[i];
-		DamageData d;
-		d.attacker = this;
-		d.damageType = DT_AVATAR_SHOCK;
-		d.damage = 3;
-		e->damage(d);
-
-		dsq->playVisualEffect(VFX_SHOCKHIT, e->position, e);
-
-		EnergyTendril *t = new EnergyTendril(this, e);
-		core->addRenderObject(t, LR_PARTICLES);
-
-		e->shock();
-	}
-	*/
-
-	//HACK: WHAT DOES THIS VARIABLE DO EXACTLY?
-	didShockDamage = true;
-
-
-	//loseTargets();
-}
-
-void Avatar::updateShock(float dt)
-{
-	/*
-	if (shockTimer > 0)
-	{
-		float shockTime = 0.75;
-		castShockTimer += dt;
-		std::vector<Entity*> closestEntities;
-		unsigned int c=0;
-		const float shotDelayTime = 0.05;
-
-
-		if (damageDelay > 0)
-		{
-			damageDelay -= dt;
-			if (damageDelay <= 0)
-				damageDelay = 0;
-		}
-
-		if (damageDelay == 0)
-		{
-		}
-
-		if (damageDelay == 0)
-		{
-			damageDelay = 999;
-		}
-
-		shockTimer -= dt;
-		if (shockTimer < 0)
-		{
-			shockTimer = 0;
-		}
-	}
-	*/
 }
 
 void Avatar::formAbilityUpdate(float dt)
@@ -3534,58 +3172,6 @@ void Avatar::formAbilityUpdate(float dt)
 	break;
 	case FORM_ENERGY:
 	{
-		/*
-		if (core->mouse.buttons.right && mana > 0 && !core->mouse.buttons.left)
-		{
-			float shockTime = 0.75;
-			castShockTimer += dt;
-			std::vector<Entity*> closestEntities;
-			unsigned int c=0;
-			const float shotDelayTime = 0.05;
-
-
-			int maxHit = 2 + dsq->continuity.getSpellLevel(SPELL_SHOCK)*2;
-			FOR_ENTITIES (i)
-			{
-				Entity *e = *i;
-				Vector d = e->position - this->position;
-				if (e != this && !e->isEntityDead() && e->isAffectedBySpell(SPELL_SHOCK) && d.getSquaredLength2D() < sqr(400+(dsq->continuity.getSpellLevel(SPELL_SHOCK)-1)*100))
-				{
-					state.shotDelay += dt;
-					if (state.shotDelay > shotDelayTime)
-					{
-						state.shotDelay -= shotDelayTime;
-
-						EnergyTendril *t = new EnergyTendril(avatar->position, e->position);
-						core->addRenderObject(t, LR_PARTICLES);
-					}
-					e->offset.x = rand()%5;
-					e->shock();
-					DamageData d;
-					d.attacker = this;
-					d.spellType = SPELL_SHOCK;
-					d.damage = 1+(dsq->continuity.getSpellLevel(SPELL_SHOCK)-1)*1;
-					e->hit(d);
-					c ++;
-				}
-				if (c >= maxHit)
-					break;
-			}
-			//std::ostringstream os;
-			//os << "castShockTimer: " << castShockTimer << " - shockTime: " << shockTime;
-			//debugLog(os.str());
-			if (castShockTimer > shockTime)
-			{
-				castShockTimer -= shockTime;
-				mana --;
-			}
-		}
-		else
-		{
-			state.shotDelay = 0;
-			endShock();
-		}
-		*/
 	}
 	break;
 	}
@@ -3600,14 +3186,6 @@ bool Avatar::isMouseInputEnabled()
 	return true;
 }
 
-int rmb_flag = 0;
-void Avatar::rmbd2()
-{
-	rmb_flag = 1;
-	rmbd();
-	rmb_flag = 0;
-}
-
 void Avatar::rmbd()
 {
 	//core->setDockIcon("BitBlot");
@@ -3616,7 +3194,7 @@ void Avatar::rmbd()
 	{
 		//if (isCoordinateInRadius(dsq->getGameCursorPosition(), 96))
 		///Vector diff = core->mouse.position - c;
-		if (dsq->inputMode == INPUT_MOUSE && !rmb_flag)
+		if (dsq->inputMode == INPUT_MOUSE)
 		{
 			Vector diff = getVectorToCursorFromScreenCentre();
 			if (diff.getSquaredLength2D() < sqr(openSingingInterfaceRadius))
@@ -3629,13 +3207,8 @@ void Avatar::rmbd()
 	}
 	else
 	{
-		if (spellCastDelay == 0)
-			startCharge(0);
+		startCharge(0);
 	}
-	/*
-	if (spellCastDelay == 0)
-		startCharging(1);
-	*/
 }
 
 void Avatar::rmbu()
@@ -3654,17 +3227,6 @@ void Avatar::rmbu()
 	dsq->cursorGlow->alpha.interpolateTo(0, 0.2);
 	dsq->cursorBlinker->alpha.interpolateTo(0, 0.2);
 
-	if (pickingPullTarget)
-	{
-		if (potentialPullTarget)
-		{
-			pullTarget = potentialPullTarget;
-			debugLog("Calling start pull");
-			pullTarget->startPull();
-		}
-		closePullTargetInterface();
-	}
-
 	if (singing)
 	{
 		closeSingingInterface();
@@ -3681,16 +3243,6 @@ void Avatar::rmbu()
 		pathToActivate->activate();
 		pathToActivate = 0;
 	}
-
-
-
-	/*
-	if (charging)
-	{
-		formAbility(1);
-		endCharge();
-	}
-	*/
 }
 
 bool Avatar::canCharge(int ability)
@@ -3701,22 +3253,9 @@ bool Avatar::canCharge(int ability)
 		if (ability == 0) return true;
 	break;
 	case FORM_BEAST:
-		//if (inTummy) return true;
+		return false;
 	break;
 	case FORM_DUAL:
-		/*
-		if (dualFormMode == DUALFORM_NAIJA)
-		{
-			if (dualFormCharge >= requiredDualFormCharge)
-			{
-				return true;
-			}
-		}
-		else
-		{
-			return true;
-		}
-		*/
 		return true;
 	break;
 	case FORM_NATURE:
@@ -3746,16 +3285,7 @@ void Avatar::startCharge(int ability)
 		dsq->loops.charge = core->sound->playSfx(sfx);
 
 		state.spellCharge = 0;
-		spellChargeMin = 0;
 		chargeLevelAttained = 0;
-
-		/*
-		chargeGraphic->alpha = 0;
-		chargeGraphic->scale = Vector(0,0);
-		chargeGraphic->alpha.interpolateTo(0.6, chargeMax, 0);
-		float sz = 1.5;
-		chargeGraphic->scale.interpolateTo(Vector(sz,sz), chargeMax, 0);
-		*/
 
 		switch(dsq->continuity.form)
 		{
@@ -3779,7 +3309,6 @@ void Avatar::startCharge(int ability)
 		chargingEmitter->start();
 
 		charging = true;
-		abilityCharging = ability;
 
 	}
 	if (!canCharge(ability))
@@ -3795,11 +3324,6 @@ void Avatar::setBlockSinging(bool v)
 
 bool Avatar::canSetBoneLock()
 {
-	/*
-	if (dsq->continuity.form == FORM_FISH || dsq->continuity.form == FORM_SPIRIT)
-		return false;
-	*/
-
 	return true;
 }
 
@@ -3849,13 +3373,6 @@ void Avatar::lmbd()
 			}
 		}
 	}
-	/*
-	else
-	{
-		if (spellCastDelay == 0)
-			startCharging(0);
-	}
-	*/
 }
 
 void Avatar::fallOffWall()
@@ -3910,17 +3427,6 @@ void Avatar::endCharge()
 			dsq->loops.charge = BBGE_AUDIO_NOCHANNEL;
 		}
 
-
-		/*
-		std::ostringstream os;
-		os << "spellCharge: " << spellCharge;
-		debugLog(os.str());
-		*/
-		/*
-		chargeGraphic->alpha.interpolateTo(0, 0.5, 0);
-		chargeGraphic->scale.interpolateTo(Vector(0,0), 1.0, 0);
-		*/
-
 		chargingEmitter->stop();
 
 		charging = false;
@@ -3931,37 +3437,6 @@ void Avatar::endCharge()
 Vector Avatar::getWallNormal(TileVector t)
 {
 	return dsq->game->getWallNormal(t.worldVector(), 5)*-1;
-
-	/*
-	Vector accum;
-	int c = 0;
-	for (int x = -2; x <= 2; x++)
-	{
-		for (int y = -2; y <= 2; y++)
-		{
-			TileVector check = t;
-			check.x+=x;
-			check.y+=y;
-			if (!dsq->game->isObstructed(check))
-			{
-				Vector v(check.x, check.y);
-				c++;
-				accum+= v;
-			}
-			//check.x+x, check.y+y
-		}
-	}
-	if (c > 0)
-	{
-		accum /= c;
-		//accum.normalize2D();
-		accum.setLength2D(-1);
-		return accum;
-	}
-	Vector v = vel;
-	v.setLength2D(-1);
-	return v;
-	*/
 }
 
 int Avatar::getSingingInterfaceRadius()
@@ -3993,7 +3468,6 @@ void Avatar::lockToWallCommon()
 	stopRoll();
 	core->sound->playSfx("LockToWall", 1.0, 0);//, (1000+rand()%100)/1000.0f);
 	//bursting = false;
-	animatedBurst = false;
 	this->burst = 1;
 	//lastLockToWallPos = position;
 
@@ -4010,16 +3484,11 @@ void Avatar::lockToWallCommon()
 void Avatar::lockToWall()
 {
 	if (riding) return;
-	if (inCurrent && dsq->continuity.form != FORM_BEAST) return;
-	if (dsq->continuity.form == FORM_FISH || dsq->continuity.form == FORM_SPIRIT) return;
+	if (inCurrent && !canSwimAgainstCurrents()) return;
+	if (!canLockToWall()) return;
 	if (state.lockedToWall) return;
 	if (vel.x == 0 && vel.y == 0) return;
 	if (dsq->game->isPaused()) return;
-
-	/*
-	Vector opos = position;
-	position = lastPosition;
-	*/
 
 	TileVector t(position);
 	TileVector myTile = t;
@@ -4029,12 +3498,7 @@ void Avatar::lockToWall()
 	m.setLength2D(3);
 	t.x += int(m.x);
 	t.y += int(m.y);
-	/*
-	TileVector t2 = t;
-	m.setLength2D(4);
-	t2.x += int(m.x);
-	t2.y += int(m.y);
-	*/
+
 	m.setLength2D(2);
 	TileVector tback = myTile;
 	tback.x += int(m.x);
@@ -4045,27 +3509,6 @@ void Avatar::lockToWall()
 	TileVector tnext = myTile;
 	tnext.x += int(add.x);
 	tnext.y += int(add.y);
-
-	// find the fraking wall
-	/*
-	TileVector actualWall = myTile;
-	Vector lastWall;
-	Vector getWall(myTile.x, myTile.y);
-	for (int i = -1; i < 5; i++)
-	{
-		getWall.x += add.x*i;
-		getWall.y += add.y*i;
-		if (lastWall.isZero())
-			lastWall = getWall;
-		TileVector test(getWall.x, getWall.y);
-		if (dsq->game->isObstructed(test))
-			break;
-		lastWall = getWall;
-	}
-	actualWall = TileVector(lastWall.x, lastWall.y);
-	*/
-
-	Vector diff = lastLockToWallPos - position;
 
 	bool good = true;
 	if (!dsq->game->isObstructed(t))
@@ -4140,7 +3583,7 @@ void Avatar::lockToWall()
 		}
 	}
 
-	if (dsq->game->getGrid(t)==OT_HURT && dsq->continuity.form != FORM_NATURE)
+	if (dsq->game->getGrid(t)==OT_HURT && isDamageTarget(DT_WALLHURT))
 	{
 		good = false;
 	}
@@ -4168,12 +3611,6 @@ void Avatar::lockToWall()
 		}
 		else
 		{
-
-			/*
-			position = TileVector(position).worldVector();
-			lastPosition = position;
-			*/
-
 			if (!dsq->mod.isActive() && !dsq->continuity.getFlag("lockedToWall"))
 			{
 				
@@ -4189,9 +3626,6 @@ void Avatar::lockToWall()
 				lockToWallFallTimer = 0.4;
 			else
 				lockToWallFallTimer = -1;
-
-			//wallPushVec = getWallNormal(t);
-
 
 			wallPushVec = wallNormal;
 			wallPushVec *= 2000;
@@ -4248,47 +3682,12 @@ void Avatar::lockToWall()
 			{
 				time = len/spd;
 			}
-			/*
-			std::ostringstream os;
-			os << "time: " << time;
-			debugLog(os.str());
-			*/
 			offset.interpolateTo(offdiff, time);
-			/*
-			if (tileType == OT_INVISIBLEIN)
-			{
-				goIn = wallNormal;
-				goIn.setLength2D(-28);
-			}
-			else
-			{
-				Vector diff = uset.worldVector()-position;
-				goIn = diff;
-			}
-			offset.interpolateTo(goIn, 0.05);
-			*/
 
 			wallLockTile = t;
 
 			vel = Vector(0,0,0);
 			vel2 = 0;
-
-			/*
-			Vector oldPos = position;
-
-			while (true)
-			{
-				Vector m = vel;
-				m |= 1;
-				position += m;
-				TileVector t(position);
-				if (dsq->game->isObstructed(t, OT_BLACK))
-				{
-					position = oldPos;
-					break;
-				}
-			}
-			*/
 		}
 	}
 	else
@@ -4405,28 +3804,6 @@ void Avatar::setNearestPullTarget()
 	}
 }
 
-void Avatar::openPullTargetInterface()
-{
-	debugLog("Open pull target");
-	if (pullTarget)
-	{
-		pullTarget->stopPull();
-	}
-	pullTarget = 0;
-	potentialPullTarget = 0;
-	pickingPullTarget = true;
-	// change the cursor
-	dsq->cursor->color = Vector(0.5,0.5,1);
-}
-
-void Avatar::closePullTargetInterface()
-{
-	debugLog("close pull target");
-	pickingPullTarget = false;
-	potentialPullTarget = 0;
-	dsq->cursor->color = Vector(1,1,1);
-}
-
 void Avatar::createWeb()
 {
 	web = new Web;
@@ -4455,7 +3832,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	
 	urchinDelay = 0;
 	jellyDelay = 0;
-	warpIn = false;
 #ifdef AQ_TEST_QUADTRAIL
 	quadTrail = new QuadTrail(100, 32);
 	quadTrail->setTexture("Particles/QuadTrail");
@@ -4485,7 +3861,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	//registerEntityDied = true;
 	setv(EV_ENTITYDIED, 1);
-	wallJumps = 0;
 	wallBurstTimer = 0;
 	beautyFlip = false;
 	invincibleBreak = true;
@@ -4494,7 +3869,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	songInterfaceTimer = 0;
 	quickSongCastDelay = 0;
 	flourish = false;
-	tummyAmount=0;
 
 	blockSinging = false;
 	singing = false;
@@ -4519,31 +3893,17 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	fallGravityTimer = 0;
 	lastOutOfWaterMaxSpeed = 0;
 	//chargeGraphic = 0;
-	tummyTimer = 0;
-	inTummy = EAT_NONE;
-	ropeTimer = shieldPoints = auraTimer = 0;
+	shieldPoints = auraTimer = 0;
 	glow = 0;
 
 	fireDelay = 0;
-	inFormInterface = false;
 	looking = false;
-	canWarpDelay = 0.5;
-	canWarp = false;
 	rollDidOne = 0;
 	lastQuad = lastQuadDir = rollDelay = rolling = 0;
-	stopTimer = 0;
-	doubleClickDelay = 0;
-	damageDelay = 0;
-	didShockDamage = false;
 	chargeLevelAttained = 0;
-	shockTimer = 0;
 	activeAura = AURA_NONE;
-	ropeState = 0;
 	movingOn = false;
 	currentMaxSpeed = 0;
-	abilityCharging = -1;
-	pickingPullTarget = false;
-	potentialPullTarget = 0;
 	pullTarget = 0;
 	revertTimer = 0;
 	currentSongIdx = -1;
@@ -4556,7 +3916,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	activateEntity = 0;
 	canMove = true;
-	castShockTimer = 0;
 	//scale = Vector(0.5, 0.5);
 	scale = Vector(0.5, 0.5);
 
@@ -4569,9 +3928,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	targets.resize(1);
 
-
-	lastEntityActivation = 0;
-
 	entityToActivate = 0;
 	pathToActivate = 0;
 	zoomOverriden = false;
@@ -4580,22 +3936,16 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	zoomVel = 0;
 
 	myZoom = Vector(1,1);
-	spellChargeMin = spellCastDelay = 0;
 	this->pushingOffWallEffect = 0;
 	lockToWallFallTimer  = 0;
 	swimming = false;
-	dodgeDelay = 0;
 	charging = false;
 	bursting = false;
-	animatedBurst = false;
 	burst = 1;
 	burstDelay = 0;
 	ignoreInputDelay = 0;
-	idleAnimDelay = 2;
 	splashDelay = 0;
 	avatar = this;
-
-	frame = 0;
 
 	particleDelay = 0;
 
@@ -4657,27 +4007,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	fader->alpha = 0;
 	dsq->game->addRenderObject(fader, LR_AFTER_EFFECTS);
 
-	text = 0;
-
-	/*
-	chargeGraphic = new Particle;
-	{
-		chargeGraphic->setBlendType(RenderObject::BLEND_ADD);
-		chargeGraphic->setTexture("glow");
-		chargeGraphic->alpha = 0;
-		//chargeGraphic->color = Vector(1,,0);
-		chargeGraphic->width = 128;
-		chargeGraphic->height = 128;
-		chargeGraphic->scale = Vector(0,0);
-		chargeGraphic->parentManagedPointer = 1;
-		//chargeGraphic->positionSnapTo = &this->position;
-		chargeGraphic->rotation.interpolateTo(Vector(0,0,360), 1, -1, 1);
-		chargeGraphic->position = Vector(16, 58);
-		//chargeGraphic->color = Vector(1,0.2,0.1);
-	}
-	//skeletalSprite.getBoneByIdx(3)->addChild(chargeGraphic);
-	*/
-
 	debugLog("Avatar 6");
 
 	targetQuads.resize(targets.size());
@@ -4731,10 +4060,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	chargingEmitter = new ParticleEffect;
 	dsq->getTopStateData()->addRenderObject(chargingEmitter, LR_PARTICLES);
-	/*
-	addChild(&chargingEmitter);
-	chargingEmitter.parentManagedStatic = true;
-	*/
 
 	chargeEmitter = new ParticleEffect;
 	dsq->getTopStateData()->addRenderObject(chargeEmitter, LR_PARTICLES_TOP);
@@ -4744,19 +4069,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	rightHandEmitter = new ParticleEffect;
 	dsq->getTopStateData()->addRenderObject(rightHandEmitter, LR_PARTICLES);
-
-	/*
-	leftHandEmitter = new ParticleEffect;
-	dsq->getTopStateData()->addRenderObject(`, LR_PARTICLES);
-
-	rightHandEmitter = new ParticlesEffect;
-	dsq->getTopStateData()->addRenderObject(rightHandEmitter, LR_PARTICLES);
-	*/
-
-	/*
-	addChild(&chargeEmitter);
-	chargeEmitter.parentManagedStatic = true;
-	*/
 
 	addChild(&biteLeftEmitter, PM_STATIC);
 	biteLeftEmitter.load("BiteLeft");
@@ -4795,36 +4107,28 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	debugLog("Avatar 9");
 
-	if (dsq->useMic)
-	{
-		debugLog("useMic...initing recording");
-
-		/*
-		debugLog("RecordStart...");
-		avatarRecord = BASS_RecordStart(44100,1,0,&recordCallback,0);
-
-		if (avatarRecord)
-		{
-			if (dsq->autoSingMenuOpen)
-			{
-			}
-			else
-			{
-				debugLog("ChannelPause...");
-				BASS_ChannelPause(avatarRecord);
-			}
-		}
-		debugLog("...done");
-		*/
-	}
-
-	debugLog("Avatar 10");
 	setDamageTarget(DT_AVATAR_LANCE, false);
 
 	//changeForm(FORM_NORMAL, false);
 
 	refreshNormalForm();
 
+	if(dsq->continuity.form == FORM_FISH)
+		collideRadius = COLLIDE_RADIUS_FISH;
+	else
+		collideRadius = COLLIDE_RADIUS_NORMAL;
+
+	// defaults for normal form
+	_canActivateStuff = true;
+	_canBurst = true;
+	_canLockToWall = true;
+	_canSwimAgainstCurrents = false;
+	_canCollideWithShots = true;
+
+	_collisionAvoidMod = COLLIDE_MOD_NORMAL;
+	_collisionAvoidRange = COLLIDE_RANGE_NORMAL;
+
+	_seeMapMode = SEE_MAP_DEFAULT;
 }
 
 void Avatar::revert()
@@ -4946,8 +4250,6 @@ void Avatar::destroy()
 {
 	Entity::destroy();
 
-	text = 0;
-
 	if (dsq->loops.shield != BBGE_AUDIO_NOCHANNEL)
 	{
 		core->sound->fadeSfx(dsq->loops.shield, SFT_OUT, 1);
@@ -4962,24 +4264,6 @@ void Avatar::destroy()
 	avatar = 0;
 }
 
-void Avatar::fireRope()
-{
-	ropeVel = getAim();
-	ropeVel.z = 0;
-	if (!ropeVel.isLength2DIn(1))
-	{
-		ropeTimer = 0.2;
-		ropeState = 1;
-		ropePos = position;
-		//ropeVel = core->mouse.position - Vector(400,300);
-
-		ropeVel.setLength2D(7000);
-		//ropeVel |= 500;
-	}
-	else
-		ropeVel = Vector(0,0,0);
-}
-
 void Avatar::toggleZoom()
 {
 	if (core->globalScale.isInterpolating()) return;
@@ -4992,56 +4276,6 @@ void Avatar::toggleZoom()
 	else if (core->globalScale.x == 0.25)
 		core->globalScale.interpolateTo(Vector(1,1),0.2);
 
-	/*
-	else if (core->globalScale.x == 1.5)
-		core->globalScale.interpolateTo(Vector(1,1),0.2);
-	*/
-
-}
-
-/*
-void Avatar::setActiveSpell(Spells spell)
-{
-	activeSpell = spell;
-}
-*/
-
-void Avatar::dodge(std::string dir)
-{
-	if (bursting) return;
-	if (!canMove) return;
-	if (dodgeDelay == 0)
-	{
-		Vector mov;
-
-		if (dir == "right")
-			mov = Vector(1,0);
-		else if (dir == "left")
-			mov = Vector(-1, 0);
-		else if (dir == "down")
-			mov = Vector(0, 1);
-		else if (dir == "up")
-			mov = Vector(0, -1);
-
-		Vector lastPosition = position;
-		//position += mov * 80;
-
-		dodgeVec = mov * 8000;
-		vel += mov * vars->maxDodgeSpeed;
-		//dodgeEffectTimer = 0.125;
-		state.dodgeEffectTimer.start(/*0.125*/vars->dodgeTime);
-		/*
-		float vlen = vel.getLength2D();
-		mov |= 500;
-		vel += mov;
-		*/
-		/*
-		if (dsq->game->collideCircleWithGrid(position, 24))
-		{
-			position = lastPosition;
-		}
-		*/
-	}
 }
 
 void Avatar::startBackFlip()
@@ -5091,25 +4325,7 @@ void Avatar::startBurstCommon()
 
 void Avatar::startBurst()
 {
-	//getVectorToCursorFromScreenCentre()
-	//!bursting && burst == 1
-	//&&
-	/*
-	bool nearWallProblem = false;
-	if (vel.isLength2DIn(200))
-	{
-		if ()
-		{
-			nearWallProblem = false
-		}
-		else
-		{
-			nearWallProblem = true;
-		}
-	}
-	*/
-	//&& !vel.isLength2DIn(32)
-	if (!riding && dsq->continuity.form != FORM_SPIRIT && (joystickMove || getVectorToCursor().getSquaredLength2D() > sqr(BURST_DISTANCE))
+	if (!riding && canBurst() && (joystickMove || getVectorToCursor().getSquaredLength2D() > sqr(BURST_DISTANCE))
 		&& getState() != STATE_PUSH && (!skeletalSprite.getCurrentAnimation() || (skeletalSprite.getCurrentAnimation()->name != "spin"))
 		&& _isUnderWater && !isActing(ACTION_ROLL))
 	{
@@ -5187,35 +4403,6 @@ void Avatar::startWallBurst(bool useCursor)
 		if (goDir.x != 0 || goDir.y != 0)
 		{
 			lastBurstType = BURST_WALL;
-			/*
-			if (wallBurstTimer > 0)
-			{
-				Vector wallJumpDir = position - lastWallJumpPos;
-				if (lastWallJumpPos.isZero() || wallJumpDir.dot2D(lastWallJumpPos) > 0.2f)
-				{
-					std::ostringstream os;
-					os << "wallJumps: " << wallJumps;
-					debugLog(os.str());
-					wallJumps++;
-				}
-				else
-				{
-					debugLog("failed angle");
-					stopWallJump();
-				}
-			}
-			wallBurstTimer = 0.8f - 0.1f * wallJumps;
-			if (wallBurstTimer <= 0)
-			{
-				// super boost!
-				debugLog("super boost!");
-				wallJumps = 0;
-			}
-
-
-			lastWallJumpPos = position;
-			lastWallJumpDir = position - lastWallJumpPos;
-			*/
 
 			dsq->rumble(0.22, 0.22, 0.2);
 			bittenEntities.clear();
@@ -5242,10 +4429,6 @@ void Avatar::startWallBurst(bool useCursor)
 			vel = wallPushVec;
 			this->state.lockedToWall = false;
 			skeletalSprite.stopAllAnimations();
-			if (wallJumps > 0)
-			{
-				dsq->sound->playSfx("WallJump", 255, 0, 1000+wallJumps*100);
-			}
 			dsq->game->playBurstSound(pushingOffWallEffect>0);
 			skeletalSprite.animate(getBurstAnimName(), 0);
 			bursting = true;
@@ -5253,56 +4436,6 @@ void Avatar::startWallBurst(bool useCursor)
 			ripples = true;
 
 			startBurstCommon();
-			/*
-			if (core->afterEffectManager)
-				core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.04,0.06,15,0.2f));
-			*/
-
-
-			/*
-			float len = wallPushVec.getLength2D();
-			goDir |= len;
-			goDir.z = 0;
-
-			Vector test = goDir;
-			test |= TILE_SIZE*2;
-			if (dsq->game->isObstructed(TileVector(position + test)))
-			{
-			}
-			else
-				wallPushVec = goDir;
-			*/
-			/*
-			wallPushVec = Vector((wallPushVec.x+goDir.x)/2, (wallPushVec.y+goDir.y)/2);
-			wallPushVec |= len;
-			*/
-		}
-		else
-		{
-			//wallPushVec |= 10;
-		}
-	}
-}
-
-void Avatar::doDodgeInput(const std::string &action, int s)
-{
-	if (s)
-	{
-		if (tapped.empty())
-		{
-			tapped = action;
-			state.tapTimer.start(0.25);
-		}
-		else if (tapped == action)
-		{
-			if (state.tapTimer.isActive())
-				dodge(action);
-			tapped = "";
-			dodgeDelay = 1.0;
-		}
-		else
-		{
-			tapped = "";
 		}
 	}
 }
@@ -5350,18 +4483,6 @@ Vector Avatar::getFakeCursorPosition()
 
 Vector Avatar::getVectorToCursorFromScreenCentre()
 {
-	/*
-	if (core->joystickEnabled)
-	{
-		Vector joy(core->joystate.lX-(65536/2), core->joystate.lY-(65536/2));
-		float len = (joy.getLength2D() * 600) / 65536;
-		joy.setLength2D(len);
-		std::ostringstream os;
-		os << "joy (" << joy.x << ", " << joy.y << ")";
-		debugLog(os.str());
-		return joy;
-	}
-	*/
 	if (game->cameraOffBounds)
 		return getVectorToCursor();
 	else
@@ -5385,54 +4506,27 @@ Vector Avatar::getVectorToCursor(bool trueMouse)
 	//return core->mouse.position - Vector(400,300);
 }
 
-void Avatar::startWallCrawl()
-{
-	lastWallNormal = wallNormal;
-	state.crawlingOnWall = true;
-	skeletalSprite.transitionAnimate("crawl", 0.1, -1);
-}
-
-void Avatar::stopWallCrawl()
-{
-	state.crawlingOnWall = false;
-	state.lockedToWall = false;
-	idle();
-}
-
 void Avatar::action(int id, int state)
 {
 	if (id == ACTION_PRIMARY)	{ if (state) lmbd(); else lmbu(); }
 	if (id == ACTION_SECONDARY) { if (state) rmbd(); else rmbu(); }
 
+	if (id == ACTION_REVERT && !state)
+		revert();
+
 	if (id == ACTION_PRIMARY && state)// !state
 	{
 		if (isMiniMapCursorOkay())
 		{
-			if (this->state.lockedToWall && !this->state.crawlingOnWall)
+			if (this->state.lockedToWall)
 			{
 				Vector test = getVectorToCursor();
 				if (test.isLength2DIn(minMouse))
 				{
 					fallOffWall();
-					// previously didn't fall off wall with mouse.... why?
-					/*
-					//fallOffWall();
-					if (dsq->inputMode == INPUT_JOYSTICK || dsq->inputMode == INPUT_KEYBOARD)
-						fallOffWall();
-					*/
 				}
-				/*
-				else if (test.isLength2DIn(maxMouse))
-				{
-					this->state.lockedToWall = false;
-					idle();
-				}
-				*/
 				else
 				{
-					//if (dsq->continuity.setFlag("lockedToWall", 1)
-
-					//!boneLock.entity && 
 					if (boneLock.entity)
 						wallNormal = boneLock.wallNormal;
 
@@ -5470,15 +4564,6 @@ void Avatar::action(int id, int state)
 					}
 				}
 
-				/*
-				else
-				{
-					wallNormal = getWallNormal(TileVector(position));
-					Vector left = wallNormal.getPerpendicularLeft();
-					Vector right = wallNormal.getPerpendicularRight();
-					position += left*0.1f;
-				}
-				*/
 			}
 			else
 			{
@@ -5494,24 +4579,7 @@ void Avatar::action(int id, int state)
 			}
 		}
 	}
-	/*
-	// song note keys
-	else if (!action.empty() && action[0] == 's')
-	{
-		if (isSinging())
-		{
-			int count=0;
-			std::istringstream is(action.substr(1, action.size()));
-			is >> count;
 
-			count--;
-			if (count >= 0 && count <= 7)
-			{
-				core->setMousePosition(songIcons[count]->position);
-			}
-		}
-	}
-	*/
 	else if (id >= ACTION_SONGSLOT1 && id < ACTION_SONGSLOTEND)
 	{
 		if (canQuickSong())
@@ -5619,238 +4687,33 @@ void Avatar::action(int id, int state)
 	}
 }
 
-void Avatar::doRangePull(float dt)
+void Avatar::doBindSong()
 {
-	int range = 4;
-	Vector total;
-
-	Vector dest = position + vel*dt;
-	TileVector t(dest);
-	std::vector<Vector> vectors;
-	for (int x = t.x-range; x <= t.x+range; x++)
+	if (pullTarget)
 	{
-		for (int y = t.y-range; y <= t.y+range; y++)
+		pullTarget->stopPull();
+		pullTarget = 0;
+		core->sound->playSfx("Denied");
+	}
+	else
+	{
+		dsq->game->bindIngredients();
+		setNearestPullTarget();
+		if (!pullTarget)
 		{
-			TileVector tile(x,y);
-			if (!(tile.x == t.x &&  tile.y == t.y) && !dsq->game->isObstructed(tile)
-				&& !dsq->game->isObstructed(TileVector(tile.x+1, tile.y))
-				&& !dsq->game->isObstructed(TileVector(tile.x, tile.y+1))
-				&& !dsq->game->isObstructed(TileVector(tile.x-1, tile.y))
-				&& !dsq->game->isObstructed(TileVector(tile.x, tile.y+1))
-				)
-			{
-				vectors.push_back(tile.worldVector());
-				/*
-				Vector obs = tile.worldVector();
-				Vector mov = position - obs;
-
-				int len = range*TILE_SIZE - mov.getLength2D();
-				if (len < 0) len = 1;
-				mov |= len;
-				total += mov;
-				*/
-			}
+			core->sound->playSfx("Denied");
 		}
-	}
-
-	unsigned int amount = 5;
-	if (amount > vectors.size())
-		amount = vectors.size();
-	std::vector<int>smallestDists;
-	smallestDists.resize(amount);
-	int i = 0;
-	for (i = 0; i < smallestDists.size(); i++)
-	{
-		smallestDists[i] = 0x7FFFFFFF;
-	}
-	std::vector<Vector> closestVectors;
-	closestVectors.resize(amount);
-	for (i = 0; i < vectors.size(); i++)
-	{
-		Vector diff = dest - vectors[i];
-		int dist = diff.getSquaredLength2D();
-		for (int j = 0; j < smallestDists.size(); j++)
-		{
-			if (dist < smallestDists[j])
-			{
-				for (int k = smallestDists.size()-1; k > j; k--)
-				{
-					smallestDists[k] = smallestDists[k-1];
-					closestVectors[k] = closestVectors[k-1];
-				}
-				smallestDists[j] = dist;
-				closestVectors[j] = vectors[i];
-			}
-		}
-	}
-
-	for (i = 0; i < closestVectors.size(); i++)
-	{
-		Vector obs = closestVectors[i];
-		if (obs.x == 0 && obs.y == 0) continue;
-		Vector mov = obs - position;
-
-		int len = range*TILE_SIZE - mov.getLength2D();
-		if (len < 0) len = 0;
 		else
 		{
-			mov.setLength2D(len);
-			total += mov;
+			core->sound->playSfx("Bind");
 		}
-	}
-
-	if (total.x != 0 || total.y != 0)
-	{
-		//float vlen = vel.getLength2D();
-		//float len = (range*TILE_SIZE - avgDist)/range*TILE_SIZE;
-		//if (len > 0)
-		{
-			if (bursting && swimming)
-			{
-				total.setLength2D(dt*4000);
-			}
-			else if (swimming)
-			{
-				//vel = Vector(0,0,0);
-				//vel |= vlen;
-				total.setLength2D(dt*1000);
-			}
-			else
-			{
-				total.setLength2D(dt*200);
-			}
-			vel += total;
-		}
-		/*
-		if (vlen < 250)
-		{
-			total |= 200*dt;
-		}
-		else
-		*/
-		/*
-		{
-			total |= 500*dt;
-		}
-		*/
-
 	}
 }
 
-void Avatar::doRangePush(float dt)
+void Avatar::doShieldSong()
 {
-	// current not used
-	/*
-	if (vel.getSquaredLength2D() < sqr(1)) return;
-	int range = 4;
-	Vector total;
-	TileVector t(position);
-	std::vector<Vector> vectors;
-	for (int x = t.x-range; x <= t.x+range; x++)
-	{
-		for (int y = t.y-range; y <= t.y+range; y++)
-		{
-			TileVector tile(x,y);
-			if (dsq->game->isObstructed(tile))
-			{
-				vectors.push_back(tile.worldVector());
-			}
-		}
-	}
-
-	int amount = 5;
-	if (amount > vectors.size())
-		amount = vectors.size();
-	std::vector<int>smallestDists;
-	smallestDists.resize(amount);
-	for (int i = 0; i < smallestDists.size(); i++)
-	{
-		smallestDists[i] = 0x7FFFFFFF;
-	}
-	std::vector<Vector> closestVectors;
-	closestVectors.resize(amount);
-	for (int i = 0; i < vectors.size(); i++)
-	{
-		Vector diff = position - vectors[i];
-		int dist = diff.getSquaredLength2D();
-		for (int j = 0; j < smallestDists.size(); j++)
-		{
-			if (dist < smallestDists[j])
-			{
-				for (int k = smallestDists.size()-1; k > j; k--)
-				{
-					smallestDists[k] = smallestDists[k-1];
-					closestVectors[k] = closestVectors[k-1];
-				}
-				smallestDists[j] = dist;
-				closestVectors[j] = vectors[i];
-			}
-		}
-	}
-
-	float tot=0;
-	int c = 0;
-	for (int i = 0; i < smallestDists.size(); i++)
-	{
-		if (smallestDists[i] < HUGE_VALF)
-		{
-			tot += smallestDists[i];
-			c++;
-		}
-	}
-	float avgDist = range*TILE_SIZE;
-	if (c > 0)
-	{
-		avgDist = tot / c;
-	}
-
-
-
-	for (int i = 0; i < closestVectors.size(); i++)
-	{
-		Vector obs = closestVectors[i];
-		if (obs.x == 0 && obs.y == 0) continue;
-		Vector mov = position - obs;
-
-		int len = range*range*TILE_SIZE - mov.getLength2D();
-		if (len < 0) len = 0;
-		else
-		{
-			mov |= len;
-			total += mov;
-		}
-	}
-
-	if (total.x != 0 || total.y != 0)
-	{
-		float vlen = vel.getLength2D();
-		//float len = (range*TILE_SIZE - avgDist)/range*TILE_SIZE;
-		//if (len > 0)
-		{
-			float totLen = 0;
-			if (swimming)
-			{
-				totLen = dt*600;
-			}
-			else
-			{
-				totLen = dt*50;
-			}
-			total |= totLen;
-
-			Vector perp = vel;
-			Vector n = vel;
-			n.normalize2D();
-			float d = total.dot2D(n);
-			perp |= d;
-			total -= perp;
-			total |= totLen;
-			lastPush = total;
-			vel += total;
-		}
-	}
-	*/
-
+	core->sound->playSfx("Shield-On");
+	activateAura(AURA_SHIELD);
 }
 
 void Avatar::render()
@@ -5866,74 +4729,11 @@ void Avatar::render()
 
 	Entity::render();
 
-	if (ropeState != 0)
-	{
-#ifdef BBGE_BUILD_OPENGL
-		glPushMatrix();
-			glColor4f(1.0f,0.0f,0.0f,1.0f);
-			glBegin(GL_LINES);
-				glVertex3f(position.x, position.y, 0);
-				glVertex3f(ropePos.x, ropePos.y, 0);
-			glEnd();
-		glPopMatrix();
-#endif
-	}
-
-	/*
-	if (activeAura == AURA_SHIELD)
-	{
-		glPushMatrix();
-		glColor4f(0,0.5,1,1);
-		glTranslatef(shieldPosition.x, shieldPosition.y, 0);
-		drawCircle(AURA_SHIELD_RADIUS, 8);
-		glPopMatrix();
-	}
-	*/
-
 }
 
 void Avatar::onRender()
 {
 	Entity::onRender();
-
-	/*
-	// HACK
-	if (RenderObject::renderPaths)
-	{
-		glPushMatrix();
-			glLoadIdentity();
-			glEnable(GL_BLEND);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			glColor4f(1, 0, 0, 0.5);
-			glTranslatef(400, 300, 0);
-			drawCircle(64);
-		glPopMatrix();
-	}
-	*/
-
-	//dsq->print(20, 600-100, "Naija: Hello there. My name is fred.");
-	/*
-	std::ostringstream os;
-	os << lastPush.x << ", " << lastPush.y;
-	debugLog(os.str());
-	*/
-	/*
-	glPopMatrix();
-	glPushMatrix();
-	glTranslatef(position.x, position.y, position.z);
-	//glRotatef(0, 0, 1, -rotation.z);
-	glDisable(GL_BLEND);
-	glPointSize(12);
-	glDisable(GL_LIGHTING);
-	glColor3f(1,0,0);
-	glBegin(GL_LINES);
-		//glColor3f(1, 0, 0);
-		glVertex3f(0,0,0);
-		//glColor3f(1, 0, 0);
-		glVertex3f(lastPush.x*50, lastPush.y*50, 0);
-	glEnd();
-	glPopMatrix();
-	*/
 }
 
 int Avatar::getBeamWidth()
@@ -5983,34 +4783,12 @@ int Avatar::getBeamWidth()
 void Avatar::onEnterState(int action)
 {
 	Entity::onEnterState(action);
-	if (action == STATE_TRANSFORM)
-	{
-		animator.stop();
-		frame = 0;
-		animate(anim_fish);
-	}
-	else if (action == STATE_PUSH)
+	if (action == STATE_PUSH)
 	{
 		state.lockedToWall = false;
-		state.crawlingOnWall = false;
 		Animation *a = skeletalSprite.getCurrentAnimation();
 		if (!a || (a && a->name != "pushed"))
 			skeletalSprite.animate("pushed", 0);
-	}
-	else if (action == STATE_EATING)
-	{
-		/*
-		// the problems with this:
-		// 1. what happens out of water?
-		// 2. is the delay too long?
-		// could just play a sound and then spawn some kind of particle effect
-		disableInput();
-		idle();
-		vel=vel2=Vector(0,0);
-		skeletalSprite.animate("eat", 0, ANIM_OVERRIDE);
-		core->main(1);
-		enableInput();
-		*/
 	}
 }
 
@@ -6024,10 +4802,6 @@ void Avatar::onExitState(int action)
 	else if (action == STATE_PUSH)
 	{
 		skeletalSprite.transitionAnimate("spin", 0.1);
-		/*
-		rotation.z = rotation.z+360;
-		rotation.interpolateTo(Vector(0,0,rotation.z-360-90), 0.5);
-		*/
 	}
 }
 
@@ -6092,25 +4866,6 @@ void Avatar::splash(bool down)
 	}
 
 	dsq->spawnParticleEffect("Splash", position, a);
-
-
-	//Vector(position.x, dsq->game->waterLevel.x));
-	/*
-	Quad *splash = new Quad;
-	splash->setTexture("splash");
-	splash->position = this->position;
-	splash->position.y = dsq->game->waterLevel-splash->width.x/2;
-	float t = 0.5;
-	splash->alpha.path.addPathNode(0, 0);
-	splash->alpha.path.addPathNode(1, 0.25);
-	splash->alpha.path.addPathNode(0, 1);
-	splash->alpha.startPath(t);
-	splash->scale = Vector(1.5, 0.9);
-	splash->scale.interpolateTo(Vector(0.5,1.2),t);
-	splash->setLife(1);
-	splash->setDecayRate(0.9);
-	core->getTopStateData()->addRenderObject(splash, LR_PARTICLES);
-	*/
 }
 
 void Avatar::clampVelocity()
@@ -6132,10 +4887,6 @@ void Avatar::clampVelocity()
 			withCurrent = true;
 		}
 	}
-
-
-
-
 
 	if (!inCurrent || (inCurrent && withCurrent))
 	{
@@ -6160,13 +4911,9 @@ void Avatar::clampVelocity()
 	}
 
 
-	setMaxSpeed(currentMaxSpeed * useSpeedMult);
-	//float cheatLen = vel.getSquaredLength2D();
-	vel.capLength2D(getMaxSpeed());
-	/*
-	if (cheatLen > sqr(getMaxSpeed()))
-		vel.setLength2D(getMaxSpeed());
-	*/
+	setMaxSpeed(currentMaxSpeed * useSpeedMult * dsq->continuity.speedMult2);
+
+	vel.capLength2D(getMaxSpeed() /* * maxSpeedLerp.x*/);
 }
 
 void Avatar::activateAura(AuraType aura)
@@ -6208,23 +4955,23 @@ void Avatar::updateAura(float dt)
 			*/
 			for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); ++i)
 			{
-				//&& (*i)->life > 0.2f
-				if ((*i) && dsq->game->isDamageTypeEnemy((*i)->getDamageType()) && (*i)->firer != this
-					&& (!(*i)->shotData || !(*i)->shotData->ignoreShield))
+				Shot *s = *i;
+				if (s->isActive() && dsq->game->isDamageTypeEnemy(s->getDamageType()) && s->firer != this
+					&& (!s->shotData || !s->shotData->ignoreShield))
 				{
 
-					Vector diff = (*i)->position - shieldPosition;
+					Vector diff = s->position - shieldPosition;
 					if (diff.getSquaredLength2D() < sqr(AURA_SHIELD_RADIUS))
 					{
-						shieldPoints -= (*i)->getDamage();
+						shieldPoints -= s->getDamage();
 						auraHitEmitter.start();
-						dsq->spawnParticleEffect("ReflectShot", (*i)->position);
+						dsq->spawnParticleEffect("ReflectShot", s->position);
 						core->sound->playSfx("Shield-Hit");
-						(*i)->position += diff;
-						//(*i)->target = 0;
-						diff.setLength2D((*i)->maxSpeed);
-						(*i)->velocity = diff;
-						(*i)->reflectFromEntity(this);
+						s->position += diff;
+						//s->target = 0;
+						diff.setLength2D(s->maxSpeed);
+						s->velocity = diff;
+						s->reflectFromEntity(this);
 					}
 				}
 			}
@@ -6383,13 +5130,11 @@ void Avatar::stopBurst()
 	//burstDelay = BURST_DELAY;
 	burstDelay = 0;
 	bursting = false;
-	animatedBurst = false;
 	wakeEmitter.stop();
 	ripples = false;
 
 	biteLeftEmitter.stop();
 	biteRightEmitter.stop();
-//	lastWallJumpPos = Vector(0,0,0);
 }
 
 int Avatar::getCursorQuadrant()
@@ -6411,7 +5156,6 @@ int Avatar::getCursorQuadrant()
 int Avatar::getQuadrantDirection(int lastQuad, int quad)
 {
 	int diff = quad - lastQuad;
-	//if (lastQuad==0) return 0;
 	if ((lastQuad==4 && quad == 1))
 	{
 		diff = 1;
@@ -6442,18 +5186,11 @@ void Avatar::startRoll(int dir)
 	}
 
 	Animation *a = skeletalSprite.getCurrentAnimation();
-	//debugLog("start roll!");
 	if (!a || a->name != getRollAnimName())
 	{
 		skeletalSprite.transitionAnimate(getRollAnimName(), 0.2, -1);
 	}
-	/*
-	rollRightEmitter.load("RollRight");
-	rollLeftEmitter.load("RollLeft");
 
-	rollRightEmitter.start();
-	rollLeftEmitter.start();
-	*/
 	rollRightEmitter.stop();
 	rollLeftEmitter.stop();
 
@@ -6483,23 +5220,9 @@ void Avatar::startRoll(int dir)
 	{
 		core->sound->fadeSfx(dsq->loops.roll, SFT_OUT, 0.5);
 	}
-	/*
-	//HACK: make this dt based
-	static int rollBits = 0;
-	rollBits = rollBits + 1;
-	if (rollBits > 6)
-	{
-		if (_isUnderWater)
-			core->sound->playSfx("Roll2");
-		rollBits = 0;
-	}
-	*/
+
 	rollDir = dir;
 
-	/*
-	if (core->afterEffectManager)
-		core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.04,0.06,15,0.2f));
-	*/
 	if (_isUnderWater && core->afterEffectManager)
 		core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.08,0.05,22,0.2f, 1.2));
 
@@ -6528,8 +5251,6 @@ void Avatar::stopRoll()
 void Avatar::stopWallJump()
 {
 	wallBurstTimer = 0;
-	wallJumps = 0;
-	lastWallJumpPos = Vector(0,0,0);
 }
 
 void Avatar::updateWallJump(float dt)
@@ -6547,7 +5268,7 @@ void Avatar::updateWallJump(float dt)
 
 void Avatar::updateRoll(float dt)
 {
-	if (!inputEnabled || dsq->continuity.getWorldType() == WT_SPIRIT)
+	if (!inputEnabled || dsq->game->isWorldPaused())
 	{
 		if (rolling)
 			stopRoll();
@@ -6557,11 +5278,6 @@ void Avatar::updateRoll(float dt)
 
 	if (rollDelay > 0)
 	{
-		/*
-		std::ostringstream os;
-		os << "rollDelay: " << rollDelay;
-		debugLog(os.str());
-		*/
 		rollDelay -= dt;
 		if (rollDelay <= 0)
 		{
@@ -6584,19 +5300,6 @@ void Avatar::updateRoll(float dt)
 
 	if (rolling)
 	{
-		/*
-		FOR_ENTITIES (i)
-		{
-			Entity *e = *i;
-			if (e->getEntityType() == ET_ENEMY && (e->position - this->position).isLength2DIn(350))
-			{
-				//e->move(dt, 500, 1, this);
-				Vector diff = (position - e->position);
-				diff.setLength2D(1000*dt);
-				e->vel2 += diff;
-			}
-		}
-		*/
 		if (dsq->continuity.form == FORM_ENERGY && dsq->continuity.hasFormUpgrade(FORMUPGRADE_ENERGY1))
 		{
 			FOR_ENTITIES(i)
@@ -6624,14 +5327,6 @@ void Avatar::updateRoll(float dt)
 			}
 		}
 
-		/*
-		//HACK: -ish, fixes low frame rate roll stuck problem?
-		// nope
-		if (rollDelay == 0)
-		{
-			rollDelay = 0.01;
-		}
-		*/
 		// NOTE: does this fix the roll problem?
 		if (rollDelay <= 0)
 			stopRoll();
@@ -6685,19 +5380,6 @@ void Avatar::updateRoll(float dt)
 					}
 				}
 			}
-			/*
-			std::ostringstream os;
-			os << "quad: " << quad << " lastQuad: " << lastQuad << " lastQuadDir: " << lastQuadDir;
-			debugLog(os.str());
-			*/
-
-
-			/*
-			if (lastQuad != 0)
-			{
-				lastQuadDir = quadDir;
-			}
-			*/
 
 			lastQuadDir = quadDir;
 
@@ -6718,28 +5400,6 @@ int Avatar::getBurstDistance()
 	return BURST_DISTANCE;
 }
 
-void Avatar::updateTummy(float dt)
-{
-	if (dsq->continuity.form == FORM_BEAST)
-	{
-		//dsq->shakeCamera(5, 0.1);
-
-		/*
-		if (inTummy > 0)
-		{
-			tummyTimer += dt;
-			if (tummyTimer > TUMMY_TIME)
-			{
-				//core->sound->playSfx("Digest");
-				//heal(inTummy);
-				inTummy = 0;
-			}
-		}
-		*/
-
-	}
-}
-
 void Avatar::setWasUnderWater()
 {
 	state.wasUnderWater = isUnderWater();
@@ -6747,7 +5407,18 @@ void Avatar::setWasUnderWater()
 
 bool Avatar::canActivateStuff()
 {
-	return dsq->continuity.form != FORM_SPIRIT;
+	return _canActivateStuff;
+}
+
+void Avatar::setCanActivateStuff(bool on)
+{
+	_canActivateStuff = on;
+}
+
+void Avatar::setCollisionAvoidanceData(int range, float mod)
+{
+	_collisionAvoidRange = range;
+	_collisionAvoidMod = mod;
 }
 
 bool Avatar::canQuickSong()
@@ -6884,7 +5555,6 @@ void Avatar::updateLookAt(float dt)
 	{
 		if (lastHeadTexture.empty())
 		{
-			//if (dsq->continuity.form == FORM_NORMAL)
 			setHeadTexture("blink", 0.1);
 			if (chance(50))
 			{
@@ -6946,20 +5616,8 @@ void Avatar::updateLookAt(float dt)
 					bone_head->rotationOffset.z = oldRot - bone_head->rotation.z;
 					bone_head->rotationOffset.interpolateTo(Vector(0,0,0), t);
 					bone_head->internalOffset.interpolateTo(Vector(0,0,0), t);
-					/*
-					std::ostringstream os;
-					os << "rotationOffset lerp " << bone_head->rotationOffset.z;
-					debugLog(os.str());
-					*/
 				}
 
-				/*
-				bone_head->rotationOffset = bone_head->rotation.z;
-				bone_head->rotation.z = 0;
-				bone_head->rotationOffset.interpolateTo(0, 0.2);
-				*/
-				//state.updateLookAtTime += dt*10;
-				//state.updateLookAtTime += dt;
 				state.updateLookAtTime += dt*4*2;
 				bone_head->internalOffset.interpolateTo(Vector(0,0), 0.2);
 			}
@@ -6969,23 +5627,7 @@ void Avatar::updateLookAt(float dt)
 				state.lookAtEntity = dsq->game->getNearestEntity(position, 800, this, ET_NOTYPE, DT_NONE, LR_ENTITIES0, LR_ENTITIES2);
 				if (state.lookAtEntity && state.lookAtEntity->isv(EV_LOOKAT, 1))
 				{
-					/*
-					std::ostringstream os;
-					os << "Nearest: " << state.lookAtEntity->name;
-					debugLog(os.str());
-					*/
-
 					state.updateLookAtTime = 0;
-					//if (dsq->continuity.form == FORM_NORMAL)
-					//setHeadTexture("blink", 0.1);
-
-					/*
-					if (state.lookAtEntity->getEntityType() == ET_NEUTRAL)
-					{
-						//if (dsq->continuity.form == FORM_NORMAL)
-						//setHeadTexture("smile", 1);
-					}
-					*/
 
 					if (!state.lookAtEntity->naijaReaction.empty())
 					{
@@ -6995,15 +5637,8 @@ void Avatar::updateLookAt(float dt)
 				else
 				{
 					state.lookAtEntity = 0;
-					/*
-					std::ostringstream os;
-					os << state.updateLookAtTime << " : found no entities";
-					debugLog(os.str());
-					*/
-					//state.updateLookAtTime -= 0.3f;
-				}
 
-				//skeletalSprite.animate("blink", 2, ANIMLAYER_HEADOVERRIDE);
+				}
 			}
 		}
 	}
@@ -7020,69 +5655,12 @@ bool lastCursorKeyboard = false;
 
 bool Avatar::isMiniMapCursorOkay()
 {
-//!(dsq->getMouseButtonState(0) || dsq->getMouseButtonState(1))
 	return ((dsq->inputMode != INPUT_MOUSE) ||  (!dsq->game->miniMapRender || !dsq->game->miniMapRender->isCursorIn()));
-}
-
-void Avatar::updateCursorFromKeyboard()
-{
-	/*
-	// why return when singing??
-	//if (isSinging()) return;
-	if (!isInputEnabled()) return;
-
-	Vector diff;
-	int dist = 200;
-	if (isActing(ACTION_SINGLEFT))
-		diff.x = -dist;
-	if (isActing(ACTION_SINGRIGHT))
-		diff.x = dist;
-	if (isActing(ACTION_SINGUP))
-		diff.y = -dist;
-	if (isActing(ACTION_SINGDOWN))
-		diff.y = dist;
-	if (!diff.isZero())
-	{
-		diff.setLength2D(dist);
-		core->mouse.position = Vector(400,300) + diff;
-		lastCursorKeyboard = true;
-	}
-	else if (lastCursorKeyboard)
-	{
-		debugLog("HEY!: lastCursorKeyboard mouse position reset");
-		core->mouse.position = Vector(400,300);
-		lastCursorKeyboard = false;
-		dsq->toggleCursor(false, 0.2);
-	}
-
-	//!diff.isZero()  || 
-	if (isInputEnabled() && (!core->mouse.change.isZero()))
-	{
-		dsq->toggleCursor(true, 0.2);
-	}
-	*/
 }
 
 void Avatar::onUpdate(float dt)
 {
 	BBGE_PROF(Avatar_onUpdate);
-
-	// animation debug code
-	/*
-	for (int i = 0; i < 8; i++)
-	{
-		if (skeletalSprite.getAnimationLayer(i))
-		{
-			if (skeletalSprite.getAnimationLayer(i)->isAnimating())
-			{
-				std::ostringstream os;
-				os << "anim layer: " << i << " - " << skeletalSprite.getAnimationLayer(i)->getCurrentAnimation()->name;
-				debugLog(os.str());
-				//debugLog("anim layer 0: " + skeletalSprite.getAnimationLayer(0)->getCurrentAnimation()->name);
-			}
-		}
-	}
-	*/
 
 	looking = 0;
 
@@ -7118,16 +5696,6 @@ void Avatar::onUpdate(float dt)
 		vel = Vector(0,0);
 	}
 
-	if (canWarpDelay > 0)
-	{
-		canWarpDelay = canWarpDelay - dt;
-		if (canWarpDelay < 0)
-		{
-			canWarp = true;
-			canWarpDelay = 0;
-		}
-	}
-
 	if (fireDelay > 0)
 	{
 		fireDelay -= dt;
@@ -7136,13 +5704,6 @@ void Avatar::onUpdate(float dt)
 			fireDelay = 0;
 		}
 	}
-
-	if (doubleClickDelay > 0)
-	{
-		doubleClickDelay = doubleClickDelay - dt;
-		if (doubleClickDelay < 0) doubleClickDelay = 0;
-	}
-
 
 	if (isInputEnabled())
 	{
@@ -7176,67 +5737,6 @@ void Avatar::onUpdate(float dt)
 		looking = 0;
 	}
 
-
-
-	// setup shader
-	if (core->afterEffectManager)
-	{
-
-		/*
-		if (!_isUnderWater)
-		{
-			core->afterEffectManager->setActiveShader(AS_WASHOUT);
-			//core->afterEffectManager->setActiveShader(AS_NONE);
-		}
-		else
-		*/
-		if (dsq->user.video.shader != AS_NONE)
-		{
-			core->afterEffectManager->setActiveShader((ActiveShader)dsq->user.video.shader);
-		}
-		else
-		{
-			if (damageTimer.isActive() && dsq->isShakingCamera())
-			{
-				if (dsq->user.video.blur)
-					core->afterEffectManager->setActiveShader(AS_BLUR);
-			}
-			else
-			{
-				core->afterEffectManager->setActiveShader(AS_NONE);
-			}
-
-		}
-	}
-
-	/*
-	if (!targets.empty())
-	{
-		if (targets[0] && (targets[0]->position - this->position).getSquaredLength2D() > sqr(TARGET_RANGE))
-		{
-			clearTargets();
-		}
-	}
-	*/
-	//spawnChildClone(4);
-	if (!core->cameraRot.isInterpolating())
-		// 10
-		core->cameraRot.interpolateTo(Vector(0,0,360), 30, -1);
-	/*
-	for (int i = 0; i < targets.size(); i++)
-	{
-		if (targets[i] && !this->isEntityDead())
-		{
-			targetQuads[i]->alpha.interpolateTo(1,0.1);
-			targetQuads[i]->position = targets[i]->position;
-		}
-		else
-		{
-			if (targetQuads[i]->alpha.getValue()>0)
-				targetQuads[i]->alpha.interpolateTo(0,0.1);
-		}
-	}
-	*/
 
 	Entity::onUpdate(dt);
 
@@ -7429,8 +5929,6 @@ void Avatar::onUpdate(float dt)
 
 	}
 
-	//skeletalSprite.getBoneByIdx(3)->getWorldPosition();
-
 	state.wasUnderWater = _isUnderWater;
 
 	if (!_isUnderWater)
@@ -7454,30 +5952,6 @@ void Avatar::onUpdate(float dt)
 			startBackFlip();
 		}
 	}
-
-	/*
-	if (core->afterEffectManager && _isUnderWater)
-	{
-		if (swimming && vel.getSquaredLength2D() > sqr(200))
-		{
-			rippleTimer += dt;
-			while (rippleTimer > RIPPLE_INTERVAL)
-			{
-				// 0.01   20
-				core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.05,0.08,15,0.2f, 1.2));
-
-				//core->afterEffectManager->addEffect(new ShockEffect(Vector(400,300),0.01,0.002f,15,0.1f));
-				rippleTimer = 0;
-			}
-		}
-	}
-	*/
-
-
-	/*
-	bobTimer += dt*2;
-	offset.y = sinf(bobTimer)*5 - 2.5f;
-	*/
 
 	if (isEntityDead())
 	{
@@ -7540,7 +6014,6 @@ void Avatar::onUpdate(float dt)
 		tripDelay -= dt;
 		if (tripDelay < 0)
 		{
-;
 			tripDelay = 0.15;
 			tripCount ++;
 			if (tripCount > 10)
@@ -7599,27 +6072,9 @@ void Avatar::onUpdate(float dt)
 		lastPosition = position;
 	}
 
-
-	updateCursorFromKeyboard();
 	updateFormVisualEffects(dt);
-	updateShock(dt);
 	updateRoll(dt);
-	updateTummy(dt);
 	updateWallJump(dt);
-
-	if (dsq->autoSingMenuOpen)
-	{
-		if (micNote != -1 && !this->isSinging())
-		{
-			openedFromMicInput = true;
-			openSingingInterface();
-		}
-		if (micNote == -1 && isSinging() && openedFromMicInput)
-		{
-			openedFromMicInput = false;
-			closeSingingInterface();
-		}
-	}
 
 	if (formAbilityDelay > 0)
 	{
@@ -7645,49 +6100,6 @@ void Avatar::onUpdate(float dt)
 	}
 
 	updateAura(dt);
-	switch(ropeState)
-	{
-	case 1:
-	{
-		if (ropeTimer > 0)
-		{
-			ropeTimer -= dt;
-			if (ropeTimer < 0)
-			{
-				ropeState = 0;
-				ropeTimer = 0;
-			}
-		}
-		ropePos += ropeVel*dt;
-		if (dsq->game->isObstructed(TileVector(ropePos)))
-		{
-			ropeState = 2;
-			ropeTimer = 2;
-		}
-		std::ostringstream os;
-		os << "ropePos (" << ropePos.x << ", " << ropePos.y << ")";
-		debugLog(os.str());
-	}
-	break;
-	case 2:
-		if (ropeTimer > 0)
-		{
-			ropeTimer -= dt;
-			if (ropeTimer < 0)
-			{
-				ropeState = 0;
-				ropeTimer = 0;
-			}
-		}
-		Vector add = (ropePos - position);
-		if (add.getSquaredLength2D() > sqr(200))
-		{
-			add.setLength2D(4000);
-			vel += add*dt;
-		}
-	break;
-	}
-
 
 	updateSingingInterface(dt);
 
@@ -7698,53 +6110,10 @@ void Avatar::onUpdate(float dt)
 			pullTarget->stopPull();
 			pullTarget = 0;
 		}
-		else
-		{
-			/*
-			static float c = 0;
-			c += dt;
-			if (c > 0.2f)
-			{
-				EnergyTendril *t = new EnergyTendril(avatar->position, pullTarget->position);
-				core->addRenderObject(t, LR_PARTICLES);
-				c -= dt;
-			}
-			*/
-		}
 	}
 
 	formTimer += dt;
 
-	/*
-	if (formTimer > 2.0f && dsq->continuity.form == FORM_SPIRIT)
-	{
-		changeForm(FORM_NORMAL, true);
-	}
-	*/
-	if (pickingPullTarget)
-	{
-		//debugLog("picking pull target");
-		Entity *closest = 0;
-		float smallestDist = HUGE_VALF;
-		FOR_ENTITIES(i)
-		{
-			Entity *e = *i;
-
-			if (e->isPullable() && e->life == 1)
-			{
-				if (e->isCoordinateInside(dsq->getGameCursorPosition()))
-				{
-					float dist = (e->position - dsq->getGameCursorPosition()).getSquaredLength2D();
-					if (dist < smallestDist)
-					{
-						smallestDist = dist;
-						closest = e;
-					}
-				}
-			}
-		}
-		potentialPullTarget = closest;
-	}
 
 	if (dsq->continuity.form == FORM_SPIRIT)
 	{
@@ -7770,10 +6139,6 @@ void Avatar::onUpdate(float dt)
 	static bool revertButtonsAreDown = false;
 	if (inputEnabled && (dsq->inputMode == INPUT_KEYBOARD || dsq->inputMode == INPUT_MOUSE) && (!pathToActivate && !entityToActivate))
 	{
-		//debugLog("update stuff");
-		///*&& dsq->continuity.form != FORM_SPIRIT*/
-		//|| isActing(ACTION_PRIMARY)
-		//|| isActing(ACTION_SECONDARY)
 		if (dsq->continuity.form != FORM_NORMAL && (core->mouse.pure_buttons.left && core->mouse.pure_buttons.right) && getVectorToCursor(true).isLength2DIn(minMouse))
 		{
 			if (!revertButtonsAreDown)
@@ -7810,97 +6175,11 @@ void Avatar::onUpdate(float dt)
 		revertButtonsAreDown = false;
 	}
 
-	/*
-	if (this->state.crawlingOnWall)
-	{
-		if (isActing("a1"))
-		{
-			wallNormal = dsq->game->getWallNormal(position);
-			if (wallNormal.dot2D(lastWallNormal)<=0.3f)
-			{
-				stopWallCrawl();
-			}
-			else
-			{
-				Vector left = wallNormal.getPerpendicularLeft();
-				Vector right = wallNormal.getPerpendicularRight();
-
-
-				Vector test = getVectorToCursor();
-				if (!test.isLength2DIn(64))
-				{
-					test.normalize2D();
-
-					Vector move;
-					if (test.dot2D(left)>0)
-						move = left;
-					else
-						move = right;
-
-					move.setLength2D(800);
-
-					if (move.x > 0 && !isfh())
-						flipHorizontal();
-					if (move.x < 0 && isfh())
-						flipHorizontal();
-
-					position += move*dt;
-					rotateToVec(wallNormal, 0.1);
-				}
-				else
-				{
-					stopWallCrawl();
-				}
-			}
-		}
-		else
-		{
-			stopWallCrawl();
-		}
-	}
-	*/
-
 	//if (core->getNestedMains() == 1)
 	{
-		if (leaches > 3)
+		if (getState() != STATE_TRANSFORM && !dsq->game->isWorldPaused())
 		{
-			/*
-			const float leachHurtInterval = 3;
-			state.leachTimer += dt;
-			if (state.leachTimer > leachHurtInterval)
-			{
-				state.leachTimer -= leachHurtInterval;
-				DamageData d;
-				d.damage = int(leaches/3);
-				damage(d);
-				//hit(0, 0, SPELL_NONE, int(leaches/3));
-			}
-			*/
-		}
-
-
-		if (getState() != STATE_TRANSFORM && dsq->continuity.getWorldType() == WT_NORMAL)
-		//if (dsq->continuity.form == FORM_ENERGY)
-		{
-			//if (dsq->continuity.selectedSpell == SPELL_SHOCK)
-
 			formAbilityUpdate(dt);
-
-			// is this really necessary??
-			// YES!
-			// this allows the player to start charging quickly after firing
-			/*
-			if (isActing("charge") && !charging && spellCastDelay == 0 && inputEnabled)
-			{
-				this->rmbd();
-			}
-			*/
-			// maybe not useful anymore
-			/*
-			if (!isActing("charge") && charging && spellChargeDelay == 0 && inputEnabled)
-			{
-			}
-			*/
 		}
 
 		if (state.useItemDelay.updateCheck(dt))
@@ -7919,29 +6198,6 @@ void Avatar::onUpdate(float dt)
 					removeBlindEffects();
 				}
 			}
-
-			 /*&& this->getSelectedSpell() == SPELL_ENERGYBLAST*/
-			/*
-			// HACK: hacked out for now
-			// FINDTARGET
-
-			if (charging && !targets.empty() && targets[0] == 0 && state.spellCharge > 0.2f
-				&& dsq->continuity.form == FORM_ENERGY)
-			{
-				FOR_ENTITIES (i)
-				{
-					Entity *e = *i;
-					if (e && e != this && e->isAvatarAttackTarget() && !e->isEntityDead() && e->isAffectedBySpell(SPELL_ENERGYBLAST))
-					{
-						ScriptedEntity *se = (ScriptedEntity*)e;
-						if ((e->position - dsq->getGameCursorPosition()).getSquaredLength2D() < sqr(64))
-						{
-							targets[0] = e;
-						}
-					}
-				}
-			}
-			*/
 		}
 
 
@@ -7970,29 +6226,15 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 
-		if (spellCastDelay > 0)
-		{
-			spellCastDelay -= dt;
-			if (spellCastDelay <= 0)
-			{
-				spellCastDelay = 0;
-			}
-		}
-
 		if (state.lockToWallDelay.updateCheck(dt))
 		{
 		}
 
-		if (state.tapTimer.updateCheck(dt))
-		{
-			tapped = "";
-		}
 		if (pushingOffWallEffect > 0)
 		{
 			pushingOffWallEffect -= dt;
 			if (pushingOffWallEffect <= 0)
 			{
-				lastLockToWallPos = Vector(0,0);
 				pushingOffWallEffect = 0;
 				if (vel.getSquaredLength2D() > sqr(1200))
 				{
@@ -8000,61 +6242,9 @@ void Avatar::onUpdate(float dt)
 				}
 			}
 		}
-		/*
-		if (beamFiring)
-		{
-			// collides enemies with beam as well
-			beam->width = getBeamWidth();
-			Vector diff = dsq->getGameCursorPosition() - this->position;
-			diff |= beam->width.getValue()/2.0f;
-			beam->position = this->position + diff;
-			float angle=0;
-			MathFunctions::calculateAngleBetweenVectorsInDegrees(this->position, dsq->getGameCursorPosition(), angle);
-			beam->rotation.z = angle+90;
-			beam->position.z = 3;
-			//collideBeamWithEntities();
-		}
-		*/
-		if (state.dodgeEffectTimer.updateCheck(dt))
-		{
-			vel.capLength2D(vars->maxSwimSpeed);
-			/*
-			if (vel.getSquaredLength2D() > sqr(vars->maxSwimSpeed))
-				vel.setLength2D(vars->maxSwimSpeed);
-			*/
-		}
-		/*
-		if (dodgeEffectTimer > 0)
-		{
-			dodgeEffectTimer -= dt;
-			if (dodgeEffectTimer <= 0)
-			{
-				dodgeEffectTimer = 0;
-				if (vel.getSquaredLength2D() > sqr(vars->maxSwimSpeed))
-					vel |= vars->maxSwimSpeed;
-			}
-		}
-		*/
-		if (dodgeDelay > 0)
-		{
-			dodgeDelay -= dt;
-			if (dodgeDelay <= 0)
-			{
-				dodgeDelay = 0;
-			}
-		}
-
-		if (text)
-		{
-			text->position = position + Vector(100);
-		}
 
 		if (charging)
 		{
-			/*
-			chargeGraphic->position = this->position;
-			chargeGraphic->position.z = position.z + 0.05f;
-			*/
 			state.spellCharge += dt;
 			switch (dsq->continuity.form)
 			{
@@ -8081,37 +6271,11 @@ void Avatar::onUpdate(float dt)
 
 					chargingEmitter->load("ChargedDualForm");
 					chargingEmitter->start();
-
-
-
-					//chargeVisualEffect("particles/energy-charge-2");
 				}
-				/*
-				if (state.spellCharge >= 1.5f && chargeLevelAttained<2)
-				{
-					chargeLevelAttained = 2;
-
-					core->sound->playSfx("PowerUp");
-					//debugLog("charge visual effect 2");
-					chargeEmitter->load("EnergyCharge");
-					chargeEmitter->start();
-
-					//chargeVisualEffect("particles/energy-charge-2");
-				}
-				*/
 			}
 			break;
 			case FORM_ENERGY:
 			{
-				/*
-				if (state.spellCharge >= 0.99f && chargeLevelAttained<1)
-				{
-					chargeLevelAttained = 1;
-					debugLog("charge visual effect 1");
-					chargeVisualEffect("energy-charge-1");
-
-				}
-				*/
 				if (state.spellCharge >= 1.5f && chargeLevelAttained<2)
 				{
 					chargeLevelAttained = 2;
@@ -8138,26 +6302,6 @@ void Avatar::onUpdate(float dt)
 					chargingEmitter->load("ChargingNature2");
 					chargingEmitter->start();
 				}
-				/*
-				if (state.spellCharge >= 0.5f && chargeLevelAttained<1)
-				{
-					chargeLevelAttained = 1;
-					core->sound->playSfx("PowerUp");
-					chargeEmitter->load("ChargeNature");
-					chargeEmitter->start();
-				}
-
-				if (state.spellCharge >= 2.0f && chargeLevelAttained<2)
-				{
-					chargeLevelAttained = 2;
-					core->sound->playSfx("PowerUp");
-					chargeEmitter->load("ChargeNature2");
-					chargeEmitter->start();
-
-					chargingEmitter->load("ChargingNature2");
-					chargingEmitter->start();
-				}
-				*/
 			}
 			break;
 			}
@@ -8267,7 +6411,7 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 
-		if (!(state.lockedToWall || state.dodgeEffectTimer.isActive()) && _isUnderWater && dsq->continuity.getWorldType() == WT_NORMAL && canMove)
+		if (!state.lockedToWall && _isUnderWater && !dsq->game->isWorldPaused() && canMove)
 		{
 			if (bursting)
 			{
@@ -8290,18 +6434,8 @@ void Avatar::onUpdate(float dt)
 		}
 		if (inputEnabled && _isUnderWater)
 		{
-			if (bursting)
+			if(bursting)
 			{
-				// disable check to stop burst
-				/*
-				if (!isActing("a1"))
-				{
-					stopBurst();
-					//bursting = false;
-					//burstDelay = BURST_DELAY;
-					//animatedBurst = false;
-				}
-				*/
 			}
 			else if (burstDelay > 0)
 			{
@@ -8320,7 +6454,7 @@ void Avatar::onUpdate(float dt)
 		bool moved = false;
 
 		//check to make sure there's still a wall there, if not fall off
-		if (state.lockedToWall && !state.crawlingOnWall)
+		if (state.lockedToWall)
 		{
 			rotateToVec(wallPushVec, dt*2);
 			if (!boneLock.on && !dsq->game->isObstructed(wallLockTile))
@@ -8330,27 +6464,19 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 
-		if (getState() != STATE_PUSH && !state.lockedToWall && inputEnabled && !ignoreInputDelay && _isUnderWater && canMove)
+		if (getState() != STATE_PUSH && !state.lockedToWall && inputEnabled && _isUnderWater && canMove)
 		{
 			float a = 800*dt;
-			Vector lastVel = vel;
 			Vector addVec;
 
 			bool isMovingSlow = false;
-			static Vector lastMousePos;
-			Vector pos = lastMousePos - dsq->getGameCursorPosition();
-			static bool lastDown;
 
 			float len = 0;
-			//dsq->continuity.toggleMoveMode &&
-			//!dsq->continuity.toggleMoveMode &&
 			
 			if (isMiniMapCursorOkay() && !isActing(ACTION_ROLL) &&
 				_isUnderWater && !riding && !boneLock.on &&
 				(movingOn || ((dsq->inputMode == INPUT_JOYSTICK || dsq->inputMode== INPUT_KEYBOARD) || (core->mouse.buttons.left || bursting))))
 			{
-				//addVec = getVectorToCursorFr
-				//(dsq->inputMode != INPUT_JOYSTICK && dsq->inputMode != INPUT_KEYBOARD)
 				if (dsq->inputMode == INPUT_MOUSE || !this->singing)
 				{
 					addVec = getVectorToCursorFromScreenCentre();//getVectorToCursor();
@@ -8373,31 +6499,13 @@ void Avatar::onUpdate(float dt)
 					{
 						if (dsq->inputMode == INPUT_JOYSTICK)
 							addVec = Vector(0,0,0);
-						/*
-						if (dsq->inputMode == INPUT_JOYSTICK && !core->mouse.buttons.left)
-						{
-							addVec = Vector(0,0,0);
-						}
-						*/
 					}
-
-
-
-					/*
-					if (!core->mouse.buttons.left && bursting)
-					{
-						addVec = vel;
-					}
-					*/
 
 					if (!addVec.isLength2DIn(minMouse))
 					{
 						//if (core->mouse.buttons.left)
 						{
 							len = addVec.getLength2D();
-							// addVec is always overwritten below; I assume this is old code?  --achurch
-							//if (len > 200)
-							//	addVec.setLength2D(a *10);
 							if (len > 100)
 								addVec.setLength2D(a *2);
 							else
@@ -8431,31 +6539,11 @@ void Avatar::onUpdate(float dt)
 									stopBurst();
 								}
 							}
-							//vel = Vector(0,0,0);
 						}
 						addVec = Vector(0,0,0);
 					}
 				}
-
-				//addVec |= a;
-				/*
-				if (pos.getSquaredLength2D() > 10000)
-				{
-					startBurst();
-				}
-				*/
 			}
-			else
-			{
-			}
-			lastDown = core->mouse.buttons.left;
-
-			/*
-			std::ostringstream os;
-			os << "addVec(" << addVec.x << ", " << addVec.y << ")";
-			debugLog(os.str());
-			*/
-			lastMousePos = dsq->getGameCursorPosition();
 
 			if (!rolling && !state.backFlip && !flourish)
 			{
@@ -8488,20 +6576,6 @@ void Avatar::onUpdate(float dt)
 				}
 			}
 
-
-			/*
-			// HACK: joystick code / slow
-			if (addVec.x == 0 && addVec.y == 0)
-			{
-				float jpos[2];
-				glfwGetJoystickPos(GLFW_JOYSTICK_1, jpos, 2);
-				const float deadZone = 0.1;
-				if (fabsf(jpos[0]) > deadZone || fabsf(jpos[1]) > deadZone)
-					addVec = Vector(jpos[0]*a, -jpos[1]*a);
-			}
-			*/
-
-
 			// will not get here if not underwater
 			if (isLockable())
 				lockToWall();
@@ -8509,23 +6583,15 @@ void Avatar::onUpdate(float dt)
 			{
 				currentMaxSpeed=0;
 				vel += addVec;
-				//addVec |= a;
-				//float cheatLen = vel.getSquaredLength2D();
+
 				if (bursting)
 				{
 					Vector add = addVec;
-					/*
-					// HACK: this will let the player boost in one direction while turning to face another
-					if (!core->mouse.buttons.left)
-					{
-						add = vel;
-					}
-					*/
 					add.setLength2D(BURST_ACCEL*dt);
 					vel += add;
 
-					if (pushingOffWallEffect > 0 || wallJumps > 0)
-						currentMaxSpeed = vars->maxWallJumpBurstSpeed + 50*wallJumps;
+					if (pushingOffWallEffect > 0)
+						currentMaxSpeed = vars->maxWallJumpBurstSpeed;
 					else
 						currentMaxSpeed = vars->maxBurstSpeed;
 
@@ -8534,39 +6600,20 @@ void Avatar::onUpdate(float dt)
 				{
 					if (pushingOffWallEffect > 0)
 						currentMaxSpeed = vars->maxWallJumpSpeed;
-					else if (state.dodgeEffectTimer.isActive())
-						currentMaxSpeed = vars->maxDodgeSpeed;
 					else
 					{
 						if (isActing(ACTION_SLOW) || isMovingSlow)
 						{
-							/*
-							int spdRange = maxMouse - minMouse;
-							float p = (len - minMouse) / spdRange;
-							int spd = p * vars->maxSwimSpeed;// + minMouse
-							currentMaxSpeed = spd;
-							*/
 							currentMaxSpeed = vars->maxSlowSwimSpeed;
 						}
-						//else if (dsq->continuity.getWorldType() == WT_NORMAL)
 						else
 							currentMaxSpeed = vars->maxSwimSpeed;
-						/*
-						else
-							currentMaxSpeed = vars->maxDreamWorldSpeed;
-						*/
 					}
 				}
-
-				/*
-				if (dsq->continuity.form == FORM_SPIRIT)
-					currentMaxSpeed *= 0.5f;
-				*/
 
 				if (leaches > 0)
 				{
 					currentMaxSpeed -= leaches*60;
-				//	vel |= vel.getLength2D()-1*leaches;
 				}
 
 				if (state.blind)
@@ -8574,22 +6621,6 @@ void Avatar::onUpdate(float dt)
 
 				if (currentMaxSpeed < 0)
 					currentMaxSpeed = 1;
-
-				if (ropeState == 2 && currentMaxSpeed < vars->maxWallJumpBurstSpeed)
-					currentMaxSpeed = vars->maxWallJumpBurstSpeed;
-
-				/*
-				if (inCurrent)
-				{
-					ropeState = 0;
-					currentMaxSpeed = 1200;
-				}
-				*/
-
-				//clampVelocity();
-
-
-				//float angle;
 
 				if (getState() == STATE_TRANSFORM)
 					rotateToVec(addVec, 0.1, 90);
@@ -8618,13 +6649,6 @@ void Avatar::onUpdate(float dt)
 					}
 					else
 					{
-						/*
-						if (bursting && !core->mouse.buttons.left)
-						{
-						}
-						else
-							rotateToVec(addVec, 0.1);
-						*/
 						if (!state.nearWall && !flourish)
 							rotateToVec(addVec, 0.1);
 					}
@@ -8662,8 +6686,6 @@ void Avatar::onUpdate(float dt)
 					{
 						if (getState() == STATE_IDLE && !rolling)
 							skeletalSprite.transitionAnimate(getBurstAnimName(), ANIM_TRANSITION);
-							//animate(anim_burst);
-						animatedBurst = true;
 					}
 				}
 			}
@@ -8719,19 +6741,6 @@ void Avatar::onUpdate(float dt)
 			}
 			if (isLockable())
 				lockToWall();
-			/*
-			if (isActing("left"))
-				addVec += Vector(-a, 0);
-			if (isActing("right"))
-				addVec += Vector(a, 0);
-			*/
-			/*
-			if (isActing("up"))
-				addVec += Vector(0, -a);
-			if (isActing("down"))
-				addVec += Vector(0, a);
-			*/
-			//vel += addVec;
 		}
 
 		if (!moved)
@@ -8739,7 +6748,6 @@ void Avatar::onUpdate(float dt)
 			if (swimming)
 			{
 				swimming = false;
-				idleAnimDelay = 0;
 				if (dsq->continuity.form == FORM_FISH)
 					rotation.interpolateTo(0, 0.2);
 			}
@@ -8788,9 +6796,6 @@ void Avatar::onUpdate(float dt)
 		if (!inCurrent)
 			currentMaxSpeed = vars->maxSwimSpeed;
 
-		if (ropeState == 2 && currentMaxSpeed < vars->maxWallJumpBurstSpeed)
-			currentMaxSpeed = vars->maxWallJumpBurstSpeed;
-
 		if (!state.lockedToWall && !bursting)
 		{
 			if (getState() == STATE_IDLE && inputEnabled)
@@ -8799,22 +6804,6 @@ void Avatar::onUpdate(float dt)
 				if (a && a->name != getIdleAnimName() && a->name != "pushed" && a->name != "spin" && !rolling)
 					skeletalSprite.transitionAnimate(getIdleAnimName(), ANIM_TRANSITION, -1);
 			}
-			/*
-			idleAnimDelay -= dt;
-			if (idleAnimDelay <= 0)
-			{
-				idleAnimDelay = 1.5;//anim_idle.time*2;
-
-				//if (currentAction == IDLE && (!skeletalSprite.isAnimating() || skeletalSprite.getCurrentAnimation()->name=="swim"
-				//	|| skeletalSprite.getCurrentAnimation()->name=="a1"))
-				if (currentAction == STATE_IDLE)
-				{
-					skeletalSprite.transitionAnimate("idle", ANIM_TRANSITION);
-				}
-
-					//animate(anim_idle);
-			}
-			*/
 		}
 	}
 
@@ -8832,7 +6821,6 @@ void Avatar::onUpdate(float dt)
 
 	if (swimming)
 	{
-		//static bool lastSpreadUp = false;
 		if (!rolling && !internalOffset.isInterpolating())
 		{
 			int spread = 8;
@@ -8842,25 +6830,10 @@ void Avatar::onUpdate(float dt)
 			internalOffset = Vector(-spread, 0);
 			internalOffset.interpolateTo(Vector(spread, 0), t, -1, 1, 1);
 
-			/*
-			rotationOffset = Vector(-rotSpread, 0);
-			rotationOffset.interpolateTo(Vector(rotSpread, 0), t, -1, 1, 1);
-			*/
-
 			for (int i = 0; i < int((t*0.5f)/0.01f); i++)
 			{
 				internalOffset.update(0.01);
-				//rotationOffset.update(0.01);
 			}
-			/*
-			if (lastSpreadUp)
-				internalOffset.interpolateTo(Vector(spread, 0), t, 1, 1, 1);
-			else
-				internalOffset.interpolateTo(Vector(-spread, 0), t, 1, 1, 1);
-			*/
-
-			//lastSpreadUp = !lastSpreadUp;
-			//internalOffset.update(t*0.5f);
 		}
 
 		if (dsq->continuity.form != FORM_ENERGY && dsq->continuity.form != FORM_DUAL && dsq->continuity.form != FORM_FISH)
@@ -8985,28 +6958,10 @@ void Avatar::onUpdate(float dt)
 
 		}
 
-		if (state.dodgeEffectTimer.isActive())
+		if (!state.lockedToWall && !bursting && _isUnderWater && swimming && !isFollowingPath() && _collisionAvoidRange > 0)
 		{
-			vel += dodgeVec*dt;
+			doCollisionAvoidance(dt, _collisionAvoidRange, _collisionAvoidMod, 0, 800, OT_HURT);
 		}
-
-		if (!state.lockedToWall && !bursting && _isUnderWater && swimming && !isFollowingPath())
-		{
-			//debugLog("collision avoidance");
-			if (dsq->continuity.form == FORM_FISH)
-				doCollisionAvoidance(dt, 1, 0.1, 0, 800, OT_HURT);
-			else
-				doCollisionAvoidance(dt, 2, 1.0, 0, 800, OT_HURT);
-		}
-
-		// friction for extraVel
-		if (!extraVel.isZero())
-		{
-			Vector d = extraVel;
-			d.setLength2D(100);
-			extraVel -= d*dt;
-		}
-
 
 		if (!game->isShuttingDownGameState())
 		{
@@ -9018,20 +6973,15 @@ void Avatar::onUpdate(float dt)
 			vel2 = Vector(0,0,0);
 		}
 
-		//int collideCircle = 24;//24; // 48
-		int collideCircle = 10;
-		if (dsq->continuity.form == FORM_FISH)
-			collideCircle = 8;
-		// just for external access
-		// HACK: should always be using collide radius :| ?
-
-		//updateMovement
-		collideRadius = collideCircle;
 		if (!state.lockedToWall && !isFollowingPath() && !riding)
 		{
 /*collideCheck:*/
 
-			if (vel.getLength2D() < sqr(2))
+			// Beware: This code may cause clamping vel to zero if the framerate is very high.
+			// Starting with zero vel, low difftimes will cause an addVec small enough that this
+			// check will always trigger, and vel will never get larger than zero.
+			// Under water and swimming check should hopefully prevent this from happening. -- FG
+			if (_isUnderWater && !isSwimming() && vel.getLength2D() < sqr(2))
 			{
 				vel = Vector(0,0,0);
 			}
@@ -9053,7 +7003,7 @@ void Avatar::onUpdate(float dt)
 				os << "vel (" << vel.x << ", " << vel.y << ")";
 				debugLog(os.str());
 				*/
-				Vector mov = (moveVel * dt) + (extraVel * dt);
+				Vector mov = (moveVel * dt);
 				Vector omov = mov;
 				mov.capLength2D(TILE_SIZE);
 				/*
@@ -9072,23 +7022,19 @@ void Avatar::onUpdate(float dt)
 						else
 							omov -= mov;
 
-						lastLastPosition = position;
 						lastPosition = position;
 						Vector newPosition = position + mov;
 						//Vector testPosition = position + (vel *dt)*2;
 						position = newPosition;
 
-
-						int hw = collideCircle;
-
-						if (dsq->game->collideCircleWithGrid(position, hw))
+						if (dsq->game->collideCircleWithGrid(position, collideRadius))
 						{
 							if (dsq->game->lastCollideTileType == OT_HURT
-								&& dsq->continuity.getWorldType() != WT_SPIRIT
-								&& dsq->continuity.form != FORM_NATURE)
+								&& isDamageTarget(DT_WALLHURT))
 							{
 								DamageData d;
 								d.damage = 1;
+								d.damageType = DT_WALLHURT;
 								damage(d);
 								vel2 = Vector(0,0,0);
 								//doCollisionAvoidance(1, 3, 1);
@@ -9186,19 +7132,6 @@ void Avatar::onUpdate(float dt)
 									// && dsq->game->getPercObsInArea(position, 4) < 0.75f
 									if (!inCurrent)
 									{
-										/*
-										int px=int(position.x);
-										int py=int(position.y);
-										int llpx=int(lastLastPosition.x);
-										int llpy=int(lastLastPosition.y);
-										if (px == llpx && py == llpy)
-										{
-
-										}
-										else
-										{
-										*/
-											//doBounce();
 										if (bursting)
 										{
 											//vel = 0;
@@ -9227,7 +7160,6 @@ void Avatar::onUpdate(float dt)
 													//vel = (n + vel)*0.5f;
 												}
 											}
-										//}
 										}
 									}
 								}
@@ -9245,39 +7177,6 @@ void Avatar::onUpdate(float dt)
 					}
 				}
 			}
-		}
-
-		/*
-		if (swimming)
-		{
-			int px=int(position.x);
-			int py=int(position.y);
-			int llpx=int(lastLastPosition.x);
-			int llpy=int(lastLastPosition.y);
-			if (px == llpx && py == llpy)
-			{
-				if (isNearObstruction(4))
-				{
-					vel = 0;
-					Vector n = dsq->game->getWallNormal(position, 6);
-					if (!n.isZero())
-					{
-						Vector add = n * 100;
-						Vector f = getForward();
-						n = (n + f * 100);
-						n *= 0.5f;
-						vel += n;
-					}
-				}
-			}
-		}
-		*/
-
-		if (ignoreInputDelay>0)
-		{
-			ignoreInputDelay -= dt;
-			if (ignoreInputDelay < 0)
-				ignoreInputDelay = 0;
 		}
 	}
 
@@ -9298,7 +7197,8 @@ void Avatar::onUpdate(float dt)
 		rightHandEmitter->position = boneRightHand->getWorldCollidePosition(Vector(0,16));
 	}
 
-	dsq->game->handleShotCollisions(this, (activeAura == AURA_SHIELD));
+	if(canCollideWithShots())
+		dsq->game->handleShotCollisions(this, (activeAura == AURA_SHIELD));
 }
 
 
@@ -9308,23 +7208,6 @@ void Avatar::checkNearWall()
 
 	if (!inCurrent && bursting && !state.lockedToWall && !vel.isZero() && !riding && _isUnderWater)
 	{
-		/*
-		int mult = 1;
-		if (isfh())
-			mult = -1;
-		*/
-		/*
-		Vector n = dsq->game->getWallNormal(position, 8);
-		if (!n.isZero())
-		{
-			state.nearWall = true;
-			float t=0.2;
-			rotateToVec(n, t, 0);
-			skeletalSprite.transitionAnimate("wall", t);
-		}
-		else
-			state.nearWall = false;
-		*/
 		int checkRange = 11;
 		Vector v = vel;
 		v.normalize2D();
@@ -9335,7 +7218,7 @@ void Avatar::checkNearWall()
 		{
 			t.x = oT.x + v.x*i;
 			t.y = oT.y + v.y*i;
-			if (dsq->game->isObstructed(t) && dsq->game->getGrid(t) != OT_HURT)
+			if (dsq->game->isObstructed(t, ~OT_HURT))
 			{
 				obs = true;
 				break;
@@ -9360,32 +7243,6 @@ void Avatar::checkNearWall()
 			state.nearWall = false;
 		}
 	}
-}
-
-void Avatar::checkSpecial()
-{
-	/*
-	if (dsq->continuity.getFlag("VedhaFollow1") == 7)
-	{
-		int total = 0, c = 0;
-		FOR_ENTITIES (i)
-		{
-			Entity *e = *i;
-			if (e->name == "PracticeEnemy")
-			{
-				total++;
-				if (e->isEntityDead())
-					c++;
-			}
-		}
-		if (total == c)
-		{
-			health = maxHealth;
-			dsq->continuity.setFlag("VedhaFollow1", 8);
-			dsq->getEntityByName("Vedha")->activate();
-		}
-	}
-	*/
 }
 
 void Avatar::onWarp()

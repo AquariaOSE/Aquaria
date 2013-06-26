@@ -291,8 +291,7 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 
 	if (makeFatal && !e)
 	{
-		errorLog(std::string("Could not open [" + f + "]"));
-		exit(0);
+		exit_error("Could not open [" + f + "]");
 	}
 
 	return e;
@@ -301,7 +300,7 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 void drawCircle(float radius, int stepSize)
 {
 #ifdef BBGE_BUILD_OPENGL
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 
 	glBegin(GL_POLYGON);
 	{
@@ -312,14 +311,14 @@ void drawCircle(float radius, int stepSize)
 	}
 	glEnd();
 
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 #endif
 }
 
-void fatalError(const std::string &message)
+void exit_error(const std::string &message)
 {
-	msg(message);
-	exit(0);
+	errorLog(message);
+	exit(1);
 }
 
 std::string parseCommand(const std::string &line, const std::string &command)
@@ -424,8 +423,7 @@ void errorLog(const std::string &s)
 	}
 	else
 	{
-		//msg("Core Not Initialized");
-		//MessageBox(0, s.c_str(), "ErrorLog (Core Not Initalized)", MB_OK);
+		messageBox("Error!", s);
 	}
 }
 
@@ -775,17 +773,18 @@ std::vector<std::string> getFileList(std::string path, std::string type, int par
 	return list;
 }
 
-std::string msg(const std::string &message)
+void messageBox(const std::string& title, const std::string &msg)
 {
-	core->msg(message);
-	return message;
-}
-
-void msgVector(const std::string &name, const Vector &vec)
-{
-	std::ostringstream os;
-	os << name << ": (" << vec.x <<", " << vec.y << ", " << vec.z << ")";
-	msg (os.str());
+#ifdef BBGE_BUILD_WINDOWS
+	MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
+#elif defined(BBGE_BUILD_MACOSX)
+	cocoaMessageBox(title, msg);
+#elif defined(BBGE_BUILD_UNIX)
+	// !!! FIXME: probably don't want the whole GTK+ dependency in here...
+	fprintf(stderr, "%s: %s\n", title.c_str(), msg.c_str());
+#else
+#error Please define your platform.
+#endif
 }
 
 Vector getNearestPointOnLine(Vector a, Vector b, Vector c)

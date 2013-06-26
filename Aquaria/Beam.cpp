@@ -142,7 +142,7 @@ void Beam::render()
 void Beam::onRender()
 {
 #ifdef BBGE_BUILD_OPENGL
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 	Vector diff = endPos - position;
 	Vector side = diff;
 	//side.normalize2D();

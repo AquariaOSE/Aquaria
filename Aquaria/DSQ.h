@@ -122,6 +122,7 @@ enum AquariaActions
 	ACTION_ROLL,
 
 	ACTION_SLOW,						// currently unused
+	ACTION_REVERT,
 
 	ACTION_ZOOMIN		= 200,
 	ACTION_ZOOMOUT,
@@ -256,6 +257,7 @@ class Mod
 {
 public:
 	Mod();
+	~Mod();
 	void clear();
 	void setActive(bool v);
 	void start();
@@ -296,6 +298,7 @@ protected:
 
 	std::string name;
 	std::string path;
+	Precacher modcache;
 };
 
 class AquariaScreenTransition : public ScreenTransition
@@ -311,7 +314,7 @@ struct Song
 	Song() { index=0; script=0; }
 	int index;
 	SongNotes notes;
-	bool script;
+	int script;
 };
 
 const int MAX_FLAGS				= 1024;
@@ -615,6 +618,7 @@ struct GemData
 	GemData() { canMove=false; }
 	std::string name;
 	std::string userString;
+	std::string mapName;
 	bool canMove;
 	Vector pos;
 };
@@ -682,6 +686,7 @@ enum IngredientEffectType
 	IET_POISON		= 17,
 	IET_BLIND		= 18,
 	IET_ALLSTATUS	= 19,
+	IET_SCRIPT		= 20,
 	IET_MAX
 };
 
@@ -712,9 +717,11 @@ public:
 	std::string displayName;
 	const IngredientType type;
 	int amount;
+	int maxAmount;
 	int held;
 	int marked;
 	bool sorted;
+	bool rotKind;
 	bool hasIET(IngredientEffectType iet);
 
 	typedef std::vector<IngredientEffect> IngredientEffects;
@@ -824,28 +831,6 @@ public:
 	int maxOutOfWaterSpeed;
 	float entityDamageTime, pushTime, avatarDamageTime;
 	void load();
-};
-
-enum CMStat
-{
-	CM_ID	=0,
-	CM_EGO,
-	CM_SEGO
-};
-
-class WordColoring
-{
-public:
-	std::string word;
-	Vector color;
-};
-
-struct SporeChildData
-{
-	SporeChildData() : state(0), entity(0), health(0) {}
-	int state;
-	int health;
-	Entity *entity;
 };
 
 const int FLAG_LI = 1000, FLAG_LICOMBAT = 1001;
@@ -966,7 +951,7 @@ public:
 
 	std::string getSaveFileName(int slot, const std::string &pfix);
 
-	int maxHealth;
+	float maxHealth;
 	float health;
 	bool hudVisible;
 	unsigned int exp;
@@ -1008,8 +993,6 @@ public:
 
 	std::string naijaModel;
 
-	std::vector<WordColoring> wordColoring;
-
 	FormType form;
 
 	void learnFormUpgrade(FormUpgradeType form);
@@ -1019,7 +1002,6 @@ public:
 	FormUpgrades formUpgrades;
 
 	void loadSongBank();
-	int getSongBankSize();
 	void loadIntoSongBank(const std::string &file);
 	int checkSong(const Song &song);
 	int checkSongAssisted(const Song &song);
@@ -1065,12 +1047,6 @@ public:
 	AuraType auraType;
 	float auraTimer;
 
-	SporeChildData *getSporeChildDataForEntity(Entity *e);
-	void registerSporeChildData(Entity *e);
-
-	std::vector<SporeChildData> sporeChildData;
-
-
 	EatData *getEatData(const std::string &name);
 	void loadEatBank();
 
@@ -1079,7 +1055,7 @@ public:
 	std::string getSongNameBySlot(int slot);
 	void toggleLiCombat(bool t);
 
-	void pickupIngredient(IngredientData *i, int amount, bool effects=true);
+	void pickupIngredient(IngredientData *i, int amount, bool effects=true, bool learn=true);
 	int indexOfIngredientData(const IngredientData* data) const;
 	IngredientData *getIngredientHeldByName(const std::string &name) const; // an ingredient that the player actually has; in the ingredients list
 	IngredientData *getIngredientDataByName(const std::string &name); // an ingredient in the general data list; ingredientData
@@ -1087,8 +1063,9 @@ public:
 	IngredientData *getIngredientHeldByIndex(int idx) const;
 	IngredientData *getIngredientDataByIndex(int idx);
 
-	void applyIngredientEffects(IngredientData *data);
+	bool applyIngredientEffects(IngredientData *data);
 
+	void loadIngredientData();
 	void loadIngredientData(const std::string &file);
 	void loadIngredientDisplayNames(const std::string& file);
 	bool hasIngredients() const { return !ingredients.empty(); }
@@ -1126,6 +1103,8 @@ public:
 	Timer regenTimer, tripTimer;
 	Timer energyTimer, poisonTimer, poisonBitTimer;
 	Timer webTimer, webBitTimer, lightTimer, petPowerTimer;
+
+	float speedMult2;
 
 	void eatBeast(const EatData &eatData);
 	void removeNaijaEat(int idx);
@@ -1256,7 +1235,7 @@ enum NagType
 class DSQ : public Core
 {
 public:
-	DSQ(std::string fileSystem);
+	DSQ(const std::string& fileSystem, const std::string& extraDataDir);
 	~DSQ();
 
 	void init();
@@ -1452,7 +1431,6 @@ public:
 	void rumble(float leftMotor, float rightMotor, float time);
 	void vision(std::string folder, int num, bool ignoreMusic = false);
 
-	bool useMic, autoSingMenuOpen;
 	void watch(float t, int canQuit = 0);
 
 	std::string lastVoiceFile;
@@ -1585,6 +1563,9 @@ public:
 	void pauseCutscene(bool on);
 	bool canSkipCutscene();
 	bool isSkippingCutscene();
+
+	virtual void onBackgroundUpdate();
+
 protected:
 
 	Quad *cutscene_bg;

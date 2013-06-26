@@ -317,7 +317,7 @@ void BitmapText::onRender()
 	glEnable(GL_BLEND);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	*/
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 
 	//glScalef(1, -1, 0);
 
@@ -374,7 +374,7 @@ void BitmapText::onRender()
 		}
 	}
 	
-	glEnable(GL_CULL_FACE);
+	//glEnable(GL_CULL_FACE);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 #endif

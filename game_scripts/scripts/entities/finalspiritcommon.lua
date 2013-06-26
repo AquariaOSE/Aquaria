@@ -223,7 +223,7 @@ function enterState(me)
 		bone_rotate(v.glow, 0, 1, 0, 0, 1)
 		bone_rotate(v.glow, 360, 1, -1)
 	end
-	bone_rotate(v.boneNote, -entity_getRotation(me))
+	bone_rotate(v.noteBone, -entity_getRotation(me))
 end
 
 function exitState(me)

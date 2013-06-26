@@ -306,12 +306,12 @@ Vector VectorPath::getValue(float usePercent)
 
 	if (!from && !target)
 	{
-		msg ("returning first value");
+		errorLog("returning first value");
 		return pathNodes[0].value;
 	}
 	else if (!from && target)
 	{
-		msg("Unexpected Path node result (UPDATE: Could use current value as from?)");
+		errorLog("Unexpected Path node result (UPDATE: Could use current value as from?)");
 	}
 	else if (from && !target)
 	{

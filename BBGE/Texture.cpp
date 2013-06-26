@@ -446,7 +446,6 @@ void Texture::loadPNG(const std::string &file)
 		width = 64;
 		height = 64;
 		Texture::textureError = TEXERR_FILENOTFOUND;
-		//exit(1);
 		return;
 	}
 
@@ -483,7 +482,6 @@ void Texture::loadPNG(const std::string &file)
 		width = 64;
 		height = 64;
 		Texture::textureError = TEXERR_FILENOTFOUND;
-		//exit(1);
 	}
 
 

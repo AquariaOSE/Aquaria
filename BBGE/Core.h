@@ -973,7 +973,7 @@ public:
 		NO_DESTROY
 	};
 	// init
-	Core(const std::string &filesystem, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
+	Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
 	void initPlatform(const std::string &filesystem);
 	~Core();
 
@@ -1133,7 +1133,7 @@ public:
 
 	virtual void onPlayedVoice(const std::string &name){}
 
-	InterpolatedVector cameraPos, cameraRot;
+	InterpolatedVector cameraPos;
 
 	int fps;
 	bool loopDone;
@@ -1174,8 +1174,6 @@ public:
 	void save64x64ScreenshotTGA(const std::string &filename);
 	void saveSizedScreenshotTGA(const std::string &filename, int sz, int crop34);
 	void saveCenteredScreenshotTGA(const std::string &filename, int sz);
-
-	virtual void msg(const std::string &message);
 
 	bool minimized;
 	std::string getEnqueuedJumpState();
@@ -1310,6 +1308,9 @@ public:
 	int zgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
 
 	volatile int dbg_numThreadDecoders;
+	static unsigned int dbg_numRenderCalls;
+
+	virtual void onBackgroundUpdate();
 
 protected:
 
@@ -1402,6 +1403,7 @@ protected:
 	virtual void onRender(){}
 
 	void setupFileAccess();
+	std::string _extraDataDir;
 };
 
 extern Core *core;

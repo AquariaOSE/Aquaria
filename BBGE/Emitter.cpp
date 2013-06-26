@@ -306,7 +306,7 @@ void Emitter::onRender()
 
 						if (data.flipH || (data.copyParentFlip && (pe->isfh() || (pe->getParent() && pe->getParent()->isfh()))))
 						{
-							glDisable(GL_CULL_FACE);
+							//glDisable(GL_CULL_FACE);
 							glRotatef(180, 0, 1, 0);
 						}
 

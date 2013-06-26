@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ScriptedEntity.h"
 #include "Shot.h"
 
-Shader Entity::blurShader;
+//Shader Entity::blurShader;
 
 void Entity::stopPull()
 {
@@ -217,7 +217,6 @@ Entity::Entity()
 	targetRange = 32;
 	//energyChargeTarget = energyShotTarget = true;
 	deathSound = "GenericDeath";
-	groupID = 0;
 	entityID = 0;
 	//assignUniqueID();
 	hair = 0;
@@ -349,50 +348,6 @@ void Entity::setSpiritFreeze(bool v)
 	spiritFreeze = v;
 }
 
-Vector Entity::getGroupCenter()
-{
-	Vector position;
-	int sz = 0;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e->getGroupID() == this->getGroupID())
-		{
-			position += e->position;
-			sz++;
-		}
-	}
-	position/=sz;
-	return position;
-}
-
-Vector Entity::getGroupHeading()
-{
-	Vector v;
-	int sz = 0;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e->getGroupID() == this->getGroupID())
-		{
-			v += e->vel;
-			sz++;
-		}
-	}
-	v/=sz;
-	return v;
-}
-
-int Entity::getGroupID()
-{
-	return groupID;
-}
-
-void Entity::setGroupID(int g)
-{
-	groupID = g;
-}
-
 void Entity::setEntityProperty(EntityProperty ep, bool value)
 {
 	entityProperties[int(ep)] = value;
@@ -501,9 +456,9 @@ void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
 				position.data->path.addPathNode(pn.position, float(i/float(p->nodes.size())));
 			}
 		}
-		debugLog("Calculating Time");
+		//debugLog("Calculating Time");
 		float time = position.data->path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
-		debugLog("Starting");
+		//debugLog("Starting");
 		position.data->path.getPathNode(0)->value = position;
 		position.startPath(time);//, 1.0f/2.0f);
 	}
@@ -574,37 +529,6 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	//position.startPath(((position.data->path.getNumPathNodes()*TILE_SIZE*4)-2)/dsq->continuity.getSpeedType(speedType));
 }
 
-void Entity::addNodeToNodeGroup(int group, Path *p)
-{
-	nodeGroups[group].push_back(p);
-}
-
-void Entity::removeNodeFromAllNodeGroups(Path *p)
-{
-	for (int j = 0; j < nodeGroups.size(); j++)
-	{
-		for (int i = 0; i < nodeGroups[j].size(); i++)
-		{
-			if (nodeGroups[j][i] == p)
-			{
-				nodeGroups[j][i] = 0;
-			}
-		}
-	}
-}
-
-void Entity::setNodeGroupActive(int group, bool v)
-{
-	for (int i = 0; i < nodeGroups[group].size(); i++)
-	{
-		Path *p = nodeGroups[group][i];
-		if (p)
-		{
-			p->setActive(v);
-		}
-	}
-}
-
 void Entity::stopFollowingPath()
 {
 	position.stopPath();
@@ -625,39 +549,6 @@ void Entity::flipToTarget(Vector pos)
 		if (isfh())
 			flipHorizontal();
 	}
-}
-
-bool Entity::isCollideAgainst(Entity *e)
-{
-	if (this == e) return false;
-	if (getEntityType()==ET_PET || getEntityType()==ET_AVATAR || getEntityType() == ET_NEUTRAL)
-	{
-		if (e->getEntityType()==ET_ENEMY || e->getEntityType()==ET_NEUTRAL)
-		{
-			return true;
-		}
-	}
-	if (getEntityType() == ET_ENEMY)
-	{
-		if (e->getEntityType()==ET_PET || e->getEntityType()==ET_AVATAR || e->getEntityType()==ET_NEUTRAL)
-			return true;
-	}
-	return false;
-}
-
-bool Entity::isOpposedTo(Entity *e)
-{
-	if (getEntityType()==ET_PET || getEntityType()==ET_AVATAR || getEntityType() == ET_NEUTRAL)
-	{
-		if (e->getEntityType()==ET_ENEMY || e->getEntityType()==ET_NEUTRAL)
-			return true;
-	}
-	if (getEntityType() == ET_ENEMY)
-	{
-		if (e->getEntityType()==ET_PET || e->getEntityType()==ET_AVATAR)
-			return true;
-	}
-	return false;
 }
 
 Entity* Entity::getTargetEntity(int t)
@@ -921,7 +812,7 @@ void Entity::heal(float a, int type)
 	}
 }
 
-void Entity::revive(int a)
+void Entity::revive(float a)
 {
 	entityDead = false;
 	health = 0;
@@ -1189,7 +1080,7 @@ void Entity::onFHScale()
 	copySkel.alpha.interpolateTo(0, 0.5);
 	*/
 	//skeletalSprite.alpha.interpolateTo(1,sct);
-	blurShaderAnim.interpolateTo(Vector(blurMin,0,0), sct);
+	//blurShaderAnim.interpolateTo(Vector(blurMin,0,0), sct);
 	fhScale = 0;
 }
 
@@ -1214,8 +1105,8 @@ void Entity::onFH()
 
 		flipScale.interpolateTo(Vector(0.6, 1), sct);
 
-		blurShaderAnim = Vector(blurMin);
-		blurShaderAnim.interpolateTo(Vector(blurMax,0,0), sct/2);
+		//blurShaderAnim = Vector(blurMin);
+		//blurShaderAnim.interpolateTo(Vector(blurMax,0,0), sct/2);
 
 		fhScale = 1;
 	}
@@ -1251,9 +1142,9 @@ void Entity::update(float dt)
 	if (doUpdate && !dsq->game->isPaused())
 	{
 
-		if (getEntityType() == ET_ENEMY || getEntityType() == ET_NEUTRAL || getEntityType() == ET_PET)
+		if (!(getEntityType() == ET_AVATAR || getEntityType() == ET_INGREDIENT))
 		{
-			if (spiritFreeze && dsq->continuity.getWorldType() == WT_SPIRIT)
+			if (spiritFreeze && dsq->game->isWorldPaused())
 			{
 				// possible bug here because of return
 				return;
@@ -1266,7 +1157,7 @@ void Entity::update(float dt)
 		//skeletalSprite.setFreeze(true);
 
 		if (frozenTimer == 0 || getState() == STATE_PUSH)
-			AnimatedSprite::update(dt);
+			Quad::update(dt);
 		onAlwaysUpdate(dt);
 
 		// always, always update:
@@ -1491,7 +1382,7 @@ bool Entity::updateCurrents(float dt)
 	// why?
 	{
 		//Path *p = dsq->game->getNearestPath(position, PATH_CURRENT);
-		if (dsq->continuity.getWorldType() != WT_SPIRIT)
+		if (!dsq->game->isWorldPaused())
 		{
 			for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 			{
@@ -1528,7 +1419,7 @@ bool Entity::updateCurrents(float dt)
 			float useLen = len;
 			if (useLen < 500)
 				useLen = 500;
-			if (!(this->getEntityType() == ET_AVATAR && dsq->continuity.form == FORM_BEAST && dsq->game->avatar->bursting))
+			if (!(this->getEntityType() == ET_AVATAR && dsq->game->avatar->canSwimAgainstCurrents() && dsq->game->avatar->bursting))
 			{
 				doCollisionAvoidance(1, 4, 1, &vel2, useLen);
 			}
@@ -1548,7 +1439,7 @@ bool Entity::updateCurrents(float dt)
 			}
 		}
 	}
-	if (this->getEntityType() == ET_AVATAR && dsq->continuity.form == FORM_BEAST)
+	if (this->getEntityType() == ET_AVATAR && dsq->game->avatar->canSwimAgainstCurrents())
 	{
 		int cap = 100;
 		if (!vel.isZero())
@@ -1755,7 +1646,8 @@ void Entity::setPoison(float m, float t)
 {
 	poison = m;
 	poisonTimer.start(t);
-	poisonBitTimer.start(dsq->continuity.poisonBitTime);
+	if (poison)
+		poisonBitTimer.start(dsq->continuity.poisonBitTime);
 }
 
 void Entity::onUpdate(float dt)
@@ -1789,7 +1681,7 @@ void Entity::onUpdate(float dt)
 		break;
 		}
 
-		blurShaderAnim.update(dt);
+		//blurShaderAnim.update(dt);
 	}
 
 
@@ -1873,7 +1765,7 @@ void Entity::onUpdate(float dt)
 		}
 	}
 
-	AnimatedSprite::onUpdate(dt);
+	Quad::onUpdate(dt);
 
 	Vector v = position - lastPos;
 	lastMove = v;
@@ -2458,24 +2350,6 @@ void Entity::moveTowardsTarget(float dt, int spd, int t)
 	moveTowards(targets[t]->position, dt, spd);
 }
 
-void Entity::moveTowardsGroupCenter(float dt, int speed)
-{
-	if (getGroupID() != 0)
-	{
-		moveTowards(getGroupCenter(), dt, speed);
-	}
-}
-
-void Entity::moveTowardsGroupHeading(float dt, int speed)
-{
-	if (getGroupID() != 0)
-	{
-		Vector d = getGroupHeading() - position;
-		d.setLength2D(speed*dt);
-		vel += d;
-	}
-}
-
 void Entity::moveAroundTarget(float dt, int spd, int dir, int t)
 {
 	if (!targets[t]) return;
@@ -2914,7 +2788,7 @@ void Entity::doEntityAvoidance(float dt, int range, float mod, Entity *ignore)
 	{
 		Entity *e = *i;
 
-		if (e != this && e != ignore && e->ridingOnEntity != this)
+		if (e != this && e != ignore && e->ridingOnEntity != this && !e->getv(EV_NOAVOID))
 		{
 			diff = (this->position - e->position);
 			if (diff.isLength2DIn(range) && !diff.isZero())
@@ -2958,23 +2832,18 @@ void Entity::render()
 
 	// HACK: need to multiply base + etc
 	skeletalSprite.setColorMult(this->color, this->alpha.x);
-	bool set=false;
+	/*bool set=false;
 	if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating() && dsq->user.video.blur)
 	{
-		/*
-		std::ostringstream os;
-		os << "blurShaderAnim: " << blurShaderAnim.x;
-		debugLog(os.str());
-		*/
 		//swizzle
 		blurShader.setValue(color.x, color.y, color.z, blurShaderAnim.x);
 		blurShader.bind();
 		set = true;
-	}
-	AnimatedSprite::render();
+	}*/
+	Quad::render();
 	//if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating())
-	if (set)
-		blurShader.unbind();
+	//if (set)
+	//	blurShader.unbind();
 	renderBorder = false;
 	skeletalSprite.clearColorMult();
 	color = bcolor;
@@ -3038,7 +2907,7 @@ void Entity::doSpellAvoidance(float dt, int range, float mod)
 	{
 		Shot *s = (Shot*)(*i);
 
-		if ((s->position - this->position).getSquaredLength2D() < sqr(range))
+		if (s->isActive() && (s->position - this->position).getSquaredLength2D() < sqr(range))
 		{
 			for (int j = 0; j < ignoreShotDamageTypes.size(); j++)
 			{
@@ -3223,3 +3092,50 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	return false;
 }
 
+void Entity::initHair(int numSegments, int segmentLength, int width, const std::string &tex)
+{
+	if (hair)
+	{
+		errorLog("Trying to init hair when hair is already present");
+	}
+	hair = new Hair(numSegments, segmentLength, width);
+	hair->setTexture(tex);
+	dsq->game->addRenderObject(hair, layer);
+}
+
+
+void Entity::setHairHeadPosition(const Vector &pos)
+{
+	if (hair)
+	{
+		hair->setHeadPosition(pos);
+	}
+}
+
+void Entity::updateHair(float dt)
+{
+	if (hair)
+	{
+		hair->updatePositions();
+	}
+}
+
+void Entity::exertHairForce(const Vector &force, float dt)
+{
+	if (hair)
+	{
+		hair->exertForce(force, dt);
+	}
+}
+
+bool Entity::isEntityInside()
+{
+	FOR_ENTITIES(i)
+	{
+		Entity *e = *i;
+		if (e && e->life == 1 && e != this && e->ridingOnEntity != this && isCoordinateInside(e->position))
+			return true;
+
+	}
+	return false;
+}

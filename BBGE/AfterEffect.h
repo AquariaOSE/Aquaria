@@ -72,16 +72,6 @@ public:
 	float time;
 };
 
-enum ActiveShader
-{
-	AS_NONE			= 0,
-	AS_BLUR			,
-	AS_BW			,	
-	AS_WASHOUT		,
-	AS_MOTIONBLUR	,
-	AS_GLOW
-};
-
 class AfterEffectManager
 {
 public:
@@ -96,12 +86,12 @@ public:
 
 	void resetGrid();
 
-	void capture();
 	void render();
 	void renderGrid();
 	void renderGridPoints();
 
 	void loadShaders();
+	void deleteShaders();
 
 	void unloadDevice();
 	void reloadDevice();
@@ -111,12 +101,6 @@ public:
 
 	bool active;
 
-	void setActiveShader(ActiveShader as);
-
-#ifdef BBGE_BUILD_OPENGL
-	GLuint texture;
-#endif
-
 	bool bRenderGridPoints;
 
 	int numEffects;
@@ -124,11 +108,23 @@ public:
 	int screenWidth, screenHeight;
 	int textureWidth, textureHeight;
 
-	Shader blurShader, bwShader, washoutShader, motionBlurShader, glowShader;
+	Vector ** drawGrid;
 
-	Vector ** drawGrid;	
+	// returns handle > 0 on success
+	int loadShaderFile(const char *vert, const char *frag);
+	int loadShaderSrc(const char *vert, const char *frag);
+	Shader *getShaderPtr(int handle);
+	void setShaderPipelineSize(size_t size);
+	bool setShaderPipelinePos(int handle, size_t pos);
+	void unloadShader(int handle);
 
-	ActiveShader activeShader;
+protected:
+	int _insertShader(Shader *sh);
+
+	std::vector<Shader*> shaderPipeline; // Shaders are applied in this order. Can contain the same pointer more than once.
+	std::vector<Shader*> loadedShaders;
+	FrameBuffer backupBuffer;
+
 };
 
 

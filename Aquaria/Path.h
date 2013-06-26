@@ -143,6 +143,7 @@ public:
 	std::string gem;
 
 	bool effectOn;
+	bool spiritFreeze;
 
 	PathShape pathShape;
 

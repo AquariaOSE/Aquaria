@@ -32,7 +32,7 @@ v.attackDelay = 0
 
 v.noteQuad = 0
 
-
+v.holdingNote = false
 
 v.maxHits = 6
 v.hits = v.maxHits

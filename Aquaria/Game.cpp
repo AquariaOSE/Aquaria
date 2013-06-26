@@ -394,7 +394,7 @@ void FoodSlot::refresh(bool effects)
 		{
 			std::ostringstream os;
 			if (i->amount > 1)
-				os << i->amount << "/" << MAX_INGREDIENT_AMOUNT;
+				os << i->amount << "/" << i->maxAmount;
 			label->setText(os.str());
 			setTexture("Ingredients/" + i->gfx);
 			renderQuad = true;
@@ -456,10 +456,13 @@ void FoodSlot::eatMe()
 
 		if (!ingredient->effects.empty())
 		{
-			ingredient->amount--;
-			dsq->continuity.applyIngredientEffects(ingredient);
-			dsq->continuity.removeEmptyIngredients();
-			dsq->game->refreshFoodSlots(true);
+			bool eaten = dsq->continuity.applyIngredientEffects(ingredient);
+			if(eaten)
+			{
+				ingredient->amount--;
+				dsq->continuity.removeEmptyIngredients();
+				dsq->game->refreshFoodSlots(true);
+			}
 		}
 		else
 		{
@@ -533,7 +536,7 @@ void FoodSlot::onUpdate(float dt)
 
 
 					Vector wp = getWorldPosition();
-					if ((dsq->game->lips->getWorldPosition() - getWorldPosition()).isLength2DIn(32))
+					if ((dsq->game->lips->getWorldPosition() - wp).isLength2DIn(32))
 					{
 						dsq->menuSelectDelay = 0.5;
 
@@ -548,7 +551,7 @@ void FoodSlot::onUpdate(float dt)
 						bool droppedIn = false;
 						for (int i = 0; i < foodHolders.size(); i++)
 						{
-							bool in = (foodHolders[i]->getWorldPosition() - getWorldPosition()).isLength2DIn(32);
+							bool in = (foodHolders[i]->getWorldPosition() - wp).isLength2DIn(32);
 							if (in)
 							{
 								droppedIn = true;
@@ -586,11 +589,6 @@ void FoodSlot::onUpdate(float dt)
 
 								label->alpha = 1;
 								grabTime = 0;
-
-								if (dsq->inputMode == INPUT_JOYSTICK)
-								{
-									dsq->game->adjustFoodSlotCursor();
-								}
 
 								return;
 							}
@@ -819,7 +817,7 @@ void TreasureSlot::onUpdate(float dt)
 				{
 					doubleClickTimer = 0;
 					
-					dsq->runScriptNum("scripts/global/menu-treasures.lua", "useTreasure", flag);
+					dsq->game->onUseTreasure(flag);
 				}
 				else
 				{
@@ -1233,6 +1231,10 @@ Game::Game() : StateObject()
 
 	loadEntityTypeList();
 
+	lastCollideMaskIndex = -1;
+	worldPaused = false;
+
+	cookingScript = 0;
 
 }
 
@@ -1867,18 +1869,6 @@ void Game::transitionToScene(std::string scene)
 	core->enqueueJumpState("Game", false);
 }
 
-void Game::transitionToSceneUnder(std::string scene)
-{
-	if (avatar)
-	{
-		avatar->onWarp();
-	}
-	sceneToLoad = scene;
-	stringToLower(sceneToLoad);
-	core->pushState("Game");
-}
-
-
 ElementTemplate *Game::getElementTemplateByIdx(int idx)
 {
 	for (int i = 0; i < elementTemplates.size(); i++)
@@ -2442,8 +2432,7 @@ void Game::loadEntityTypeList()
 	std::string line;
 	if(!in)
 	{
-		core->messageBox(dsq->continuity.stringBank.get(2008), dsq->continuity.stringBank.get(2016));
-		exit(1);
+		exit_error(dsq->continuity.stringBank.get(2008).c_str());
 	}
 	while (std::getline(in, line))
 	{
@@ -2532,7 +2521,7 @@ int Game::getIdxForEntityType(std::string type)
 	return -1;
 }
 
-Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
+Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
 {
 	std::string type;
 	for (int i = 0; i < dsq->game->entityTypeList.size(); i++)
@@ -2541,7 +2530,7 @@ Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool creat
 		if (ec->idx == idx)
 		{
 			type = ec->name;
-			return createEntity(type, id, position, rot, createSaveData, name, et, nodeGroups, gid, doPostInit);
+			return createEntity(type, id, position, rot, createSaveData, name, et, doPostInit);
 		}
 	}
 	return 0;
@@ -2580,7 +2569,7 @@ void Game::ensureLimit(Entity *e, int num, int state)
 	}
 }
 
-Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
+Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
 {
 	// e->layer must be set BEFORE calling this function!
 
@@ -2615,12 +2604,6 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 		}
 	}
 
-	// get node groups before calling init
-	if (nodeGroups)
-	{
-		e->nodeGroups = (*nodeGroups);
-	}
-
 	// NOTE: init cannot be called after "addRenderObject" for some unknown reason
 	e->init();
 
@@ -2628,8 +2611,6 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 	e->startPos = usePos;
 	if (!name.empty())
 		e->name = name;
-
-	e->setGroupID(gid);
 
 	e->rotation.z = rot;
 
@@ -2640,7 +2621,7 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 	if (createSaveData)
 	{
 		int idx = dsq->game->getIdxForEntityType(type);
-		entitySaveData.push_back(EntitySaveData(e, idx, usePos.x, usePos.y, rot, e->getGroupID(), e->getID(), e->name));
+		entitySaveData.push_back(EntitySaveData(e, idx, usePos.x, usePos.y, rot, e->getID(), e->name));
 	}
 
 	addRenderObject(e, e->layer);
@@ -2653,7 +2634,7 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 	return e;
 }
 
-Entity *Game::createEntity(const std::string &t, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, Entity::NodeGroups *nodeGroups, int gid, bool doPostInit)
+Entity *Game::createEntity(const std::string &t, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
 {
 	std::string type = t;
 	stringToLower(type);
@@ -2663,7 +2644,7 @@ Entity *Game::createEntity(const std::string &t, int id, Vector position, int ro
 	e = new ScriptedEntity(type, position, et);
 
 
-	return establishEntity(e, id, position, rot, createSaveData, name, et, nodeGroups, gid, doPostInit);
+	return establishEntity(e, id, position, rot, createSaveData, name, et, doPostInit);
 }
 
 void Game::initEntities()
@@ -2712,34 +2693,6 @@ EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e, Vector pos)
 		*/
 	}
 	return 0;
-}
-
-void Game::spawnSporeChildren()
-{
-	creatingSporeChildren = true;
-	SporeChildData *scd;
-	int sz = dsq->continuity.sporeChildData.size();
-	for (int i=0; i < sz; i++)
-	{
-		scd = &dsq->continuity.sporeChildData[i];
-		scd->entity = 0;
-	}
-	int c = 0;
-	for (int i=0; i < sz; i++)
-	{
-		scd = &dsq->continuity.sporeChildData[i];
-		Entity *e = dsq->game->createEntity("SporeChild", 0, avatar->position+Vector(0,2+c*2), 0, 0, "");
-		if (e)
-		{
-			e->setState(scd->state);
-			if (scd->health < 1)
-				scd->health = 1;
-			e->health = scd->health;
-			scd->entity = e;
-		}
-		c++;
-	}
-	creatingSporeChildren = false;
 }
 
 void Game::setTimerTextAlpha(float a, float t)
@@ -4146,8 +4099,7 @@ void Game::toggleOverrideZoom(bool on)
 		if (!on && avatar->zoomOverriden == true)
 		{
 			dsq->globalScale.stop();
-			dsq->game->avatar->myZoom = dsq->globalScale;
-			//dsq->game->avatar->myZoom.interpolateTo(Vector(1,1), 1.0);
+			avatar->myZoom = dsq->globalScale;
 		}
 		avatar->zoomOverriden = on;
 	}
@@ -5109,110 +5061,11 @@ bool Game::loadSceneXML(std::string scene)
 	TiXmlElement *entitiesNode = doc.FirstChildElement("Entities");
 	while(entitiesNode)
 	{
-		if (entitiesNode->Attribute("d"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("d"));
-			int idx, x, y;
-			while (is >> idx)
-			{
-				is >> x >> y;
-				dsq->game->createEntity(idx, 0, Vector(x,y), 0, true, "");
-			}
-		}
-		if (entitiesNode->Attribute("e"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("e"));
-			int idx, x, y, rot;
-			while (is >> idx)
-			{
-				is >> x >> y >> rot;
-				if (idx == 32)
-				{
-					std::ostringstream os;
-					os << "read in rot as: " << rot;
-					debugLog(os.str());
-				}
-				dsq->game->createEntity(idx, 0, Vector(x,y), rot, true, "");
-			}
-		}
-		if (entitiesNode->Attribute("f"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("f"));
-			int idx, x, y, rot, group;
-			while (is >> idx)
-			{
-				is >> x >> y >> rot >> group;
-				Entity *e = dsq->game->createEntity(idx, 0, Vector(x,y), rot, true, "");
-				e->setGroupID(group);
-			}
-		}
-		if (entitiesNode->Attribute("g"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("g"));
-			int idx, x, y, rot, group, id;
-			while (is >> idx)
-			{
-				is >> x >> y >> rot >> group >> id;
-				Entity *e = dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "");
-				e->setGroupID(group);
-			}
-		}
-		if (entitiesNode->Attribute("h"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("h"));
-			int idx, x, y, rot, groupID, id;
-			Entity::NodeGroups *ng;
-			Entity::NodeGroups nodeGroups;
-			while (is >> idx)
-			{
-				int numNodeGroups = 0;
-				is >> x >> y >> rot >> groupID >> id;
-				is >> numNodeGroups;
-
-				ng = 0;
-				nodeGroups.clear();
-				if (numNodeGroups > 0)
-				{
-					ng = &nodeGroups;
-					for (int i = 0; i < numNodeGroups; i++)
-					{
-						int sz;
-						is >> sz;
-						for (int j = 0; j < sz; j++)
-						{
-							int idx;
-							is >> idx;
-							if (idx >= 0 && idx < getNumPaths())
-							{
-								nodeGroups[i].push_back(getPath(idx));
-							}
-						}
-					}
-				}
-
-				dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, ng, groupID);
-				// setting group ID
-			}
-		}
-		if (entitiesNode->Attribute("i"))
-		{
-			SimpleIStringStream is(entitiesNode->Attribute("i"));
-			int idx, x, y, rot, groupID, id;
-			Entity::NodeGroups nodeGroups;
-			while (is >> idx)
-			{
-				is >> x >> y >> rot >> groupID >> id;
-
-				dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, 0, groupID);
-				// setting group ID
-			}
-		}
 		if (entitiesNode->Attribute("j"))
 		{
 			SimpleIStringStream is(entitiesNode->Attribute("j"));
 			int idx, x, y, rot, groupID, id;
 			std::string name;
-			Entity::NodeGroups nodeGroups;
 			while (is >> idx)
 			{
 				name="";
@@ -5221,10 +5074,9 @@ bool Game::loadSceneXML(std::string scene)
 				is >> x >> y >> rot >> groupID >> id;
 
 				if (!name.empty())
-					dsq->game->createEntity(name, id, Vector(x,y), rot, true, "", ET_ENEMY, 0, groupID);
+					dsq->game->createEntity(name, id, Vector(x,y), rot, true, "", ET_ENEMY);
 				else
-					dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY, 0, groupID);
-				// setting group ID
+					dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY);
 			}
 		}
 		entitiesNode = entitiesNode->NextSiblingElement("Entities");
@@ -5341,22 +5193,6 @@ void Game::setWarpAreaSceneName(WarpArea &warpArea)
 	}
 }
 
-Entity *Game::getEntityInGroup(int gid, int iter)
-{
-	int c = 0;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e->getGroupID() == gid)
-		{
-			if (iter == c)
-				return e;
-			c++;
-		}
-	}
-	return 0;
-}
-
 bool Game::loadScene(std::string scene)
 {
 	stringToLower(scene);
@@ -5376,7 +5212,7 @@ bool Game::loadScene(std::string scene)
 	}
 	if (i == allowedMaps.size())
 	{
-		exit(-1);
+		exit_error("Demo version refuses to load this map, sorry.");
 	}
 #endif
 
@@ -5552,8 +5388,8 @@ bool Game::saveScene(std::string scene)
 				else
 					os << "INVALID" << " ";
 			}
-
-			os << e->x << " " << e->y << " " << e->rot << " " << e->group << " " << e->id << " ";
+			// group ID no longer used
+			os << e->x << " " << e->y << " " << e->rot << " " << 0 << " " << e->id << " ";
 		}
 		entitiesNode.SetAttribute("j", os.str());
 		saveFile.InsertEndChild(entitiesNode);
@@ -5882,53 +5718,13 @@ void Game::updateParticlePause()
 	{
 		core->particlesPaused = 2;
 	}
-	else if (dsq->continuity.getWorldType() == WT_SPIRIT)
+	else if (this->isWorldPaused())
 	{
 		core->particlesPaused = 1;
 	}
 	else
 	{
 		core->particlesPaused = 0;
-	}
-}
-
-void Game::warpKey1()
-{
-	if (core->getCtrlState())
-	{
-		dsq->game->avatar->heal(1000);
-		dsq->game->avatar->fhTo(true);
-		warpToSceneNode("OPENWATER02", "WARPKEY");
-	}
-}
-
-void Game::warpKey2()
-{
-	if (core->getCtrlState())
-	{
-		dsq->game->avatar->heal(1000);
-		dsq->game->avatar->fhTo(true);
-		warpToSceneNode("VEIL01", "WARPKEY");
-	}
-}
-
-void Game::warpKey3()
-{
-	if (core->getCtrlState())
-	{
-		dsq->game->avatar->heal(1000);
-		dsq->game->avatar->fhTo(true);
-		warpToSceneNode("FOREST03", "WARPKEY");
-	}
-}
-
-void Game::warpKey4()
-{
-	if (core->getCtrlState())
-	{
-		dsq->game->avatar->heal(1000);
-		dsq->game->avatar->fhTo(true);
-		warpToSceneNode("ABYSS01", "WARPKEY");
 	}
 }
 
@@ -6037,41 +5833,6 @@ float Game::getHalf2WayTimer(float mod)
 float Game::getHalfTimer(float mod)
 {
 	return halfTimer*mod;
-}
-
-void Game::adjustFoodSlotCursor()
-{
-	// using visible slots now, don't need this atm
-	return;
-	/*
-	for (int i = 0; i < foodSlots.size(); i++)
-	{
-		if (foodSlots[i]->isCursorIn())
-		{
-			if (!foodSlots[i]->getIngredient() || foodSlots[i]->getIngredient()->amount <= 0)
-			{
-				foodSlots[i]->setFocus(false);
-				i--;
-				while (i >= 0)
-				{
-					if (foodSlots[i]->getIngredient() && foodSlots[i]->getIngredient()->amount > 0)
-					{
-						//cursor->position = foodSlots[i]->getWorldPosition();
-						foodSlots[i]->setFocus(true);
-						break;
-					}
-					i--;
-				}
-				if (i <= -1)
-				{
-					menu[5]->setFocus(true);
-					//cursor->position = menu[5]->getWorldPosition();
-				}
-			}
-			break;
-		}
-	}
-	*/
 }
 
 void Game::action(int id, int state)
@@ -6197,7 +5958,6 @@ void Game::action(int id, int state)
 							if (foodSlots[i]->isCursorIn() && foodSlots[i]->getIngredient())
 							{
 								foodSlots[i]->moveRight();
-								adjustFoodSlotCursor();
 								break;
 							}
 						}
@@ -6234,7 +5994,6 @@ void Game::action(int id, int state)
 							if (ingrIndex >= 0)
 							{
 								foodSlots[ingrIndex]->discard();
-								adjustFoodSlotCursor();
 							}
 						}
 					}
@@ -6377,7 +6136,8 @@ void Game::applyState()
 		core->afterEffectManager->clear();
 		//core->afterEffectManager->addEffect(new RippleEffect());
 	}
-	Shot::shots.clear();
+	Shot::shots.clear(); // the shots were deleted elsewhere, drop any remaining pointers
+	Shot::deleteShots.clear();
 	backdropQuad = 0;
 	clearObsRows();
 	inGameMenu = false;
@@ -6884,9 +6644,6 @@ void Game::applyState()
 
 	toNode = "";
 
-
-	spawnSporeChildren();
-
 	createInGameMenu();
 	hideInGameMenu(false);
 
@@ -6913,6 +6670,14 @@ void Game::applyState()
 	{
 		musicToPlay = overrideMusic;
 	}
+
+	if(cookingScript)
+		dsq->scriptInterface.closeScript(cookingScript);
+
+	if (dsq->mod.isActive())
+		cookingScript = dsq->scriptInterface.openScript(dsq->mod.getPath() + "scripts/cooking.lua", true);
+	else
+		cookingScript = dsq->scriptInterface.openScript("scripts/global/cooking.lua", true);
 
 	//INFO: this used to be here to start fading out the music
 	// before the level had begun
@@ -7058,22 +6823,9 @@ void Game::bindInput()
 #ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->canOpenEditor())
 	{
-		//addAction(MakeFunctionEvent(Game, toggleSceneEditor), KEY_TAB, 0);
 		addAction(ACTION_TOGGLESCENEEDITOR, KEY_TAB);
 	}
 #endif
-
-
-
-	/*
-	if (dsq->user.demo.warpKeys)
-	{
-		addAction(MakeFunctionEvent(Game, warpKey1), KEY_1, 1);
-		addAction(MakeFunctionEvent(Game, warpKey2), KEY_2, 1);
-		addAction(MakeFunctionEvent(Game, warpKey3), KEY_3, 1);
-		addAction(MakeFunctionEvent(Game, warpKey4), KEY_4, 1);
-	}
-	*/
 
 
 	dsq->user.control.actionSet.importAction(this, "PrimaryAction", ACTION_PRIMARY);
@@ -7127,6 +6879,20 @@ void Game::bindInput()
 	addAction(ACTION_MENURIGHT,	JOY1_STICK_RIGHT);
 	addAction(ACTION_MENUUP,	JOY1_STICK_UP);
 	addAction(ACTION_MENUDOWN,	JOY1_STICK_DOWN);
+
+	// To capture quick song keys via script
+	dsq->user.control.actionSet.importAction(this, "SongSlot1",		ACTION_SONGSLOT1);
+	dsq->user.control.actionSet.importAction(this, "SongSlot2",		ACTION_SONGSLOT2);
+	dsq->user.control.actionSet.importAction(this, "SongSlot3",		ACTION_SONGSLOT3);
+	dsq->user.control.actionSet.importAction(this, "SongSlot4",		ACTION_SONGSLOT4);
+	dsq->user.control.actionSet.importAction(this, "SongSlot5",		ACTION_SONGSLOT5);
+	dsq->user.control.actionSet.importAction(this, "SongSlot6",		ACTION_SONGSLOT6);
+	dsq->user.control.actionSet.importAction(this, "SongSlot7",		ACTION_SONGSLOT7);
+	dsq->user.control.actionSet.importAction(this, "SongSlot8",		ACTION_SONGSLOT8);
+	dsq->user.control.actionSet.importAction(this, "SongSlot9",		ACTION_SONGSLOT9);
+	dsq->user.control.actionSet.importAction(this, "SongSlot10",	ACTION_SONGSLOT10);
+
+	dsq->user.control.actionSet.importAction(this, "Revert",		ACTION_REVERT);
 
 
 	if (avatar)
@@ -7277,8 +7043,16 @@ void Game::onUseTreasure()
 
 	if (selectedTreasureFlag != -1)
 	{
-		dsq->runScriptNum("scripts/global/menu-treasures.lua", "useTreasure", selectedTreasureFlag);
+		onUseTreasure(selectedTreasureFlag);
 	}
+}
+
+void Game::onUseTreasure(int flag)
+{
+	if(dsq->mod.isActive())
+		dsq->runScriptNum(dsq->mod.getPath() + "scripts/menu-treasures.lua", "useTreasure", flag);
+	else
+		dsq->runScriptNum("scripts/global/menu-treasures.lua", "useTreasure", flag);
 }
 
 Recipe *Game::findRecipe(const std::vector<IngredientData*> &list)
@@ -7440,7 +7214,22 @@ void Game::onCook()
 
 	if (r)
 		data = dsq->continuity.getIngredientDataByName(r->result);
-	else
+	else if(cookingScript)
+	{
+		const char *p1 = cookList[0]->name.c_str();
+		const char *p2 = cookList[1]->name.c_str();
+		const char *p3 = cookList.size() >= 3 ? cookList[2]->name.c_str() : "";
+		std::string ingname;
+		if(cookingScript->call("cookFailure", p1, p2, p3, &ingname))
+		{
+			if(ingname.length())
+				data = dsq->continuity.getIngredientDataByName(ingname);
+			if(!data)
+				goto endcook;
+		}
+	}
+	
+	if(!data)
 	{
 		dsq->sound->playSfx("Denied");
 		data = dsq->continuity.getIngredientDataByName("SeaLoaf");
@@ -7619,6 +7408,8 @@ void Game::onCook()
 		dsq->centerMessage(dsq->continuity.stringBank.get(27));
 	}
 	refreshFoodSlots(true);
+
+endcook:
 
 	AquariaGuiElement::canDirMoveGlobal = true;
 
@@ -8346,26 +8137,25 @@ bool Game::collideCircleVsCircle(Entity *a, Entity *b)
 	return (a->position - b->position).isLength2DIn(a->collideRadius + b->collideRadius);
 }
 
-bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc)
+bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc, int *colSegment)
 {
 	if (perc == 0)
 		perc = 1;
 	bool c = false;
-	if (a->hair)
+	if (a && a->hair)
 	{
-		if (a)
+		if (num == 0)
+			num = a->hair->hairNodes.size();
+		// HACK: minus 2
+		for (int i = 0; i < num; i++)
 		{
-			if (num == 0)
-				num = a->hair->hairNodes.size();
-			// HACK: minus 2
-			for (int i = 0; i < num; i++)
+			// + a->hair->position
+			c = ((a->hair->hairNodes[i].position) - pos2).isLength2DIn(a->hair->hairWidth*perc + radius);
+			if (c)
 			{
-				// + a->hair->position
-				c = ((a->hair->hairNodes[i].position) - pos2).isLength2DIn(a->hair->hairWidth*perc + radius);
-				if (c)
-				{
-					return true;
-				}
+				if (colSegment)
+					*colSegment = i;
+				return true;
 			}
 		}
 	}
@@ -8525,8 +8315,6 @@ void Game::preLocalWarp(LocalWarpType localWarpType)
 	{
 		dsq->game->avatar->warpInLocal = Vector(0,0,0);
 	}
-
-	dsq->game->avatar->warpIn = !dsq->game->avatar->warpIn;
 	
 	dsq->screenTransition->capture();
 	core->resetTimer();
@@ -8557,7 +8345,7 @@ void Game::registerSporeDrop(const Vector &pos, int t)
 
 bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 {
-	if (!shot->isHitEnts())
+	if (!shot->isHitEnts() || shot->firer == e)
 	{
 		return false;
 	}
@@ -8568,24 +8356,17 @@ bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 	}
 	if (e->getEntityType() == ET_ENEMY)
 	{
-		if (shot->firer != e)
+		if (shot->getDamageType() == DT_AVATAR_BITE)
 		{
-			if (shot->getDamageType() == DT_AVATAR_BITE)
+			Avatar::BittenEntities::iterator i;
+			for (i = avatar->bittenEntities.begin(); i != avatar->bittenEntities.end(); i++)
 			{
-				Avatar::BittenEntities::iterator i;
-				for (i = avatar->bittenEntities.begin(); i != avatar->bittenEntities.end(); i++)
+				if (e == (*i))
 				{
-					if (e == (*i))
-					{
-						return false;
-					}
+					return false;
 				}
-				return true;
 			}
-		}
-		else
-		{
-			return false;
+			return true;
 		}
 	}
 	else if (e->getEntityType() == ET_AVATAR)
@@ -8608,10 +8389,10 @@ void Game::handleShotCollisions(Entity *e, bool hasShield)
 {
 	BBGE_PROF(Game_handleShotCollisions);
 	bool isRegValid=true;
-	for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); i++)
+	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
-		Shot *shot = *i;
-		if (isEntityCollideWithShot(e, shot) && (!hasShield || (!shot->shotData || !shot->shotData->ignoreShield)))
+		Shot *shot = Shot::shots[i];
+		if (shot->isActive() && isEntityCollideWithShot(e, shot) && (!hasShield || (!shot->shotData || !shot->shotData->ignoreShield)))
 		{
 			Vector collidePoint = e->position+e->offset;
 			if (e->getNumTargetPoints()>0)
@@ -8640,10 +8421,10 @@ bool Game::isDamageTypeEnemy(DamageType dt)
 void Game::handleShotCollisionsSkeletal(Entity *e)
 {
 	BBGE_PROF(Game_HSSKELETAL);
-	for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); i++)
+	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
-		Shot *shot = *i;
-		if (isEntityCollideWithShot(e, shot))
+		Shot *shot = Shot::shots[i];
+		if (shot->isActive() && isEntityCollideWithShot(e, shot))
 		{
 			Bone *b = collideSkeletalVsCircle(e, shot->position, shot->collideRadius);
 			if (b)
@@ -8657,10 +8438,10 @@ void Game::handleShotCollisionsSkeletal(Entity *e)
 
 void Game::handleShotCollisionsHair(Entity *e, int num)
 {
-	for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); i++)
+	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
-		Shot *shot = *i;
-		if (isEntityCollideWithShot(e, shot))
+		Shot *shot = Shot::shots[i];
+		if (shot->isActive() && isEntityCollideWithShot(e, shot))
 		{
 			bool b = collideHairVsCircle(e, num, shot->position, 8);
 			if (b)
@@ -8946,7 +8727,6 @@ void Game::refreshFoodSlots(bool effects)
 	{
 		foodSlots[i]->refresh(effects);
 	}
-	adjustFoodSlotCursor();
 }
 
 void Game::refreshTreasureSlots()
@@ -10178,7 +9958,7 @@ void Game::update(float dt)
 
 	if (avatar)
 	{
-		tintColor.update(dt);
+		/*tintColor.update(dt);
 		if (core->afterEffectManager)
 		{
 			if (tintColor.isInterpolating())
@@ -10187,7 +9967,7 @@ void Game::update(float dt)
 				core->afterEffectManager->setActiveShader(AS_NONE);
 
 			core->afterEffectManager->glowShader.setValue(tintColor.x, tintColor.y, tintColor.z, 1);
-		}
+		}*/
 
 		if (avatar->isRolling())
 			particleManager->addInfluence(ParticleInfluence(avatar->position, 300, 800, true));
@@ -10925,11 +10705,6 @@ void Game::removeState()
 
 	elementUpdateList.clear();
 
-	if (core->afterEffectManager)
-	{
-		//core->afterEffectManager->blurShader.setMode(0);
-		core->afterEffectManager->setActiveShader(AS_NONE);
-	}
 	dsq->setCursor(CURSOR_NORMAL);
 	dsq->darkLayer.toggle(0);
 	dsq->shakeCamera(0,0);
@@ -11006,6 +10781,7 @@ void Game::removeState()
 
 	debugLog("killAllShots");
 	Shot::killAllShots();
+	Shot::clearShotGarbage(); // make sure there are no pointers left (would lead to a crash on shutdown otherwise)
 	debugLog("killAllBeams");
 	Beam::killAllBeams();
 	debugLog("killAllWebs");

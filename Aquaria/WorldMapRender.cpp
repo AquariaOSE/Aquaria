@@ -266,9 +266,9 @@ protected:
 				q->setBlendType(BLEND_ADD);
 				addChild(q, PM_POINTER);
 
-				std::ostringstream os;
-				os << "children: " << children.size();
-				debugLog(os.str());
+				//std::ostringstream os;
+				//os << "children: " << children.size();
+				//debugLog(os.str());
 			}
 			else
 			{

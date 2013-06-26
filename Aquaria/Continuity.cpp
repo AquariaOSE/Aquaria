@@ -61,7 +61,7 @@ bool Continuity::isIngredientFull(IngredientData *data)
 	{
 		if (nocasecmp(ingredients[i]->name, data->name)==0)
 		{
-			if (ingredients[i]->amount >= MAX_INGREDIENT_AMOUNT)
+			if (ingredients[i]->amount >= ingredients[i]->maxAmount)
 				return true;
 			else
 				return false;
@@ -70,22 +70,23 @@ bool Continuity::isIngredientFull(IngredientData *data)
 	return false;
 }
 
-void Continuity::pickupIngredient(IngredientData *d, int amount, bool effects)
+void Continuity::pickupIngredient(IngredientData *d, int amount, bool effects, bool learn)
 {
-	learnRecipe(d->name, effects);
+	if(learn)
+		learnRecipe(d->name, effects);
 
 	if (!getIngredientHeldByName(d->name))
 	{
 		ingredients.push_back(d);
 	}
 
-	if (d->amount < MAX_INGREDIENT_AMOUNT - amount)
+	if (d->amount < d->maxAmount - amount)
 	{
 		d->amount += amount;
 	}
 	else
 	{
-		d->amount = MAX_INGREDIENT_AMOUNT;
+		d->amount = d->maxAmount;
 	}
 }
 
@@ -590,6 +591,14 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 	case IET_LI:
 		return dsq->continuity.stringBank.get(227);
 	break;
+	case IET_SCRIPT:
+		if(dsq->game->cookingScript)
+		{
+			std::string ret = "";
+			dsq->game->cookingScript->call("getIngredientEffectString", data->name.c_str(), &ret);
+			return ret;
+		}
+	break;
 	}
 
 	return "";
@@ -607,8 +616,10 @@ std::string Continuity::getAllIEString(IngredientData *data)
 	return os.str();
 }
 
-void Continuity::applyIngredientEffects(IngredientData *data)
+// returns true if eaten
+bool Continuity::applyIngredientEffects(IngredientData *data)
 {
+	bool eaten = true;
 	float y =0;
 	for (int i = 0; i < data->effects.size(); i++)
 	{
@@ -841,29 +852,28 @@ void Continuity::applyIngredientEffects(IngredientData *data)
 			// this item should only affect li if naija drops it and li eats it.
 		}
 		break;
+		case IET_SCRIPT:
+		{
+			// If this fails, it will still be eaten
+			if(dsq->game->cookingScript)
+				dsq->game->cookingScript->call("useIngredient", data->name.c_str(), &eaten);
+		}
+		break;
 		default:
 		{
 			char str[256];
 			sprintf((char*)&str, "ingredient effect not defined, index[%d]", int(useType));
 			errorLog(str);
+			eaten = false;
 		}
 		break;
 		}
 	}
+	return eaten;
 }
 
 std::string Continuity::getIngredientAffectsString(IngredientData *data)
 {
-
-	/*
-	std::string str;
-	for (int i = 0; i < data->effects.size(); i++)
-	{
-		str += splitCamelCase(getIngredientDescription(data->effects[i].type)) + "\n";
-	}
-	return str;
-	*/
-
 	return getAllIEString(data);
 }
 
@@ -910,6 +920,43 @@ void Continuity::clearIngredientData()
 	ingredientData.clear();
 }
 
+void Continuity::loadIngredientData()
+{
+	if(ingredients.size())
+	{
+		debugLog("Can't reload ingredient data, inventory is not empty");
+		return; // ... because otherwise there would be dangling pointers and it would crash.
+	}
+
+	clearIngredientData();
+	ingredientDescriptions.clear();
+	ingredientDisplayNames.clear();
+	recipes.clear();
+
+	loadIngredientDisplayNames("data/ingredientnames.txt");
+
+	std::string fname = localisePath("data/ingredientnames.txt");
+	loadIngredientDisplayNames(fname);
+
+	if(dsq->mod.isActive())
+	{
+		fname = localisePath(dsq->mod.getPath() + "ingredientnames.txt", dsq->mod.getPath());
+		loadIngredientDisplayNames(fname);
+	}
+
+	if(dsq->mod.isActive())
+	{
+		//load mod ingredients
+		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
+	}
+
+	//load ingredients for the main game
+	if(ingredientData.empty() && recipes.empty())
+	{
+		loadIngredientData("data/ingredients.txt");
+	}
+}
+
 void Continuity::loadIngredientData(const std::string &file)
 {
 	std::string line, name, gfx, type, effects;
@@ -920,6 +967,7 @@ void Continuity::loadIngredientData(const std::string &file)
 	InStream in(file.c_str());
 
 	bool recipes = false;
+	bool extradata = false;
 	while (std::getline(in, line))
 	{
 		std::istringstream inLine(line);
@@ -929,6 +977,11 @@ void Continuity::loadIngredientData(const std::string &file)
 		if (name == "==Recipes==")
 		{
 			recipes = true;
+			break;
+		}
+		else if(name == "==Extra==")
+		{
+			extradata = true;
 			break;
 		}
 		inLine >> gfx >> type;
@@ -1032,6 +1085,10 @@ void Continuity::loadIngredientData(const std::string &file)
 					{
 						fx.type = IET_LI;
 					}
+					else if (bit.find("script") != std::string::npos)
+					{
+						fx.type = IET_SCRIPT;
+					}
 
 					int c = 0;
 					while (c < bit.size())
@@ -1050,6 +1107,31 @@ void Continuity::loadIngredientData(const std::string &file)
 		}
 
 		ingredientData.push_back(data);
+	}
+
+	if(extradata)
+	{
+		while (std::getline(in, line))
+		{
+			SimpleIStringStream inLine(line.c_str(), SimpleIStringStream::REUSE);
+			int maxAmount = MAX_INGREDIENT_AMOUNT;
+			int rotKind = 1;
+			inLine >> name >> maxAmount >> rotKind;
+			if (name == "==Recipes==")
+			{
+				recipes = true;
+				break;
+			}
+			IngredientData *data = getIngredientDataByName(name);
+			if(!data)
+			{
+				errorLog("Specifying data for undefined ingredient: " + name);
+				continue;
+			}
+
+			data->maxAmount = maxAmount;
+			data->rotKind = rotKind;
+		}
 	}
 
 	if (recipes)
@@ -1347,16 +1429,6 @@ Song *Continuity::getSongByIndex(int idx)
 	return &songBank[idx];
 }
 
-int Continuity::getSongBankSize()
-{
-	int c = 0;
-	for (SongMap::iterator i = songBank.begin(); i != songBank.end(); i++)
-	{
-		c++;
-	}
-	return c;
-}
-
 void Continuity::castSong(int num)
 {
 	if (!dsq->continuity.hasSong((SongType)num)) return;
@@ -1392,6 +1464,10 @@ void Continuity::castSong(int num)
 	effect->setPositionSnapTo(&dsq->game->avatar->position);
 	dsq->game->addRenderObject(effect, LR_PARTICLES);
 
+
+	// song->script == 0: internal handler only
+	// song->script == 1: script handler only
+	// song->script == 2: both
 	if (song->script)
 	{
 		if (dsq->mod.isActive())
@@ -1399,37 +1475,16 @@ void Continuity::castSong(int num)
 		else
 			dsq->runScriptNum("songs.lua", "castSong", num);
 	}
-	else
+
+	if (song->script != 1)
 	{
 		switch((SongType)num)
 		{
 		case SONG_SHIELDAURA:
-			core->sound->playSfx("Shield-On");
-			dsq->game->avatar->activateAura(AURA_SHIELD);
+			dsq->game->avatar->doShieldSong();
 		break;
 		case SONG_BIND:
-			//debugLog("sang pull");
-			if (dsq->game->avatar->pullTarget)
-			{
-				dsq->game->avatar->pullTarget->stopPull();
-				dsq->game->avatar->pullTarget = 0;
-				core->sound->playSfx("Denied");
-			}
-			else
-			{
-				dsq->game->bindIngredients();
-				dsq->game->avatar->setNearestPullTarget();
-				if (!dsq->game->avatar->pullTarget)
-				{
-					core->sound->playSfx("Denied");
-				}
-				else
-				{
-					core->sound->playSfx("Bind");
-				}
-			}
-				//dsq->game->avatar->openPullTargetInterface();
-			//pickingPullTarget = true;
+			dsq->game->avatar->doBindSong();
 		break;
 		case SONG_ENERGYFORM:
 			dsq->game->avatar->changeForm(FORM_ENERGY);
@@ -1943,9 +1998,15 @@ void Continuity::shiftWorlds()
 {
 	WorldType lastWorld = worldType;
 	if (worldType == WT_NORMAL)
+	{
 		worldType = WT_SPIRIT;
+		dsq->game->setWorldPaused(true);
+	}
 	else if (worldType == WT_SPIRIT)
+	{
 		worldType = WT_NORMAL;
+		dsq->game->setWorldPaused(false);
+	}
 	FOR_ENTITIES(i)
 	{
 		Entity *e = *i;
@@ -2331,15 +2392,34 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 			if (hasUserString)
 				os << spacesToUnderscores((*i).userString) << " ";
-
-			/*
-			std::ostringstream os2;
-			os2 << "Saving a Gem called [" << (*i).name << "] with userString [" << (*i).userString << "] pos (" << (*i).pos.x << ", " << (*i).pos.y << ")\n";
-			os2 << os.str() << "\n";
-			debugLog(os2.str());
-			*/
 		}
 		gems.SetAttribute("c", os.str());
+
+		// This is the format used in the android version. Keeping this commented out for now,
+		// but it should be used instead of the code above in some time -- FG
+		/*
+		os.str("");
+		bool hasMapName = false;
+		os << this->gems.size() << " ";
+		for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
+		{
+			os << (*i).name << " ";
+			hasMapName = !(*i).mapName.empty();
+			os << hasMapName << " ";
+			if(hasMapName)
+				os << (*i).mapName << " "; // warning: this will fail to load if the map name contains whitespace
+
+			os << (*i).pos.x << " " << (*i).pos.y << " ";
+			os << (*i).canMove << " ";
+
+			hasUserString = !(*i).userString.empty();
+			os << hasUserString << " ";
+			if (hasUserString)
+				os << spacesToUnderscores((*i).userString) << " ";
+		}
+		gems.SetAttribute("d", os.str());
+		*/
+
 	}
 	doc.InsertEndChild(gems);
 
@@ -2436,6 +2516,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	startData.SetAttribute("scene", dsq->game->sceneName);
 	startData.SetAttribute("exp", dsq->continuity.exp);
 	startData.SetAttribute("h", dsq->continuity.maxHealth);
+	startData.SetAttribute("ch", dsq->continuity.health);
 	startData.SetAttribute("naijaModel", dsq->continuity.naijaModel);
 	startData.SetAttribute("costume", dsq->continuity.costume);
 	startData.SetAttribute("form", dsq->continuity.form);
@@ -2454,6 +2535,16 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	}
 	startData.SetAttribute("songs", os2.str());
 
+	// new format as used by android version
+	std::ostringstream ingrNames;
+	for (int i = 0; i < ingredients.size(); i++)
+	{
+		IngredientData *data = ingredients[i];
+		ingrNames << data->name << " " << data->amount << " ";
+	}
+	startData.SetAttribute("ingrNames", ingrNames.str());
+
+	// for compatibility with older versions
 	std::ostringstream ingrOs;
 	for (int i = 0; i < ingredients.size(); i++)
 	{
@@ -2486,6 +2577,74 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		fos << intFlags[i] << " ";
 	}
 	startData.SetAttribute("intFlags", fos.str());
+
+	// Additional data for the android version
+
+#define SINGLE_FLOAT_ATTR(name, cond, val) \
+	do { if((cond) && (val)) { \
+		std::ostringstream osf; \
+		osf << (val); \
+		startData.SetAttribute(name, osf.str()); \
+	}} while(0)
+
+	SINGLE_FLOAT_ATTR("blind", dsq->game->avatar->state.blind, dsq->game->avatar->state.blindTimer.getValue());
+	SINGLE_FLOAT_ATTR("invincible", invincibleTimer.isActive(), invincibleTimer.getValue());
+	SINGLE_FLOAT_ATTR("regen", regenTimer.isActive(), regenTimer.getValue());
+	SINGLE_FLOAT_ATTR("trip", tripTimer.isActive(), tripTimer.getValue());
+	SINGLE_FLOAT_ATTR("shieldPoints", true, dsq->game->avatar->shieldPoints);
+	SINGLE_FLOAT_ATTR("webTimer", webTimer.isActive(), webTimer.getValue()); // Extension; not present in the android version
+
+#undef SINGLE_FLOAT_ATTR
+
+#define TIMER_AND_VALUE_ATTR(name, timer, val) \
+	do { if(((timer).isActive()) && (val)) { \
+		std::ostringstream osf; \
+		osf << (val) << " " << ((timer).getValue()); \
+		startData.SetAttribute((name), osf.str()); \
+	}} while(0)
+
+	TIMER_AND_VALUE_ATTR("biteMult", biteMultTimer, biteMult);
+	TIMER_AND_VALUE_ATTR("speedMult", speedMultTimer, speedMult);
+	TIMER_AND_VALUE_ATTR("defenseMult", defenseMultTimer, defenseMult);
+	TIMER_AND_VALUE_ATTR("energyMult", energyTimer, energyMult);
+	TIMER_AND_VALUE_ATTR("petPower", petPowerTimer, petPower);
+	TIMER_AND_VALUE_ATTR("liPower", liPowerTimer, liPower);
+	TIMER_AND_VALUE_ATTR("light", lightTimer, light);
+
+#undef TIMER_AND_VALUE_ATTR
+
+	if(poisonTimer.isActive())
+	{
+		std::ostringstream osp;
+		osp << poison << " " << poisonTimer.getValue() << " " << poisonBitTimer.getValue();
+		startData.SetAttribute("poison", osp.str());
+	}
+
+	if(dsq->game->avatar->activeAura != AURA_NONE)
+	{
+		std::ostringstream osa;
+		osa << dsq->game->avatar->activeAura << " " << dsq->game->avatar->auraTimer;
+		startData.SetAttribute("aura", osa.str());
+	}
+
+	// FIXME: Web is a bit weird. There are 2 webBitTimer variables in use, one in Continuity, one in Avatar.
+	// Because the avatar one ticks every 0.5 seconds, it will be hardly noticeable if that timer is off.
+	// So we just use the Continuty timers and hope for the best. -- FG
+	if(webTimer.isActive() && dsq->game->avatar->web)
+	{
+		Web *w = dsq->game->avatar->web;
+		const int nump = w->getNumPoints();
+		std::ostringstream osw;
+		osw << webBitTimer.getValue() << " " << nump << " ";
+		for(int i = 0; i < nump; ++i)
+		{
+			Vector v = w->getPoint(i);
+			osw << v.x << " " << v.y << " ";
+		}
+		startData.SetAttribute("web", osw.str());
+	}
+
+	// end extra android data
 
 	doc.InsertEndChild(startData);
 
@@ -2526,6 +2685,9 @@ std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
 void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 {
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
+	if(!exists(teh_file))
+		teh_file = dsq->continuity.getSaveFileName(slot, "bin");
+
 	if (exists(teh_file))
 	{
 		unsigned long size = 0;
@@ -2563,7 +2725,7 @@ void Continuity::loadFile(int slot)
 		if (startData->Attribute("mod"))
 		{
 #ifdef AQUARIA_DEMO
-			exit(-1);
+			exit_error("The demo version does not support loading savegames from mods, sorry.");
 #else
 			dsq->mod.load(startData->Attribute("mod"));
 #endif
@@ -2709,6 +2871,7 @@ void Continuity::loadFile(int slot)
 				this->gems.push_back(g);
 			}
 		}
+		// num [name mapX mapY canMove hasUserString (userString)]
 		else if (gems->Attribute("c"))
 		{
 			std::string s = gems->Attribute("c");
@@ -2742,6 +2905,54 @@ void Continuity::loadFile(int slot)
 					is >> g.userString;
 				else
 					g.userString = "";
+
+				g.userString = underscoresToSpaces(g.userString);
+				this->gems.push_back(g);
+
+				std::ostringstream os;
+				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
+				debugLog(os.str());
+			}
+		}
+		// num [name hasMapName (mapName) mapX mapY canMove hasUserString (userString)]
+		else if (gems->Attribute("d"))
+		{
+			std::string s = gems->Attribute("d");
+			std::istringstream is(s);
+
+			int num = 0;
+			is >> num;
+
+			bool hasUserString = false;
+			bool hasMapName = false;
+			GemData g;
+
+			std::ostringstream os;
+			os << "continuity num: [" << num << "]" << std::endl;
+			os << "data: [" << s << "]" << std::endl;
+			debugLog(os.str());
+
+			for (int i = 0; i < num; i++)
+			{
+				g.pos = Vector(0,0,0);
+				g.canMove = false;
+				g.userString = "";
+				g.mapName = "";
+
+				hasUserString=false;
+				hasMapName = false;
+
+				is >> g.name;
+				is >> hasMapName;
+				if(hasMapName)
+					is >> g.mapName;
+
+				is >> g.pos.x >> g.pos.y;
+				is >> g.canMove;
+				is >> hasUserString;
+
+				if (hasUserString)
+					is >> g.userString;
 
 				g.userString = underscoresToSpaces(g.userString);
 				this->gems.push_back(g);
@@ -2785,7 +2996,9 @@ void Continuity::loadFile(int slot)
 
 				if (!tile)
 				{
-					errorLog("tile dummy");
+					std::ostringstream os;
+					os << "tile dummy: dropping data for worldmap tile index " << idx;
+					debugLog(os.str());
 					tile = &dummy;
 				}
 
@@ -2828,7 +3041,23 @@ void Continuity::loadFile(int slot)
 			dsq->continuity.form = FormType(atoi(startData->Attribute("form")));
 		}
 
-		if (startData->Attribute("ingr"))
+		if (startData->Attribute("ingrNames"))
+		{
+			std::istringstream is(startData->Attribute("ingrNames"));
+			std::string name;
+			while (is >> name)
+			{
+				int amount=0;
+				is >> amount;
+				IngredientData *data = getIngredientDataByName(name);
+				if (data)
+				{
+					data->amount = 0;
+					pickupIngredient(data, amount, false);
+				}
+			}
+		}
+		else if (startData->Attribute("ingr")) // use this only if ingrNames does not exist.
 		{
 			std::istringstream is(startData->Attribute("ingr"));
 			int idx;
@@ -2893,7 +3122,7 @@ void Continuity::loadFile(int slot)
 
 		if (startData->Attribute("h"))
 		{
-			int read = atoi(startData->Attribute("h"));
+			float read = strtof(startData->Attribute("h"), NULL);
 			maxHealth = read;
 			health = read;
 			std::ostringstream os;
@@ -2906,6 +3135,21 @@ void Continuity::loadFile(int slot)
 				dsq->game->avatar->health = maxHealth;
 			}
 		}
+
+		if (startData->Attribute("ch"))
+		{
+			float h = strtof(startData->Attribute("ch"), NULL);
+			health = h;
+			std::ostringstream os;
+			os << "CurHealth read as: " << health;
+			debugLog(os.str());
+
+			if (dsq->game->avatar)
+			{
+				dsq->game->avatar->health = h;
+			}
+		}
+
 		if (startData->Attribute("seconds"))
 		{
 			std::istringstream is(startData->Attribute("seconds"));
@@ -2916,9 +3160,124 @@ void Continuity::loadFile(int slot)
 			dsq->continuity.costume = startData->Attribute("costume");
 		}
 
-		//dsq->game->positionToAvatar = Vector(500,400);
 		dsq->game->sceneToLoad = startData->Attribute("scene");
-		//dsq->game->transitionToScene();
+
+		// Additional data introduced in the android version
+
+		if(startData->Attribute("blind"))
+		{
+			float timer = strtof(startData->Attribute("blind"), NULL);
+			if(dsq->game->avatar)
+				dsq->game->avatar->setBlind(timer);
+		}
+
+		if(startData->Attribute("invincible"))
+		{
+			float timer = strtof(startData->Attribute("invincible"), NULL);
+			setInvincible(timer);
+		}
+
+		if(startData->Attribute("regen"))
+		{
+			float timer = strtof(startData->Attribute("regen"), NULL);
+			setRegen(timer);
+		}
+
+		if(startData->Attribute("trip"))
+		{
+			float timer = strtof(startData->Attribute("trip"), NULL);
+			setTrip(timer);
+		}
+
+		if(startData->Attribute("aura"))
+		{
+			std::istringstream is(startData->Attribute("aura"));
+			int type = AURA_NONE;
+			float timer = 0.0f;
+			is >> type >> timer;
+			auraTimer = timer;
+			auraType = (AuraType)type;
+			if(dsq->game->avatar)
+			{
+				dsq->game->avatar->activateAura((AuraType)type);
+				dsq->game->avatar->auraTimer = timer;
+			}
+		}
+
+		if(startData->Attribute("shieldPoints"))
+		{
+			float sp = strtof(startData->Attribute("shieldPoints"), NULL);
+			if(dsq->game->avatar)
+				dsq->game->avatar->shieldPoints = sp;
+		}
+
+#define LOAD_MULTI_SIMPLE(attr, mth) \
+		do { if(startData->Attribute(attr)) \
+		{ \
+			std::istringstream is(startData->Attribute(attr)); \
+			float value = 0.0f, timer = 0.0f; \
+			is >> value >> timer; \
+			this->mth(value, timer); \
+		}} while(0)
+
+		LOAD_MULTI_SIMPLE("biteMult", setBiteMultiplier);
+		LOAD_MULTI_SIMPLE("speedMult", setSpeedMultiplier);
+		LOAD_MULTI_SIMPLE("defenseMult", setDefenseMultiplier);
+		LOAD_MULTI_SIMPLE("energyMult", setEnergy);
+		LOAD_MULTI_SIMPLE("petPower", setPetPower);
+		LOAD_MULTI_SIMPLE("liPower", setLiPower);
+		LOAD_MULTI_SIMPLE("light", setLight);
+
+#undef LOAD_MULTI_SIMPLE
+
+		if(startData->Attribute("poison"))
+		{
+			std::istringstream is(startData->Attribute("poison"));
+			float p = 0.0f, pt = 0.0f, pbit = 0.0f;
+			is >> p >> pt >> pbit;
+			setPoison(p, pt);
+			poisonBitTimer.start(pbit);
+		}
+
+		// FIXME: the total web time is seemingly not saved in the file.
+		// Not sure if the calculation of the remaining time is correct.
+		// Especially because there are two webBitTimer variables in use (in Continuity and Avatar),
+		// and both of them access the avatar web. It's thus likely that more points were added than intended. -- FG
+		if(startData->Attribute("web"))
+		{
+			std::istringstream is(startData->Attribute("web"));
+			float wbit = 0.0f;
+			int nump = 0;
+			is >> wbit >> nump;
+			// 2 web points are added in setWeb() by default, so we exclude them from the calculation
+			float remainTime = webTime - (0.5 * (nump - 2)); // Avatar::webBitTimer ticks every 0.5 secs
+			if(nump > 1 && remainTime > 0 && dsq->game->avatar)
+			{
+				if(!dsq->game->avatar->web)
+					dsq->game->avatar->createWeb();
+				Web *w = dsq->game->avatar->web;
+				for(int i = 0; i < nump; ++i)
+				{
+					Vector v;
+					is >> v.x >> v.y;
+					if(i < w->getNumPoints())
+						w->setPoint(i, v);
+					else
+						w->addPoint(v);
+				}
+				webBitTimer.start(wbit);
+				webTimer.start(remainTime);
+			}
+		}
+
+		// This is AFAIK not in the android version, but let's add this for completeness
+		// and to avoid the mess described above.
+		if(startData->Attribute("webTimer"))
+		{
+			float timer = strtof(startData->Attribute("webTimer"), NULL);
+			webTimer.start(timer);
+		}
+
 	}
 }
 
@@ -2995,40 +3354,6 @@ int Continuity::getPathFlag(Path *p)
 	std::ostringstream os2;
 	os2 << hash(os.str());
 	return entityFlags[os2.str()];
-}
-
-SporeChildData *Continuity::getSporeChildDataForEntity(Entity *e)
-{
-	SporeChildData *scd=0;
-	for (int i = 0; i < sporeChildData.size(); i++)
-	{
-		if (sporeChildData[i].entity == e)
-		{
-			scd = &sporeChildData[i];
-			break;
-		}
-	}
-	return scd;
-}
-
-void Continuity::registerSporeChildData(Entity *e)
-{
-	if (!dsq->game->creatingSporeChildren)
-	{
-		SporeChildData *scd=0;
-		if (!(scd = getSporeChildDataForEntity(e)))
-		{
-			SporeChildData d;
-			sporeChildData.push_back(d);
-			scd = &sporeChildData[sporeChildData.size()-1];
-		}
-		if (scd)
-		{
-			scd->state = e->getState();
-			scd->health = e->health;
-			scd->entity = e;
-		}
-	}
 }
 
 class GemGet : public Quad
@@ -3108,6 +3433,7 @@ GemData *Continuity::pickupGem(std::string name, bool effects)
 {
 	GemData g;
 	g.name = name;
+	g.mapName = dsq->game->sceneName;
 	int sz = gems.size();
 
 	//HACK: (hacky) using effects to determine the starting position of the gem
@@ -3218,6 +3544,7 @@ void Continuity::reset()
 	//worldMapTiles.clear();
 
 	speedMult = biteMult = fishPoison = defenseMult = 1;
+	speedMult2 = 1;
 	poison = 0;
 	energyMult = 0;
 	light = petPower = 0;
@@ -3247,45 +3574,15 @@ void Continuity::reset()
 
 	worldMap.load();
 
-	ingredients.clear();
 	naijaEats.clear();
-
 	foodSortType = 0;
+	ingredients.clear();
 
-	//load ingredients
-
-	ingredientDisplayNames.clear();
-
-	loadIngredientDisplayNames("data/ingredientnames.txt");
-
-	std::string fname = localisePath("data/ingredientnames.txt");
-	loadIngredientDisplayNames(fname);
-
-	if(dsq->mod.isActive())
-	{
-		fname = localisePath(dsq->mod.getPath() + "ingredientnames.txt", dsq->mod.getPath());
-		loadIngredientDisplayNames(fname);
-	}
-
-	ingredientDescriptions.clear();
-	ingredientData.clear();
-	recipes.clear();
-
-	if(dsq->mod.isActive())
-	{
-		//load mod ingredients
-		loadIngredientData(dsq->mod.getPath() + "ingredients.txt");
-	}
-
-	//load ingredients for the main game
-	if(ingredientData.empty() && recipes.empty()) {
-		loadIngredientData("data/ingredients.txt");
-	}
+	loadIngredientData(); // must be after clearing ingredients
 
 	loadPetData();
 
 	formUpgrades.clear();
-	sporeChildData.clear();
 
 	auraType = AURA_NONE;
 	for (int i = 0; i < MAX_FLAGS; i++)

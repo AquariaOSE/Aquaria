@@ -132,15 +132,17 @@ function update(me, dt)
 		
 		if entity_hasTarget(me) then
 			target = entity_getTarget(me)
-			--[[
-			ox, oy = entity_getOffset(target)
-			cx = entity_x(target) + ox + entity_velx(target)
-			cy = entity_y(target) + oy + entity_vely(target)
-			]]--
-			cx, cy = entity_getTargetPoint(target, v.tpoint)
-			cx = cx + entity_velx(target)
-			cy = cy + entity_vely(target)
-			dist = 40
+			if target ~= 0 then
+				--[[
+				ox, oy = entity_getOffset(target)
+				cx = entity_x(target) + ox + entity_velx(target)
+				cy = entity_y(target) + oy + entity_vely(target)
+				]]--
+				cx, cy = entity_getTargetPoint(target, v.tpoint)
+				cx = cx + entity_velx(target)
+				cy = cy + entity_vely(target)
+				dist = 40
+			end
 			
 			--debugLog(string.format("distTimer: %f", v.distTimer))
 			v.distTimer = v.distTimer + dt * 0.5
@@ -160,8 +162,10 @@ function update(me, dt)
 			end
 		end
 		
-		entity_flipToEntity(me, target)
-		entity_rotateToEntity(me, target)
+		if target ~= 0 then
+			entity_flipToEntity(me, target)
+			entity_rotateToEntity(me, target)
+		end
 		
 		local a = t
 		x = x + math.sin(a)*dist

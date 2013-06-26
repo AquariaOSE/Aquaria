@@ -30,7 +30,6 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 {
 	addType(SCO_SCRIPTED_ENTITY);
 	crushDelay = 0;
-	autoSkeletalSpriteUpdate = true;
 	script = 0;
 	songNoteFunction = songNoteDoneFunction = true;
 	addChild(&pullEmitter, PM_STATIC);
@@ -83,7 +82,7 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 
 void ScriptedEntity::setAutoSkeletalUpdate(bool v)
 {
-	autoSkeletalSpriteUpdate = v;
+	skeletalSprite.ignoreUpdate = !v;
 }
 
 void ScriptedEntity::message(const std::string &msg, int v)
@@ -179,41 +178,6 @@ void ScriptedEntity::stopEmitter(int emit)
 void ScriptedEntity::registerNewPart(RenderObject *r, const std::string &name)
 {
 	partMap[name] = r;
-}
-
-void ScriptedEntity::initHair(int numSegments, int segmentLength, int width, const std::string &tex)
-{
-	if (hair)
-	{
-		errorLog("Trying to init hair when hair is already present");
-	}
-	hair = new Hair(numSegments, segmentLength, width);
-	hair->setTexture(tex);
-	dsq->game->addRenderObject(hair, layer);
-}
-
-void ScriptedEntity::setHairHeadPosition(const Vector &pos)
-{
-	if (hair)
-	{
-		hair->setHeadPosition(pos);
-	}
-}
-
-void ScriptedEntity::updateHair(float dt)
-{
-	if (hair)
-	{
-		hair->updatePositions();
-	}
-}
-
-void ScriptedEntity::exertHairForce(const Vector &force, float dt)
-{
-	if (hair)
-	{
-		hair->exertForce(force, dt);
-	}
 }
 
 void ScriptedEntity::initSegments(int numSegments, int minDist, int maxDist, std::string bodyTex, std::string tailTex, int w, int h, float taper, bool reverseSegments)
@@ -640,13 +604,8 @@ void ScriptedEntity::onUpdate(float dt)
 	}
 	*/
 
-	if (!autoSkeletalSpriteUpdate)
-		skeletalSprite.ignoreUpdate = true;
-
 	CollideEntity::onUpdate(dt);
 
-	if (!autoSkeletalSpriteUpdate)
-		skeletalSprite.ignoreUpdate = false;
 	//updateStrands(dt);
 
 	if (becomeSolidDelay)
@@ -798,32 +757,6 @@ void ScriptedEntity::songNoteDone(int note, float len)
 			debugLog(this->name + " : " + script->getLastError() + " songNoteDone");
 		}
 	}
-}
-
-bool ScriptedEntity::isEntityInside()
-{
-	bool v = false;
-	int avatars = 0;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e->getEntityType() == ET_AVATAR)
-			avatars ++;
-		if (e && e->life == 1 && e != this && e->ridingOnEntity != this)
-		{			
-			if (isCoordinateInside(e->position))
-			{				
-				/*
-				Vector diff = (e->position - position);
-				diff.setLength2D(100);
-				e->vel += diff;
-				*/
-				v = true;
-			}
-		}
-		
-	}
-	return v;
 }
 
 void ScriptedEntity::becomeSolid()

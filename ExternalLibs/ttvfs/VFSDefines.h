@@ -29,6 +29,7 @@
 // performance matters, and you implemented actual locking into the Mutex class.
 // If no Mutex implementation is provided, its operations are no-ops, beware!
 // Note: This adds a *lot* of overhead. Better ensure thread safety yourself, externally. Really!
+// (Also note that this feature is *UNTESTED*. Don't activate.)
 //#define VFS_THREADSAFE
 
 // By default, ttvfs uses a std::map to store stuff.

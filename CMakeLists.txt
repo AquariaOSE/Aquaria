@@ -5,7 +5,7 @@ INCLUDE(CheckCCompilerFlag)
 INCLUDE(CheckFunctionExists)
 
 IF(NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "None Debug Release RelWithDebInfo MinSizeRel" FORCE)
+    SET(CMAKE_BUILD_TYPE Release CACHE STRING "None Debug Release RelWithDebInfo MinSizeRel" FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
 IF(APPLE)
@@ -15,6 +15,17 @@ ENDIF(APPLE)
 IF(CMAKE_SYSTEM_NAME STREQUAL "Haiku")
     SET(HAIKU TRUE)
 ENDIF()
+
+IF(WIN32)
+    SET(WIN32_TRUE TRUE)
+ELSE(WIN32)
+    SET(WIN32_TRUE FALSE)
+ENDIF(WIN32)
+
+# if no build type was provided, set a default one
+IF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
 
 OPTION(AQUARIA_DEVELOPER_BUILD "Developer Build?" FALSE)
 OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
@@ -42,7 +53,7 @@ SET(PNGDIR ${EXTLIBDIR}/glpng/png)
 
 ### zlib
 
-OPTION(AQUARIA_INTERNAL_ZLIB "Always use included zlib library" FALSE)
+OPTION(AQUARIA_INTERNAL_ZLIB "Always use included zlib library" TRUE)
 if(NOT AQUARIA_INTERNAL_ZLIB)
     find_package(ZLIB)
 endif(NOT AQUARIA_INTERNAL_ZLIB)
@@ -52,7 +63,7 @@ endif(NOT ZLIB_FOUND)
 
 ### PNG
 
-OPTION(AQUARIA_INTERNAL_PNG "Always use included PNG library" FALSE)
+OPTION(AQUARIA_INTERNAL_PNG "Always use included PNG library" TRUE)
 if(NOT AQUARIA_INTERNAL_PNG)
     find_package(PNG)
 endif(NOT AQUARIA_INTERNAL_PNG)
@@ -66,7 +77,7 @@ STRING(REGEX REPLACE "^.*PNG_LIBPNG_VER[^0-9]*([0-9]+).*$" "\\1" PNG_LIBPNG_VER 
 
 ### FreeType
 
-OPTION(AQUARIA_INTERNAL_FREETYPE "Always use included FreeType library" FALSE)
+OPTION(AQUARIA_INTERNAL_FREETYPE "Always use included FreeType library" TRUE)
 if(NOT AQUARIA_INTERNAL_FREETYPE)
     find_package(Freetype)
 endif(NOT AQUARIA_INTERNAL_FREETYPE)
@@ -76,7 +87,7 @@ endif(NOT FREETYPE_FOUND)
 
 ### Lua
 
-OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" FALSE)
+OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" TRUE)
 if(NOT AQUARIA_INTERNAL_LUA)
     find_package(Lua51)
 endif(NOT AQUARIA_INTERNAL_LUA)
@@ -86,7 +97,7 @@ endif(NOT LUA51_FOUND)
 
 ### Ogg/Vorbis
 
-OPTION(AQUARIA_INTERNAL_OGGVORBIS "Always use included Ogg/Vorbis libraries" FALSE)
+OPTION(AQUARIA_INTERNAL_OGGVORBIS "Always use included Ogg/Vorbis libraries" TRUE)
 if(NOT AQUARIA_INTERNAL_OGGVORBIS)
     # CMake doesn't seem to have a module for libogg or libvorbis yet, so
     # we roll our own based on existing find_package modules.
@@ -148,7 +159,7 @@ endif(NOT OGGVORBIS_FOUND)
 
 ### SDL
 
-OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" FALSE)
+OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" ${WIN32_TRUE})
 if(NOT AQUARIA_INTERNAL_SDL)
     find_package(SDL)
 endif(NOT AQUARIA_INTERNAL_SDL)
@@ -172,7 +183,7 @@ endif(NOT SDL_FOUND)
 
 ### OpenAL
 
-OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" FALSE)
+OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" ${WIN32_TRUE})
 if(NOT AQUARIA_INTERNAL_OPENAL)
     find_package(OpenAL)
 endif(NOT AQUARIA_INTERNAL_OPENAL)
@@ -189,19 +200,19 @@ endif (NOT OPENAL_FOUND)
 
 ################ End of external libraries
 
-INCLUDE_DIRECTORIES(${BBGEDIR})
-INCLUDE_DIRECTORIES(${BBGEDIR}/GL)
-INCLUDE_DIRECTORIES(${ZLIB_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES(${PNG_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(${SRCDIR})
-INCLUDE_DIRECTORIES(${FTGLDIR}/include)
-INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(${OGGVORBIS_INCLUDE_DIRS})
-INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(${EXTLIBDIR})
-INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs)
+INCLUDE_DIRECTORIES("${BBGEDIR}")
+INCLUDE_DIRECTORIES("${BBGEDIR}/GL")
+INCLUDE_DIRECTORIES("${ZLIB_INCLUDE_DIRS}")
+INCLUDE_DIRECTORIES("${PNG_INCLUDE_DIR}")
+INCLUDE_DIRECTORIES("${SRCDIR}")
+INCLUDE_DIRECTORIES("${FTGLDIR}/include")
+INCLUDE_DIRECTORIES("${FREETYPE_INCLUDE_DIRS}")
+INCLUDE_DIRECTORIES("${LUA_INCLUDE_DIR}")
+INCLUDE_DIRECTORIES("${OGGVORBIS_INCLUDE_DIRS}")
+INCLUDE_DIRECTORIES("${SDL_INCLUDE_DIR}")
+INCLUDE_DIRECTORIES("${OPENAL_INCLUDE_DIR}")
+INCLUDE_DIRECTORIES("${EXTLIBDIR}")
+INCLUDE_DIRECTORIES("${EXTLIBDIR}/ttvfs")
 
 
 # Custom build ID: e.g. "-custom", " (my very own build)"
@@ -211,6 +222,26 @@ if (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
   ADD_DEFINITIONS("-DAQUARIA_CUSTOM_BUILD_ID=\"${AQUARIA_CUSTOM_BUILD_ID}\"")
 endif (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
 
+# Custom version string override (displayed as-is instead of "Aquaria vx.x.x ..." on the title screen
+SET(AQUARIA_OVERRIDE_VERSION_STRING "" CACHE STRING
+    "Text to display instead of the Aquaria version ID on the title screen. (Overrides AQUARIA_CUSTOM_BUILD_ID as well)")
+if (NOT(AQUARIA_OVERRIDE_VERSION_STRING STREQUAL ""))
+  ADD_DEFINITIONS("-AQUARIA_OVERRIDE_VERSION_STRING=\"${AQUARIA_OVERRIDE_VERSION_STRING}\"")
+endif (NOT(AQUARIA_OVERRIDE_VERSION_STRING STREQUAL ""))
+
+# Custom data directories
+SET(AQUARIA_DEFAULT_DATA_DIR "" CACHE STRING
+    "Default data directory (for package maintainers only)")
+if(NOT(AQUARIA_DEFAULT_DATA_DIR STREQUAL ""))
+    ADD_DEFINITIONS("-DAQUARIA_DEFAULT_DATA_DIR=\"${AQUARIA_DEFAULT_DATA_DIR}\"")
+endif(NOT(AQUARIA_DEFAULT_DATA_DIR STREQUAL ""))
+
+SET(AQUARIA_EXTRA_DATA_DIR "" CACHE STRING
+    "Extra data directory, overrides files from default datadir (for package maintainers only)")
+if(NOT(AQUARIA_EXTRA_DATA_DIR STREQUAL ""))
+    ADD_DEFINITIONS("-DAQUARIA_EXTRA_DATA_DIR=\"${AQUARIA_EXTRA_DATA_DIR}\"")
+endif(NOT(AQUARIA_EXTRA_DATA_DIR STREQUAL ""))
+
 # Aquaria/BBGE specific defines...
 
 ADD_DEFINITIONS(-DGL_GLEXT_LEGACY=1)
@@ -219,7 +250,7 @@ ADD_DEFINITIONS(-DTIXML_USE_STL=1)
 ADD_DEFINITIONS(-DBBGE_SKIP_CONFIG_HEADERS=1) # if this is not defined, it will use .h files to set the necessary defines
 ADD_DEFINITIONS(-DBBGE_BUILD_SDL=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_FRAMEBUFFER=1)
-#ADD_DEFINITIONS(-DBBGE_BUILD_SHADERS=1)
+ADD_DEFINITIONS(-DBBGE_BUILD_SHADERS=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL_DYNAMIC=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_FMOD_OPENAL_BRIDGE=1)
@@ -276,6 +307,11 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     IF(AQUARIA_GCC_HAS_STACKPROT)
         ADD_DEFINITIONS(-fno-stack-protector)
     ENDIF(AQUARIA_GCC_HAS_STACKPROT)
+    
+    # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
+    # Exceptions are not used, excluding support for release builds adds less bulk as well.
+    set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "Flags used for release builds" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
 
     # !!! FIXME: probably not safe long-term.
     # CMake mailing list had this hack for getting rid of -rdynamic:
@@ -348,7 +384,6 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/SubtitlePlayer.cpp
     ${SRCDIR}/ToolTip.cpp
     ${SRCDIR}/UserSettings.cpp
-    ${SRCDIR}/WaterFont.cpp
     ${SRCDIR}/WaterSurfaceRender.cpp
     ${SRCDIR}/Web.cpp
     ${SRCDIR}/WorldMapRender.cpp
@@ -361,6 +396,7 @@ SET(AQUARIA_SRCS_UNUSED
     ${SRCDIR}/BubbleRender.cpp
     ${SRCDIR}/FFTNotes.cpp
     ${SRCDIR}/StarRenderer.cpp
+    ${SRCDIR}/WaterFont.cpp
 )
 
 IF(MACOSX)
@@ -373,7 +409,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/ActionMapper.cpp
     ${BBGEDIR}/ActionSet.cpp
     ${BBGEDIR}/AfterEffect.cpp
-    ${BBGEDIR}/AnimatedSprite.cpp
     ${BBGEDIR}/Base.cpp
     ${BBGEDIR}/BitmapFont.cpp
     ${BBGEDIR}/Collision.cpp
@@ -387,7 +422,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Flags.cpp
     ${BBGEDIR}/FrameBuffer.cpp
     ${BBGEDIR}/Gradient.cpp
-    ${BBGEDIR}/Interpolator.cpp
     ${BBGEDIR}/Joystick.cpp
     ${BBGEDIR}/LensFlare.cpp
     ${BBGEDIR}/Localization.cpp
@@ -460,12 +494,14 @@ SET(PNG_SRCS
 
 # Apparently not used at the moment. Listed here just for completeness.
 SET(BBGE_SRCS_UNUSED
+    ${BBGEDIR}/AnimatedSprite.cpp
     ${BBGEDIR}/BloomEffect.cpp
     ${BBGEDIR}/CShim.cpp
     ${BBGEDIR}/Cutscene.cpp
     ${BBGEDIR}/Datafile.cpp
     ${BBGEDIR}/DFSprite.cpp
     ${BBGEDIR}/FileVars.cpp
+    ${BBGEDIR}/Interpolator.cpp
     ${BBGEDIR}/Light.cpp
     ${BBGEDIR}/LightCone.cpp
     ${BBGEDIR}/Model.cpp
@@ -618,12 +654,15 @@ SET(LUA_SRCS
 )
 
 IF(AQUARIA_USE_VFS)
-    ADD_SUBDIRECTORY(${EXTLIBDIR}/ttvfs)
-    ADD_SUBDIRECTORY(${EXTLIBDIR}/ttvfs_zip)
+    ADD_SUBDIRECTORY("${EXTLIBDIR}/ttvfs")
+    ADD_SUBDIRECTORY("${EXTLIBDIR}/ttvfs_zip")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "ttvfs")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "ttvfs_zip")
 ENDIF(AQUARIA_USE_VFS)
 
+IF(WIN32)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "ws2_32")
+ENDIF(WIN32)
 
 IF(MACOSX)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Carbon")

@@ -499,7 +499,7 @@ void Quad::onRender()
 	if (!strip.empty())
 	{
 		//glDisable(GL_BLEND);gggg
-		glDisable(GL_CULL_FACE);
+		//glDisable(GL_CULL_FACE);
 
 		const float texBits = 1.0f / (strip.size()-1);
 
@@ -517,7 +517,7 @@ void Quad::onRender()
 		}
 		glEnd();
 
-		glEnable(GL_CULL_FACE);
+		//glEnable(GL_CULL_FACE);
 		glBindTexture( GL_TEXTURE_2D, 0 );
 		glColor4f(1,0,0,1);
 		glPointSize(64);
@@ -802,6 +802,7 @@ void Quad::onSetTexture()
 
 PauseQuad::PauseQuad() : Quad(), pauseLevel(0)
 {
+	addType(SCO_PAUSEQUAD);
 }
 
 void PauseQuad::onUpdate(float dt)

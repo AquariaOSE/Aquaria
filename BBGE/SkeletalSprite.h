@@ -163,10 +163,10 @@ public:
 	void updateBones();
 	void stopAnimation();
 	float getAnimationLength();
-	bool createTransitionAnimation(std::string anim, float time);
+	bool createTransitionAnimation(const std::string& anim, float time);
 	void playAnimation(int idx, int loop);
 	void playCurrentAnimation(int loop);
-	void enqueueAnimation(std::string anim, int loop);
+	void enqueueAnimation(const std::string& anim, int loop);
 	float transitionAnimate(std::string anim, float time, int loop);
 	void setTimeMultiplier(float t);
 	bool isAnimating();
@@ -240,7 +240,7 @@ public:
 	
 	
 	
-	Animation *getAnimation(std::string anim);
+	Animation *getAnimation(const std::string& anim);
 
 	std::vector<Animation> animations;
 	std::vector<Bone*> bones;

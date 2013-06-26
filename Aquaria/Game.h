@@ -125,7 +125,6 @@ typedef std::vector<EntityGroup> EntityGroups;
 
 enum EditTypes
 {
-	ET_NONE			=-1,
 	ET_ELEMENTS		=0,
 	ET_ENTITIES		=1,
 	ET_PATHS		=2,
@@ -418,7 +417,6 @@ public:
 	void closeMainMenu();
 
 	void setBackgroundGradient();
-	void addSpringPlant();
 
 	bool isOn();
 
@@ -472,12 +470,10 @@ public:
 	void moveLayer();
 	void moveElementToLayer(Element *e, int bgLayer);
 	void toggleElementRepeat();
-	void setGroup();
 	bool multiSelecting;
 	Vector multiSelectPoint;
 	std::vector <Element*> selectedElements;
 	void fixEntityIDs();
-	void bindNodeToEntity();
 
 	Vector groupCenter;
 	Vector getSelectedElementsCenter();
@@ -610,9 +606,9 @@ enum ObsType
 struct EntitySaveData
 {
 public:
-	EntitySaveData(Entity *e, int idx, int x, int y, int rot, int group, int id, const std::string &name) : e(e), idx(idx), x(x), y(y), rot(rot), group(group), id(id), name(name) {}
+	EntitySaveData(Entity *e, int idx, int x, int y, int rot, int id, const std::string &name) : e(e), idx(idx), x(x), y(y), rot(rot), id(id), name(name) {}
 	Entity *e;
-	int idx, x, y, rot, group, id;
+	int idx, x, y, rot, id;
 	std::string name;
 };
 
@@ -651,7 +647,6 @@ public:
 	void updatePreviewRecipe();
 
 	void transitionToScene(std::string scene);
-	void transitionToSceneUnder(std::string scene);
 	bool loadScene(std::string scene);
 
 	void clearGrid(int v = 0);
@@ -677,7 +672,7 @@ public:
 	bool collideBoxWithGrid(const Vector& position, int w, int h);
 	bool collideCircleWithGrid(const Vector& position, int r);
 
-	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc=0);
+	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc=0, int *colSegment=0);
 
 	bool collideCircleVsCircle(Entity *a, Entity *b);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, Entity *circle);
@@ -699,7 +694,6 @@ public:
 	WarpAreas warpAreas;
 
 	void postInitEntities();
-	Entity *getEntityInGroup(int gid, int iter);
 	EntityClass *getEntityClassForEntityType(const std::string &type);
 
 	void warpToArea(WarpArea *area);
@@ -719,6 +713,8 @@ public:
 
 	Ingredient *getNearestIngredient(const Vector &pos, int radius);
 	Entity *getNearestEntity(const Vector &pos, int radius, Entity *ignore = 0, EntityType et=ET_NOTYPE, DamageType dt=DT_NONE, int lrStart=-1, int lrEnd=-1);
+
+	Script *cookingScript;
 
 	void spawnManaBall(Vector pos, float a);
 	bool updateMusic();
@@ -744,9 +740,9 @@ public:
 	MiniMapHint miniMapHint;
 	void updateMiniMapHintPosition();
 	EntitySaveData *getEntitySaveDataForEntity(Entity *e, Vector pos);
-	Entity *createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
-	Entity *createEntity(const std::string &type, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
-	Entity *establishEntity(Entity *e, int id=0, Vector position=Vector(0,0), int rot=0, bool createSaveData=false, std::string name="", EntityType = ET_ENEMY, Entity::NodeGroups *nodeGroups=0, int groupID=0, bool doPostInit=false);
+	Entity *createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, bool doPostInit=false);
+	Entity *createEntity(const std::string &type, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, bool doPostInit=false);
+	Entity *establishEntity(Entity *e, int id=0, Vector position=Vector(0,0), int rot=0, bool createSaveData=false, std::string name="", EntityType = ET_ENEMY,bool doPostInit=false);
 	void setCameraFollow(RenderObject *r);
 	void setCameraFollowEntity(Entity *e);
 	void setMenuDescriptionText(const std::string &text);
@@ -886,9 +882,6 @@ public:
 
 	int worldMapIndex;
 
-	void spawnSporeChildren();
-
-	bool creatingSporeChildren;
 	bool loadingScene;
 
 	WaterSurfaceRender *waterSurfaceRender;
@@ -901,7 +894,8 @@ public:
 	std::string getNoteName(int n, const std::string &pre="");
 
 	void selectEntityFromGroups();
-	InterpolatedVector cameraInterp, tintColor;
+	InterpolatedVector cameraInterp;
+	//InterpolatedVector tintColor;
 	float getWaterLevel();
 	void setMusicToPlay(const std::string &musicToPlay);
 	Vector lastCollidePosition;
@@ -943,6 +937,7 @@ public:
 	void onRecipes();
 	void updateCookList();
 	void onUseTreasure();
+	void onUseTreasure(int flag);
 
 	void onPrevFoodPage();
 	void onNextFoodPage();
@@ -1009,6 +1004,9 @@ public:
 	void toggleHelpScreen(bool on, const std::string &label="");
 	void onToggleHelpScreen();
 
+	void setWorldPaused(bool b) { worldPaused = b; }
+	bool isWorldPaused() const { return worldPaused; }
+
 protected:
 
 	void onHelpUp();
@@ -1051,10 +1049,6 @@ protected:
 
 
 	void warpPrep();
-	void warpKey1();
-	void warpKey2();
-	void warpKey3();
-	void warpKey4();
 	bool shuttingDownGameState;
 	void onOptionsMenu();
 	bool optionsMenu, foodMenu, petMenu, treasureMenu, keyConfigMenu;
@@ -1170,6 +1164,7 @@ protected:
 	std::vector<AquariaMenuItem*> menu;
 	Quad *menuBg, *menuBg2;
 	bool paused;
+	bool worldPaused;
 
 	Vector getClosestPointOnTriangle(Vector a, Vector b, Vector c, Vector p);
 	Vector getClosestPointOnLine(Vector a, Vector b, Vector p);
