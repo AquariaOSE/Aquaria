@@ -82,6 +82,14 @@ void Web::setPoint(int pt, const Vector &v)
 	points[pt] = v;
 }
 
+Vector Web::getPoint(int pt) const
+{
+	Vector v;
+	if (pt >= 0 || pt < points.size())
+		v = points[pt];
+	return v;
+}
+
 int Web::getNumPoints()
 {
 	return points.size();
@@ -150,7 +158,7 @@ void Web::onRender()
 	//glDisable(GL_BLEND);
 	
 	glLineWidth(4);
-	glDisable(GL_CULL_FACE);
+	//glDisable(GL_CULL_FACE);
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBegin(GL_LINES);

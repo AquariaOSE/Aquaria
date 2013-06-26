@@ -91,12 +91,6 @@ void UserSettings::save()
 
 		TiXmlElement xml_video("Video");
 		{
-			TiXmlElement xml_shader("Shader");
-			{
-				xml_shader.SetAttribute("num", video.shader);
-			}
-			xml_video.InsertEndChild(xml_shader);
-
 			TiXmlElement xml_blur("Blur");
 			{
 				xml_blur.SetAttribute("on", video.blur);
@@ -413,8 +407,6 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	TiXmlElement *xml_video = doc.FirstChildElement("Video");
 	if (xml_video)
 	{
-		readInt(xml_video, "Shader", "num", &video.shader);
-
 		readInt(xml_video, "Blur", "on", &video.blur);
 
 		readInt(xml_video, "NoteEffects", "on", &video.noteEffects);

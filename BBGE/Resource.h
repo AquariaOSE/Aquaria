@@ -45,10 +45,6 @@ public:
 		ref--;
 		if (ref == 0)
 			destroy();
-		/*
-		else if (ref < 0)
-			throw std::exception("ref count out of bounds < 0");
-		*/
 	}
 	int getRef() { return ref; }
 	std::string name;

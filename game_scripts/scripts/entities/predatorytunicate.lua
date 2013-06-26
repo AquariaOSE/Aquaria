@@ -28,6 +28,7 @@ v.getOutHits = 0
 v.hx = 0
 v.hy = 0
 v.hurtTimer = 0
+v.trapDelay = 0
 
 local STATE_TRAP	= 1001
 local STATE_TRAPPED	= 1002

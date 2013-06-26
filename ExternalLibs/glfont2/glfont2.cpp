@@ -11,15 +11,15 @@
 #include "ByteBuffer.h"
 using namespace std;
 
-//OpenGL headers
-/*
-#ifdef _WINDOWS
-#include <windows.h>
-#endif
-#include <OpenGL/gl.h>
-*/
 
-#include "GL/gl.h"
+#ifdef _WIN32 /* Stupid Windows needs to include windows.h before gl.h */
+#undef FAR
+#define WIN32_LEAN_AND_MEAN
+#define NOMINMAX
+#include <windows.h>
+#undef GetCharWidth
+#endif
+#include "gl.h"
 
 //glFont header
 #include "glfont2.h"
@@ -232,7 +232,7 @@ int GLFont::GetCharWidth (unsigned char c)
 		if (c == ' ' && glfont_char->dx <= 0)
 		{
 			GLFontChar *glfont_a = &header.chars['a' - header.start_char];
-			glfont_char->dx = glfont_a->dx*0.75;
+			glfont_char->dx = glfont_a->dx*0.75f;
 			glfont_char->dy = glfont_a->dy;
 		}
 

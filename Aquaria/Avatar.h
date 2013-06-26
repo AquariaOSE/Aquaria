@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define AVATAR_H
 
 #include "../BBGE/Particles.h"
-#include "../BBGE/BitmapFont.h"
 
 #include "DSQ.h"
 #include "Hair.h"
@@ -30,9 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Web.h"
 
-class SpringPlant;
-
-//class Item;
 class TileVector;
 class SongIcon;
 
@@ -68,6 +64,13 @@ enum AvatarAnimLayers
 	ANIMLAYER_UPPERBODYIDLE	= 6,
 	ANIMLAYER_HEADOVERRIDE	= 7,
 	ANIMLAYER_MAX
+};
+
+enum SeeMapMode
+{
+	SEE_MAP_NEVER = 0,
+	SEE_MAP_DEFAULT = 1,
+	SEE_MAP_ALWAYS = 2,
 };
 
 class SongIconParticle : public Quad
@@ -106,20 +109,10 @@ protected:
 	void onUpdate(float dt);
 };
 
-class FormIcon : public Quad
-{
-public:
-	FormIcon();
-protected:
-	bool cursorIsIn;
-	void onUpdate(float dt);
-};
-
 class AvatarState
 {
 public:
 	AvatarState();
-	Timer dodgeEffectTimer;
 	Timer blindTimer;
 	float abilityDelay;
 	bool blind;
@@ -127,12 +120,10 @@ public:
 	float shotDelay;
 	//Timer shockTimer;
 	Timer useItemDelay;
-	Timer tapTimer;
 	Timer lockToWallDelay;
 	float spellCharge;
 	bool lockedToWall;
 	float leachTimer;
-	bool crawlingOnWall;
 	bool nearWall;
 	float swimTimer, rollTimer;
 	float updateLookAtTime;
@@ -151,23 +142,14 @@ public:
 	virtual ~Avatar();
 	void destroy();
 	void action(int actionID, int state);
-	// anim data
-	AnimData anim_swim, anim_stopTransition, anim_idle, anim_idle2, anim_burst, anim_fish;
 	AvatarState state;
-	void setIgnoreInputDelay(float delay)
-	{
-		ignoreInputDelay = delay;
-	}
 	float burst, burstTimer;
 	float burstDelay;
 	bool bursting;
 	BurstType lastBurstType;
 	//void damage(int amount);
 	bool isCharging();
-	void slowToRest();
-	void debugMsg(const std::string &msg);
 	void setBlind(float time);
-	void onBlindTest();
 
 	void revive();
 
@@ -185,10 +167,7 @@ public:
 	Entity *entityToActivate;
 	Path *pathToActivate;
 
-	Entity *lastEntityActivation;
-	void shift();
 	void applyWorldEffects(WorldType type);
-	Vector extraVel;
 
 	void toggleMovement(bool on);
 
@@ -223,16 +202,11 @@ public:
 	void changeForm(FormType form, bool effects=true, bool onInit=false, FormType lastForm=FORM_NONE);
 	void singNote(int note);
 	std::vector<SongIcon*> songIcons;
-	std::vector<FormIcon*> formIcons;
-	//std::vector<int> currentsong;
 	Song currentSong;
 	int currentSongIdx;
 
 	Entity *pullTarget;
-	bool pickingPullTarget;
 
-	void openPullTargetInterface();
-	void closePullTargetInterface();
 	void setNearestPullTarget();
 
 	void formAbility(int ability);
@@ -246,16 +220,11 @@ public:
 
 	bool canDie;
 
-	bool warpIn;
 	Vector warpInLocal;
 
 	float biteDelay, urchinDelay, jellyDelay;
 	bool movingOn;
 
-	int ropeState;
-	float ropeTimer;
-	Vector ropePos, ropeVel;
-	void fireRope();
 	void render();
 	void activateAura(AuraType aura);
 	void stopAura();
@@ -267,7 +236,6 @@ public:
 	void updateFormVisualEffects(float dt);
 	bool isSinging();
 	bool isLockable();
-	float stopTimer;
 	int getCursorQuadrant();
 	void onWarp();
 	int getBurstDistance();
@@ -278,16 +246,12 @@ public:
 	int rollDir;
 	std::string getBurstAnimName();
 	std::string getRollAnimName();
-	void startWallCrawl();
-	void stopWallCrawl();
 
 	void updateDualFormChargeEffects();
 
 	TileVector wallLockTile;
-	Vector wallNormal, lastWallNormal;
+	Vector wallNormal;
 
-	void openFormInterface();
-	void closeFormInterface();
 	void fallOffWall();
 
 	float fireDelay;
@@ -296,8 +260,6 @@ public:
 	AuraType activeAura;
 	float auraTimer;
 	bool fireAtNearestValidEntity(const std::string &shot);
-	EatType inTummy;
-	float tummyTimer;
 
 	void checkNearWall();
 	Vector getAim();
@@ -309,7 +271,6 @@ public:
 	void updatePosition();
 	float quickSongCastDelay;
 	void onAnimationKeyPassed(int key);
-	int tummyAmount;
 
 	bool isSwimming();
 
@@ -329,6 +290,7 @@ public:
 	void endOfGameState();
 	bool canQuickSong();
 	bool canActivateStuff();
+	void setCanActivateStuff(bool on);
 	bool hasThingToActivate();
 
 	float biteTimer;
@@ -362,8 +324,28 @@ public:
 	bool canSetBoneLock();
 	
 	void revert();
+	void doBindSong();
+	void doShieldSong();
+
+	bool canBurst() const { return _canBurst; }
+	void setCanBurst(bool b) { _canBurst = b; }
+
+	bool canLockToWall() const { return _canLockToWall; }
+	void setCanLockToWall(bool b) { _canLockToWall = b; }
+
+	bool canSwimAgainstCurrents() const { return _canSwimAgainstCurrents; }
+	void setCanSwimAgainstCurrents(bool b) { _canSwimAgainstCurrents = b; }
+
+	bool canCollideWithShots() const { return _canCollideWithShots; }
+	void setCollideWithShots(bool b) { _canCollideWithShots = b; }
+
+	void setCollisionAvoidanceData(int range, float mod);
+
+	void setSeeMapMode(SeeMapMode mode) { _seeMapMode = mode; }
+	SeeMapMode getSeeMapMode() const { return _seeMapMode; }
 
 	int leaches;
+	float shieldPoints;
 	
 protected:
 	void setSongIconPositions();
@@ -372,23 +354,17 @@ protected:
 	int curWebPoint;
 	void checkUpgradeForShot(Shot *s);
 	int getNumShots();
-	void updateCursorFromKeyboard();
 	void lockToWallCommon();
 	void onSetBoneLock();
 	void onUpdateBoneLock();
 
-
-
-	InterpolatedVector cursorPos;
 	void adjustHeadRot();
 	std::string lastHeadTexture;
 	void updateDualFormGlow(float dt);
 	Vector getTendrilAimVector(int i, int max);
 	void applyRidingPosition();
-	Vector lastWallJumpPos, lastWallJumpDir;
 	void stopWallJump();
 	void updateWallJump(float dt);
-	int wallJumps;
 	float wallBurstTimer;
 	float targetUpdateDelay;
 	std::vector<Target> targets;
@@ -409,11 +385,7 @@ protected:
 	float fallGravityTimer;
 	Vector fallGravity;
 	int lastOutOfWaterMaxSpeed;
-	void spawnSeed();
 
-	int shieldPoints;
-
-	bool inFormInterface;
 	void onIdle();
 	void onHeal(int type);
 	ParticleEffect biteLeftEmitter, biteRightEmitter, swimEmitter, auraHitEmitter;
@@ -422,7 +394,6 @@ protected:
 	ParticleEffect *leftHandEmitter, *rightHandEmitter;
 	ParticleEffect *chargingEmitter, *chargeEmitter;
 	void updateCursor(float dt);
-	float canWarpDelay;
 	bool rolling;
 	int rollDidOne;
 	
@@ -430,19 +401,12 @@ protected:
 	void stopRoll();
 	int getQuadrantDirection(int lastQuad, int quad);
 	void updateRoll(float dt);
-	void updateTummy(float dt);
 	int lastQuad, lastQuadDir;
 	void onDamage(DamageData &d);
 	void updateHair(float dt);
 
 	void lostTarget(int i, Entity *e);
 
-	float doubleClickDelay;
-
-	float damageDelay;
-	bool didShockDamage;
-	void updateShock(float dt);
-	float shockTimer;
 	Vector shieldPosition;
 	void updateAura(float dt);
 
@@ -458,15 +422,12 @@ protected:
 	void clampVelocity();
 
 	bool canCharge(int ability);
-	int abilityCharging;
 	void formAbilityUpdate(float dt);
-	Entity *potentialPullTarget;
 	float revertTimer;
 
 	void endCharge();
 	Entity *activateEntity;
 	bool canMove;
-	float castShockTimer;
 
 	void onEnterState(int action);
 	void onExitState(int action);
@@ -475,27 +436,16 @@ protected:
 	void applyBlindEffects();
 	void removeBlindEffects();
 
-
-	//bool blind;
-	bool animatedBurst;
-
 	float zoomVel;
 	// implement "bobbing" in a lower class
 	int getBeamWidth();
 	Vector getWallNormal(TileVector t);
-	void onToggleDebugMessages();
-	float spellCastDelay;
-	float spellChargeMin;
 	bool checkWarpAreas();
-	void checkSpecial();
 	void toggleZoom();
 
 	float ignoreInputDelay;
-	float idleAnimDelay;
 	float splashDelay;
 	//Hair *hair;
-
-	BitmapText *text;
 
 	//Item *currentItem;
 	void onUpdate(float dt);
@@ -506,42 +456,34 @@ protected:
 	Quad *glow;
 	bool swimming;
 
-	void doRangePush(float dt);
-	void doRangePull(float dt);
-
 	void lmbd();
 	void lmbu();
 
 	void rmbd();
-	void rmbd2();
 	void rmbu();
 
 	bool charging;
 
-	AnimData tongueAnim;
-
-	//Quad *chargeGraphic;
-
-
-	Vector lastPush;
-
-	std::string tapped;
-	float dodgeDelay;
 	float pushingOffWallEffect;
 	float lockToWallFallTimer;
-	void dodge(std::string dir);
-	void doDodgeInput(const std::string &action, int state);
 
 	Vector dodgeVec;
 	Vector wallPushVec, wallTurnVec;
-	Vector lastLockToWallPos;
 
 
 
 	void lockToWall();
 	void doShock(const std::string &shotName);
 
-	Vector lastLastPosition;
+	bool _canActivateStuff;
+	bool _canBurst;
+	bool _canLockToWall;
+	bool _canSwimAgainstCurrents;
+	bool _canCollideWithShots;
+	SeeMapMode _seeMapMode;
+
+	int _collisionAvoidRange;
+	float _collisionAvoidMod;
 
 };
 

@@ -39,6 +39,8 @@ enum ScriptObjectType
 	SCO_PATH              = 0x0200,
 	SCO_QUAD              = 0x0400,
 	SCO_TEXT              = 0x0800,
+	SCO_PAUSEQUAD         = 0x1000,
+	SCO_SHADER            = 0x2000,
 
 	SCO_FORCE_32BIT = 0xFFFFFFFF
 };

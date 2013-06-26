@@ -12,6 +12,9 @@
 
     #define AQUARIA_CUSTOM_BUILD_ID ""
 
+    // If defined, this is shown instead of "Aquaria vx.x.x ..." on the title screen.
+    //#define AQUARIA_OVERRIDE_VERSION_STRING "Aquaria OSE v1.000"
+
 #endif
 
 

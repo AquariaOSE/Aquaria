@@ -60,6 +60,12 @@ public:
 	bool call(const char *name, void *param1, void *param2, void *param3, void *param4);
 	// boolean = function(pointer, pointer, pointer, number, number, number, number, pointer)
 	bool call(const char *name, void *param1, void *param2, void *param3, float param4, float param5, float param6, float param7, void *param8, bool *ret1);
+	// boolean = function(string)
+	bool call(const char *name, const char *param, bool *ret);
+	// string = function(string)
+	bool call(const char *name, const char *param, std::string *ret);
+	// string = function(string, string, string)
+	bool call(const char *name, const char *param1, const char *param2, const char *param3, std::string *ret);
 	// function(pointer, ...) - anything that is already on the stack is forwarded. Results are left on the stack.
 	// Returns how many values the called function returned, or -1 in case of error.
 	int callVariadic(const char *name, lua_State *L, int nparams, void *param);

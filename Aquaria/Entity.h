@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef ENTITY_H
 #define ENTITY_H
 
-#include "../BBGE/AnimatedSprite.h"
 #include "../BBGE/StateMachine.h"
 #include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/SkeletalSprite.h"
@@ -71,7 +70,8 @@ enum EV
 	EV_MINIMAP				= 19,			// should the entity show up on the minimap?
 	EV_SOULSCREAMRADIUS		= 20,			// 0-n: size of radius for naija's dual form scream attack, -1: always hit
 	EV_WEBSLOW				= 21,			// 100 by default, multiplied by dt and then divided into vel
-	EV_MAX					= 22
+	EV_NOAVOID				= 22,			// if 1: doEntityAvoidance() will ignore this entity
+	EV_MAX					= 23
 };
 
 enum DamageType
@@ -123,6 +123,7 @@ enum DamageType
 	DT_CRUSH				= 1032,
 	DT_SPIKES				= 1033,
 	DT_STEAM				= 1034,
+	DT_WALLHURT				= 1035,
 	DT_REALMAX
 };
 
@@ -195,7 +196,7 @@ enum BounceType
 	BOUNCE_REAL		= 1
 };
 
-class Entity : public AnimatedSprite, public StateMachine
+class Entity : public Quad, public StateMachine
 {
 public:
 	Entity();
@@ -342,8 +343,6 @@ public:
 
 	void setEntityType(EntityType et);
 	EntityType getEntityType();
-	bool isOpposedTo(Entity *e);
-	bool isCollideAgainst(Entity *e);
 	void flipToTarget(Vector pos);
 	bool isFollowingPath();
 	void stopFollowingPath();
@@ -354,7 +353,7 @@ public:
 	bool isHit();
 	bool pathBurst(bool wallJump = false);
 	Timer burstTimer;
-	void revive(int a);
+	void revive(float a);
 	void setName(const std::string &name);
 	void doFriction(float dt);
 	void doFriction(float dt, int len);
@@ -391,10 +390,6 @@ public:
 
 	InterpolatedVector maxSpeedLerp;
 	Hair *hair;
-	void setGroupID(int gid);
-	int getGroupID();
-	Vector getGroupCenter();
-	Vector getGroupHeading();
 
 	void assignUniqueID();
 	int entityID;
@@ -423,12 +418,6 @@ public:
 	bool isCrawling() { return crawling; }
 	*/
 	void flipToVel();
-	typedef std::vector<Path*> NodeGroup;
-	typedef std::map<int, NodeGroup> NodeGroups;
-	NodeGroups nodeGroups;
-	void addNodeToNodeGroup(int group, Path *p);
-	void setNodeGroupActive(int group, bool v);
-	void removeNodeFromAllNodeGroups(Path *p);
 	bool isInCurrent() { return inCurrent; }
 	void clearTargetPoints();
 	void addTargetPoint(const Vector &point);
@@ -448,6 +437,7 @@ public:
 	void setDieTimer(float v) { dieTimer = v; }
 	float getHealthPerc();
 	void setDeathScene(bool v);
+	bool isDeathScene() const { return deathScene; }
 	void generateCollisionMask(int ovrCollideRadius=0);
 	DamageData lastDamage;
 	bool checkSplash(const Vector &override=Vector(0,0,0));
@@ -462,7 +452,7 @@ public:
 	//bool registerEntityDied;
 	bool clampToSurface(int tcheck=0, Vector usePos=Vector(0,0), TileVector hitTile=TileVector(0,0));
 	bool checkSurface(int tcheck, int state, float statet);
-	static Shader blurShader;
+	//static Shader blurShader;
 	std::string naijaReaction;
 	Vector lookAtPoint;
 	Vector getLookAtPoint();
@@ -491,8 +481,16 @@ public:
 	void setRidingData(const Vector &pos, float rot, bool fh);
 	bool isGoingToBeEaten();
 	void setPoison(float m, float t);
+	inline float getPoison() const { return poison; }
 
 	virtual bool canSetBoneLock();
+
+	void initHair(int numSegments, int segmentLength, int width, const std::string &tex);
+	void updateHair(float dt);
+	void setHairHeadPosition(const Vector &pos);
+	void exertHairForce(const Vector &force, float dt);
+
+	bool isEntityInside();
 
 protected:
 	bool calledEntityDied;
@@ -520,7 +518,7 @@ protected:
 	int lance;
 	Bone *lanceBone;
 	void updateLance(float dt);
-	InterpolatedVector blurShaderAnim;
+	//InterpolatedVector blurShaderAnim;
 
 
 	int fhScale, fvScale;
@@ -545,7 +543,6 @@ protected:
 
 	//Vector backupPos, backupVel;
 	virtual void onIdle() {}
-	int groupID;
 	virtual void onHeal(int type){}
 	virtual void onDamage(DamageData &d){}
 	virtual void onHealthChange(float change){}
@@ -592,7 +589,7 @@ protected:
 	void updateBoneLock();
 
 	int pushMaxSpeed;
-
+	std::string currentAnim;
 	
 
 protected:
