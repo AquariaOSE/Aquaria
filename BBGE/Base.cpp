@@ -773,6 +773,10 @@ std::vector<std::string> getFileList(std::string path, std::string type, int par
 	return list;
 }
 
+#if defined(BBGE_BUILD_MACOSX)
+void cocoaMessageBox(const std::string &title, const std::string &msg);
+#endif
+
 void messageBox(const std::string& title, const std::string &msg)
 {
 #ifdef BBGE_BUILD_WINDOWS

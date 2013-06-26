@@ -822,10 +822,6 @@ void Core::errorLog(const std::string &s)
 	debugLog(s);
 }
 
-#if defined(BBGE_BUILD_MACOSX)
-void cocoaMessageBox(const std::string &title, const std::string &msg);
-#endif
-
 void Core::messageBox(const std::string &title, const std::string &msg)
 {
 	::messageBox(title, msg);
