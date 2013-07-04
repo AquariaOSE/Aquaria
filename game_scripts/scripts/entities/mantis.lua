@@ -41,6 +41,7 @@ local STATE_DIE				= 1008
 
 v.n = 0
 v.fight = false
+v.cut = false
 
 v.spawnPoint = 0
 
