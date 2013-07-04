@@ -166,7 +166,8 @@ enum AquariaActions
 typedef std::list<Entity*> EntityList;
 typedef std::vector<Entity*> EntityContainer;
 
-#define FOR_ENTITIES(i) for (Entity **i = &dsq->entities[0]; *i != 0; i++)
+// last entry is always NULL. added if is a little hack to ensure the scope of the iterator variable
+#define FOR_ENTITIES(i) for (size_t i##_i = 0; dsq->entities[i##_i] != 0; ++i##_i) if (Entity **i = &dsq->entities[i##_i])
 
 
 enum MenuPage
