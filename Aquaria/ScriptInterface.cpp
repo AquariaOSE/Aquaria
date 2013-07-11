@@ -1673,6 +1673,30 @@ luaFunc(debugBreak)
 	luaReturnNil();
 }
 
+luaFunc(setIgnoreAction)
+{
+	dsq->game->setIgnoreAction((AquariaActions)lua_tointeger(L, 1), getBool(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(isIgnoreAction)
+{
+	luaReturnBool(dsq->game->isIgnoreAction((AquariaActions)lua_tointeger(L, 1)));
+}
+
+luaFunc(sendAction)
+{
+	AquariaActions ac = (AquariaActions)lua_tointeger(L, 1);
+	int state = lua_tointeger(L, 2);
+	int mask = lua_tointeger(L, 3);
+	if(!mask)
+		mask = -1;
+	if(mask & 1)
+		dsq->game->action(ac, state);
+	if((mask & 2) && dsq->game->avatar)
+		dsq->game->avatar->action(ac, state);
+	luaReturnNil();
+}
 
 luaFunc(randRange)
 {
@@ -8044,6 +8068,9 @@ static const struct {
 	{"loadfile", l_loadfile_caseinsensitive},
 
 	luaRegister(debugBreak),
+	luaRegister(setIgnoreAction),
+	luaRegister(isIgnoreAction),
+	luaRegister(sendAction),
 
 	luaRegister(shakeCamera),
 	luaRegister(upgradeHealth),

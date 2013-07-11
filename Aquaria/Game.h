@@ -1001,13 +1001,18 @@ public:
 
 	void enqueuePreviewRecipe();
 
-	void toggleHelpScreen(bool on, const std::string &label="");
-	void onToggleHelpScreen();
+	void toggleHelpScreen() { action(ACTION_TOGGLEHELPSCREEN, 0); }
 
 	void setWorldPaused(bool b) { worldPaused = b; }
 	bool isWorldPaused() const { return worldPaused; }
 
+	void setIgnoreAction(AquariaActions ac, bool ignore);
+	bool isIgnoreAction(AquariaActions ac) const;
+
 protected:
+
+	void toggleHelpScreen(bool on, const std::string &label="");
+	void onToggleHelpScreen();
 
 	void onHelpUp();
 	void onHelpDown();
@@ -1181,9 +1186,6 @@ protected:
 	void toggleSceneEditor();
 #endif
 
-
-
-
 	signed char grid[MAX_GRID][MAX_GRID];
 
 
@@ -1197,9 +1199,9 @@ protected:
 
 	std::string selectedChoice;
 
-
-
 	void warpCameraTo(Vector position);
+
+	std::set<int> ignoredActions;
 
 private:
 	Ingredients ingredients;
