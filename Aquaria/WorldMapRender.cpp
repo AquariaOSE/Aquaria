@@ -865,7 +865,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 
 void WorldMapRender::onToggleHelpScreen()
 {
-	game->onToggleHelpScreen();
+	game->toggleHelpScreen();
 }
 
 void WorldMapRender::bindInput()

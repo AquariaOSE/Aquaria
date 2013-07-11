@@ -4508,6 +4508,9 @@ Vector Avatar::getVectorToCursor(bool trueMouse)
 
 void Avatar::action(int id, int state)
 {
+	if(dsq->game->isIgnoreAction((AquariaActions)id))
+		return;
+
 	if (id == ACTION_PRIMARY)	{ if (state) lmbd(); else lmbu(); }
 	if (id == ACTION_SECONDARY) { if (state) rmbd(); else rmbu(); }
 
