@@ -296,4 +296,7 @@ void openURL(const std::string &url);
 std::string underscoresToSpaces(const std::string &str);
 std::string spacesToUnderscores(const std::string &str);
 
+void triggerBreakpoint();
+
+
 #endif
