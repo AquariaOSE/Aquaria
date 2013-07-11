@@ -26,6 +26,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include <shellapi.h>
 #endif
 
+#ifdef _MSC_VER
+#	include <intrin.h>
+#endif
+
 #if defined(BBGE_BUILD_UNIX)
 	#include <sys/types.h>
 	#include <dirent.h>
@@ -1117,6 +1121,16 @@ std::string spacesToUnderscores(const std::string &str)
 	return s;
 }
 
+void triggerBreakpoint()
+{
+#ifdef _MSC_VER
+	__debugbreak();
+#elif defined(__GNUC__) && ((__i386__) || (__x86_64__))
+	__asm__ __volatile__ ( "int $3\n\t" );
+#else
+	raise(SIGTRAP);
+#endif
+}
 
 
 #include "DeflateCompressor.h"

@@ -6127,6 +6127,8 @@ void Game::applyState()
 		l->followCameraLock = 0;
 	}
 
+	dsq->resetLayerPasses();
+
 	cameraLerpDelay = 0;
 	playingSongInMenu = -1;
 	sceneColor2 = Vector(1,1,1);

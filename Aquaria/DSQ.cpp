@@ -1496,8 +1496,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	loadBit(LOAD_TEXTURES);
 
-	renderObjectLayers[LR_ENTITIES].startPass = -2;
-	renderObjectLayers[LR_ENTITIES].endPass = 5;
+	resetLayerPasses();
 
 	renderObjectLayerOrder[LR_BACKGROUND_ELEMENTS1] = LR_ELEMENTS1;
 	renderObjectLayerOrder[LR_BACKGROUND_ELEMENTS2] = LR_ELEMENTS2;
@@ -5139,3 +5138,13 @@ void DSQ::onBackgroundUpdate()
 	Core::onBackgroundUpdate();
 }
 
+void DSQ::resetLayerPasses()
+{
+	for(size_t i = 0; i < renderObjectLayers.size(); ++i)
+	{
+		renderObjectLayers[i].startPass = 0;
+		renderObjectLayers[i].endPass = 0;
+	}
+	renderObjectLayers[LR_ENTITIES].startPass = -2;
+	renderObjectLayers[LR_ENTITIES].endPass = 5;
+}

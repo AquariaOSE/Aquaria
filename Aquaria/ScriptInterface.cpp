@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
 #include "ScriptInterface.h"
 #include "../BBGE/ScriptObject.h"
 extern "C"
@@ -1314,6 +1315,15 @@ luaFunc(obj_setRenderPass)
 	luaReturnNil();
 }
 
+luaFunc(obj_setOverrideRenderPass)
+{
+	RenderObject *r = robj(L);
+	int pass = lua_tointeger(L, 2);
+	if (r)
+		r->setOverrideRenderPass(pass);
+	luaReturnNil();
+}
+
 luaFunc(obj_fh)
 {
 	RenderObject *r = robj(L);
@@ -1462,7 +1472,6 @@ luaFunc(obj_collideCircleVsLine)
 	luaReturnBool(v);
 }
 
-
 luaFunc(obj_collideCircleVsLineAngle)
 {
 	RenderObject *r = robj(L);
@@ -1474,6 +1483,14 @@ luaFunc(obj_collideCircleVsLineAngle)
 	if (r)
 		v = dsq->game->collideCircleVsLineAngle(r, angle, start, end, radius, Vector(x,y));
 	luaReturnBool(v);
+}
+
+luaFunc(obj_fadeAlphaWithLife)
+{
+	RenderObject *r = robj(L);
+	if (r)
+		r->fadeAlphaWithLife = getBool(L, 2);
+	luaReturnNil();
 }
 
 
@@ -1612,6 +1629,7 @@ luaFunc(quad_setSegs)
 	RO_FUNC(getter, prefix,  setCullRadius	) \
 	RO_FUNC(getter, prefix,  setUpdateCull	) \
 	RO_FUNC(getter, prefix,  setRenderPass	) \
+	RO_FUNC(getter, prefix,  setOverrideRenderPass	) \
 	RO_FUNC(getter, prefix,  setPositionX	) \
 	RO_FUNC(getter, prefix,  setPositionY	) \
 	RO_FUNC(getter, prefix,  enableMotionBlur	) \
@@ -1619,6 +1637,7 @@ luaFunc(quad_setSegs)
 	RO_FUNC(getter, prefix,  collideCircleVsLine) \
 	RO_FUNC(getter, prefix,  collideCircleVsLineAngle) \
 	RO_FUNC(getter, prefix,  getVectorToObj	) \
+	RO_FUNC(getter, prefix,  fadeAlphaWithLife	) \
 	MK_ALIAS(prefix, fh, flipHorizontal	) \
 	MK_ALIAS(prefix, fv, flipVertical	)
 
@@ -1645,6 +1664,14 @@ luaFunc(quad_setSegs)
 
 // first time, create them. (There is a second use of this further down, with different MK_* macros)
 EXPAND_FUNC_PROTOTYPES
+
+
+luaFunc(debugBreak)
+{
+	debugLog("DEBUG BREAK");
+	triggerBreakpoint();
+	luaReturnNil();
+}
 
 
 luaFunc(randRange)
@@ -3907,6 +3934,12 @@ luaFunc(savePoint)
 	}
 
 	dsq->doSavePoint(position);
+	luaReturnNil();
+}
+
+luaFunc(saveMenu)
+{
+	dsq->doSaveSlotMenu(SSM_SAVE);
 	luaReturnNil();
 }
 
@@ -7443,6 +7476,52 @@ luaFunc(pickupGem)
 	luaReturnNil();
 }
 
+luaFunc(setGemPosition)
+{
+	int gemId = lua_tointeger(L, 1);
+	std::string mapname = getString(L, 4);
+	if(mapname.empty())
+		mapname = dsq->game->sceneName;
+	Vector pos(lua_tonumber(L, 2), lua_tonumber(L, 3));
+
+	WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(getString(L, 1));
+	if(tile)
+	{
+		pos = dsq->game->worldMapRender->getWorldToTile(tile, pos, true, true);
+		if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+		{
+			Continuity::Gems::iterator it = dsq->continuity.gems.begin();
+			std::advance(it, gemId);
+			GemData& gem = *it;
+			gem.pos = pos;
+			gem.mapName = mapname;
+		}
+		else
+		{
+			debugLog("setGemPosition: invalid index");
+		}
+	}
+	else
+	{
+		debugLog("setGemPosition: Map tile does not exist: " + mapname);
+	}
+	luaReturnNil();
+}
+
+luaFunc(removeGem)
+{
+	int gemId = lua_tointeger(L, 1);
+	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	{
+		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
+		std::advance(it, gemId);
+		dsq->continuity.removeGemData(&(*it));
+		if(dsq->game->worldMapRender->isOn())
+			dsq->game->worldMapRender->fixGems();
+	}
+	luaReturnNil();
+}
+
 luaFunc(beaconEffect)
 {
 	int index = lua_tointeger(L, 1);
@@ -7501,6 +7580,19 @@ luaFunc(getCostume)
 luaFunc(setCostume)
 {
 	dsq->continuity.setCostume(getString(L));
+	luaReturnNil();
+}
+
+luaFunc(setLayerRenderPass)
+{
+	int layer = lua_tointeger(L, 1);
+	int startPass = lua_tointeger(L, 2);
+	int endPass = lua_tointeger(L, 3);
+	if(layer >= 0 && layer < core->renderObjectLayers.size())
+	{
+		core->renderObjectLayers[layer].startPass = startPass;
+		core->renderObjectLayers[layer].endPass = endPass;
+	}
 	luaReturnNil();
 }
 
@@ -7951,6 +8043,8 @@ static const struct {
 	{"dofile", l_dofile_caseinsensitive},
 	{"loadfile", l_loadfile_caseinsensitive},
 
+	luaRegister(debugBreak),
+
 	luaRegister(shakeCamera),
 	luaRegister(upgradeHealth),
 
@@ -8397,6 +8491,7 @@ static const struct {
 
 
 	luaRegister(savePoint),
+	luaRegister(saveMenu),
 	luaRegister(wait),
 	luaRegister(watch),
 
@@ -8408,6 +8503,7 @@ static const struct {
 	luaRegister(centerText),
 	luaRegister(watchForVoice),
 
+	luaRegister(setLayerRenderPass),
 	luaRegister(setElementLayerVisible),
 	luaRegister(isElementLayerVisible),
 
@@ -8416,6 +8512,8 @@ static const struct {
 
 
 	luaRegister(pickupGem),
+	luaRegister(setGemPosition),
+	luaRegister(removeGem),
 	luaRegister(setBeacon),
 	luaRegister(getBeacon),
 	luaRegister(beaconEffect),

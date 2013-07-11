@@ -1567,6 +1567,8 @@ public:
 
 	virtual void onBackgroundUpdate();
 
+	void resetLayerPasses();
+
 protected:
 
 	Quad *cutscene_bg;
