@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 IngredientData::IngredientData(const std::string &name, const std::string &gfx, IngredientType type)
 : name(name), gfx(gfx), amount(0), maxAmount(MAX_INGREDIENT_AMOUNT), held(0), type(type), marked(0), sorted(false)
 , displayName(dsq->continuity.getIngredientDisplayName(name))
-, rotKind(!(type == IT_OIL && type == IT_EGG))
+, rotKind(!(type == IT_OIL || type == IT_EGG))
 {
 }
 
