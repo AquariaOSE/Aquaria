@@ -1548,6 +1548,27 @@ luaFunc(quad_setSegs)
 	luaReturnNil();
 }
 
+luaFunc(quad_setRepeatTexture)
+{
+	Quad *b = getQuad(L);
+	if (b)
+		b->repeatTextureToFill(getBool(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(quad_setRepeatScale)
+{
+	Quad *b = getQuad(L);
+	if (b)
+		b->repeatToFillScale = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
+	luaReturnNil();
+}
+
+luaFunc(quad_isRepeatTexture)
+{
+	Quad *b = getQuad(L);
+	luaReturnBool(b ? b->isRepeatingTextureToFill() : false);
+}
 
 // --- standard set/get functions for each type, wrapping RenderObject functions ---
 
@@ -1649,7 +1670,10 @@ luaFunc(quad_setSegs)
 	Q_FUNC(getter, prefix,  setHeight		) \
 	Q_FUNC(getter, prefix,  getWidth		) \
 	Q_FUNC(getter, prefix,  getHeight		) \
-	Q_FUNC(getter, prefix,  setSegs			)
+	Q_FUNC(getter, prefix,  setSegs			) \
+	Q_FUNC(getter, prefix,  setRepeatTexture) \
+	Q_FUNC(getter, prefix,  isRepeatTexture	) \
+	Q_FUNC(getter, prefix,  setRepeatScale	)
 
 // This should reflect the internal class hierarchy,
 // e.g. a Beam is a Quad, so it can use quad_* functions
@@ -6299,6 +6323,16 @@ luaFunc(getHalfTimer)
 	luaReturnNum(dsq->game->getHalfTimer(n));
 }
 
+luaFunc(getOldDT)
+{
+	luaReturnNum(core->get_old_dt());
+}
+
+luaFunc(getDT)
+{
+	luaReturnNum(core->get_current_dt());
+}
+
 luaFunc(isNested)
 {
 	luaReturnBool(core->isNested());
@@ -8103,6 +8137,8 @@ static const struct {
 	luaRegister(getPetPower),
 	luaRegister(getTimer),
 	luaRegister(getHalfTimer),
+	luaRegister(getOldDT),
+	luaRegister(getDT),
 	luaRegister(setCostume),
 	luaRegister(getCostume),
 	luaRegister(getNoteName),
@@ -8180,7 +8216,6 @@ static const struct {
 
 
 	luaRegister(entity_setCullRadius),
-	luaRegister(entity_setUpdateCull),
 
 	luaRegister(entity_switchLayer),
 
