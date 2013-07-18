@@ -177,7 +177,11 @@ void OggDecoder::startDecoderThread()
 {
 #ifdef BBGE_BUILD_SDL
     stop_thread = false;
+#ifdef BBGE_BUILD_SDL2
+    decoderThread = SDL_CreateThread((int (*)(void *))decode_loop, "OggDecoder", NULL);
+#else
     decoderThread = SDL_CreateThread((int (*)(void *))decode_loop, NULL);
+#endif
     if (!decoderThread)
     {
         debugLog("Failed to create Ogg Vorbis decode thread: "

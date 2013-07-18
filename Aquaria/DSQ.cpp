@@ -888,7 +888,19 @@ void DSQ::setVersionLabelText()
 #ifdef BBGE_BUILD_SDL
 static bool sdlVideoModeOK(const int w, const int h, const int bpp)
 {
+#ifdef BBGE_BUILD_SDL2
+	SDL_DisplayMode mode;
+	const int modecount = SDL_GetNumDisplayModes(0);
+	for (int i = 0; i < modecount; i++) {
+		SDL_GetDisplayMode(0, i, &mode);
+        if (!mode.w || !mode.h || (w >= mode.w && h >= mode.h)) {
+			return true;
+        }
+    }
+    return false;
+#else
 	return SDL_VideoModeOK(w, h, bpp, SDL_OPENGL | SDL_FULLSCREEN);
+#endif
 }
 #endif
 
