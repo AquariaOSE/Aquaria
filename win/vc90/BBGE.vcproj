@@ -42,7 +42,7 @@
 			<Tool
 				Name="VCCLCompilerTool"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.3.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.3\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.3.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.3\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;FTGL_LIBRARY_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
@@ -63,8 +63,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib OpenAL32.lib"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\ExternalLibs\AL\lib\win32&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\lib\win32&quot;"
+				AdditionalDependencies="SDL2.lib SDL2main.lib OpenAL32.lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\ExternalLibs\AL\lib\win32&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\lib\win32&quot;"
 				IgnoreAllDefaultLibraries="true"
 				IgnoreDefaultLibraryNames=""
 			/>
@@ -115,7 +115,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.3.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.3\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.3.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.3\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;FTGL_LIBRARY_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;_HAS_EXCEPTIONS=0"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -139,8 +139,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="SDL.lib SDLmain.lib OpenAL32.lib"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\ExternalLibs\AL\lib\win32&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\lib\win32&quot;"
+				AdditionalDependencies="SDL2.lib SDL2main.lib OpenAL32.lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\ExternalLibs\AL\lib\win32&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\lib\win32&quot;"
 				IgnoreAllDefaultLibraries="true"
 			/>
 			<Tool
