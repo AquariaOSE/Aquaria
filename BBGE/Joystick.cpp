@@ -251,6 +251,19 @@ void Joystick::shutdown()
 	}
 #endif
 #ifdef BBGE_BUILD_SDL
+#ifdef BBGE_BUILD_SDL2
+	if (sdl_haptic)
+	{
+		SDL_HapticClose(sdl_haptic);
+		sdl_haptic = 0;
+	}
+	if (sdl_controller)
+	{
+		SDL_GameControllerClose(sdl_controller);
+		sdl_controller = 0;
+		sdl_joy = 0; // SDL_GameControllerClose() frees this
+	}
+#endif
 	if (sdl_joy)
 	{
 		SDL_JoystickClose(sdl_joy);
@@ -268,9 +281,15 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 		{
 			const float power = (leftMotor + rightMotor) / 2.0f;
 			if ((power > 0.0f) && (time > 0.0f))
+			{
+				clearRumbleTime = time;
 				SDL_HapticRumblePlay(sdl_haptic, power, (Uint32) (time * 1000.0f));
+			}
 			else
+			{
+				clearRumbleTime = -1;
 				SDL_HapticRumbleStop(sdl_haptic);
+			}
 		}
 
 #elif defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_XINPUT)
@@ -393,25 +412,25 @@ void Joystick::update(float dt)
 		{
 			Sint16 xaxis = SDL_GameControllerGetAxis(sdl_controller, SDL_CONTROLLER_AXIS_LEFTX);
 			Sint16 yaxis = SDL_GameControllerGetAxis(sdl_controller, SDL_CONTROLLER_AXIS_LEFTY);
-			position.x = double(xaxis)/32768.0;
-			position.y = double(yaxis)/32768.0;
+			position.x = float(xaxis)/32768.0f;
+			position.y = float(yaxis)/32768.0f;
 
 			Sint16 xaxis2 = SDL_GameControllerGetAxis(sdl_controller, SDL_CONTROLLER_AXIS_RIGHTX);
 			Sint16 yaxis2 = SDL_GameControllerGetAxis(sdl_controller, SDL_CONTROLLER_AXIS_RIGHTY);
-			rightStick.x = double(xaxis2)/32768.0;
-			rightStick.y = double(yaxis2)/32768.0;
+			rightStick.x = float(xaxis2)/32768.0f;
+			rightStick.y = float(yaxis2)/32768.0f;
 		}
 		else
 		{
 			Sint16 xaxis = SDL_JoystickGetAxis(sdl_joy, s1ax);
 			Sint16 yaxis = SDL_JoystickGetAxis(sdl_joy, s1ay);
-			position.x = double(xaxis)/32768.0;
-			position.y = double(yaxis)/32768.0;
+			position.x = float(xaxis)/32768.0f;
+			position.y = float(yaxis)/32768.0f;
 
 			Sint16 xaxis2 = SDL_JoystickGetAxis(sdl_joy, s2ax);
 			Sint16 yaxis2 = SDL_JoystickGetAxis(sdl_joy, s2ay);
-			rightStick.x = double(xaxis2)/32768.0;
-			rightStick.y = double(yaxis2)/32768.0;
+			rightStick.x = float(xaxis2)/32768.0f;
+			rightStick.y = float(yaxis2)/32768.0f;
 		}
 #else
 		if (!SDL_JoystickOpened(stickIndex))
@@ -482,10 +501,10 @@ void Joystick::update(float dt)
 	}
 #endif
 
-	if (clearRumbleTime > 0)
+	if (clearRumbleTime >= 0)
 	{
 		clearRumbleTime -= dt;
-		if (clearRumbleTime < 0)
+		if (clearRumbleTime <= 0)
 		{
 			rumble(0,0,0);
 		}
