@@ -3835,7 +3835,7 @@ luaFunc(spawnManaBall)
 	Vector p;
 	p.x = lua_tonumber(L, 1);
 	p.y = lua_tonumber(L, 2);
-	int amount = lua_tonumber(L, 3);
+	float amount = lua_tonumber(L, 3);
 	dsq->game->spawnManaBall(p, amount);
 	luaReturnNil();
 }
