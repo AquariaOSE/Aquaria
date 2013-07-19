@@ -46,7 +46,7 @@
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;FTGL_LIBRARY_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
-				RuntimeLibrary="1"
+				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="true"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
