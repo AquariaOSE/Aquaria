@@ -31,26 +31,27 @@ static void MakeRan(void)
 {
 #ifdef BBGE_BUILD_WINDOWS
     std::ofstream out("ran");
-    for (int i = 0; i < 32; i++)
-        out << rand()%1000;
-    out.close();
+    if(out)
+    {
+        for (int i = 0; i < 32; i++)
+            out << rand()%1000;
+        out.close();
+    }
 #endif
 }
 
 static void StartAQConfig()
 {
 #if defined(BBGE_BUILD_WINDOWS)
-#if defined(AQUARIA_DEMO) || defined(AQUARIA_FULL)
-    if (!exists("ran", false))
+    if (!exists("ran", false, true))
     {
         MakeRan();
-        if(exists("aqconfig.exe", false))
+        if(exists("AQConfig.exe", false, true))
         {
-            ShellExecute(NULL, "open", "aqconfig.exe", NULL, NULL, SW_SHOWNORMAL);
+            ShellExecute(NULL, "open", "AQConfig.exe", NULL, NULL, SW_SHOWNORMAL);
             exit(0);
         }
     }
-#endif
     remove("ran");
 #endif
 }

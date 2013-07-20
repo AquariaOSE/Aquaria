@@ -1220,7 +1220,11 @@ void WorldMapRender::onUpdate(float dt)
 	else
 	{
 #ifdef AQUARIA_BUILD_MAPVIS
-		if (!dsq->isInCutscene() && dsq->game->avatar && activeTile && !dsq->game->sceneEditor.isOn())
+		if (!dsq->isInCutscene() && dsq->game->avatar && activeTile
+	#ifdef AQUARIA_BUILD_SCENEEDITOR
+			&& !dsq->game->sceneEditor.isOn()
+	#endif
+			)
 		{
 			const float screenWidth  = core->getVirtualWidth()  * core->invGlobalScale;
 			const float screenHeight = core->getVirtualHeight() * core->invGlobalScale;
