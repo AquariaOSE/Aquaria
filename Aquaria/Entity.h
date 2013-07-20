@@ -356,7 +356,7 @@ public:
 	void revive(float a);
 	void setName(const std::string &name);
 	void doFriction(float dt);
-	void doFriction(float dt, int len);
+	void doFriction(float dt, float len);
 
 	bool isNormalLayer() const
 	{

@@ -206,6 +206,7 @@ public:
 
 	Vector getAbsoluteRotation();
 	float getWorldRotation();
+	Vector getWorldPositionAndRotation(); // more efficient shortcut, returns rotation in vector z component
 	Vector getNormal();
 	Vector getForward();
 	void setOverrideCullRadius(float ovr);
