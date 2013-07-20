@@ -37,7 +37,7 @@ public:
 	void resetTimer(float t);
 	void setEntityLayer(int layer);
 	void setupEntity(const std::string &tex, int layer=0);
-	void setupBasicEntity(const std::string& texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer);
+	void setupBasicEntity(const std::string& texture, int health, int manaBall, int exp, int money, float collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer);
 	void initSegments(int numSegments, int minDist, int maxDist, std::string bodyTex, std::string tailTex, int w, int h, float taper, bool reverseSegments);
 	void registerNewPart(RenderObject *r, const std::string &name);
 	typedef std::map<std::string, RenderObject*> PartMap;
