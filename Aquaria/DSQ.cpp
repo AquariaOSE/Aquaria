@@ -989,7 +989,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 	bool fullscreen = true;
 	int joystickMode = 0;
 	int dsq_filter = 0;
-	developerKeys = false;
 	voiceOversEnabled = true;
 
 
@@ -1012,13 +1011,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 	setFilter(dsq_filter);
 
 	useFrameBuffer = user.video.fbuffer;
-
-#ifdef AQUARIA_DEMO
-	developerKeys = 0;
-#endif
-
-	if (exists("unlockdeveloperkeys"))
-		developerKeys = 1;
 
 	if (isDeveloperKeys())
 	{
@@ -1555,11 +1547,15 @@ This build is not yet final, and as such there are a couple things lacking. They
 	sound->playSfx("defense", 0.5);
 	sound->playSfx("visionwakeup");
 	*/
-#if defined(AQUARIA_FULL) || defined(AQUARIA_DEMO)
-	float trans = 0.5;
-	overlay->alpha.interpolateTo(1, trans);
-	core->main(trans);
-#endif
+
+	// Don't do transitions for a faster start up in dev mode
+	if (!isDeveloperKeys())
+	{
+		float trans = 0.5;
+		overlay->alpha.interpolateTo(1, trans);
+		core->main(trans);
+	}
+
 	removeRenderObject(loading);
 	loading = 0;
 	removeRenderObject(sidel);
@@ -1581,11 +1577,11 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	bindInput();
 
-#if defined(AQUARIA_FULL) || defined(AQUARIA_DEMO)
-	enqueueJumpState("BitBlotLogo");
-#else
-	title();
-#endif
+	// Go directly to the title in dev mode
+	if(isDeveloperKeys())
+		title();
+	else
+		enqueueJumpState("BitBlotLogo");
 }
 
 void DSQ::recreateBlackBars()
@@ -2006,7 +2002,7 @@ void DSQ::reloadDevice()
 #ifdef AQUARIA_BUILD_CONSOLE
 void DSQ::toggleConsole()
 {
-	if (console)
+	if (console && isDeveloperKeys())
 	{
 		if (console->alpha == 0)
 		{
@@ -2793,11 +2789,6 @@ void DSQ::nag(NagType type)
 
 void DSQ::doModSelect()
 {
-#ifdef AQUARIA_DEMO
-	nag(NAG_TOTITLE);
-	return;
-#endif
-
 	modIsSelected = false;
 
 	dsq->loadMods();
@@ -2811,10 +2802,14 @@ void DSQ::doModSelect()
 	main(-1);
 
 	clearModSelector();
-		
+
 	if (modIsSelected)
 	{
+#ifdef AQUARIA_DEMO
+		nag(NAG_TOTITLE);
+#else
 		dsq->startSelectedMod();
+#endif
 	}
 
 	inModSelector = false;
@@ -4147,21 +4142,11 @@ void DSQ::vision(std::string folder, int num, bool ignoreMusic)
 
 bool DSQ::isDeveloperKeys()
 {	
-	///HACK TEMPORARY
-	//return true;
-
-#if !defined(AQUARIA_FULL) && !defined(AQUARIA_DEMO)
-	return true;
-#endif
-
 #ifdef AQUARIA_DEMO
 	return false;
 #endif
-#ifdef AQUARIA_FULL
-	return false;
-#endif
 
-	return developerKeys;
+	return user.system.devModeOn;
 }
 
 bool DSQ::canOpenEditor() const

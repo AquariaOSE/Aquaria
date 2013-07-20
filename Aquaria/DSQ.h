@@ -1612,7 +1612,6 @@ protected:
 	void updatepecue(float dt);
 	std::vector<PECue> pecue;
 
-	bool developerKeys;
 	void onMouseInput();
 	std::vector<std::string> voxQueue;
 

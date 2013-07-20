@@ -39,8 +39,6 @@ extern "C"
 
 #include "../BBGE/MathFunctions.h"
 
-#if defined(AQUARIA_FULL) || defined(AQUARIA_DEMO)
-
 // Define this to 1 to check types of pointers passed to functions,
 // and warn if a type mismatch is detected. In this case,
 // the pointer is treated as NULL, to avoid crashing or undefined behavior.
@@ -51,25 +49,16 @@ extern "C"
 // If true, send all sort of script errors to errorLog instead of debugLog.
 // On win32/OSX, this pops up message boxes which help to locate errors easily,
 // but can be annoying for regular gameplay.
-const bool loudScriptErrors = false;
+bool loudScriptErrors = false;
 
 // Set this to true to complain whenever a script tries to
 // get or set a global variable.
-const bool complainOnGlobalVar = false;
+bool complainOnGlobalVar = false;
 
 // Set this to true to complain whenever a script tries to get an undefined
 // thread-local variable.
-const bool complainOnUndefLocal = false;
+bool complainOnUndefLocal = false;
 
-#else
-
-// Use maximal safety for developer builds.
-#define CHECK_POINTER_TYPES 1
-const bool loudScriptErrors = true;
-const bool complainOnGlobalVar = true;
-const bool complainOnUndefLocal = true;
-
-#endif
 
 // List of all interface functions called by C++ code, terminated by NULL.
 static const char * const interfaceFunctions[] = {
@@ -9739,6 +9728,13 @@ ScriptInterface::ScriptInterface()
 
 void ScriptInterface::init()
 {
+	bool devmode = dsq->isDeveloperKeys();
+
+	// Everything on in dev mode, everything off otherwise.
+	bool loudScriptErrors = devmode;
+	bool complainOnGlobalVar = devmode;
+	bool complainOnUndefLocal = devmode;
+
 	if (!baseState)
 		baseState = createLuaVM();
 }
