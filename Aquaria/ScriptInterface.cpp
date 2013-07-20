@@ -2115,7 +2115,7 @@ luaFunc(shot_setMaxSpeed)
 {
 	Shot *shot = getShot(L);
 	if (shot)
-		shot->homingness = lua_tonumber(L, 2);
+		shot->maxSpeed = lua_tonumber(L, 2);
 	luaReturnNil();
 }
 
