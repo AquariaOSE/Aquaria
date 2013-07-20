@@ -63,12 +63,5 @@ END
 END
 
 // Icon
-#if defined(AQUARIA_FULL) || defined(AQUARIA_DEMO)
-101 ICON "AquariaWin32.ico"
-#else
-101 ICON "AquariaWin32Dev.ico"
-#endif
-
-//101 ICON "Aquaria.ico"
-
+101 ICON "AquariaWin32OSE.ico"
 
