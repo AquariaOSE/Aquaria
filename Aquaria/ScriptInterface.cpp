@@ -2105,6 +2105,48 @@ luaFunc(shot_getDamageType)
 	luaReturnNum(shot ? shot->getDamageType() : DT_NONE);
 }
 
+luaFunc(shot_getMaxSpeed)
+{
+	Shot *shot = getShot(L);
+	luaReturnNum(shot ? shot->maxSpeed : 0.0f);
+}
+
+luaFunc(shot_setMaxSpeed)
+{
+	Shot *shot = getShot(L);
+	if (shot)
+		shot->homingness = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(shot_getHomingness)
+{
+	Shot *shot = getShot(L);
+	luaReturnNum(shot ? shot->homingness : 0.0f);
+}
+
+luaFunc(shot_setHomingness)
+{
+	Shot *shot = getShot(L);
+	if (shot)
+		shot->homingness = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(shot_getLifeTime)
+{
+	Shot *shot = getShot(L);
+	luaReturnNum(shot ? shot->lifeTime : 0.0f);
+}
+
+luaFunc(shot_setLifeTime)
+{
+	Shot *shot = getShot(L);
+	if (shot)
+		shot->lifeTime = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
 luaFunc(entity_setVel)
 {
 	Entity *e = entity(L);
@@ -7968,6 +8010,11 @@ luaFunc(getScreenSize)
 	luaReturnVec2(core->width, core->height);
 }
 
+luaFunc(getScreenVirtualSize)
+{
+	luaReturnVec2(core->getVirtualWidth(), core->getVirtualHeight());
+}
+
 luaFunc(inv_isFull)
 {
 	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
@@ -8821,6 +8868,12 @@ static const struct {
 	luaRegister(shot_getDamage),
 	luaRegister(shot_getDamageType),
 	luaRegister(shot_getName),
+	luaRegister(shot_getMaxSpeed),
+	luaRegister(shot_setMaxSpeed),
+	luaRegister(shot_getHomingness),
+	luaRegister(shot_setHomingness),
+	luaRegister(shot_getLifeTime),
+	luaRegister(shot_setLifeTime),
 	luaRegister(entity_pathBurst),
 	luaRegister(entity_handleShotCollisions),
 	luaRegister(entity_handleShotCollisionsSkeletal),
@@ -8932,9 +8985,6 @@ static const struct {
 	luaRegister(getSceneColor2),
 
 	luaRegister(entity_watchEntity),
-
-	luaRegister(entity_setCollideRadius),
-	luaRegister(entity_getCollideRadius),
 
 	luaRegister(entity_isEntityInRange),
 	luaRegister(entity_isPositionInRange),
@@ -9051,6 +9101,7 @@ static const struct {
 
 	luaRegister(getScreenVirtualOff),
 	luaRegister(getScreenSize),
+	luaRegister(getScreenVirtualSize),
 
 	luaRegister(inv_isFull),
 	luaRegister(inv_getMaxAmount),
