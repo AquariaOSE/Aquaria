@@ -2293,7 +2293,7 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 			avg += vs[i];
 		}
 	}
-	if (avg != 0)
+	if (c)
 	{
 		avg /= c;
 		if (avg.x != 0 || avg.y != 0)

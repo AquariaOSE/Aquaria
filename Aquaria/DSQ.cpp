@@ -4530,7 +4530,7 @@ void DSQ::onUpdate(float dt)
 		{
 			Avatar *avatar = dsq->game->avatar;
 			os << "rolling: " << dsq->game->avatar->isRolling() << " rollDelay: " << dsq->game->avatar->rollDelay << std::endl;
-			os << "canChangeForm: " << dsq->game->avatar->canChangeForm << std::endl;
+			os << "canChangeForm: " << dsq->game->avatar->canChangeForm << " gamespeed: " << gameSpeed.x << std::endl;
 			os << "h: " << dsq->game->avatar->health << " / " << dsq->game->avatar->maxHealth << std::endl;
 			os << "biteTimer: " << dsq->game->avatar->biteTimer << " flourTimer: " << dsq->game->avatar->flourishTimer.getValue() << std::endl;
 			os << "stillTimer: " << dsq->game->avatar->stillTimer.getValue() << std::endl;
