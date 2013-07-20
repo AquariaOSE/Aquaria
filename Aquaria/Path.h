@@ -76,7 +76,7 @@ public:
 	~Path();
 	void destroy();
 	void init();
-	void clampPosition(Vector *pos, int rad=0);
+	void clampPosition(Vector *pos, float rad=0);
 	void song(SongType song);
 	void songNote(int note);
 	void songNoteDone(int note, float len);

@@ -48,7 +48,7 @@ Beam::Beam(Vector pos, float angle) : Quad()
 	beamWidth = 16;
 }
 
-void Beam::setBeamWidth(int w)
+void Beam::setBeamWidth(float w)
 {
 	beamWidth = w;
 }

@@ -56,7 +56,7 @@ Path::Path()
 	spiritFreeze = true;
 }
 
-void Path::clampPosition(Vector *pos, int radius)
+void Path::clampPosition(Vector *pos, float radius)
 {
 	if (pathShape == PATHSHAPE_CIRCLE)
 	{

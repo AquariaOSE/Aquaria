@@ -289,13 +289,13 @@ public:
 	//D3DXMATRIX matrix;
 #endif
 
-	int collideRadius;
+	float collideRadius;
 	Vector collidePosition;
 	std::vector<Vector> collisionMask;
 	std::vector<Vector> transformedCollisionMask;
 
 	CollideRects collisionRects;
-	int collisionMaskRadius;
+	float collisionMaskRadius;
 
 	float alphaMod;
 

@@ -166,9 +166,9 @@ public:
 
 	void setDamage(float dmg);
 	void setFirer(Entity *e);
-	void setBeamWidth(int w);
+	void setBeamWidth(float w);
 protected:
-	int beamWidth;
+	float beamWidth;
 	void onRender();
 	void onEndOfLife();
 	void onUpdate(float dt);
