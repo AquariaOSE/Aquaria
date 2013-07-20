@@ -78,6 +78,8 @@ public:
 	void initEmitter(int emit, const std::string &file);
 	void startEmitter(int emit);
 	void stopEmitter(int emit);
+	ParticleEffect *getEmitter(int emit);
+	int getNumEmitters() const;
 
 	void shiftWorlds(WorldType lastWorld, WorldType worldType);
 	void setAutoSkeletalUpdate(bool v);

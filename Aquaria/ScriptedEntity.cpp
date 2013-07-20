@@ -175,6 +175,16 @@ void ScriptedEntity::stopEmitter(int emit)
 	}
 }
 
+ParticleEffect *ScriptedEntity::getEmitter(int emit)
+{
+	return (size_t(emit) < emitters.size()) ? emitters[emit] : NULL;
+}
+
+int ScriptedEntity::getNumEmitters() const
+{
+	return emitters.size();
+}
+
 void ScriptedEntity::registerNewPart(RenderObject *r, const std::string &name)
 {
 	partMap[name] = r;
