@@ -1735,6 +1735,12 @@ luaFunc(shakeCamera)
 	luaReturnNil();
 }
 
+luaFunc(rumble)
+{
+	dsq->rumble(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
+	luaReturnNil();
+}
+
 luaFunc(changeForm)
 {
 	dsq->game->avatar->changeForm((FormType)lua_tointeger(L, 1));
@@ -8108,6 +8114,7 @@ static const struct {
 	luaRegister(isIgnoreAction),
 	luaRegister(sendAction),
 
+	luaRegister(rumble),
 	luaRegister(shakeCamera),
 	luaRegister(upgradeHealth),
 
