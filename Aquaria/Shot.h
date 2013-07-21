@@ -94,8 +94,6 @@ public:
 
 	void fire(bool playSfx = true);
 	void hitEntity(Entity *e, Bone *b, bool isValid=true);
-	void setLifeTime(float l);
-	void setBounceType(BounceType bt);
 	
 	void noSegs();
 
@@ -128,6 +126,8 @@ public:
 	float extraDamage;
 	float homingness;
 	float lifeTime;
+	DamageType damageType;
+	bool checkDamageTarget;
 
 protected:
 
