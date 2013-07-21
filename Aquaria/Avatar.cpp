@@ -4129,6 +4129,8 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	_collisionAvoidRange = COLLIDE_RANGE_NORMAL;
 
 	_seeMapMode = SEE_MAP_DEFAULT;
+
+	blockBackFlip = false;
 }
 
 void Avatar::revert()
@@ -4282,6 +4284,7 @@ void Avatar::startBackFlip()
 {
 	if (boneLock.on) return;
 	if (riding) return;
+	if (blockBackFlip) return;
 
 	skeletalSprite.getAnimationLayer(ANIMLAYER_OVERRIDE)->transitionAnimate("backflip", 0.2, 0);
 	vel.x = -vel.x*0.25f;

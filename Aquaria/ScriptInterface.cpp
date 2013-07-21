@@ -2998,6 +2998,18 @@ luaFunc(avatar_isBlockSinging)
 	luaReturnBool(dsq->game->avatar->isBlockSinging());
 }
 
+luaFunc(avatar_setBlockBackflip)
+{
+	dsq->game->avatar->blockBackFlip = getBool(L);
+	luaReturnNil();
+}
+
+luaFunc(avatar_isBlockBackflip)
+{
+	dsq->game->avatar->blockBackFlip = getBool(L);
+	luaReturnNil();
+}
+
 luaFunc(avatar_fallOffWall)
 {
 	dsq->game->avatar->fallOffWall();
@@ -8083,6 +8095,29 @@ luaFunc(inv_pickupEffect)
 	luaReturnNil();
 }
 
+luaFunc(inv_getNumItems)
+{
+	luaReturnInt(dsq->continuity.getIngredientHeldSize());
+}
+
+luaFunc(inv_getItemName)
+{
+	IngredientData *data = dsq->continuity.getIngredientHeldByIndex(lua_tointeger(L, 1));
+	luaReturnStr(data ? data->name.c_str() : "");
+}
+
+
+luaFunc(getIngredientDataSize)
+{
+	luaReturnInt(dsq->continuity.getIngredientDataSize());
+}
+
+luaFunc(getIngredientDataName)
+{
+	IngredientData *data = dsq->continuity.getIngredientDataByIndex(lua_tointeger(L, 1));
+	luaReturnStr(data ? data->name.c_str() : "");
+}
+
 luaFunc(learnRecipe)
 {
 	std::string name = getString(L, 1);
@@ -8774,6 +8809,8 @@ static const struct {
 	luaRegister(avatar_fallOffWall),
 	luaRegister(avatar_setBlockSinging),
 	luaRegister(avatar_isBlockSinging),
+	luaRegister(avatar_setBlockBackflip),
+	luaRegister(avatar_isBlockBackflip),
 
 	luaRegister(avatar_setSpeedMult),
 	luaRegister(avatar_setSpeedMult2),
@@ -9112,7 +9149,11 @@ static const struct {
 	luaRegister(inv_getType),
 	luaRegister(inv_getDisplayName),
 	luaRegister(inv_pickupEffect),
+	luaRegister(inv_getNumItems),
+	luaRegister(inv_getItemName),
 	luaRegister(learnRecipe),
+	luaRegister(getIngredientDataSize),
+	luaRegister(getIngredientDataName),
 
 	luaRegister(createDebugText),
 	luaRegister(createBitmapText),
