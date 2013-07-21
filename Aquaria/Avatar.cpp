@@ -2754,7 +2754,7 @@ void Avatar::formAbility(int ability)
 						if (s->shotData->homing > 0)
 						{
 							Vector p = dsq->getGameCursorPosition();
-							target = dsq->game->getNearestEntity(p, 800, this, ET_ENEMY, s->shotData->damageType);
+							target = dsq->game->getNearestEntity(p, 800, this, ET_ENEMY, s->getDamageType());
 						}
 						if (target)
 						{

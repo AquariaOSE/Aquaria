@@ -2147,6 +2147,36 @@ luaFunc(shot_setLifeTime)
 	luaReturnNil();
 }
 
+luaFunc(shot_setDamageType)
+{
+	Shot *shot = getShot(L);
+	if (shot)
+		shot->damageType = (DamageType)lua_tointeger(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(shot_setCheckDamageTarget)
+{
+	Shot *shot = getShot(L);
+	if (shot)
+		shot->checkDamageTarget = getBool(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(shot_isCheckDamageTarget)
+{
+	Shot *shot = getShot(L);
+	luaReturnBool(shot ? shot->checkDamageTarget : false);
+}
+
+luaFunc(shot_setTrailPrt)
+{
+	Shot *shot = getShot(L);
+	if (shot)
+		shot->setParticleEffect(getString(L, 2));
+	luaReturnNil();
+}
+
 luaFunc(entity_setVel)
 {
 	Entity *e = entity(L);
@@ -8911,6 +8941,10 @@ static const struct {
 	luaRegister(shot_setHomingness),
 	luaRegister(shot_getLifeTime),
 	luaRegister(shot_setLifeTime),
+	luaRegister(shot_setDamageType),
+	luaRegister(shot_setCheckDamageTarget),
+	luaRegister(shot_isCheckDamageTarget),
+	luaRegister(shot_setTrailPrt),
 	luaRegister(entity_pathBurst),
 	luaRegister(entity_handleShotCollisions),
 	luaRegister(entity_handleShotCollisionsSkeletal),

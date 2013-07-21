@@ -120,8 +120,6 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 			inf >> fireSfx;
 		else if (token == "HitPrt")
 			inf >> hitPrt;
-		else if (token == "TrailPrt")
-			inf >> trailPrt;
 		else if (token == "BouncePrt")
 			inf >> bouncePrt;
 		else if (token == "FirePrt")
@@ -271,64 +269,8 @@ void Shot::fire(bool playSfx)
 			fired = true;
 		}
 	}
-
-
 }
 
-//const int MAX_ENEMY_SHOT = 400;
-/*
-Shot::Shot(DamageType damageType, Entity *firer, Vector pos, Entity *target, std::string tex, float homingness, int maxSpeed, int numSegments, float segMin, float segMax, float d, float lifeTime)
-: Quad(), Segmented(0,segMax)
-{
-	shotData = 0;
-	targetPt = -1;
-	bounceType = BOUNCE_NONE;
-	if (lifeTime == 0)
-		lifeTime = 8;
-
-	this->damageType = damageType;
-	this->firer = firer;
-	position = pos;
-	this->damage = d;
-	this->target = target;
-	this->maxSpeed = maxSpeed;
-	this->homingness = homingness;
-	if (tex.empty())
-		tex = "energyBlast";
-	setTexture(tex);
-	setBlendType(BLEND_ADD);
-	scale = Vector(0.5, 0.5);
-	dead = false;
-
-	this->lifeTime = lifeTime;
-
-	segments.resize(numSegments);
-	for (int i = segments.size()-1; i >=0 ; i--)
-	{
-		Quad *flame = new Quad;
-		flame->setTexture(tex);
-		flame->width = 32;
-		flame->height = 32;
-		flame->blendType = RenderObject::BLEND_ADD;
-		flame->alpha = 0.5;
-		dsq->game->addRenderObject(flame, LR_PARTICLES);
-		segments[i] = flame;
-	}
-
-	initSegments(position);
-
-	shots.push_back(this);
-
-	//hitParticleEffect = "EnergyBlastHit";
-	//hitSound = "BasicShotHit";
-
-	//if (dsq->game->isObstructed(TileVector(startPos)))
-	//{
-	//	// DON'T DO THIS YOU WILL RUIN THE GAME
-	//	safeKill();
-	//}
-}
-*/
 
 Shot::Shot() : Quad(), Segmented(0,0)
 {
@@ -342,6 +284,8 @@ Shot::Shot() : Quad(), Segmented(0,0)
 	fired = false;
 	target = 0;
 	dead = false;
+	damageType = DT_NONE;
+	checkDamageTarget = false;
 	enqueuedForDelete = false;
 	shotIdx = shots.size();
 	shots.push_back(this);
@@ -417,17 +361,11 @@ void Shot::applyShotData(ShotData *shotData)
 		this->collideRadius = shotData->collideRadius;
 		this->renderQuad = !shotData->invisible;
 		this->gravity = shotData->gravity;
-		if (!shotData->trailPrt.empty() && !emitter)
+		this->damageType = shotData->damageType;
+		this->checkDamageTarget = shotData->checkDamageTarget;
+		if (!shotData->trailPrt.empty())
 		{
-			emitter = new ParticleEffect;
-			emitter->load(shotData->trailPrt);
-			emitter->start();
-			dsq->game->addRenderObject(emitter, LR_PARTICLES);
-			/*
-			addChild(&emitter);
-			emitter.load(shotData->trailPrt);
-			emitter.start();
-			*/
+			setParticleEffect(shotData->trailPrt);
 		}
 
 		if (shotData->numSegs > 0)
@@ -465,24 +403,21 @@ void Shot::suicide()
 
 void Shot::setParticleEffect(const std::string &particleEffect)
 {
-	/*
-	if (!particleEffect.empty())
+	if(dead)
+		return;
+	if(particleEffect.empty())
 	{
-		addChild(&emitter);
-		emitter.load(particleEffect);
-		emitter.start();
+		if(emitter)
+			emitter->stop();
+		return;
 	}
-	*/
-}
-
-void Shot::setBounceType(BounceType bt)
-{
-	//bounceType = bt;
-}
-
-void Shot::setLifeTime(float l)
-{
-	//lifeTime = l;
+	if(!emitter)
+	{
+		emitter = new ParticleEffect;
+		dsq->game->addRenderObject(emitter, LR_PARTICLES);
+	}
+	emitter->load(particleEffect);
+	emitter->start();
 }
 
 void Shot::onEndOfLife()
@@ -629,7 +564,7 @@ void Shot::hitEntity(Entity *e, Bone *b, bool isValid)
 
 		if (e)
 		{
-			if (shotData && shotData->damageType == DT_AVATAR_BITE)
+			if (damageType == DT_AVATAR_BITE)
 			{
 				//debugLog("Shot::hitEntity bittenEntities.push_back");
 				dsq->game->avatar->bittenEntities.push_back(e);
@@ -652,7 +587,7 @@ void Shot::hitEntity(Entity *e, Bone *b, bool isValid)
 			// doesn't have anything to do with effectTime
 			if (shotData)
 			{
-				if (!damaged && shotData->checkDamageTarget && !shotData->alwaysDoHitEffects)
+				if (!damaged && checkDamageTarget && !shotData->alwaysDoHitEffects)
 				{
 					doEffects = false;
 				}
@@ -727,11 +662,7 @@ float Shot::getDamage() const
 
 DamageType Shot::getDamageType() const
 {
-	if (shotData)
-	{
-		return shotData->damageType;
-	}
-	return (DamageType)0;
+	return damageType;
 }
 
 void Shot::setAimVector(const Vector &aim)
@@ -849,9 +780,9 @@ void Shot::onUpdate(float dt)
 			emitter = 0;
 	}
 
-	if (target && shotData && lifeTime > 0 && shotData->damageType != DT_NONE)
+	if (target && lifeTime > 0 && damageType != DT_NONE)
 	{
-		if (!target->isDamageTarget(shotData->damageType))
+		if (!target->isDamageTarget(damageType))
 		{
 			target = 0;
 		}
@@ -899,6 +830,8 @@ void Shot::onUpdate(float dt)
 						if (!shotData->bounceSfx.empty())
 						{
 							dsq->playPositionalSfx(shotData->bounceSfx, position);
+							if(!shotData->bouncePrt.empty())
+								dsq->spawnParticleEffect(shotData->bouncePrt, position);
 						}
 						float len = velocity.getLength2D();
 						Vector I = velocity/len;
@@ -922,35 +855,6 @@ void Shot::onUpdate(float dt)
 				}
 			}
 		}
-
-
-		/*
-		CollideData c = dsq->game->collideCircleWithAllEntities(this->position, 8, firer, spellType);
-
-		if (c.collision || lifeTime < 0)
-		{
-			lifeTime = 0;
-			fadeAlphaWithLife = true;
-			setLife(1);
-
-			velocity = 0;
-			setDecayRate(10);
-			destroySegments(0.1);
-
-			dead = true;
-			if (c.entity)
-			{
-				DamageData d;
-				d.attacker = firer;
-				d.bone = c.bone;
-				d.damage = damage;
-				d.spellType = spellType;
-
-				c.entity->damage(d);
-			}
-			target = 0;
-		}
-		*/
 
 		if (!velocity.isZero() && target)
 		{

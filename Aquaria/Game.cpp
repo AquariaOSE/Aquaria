@@ -8363,7 +8363,7 @@ bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 	{
 		return false;
 	}
-	if (shot->shotData && shot->shotData->checkDamageTarget)
+	if (shot->checkDamageTarget)
 	{
 		if (!e->isDamageTarget(shot->getDamageType()))
 			return false;
