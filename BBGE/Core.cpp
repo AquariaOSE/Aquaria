@@ -3138,6 +3138,8 @@ void Core::main(float runTime)
 			}
 		}
 
+		sound->setListenerPos(screenCenter.x, screenCenter.y);
+
 		if (doScreenshot)
 		{
 			if (verbose) debugLog("screenshot");
