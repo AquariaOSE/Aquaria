@@ -822,10 +822,6 @@ void Core::errorLog(const std::string &s)
 	debugLog(s);
 }
 
-#if defined(BBGE_BUILD_MACOSX)
-void cocoaMessageBox(const std::string &title, const std::string &msg);
-#endif
-
 void Core::messageBox(const std::string &title, const std::string &msg)
 {
 	::messageBox(title, msg);
@@ -957,6 +953,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 
 	srand(time(NULL));
 	old_dt = 0;
+	current_dt = 0;
 
 	aspectX = 4;
 	aspectY = 3;
@@ -2960,6 +2957,7 @@ void Core::main(float runTime)
 		if (verbose) debugLog("modify dt");
 		modifyDt(dt);
 
+		current_dt = dt;
 
 		if (verbose) debugLog("check runtime/quit");
 
