@@ -1055,7 +1055,6 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 			checkError();
 			*/
 
-			voiceChannel->setPan(0);
 			voiceChannel->setFrequency(1);
 			voiceChannel->setCallback(NULL);
 			voiceChannel->setUserData(NULL);
@@ -1147,8 +1146,6 @@ void *SoundManager::playSfx(const PlaySfx &play)
 		result = channel->setVolume(play.vol);
 		checkError();
 	}
-
-	//channel->setPan(play.pan);
 
 	float freq = play.freq;
 	if (freq <= 0)
@@ -1341,7 +1338,6 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 		}
 
 		musicChannel->setFrequency(1); // in case the channel was used by a pitch-shifted sound before
-		musicChannel->setPan(0);
 		musicChannel->setCallback(NULL);
 		musicChannel->setUserData(NULL);
 		musicChannel->set3DMinMaxDistance(0.0f, 0.0f); // disable attenuation
