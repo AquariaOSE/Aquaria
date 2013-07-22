@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <string>
 #include <list>
 #include <queue>
+#include <set>
 #include "Vector.h"
 
 // if using SDL_MIXER
@@ -103,19 +104,25 @@ enum SoundLoadType
 
 struct PlaySfx
 {
-	PlaySfx() : priority(0.5), handle(0), pan(0), vol(1), fade(SFT_NONE), time(0), freq(1), loops(0), channel(BBGE_AUDIO_NOCHANNEL) {}
+	PlaySfx() : priority(0.5), handle(0), vol(1), fade(SFT_NONE),
+		time(0), freq(1), loops(0), channel(BBGE_AUDIO_NOCHANNEL),
+		maxdist(0), x(0), y(0), relative(true) {}
 
 	std::string name;
 	intptr_t handle;
-	float pan;
 	float vol;
 	float time;
 	float freq;
 	int loops;
 	int channel;
 	float priority;
+	float maxdist; // distance gain attenuation. if 0: use default value, -1: don't attenuate at all
 	SoundFadeType fade;
+	float x, y;
+	bool relative;
 };
+
+class SoundHolder; // defined below
 
 class SoundManager
 {
@@ -140,15 +147,17 @@ public:
 	SoundCore::Buffer getBuffer(const std::string &name);
 
 	void *playSfx(const PlaySfx &play);
-	void *playSfx(const std::string &name, float vol=1, float pan=0, float freq=1);
-	void *playSfx(int handle, float vol=1, float pan=0, float freq=1);
+	void *playSfx(const std::string &name, float vol=1);
 
-	bool playMod(const std::string &name);
 	bool playMusic(const std::string &name, SoundLoopType=SLT_NORMAL, SoundFadeType sft=SFT_NONE, float trans=0, SoundConditionType sct=SCT_NORMAL);
 	bool playVoice(const std::string &name, SoundVoiceType=SVT_QUEUE, float vmod=-1);
 
 	float getMusicFader();
 	float getVoxFader();
+
+	void setListenerPos(float x, float y);
+	void setSoundPos(void *channel, float x, float y);
+	void setSoundRelative(void *channel, bool relative);
 
 	std::string getVolumeString();
 
@@ -248,6 +257,28 @@ private:
 	void (*loadProgressCallback)();
 };
 
+class SoundHolder
+{
+	friend class SoundManager;
+public:
+	void updateSoundPosition(float x, float y);
+	void stopAllSounds();
+	void unlinkSound(void *channel);
+	void linkSound(void *channel);
+	void unlinkAllSounds();
+
+protected:
+	virtual ~SoundHolder();
+
+private:
+	std::set<void*> activeSounds;
+};
+
+
 extern SoundManager *sound;
+
+
+
+
 
 #endif

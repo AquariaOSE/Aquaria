@@ -175,6 +175,16 @@ void ScriptedEntity::stopEmitter(int emit)
 	}
 }
 
+ParticleEffect *ScriptedEntity::getEmitter(int emit)
+{
+	return (size_t(emit) < emitters.size()) ? emitters[emit] : NULL;
+}
+
+int ScriptedEntity::getNumEmitters() const
+{
+	return emitters.size();
+}
+
 void ScriptedEntity::registerNewPart(RenderObject *r, const std::string &name)
 {
 	partMap[name] = r;
@@ -217,7 +227,7 @@ void ScriptedEntity::setupEntity(const std::string &tex, int lcode)
 	this->layer = dsq->getEntityLayerToLayer(lcode);
 }
 
-void ScriptedEntity::setupBasicEntity(const std::string& texture, int health, int manaBall, int exp, int money, int collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer)
+void ScriptedEntity::setupBasicEntity(const std::string& texture, int health, int manaBall, int exp, int money, float collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer)
 {
 	//this->updateCull = updateCull;
 	updateCull = -1;

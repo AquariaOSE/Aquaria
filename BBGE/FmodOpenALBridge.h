@@ -60,6 +60,24 @@ typedef enum
     FMOD_DSP_TYPE_REVERB,
 } FMOD_DSP_TYPE;
 
+typedef enum
+{
+     FMOD_CHANNEL_CALLBACKTYPE_END,                  /* Called when a sound ends. */
+     FMOD_CHANNEL_CALLBACKTYPE_VIRTUALVOICE,         /* Called when a voice is swapped out or swapped in. */
+     FMOD_CHANNEL_CALLBACKTYPE_SYNCPOINT,            /* Called when a syncpoint is encountered.  Can be from wav file markers. */
+     FMOD_CHANNEL_CALLBACKTYPE_OCCLUSION,            /* Called when the channel has its geometry occlusion value calculated.  Can be used to clamp or change the value. */
+
+     FMOD_CHANNEL_CALLBACKTYPE_MAX,                  /* Maximum number of callback types supported. */
+     FMOD_CHANNEL_CALLBACKTYPE_FORCEINT = 65536      /* Makes sure this enum is signed 32bit. */
+} FMOD_CHANNEL_CALLBACKTYPE;
+
+typedef struct
+{
+	float x;        /* X co-ordinate in 3D space. */
+	float y;        /* Y co-ordinate in 3D space. */
+	 float z;        /* Z co-ordinate in 3D space. */
+} FMOD_VECTOR;
+
 #define F_CALLBACK
 
 typedef int FMOD_CAPS;
@@ -77,7 +95,14 @@ typedef int FMOD_MODE;
 #define FMOD_LOOP_OFF     (1<<4)
 #define FMOD_LOOP_NORMAL  (1<<5)
 #define FMOD_LOWMEM       (1<<6)
+#define FMOD_3D           (1<<7)
+#define FMOD_3D_HEADRELATIVE (1<<8)
+#define FMOD_3D_WORLDRELATIVE (1<<9)
+#define FMOD_3D_LINEARROLLOFF (1<<10)
 #define FMOD_DEFAULT      (FMOD_2D | FMOD_HARDWARE)
+
+typedef int FMOD_SOUND_FORMAT;
+typedef int FMOD_SOUND_TYPE;
 
 typedef int FMOD_CREATESOUNDEXINFO;
 
@@ -91,6 +116,8 @@ typedef FMOD_RESULT (*FMOD_FILE_OPENCALLBACK)(const char *,int,unsigned int *,vo
 typedef FMOD_RESULT (*FMOD_FILE_CLOSECALLBACK)(void *,void *);
 typedef FMOD_RESULT (*FMOD_FILE_READCALLBACK)(void *,void *,unsigned int,unsigned int *,void *);
 typedef FMOD_RESULT (*FMOD_FILE_SEEKCALLBACK)(void *,unsigned int,void *);
+
+typedef FMOD_RESULT (*FMOD_CHANNEL_CALLBACK)(void *channel, FMOD_CHANNEL_CALLBACKTYPE type, void *commanddata1, void *commanddata2);
 
 
 typedef enum
@@ -112,6 +139,7 @@ namespace FMOD
     {
     public:
         FMOD_RESULT release();
+        FMOD_RESULT getFormat(FMOD_SOUND_TYPE *type, FMOD_SOUND_FORMAT *format, int *channels, int *bits); // only *channels implemented
     };
 
     class DSP
@@ -145,7 +173,13 @@ namespace FMOD
         FMOD_RESULT setPriority(int priority);
         FMOD_RESULT stop();
         FMOD_RESULT setPaused(bool paused);
-        FMOD_RESULT setPan(float pan);
+        FMOD_RESULT setCallback(FMOD_CHANNEL_CALLBACK callback);
+        FMOD_RESULT getUserData(void **userdata);
+        FMOD_RESULT setUserData(void *userdata);
+        FMOD_RESULT set3DAttributes(const FMOD_VECTOR *pos, const FMOD_VECTOR *vel);
+        FMOD_RESULT set3DMinMaxDistance(float mindistance, float maxdistance);
+        FMOD_RESULT setMode(FMOD_MODE mode);
+        FMOD_RESULT getMode(FMOD_MODE *mode);
     };
 
     class System
@@ -165,6 +199,7 @@ namespace FMOD
         FMOD_RESULT setFileSystem(FMOD_FILE_OPENCALLBACK useropen, FMOD_FILE_CLOSECALLBACK userclose, FMOD_FILE_READCALLBACK userread, FMOD_FILE_SEEKCALLBACK userseek, int blockalign);
         FMOD_RESULT setSpeakerMode(FMOD_SPEAKERMODE speakermode);
         FMOD_RESULT update();
+        FMOD_RESULT set3DListenerAttributes(int listener, const FMOD_VECTOR *pos, const FMOD_VECTOR *vel, const FMOD_VECTOR *forward, const FMOD_VECTOR *up);
 
 	// BBGE-specific...
 	FMOD_RESULT getNumChannels(int *maxchannels_ret);

@@ -270,7 +270,7 @@ protected:
 	int selectedBone;
 	friend class AnimationLayer;
 	std::vector<AnimationLayer> animLayers;
-	Bone* initBone(int idx, std::string gfx, int pidx, int rbp=0, std::string name="", int cr=0, bool fh=false, bool fv=false, const Vector &cp=Vector(0,0,0));
+	Bone* initBone(int idx, std::string gfx, int pidx, int rbp=0, std::string name="", float cr=0, bool fh=false, bool fv=false, const Vector &cp=Vector(0,0,0));
 	void deleteBones();
 	void onUpdate(float dt);
 };

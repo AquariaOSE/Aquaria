@@ -284,6 +284,8 @@ Entity::Entity()
 	setDamageTarget(DT_AVATAR_BUBBLE, false);
 	setDamageTarget(DT_AVATAR_SEED, false);
 
+	stopSoundsOnDeath = false;
+
 
 	//debugLog("End Entity::Entity()");
 }
@@ -416,12 +418,12 @@ void Entity::doFriction(float dt)
 	}
 }
 
-void Entity::doFriction(float dt, int len)
+void Entity::doFriction(float dt, float len)
 {
 	Vector v = vel;
 	if (!v.isZero())
 	{
-		v.setLength2D(dt * float(len));
+		v.setLength2D(dt * len);
 		vel -= v;
 	}
 }
@@ -573,6 +575,10 @@ void Entity::watchEntity(Entity *e)
 
 void Entity::destroy()
 {
+	if (stopSoundsOnDeath)
+		this->stopAllSounds();
+	this->unlinkAllSounds();
+
 	/*
 	if (hair)
 	{
@@ -1231,6 +1237,8 @@ void Entity::update(float dt)
 		position = backupPos;
 	if (vel.isNan())
 		vel = backupVel;
+
+	updateSoundPosition();
 }
 
 void Entity::postUpdate(float dt)
@@ -2239,7 +2247,8 @@ void Entity::songNoteDone(int note, float len)
 
 void Entity::sound(const std::string &sound, float freq, float fadeOut)
 {
-	dsq->playPositionalSfx(sound, position, freq, fadeOut);
+	dsq->playPositionalSfx(sound, position, freq, fadeOut, this);
+	updateSoundPosition();
 }
 
 Vector Entity::getEnergyShotTargetPosition()
@@ -3138,4 +3147,9 @@ bool Entity::isEntityInside()
 
 	}
 	return false;
+}
+
+void Entity::updateSoundPosition()
+{
+	SoundHolder::updateSoundPosition(position.x + offset.x, position.y + offset.y);
 }
