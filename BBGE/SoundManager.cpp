@@ -1060,8 +1060,8 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 			voiceChannel->setCallback(NULL);
 			voiceChannel->setUserData(NULL);
 			voiceChannel->set3DMinMaxDistance(0.0f, 0.0f);
-			setSoundPos(voiceChannel, 0, 0);
 			setSoundRelative(voiceChannel, true);
+			setSoundPos(voiceChannel, 0, 0);
 
 			result = voiceChannel->setPaused(false);
 			checkError();
@@ -1158,10 +1158,6 @@ void *SoundManager::playSfx(const PlaySfx &play)
 	channel->setCallback(NULL);
 	channel->setUserData(NULL);
 
-	// position in space
-	setSoundPos(channel, play.x, play.y);
-	setSoundRelative(channel, play.relative);
-
 	// distance gain attenuation: stereo separation + silence at further away than maxdist
 	float maxdist = play.maxdist;
 	if (!maxdist)
@@ -1171,6 +1167,10 @@ void *SoundManager::playSfx(const PlaySfx &play)
 		channel->set3DMinMaxDistance(maxdist * 0.3, maxdist); // HACK: this works reasonably well
 	else
 		channel->set3DMinMaxDistance(0, 0); // no attenuation
+
+	// position in space
+	setSoundRelative(channel, play.relative);
+	setSoundPos(channel, play.x, play.y); // must be set after everything else (See hack in OpenALChannel::set3DAttributes())
 
 
 
@@ -1344,9 +1344,9 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 		musicChannel->setPan(0);
 		musicChannel->setCallback(NULL);
 		musicChannel->setUserData(NULL);
-		musicChannel->set3DMinMaxDistance(0.0f, 0.0f); // disable attenuation // FIXME: is that right?
-		setSoundPos(musicChannel, 0, 0);
+		musicChannel->set3DMinMaxDistance(0.0f, 0.0f); // disable attenuation
 		setSoundRelative(musicChannel, true);
+		setSoundPos(musicChannel, 0, 0);
 
 		result = musicChannel->setPaused(false);		// This is where the sound really starts.
 		checkError();

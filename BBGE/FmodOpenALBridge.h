@@ -101,6 +101,8 @@ typedef int FMOD_MODE;
 #define FMOD_3D_LINEARROLLOFF (1<<10)
 #define FMOD_DEFAULT      (FMOD_2D | FMOD_HARDWARE)
 
+typedef int FMOD_SOUND_FORMAT;
+typedef int FMOD_SOUND_TYPE;
 
 typedef int FMOD_CREATESOUNDEXINFO;
 
@@ -137,6 +139,7 @@ namespace FMOD
     {
     public:
         FMOD_RESULT release();
+        FMOD_RESULT getFormat(FMOD_SOUND_TYPE *type, FMOD_SOUND_FORMAT *format, int *channels, int *bits); // only *channels implemented
     };
 
     class DSP
