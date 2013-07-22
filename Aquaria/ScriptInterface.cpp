@@ -2767,6 +2767,8 @@ luaFunc(entity_playSfx)
 		sfx.name = getString(L, 2);
 		sfx.freq = lua_tonumber(L, 3);
 		sfx.vol = lua_tonumber(L, 4);
+		if(sfx.vol <= 0)
+			sfx.vol = 1;
 		sfx.loops = lua_tonumber(L, 5);
 		
 		float fadeOut = lua_tonumber(L, 6);

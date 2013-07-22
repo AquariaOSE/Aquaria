@@ -49,6 +49,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //#define _DEBUG 1
 #endif
 
+#undef min
+#undef max
+
 ///////////////////////////////////////////////////////////////////////////
 
 // Decoder implementation for streamed Ogg Vorbis audio.
@@ -84,6 +87,8 @@ public:
 
     static void startDecoderThread();
     static void stopDecoderThread();
+
+    ALenum getFormat() const { return format; }
 
 private:
 
@@ -597,8 +602,11 @@ public:
     bool isLooping() const { return looping; }
     bool isRaw() const { return raw; }
     FMOD_RESULT release();
+    FMOD_RESULT getFormat(FMOD_SOUND_TYPE *type, FMOD_SOUND_FORMAT *format, int *channels, int *bits);
     void reference() { refcount++; }
     ALuint getBufferName() const { return bid; }
+    int getNumChannels() const { return numChannels; }
+    void setNumChannels(int c) { numChannels = c; }
 
 private:
     VFILE * const fp;
@@ -608,6 +616,7 @@ private:
     int refcount;
     const bool raw; // true if buffer holds raw PCM data
     ALuint bid; // only used if raw == true
+    int numChannels;
 };
 
 OpenALSound::OpenALSound(VFILE *_fp, const bool _looping)
@@ -618,6 +627,7 @@ OpenALSound::OpenALSound(VFILE *_fp, const bool _looping)
     , refcount(1)
     , raw(false)
     , bid(0)
+    , numChannels(0)
 {
 }
 
@@ -629,6 +639,7 @@ OpenALSound::OpenALSound(void *_data, long _size, const bool _looping)
     , refcount(1)
     , raw(false)
     , bid(0)
+    , numChannels(0)
 {
 }
 
@@ -640,6 +651,7 @@ OpenALSound::OpenALSound(ALuint _bid, const bool _looping)
     , refcount(1)
     , raw(true)
     , bid(_bid)
+    , numChannels(0)
 {
 }
 
@@ -663,6 +675,14 @@ FMOD_RESULT OpenALSound::release()
         delete this;
     }
     return FMOD_OK;
+}
+
+ALBRIDGE(Sound,getFormat,(FMOD_SOUND_TYPE *type, FMOD_SOUND_FORMAT *format, int *channels, int *bits),(type, format, channels, bits))
+FMOD_RESULT OpenALSound::getFormat(FMOD_SOUND_TYPE *type, FMOD_SOUND_FORMAT *format, int *channels, int *bits)
+{
+	if(channels)
+		*channels = getNumChannels();
+	return FMOD_OK;
 }
 
 
@@ -691,6 +711,7 @@ public:
     FMOD_RESULT getMode(FMOD_MODE *mode);
 
     void setGroupVolume(const float _volume);
+	void setDistanceVolume(float _volume);
     void setSourceName(const ALuint _sid) { sid = _sid; }
     ALuint getSourceName() const { return sid; }
     bool start(OpenALSound *sound);
@@ -700,9 +721,12 @@ public:
     void setSound(OpenALSound *sound);
 
 private:
+    void applyVolume();
+
     ALuint sid;  // source id.
     float groupvolume;
     float volume;
+    float distvolume;
     bool paused;
     int priority;
     float frequency;
@@ -746,6 +770,7 @@ OpenALChannel::OpenALChannel()
     : sid(0)
     , groupvolume(1.0f)
     , volume(1.0f)
+    , distvolume(1.0f)
     , paused(false)
     , priority(0)
     , frequency(1.0f)
@@ -763,6 +788,7 @@ void OpenALChannel::reacquire()
     assert(!inuse);
     inuse = true;
     volume = 1.0f;
+    distvolume = 1.0f;
     paused = true;
     priority = 0;
     frequency = 1.0f;
@@ -773,8 +799,7 @@ void OpenALChannel::reacquire()
 void OpenALChannel::setGroupVolume(const float _volume)
 {
     groupvolume = _volume;
-    alSourcef(sid, AL_GAIN, volume * groupvolume);
-    SANITY_CHECK_OPENAL_CALL();
+    applyVolume();
 }
 
 bool OpenALChannel::start(OpenALSound *sound)
@@ -798,6 +823,7 @@ bool OpenALChannel::start(OpenALSound *sound)
             decoder = NULL;
             return false;
         }
+        sound->setNumChannels((decoder->getFormat() == AL_FORMAT_STEREO16) ? 2 : 1);
     }
     return true;
 }
@@ -820,8 +846,7 @@ ALBRIDGE(Channel,setVolume,(float volume),(volume))
 FMOD_RESULT OpenALChannel::setVolume(const float _volume)
 {
     volume = _volume;
-    alSourcef(sid, AL_GAIN, _volume * groupvolume);
-    SANITY_CHECK_OPENAL_CALL();
+    applyVolume();
     return FMOD_OK;
 }
 
@@ -984,7 +1009,37 @@ ALBRIDGE(Channel,set3DAttributes,(const FMOD_VECTOR *pos, const FMOD_VECTOR *vel
 FMOD_RESULT OpenALChannel::set3DAttributes(const FMOD_VECTOR *pos, const FMOD_VECTOR *vel)
 {
 	if (pos)
+	{
 		alSource3f(sid, AL_POSITION, pos->x, pos->y, pos->z);
+		int chans = sound->getNumChannels();
+		if(sound->getNumChannels() == 1)
+			setDistanceVolume(1); // nothing to do
+		else
+		{
+			// HACK: reduce volume if far away (OpanAL does not do this for stereo sounds)
+			// HACK: assume linear distance model
+			ALfloat listenerPos[3];
+			ALint relative = 0;
+			alGetSourcei(sid, AL_SOURCE_RELATIVE, &relative);
+			if(relative)
+				listenerPos[0] = listenerPos[1] = listenerPos[2] = 0;
+			else
+				alGetListenerfv(AL_POSITION, &listenerPos[0]);
+			float dx = listenerPos[0] - pos->x;
+			float dy = listenerPos[1] - pos->y;
+			float dz = listenerPos[2] - pos->z;
+			float distance = sqrtf(dx*dx + dy*dy + dz*dz);
+			float rolloff = 1, refdist = 0, maxdist = 0;
+			alGetSourcef(sid, AL_ROLLOFF_FACTOR, &rolloff);
+			alGetSourcef(sid, AL_REFERENCE_DISTANCE, &refdist);
+			alGetSourcef(sid, AL_MAX_DISTANCE, &maxdist);
+			distance = std::max(distance, refdist);
+			distance = std::min(distance, maxdist);
+			float gain = (maxdist == refdist) ? 1 : (1 - rolloff * (distance - refdist) / (maxdist - refdist));
+			setDistanceVolume(gain);
+		}
+
+	}
 	if(vel)
 		alSource3f(sid, AL_VELOCITY, vel->x, vel->y, vel->z);
 
@@ -1022,6 +1077,18 @@ FMOD_RESULT OpenALChannel::getMode(FMOD_MODE *mode)
 {
 	*mode = _mode;
 	return FMOD_OK;
+}
+
+void OpenALChannel::setDistanceVolume(float _volume)
+{
+	distvolume = _volume;
+	applyVolume();
+}
+
+void OpenALChannel::applyVolume()
+{
+	alSourcef(sid, AL_GAIN, volume * groupvolume * distvolume);
+	SANITY_CHECK_OPENAL_CALL();
 }
 
 
@@ -1330,6 +1397,7 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
         {
             alBufferData(bid, format, data, size, freq);
             *sound = (Sound *) new OpenALSound(bid, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
+            ((OpenALSound*)*sound)->setNumChannels(format == AL_FORMAT_STEREO16 ? 2 : 1);
             retval = FMOD_OK;
         }
         free(data);
