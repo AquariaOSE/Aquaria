@@ -206,6 +206,7 @@ public:
 
 	Vector getAbsoluteRotation();
 	float getWorldRotation();
+	Vector getWorldPositionAndRotation(); // more efficient shortcut, returns rotation in vector z component
 	Vector getNormal();
 	Vector getForward();
 	void setOverrideCullRadius(float ovr);
@@ -288,13 +289,13 @@ public:
 	//D3DXMATRIX matrix;
 #endif
 
-	int collideRadius;
+	float collideRadius;
 	Vector collidePosition;
 	std::vector<Vector> collisionMask;
 	std::vector<Vector> transformedCollisionMask;
 
 	CollideRects collisionRects;
-	int collisionMaskRadius;
+	float collisionMaskRadius;
 
 	float alphaMod;
 

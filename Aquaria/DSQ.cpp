@@ -888,7 +888,19 @@ void DSQ::setVersionLabelText()
 #ifdef BBGE_BUILD_SDL
 static bool sdlVideoModeOK(const int w, const int h, const int bpp)
 {
+#ifdef BBGE_BUILD_SDL2
+	SDL_DisplayMode mode;
+	const int modecount = SDL_GetNumDisplayModes(0);
+	for (int i = 0; i < modecount; i++) {
+		SDL_GetDisplayMode(0, i, &mode);
+        if (!mode.w || !mode.h || (w >= mode.w && h >= mode.h)) {
+			return true;
+        }
+    }
+    return false;
+#else
 	return SDL_VideoModeOK(w, h, bpp, SDL_OPENGL | SDL_FULLSCREEN);
+#endif
 }
 #endif
 
@@ -2281,58 +2293,22 @@ void DSQ::playMenuSelectSfx()
 	core->sound->playSfx("MenuSelect");
 }
 
-PlaySfx DSQ::calcPositionalSfx(const Vector &position, float maxdist)
+void DSQ::playPositionalSfx(const std::string &name, const Vector &position, float f, float fadeOut, SoundHolder *holder)
 {
 	PlaySfx sfx;
-	sfx.vol = 0;
-	if (dsq->game && dsq->game->avatar)
-	{
-		Vector diff = position - dsq->game->avatar->position;
-
-		// Aspect-ratio-adjustment:
-		// Just multiplying the cut-off distance with aspect increases it too much on widescreen,
-		// so only a part of it is aspect-corrected to make it sound better.
-		// Aspect is most likely >= 5/4 here, which results in a higher value than
-		// the default of 1024; this is intended. -- FG
-		if (maxdist <= 0)
-			maxdist = 724 + (300 * aspect);
-
-		float dist = diff.getLength2D();
-		if (dist < maxdist)
-		{
-			sfx.vol = 1.0f - (dist / maxdist);
-			sfx.pan = (diff.x / maxdist) * 2.0f;
-			if (sfx.pan < -1)
-				sfx.pan = -1;
-			if (sfx.pan > 1)
-				sfx.pan = 1;
-		}
-	}
-	return sfx;
-}
-
-void DSQ::playPositionalSfx(const std::string &name, const Vector &position, float f, float fadeOut)
-{
-	PlaySfx sfx = calcPositionalSfx(position);
-
-	// FIXME: Right now, positional sound effects never update their relative position to the
-	// listener, which means that if they are spawned too far away to be audible, it is not possible
-	// that they ever get audible at all. Additionally, the current scripting API only provides
-	// functions to fade sounds OUT, not to set their volume arbitrarily.
-	// Because audio thread creation is costly, drop sounds that can not be heard.
-	// This needs to be removed once proper audio source/listener positioning is implemented,
-	// or the scripting interface gets additional functions to mess with sound. -- FG
-	if (sfx.vol <= 0)
-		return;
-
 	sfx.freq = f;
 	sfx.name = name;
+	sfx.relative = false;
+	sfx.x = position.x;
+	sfx.y = position.y;
 
 	void *c = sound->playSfx(sfx);
+
 	if (fadeOut != 0)
-	{
 		sound->fadeSfx(c, SFT_OUT, fadeOut);
-	}
+
+	if (holder)
+		holder->linkSound(c);
 }
 
 void DSQ::shutdown()
@@ -4518,7 +4494,7 @@ void DSQ::onUpdate(float dt)
 		{
 			Avatar *avatar = dsq->game->avatar;
 			os << "rolling: " << dsq->game->avatar->isRolling() << " rollDelay: " << dsq->game->avatar->rollDelay << std::endl;
-			os << "canChangeForm: " << dsq->game->avatar->canChangeForm << std::endl;
+			os << "canChangeForm: " << dsq->game->avatar->canChangeForm << " gamespeed: " << gameSpeed.x << std::endl;
 			os << "h: " << dsq->game->avatar->health << " / " << dsq->game->avatar->maxHealth << std::endl;
 			os << "biteTimer: " << dsq->game->avatar->biteTimer << " flourTimer: " << dsq->game->avatar->flourishTimer.getValue() << std::endl;
 			os << "stillTimer: " << dsq->game->avatar->stillTimer.getValue() << std::endl;

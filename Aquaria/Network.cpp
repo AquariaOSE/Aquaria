@@ -157,7 +157,13 @@ static void init()
 	userAgent = os.str();
 
 	if(!worker)
+	{
+#ifdef BBGE_BUILD_SDL2
+		worker = SDL_CreateThread(_NetworkWorkerThread, "network", NULL);
+#else
 		worker = SDL_CreateThread(_NetworkWorkerThread, NULL);
+#endif
+	}
 }
 
 void shutdown()

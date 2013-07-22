@@ -1055,8 +1055,12 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 			checkError();
 			*/
 
-			voiceChannel->setPan(0);
 			voiceChannel->setFrequency(1);
+			voiceChannel->setCallback(NULL);
+			voiceChannel->setUserData(NULL);
+			voiceChannel->set3DMinMaxDistance(0.0f, 0.0f);
+			setSoundRelative(voiceChannel, true);
+			setSoundPos(voiceChannel, 0, 0);
 
 			result = voiceChannel->setPaused(false);
 			checkError();
@@ -1143,12 +1147,29 @@ void *SoundManager::playSfx(const PlaySfx &play)
 		checkError();
 	}
 
-	channel->setPan(play.pan);
-
 	float freq = play.freq;
 	if (freq <= 0)
 		freq = 1;
 	channel->setFrequency(freq);
+
+	channel->setCallback(NULL);
+	channel->setUserData(NULL);
+
+	// distance gain attenuation: stereo separation + silence at further away than maxdist
+	float maxdist = play.maxdist;
+	if (!maxdist)
+		maxdist = 1300;
+
+	if(maxdist > 0)
+		channel->set3DMinMaxDistance(maxdist * 0.3, maxdist); // HACK: this works reasonably well
+	else
+		channel->set3DMinMaxDistance(0, 0); // no attenuation
+
+	// position in space
+	setSoundRelative(channel, play.relative);
+	setSoundPos(channel, play.x, play.y); // must be set after everything else (See hack in OpenALChannel::set3DAttributes())
+
+
 
 	result = channel->setPaused(false);
 	checkError();
@@ -1160,23 +1181,11 @@ void *SoundManager::playSfx(const PlaySfx &play)
 	return 0;
 }
 
-void *SoundManager::playSfx(const std::string &name, float vol, float pan, float freq)
+void *SoundManager::playSfx(const std::string &name, float vol)
 {
 	PlaySfx play;
 	play.name = name;
 	play.vol = vol;
-	play.pan = pan;
-	play.freq = freq;
-	return playSfx(play);
-}
-
-void *SoundManager::playSfx(int handle, float vol, float pan, float freq)
-{
-	PlaySfx play;
-	play.handle = handle;
-	play.vol = vol;
-	play.pan = pan;
-	play.freq = freq;
 	return playSfx(play);
 }
 
@@ -1203,49 +1212,6 @@ bool SoundManager::isPlayingMusic(const std::string &name)
 	}
 
 	return false;
-}
-
-bool SoundManager::playMod(const std::string &name)
-{
-	std::string fn;
-
-	fn = musicPath + name;
-	stringToLower(fn);
-
-	FMOD_MODE mode=0;
-
-	//FMOD_CREATESOUNDEXINFO exinfo;
-
-	//mode = FMOD_2D | FMOD_SOFTWARE | FMOD_CREATESAMPLE;//FMOD_CREATESTREAM;
-	mode = FMOD_HARDWARE | FMOD_2D | FMOD_CREATESTREAM;
-
-	debugLog("createSound: " + fn);
-	result = SoundCore::system->createSound(fn.c_str(), mode, 0, &modSound);
-	if (checkError())
-	{
-		debugLog("createSound failed");
-		return false;
-	}
-
-	debugLog("playSound");
-	result = SoundCore::system->playSound(FMOD_CHANNEL_FREE, modSound, false, &modChannel);
-	checkError();
-
-	debugLog("setChannelGroup");
-	result = modChannel->setChannelGroup(group_mus);
-	checkError();
-
-	debugLog("setPriority");
-	result = modChannel->setPriority(0); // should be highest priority (according to the docs)
-	checkError();
-
-	debugLog("setPaused");
-	result = modChannel->setPaused(false);
-	checkError();
-
-	debugLog("returning");
-
-	return true;
 }
 
 bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFadeType sft, float trans, SoundConditionType sct)
@@ -1372,7 +1338,11 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 		}
 
 		musicChannel->setFrequency(1); // in case the channel was used by a pitch-shifted sound before
-		musicChannel->setPan(0);
+		musicChannel->setCallback(NULL);
+		musicChannel->setUserData(NULL);
+		musicChannel->set3DMinMaxDistance(0.0f, 0.0f); // disable attenuation
+		setSoundRelative(musicChannel, true);
+		setSoundPos(musicChannel, 0, 0);
 
 		result = musicChannel->setPaused(false);		// This is where the sound really starts.
 		checkError();
@@ -1557,7 +1527,7 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	if (sound)
 		return sound;
 
-	FMOD_MODE mode = FMOD_DEFAULT | FMOD_LOWMEM;
+	FMOD_MODE mode = FMOD_DEFAULT | FMOD_LOWMEM | FMOD_3D | FMOD_3D_LINEARROLLOFF;
 	if (loop)
 		mode |= FMOD_LOOP_NORMAL;
 
@@ -1680,3 +1650,122 @@ bool SoundManager::checkError()
 #endif
 	return false;
 }
+
+void SoundManager::setListenerPos(float x, float y)
+{
+	FMOD_VECTOR pos;
+	pos.x = x;
+	pos.y = y;
+	pos.z = 0.0f;
+
+	FMOD_VECTOR forward;
+	forward.x = 0.0f;
+	forward.y = 0.0f;
+	forward.z = -1.0f;
+
+	FMOD_VECTOR up;
+	up.x = 0.0f;
+	up.y = 1.0f;
+	up.z = 0.0f;
+
+	SoundCore::system->set3DListenerAttributes(0, &pos, NULL, &forward, &up);
+}
+
+void SoundManager::setSoundPos(void *channel, float x, float y)
+{
+	if (!channel)
+		return;
+
+	FMOD::Channel *pChannel = (FMOD::Channel*)channel;
+	FMOD_VECTOR pos;
+	pos.x = x;
+	pos.y = y;
+	pos.z = 0.0f;
+
+	pChannel->set3DAttributes(&pos, NULL);
+}
+
+void SoundManager::setSoundRelative(void *channel, bool relative)
+{
+	if (!channel)
+		return;
+
+	FMOD::Channel *pChannel = (FMOD::Channel*)channel;
+
+	FMOD_MODE mode = 0;
+	pChannel->getMode(&mode);
+	FMOD_MODE newmode = mode & ~(FMOD_3D_WORLDRELATIVE | FMOD_3D_HEADRELATIVE);
+	if(relative)
+		newmode |= (FMOD_3D_HEADRELATIVE | FMOD_3D);
+	else
+		newmode |= (FMOD_3D_WORLDRELATIVE | FMOD_3D);
+
+	if (mode != newmode)
+		pChannel->setMode(newmode);
+}
+
+static FMOD_RESULT s_soundHolderCallback(void *channel, FMOD_CHANNEL_CALLBACKTYPE type, void *commanddata1, void *commanddata2)
+{
+	if (!channel)
+		return FMOD_ERR_INVALID_PARAM;
+
+	SoundHolder *holder = NULL;
+	FMOD::Channel *pChannel = (FMOD::Channel*)channel;
+	pChannel->getUserData((void**)&holder);
+
+	switch(type)
+	{
+		case FMOD_CHANNEL_CALLBACKTYPE_END:
+			holder->unlinkSound(channel);
+			break;
+		default:
+			return FMOD_ERR_INVALID_PARAM;
+	}
+
+	return FMOD_OK;
+}
+
+
+SoundHolder::~SoundHolder()
+{
+	unlinkAllSounds();
+}
+
+void SoundHolder::updateSoundPosition(float x, float y)
+{
+	if (activeSounds.size())
+		for(std::set<void*>::iterator it = activeSounds.begin(); it != activeSounds.end(); ++it)
+			sound->setSoundPos(*it, x, y);
+}
+
+void SoundHolder::stopAllSounds()
+{
+	// activeSounds is modified by SoundManager::stopSfx(), which calls unkinkSound(), can't use iterator here
+	while(activeSounds.size())
+		sound->stopSfx(*activeSounds.begin());
+}
+
+void SoundHolder::unlinkSound(void *channel)
+{
+	FMOD::Channel *pChannel = (FMOD::Channel*)channel;
+	pChannel->setUserData(NULL);
+	pChannel->setCallback(NULL);
+	activeSounds.erase(channel);
+}
+
+void SoundHolder::linkSound(void *channel)
+{
+	if (!channel)
+		return;
+	FMOD::Channel *pChannel = (FMOD::Channel*)channel;
+	pChannel->setUserData(this);
+	pChannel->setCallback(s_soundHolderCallback);
+	activeSounds.insert(channel);
+}
+
+void SoundHolder::unlinkAllSounds()
+{
+	while(activeSounds.size())
+		unlinkSound(*activeSounds.begin());
+}
+
