@@ -173,7 +173,6 @@ namespace FMOD
         FMOD_RESULT setPriority(int priority);
         FMOD_RESULT stop();
         FMOD_RESULT setPaused(bool paused);
-        FMOD_RESULT setPan(float pan);
         FMOD_RESULT setCallback(FMOD_CHANNEL_CALLBACK callback);
         FMOD_RESULT getUserData(void **userdata);
         FMOD_RESULT setUserData(void *userdata);
