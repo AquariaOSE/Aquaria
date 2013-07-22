@@ -3939,7 +3939,7 @@ void Game::createInGameMenu()
 	menu[8]->useSound("Click");
 	menu[8]->position = Vector(400+60, 350);
 
-	menu[9]->event.set(MakeFunctionEvent(Game, onToggleHelpScreen));
+	menu[9]->event.set(MakeFunctionEvent(Game, toggleHelpScreen));
 	menu[9]->useQuad("gui/icon-help");
 	menu[9]->useGlow("particles/glow", gs, gs);
 	menu[9]->useSound("Click");
@@ -5846,6 +5846,9 @@ void Game::action(int id, int state)
 		}
 	}
 
+	if(isIgnoreAction((AquariaActions)id))
+		return;
+
 	if (id == ACTION_TOGGLEHELPSCREEN && !state)
 	{
 		onToggleHelpScreen();
@@ -5853,6 +5856,13 @@ void Game::action(int id, int state)
 	}
 	if (id == ACTION_ESC && !state)					onPressEscape();
 	if (id == ACTION_PRIMARY && !state)				onLeftMouseButton();
+	if (id == ACTION_TOGGLEMENU)
+	{
+		if(state)
+			showInGameMenu();
+		else
+			hideInGameMenu();
+	}
 	if (id == ACTION_TOGGLEWORLDMAP && !state)
 	{
 		if (foodMenu)
@@ -6126,6 +6136,10 @@ void Game::applyState()
 		l->followCamera = 0;
 		l->followCameraLock = 0;
 	}
+
+	dsq->resetLayerPasses();
+
+	ignoredActions.clear();
 
 	cameraLerpDelay = 0;
 	playingSongInMenu = -1;
@@ -7823,7 +7837,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		helpCancel->position = Vector(750, 600-20);
 		helpCancel->followCamera = 1;
 		//helpCancel->rotation.z = 90;
-		helpCancel->event.set(MakeFunctionEvent(Game, onToggleHelpScreen));
+		helpCancel->event.set(MakeFunctionEvent(Game, toggleHelpScreen));
 		helpCancel->scale = Vector(0.9, 0.9);
 		helpCancel->guiInputLevel = 100;
 		addRenderObject(helpCancel, LR_HELP);
@@ -7976,7 +7990,7 @@ void Game::onPressEscape()
 					if (optionsMenu || keyConfigMenu)
 						onOptionsCancel();
 					else
-						hideInGameMenu();
+						action(ACTION_TOGGLEMENU, 0); // hide menu
 				}
 			}
 			return;
@@ -7985,7 +7999,7 @@ void Game::onPressEscape()
 		if (!paused)
 		{
 			if (core->getNestedMains() == 1 && !core->isStateJumpPending())
-				showInGameMenu();
+				action(ACTION_TOGGLEMENU, 1); // show menu
 		}
 		else
 		{
@@ -10989,4 +11003,15 @@ void Game::learnedRecipe(Recipe *r, bool effects)
 	}
 }
 
+void Game::setIgnoreAction(AquariaActions ac, bool ignore)
+{
+	if (ignore)
+		ignoredActions.insert(ac);
+	else
+		ignoredActions.erase(ac);
+}
 
+bool Game::isIgnoreAction(AquariaActions ac) const
+{
+	return ignoredActions.find(ac) != ignoredActions.end();
+}

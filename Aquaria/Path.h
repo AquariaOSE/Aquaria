@@ -149,6 +149,9 @@ public:
 
 
 	void parseWarpNodeData(const std::string &dataString);
+
+	int messageVariadic(lua_State *L, int nparams);
+	void luaDebugMsg(const std::string &func, const std::string &msg);
 };
 
 #endif

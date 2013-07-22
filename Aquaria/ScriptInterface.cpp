@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
 #include "ScriptInterface.h"
 #include "../BBGE/ScriptObject.h"
 extern "C"
@@ -38,8 +39,6 @@ extern "C"
 
 #include "../BBGE/MathFunctions.h"
 
-#if defined(AQUARIA_FULL) || defined(AQUARIA_DEMO)
-
 // Define this to 1 to check types of pointers passed to functions,
 // and warn if a type mismatch is detected. In this case,
 // the pointer is treated as NULL, to avoid crashing or undefined behavior.
@@ -50,25 +49,16 @@ extern "C"
 // If true, send all sort of script errors to errorLog instead of debugLog.
 // On win32/OSX, this pops up message boxes which help to locate errors easily,
 // but can be annoying for regular gameplay.
-const bool loudScriptErrors = false;
+bool loudScriptErrors = false;
 
 // Set this to true to complain whenever a script tries to
 // get or set a global variable.
-const bool complainOnGlobalVar = false;
+bool complainOnGlobalVar = false;
 
 // Set this to true to complain whenever a script tries to get an undefined
 // thread-local variable.
-const bool complainOnUndefLocal = false;
+bool complainOnUndefLocal = false;
 
-#else
-
-// Use maximal safety for developer builds.
-#define CHECK_POINTER_TYPES 1
-const bool loudScriptErrors = true;
-const bool complainOnGlobalVar = true;
-const bool complainOnUndefLocal = true;
-
-#endif
 
 // List of all interface functions called by C++ code, terminated by NULL.
 static const char * const interfaceFunctions[] = {
@@ -1314,6 +1304,15 @@ luaFunc(obj_setRenderPass)
 	luaReturnNil();
 }
 
+luaFunc(obj_setOverrideRenderPass)
+{
+	RenderObject *r = robj(L);
+	int pass = lua_tointeger(L, 2);
+	if (r)
+		r->setOverrideRenderPass(pass);
+	luaReturnNil();
+}
+
 luaFunc(obj_fh)
 {
 	RenderObject *r = robj(L);
@@ -1462,7 +1461,6 @@ luaFunc(obj_collideCircleVsLine)
 	luaReturnBool(v);
 }
 
-
 luaFunc(obj_collideCircleVsLineAngle)
 {
 	RenderObject *r = robj(L);
@@ -1474,6 +1472,14 @@ luaFunc(obj_collideCircleVsLineAngle)
 	if (r)
 		v = dsq->game->collideCircleVsLineAngle(r, angle, start, end, radius, Vector(x,y));
 	luaReturnBool(v);
+}
+
+luaFunc(obj_fadeAlphaWithLife)
+{
+	RenderObject *r = robj(L);
+	if (r)
+		r->fadeAlphaWithLife = getBool(L, 2);
+	luaReturnNil();
 }
 
 
@@ -1531,6 +1537,27 @@ luaFunc(quad_setSegs)
 	luaReturnNil();
 }
 
+luaFunc(quad_setRepeatTexture)
+{
+	Quad *b = getQuad(L);
+	if (b)
+		b->repeatTextureToFill(getBool(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(quad_setRepeatScale)
+{
+	Quad *b = getQuad(L);
+	if (b)
+		b->repeatToFillScale = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
+	luaReturnNil();
+}
+
+luaFunc(quad_isRepeatTexture)
+{
+	Quad *b = getQuad(L);
+	luaReturnBool(b ? b->isRepeatingTextureToFill() : false);
+}
 
 // --- standard set/get functions for each type, wrapping RenderObject functions ---
 
@@ -1612,6 +1639,7 @@ luaFunc(quad_setSegs)
 	RO_FUNC(getter, prefix,  setCullRadius	) \
 	RO_FUNC(getter, prefix,  setUpdateCull	) \
 	RO_FUNC(getter, prefix,  setRenderPass	) \
+	RO_FUNC(getter, prefix,  setOverrideRenderPass	) \
 	RO_FUNC(getter, prefix,  setPositionX	) \
 	RO_FUNC(getter, prefix,  setPositionY	) \
 	RO_FUNC(getter, prefix,  enableMotionBlur	) \
@@ -1619,6 +1647,7 @@ luaFunc(quad_setSegs)
 	RO_FUNC(getter, prefix,  collideCircleVsLine) \
 	RO_FUNC(getter, prefix,  collideCircleVsLineAngle) \
 	RO_FUNC(getter, prefix,  getVectorToObj	) \
+	RO_FUNC(getter, prefix,  fadeAlphaWithLife	) \
 	MK_ALIAS(prefix, fh, flipHorizontal	) \
 	MK_ALIAS(prefix, fv, flipVertical	)
 
@@ -1630,7 +1659,10 @@ luaFunc(quad_setSegs)
 	Q_FUNC(getter, prefix,  setHeight		) \
 	Q_FUNC(getter, prefix,  getWidth		) \
 	Q_FUNC(getter, prefix,  getHeight		) \
-	Q_FUNC(getter, prefix,  setSegs			)
+	Q_FUNC(getter, prefix,  setSegs			) \
+	Q_FUNC(getter, prefix,  setRepeatTexture) \
+	Q_FUNC(getter, prefix,  isRepeatTexture	) \
+	Q_FUNC(getter, prefix,  setRepeatScale	)
 
 // This should reflect the internal class hierarchy,
 // e.g. a Beam is a Quad, so it can use quad_* functions
@@ -1646,6 +1678,38 @@ luaFunc(quad_setSegs)
 // first time, create them. (There is a second use of this further down, with different MK_* macros)
 EXPAND_FUNC_PROTOTYPES
 
+
+luaFunc(debugBreak)
+{
+	debugLog("DEBUG BREAK");
+	triggerBreakpoint();
+	luaReturnNil();
+}
+
+luaFunc(setIgnoreAction)
+{
+	dsq->game->setIgnoreAction((AquariaActions)lua_tointeger(L, 1), getBool(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(isIgnoreAction)
+{
+	luaReturnBool(dsq->game->isIgnoreAction((AquariaActions)lua_tointeger(L, 1)));
+}
+
+luaFunc(sendAction)
+{
+	AquariaActions ac = (AquariaActions)lua_tointeger(L, 1);
+	int state = lua_tointeger(L, 2);
+	int mask = lua_tointeger(L, 3);
+	if(!mask)
+		mask = -1;
+	if(mask & 1)
+		dsq->game->action(ac, state);
+	if((mask & 2) && dsq->game->avatar)
+		dsq->game->avatar->action(ac, state);
+	luaReturnNil();
+}
 
 luaFunc(randRange)
 {
@@ -3760,7 +3824,7 @@ luaFunc(spawnManaBall)
 	Vector p;
 	p.x = lua_tonumber(L, 1);
 	p.y = lua_tonumber(L, 2);
-	int amount = lua_tonumber(L, 3);
+	float amount = lua_tonumber(L, 3);
 	dsq->game->spawnManaBall(p, amount);
 	luaReturnNil();
 }
@@ -3907,6 +3971,12 @@ luaFunc(savePoint)
 	}
 
 	dsq->doSavePoint(position);
+	luaReturnNil();
+}
+
+luaFunc(saveMenu)
+{
+	dsq->doSaveSlotMenu(SSM_SAVE);
 	luaReturnNil();
 }
 
@@ -4722,6 +4792,19 @@ luaFunc(entity_msg)
 	{
 		// pass everything on the stack except the entity pointer
 		int res = e->messageVariadic(L, lua_gettop(L) - 1);
+		if (res >= 0)
+			return res;
+	}
+	luaReturnNil();
+}
+
+luaFunc(node_msg)
+{
+	Path *p = path(L);
+	if (p)
+	{
+		// pass everything on the stack except the entity pointer
+		int res = p->messageVariadic(L, lua_gettop(L) - 1);
 		if (res >= 0)
 			return res;
 	}
@@ -6229,6 +6312,16 @@ luaFunc(getHalfTimer)
 	luaReturnNum(dsq->game->getHalfTimer(n));
 }
 
+luaFunc(getOldDT)
+{
+	luaReturnNum(core->get_old_dt());
+}
+
+luaFunc(getDT)
+{
+	luaReturnNum(core->get_current_dt());
+}
+
 luaFunc(isNested)
 {
 	luaReturnBool(core->isNested());
@@ -7443,6 +7536,52 @@ luaFunc(pickupGem)
 	luaReturnNil();
 }
 
+luaFunc(setGemPosition)
+{
+	int gemId = lua_tointeger(L, 1);
+	std::string mapname = getString(L, 4);
+	if(mapname.empty())
+		mapname = dsq->game->sceneName;
+	Vector pos(lua_tonumber(L, 2), lua_tonumber(L, 3));
+
+	WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(getString(L, 1));
+	if(tile)
+	{
+		pos = dsq->game->worldMapRender->getWorldToTile(tile, pos, true, true);
+		if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+		{
+			Continuity::Gems::iterator it = dsq->continuity.gems.begin();
+			std::advance(it, gemId);
+			GemData& gem = *it;
+			gem.pos = pos;
+			gem.mapName = mapname;
+		}
+		else
+		{
+			debugLog("setGemPosition: invalid index");
+		}
+	}
+	else
+	{
+		debugLog("setGemPosition: Map tile does not exist: " + mapname);
+	}
+	luaReturnNil();
+}
+
+luaFunc(removeGem)
+{
+	int gemId = lua_tointeger(L, 1);
+	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	{
+		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
+		std::advance(it, gemId);
+		dsq->continuity.removeGemData(&(*it));
+		if(dsq->game->worldMapRender->isOn())
+			dsq->game->worldMapRender->fixGems();
+	}
+	luaReturnNil();
+}
+
 luaFunc(beaconEffect)
 {
 	int index = lua_tointeger(L, 1);
@@ -7501,6 +7640,19 @@ luaFunc(getCostume)
 luaFunc(setCostume)
 {
 	dsq->continuity.setCostume(getString(L));
+	luaReturnNil();
+}
+
+luaFunc(setLayerRenderPass)
+{
+	int layer = lua_tointeger(L, 1);
+	int startPass = lua_tointeger(L, 2);
+	int endPass = lua_tointeger(L, 3);
+	if(layer >= 0 && layer < core->renderObjectLayers.size())
+	{
+		core->renderObjectLayers[layer].startPass = startPass;
+		core->renderObjectLayers[layer].endPass = endPass;
+	}
 	luaReturnNil();
 }
 
@@ -7951,6 +8103,11 @@ static const struct {
 	{"dofile", l_dofile_caseinsensitive},
 	{"loadfile", l_loadfile_caseinsensitive},
 
+	luaRegister(debugBreak),
+	luaRegister(setIgnoreAction),
+	luaRegister(isIgnoreAction),
+	luaRegister(sendAction),
+
 	luaRegister(shakeCamera),
 	luaRegister(upgradeHealth),
 
@@ -7969,6 +8126,8 @@ static const struct {
 	luaRegister(getPetPower),
 	luaRegister(getTimer),
 	luaRegister(getHalfTimer),
+	luaRegister(getOldDT),
+	luaRegister(getDT),
 	luaRegister(setCostume),
 	luaRegister(getCostume),
 	luaRegister(getNoteName),
@@ -8046,7 +8205,6 @@ static const struct {
 
 
 	luaRegister(entity_setCullRadius),
-	luaRegister(entity_setUpdateCull),
 
 	luaRegister(entity_switchLayer),
 
@@ -8214,6 +8372,7 @@ static const struct {
 	luaRegister(entity_getMaxHealth),
 	luaRegister(entity_pushTarget),
 	luaRegister(entity_msg),
+	luaRegister(node_msg),
 	luaRegister(entity_updateMovement),
 	luaRegister(entity_updateCurrents),
 	luaRegister(entity_updateLocalWarpAreas),
@@ -8397,6 +8556,7 @@ static const struct {
 
 
 	luaRegister(savePoint),
+	luaRegister(saveMenu),
 	luaRegister(wait),
 	luaRegister(watch),
 
@@ -8408,6 +8568,7 @@ static const struct {
 	luaRegister(centerText),
 	luaRegister(watchForVoice),
 
+	luaRegister(setLayerRenderPass),
 	luaRegister(setElementLayerVisible),
 	luaRegister(isElementLayerVisible),
 
@@ -8416,6 +8577,8 @@ static const struct {
 
 
 	luaRegister(pickupGem),
+	luaRegister(setGemPosition),
+	luaRegister(removeGem),
 	luaRegister(setBeacon),
 	luaRegister(getBeacon),
 	luaRegister(beaconEffect),
@@ -9565,6 +9728,13 @@ ScriptInterface::ScriptInterface()
 
 void ScriptInterface::init()
 {
+	bool devmode = dsq->isDeveloperKeys();
+
+	// Everything on in dev mode, everything off otherwise.
+	bool loudScriptErrors = devmode;
+	bool complainOnGlobalVar = devmode;
+	bool complainOnUndefLocal = devmode;
+
 	if (!baseState)
 		baseState = createLuaVM();
 }

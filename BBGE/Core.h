@@ -1277,6 +1277,7 @@ public:
 	float aspectX, aspectY;
 
 	float get_old_dt() { return old_dt; }
+	float get_current_dt() { return current_dt; }
 
 	bool debugLogActive;
 
@@ -1330,6 +1331,7 @@ protected:
 	void initIcon();
 
 	float old_dt;
+	float current_dt;
 	
 	std::string debugLogPath;
 

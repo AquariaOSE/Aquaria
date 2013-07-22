@@ -338,14 +338,12 @@ void ModSelectorScreen::initNetPanel()
 #ifdef BBGE_BUILD_VFS
 	if(!gotServerList)
 	{
-		// FIXME: demo should be able to see downloadable mods imho
-#ifndef AQUARIA_DEMO
 		moddl.init();
 		std::string serv = dsq->user.network.masterServer;
 		if(serv.empty())
 			serv = DEFAULT_MASTER_SERVER;
 		moddl.GetModlist(serv, true, true);
-#endif
+
 		gotServerList = true; // try this only once (is automatically reset on failure)
 	}
 #endif
@@ -502,11 +500,6 @@ void ModIcon::onClick()
 {
 	dsq->sound->playSfx("click");
 
-#ifdef AQUARIA_DEMO
-	dsq->nag(NAG_TOTITLE);
-	return;
-#endif
-
 	switch(modType)
 	{
 		case MODTYPE_MOD:
@@ -520,18 +513,24 @@ void ModIcon::onClick()
 
 		case MODTYPE_PATCH:
 		{
+			#ifdef AQUARIA_DEMO
+				dsq->sound->playSfx("denied");
+				core->quitNestedMain();
+				dsq->modIsSelected = true; // HACK: trigger nag screen
+				dsq->selectedMod = -1;
+				break;
+			#endif
+
 			std::set<std::string>::iterator it = dsq->activePatches.find(fname);
 			if(it != dsq->activePatches.end())
 			{
 				dsq->sound->playSfx("pet-off");
 				dsq->unapplyPatch(fname);
-				//dsq->screenMessage(modname + " - deactivated"); // DEBUG
 			}
 			else
 			{
 				dsq->sound->playSfx("pet-on");
 				dsq->applyPatch(fname);
-				//dsq->screenMessage(modname + " - activated"); // DEBUG
 			}
 			updateStatus();
 			break;
@@ -711,7 +710,9 @@ void ModIconOnline::onClick()
 	dsq->sound->playSfx("click");
 
 #ifdef AQUARIA_DEMO
-	dsq->nag(NAG_TOTITLE);
+	core->quitNestedMain();
+	dsq->modIsSelected = true; // HACK: trigger nag screen
+	dsq->selectedMod = -1;
 	return;
 #endif
 

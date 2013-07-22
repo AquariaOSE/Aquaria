@@ -54,6 +54,12 @@ void UserSettings::save()
 				xml_locale.SetAttribute("name", system.locale);
 			}
 			xml_system.InsertEndChild(xml_locale);
+
+			TiXmlElement xml_devmode("DeveloperMode");
+			{
+				xml_devmode.SetAttribute("on", system.devModeOn);
+			}
+			xml_system.InsertEndChild(xml_devmode);
 		}
 		doc.InsertEndChild(xml_system);
 
@@ -369,6 +375,12 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		if (xml_locale)
 		{
 			system.locale = xml_locale->Attribute("name");
+		}
+
+		TiXmlElement *xml_devmode = xml_system->FirstChildElement("DeveloperMode");
+		if (xml_devmode)
+		{
+			xml_devmode->Attribute("on", &system.devModeOn);
 		}
 	}
 

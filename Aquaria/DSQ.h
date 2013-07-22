@@ -96,6 +96,9 @@ enum AquariaActions
 	ACTION_FOODRIGHT,
 	ACTION_FOODDROP,
 
+	ACTION_TOGGLEMENU,
+
+
 
 	ACTION_SWIMUP = 100,
 	ACTION_SWIMDOWN,
@@ -166,7 +169,8 @@ enum AquariaActions
 typedef std::list<Entity*> EntityList;
 typedef std::vector<Entity*> EntityContainer;
 
-#define FOR_ENTITIES(i) for (Entity **i = &dsq->entities[0]; *i != 0; i++)
+// last entry is always NULL. added if is a little hack to ensure the scope of the iterator variable
+#define FOR_ENTITIES(i) for (size_t i##_i = 0; dsq->entities[i##_i] != 0; ++i##_i) if (Entity **i = &dsq->entities[i##_i])
 
 
 enum MenuPage
@@ -1566,6 +1570,8 @@ public:
 
 	virtual void onBackgroundUpdate();
 
+	void resetLayerPasses();
+
 protected:
 
 	Quad *cutscene_bg;
@@ -1606,7 +1612,6 @@ protected:
 	void updatepecue(float dt);
 	std::vector<PECue> pecue;
 
-	bool developerKeys;
 	void onMouseInput();
 	std::vector<std::string> voxQueue;
 
