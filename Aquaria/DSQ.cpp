@@ -2299,6 +2299,7 @@ void DSQ::playPositionalSfx(const std::string &name, const Vector &position, flo
 	sfx.freq = f;
 	sfx.name = name;
 	sfx.relative = false;
+	sfx.positional = true;
 	sfx.x = position.x;
 	sfx.y = position.y;
 

@@ -69,8 +69,12 @@ public:
 
     ~OggDecoder();
 
-    // Start playing on the given channel, with optional looping.
-    bool start(ALuint source, bool loop);
+    // Prepare playing on the given channel.
+    bool preStart(ALuint source);
+
+    // Decodes the first few buffers, starts the actual playback and detaches the decoder
+    // from the main thread, with optional looping.
+    void start(bool loop);
 
     // Decode audio into any free buffers.  Must be called periodically
     // on systems without threads; may be called without harm on systems
@@ -322,10 +326,9 @@ OggDecoder::~OggDecoder()
     }
 }
 
-bool OggDecoder::start(ALuint source, bool loop)
+bool OggDecoder::preStart(ALuint source)
 {
     this->source = source;
-    this->loop = loop;
 
     if (fp) {
         if (ov_open_callbacks(fp, &vf, NULL, 0, local_OV_CALLBACKS_NOCLOSE) != 0)
@@ -387,6 +390,13 @@ bool OggDecoder::start(ALuint source, bool loop)
         return false;
     }
 
+    return true;
+}
+
+void OggDecoder::start(bool loop)
+{
+    this->loop = loop;
+
     playing = true;
     eof = false;
     samples_done = 0;
@@ -394,8 +404,6 @@ bool OggDecoder::start(ALuint source, bool loop)
         queue(buffers[i]);
 
     detachDecoder(this);
-
-    return true;
 }
 
 void OggDecoder::update()
@@ -512,7 +520,22 @@ void OggDecoder::queue(ALuint buffer)
 
     if (pcm_size > 0)
     {
-        alBufferData(buffer, format, pcm_buffer, pcm_size, freq);
+        ALuint fmt = format;
+        if(channels == 2 && forcemono)
+        {
+            signed short *buf = (short*)&pcm_buffer[0];
+            int numSamples = pcm_size / 2; // 16 bit samples
+            int j = 0;
+            for (int i = 0; i < numSamples ; i += 2)
+            {
+                // This is in theory not quite correct, but it doesn't add any artifacts or clipping.
+                // FIXME: Seems that simple and stupid is the method of choice, then... -- FG
+                buf[j++] = (buf[i] + buf[i+1]) / 2;
+            }
+            pcm_size = numSamples;
+            fmt = AL_FORMAT_MONO16;
+        }
+        alBufferData(buffer, fmt, pcm_buffer, pcm_size, freq);
         alSourceQueueBuffers(source, 1, &buffer);
     }
 }
@@ -839,7 +862,7 @@ bool OpenALChannel::start(OpenALSound *sound)
             decoder = new OggDecoder(sound->getFile());
         else
             decoder = new OggDecoder(sound->getData(), sound->getSize());
-        if (!decoder->start(sid, sound->isLooping()))
+        if (!decoder->preStart(sid))
         {
             delete decoder;
             decoder = NULL;
@@ -954,6 +977,11 @@ FMOD_RESULT OpenALChannel::setPaused(const bool _paused, const bool setstate)
     }
     else if ((!_paused) && (initial || ((state == AL_INITIAL) || (state == AL_PAUSED))))
     {
+        if (initial)
+        {
+            decoder->setForceMono(mindist || maxdist); // HACK: this is set for positional sounds.
+            decoder->start(sound->isLooping());
+        }
         alSourcePlay(sid);
         initial = false;
         SANITY_CHECK_OPENAL_CALL();
@@ -1429,6 +1457,8 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
         alGenBuffers(1, &bid);
         if (bid != 0)
         {
+            // FIXME: This needs to stored seperately and fed to the AL on demand,
+            // converting stereo to mono when it's known whether to do so or not.
             alBufferData(bid, format, data, size, freq);
             *sound = (Sound *) new OpenALSound(bid, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
             ((OpenALSound*)*sound)->setNumChannels(format == AL_FORMAT_STEREO16 ? 2 : 1);
