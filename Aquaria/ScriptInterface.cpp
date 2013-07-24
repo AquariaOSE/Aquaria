@@ -2774,6 +2774,7 @@ luaFunc(entity_playSfx)
 		float fadeOut = lua_tonumber(L, 6);
 		sfx.maxdist = lua_tonumber(L, 7);
 		sfx.relative = false;
+		sfx.positional = true;
 
 		h = core->sound->playSfx(sfx);
 		if (fadeOut != 0)
@@ -5944,8 +5945,12 @@ luaFunc(playSfx)
 	if (sfx.vol <= 0)
 		sfx.vol = 1;
 	sfx.loops = lua_tointeger(L, 4);
-	sfx.x = lua_tonumber(L, 5);
-	sfx.y =  lua_tonumber(L, 6);
+	if(lua_isnumber(L, 6) && lua_isnumber(L, 7))
+	{
+		sfx.x = lua_tonumber(L, 5);
+		sfx.y =  lua_tonumber(L, 6);
+		sfx.positional = true;
+	}
 	sfx.maxdist = lua_tonumber(L, 7);
 	if(lua_isnoneornil(L, 8))
 		sfx.relative = (sfx.x == 0 && sfx.y == 0);

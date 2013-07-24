@@ -1158,9 +1158,9 @@ void *SoundManager::playSfx(const PlaySfx &play)
 	// distance gain attenuation: stereo separation + silence at further away than maxdist
 	float maxdist = play.maxdist;
 	if (!maxdist)
-		maxdist = 1300;
+		maxdist = 1800;
 
-	if(maxdist > 0)
+	if(maxdist > 0 && play.positional)
 		channel->set3DMinMaxDistance(maxdist * 0.3, maxdist); // HACK: this works reasonably well
 	else
 		channel->set3DMinMaxDistance(0, 0); // no attenuation

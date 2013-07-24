@@ -106,7 +106,7 @@ struct PlaySfx
 {
 	PlaySfx() : priority(0.5), handle(0), vol(1), fade(SFT_NONE),
 		time(0), freq(1), loops(0), channel(BBGE_AUDIO_NOCHANNEL),
-		maxdist(0), x(0), y(0), relative(true) {}
+		maxdist(0), x(0), y(0), relative(true), positional(false) {}
 
 	std::string name;
 	intptr_t handle;
@@ -119,7 +119,8 @@ struct PlaySfx
 	float maxdist; // distance gain attenuation. if 0: use default value, -1: don't attenuate at all
 	SoundFadeType fade;
 	float x, y;
-	bool relative;
+	bool relative; // relative to listener?
+	bool positional; // if true, this indicates that we want positional sound (stereo will be downmixed to mono to make OpenAL happy)
 };
 
 class SoundHolder; // defined below
