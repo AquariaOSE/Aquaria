@@ -816,7 +816,7 @@ void MenuIconBar::init()
 	
 	ico = new MenuIcon(0);
 	ico->label = dsq->continuity.stringBank.get(2027);
-	ico->useQuad("modselect/hdd");
+	ico->useQuad("modselect/installed");
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
 	add(ico);
@@ -825,7 +825,7 @@ void MenuIconBar::init()
 	MenuIcon *prev = ico;
 	ico = new MenuIcon(1);
 	ico->label = dsq->continuity.stringBank.get(2028);
-	ico->useQuad("modselect/patch");
+	ico->useQuad("modselect/patches");
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
 	ico->setDirMove(DIR_UP, prev);
@@ -835,7 +835,7 @@ void MenuIconBar::init()
 	prev = ico;
 	ico = new MenuIcon(2);
 	ico->label = dsq->continuity.stringBank.get(2029);
-	ico->useQuad("modselect/globe");
+	ico->useQuad("modselect/download");
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
 	ico->setDirMove(DIR_UP, prev);
@@ -846,7 +846,7 @@ void MenuIconBar::init()
 	prev = ico;
 	ico = new MenuIcon(3);
 	ico->label = dsq->continuity.stringBank.get(2030);
-	ico->useQuad("gui/wok-drop");
+	ico->useQuad("modselect/exit");
 	ico->repeatTextureToFill(false);
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
