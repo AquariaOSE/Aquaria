@@ -1079,7 +1079,7 @@ Bone *SkeletalSprite::getBoneByIdx(int idx)
 	return 0;
 }
 
-Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std::string name, int cr, bool fh, bool fv, const Vector &cp)
+Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std::string name, float cr, bool fh, bool fv, const Vector &cp)
 {
 	Bone *b = new Bone;
 	b->boneIdx = idx;

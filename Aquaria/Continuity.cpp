@@ -165,6 +165,8 @@ IngredientType Continuity::getIngredientTypeFromName(const std::string &name) co
 		return IT_MUSHROOM;
 	else if (name == "Anything")
 		return IT_ANYTHING;
+	else if (name.length() && isdigit(name[0]))
+		return (IngredientType)atoi(name.c_str());
 
 	return IT_NONE;
 }
@@ -188,6 +190,16 @@ IngredientData *Continuity::getIngredientDataByIndex(int idx)
 {
 	if (idx < 0 || idx >= ingredientData.size()) return 0;
 	return ingredientData[idx];
+}
+
+int Continuity::getIngredientDataSize() const
+{
+	return (int)ingredientData.size();
+}
+
+int Continuity::getIngredientHeldSize() const
+{
+	return (int)ingredients.size();
 }
 
 Recipe::Recipe()

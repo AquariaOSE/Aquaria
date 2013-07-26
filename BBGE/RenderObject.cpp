@@ -319,6 +319,14 @@ float RenderObject::getWorldRotation()
 	return rot;
 }
 
+Vector RenderObject::getWorldPositionAndRotation()
+{
+	Vector up = getWorldCollidePosition(Vector(0,1));
+	Vector orig = getWorldPosition();
+	MathFunctions::calculateAngleBetweenVectorsInDegrees(orig, up, orig.z);
+	return orig;
+}
+
 Vector RenderObject::getWorldCollidePosition(const Vector &vec)
 {
 #ifdef BBGE_BUILD_OPENGL

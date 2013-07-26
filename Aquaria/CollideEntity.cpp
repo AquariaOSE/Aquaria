@@ -205,7 +205,7 @@ void CollideEntity::updateMovement(float dt)
 	if (vel.x != 0 || vel.y != 0)
 	{
 
-		const int hw = collideRadius;
+		const float hw = collideRadius;
 		bool freeRange = false;
 
 		if (isv(EV_COLLIDELEVEL,1))

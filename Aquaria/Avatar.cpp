@@ -2754,7 +2754,7 @@ void Avatar::formAbility(int ability)
 						if (s->shotData->homing > 0)
 						{
 							Vector p = dsq->getGameCursorPosition();
-							target = dsq->game->getNearestEntity(p, 800, this, ET_ENEMY, s->shotData->damageType);
+							target = dsq->game->getNearestEntity(p, 800, this, ET_ENEMY, s->getDamageType());
 						}
 						if (target)
 						{
@@ -4129,6 +4129,8 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	_collisionAvoidRange = COLLIDE_RANGE_NORMAL;
 
 	_seeMapMode = SEE_MAP_DEFAULT;
+
+	blockBackFlip = false;
 }
 
 void Avatar::revert()
@@ -4282,6 +4284,7 @@ void Avatar::startBackFlip()
 {
 	if (boneLock.on) return;
 	if (riding) return;
+	if (blockBackFlip) return;
 
 	skeletalSprite.getAnimationLayer(ANIMLAYER_OVERRIDE)->transitionAnimate("backflip", 0.2, 0);
 	vel.x = -vel.x*0.25f;

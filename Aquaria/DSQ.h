@@ -1067,6 +1067,9 @@ public:
 	IngredientData *getIngredientHeldByIndex(int idx) const;
 	IngredientData *getIngredientDataByIndex(int idx);
 
+	int getIngredientDataSize() const;
+	int getIngredientHeldSize() const;
+
 	bool applyIngredientEffects(IngredientData *data);
 
 	void loadIngredientData();
@@ -1152,6 +1155,7 @@ public:
 	std::vector<FoodSortOrder> sortByType, sortByHeal, sortByIngredients, sortByUnsort;
 
 	StatsAndAchievements *statsAndAchievements;
+
 protected:
 	std::vector<EatData> eats;
 	std::vector<int> speedTypes;

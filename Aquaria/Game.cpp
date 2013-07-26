@@ -2293,7 +2293,7 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 			avg += vs[i];
 		}
 	}
-	if (avg != 0)
+	if (c)
 	{
 		avg /= c;
 		if (avg.x != 0 || avg.y != 0)
@@ -2716,7 +2716,7 @@ void Game::setTimerText(float time)
 	timerText->setText(os.str());
 }
 
-void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
+void Game::generateCollisionMask(Quad *q, float overrideCollideRadius /* = 0 */)
 {
 #ifdef BBGE_BUILD_OPENGL
 	if (q->texture)
@@ -8151,7 +8151,7 @@ bool Game::collideCircleVsCircle(Entity *a, Entity *b)
 	return (a->position - b->position).isLength2DIn(a->collideRadius + b->collideRadius);
 }
 
-bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc, int *colSegment)
+bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc, int *colSegment)
 {
 	if (perc == 0)
 		perc = 1;
@@ -8363,7 +8363,7 @@ bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 	{
 		return false;
 	}
-	if (shot->shotData && shot->shotData->checkDamageTarget)
+	if (shot->checkDamageTarget)
 	{
 		if (!e->isDamageTarget(shot->getDamageType()))
 			return false;
@@ -10879,7 +10879,7 @@ Vector Game::getClosestPointOnLine(Vector a, Vector b, Vector p)
    return a + V;
 }
 
-bool Game::collideCircleWithGrid(const Vector& position, int r)
+bool Game::collideCircleWithGrid(const Vector& position, float r)
 {
 	Vector tile = position;
 	TileVector t(tile);
