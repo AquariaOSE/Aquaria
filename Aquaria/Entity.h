@@ -196,7 +196,7 @@ enum BounceType
 	BOUNCE_REAL		= 1
 };
 
-class Entity : public Quad, public StateMachine
+class Entity : public Quad, public StateMachine, public SoundHolder
 {
 public:
 	Entity();
@@ -276,6 +276,7 @@ public:
 
 	void popBubble();
 	void sound(const std::string &sound, float freq=1, float fadeOut=0);
+	void setStopSoundsOnDeath(bool stop) { stopSoundsOnDeath = stop; }
 
 	void freeze(float time);
 
@@ -492,6 +493,8 @@ public:
 
 	bool isEntityInside();
 
+	void updateSoundPosition();
+
 protected:
 	bool calledEntityDied;
 	Path *waterBubble;
@@ -601,6 +604,8 @@ private:
 
 	int maxSpeed;
 	int oldMaxSpeed;
+
+	bool stopSoundsOnDeath;
 
 };
 

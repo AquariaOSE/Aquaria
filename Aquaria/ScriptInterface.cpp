@@ -2763,26 +2763,37 @@ luaFunc(entity_playSfx)
 	void *h = NULL;
 	if (e && !dsq->isSkippingCutscene())
 	{
-		PlaySfx sfx = dsq->calcPositionalSfx(e->position, lua_tonumber(L, 7));
+		PlaySfx sfx;
 		sfx.name = getString(L, 2);
 		sfx.freq = lua_tonumber(L, 3);
-		float vol = lua_tonumber(L, 4);
+		sfx.vol = lua_tonumber(L, 4);
+		if(sfx.vol <= 0)
+			sfx.vol = 1;
 		sfx.loops = lua_tonumber(L, 5);
+		
 		float fadeOut = lua_tonumber(L, 6);
-		if(vol > 0)
-			sfx.vol *= vol;
-
-		// FIXME: See comment in DSQ::playPositionalSfx() -- FG
-		if (sfx.vol <= 0)
-			luaReturnPtr(NULL);
+		sfx.maxdist = lua_tonumber(L, 7);
+		sfx.relative = false;
+		sfx.positional = true;
 
 		h = core->sound->playSfx(sfx);
 		if (fadeOut != 0)
 		{
 			sound->fadeSfx(h, SFT_OUT, fadeOut);
 		}
+
+		e->linkSound(h);
+		e->updateSoundPosition();
 	}
 	luaReturnPtr(h);
+}
+
+luaFunc(entity_setStopSoundsOnDeath)
+{
+	Entity *e = entity(L);
+	if (e)
+		e->setStopSoundsOnDeath(getBool(L, 2));
+	luaReturnNil();
 }
 
 luaFunc(entity_setSpiritFreeze)
@@ -5927,32 +5938,24 @@ luaFunc(emote)
 
 luaFunc(playSfx)
 {
-	float freq = lua_tonumber(L, 2);
-	float vol = lua_tonumber(L, 3);
-	int loops = lua_tointeger(L, 4);
-	if (vol <= 0)
-		vol = 1;
-
 	PlaySfx sfx;
-
-	if (lua_isnumber(L, 5) && lua_isnumber(L, 6))
-	{
-		const Vector pos(lua_tonumber(L, 5), lua_tonumber(L, 6));
-		sfx = dsq->calcPositionalSfx(pos, lua_tonumber(L, 7));
-		sfx.vol *= vol;
-	}
-	else
-	{
-		sfx.vol = vol;
-	}
-
-	// FIXME: See comment in DSQ::playPositionalSfx() -- FG
-	if (sfx.vol <= 0)
-		luaReturnPtr(NULL);
-
 	sfx.name = getString(L, 1);
-	sfx.freq = freq;
-	sfx.loops = loops;
+	sfx.freq = lua_tonumber(L, 2);
+	sfx.vol = lua_tonumber(L, 3);
+	if (sfx.vol <= 0)
+		sfx.vol = 1;
+	sfx.loops = lua_tointeger(L, 4);
+	if(lua_isnumber(L, 6) && lua_isnumber(L, 7))
+	{
+		sfx.x = lua_tonumber(L, 5);
+		sfx.y =  lua_tonumber(L, 6);
+		sfx.positional = true;
+	}
+	sfx.maxdist = lua_tonumber(L, 7);
+	if(lua_isnoneornil(L, 8))
+		sfx.relative = (sfx.x == 0 && sfx.y == 0);
+	else
+		sfx.relative = getBool(L, 8);
 
 	void *handle = NULL;
 
