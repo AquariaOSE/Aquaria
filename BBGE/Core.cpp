@@ -46,7 +46,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #ifdef BBGE_BUILD_SDL
 	#include "SDL_syswm.h"
+	#ifdef BBGE_BUILD_SDL2
+	static SDL_Window *gScreen=0;
+	static SDL_GLContext gGLctx=0;
+	#else
 	static SDL_Surface *gScreen=0;
+	#endif
+
 	bool ignoreNextMouse=false;
 	Vector unchange;
 #endif
@@ -68,13 +74,13 @@ void Core::initIcon()
 
 	SDL_SysWMinfo wminfo;
 	SDL_VERSION(&wminfo.version)
-	if (SDL_GetWMInfo(&wminfo) != 1)
+	if (SDL_GetWindowWMInfo(gScreen, &wminfo) != 1)
 	{
 		//errorLog("wrong SDL version");
 		// error: wrong SDL version
 	}
 
-	HWND hwnd = wminfo.window;
+	HWND hwnd = wminfo.info.win.window;
 
 	::SetClassLong(hwnd, GCL_HICON, (LONG) icon_windows);
 #endif
@@ -205,7 +211,9 @@ void Core::updateCursorFromJoystick(float dt, int spd)
 void Core::setWindowCaption(const std::string &caption, const std::string &icon)
 {
 #ifdef BBGE_BUILD_SDL
+#ifndef BBGE_BUILD_SDL2
 	SDL_WM_SetCaption(caption.c_str(), icon.c_str());
+#endif
 #endif
 }
 
@@ -1220,7 +1228,11 @@ void Core::setInputGrab(bool on)
 	if (isWindowFocus())
 	{
 #ifdef BBGE_BUILD_SDL
+		#ifdef BBGE_BUILD_SDL2
+		SDL_SetWindowGrab(gScreen, on ? SDL_TRUE : SDL_FALSE);
+		#else
 		SDL_WM_GrabInput(on?SDL_GRAB_ON:SDL_GRAB_OFF);
+		#endif
 #endif
 	}
 }
@@ -1258,9 +1270,11 @@ void Core::init()
 		exit(0);
 #endif
 #ifdef BBGE_BUILD_SDL
+#ifndef BBGE_BUILD_SDL2
 	// Disable relative mouse motion at the edges of the screen, which breaks
 	// mouse control for absolute input devices like Wacom tablets and touchscreens.
 	SDL_putenv((char *) "SDL_MOUSE_RELATIVE=0");
+#endif
 
 	if((SDL_Init(0))==-1)
 	{
@@ -1536,7 +1550,11 @@ bool Core::initJoystickLibrary(int numSticks)
 {
 	//joystickEnabled = false;
 #ifdef BBGE_BUILD_SDL
+#ifdef BBGE_BUILD_SDL2
+	SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER);
+#else
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+#endif
 #endif
 
 	if (numSticks > 0)
@@ -1821,7 +1839,10 @@ void Core::setSDLGLAttributes()
 	debugLog(os.str());
 
 #ifdef BBGE_BUILD_SDL
+#ifndef BBGE_BUILD_SDL2
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, _vsync);
+#endif
+
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 #endif
 }
@@ -1897,11 +1918,15 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 	//setenv("SDL_VIDEO_CENTERED", "1", 1);
 	//SDL_putenv("SDL_VIDEO_WINDOW_POS=400,300");
 
+#ifndef BBGE_BUILD_SDL2
+#if !defined(BBGE_BUILD_MACOSX)
 	// have to cast away constness, since SDL_putenv() might be #defined to
 	//  putenv(), which takes a (char *), and freaks out newer GCC releases
 	//  when you try to pass a (const!) string literal here...  --ryan.
 	SDL_putenv((char *) "SDL_VIDEO_CENTERED=1");
-	SDL_putenv((char *) "LIBGL_DEBUG=verbose"); // temp, to track errors on linux with nouveau drivers.
+#endif
+#endif
+	//SDL_putenv((char *) "LIBGL_DEBUG=verbose"); // temp, to track errors on linux with nouveau drivers.
 
 	if (recreate)
 	{
@@ -1929,6 +1954,30 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 
 	//if (!didOnce)
 	{
+#ifdef BBGE_BUILD_SDL2
+		Uint32 flags = 0;
+		flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+		if (fullscreen)
+			flags |= SDL_WINDOW_FULLSCREEN;
+		gScreen = SDL_CreateWindow(appName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
+		if (gScreen == NULL)
+		{
+			std::ostringstream os;
+			os << "Couldn't set resolution [" << width << "x" << height << "]\n" << SDL_GetError();
+			errorLog(os.str());
+			SDL_Quit();
+			exit(0);
+		}
+		gGLctx = SDL_GL_CreateContext(gScreen);
+		if (gGLctx == NULL)
+		{
+			std::ostringstream os;
+			os << "Couldn't create OpenGL context!\n" << SDL_GetError();
+			errorLog(os.str());
+			SDL_Quit();
+			exit(0);
+		}
+#else
 		Uint32 flags = 0;
 		flags = SDL_OPENGL;
 		if (fullscreen)
@@ -1942,6 +1991,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 			SDL_Quit();
 			exit_error(os.str());
 		}
+#endif
 
 #if BBGE_BUILD_OPENGL_DYNAMIC
 		if (!lookup_all_glsyms())
@@ -1956,9 +2006,21 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 
 	setWindowCaption(appName, appName);
 
+#ifdef BBGE_BUILD_SDL2
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	SDL_GL_SwapWindow(gScreen);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	SDL_GL_SwapWindow(gScreen);
+	if ((_vsync != 1) || (SDL_GL_SetSwapInterval(-1) == -1))
+		SDL_GL_SetSwapInterval(_vsync);
+	const char *name = SDL_GetCurrentVideoDriver();
+	SDL_SetWindowGrab(gScreen, SDL_TRUE);
+#else
 	SDL_WM_GrabInput(grabInputOnReentry==0 ? SDL_GRAB_OFF : SDL_GRAB_ON);
 	char name[256];
 	SDL_VideoDriverName((char*)name, 256);
+#endif
 
 	glViewport(0, 0, width, height);
 	glScissor(0, 0, width, height);
@@ -1975,11 +2037,13 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 		keys[i] = 0;
 	}
 
+/*
 #ifdef BBGE_BUILD_WINDOWS
 	SDL_SysWMinfo wmInfo;
 	SDL_GetWMInfo(&wmInfo);
 	hWnd = wmInfo.window;
 #endif
+*/
 
 #endif
 
@@ -2045,6 +2109,23 @@ void Core::enumerateScreenModes()
 	screenModes.clear();
 
 #ifdef BBGE_BUILD_SDL
+#ifdef BBGE_BUILD_SDL2
+	SDL_DisplayMode mode;
+	const int modecount = SDL_GetNumDisplayModes(0);
+	if(modecount == 0){
+		debugLog("No modes available!");
+		return;
+	}
+	
+	for (int i = 0; i < modecount; i++) {
+		SDL_GetDisplayMode(0, i, &mode);
+		if (mode.w && mode.h && (mode.w > mode.h))
+		{
+			screenModes.push_back(ScreenMode(i, mode.w, mode.h));
+		}
+	}
+
+#else
 	SDL_Rect **modes;
 	int i;
 
@@ -2072,6 +2153,7 @@ void Core::enumerateScreenModes()
 		}
 	}
 #endif
+#endif
 }
 
 void Core::shutdownSoundLibrary()
@@ -2083,8 +2165,17 @@ void Core::shutdownGraphicsLibrary(bool killVideo)
 #ifdef BBGE_BUILD_SDL
 	glFinish();
 	if (killVideo) {
+		#ifdef BBGE_BUILD_SDL2
+		SDL_SetWindowGrab(gScreen, SDL_FALSE);
+		SDL_GL_MakeCurrent(gScreen, NULL);
+		SDL_GL_DeleteContext(gGLctx);
+		SDL_DestroyWindow(gScreen);
+		gGLctx = 0;
+		SDL_QuitSubSystem(SDL_INIT_VIDEO);
+		#else
 		SDL_QuitSubSystem(SDL_INIT_VIDEO);
 		SDL_WM_GrabInput(SDL_GRAB_OFF);
+		#endif
 
 		FrameBuffer::resetOpenGL();
 
@@ -2171,6 +2262,7 @@ void centerWindow(HWND hwnd)
 }
 #endif
 
+/*
 void Core::adjustWindowPosition(int x, int y)
 {
 #ifdef BBGE_BUILD_WINDOWS
@@ -2181,6 +2273,7 @@ void Core::adjustWindowPosition(int x, int y)
 	::SetWindowPos(hWnd, HWND_TOP, rcWnd.left, rcWnd.top, 0, 0, SWP_NOSIZE);
 #endif
 }
+*/
 
 bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::string windowTitle)
 {
@@ -2631,7 +2724,11 @@ void Core::setMousePosition(const Vector &p)
 	float px = p.x + virtualOffX;
 	float py = p.y;// + virtualOffY;
 
+	#ifdef BBGE_BUILD_SDL2
+	SDL_WarpMouseInWindow(gScreen, px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
+	#else
 	SDL_WarpMouse( px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
+	#endif
 
 	/*
 	ignoreNextMouse = true;
@@ -2719,7 +2816,11 @@ float Core::stopWatch(int d)
 bool Core::isWindowFocus()
 {
 #ifdef BBGE_BUILD_SDL
+	#ifdef BBGE_BUILD_SDL2
+	return ((SDL_GetWindowFlags(gScreen) & SDL_WINDOW_INPUT_FOCUS) != 0);
+	#else
 	return ((SDL_GetAppState() & SDL_APPINPUTFOCUS) != 0);
+	#endif
 #endif
 	return true;
 }
@@ -3236,6 +3337,174 @@ bool Core::doMouseConstraint()
 	return false;
 }
 
+#if defined(BBGE_BUILD_SDL)
+
+#if defined(BBGE_BUILD_SDL2)
+typedef std::map<SDL_Keycode,int> sdlKeyMap;
+#else
+typedef std::map<SDLKey,int> sdlKeyMap;
+#endif
+
+static sdlKeyMap *initSDLKeymap(void)
+{
+	sdlKeyMap *_retval = new sdlKeyMap;
+	sdlKeyMap &retval = *_retval;
+
+	#define SETKEYMAP(gamekey,sdlkey) retval[sdlkey] = gamekey
+
+#ifdef BBGE_BUILD_SDL2
+	SETKEYMAP(KEY_LSUPER, SDLK_LGUI);
+	SETKEYMAP(KEY_RSUPER, SDLK_RGUI);
+	SETKEYMAP(KEY_LMETA, SDLK_LGUI);
+	SETKEYMAP(KEY_RMETA, SDLK_RGUI);
+	SETKEYMAP(KEY_PRINTSCREEN, SDLK_PRINTSCREEN);
+	SETKEYMAP(KEY_NUMPAD1, SDLK_KP_1);
+	SETKEYMAP(KEY_NUMPAD2, SDLK_KP_2);
+	SETKEYMAP(KEY_NUMPAD3, SDLK_KP_3);
+	SETKEYMAP(KEY_NUMPAD4, SDLK_KP_4);
+	SETKEYMAP(KEY_NUMPAD5, SDLK_KP_5);
+	SETKEYMAP(KEY_NUMPAD6, SDLK_KP_6);
+	SETKEYMAP(KEY_NUMPAD7, SDLK_KP_7);
+	SETKEYMAP(KEY_NUMPAD8, SDLK_KP_8);
+	SETKEYMAP(KEY_NUMPAD9, SDLK_KP_9);
+	SETKEYMAP(KEY_NUMPAD0, SDLK_KP_0);
+#else
+	SETKEYMAP(KEY_LSUPER, SDLK_LSUPER);
+	SETKEYMAP(KEY_RSUPER, SDLK_RSUPER);
+	SETKEYMAP(KEY_LMETA, SDLK_LMETA);
+	SETKEYMAP(KEY_RMETA, SDLK_RMETA);
+	SETKEYMAP(KEY_PRINTSCREEN, SDLK_PRINT);
+	SETKEYMAP(KEY_NUMPAD1, SDLK_KP1);
+	SETKEYMAP(KEY_NUMPAD2, SDLK_KP2);
+	SETKEYMAP(KEY_NUMPAD3, SDLK_KP3);
+	SETKEYMAP(KEY_NUMPAD4, SDLK_KP4);
+	SETKEYMAP(KEY_NUMPAD5, SDLK_KP5);
+	SETKEYMAP(KEY_NUMPAD6, SDLK_KP6);
+	SETKEYMAP(KEY_NUMPAD7, SDLK_KP7);
+	SETKEYMAP(KEY_NUMPAD8, SDLK_KP8);
+	SETKEYMAP(KEY_NUMPAD9, SDLK_KP9);
+	SETKEYMAP(KEY_NUMPAD0, SDLK_KP0);
+#endif
+
+	SETKEYMAP(KEY_BACKSPACE, SDLK_BACKSPACE);
+
+	//SETKEYMAP(KEY_CAPSLOCK, DIK_CAPSLOCK);
+	//SETKEYMAP(KEY_CIRCUMFLEX, DIK_CIRCUMFLEX);
+	SETKEYMAP(KEY_LALT, SDLK_LALT);
+	SETKEYMAP(KEY_RALT, SDLK_RALT);
+	SETKEYMAP(KEY_LSHIFT, SDLK_LSHIFT);
+	SETKEYMAP(KEY_RSHIFT, SDLK_RSHIFT);
+	SETKEYMAP(KEY_LCONTROL, SDLK_LCTRL);
+	SETKEYMAP(KEY_RCONTROL, SDLK_RCTRL);
+	SETKEYMAP(KEY_NUMPADMINUS, SDLK_KP_MINUS);
+	SETKEYMAP(KEY_NUMPADPERIOD, SDLK_KP_PERIOD);
+	SETKEYMAP(KEY_NUMPADPLUS, SDLK_KP_PLUS);
+	SETKEYMAP(KEY_NUMPADSLASH, SDLK_KP_DIVIDE);
+	SETKEYMAP(KEY_NUMPADSTAR, SDLK_KP_MULTIPLY);
+	SETKEYMAP(KEY_PGDN, SDLK_PAGEDOWN);
+	SETKEYMAP(KEY_PGUP, SDLK_PAGEUP);
+	SETKEYMAP(KEY_APOSTROPHE, SDLK_QUOTE);
+	SETKEYMAP(KEY_EQUALS, SDLK_EQUALS);
+	SETKEYMAP(KEY_SEMICOLON, SDLK_SEMICOLON);
+	SETKEYMAP(KEY_LBRACKET, SDLK_LEFTBRACKET);
+	SETKEYMAP(KEY_RBRACKET, SDLK_RIGHTBRACKET);
+	//SETKEYMAP(KEY_RALT, GLFW_SETKEYMAP(KEY_RALT);
+	SETKEYMAP(KEY_TILDE, SDLK_BACKQUOTE);
+	SETKEYMAP(KEY_0, SDLK_0);
+	SETKEYMAP(KEY_1, SDLK_1);
+	SETKEYMAP(KEY_2, SDLK_2);
+	SETKEYMAP(KEY_3, SDLK_3);
+	SETKEYMAP(KEY_4, SDLK_4);
+	SETKEYMAP(KEY_5, SDLK_5);
+	SETKEYMAP(KEY_6, SDLK_6);
+	SETKEYMAP(KEY_7, SDLK_7);
+	SETKEYMAP(KEY_8, SDLK_8);
+	SETKEYMAP(KEY_9, SDLK_9);
+	SETKEYMAP(KEY_A, SDLK_a);
+	SETKEYMAP(KEY_B, SDLK_b);
+	SETKEYMAP(KEY_C, SDLK_c);
+	SETKEYMAP(KEY_D, SDLK_d);
+	SETKEYMAP(KEY_E, SDLK_e);
+	SETKEYMAP(KEY_F, SDLK_f);
+	SETKEYMAP(KEY_G, SDLK_g);
+	SETKEYMAP(KEY_H, SDLK_h);
+	SETKEYMAP(KEY_I, SDLK_i);
+	SETKEYMAP(KEY_J, SDLK_j);
+	SETKEYMAP(KEY_K, SDLK_k);
+	SETKEYMAP(KEY_L, SDLK_l);
+	SETKEYMAP(KEY_M, SDLK_m);
+	SETKEYMAP(KEY_N, SDLK_n);
+	SETKEYMAP(KEY_O, SDLK_o);
+	SETKEYMAP(KEY_P, SDLK_p);
+	SETKEYMAP(KEY_Q, SDLK_q);
+	SETKEYMAP(KEY_R, SDLK_r);
+	SETKEYMAP(KEY_S, SDLK_s);
+	SETKEYMAP(KEY_T, SDLK_t);
+	SETKEYMAP(KEY_U, SDLK_u);
+	SETKEYMAP(KEY_V, SDLK_v);
+	SETKEYMAP(KEY_W, SDLK_w);
+	SETKEYMAP(KEY_X, SDLK_x);
+	SETKEYMAP(KEY_Y, SDLK_y);
+	SETKEYMAP(KEY_Z, SDLK_z);
+
+	SETKEYMAP(KEY_LEFT, SDLK_LEFT);
+	SETKEYMAP(KEY_RIGHT, SDLK_RIGHT);
+	SETKEYMAP(KEY_UP, SDLK_UP);
+	SETKEYMAP(KEY_DOWN, SDLK_DOWN);
+
+	SETKEYMAP(KEY_DELETE, SDLK_DELETE);
+	SETKEYMAP(KEY_SPACE, SDLK_SPACE);
+	SETKEYMAP(KEY_RETURN, SDLK_RETURN);
+	SETKEYMAP(KEY_PERIOD, SDLK_PERIOD);
+	SETKEYMAP(KEY_MINUS, SDLK_MINUS);
+	SETKEYMAP(KEY_CAPSLOCK, SDLK_CAPSLOCK);
+	SETKEYMAP(KEY_SYSRQ, SDLK_SYSREQ);
+	SETKEYMAP(KEY_TAB, SDLK_TAB);
+	SETKEYMAP(KEY_HOME, SDLK_HOME);
+	SETKEYMAP(KEY_END, SDLK_END);
+	SETKEYMAP(KEY_COMMA, SDLK_COMMA);
+	SETKEYMAP(KEY_SLASH, SDLK_SLASH);
+
+	SETKEYMAP(KEY_F1, SDLK_F1);
+	SETKEYMAP(KEY_F2, SDLK_F2);
+	SETKEYMAP(KEY_F3, SDLK_F3);
+	SETKEYMAP(KEY_F4, SDLK_F4);
+	SETKEYMAP(KEY_F5, SDLK_F5);
+	SETKEYMAP(KEY_F6, SDLK_F6);
+	SETKEYMAP(KEY_F7, SDLK_F7);
+	SETKEYMAP(KEY_F8, SDLK_F8);
+	SETKEYMAP(KEY_F9, SDLK_F9);
+	SETKEYMAP(KEY_F10, SDLK_F10);
+	SETKEYMAP(KEY_F11, SDLK_F11);
+	SETKEYMAP(KEY_F12, SDLK_F12);
+	SETKEYMAP(KEY_F13, SDLK_F13);
+	SETKEYMAP(KEY_F14, SDLK_F14);
+	SETKEYMAP(KEY_F15, SDLK_F15);
+
+	SETKEYMAP(KEY_ESCAPE, SDLK_ESCAPE);
+	//SETKEYMAP(KEY_ANYKEY, 4059);
+	//SETKEYMAP(KEY_MAXARRAY, SDLK_LAST+1
+
+	#undef SETKEYMAP
+
+	return _retval;
+}
+
+#if defined(BBGE_BUILD_SDL2)
+static int mapSDLKeyToGameKey(const SDL_Keycode val)
+#else
+static int mapSDLKeyToGameKey(const SDLKey val)
+#endif
+{
+	static sdlKeyMap *keymap = NULL;
+	if (keymap == NULL)
+		keymap = initSDLKeymap();
+
+	return (*keymap)[val];
+}
+#endif
+
+
 void Core::pollEvents()
 {
 #if defined(BBGE_BUILD_SDL)
@@ -3306,8 +3575,7 @@ void Core::pollEvents()
 				}
 				else if (_hasFocus)
 				{
-					int k = (int)event.key.keysym.sym;
-					keys[k] = 1;
+					keys[mapSDLKeyToGameKey(event.key.keysym.sym)] = 1;
 				}
 			}
 			break;
@@ -3316,8 +3584,7 @@ void Core::pollEvents()
 			{
 				if (_hasFocus)
 				{
-					int k = (int)event.key.keysym.sym;
-					keys[k] = 0;
+					keys[mapSDLKeyToGameKey(event.key.keysym.sym)] = 0;
 				}
 			}
 			break;
@@ -3338,6 +3605,31 @@ void Core::pollEvents()
 			}
 			break;
 
+			#ifdef BBGE_BUILD_SDL2
+			case SDL_WINDOWEVENT:
+			{
+				if (event.window.event == SDL_WINDOWEVENT_CLOSE)
+				{
+					SDL_Quit();
+					_exit(0);
+					//loopDone = true;
+					//quit();
+				}
+			}
+			break;
+
+			case SDL_MOUSEWHEEL:
+			{
+				if (_hasFocus && updateMouse)
+				{
+					if (event.wheel.y > 0)
+						mouse.scrollWheelChange = 1;
+					else if (event.wheel.y < 0)
+						mouse.scrollWheelChange = -1;
+				}
+			}
+			break;
+			#else
 			case SDL_MOUSEBUTTONDOWN:
 			{
 				if (_hasFocus && updateMouse)
@@ -3371,6 +3663,7 @@ void Core::pollEvents()
 				}
 			}
 			break;
+			#endif
 
 			case SDL_QUIT:
 				SDL_Quit();
@@ -3914,10 +4207,13 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 void Core::showBuffer()
 {
 	BBGE_PROF(Core_showBuffer);
-#ifdef BBGE_BUILD_SDL
+#ifdef BBGE_BUILD_SDL2
+	SDL_GL_SwapWindow(gScreen);
+#elif BBGE_BUILD_SDL
 	SDL_GL_SwapBuffers();
 	//glFlush();
 #endif
+
 #ifdef BBGE_BUILD_GLFW
 	glfwSwapBuffers();
 	//_glfwPlatSwapBuffers();

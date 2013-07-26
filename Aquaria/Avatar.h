@@ -346,6 +346,8 @@ public:
 
 	int leaches;
 	float shieldPoints;
+
+	bool blockBackFlip;
 	
 protected:
 	void setSongIconPositions();

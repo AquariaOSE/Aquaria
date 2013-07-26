@@ -416,12 +416,12 @@ void Entity::doFriction(float dt)
 	}
 }
 
-void Entity::doFriction(float dt, int len)
+void Entity::doFriction(float dt, float len)
 {
 	Vector v = vel;
 	if (!v.isZero())
 	{
-		v.setLength2D(dt * float(len));
+		v.setLength2D(dt * len);
 		vel -= v;
 	}
 }

@@ -888,7 +888,19 @@ void DSQ::setVersionLabelText()
 #ifdef BBGE_BUILD_SDL
 static bool sdlVideoModeOK(const int w, const int h, const int bpp)
 {
+#ifdef BBGE_BUILD_SDL2
+	SDL_DisplayMode mode;
+	const int modecount = SDL_GetNumDisplayModes(0);
+	for (int i = 0; i < modecount; i++) {
+		SDL_GetDisplayMode(0, i, &mode);
+        if (!mode.w || !mode.h || (w >= mode.w && h >= mode.h)) {
+			return true;
+        }
+    }
+    return false;
+#else
 	return SDL_VideoModeOK(w, h, bpp, SDL_OPENGL | SDL_FULLSCREEN);
+#endif
 }
 #endif
 
@@ -4518,7 +4530,7 @@ void DSQ::onUpdate(float dt)
 		{
 			Avatar *avatar = dsq->game->avatar;
 			os << "rolling: " << dsq->game->avatar->isRolling() << " rollDelay: " << dsq->game->avatar->rollDelay << std::endl;
-			os << "canChangeForm: " << dsq->game->avatar->canChangeForm << std::endl;
+			os << "canChangeForm: " << dsq->game->avatar->canChangeForm << " gamespeed: " << gameSpeed.x << std::endl;
 			os << "h: " << dsq->game->avatar->health << " / " << dsq->game->avatar->maxHealth << std::endl;
 			os << "biteTimer: " << dsq->game->avatar->biteTimer << " flourTimer: " << dsq->game->avatar->flourishTimer.getValue() << std::endl;
 			os << "stillTimer: " << dsq->game->avatar->stillTimer.getValue() << std::endl;
