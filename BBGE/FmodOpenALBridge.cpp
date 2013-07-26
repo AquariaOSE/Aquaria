@@ -977,7 +977,7 @@ FMOD_RESULT OpenALChannel::setPaused(const bool _paused, const bool setstate)
     }
     else if ((!_paused) && (initial || ((state == AL_INITIAL) || (state == AL_PAUSED))))
     {
-        if (initial)
+        if (initial && decoder)
         {
             decoder->setForceMono(mindist || maxdist); // HACK: this is set for positional sounds.
             decoder->start(sound->isLooping());
