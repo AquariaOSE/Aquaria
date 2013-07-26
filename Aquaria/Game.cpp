@@ -8134,13 +8134,13 @@ void Game::playBurstSound(bool wallJump)
 	int freqBase = 950;
 	if (wallJump)
 		freqBase += 100;
-	sound->playSfx("Burst", 1, 0);//, (freqBase+rand()%25)/1000.0f);
+	sound->playSfx("Burst", 1);
 	if (chance(50))
 	{
 		switch (dsq->continuity.form)
 		{
 		case FORM_BEAST:
-			sound->playSfx("BeastBurst", (128+rand()%64)/256.0f, 0);//, (freqBase+rand()%25)/1000.0f);
+			sound->playSfx("BeastBurst", (128+rand()%64)/256.0f);
 		break;
 		}
 	}

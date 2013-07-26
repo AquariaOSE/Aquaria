@@ -3466,7 +3466,7 @@ void Avatar::lockToWallCommon()
 	dsq->spawnParticleEffect("LockToWall", position);
 	stopBurst();
 	stopRoll();
-	core->sound->playSfx("LockToWall", 1.0, 0);//, (1000+rand()%100)/1000.0f);
+	core->sound->playSfx("LockToWall", 1.0);
 	//bursting = false;
 	this->burst = 1;
 	//lastLockToWallPos = position;

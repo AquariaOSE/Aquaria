@@ -2293,58 +2293,23 @@ void DSQ::playMenuSelectSfx()
 	core->sound->playSfx("MenuSelect");
 }
 
-PlaySfx DSQ::calcPositionalSfx(const Vector &position, float maxdist)
+void DSQ::playPositionalSfx(const std::string &name, const Vector &position, float f, float fadeOut, SoundHolder *holder)
 {
 	PlaySfx sfx;
-	sfx.vol = 0;
-	if (dsq->game && dsq->game->avatar)
-	{
-		Vector diff = position - dsq->game->avatar->position;
-
-		// Aspect-ratio-adjustment:
-		// Just multiplying the cut-off distance with aspect increases it too much on widescreen,
-		// so only a part of it is aspect-corrected to make it sound better.
-		// Aspect is most likely >= 5/4 here, which results in a higher value than
-		// the default of 1024; this is intended. -- FG
-		if (maxdist <= 0)
-			maxdist = 724 + (300 * aspect);
-
-		float dist = diff.getLength2D();
-		if (dist < maxdist)
-		{
-			sfx.vol = 1.0f - (dist / maxdist);
-			sfx.pan = (diff.x / maxdist) * 2.0f;
-			if (sfx.pan < -1)
-				sfx.pan = -1;
-			if (sfx.pan > 1)
-				sfx.pan = 1;
-		}
-	}
-	return sfx;
-}
-
-void DSQ::playPositionalSfx(const std::string &name, const Vector &position, float f, float fadeOut)
-{
-	PlaySfx sfx = calcPositionalSfx(position);
-
-	// FIXME: Right now, positional sound effects never update their relative position to the
-	// listener, which means that if they are spawned too far away to be audible, it is not possible
-	// that they ever get audible at all. Additionally, the current scripting API only provides
-	// functions to fade sounds OUT, not to set their volume arbitrarily.
-	// Because audio thread creation is costly, drop sounds that can not be heard.
-	// This needs to be removed once proper audio source/listener positioning is implemented,
-	// or the scripting interface gets additional functions to mess with sound. -- FG
-	if (sfx.vol <= 0)
-		return;
-
 	sfx.freq = f;
 	sfx.name = name;
+	sfx.relative = false;
+	sfx.positional = true;
+	sfx.x = position.x;
+	sfx.y = position.y;
 
 	void *c = sound->playSfx(sfx);
+
 	if (fadeOut != 0)
-	{
 		sound->fadeSfx(c, SFT_OUT, fadeOut);
-	}
+
+	if (holder)
+		holder->linkSound(c);
 }
 
 void DSQ::shutdown()

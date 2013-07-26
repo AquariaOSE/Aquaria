@@ -49,6 +49,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //#define _DEBUG 1
 #endif
 
+#undef min
+#undef max
+
+// HACK: global because OpenAL has only one listener anyway
+static FMOD_VECTOR s_listenerPos;
+
 ///////////////////////////////////////////////////////////////////////////
 
 // Decoder implementation for streamed Ogg Vorbis audio.
@@ -63,8 +69,12 @@ public:
 
     ~OggDecoder();
 
-    // Start playing on the given channel, with optional looping.
-    bool start(ALuint source, bool loop);
+    // Prepare playing on the given channel.
+    bool preStart(ALuint source);
+
+    // Decodes the first few buffers, starts the actual playback and detaches the decoder
+    // from the main thread, with optional looping.
+    void start(bool loop);
 
     // Decode audio into any free buffers.  Must be called periodically
     // on systems without threads; may be called without harm on systems
@@ -84,6 +94,10 @@ public:
 
     static void startDecoderThread();
     static void stopDecoderThread();
+
+    int getNumChannels() const { return channels; }
+
+    void setForceMono(bool mono) { forcemono = mono; }
 
 private:
 
@@ -114,7 +128,9 @@ private:
 
     OggVorbis_File vf;
     ALenum format;
+    int channels;
     int freq;
+    bool forcemono;
 
     bool thread; // true if played by background thread
 
@@ -272,6 +288,9 @@ OggDecoder::OggDecoder(VFILE *fp)
     this->eof = false;
     this->samples_done = 0;
     this->stopped = false;
+    this->format = 0;
+    this->channels = 0;
+    this->forcemono = false;
 }
 
 OggDecoder::OggDecoder(const void *data, long data_size)
@@ -291,6 +310,9 @@ OggDecoder::OggDecoder(const void *data, long data_size)
     this->eof = false;
     this->samples_done = 0;
     this->stopped = false;
+    this->format = 0;
+    this->channels = 0;
+    this->forcemono = false;
 }
 
 OggDecoder::~OggDecoder()
@@ -304,10 +326,9 @@ OggDecoder::~OggDecoder()
     }
 }
 
-bool OggDecoder::start(ALuint source, bool loop)
+bool OggDecoder::preStart(ALuint source)
 {
     this->source = source;
-    this->loop = loop;
 
     if (fp) {
         if (ov_open_callbacks(fp, &vf, NULL, 0, local_OV_CALLBACKS_NOCLOSE) != 0)
@@ -333,6 +354,7 @@ bool OggDecoder::start(ALuint source, bool loop)
         ov_clear(&vf);
         return false;
     }
+    channels = info->channels;
     if (info->channels == 1)
         format = AL_FORMAT_MONO16;
     else if (info->channels == 2)
@@ -368,6 +390,13 @@ bool OggDecoder::start(ALuint source, bool loop)
         return false;
     }
 
+    return true;
+}
+
+void OggDecoder::start(bool loop)
+{
+    this->loop = loop;
+
     playing = true;
     eof = false;
     samples_done = 0;
@@ -375,8 +404,6 @@ bool OggDecoder::start(ALuint source, bool loop)
         queue(buffers[i]);
 
     detachDecoder(this);
-
-    return true;
 }
 
 void OggDecoder::update()
@@ -493,7 +520,22 @@ void OggDecoder::queue(ALuint buffer)
 
     if (pcm_size > 0)
     {
-        alBufferData(buffer, format, pcm_buffer, pcm_size, freq);
+        ALuint fmt = format;
+        if(channels == 2 && forcemono)
+        {
+            signed short *buf = (short*)&pcm_buffer[0];
+            int numSamples = pcm_size / 2; // 16 bit samples
+            int j = 0;
+            for (int i = 0; i < numSamples ; i += 2)
+            {
+                // This is in theory not quite correct, but it doesn't add any artifacts or clipping.
+                // FIXME: Seems that simple and stupid is the method of choice, then... -- FG
+                buf[j++] = (buf[i] + buf[i+1]) / 2;
+            }
+            pcm_size = numSamples;
+            fmt = AL_FORMAT_MONO16;
+        }
+        alBufferData(buffer, fmt, pcm_buffer, pcm_size, freq);
         alSourceQueueBuffers(source, 1, &buffer);
     }
 }
@@ -597,8 +639,11 @@ public:
     bool isLooping() const { return looping; }
     bool isRaw() const { return raw; }
     FMOD_RESULT release();
+    FMOD_RESULT getFormat(FMOD_SOUND_TYPE *type, FMOD_SOUND_FORMAT *format, int *channels, int *bits);
     void reference() { refcount++; }
     ALuint getBufferName() const { return bid; }
+    int getNumChannels() const { return numChannels; }
+    void setNumChannels(int c) { numChannels = c; }
 
 private:
     VFILE * const fp;
@@ -608,6 +653,7 @@ private:
     int refcount;
     const bool raw; // true if buffer holds raw PCM data
     ALuint bid; // only used if raw == true
+    int numChannels;
 };
 
 OpenALSound::OpenALSound(VFILE *_fp, const bool _looping)
@@ -618,6 +664,7 @@ OpenALSound::OpenALSound(VFILE *_fp, const bool _looping)
     , refcount(1)
     , raw(false)
     , bid(0)
+    , numChannels(0)
 {
 }
 
@@ -629,6 +676,7 @@ OpenALSound::OpenALSound(void *_data, long _size, const bool _looping)
     , refcount(1)
     , raw(false)
     , bid(0)
+    , numChannels(0)
 {
 }
 
@@ -640,6 +688,7 @@ OpenALSound::OpenALSound(ALuint _bid, const bool _looping)
     , refcount(1)
     , raw(true)
     , bid(_bid)
+    , numChannels(0)
 {
 }
 
@@ -665,6 +714,14 @@ FMOD_RESULT OpenALSound::release()
     return FMOD_OK;
 }
 
+ALBRIDGE(Sound,getFormat,(FMOD_SOUND_TYPE *type, FMOD_SOUND_FORMAT *format, int *channels, int *bits),(type, format, channels, bits))
+FMOD_RESULT OpenALSound::getFormat(FMOD_SOUND_TYPE *type, FMOD_SOUND_FORMAT *format, int *channels, int *bits)
+{
+    if(channels)
+        *channels = getNumChannels();
+    return FMOD_OK;
+}
+
 
 class OpenALChannelGroup;
 
@@ -672,7 +729,7 @@ class OpenALChannel
 {
 public:
     OpenALChannel();
-    FMOD_RESULT setVolume(const float _volume, const bool setstate=true);
+    FMOD_RESULT setVolume(const float _volume);
     FMOD_RESULT setPaused(const bool _paused, const bool setstate=true);
     FMOD_RESULT setFrequency(const float _frequency);
     FMOD_RESULT setPriority(int _priority);
@@ -681,8 +738,16 @@ public:
     FMOD_RESULT isPlaying(bool *isplaying);
     FMOD_RESULT setChannelGroup(ChannelGroup *channelgroup);
     FMOD_RESULT stop();
-    FMOD_RESULT setPan(const float pan);
+    FMOD_RESULT setCallback(FMOD_CHANNEL_CALLBACK callback);
+    FMOD_RESULT getUserData(void **userdata);
+    FMOD_RESULT setUserData(void *userdata);
+    FMOD_RESULT set3DAttributes(const FMOD_VECTOR *pos, const FMOD_VECTOR *vel);
+    FMOD_RESULT set3DMinMaxDistance(float mindistance, float maxdistance);
+    FMOD_RESULT setMode(FMOD_MODE mode);
+    FMOD_RESULT getMode(FMOD_MODE *mode);
+
     void setGroupVolume(const float _volume);
+    void setDistanceVolume(float _volume);
     void setSourceName(const ALuint _sid) { sid = _sid; }
     ALuint getSourceName() const { return sid; }
     bool start(OpenALSound *sound);
@@ -692,9 +757,12 @@ public:
     void setSound(OpenALSound *sound);
 
 private:
+    void applyVolume();
+
     ALuint sid;  // source id.
     float groupvolume;
     float volume;
+    float distvolume;
     bool paused;
     int priority;
     float frequency;
@@ -703,6 +771,12 @@ private:
     OggDecoder *decoder;
     bool inuse;
     bool initial;
+    FMOD_CHANNEL_CALLBACK callback;
+    void *userdata;
+    FMOD_MODE _mode;
+    float mindist;
+    float maxdist;
+    bool relative;
 };
 
 
@@ -735,6 +809,7 @@ OpenALChannel::OpenALChannel()
     : sid(0)
     , groupvolume(1.0f)
     , volume(1.0f)
+    , distvolume(1.0f)
     , paused(false)
     , priority(0)
     , frequency(1.0f)
@@ -743,6 +818,10 @@ OpenALChannel::OpenALChannel()
     , decoder(NULL)
     , inuse(false)
     , initial(true)
+    , _mode(FMOD_DEFAULT)
+    , mindist(0.0f)
+    , maxdist(0.0f)
+    , relative(false)
 {
 }
 
@@ -751,18 +830,21 @@ void OpenALChannel::reacquire()
     assert(!inuse);
     inuse = true;
     volume = 1.0f;
+    distvolume = 1.0f;
     paused = true;
     priority = 0;
     frequency = 1.0f;
     sound = NULL;
     initial = true;
+    mindist = 0.0f;
+    maxdist = 0.0f;
+    relative = false;
 }
 
 void OpenALChannel::setGroupVolume(const float _volume)
 {
     groupvolume = _volume;
-    alSourcef(sid, AL_GAIN, volume * groupvolume);
-    SANITY_CHECK_OPENAL_CALL();
+    applyVolume();
 }
 
 bool OpenALChannel::start(OpenALSound *sound)
@@ -780,12 +862,13 @@ bool OpenALChannel::start(OpenALSound *sound)
             decoder = new OggDecoder(sound->getFile());
         else
             decoder = new OggDecoder(sound->getData(), sound->getSize());
-        if (!decoder->start(sid, sound->isLooping()))
+        if (!decoder->preStart(sid))
         {
             delete decoder;
             decoder = NULL;
             return false;
         }
+        sound->setNumChannels(decoder->getNumChannels());
     }
     return true;
 }
@@ -805,12 +888,10 @@ void OpenALChannel::update()
 }
 
 ALBRIDGE(Channel,setVolume,(float volume),(volume))
-FMOD_RESULT OpenALChannel::setVolume(const float _volume, const bool setstate)
+FMOD_RESULT OpenALChannel::setVolume(const float _volume)
 {
-    if (setstate)
-        volume = _volume;
-    alSourcef(sid, AL_GAIN, _volume * groupvolume);
-    SANITY_CHECK_OPENAL_CALL();
+    volume = _volume;
+    applyVolume();
     return FMOD_OK;
 }
 
@@ -896,6 +977,11 @@ FMOD_RESULT OpenALChannel::setPaused(const bool _paused, const bool setstate)
     }
     else if ((!_paused) && (initial || ((state == AL_INITIAL) || (state == AL_PAUSED))))
     {
+        if (initial && decoder)
+        {
+            decoder->setForceMono(mindist || maxdist); // HACK: this is set for positional sounds.
+            decoder->start(sound->isLooping());
+        }
         alSourcePlay(sid);
         initial = false;
         SANITY_CHECK_OPENAL_CALL();
@@ -914,13 +1000,159 @@ FMOD_RESULT OpenALChannel::setPriority(int _priority)
     return FMOD_OK;
 }
 
-ALBRIDGE(Channel,setPan,(float volume),(volume))
-FMOD_RESULT OpenALChannel::setPan(const float pan)
+ALBRIDGE(Channel,stop,(),())
+FMOD_RESULT OpenALChannel::stop()
 {
-    alSource3f(sid, AL_POSITION, pan, 0, 0);
+    if (decoder)
+    {
+        decoder->stop();
+        decoder = NULL;
+    }
+    alSourceStop(sid);
     SANITY_CHECK_OPENAL_CALL();
+    alSourcei(sid, AL_BUFFER, 0);
+    SANITY_CHECK_OPENAL_CALL();
+    if (sound)
+    {
+        sound->release();
+        sound = NULL;
+    }
+    if (inuse && callback)
+        callback(this, FMOD_CHANNEL_CALLBACKTYPE_END, NULL, NULL); // HACK: commanddata missing (but they are not used by the callback)
+    paused = false;
+    inuse = false;
+    initial = false;
     return FMOD_OK;
 }
+
+
+ALBRIDGE(Channel,setCallback,(FMOD_CHANNEL_CALLBACK callback),(callback))
+FMOD_RESULT OpenALChannel::setCallback(FMOD_CHANNEL_CALLBACK callback)
+{
+    this->callback = callback;
+    return FMOD_OK;
+}
+
+ALBRIDGE(Channel,getUserData,(void **userdata),(userdata))
+FMOD_RESULT OpenALChannel::getUserData(void **userdata)
+{
+    *userdata = this->userdata;
+    return FMOD_OK;
+}
+
+ALBRIDGE(Channel,setUserData,(void *userdata),(userdata))
+FMOD_RESULT OpenALChannel::setUserData(void *userdata)
+{
+    this->userdata = userdata;
+    return FMOD_OK;
+}
+
+ALBRIDGE(Channel,set3DAttributes,(const FMOD_VECTOR *pos, const FMOD_VECTOR *vel),(pos, vel))
+FMOD_RESULT OpenALChannel::set3DAttributes(const FMOD_VECTOR *pos, const FMOD_VECTOR *vel)
+{
+    if (pos)
+    {
+        alSource3f(sid, AL_POSITION, pos->x, pos->y, pos->z);
+
+        if(maxdist == mindist)
+            setDistanceVolume(1.0f);
+        else
+        {
+            // This is where custom distance attenuation starts.
+            float dx, dy, dz;
+            if(relative)
+            {
+                dx = pos->x;
+                dy = pos->y;
+                dz = pos->z;
+            }
+            else
+            {
+                dx = s_listenerPos.x - pos->x;
+                dy = s_listenerPos.y - pos->y;
+                dz = s_listenerPos.z - pos->z;
+            }
+
+            float d2 = dx*dx + dy*dy + dz*dz;
+
+            if(d2 < mindist*mindist)
+                setDistanceVolume(1.0f);
+            else if(d2 > maxdist*maxdist)
+                setDistanceVolume(0.0f);
+            else
+            {
+                // Replacement method for AL_INVERSE_DISTANCE_CLAMPED.
+                // The problem with this distance model is that the volume never goes down
+                // to 0, no matter how far sound sources are away from the listener.
+                // This could be fixed by using AL_LINEAR_DISTANCE_CLAMPED, but this model does not sound
+                // natural (as the gain/volume/decibels is a logarithmic measure).
+                // As a remedy, use a simplified quadratic 1D-bezier curve to model
+                // a decay similar to AL_INVERSE_DISTANCE_CLAMPED, but that actually reaches 0.
+                // (The formula is simplified, as the control points (1, 0, 0) cause some math to vanish.) -- FG
+                const float t = ((sqrtf(d2) - mindist) / (maxdist - mindist)); // [0 .. 1]
+                const float t1 = 1.0f - t;
+                const float a = t1 * t1;
+                const float w = 2.0f; // weight; the higher this is, the steeper is the initial falloff, and the slower the final decay before reaching 0
+                const float gain = a / (a + (2.0f * w * t * t1) + (t * t));
+                setDistanceVolume(gain);
+            }
+        }
+    }
+
+    if(vel)
+        alSource3f(sid, AL_VELOCITY, vel->x, vel->y, vel->z);
+
+    SANITY_CHECK_OPENAL_CALL();
+
+    return FMOD_OK;
+}
+
+ALBRIDGE(Channel,set3DMinMaxDistance,(float mindistance, float maxdistance),(mindistance, maxdistance))
+FMOD_RESULT OpenALChannel::set3DMinMaxDistance(float mindistance, float maxdistance)
+{
+    alSourcef(sid, AL_REFERENCE_DISTANCE, mindistance);
+    alSourcef(sid, AL_MAX_DISTANCE, maxdistance);
+    SANITY_CHECK_OPENAL_CALL();
+    mindist = mindistance;
+    maxdist = maxdistance;
+
+    return FMOD_OK;
+}
+
+ALBRIDGE(Channel,setMode,(FMOD_MODE mode),(mode))
+FMOD_RESULT OpenALChannel::setMode(FMOD_MODE mode)
+{
+    _mode = mode;
+
+    if(mode & FMOD_3D_HEADRELATIVE)
+        alSourcei(sid, AL_SOURCE_RELATIVE, AL_TRUE);
+    else // FMOD_3D_WORLDRELATIVE is the default according to FMOD docs
+        alSourcei(sid, AL_SOURCE_RELATIVE, AL_FALSE);
+
+    SANITY_CHECK_OPENAL_CALL();
+
+    return FMOD_OK;
+}
+
+ALBRIDGE(Channel,getMode,(FMOD_MODE *mode),(mode))
+FMOD_RESULT OpenALChannel::getMode(FMOD_MODE *mode)
+{
+    *mode = _mode;
+    return FMOD_OK;
+}
+
+void OpenALChannel::setDistanceVolume(float _volume)
+{
+    distvolume = _volume;
+    applyVolume();
+}
+
+void OpenALChannel::applyVolume()
+{
+    alSourcef(sid, AL_GAIN, volume * groupvolume * distvolume);
+    SANITY_CHECK_OPENAL_CALL();
+}
+
 
 
 // FMOD::ChannelGroup implementation...
@@ -1066,29 +1298,6 @@ void OpenALChannel::setSound(OpenALSound *_sound)
 }
 
 
-ALBRIDGE(Channel,stop,(),())
-FMOD_RESULT OpenALChannel::stop()
-{
-    if (decoder)
-    {
-        decoder->stop();
-        decoder = NULL;
-    }
-    alSourceStop(sid);
-    SANITY_CHECK_OPENAL_CALL();
-    alSourcei(sid, AL_BUFFER, 0);
-    SANITY_CHECK_OPENAL_CALL();
-    if (sound)
-    {
-        sound->release();
-        sound = NULL;
-    }
-    paused = false;
-    inuse = false;
-    initial = false;
-    return FMOD_OK;
-}
-
 
 
 // FMOD::System implementation ...
@@ -1112,6 +1321,7 @@ public:
     FMOD_RESULT getDriverCaps(const int id, FMOD_CAPS *caps, int *minfrequency, int *maxfrequency, FMOD_SPEAKERMODE *controlpanelspeakermode);
     FMOD_RESULT getMasterChannelGroup(ChannelGroup **channelgroup);
     FMOD_RESULT playSound(FMOD_CHANNELINDEX channelid, Sound *sound, bool paused, Channel **channel);
+    FMOD_RESULT set3DListenerAttributes(int listener, const FMOD_VECTOR *pos, const FMOD_VECTOR *vel, const FMOD_VECTOR *forward, const FMOD_VECTOR *up);
 
     FMOD_RESULT getNumChannels(int *maxchannels_ret);
 
@@ -1247,8 +1457,11 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
         alGenBuffers(1, &bid);
         if (bid != 0)
         {
+            // FIXME: This needs to stored seperately and fed to the AL on demand,
+            // converting stereo to mono when it's known whether to do so or not.
             alBufferData(bid, format, data, size, freq);
             *sound = (Sound *) new OpenALSound(bid, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
+            ((OpenALSound*)*sound)->setNumChannels(format == AL_FORMAT_STEREO16 ? 2 : 1);
             retval = FMOD_OK;
         }
         free(data);
@@ -1415,7 +1628,7 @@ FMOD_RESULT OpenALSystem::init(int maxchannels, const FMOD_INITFLAGS flags, cons
             break;
         }
 
-        alSourcei(sid, AL_SOURCE_RELATIVE, AL_TRUE);
+        alSourcei(sid, AL_SOURCE_RELATIVE, AL_FALSE);
         SANITY_CHECK_OPENAL_CALL();
         alSource3f(sid, AL_POSITION, 0.0f, 0.0f, 0.0f);  // no panning or spatialization in Aquaria.
         SANITY_CHECK_OPENAL_CALL();
@@ -1425,6 +1638,15 @@ FMOD_RESULT OpenALSystem::init(int maxchannels, const FMOD_INITFLAGS flags, cons
     std::stringstream ss;
     ss << "Using " << num_channels << " sound channels.";
     debugLog(ss.str());
+
+    // HACK: FMOD doesn't do this.
+    // For completeness, we pass FMOD_3D_LINEARROLLOFF to createSound().
+    // We do our own non-standard distance attenuation model, as the modes offered by OpenAL
+    // are not sufficient. See OpenALChannel::set3DMinMaxDistance() for the gain control code. -- FG
+    alDistanceModel(AL_NONE);
+    SANITY_CHECK_OPENAL_CALL();
+    s_listenerPos.x = s_listenerPos.y = s_listenerPos.z = 0.0f;
+
 
     OggDecoder::startDecoderThread();
 
@@ -1536,6 +1758,46 @@ FMOD_RESULT OpenALSystem::update()
     if (err != AL_NONE)
         fprintf(stderr, "WARNING: OpenAL error this frame: 0x%X\n", (int) err);
 #endif
+    return FMOD_OK;
+}
+
+ALBRIDGE(System, set3DListenerAttributes, (int listener, const FMOD_VECTOR *pos, const FMOD_VECTOR *vel, const FMOD_VECTOR *forward, const FMOD_VECTOR *up),
+    (listener, pos, vel, forward, up));
+FMOD_RESULT OpenALSystem::set3DListenerAttributes(int listener, const FMOD_VECTOR *pos, const FMOD_VECTOR *vel, const FMOD_VECTOR *forward, const FMOD_VECTOR *up)
+{
+    // ignore listener parameter; there is only one listener in OpenAL.
+
+    if(up || forward)
+    {
+        ALfloat orientation[6];
+        alGetListenerfv(AL_ORIENTATION, &orientation[0]);
+
+        if(forward)
+        {
+            orientation[0] = forward->x;
+            orientation[1] = forward->y;
+            orientation[2] = forward->z;
+        }
+
+        if(up)
+        {
+            orientation[3] = up->x;
+            orientation[4] = up->y;
+            orientation[5] = up->z;
+        }
+
+        alListenerfv(AL_ORIENTATION, &orientation[0]);
+    }
+
+    if(pos)
+    {
+        s_listenerPos = *pos;
+        alListener3f(AL_POSITION, pos->x, pos->y, pos->z);
+    }
+
+    if(vel)
+        alListener3f(AL_VELOCITY, vel->x, vel->y, vel->z);
+
     return FMOD_OK;
 }
 
