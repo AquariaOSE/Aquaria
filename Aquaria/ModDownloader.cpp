@@ -286,7 +286,8 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 			<Package url="localhost/aq/jukebox.aqmod" saveAs="jukebox" size="1234" /> // -- saveAs is optional, and ".aqmod" appended to it
 			<Author name="Dolphin's Cry" />  //-- optional tag
 			<Confirm text="" />  //-- optional tag, pops up confirm dialog
-			<Properties type="patch" /> //-- optional tag, if not given, "mod" is assumed.
+			<Properties type="patch" /> //-- optional tag, if not given, "mod" is assumed. Can be "mod", "patch", or "weblink".
+						// if type=="weblink", <Package url> will be opened with the default web browser.
 		</AquariaMod>
 		
 		<AquariaMod>
@@ -320,17 +321,18 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 	while(modx)
 	{
 		std::string namestr, descstr, iconurl, pkgurl, confirmStr, localname;
-		std::string sizestr;
-		bool isPatch = false;
+		std::string sizestr, weburl;
+		ModPackageType pkgtype = MPT_MOD;
 		int serverSize = 0;
 		int serverIconSize = 0;
-		TiXmlElement *fullname, *desc, *icon, *pkg, *confirm, *props;
+		TiXmlElement *fullname, *desc, *icon, *pkg, *confirm, *props, *web;
 		fullname = modx->FirstChildElement("Fullname");
 		desc = modx->FirstChildElement("Description");
 		icon = modx->FirstChildElement("Icon");
 		pkg = modx->FirstChildElement("Package");
 		confirm = modx->FirstChildElement("Confirm");
 		props = modx->FirstChildElement("Properties");
+		web = modx->FirstChildElement("Web");
 
 		if(fullname && fullname->Attribute("text"))
 			namestr = fullname->Attribute("text");
@@ -347,7 +349,15 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 		}
 
 		if(props && props->Attribute("type"))
-			isPatch = !strcmp(props->Attribute("type"), "patch");
+		{
+			const char *ty = props->Attribute("type");
+			if(!strcmp(ty, "patch"))
+				pkgtype = MPT_PATCH;
+			else if(!strcmp(ty, "mod"))
+				pkgtype = MPT_MOD;
+			else if(!strcmp(ty, "weblink"))
+				pkgtype = MPT_WEBLINK;
+		}
 
 		if(pkg)
 		{
@@ -394,7 +404,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 			ico->confirmStr = confirmStr;
 			ico->localname = localname;
 			ico->label = "--[ " + namestr + " ]--\n" + descstr;
-			ico->isPatch = isPatch;
+			ico->pkgtype = pkgtype;
 
 			if(serverSize && dsq->modIsKnown(localname))
 			{
