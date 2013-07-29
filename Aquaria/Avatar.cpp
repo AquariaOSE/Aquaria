@@ -3320,6 +3320,11 @@ void Avatar::startCharge(int ability)
 void Avatar::setBlockSinging(bool v)
 {
 	blockSinging = v;
+	if (v)
+	{
+		currentSong.notes.clear(); // abort singing without triggering a song, if queued
+		closeSingingInterface();
+	}
 }
 
 bool Avatar::canSetBoneLock()
