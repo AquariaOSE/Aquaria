@@ -2746,8 +2746,6 @@ void Core::setMousePosition(const Vector &p)
 // used to update all render objects either uniformly or as part of a time sliced update process
 void Core::updateRenderObjects(float dt)
 {
-	//HACK: we may not always be assuming virtual 800x600
-	Vector cameraC = core->cameraPos + Vector(400,300);
 	for (int c = 0; c < renderObjectLayers.size(); c++)
 	{
 

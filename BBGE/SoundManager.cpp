@@ -483,7 +483,6 @@ std::string SoundManager::getVolumeString()
 		musicChannel2->getVolume(&musicChannel2Vol);
 
 	os << "curMusVol (c1/c2/g): " << musicChannelVol << " " << musicChannel2Vol << " " << musicGroupVol << std::endl;
-	os << "runInBG: " << core->settings.runInBackground << std::endl;
 	return os.str();
 }
 
