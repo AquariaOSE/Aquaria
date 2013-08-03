@@ -1580,7 +1580,7 @@ luaFunc(quad_setSegs)
 {
 	Quad *b = getQuad(L);
 	if (b)
-		b->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), lua_tointeger(L, 9));
+		b->setSegs(lua_tointeger(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6), lua_tonumber(L, 7), lua_tonumber(L, 8), getBool(L, 9));
 	luaReturnNil();
 }
 
@@ -9079,7 +9079,6 @@ static const struct {
 
 	luaRegister(entity_setCull),
 
-	luaRegister(entity_setTexture),
 	luaRegister(entity_setFillGrid),
 	luaRegister(entity_isFillGrid),
 
@@ -9111,8 +9110,6 @@ static const struct {
 
 
 	luaRegister(entity_warpLastPosition),
-	luaRegister(entity_x),
-	luaRegister(entity_y),
 	luaRegister(entity_setVel),
 	luaRegister(entity_setVelLen),
 	luaRegister(entity_getVelLen),
@@ -9938,9 +9935,9 @@ void ScriptInterface::init()
 	bool devmode = dsq->isDeveloperKeys();
 
 	// Everything on in dev mode, everything off otherwise.
-	bool loudScriptErrors = devmode;
-	bool complainOnGlobalVar = devmode;
-	bool complainOnUndefLocal = devmode;
+	loudScriptErrors = devmode;
+	complainOnGlobalVar = devmode;
+	complainOnUndefLocal = devmode;
 
 	if (!baseState)
 		baseState = createLuaVM();

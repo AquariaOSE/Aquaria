@@ -4557,6 +4557,7 @@ void DSQ::onUpdate(float dt)
 		dsq->sound->getStats(&ca, &ma);
 		os << " ca: " << ca << " ma: " << ma << std::endl;
 		os << dsq->sound->getVolumeString() << std::endl;
+		os << "runInBG: " << core->settings.runInBackground << " nested: " << core->getNestedMains() << std::endl;
 		os << core->globalResolutionScale.x << ", " << core->globalResolutionScale.y << std::endl;
 		os << "Lua mem: " << scriptInterface.gcGetStats() << " KB" << std::endl;
 
