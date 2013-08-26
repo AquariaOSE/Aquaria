@@ -2806,11 +2806,29 @@ luaFunc(entity_setSpiritFreeze)
 	luaReturnNil();
 }
 
+luaFunc(entity_setPauseFreeze)
+{
+	Entity *e = entity(L);
+	if (e)
+	{
+		e->setPauseFreeze(getBool(L,2));
+	}
+	luaReturnNil();
+}
+
 luaFunc(node_setSpiritFreeze)
 {
 	Path *e = path(L);
 	if (e)
 		e->spiritFreeze = getBool(L,2);
+	luaReturnNil();
+}
+
+luaFunc(node_setPauseFreeze)
+{
+	Path *e = path(L);
+	if (e)
+		e->pauseFreeze = getBool(L,2);
 	luaReturnNil();
 }
 
@@ -6486,6 +6504,11 @@ luaFunc(getDT)
 	luaReturnNum(core->get_current_dt());
 }
 
+luaFunc(getFPS)
+{
+	luaReturnInt(core->fps);
+}
+
 luaFunc(isNested)
 {
 	luaReturnBool(core->isNested());
@@ -7234,7 +7257,7 @@ luaFunc(entity_setStateTime)
 	float t = lua_tonumber(L, 2);
 	if (e)
 		e->setStateTime(t);
-	luaReturnNum(e->getStateTime());
+	luaReturnNum(t);
 }
 
 luaFunc(entity_offsetUpdate)
@@ -8317,6 +8340,7 @@ static const struct {
 	luaRegister(getHalfTimer),
 	luaRegister(getOldDT),
 	luaRegister(getDT),
+	luaRegister(getFPS),
 	luaRegister(setCostume),
 	luaRegister(getCostume),
 	luaRegister(getNoteName),
@@ -8381,7 +8405,9 @@ static const struct {
 	luaRegister(entity_setEatType),
 
 	luaRegister(entity_setSpiritFreeze),
+	luaRegister(entity_setPauseFreeze),
 	luaRegister(node_setSpiritFreeze),
+	luaRegister(node_setPauseFreeze),
 
 	luaRegister(entity_setCanLeaveWater),
 

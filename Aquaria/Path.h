@@ -144,6 +144,7 @@ public:
 
 	bool effectOn;
 	bool spiritFreeze;
+	bool pauseFreeze;
 
 	PathShape pathShape;
 

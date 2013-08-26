@@ -428,6 +428,7 @@ public:
 	virtual void shiftWorlds(WorldType lastWorld, WorldType worldType){}
 	void setCanLeaveWater(bool v);
 	void setSpiritFreeze(bool v);
+	void setPauseFreeze(bool v);
 	void setEatType(EatType et, const std::string &file="");
 	EatType getEatType() { return eatType; }
 	void setRiding(Entity *e);
@@ -535,6 +536,7 @@ protected:
 	bool stickToNaijasHead;
 
 	bool spiritFreeze;
+	bool pauseFreeze;
 	bool canLeaveWater;
 	bool wasUnderWater;
 
