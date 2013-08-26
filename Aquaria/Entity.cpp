@@ -209,6 +209,7 @@ Entity::Entity()
 	eatType = EAT_DEFAULT;
 	stickToNaijasHead = false;
 	spiritFreeze = true;
+	pauseFreeze = true;
 	canLeaveWater = false;
 	targetPriority = 0;
 	//renderPass = RENDER_ALL;
@@ -348,6 +349,11 @@ bool Entity::checkSplash(const Vector &o)
 void Entity::setSpiritFreeze(bool v)
 {
 	spiritFreeze = v;
+}
+
+void Entity::setPauseFreeze(bool v)
+{
+	pauseFreeze = v;
 }
 
 void Entity::setEntityProperty(EntityProperty ep, bool value)
@@ -1145,7 +1151,7 @@ void Entity::update(float dt)
 	Vector backupVel = vel;
 
 	bool doUpdate = (updateCull == -1 || (position - core->screenCenter).isLength2DIn(updateCull));
-	if (doUpdate && !dsq->game->isPaused())
+	if (doUpdate && !(pauseFreeze && dsq->game->isPaused()))
 	{
 
 		if (!(getEntityType() == ET_AVATAR || getEntityType() == ET_INGREDIENT))
