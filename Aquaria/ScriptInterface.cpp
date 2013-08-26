@@ -9952,7 +9952,7 @@ static const struct {
 //============================================================================================
 
 ScriptInterface::ScriptInterface()
-: baseState(NULL)
+: baseState(NULL), _sballoc(8, 128)
 {
 }
 
@@ -9975,9 +9975,15 @@ void ScriptInterface::reset()
 	init();
 }
 
+void *ScriptInterface::the_alloc(void *ud, void *ptr, size_t osize, size_t nsize)
+{
+	ScriptInterface *this_ = (ScriptInterface*)ud;
+	return this_->_sballoc.Alloc(ptr, nsize, osize);
+}
+
 lua_State *ScriptInterface::createLuaVM()
 {
-	lua_State *state = lua_open();	/* opens Lua */
+	lua_State *state = lua_newstate(the_alloc, this);	/* opens Lua */
 	luaopen_base(state);			/* opens the basic library */
 	luaopen_table(state);			/* opens the table library */
 	luaopen_string(state);			/* opens the string lib. */
