@@ -273,8 +273,6 @@ void ModSelectorScreen::init()
 	dsq->toggleVersionLabel(false);
 
 	modsIcon->setFocus(true);
-
-	// TODO: keyboard/gamepad control
 }
 
 void ModSelectorScreen::initModAndPatchPanel()
@@ -338,14 +336,12 @@ void ModSelectorScreen::initNetPanel()
 #ifdef BBGE_BUILD_VFS
 	if(!gotServerList)
 	{
-		// FIXME: demo should be able to see downloadable mods imho
-#ifndef AQUARIA_DEMO
 		moddl.init();
 		std::string serv = dsq->user.network.masterServer;
 		if(serv.empty())
 			serv = DEFAULT_MASTER_SERVER;
 		moddl.GetModlist(serv, true, true);
-#endif
+
 		gotServerList = true; // try this only once (is automatically reset on failure)
 	}
 #endif
@@ -361,7 +357,6 @@ void ModSelectorScreen::setSubText(const std::string& s)
 
 static void _FadeOutAll(RenderObject *r, float t)
 {
-	//r->shareAlphaWithChildren = true;
 	r->alpha.interpolateTo(0, t);
 	for(RenderObject::Children::iterator it = r->children.begin(); it != r->children.end(); ++it)
 		_FadeOutAll(*it, t);
@@ -371,7 +366,6 @@ void ModSelectorScreen::close()
 {
 	const float t = 0.5f;
 	_FadeOutAll(this, t);
-	//panels[currentPanel]->scale.interpolateTo(Vector(0.9f, 0.9f), t); // HMM
 	dsq->user.save();
 	dsq->toggleVersionLabel(true);
 }
@@ -379,7 +373,6 @@ void ModSelectorScreen::close()
 JuicyProgressBar::JuicyProgressBar() : Quad(), txt(&dsq->smallFont)
 {
 	setTexture("modselect/tube");
-	//shareAlphaWithChildren = true;
 	followCamera = 1;
 	alpha = 1;
 
@@ -502,11 +495,6 @@ void ModIcon::onClick()
 {
 	dsq->sound->playSfx("click");
 
-#ifdef AQUARIA_DEMO
-	dsq->nag(NAG_TOTITLE);
-	return;
-#endif
-
 	switch(modType)
 	{
 		case MODTYPE_MOD:
@@ -520,18 +508,24 @@ void ModIcon::onClick()
 
 		case MODTYPE_PATCH:
 		{
+			#ifdef AQUARIA_DEMO
+				dsq->sound->playSfx("denied");
+				core->quitNestedMain();
+				dsq->modIsSelected = true; // HACK: trigger nag screen
+				dsq->selectedMod = -1;
+				break;
+			#endif
+
 			std::set<std::string>::iterator it = dsq->activePatches.find(fname);
 			if(it != dsq->activePatches.end())
 			{
 				dsq->sound->playSfx("pet-off");
 				dsq->unapplyPatch(fname);
-				//dsq->screenMessage(modname + " - deactivated"); // DEBUG
 			}
 			else
 			{
 				dsq->sound->playSfx("pet-on");
 				dsq->applyPatch(fname);
-				//dsq->screenMessage(modname + " - activated"); // DEBUG
 			}
 			updateStatus();
 			break;
@@ -571,8 +565,6 @@ void ModIcon::loadEntry(const ModEntry& entry)
 			if (desc->Attribute("text"))
 			{
 				ds = desc->Attribute("text");
-				//if (label.size() > 255)
-				//	label.resize(255);
 			}
 		}
 		TiXmlElement *fullname = top->FirstChildElement("Fullname");
@@ -619,7 +611,7 @@ void ModIcon::updateStatus()
 
 
 ModIconOnline::ModIconOnline()
-: SubtitleIcon(), pb(0), extraIcon(0), statusIcon(0), clickable(true), isPatch(false), hasUpdate(false)
+: SubtitleIcon(), pb(0), extraIcon(0), statusIcon(0), clickable(true), pkgtype(MPT_MOD), hasUpdate(false)
 {
 	label = desc;
 }
@@ -661,7 +653,7 @@ bool ModIconOnline::fixIcon()
 	quad->setWidthHeight(MOD_ICON_SIZE, MOD_ICON_SIZE);
 	quad->alpha.interpolateTo(1, 0.5f);
 
-	if(!extraIcon && isPatch)
+	if(!extraIcon && pkgtype == MPT_PATCH)
 	{
 		Vector pos(-MOD_ICON_SIZE/2 + MINI_ICON_SIZE/2, MOD_ICON_SIZE/2 - MINI_ICON_SIZE/2);
 		extraIcon = new Quad("modselect/ico_patch", pos);
@@ -711,7 +703,9 @@ void ModIconOnline::onClick()
 	dsq->sound->playSfx("click");
 
 #ifdef AQUARIA_DEMO
-	dsq->nag(NAG_TOTITLE);
+	core->quitNestedMain();
+	dsq->modIsSelected = true; // HACK: trigger nag screen
+	dsq->selectedMod = -1;
 	return;
 #endif
 
@@ -720,40 +714,53 @@ void ModIconOnline::onClick()
 	if(clickable && !packageUrl.empty())
 	{
 		bool proceed = true;
-		if(dsq->modIsKnown(localname))
+		if(pkgtype == MPT_MOD || pkgtype == MPT_PATCH)
 		{
-			mouseDown = false; // HACK: do this here else stack overflow!
-			if(hasPkgOnDisk())
+			if(dsq->modIsKnown(localname))
 			{
-				if(hasUpdate)
-					proceed = dsq->confirm(dsq->continuity.stringBank.get(2024));
+				mouseDown = false; // HACK: do this here else stack overflow!
+				if(hasPkgOnDisk())
+				{
+					if(hasUpdate)
+						proceed = dsq->confirm(dsq->continuity.stringBank.get(2024));
+					else
+						proceed = dsq->confirm(dsq->continuity.stringBank.get(2025));
+				}
 				else
-					proceed = dsq->confirm(dsq->continuity.stringBank.get(2025));
+				{
+					dsq->confirm(dsq->continuity.stringBank.get(2026), "", true);
+					proceed = false;
+				}
+
+			}
+
+			if(proceed && confirmStr.length())
+			{
+				mouseDown = false; // HACK: do this here else stack overflow!
+				dsq->sound->playSfx("spirit-beacon");
+				proceed = dsq->confirm(confirmStr);
+			}
+
+			if(proceed)
+			{
+				moddl.GetMod(packageUrl, localname);
+				setDownloadProgress(0);
+				success = true;
+				clickable = false;
 			}
 			else
+				success = true; // we didn't want, anyway
+		}
+		else if(pkgtype == MPT_WEBLINK)
+		{
+			mouseDown = false;
+			proceed = dsq->confirm(dsq->continuity.stringBank.get(2034));
+			if(proceed)
 			{
-				dsq->confirm(dsq->continuity.stringBank.get(2026), "", true);
-				proceed = false;
+				openURL(packageUrl);
+				success = true;
 			}
-
 		}
-
-		if(proceed && confirmStr.length())
-		{
-			mouseDown = false; // HACK: do this here else stack overflow!
-			dsq->sound->playSfx("spirit-beacon");
-			proceed = dsq->confirm(confirmStr);
-		}
-
-		if(proceed)
-		{
-			moddl.GetMod(packageUrl, localname);
-			setDownloadProgress(0);
-			success = true;
-			clickable = false;
-		}
-		else
-			success = true; // we didn't want, anyway
 	}
 
 	if(!success)
@@ -815,7 +822,7 @@ void MenuIconBar::init()
 	
 	ico = new MenuIcon(0);
 	ico->label = dsq->continuity.stringBank.get(2027);
-	ico->useQuad("modselect/hdd");
+	ico->useQuad("modselect/installed");
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
 	add(ico);
@@ -824,7 +831,7 @@ void MenuIconBar::init()
 	MenuIcon *prev = ico;
 	ico = new MenuIcon(1);
 	ico->label = dsq->continuity.stringBank.get(2028);
-	ico->useQuad("modselect/patch");
+	ico->useQuad("modselect/patches");
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
 	ico->setDirMove(DIR_UP, prev);
@@ -834,7 +841,7 @@ void MenuIconBar::init()
 	prev = ico;
 	ico = new MenuIcon(2);
 	ico->label = dsq->continuity.stringBank.get(2029);
-	ico->useQuad("modselect/globe");
+	ico->useQuad("modselect/download");
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
 	ico->setDirMove(DIR_UP, prev);
@@ -845,7 +852,7 @@ void MenuIconBar::init()
 	prev = ico;
 	ico = new MenuIcon(3);
 	ico->label = dsq->continuity.stringBank.get(2030);
-	ico->useQuad("gui/wok-drop");
+	ico->useQuad("modselect/exit");
 	ico->repeatTextureToFill(false);
 	y += ico->quad->height;
 	ico->position = Vector(0, y);
@@ -860,11 +867,6 @@ void MenuIconBar::add(MenuIcon *ico)
 	ico->followCamera = 1;
 	icons.push_back(ico);
 	addChild(ico, PM_POINTER);
-}
-
-void MenuArrowBar::init()
-{
-	// TODO: up/down arrow
 }
 
 IconGridPanel::IconGridPanel()

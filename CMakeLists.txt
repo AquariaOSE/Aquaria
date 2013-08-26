@@ -5,7 +5,7 @@ INCLUDE(CheckCCompilerFlag)
 INCLUDE(CheckFunctionExists)
 
 IF(NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE RelWithDebInfo CACHE STRING "None Debug Release RelWithDebInfo MinSizeRel" FORCE)
+    SET(CMAKE_BUILD_TYPE Release CACHE STRING "None Debug Release RelWithDebInfo MinSizeRel" FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
 IF(APPLE)
@@ -16,9 +16,21 @@ IF(CMAKE_SYSTEM_NAME STREQUAL "Haiku")
     SET(HAIKU TRUE)
 ENDIF()
 
-OPTION(AQUARIA_DEVELOPER_BUILD "Developer Build?" FALSE)
+IF(WIN32)
+    SET(WIN32_TRUE TRUE)
+ELSE(WIN32)
+    SET(WIN32_TRUE FALSE)
+ENDIF(WIN32)
+
+# if no build type was provided, set a default one
+IF(NOT CMAKE_BUILD_TYPE)
+    SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
+ENDIF(NOT CMAKE_BUILD_TYPE)
+
 OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
 OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional features." TRUE)
+
+OPTION(AQUARIA_USE_SDL2 "Use SDL2" FALSE)
 
 # No Steamworks SDK for Linux at the moment. Roll our own achievements.
 ADD_DEFINITIONS(-DBBGE_BUILD_ACHIEVEMENTS_INTERNAL=1)
@@ -42,7 +54,7 @@ SET(PNGDIR ${EXTLIBDIR}/glpng/png)
 
 ### zlib
 
-OPTION(AQUARIA_INTERNAL_ZLIB "Always use included zlib library" FALSE)
+OPTION(AQUARIA_INTERNAL_ZLIB "Always use included zlib library" TRUE)
 if(NOT AQUARIA_INTERNAL_ZLIB)
     find_package(ZLIB)
 endif(NOT AQUARIA_INTERNAL_ZLIB)
@@ -52,7 +64,7 @@ endif(NOT ZLIB_FOUND)
 
 ### PNG
 
-OPTION(AQUARIA_INTERNAL_PNG "Always use included PNG library" FALSE)
+OPTION(AQUARIA_INTERNAL_PNG "Always use included PNG library" TRUE)
 if(NOT AQUARIA_INTERNAL_PNG)
     find_package(PNG)
 endif(NOT AQUARIA_INTERNAL_PNG)
@@ -66,7 +78,7 @@ STRING(REGEX REPLACE "^.*PNG_LIBPNG_VER[^0-9]*([0-9]+).*$" "\\1" PNG_LIBPNG_VER 
 
 ### FreeType
 
-OPTION(AQUARIA_INTERNAL_FREETYPE "Always use included FreeType library" FALSE)
+OPTION(AQUARIA_INTERNAL_FREETYPE "Always use included FreeType library" TRUE)
 if(NOT AQUARIA_INTERNAL_FREETYPE)
     find_package(Freetype)
 endif(NOT AQUARIA_INTERNAL_FREETYPE)
@@ -76,7 +88,7 @@ endif(NOT FREETYPE_FOUND)
 
 ### Lua
 
-OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" FALSE)
+OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" TRUE)
 if(NOT AQUARIA_INTERNAL_LUA)
     find_package(Lua51)
 endif(NOT AQUARIA_INTERNAL_LUA)
@@ -86,7 +98,7 @@ endif(NOT LUA51_FOUND)
 
 ### Ogg/Vorbis
 
-OPTION(AQUARIA_INTERNAL_OGGVORBIS "Always use included Ogg/Vorbis libraries" FALSE)
+OPTION(AQUARIA_INTERNAL_OGGVORBIS "Always use included Ogg/Vorbis libraries" TRUE)
 if(NOT AQUARIA_INTERNAL_OGGVORBIS)
     # CMake doesn't seem to have a module for libogg or libvorbis yet, so
     # we roll our own based on existing find_package modules.
@@ -148,22 +160,45 @@ endif(NOT OGGVORBIS_FOUND)
 
 ### SDL
 
-OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" FALSE)
+OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" ${WIN32_TRUE})
 if(NOT AQUARIA_INTERNAL_SDL)
-    find_package(SDL)
+    if(AQUARIA_USE_SDL2)
+        set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
+        find_package(SDL2)
+        if(SDL2_FOUND)
+            set(SDL_FOUND TRUE)
+            set(SDL_INCLUDE_DIR ${SDL2_INCLUDE_DIR})
+            set(SDL_LIBRARY ${SDL2_LIBRARY})
+        endif(SDL2_FOUND)
+    else(AQUARIA_USE_SDL2)
+        find_package(SDL)
+    endif(AQUARIA_USE_SDL2)
 endif(NOT AQUARIA_INTERNAL_SDL)
 if(NOT SDL_FOUND)
-    if(MACOSX)
+    if(AQUARIA_USE_SDL2)
+        set(SDLDIR "${EXTLIBDIR}/SDL2")
+    else(AQUARIA_USE_SDL2)
         set(SDLDIR "${EXTLIBDIR}/SDL12")
+    endif(AQUARIA_USE_SDL2)
+    
+    if(MACOSX)
         set(SDL_INCLUDE_DIR "${SDLDIR}/include")
         message(STATUS "Using internal copy of SDL")
-        set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib;${SDLDIR}/lib/macosx/libSDLmain.a")
+        if(AQUARIA_USE_SDL2)
+            set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-2.0.0.dylib")
+        else(AQUARIA_USE_SDL2)
+            set(SDL_LIBRARY "${SDLDIR}/lib/macosx/libSDL-1.2.0.dylib;${SDLDIR}/lib/macosx/libSDLmain.a")
+        endif(AQUARIA_USE_SDL2)
     elseif(WIN32)
-        set(SDLDIR "${EXTLIBDIR}/SDL12")
         set(SDL_INCLUDE_DIR "${SDLDIR}/include" CACHE PATH "SDL include directory" FORCE)
         message(STATUS "Using internal copy of SDL")
-        set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE FILEPATH "Where the SDLmain library can be found" FORCE)
-        set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL.lib" CACHE FILEPATH "Where the SDL library can be found" FORCE)
+        if(AQUARIA_USE_SDL2)
+            set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDL2main.lib" CACHE FILEPATH "Where the SDL2main library can be found" FORCE)
+            set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL2.lib" CACHE FILEPATH "Where the SDL2 library can be found" FORCE)
+        else(AQUARIA_USE_SDL2)
+            set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE FILEPATH "Where the SDLmain library can be found" FORCE)
+            set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL.lib" CACHE FILEPATH "Where the SDL library can be found" FORCE)
+        endif(AQUARIA_USE_SDL2)
         set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
     else(MACOSX)
         message(SEND_ERROR "We don't have a prebuilt SDL for this platform.")
@@ -172,7 +207,7 @@ endif(NOT SDL_FOUND)
 
 ### OpenAL
 
-OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" FALSE)
+OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" ${WIN32_TRUE})
 if(NOT AQUARIA_INTERNAL_OPENAL)
     find_package(OpenAL)
 endif(NOT AQUARIA_INTERNAL_OPENAL)
@@ -211,6 +246,26 @@ if (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
   ADD_DEFINITIONS("-DAQUARIA_CUSTOM_BUILD_ID=\"${AQUARIA_CUSTOM_BUILD_ID}\"")
 endif (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
 
+# Custom version string override (displayed as-is instead of "Aquaria vx.x.x ..." on the title screen
+SET(AQUARIA_OVERRIDE_VERSION_STRING "" CACHE STRING
+    "Text to display instead of the Aquaria version ID on the title screen. (Overrides AQUARIA_CUSTOM_BUILD_ID as well)")
+if (NOT(AQUARIA_OVERRIDE_VERSION_STRING STREQUAL ""))
+  ADD_DEFINITIONS("-DAQUARIA_OVERRIDE_VERSION_STRING=\"${AQUARIA_OVERRIDE_VERSION_STRING}\"")
+endif (NOT(AQUARIA_OVERRIDE_VERSION_STRING STREQUAL ""))
+
+# Custom data directories
+SET(AQUARIA_DEFAULT_DATA_DIR "" CACHE STRING
+    "Default data directory (for package maintainers only)")
+if(NOT(AQUARIA_DEFAULT_DATA_DIR STREQUAL ""))
+    ADD_DEFINITIONS("-DAQUARIA_DEFAULT_DATA_DIR=\"${AQUARIA_DEFAULT_DATA_DIR}\"")
+endif(NOT(AQUARIA_DEFAULT_DATA_DIR STREQUAL ""))
+
+SET(AQUARIA_EXTRA_DATA_DIR "" CACHE STRING
+    "Extra data directory, overrides files from default datadir (for package maintainers only)")
+if(NOT(AQUARIA_EXTRA_DATA_DIR STREQUAL ""))
+    ADD_DEFINITIONS("-DAQUARIA_EXTRA_DATA_DIR=\"${AQUARIA_EXTRA_DATA_DIR}\"")
+endif(NOT(AQUARIA_EXTRA_DATA_DIR STREQUAL ""))
+
 # Aquaria/BBGE specific defines...
 
 ADD_DEFINITIONS(-DGL_GLEXT_LEGACY=1)
@@ -227,11 +282,9 @@ IF(AQUARIA_USE_VFS)
     ADD_DEFINITIONS(-DBBGE_BUILD_VFS=1)
 ENDIF(AQUARIA_USE_VFS)
 
-IF(AQUARIA_DEVELOPER_BUILD)
-    message(STATUS "Developer build.")
-ELSE(AQUARIA_DEVELOPER_BUILD)
-    ADD_DEFINITIONS(-DAQUARIA_FULL=1)
-ENDIF(AQUARIA_DEVELOPER_BUILD)
+IF(AQUARIA_USE_SDL2)
+    ADD_DEFINITIONS(-DBBGE_BUILD_SDL2=1)
+ENDIF(AQUARIA_USE_SDL2)
 
 IF(AQUARIA_DEMO_BUILD)
     message(STATUS "Demo build.")
@@ -276,6 +329,11 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     IF(AQUARIA_GCC_HAS_STACKPROT)
         ADD_DEFINITIONS(-fno-stack-protector)
     ENDIF(AQUARIA_GCC_HAS_STACKPROT)
+    
+    # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
+    # Exceptions are not used, excluding support for release builds adds less bulk as well.
+    set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "Flags used for release builds" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
 
     # !!! FIXME: probably not safe long-term.
     # CMake mailing list had this hack for getting rid of -rdynamic:
@@ -618,12 +676,15 @@ SET(LUA_SRCS
 )
 
 IF(AQUARIA_USE_VFS)
-    ADD_SUBDIRECTORY(${EXTLIBDIR}/ttvfs)
-    ADD_SUBDIRECTORY(${EXTLIBDIR}/ttvfs_zip)
+    ADD_SUBDIRECTORY("${EXTLIBDIR}/ttvfs")
+    ADD_SUBDIRECTORY("${EXTLIBDIR}/ttvfs_zip")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "ttvfs")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "ttvfs_zip")
 ENDIF(AQUARIA_USE_VFS)
 
+IF(WIN32)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "ws2_32")
+ENDIF(WIN32)
 
 IF(MACOSX)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Carbon")

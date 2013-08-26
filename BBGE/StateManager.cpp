@@ -122,19 +122,10 @@ void StateData::eraseRenderObjects()
 	for (int i = 0; i < renderObjects.size(); i++)
 	{
 		RenderObject *r = renderObjects[i];
-		//try
+		if (r && !r->isDead())
 		{
-			if (r && !r->isDead())
-			{
-				core->enqueueRenderObjectDeletion(renderObjects[i]);
-			}
+			core->enqueueRenderObjectDeletion(renderObjects[i]);
 		}
-		/*
-		catch(...)
-		{
-			debugLog("Caught exception in StateData::eraseRenderObjects");
-		}
-		*/
 	}
 	renderObjects.clear();
 }
@@ -288,7 +279,7 @@ void StateManager::registerStateObject(StateObject *stateObject, const std::stri
 	//getNameFromDerivedClassTypeName(c);
 	if (stateObject->name.empty())
 	{
-		fatalError("StateManager::registerStateObject - Empty name.");
+		exit_error("StateManager::registerStateObject - Empty name.");
 	}
 
 	if (!stateObjects[stateObject->name])

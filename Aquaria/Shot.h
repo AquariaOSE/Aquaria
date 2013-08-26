@@ -37,7 +37,7 @@ struct ShotData
 	int blendType;
 	bool segments;
 	float damage;
-	int maxSpeed, homing, homingMax;
+	float maxSpeed, homing, homingMax;
 	double homingIncr;
 	DamageType damageType;
 	Vector scale;
@@ -46,7 +46,7 @@ struct ShotData
 
 	float effectTime;
 
-	int collideRadius;
+	float collideRadius;
 	float lifeTime;
 
 	int numSegs, segDist;
@@ -61,7 +61,7 @@ struct ShotData
 
 	float spinSpeed;
 	bool invisible, checkDamageTarget, hitWalls, hitEnts, alwaysDoHitEffects;
-	int rotIncr;
+	float rotIncr;
 
 	float avatarKickBack, avatarKickBackTime;
 
@@ -89,12 +89,11 @@ public:
 	static void killAllShots();
 	static void clearShotGarbage();
 	Entity *target, *firer;
-	int maxSpeed, targetPt;
+	int targetPt;
+	float maxSpeed;
 
 	void fire(bool playSfx = true);
 	void hitEntity(Entity *e, Bone *b, bool isValid=true);
-	void setLifeTime(float l);
-	void setBounceType(BounceType bt);
 	
 	void noSegs();
 
@@ -125,6 +124,11 @@ public:
 	inline const char *getName() const { return shotData ? shotData->name.c_str() : ""; }
 
 	float extraDamage;
+	float homingness;
+	float lifeTime;
+	DamageType damageType;
+	bool checkDamageTarget;
+
 protected:
 
 	float waveTimer;
@@ -132,9 +136,6 @@ protected:
 	void suicide();
 
 	ParticleEffect *emitter;
-
-	double homingness;
-	float lifeTime;
 
 	void onHitWall();
 	void onEndOfLife();
@@ -165,9 +166,9 @@ public:
 
 	void setDamage(float dmg);
 	void setFirer(Entity *e);
-	void setBeamWidth(int w);
+	void setBeamWidth(float w);
 protected:
-	int beamWidth;
+	float beamWidth;
 	void onRender();
 	void onEndOfLife();
 	void onUpdate(float dt);

@@ -4,6 +4,13 @@
 #include "AquariaMenuItem.h"
 #include "DSQ.h"
 
+enum ModPackageType
+{
+	MPT_MOD,
+	MPT_PATCH,
+	MPT_WEBLINK,
+};
+
 class JuicyProgressBar : public Quad
 {
 public:
@@ -90,8 +97,8 @@ public:
 	JuicyProgressBar *pb; // visible if downloading
 	Quad *extraIcon; // installed or update available
 	Quad *statusIcon;
+	ModPackageType pkgtype;
 	bool clickable;
-	bool isPatch;
 	bool hasUpdate;
 
 protected:
@@ -117,13 +124,6 @@ public:
 protected:
 	void add(MenuIcon *ico);
 };
-
-class MenuArrowBar : public MenuBasicBar
-{
-public:
-	virtual void init();
-};
-
 
 class IconGridPanel : public Quad
 {
@@ -168,7 +168,7 @@ public:
 protected:
 	virtual void onUpdate(float dt);
 	MenuIconBar leftbar;
-	MenuArrowBar rightbar;
+	MenuBasicBar rightbar;
 	int currentPanel;
 	BitmapText subtext;
 	Quad subbox;

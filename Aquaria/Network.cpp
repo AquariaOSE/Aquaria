@@ -146,6 +146,9 @@ static void init()
 #ifdef AQUARIA_CUSTOM_BUILD_ID
 	os << AQUARIA_CUSTOM_BUILD_ID;
 #endif
+#ifdef AQUARIA_OVERRIDE_VERSION_STRING
+	os << "|" << AQUARIA_OVERRIDE_VERSION_STRING;
+#endif
 
 	const char *loc = getUsedLocale();
 	if(*loc)
@@ -154,7 +157,13 @@ static void init()
 	userAgent = os.str();
 
 	if(!worker)
+	{
+#ifdef BBGE_BUILD_SDL2
+		worker = SDL_CreateThread(_NetworkWorkerThread, "network", NULL);
+#else
 		worker = SDL_CreateThread(_NetworkWorkerThread, NULL);
+#endif
+	}
 }
 
 void shutdown()
@@ -241,6 +250,9 @@ void download(RequestData *rq)
 
 void update()
 {
+	if(!netUp)
+		return;
+
 	RequestDataHolder h;
 	while(notifyRequests.pop(h))
 		h.rq->notify(h.ev, h.recvd, h.total);
