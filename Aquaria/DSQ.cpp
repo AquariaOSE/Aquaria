@@ -4572,6 +4572,7 @@ void DSQ::onUpdate(float dt)
 		os << " | s: " << dsq->continuity.seconds;
 		os << " | evQ: " << core->eventQueue.getSize();
 		os << " | sndQ: " << core->dbg_numThreadDecoders;
+		os << " | dt: " << core->get_current_dt();
 		/*
 		os << " | s: " << dsq->continuity.seconds;
 		os << " cr: " << core->cullRadius;
