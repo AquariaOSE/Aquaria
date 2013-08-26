@@ -24,7 +24,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef BBGE_BUILD_WINDOWS
 
 	#define WIN32_LEAN_AND_MEAN
+	#define WIN32_NOMINMAX
 	#include <windows.h>
+	#undef min
+	#undef max
 
     #ifdef _MSC_VER
         #define strtof (float)strtod
@@ -257,11 +260,9 @@ bool isVectorInRect(const Vector &vec, const Vector &coord1, const Vector &coord
 
 std::string parseCommand(const std::string &line, const std::string &command);
 
-std::string msg(const std::string &message);
+void messageBox(const std::string &title, const std::string& msg);
 
-void msgVector(const std::string &name, const Vector &vec);
-
-void fatalError(const std::string &message);
+void exit_error(const std::string &message);
 
 unsigned hash(const std::string &string);
 
@@ -297,5 +298,8 @@ void openURL(const std::string &url);
 
 std::string underscoresToSpaces(const std::string &str);
 std::string spacesToUnderscores(const std::string &str);
+
+void triggerBreakpoint();
+
 
 #endif

@@ -207,6 +207,7 @@
 2031 Any
 2032 [Achievements]
 2033 Retrieving online mod list...
+2034 Open URL in web browser?
 2100 === for options menu ===
 2101 Action
 2102 Key 1

@@ -670,9 +670,9 @@ public:
 	void registerSporeDrop(const Vector &pos, int t);
 
 	bool collideBoxWithGrid(const Vector& position, int w, int h);
-	bool collideCircleWithGrid(const Vector& position, int r);
+	bool collideCircleWithGrid(const Vector& position, float r);
 
-	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc=0, int *colSegment=0);
+	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc=0, int *colSegment=0);
 
 	bool collideCircleVsCircle(Entity *a, Entity *b);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, Entity *circle);
@@ -823,7 +823,7 @@ public:
 	void setTimerTextAlpha(float a, float t);
 	void setTimerText(float time);
 
-	void generateCollisionMask(Quad *q, int overrideCollideRadius=0);
+	void generateCollisionMask(Quad *q, float overrideCollideRadius=0);
 	std::string sceneNatureForm;
 	std::string fromScene, toNode;
 	int toFlip;
@@ -1001,13 +1001,18 @@ public:
 
 	void enqueuePreviewRecipe();
 
-	void toggleHelpScreen(bool on, const std::string &label="");
-	void onToggleHelpScreen();
+	void toggleHelpScreen() { action(ACTION_TOGGLEHELPSCREEN, 0); }
 
 	void setWorldPaused(bool b) { worldPaused = b; }
 	bool isWorldPaused() const { return worldPaused; }
 
+	void setIgnoreAction(AquariaActions ac, bool ignore);
+	bool isIgnoreAction(AquariaActions ac) const;
+
 protected:
+
+	void toggleHelpScreen(bool on, const std::string &label="");
+	void onToggleHelpScreen();
 
 	void onHelpUp();
 	void onHelpDown();
@@ -1181,9 +1186,6 @@ protected:
 	void toggleSceneEditor();
 #endif
 
-
-
-
 	signed char grid[MAX_GRID][MAX_GRID];
 
 
@@ -1197,9 +1199,9 @@ protected:
 
 	std::string selectedChoice;
 
-
-
 	void warpCameraTo(Vector position);
+
+	std::set<int> ignoredActions;
 
 private:
 	Ingredients ingredients;

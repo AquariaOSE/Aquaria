@@ -345,6 +345,9 @@ public:
 	SeeMapMode getSeeMapMode() const { return _seeMapMode; }
 
 	int leaches;
+	float shieldPoints;
+
+	bool blockBackFlip;
 	
 protected:
 	void setSongIconPositions();
@@ -384,8 +387,6 @@ protected:
 	float fallGravityTimer;
 	Vector fallGravity;
 	int lastOutOfWaterMaxSpeed;
-
-	int shieldPoints;
 
 	void onIdle();
 	void onHeal(int type);

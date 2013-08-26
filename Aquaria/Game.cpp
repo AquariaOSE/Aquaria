@@ -2293,7 +2293,7 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 			avg += vs[i];
 		}
 	}
-	if (avg != 0)
+	if (c)
 	{
 		avg /= c;
 		if (avg.x != 0 || avg.y != 0)
@@ -2432,8 +2432,7 @@ void Game::loadEntityTypeList()
 	std::string line;
 	if(!in)
 	{
-		core->messageBox(dsq->continuity.stringBank.get(2008), dsq->continuity.stringBank.get(2016));
-		exit(1);
+		exit_error(dsq->continuity.stringBank.get(2008).c_str());
 	}
 	while (std::getline(in, line))
 	{
@@ -2717,7 +2716,7 @@ void Game::setTimerText(float time)
 	timerText->setText(os.str());
 }
 
-void Game::generateCollisionMask(Quad *q, int overrideCollideRadius)
+void Game::generateCollisionMask(Quad *q, float overrideCollideRadius /* = 0 */)
 {
 #ifdef BBGE_BUILD_OPENGL
 	if (q->texture)
@@ -3940,7 +3939,7 @@ void Game::createInGameMenu()
 	menu[8]->useSound("Click");
 	menu[8]->position = Vector(400+60, 350);
 
-	menu[9]->event.set(MakeFunctionEvent(Game, onToggleHelpScreen));
+	menu[9]->event.set(MakeFunctionEvent(Game, toggleHelpScreen));
 	menu[9]->useQuad("gui/icon-help");
 	menu[9]->useGlow("particles/glow", gs, gs);
 	menu[9]->useSound("Click");
@@ -5213,7 +5212,7 @@ bool Game::loadScene(std::string scene)
 	}
 	if (i == allowedMaps.size())
 	{
-		exit(-1);
+		exit_error("Demo version refuses to load this map, sorry.");
 	}
 #endif
 
@@ -5847,6 +5846,9 @@ void Game::action(int id, int state)
 		}
 	}
 
+	if(isIgnoreAction((AquariaActions)id))
+		return;
+
 	if (id == ACTION_TOGGLEHELPSCREEN && !state)
 	{
 		onToggleHelpScreen();
@@ -5854,6 +5856,13 @@ void Game::action(int id, int state)
 	}
 	if (id == ACTION_ESC && !state)					onPressEscape();
 	if (id == ACTION_PRIMARY && !state)				onLeftMouseButton();
+	if (id == ACTION_TOGGLEMENU)
+	{
+		if(state)
+			showInGameMenu();
+		else
+			hideInGameMenu();
+	}
 	if (id == ACTION_TOGGLEWORLDMAP && !state)
 	{
 		if (foodMenu)
@@ -6127,6 +6136,10 @@ void Game::applyState()
 		l->followCamera = 0;
 		l->followCameraLock = 0;
 	}
+
+	dsq->resetLayerPasses();
+
+	ignoredActions.clear();
 
 	cameraLerpDelay = 0;
 	playingSongInMenu = -1;
@@ -6840,10 +6853,8 @@ void Game::bindInput()
 	// used for scrolling help text
 	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_SWIMUP);
 	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_SWIMDOWN);
-	/*
 	dsq->user.control.actionSet.importAction(this, "SwimLeft",		ACTION_SWIMLEFT);
 	dsq->user.control.actionSet.importAction(this, "SwimRight",		ACTION_SWIMRIGHT);
-	*/
 
 
 	dsq->user.control.actionSet.importAction(this, "PrevPage",		ACTION_PREVPAGE);
@@ -7824,7 +7835,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		helpCancel->position = Vector(750, 600-20);
 		helpCancel->followCamera = 1;
 		//helpCancel->rotation.z = 90;
-		helpCancel->event.set(MakeFunctionEvent(Game, onToggleHelpScreen));
+		helpCancel->event.set(MakeFunctionEvent(Game, toggleHelpScreen));
 		helpCancel->scale = Vector(0.9, 0.9);
 		helpCancel->guiInputLevel = 100;
 		addRenderObject(helpCancel, LR_HELP);
@@ -7977,7 +7988,7 @@ void Game::onPressEscape()
 					if (optionsMenu || keyConfigMenu)
 						onOptionsCancel();
 					else
-						hideInGameMenu();
+						action(ACTION_TOGGLEMENU, 0); // hide menu
 				}
 			}
 			return;
@@ -7986,7 +7997,7 @@ void Game::onPressEscape()
 		if (!paused)
 		{
 			if (core->getNestedMains() == 1 && !core->isStateJumpPending())
-				showInGameMenu();
+				action(ACTION_TOGGLEMENU, 1); // show menu
 		}
 		else
 		{
@@ -8121,13 +8132,13 @@ void Game::playBurstSound(bool wallJump)
 	int freqBase = 950;
 	if (wallJump)
 		freqBase += 100;
-	sound->playSfx("Burst", 1, 0);//, (freqBase+rand()%25)/1000.0f);
+	sound->playSfx("Burst", 1);
 	if (chance(50))
 	{
 		switch (dsq->continuity.form)
 		{
 		case FORM_BEAST:
-			sound->playSfx("BeastBurst", (128+rand()%64)/256.0f, 0);//, (freqBase+rand()%25)/1000.0f);
+			sound->playSfx("BeastBurst", (128+rand()%64)/256.0f);
 		break;
 		}
 	}
@@ -8138,7 +8149,7 @@ bool Game::collideCircleVsCircle(Entity *a, Entity *b)
 	return (a->position - b->position).isLength2DIn(a->collideRadius + b->collideRadius);
 }
 
-bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, int radius, float perc, int *colSegment)
+bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc, int *colSegment)
 {
 	if (perc == 0)
 		perc = 1;
@@ -8350,7 +8361,7 @@ bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 	{
 		return false;
 	}
-	if (shot->shotData && shot->shotData->checkDamageTarget)
+	if (shot->checkDamageTarget)
 	{
 		if (!e->isDamageTarget(shot->getDamageType()))
 			return false;
@@ -10866,7 +10877,7 @@ Vector Game::getClosestPointOnLine(Vector a, Vector b, Vector p)
    return a + V;
 }
 
-bool Game::collideCircleWithGrid(const Vector& position, int r)
+bool Game::collideCircleWithGrid(const Vector& position, float r)
 {
 	Vector tile = position;
 	TileVector t(tile);
@@ -10990,4 +11001,15 @@ void Game::learnedRecipe(Recipe *r, bool effects)
 	}
 }
 
+void Game::setIgnoreAction(AquariaActions ac, bool ignore)
+{
+	if (ignore)
+		ignoredActions.insert(ac);
+	else
+		ignoredActions.erase(ac);
+}
 
+bool Game::isIgnoreAction(AquariaActions ac) const
+{
+	return ignoredActions.find(ac) != ignoredActions.end();
+}

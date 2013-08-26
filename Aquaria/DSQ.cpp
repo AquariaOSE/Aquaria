@@ -153,7 +153,8 @@ Vector savesz;
 	#define APPNAME "Aquaria"
 #endif
 
-DSQ::DSQ(std::string fileSystem) : Core(fileSystem, LR_MAX, APPNAME, PARTICLE_AMOUNT_DEFAULT, "Aquaria")
+DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
+: Core(fileSystem, extraDataDir, LR_MAX, APPNAME, PARTICLE_AMOUNT_DEFAULT, "Aquaria")
 {
 	// 2048
 	//createDirectory(getSaveDirectory());
@@ -843,7 +844,13 @@ void loadBitForTexPrecache()
 }
 
 
-void DSQ::setVersionLabelText() {
+void DSQ::setVersionLabelText()
+{
+#ifdef AQUARIA_OVERRIDE_VERSION_STRING
+	versionLabel->setText(AQUARIA_OVERRIDE_VERSION_STRING);
+	return;
+#endif
+
 	std::ostringstream os;
 	os << "Aquaria";
 
@@ -881,7 +888,19 @@ void DSQ::setVersionLabelText() {
 #ifdef BBGE_BUILD_SDL
 static bool sdlVideoModeOK(const int w, const int h, const int bpp)
 {
+#ifdef BBGE_BUILD_SDL2
+	SDL_DisplayMode mode;
+	const int modecount = SDL_GetNumDisplayModes(0);
+	for (int i = 0; i < modecount; i++) {
+		SDL_GetDisplayMode(0, i, &mode);
+        if (!mode.w || !mode.h || (w >= mode.w && h >= mode.h)) {
+			return true;
+        }
+    }
+    return false;
+#else
 	return SDL_VideoModeOK(w, h, bpp, SDL_OPENGL | SDL_FULLSCREEN);
+#endif
 }
 #endif
 
@@ -922,11 +941,13 @@ This build is not yet final, and as such there are a couple things lacking. They
 	// steam gets inited in here
 	Core::init();
 
-	// steam callbacks are inited here
-	dsq->continuity.init();
+	dsq->continuity.stringBank.load();
 
 	vars = &v;
 	v.load();
+
+	// steam callbacks are inited here
+	dsq->continuity.init();
 
 	// do copy stuff
 #ifdef BBGE_BUILD_UNIX
@@ -980,7 +1001,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 	bool fullscreen = true;
 	int joystickMode = 0;
 	int dsq_filter = 0;
-	developerKeys = false;
 	voiceOversEnabled = true;
 
 
@@ -997,20 +1017,12 @@ This build is not yet final, and as such there are a couple things lacking. They
 	{
 		std::ostringstream os;
 		os << "Aspect ratio for resolution [" << user.video.resx << ", " << user.video.resy << "] not supported.";
-		errorLog(os.str());
-		exit(0);
+		exit_error(os.str());
 	}
 
 	setFilter(dsq_filter);
 
 	useFrameBuffer = user.video.fbuffer;
-
-#ifdef AQUARIA_DEMO
-	developerKeys = 0;
-#endif
-
-	if (exists("unlockdeveloperkeys"))
-		developerKeys = 1;
 
 	if (isDeveloperKeys())
 	{
@@ -1041,7 +1053,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	if (!createWindow(user.video.resx, user.video.resy, user.video.bits, user.video.full, "Aquaria"))
 #endif
 	{
-		msg("Failed to create window");
+		exit_error("Failed to create window");
 		return;
 	}
 
@@ -1488,8 +1500,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	loadBit(LOAD_TEXTURES);
 
-	renderObjectLayers[LR_ENTITIES].startPass = -2;
-	renderObjectLayers[LR_ENTITIES].endPass = 5;
+	resetLayerPasses();
 
 	renderObjectLayerOrder[LR_BACKGROUND_ELEMENTS1] = LR_ELEMENTS1;
 	renderObjectLayerOrder[LR_BACKGROUND_ELEMENTS2] = LR_ELEMENTS2;
@@ -1548,11 +1559,15 @@ This build is not yet final, and as such there are a couple things lacking. They
 	sound->playSfx("defense", 0.5);
 	sound->playSfx("visionwakeup");
 	*/
-#if defined(AQUARIA_FULL) || defined(AQUARIA_DEMO)
-	float trans = 0.5;
-	overlay->alpha.interpolateTo(1, trans);
-	core->main(trans);
-#endif
+
+	// Don't do transitions for a faster start up in dev mode
+	if (!isDeveloperKeys())
+	{
+		float trans = 0.5;
+		overlay->alpha.interpolateTo(1, trans);
+		core->main(trans);
+	}
+
 	removeRenderObject(loading);
 	loading = 0;
 	removeRenderObject(sidel);
@@ -1574,11 +1589,11 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	bindInput();
 
-#if defined(AQUARIA_FULL) || defined(AQUARIA_DEMO)
-	enqueueJumpState("BitBlotLogo");
-#else
-	title();
-#endif
+	// Go directly to the title in dev mode
+	if(isDeveloperKeys())
+		title();
+	else
+		enqueueJumpState("BitBlotLogo");
 }
 
 void DSQ::recreateBlackBars()
@@ -1999,7 +2014,7 @@ void DSQ::reloadDevice()
 #ifdef AQUARIA_BUILD_CONSOLE
 void DSQ::toggleConsole()
 {
-	if (console)
+	if (console && isDeveloperKeys())
 	{
 		if (console->alpha == 0)
 		{
@@ -2278,58 +2293,23 @@ void DSQ::playMenuSelectSfx()
 	core->sound->playSfx("MenuSelect");
 }
 
-PlaySfx DSQ::calcPositionalSfx(const Vector &position, float maxdist)
+void DSQ::playPositionalSfx(const std::string &name, const Vector &position, float f, float fadeOut, SoundHolder *holder)
 {
 	PlaySfx sfx;
-	sfx.vol = 0;
-	if (dsq->game && dsq->game->avatar)
-	{
-		Vector diff = position - dsq->game->avatar->position;
-
-		// Aspect-ratio-adjustment:
-		// Just multiplying the cut-off distance with aspect increases it too much on widescreen,
-		// so only a part of it is aspect-corrected to make it sound better.
-		// Aspect is most likely >= 5/4 here, which results in a higher value than
-		// the default of 1024; this is intended. -- FG
-		if (maxdist <= 0)
-			maxdist = 724 + (300 * aspect);
-
-		float dist = diff.getLength2D();
-		if (dist < maxdist)
-		{
-			sfx.vol = 1.0f - (dist / maxdist);
-			sfx.pan = (diff.x / maxdist) * 2.0f;
-			if (sfx.pan < -1)
-				sfx.pan = -1;
-			if (sfx.pan > 1)
-				sfx.pan = 1;
-		}
-	}
-	return sfx;
-}
-
-void DSQ::playPositionalSfx(const std::string &name, const Vector &position, float f, float fadeOut)
-{
-	PlaySfx sfx = calcPositionalSfx(position);
-
-	// FIXME: Right now, positional sound effects never update their relative position to the
-	// listener, which means that if they are spawned too far away to be audible, it is not possible
-	// that they ever get audible at all. Additionally, the current scripting API only provides
-	// functions to fade sounds OUT, not to set their volume arbitrarily.
-	// Because audio thread creation is costly, drop sounds that can not be heard.
-	// This needs to be removed once proper audio source/listener positioning is implemented,
-	// or the scripting interface gets additional functions to mess with sound. -- FG
-	if (sfx.vol <= 0)
-		return;
-
 	sfx.freq = f;
 	sfx.name = name;
+	sfx.relative = false;
+	sfx.positional = true;
+	sfx.x = position.x;
+	sfx.y = position.y;
 
 	void *c = sound->playSfx(sfx);
+
 	if (fadeOut != 0)
-	{
 		sound->fadeSfx(c, SFT_OUT, fadeOut);
-	}
+
+	if (holder)
+		holder->linkSound(c);
 }
 
 void DSQ::shutdown()
@@ -2786,11 +2766,6 @@ void DSQ::nag(NagType type)
 
 void DSQ::doModSelect()
 {
-#ifdef AQUARIA_DEMO
-	nag(NAG_TOTITLE);
-	return;
-#endif
-
 	modIsSelected = false;
 
 	dsq->loadMods();
@@ -2804,10 +2779,14 @@ void DSQ::doModSelect()
 	main(-1);
 
 	clearModSelector();
-		
+
 	if (modIsSelected)
 	{
+#ifdef AQUARIA_DEMO
+		nag(NAG_TOTITLE);
+#else
 		dsq->startSelectedMod();
+#endif
 	}
 
 	inModSelector = false;
@@ -4140,21 +4119,11 @@ void DSQ::vision(std::string folder, int num, bool ignoreMusic)
 
 bool DSQ::isDeveloperKeys()
 {	
-	///HACK TEMPORARY
-	//return true;
-
-#if !defined(AQUARIA_FULL) && !defined(AQUARIA_DEMO)
-	return true;
-#endif
-
 #ifdef AQUARIA_DEMO
 	return false;
 #endif
-#ifdef AQUARIA_FULL
-	return false;
-#endif
 
-	return developerKeys;
+	return user.system.devModeOn;
 }
 
 bool DSQ::canOpenEditor() const
@@ -4526,7 +4495,7 @@ void DSQ::onUpdate(float dt)
 		{
 			Avatar *avatar = dsq->game->avatar;
 			os << "rolling: " << dsq->game->avatar->isRolling() << " rollDelay: " << dsq->game->avatar->rollDelay << std::endl;
-			os << "canChangeForm: " << dsq->game->avatar->canChangeForm << std::endl;
+			os << "canChangeForm: " << dsq->game->avatar->canChangeForm << " gamespeed: " << gameSpeed.x << std::endl;
 			os << "h: " << dsq->game->avatar->health << " / " << dsq->game->avatar->maxHealth << std::endl;
 			os << "biteTimer: " << dsq->game->avatar->biteTimer << " flourTimer: " << dsq->game->avatar->flourishTimer.getValue() << std::endl;
 			os << "stillTimer: " << dsq->game->avatar->stillTimer.getValue() << std::endl;
@@ -4588,6 +4557,7 @@ void DSQ::onUpdate(float dt)
 		dsq->sound->getStats(&ca, &ma);
 		os << " ca: " << ca << " ma: " << ma << std::endl;
 		os << dsq->sound->getVolumeString() << std::endl;
+		os << "runInBG: " << core->settings.runInBackground << " nested: " << core->getNestedMains() << std::endl;
 		os << core->globalResolutionScale.x << ", " << core->globalResolutionScale.y << std::endl;
 		os << "Lua mem: " << scriptInterface.gcGetStats() << " KB" << std::endl;
 
@@ -4602,6 +4572,7 @@ void DSQ::onUpdate(float dt)
 		os << " | s: " << dsq->continuity.seconds;
 		os << " | evQ: " << core->eventQueue.getSize();
 		os << " | sndQ: " << core->dbg_numThreadDecoders;
+		os << " | dt: " << core->get_current_dt();
 		/*
 		os << " | s: " << dsq->continuity.seconds;
 		os << " cr: " << core->cullRadius;
@@ -5125,16 +5096,19 @@ void DSQ::cutsceneEffects(bool on)
 	}
 }
 
-void pauseSound()
+void DSQ::onBackgroundUpdate()
 {
-	if (dsq && dsq->sound) {
-		dsq->sound->pause();
-	}
+	Network::update();
+	Core::onBackgroundUpdate();
 }
 
-void resumeSound()
+void DSQ::resetLayerPasses()
 {
-	if (dsq && dsq->sound) {
-		dsq->sound->resume();
+	for(size_t i = 0; i < renderObjectLayers.size(); ++i)
+	{
+		renderObjectLayers[i].startPass = 0;
+		renderObjectLayers[i].endPass = 0;
 	}
+	renderObjectLayers[LR_ENTITIES].startPass = -2;
+	renderObjectLayers[LR_ENTITIES].endPass = 5;
 }

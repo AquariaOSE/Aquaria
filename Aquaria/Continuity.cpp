@@ -165,6 +165,8 @@ IngredientType Continuity::getIngredientTypeFromName(const std::string &name) co
 		return IT_MUSHROOM;
 	else if (name == "Anything")
 		return IT_ANYTHING;
+	else if (name.length() && isdigit(name[0]))
+		return (IngredientType)atoi(name.c_str());
 
 	return IT_NONE;
 }
@@ -188,6 +190,16 @@ IngredientData *Continuity::getIngredientDataByIndex(int idx)
 {
 	if (idx < 0 || idx >= ingredientData.size()) return 0;
 	return ingredientData[idx];
+}
+
+int Continuity::getIngredientDataSize() const
+{
+	return (int)ingredientData.size();
+}
+
+int Continuity::getIngredientHeldSize() const
+{
+	return (int)ingredients.size();
 }
 
 Recipe::Recipe()
@@ -591,6 +603,14 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 	case IET_LI:
 		return dsq->continuity.stringBank.get(227);
 	break;
+	case IET_SCRIPT:
+		if(dsq->game->cookingScript)
+		{
+			std::string ret = "";
+			dsq->game->cookingScript->call("getIngredientEffectString", data->name.c_str(), &ret);
+			return ret;
+		}
+	break;
 	}
 
 	return "";
@@ -866,16 +886,6 @@ bool Continuity::applyIngredientEffects(IngredientData *data)
 
 std::string Continuity::getIngredientAffectsString(IngredientData *data)
 {
-	if(data->type == IET_SCRIPT)
-	{
-		if(dsq->game->cookingScript)
-		{
-			std::string ret = "";
-			dsq->game->cookingScript->call("getIngredientString", data->name.c_str(), &ret);
-			return ret;
-		}
-	}
-
 	return getAllIEString(data);
 }
 
@@ -2518,7 +2528,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	startData.SetAttribute("scene", dsq->game->sceneName);
 	startData.SetAttribute("exp", dsq->continuity.exp);
 	startData.SetAttribute("h", dsq->continuity.maxHealth);
-	// ANDROID TODO: "ch" field
+	startData.SetAttribute("ch", dsq->continuity.health);
 	startData.SetAttribute("naijaModel", dsq->continuity.naijaModel);
 	startData.SetAttribute("costume", dsq->continuity.costume);
 	startData.SetAttribute("form", dsq->continuity.form);
@@ -2579,6 +2589,74 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		fos << intFlags[i] << " ";
 	}
 	startData.SetAttribute("intFlags", fos.str());
+
+	// Additional data for the android version
+
+#define SINGLE_FLOAT_ATTR(name, cond, val) \
+	do { if((cond) && (val)) { \
+		std::ostringstream osf; \
+		osf << (val); \
+		startData.SetAttribute(name, osf.str()); \
+	}} while(0)
+
+	SINGLE_FLOAT_ATTR("blind", dsq->game->avatar->state.blind, dsq->game->avatar->state.blindTimer.getValue());
+	SINGLE_FLOAT_ATTR("invincible", invincibleTimer.isActive(), invincibleTimer.getValue());
+	SINGLE_FLOAT_ATTR("regen", regenTimer.isActive(), regenTimer.getValue());
+	SINGLE_FLOAT_ATTR("trip", tripTimer.isActive(), tripTimer.getValue());
+	SINGLE_FLOAT_ATTR("shieldPoints", true, dsq->game->avatar->shieldPoints);
+	SINGLE_FLOAT_ATTR("webTimer", webTimer.isActive(), webTimer.getValue()); // Extension; not present in the android version
+
+#undef SINGLE_FLOAT_ATTR
+
+#define TIMER_AND_VALUE_ATTR(name, timer, val) \
+	do { if(((timer).isActive()) && (val)) { \
+		std::ostringstream osf; \
+		osf << (val) << " " << ((timer).getValue()); \
+		startData.SetAttribute((name), osf.str()); \
+	}} while(0)
+
+	TIMER_AND_VALUE_ATTR("biteMult", biteMultTimer, biteMult);
+	TIMER_AND_VALUE_ATTR("speedMult", speedMultTimer, speedMult);
+	TIMER_AND_VALUE_ATTR("defenseMult", defenseMultTimer, defenseMult);
+	TIMER_AND_VALUE_ATTR("energyMult", energyTimer, energyMult);
+	TIMER_AND_VALUE_ATTR("petPower", petPowerTimer, petPower);
+	TIMER_AND_VALUE_ATTR("liPower", liPowerTimer, liPower);
+	TIMER_AND_VALUE_ATTR("light", lightTimer, light);
+
+#undef TIMER_AND_VALUE_ATTR
+
+	if(poisonTimer.isActive())
+	{
+		std::ostringstream osp;
+		osp << poison << " " << poisonTimer.getValue() << " " << poisonBitTimer.getValue();
+		startData.SetAttribute("poison", osp.str());
+	}
+
+	if(dsq->game->avatar->activeAura != AURA_NONE)
+	{
+		std::ostringstream osa;
+		osa << dsq->game->avatar->activeAura << " " << dsq->game->avatar->auraTimer;
+		startData.SetAttribute("aura", osa.str());
+	}
+
+	// FIXME: Web is a bit weird. There are 2 webBitTimer variables in use, one in Continuity, one in Avatar.
+	// Because the avatar one ticks every 0.5 seconds, it will be hardly noticeable if that timer is off.
+	// So we just use the Continuty timers and hope for the best. -- FG
+	if(webTimer.isActive() && dsq->game->avatar->web)
+	{
+		Web *w = dsq->game->avatar->web;
+		const int nump = w->getNumPoints();
+		std::ostringstream osw;
+		osw << webBitTimer.getValue() << " " << nump << " ";
+		for(int i = 0; i < nump; ++i)
+		{
+			Vector v = w->getPoint(i);
+			osw << v.x << " " << v.y << " ";
+		}
+		startData.SetAttribute("web", osw.str());
+	}
+
+	// end extra android data
 
 	doc.InsertEndChild(startData);
 
@@ -2659,7 +2737,7 @@ void Continuity::loadFile(int slot)
 		if (startData->Attribute("mod"))
 		{
 #ifdef AQUARIA_DEMO
-			exit(-1);
+			exit_error("The demo version does not support loading savegames from mods, sorry.");
 #else
 			dsq->mod.load(startData->Attribute("mod"));
 #endif
@@ -2991,8 +3069,7 @@ void Continuity::loadFile(int slot)
 				}
 			}
 		}
-
-		if (startData->Attribute("ingr"))
+		else if (startData->Attribute("ingr")) // use this only if ingrNames does not exist.
 		{
 			std::istringstream is(startData->Attribute("ingr"));
 			int idx;
@@ -3055,11 +3132,9 @@ void Continuity::loadFile(int slot)
 			}
 		}
 
-		// TODO ANDROID: "ch" field
-
 		if (startData->Attribute("h"))
 		{
-			int read = atoi(startData->Attribute("h"));
+			float read = strtof(startData->Attribute("h"), NULL);
 			maxHealth = read;
 			health = read;
 			std::ostringstream os;
@@ -3072,6 +3147,21 @@ void Continuity::loadFile(int slot)
 				dsq->game->avatar->health = maxHealth;
 			}
 		}
+
+		if (startData->Attribute("ch"))
+		{
+			float h = strtof(startData->Attribute("ch"), NULL);
+			health = h;
+			std::ostringstream os;
+			os << "CurHealth read as: " << health;
+			debugLog(os.str());
+
+			if (dsq->game->avatar)
+			{
+				dsq->game->avatar->health = h;
+			}
+		}
+
 		if (startData->Attribute("seconds"))
 		{
 			std::istringstream is(startData->Attribute("seconds"));
@@ -3082,9 +3172,124 @@ void Continuity::loadFile(int slot)
 			dsq->continuity.costume = startData->Attribute("costume");
 		}
 
-		//dsq->game->positionToAvatar = Vector(500,400);
 		dsq->game->sceneToLoad = startData->Attribute("scene");
-		//dsq->game->transitionToScene();
+
+		// Additional data introduced in the android version
+
+		if(startData->Attribute("blind"))
+		{
+			float timer = strtof(startData->Attribute("blind"), NULL);
+			if(dsq->game->avatar)
+				dsq->game->avatar->setBlind(timer);
+		}
+
+		if(startData->Attribute("invincible"))
+		{
+			float timer = strtof(startData->Attribute("invincible"), NULL);
+			setInvincible(timer);
+		}
+
+		if(startData->Attribute("regen"))
+		{
+			float timer = strtof(startData->Attribute("regen"), NULL);
+			setRegen(timer);
+		}
+
+		if(startData->Attribute("trip"))
+		{
+			float timer = strtof(startData->Attribute("trip"), NULL);
+			setTrip(timer);
+		}
+
+		if(startData->Attribute("aura"))
+		{
+			std::istringstream is(startData->Attribute("aura"));
+			int type = AURA_NONE;
+			float timer = 0.0f;
+			is >> type >> timer;
+			auraTimer = timer;
+			auraType = (AuraType)type;
+			if(dsq->game->avatar)
+			{
+				dsq->game->avatar->activateAura((AuraType)type);
+				dsq->game->avatar->auraTimer = timer;
+			}
+		}
+
+		if(startData->Attribute("shieldPoints"))
+		{
+			float sp = strtof(startData->Attribute("shieldPoints"), NULL);
+			if(dsq->game->avatar)
+				dsq->game->avatar->shieldPoints = sp;
+		}
+
+#define LOAD_MULTI_SIMPLE(attr, mth) \
+		do { if(startData->Attribute(attr)) \
+		{ \
+			std::istringstream is(startData->Attribute(attr)); \
+			float value = 0.0f, timer = 0.0f; \
+			is >> value >> timer; \
+			this->mth(value, timer); \
+		}} while(0)
+
+		LOAD_MULTI_SIMPLE("biteMult", setBiteMultiplier);
+		LOAD_MULTI_SIMPLE("speedMult", setSpeedMultiplier);
+		LOAD_MULTI_SIMPLE("defenseMult", setDefenseMultiplier);
+		LOAD_MULTI_SIMPLE("energyMult", setEnergy);
+		LOAD_MULTI_SIMPLE("petPower", setPetPower);
+		LOAD_MULTI_SIMPLE("liPower", setLiPower);
+		LOAD_MULTI_SIMPLE("light", setLight);
+
+#undef LOAD_MULTI_SIMPLE
+
+		if(startData->Attribute("poison"))
+		{
+			std::istringstream is(startData->Attribute("poison"));
+			float p = 0.0f, pt = 0.0f, pbit = 0.0f;
+			is >> p >> pt >> pbit;
+			setPoison(p, pt);
+			poisonBitTimer.start(pbit);
+		}
+
+		// FIXME: the total web time is seemingly not saved in the file.
+		// Not sure if the calculation of the remaining time is correct.
+		// Especially because there are two webBitTimer variables in use (in Continuity and Avatar),
+		// and both of them access the avatar web. It's thus likely that more points were added than intended. -- FG
+		if(startData->Attribute("web"))
+		{
+			std::istringstream is(startData->Attribute("web"));
+			float wbit = 0.0f;
+			int nump = 0;
+			is >> wbit >> nump;
+			// 2 web points are added in setWeb() by default, so we exclude them from the calculation
+			float remainTime = webTime - (0.5 * (nump - 2)); // Avatar::webBitTimer ticks every 0.5 secs
+			if(nump > 1 && remainTime > 0 && dsq->game->avatar)
+			{
+				if(!dsq->game->avatar->web)
+					dsq->game->avatar->createWeb();
+				Web *w = dsq->game->avatar->web;
+				for(int i = 0; i < nump; ++i)
+				{
+					Vector v;
+					is >> v.x >> v.y;
+					if(i < w->getNumPoints())
+						w->setPoint(i, v);
+					else
+						w->addPoint(v);
+				}
+				webBitTimer.start(wbit);
+				webTimer.start(remainTime);
+			}
+		}
+
+		// This is AFAIK not in the android version, but let's add this for completeness
+		// and to avoid the mess described above.
+		if(startData->Attribute("webTimer"))
+		{
+			float timer = strtof(startData->Attribute("webTimer"), NULL);
+			webTimer.start(timer);
+		}
+
 	}
 }
 

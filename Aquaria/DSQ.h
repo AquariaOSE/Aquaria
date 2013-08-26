@@ -96,6 +96,9 @@ enum AquariaActions
 	ACTION_FOODRIGHT,
 	ACTION_FOODDROP,
 
+	ACTION_TOGGLEMENU,
+
+
 
 	ACTION_SWIMUP = 100,
 	ACTION_SWIMDOWN,
@@ -166,7 +169,8 @@ enum AquariaActions
 typedef std::list<Entity*> EntityList;
 typedef std::vector<Entity*> EntityContainer;
 
-#define FOR_ENTITIES(i) for (Entity **i = &dsq->entities[0]; *i != 0; i++)
+// last entry is always NULL. added if is a little hack to ensure the scope of the iterator variable
+#define FOR_ENTITIES(i) for (size_t i##_i = 0; dsq->entities[i##_i] != 0; ++i##_i) if (Entity **i = &dsq->entities[i##_i])
 
 
 enum MenuPage
@@ -951,7 +955,7 @@ public:
 
 	std::string getSaveFileName(int slot, const std::string &pfix);
 
-	int maxHealth;
+	float maxHealth;
 	float health;
 	bool hudVisible;
 	unsigned int exp;
@@ -1063,6 +1067,9 @@ public:
 	IngredientData *getIngredientHeldByIndex(int idx) const;
 	IngredientData *getIngredientDataByIndex(int idx);
 
+	int getIngredientDataSize() const;
+	int getIngredientHeldSize() const;
+
 	bool applyIngredientEffects(IngredientData *data);
 
 	void loadIngredientData();
@@ -1148,6 +1155,7 @@ public:
 	std::vector<FoodSortOrder> sortByType, sortByHeal, sortByIngredients, sortByUnsort;
 
 	StatsAndAchievements *statsAndAchievements;
+
 protected:
 	std::vector<EatData> eats;
 	std::vector<int> speedTypes;
@@ -1235,7 +1243,7 @@ enum NagType
 class DSQ : public Core
 {
 public:
-	DSQ(std::string fileSystem);
+	DSQ(const std::string& fileSystem, const std::string& extraDataDir);
 	~DSQ();
 
 	void init();
@@ -1418,8 +1426,7 @@ public:
 	bool voiceOversEnabled;
 	int recentSaveSlot;
 
-	PlaySfx calcPositionalSfx(const Vector &position, float maxdist = 0);
-	void playPositionalSfx(const std::string &name, const Vector &position, float freq=1.0f, float fadeOut=0);
+	void playPositionalSfx(const std::string &name, const Vector &position, float freq=1.0f, float fadeOut=0, SoundHolder *holder = 0);
 
 	void playMenuSelectSfx();
 
@@ -1563,6 +1570,11 @@ public:
 	void pauseCutscene(bool on);
 	bool canSkipCutscene();
 	bool isSkippingCutscene();
+
+	virtual void onBackgroundUpdate();
+
+	void resetLayerPasses();
+
 protected:
 
 	Quad *cutscene_bg;
@@ -1603,7 +1615,6 @@ protected:
 	void updatepecue(float dt);
 	std::vector<PECue> pecue;
 
-	bool developerKeys;
 	void onMouseInput();
 	std::vector<std::string> voxQueue;
 

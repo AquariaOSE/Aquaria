@@ -26,6 +26,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include <shellapi.h>
 #endif
 
+#ifdef _MSC_VER
+#	include <intrin.h>
+#endif
+
 #if defined(BBGE_BUILD_UNIX)
 	#include <sys/types.h>
 	#include <dirent.h>
@@ -246,11 +250,11 @@ void stringToLowerUserData(std::string &s)
 #ifndef HAVE_STRCASECMP
 int nocasecmp(const std::string &s1, const std::string &s2)
 {
-	std::string::const_iterator it1=s1.begin();
-	std::string::const_iterator it2=s2.begin();
+	const char *it1 = s1.c_str();
+	const char *it2 = s2.c_str();
 
   //stop when either string's end has been reached
-  while ( (it1!=s1.end()) && (it2!=s2.end()) )
+  while ( *it1 && *it2 )
   {
     if(charToUpper(*it1) != charToUpper(*it2)) //letters differ?
      // return -1 to indicate smaller than, 1 otherwise
@@ -291,8 +295,7 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 
 	if (makeFatal && !e)
 	{
-		errorLog(std::string("Could not open [" + f + "]"));
-		exit(0);
+		exit_error("Could not open [" + f + "]");
 	}
 
 	return e;
@@ -316,10 +319,10 @@ void drawCircle(float radius, int stepSize)
 #endif
 }
 
-void fatalError(const std::string &message)
+void exit_error(const std::string &message)
 {
-	msg(message);
-	exit(0);
+	errorLog(message);
+	exit(1);
 }
 
 std::string parseCommand(const std::string &line, const std::string &command)
@@ -424,8 +427,7 @@ void errorLog(const std::string &s)
 	}
 	else
 	{
-		//msg("Core Not Initialized");
-		//MessageBox(0, s.c_str(), "ErrorLog (Core Not Initalized)", MB_OK);
+		messageBox("Error!", s);
 	}
 }
 
@@ -775,17 +777,22 @@ std::vector<std::string> getFileList(std::string path, std::string type, int par
 	return list;
 }
 
-std::string msg(const std::string &message)
-{
-	core->msg(message);
-	return message;
-}
+#if defined(BBGE_BUILD_MACOSX)
+void cocoaMessageBox(const std::string &title, const std::string &msg);
+#endif
 
-void msgVector(const std::string &name, const Vector &vec)
+void messageBox(const std::string& title, const std::string &msg)
 {
-	std::ostringstream os;
-	os << name << ": (" << vec.x <<", " << vec.y << ", " << vec.z << ")";
-	msg (os.str());
+#ifdef BBGE_BUILD_WINDOWS
+	MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
+#elif defined(BBGE_BUILD_MACOSX)
+	cocoaMessageBox(title, msg);
+#elif defined(BBGE_BUILD_UNIX)
+	// !!! FIXME: probably don't want the whole GTK+ dependency in here...
+	fprintf(stderr, "%s: %s\n", title.c_str(), msg.c_str());
+#else
+#error Please define your platform.
+#endif
 }
 
 Vector getNearestPointOnLine(Vector a, Vector b, Vector c)
@@ -1114,6 +1121,16 @@ std::string spacesToUnderscores(const std::string &str)
 	return s;
 }
 
+void triggerBreakpoint()
+{
+#ifdef _MSC_VER
+	__debugbreak();
+#elif defined(__GNUC__) && ((__i386__) || (__x86_64__))
+	__asm__ __volatile__ ( "int $3\n\t" );
+#else
+	raise(SIGTRAP);
+#endif
+}
 
 
 #include "DeflateCompressor.h"

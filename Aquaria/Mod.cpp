@@ -177,15 +177,10 @@ const std::string& Mod::getName() const
 
 void Mod::recache()
 {
-	if (doRecache)
+	if(doRecache)
 	{
 		dsq->precacher.clean();
 		dsq->unloadResources();
-
-		dsq->precacher.precacheList("data/precache.txt");
-		dsq->reloadResources();
-		
-		core->resetTimer();
 	}
 
 	if(active)
@@ -195,14 +190,23 @@ void Mod::recache()
 		if(fname[fname.length() - 1] != '/')
 			fname += '/';
 		fname += "precache.txt";
-		fname = localisePath(fname, dsq->mod.getPath());
 		fname = core->adjustFilenameCase(fname);
 		if (exists(fname))
+		{
 			modcache.precacheList(fname);
+			core->resetTimer();
+		}
 	}
 	else
 	{
 		modcache.clean();
+	}
+
+	if(doRecache)
+	{
+		dsq->precacher.precacheList("data/precache.txt");
+		dsq->reloadResources();
+		core->resetTimer();
 	}
 }
 

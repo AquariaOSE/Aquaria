@@ -283,122 +283,115 @@ enum GameKeys
 	KEY_LEFTARROW = GLFW_KEY_LEFT,
 	*/
 
+	KEY_LSUPER,
+	KEY_RSUPER,
+	KEY_LMETA,
+	KEY_RMETA,
+	KEY_BACKSPACE,
+	KEY_PRINTSCREEN,
 
-	KEY_LSUPER = SDLK_LSUPER,
-	KEY_RSUPER = SDLK_RSUPER,
-	KEY_LMETA = SDLK_LMETA,
-	KEY_RMETA = SDLK_RMETA,
-
-	KEY_BACKSPACE = SDLK_BACKSPACE,
-	KEY_PRINTSCREEN = SDLK_PRINT,
-
-	//KEY_CAPSLOCK = DIK_CAPSLOCK,
-	//KEY_CIRCUMFLEX = DIK_CIRCUMFLEX,
-	KEY_LALT = SDLK_LALT,
-	KEY_RALT = SDLK_RALT,
-	KEY_LSHIFT = SDLK_LSHIFT,
-	KEY_RSHIFT = SDLK_RSHIFT,
-	KEY_LCONTROL = SDLK_LCTRL,
-	KEY_RCONTROL = SDLK_RCTRL,
-	KEY_NUMPADMINUS = SDLK_KP_MINUS,
-	KEY_NUMPADPERIOD = SDLK_KP_PERIOD,
-	KEY_NUMPADPLUS = SDLK_KP_PLUS,
-	KEY_NUMPADSLASH = SDLK_KP_DIVIDE,
-	KEY_NUMPADSTAR = SDLK_KP_MULTIPLY,
-	KEY_PGDN = SDLK_PAGEDOWN,
-	KEY_PGUP = SDLK_PAGEUP,
-	KEY_APOSTROPHE = SDLK_QUOTE,
-	KEY_EQUALS = SDLK_EQUALS,
-	KEY_SEMICOLON = SDLK_SEMICOLON,
-	KEY_LBRACKET = SDLK_LEFTBRACKET,
-	KEY_RBRACKET = SDLK_RIGHTBRACKET,
-	//KEY_RALT = GLFW_KEY_RALT,
-	KEY_TILDE = SDLK_BACKQUOTE,
-    KEY_0 = SDLK_0,
-    KEY_1 = SDLK_1,
-    KEY_2 = SDLK_2,
-    KEY_3 = SDLK_3,
-    KEY_4 = SDLK_4,
-    KEY_5 = SDLK_5,
-    KEY_6 = SDLK_6,
-    KEY_7 = SDLK_7,
-    KEY_8 = SDLK_8,
-    KEY_9 = SDLK_9,
-    KEY_A = SDLK_a,
-	KEY_B = SDLK_b,
-	KEY_C = SDLK_c,
-	KEY_D = SDLK_d,
-	KEY_E = SDLK_e,
-	KEY_F = SDLK_f,
-	KEY_G = SDLK_g,
-	KEY_H = SDLK_h,
-	KEY_I = SDLK_i,
-	KEY_J = SDLK_j,
-	KEY_K = SDLK_k,
-	KEY_L = SDLK_l,
-	KEY_M = SDLK_m,
-	KEY_N = SDLK_n,
-	KEY_O = SDLK_o,
-	KEY_P = SDLK_p,
-	KEY_Q = SDLK_q,
-	KEY_R = SDLK_r,
-	KEY_S = SDLK_s,
-	KEY_T = SDLK_t,
-	KEY_U = SDLK_u,
-	KEY_V = SDLK_v,
-	KEY_W = SDLK_w,
-	KEY_X = SDLK_x,
-	KEY_Y = SDLK_y,
-	KEY_Z = SDLK_z,
-	
-	KEY_LEFT = SDLK_LEFT,
-	KEY_RIGHT = SDLK_RIGHT,
-	KEY_UP = SDLK_UP,
-	KEY_DOWN = SDLK_DOWN,
-
-	KEY_NUMPAD1 = SDLK_KP1,
-	KEY_NUMPAD2 = SDLK_KP2,
-	KEY_NUMPAD3 = SDLK_KP3,
-	KEY_NUMPAD4 = SDLK_KP4,
-	KEY_NUMPAD5 = SDLK_KP5,
-	KEY_NUMPAD6 = SDLK_KP6,
-	KEY_NUMPAD7 = SDLK_KP7,
-	KEY_NUMPAD8 = SDLK_KP8,
-	KEY_NUMPAD9 = SDLK_KP9,
-	KEY_NUMPAD0 = SDLK_KP0,
-
-	KEY_DELETE = SDLK_DELETE,
-	KEY_SPACE = SDLK_SPACE,
-	KEY_RETURN = SDLK_RETURN,
-	KEY_PERIOD = SDLK_PERIOD,
-	KEY_MINUS = SDLK_MINUS,
-	KEY_CAPSLOCK = SDLK_CAPSLOCK,
-	KEY_SYSRQ = SDLK_SYSREQ,
-	KEY_TAB = SDLK_TAB,
-	KEY_HOME = SDLK_HOME,
-	KEY_END = SDLK_END,
-	KEY_COMMA = SDLK_COMMA,
-	KEY_SLASH = SDLK_SLASH,
-
-    KEY_F1 = SDLK_F1,
-    KEY_F2 = SDLK_F2,
-    KEY_F3 = SDLK_F3,
-    KEY_F4 = SDLK_F4,
-    KEY_F5 = SDLK_F5,
-    KEY_F6 = SDLK_F6,
-    KEY_F7 = SDLK_F7,
-    KEY_F8 = SDLK_F8,
-    KEY_F9 = SDLK_F9,
-    KEY_F10 = SDLK_F10,
-    KEY_F11 = SDLK_F11,
-    KEY_F12 = SDLK_F12,
-    KEY_F13 = SDLK_F13,
-    KEY_F14 = SDLK_F14,
-    KEY_F15 = SDLK_F15,
-
-	KEY_ESCAPE = SDLK_ESCAPE,
-	KEY_ANYKEY = 4059,
-	KEY_MAXARRAY = SDLK_LAST+1
+	//KEY_CAPSLOCK,
+	//KEY_CIRCUMFLEX,
+	KEY_LALT,
+	KEY_RALT,
+	KEY_LSHIFT,
+	KEY_RSHIFT,
+	KEY_LCONTROL,
+	KEY_RCONTROL,
+	KEY_NUMPADMINUS,
+	KEY_NUMPADPERIOD,
+	KEY_NUMPADPLUS,
+	KEY_NUMPADSLASH,
+	KEY_NUMPADSTAR,
+	KEY_PGDN,
+	KEY_PGUP,
+	KEY_APOSTROPHE,
+	KEY_EQUALS,
+	KEY_SEMICOLON,
+	KEY_LBRACKET,
+	KEY_RBRACKET,
+	//KEY_RALT,
+	KEY_TILDE,
+    KEY_0,
+    KEY_1,
+    KEY_2,
+    KEY_3,
+    KEY_4,
+    KEY_5,
+    KEY_6,
+    KEY_7,
+    KEY_8,
+    KEY_9,
+    KEY_A,
+	KEY_B,
+	KEY_C,
+	KEY_D,
+	KEY_E,
+	KEY_F,
+	KEY_G,
+	KEY_H,
+	KEY_I,
+	KEY_J,
+	KEY_K,
+	KEY_L,
+	KEY_M,
+	KEY_N,
+	KEY_O,
+	KEY_P,
+	KEY_Q,
+	KEY_R,
+	KEY_S,
+	KEY_T,
+	KEY_U,
+	KEY_V,
+	KEY_W,
+	KEY_X,
+	KEY_Y,
+	KEY_Z,
+	KEY_LEFT,
+	KEY_RIGHT,
+	KEY_UP,
+	KEY_DOWN,
+	KEY_NUMPAD1,
+	KEY_NUMPAD2,
+	KEY_NUMPAD3,
+	KEY_NUMPAD4,
+	KEY_NUMPAD5,
+	KEY_NUMPAD6,
+	KEY_NUMPAD7,
+	KEY_NUMPAD8,
+	KEY_NUMPAD9,
+	KEY_NUMPAD0,
+	KEY_DELETE,
+	KEY_SPACE,
+	KEY_RETURN,
+	KEY_PERIOD,
+	KEY_MINUS,
+	KEY_CAPSLOCK,
+	KEY_SYSRQ,
+	KEY_TAB,
+	KEY_HOME,
+	KEY_END,
+	KEY_COMMA,
+	KEY_SLASH,
+    KEY_F1,
+    KEY_F2,
+    KEY_F3,
+    KEY_F4,
+    KEY_F5,
+    KEY_F6,
+    KEY_F7,
+    KEY_F8,
+    KEY_F9,
+    KEY_F10,
+    KEY_F11,
+    KEY_F12,
+    KEY_F13,
+    KEY_F14,
+    KEY_F15,
+	KEY_ESCAPE,
+	KEY_ANYKEY,
+	KEY_MAXARRAY
 };
 #elif defined(BBGE_BUILD_XINPUT)
 enum GameKeys
@@ -808,9 +801,13 @@ public:
 	bool inited, xinited;
 	bool anyButton();
 #ifdef BBGE_BUILD_SDL
+#  ifdef BBGE_BUILD_SDL2
+	SDL_GameController *sdl_controller;
+	SDL_Haptic *sdl_haptic;
+#  endif
 	SDL_Joystick *sdl_joy;
 #endif
-#ifdef __LINUX__
+#if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
 	int eventfd;
 	int16_t effectid;
 #endif
@@ -973,7 +970,7 @@ public:
 		NO_DESTROY
 	};
 	// init
-	Core(const std::string &filesystem, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
+	Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
 	void initPlatform(const std::string &filesystem);
 	~Core();
 
@@ -1013,7 +1010,7 @@ public:
 
 	void main(float runTime = -1); // can use main 
 
-	void adjustWindowPosition(int x, int y);
+	//void adjustWindowPosition(int x, int y);
 
 	// state functions
 
@@ -1175,8 +1172,6 @@ public:
 	void saveSizedScreenshotTGA(const std::string &filename, int sz, int crop34);
 	void saveCenteredScreenshotTGA(const std::string &filename, int sz);
 
-	virtual void msg(const std::string &message);
-
 	bool minimized;
 	std::string getEnqueuedJumpState();
 	int cullRadius;
@@ -1279,6 +1274,7 @@ public:
 	float aspectX, aspectY;
 
 	float get_old_dt() { return old_dt; }
+	float get_current_dt() { return current_dt; }
 
 	bool debugLogActive;
 
@@ -1312,6 +1308,8 @@ public:
 	volatile int dbg_numThreadDecoders;
 	static unsigned int dbg_numRenderCalls;
 
+	virtual void onBackgroundUpdate();
+
 protected:
 
 	std::string fpsDebugString;
@@ -1330,6 +1328,7 @@ protected:
 	void initIcon();
 
 	float old_dt;
+	float current_dt;
 	
 	std::string debugLogPath;
 
@@ -1403,6 +1402,7 @@ protected:
 	virtual void onRender(){}
 
 	void setupFileAccess();
+	std::string _extraDataDir;
 };
 
 extern Core *core;

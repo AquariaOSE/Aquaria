@@ -196,7 +196,7 @@ enum BounceType
 	BOUNCE_REAL		= 1
 };
 
-class Entity : public Quad, public StateMachine
+class Entity : public Quad, public StateMachine, public SoundHolder
 {
 public:
 	Entity();
@@ -276,6 +276,7 @@ public:
 
 	void popBubble();
 	void sound(const std::string &sound, float freq=1, float fadeOut=0);
+	void setStopSoundsOnDeath(bool stop) { stopSoundsOnDeath = stop; }
 
 	void freeze(float time);
 
@@ -356,7 +357,7 @@ public:
 	void revive(float a);
 	void setName(const std::string &name);
 	void doFriction(float dt);
-	void doFriction(float dt, int len);
+	void doFriction(float dt, float len);
 
 	bool isNormalLayer() const
 	{
@@ -427,6 +428,7 @@ public:
 	virtual void shiftWorlds(WorldType lastWorld, WorldType worldType){}
 	void setCanLeaveWater(bool v);
 	void setSpiritFreeze(bool v);
+	void setPauseFreeze(bool v);
 	void setEatType(EatType et, const std::string &file="");
 	EatType getEatType() { return eatType; }
 	void setRiding(Entity *e);
@@ -492,6 +494,8 @@ public:
 
 	bool isEntityInside();
 
+	void updateSoundPosition();
+
 protected:
 	bool calledEntityDied;
 	Path *waterBubble;
@@ -532,6 +536,7 @@ protected:
 	bool stickToNaijasHead;
 
 	bool spiritFreeze;
+	bool pauseFreeze;
 	bool canLeaveWater;
 	bool wasUnderWater;
 
@@ -601,6 +606,8 @@ private:
 
 	int maxSpeed;
 	int oldMaxSpeed;
+
+	bool stopSoundsOnDeath;
 
 };
 

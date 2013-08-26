@@ -90,9 +90,13 @@ Joystick::Joystick()
 	xinited = false;
 	stickIndex = -1;
 #ifdef BBGE_BUILD_SDL
-	sdl_joy = 0;
+#  ifdef BBGE_BUILD_SDL2
+	sdl_controller = NULL;
+	sdl_haptic = NULL;
+#  endif
+	sdl_joy = NULL;
 #endif
-#ifdef __LINUX__
+#if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
 	eventfd = -1;
 	effectid = -1;
 #endif
@@ -126,16 +130,48 @@ void Joystick::init(int stick)
 
 #ifdef BBGE_BUILD_SDL
 	stickIndex = stick;
-	int numJoy = SDL_NumJoysticks();
+	const int numJoy = SDL_NumJoysticks();
 	os << "Found [" << numJoy << "] joysticks";
 	debugLog(os.str());
+
 	if (numJoy > stick)
 	{
-		sdl_joy = SDL_JoystickOpen(stick);
+		#ifdef BBGE_BUILD_SDL2
+		if (SDL_IsGameController(stick))
+		{
+			sdl_controller = SDL_GameControllerOpen(stick);
+			if (sdl_controller)
+				sdl_joy = SDL_GameControllerGetJoystick(sdl_controller);
+		}
+		if (!sdl_joy)
+			sdl_joy = SDL_JoystickOpen(stick);
+		if (sdl_joy && SDL_JoystickIsHaptic(sdl_joy))
+		{
+			sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joy);
+			bool rumbleok = false;
+			if (sdl_haptic && SDL_HapticRumbleSupported(sdl_haptic))
+				rumbleok = (SDL_HapticRumbleInit(sdl_haptic) == 0);
+			if (!rumbleok)
+			{
+				SDL_HapticClose(sdl_haptic);
+				sdl_haptic = NULL;
+			}
+		}
+		#endif
+
+		if (!sdl_joy)
+			sdl_joy = SDL_JoystickOpen(stick);
+
 		if (sdl_joy)
 		{
 			inited = true;
+			#ifdef BBGE_BUILD_SDL2
+			debugLog(std::string("Initialized Joystick [") + std::string(SDL_JoystickName(sdl_joy)) + std::string("]"));
+			if (sdl_controller) debugLog(std::string("Joystick is a Game Controller"));
+			if (sdl_haptic) debugLog(std::string("Joystick has force feedback support"));
+			#else
 			debugLog(std::string("Initialized Joystick [") + std::string(SDL_JoystickName(stick)) + std::string("]"));
+			#endif
 		}
 		else
 		{
@@ -150,7 +186,7 @@ void Joystick::init(int stick)
 	}
 #endif
 	
-#ifdef __LINUX__
+#if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
 	os.seekp(0);
 	os << "AQUARIA_EVENT_JOYSTICK" << stick;
 
@@ -205,7 +241,7 @@ void Joystick::init(int stick)
 
 void Joystick::shutdown()
 {
-#ifdef __LINUX__
+#if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
 	if (eventfd >= 0) {
 		if (effectid != -1 && ioctl(eventfd, EVIOCRMFF, effectid) == -1) {
 			debugLog(std::string("Remove rumble effect: ") + strerror(errno));
@@ -215,11 +251,22 @@ void Joystick::shutdown()
 	}
 #endif
 #ifdef BBGE_BUILD_SDL
+#ifdef BBGE_BUILD_SDL2
+	if (sdl_haptic)
+	{
+		SDL_HapticClose(sdl_haptic);
+		sdl_haptic = 0;
+	}
+	if (sdl_controller)
+	{
+		SDL_GameControllerClose(sdl_controller);
+		sdl_controller = 0;
+		sdl_joy = 0; // SDL_GameControllerClose() frees this
+	}
+#endif
 	if (sdl_joy)
 	{
-		if (SDL_JoystickOpened(stickIndex)) {
-			SDL_JoystickClose(sdl_joy);
-		}
+		SDL_JoystickClose(sdl_joy);
 		sdl_joy = 0;
 	}
 #endif
@@ -229,7 +276,23 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 {
 	if (core->joystickEnabled && inited)
 	{
-#if defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_XINPUT)
+#ifdef BBGE_BUILD_SDL2
+		if (sdl_haptic)
+		{
+			const float power = (leftMotor + rightMotor) / 2.0f;
+			if ((power > 0.0f) && (time > 0.0f))
+			{
+				clearRumbleTime = time;
+				SDL_HapticRumblePlay(sdl_haptic, power, (Uint32) (time * 1000.0f));
+			}
+			else
+			{
+				clearRumbleTime = -1;
+				SDL_HapticRumbleStop(sdl_haptic);
+			}
+		}
+
+#elif defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_XINPUT)
 		XINPUT_VIBRATION vib;
 		vib.wLeftMotorSpeed = WORD(leftMotor*65535);
 		vib.wRightMotorSpeed = WORD(rightMotor*65535);
@@ -325,14 +388,55 @@ void Joystick::callibrate(Vector &calvec, float deadZone)
 }
 
 void Joystick::update(float dt)
-{	
+{
 #ifdef BBGE_BUILD_SDL
 	if (core->joystickEnabled && inited && sdl_joy && stickIndex != -1)
-	{	
+	{
+#ifdef BBGE_BUILD_SDL2
+		if (!SDL_JoystickGetAttached(sdl_joy))
+		{
+			debugLog("Lost Joystick");
+			if (sdl_haptic) { SDL_HapticClose(sdl_haptic); sdl_haptic = NULL; }
+			if (!sdl_controller)
+				SDL_JoystickClose(sdl_joy);
+			else
+			{
+				SDL_GameControllerClose(sdl_controller);
+				sdl_controller = NULL;
+			}
+			sdl_joy = NULL;
+			return;
+		}
+
+		if (sdl_controller)
+		{
+			Sint16 xaxis = SDL_GameControllerGetAxis(sdl_controller, SDL_CONTROLLER_AXIS_LEFTX);
+			Sint16 yaxis = SDL_GameControllerGetAxis(sdl_controller, SDL_CONTROLLER_AXIS_LEFTY);
+			position.x = float(xaxis)/32768.0f;
+			position.y = float(yaxis)/32768.0f;
+
+			Sint16 xaxis2 = SDL_GameControllerGetAxis(sdl_controller, SDL_CONTROLLER_AXIS_RIGHTX);
+			Sint16 yaxis2 = SDL_GameControllerGetAxis(sdl_controller, SDL_CONTROLLER_AXIS_RIGHTY);
+			rightStick.x = float(xaxis2)/32768.0f;
+			rightStick.y = float(yaxis2)/32768.0f;
+		}
+		else
+		{
+			Sint16 xaxis = SDL_JoystickGetAxis(sdl_joy, s1ax);
+			Sint16 yaxis = SDL_JoystickGetAxis(sdl_joy, s1ay);
+			position.x = float(xaxis)/32768.0f;
+			position.y = float(yaxis)/32768.0f;
+
+			Sint16 xaxis2 = SDL_JoystickGetAxis(sdl_joy, s2ax);
+			Sint16 yaxis2 = SDL_JoystickGetAxis(sdl_joy, s2ay);
+			rightStick.x = float(xaxis2)/32768.0f;
+			rightStick.y = float(yaxis2)/32768.0f;
+		}
+#else
 		if (!SDL_JoystickOpened(stickIndex))
 		{
 			debugLog("Lost Joystick");
-			sdl_joy = 0;
+			sdl_joy = NULL;
 			return;
 		}
 
@@ -341,11 +445,11 @@ void Joystick::update(float dt)
 		position.x = xaxis/32768.0f;
 		position.y = yaxis/32768.0f;
 
-
 		Sint16 xaxis2 = SDL_JoystickGetAxis(sdl_joy, s2ax);
 		Sint16 yaxis2 = SDL_JoystickGetAxis(sdl_joy, s2ay);
 		rightStick.x = xaxis2/32768.0f;
 		rightStick.y = yaxis2/32768.0f;
+#endif
 
 		/*
 		std::ostringstream os;
@@ -364,8 +468,23 @@ void Joystick::update(float dt)
 		os2 << "joy2(" << position.x << ", " << position.y << ")";
 		debugLog(os2.str());
 		*/
+#ifdef BBGE_BUILD_SDL2
+		if (sdl_controller)
+		{
+			for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; i++)
+				buttons[i] = SDL_GameControllerGetButton(sdl_controller, (SDL_GameControllerButton)i)?DOWN:UP;
+			for (int i = SDL_CONTROLLER_BUTTON_MAX; i < maxJoyBtns; i++)
+				buttons[i] = UP;
+		}
+		else
+		{
+			for (int i = 0; i < maxJoyBtns; i++)
+				buttons[i] = SDL_JoystickGetButton(sdl_joy, i)?DOWN:UP;
+		}
+#else
 		for (int i = 0; i < maxJoyBtns; i++)
 			buttons[i] = SDL_JoystickGetButton(sdl_joy, i)?DOWN:UP;
+#endif
 		/*
 		unsigned char btns[maxJoyBtns];
 		glfwGetJoystickButtons(GLFW_JOYSTICK_1, btns, maxJoyBtns);
@@ -382,10 +501,10 @@ void Joystick::update(float dt)
 	}
 #endif
 
-	if (clearRumbleTime > 0)
+	if (clearRumbleTime >= 0)
 	{
 		clearRumbleTime -= dt;
-		if (clearRumbleTime < 0)
+		if (clearRumbleTime <= 0)
 		{
 			rumble(0,0,0);
 		}

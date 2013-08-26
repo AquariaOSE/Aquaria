@@ -31,26 +31,27 @@ static void MakeRan(void)
 {
 #ifdef BBGE_BUILD_WINDOWS
     std::ofstream out("ran");
-    for (int i = 0; i < 32; i++)
-        out << rand()%1000;
-    out.close();
+    if(out)
+    {
+        for (int i = 0; i < 32; i++)
+            out << rand()%1000;
+        out.close();
+    }
 #endif
 }
 
 static void StartAQConfig()
 {
 #if defined(BBGE_BUILD_WINDOWS)
-#if defined(AQUARIA_DEMO) || defined(AQUARIA_FULL)
-    if (!exists("ran", false))
+    if (!exists("ran", false, true))
     {
         MakeRan();
-        if(exists("aqconfig.exe", false))
+        if(exists("AQConfig.exe", false, true))
         {
-            ShellExecute(NULL, "open", "aqconfig.exe", NULL, NULL, SW_SHOWNORMAL);
+            ShellExecute(NULL, "open", "AQConfig.exe", NULL, NULL, SW_SHOWNORMAL);
             exit(0);
         }
     }
-#endif
     remove("ran");
 #endif
 }
@@ -83,18 +84,31 @@ static void CheckConfig(void)
 	extern "C" int main(int argc,char *argv[])
 	{
 		std::string dsqParam = ""; // fileSystem
+		std::string extraDataDir = "";
 
+		const char *envPath = 0;
 #ifdef BBGE_BUILD_UNIX
-		const char *envPath = getenv("AQUARIA_DATA_PATH");
-		if (envPath != NULL)
+		envPath = getenv("AQUARIA_DATA_PATH");
+		if (envPath)
+		{
 			dsqParam = envPath;
+		}
 #endif
+#ifdef AQUARIA_DEFAULT_DATA_DIR
+		if(!envPath)
+			dsqParam = AQUARIA_DEFAULT_DATA_DIR;
+#endif
+#ifdef AQUARIA_EXTRA_DATA_DIR
+		if(!envPath)
+			extraDataDir = AQUARIA_EXTRA_DATA_DIR;
+#endif
+
 #endif
 
         CheckConfig();
 
         {
-            DSQ dsql(dsqParam);
+            DSQ dsql(dsqParam, extraDataDir);
             dsql.init();
             dsql.main();
             dsql.shutdown();

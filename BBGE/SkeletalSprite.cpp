@@ -507,8 +507,7 @@ Animation* AnimationLayer::getCurrentAnimation()
 	{
 		std::ostringstream os;
 		os << "skel: " << s->filenameLoaded << " currentAnimation: " << currentAnimation << " is out of range\n error in anim file?";
-		errorLog(os.str());
-		exit(-1);
+		exit_error(os.str());
 		return 0;
 	}
 	return &s->animations[currentAnimation];
@@ -1080,7 +1079,7 @@ Bone *SkeletalSprite::getBoneByIdx(int idx)
 	return 0;
 }
 
-Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std::string name, int cr, bool fh, bool fv, const Vector &cp)
+Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std::string name, float cr, bool fh, bool fv, const Vector &cp)
 {
 	Bone *b = new Bone;
 	b->boneIdx = idx;

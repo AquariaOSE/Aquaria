@@ -54,9 +54,10 @@ Path::Path()
 	spawnEnemyDistance = 0;
 	warpType = 0;
 	spiritFreeze = true;
+	pauseFreeze = true;
 }
 
-void Path::clampPosition(Vector *pos, int radius)
+void Path::clampPosition(Vector *pos, float radius)
 {
 	if (pathShape == PATHSHAPE_CIRCLE)
 	{
@@ -235,7 +236,7 @@ void Path::song(SongType songType)
 		if (!script->call("song", this, int(songType)))
 		{
 			songFunc = false;
-			debugLog("Path [" + name + "] " + script->getLastError());
+			luaDebugMsg("song", script->getLastError());
 		}
 	}
 }
@@ -247,7 +248,7 @@ void Path::songNote(int note)
 		if (!script->call("songNote", this, note))
 		{
 			songNoteFunc = false;
-			debugLog("Path [" + name + "] " + script->getLastError() + " songNote");
+			luaDebugMsg("songNote", script->getLastError());
 		}
 	}
 }
@@ -259,7 +260,7 @@ void Path::songNoteDone(int note, float len)
 		if (!script->call("songNoteDone", this, note, len))
 		{
 			songNoteDoneFunc = false;
-			debugLog("Path [" + name + "] " + script->getLastError() + " songNoteDone");
+			luaDebugMsg("songNoteDone", script->getLastError());
 		}
 	}
 }
@@ -472,14 +473,14 @@ void Path::init()
 	{
 		if (!script->call("init", this))
 		{
-			debugLog(name + " : " + script->getLastError() + " init");
+			luaDebugMsg("init", script->getLastError());
 		}
 	}
 }
 
 void Path::update(float dt)
 {
-	if (!dsq->game->isPaused() && !(spiritFreeze && dsq->game->isWorldPaused()))
+	if (!(pauseFreeze && dsq->game->isPaused()) && !(spiritFreeze && dsq->game->isWorldPaused()))
 	{
 		if (addEmitter && emitter)
 		{
@@ -495,7 +496,7 @@ void Path::update(float dt)
 		{
 			if (!script->call("update", this, dt))
 			{
-				debugLog(name + " : " + script->getLastError() + " update");
+				luaDebugMsg("update", script->getLastError());
 				updateFunction = false;
 			}
 		}
@@ -641,7 +642,7 @@ bool Path::action(int id, int state)
 	{
 		bool dontRemove = true;
 		if (!script->call("action", this, id, state, &dontRemove))
-			debugLog(name + " : " + script->getLastError() + " action");
+			luaDebugMsg("action", script->getLastError());
 		return dontRemove;
 	}
 	return true;
@@ -653,7 +654,7 @@ void Path::activate(Entity *e)
 	{
 		if (!script->call("activate", this, e))
 		{
-			debugLog(name + " : " + script->getLastError() + " activate");
+			luaDebugMsg("activate", script->getLastError());
 			activateFunction = false;
 		}
 	}
@@ -704,3 +705,20 @@ void Path::addNode(int idx)
 	}
 }
 
+int Path::messageVariadic(lua_State *L, int nparams)
+{
+	if (script)
+	{
+		int res = script->callVariadic("msg", L, nparams, this);
+		if (res < 0)
+			luaDebugMsg("msg", script->getLastError());
+		else
+			return res;
+	}
+	return 0;
+}
+
+void Path::luaDebugMsg(const std::string &func, const std::string &msg)
+{
+	debugLog("luaScriptError: Path [" + name + "]: " + func + " : " + msg);
+}

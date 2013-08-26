@@ -394,7 +394,7 @@ unsigned int VFSDirReal::load(bool recursive)
     unsigned int sum = li.size();
 
     li.clear();
-    GetDirList(fullname(), li, false);
+    GetDirList(fullname(), li, 0);
     for(std::deque<std::string>::iterator it = li.begin(); it != li.end(); ++it)
     {
         // subdir was already present, move over and erase

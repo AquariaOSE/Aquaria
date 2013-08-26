@@ -569,8 +569,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 		if (!ai)
 		{
-			errorLog("Could not find actionInput: " + actionInputName);
-			exit(-1);
+			exit_error("Could not find actionInput: " + actionInputName);
 		}
 		switch(inputSetType)
 		{
@@ -588,14 +587,6 @@ void AquariaKeyConfig::onUpdate(float dt)
 		break;
 		}
 	}
-
-	/*
-	if (k == 0)
-	{
-		errorLog("AquariaKeyConfig::onUpdate");
-		exit(-1);
-	}
-	*/
 
 	int *value = 0;
 

@@ -82,6 +82,14 @@ void Web::setPoint(int pt, const Vector &v)
 	points[pt] = v;
 }
 
+Vector Web::getPoint(int pt) const
+{
+	Vector v;
+	if (pt >= 0 || pt < points.size())
+		v = points[pt];
+	return v;
+}
+
 int Web::getNumPoints()
 {
 	return points.size();
