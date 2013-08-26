@@ -6853,10 +6853,8 @@ void Game::bindInput()
 	// used for scrolling help text
 	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_SWIMUP);
 	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_SWIMDOWN);
-	/*
 	dsq->user.control.actionSet.importAction(this, "SwimLeft",		ACTION_SWIMLEFT);
 	dsq->user.control.actionSet.importAction(this, "SwimRight",		ACTION_SWIMRIGHT);
-	*/
 
 
 	dsq->user.control.actionSet.importAction(this, "PrevPage",		ACTION_PREVPAGE);
