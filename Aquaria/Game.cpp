@@ -6843,6 +6843,7 @@ void Game::bindInput()
 
 
 	dsq->user.control.actionSet.importAction(this, "PrimaryAction", ACTION_PRIMARY);
+	dsq->user.control.actionSet.importAction(this, "SecondaryAction", ACTION_SECONDARY);
 
 	dsq->user.control.actionSet.importAction(this, "Escape",		ACTION_ESC);
 
