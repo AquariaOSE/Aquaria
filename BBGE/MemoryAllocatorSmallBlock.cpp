@@ -7,11 +7,18 @@
 #include "MemoryAllocatorSmallBlock.h"
 #include "bithacks.h"
 
-//#define DD(...) logdev(__VA_ARGS__)
+#include <assert.h>
+
+//#define DD(...) fprintf(stderr, __VA_ARGS__)
 #define DD(...)
 #define logdev(...)
 #define logerror(...)
-#define ASSERT(x) assert(x)
+
+#ifdef NDEBUG
+# define ASSERT(x)
+#else
+# define ASSERT(x) assert(x)
+#endif
 
 
 SmallBlockAllocator::SmallBlockAllocator(unsigned int blockSizeMin,
