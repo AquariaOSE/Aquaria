@@ -408,9 +408,9 @@ void PathFinding::molestPath(VectorPath &path)
 						}
 					}
 				}
-				std::ostringstream os;
+				/*std::ostringstream os;
 				os << "pushing node [" << i << "] out by (" << n.x << ", " << n.y << ") - dist: " << dist << " maxDist: " << maxDist;
-				debugLog(os.str());
+				debugLog(os.str());*/
 				//path.getPathNode(i)->value += n;
 				normals[i] = n;
 			}
@@ -453,9 +453,9 @@ void PathFinding::molestPath(VectorPath &path)
 //bowl_loop:
 	sz=path.getNumPathNodes();
 
-	std::ostringstream os;
+	/*std::ostringstream os;
 	os << "kill bowls # " << runs;
-	debugLog(os.str());
+	debugLog(os.str());*/
 	
 	for (i = start; i < sz-1; i++)
 	{
@@ -502,9 +502,9 @@ void PathFinding::molestPath(VectorPath &path)
 			*/
 			{
 				path.removeNodes(i+1, lastSuccessNode-1);
-				std::ostringstream os;
+				/*std::ostringstream os;
 				os << "killing bowl: " << i+1 << " - " << lastSuccessNode-1;
-				debugLog(os.str());
+				debugLog(os.str());*/
 				//start = lastSuccessNode - (lastSuccessNode-i);
 				//start = i+1;
 				//i = i+1;
@@ -516,7 +516,7 @@ void PathFinding::molestPath(VectorPath &path)
 		}
 		sz = path.getNumPathNodes();
 	}
-	debugLog("kill bowls done");
+	//debugLog("kill bowls done");
 	sz=path.getNumPathNodes();
 
 	// remove last node
