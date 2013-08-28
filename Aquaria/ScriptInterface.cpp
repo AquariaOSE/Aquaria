@@ -3090,6 +3090,11 @@ luaFunc(avatar_isRolling)
 	luaReturnBool(dsq->game->avatar->isRolling());
 }
 
+luaFunc(avatar_isSwimming)
+{
+	luaReturnBool(dsq->game->avatar->isSwimming());
+}
+
 luaFunc(avatar_isOnWall)
 {
 	bool v = dsq->game->avatar->state.lockedToWall;
@@ -5672,13 +5677,14 @@ luaFunc(entity_doCollisionAvoidance)
 
 	int useVel2 = lua_tonumber(L, 6);
 	bool onlyVP = getBool(L, 7);
+	int ignoreObs = lua_tointeger(L, 8);
 
 	if (e)
 	{
 		if (useVel2)
-			ret = e->doCollisionAvoidance(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), &e->vel2, lua_tonumber(L, 5), onlyVP);
+			ret = e->doCollisionAvoidance(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), &e->vel2, lua_tonumber(L, 5), ignoreObs, onlyVP);
 		else
-			ret = e->doCollisionAvoidance(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), 0, lua_tonumber(L, 5));
+			ret = e->doCollisionAvoidance(lua_tonumber(L, 2), lua_tointeger(L, 3), lua_tonumber(L, 4), 0, lua_tonumber(L, 5), ignoreObs);
 	}
 	luaReturnBool(ret);
 }
@@ -5794,7 +5800,7 @@ luaFunc(entity_followEntity)
 
 luaFunc(toggleInput)
 {
-	int v = lua_tointeger(L, 1);
+	bool v = getBool(L, 1);
 	if (v)
 		dsq->game->avatar->enableInput();
 	else
@@ -7716,7 +7722,7 @@ luaFunc(entity_setWeight)
 luaFunc(pickupGem)
 {
 	dsq->continuity.pickupGem(getString(L), !getBool(L, 2));
-	luaReturnNil();
+	luaReturnInt(dsq->continuity.gems.size() - 1);
 }
 
 luaFunc(setGemPosition)
@@ -8860,6 +8866,7 @@ static const struct {
 	luaRegister(avatar_isBursting),
 	luaRegister(avatar_isLockable),
 	luaRegister(avatar_isRolling),
+	luaRegister(avatar_isSwimming),
 	luaRegister(avatar_isOnWall),
 	luaRegister(avatar_isShieldActive),
 	luaRegister(avatar_setShieldActive),
