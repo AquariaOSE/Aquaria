@@ -2177,6 +2177,20 @@ luaFunc(shot_setTrailPrt)
 	luaReturnNil();
 }
 
+luaFunc(shot_setTargetPoint)
+{
+	Shot *shot = getShot(L);
+	if (shot)
+		shot->setTargetPoint(lua_tointeger(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(shot_getTargetPoint)
+{
+	Shot *shot = getShot(L);
+	luaReturnInt(shot ? shot->targetPt : 0);
+}
+
 luaFunc(entity_setVel)
 {
 	Entity *e = entity(L);
@@ -2500,6 +2514,12 @@ luaFunc(entity_setTargetPriority)
 		e->targetPriority = lua_tonumber(L, 2);
 	}
 	luaReturnNil();
+}
+
+luaFunc(entity_getTargetPriority)
+{
+	Entity *e = entity(L);
+	luaReturnInt(e ? e->targetPriority : 0);
 }
 
 luaFunc(isQuitFlag)
@@ -5675,7 +5695,7 @@ luaFunc(entity_doCollisionAvoidance)
 	Entity *e = entity(L);
 	bool ret = false;
 
-	int useVel2 = lua_tonumber(L, 6);
+	bool useVel2 = getBool(L, 6);
 	bool onlyVP = getBool(L, 7);
 	int ignoreObs = lua_tointeger(L, 8);
 
@@ -5874,6 +5894,12 @@ luaFunc(entity_setTargetRange)
 		e->targetRange = lua_tonumber(L, 2);
 	}
 	luaReturnNil();
+}
+
+luaFunc(entity_getTargetRange)
+{
+	Entity *e = entity(L);
+	luaReturnInt(e ? e->getTargetRange() : 0);
 }
 
 luaFunc(entity_clearTargetPoints)
@@ -7565,6 +7591,18 @@ luaFunc(getInputMode)
 	luaReturnInt(dsq->inputMode);
 }
 
+luaFunc(getJoystickAxisLeft)
+{
+	Vector v = core->joystick.position;
+	luaReturnVec2(v.x, v.y);
+}
+
+luaFunc(getJoystickAxisRight)
+{
+	Vector v = core->joystick.rightStick;
+	luaReturnVec2(v.x, v.y);
+}
+
 luaFunc(quit)
 {
 #ifdef AQUARIA_DEMO
@@ -8486,6 +8524,7 @@ static const struct {
 	luaRegister(entity_getNumTargetPoints),
 
 	luaRegister(entity_setTargetRange),
+	luaRegister(entity_getTargetRange),
 
 	luaRegister(bone_addSegment),
 
@@ -8528,6 +8567,8 @@ static const struct {
 	luaRegister(disableInput),
 
 	luaRegister(getInputMode),
+	luaRegister(getJoystickAxisLeft),
+	luaRegister(getJoystickAxisRight),
 
 	luaRegister(setMousePos),
 	luaRegister(getMousePos),
@@ -8615,6 +8656,7 @@ static const struct {
 	luaRegister(entity_stopTimer),
 	luaRegister(entity_stopPull),
 	luaRegister(entity_setTargetPriority),
+	luaRegister(entity_getTargetPriority),
 
 	luaRegister(entity_setEntityType),
 	luaRegister(entity_getEntityType),
@@ -8981,6 +9023,8 @@ static const struct {
 	luaRegister(shot_setCheckDamageTarget),
 	luaRegister(shot_isCheckDamageTarget),
 	luaRegister(shot_setTrailPrt),
+	luaRegister(shot_setTargetPoint),
+	luaRegister(shot_getTargetPoint),
 	luaRegister(entity_pathBurst),
 	luaRegister(entity_handleShotCollisions),
 	luaRegister(entity_handleShotCollisionsSkeletal),
