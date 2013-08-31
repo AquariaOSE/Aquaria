@@ -1630,14 +1630,14 @@ luaFunc(quad_setRenderCenter)
 {
 	Quad *b = getQuad(L);
 	if (b)
-		b->renderBorder = getBool(L, 2);
+		b->renderCenter = getBool(L, 2);
 	luaReturnNil();
 }
 
 luaFunc(quad_isRenderCenter)
 {
 	Quad *b = getQuad(L);
-	luaReturnBool(b ? b->renderBorder : false);
+	luaReturnBool(b ? b->renderCenter : false);
 }
 
 
