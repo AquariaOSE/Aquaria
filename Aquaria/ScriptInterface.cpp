@@ -1145,6 +1145,12 @@ luaFunc(obj_setRenderBeforeParent)
 	luaReturnNil();
 }
 
+luaFunc(obj_isRenderBeforeParent)
+{
+	RenderObject *r = robj(L);
+	luaReturnBool(r ? r->renderBeforeParent : false);
+}
+
 // Not so pretty: Because RenderObject has a `velocity' vector,
 // and Entity has `vel' ADDITIONALLY, we need to use
 // extra functions to manage RenderObject's velocities.
@@ -1606,6 +1612,49 @@ luaFunc(quad_isRepeatTexture)
 	luaReturnBool(b ? b->isRepeatingTextureToFill() : false);
 }
 
+luaFunc(quad_setRenderBorder)
+{
+	Quad *b = getQuad(L);
+	if (b)
+		b->renderBorder = getBool(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(quad_isRenderBorder)
+{
+	Quad *b = getQuad(L);
+	luaReturnBool(b ? b->renderBorder : false);
+}
+
+luaFunc(quad_setRenderCenter)
+{
+	Quad *b = getQuad(L);
+	if (b)
+		b->renderBorder = getBool(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(quad_isRenderCenter)
+{
+	Quad *b = getQuad(L);
+	luaReturnBool(b ? b->renderBorder : false);
+}
+
+
+luaFunc(quad_borderAlpha)
+{
+	Quad *b = getQuad(L);
+	if (b)
+		b->borderAlpha = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(quad_getBorderAlpha)
+{
+	Quad *b = getQuad(L);
+	luaReturnNum(b ? b->borderAlpha : 0.0f);
+}
+
 // --- standard set/get functions for each type, wrapping RenderObject functions ---
 
 #define MK_FUNC(base, getter, prefix, suffix)	\
@@ -1674,6 +1723,7 @@ luaFunc(quad_isRepeatTexture)
 	RO_FUNC(getter, prefix,  setLayer		) \
 	RO_FUNC(getter, prefix,  getLayer		) \
 	RO_FUNC(getter, prefix,  setRenderBeforeParent) \
+	RO_FUNC(getter, prefix,  isRenderBeforeParent) \
 	RO_FUNC(getter, prefix,  addChild		) \
 	RO_FUNC(getter, prefix,  fh				) \
 	RO_FUNC(getter, prefix,  fv				) \
@@ -1710,7 +1760,13 @@ luaFunc(quad_isRepeatTexture)
 	Q_FUNC(getter, prefix,  setSegs			) \
 	Q_FUNC(getter, prefix,  setRepeatTexture) \
 	Q_FUNC(getter, prefix,  isRepeatTexture	) \
-	Q_FUNC(getter, prefix,  setRepeatScale	)
+	Q_FUNC(getter, prefix,  setRepeatScale	) \
+	Q_FUNC(getter, prefix,  setRenderBorder	) \
+	Q_FUNC(getter, prefix,  isRenderBorder	) \
+	Q_FUNC(getter, prefix,  setRenderCenter	) \
+	Q_FUNC(getter, prefix,  isRenderCenter	) \
+	Q_FUNC(getter, prefix,  borderAlpha		) \
+	Q_FUNC(getter, prefix,  getBorderAlpha	)
 
 // This should reflect the internal class hierarchy,
 // e.g. a Beam is a Quad, so it can use quad_* functions
@@ -4725,6 +4781,12 @@ luaFunc(node_setPosition)
 		node->position = Vector(x, y);
 	}
 	luaReturnNil();
+}
+
+luaFunc(node_getShape)
+{
+	Path *p = path(L);
+	luaReturnInt(p ? p->pathShape : 0);
 }
 
 
@@ -8269,6 +8331,14 @@ luaFunc(text_setWidth)
 	luaReturnNil();
 }
 
+luaFunc(text_setAlign)
+{
+	BaseText *txt = getText(L);
+	if (txt)
+		txt->setAlign((Align)lua_tointeger(L, 2));
+	luaReturnNil();
+}
+
 luaFunc(loadShader)
 {
 	int handle = 0;
@@ -9099,6 +9169,7 @@ static const struct {
 	luaRegister(node_getSize),
 	luaRegister(node_setEffectOn),
 	luaRegister(node_isEffectOn),
+	luaRegister(node_getShape),
 
 	luaRegister(toggleSteam),
 	luaRegister(toggleVersionLabel),
@@ -9271,6 +9342,7 @@ static const struct {
 	luaRegister(text_setText),
 	luaRegister(text_setFontSize),
 	luaRegister(text_setWidth),
+	luaRegister(text_setAlign),
 
 	luaRegister(loadShader),
 	luaRegister(createShader),
@@ -9996,6 +10068,12 @@ static const struct {
 	luaConstant(SEE_MAP_NEVER),
 	luaConstant(SEE_MAP_DEFAULT),
 	luaConstant(SEE_MAP_ALWAYS),
+
+	luaConstant(ALIGN_CENTER),
+	luaConstant(ALIGN_LEFT),
+
+	luaConstant(PATHSHAPE_RECT),
+	luaConstant(PATHSHAPE_CIRCLE),
 };
 
 //============================================================================================
