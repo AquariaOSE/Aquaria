@@ -63,7 +63,7 @@ public:
 	bool isScrollingText();
 	void stopScrollingText();
 	bool isEmpty();
-	void setAlign(Align align);
+	virtual void setAlign(Align align);
 	std::string getText();
 	int getWidthOnScreen();
 	void loadSpacingMap(const std::string &file);
