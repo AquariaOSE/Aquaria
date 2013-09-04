@@ -29,9 +29,6 @@ CollideEntity::CollideEntity() : Entity()
 	this->canBeTargetedByAvatar = true;
 	weight = 0;
 	bounceAmount = 0.5f;
-	bounceEntityAmount = 0.5f;
-	doCusion = false;
-	friction = 0;
 	this->updateCull = 4000;
 }
 
@@ -115,56 +112,6 @@ void CollideEntity::updateMovement(float dt)
 
 	updateVel2(dt);
 
-	if (doCusion)
-	{
-		Vector push;
-		TileVector t(position+vel*dt);
-		if (dsq->game->isObstructed(TileVector(t.x-1, t.y)))
-		{
-			push += Vector(1.25,0);
-		}
-		if (dsq->game->isObstructed(TileVector(t.x+1, t.y)))
-		{
-			push += Vector(-1.25,0);
-		}
-		if (dsq->game->isObstructed(TileVector(t.x, t.y-1)))
-		{
-			push += Vector(0,1.25);
-		}
-		if (dsq->game->isObstructed(TileVector(t.x, t.y+1)))
-		{
-			push += Vector(0,-1.25);
-		}
-		if (dsq->game->isObstructed(TileVector(t.x-1, t.y-1)))
-		{
-			push += Vector(0.5,0.5);
-		}
-		if (dsq->game->isObstructed(TileVector(t.x-1, t.y+1)))
-		{
-			push += Vector(0.5,-0.5);
-		}
-		if (dsq->game->isObstructed(TileVector(t.x+1, t.y-1)))
-		{
-			push += Vector(-0.5,0.5);
-		}
-		if (dsq->game->isObstructed(TileVector(t.x+1, t.y+1)))
-		{
-			push += Vector(-0.5,-0.5);
-		}
-
-		// cushion
-		
-		if (push.x != 0 || push.y != 0)
-		{
-			if (vel.getSquaredLength2D() > sqr(10))
-			{
-				push.setLength2D(100 * dt * 60);
-				push.z = 0;
-			}
-			vel += push;
-		}
-	}
-	
 	Vector lastPosition = position;
 
 	bool underWater = isUnderWater();
@@ -252,16 +199,6 @@ void CollideEntity::updateMovement(float dt)
 		}
 	}
 
-	if (collided && friction != 0 && (vel.x != 0 || vel.y != 0))
-	{
-		Vector fric = vel;
-		fric.setLength2D(-friction);
-		vel.z = 0;
-		vel += fric*dt;
-	}
-
-	//doFriction(dt);
-	
 	if (!collided && weight != 0)
 	{
 		vel += Vector(0, weight*dt);
