@@ -2386,6 +2386,23 @@ luaFunc(entity_getBoneLockEntity)
 	luaReturnPtr(ent);
 }
 
+luaFunc(entity_getBoneLockData)
+{
+	Entity *e = entity(L);
+	if (!e)
+		luaReturnNil();
+	BoneLock b = *e->getBoneLock(); // always safe to deref
+
+	lua_pushboolean(L, b.on);
+	luaPushPointer(L, b.bone);
+	lua_pushnumber(L, b.origRot);
+	lua_pushnumber(L, b.wallNormal.x);
+	lua_pushnumber(L, b.wallNormal.y);
+	lua_pushnumber(L, b.localOffset.x);
+	lua_pushnumber(L, b.localOffset.y);
+	return 7;
+}
+
 luaFunc(entity_ensureLimit)
 {
 	Entity *e = entity(L);
@@ -5591,7 +5608,7 @@ luaFunc(entity_setBounce)
 {
 	CollideEntity *e = collideEntity(L);
 	if (e)
-		e->bounceAmount = e->bounceEntityAmount = lua_tonumber(L, 2);
+		e->bounceAmount = lua_tonumber(L, 2);
 	luaReturnNil();
 }
 
@@ -7819,6 +7836,12 @@ luaFunc(entity_setWeight)
 	luaReturnNil();
 }
 
+luaFunc(entity_getWeight)
+{
+	CollideEntity *e = collideEntity(L);
+	luaReturnNum(e ? e->weight : 0.0f);
+}
+
 luaFunc(pickupGem)
 {
 	dsq->continuity.pickupGem(getString(L), !getBool(L, 2));
@@ -8488,6 +8511,7 @@ static const struct {
 	luaRegister(entity_addIgnoreShotDamageType),
 	luaRegister(entity_ensureLimit),
 	luaRegister(entity_getBoneLockEntity),
+	luaRegister(entity_getBoneLockData),
 
 	luaRegister(entity_setRidingPosition),
 	luaRegister(entity_setRidingData),
@@ -8626,6 +8650,7 @@ static const struct {
 
 	luaRegister(createEntity),
 	luaRegister(entity_setWeight),
+	luaRegister(entity_getWeight),
 
 	luaRegister(entity_setActivationType),
 
