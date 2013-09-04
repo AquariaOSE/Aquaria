@@ -35,13 +35,12 @@ class Path;
 
 struct BoneLock
 {
-	BoneLock() : entity(0), bone(0), on(false), origRot(0), offRot(0) {}
+	BoneLock() : entity(0), bone(0), on(false), origRot(0) {}
 	Entity *entity;
 	Bone *bone;
 	Vector localOffset;
 	bool on;
 	float origRot;
-	float offRot;
 	Vector wallNormal, circleOffset;
 	int collisionMaskIndex;
 };

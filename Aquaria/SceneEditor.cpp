@@ -2338,6 +2338,7 @@ void SceneEditor::removeEntity()
 void SceneEditor::placeAvatar()
 {
 	dsq->game->avatar->position = dsq->getGameCursorPosition();
+	dsq->game->action(ACTION_PLACE_AVATAR, 0);
 }
 
 void SceneEditor::scaleElementUp()
