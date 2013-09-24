@@ -568,7 +568,7 @@ protected:
 typedef std::vector<Quad*> QuadList;
 typedef std::vector<QuadList> QuadArray;
 
-typedef std::list<Element*> ElementUpdateList;
+typedef std::vector<Element*> ElementUpdateList;
 
 // Note: although this is a bitmask, only one of these values may be set at a time!
 enum ObsType
@@ -961,6 +961,7 @@ public:
 	GridRender *gridRender, *gridRender2, *gridRender3, *edgeRender, *gridRenderEnt;
 	void toggleGridRender();
 	ElementUpdateList elementUpdateList;
+	ElementUpdateList elementInteractionList;
 
 	bool invinciblity;
 

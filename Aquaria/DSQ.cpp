@@ -359,7 +359,7 @@ ElementEffect DSQ::getElementEffectByIndex(int e)
 
 	return empty;
 }
-
+/*
 Element *DSQ::getSolidElementNear(Vector pos, int rad)
 {
 	Element *closestE = 0;
@@ -376,25 +376,11 @@ Element *DSQ::getSolidElementNear(Vector pos, int rad)
 	}
 	return closestE;
 }
-
+*/
 Vector DSQ::getCameraCenter()
 {
 	return cameraPos; //+ Vector(400*(1.0f/core->globalScale.x),300*(1.0f/core->globalScale.x));
 }
-
-void DSQ::doScript(const std::string &script)
-{
-	/*
-	this->script.loadScriptFile(script);
-	this->script.run("void main()");
-	*/
-}
-
-void DSQ::print(int x, int y, const std::string &text)
-{
-//	CTextDrawer::GetSingleton().PrintText(x, y, text.c_str());
-}
-
 
 void DSQ::centerMessage(const std::string &text, float y, int type)
 {
@@ -4559,6 +4545,7 @@ void DSQ::onUpdate(float dt)
 		os << dsq->sound->getVolumeString() << std::endl;
 		os << "runInBG: " << core->settings.runInBackground << " nested: " << core->getNestedMains() << std::endl;
 		os << core->globalResolutionScale.x << ", " << core->globalResolutionScale.y << std::endl;
+		os << "elemu: " << game->elementUpdateList.size() << " elemi: " << game->elementInteractionList.size() << std::endl;
 		os << "Lua mem: " << scriptInterface.gcGetStats() << " KB" << std::endl;
 
 		cmDebug->setText(os.str());
