@@ -574,20 +574,12 @@ void SceneEditor::init()
 	selectedElements.clear();
 	autoSaveTimer = 0;
 	skinMinX = skinMinY = skinMaxX = skinMaxY = -1;
-	selectionType = ST_SINGLE;
 	editingElement = 0;
 	editingEntity = 0;
 	pathRender = new PathRender();
 	core->getTopStateData()->addRenderObject(pathRender, LR_DEBUG_TEXT);
 	pathRender->alpha = 0;
 
-	selectedType = -1;
-	possibleSelectedType = -1;
-
-	target = new Quad;
-	//target->setTexture("target");
-	core->getTopStateData()->addRenderObject(target, LR_HUD);
-	target->alpha = 0;
 	editType = ET_ELEMENTS;
 	state = ES_SELECTING;
 	drawingWarpArea = 'N';
@@ -1026,7 +1018,6 @@ void SceneEditor::moveToBack()
 void SceneEditor::editModeElements()
 {
 	selectedIdx = -1;
-	target->alpha.interpolateTo(0, 0.5);
 	editType = ET_ELEMENTS;
 	if (curElement < dsq->game->elementTemplates.size())
 	{
@@ -1035,6 +1026,8 @@ void SceneEditor::editModeElements()
 	}
 	placer->alpha = 0.5;
 	pathRender->alpha = 0;
+	editingEntity = NULL;
+	editingPath = NULL;
 }
 
 void SceneEditor::editModeEntities()
@@ -1048,15 +1041,20 @@ void SceneEditor::editModeEntities()
 	placer->setTexture(selectedEntity.prevGfx);
 	placer->alpha = 0.5;
 	pathRender->alpha = 0;
+	selectedElements.clear();
+	editingElement = NULL;
+	editingPath = NULL;
 }
 
 void SceneEditor::editModePaths()
 {
 	selectedIdx = -1;
-	target->alpha.interpolateTo(0, 0.5);
 	editType = ET_PATHS;
 	placer->alpha = 0;
 	pathRender->alpha = 0.5;
+	selectedElements.clear();
+	editingElement = NULL;
+	editingEntity = NULL;
 }
 
 Element *SceneEditor::getElementAtCursor()
@@ -1128,23 +1126,6 @@ void SceneEditor::deleteSelected()
 			editingElement = 0;
 			dsq->game->reconstructGrid();
 		}
-		/*
-		RenderObject *r = getSelectedRenderObject();
-		if (r)
-		{
-			if (dynamic_cast<Element*>(r))
-			{
-				deleteSelectedElement();
-			}
-			Entity *ent = 0;
-			if (ent=dynamic_cast<Entity*>(r))
-			{
-				dsq->game->removeEntity(ent);
-				//removeEntity();
-			}
-			selectedIdx = -1;
-		}
-		*/
 	}
 	else if (editType == ET_ENTITIES)
 	{
@@ -1218,23 +1199,6 @@ void SceneEditor::updateSaveFileEnemyPosition(Entity *ent)
 
 }
 
-RenderObject *SceneEditor::getSelectedRenderObject()
-{
-	if (editType == ET_ELEMENTS)
-	{
-		if (selectedIdx > -1)
-		{
-			if (selectedType == 0)
-				return dsq->getElement(selectedIdx);
-			/*
-			else if (selectedType == 1)
-				return dsq->entities[selectedIdx];
-			*/
-		}
-	}
-	return 0;
-}
-
 void SceneEditor::checkForRebuild()
 {
 	if (editType == ET_ELEMENTS && state != ES_SELECTING && !selectedElements.empty())
@@ -1276,14 +1240,6 @@ void SceneEditor::exitMoveState()
 
 void SceneEditor::enterMoveState()
 {
-	/*
-	if (editType == ET_ELEMENTS && state == ES_SELECTING && selectedIdx > -1)
-	{
-		state = ES_MOVING;
-		oldPosition = getSelectedRenderObject()->position;
-		cursorOffset = getSelectedRenderObject()->position - dsq->getGameCursorPosition();
-	}
-	*/
 	if (state != ES_SELECTING) return;
 	state = ES_MOVING;
 	if (editType == ET_ELEMENTS)
@@ -1324,16 +1280,6 @@ void SceneEditor::enterMoveState()
 
 void SceneEditor::enterRotateState()
 {
-	/*
-	if (editType == ET_ELEMENTS && state == ES_SELECTING && selectedIdx > -1)
-	{
-		state = ES_ROTATING;
-		oldRotation = getSelectedRenderObject()->rotation;
-		//cursorOffset = getSelectedRenderObject()->position - dsq->getGameCursorPosition();
-		//cursorOffset = Vector(0,0);
-		cursorOffset = dsq->getGameCursorPosition();
-	}
-	*/
 	if (state != ES_SELECTING) return;
 	if (editType == ET_ENTITIES)
 	{
@@ -1365,8 +1311,6 @@ void SceneEditor::enterRotateState()
 		{
 			state = ES_ROTATING;
 			oldRotation = editingElement->rotation;
-			//cursorOffset = getSelectedRenderObject()->position - dsq->getGameCursorPosition();
-			//cursorOffset = Vector(0,0);
 			cursorOffset = dsq->getGameCursorPosition();
 		}
 	}
@@ -1374,15 +1318,6 @@ void SceneEditor::enterRotateState()
 
 void SceneEditor::enterScaleState()
 {
-	/*
-	if (editType == ET_ELEMENTS && state == ES_SELECTING && selectedIdx > -1)
-	{
-		state = ES_SCALING;
-		oldScale = getSelectedRenderObject()->scale;
-		//cursorOffset = getSelectedRenderObject()->position - dsq->getGameCursorPosition();
-		cursorOffset = dsq->getGameCursorPosition();
-	}
-	*/
 	if (state != ES_SELECTING) return;
 	if (editType == ET_ELEMENTS)
 	{
@@ -1523,41 +1458,11 @@ void SceneEditor::mouseButtonRightUp()
 	//dsq->game->reconstructGrid();
 }
 
-/*
-void SceneEditor::toggleElementFlag1()
-{
-	if (editingElement)
-	{
-		editingElement->setFlag("");
-	}
-}
-
-void SceneEditor::toggleElementFlag2()
-{
-}
-
-void SceneEditor::toggleElementFlag3()
-{
-}
-
-void SceneEditor::toggleElementFlag4()
-{
-}
-
-void SceneEditor::toggleElementFlag5()
-{
-}
-*/
 
 void SceneEditor::toggleElementSolid()
 {
 	if (editingElement)
 	{
-		/*
-		TileVector t(editingElement->position);
-		editingElement->position = t.worldVector();
-		*/
-
 		switch(editingElement->elementFlag)
 		{
 		default:
@@ -1623,35 +1528,6 @@ void SceneEditor::mouseButtonLeft()
 				enterMoveState();
 			}
 		}
-		/*
-		if (!selectedElements.empty())
-		{
-			enterMoveState();
-		}
-		*/
-		/*
-		if (state == ES_MOVING || state == ES_ROTATING || state == ES_SCALING)
-		{
-			if (selectedIdx != -1)
-			{
-				if (selectedType == 1)
-				{
-					RenderObject *r = getSelectedRenderObject();
-					Entity *e = dynamic_cast<Entity*>(r);
-					if (e)
-					{
-						updateSaveFileEnemyPosition(e);
-					}
-				}
-			}
-			state = ES_SELECTING;
-			//selectedIdx = -1;
-		}
-		else if (state == ES_SELECTING)
-		{
-			placeElement();
-		}
-		*/
 	}
 	else if (editType == ET_ENTITIES)
 	{
@@ -1685,29 +1561,6 @@ void SceneEditor::mouseButtonLeft()
 				}
 			}
 		}
-		/*
-		else if (selectedIdx != -1)
-		{
-			if (selectedIdx >= 0 && selectedIdx < dsq->game->getNumPaths())
-			{
-				Path *p = dsq->game->getPath(selectedIdx);
-				PathNode n;
-				n.position = dsq->getGameCursorPosition();
-				p->nodes.push_back(n);
-			}
-		}
-				else if (selectedIdx != -1)
-		{
-			if (selectedIdx >= 0 && selectedIdx < dsq->game->getNumPaths())
-			{
-				Path *p = dsq->game->getPath(selectedIdx);
-				p->nodes[selectedNode] =
-				PathNode n;
-				n.position = dsq->getGameCursorPosition();
-				p->nodes.push_back(n);
-			}
-		}
-		*/
 	}
 }
 
@@ -1746,27 +1599,6 @@ void SceneEditor::mouseButtonRight()
 			else
 				enterRotateState();
 		}
-		/*
-		switch(state)
-		{
-		case ES_SELECTING:
-			selectedType = possibleSelectedType;
-			selectedIdx = possibleSelectedIdx;
-		break;
-		case ES_MOVING:
-			getSelectedRenderObject()->position = oldPosition;
-			state = ES_SELECTING;
-		break;
-		case ES_ROTATING:
-			getSelectedRenderObject()->rotation = oldRotation;
-			state = ES_SELECTING;
-		break;
-		case ES_SCALING:
-			getSelectedRenderObject()->scale = oldScale;
-			state = ES_SELECTING;
-		break;
-		}
-		*/
 	}
 	if (editType == ET_ELEMENTS && state == ES_MOVING)
 	{
@@ -1875,11 +1707,6 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 		{
 			e->safeKill();
 			deleteElements.push_back(e);
-			/*
-			e->setLife(0.1);
-			e->setDecayRate(1);
-			deleteElements.push_back(e);
-			*/
 		}
 	}
 	for (i = 0; i < deleteElements.size(); i++)
@@ -2260,14 +2087,6 @@ void SceneEditor::generateLevel()
 			}
 
 			dsq->game->addObsRow(rows[i].x1/TILE_SIZE, rows[i].y/TILE_SIZE, w/TILE_SIZE);
-			/*
-			BoxElement *box = new BoxElement(w,h);
-
-			box->position = Vector(rows[i].x1 + int(w/2), useY);
-			box->position.z = boxElementZ;
-			dsq->game->addRenderObject(box, BLACKGROUND);
-			dsq->elements.push_back(box);
-			*/
 		}
 
 		dsq->game->reconstructGrid(true);
@@ -2358,6 +2177,9 @@ void SceneEditor::scaleElement1()
 
 void SceneEditor::flipElementHorz()
 {
+	if (editType != ET_ELEMENTS)
+		return;
+
 	if (editingElement)
 		editingElement->flipHorizontal();
 	else
@@ -2366,6 +2188,9 @@ void SceneEditor::flipElementHorz()
 
 void SceneEditor::flipElementVert()
 {
+	if (editType != ET_ELEMENTS)
+		return;
+
 	if (editingElement)
 		editingElement->flipVertical();
 	else
@@ -2687,8 +2512,6 @@ void prevEntityPage()
 	createEntityPage();
 }
 
-//page = game->entityGroups.begin();
-
 void SceneEditor::selectEntityFromGroups()
 {
 	createEntityPage();
@@ -2697,24 +2520,11 @@ void SceneEditor::selectEntityFromGroups()
 	se_changedEntityType = false;
 	editType = ET_SELECTENTITY;
 
-
-	//bool done = false;
-	//bool mbrd = false;
 	bool mbld = false;
 	bool ld = false, rd = false;
 	ld = core->getKeyState(KEY_E);
 	while (!se_changedEntityType)
 	{
-		/*
-		if (core->mouse.buttons.right && !mbrd)
-			mbrd = true;
-		else if (!core->mouse.buttons.right && mbrd)
-		{
-			mbrd = false;
-			nextEntityPage();
-		}
-		*/
-		
 		if (core->mouse.buttons.left && !mbld)
 			mbld = true;
 		else if (!core->mouse.buttons.left && mbld)
@@ -2831,26 +2641,7 @@ void SceneEditor::nextElement()
 		return;
 	}
 
-	if (editType == ET_ENTITIES)
-	{
-		/*
-		if (editingEntity)
-		{
-			// swap entity type up (somehow)
-
-		}
-		else
-		{
-			curEntity++;
-
-			if (curEntity >= dsq->game->entityTypeList.size())
-				curEntity = 0;
-
-			updateEntityPlacer();
-		}
-		*/
-	}
-	else if (editType == ET_ELEMENTS)
+	if (editType == ET_ELEMENTS)
 	{
 		if (dsq->game->elementTemplates.empty()) return;
 		if (core->getCtrlState())
@@ -2888,7 +2679,6 @@ void SceneEditor::nextElement()
 
 			if (dsq->game->elementTemplates[curElement].idx < 1024)
 			{
-				//int idx = dsq->game->elementTemplates[curElement].idx;
 				placer->setTexture(dsq->game->elementTemplates[curElement].gfx);
 			}
 			else
@@ -2912,28 +2702,8 @@ void SceneEditor::prevElement()
 			return;
 		}
 	}
-	if (editType == ET_ENTITIES)
-	{
-		/*
-		if (editingEntity)
-		{
-			// swap entity type up (somehow)
-		}
-		else
-		{
-			curEntity--;
 
-			if (curEntity < 0)
-				curEntity = dsq->game->entityTypeList.size()-1;
-
-			updateEntityPlacer();
-
-
-			//dsq->game->entityTypeList
-		}
-		*/
-	}
-	else if (editType == ET_ELEMENTS)
+	if (editType == ET_ELEMENTS)
 	{
 		if (dsq->game->elementTemplates.empty()) return;
 		if (!selectedElements.empty())
@@ -2967,7 +2737,6 @@ void SceneEditor::doPrevElement()
 
 	if (dsq->game->elementTemplates[curElement].idx < 1024)
 	{
-		//int idx = dsq->game->elementTemplates[curElement].idx;
 		placer->setTexture(dsq->game->elementTemplates[curElement].gfx);
 	}
 	else
@@ -2997,29 +2766,6 @@ void SceneEditor::moveLayer()
 				}
 			}
 		}
-		/*
-		int realLayer1 = LR_ELEMENTS1 + fromLayer, realLayer2 = LR_ELEMENTS1 + toLayer;
-		std::vector<RenderObject*> move;
-		for (int i = 0; i < dsq->renderObjectLayers[realLayer1].renderObjects.size(); i++)
-		{
-			RenderObject *r = dsq->renderObjectLayers[realLayer1].renderObjects[i];
-			if (r)
-			{
-				move.push_back(r);
-				core->removeRenderObject(r, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-				//dsq->renderObjectLayers[realLayer1].renderObjects[i] = 0;
-			}
-		}
-		for (int i = 0; i < move.size(); i++)
-		{
-			RenderObject *r = move[i];
-			if (r)
-			{
-				r->layer = realLayer2;
-				dsq->addRenderObject(r, realLayer2);
-			}
-		}
-		*/
 	}
 }
 
@@ -3070,8 +2816,6 @@ void SceneEditor::placeElement()
 	{
 		if (!core->getShiftState() && !core->getKeyState(KEY_LALT) && !drawingBox)
 		{
-			//errorLog("placeElement");
-
 			dsq->game->createElement(dsq->game->elementTemplates[curElement].idx, placer->position, bgLayer, placer);
 			updateText();
 			dsq->game->reconstructGrid();
@@ -3104,27 +2848,8 @@ void SceneEditor::placeElement()
 			{
 				p->addNode(selectedNode);
 			}
-			/*
-			if (selectedIdx >= 0 && selectedIdx < dsq->game->getNumPaths())
-			{
-				Path *p = dsq->game->getPath(selectedIdx);
-				PathNode n;
-				n.position = dsq->getGameCursorPosition();
-				p->nodes.push_back(n);
-			}
-			*/
 		}
 	}
-}
-
-void SceneEditor::cloneSelectedElementInput()
-{
-	/*
-	if (core->getShiftState())
-	{
-		cloneSelectedElement();
-	}
-	*/
 }
 
 void SceneEditor::cloneSelectedElement()
@@ -3180,15 +2905,6 @@ void SceneEditor::cloneSelectedElement()
 			newp->init();
 		}
 	}
-
-	/*
-	if (selectedIdx > -1)
-	{
-		Element *e1 = dsq->elements[selectedIdx];
-		Element *e = dsq->game->createElement(e1->templateIdx, placer->position, e1->layer-LR_ELEMENTS1, getSelectedRenderObject());
-		selectedIdx = dsq->elements.size()-1;
-	}
-	*/
 }
 
 void SceneEditor::shutdown()
@@ -3265,7 +2981,6 @@ void SceneEditor::toggle(bool on)
 		text->alpha.interpolateTo(0, 0.2);
 		placer->alpha.interpolateTo(0, 0.2);
 		//core->flags.unset(CF_CLEARBUFFERS);
-		target->alpha = 0;
 		dsq->darkLayer.toggle(true);
 
 		dsq->game->rebuildElementUpdateList();
@@ -3400,14 +3115,6 @@ void SceneEditor::endDrawingWarpArea(char c)
 			a.sceneName = dsq->getUserInputString("Enter map to warp to");
 			a.spawnOffset = dsq->getUserInputDirection("Enter warp direction");
 			dsq->game->warpAreas.push_back(a);
-			/*
-			BoxElement *boxElement = new BoxElement(boxPromo->width.getValue(), boxPromo->height.getValue());
-			boxElement->position = boxPromo->position;
-			boxElement->position.z = boxElementZ;
-			dsq->game->addRenderObject(boxElement, BLACKGROUND);
-			dsq->elements.push_back(boxElement);
-			dsq->game->reconstructGrid();
-			*/
 		}
 	}
 }
@@ -3482,9 +3189,6 @@ void SceneEditor::update(float dt)
 		Vector p = Vector(cursorTile.x*TILE_SIZE+TILE_SIZE/2, cursorTile.y*TILE_SIZE+TILE_SIZE/2);
 		placer->position = p;
 
-
-		//selectedIdx = idx;
-
 		int camSpeed = 500/zoom.x;
 		if (core->getShiftState())
 			camSpeed = 5000/zoom.x;
@@ -3533,19 +3237,6 @@ void SceneEditor::update(float dt)
 			dsq->cameraPos.y += mouseY/oldZoom.y - mouseY/zoom.y;
 		}
 
-		/*
-		for (int i = 0; i < dsq->elements.size(); i++)
-		{
-			//dsq->elements[i]->flags.unset(RO_RENDERBORDERS);
-			dsq->elements[i]->renderBorders = false;
-		}
-		RenderObject *r;
-		if (r = getSelectedRenderObject())
-		{
-			//r->flags.set(RO_RENDERBORDERS);
-			r->renderBorders = true;
-		}
-		*/
 		if (this->editType == ET_PATHS)
 		{
 			switch(state)
@@ -3574,23 +3265,26 @@ void SceneEditor::update(float dt)
 			break;
 			case ES_SCALING:
 			{
-				float factor = 1;
-				Vector add = Vector((dsq->getGameCursorPosition().x - cursorOffset.x)*factor,
-					(dsq->getGameCursorPosition().y - cursorOffset.y)*factor);
-				//editingElement->scale=oldScale + add;
-				Vector sz = oldScale + add;
-				if (sz.x < 32)
-					sz.x = 32;
-				if (sz.y < 32)
-					sz.y = 32;
-				editingPath->rect.x1 = -sz.x/2;
-				editingPath->rect.x2 = sz.x/2;
-				editingPath->rect.y1 = -sz.y/2;
-				editingPath->rect.y2 = sz.y/2;
+				if (editingPath)
+				{
+					float factor = 1;
+					Vector add = Vector((dsq->getGameCursorPosition().x - cursorOffset.x)*factor,
+						(dsq->getGameCursorPosition().y - cursorOffset.y)*factor);
+					Vector sz = oldScale + add;
+					if (sz.x < 32)
+						sz.x = 32;
+					if (sz.y < 32)
+						sz.y = 32;
+					editingPath->rect.x1 = -sz.x/2;
+					editingPath->rect.x2 = sz.x/2;
+					editingPath->rect.y1 = -sz.y/2;
+					editingPath->rect.y2 = sz.y/2;
+				}
 			}
 			break;
 			case ES_MOVING:
-				dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
+				if (selectedIdx >= 0)
+					dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
 			break;
 			}
 		}
@@ -3599,27 +3293,24 @@ void SceneEditor::update(float dt)
 			switch(state)
 			{
 			case ES_MOVING:
-				editingEntity->position = dsq->getGameCursorPosition() + cursorOffset;
-				/*
-				if (core->getShiftState())
-				{
-					TileVector t(getSelectedRenderObject()->position);
-					getSelectedRenderObject()->position = t.worldVector();
-				}
-				*/
+				if (editingEntity)
+					editingEntity->position = dsq->getGameCursorPosition() + cursorOffset;
 			break;
 			case ES_ROTATING:
 			{
-				float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
-				if (core->getCtrlState())
+				if (editingEntity)
 				{
-					int a = (oldRotation.z + add)/45;
-					add = a * 45;
-					editingEntity->rotation.z = add;
-				}
-				else
-				{
-					editingEntity->rotation.z = oldRotation.z + add;
+					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
+					if (core->getCtrlState())
+					{
+						int a = (oldRotation.z + add)/45;
+						add = a * 45;
+						editingEntity->rotation.z = add;
+					}
+					else
+					{
+						editingEntity->rotation.z = oldRotation.z + add;
+					}
 				}
 			}
 			}
@@ -3640,37 +3331,12 @@ void SceneEditor::update(float dt)
 					{
 						closest = len;
 						idx = i;
-						possibleSelectedType = 0;
 					}
 				}
-
-				/*
-				FOR_ENTITIES(i)
-				{
-					Entity *e = *i;
-					Vector dist = e->position - dsq->getGameCursorPosition();
-					int len = dist.getSquaredLength2D();
-					if ((len < closest || closest == -1))
-					{
-						closest = len;
-						idx = i;
-						possibleSelectedType = 1;
-					}
-				}
-
-				possibleSelectedIdx = idx;
-				*/
 			}
 			break;
 			case ES_MOVING:
 				updateSelectedElementPosition(dsq->getGameCursorPosition() - cursorOffset);
-				/*
-				if (core->getShiftState())
-				{
-					TileVector t(getSelectedRenderObject()->position);
-					getSelectedRenderObject()->position = t.worldVector();
-				}
-				*/
 			break;
 			case ES_ROTATING:
 			{
@@ -3808,20 +3474,6 @@ void SceneEditor::update(float dt)
 			break;
 			}
 		}
-		RenderObject *r = getSelectedRenderObject();
-		if (r)
-		{
-			target->position = r->position;
-			target->alpha = 1;
-		}
-		else
-			target->alpha = 0;
-		/*
-		if (movingEntity)
-		{
-			movingEntity->position = dsq->getGameCursorPosition();
-		}
-		*/
 	}
 }
 
@@ -3835,16 +3487,6 @@ void SceneEditor::nextEntityType()
 			updateSelectedElementPosition(Vector(1,0));
 			exitMoveState();
 		}
-	}
-	else if (editType == ET_ENTITIES)
-	{
-		/*
-		selectedEntityType++;
-		if (selectedEntityType>=dsq->game->entityTypeList.size())
-		{
-			selectedEntityType = 0;
-		}
-		*/
 	}
 	else if (editType == ET_SELECTENTITY)
 	{
@@ -3862,16 +3504,6 @@ void SceneEditor::prevEntityType()
 			updateSelectedElementPosition(Vector(-1,0));
 			exitMoveState();
 		}
-	}
-	else if (editType == ET_ENTITIES)
-	{
-		/*
-		selectedEntityType --;
-		if (selectedEntityType < 0)
-		{
-			selectedEntityType = dsq->game->entityTypeList.size()-1;
-		}
-		*/
 	}
 	else if (editType == ET_SELECTENTITY)
 	{
