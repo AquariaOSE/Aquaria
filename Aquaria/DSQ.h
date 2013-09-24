@@ -1270,10 +1270,7 @@ public:
 
 	void setTexturePointers();
 
-	void doScript(const std::string &script);
-
 	void fade(float alpha, float time);
-	void print(int x, int y, const std::string &text);
 
 	void applyParallaxUserSettings();
 
@@ -1380,7 +1377,7 @@ public:
 	std::string getDialogueFilename(const std::string &f);
 
 	bool isShakingCamera();
-	Element *getSolidElementNear(Vector pos, int rad);
+	//Element *getSolidElementNear(Vector pos, int rad);
 
 	std::string languagePack;
 

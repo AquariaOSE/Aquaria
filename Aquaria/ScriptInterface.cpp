@@ -3572,7 +3572,7 @@ luaFunc(entity_isUnderWater)
 	bool b = false;
 	if (e)
 	{
-		b = e->isUnderWater();
+		b = e->isUnderWater(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
 	}
 	luaReturnBool(b);
 }
@@ -5143,6 +5143,31 @@ luaFunc(entity_applySurfaceNormalForce)
 		v.setLength2D(lua_tointeger(L, 2));
 		e->vel += v;
 	}
+	luaReturnNil();
+}
+
+luaFunc(entity_doElementInteraction)
+{
+	Entity *e = entity(L);
+	if (e)
+	{
+		float mult = lua_tonumber(L, 2);
+		float touchWidth = lua_tonumber(L, 3);
+		if (!touchWidth)
+			touchWidth = 16;
+
+		ElementUpdateList& elems = dsq->game->elementUpdateList;
+		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
+		{
+			(*it)->doInteraction(e, mult, touchWidth);
+		}
+	}
+	luaReturnNil();
+}
+
+luaFunc(avatar_setElementEffectMult)
+{
+	dsq->game->avatar->elementEffectMult = lua_tonumber(L, 1);
 	luaReturnNil();
 }
 
@@ -8635,6 +8660,9 @@ static const struct {
 
 	luaRegister(entity_adjustPositionBySurfaceNormal),
 	luaRegister(entity_applySurfaceNormalForce),
+
+	luaRegister(entity_doElementInteraction),
+	luaRegister(avatar_setElementEffectMult),
 
 	luaRegister(createBeam),
 	luaRegister(beam_setAngle),
