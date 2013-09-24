@@ -341,12 +341,6 @@ enum EditorStates
 	ES_MAX
 };
 
-enum SelectionType
-{
-	ST_SINGLE		=0,
-	ST_MULTIPLE		,
-	ST_MAX
-};
 #endif
 
 class EntityClass
@@ -444,9 +438,6 @@ public:
 
 	EditTypes editType;
 	EditorStates state;
-	Quad *target;
-
-
 
 	Element *getElementAtCursor();
 	Entity *getEntityAtCursor();
@@ -459,7 +450,6 @@ public:
 	Element *editingElement;
 	Entity *editingEntity;
 	Path *editingPath;
-	SelectionType selectionType;
 
 	void toggleWarpAreaRender();
 	int selectedIdx;
@@ -521,18 +511,14 @@ protected:
 	void editModeElements();
 	void editModeEntities();
 	void editModePaths();
-	int selectedType, possibleSelectedType;
 
 	void deleteSelected();
 	void cloneSelectedElement();
-	void cloneSelectedElementInput();
 	void enterScaleState();
 	void enterRotateState();
 	void enterMoveState();
 
 	Vector oldPosition, oldRotation, oldScale, cursorOffset;
-
-	RenderObject *getSelectedRenderObject();
 
 	Entity *movingEntity;
 	void updateDrawingWarpArea(char c, int k);
@@ -582,7 +568,7 @@ protected:
 typedef std::vector<Quad*> QuadList;
 typedef std::vector<QuadList> QuadArray;
 
-typedef std::list<Element*> ElementUpdateList;
+typedef std::vector<Element*> ElementUpdateList;
 
 // Note: although this is a bitmask, only one of these values may be set at a time!
 enum ObsType
@@ -975,6 +961,7 @@ public:
 	GridRender *gridRender, *gridRender2, *gridRender3, *edgeRender, *gridRenderEnt;
 	void toggleGridRender();
 	ElementUpdateList elementUpdateList;
+	ElementUpdateList elementInteractionList;
 
 	bool invinciblity;
 

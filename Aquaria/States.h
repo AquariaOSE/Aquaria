@@ -189,6 +189,7 @@ public:
 
 	void clearRot();
 	void clearPos();
+	void flipRot();
 	void cycleLerpType();
 
 	void toggleHideBone();
