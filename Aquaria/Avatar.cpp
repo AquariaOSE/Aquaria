@@ -1629,7 +1629,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 	break;
 	}
 
-
+	elementEffectMult = 1;
 	state.abilityDelay = 0;
 	formAbilityDelay = 0;
 	dsq->continuity.form = form;
@@ -1731,6 +1731,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		collideRadius = COLLIDE_RADIUS_FISH;
 		setCanLockToWall(false);
 		setCollisionAvoidanceData(COLLIDE_RANGE_FISH, COLLIDE_MOD_FISH);
+		elementEffectMult = 0.4f;
 	}
 	break;
 	case FORM_SUN:
@@ -1780,6 +1781,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		setCanLockToWall(false);
 		setCanBurst(false);
 		setDamageTarget(DT_WALLHURT, false);
+		elementEffectMult = 0;
 
 		if (onInit)
 		{
@@ -4076,6 +4078,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	_seeMapMode = SEE_MAP_DEFAULT;
 
 	blockBackFlip = false;
+	elementEffectMult = 1;
 }
 
 void Avatar::revert()
@@ -7133,6 +7136,16 @@ void Avatar::onUpdate(float dt)
 
 	if(canCollideWithShots())
 		dsq->game->handleShotCollisions(this, (activeAura == AURA_SHIELD));
+
+
+	if(!core->particlesPaused && elementEffectMult > 0)
+	{
+		ElementUpdateList& elems = dsq->game->elementUpdateList;
+		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
+		{
+			(*it)->doInteraction(this, elementEffectMult, 16);
+		}
+	}
 }
 
 

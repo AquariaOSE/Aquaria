@@ -346,6 +346,7 @@ public:
 
 	int leaches;
 	float shieldPoints;
+	float elementEffectMult;
 
 	bool blockBackFlip;
 	

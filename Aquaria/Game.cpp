@@ -5789,6 +5789,7 @@ void Game::rebuildElementUpdateList()
 		dsq->getRenderObjectLayer(i)->update = false;
 
 	elementUpdateList.clear();
+	elementInteractionList.clear();
 	for (int i = 0; i < dsq->getNumElements(); i++)
 	//for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
 	{
@@ -5799,6 +5800,11 @@ void Game::rebuildElementUpdateList()
 			if (e->getElementEffectIndex() != -1)
 			{
 				elementUpdateList.push_back(e);
+			}
+			ElementEffect ee = dsq->getElementEffectByIndex(e->getElementEffectIndex());
+			if(ee.type == EFX_WAVY)
+			{
+				elementInteractionList.push_back(e);
 			}
 		}
 	}
