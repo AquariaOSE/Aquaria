@@ -2332,6 +2332,15 @@ luaFunc(entity_clearVel)
 }
 // end extra Entity::vel functions
 
+luaFunc(entity_getPushVec)
+{
+	Entity *e = entity(L);
+	Vector v;
+	if (e)
+		v = e->getPushVec();
+	luaReturnVec2(v.x, v.y);
+}
+
 luaFunc(entity_addIgnoreShotDamageType)
 {
 	Entity *e = entity(L);
@@ -4186,7 +4195,7 @@ luaFunc(beam_setFirer)
 {
 	Beam *b = beam(L);
 	if (b)
-		b->setFirer(entity(L));
+		b->setFirer(entity(L, 2));
 	luaReturnNil();
 }
 
@@ -6171,6 +6180,7 @@ luaFunc(addInfluence)
 	pinf.pos.y = lua_tonumber(L, 2);
 	pinf.size = lua_tonumber(L, 3);
 	pinf.spd = lua_tonumber(L, 4);
+	pinf.pull = getBool(L, 5);
 	dsq->particleManager->addInfluence(pinf);
 	luaReturnNil();
 }
@@ -6581,6 +6591,12 @@ luaFunc(entity_pushTarget)
 	}
 
 	luaReturnNil();
+}
+
+luaFunc(entity_getPushDamage)
+{
+	Entity *e = entity(L);
+	luaReturnNum(e ? e->getPushDamage() : 0.0f);
 }
 
 luaFunc(watch)
@@ -7766,6 +7782,11 @@ luaFunc(getMouseWorldPos)
 	luaReturnVec2(v.x, v.y);
 }
 
+luaFunc(getMouseWheelChange)
+{
+	luaReturnNum(core->mouse.scrollWheelChange);
+}
+
 luaFunc(fade)
 {
 	dsq->overlay->color.interpolateTo(Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5)), lua_tonumber(L, 6));
@@ -8696,6 +8717,7 @@ static const struct {
 	luaRegister(setMousePos),
 	luaRegister(getMousePos),
 	luaRegister(getMouseWorldPos),
+	luaRegister(getMouseWheelChange),
 
 	luaRegister(resetContinuity),
 
@@ -8756,6 +8778,7 @@ static const struct {
 	luaRegister(entity_getHealth),
 	luaRegister(entity_getMaxHealth),
 	luaRegister(entity_pushTarget),
+	luaRegister(entity_getPushDamage),
 	luaRegister(entity_msg),
 	luaRegister(node_msg),
 	luaRegister(entity_updateMovement),
@@ -9330,6 +9353,7 @@ static const struct {
 	luaRegister(entity_getVel2),
 	luaRegister(entity_clearVel2),
 
+	luaRegister(entity_getPushVec),
 
 
 	luaRegister(updateMusic),

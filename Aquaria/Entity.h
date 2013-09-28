@@ -495,6 +495,9 @@ public:
 
 	void updateSoundPosition();
 
+	Vector getPushVec() const { return pushVec; }
+	float getPushDamage() const { return pushDamage; }
+
 protected:
 	bool calledEntityDied;
 	Path *waterBubble;
