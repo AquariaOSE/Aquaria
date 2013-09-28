@@ -2435,6 +2435,28 @@ luaFunc(entity_setRidingData)
 	luaReturnNil();
 }
 
+luaFunc(entity_getRidingPosition)
+{
+	Entity *e = entity(L);
+	Vector v;
+	if (e)
+		v = e->getRidingPosition();
+	luaReturnVec2(v.x, v.y);
+}
+
+luaFunc(entity_getRidingRotation)
+{
+	Entity *e = entity(L);
+	luaReturnNum(e ? e->getRidingRotation() : 0.0f);
+}
+
+luaFunc(entity_getRidingFlip)
+{
+	Entity *e = entity(L);
+	luaReturnBool(e && e->getRidingFlip());
+}
+
+
 luaFunc(entity_setBoneLock)
 {
 	Entity *e = entity(L);
@@ -8561,6 +8583,9 @@ static const struct {
 
 	luaRegister(entity_setRidingPosition),
 	luaRegister(entity_setRidingData),
+	luaRegister(entity_getRidingPosition),
+	luaRegister(entity_getRidingRotation),
+	luaRegister(entity_getRidingFlip),
 	luaRegister(entity_setBoneLock),
 	luaRegister(entity_setIngredient),
 	luaRegister(entity_setDeathScene),
