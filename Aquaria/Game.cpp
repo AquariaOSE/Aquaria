@@ -6692,7 +6692,10 @@ void Game::applyState()
 	}
 
 	if(cookingScript)
+	{
 		dsq->scriptInterface.closeScript(cookingScript);
+		cookingScript = NULL;
+	}
 
 	if (dsq->mod.isActive())
 		cookingScript = dsq->scriptInterface.openScript(dsq->mod.getPath() + "scripts/cooking.lua", true);
@@ -6913,6 +6916,8 @@ void Game::bindInput()
 
 	dsq->user.control.actionSet.importAction(this, "Revert",		ACTION_REVERT);
 
+	dsq->user.control.actionSet.importAction(this, "Look",			ACTION_LOOK);
+	dsq->user.control.actionSet.importAction(this, "Roll",			ACTION_ROLL);
 
 	if (avatar)
 		avatar->bindInput();
