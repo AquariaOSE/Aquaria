@@ -3107,7 +3107,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	return false;
 }
 
-void Entity::initHair(int numSegments, int segmentLength, int width, const std::string &tex)
+void Entity::initHair(int numSegments, float segmentLength, float width, const std::string &tex)
 {
 	if (hair)
 	{
