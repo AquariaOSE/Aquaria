@@ -1535,6 +1535,21 @@ luaFunc(obj_fadeAlphaWithLife)
 	luaReturnNil();
 }
 
+luaFunc(obj_getWorldScale)
+{
+	RenderObject *r = robj(L);
+	Vector s;
+	if (r)
+		s = r->getRealScale();
+	luaReturnVec2(s.x, s.y);
+}
+
+luaFunc(obj_getParent)
+{
+	RenderObject *r = robj(L);
+	luaReturnPtr(r ? r->getParent() : NULL);
+}
+
 
 // ----- end RenderObject common functions -----
 
@@ -1746,6 +1761,8 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  collideCircleVsLineAngle) \
 	RO_FUNC(getter, prefix,  getVectorToObj	) \
 	RO_FUNC(getter, prefix,  fadeAlphaWithLife	) \
+	RO_FUNC(getter, prefix,  getWorldScale	) \
+	RO_FUNC(getter, prefix,  getParent		) \
 	MK_ALIAS(prefix, fh, flipHorizontal	) \
 	MK_ALIAS(prefix, fv, flipVertical	)
 
