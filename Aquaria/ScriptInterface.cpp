@@ -1535,6 +1535,21 @@ luaFunc(obj_fadeAlphaWithLife)
 	luaReturnNil();
 }
 
+luaFunc(obj_getWorldScale)
+{
+	RenderObject *r = robj(L);
+	Vector s;
+	if (r)
+		s = r->getRealScale();
+	luaReturnVec2(s.x, s.y);
+}
+
+luaFunc(obj_getParent)
+{
+	RenderObject *r = robj(L);
+	luaReturnPtr(r ? r->getParent() : NULL);
+}
+
 
 // ----- end RenderObject common functions -----
 
@@ -1746,6 +1761,8 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  collideCircleVsLineAngle) \
 	RO_FUNC(getter, prefix,  getVectorToObj	) \
 	RO_FUNC(getter, prefix,  fadeAlphaWithLife	) \
+	RO_FUNC(getter, prefix,  getWorldScale	) \
+	RO_FUNC(getter, prefix,  getParent		) \
 	MK_ALIAS(prefix, fh, flipHorizontal	) \
 	MK_ALIAS(prefix, fv, flipVertical	)
 
@@ -3815,15 +3832,27 @@ luaFunc(entity_getAnimationLength)
 {
 	Entity *e = entity(L);
 	float ret=0;
-	int layer = lua_tonumber(L, 2);
 	if (e)
 	{
-		if (Animation *anim = e->skeletalSprite.getCurrentAnimation(layer))
+		Animation *anim = 0;
+		if (lua_isstring(L, 2))
+			anim = e->skeletalSprite.getAnimation(lua_tostring(L, 2));
+		else
 		{
-			ret = anim->getAnimationLength();
+			int layer = lua_tointeger(L, 2);
+			anim = e->skeletalSprite.getCurrentAnimation(layer);
 		}
+		if (anim)
+			ret = anim->getAnimationLength();
 	}
 	luaReturnNum(ret);
+}
+
+luaFunc(entity_hasAnimation)
+{
+	Entity *e = entity(L);
+	Animation *anim = e->skeletalSprite.getAnimation(getString(L, 2));
+	luaReturnBool(anim != NULL);
 }
 
 luaFunc(entity_isFollowingPath)
@@ -4233,6 +4262,15 @@ luaFunc(beam_setPosition_override)
 	luaReturnNil();
 }
 
+luaFunc(beam_getEndPos)
+{
+	Beam *b = beam(L);
+	Vector v;
+	if (b)
+		v = b->endPos;
+	luaReturnVec2(v.x, v.y);
+}
+
 luaFunc(getStringBank)
 {
 	luaReturnStr(dsq->continuity.stringBank.get(lua_tointeger(L, 1)).c_str());
@@ -4411,6 +4449,8 @@ luaFunc(entity_damage)
 		d.damageType = (DamageType)lua_tointeger(L, 4);
 		d.effectTime = lua_tonumber(L, 5);
 		d.useTimer = !getBool(L, 6);
+		d.shot = lua_isuserdata(L, 7) ? getShot(L, 7) : NULL;
+		d.hitPos = Vector(lua_tonumber(L, 8), lua_tonumber(L, 9));
 		didDamage = e->damage(d);
 	}
 	luaReturnBool(didDamage);
@@ -4445,6 +4485,22 @@ luaFunc(entity_setHealth)
 	Entity *e = entity(L, 1);
 	if (e)
 		e->health = e->maxHealth = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(entity_setCurrentHealth)
+{
+	Entity *e = entity(L, 1);
+	if (e)
+		e->health = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(entity_setMaxHealth)
+{
+	Entity *e = entity(L, 1);
+	if (e)
+		e->maxHealth = lua_tonumber(L, 2);
 	luaReturnNil();
 }
 
@@ -8716,6 +8772,7 @@ static const struct {
 	luaRegister(beam_setBeamWidth),
 	luaRegister(beam_setFirer),
 	luaRegister(beam_setDamageType),
+	luaRegister(beam_getEndPos),
 
 	luaRegister(getStringBank),
 
@@ -9297,6 +9354,8 @@ static const struct {
 
 
 	luaRegister(entity_setHealth),
+	luaRegister(entity_setCurrentHealth),
+	luaRegister(entity_setMaxHealth),
 	luaRegister(entity_changeHealth),
 
 	luaRegister(node_setActive),
@@ -9325,6 +9384,7 @@ static const struct {
 	luaRegister(entity_isAnimating),
 	luaRegister(entity_getAnimationName),
 	luaRegister(entity_getAnimationLength),
+	luaRegister(entity_hasAnimation),
 
 	luaRegister(entity_setCull),
 
