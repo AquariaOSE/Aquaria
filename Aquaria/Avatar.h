@@ -158,8 +158,6 @@ public:
 	void onCollide(Entity *e);
 	bool zoomOverriden;
 	void clampPosition();
-	
-	bool isMiniMapCursorOkay();
 
 	void splash(bool down);
 	InterpolatedVector myZoom;
