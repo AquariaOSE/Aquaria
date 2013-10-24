@@ -39,6 +39,7 @@ static const char *scriptObjTypeNames[] =
 	/* (1 <<11) */ "Text",
 	/* (1 <<12) */ "PauseQuad",
 	/* (1 <<13) */ "Shader",
+	/* (1 <<14) */ "ParticleEffect",
 	NULL
 };
 

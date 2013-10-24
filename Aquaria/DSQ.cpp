@@ -5099,3 +5099,9 @@ void DSQ::resetLayerPasses()
 	renderObjectLayers[LR_ENTITIES].startPass = -2;
 	renderObjectLayers[LR_ENTITIES].endPass = 5;
 }
+
+bool DSQ::isMiniMapCursorOkay()
+{
+	return ((inputMode != INPUT_MOUSE) ||  (!game->miniMapRender || !game->miniMapRender->isCursorIn()));
+}
+
