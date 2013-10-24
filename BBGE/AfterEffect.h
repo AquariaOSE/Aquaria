@@ -91,6 +91,7 @@ public:
 	void renderGridPoints();
 
 	void loadShaders();
+	void unloadShaders(); // unloads shaders but keeps code and data intact, so that they can be reloaded.
 	void deleteShaders();
 
 	void unloadDevice();
@@ -116,7 +117,7 @@ public:
 	Shader *getShaderPtr(int handle);
 	void setShaderPipelineSize(size_t size);
 	bool setShaderPipelinePos(int handle, size_t pos);
-	void unloadShader(int handle);
+	void deleteShader(int handle);
 
 protected:
 	int _insertShader(Shader *sh);

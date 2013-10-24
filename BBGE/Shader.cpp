@@ -164,7 +164,10 @@ bool Shader::isLoaded() const
 
 void Shader::reload()
 {
-	load(vertFile, fragFile);
+	if (vertFile.size() || fragFile.size())
+		load(vertFile, fragFile);
+	else
+		loadSrc(vertSrc.c_str(), fragSrc.c_str());
 }
 
 void Shader::bind()
@@ -321,6 +324,9 @@ void Shader::loadSrc(const char *vertCode, const char *fragCode)
 		return;
 	}
 
+	vertSrc = vertCode ? vertCode : "";
+	fragSrc = fragCode ? fragCode : "";
+
 	_queryUniforms();
 
 #endif
@@ -328,15 +334,6 @@ void Shader::loadSrc(const char *vertCode, const char *fragCode)
 
 void Shader::_setUniform(Uniform *u)
 {
-	/*if(u->location == -1)
-	{
-		u->location = glGetUniformLocationARB(g_programObj, u->name);
-		if(u->location == -1)
-		{
-			u->dirty = false;
-			return;
-		}
-	}*/
 	switch(u->type)
 	{
 		case GL_FLOAT:          glUniform1fvARB(u->location, 1, u->data.f); break;
@@ -381,9 +378,13 @@ void Shader::_queryUniforms()
 	glGetObjectParameterivARB(g_programObj, GL_OBJECT_ACTIVE_UNIFORMS_ARB , &numUniforms);
 
 	if (numUniforms <= 0)
+	{
+		uniforms.clear();
 		return;
+	}
 
 	uniforms.reserve(numUniforms);
+	size_t total = 0;
 
 	for (unsigned int i = 0; i < numUniforms; ++i)
 	{
@@ -396,15 +397,27 @@ void Shader::_queryUniforms()
 		u.location = glGetUniformLocationARB(g_programObj, u.name);
 		if(u.location == -1)
 			continue;
-		u.dirty = false;
-		u.type = type;
-		memset(&u.data, 0, sizeof(u.data));
 
-		uniforms.push_back(u);
+		bool add = total >= uniforms.size();
+		if(add || type != u.type) // keep data intact on reload
+			memset(&u.data, 0, sizeof(u.data));
+		u.dirty = true;
+		u.type = type;
+		
+		if(add)
+			uniforms.push_back(u);
+		else
+			uniforms[total] = u;
+
+		++total;
 	}
+
+	uniforms.resize(total);
 
 	// sort to be able to do binary search later
 	std::sort(uniforms.begin(), uniforms.end());
+
+	uniformsDirty = true;
 }
 
 int Shader::_getUniformIndex(const char *name)
