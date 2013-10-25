@@ -4470,7 +4470,7 @@ void Avatar::action(int id, int state)
 
 	if (id == ACTION_PRIMARY && state)// !state
 	{
-		if (isMiniMapCursorOkay())
+		if (dsq->isMiniMapCursorOkay())
 		{
 			if (this->state.lockedToWall)
 			{
@@ -5607,11 +5607,6 @@ Vector Avatar::getHeadPosition()
 
 bool lastCursorKeyboard = false;
 
-bool Avatar::isMiniMapCursorOkay()
-{
-	return ((dsq->inputMode != INPUT_MOUSE) ||  (!dsq->game->miniMapRender || !dsq->game->miniMapRender->isCursorIn()));
-}
-
 void Avatar::onUpdate(float dt)
 {
 	BBGE_PROF(Avatar_onUpdate);
@@ -6427,7 +6422,7 @@ void Avatar::onUpdate(float dt)
 
 			float len = 0;
 			
-			if (isMiniMapCursorOkay() && !isActing(ACTION_ROLL) &&
+			if (dsq->isMiniMapCursorOkay() && !isActing(ACTION_ROLL) &&
 				_isUnderWater && !riding && !boneLock.on &&
 				(movingOn || ((dsq->inputMode == INPUT_JOYSTICK || dsq->inputMode== INPUT_KEYBOARD) || (core->mouse.buttons.left || bursting))))
 			{

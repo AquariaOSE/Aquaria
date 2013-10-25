@@ -371,6 +371,7 @@ static void compile_time_assertions()
 	compile_assert(oo(Path) == oo(Avatar));
 	compile_assert(oo(Path) == oo(BaseText));
 	compile_assert(oo(Path) == oo(PauseQuad));
+	compile_assert(oo(Path) == oo(ParticleEffect));
 #undef oo
 }
 #endif
@@ -591,6 +592,16 @@ Shader *getShader(lua_State *L, int slot = 1)
 static SkeletalSprite *getSkeletalSprite(Entity *e)
 {
 	return e ? &e->skeletalSprite : NULL;
+}
+
+static inline
+ParticleEffect *getParticle(lua_State *L, int slot = 1)
+{
+	ParticleEffect *q = (ParticleEffect*)lua_touserdata(L, slot);
+	ENSURE_TYPE(q, SCO_PARTICLE_EFFECT);
+	if (!q)
+		scriptDebug(L, "Invalid Particle Effect");
+	return q;
 }
 
 static bool looksLikeGlobal(const char *s)
@@ -838,6 +849,8 @@ MakeTypeCheckFunc(isWeb, SCO_WEB)
 MakeTypeCheckFunc(isIng, SCO_INGREDIENT)
 MakeTypeCheckFunc(isBeam, SCO_BEAM)
 MakeTypeCheckFunc(isText, SCO_TEXT)
+MakeTypeCheckFunc(isShader, SCO_SHADER)
+MakeTypeCheckFunc(isParticleEffect, SCO_PARTICLE_EFFECT)
 
 #undef MakeTypeCheckFunc
 
@@ -1794,7 +1807,8 @@ luaFunc(quad_getBorderAlpha)
 	MAKE_QUAD_FUNCS(beam,     beam	) \
 	MAKE_ROBJ_FUNCS(getQuad,  quad	) \
 	MAKE_ROBJ_FUNCS(getWeb,   web	) \
-	MAKE_ROBJ_FUNCS(getText,  text	)
+	MAKE_ROBJ_FUNCS(getText,  text	) \
+	MAKE_ROBJ_FUNCS(getParticle, pe	)
 
 // first time, create them. (There is a second use of this further down, with different MK_* macros)
 EXPAND_FUNC_PROTOTYPES
@@ -7979,8 +7993,9 @@ luaFunc(setGemPosition)
 	if(mapname.empty())
 		mapname = dsq->game->sceneName;
 	Vector pos(lua_tonumber(L, 2), lua_tonumber(L, 3));
+	bool result = false;
 
-	WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(getString(L, 1));
+	WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(mapname);
 	if(tile)
 	{
 		pos = dsq->game->worldMapRender->getWorldToTile(tile, pos, true, true);
@@ -7991,6 +8006,7 @@ luaFunc(setGemPosition)
 			GemData& gem = *it;
 			gem.pos = pos;
 			gem.mapName = mapname;
+			result = true;
 		}
 		else
 		{
@@ -8001,7 +8017,7 @@ luaFunc(setGemPosition)
 	{
 		debugLog("setGemPosition: Map tile does not exist: " + mapname);
 	}
-	luaReturnNil();
+	luaReturnBool(result);
 }
 
 luaFunc(removeGem)
@@ -8336,6 +8352,11 @@ luaFunc(getScreenVirtualSize)
 	luaReturnVec2(core->getVirtualWidth(), core->getVirtualHeight());
 }
 
+luaFunc(isMiniMapCursorOkay)
+{
+	luaReturnBool(dsq->isMiniMapCursorOkay());
+}
+
 luaFunc(inv_isFull)
 {
 	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
@@ -8557,10 +8578,31 @@ luaFunc(shader_setFloat)
 luaFunc(shader_delete)
 {
 	if(core->afterEffectManager)
-		core->afterEffectManager->unloadShader(lua_tointeger(L, 1));
+		core->afterEffectManager->deleteShader(lua_tointeger(L, 1));
 	luaReturnNil();
 }
 
+luaFunc(pe_start)
+{
+	ParticleEffect *pe = getParticle(L);
+	if (pe)
+		pe->start();
+	luaReturnNil();
+}
+
+luaFunc(pe_stop)
+{
+	ParticleEffect *pe = getParticle(L);
+	if (pe)
+		pe->stop();
+	luaReturnNil();
+}
+
+luaFunc(pe_isRunning)
+{
+	ParticleEffect *pe = getParticle(L);
+	luaReturnBool(pe && pe->isRunning());
+}
 
 //--------------------------------------------------------------------------------------------
 
@@ -9483,6 +9525,7 @@ static const struct {
 	luaRegister(getScreenVirtualOff),
 	luaRegister(getScreenSize),
 	luaRegister(getScreenVirtualSize),
+	luaRegister(isMiniMapCursorOkay),
 
 	luaRegister(inv_isFull),
 	luaRegister(inv_getMaxAmount),
@@ -9514,6 +9557,10 @@ static const struct {
 	luaRegister(shader_setInt),
 	luaRegister(shader_delete),
 
+	luaRegister(pe_start),
+	luaRegister(pe_stop),
+	luaRegister(pe_isRunning),
+
 	luaRegister(isQuad),
 	luaRegister(isNode),
 	luaRegister(isObject),
@@ -9523,6 +9570,8 @@ static const struct {
 	luaRegister(isIng),
 	luaRegister(isBeam),
 	luaRegister(isText),
+	luaRegister(isShader),
+	luaRegister(isParticleEffect),
 
 
 #undef MK_FUNC

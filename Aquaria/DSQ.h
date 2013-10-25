@@ -1572,6 +1572,7 @@ public:
 	virtual void onBackgroundUpdate();
 
 	void resetLayerPasses();
+	bool isMiniMapCursorOkay();
 
 protected:
 
