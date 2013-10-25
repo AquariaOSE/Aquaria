@@ -113,6 +113,13 @@ void AfterEffectManager::deleteShaders()
 	}
 }
 
+void AfterEffectManager::unloadShaders()
+{
+	for(size_t i = 0; i < loadedShaders.size(); ++i)
+		if(loadedShaders[i])
+			loadedShaders[i]->unload();
+}
+
 void AfterEffectManager::clear()
 {
 	deleteEffects();
@@ -196,7 +203,7 @@ void AfterEffectManager::renderGrid()
 	Shader *activeShader = 0;
 	for (size_t i = 0; i < shaderPipeline.size(); ++i)
 	{
-		if(shaderPipeline[i])
+		if(shaderPipeline[i] && shaderPipeline[i]->isLoaded())
 		{
 			if(firstShader < 0)
 			{
@@ -275,7 +282,7 @@ void AfterEffectManager::renderGrid()
 		for(int i = firstShader + 1; i <= lastShader; ++i)
 		{
 			activeShader = shaderPipeline[i];
-			if(!activeShader)
+			if(!(activeShader && activeShader->isLoaded()))
 				continue;
 
 			// Swap and exchange framebuffers. The old output buffer serves as texture input for the other one
@@ -373,7 +380,7 @@ void AfterEffectManager::renderGridPoints()
 void AfterEffectManager::unloadDevice()
 {
 	backupBuffer.unloadDevice();
-	deleteShaders();
+	unloadShaders();
 }
 
 void AfterEffectManager::reloadDevice()
@@ -399,7 +406,22 @@ void AfterEffectManager::reloadDevice()
 	else
 		backupBuffer.init(-1, -1, true);
 
-	loadShaders();
+	for (size_t i = 0; i < loadedShaders.size(); ++i)
+	{
+		if (Shader *sh = loadedShaders[i])
+		{
+			sh->reload();
+			if (!sh->isLoaded())
+			{
+				debugLog("AfterEffect::reloadDevice(): Failed to reload shader");
+				delete sh;
+				loadedShaders[i] = 0;
+				for(size_t j = 0; j < shaderPipeline.size(); ++j)
+					if(sh == shaderPipeline[j])
+						shaderPipeline[j] = 0;
+			}
+		}
+	}
 }
 
 void AfterEffectManager::addEffect(Effect *e)
@@ -612,7 +634,7 @@ int AfterEffectManager::_insertShader(Shader *sh)
 	return loadedShaders.size();
 }
 
-void AfterEffectManager::unloadShader(int handle)
+void AfterEffectManager::deleteShader(int handle)
 {
 	Shader *sh = getShaderPtr(handle);
 	if(!sh)
