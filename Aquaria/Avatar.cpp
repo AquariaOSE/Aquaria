@@ -5222,7 +5222,7 @@ void Avatar::updateWallJump(float dt)
 
 void Avatar::updateRoll(float dt)
 {
-	if (!inputEnabled || dsq->game->isWorldPaused())
+	if (!inputEnabled || dsq->game->isWorldPaused() || riding)
 	{
 		if (rolling)
 			stopRoll();
