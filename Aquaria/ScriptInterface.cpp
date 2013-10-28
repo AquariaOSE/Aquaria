@@ -8357,6 +8357,11 @@ luaFunc(isMiniMapCursorOkay)
 	luaReturnBool(dsq->isMiniMapCursorOkay());
 }
 
+luaFunc(isShuttingDownGameState)
+{
+	luaReturnBool(dsq->game->isShuttingDownGameState());
+}
+
 luaFunc(inv_isFull)
 {
 	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
@@ -9526,6 +9531,7 @@ static const struct {
 	luaRegister(getScreenSize),
 	luaRegister(getScreenVirtualSize),
 	luaRegister(isMiniMapCursorOkay),
+	luaRegister(isShuttingDownGameState),
 
 	luaRegister(inv_isFull),
 	luaRegister(inv_getMaxAmount),
