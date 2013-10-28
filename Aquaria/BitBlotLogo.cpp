@@ -78,7 +78,7 @@ void BitBlotLogo::skipLogo()
 
 void BitBlotLogo::getOut()
 {
-	dsq->continuity.reset();
+	//dsq->continuity.reset();
 
 #ifdef AQUARIA_DEMO
 	dsq->title();
