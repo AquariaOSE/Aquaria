@@ -1537,7 +1537,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	setMousePosition(core->center);
 	
-	dsq->continuity.reset();
+	//dsq->continuity.reset();
 
 	loadBit(LOAD_FINISHED);
 

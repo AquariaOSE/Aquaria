@@ -247,17 +247,13 @@ void Mod::applyStart()
 	if (!dsq->runScript(scriptPath, "init"))
 	{
 		debugLog("MOD: runscript failed");
-		dsq->continuity.reset();
 		setActive(false);
-		dsq->continuity.reset();
 		dsq->title();
 	}
 	if (isActive() && dsq->game->sceneToLoad.empty())
 	{
 		debugLog("MOD: no scene loaded in mod-init");
-		dsq->continuity.reset();
 		setActive(false);
-		dsq->continuity.reset();
 		dsq->title();
 	}
 	else if (isActive())
