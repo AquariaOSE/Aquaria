@@ -3327,7 +3327,7 @@ void Game::createInGameMenu()
 	resBox->position = Vector(196, 285);
 	for (i = 0; i < core->screenModes.size(); i++)
 	{
-		ostringstream os;
+		std::ostringstream os;
 		os << core->screenModes[i].x << "x" << core->screenModes[i].y;
 		resBox->addItem(os.str());
 		if (core->screenModes[i].x == dsq->user.video.resx && core->screenModes[i].y == dsq->user.video.resy)
