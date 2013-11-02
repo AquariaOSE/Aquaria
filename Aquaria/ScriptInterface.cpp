@@ -4065,6 +4065,18 @@ luaFunc(entity_getSkeletalName)
 	luaReturnStr(s);
 }
 
+luaFunc(entity_hasSkeletal)
+{
+	Entity *e = entity(L);
+	luaReturnBool(e && e->skeletalSprite.isLoaded());
+}
+
+luaFunc(entity_getNumAnimLayers)
+{
+	Entity *e = entity(L);
+	luaReturnInt(e ? e->skeletalSprite.getNumAnimLayers() : 0);
+}
+
 luaFunc(entity_idle)
 {
 	Entity *e = entity(L);
@@ -7432,6 +7444,68 @@ luaFunc(getNextEntity)
 	luaReturnPtr(dsq->getNextEntity());
 }
 
+typedef std::pair<Entity*, float> EntityDistancePair;
+static std::vector<EntityDistancePair> filteredEntities(20);
+static int filteredIdx = 0;
+
+static bool _entityDistanceCmp(const EntityDistancePair& a, const EntityDistancePair& b)
+{
+	return a.second < b.second;
+}
+
+luaFunc(filterNearestEntities)
+{
+	filteredEntities.clear();
+
+	const Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	const float radius = lua_tointeger(L, 3);
+	const Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
+	const EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
+	const DamageType dt = lua_isnumber(L, 6) ? (DamageType)lua_tointeger(L, 6) : DT_NONE;
+	const int lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
+	const int lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
+
+	const float sqrRadius = radius * radius;
+	float distsq;
+	const bool skipLayerCheck = lrStart == -1 || lrEnd == -1;
+	const bool skipRadiusCheck = radius <= 0;
+	FOR_ENTITIES(i)
+	{
+		Entity *e = *i;
+		distsq = (e->position - p).getSquaredLength2D();
+		if (skipRadiusCheck || distsq <= sqrRadius)
+		{
+			if (e != ignore && e->isPresent())
+			{
+				if (skipLayerCheck || (e->layer >= lrStart && e->layer <= lrEnd))
+				{
+					if (et == ET_NOTYPE || e->getEntityType() == et)
+					{
+						if (dt == DT_NONE || e->isDamageTarget(dt))
+						{
+							filteredEntities.push_back(std::make_pair(e, distsq));
+						}
+					}
+				}
+			}
+		}
+	}
+	std::sort(filteredEntities.begin(), filteredEntities.end(), _entityDistanceCmp);
+	filteredEntities.push_back(std::make_pair((Entity*)NULL, 0.0f)); // terminator
+	filteredIdx = 0;
+	luaReturnInt(filteredEntities.size()-1);
+}
+
+luaFunc(getNextFilteredEntity)
+{
+	EntityDistancePair ep = filteredEntities[filteredIdx];
+	if (ep.first)
+		++filteredIdx;
+	luaPushPointer(L, ep.first);
+	lua_pushnumber(L, ep.second);
+	return 2;
+}
+
 luaFunc(getEntity)
 {
 	Entity *ent = 0;
@@ -8950,6 +9024,8 @@ static const struct {
 	luaRegister(entity_warpSegments),
 	luaRegister(entity_initSkeletal),
 	luaRegister(entity_loadSkin),
+	luaRegister(entity_hasSkeletal),
+	luaRegister(entity_getNumAnimLayers),
 	luaRegister(entity_getSkeletalName),
 	luaRegister(entity_initStrands),
 
@@ -9218,6 +9294,8 @@ static const struct {
 	luaRegister(getEntity),
 	luaRegister(getFirstEntity),
 	luaRegister(getNextEntity),
+	luaRegister(filterNearestEntities),
+	luaRegister(getNextFilteredEntity),
 
 	luaRegister(setStory),
 	luaRegister(getStory),
