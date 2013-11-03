@@ -1,0 +1,209 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{4DB6D5AA-4EAD-4195-9B54-389B558036D8}</ProjectGuid>
+    <RootNamespace>Aquaria_vc90</RootNamespace>
+    <Keyword>Win32Proj</Keyword>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup>
+    <_ProjectFileVersion>10.0.30319.1</_ProjectFileVersion>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">$(SolutionDir)temp\$(Configuration)\$(ProjectName)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</LinkIncremental>
+    <IntDir Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">$(SolutionDir)temp\$(Configuration)\$(ProjectName)\</IntDir>
+    <LinkIncremental Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <Optimization>Disabled</Optimization>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config;$(SolutionDir)\..\ExternalLibs\gl;$(SolutionDir)\..\ExternalLibs\glpng\zlib;$(SolutionDir)\..\ExternalLibs\glpng\png;$(SolutionDir)\..\ExternalLibs\libogg-1.3.0\include;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.3\include;$(SolutionDir)\..\ExternalLibs\freetype2\include;$(SolutionDir)\..\ExternalLibs\FTGL\include;$(SolutionDir)\..\ExternalLibs\SDL2\include;$(SolutionDir)\..\ExternalLibs\AL\include;$(SolutionDir)\..\BBGE;$(SolutionDir)\..\ExternalLibs\lua-5.1.4\src;$(SolutionDir)\..\ExternalLibs\lvpa\include;$(SolutionDir)\..\ExternalLibs\lvpa;$(SolutionDir)\..\ExternalLibs\ttvfs;$(SolutionDir)\..\ExternalLibs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <MinimalRebuild>true</MinimalRebuild>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)/$(Configuration/%(RelativeDir)/</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <AdditionalLibraryDirectories>$(SolutionDir)temp\$(Configuration)\external\;$(SolutionDir)temp\$(Configuration)\BBGE\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Console</SubSystem>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalDependencies>external.lib;BBGE.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <Optimization>Full</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <OmitFramePointers>true</OmitFramePointers>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <AdditionalIncludeDirectories>$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config;$(SolutionDir)\..\ExternalLibs\gl;$(SolutionDir)\..\ExternalLibs\glpng\zlib;$(SolutionDir)\..\ExternalLibs\glpng\png;$(SolutionDir)\..\ExternalLibs\libogg-1.3.0\include;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.3\include;$(SolutionDir)\..\ExternalLibs\freetype2\include;$(SolutionDir)\..\ExternalLibs\FTGL\include;$(SolutionDir)\..\ExternalLibs\SDL2\include;$(SolutionDir)\..\ExternalLibs\AL\include;$(SolutionDir)\..\BBGE;$(SolutionDir)\..\ExternalLibs\lua-5.1.4\src;$(SolutionDir)\..\ExternalLibs\lvpa\include;$(SolutionDir)\..\ExternalLibs\lvpa;$(SolutionDir)\..\ExternalLibs\ttvfs;$(SolutionDir)\..\ExternalLibs;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>WIN32;NDEBUG;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;_HAS_EXCEPTIONS=0;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <ExceptionHandling>
+      </ExceptionHandling>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+      <BufferSecurityCheck>false</BufferSecurityCheck>
+      <FunctionLevelLinking>false</FunctionLevelLinking>
+      <EnableEnhancedInstructionSet>StreamingSIMDExtensions2</EnableEnhancedInstructionSet>
+      <FloatingPointModel>Fast</FloatingPointModel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
+      <ObjectFileName>$(IntDir)/$(Configuration/%(RelativeDir)/</ObjectFileName>
+    </ClCompile>
+    <Link>
+      <IgnoreSpecificDefaultLibraries>msvcrt.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <OptimizeReferences>true</OptimizeReferences>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <TargetMachine>MachineX86</TargetMachine>
+      <AdditionalLibraryDirectories>$(SolutionDir)temp\$(Configuration)\external\;$(SolutionDir)temp\$(Configuration)\BBGE\;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>external.lib;BBGE.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\Aquaria\AnimationEditor.cpp" />
+    <ClCompile Include="..\..\Aquaria\AquariaComboBox.cpp" />
+    <ClCompile Include="..\..\Aquaria\AquariaMenuItem.cpp" />
+    <ClCompile Include="..\..\Aquaria\AquariaProgressBar.cpp" />
+    <ClCompile Include="..\..\Aquaria\AquariaSaveSlot.cpp" />
+    <ClCompile Include="..\..\Aquaria\AutoMap.cpp" />
+    <ClCompile Include="..\..\Aquaria\Avatar.cpp" />
+    <ClCompile Include="..\..\Aquaria\Beam.cpp" />
+    <ClCompile Include="..\..\Aquaria\BitBlotLogo.cpp" />
+    <ClCompile Include="..\..\Aquaria\CollideEntity.cpp" />
+    <ClCompile Include="..\..\Aquaria\Continuity.cpp" />
+    <ClCompile Include="..\..\Aquaria\Credits.cpp" />
+    <ClCompile Include="..\..\Aquaria\CurrentRender.cpp" />
+    <ClCompile Include="..\..\Aquaria\Demo.cpp" />
+    <ClCompile Include="..\..\Aquaria\DSQ.cpp" />
+    <ClCompile Include="..\..\Aquaria\Element.cpp" />
+    <ClCompile Include="..\..\Aquaria\Emote.cpp" />
+    <ClCompile Include="..\..\Aquaria\Entity.cpp" />
+    <ClCompile Include="..\..\Aquaria\FlockEntity.cpp" />
+    <ClCompile Include="..\..\Aquaria\Game.cpp" />
+    <ClCompile Include="..\..\Aquaria\GameplayVariables.cpp" />
+    <ClCompile Include="..\..\Aquaria\GasCloud.cpp" />
+    <ClCompile Include="..\..\Aquaria\GridRender.cpp" />
+    <ClCompile Include="..\..\Aquaria\Hair.cpp" />
+    <ClCompile Include="..\..\Aquaria\Ingredient.cpp" />
+    <ClCompile Include="..\..\Aquaria\Intro.cpp" />
+    <ClCompile Include="..\..\Aquaria\Main.cpp" />
+    <ClCompile Include="..\..\Aquaria\ManaBall.cpp" />
+    <ClCompile Include="..\..\Aquaria\MiniMapRender.cpp" />
+    <ClCompile Include="..\..\Aquaria\Mod.cpp" />
+    <ClCompile Include="..\..\Aquaria\ModDownloader.cpp" />
+    <ClCompile Include="..\..\Aquaria\ModSelector.cpp" />
+    <ClCompile Include="..\..\Aquaria\Network.cpp" />
+    <ClCompile Include="..\..\Aquaria\ParticleEditor.cpp" />
+    <ClCompile Include="..\..\Aquaria\Path.cpp" />
+    <ClCompile Include="..\..\Aquaria\PathFinding.cpp" />
+    <ClCompile Include="..\..\Aquaria\PathRender.cpp" />
+    <ClCompile Include="..\..\Aquaria\RecipeMenuEntry.cpp" />
+    <ClCompile Include="..\..\Aquaria\SceneEditor.cpp" />
+    <ClCompile Include="..\..\Aquaria\SchoolFish.cpp" />
+    <ClCompile Include="..\..\Aquaria\ScriptedEntity.cpp" />
+    <ClCompile Include="..\..\Aquaria\ScriptInterface.cpp" />
+    <ClCompile Include="..\..\Aquaria\Segmented.cpp" />
+    <ClCompile Include="..\..\Aquaria\SFXLoops.cpp" />
+    <ClCompile Include="..\..\Aquaria\Shot.cpp" />
+    <ClCompile Include="..\..\Aquaria\Spore.cpp" />
+    <ClCompile Include="..\..\Aquaria\States.cpp" />
+    <ClCompile Include="..\..\Aquaria\StatsAndAchievements.cpp" />
+    <ClCompile Include="..\..\Aquaria\SteamRender.cpp" />
+    <ClCompile Include="..\..\Aquaria\Strand.cpp" />
+    <ClCompile Include="..\..\Aquaria\StringBank.cpp" />
+    <ClCompile Include="..\..\Aquaria\SubtitlePlayer.cpp" />
+    <ClCompile Include="..\..\Aquaria\ToolTip.cpp" />
+    <ClCompile Include="..\..\Aquaria\UserSettings.cpp" />
+    <ClCompile Include="..\..\Aquaria\WaterFont.cpp" />
+    <ClCompile Include="..\..\Aquaria\WaterSurfaceRender.cpp" />
+    <ClCompile Include="..\..\Aquaria\Web.cpp" />
+    <ClCompile Include="..\..\Aquaria\WorldMapRender.cpp" />
+    <ClCompile Include="..\..\Aquaria\WorldMapTiles.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\Aquaria\AquariaMenuItem.h" />
+    <ClInclude Include="..\..\Aquaria\AquariaProgressBar.h" />
+    <ClInclude Include="..\..\Aquaria\AStar.h" />
+    <ClInclude Include="..\..\Aquaria\AutoMap.h" />
+    <ClInclude Include="..\..\Aquaria\Avatar.h" />
+    <ClInclude Include="..\..\Aquaria\CollideEntity.h" />
+    <ClInclude Include="..\..\Aquaria\DSQ.h" />
+    <ClInclude Include="..\..\Aquaria\Element.h" />
+    <ClInclude Include="..\..\Aquaria\Entity.h" />
+    <ClInclude Include="..\..\Aquaria\FlockEntity.h" />
+    <ClInclude Include="..\..\Aquaria\Game.h" />
+    <ClInclude Include="..\..\Aquaria\GridRender.h" />
+    <ClInclude Include="..\..\Aquaria\Hair.h" />
+    <ClInclude Include="..\..\Aquaria\ModDownloader.h" />
+    <ClInclude Include="..\..\Aquaria\Network.h" />
+    <ClInclude Include="..\..\Aquaria\Path.h" />
+    <ClInclude Include="..\..\Aquaria\PathFinding.h" />
+    <ClInclude Include="..\..\Aquaria\resource.h" />
+    <ClInclude Include="..\..\Aquaria\SchoolFish.h" />
+    <ClInclude Include="..\..\Aquaria\ScriptedEntity.h" />
+    <ClInclude Include="..\..\Aquaria\ScriptInterface.h" />
+    <ClInclude Include="..\..\Aquaria\Segmented.h" />
+    <ClInclude Include="..\..\Aquaria\Shot.h" />
+    <ClInclude Include="..\..\Aquaria\States.h" />
+    <ClInclude Include="..\..\Aquaria\StatsAndAchievements.h" />
+    <ClInclude Include="..\..\Aquaria\TileVector.h" />
+    <ClInclude Include="..\..\Aquaria\ToolTip.h" />
+    <ClInclude Include="..\..\Aquaria\UserSettings.h" />
+    <ClInclude Include="..\..\Aquaria\WaterFont.h" />
+    <ClInclude Include="..\..\Aquaria\WaterSurfaceRender.h" />
+    <ClInclude Include="..\..\Aquaria\Web.h" />
+    <ClInclude Include="..\..\Aquaria\AquariaCompileConfig.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\Aquaria\Aquaria.rc" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
