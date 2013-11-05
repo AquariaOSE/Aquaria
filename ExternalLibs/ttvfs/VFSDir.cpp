@@ -97,6 +97,10 @@ bool VFSDir::merge(VFSDir *dir, bool overwrite, EntryFlags flag)
     if(dir == this)
         return true; // nothing to do then
 
+	// HACK: make sure the files are there before merging
+	this->load(false);
+	dir->load(false);
+
     bool result = false;
     VFS_GUARD_OPT(this);
 
