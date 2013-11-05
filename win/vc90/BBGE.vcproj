@@ -213,6 +213,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\bithacks.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\BitmapFont.cpp"
 				>
 			</File>
@@ -330,6 +334,14 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\MathFunctions.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\MemoryAllocatorSmallBlock.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\MemoryAllocatorSmallBlock.h"
 				>
 			</File>
 			<File

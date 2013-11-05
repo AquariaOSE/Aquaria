@@ -251,6 +251,7 @@ public:
 	void selectNextBone();
 
 	bool isLoaded();
+	int getNumAnimLayers() const { return animLayers.size(); }
 
 	AnimationLayer* getAnimationLayer(int l);
 	int getBoneIdx(Bone *b);

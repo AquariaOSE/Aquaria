@@ -35,13 +35,12 @@ class Path;
 
 struct BoneLock
 {
-	BoneLock() : entity(0), bone(0), on(false), origRot(0), offRot(0) {}
+	BoneLock() : entity(0), bone(0), on(false), origRot(0) {}
 	Entity *entity;
 	Bone *bone;
 	Vector localOffset;
 	bool on;
 	float origRot;
-	float offRot;
 	Vector wallNormal, circleOffset;
 	int collisionMaskIndex;
 };
@@ -487,7 +486,7 @@ public:
 
 	virtual bool canSetBoneLock();
 
-	void initHair(int numSegments, int segmentLength, int width, const std::string &tex);
+	void initHair(int numSegments, float segmentLength, float width, const std::string &tex);
 	void updateHair(float dt);
 	void setHairHeadPosition(const Vector &pos);
 	void exertHairForce(const Vector &force, float dt);
@@ -495,6 +494,9 @@ public:
 	bool isEntityInside();
 
 	void updateSoundPosition();
+
+	Vector getPushVec() const { return pushVec; }
+	float getPushDamage() const { return pushDamage; }
 
 protected:
 	bool calledEntityDied;

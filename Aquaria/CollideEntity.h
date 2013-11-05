@@ -27,9 +27,8 @@ class CollideEntity : public Entity
 {
 public:
 	CollideEntity();
-	float bounceAmount, bounceEntityAmount;
+	float bounceAmount;
 	float weight;
-	Vector collideOffset;
 	void updateMovement(float dt);	
 	void entityDied(Entity *e);
 protected:	
@@ -37,8 +36,6 @@ protected:
 	void onUpdateFrozen(float dt);
 	
 	virtual void onBounce() {}
-	float friction;
-	bool doCusion;
 	void bounce(float ba);
 	
 };

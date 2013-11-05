@@ -448,6 +448,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/LensFlare.cpp
     ${BBGEDIR}/Localization.cpp
     ${BBGEDIR}/Math.cpp
+    ${BBGEDIR}/MemoryAllocatorSmallBlock.cpp
     ${BBGEDIR}/MT.cpp
     ${BBGEDIR}/ParticleEffect.cpp
     ${BBGEDIR}/ParticleManager.cpp

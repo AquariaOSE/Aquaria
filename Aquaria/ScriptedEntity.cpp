@@ -38,7 +38,6 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	becomeSolidDelay = false;
 	strandSpacing = 10;
 	animKeyFunc = true;
-	preUpdateFunc = true;
 	//runningActivation = false;
 
 	setEntityType(et);
@@ -120,16 +119,8 @@ void ScriptedEntity::init()
 		if (!script->call("init", this))
 			luaDebugMsg("init", script->getLastError());
 	}
-	//update(0);
 
 	Entity::init();
-	/*
-	if (script)
-	{
-		bool fail=false;
-		//update(0);
-	}
-	*/
 }
 
 void ScriptedEntity::postInit()
@@ -257,11 +248,6 @@ void ScriptedEntity::initStrands(int num, int segs, int dist, int strandSpacing,
 	strands.resize(num);
 	for (int i = 0; i < strands.size(); i++)
 	{
-		/*
-		int sz = 5;
-		if (i == 0 || i == strands.size()-1)
-			sz = 4;
-		*/
 		strands[i] = new Strand(position, segs, dist);
 		strands[i]->color = color;
 		dsq->game->addRenderObject(strands[i], this->layer);
@@ -269,113 +255,32 @@ void ScriptedEntity::initStrands(int num, int segs, int dist, int strandSpacing,
 	updateStrands(0);
 }
 
-/*
-// write this if/when needed, set all strands to color (with lerp)
-void ScriptedEntity::setStrandsColor(const Vector &color, float time)
-{
-
-}
-*/
-
 void ScriptedEntity::onAlwaysUpdate(float dt)
 {
 	Entity::onAlwaysUpdate(dt);
-//	debugLog("calling updateStrands");
+
 	updateStrands(dt);
-
-	//HACK: this would be better in base Entity
-
-	/*
-	if (frozenTimer)
-	{
-	}
-	*/
 
 	if (!isEntityDead() && getState() != STATE_DEAD && getState() != STATE_DEATHSCENE && isPresent())
 	{
-		const bool useEV=false;
-
-		if (useEV)
-		{
-			int mov = getv(EV_MOVEMENT);
-			if (mov && frozenTimer)
-			{
-				doFriction(dt, 50);
-			}
-			else
-			{
-				// don't update friction if we're in a bubble.
-				int fric = getv(EV_FRICTION);
-				if (fric)
-				{
-					doFriction(dt, fric);
-				}
-			}
-
-			switch (mov)
-			{
-			case 1:
-				updateMovement(dt);
-			break;
-			case 2:
-				updateCurrents(dt);
-				updateMovement(dt);
-			break;
-			}
-
-			if (mov)
-			{
-				if (hair)
-				{
-					setHairHeadPosition(position);
-					updateHair(dt);
-				}
-			}
-
-
-			switch (getv(EV_COLLIDE))
-			{		
-			case 1:
-				if (skeletalSprite.isLoaded())
-					dsq->game->handleShotCollisionsSkeletal(this);
-				else
-					dsq->game->handleShotCollisions(this);
-			break;
-			case 2:
-				if (skeletalSprite.isLoaded())
-					dsq->game->handleShotCollisionsSkeletal(this);
-				else
-					dsq->game->handleShotCollisions(this);
-
-				int dmg = getv(EV_TOUCHDMG);
-				if (frozenTimer > 0)
-					dmg = 0;
-				touchAvatarDamage(collideRadius, dmg);
-			break;
-			}
-		}
-
 		if (frozenTimer > 0)
 		{
 			pullEmitter.update(dt);
 
-			if (!useEV)
+			doFriction(dt, 50);
+			updateCurrents(dt);
+			updateMovement(dt);
+
+			if (hair)
 			{
-				doFriction(dt, 50);
-				updateCurrents(dt);
-				updateMovement(dt);
-
-				if (hair)
-				{
-					setHairHeadPosition(position);
-					updateHair(dt);
-				}
-
-				if (skeletalSprite.isLoaded())
-					dsq->game->handleShotCollisionsSkeletal(this);
-				else
-					dsq->game->handleShotCollisions(this);
+				setHairHeadPosition(position);
+				updateHair(dt);
 			}
+
+			if (skeletalSprite.isLoaded())
+				dsq->game->handleShotCollisionsSkeletal(this);
+			else
+				dsq->game->handleShotCollisions(this);
 		}
 
 		if (isPullable() && !fillGridFromQuad)
@@ -387,7 +292,6 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 				crushDelay = 0.2;
 				doCrush = true;
 			}
-			//if ((dsq->game->avatar->position - this->position).getSquaredLength2D() < sqr(collideRadius + dsq->game->avatar->collideRadius))
 			FOR_ENTITIES(i)
 			{
 				Entity *e = *i;
@@ -397,9 +301,6 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 					{
 						if (this->isEntityProperty(EP_BLOCKER) && doCrush)
 						{
-							//bool doit = !vel.isLength2DIn(200) || (e->position.y > position.y && vel.y > 0);
-							/*dsq->game->avatar->pullTarget != this ||*/ 
-							/*&& */
 							bool doit = !vel.isLength2DIn(64) || (e->position.y > position.y && vel.y > 0);
 							if (doit)
 							{
@@ -432,11 +333,9 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 
 		if (isPullable())
 		{		
-			//debugLog("movable!");
 			Entity *followEntity = dsq->game->avatar;
 			if (followEntity && dsq->game->avatar->pullTarget == this)
 			{
-				//debugLog("followentity!");
 				Vector dist = followEntity->position - this->position;
 				if (dist.isLength2DIn(followEntity->collideRadius + collideRadius + 16))
 				{
@@ -468,7 +367,6 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 						if (vel.isLength2DIn(100))
 							vel = 0;
 					}
-					//vel = 0;
 				}
 				doCollisionAvoidance(dt, 2, 0.5);
 			}
@@ -497,28 +395,8 @@ void ScriptedEntity::updateStrands(float dt)
 
 void ScriptedEntity::destroy()
 {
-	//debugLog("calling target died");	
-
 	CollideEntity::destroy();
-	/*
-	// spring plant might already be destroyed at this point (end of state)
-	// could add as child?
-	if (springPlant)
-	{
-		//springPlant->life = 0.1;
-		springPlant->alpha = 0;
-	}
-	*/
-	/*
-	if (hair)
-	{
-		//dsq->removeRenderObject(hair, DESTROY_RENDER_OBJECT);
-		dsq->game->removeRenderObject(hair);
-		hair->destroy();
-		delete hair;
-		hair = 0;
-	}
-	*/
+
 	if (script)
 	{
 		dsq->scriptInterface.closeScript(script);
@@ -552,13 +430,8 @@ void ScriptedEntity::startPull()
 	debugLog("HERE!");
 	if (isEntityProperty(EP_BLOCKER))
 	{
-		//debugLog("property set!");
 		fillGridFromQuad = false;
 		dsq->game->reconstructEntityGrid();
-	}
-	else
-	{
-		//debugLog("property not set!");
 	}
 	pullEmitter.load("Pulled");
 	pullEmitter.start();
@@ -603,20 +476,7 @@ void ScriptedEntity::onUpdate(float dt)
 {
 	BBGE_PROF(ScriptedEntity_onUpdate);
 
-	/*
-	if (script && preUpdateFunc)
-	{
-		if (!script->call("preUpdate", this, dt))
-		{
-			debugLog(name + " : preUpdate : " + script->getLastError());
-			preUpdateFunc = false;
-		}
-	}
-	*/
-
 	CollideEntity::onUpdate(dt);
-
-	//updateStrands(dt);
 
 	if (becomeSolidDelay)
 	{
@@ -659,15 +519,6 @@ void ScriptedEntity::onUpdate(float dt)
 		updateSegments(position, reverseSegments);
 		updateAlpha(alpha.x);
 	}
-
-	/*
-	//HACK: if this is wanted (to support moving placed entities), then 
-	// springPlant has to notify ScriptedEntity when it is deleted / pulled out
-	if (springPlant)
-	{
-		springPlant->position = this->position;
-	}
-	*/
 }
 
 void ScriptedEntity::resetTimer(float t)
@@ -720,25 +571,14 @@ bool ScriptedEntity::damage(const DamageData &d)
 		if (!script->call("damage", this, d.attacker, d.bone, int(d.damageType), d.damage, d.hitPos.x, d.hitPos.y, d.shot, &doDefault))
 		{
 			debugLog(name + ": damage function failed");
-			//debugLog(this->name + " : " + script->getLastError() + " hit");
-		}
-		else
-		{
-			/*
-			std::ostringstream os;
-			os << "doDefault: " << doDefault;
-			debugLog(os.str());
-			*/
 		}
 	}
 
 	if (doDefault)
 	{
-		//debugLog("doing default damage");
 		return Entity::damage(d);
 	}
 
-	//debugLog("not doing default damage");
 	return false;
 }
 
@@ -835,24 +675,6 @@ void ScriptedEntity::activate()
 {	
 	if (runningActivation) return;
 	Entity::activate();
-	/*
-	if (dsq->game->avatar)
-	{
-		Avatar *a = dsq->game->avatar;
-		if (a->position.x < this->position.x)
-		{
-			if (!a->isFlippedHorizontal())
-				a->flipHorizontal();
-		}
-		else
-		{
-			if (a->isFlippedHorizontal())
-				a->flipHorizontal();
-		}
-		if (getEntityType() == ET_NEUTRAL)
-			flipToTarget(dsq->game->avatar->position);
-	}
-	*/
 	
 	runningActivation = true;
 	if (script)
@@ -940,15 +762,6 @@ void ScriptedEntity::onEnterState(int action)
 		strands.clear();
 
 		// BASE ENTITY CLASS WILL HANDLE CLEANING UP HAIR
-		/*
-		if (hair)
-		{
-			hair->setLife(1.0);
-			hair->setDecayRate(10);
-			hair->fadeAlphaWithLife = true;
-			hair = 0;
-		}
-		*/
 	break;
 	}
 }

@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 ParticleEffect::ParticleEffect() : RenderObject()
 {
+	addType(SCO_PARTICLE_EFFECT);
 	running = false;
 	waitForParticles = true;
 	effectLife = -1;
