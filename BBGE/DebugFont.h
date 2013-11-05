@@ -32,7 +32,7 @@ public:
 	void setWidth(int width);
 	void setFontSize(int sz);
 	int getNumLines() { return lines.size(); }
-	void setAlign(Align align);
+	virtual void setAlign(Align align);
 protected:
 	int fontDrawSize, textWidth;
 	void formatText();

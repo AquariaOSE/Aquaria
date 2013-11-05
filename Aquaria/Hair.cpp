@@ -25,13 +25,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 // nodes = 40
 // segmentLength = 3
-Hair::Hair(int nodes, int segmentLength, int hairWidth) : RenderObject()
+Hair::Hair(int nodes, float segmentLength, float hairWidth) : RenderObject()
 {
 	this->segmentLength = segmentLength;
 	this->hairWidth = hairWidth;
-	waveTimer = 0;
-	waveAmount = 5;
-	//hairWidth = 10;
 
 	cull = false;
 
@@ -46,7 +43,6 @@ Hair::Hair(int nodes, int segmentLength, int hairWidth) : RenderObject()
 		hairNodes[i].percent = 1.0f-perc;
 		hairNodes[i].position = hairNodes[i].originalPosition = hairNodes[i].defaultPosition = Vector(0, i*segmentLength, 0);
 	}
-	hairTimer = 0;
 }
 
 void Hair::exertWave(float dt)
@@ -194,15 +190,6 @@ void Hair::onRender()
 	*/
 	//glEnable(GL_CULL_FACE);
 #endif
-}
-
-void Hair::updateWaveTimer(float dt)
-{
-	waveTimer += dt;
-	for (int i = 1; i < hairNodes.size(); i++)
-	{
-		hairNodes[i].defaultPosition = hairNodes[i].originalPosition + Vector(cosf(waveTimer+i)*waveAmount*hairNodes[i].percent, 0, 0);
-	}
 }
 
 void Hair::onUpdate(float dt)

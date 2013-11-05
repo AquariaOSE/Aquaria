@@ -158,8 +158,6 @@ public:
 	void onCollide(Entity *e);
 	bool zoomOverriden;
 	void clampPosition();
-	
-	bool isMiniMapCursorOkay();
 
 	void splash(bool down);
 	InterpolatedVector myZoom;
@@ -346,6 +344,7 @@ public:
 
 	int leaches;
 	float shieldPoints;
+	float elementEffectMult;
 
 	bool blockBackFlip;
 	
@@ -445,7 +444,6 @@ protected:
 	bool checkWarpAreas();
 	void toggleZoom();
 
-	float ignoreInputDelay;
 	float splashDelay;
 	//Hair *hair;
 
@@ -453,8 +451,6 @@ protected:
 	void onUpdate(float dt);
 	void onRender();
 
-	float particleDelay;
-	//float rippleDelay;
 	Quad *glow;
 	bool swimming;
 
@@ -469,8 +465,7 @@ protected:
 	float pushingOffWallEffect;
 	float lockToWallFallTimer;
 
-	Vector dodgeVec;
-	Vector wallPushVec, wallTurnVec;
+	Vector wallPushVec;
 
 
 

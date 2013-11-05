@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../BBGE/Quad.h"
 
-class Avatar;
+class Entity;
 
 
 enum ElementFlag
@@ -42,50 +42,48 @@ enum ElementFlag
 	*/
 };
 
+struct ElementEffectData
+{	
+	ElementEffectData();
+
+	int elementEffectType;
+	float wavyAngleOffset, wavyMagnitude, wavyLerpIn;
+	float wavyMin, wavyMax;
+	float hitPerc, effectMult;
+	bool wavyWaving, wavyFlip, touching;
+	Vector touchVel;
+	std::vector<Vector> wavy, wavySave;
+	int elementEffectIndex; // used by editor only
+};
+
 class Element : public Quad
 {
 public:
 	Element();
 	~Element();
 	void destroy();
-	//void interact(Interaction::Type interactionType, Avatar *avatar);
-	bool canSeeAvatar(Avatar *avatar);
 	void update(float dt);
-	bool isActive();
-	//InteractionContainer interactions;
 	int templateIdx;
 	int bgLayer;
 	Element *bgLayerNext;
-	float getSortDepth();
 	void render();
-	//Flags elementFlags;
 	ElementFlag elementFlag;
 	void fillGrid();
 	bool isElementActive() { return elementActive; }
 	int getElementEffectIndex();
 	void setElementEffectByIndex(int e);
 	void setElementActive(bool v) { elementActive = v; }
+	void doInteraction(Entity *ent, float mult, float touchWidth);
 protected:
+	void ensureEffectData();
+	void freeEffectData();
 	void setGridFromWavy();
-	float wavyAngleOffset, wavyMagnitude, wavyLerpIn;
-	bool wavyWaving, wavyFlip;
-	void wavyPull(int to, int from, float dt);
-	std::vector<Vector> wavy, wavySave;
-	float wavyRadius, wavyMin, wavyMax;
+	ElementEffectData *eff;
+
 	void updateEffects(float dt);
-	int elementEffectIndex, elementEffectType;
+
 	bool elementActive;
 };
-/*
-class BoxElement : public Element
-{
-public:
-	BoxElement(int width, int height);
-	//bool isOnScreen();
-protected:
-	int ww,hh;
-};
-*/
 
 typedef std::vector<Element*> ElementContainer;
 
