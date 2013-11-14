@@ -1310,6 +1310,8 @@ public:
 
 	virtual void onBackgroundUpdate();
 
+	void initLocalization();
+
 protected:
 
 	std::string fpsDebugString;

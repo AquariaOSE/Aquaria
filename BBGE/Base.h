@@ -204,6 +204,7 @@ struct IntPair
 std::string numToZeroString(int num, int zeroes);
 bool chance(int perc);
 bool chancef(float p);
+void initCharTranslationTables(const std::map<unsigned char, unsigned char>& tab);
 void stringToUpper(std::string &s);
 void stringToLower(std::string &s);
 void stringToLowerUserData(std::string &s);
