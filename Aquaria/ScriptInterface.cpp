@@ -5120,20 +5120,20 @@ luaFunc(entity_warpSegments)
 	if (se)
 		se->warpSegments();
 
-	luaReturnNum(0);
+	luaReturnNil()
 }
 
 luaFunc(avatar_incrLeaches)
 {
 	dsq->game->avatar->leaches++;
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(avatar_decrLeaches)
 {
 	// Not checking for underflow here because this allows some neat tricks.
 	dsq->game->avatar->leaches--;
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_rotateToVel)
@@ -6300,7 +6300,7 @@ luaFunc(entity_grabTarget)
 	Entity *e = entity(L);
 	if (e)
 		e->attachEntity(e->getTargetEntity(), Vector(lua_tointeger(L, 2), lua_tointeger(L, 3)));
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_clampToHit)
@@ -6336,7 +6336,7 @@ luaFunc(entity_switchSurfaceDirection)
 {
 	ScriptedEntity *e = scriptedEntity(L);
 	if (!e)
-		luaReturnNum(0);
+		luaReturnNil();
 
 	int n = -1;
 	if (lua_isnumber(L, 2))
@@ -6558,7 +6558,7 @@ luaFunc(entity_releaseTarget)
 	Entity *e = entity(L);
 	if (e)
 		e->detachEntity(e->getTargetEntity());
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(esetv)
@@ -6833,7 +6833,7 @@ luaFunc(entity_delete_override)
 			e->setDecayRate(1.0f/time);
 		}
 	}
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_isRidingOnEntity)
@@ -6883,7 +6883,7 @@ luaFunc(entity_setActivation)
 		e->activationRadius = activationRadius;
 	}
 
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_setActivationType)
@@ -6892,7 +6892,7 @@ luaFunc(entity_setActivationType)
 	if (e)
 		e->activationType = (Entity::ActivationType)lua_tointeger(L, 2);
 
-	luaReturnInt(0);
+	luaReturnNil();
 }
 
 luaFunc(entity_hasTarget)
@@ -7608,7 +7608,7 @@ luaFunc(entity_switchLayer)
 
 		core->switchRenderObjectLayer(e, toLayer);
 	}
-	luaReturnNum(0);
+	luaReturnNil();
 }
 
 // entity numSegments segmentLength width texture
