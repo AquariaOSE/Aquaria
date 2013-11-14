@@ -8,10 +8,6 @@
 #include "Network.h"
 #include "tinyxml.h"
 
-#ifdef BBGE_BUILD_UNIX
-#include <sys/stat.h>
-#endif
-
 using Network::NetEvent;
 using Network::NE_ABORT;
 using Network::NE_FINISH;
@@ -146,7 +142,7 @@ void ModDL::GetModlist(const std::string& url, bool allowChaining, bool first)
 {
 	if(first)
 		knownServers.clear();
-	
+
 	// Prevent recursion, self-linking, or cycle linking.
 	// In theory, this allows setting up a server network
 	// where each server links to any servers it knows,
@@ -174,7 +170,7 @@ void ModDL::GetModlist(const std::string& url, bool allowChaining, bool first)
 	std::ostringstream os;
 	os << "Fetching mods list [" << url << "], chain: " << allowChaining;
 	debugLog(os.str());
-	
+
 	std::string localName = remoteToLocalName(url);
 
 	debugLog("... to: " + localName);
@@ -230,7 +226,7 @@ void ModDL::NotifyModlist(ModlistRequest *rq, NetEvent ev, size_t recvd, size_t 
 		}
 		return;
 	}
-	
+
 	if(scr)
 	{
 		scr->globeIcon->alpha.stop();
@@ -279,7 +275,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 			<Properties type="patch" /> //-- optional tag, if not given, "mod" is assumed. Can be "mod", "patch", or "weblink".
 						// if type=="weblink", <Package url> will be opened with the default web browser.
 		</AquariaMod>
-		
+
 		<AquariaMod>
 		...
 		</AquariaMod>
@@ -527,7 +523,7 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 			// Dir already exists, just remount everything
 			vfs.Reload();
 		}
-		else if(!dsq->mountModPackage(archiveFile)) 
+		else if(!dsq->mountModPackage(archiveFile))
 		{
 			// make package readable (so that the icon can be shown)
 			// But only if it wasn't mounted before!

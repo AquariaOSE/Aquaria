@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #if defined(BBGE_BUILD_UNIX)
 	#include <sys/types.h>
 	#include <dirent.h>
+	#include <sys/stat.h>
+	#include <errno.h>
 #endif
 
 #if defined(BBGE_BUILD_MACOSX)
@@ -105,7 +107,7 @@ Direction getNextDirClockwise(Direction dir)
 void sizePowerOf2Texture(int &v)
 {
 	int p = 8, use=0;
-	do 
+	do
 	{
 		use = 1 << p;
 		p++;
