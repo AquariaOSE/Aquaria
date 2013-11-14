@@ -22,16 +22,6 @@ using Network::NE_UPDATE;
 ModDL moddl;
 
 
-// TODO: move this to Base.cpp and replace other similar occurrances
-static void createDir(const char *d)
-{
-#if defined(BBGE_BUILD_UNIX)
-	mkdir(d, S_IRWXU);
-#elif defined(BBGE_BUILD_WINDOWS)
-	CreateDirectoryA(d, NULL);
-#endif
-}
-
 // .../_mods/<MODNAME>
 // .../_mods/<MODNAME>.zip
 static std::string _PathToModName(const std::string& path)

@@ -302,5 +302,7 @@ std::string spacesToUnderscores(const std::string &str);
 
 void triggerBreakpoint();
 
+bool createDir(const std::string& d);
+
 
 #endif

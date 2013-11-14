@@ -899,7 +899,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
         envr = ".";  // oh well.
 	const std::string home(envr);
 
-	mkdir(home.c_str(), 0700);  // just in case.
+	createDir(home);  // just in case.
 
 	// "/home/icculus/.Aquaria" or something. Spaces are okay.
 	#ifdef BBGE_BUILD_MACOSX
@@ -909,11 +909,12 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	#endif
 
 	userDataFolder = home + "/" + prefix + userDataSubFolder;
-	mkdir(userDataFolder.c_str(), 0700);
+	createDir(userDataFolder);
 	debugLogPath = userDataFolder + "/";
-	mkdir((userDataFolder + "/screenshots").c_str(), 0700);
+	createDir(userDataFolder + "/screenshots");
 	std::string prefpath(getPreferencesFolder());
-	mkdir(prefpath.c_str(), 0700);
+	createDir(prefpath);
+
 #else
 	debugLogPath = "";
 	userDataFolder = ".";
@@ -929,7 +930,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 		// not sure about this right now -- FG
 		/*else
 		{
-			puts("Working directory is not writeable...");
+			puts("Working directory is not writable...");
 			char pathbuf[MAX_PATH];
 			if(SHGetSpecialFolderPathA(NULL, &pathbuf[0], CSIDL_APPDATA, 0))
 			{
@@ -941,7 +942,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 						userDataFolder[i] = '/';
 				debugLogPath = userDataFolder + "/";
 				puts(("Using \"" + userDataFolder + "\" as user directory.").c_str());
-				CreateDirectoryA(userDataFolder.c_str(), NULL);
+				createDir(userDataFolder);
 				checkWritable(userDataFolder, true, true);
 			}
 			else
