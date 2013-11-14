@@ -1170,6 +1170,38 @@ void triggerBreakpoint()
 #endif
 }
 
+bool createDir(const std::string& d)
+{
+	bool success = false;
+	int err = 0;
+#if defined(BBGE_BUILD_UNIX)
+	if (!mkdir(d.c_str(), S_IRWXU))
+		success = true;
+	else
+	{
+		err = errno;
+		if (err == EEXIST)
+			success = true;
+	}
+#elif defined(BBGE_BUILD_WINDOWS)
+	if (CreateDirectoryA(d.c_str(), NULL))
+		success = true;
+	else
+	{
+		err = GetLastError();
+		if(err == ERROR_ALREADY_EXISTS)
+			success = true;
+	}
+#endif
+	if (!success)
+	{
+		std::ostringstream os;
+		os <<  "Failed to create directory: [" << d << "], error code: " << err;
+		debugLog(os.str());
+	}
+	return success;
+}
+
 
 #include "DeflateCompressor.h"
 

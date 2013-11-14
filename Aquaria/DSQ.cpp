@@ -62,7 +62,7 @@ static void Linux_CopyTree(const char *src, const char *dst)
 
     if (S_ISDIR(statbuf.st_mode))
     {
-        mkdir(dst, 0700);  // don't care if this fails.
+        createDir(dst);  // don't care if this fails.
         DIR *dirp = opendir(src);
         if (dirp == NULL)
             return;
@@ -156,8 +156,6 @@ Vector savesz;
 DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 : Core(fileSystem, extraDataDir, LR_MAX, APPNAME, PARTICLE_AMOUNT_DEFAULT, "Aquaria")
 {
-	// 2048
-	//createDirectory(getSaveDirectory());
 	dsq = this;
 
 	cutscene_bg = 0;
@@ -947,14 +945,9 @@ This build is not yet final, and as such there are a couple things lacking. They
 		Linux_CopyTree(core->adjustFilenameCase("_mods").c_str(), core->adjustFilenameCase(fn).c_str());
 #endif
 
-	std::string p1 = getUserDataFolder();
-	std::string p2 = getUserDataFolder() + "/save";
-#if defined(BBGE_BUILD_UNIX)
-	mkdir(p1.c_str(), S_IRWXU);
-	mkdir(p2.c_str(), S_IRWXU);
-#elif defined(BBGE_BUILD_WINDOWS)
-	CreateDirectoryA(p2.c_str(), NULL);
-#endif
+	createDir(getUserDataFolder());
+	createDir(getUserDataFolder() + "/save");
+	createDir(getUserDataFolder() + "/_mods");
 
 	addStateInstance(game = new Game);
 	addStateInstance(new GameOver);
@@ -2670,6 +2663,8 @@ void DSQ::clearMenu(float t)
 
 void DSQ::screenMessage(const std::string &msg)
 {
+	debugLog(msg);
+
 	DebugFont *b = new DebugFont();
 	b->position = Vector(16,300);
 	b->setFontSize(10);
