@@ -1293,6 +1293,8 @@ void Core::init()
 
 	initInputCodeMap();
 
+	initLocalization();
+
 	//glfwSetWindowSizeCallback(lockWindowSize);
 }
 
@@ -5164,3 +5166,23 @@ void Core::setupFileAccess()
 	debugLog("Done");
 #endif
 }
+
+void Core::initLocalization()
+{
+	InStream in(localisePath("data/localecase.txt"));
+	if(!in)
+	{
+		debugLog("data/localecase.txt does not exist, using internal locale data");
+		return;
+	}
+
+	std::string low, up;
+	std::map<unsigned char, unsigned char> trans;
+	while(in)
+	{
+		in >> low >> up;
+		trans[low[0]] = up[0];
+	}
+	initCharTranslationTables(trans);
+}
+
