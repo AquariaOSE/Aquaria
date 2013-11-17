@@ -512,7 +512,7 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 		remove(archiveFile.c_str());
 		if(rename(rq->tempFilename.c_str(), archiveFile.c_str()))
 		{
-			debugLog("Could not rename mod " + rq->tempFilename + " to " + archiveFile);
+			dsq->screenMessage("Failed to rename mod\n" + rq->tempFilename + "\n  to\n" + archiveFile);
 			return;
 		}
 		else
