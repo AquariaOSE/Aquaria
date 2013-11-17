@@ -948,6 +948,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	createDir(getUserDataFolder());
 	createDir(getUserDataFolder() + "/save");
 	createDir(getUserDataFolder() + "/_mods");
+	createDir(getUserDataFolder() + "/screenshots");
 
 	addStateInstance(game = new Game);
 	addStateInstance(new GameOver);
