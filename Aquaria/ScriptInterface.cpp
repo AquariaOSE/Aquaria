@@ -3349,7 +3349,9 @@ luaFunc(showInGameMenu)
 
 luaFunc(hideInGameMenu)
 {
-	dsq->game->hideInGameMenu();
+	bool skipEffect = getBool(L, 1);
+	bool cancel = getBool(L, 2);
+	dsq->game->hideInGameMenu(!skipEffect, cancel);
 	luaReturnNil();
 }
 

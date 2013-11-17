@@ -1543,7 +1543,7 @@ void Game::pickupIngredientEffects(IngredientData *data)
 	ingOffYTimer = 2;
 }
 
-void Game::hideInGameMenu(bool effects)
+void Game::hideInGameMenu(bool effects, bool cancel)
 {
 	if (isCooking) return;
 	if (FoodSlot::foodSlotIndex != -1) return;
@@ -1577,8 +1577,11 @@ void Game::hideInGameMenu(bool effects)
 		}
 
 		dsq->continuity.lastMenuPage = currentMenuPage;
+		if(cancel && (optionsMenu || keyConfigMenu))
+			onOptionsCancel();
+		else
+			toggleOptionsMenu(false);
 
-		toggleOptionsMenu(false);
 		if (!optionsOnly)
 		{
 			toggleFoodMenu(false);

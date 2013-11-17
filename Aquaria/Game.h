@@ -786,7 +786,7 @@ public:
 	void loadEntityTypeList();
 	std::vector<EntitySaveData> entitySaveData;
 	int getIdxForEntityType(std::string type);
-	void hideInGameMenu(bool effects=true);
+	void hideInGameMenu(bool effects=true, bool cancel=false);
 	void showInGameMenu(bool force=false, bool optionsOnly=false, MenuPage menuPage = MENUPAGE_NONE);
 	bool optionsOnly;
 
