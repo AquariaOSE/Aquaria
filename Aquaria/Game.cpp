@@ -2157,8 +2157,6 @@ void Game::reconstructGrid(bool force)
 	}
 
 	trimGrid();
-
-	dsq->pathFinding.generateZones();
 }
 
 void Game::trimGrid()
