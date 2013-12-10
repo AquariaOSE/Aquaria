@@ -426,11 +426,11 @@ public:
 	void splice(const VectorPath &path, int sz);
 	void prepend(const VectorPath &path);
 	void append(const VectorPath &path);
-	void removeNode(int i);
+	void removeNode(unsigned int i);
 	void calculatePercentages();
 	float getLength();
 	void realPercentageCalc();
-	void removeNodes(int startInclusive, int endInclusive);
+	void removeNodes(unsigned int startInclusive, unsigned int endInclusive);
 	float getSubSectionLength(int startIncl, int endIncl);
 protected:
 	std::vector <VectorPathNode> pathNodes;
