@@ -486,6 +486,7 @@ SET(BBGE_SRCS
     ${EXTLIBDIR}/tinyxmlparser.cpp
     ${EXTLIBDIR}/FileAPI.cpp
     ${EXTLIBDIR}/minihttp.cpp
+    ${EXTLIBDIR}/JPS.h
 )
 
 SET(ZLIB_SRCS
