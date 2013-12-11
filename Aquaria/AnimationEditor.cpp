@@ -263,6 +263,7 @@ void AnimationEditor::applyState()
 
 	addAction(MakeFunctionEvent(AnimationEditor, clearRot), KEY_R, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, clearPos), KEY_P, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, flipRot), KEY_D, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, toggleHideBone), KEY_N, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, copy), KEY_C, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, paste), KEY_V, 0);
@@ -1152,6 +1153,58 @@ void AnimationEditor::clearRot()
 	if (editingBone)
 	{
 		applyRotation();
+	}
+}
+
+void AnimationEditor::flipRot()
+{
+	if (dsq->isNested()) return;
+
+	updateEditingBone();
+	if (editingBone)
+	{
+		if (!core->getShiftState())
+		{
+			BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+			if (b)
+			{
+				b->rot = -b->rot;
+			}
+		}
+		else
+		{
+			BoneKeyframe *bcur = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+			if (bcur)
+			{
+				int rotdiff = editingBone->rotation.z - bcur->rot;
+				if (!core->getCtrlState())
+				{
+					for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+					{
+						BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+						if (b)
+						{
+							b->rot = -b->rot;
+						}
+					}
+				}
+				else
+				{
+					// all bones in all anims mode
+					for (int a = 0; a < editSprite->animations.size(); ++a)
+					{
+						for (int i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+						{
+							BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							if (b)
+							{
+								b->rot = -b->rot;
+							}
+						}
+					}
+				}
+			}
+		}
 	}
 }
 

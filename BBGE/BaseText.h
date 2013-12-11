@@ -12,6 +12,7 @@ public:
 	virtual void setText(const std::string& text) = 0;
 	virtual void setWidth(int width) = 0;
 	virtual void setFontSize(int sz) = 0;
+	virtual void setAlign(Align a) = 0;
 
 };
 

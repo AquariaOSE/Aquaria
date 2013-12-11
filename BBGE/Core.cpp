@@ -2746,8 +2746,6 @@ void Core::setMousePosition(const Vector &p)
 // used to update all render objects either uniformly or as part of a time sliced update process
 void Core::updateRenderObjects(float dt)
 {
-	//HACK: we may not always be assuming virtual 800x600
-	Vector cameraC = core->cameraPos + Vector(400,300);
 	for (int c = 0; c < renderObjectLayers.size(); c++)
 	{
 
@@ -3560,7 +3558,7 @@ void Core::pollEvents()
 			case SDL_KEYDOWN:
 			{
 				#if __APPLE__
-				if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_META))
+				if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_GUI))
 				#else
 				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
 				#endif

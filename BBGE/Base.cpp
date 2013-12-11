@@ -250,11 +250,11 @@ void stringToLowerUserData(std::string &s)
 #ifndef HAVE_STRCASECMP
 int nocasecmp(const std::string &s1, const std::string &s2)
 {
-	std::string::const_iterator it1=s1.begin();
-	std::string::const_iterator it2=s2.begin();
+	const char *it1 = s1.c_str();
+	const char *it2 = s2.c_str();
 
   //stop when either string's end has been reached
-  while ( (it1!=s1.end()) && (it2!=s2.end()) )
+  while ( *it1 && *it2 )
   {
     if(charToUpper(*it1) != charToUpper(*it2)) //letters differ?
      // return -1 to indicate smaller than, 1 otherwise

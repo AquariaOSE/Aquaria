@@ -3327,7 +3327,7 @@ void Game::createInGameMenu()
 	resBox->position = Vector(196, 285);
 	for (i = 0; i < core->screenModes.size(); i++)
 	{
-		ostringstream os;
+		std::ostringstream os;
 		os << core->screenModes[i].x << "x" << core->screenModes[i].y;
 		resBox->addItem(os.str());
 		if (core->screenModes[i].x == dsq->user.video.resx && core->screenModes[i].y == dsq->user.video.resy)
@@ -5789,6 +5789,7 @@ void Game::rebuildElementUpdateList()
 		dsq->getRenderObjectLayer(i)->update = false;
 
 	elementUpdateList.clear();
+	elementInteractionList.clear();
 	for (int i = 0; i < dsq->getNumElements(); i++)
 	//for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
 	{
@@ -5799,6 +5800,11 @@ void Game::rebuildElementUpdateList()
 			if (e->getElementEffectIndex() != -1)
 			{
 				elementUpdateList.push_back(e);
+			}
+			ElementEffect ee = dsq->getElementEffectByIndex(e->getElementEffectIndex());
+			if(ee.type == EFX_WAVY)
+			{
+				elementInteractionList.push_back(e);
 			}
 		}
 	}
@@ -6686,7 +6692,10 @@ void Game::applyState()
 	}
 
 	if(cookingScript)
+	{
 		dsq->scriptInterface.closeScript(cookingScript);
+		cookingScript = NULL;
+	}
 
 	if (dsq->mod.isActive())
 		cookingScript = dsq->scriptInterface.openScript(dsq->mod.getPath() + "scripts/cooking.lua", true);
@@ -6843,6 +6852,7 @@ void Game::bindInput()
 
 
 	dsq->user.control.actionSet.importAction(this, "PrimaryAction", ACTION_PRIMARY);
+	dsq->user.control.actionSet.importAction(this, "SecondaryAction", ACTION_SECONDARY);
 
 	dsq->user.control.actionSet.importAction(this, "Escape",		ACTION_ESC);
 
@@ -6853,10 +6863,8 @@ void Game::bindInput()
 	// used for scrolling help text
 	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_SWIMUP);
 	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_SWIMDOWN);
-	/*
 	dsq->user.control.actionSet.importAction(this, "SwimLeft",		ACTION_SWIMLEFT);
 	dsq->user.control.actionSet.importAction(this, "SwimRight",		ACTION_SWIMRIGHT);
-	*/
 
 
 	dsq->user.control.actionSet.importAction(this, "PrevPage",		ACTION_PREVPAGE);
@@ -6908,6 +6916,8 @@ void Game::bindInput()
 
 	dsq->user.control.actionSet.importAction(this, "Revert",		ACTION_REVERT);
 
+	dsq->user.control.actionSet.importAction(this, "Look",			ACTION_LOOK);
+	dsq->user.control.actionSet.importAction(this, "Roll",			ACTION_ROLL);
 
 	if (avatar)
 		avatar->bindInput();
