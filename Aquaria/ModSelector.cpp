@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AquariaProgressBar.h"
 #include "tinyxml.h"
 #include "ModSelector.h"
+#include <algorithm>
 
 #ifdef BBGE_BUILD_VFS
 #include "ModDownloader.h"
@@ -684,7 +685,7 @@ bool ModIconOnline::fixIcon()
 				statusIcon = new Quad("modselect/ico_update", pos);
 				statusIcon->alpha.interpolateTo(0.5f, 0.5f, -1, true, true);
 			}
-			else 
+			else
 				statusIcon = new Quad("modselect/ico_check", pos);
 		}
 
@@ -819,7 +820,7 @@ void MenuIconBar::init()
 	MenuIcon *ico;
 	int y = (-height / 2) - 35;
 
-	
+
 	ico = new MenuIcon(0);
 	ico->label = dsq->continuity.stringBank.get(2027);
 	ico->useQuad("modselect/installed");

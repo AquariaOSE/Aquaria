@@ -36,6 +36,7 @@ extern "C"
 #include "Web.h"
 #include "GridRender.h"
 #include "AfterEffect.h"
+#include <algorithm>
 
 #include "../BBGE/MathFunctions.h"
 
@@ -2502,7 +2503,7 @@ luaFunc(entity_setBoneLock)
 			Bone *b = 0;
 			if (lua_isuserdata(L, 3))
 				b = bone(L, 3);
-			
+
 			bl.entity = e2;
 			bl.bone = b;
 			bl.on = true;
@@ -2926,7 +2927,7 @@ luaFunc(entity_playSfx)
 		if(sfx.vol <= 0)
 			sfx.vol = 1;
 		sfx.loops = lua_tonumber(L, 5);
-		
+
 		float fadeOut = lua_tonumber(L, 6);
 		sfx.maxdist = lua_tonumber(L, 7);
 		sfx.relative = false;
@@ -8690,7 +8691,7 @@ luaFunc(shader_setAsAfterEffect)
 
 	if(core->afterEffectManager)
 		done = core->afterEffectManager->setShaderPipelinePos(handle, pos);
-		
+
 	luaReturnBool(done);
 }
 
