@@ -1223,6 +1223,10 @@
 				RelativePath="..\..\ExternalLibs\algorithmx.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\JPS.h"
+				>
+			</File>
 			<Filter
 				Name="FTGL"
 				>
