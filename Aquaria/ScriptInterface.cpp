@@ -844,6 +844,7 @@ luaFunc(loadfile_caseinsensitive)
 MakeTypeCheckFunc(isNode, SCO_PATH);
 MakeTypeCheckFunc(isObject, SCO_RENDEROBJECT);
 MakeTypeCheckFunc(isEntity, SCO_ENTITY)
+MakeTypeCheckFunc(isScriptedEntity, SCO_SCRIPTED_ENTITY)
 MakeTypeCheckFunc(isShot, SCO_SHOT)
 MakeTypeCheckFunc(isWeb, SCO_WEB)
 MakeTypeCheckFunc(isIng, SCO_INGREDIENT)
@@ -7460,7 +7461,7 @@ luaFunc(filterNearestEntities)
 	filteredEntities.clear();
 
 	const Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	const float radius = lua_tointeger(L, 3);
+	const float radius = lua_tonumber(L, 3);
 	const Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
 	const EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
 	const DamageType dt = lua_isnumber(L, 6) ? (DamageType)lua_tointeger(L, 6) : DT_NONE;
@@ -8205,16 +8206,13 @@ luaFunc(isStreamingVoice)
 
 luaFunc(isObstructed)
 {
-	int x = lua_tonumber(L, 1);
-	int y = lua_tonumber(L, 2);
-	luaReturnBool(dsq->game->isObstructed(TileVector(Vector(x,y))));
+	int obs = lua_tointeger(L, 3);
+	luaReturnBool(dsq->game->isObstructed(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2))), obs ? obs : -1));
 }
 
 luaFunc(getObstruction)
 {
-	int x = lua_tonumber(L, 1);
-	int y = lua_tonumber(L, 2);
-	luaReturnInt(dsq->game->getGrid(TileVector(Vector(x,y))));
+	luaReturnInt(dsq->game->getGrid(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)))));
 }
 
 luaFunc(isObstructedBlock)
@@ -8225,9 +8223,9 @@ luaFunc(isObstructedBlock)
 	TileVector t(Vector(x,y));
 
 	bool obs = false;
-	for (int xx = t.x-span; xx < t.x+span; xx++)
+	for (int xx = t.x-span; xx <= t.x+span; xx++)
 	{
-		for (int yy = t.y-span; yy < t.y+span; yy++)
+		for (int yy = t.y-span; yy <= t.y+span; yy++)
 		{
 			if (dsq->game->isObstructed(TileVector(xx, yy)))
 			{
@@ -8437,6 +8435,77 @@ luaFunc(isShuttingDownGameState)
 {
 	luaReturnBool(dsq->game->isShuttingDownGameState());
 }
+
+// startx, starty, endx, endy [, step, xtab, ytab]
+luaFunc(findPath)
+{
+	VectorPath path;
+	Vector start(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
+	if(!dsq->pathFinding.generatePathSimple(path, start, end, lua_tointeger(L, 5)))
+		luaReturnBool(false);
+
+	const unsigned num = path.getNumPathNodes();
+	lua_pushinteger(L, num);
+
+	if(lua_istable(L, 6))
+		lua_pushvalue(L, 6);
+	else
+		lua_createtable(L, num, 0);
+
+	if(lua_istable(L, 7))
+		lua_pushvalue(L, 7);
+	else
+		lua_createtable(L, num, 0);
+
+	// [true, xs, yx]
+
+	for(unsigned i = 0; i < num; ++i)
+	{
+		const VectorPathNode *n = path.getPathNode(i);
+		lua_pushnumber(L, n->value.x);  // [num, xs, ys, x]
+		lua_rawseti(L, -3, i+1);        // [num, xs, ys]
+		lua_pushnumber(L, n->value.y);  // [num, xs, ys, y]
+		lua_rawseti(L, -2, i+1);        // [num, xs, ys]
+	}
+	// terminate tables
+	lua_pushnil(L);            // [num xs, ys, nil]
+	lua_rawseti(L, -3, num+1); // [num, xs, ys]
+	lua_pushnil(L);            // [num, xs, ys, nil]
+	lua_rawseti(L, -2, num+1); // [num, xs, ys]
+
+	return 3; // found path?, x positions, y positions
+}
+
+luaFunc(castLine)
+{
+	Vector v(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
+	int tiletype = lua_tointeger(L, 5);
+	if(!tiletype)
+		tiletype = -1;
+	Vector step = end - v;
+	int steps = step.getLength2D() / TILE_SIZE;
+	step.setLength2D(TILE_SIZE);
+
+	for(int i = 0; i < steps; ++i)
+	{
+		if(dsq->game->isObstructed(TileVector(v), tiletype))
+		{
+			lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
+			lua_pushnumber(L, v.x);
+			lua_pushnumber(L, v.y);
+			return 3;
+		}
+		v += step;
+	}
+
+	lua_pushboolean(L, false);
+	lua_pushnumber(L, v.x);
+	lua_pushnumber(L, v.y);
+	return 3;
+}
+
 
 luaFunc(inv_isFull)
 {
@@ -9242,6 +9311,8 @@ static const struct {
 	luaRegister(isObstructed),
 	luaRegister(isObstructedBlock),
 	luaRegister(getObstruction),
+	luaRegister(findPath),
+	luaRegister(castLine),
 
 	luaRegister(isFlag),
 
@@ -9651,6 +9722,7 @@ static const struct {
 	luaRegister(isNode),
 	luaRegister(isObject),
 	luaRegister(isEntity),
+	luaRegister(isScriptedEntity),
 	luaRegister(isShot),
 	luaRegister(isWeb),
 	luaRegister(isIng),
