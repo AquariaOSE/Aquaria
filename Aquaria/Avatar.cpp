@@ -93,7 +93,6 @@ const float QUICK_SONG_CAST_DELAY = 0.4;
 
 const float BURST_RECOVER_RATE = 1.2; // 3.0 // 0.75
 const float BURST_USE_RATE = 1.5; //0.9 //1.5;
-const float BURST_DELAY = 0.1;
 const float BURST_ACCEL = 4000; //2000 // 1000
 
 // Minimum time between two splash effects (seconds).
@@ -265,13 +264,6 @@ void Avatar::postInit()
 
 void Avatar::onAnimationKeyPassed(int key)
 {
-	if (swimming && !isRolling() && !bursting && _isUnderWater)
-	{
-		if (key == 0 || key == 2)
-		{
-			//core->sound->playSfx("SwimKick", 255, 0, 1000+getMaxSpeed()/10.0f);
-		}
-	}
 	Entity::onAnimationKeyPassed(key);
 }
 
@@ -1637,7 +1629,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 	break;
 	}
 
-
+	elementEffectMult = 1;
 	state.abilityDelay = 0;
 	formAbilityDelay = 0;
 	dsq->continuity.form = form;
@@ -1739,6 +1731,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		collideRadius = COLLIDE_RADIUS_FISH;
 		setCanLockToWall(false);
 		setCollisionAvoidanceData(COLLIDE_RANGE_FISH, COLLIDE_MOD_FISH);
+		elementEffectMult = 0.4f;
 	}
 	break;
 	case FORM_SUN:
@@ -1788,6 +1781,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		setCanLockToWall(false);
 		setCanBurst(false);
 		setDamageTarget(DT_WALLHURT, false);
+		elementEffectMult = 0;
 
 		if (onInit)
 		{
@@ -3320,6 +3314,11 @@ void Avatar::startCharge(int ability)
 void Avatar::setBlockSinging(bool v)
 {
 	blockSinging = v;
+	if (v)
+	{
+		currentSong.notes.clear(); // abort singing without triggering a song, if queued
+		closeSingingInterface();
+	}
 }
 
 bool Avatar::canSetBoneLock()
@@ -3491,31 +3490,15 @@ void Avatar::lockToWall()
 	if (dsq->game->isPaused()) return;
 
 	TileVector t(position);
-	TileVector myTile = t;
-	// 3 + 4
-	// 4 + 5
 	Vector m = vel;
 	m.setLength2D(3);
 	t.x += int(m.x);
 	t.y += int(m.y);
 
-	m.setLength2D(2);
-	TileVector tback = myTile;
-	tback.x += int(m.x);
-	tback.y += int(m.y);
-
-	Vector add = m;
-	add.setLength2D(1);
-	TileVector tnext = myTile;
-	tnext.x += int(add.x);
-	tnext.y += int(add.y);
-
 	bool good = true;
 	if (!dsq->game->isObstructed(t))
 	{
-		int tried = 0;
-//tryAgain:
-		while(1)
+		do
 		{
 			TileVector test;
 
@@ -3567,46 +3550,23 @@ void Avatar::lockToWall()
 				t = test;
 				break;
 			}
-			tried++;
-			//if (tried >= 2)
-			if (true)
-			{
-				good = false;
-				break;
-			}
-			else
-			{
-				//debugLog("trying other");
-				//t = myTile;
-				//goto tryAgain;
-			}
+
+			good = false;
 		}
+		while(0);
 	}
 
 	if (dsq->game->getGrid(t)==OT_HURT && isDamageTarget(DT_WALLHURT))
 	{
 		good = false;
 	}
-	if (good /*&& dsq->game->)isObstructed(t2, OT_BLACK)*/ /*&& diff.getSquaredLength2D() > sqr(40)*/)
+	if (good)
 	{
 		wallNormal = dsq->game->getWallNormal(position);
 		bool outOfWaterHit = (!_isUnderWater && !(wallNormal.y < -0.1f));
-		if (wallNormal.isZero() ) //|| outOfWaterHit
+		if (wallNormal.isZero() )
 		{
 			debugLog("COULD NOT FIND NORMAL, GOING TO BOUNCE");
-			if (outOfWaterHit)
-			{
-				/*
-				Animation *anim = skeletalSprite.getCurrentAnimation();
-				if (anim && anim->name == "hitGround")
-				{
-				}
-				else
-				{
-					skeletalSprite.animate("hitGround");
-				}
-				*/
-			}
 			return;
 		}
 		else
@@ -3642,16 +3602,6 @@ void Avatar::lockToWall()
 			rotateToVec(wallPushVec, 0.1);
 
 			offset.stop();
-
-			Vector goIn;
-
-			TileVector uset;
-			if (!dsq->game->isObstructed(tnext))
-			{
-				uset = tnext;
-			}
-			else
-				uset = tback;
 
 			int tileType = dsq->game->getGrid(t);
 			Vector offdiff = t.worldVector() - position;
@@ -3943,11 +3893,8 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	bursting = false;
 	burst = 1;
 	burstDelay = 0;
-	ignoreInputDelay = 0;
 	splashDelay = 0;
 	avatar = this;
-
-	particleDelay = 0;
 
 	swimming = false;
 
@@ -4131,6 +4078,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	_seeMapMode = SEE_MAP_DEFAULT;
 
 	blockBackFlip = false;
+	elementEffectMult = 1;
 }
 
 void Avatar::revert()
@@ -4522,7 +4470,7 @@ void Avatar::action(int id, int state)
 
 	if (id == ACTION_PRIMARY && state)// !state
 	{
-		if (isMiniMapCursorOkay())
+		if (dsq->isMiniMapCursorOkay())
 		{
 			if (this->state.lockedToWall)
 			{
@@ -5274,7 +5222,7 @@ void Avatar::updateWallJump(float dt)
 
 void Avatar::updateRoll(float dt)
 {
-	if (!inputEnabled || dsq->game->isWorldPaused())
+	if (!inputEnabled || dsq->game->isWorldPaused() || riding)
 	{
 		if (rolling)
 			stopRoll();
@@ -5658,11 +5606,6 @@ Vector Avatar::getHeadPosition()
 }
 
 bool lastCursorKeyboard = false;
-
-bool Avatar::isMiniMapCursorOkay()
-{
-	return ((dsq->inputMode != INPUT_MOUSE) ||  (!dsq->game->miniMapRender || !dsq->game->miniMapRender->isCursorIn()));
-}
 
 void Avatar::onUpdate(float dt)
 {
@@ -6479,7 +6422,7 @@ void Avatar::onUpdate(float dt)
 
 			float len = 0;
 			
-			if (isMiniMapCursorOkay() && !isActing(ACTION_ROLL) &&
+			if (dsq->isMiniMapCursorOkay() && !isActing(ACTION_ROLL) &&
 				_isUnderWater && !riding && !boneLock.on &&
 				(movingOn || ((dsq->inputMode == INPUT_JOYSTICK || dsq->inputMode== INPUT_KEYBOARD) || (core->mouse.buttons.left || bursting))))
 			{
@@ -6553,32 +6496,15 @@ void Avatar::onUpdate(float dt)
 
 			if (!rolling && !state.backFlip && !flourish)
 			{
-				bool swimOnBack = false;
-				if (swimOnBack)
+				if (addVec.x > 0)
 				{
-					if (addVec.x > 0)
-					{
-						if (isfh())
-							flipHorizontal();
-					}
-					if (addVec.x < 0)
-					{
-						if (!isfh())
-							flipHorizontal();
-					}
+					if (!isfh())
+						flipHorizontal();
 				}
-				else
+				if (addVec.x < 0)
 				{
-					if (addVec.x > 0)
-					{
-						if (!isfh())
-							flipHorizontal();
-					}
-					if (addVec.x < 0)
-					{
-						if (isfh())
-							flipHorizontal();
-					}
+					if (isfh())
+						flipHorizontal();
 				}
 			}
 
@@ -7205,6 +7131,16 @@ void Avatar::onUpdate(float dt)
 
 	if(canCollideWithShots())
 		dsq->game->handleShotCollisions(this, (activeAura == AURA_SHIELD));
+
+
+	if(!core->particlesPaused && elementEffectMult > 0)
+	{
+		ElementUpdateList& elems = dsq->game->elementUpdateList;
+		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
+		{
+			(*it)->doInteraction(this, elementEffectMult, 16);
+		}
+	}
 }
 
 

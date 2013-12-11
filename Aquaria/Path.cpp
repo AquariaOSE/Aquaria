@@ -54,6 +54,7 @@ Path::Path()
 	spawnEnemyDistance = 0;
 	warpType = 0;
 	spiritFreeze = true;
+	pauseFreeze = true;
 }
 
 void Path::clampPosition(Vector *pos, float radius)
@@ -479,7 +480,7 @@ void Path::init()
 
 void Path::update(float dt)
 {
-	if (!dsq->game->isPaused() && !(spiritFreeze && dsq->game->isWorldPaused()))
+	if (!(pauseFreeze && dsq->game->isPaused()) && !(spiritFreeze && dsq->game->isWorldPaused()))
 	{
 		if (addEmitter && emitter)
 		{

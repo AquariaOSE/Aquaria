@@ -30,7 +30,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
 OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional features." TRUE)
 
-OPTION(AQUARIA_USE_SDL2 "Use SDL2" FAlSE)
+OPTION(AQUARIA_USE_SDL2 "Use SDL2" FALSE)
 
 # No Steamworks SDK for Linux at the moment. Roll our own achievements.
 ADD_DEFINITIONS(-DBBGE_BUILD_ACHIEVEMENTS_INTERNAL=1)
@@ -448,6 +448,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/LensFlare.cpp
     ${BBGEDIR}/Localization.cpp
     ${BBGEDIR}/Math.cpp
+    ${BBGEDIR}/MemoryAllocatorSmallBlock.cpp
     ${BBGEDIR}/MT.cpp
     ${BBGEDIR}/ParticleEffect.cpp
     ${BBGEDIR}/ParticleManager.cpp

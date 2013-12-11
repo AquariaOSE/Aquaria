@@ -44,6 +44,7 @@ public:
 
 protected:
 	std::string vertFile, fragFile;
+	std::string vertSrc, fragSrc;
 #ifdef BBGE_BUILD_OPENGL
 	GLuint g_programObj;
 	int numUniforms;
@@ -72,7 +73,7 @@ private:
 				float f[4];
 			};
 		} data;
-		char name[32];
+		char name[64];
 
 		bool operator< (const Uniform&) const;
 	};

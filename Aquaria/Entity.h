@@ -35,13 +35,12 @@ class Path;
 
 struct BoneLock
 {
-	BoneLock() : entity(0), bone(0), on(false), origRot(0), offRot(0) {}
+	BoneLock() : entity(0), bone(0), on(false), origRot(0) {}
 	Entity *entity;
 	Bone *bone;
 	Vector localOffset;
 	bool on;
 	float origRot;
-	float offRot;
 	Vector wallNormal, circleOffset;
 	int collisionMaskIndex;
 };
@@ -428,6 +427,7 @@ public:
 	virtual void shiftWorlds(WorldType lastWorld, WorldType worldType){}
 	void setCanLeaveWater(bool v);
 	void setSpiritFreeze(bool v);
+	void setPauseFreeze(bool v);
 	void setEatType(EatType et, const std::string &file="");
 	EatType getEatType() { return eatType; }
 	void setRiding(Entity *e);
@@ -486,7 +486,7 @@ public:
 
 	virtual bool canSetBoneLock();
 
-	void initHair(int numSegments, int segmentLength, int width, const std::string &tex);
+	void initHair(int numSegments, float segmentLength, float width, const std::string &tex);
 	void updateHair(float dt);
 	void setHairHeadPosition(const Vector &pos);
 	void exertHairForce(const Vector &force, float dt);
@@ -494,6 +494,9 @@ public:
 	bool isEntityInside();
 
 	void updateSoundPosition();
+
+	Vector getPushVec() const { return pushVec; }
+	float getPushDamage() const { return pushDamage; }
 
 protected:
 	bool calledEntityDied;
@@ -535,6 +538,7 @@ protected:
 	bool stickToNaijasHead;
 
 	bool spiritFreeze;
+	bool pauseFreeze;
 	bool canLeaveWater;
 	bool wasUnderWater;
 

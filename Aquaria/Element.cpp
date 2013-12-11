@@ -20,169 +20,150 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Element.h"
 #include "Game.h"
-#include "Avatar.h"
+
+ElementEffectData::ElementEffectData()
+	: elementEffectIndex(-1)
+	, wavyAngleOffset(0)
+	, wavyMagnitude(0)
+	, wavyLerpIn(0)
+	, wavyMin(0)
+	, wavyMax(0)
+	, hitPerc(0)
+	, effectMult(0)
+	, wavyWaving(false)
+	, wavyFlip(false)
+	, touching(false)
+	, elementEffectType(EFX_NONE)
+{
+}
 
 Element::Element() : Quad()
 {
 	elementFlag = EF_NONE;
-	wavyFlip = false;
-	elementEffectIndex = -1;
 	elementActive = true;
 	bgLayer = 0;
-
-	wavyAngleOffset=0;
-	wavyMagnitude=0;
-	wavyLerpIn=0;
-	wavyWaving=false;
-	wavyFlip=false;
-
-	elementEffectType = 0;
-	wavyRadius = 0;
-	wavyMin = 0;
-	wavyMax = 0;
 	templateIdx = -1;
+	eff = NULL;
 
 	setStatic(true);
 }
 
-void Element::wavyPull(int to, int from, float dt)
+void Element::ensureEffectData()
 {
-	Vector diff = wavy[to] - wavy[from];
-	if (!diff.isZero())
+	if (!eff)
+		eff = new ElementEffectData;
+}
+
+void Element::freeEffectData()
+{
+	if (eff)
 	{
-		diff.capLength2D(wavyMax);
-		if (diff.isLength2DIn(wavyMin))
-		{
-			diff.setLength2D(wavyMin);
-		}
-		wavy[to] = wavy[from] + diff;
+		delete eff;
+		eff = NULL;
 	}
+}
+
+void Element::doInteraction(Entity *ent, float mult, float touchWidth)
+{
+	ElementEffectData *eff = this->eff;
+	Vector pos = position;
+	pos.y -= (height*scale.y)/2;
+
+	float hitPerc=0;
+	Vector p = ent->position;
+	if (p.x > position.x-touchWidth && p.x < position.x+touchWidth)
+	{
+		float h2 = (height*scale.y)/2.0f;
+		if (p.y < position.y+h2 && p.y > position.y-h2)
+		{
+			eff->touching = true;
+			eff->wavyWaving = true;
+			hitPerc = pos.y - p.y;
+			hitPerc /= float(height*scale.y);
+			hitPerc = (1.0f-hitPerc)-1.0f;
+			eff->hitPerc = hitPerc;
+			eff->touchVel = ent->vel;
+			eff->effectMult = mult;
+			return;
+		}
+	}
+	//eff->touchVel = Vector(0, 0);
+	//eff->hitPerc = 0;
+	eff->touching = false;
 }
 
 void Element::updateEffects(float dt)
 {
-	switch (elementEffectType)
+	switch (eff->elementEffectType)
 	{
 	case EFX_ALPHA:
 		alpha.update(dt);
-	break;
+		break;
 	case EFX_WAVY:
 		//debugLog("EXF_WAVY update");
 		/// check player position
 	{
 		// if a big wavy doesn't work, this is probably why
-		//if ((position - dsq->game->avatar->position).isLength2DIn(1024))
+		//if ((position - ent->position).isLength2DIn(1024))
 		{
-			int touchIdx = -1;
-			Vector pos = position;
-			pos.y = position.y - (height*scale.y)/2;
+			ElementEffectData *eff = this->eff;
 
-			float hitPerc=0;
-			Vector p = dsq->game->avatar->position;// + Vector(200,0);
-			if (p.x > position.x-16 && p.x < position.x+16)
+			if (eff->touching)
 			{
-				float h2 = (height*scale.y)/2.0f;
-				if (p.y < position.y+h2 && p.y > position.y-h2)
-				{
-					touchIdx = 0;
-					hitPerc = pos.y - p.y;
-					hitPerc /= float(height*scale.y);
-					hitPerc = (1.0f-hitPerc)-1.0f;
-					
-					
-					//std::cout << "hit!\n";
-					/*
-					std::ostringstream os;
-					os << "hit perc: " << hitPerc;
-					debugLog(os.str());
-					*/
-				}
-			}
-			/*
-			for (int i = 0; i < wavy.size()-1; i++)
-			{
-				if (isTouchingLine(wavy[0]+pos, wavy[i+1]+pos, dsq->game->avatar->position, wavyRadius))
-				{
-					//wavy[i+1] = dsq->game->avatar->position;
-					touchIdx = i+1;
-					break;
-				}
-			}
-			*/
-
-			if (touchIdx != -1)
-			{
-				// start pull
-				wavyWaving = true;
-				wavyAngleOffset = 0;
-				float ramp = dsq->game->avatar->vel.getLength2D()/800.0f;
+				float ramp = eff->touchVel.getLength2D()/800.0f;
 				if (ramp < 0)	ramp = 0;
 				if (ramp > 1)	ramp = 1;
 
-				wavyMagnitude = 100 * ramp + 16;
+				eff->wavyMagnitude = 100 * ramp + 16;
 
-				if (dsq->game->avatar->vel.x < 0)
-					wavyMagnitude = -wavyMagnitude;
+				if (eff->touchVel.x < 0)
+					eff->wavyMagnitude = -eff->wavyMagnitude;
 
-				/*
-				if (hitPerc > 0.35f)
-					wavyMagnitude = -wavyMagnitude;
-				*/
+				eff->wavyAngleOffset = (eff->hitPerc-0.5f)*PI;
 
-				wavyAngleOffset = (hitPerc-0.5f)*PI;
-
-				wavySave = wavy;
-				wavyLerpIn = 0;
+				eff->wavySave = eff->wavy;
+				eff->wavyLerpIn = 0;
 			}
 
-			if (wavyWaving)
+			if (eff->wavyWaving)
 			{
-				/*
-				float wavyMagnitude = wavyMagnitude;
-				if (dsq->continuity.form == FORM_FISH)
-					wavyMagnitude *= 0.1f;
-				*/
-				float wavyMagMult = 1;
-				
-				if (dsq->continuity.form == FORM_FISH)
-					wavyMagMult = 0.4;
-
 				float spd = PI*1.1f;
 				float magRedSpd = 48;
 				float lerpSpd = 5.0;
-				for (int i = 0; i < wavy.size(); i++)
+				float wavySz = float(eff->wavy.size());
+				for (int i = 0; i < eff->wavy.size(); i++)
 				{
-					float weight = float(i)/float(wavy.size());
-					if (wavyFlip)
+					float weight = float(i)/wavySz;
+					if (eff->wavyFlip)
 						weight = 1.0f-weight;
 					if (weight < 0.125f)
 						weight *= 0.5f;
-					wavy[i].x = sinf(wavyAngleOffset + (float(i)/float(wavy.size()))*PI)*float(wavyMagnitude*wavyMagMult)*weight;
-					if (!wavySave.empty())
+					eff->wavy[i].x = sinf(eff->wavyAngleOffset + (float(i)/wavySz)*PI)*float(eff->wavyMagnitude*eff->effectMult)*weight;
+					if (!eff->wavySave.empty())
 					{
-						if (wavyLerpIn < 1)
-							wavy[i].x = wavy[i].x*wavyLerpIn + (wavySave[i].x*(1.0f-wavyLerpIn));
+						if (eff->wavyLerpIn < 1)
+							eff->wavy[i].x = eff->wavy[i].x*eff->wavyLerpIn + (eff->wavySave[i].x*(1.0f-eff->wavyLerpIn));
 					}
 				}
 				
-				if (wavyLerpIn < 1)
+				if (eff->wavyLerpIn < 1)
 				{
-					wavyLerpIn += dt*lerpSpd;
-					if (wavyLerpIn > 1)
-						wavyLerpIn = 1;
+					eff->wavyLerpIn += dt*lerpSpd;
+					if (eff->wavyLerpIn > 1)
+						eff->wavyLerpIn = 1;
 				}
-				wavyAngleOffset += dt*spd;
-				if (wavyMagnitude > 0)
+				eff->wavyAngleOffset += dt*spd;
+				if (eff->wavyMagnitude > 0)
 				{
-					wavyMagnitude -= magRedSpd*dt;
-					if (wavyMagnitude < 0)
-						wavyMagnitude = 0;
+					eff->wavyMagnitude -= magRedSpd*dt;
+					if (eff->wavyMagnitude < 0)
+						eff->wavyMagnitude = 0;
 				}
 				else
 				{
-					wavyMagnitude += magRedSpd*dt;
-					if (wavyMagnitude > 0)
-						wavyMagnitude = 0;
+					eff->wavyMagnitude += magRedSpd*dt;
+					if (eff->wavyMagnitude > 0)
+						eff->wavyMagnitude = 0;
 				}
 
 				//std::cout << "setting grid from wav w/ wavyWaving\n";
@@ -194,24 +175,6 @@ void Element::updateEffects(float dt)
 				//std::cout << "not waving";
 				setGridFromWavy();
 			}
-			/*
-			for (int i = touchIdx; i < wavy.size()-1; i++)
-			{
-				wavyPull(i, i+1, dt);
-			}
-			for (int i = touchIdx; i >= 0; i--)
-			{
-				wavyPull(i, i-1, dt);
-			}
-			*/
-
-			// normal down pull
-			/*
-			for (int i = 0; i < wavy.size()-1; i++)
-			{
-				wavyPull(i, i+1, dt);
-			}
-			*/
 		}
 	}
 	break;
@@ -224,16 +187,16 @@ void Element::update(float dt)
 	if (!core->particlesPaused)
 	{
 		updateLife(dt);
-		updateEffects(dt);
+		if (eff)
+			updateEffects(dt);
 		if (drawGrid)
 			updateGrid(dt);
 	}
-
-//	updateCullVariables();
 }
 
 Element::~Element()
 {
+	freeEffectData();
 }
 
 void Element::destroy()
@@ -243,7 +206,7 @@ void Element::destroy()
 
 int Element::getElementEffectIndex()
 {
-	return elementEffectIndex;
+	return eff ? eff->elementEffectIndex : -1;
 }
 
 void Element::setGridFromWavy()
@@ -251,16 +214,18 @@ void Element::setGridFromWavy()
 	if (drawGrid)
 	{
 		//std::cout << "set grid from wavy (" << xDivs << ", " << yDivs << ")\n"
-		
+		const float w = float(getWidth());
 		for (int x = 0; x < xDivs-1; x++)
 		{
 			for (int y = 0; y < yDivs; y++)
 			{
-				int wavy_y = (yDivs - y)-1;
-				if (wavy_y < wavy.size())
+				const int wavy_y = (yDivs - y)-1;
+				const float tmp = eff->wavy[wavy_y].x / w;
+				if (wavy_y < eff->wavy.size())
 				{
-					drawGrid[x][y].x = (wavy[wavy_y].x/float(getWidth()) - 0.5f);
-					drawGrid[x+1][y].x = (wavy[wavy_y].x/float(getWidth()) + 0.5f);
+					
+					drawGrid[x][y].x = tmp - 0.5f;
+					drawGrid[x+1][y].x = tmp + 0.5f;
 				}
 			}
 		}
@@ -279,9 +244,9 @@ void Element::setElementEffectByIndex(int eidx)
 	alpha.stop();
 	alpha = 1;
 
-	elementEffectIndex = eidx;
-
 	ElementEffect e = dsq->getElementEffectByIndex(eidx);
+	if(e.type != EFX_NONE)
+		ensureEffectData();
 
 	switch(e.type)
 	{
@@ -305,37 +270,32 @@ void Element::setElementEffectByIndex(int eidx)
 		sprintf(buf, "setting wavy segsy: %d radius: %d min: %d max: %d", e.segsy, e.wavy_radius, e.wavy_min, e.wavy_max);
 		debugLog(buf);
 		*/
-		wavy.resize(e.segsy);
+		eff->wavy.resize(e.segsy);
 		float bity = float(getHeight())/float(e.segsy);
-		for (int i = 0; i < wavy.size(); i++)
+		for (int i = 0; i < eff->wavy.size(); i++)
 		{
-			wavy[i] = Vector(0, -(i*bity));
+			eff->wavy[i] = Vector(0, -(i*bity));
 		}
-		//wavySave = wavy;
-		wavyRadius = e.wavy_radius;
-		wavyFlip = e.wavy_flip;
-		wavyMin = bity;
-		wavyMax = bity*1.2f;
-
-		//wavyRadius = 8;
+		eff->wavyFlip = e.wavy_flip;
+		eff->wavyMin = bity;
+		eff->wavyMax = bity*1.2f;
 
 		createGrid(2, e.segsy);
-
 		setGridFromWavy();
-
-		//createGrid(8,8);
-		/*
-		wavyMin = e.wavy_min;
-		wavyMax = e.wavy_max;
-		*/
 		setStatic(false);
 	}
 	break;
 	default:
+		freeEffectData();
 		setStatic(true);
 	break;
 	}
-	elementEffectType = e.type;
+	
+	if (eff)
+	{
+		eff->elementEffectIndex = eidx;
+		eff->elementEffectType = e.type;
+	}
 }
 
 void Element::render()
@@ -364,31 +324,7 @@ void Element::render()
 	}
 #endif
 	
-	if (this->elementEffectType == EFX_WAVY)
-	{
-		//debugLog("rendering efx_wavy");
-	}
-	
 	Quad::render();
-
-	/*
-	if (!wavy.empty())
-	{
-		
-		glDisable(GL_BLEND);
-		Vector pos = position;
-		pos.y = position.y + (getHeight()*scale.y)/2.0f;
-		glBegin(GL_LINES);
-			for (int i = 0; i < wavy.size()-1; i++)
-			{
-				glColor4f(1, 0, 0, 1);
-				glVertex3f(wavy[i].x+pos.x, wavy[i].y+pos.y, 0);
-				glVertex3f(wavy[i+1].x+pos.x, wavy[i+1].y+pos.y, 0);
-			}
-		glEnd();
-		glEnable(GL_BLEND);
-	}
-	*/
 
 	renderBorder = false;
 }
@@ -414,21 +350,5 @@ void Element::fillGrid()
 			dsq->game->fillGridFromQuad(this, OT_INVISIBLEIN, false); 
 		}
 	}
-}
-
-// override this functionality as needed
-bool Element::canSeeAvatar(Avatar *avatar) 
-{
-	return false;
-}
-
-bool Element::isActive()
-{
-	return true;
-}
-
-float Element::getSortDepth()
-{
-	return Quad::getSortDepth() - bgLayer*0.01f;
 }
 

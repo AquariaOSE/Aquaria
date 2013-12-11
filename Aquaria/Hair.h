@@ -38,13 +38,13 @@ struct HairNode
 class Hair : public RenderObject
 {
 public:
-	Hair(int nodes=40, int segmentLength=3, int width=18);
+	Hair(int nodes=40, float segmentLength=3, float width=18);
 
 	void exertForce(const Vector &force, float dt, int usePerc=0);
 	void updatePositions();
 	void returnToDefaultPositions(float dt);
 
-	int hairWidth;
+	float hairWidth;
 
 	std::vector<HairNode> hairNodes;
 
@@ -54,10 +54,6 @@ public:
 	void exertGravityWave(float dt);
 	HairNode *getHairNode(int idx);
 protected:
-	float hairTimer;
-	void updateWaveTimer(float dt);
-	int waveAmount;
-	float waveTimer;
 	float segmentLength;
 	void onUpdate(float dt);
 	void onRender();

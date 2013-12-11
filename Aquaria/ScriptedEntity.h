@@ -91,7 +91,7 @@ protected:
 	void luaDebugMsg(const std::string &func, const std::string &msg);
 	float crushDelay;
 	int beforePullMaxSpeed;
-	bool songNoteFunction, preUpdateFunc;
+	bool songNoteFunction;
 	bool songNoteDoneFunction;
 	std::vector<ParticleEffect*> emitters;
 	bool becomeSolidDelay;
