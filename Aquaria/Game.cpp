@@ -1543,7 +1543,7 @@ void Game::pickupIngredientEffects(IngredientData *data)
 	ingOffYTimer = 2;
 }
 
-void Game::hideInGameMenu(bool effects)
+void Game::hideInGameMenu(bool effects, bool cancel)
 {
 	if (isCooking) return;
 	if (FoodSlot::foodSlotIndex != -1) return;
@@ -1577,8 +1577,11 @@ void Game::hideInGameMenu(bool effects)
 		}
 
 		dsq->continuity.lastMenuPage = currentMenuPage;
+		if(cancel && (optionsMenu || keyConfigMenu))
+			onOptionsCancel();
+		else
+			toggleOptionsMenu(false);
 
-		toggleOptionsMenu(false);
 		if (!optionsOnly)
 		{
 			toggleFoodMenu(false);
@@ -2154,8 +2157,6 @@ void Game::reconstructGrid(bool force)
 	}
 
 	trimGrid();
-
-	dsq->pathFinding.generateZones();
 }
 
 void Game::trimGrid()
@@ -3327,7 +3328,7 @@ void Game::createInGameMenu()
 	resBox->position = Vector(196, 285);
 	for (i = 0; i < core->screenModes.size(); i++)
 	{
-		ostringstream os;
+		std::ostringstream os;
 		os << core->screenModes[i].x << "x" << core->screenModes[i].y;
 		resBox->addItem(os.str());
 		if (core->screenModes[i].x == dsq->user.video.resx && core->screenModes[i].y == dsq->user.video.resy)

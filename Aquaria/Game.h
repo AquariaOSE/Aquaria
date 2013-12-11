@@ -786,7 +786,7 @@ public:
 	void loadEntityTypeList();
 	std::vector<EntitySaveData> entitySaveData;
 	int getIdxForEntityType(std::string type);
-	void hideInGameMenu(bool effects=true);
+	void hideInGameMenu(bool effects=true, bool cancel=false);
 	void showInGameMenu(bool force=false, bool optionsOnly=false, MenuPage menuPage = MENUPAGE_NONE);
 	bool optionsOnly;
 
@@ -1207,8 +1207,9 @@ int Game::getGridRaw(unsigned int x, unsigned int y) const
 inline
 int Game::getGrid(const TileVector &tile) const
 {
-	if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return OT_INVISIBLE;
-	return grid[tile.x][tile.y];
+	//if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return OT_INVISIBLE;
+	//return grid[tile.x][tile.y];
+	return (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID)) ? grid[tile.x][tile.y] : OT_INVISIBLE;
 }
 
 inline

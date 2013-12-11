@@ -899,7 +899,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
         envr = ".";  // oh well.
 	const std::string home(envr);
 
-	mkdir(home.c_str(), 0700);  // just in case.
+	createDir(home);  // just in case.
 
 	// "/home/icculus/.Aquaria" or something. Spaces are okay.
 	#ifdef BBGE_BUILD_MACOSX
@@ -909,11 +909,12 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	#endif
 
 	userDataFolder = home + "/" + prefix + userDataSubFolder;
-	mkdir(userDataFolder.c_str(), 0700);
+	createDir(userDataFolder);
 	debugLogPath = userDataFolder + "/";
-	mkdir((userDataFolder + "/screenshots").c_str(), 0700);
+	createDir(userDataFolder + "/screenshots");
 	std::string prefpath(getPreferencesFolder());
-	mkdir(prefpath.c_str(), 0700);
+	createDir(prefpath);
+
 #else
 	debugLogPath = "";
 	userDataFolder = ".";
@@ -929,7 +930,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 		// not sure about this right now -- FG
 		/*else
 		{
-			puts("Working directory is not writeable...");
+			puts("Working directory is not writable...");
 			char pathbuf[MAX_PATH];
 			if(SHGetSpecialFolderPathA(NULL, &pathbuf[0], CSIDL_APPDATA, 0))
 			{
@@ -941,7 +942,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 						userDataFolder[i] = '/';
 				debugLogPath = userDataFolder + "/";
 				puts(("Using \"" + userDataFolder + "\" as user directory.").c_str());
-				CreateDirectoryA(userDataFolder.c_str(), NULL);
+				createDir(userDataFolder);
 				checkWritable(userDataFolder, true, true);
 			}
 			else
@@ -1292,6 +1293,8 @@ void Core::init()
 	clearedGarbageFlag = false;
 
 	initInputCodeMap();
+
+	initLocalization();
 
 	//glfwSetWindowSizeCallback(lockWindowSize);
 }
@@ -3558,7 +3561,7 @@ void Core::pollEvents()
 			case SDL_KEYDOWN:
 			{
 				#if __APPLE__
-				if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_META))
+				if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_GUI))
 				#else
 				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
 				#endif
@@ -5164,3 +5167,23 @@ void Core::setupFileAccess()
 	debugLog("Done");
 #endif
 }
+
+void Core::initLocalization()
+{
+	InStream in(localisePath("data/localecase.txt"));
+	if(!in)
+	{
+		debugLog("data/localecase.txt does not exist, using internal locale data");
+		return;
+	}
+
+	std::string low, up;
+	std::map<unsigned char, unsigned char> trans;
+	while(in)
+	{
+		in >> low >> up;
+		trans[low[0]] = up[0];
+	}
+	initCharTranslationTables(trans);
+}
+
