@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef BBGE_VECTOR_H
 #define BBGE_VECTOR_H
 
-#include <math.h>
+#include <cmath>
 #include <float.h>
 #include <vector> 
 #include "Event.h"
@@ -374,7 +374,7 @@ public:
 #ifdef BBGE_BUILD_WINDOWS
 		return _isnan(x) || _isnan(y) || _isnan(z);
 #elif defined(BBGE_BUILD_UNIX)
-		return isnan(x) || isnan(y) || isnan(z);
+		 return std::isnan(x) || std::isnan(y) || std::isnan(z);
 #else
 		return false;
 #endif
