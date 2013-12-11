@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #if defined(BBGE_BUILD_UNIX)
 	#include <sys/types.h>
 	#include <dirent.h>
+	#include <sys/stat.h>
+	#include <errno.h>
 #endif
 
 #if defined(BBGE_BUILD_MACOSX)
@@ -105,7 +107,7 @@ Direction getNextDirClockwise(Direction dir)
 void sizePowerOf2Texture(int &v)
 {
 	int p = 8, use=0;
-	do 
+	do
 	{
 		use = 1 << p;
 		p++;
@@ -152,6 +154,60 @@ unsigned hash(const std::string &string)
 
 /* hash * 33 + c */
 
+
+static unsigned char lowerToUpperTable[256];
+static unsigned char upperToLowerTable[256];
+
+void initCharTranslationTables(const std::map<unsigned char, unsigned char>& tab)
+{
+	for (unsigned int i = 0; i < 256; ++i)
+	{
+		lowerToUpperTable[i] = i;
+		upperToLowerTable[i] = i;
+	}
+	for (unsigned char i = 'a'; i <= 'z'; ++i)
+	{
+		lowerToUpperTable[i] = i - 'a' + 'A';
+		upperToLowerTable[i - 'a' + 'A'] = i;
+	}
+
+	for (std::map<unsigned char, unsigned char>::const_iterator it = tab.begin(); it != tab.end(); ++it)
+	{
+		lowerToUpperTable[it->first] = it->second;
+		upperToLowerTable[it->second] = it->first;
+	}
+}
+
+struct TransatableStaticInit
+{
+	TransatableStaticInit()
+	{
+		std::map<unsigned char, unsigned char> dummy;
+		initCharTranslationTables(dummy);
+	}
+};
+static TransatableStaticInit _transtable_static_init;
+
+static unsigned char charIsUpper(unsigned char c)
+{
+	return c == upperToLowerTable[c];
+}
+
+static unsigned char charIsLower(unsigned char c)
+{
+	return c == lowerToUpperTable[c];
+}
+
+static unsigned char charToLower(unsigned char c)
+{
+	return upperToLowerTable[c];
+}
+
+static unsigned char charToUpper(unsigned char c)
+{
+	return lowerToUpperTable[c];
+}
+
 std::string splitCamelCase(const std::string &input)
 {
 	std::string result;
@@ -160,7 +216,7 @@ std::string splitCamelCase(const std::string &input)
 	{
 		if (last == 1)
 		{
-			if (input[i] >= 'A' && input[i] <= 'Z')
+			if (charIsUpper(input[i]))
 			{
 				result += ' ';
 			}
@@ -168,7 +224,7 @@ std::string splitCamelCase(const std::string &input)
 
 		result += input[i];
 
-		if (input[i] >= 'A' && input[i] <= 'Z')
+		if (charIsUpper(input[i]))
 		{
 			last = 2;
 		}
@@ -199,22 +255,6 @@ std::string numToZeroString(int num, int zeroes)
 bool isVectorInRect(const Vector &vec, const Vector &coord1, const Vector &coord2)
 {
 	return (vec.x > coord1.x && vec.x < coord2.x && vec.y > coord1.y && vec.y < coord2.y);
-}
-
-static char charToUpper(char c)
-{
-	if (c >= 'a' && c <= 'z') c = c - 'a' + 'A';
-	if ((unsigned char)c >= 0xE0 && (unsigned char)c <= 0xFF)
-		c = c - 0xE0 + 0xC0;
-	return c;
-}
-
-static char charToLower(char c)
-{
-	if (c >= 'A' && c <= 'Z') c = c-'A' + 'a';
-	if ((unsigned char)c >= 0xC0 && (unsigned char)c <= 0xDF)
-		c = c-0xC0+0xE0;
-	return c;
 }
 
 void stringToUpper(std::string &s)
@@ -1130,6 +1170,38 @@ void triggerBreakpoint()
 #else
 	raise(SIGTRAP);
 #endif
+}
+
+bool createDir(const std::string& d)
+{
+	bool success = false;
+	int err = 0;
+#if defined(BBGE_BUILD_UNIX)
+	if (!mkdir(d.c_str(), S_IRWXU))
+		success = true;
+	else
+	{
+		err = errno;
+		if (err == EEXIST)
+			success = true;
+	}
+#elif defined(BBGE_BUILD_WINDOWS)
+	if (CreateDirectoryA(d.c_str(), NULL))
+		success = true;
+	else
+	{
+		err = GetLastError();
+		if(err == ERROR_ALREADY_EXISTS)
+			success = true;
+	}
+#endif
+	if (!success)
+	{
+		std::ostringstream os;
+		os <<  "Failed to create directory: [" << d << "], error code: " << err;
+		debugLog(os.str());
+	}
+	return success;
 }
 
 
