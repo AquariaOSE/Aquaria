@@ -2365,6 +2365,7 @@ void SceneEditor::loadScene()
 	dsq->game->loadEntityTypeList();
 	dsq->loadElementEffects();
 	dsq->continuity.loadSongBank();
+	dsq->continuity.stringBank.load();
 }
 
 void SceneEditor::saveScene()
