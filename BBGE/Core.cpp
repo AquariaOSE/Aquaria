@@ -3561,7 +3561,11 @@ void Core::pollEvents()
 			case SDL_KEYDOWN:
 			{
 				#if __APPLE__
-				if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_GUI))
+					#if SDL_VERSION_ATLEAST(2, 0, 0)
+						if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_GUI))
+					#else
+						if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_META))
+					#endif
 				#else
 				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
 				#endif
