@@ -8507,6 +8507,11 @@ luaFunc(castLine)
 	return 3;
 }
 
+luaFunc(getUserInputString)
+{
+	luaReturnStr(dsq->getUserInputString(getString(L, 1), getString(L, 2), true).c_str());
+}
+
 
 luaFunc(inv_isFull)
 {
@@ -8656,6 +8661,12 @@ luaFunc(text_setAlign)
 	if (txt)
 		txt->setAlign((Align)lua_tointeger(L, 2));
 	luaReturnNil();
+}
+
+luaFunc(text_getHeight)
+{
+	BaseText *txt = getText(L);
+	luaReturnNum(txt ? txt->getHeight() : 0.0f);
 }
 
 luaFunc(loadShader)
@@ -9314,6 +9325,7 @@ static const struct {
 	luaRegister(getObstruction),
 	luaRegister(findPath),
 	luaRegister(castLine),
+	luaRegister(getUserInputString),
 
 	luaRegister(isFlag),
 
@@ -9706,6 +9718,7 @@ static const struct {
 	luaRegister(text_setFontSize),
 	luaRegister(text_setWidth),
 	luaRegister(text_setAlign),
+	luaRegister(text_getHeight),
 
 	luaRegister(loadShader),
 	luaRegister(createShader),

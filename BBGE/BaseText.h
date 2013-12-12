@@ -13,6 +13,7 @@ public:
 	virtual void setWidth(int width) = 0;
 	virtual void setFontSize(int sz) = 0;
 	virtual void setAlign(Align a) = 0;
+	virtual float getHeight() = 0;
 
 };
 
