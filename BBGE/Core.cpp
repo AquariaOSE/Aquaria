@@ -63,6 +63,10 @@ Core *core = 0;
 	HICON icon_windows = 0;
 #endif
 
+#ifndef KMOD_GUI
+	#define KMOD_GUI KMOD_META
+#endif
+
 void Core::initIcon()
 {
 #ifdef BBGE_BUILD_WINDOWS
