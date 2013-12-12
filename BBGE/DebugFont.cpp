@@ -47,6 +47,11 @@ void DebugFont::setFontSize(int sz)
 	fontDrawSize = sz;
 }
 
+float DebugFont::getHeight()
+{
+	return fontDrawSize * lines.size() * 1.5f; // vspc in render()
+}
+
 void DebugFont::formatText()
 {
 	std::string text;

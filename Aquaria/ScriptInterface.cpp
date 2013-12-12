@@ -36,6 +36,7 @@ extern "C"
 #include "Web.h"
 #include "GridRender.h"
 #include "AfterEffect.h"
+#include <algorithm>
 
 #include "../BBGE/MathFunctions.h"
 
@@ -2502,7 +2503,7 @@ luaFunc(entity_setBoneLock)
 			Bone *b = 0;
 			if (lua_isuserdata(L, 3))
 				b = bone(L, 3);
-			
+
 			bl.entity = e2;
 			bl.bone = b;
 			bl.on = true;
@@ -2926,7 +2927,7 @@ luaFunc(entity_playSfx)
 		if(sfx.vol <= 0)
 			sfx.vol = 1;
 		sfx.loops = lua_tonumber(L, 5);
-		
+
 		float fadeOut = lua_tonumber(L, 6);
 		sfx.maxdist = lua_tonumber(L, 7);
 		sfx.relative = false;
@@ -8506,6 +8507,11 @@ luaFunc(castLine)
 	return 3;
 }
 
+luaFunc(getUserInputString)
+{
+	luaReturnStr(dsq->getUserInputString(getString(L, 1), getString(L, 2), true).c_str());
+}
+
 
 luaFunc(inv_isFull)
 {
@@ -8657,6 +8663,12 @@ luaFunc(text_setAlign)
 	luaReturnNil();
 }
 
+luaFunc(text_getHeight)
+{
+	BaseText *txt = getText(L);
+	luaReturnNum(txt ? txt->getHeight() : 0.0f);
+}
+
 luaFunc(loadShader)
 {
 	int handle = 0;
@@ -8690,7 +8702,7 @@ luaFunc(shader_setAsAfterEffect)
 
 	if(core->afterEffectManager)
 		done = core->afterEffectManager->setShaderPipelinePos(handle, pos);
-		
+
 	luaReturnBool(done);
 }
 
@@ -9313,6 +9325,7 @@ static const struct {
 	luaRegister(getObstruction),
 	luaRegister(findPath),
 	luaRegister(castLine),
+	luaRegister(getUserInputString),
 
 	luaRegister(isFlag),
 
@@ -9705,6 +9718,7 @@ static const struct {
 	luaRegister(text_setFontSize),
 	luaRegister(text_setWidth),
 	luaRegister(text_setAlign),
+	luaRegister(text_getHeight),
 
 	luaRegister(loadShader),
 	luaRegister(createShader),
