@@ -1235,6 +1235,26 @@ luaFunc(obj_isInternalVelIn)
 	luaReturnBool(r ? r->velocity.isLength2DIn(lua_tonumber(L, 2)) : false);
 }
 
+luaFunc(obj_setGravity)
+{
+	RenderObject *r = robj(L);
+	if (r)
+	{
+		r->gravity.stop();
+		interpolateVec2(L, r->gravity, 2);
+	}
+	luaReturnNil();
+}
+
+luaFunc(obj_getGravity)
+{
+	Vector v;
+	RenderObject *r = robj(L);
+	if (r)
+		v = r->gravity;
+	luaReturnVec2(v.x, v.y);
+}
+
 luaFunc(obj_getCollideRadius)
 {
 	RenderObject *r = robj(L);
@@ -1738,6 +1758,8 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  addInternalVel	) \
 	RO_FUNC(getter, prefix,  isInternalVelIn) \
 	RO_FUNC(getter, prefix,  getInternalVelLen) \
+	RO_FUNC(getter, prefix,  setGravity		) \
+	RO_FUNC(getter, prefix,  getGravity		) \
 	RO_FUNC(getter, prefix,  getCollideRadius) \
 	RO_FUNC(getter, prefix,  setCollideRadius) \
 	RO_FUNC(getter, prefix,  getNormal		) \
