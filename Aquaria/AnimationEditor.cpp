@@ -516,6 +516,10 @@ void AnimationEditor::pushUndo()
 	SkeletalSprite sk;
 	sk.animations = editSprite->animations;
 	undoHistory.push_back(sk);
+
+	if(undoHistory.size() > 50)
+		undoHistory.pop_front();
+
 	undoEntry = undoHistory.size()-1;
 }
 
@@ -1328,8 +1332,10 @@ void AnimationEditor::cloneBoneAhead()
 
 void AnimationEditor::saveFile()
 {
-	editSprite->saveSkeletal(editingFile);
-	dsq->screenMessage("Saved anim: " + editingFile);
+	if(editSprite->saveSkeletal(editingFile))
+		dsq->screenMessage("Saved anim: " + editingFile);
+	else
+		dsq->screenMessage("FAILED TO SAVE: " + editingFile);
 }
 
 void AnimationEditor::loadFile()
