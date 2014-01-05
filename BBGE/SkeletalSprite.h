@@ -203,7 +203,7 @@ public:
 	
 	SkeletalSprite();
 	void loadSkeletal(const std::string &fn);
-	void saveSkeletal(const std::string &fn);
+	bool saveSkeletal(const std::string &fn);
 	void loadSkin(const std::string &fn);
 
 	Bone *getBoneByIdx(int idx);
