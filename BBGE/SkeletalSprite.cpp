@@ -846,15 +846,20 @@ void AnimationLayer::update(float dt)
 	}
 }
 
-void SkeletalSprite::saveSkeletal(const std::string &fn)
+bool SkeletalSprite::saveSkeletal(const std::string &fn)
 {
 	std::string file, filename=fn;
 	stringToLower(filename);
 
 	if (!secondaryAnimationPath.empty())
+	{
+		createDir(secondaryAnimationPath);
 		file = secondaryAnimationPath + filename + ".xml";
+	}
 	else
+	{
 		file = animationPath + filename + ".xml";
+	}
 
 	int i = 0;
 	TiXmlDocument& xml = _retrieveSkeletalXML(file);
@@ -1032,7 +1037,7 @@ void SkeletalSprite::saveSkeletal(const std::string &fn)
 		animations.InsertEndChild(animation);
 	}
 	xml.InsertEndChild(animations);
-	xml.SaveFile(file);
+	return xml.SaveFile(file);
 }
 
 int SkeletalSprite::getBoneIdx(Bone *b)
