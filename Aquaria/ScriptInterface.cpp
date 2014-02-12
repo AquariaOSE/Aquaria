@@ -656,6 +656,32 @@ inline float interpolateVec3(lua_State *L, InterpolatedVector& vec, int argOffs)
 		getBool(L, argOffs+6));              // ease
 }
 
+static void safePath(lua_State *L, const std::string& path)
+{
+	// invalid characters for file/path names.
+	// Filter out \ as well, it'd work on on win32 only, so it's not supposed to be used.
+	size_t invchr = path.find_first_of("\\\":*?<>|");
+	if(invchr != std::string::npos)
+	{
+		lua_pushfstring(L, "Invalid char in path/file name: %c", path[invchr]);
+		lua_error(L);
+	}
+	// Block attempts to access files outside of the "safe area"
+	if(path.length())
+	{
+		if(path[0] == '/')
+		{
+			lua_pushliteral(L, "Absolute paths are not allowed");
+			lua_error(L);
+		}
+		if(path.find("../") != std::string::npos)
+		{
+			lua_pushliteral(L, "Accessing parent is not allowed");
+			lua_error(L);
+		}
+	}
+}
+
 
 //----------------------------------//
 
@@ -831,6 +857,15 @@ luaFunc(loadfile_caseinsensitive)
 		lua_insert(L, -2);  /* put before error message */
 		return 2;  /* return nil plus error message */
 	}
+}
+
+luaFunc(fileExists)
+{
+	const std::string s = getString(L);
+	safePath(L, s);
+	std::string res;
+	bool there = findFile_helper(s.c_str(), res);
+	luaReturnBool(there);
 }
 
 
@@ -8800,6 +8835,8 @@ static const struct {
 	// override Lua's standard dofile() and loadfile(), so we can handle filename case issues.
 	{"dofile", l_dofile_caseinsensitive},
 	{"loadfile", l_loadfile_caseinsensitive},
+
+	luaRegister(fileExists),
 
 	luaRegister(debugBreak),
 	luaRegister(setIgnoreAction),
