@@ -217,7 +217,7 @@ public:
 	std::string name;
 	Vector vel;
 	InterpolatedVector vel2;
-	int activationRadius;
+	float activationRadius;
 	void render();
 	void update(float dt);
 
@@ -262,7 +262,7 @@ public:
 	void rotateToSurfaceNormal(float t, int n=0, int rot=0);
 
 	ActivationType activationType;
-	int activationRange;
+	float activationRange;
 	Entity *followEntity;
 	Entity *ridingOnEntity;
 	bool canBeTargetedByAvatar;
@@ -270,7 +270,7 @@ public:
 	virtual void loadExtraData(TiXmlElement *xml){}
 	Vector startPos;
 	void getEXP(unsigned int exp);
-	void rotateToVec(Vector addVec, float time, int offsetAngle=0);
+	void rotateToVec(Vector addVec, float time, float offsetAngle=0);
 	virtual void applyVariation(int variation){}
 
 	void popBubble();
@@ -576,7 +576,7 @@ protected:
 	float frozenTimer;
 	Quad *bubble;
 
-	void doDeathEffects(int manaBallEnergy=0, bool die=true);
+	void doDeathEffects(float manaBallEnergy=0, bool die=true);
 
 	void onEnterState(int action);
 	void onExitState(int action);
