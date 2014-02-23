@@ -1488,7 +1488,7 @@ luaFunc(obj_isfvr)
 luaFunc(obj_damageFlash)
 {
 	RenderObject *r = robj(L);
-	int type = lua_tonumber(L, 2);
+	int type = lua_tointeger(L, 2);
 	if (r)
 	{
 		Vector toColor = Vector(1, 0.1, 0.1);
@@ -2111,7 +2111,7 @@ luaFunc(web_addPoint)
 luaFunc(web_setPoint)
 {
 	Web *w = getWeb(L);
-	int pt = lua_tonumber(L, 2);
+	int pt = lua_tointeger(L, 2);
 	float x = lua_tonumber(L, 3);
 	float y = lua_tonumber(L, 4);
 	if (w)
@@ -2455,10 +2455,10 @@ luaFunc(entity_warpLastPosition)
 luaFunc(entity_velTowards)
 {
 	Entity *e = entity(L);
-	int x = lua_tonumber(L, 2);
-	int y = lua_tonumber(L, 3);
-	int velLen = lua_tonumber(L, 4);
-	int range = lua_tonumber(L, 5);
+	float x = lua_tonumber(L, 2);
+	float y = lua_tonumber(L, 3);
+	float velLen = lua_tonumber(L, 4);
+	float range = lua_tonumber(L, 5);
 	if (e)
 	{
 		Vector pos(x,y);
@@ -2605,7 +2605,7 @@ luaFunc(entity_setBounceType)
 luaFunc(user_set_demo_intro)
 {
 #ifndef AQUARIA_DEMO
-	dsq->user.demo.intro = lua_tonumber(L, 1);
+	dsq->user.demo.intro = lua_tointeger(L, 1);
 #endif
 	luaReturnNil();
 }
@@ -2739,7 +2739,7 @@ luaFunc(isWithin)
 {
 	Vector v1 = getVector(L, 1);
 	Vector v2 = getVector(L, 3);
-	int dist = lua_tonumber(L, 5);
+	float dist = lua_tonumber(L, 5);
 	/*
 	std::ostringstream os;
 	os << "v1(" << v1.x << ", " << v1.y << ") v2(" << v2.x << ", " << v2.y << ")";
@@ -2816,9 +2816,9 @@ luaFunc(setWorldPaused)
 
 luaFunc(getNearestNodeByType)
 {
-	int x = lua_tonumber(L, 1);
-	int y = lua_tonumber(L, 2);
-	int type = lua_tonumber(L, 3);
+	float x = lua_tonumber(L, 1);
+	float y = lua_tonumber(L, 2);
+	int type = lua_tointeger(L, 3);
 
 	luaReturnPtr(dsq->game->getNearestPath(Vector(x,y), (PathType)type));
 }
@@ -2843,6 +2843,22 @@ luaFunc(setNodeToActivate)
 {
 	dsq->game->avatar->pathToActivate = path(L, 1);
 	luaReturnNil();
+}
+
+luaFunc(getEntityToActivate)
+{
+	luaReturnPtr(dsq->game->avatar->entityToActivate);
+}
+
+luaFunc(setEntityToActivate)
+{
+	dsq->game->avatar->entityToActivate = entity(L, 1);
+	luaReturnNil();
+}
+
+luaFunc(hasThingToActivate)
+{
+	luaReturnBool(dsq->game->avatar->hasThingToActivate());
 }
 
 luaFunc(setActivation)
@@ -3105,7 +3121,7 @@ luaFunc(entity_setDropChance)
 	if (e)
 	{
 		e->dropChance = lua_tonumber(L, 2);
-		int amount = lua_tonumber(L, 3);
+		float amount = lua_tonumber(L, 3);
 		ScriptedEntity *se = dynamic_cast<ScriptedEntity*>(e);
 		if (se && amount)
 		{
@@ -3467,8 +3483,8 @@ luaFunc(entity_followPath)
 	if (e)
 	{
 		Path *p = path(L, 2);
-		int speedType = lua_tonumber(L, 3);
-		int dir = lua_tonumber(L, 4);
+		int speedType = lua_tointeger(L, 3);
+		int dir = lua_tointeger(L, 4);
 
 		e->followPath(p, speedType, dir);
 	}
@@ -3477,7 +3493,7 @@ luaFunc(entity_followPath)
 
 luaFunc(spawnIngredient)
 {
-	int times = lua_tonumber(L, 4);
+	int times = lua_tointeger(L, 4);
 	if (times == 0) times = 1;
 	bool out = getBool(L, 5);
 	Entity *e = dsq->game->spawnIngredient(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), times, out);
@@ -3502,7 +3518,7 @@ luaFunc(spawnParticleEffect)
 	float t = lua_tonumber(L, 4);
 	// having t and rot reversed compared to the DSQ function is intentional
 	float rot = lua_tonumber(L, 5);
-	int layer = lua_tonumber(L, 6);
+	int layer = lua_tointeger(L, 6);
 	if (!layer)
 		layer = LR_PARTICLES;
 	float follow = lua_tonumber(L, 7);
@@ -3758,12 +3774,10 @@ luaFunc(collideCircleWithGrid)
 luaFunc(entity_isNearGround)
 {
 	Entity *e = entity(L);
-	int sampleArea = 0;
 	bool value = false;
 	if (e)
 	{
-		if (lua_isnumber(L, 2))
-			sampleArea = int(lua_tonumber(L, 2));
+		int sampleArea = lua_tointeger(L, 2);
 		Vector v = dsq->game->getWallNormal(e->position, sampleArea);
 		if (!v.isZero())
 		{
@@ -3892,7 +3906,7 @@ luaFunc(entity_getAnimationName)
 {
 	Entity *e = entity(L);
 	const char *ret = "";
-	int layer = lua_tonumber(L, 2);
+	int layer = lua_tointeger(L, 2);
 	if (e)
 	{
 		if (Animation *anim = e->skeletalSprite.getCurrentAnimation(layer))
@@ -4025,7 +4039,7 @@ luaFunc(entity_spawnParticlesFromCollisionMask)
 	Entity *e = entity(L);
 	if (e)
 	{
-		int intv = lua_tonumber(L, 3);
+		int intv = lua_tointeger(L, 3);
 		if (intv <= 0)
 			intv = 1;
 		e->spawnParticlesFromCollisionMask(getString(L, 2), intv);
@@ -4256,8 +4270,8 @@ luaFunc(spawnManaBall)
 luaFunc(spawnAroundEntity)
 {
 	Entity *e = entity(L);
-	int num = lua_tonumber(L, 2);
-	int radius = lua_tonumber(L, 3);
+	int num = lua_tointeger(L, 2);
+	float radius = lua_tonumber(L, 3);
 	std::string entType = getString(L, 4);
 	std::string name = getString(L, 5);
 	int idx = dsq->game->getIdxForEntityType(entType);
@@ -4547,7 +4561,7 @@ luaFunc(entity_damage)
 luaFunc(entity_setEntityLayer)
 {
 	ScriptedEntity *e = scriptedEntity(L);
-	int l = lua_tonumber(L, 2);
+	int l = lua_tointeger(L, 2);
 	if (e)
 	{
 		e->setEntityLayer(l);
@@ -4766,7 +4780,7 @@ luaFunc(node_isEntityInRange)
 {
 	Path *p = path(L);
 	Entity *e = entity(L,2);
-	int range = lua_tonumber(L, 3);
+	float range = lua_tonumber(L, 3);
 	bool v = false;
 	if (p && e)
 	{
@@ -4788,9 +4802,9 @@ luaFunc(node_isEntityPast)
 		Entity *e = entity(L, 2);
 		if (e)
 		{
-			bool checkY = lua_tonumber(L, 3);
-			int dir = lua_tonumber(L, 4);
-			int range = lua_tonumber(L, 5);
+			bool checkY = getBool(L, 3);
+			int dir = lua_tointeger(L, 4);
+			float range = lua_tonumber(L, 5);
 			if (!checkY)
 			{
 				if (e->position.x > n->position.x-range && e->position.x < n->position.x+range)
@@ -4933,7 +4947,7 @@ luaFunc(node_getLabel)
 luaFunc(node_getPathPosition)
 {
 	Path *p = path(L);
-	int idx = lua_tonumber(L, 2);
+	int idx = lua_tointeger(L, 2);
 	float x=0,y=0;
 	if (p)
 	{
@@ -5095,7 +5109,7 @@ luaFunc(entity_collideHairVsCircle)
 	bool col=false;
 	if (e && e2)
 	{
-		int num = lua_tonumber(L, 3);
+		int num = lua_tointeger(L, 3);
 		// perc: percent of hairWidth to use as collide radius
 		float perc = lua_tonumber(L, 4);
 		int colSegment;
@@ -5524,7 +5538,7 @@ luaFunc(createQuad)
 {
 	PauseQuad *q = new PauseQuad();
 	q->setTexture(getString(L, 1));
-	int layer = lua_tonumber(L, 2);
+	int layer = lua_tointeger(L, 2);
 	if (layer == 13)
 		layer = 13;
 	else
@@ -6259,7 +6273,7 @@ luaFunc(createShockEffect)
 
 luaFunc(emote)
 {
-	int emote = lua_tonumber(L, 1);
+	int emote = lua_tointeger(L, 1);
 	dsq->emote.playSfx(emote);
 	luaReturnNil();
 }
@@ -6485,7 +6499,7 @@ luaFunc(entity_moveAlongSurface)
 			}
 			else
 				v = dsq->game->getWallNormal(e->position);
-			//int outFromWall = lua_tonumber(L, 5);
+			//int outFromWall = lua_tointeger(L, 5);
 			int outFromWall = e->getv(EV_WALLOUT);
 			bool invisibleIn = e->isSittingOnInvisibleIn();
 
@@ -6535,7 +6549,7 @@ luaFunc(entity_moveAlongSurface)
 			// HACK: make this an optional parameter?
 			//e->rotateToVec(v, 0.1);
 			float dt = lua_tonumber(L, 2);
-			int speed = lua_tonumber(L, 3);
+			float speed = lua_tonumber(L, 3);
 			//int climbHeight = lua_tonumber(L, 4);
 			Vector mov;
 			if (e->surfaceMoveDir==1)
@@ -6603,8 +6617,8 @@ luaFunc(entity_rotateToSurfaceNormal)
 	//ScriptedEntity *e = scriptedEntity(L);
 	Entity *e = entity(L);
 	float t = lua_tonumber(L, 2);
-	int n = lua_tonumber(L, 3);
-	int rot = lua_tonumber(L, 4);
+	int n = lua_tointeger(L, 3);
+	float rot = lua_tonumber(L, 4);
 	if (e)
 	{
 		e->rotateToSurfaceNormal(t, n, rot);
@@ -6668,7 +6682,7 @@ luaFunc(eisv)
 {
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
-	int n = lua_tonumber(L, 3);
+	int n = lua_tointeger(L, 3);
 	bool b = 0;
 	if (e)
 		b = e->isv(ev, n);
@@ -6913,8 +6927,7 @@ luaFunc(entity_isProperty)
 	bool v = false;
 	if (e)
 	{
-		v = e->isEntityProperty((EntityProperty)int(lua_tonumber(L, 2)));
-		//e->setEntityProperty((EntityProperty)lua_tointeger(L, 2), getBool(L, 3));
+		v = e->isEntityProperty((EntityProperty)lua_tointeger(L, 2));
 	}
 	luaReturnBool(v);
 }
@@ -6935,10 +6948,10 @@ luaFunc(entity_setActivation)
 	ScriptedEntity *e = scriptedEntity(L);
 	if (e)
 	{
-		int type = lua_tonumber(L, 2);
+		int type = lua_tointeger(L, 2);
 		// cursor radius
-		int activationRadius = lua_tonumber(L, 3);
-		int range = lua_tonumber(L, 4);
+		float activationRadius = lua_tonumber(L, 3);
+		float range = lua_tonumber(L, 4);
 		e->activationType = (Entity::ActivationType)type;
 		e->activationRange = range;
 		e->activationRadius = activationRadius;
@@ -7222,7 +7235,7 @@ luaFunc(node_setElementsInLayerActive)
 	Path *p = path(L);
 	if (p)
 	{
-		int l = lua_tonumber(L, 2);
+		int l = lua_tointeger(L, 2);
 		bool v = getBool(L, 3);
 		for (Element *e = dsq->getFirstElementOnLayer(l); e; e = e->bgLayerNext)
 		{
@@ -7440,10 +7453,10 @@ luaFunc(getNearestEntity)
 
 luaFunc(findWall)
 {
-	int x = lua_tonumber(L, 1);
-	int y = lua_tonumber(L, 2);
-	int dirx = lua_tonumber(L, 3);
-	int diry = lua_tonumber(L, 4);
+	float x = lua_tonumber(L, 1);
+	float y = lua_tonumber(L, 2);
+	int dirx = lua_tointeger(L, 3);
+	int diry = lua_tointeger(L, 4);
 	if (dirx == 0 && diry == 0){ debugLog("dirx && diry are zero!"); luaReturnNum(0); }
 
 	TileVector t(Vector(x, y));
@@ -7513,11 +7526,13 @@ static bool _entityDistanceCmp(const EntityDistancePair& a, const EntityDistance
 {
 	return a.second < b.second;
 }
-
-luaFunc(filterNearestEntities)
+static bool _entityDistanceEq(const EntityDistancePair& a, const EntityDistancePair& b)
 {
-	filteredEntities.clear();
+	return a.first == b.first;
+}
 
+static size_t _entityFilter(lua_State *L)
+{
 	const Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	const float radius = lua_tonumber(L, 3);
 	const Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
@@ -7530,6 +7545,7 @@ luaFunc(filterNearestEntities)
 	float distsq;
 	const bool skipLayerCheck = lrStart == -1 || lrEnd == -1;
 	const bool skipRadiusCheck = radius <= 0;
+	size_t added = 0;
 	FOR_ENTITIES(i)
 	{
 		Entity *e = *i;
@@ -7545,16 +7561,41 @@ luaFunc(filterNearestEntities)
 						if (dt == DT_NONE || e->isDamageTarget(dt))
 						{
 							filteredEntities.push_back(std::make_pair(e, distsq));
+							++added;
 						}
 					}
 				}
 			}
 		}
 	}
-	std::sort(filteredEntities.begin(), filteredEntities.end(), _entityDistanceCmp);
-	filteredEntities.push_back(std::make_pair((Entity*)NULL, 0.0f)); // terminator
-	filteredIdx = 0;
-	luaReturnInt(filteredEntities.size()-1);
+	if(added)
+	{
+		std::sort(filteredEntities.begin(), filteredEntities.end(), _entityDistanceCmp);
+		std::vector<EntityDistancePair>::iterator newend = std::unique(filteredEntities.begin(), filteredEntities.end(), _entityDistanceEq);
+		filteredEntities.resize(std::distance(filteredEntities.begin(), newend));
+	}
+
+	// Add terminator if there is none
+	if(filteredEntities.size() && filteredEntities.back().first)
+		filteredEntities.push_back(std::make_pair((Entity*)NULL, 0.0f)); // terminator
+
+	filteredIdx = 0; // Reset getNextFilteredEntity() iteration index
+
+	return added;
+}
+
+luaFunc(filterNearestEntities)
+{
+	filteredEntities.clear();
+	luaReturnInt(_entityFilter(L));
+}
+
+luaFunc(filterNearestEntitiesAdd)
+{
+	// Remove terminator if there is one
+	if(filteredEntities.size() && !filteredEntities.back().first)
+		filteredEntities.pop_back();
+	luaReturnInt(_entityFilter(L));
 }
 
 luaFunc(getNextFilteredEntity)
@@ -7659,7 +7700,7 @@ luaFunc(entity_switchLayer)
 	Entity *e = entity(L);
 	if (e)
 	{
-		int lcode = lua_tonumber(L, 2);
+		int lcode = lua_tointeger(L, 2);
 		int toLayer = LR_ENTITIES;
 
 		toLayer = dsq->getEntityLayerToLayer(lcode);
@@ -7705,7 +7746,7 @@ luaFunc(entity_getHairPosition)
 	Entity *se = entity(L);
 	float x=0;
 	float y=0;
-	int idx = lua_tonumber(L, 2);
+	int idx = lua_tointeger(L, 2);
 	if (se && se->hair)
 	{
 		HairNode *h = se->hair->getHairNode(idx);
@@ -7840,7 +7881,7 @@ luaFunc(entity_getTargetPositionY)
 luaFunc(entity_isNearObstruction)
 {
 	Entity *e = entity(L);
-	int sz = lua_tonumber(L, 2);
+	int sz = lua_tointeger(L, 2);
 	int type = lua_tointeger(L, 3);
 	bool v = false;
 	if (e)
@@ -8245,7 +8286,7 @@ luaFunc(setLayerRenderPass)
 
 luaFunc(setElementLayerVisible)
 {
-	int l = lua_tonumber(L, 1);
+	int l = lua_tointeger(L, 1);
 	bool v = getBool(L, 2);
 	dsq->game->setElementLayerVisible(l, v);
 	luaReturnNil();
@@ -8275,9 +8316,9 @@ luaFunc(getObstruction)
 
 luaFunc(isObstructedBlock)
 {
-	int x = lua_tonumber(L, 1);
-	int y = lua_tonumber(L, 2);
-	int span = lua_tonumber(L, 3);
+	float x = lua_tonumber(L, 1);
+	float y = lua_tonumber(L, 2);
+	int span = lua_tointeger(L, 3);
 	TileVector t(Vector(x,y));
 
 	bool obs = false;
@@ -8309,7 +8350,7 @@ luaFunc(node_getFlag)
 luaFunc(node_isFlag)
 {
 	Path *p = path(L);
-	int c = lua_tonumber(L, 2);
+	int c = lua_tointeger(L, 2);
 	bool ret = false;
 	if (p)
 	{
@@ -8321,7 +8362,7 @@ luaFunc(node_isFlag)
 luaFunc(node_setFlag)
 {
 	Path *p = path(L);
-	int v = lua_tonumber(L, 2);
+	int v = lua_tointeger(L, 2);
 	if (p)
 	{
 		dsq->continuity.setPathFlag(p, v);
@@ -8332,7 +8373,7 @@ luaFunc(node_setFlag)
 luaFunc(entity_isFlag)
 {
 	Entity *e = entity(L);
-	int v = lua_tonumber(L, 2);
+	int v = lua_tointeger(L, 2);
 	bool b = false;
 	if (e)
 	{
@@ -8344,7 +8385,7 @@ luaFunc(entity_isFlag)
 luaFunc(entity_setFlag)
 {
 	Entity *e = entity(L);
-	int v = lua_tonumber(L, 2);
+	int v = lua_tointeger(L, 2);
 	if (e)
 	{
 		dsq->continuity.setEntityFlag(dsq->game->sceneName, e->getID(), v);
@@ -9440,6 +9481,7 @@ static const struct {
 	luaRegister(getFirstEntity),
 	luaRegister(getNextEntity),
 	luaRegister(filterNearestEntities),
+	luaRegister(filterNearestEntitiesAdd),
 	luaRegister(getNextFilteredEntity),
 
 	luaRegister(setStory),
@@ -9462,6 +9504,9 @@ static const struct {
 	luaRegister(getNode),
 	luaRegister(getNodeToActivate),
 	luaRegister(setNodeToActivate),
+	luaRegister(getEntityToActivate),
+	luaRegister(setEntityToActivate),
+	luaRegister(hasThingToActivate),
 	luaRegister(setActivation),
 
 	luaRegister(entity_warpToNode),

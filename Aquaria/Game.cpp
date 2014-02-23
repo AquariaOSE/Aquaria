@@ -10219,7 +10219,7 @@ void Game::update(float dt)
 			FOR_ENTITIES(i)
 			{
 				Entity *e = *i;
-				int sqrLen = (dsq->getGameCursorPosition() - e->position).getSquaredLength2D();
+				float sqrLen = (dsq->getGameCursorPosition() - e->position).getSquaredLength2D();
 				if (sqrLen < sqr(e->activationRadius)
 					&& (avatar->position-e->position).getSquaredLength2D() < sqr(e->activationRange)
 					&& e->activationType == Entity::ACT_CLICK
