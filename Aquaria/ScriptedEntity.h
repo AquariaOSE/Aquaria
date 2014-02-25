@@ -73,7 +73,7 @@ public:
 	std::string deathParticleEffect;
 
 	ParticleEffect pullEmitter;
-	int manaBallAmount;
+	float manaBallAmount;
 	
 	void initEmitter(int emit, const std::string &file);
 	void startEmitter(int emit);
