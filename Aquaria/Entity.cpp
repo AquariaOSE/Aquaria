@@ -840,7 +840,7 @@ bool Entity::isGoingToBeEaten()
 	return (eatType != EAT_NONE && (lastDamage.damageType == DT_AVATAR_BITE || lastDamage.damageType == DT_AVATAR_PETBITE));
 }
 
-void Entity::doDeathEffects(int manaBallEnergy, bool die)
+void Entity::doDeathEffects(float manaBallEnergy, bool die)
 {
 	if (deathScene || !isGoingToBeEaten())
 	{
@@ -2104,7 +2104,7 @@ if (rotation.z > 270 && angle > -45 && angle < 0)
 	angle = 360 + angle;
 */
 
-void Entity::rotateToVec(Vector addVec, float time, int offsetAngle)
+void Entity::rotateToVec(Vector addVec, float time, float offsetAngle)
 {
 	// HACK: this mucks up wall normals for some reason
 //	if (vel.getSquaredLength2D() <= 0) return;
