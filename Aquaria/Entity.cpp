@@ -2193,7 +2193,7 @@ bool Entity::isUnderWater(const Vector &override)
 
 
 	Path *p = dsq->game->getNearestPath(position, PATH_WATERBUBBLE);
-	if (p != 0 && p->isCoordinateInside(position, collideRadius))
+	if (p && p->active && p->isCoordinateInside(position, collideRadius))
 	{
 		waterBubble = p;
 		return true;

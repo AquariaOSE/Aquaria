@@ -5736,7 +5736,7 @@ int game_collideParticle(Vector pos)
 	if (!aboveWaterLine)
 	{
 		Path *p = dsq->game->getNearestPath(pos, PATH_WATERBUBBLE);
-		if (p)
+		if (p && p->active)
 		{
 			if (p->isCoordinateInside(pos))
 			{
