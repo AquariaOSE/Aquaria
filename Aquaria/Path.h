@@ -90,8 +90,6 @@ public:
 	void setActive(bool v);
 	bool action(int id, int state);
 
-	void setEffectOn(bool on) { effectOn = on; }
-
 	PathNode *getPathNode(int idx);
 	bool isCoordinateInside(const Vector &pos, int rad=0);
 
@@ -142,7 +140,6 @@ public:
 
 	std::string gem;
 
-	bool effectOn;
 	bool spiritFreeze;
 	bool pauseFreeze;
 

@@ -25,7 +25,6 @@ Path::Path()
 {
 	addType(SCO_PATH);
 	localWarpType = LOCALWARP_NONE;
-	effectOn = true;
 	time = 0;
 	naijaIn = false;
 	amount = 0;
@@ -538,7 +537,7 @@ void Path::update(float dt)
 				}
 			}
 		}
-		if (pathType == PATH_ZOOM && dsq->game->avatar)
+		if (active && pathType == PATH_ZOOM && dsq->game->avatar)
 		{
 			if (isCoordinateInside(dsq->game->avatar->position))
 			{
@@ -555,7 +554,7 @@ void Path::update(float dt)
 			}
 		}
 
-		if (pathType == PATH_STEAM && !dsq->game->isWorldPaused() && effectOn)
+		if (active && pathType == PATH_STEAM && !dsq->game->isWorldPaused())
 		{
 			animOffset -= 1000*0.00002f;
 

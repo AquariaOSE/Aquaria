@@ -7200,10 +7200,10 @@ bool Avatar::checkWarpAreas()
 	{
 		bool warp = false;
 		Path *p = dsq->game->getPath(i);
-		if (!p->nodes.empty())
+		if (p && p->active && !p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];
-			if (p && n)
+			if (n)
 			{
 				Vector backPos;
 				if (!p->vox.empty())
