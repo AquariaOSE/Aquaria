@@ -4025,12 +4025,12 @@ luaFunc(cam_setPosition)
 	bool pingPong = getBool(L, 5);
 	bool ease = getBool(L, 6);
 
-	Vector p = dsq->game->getCameraPositionFor(Vector(x,y));
+	Vector p(x,y);
 
 	dsq->game->cameraInterp.stop();
 	dsq->game->cameraInterp.interpolateTo(p, time, loopType, pingPong, ease);
 
-	dsq->cameraPos = p;
+	dsq->cameraPos = dsq->game->getCameraPositionFor(dsq->game->cameraInterp);
 	luaReturnNil();
 }
 

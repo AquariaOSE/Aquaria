@@ -6670,13 +6670,13 @@ void Game::applyState()
 
 	core->cacheRender();
 
-	core->cameraPos.stop();
 	cameraInterp.stop();
 
 	core->globalScale = dsq->continuity.zoom;
+	//core->globalScaleChanged();
 	avatar->myZoom = dsq->continuity.zoom;
 
-	cameraInterp = getCameraPositionFor(avatar->position);
+	cameraInterp = avatar->position;
 	core->cameraPos = getCameraPositionFor(avatar->position);
 
 	core->sort();
@@ -7450,7 +7450,9 @@ void Game::overrideZoom(float sz, float t)
 	else
 	{
 		dsq->game->toggleOverrideZoom(true);
+		dsq->globalScale.stop();
 		dsq->globalScale.interpolateTo(Vector(sz, sz), t);
+		dsq->globalScaleChanged();
 	}
 }
 
@@ -8535,13 +8537,7 @@ void Game::toggleGridRender()
 
 Vector Game::getCameraPositionFor(const Vector &pos)
 {
-	Vector dest = pos;
-
-	Vector v;
-	dest += v + Vector(-400/core->globalScale.x,-300/core->globalScale.y);
-	dest.z = 0;
-
-	return dest;
+	return Vector(pos.x - 400 * core->invGlobalScale, pos.y - 300 * core->invGlobalScale, 0);
 }
 
 void Game::setParallaxTextureCoordinates(Quad *q, float speed)
@@ -10296,10 +10292,10 @@ void Game::update(float dt)
 	{
 		if (!isPaused())
 			waterLevel.update(dt);
-		cameraInterp.update(dt);
+
 		if (cameraFollow)
 		{
-			Vector dest = getCameraPositionFor(*cameraFollow);
+			Vector dest = *cameraFollow;
 			
 			if (avatar)
 			{
@@ -10313,43 +10309,21 @@ void Game::update(float dt)
 				}
 			}
 
-			/*
-			if (avatar)
-			{
-				if (!dsq->game->isPaused() && core->mouse.buttons.middle && !dsq->game->avatar->isSinging() && dsq->game->avatar->isInputEnabled())
-				{
-					Vector diff = avatar->getAim();//dsq->getGameCursorPosition() - avatar->position;
-					diff.capLength2D(600);
-
-					avatar->looking = 1;
-					dest += diff;
-				}
-				else
-				{
-					avatar->looking = 0;
-				}
-			}
-			*/
-			
-
 			if (cameraLerpDelay==0)
 			{
 				//cameraLerpDelay = 0.15;
 				cameraLerpDelay = vars->defaultCameraLerpDelay;
 			}
+			Vector oldCamPos = dsq->cameraPos;
+			cameraInterp.stop();
 			cameraInterp.interpolateTo(dest, cameraLerpDelay);
-
-			dsq->cameraPos.x = cameraInterp.x;
-			dsq->cameraPos.y = cameraInterp.y;
-
-			// constrainCamera
+			dsq->cameraPos = getCameraPositionFor(cameraInterp);
 			constrainCamera();
-			/*
-			if (cam_region)
-				ConstrainToRegion(&ek->cameraPos, cam_region, core->getVirtualWidth()*(core->globalScale.x), core->getVirtualHeight()*(core->globalScale.y));
-				*/
+
+			float dd = (dsq->cameraPos - oldCamPos).getLength2D();
 		}
 
+		cameraInterp.update(dt);
 	}
 
 }
@@ -10484,20 +10458,14 @@ void Game::warpCameraTo(RenderObject *r)
 void Game::warpCameraTo(Vector position)
 {
 	cameraInterp.stop();
-	cameraInterp = getCameraPositionFor(position);
-	dsq->cameraPos.x = cameraInterp.x;
-	dsq->cameraPos.y = cameraInterp.y;
+	cameraInterp = position;
+	dsq->cameraPos = getCameraPositionFor(position);
 }
 
 void Game::snapCam()
 {
 	if (cameraFollow)
-	{
-		Vector p = getCameraPositionFor(*cameraFollow);
-		cameraInterp.interpolateTo(p,0);
-		cameraInterp = p;
-		core->cameraPos = p;
-	}
+		warpCameraTo(*cameraFollow);
 }
 
 ElementTemplate Game::getElementTemplateForLetter(int i)
@@ -10758,6 +10726,7 @@ void Game::removeState()
 
 	dsq->game->avatar->myZoom = Vector(1,1);
 	dsq->globalScale = Vector(1,1);
+	core->globalScaleChanged();
 
 	for (int i = 0; i < getNumPaths(); i++)
 	{

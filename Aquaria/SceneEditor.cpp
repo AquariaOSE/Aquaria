@@ -2960,6 +2960,7 @@ void SceneEditor::toggle(bool on)
 		core->cameraPos.x += cameraOffset * core->getVirtualWidth()/2;
 		core->cameraPos.y += cameraOffset * core->getVirtualHeight()/2;
 		core->globalScale = zoom;
+		core->globalScaleChanged();
 	}
 	else
 	{
@@ -3230,6 +3231,7 @@ void SceneEditor::update(float dt)
 		if (zoom.x < 0.04f)
 			zoom.x = zoom.y = 0.04f;
 		core->globalScale = zoom;
+		core->globalScaleChanged();
 		if (zoom.x != oldZoom.x)
 		{
 			const float mouseX = core->mouse.position.x;
