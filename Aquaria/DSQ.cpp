@@ -357,28 +357,6 @@ ElementEffect DSQ::getElementEffectByIndex(int e)
 
 	return empty;
 }
-/*
-Element *DSQ::getSolidElementNear(Vector pos, int rad)
-{
-	Element *closestE = 0;
-	int closestDist = -1;
-	for (int i = 0; i < elements.size(); i++)
-	{
-		Element *e = elements[i];
-		int dist = (e->position - pos).getSquaredLength2D();
-		if (e->isElementActive() && e->elementFlag == EF_SOLID && dist < sqr(rad) && (dist < closestDist || closestDist==-1))
-		{
-			closestDist = dist;
-			closestE = e;
-		}
-	}
-	return closestE;
-}
-*/
-Vector DSQ::getCameraCenter()
-{
-	return cameraPos; //+ Vector(400*(1.0f/core->globalScale.x),300*(1.0f/core->globalScale.x));
-}
 
 void DSQ::centerMessage(const std::string &text, float y, int type)
 {
@@ -703,7 +681,7 @@ void DSQ::debugMenu()
 					Entity *e = dsq->getEntityByNameNoCase(entityName);
 					if (e)
 					{
-						dsq->cameraPos = e->position;
+						dsq->cameraPos = game->getCameraPositionFor(e->position);
 					}
 				}
 				else if (c == 'C')
