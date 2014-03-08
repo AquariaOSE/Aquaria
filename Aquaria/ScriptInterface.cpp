@@ -5964,11 +5964,23 @@ luaFunc(overrideZoom)
 	luaReturnNil();
 }
 
+luaFunc(getZoom)
+{
+	luaReturnNum(dsq->globalScale.x);
+}
+
 luaFunc(disableOverrideZoom)
 {
 	dsq->game->toggleOverrideZoom(false);
 	luaReturnNil();
 }
+
+luaFunc(setMaxLookDistance)
+{
+	dsq->game->maxLookDistance = lua_tonumber(L, 1);
+	luaReturnNil();
+}
+
 
 // dt, range, mod
 luaFunc(entity_doSpellAvoidance)
@@ -9713,6 +9725,8 @@ static const struct {
 
 	luaRegister(overrideZoom),
 	luaRegister(disableOverrideZoom),
+	luaRegister(getZoom),
+	luaRegister(setMaxLookDistance),
 
 
 

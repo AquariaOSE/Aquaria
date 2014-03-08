@@ -6175,6 +6175,7 @@ void Game::applyState()
 	backgroundImageRepeat = 1;
 	grad = 0;
 	maxZoom = -1;
+	maxLookDistance = 600;
 	saveFile = 0;
 	deathTimer = 0.9;
 	runGameOverScript = false;
@@ -10301,7 +10302,7 @@ void Game::update(float dt)
 			{
 				if (avatar->looking && !dsq->game->isPaused()) {
 					Vector diff = avatar->getAim();//dsq->getGameCursorPosition() - avatar->position;
-					diff.capLength2D(600);
+					diff.capLength2D(maxLookDistance);
 					dest += diff;
 				}
 				else {
