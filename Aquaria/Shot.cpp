@@ -59,6 +59,7 @@ ShotData::ShotData()
 	homingMax = 0;
 	homingIncr = 0;
 	dieOnHit = 1;
+	dieOnKill = false;
 	hitEnts = 1;
 	wallHitRadius = 0;
 	rotateToVel = 1;
@@ -241,6 +242,8 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 			inf >> dieOnHit;
 		else if (token == "IgnoreShield")
 			inf >> ignoreShield;
+		else if (token == "DieOnKill")
+			inf >> dieOnKill;
 		else
 		{
 			// if having weirdness, check for these
@@ -595,7 +598,7 @@ void Shot::hitEntity(Entity *e, Bone *b, bool isValid)
 
 			if (e->isEntityDead())
 			{
-				die = false;
+				die = shotData ? shotData->dieOnKill : false;
 			}
 
 			if (firer)

@@ -43,6 +43,7 @@ struct ShotData
 	Vector scale;
 
 	bool ignoreShield;
+	bool dieOnKill;
 
 	float effectTime;
 
