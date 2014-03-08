@@ -708,6 +708,7 @@ public:
 	void resetFromTitle();
 
 	float maxZoom;
+	float maxLookDistance;
 
 	void setParallaxTextureCoordinates(Quad *q, float speed);
 
