@@ -1037,7 +1037,7 @@ public:
 	void removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag = DESTROY_RENDER_OBJECT);
 
 	void setMouseConstraint(bool on);
-	void setMouseConstraintCircle(int mouseCircle);
+	void setMouseConstraintCircle(float mouseCircle);
 	
 	void setReentryInputGrab(int on);
 	
@@ -1130,7 +1130,7 @@ public:
 
 	virtual void onPlayedVoice(const std::string &name){}
 
-	InterpolatedVector cameraPos;
+	Vector cameraPos;
 
 	int fps;
 	bool loopDone;
@@ -1174,12 +1174,13 @@ public:
 
 	bool minimized;
 	std::string getEnqueuedJumpState();
-	int cullRadius;
+	float cullRadius;
 	float cullRadiusSqr;
 	Vector cullCenter;
-	int screenCullX1, screenCullY1, screenCullX2, screenCullY2;
 	unsigned int renderObjectCount, processedRenderObjectCount, totalRenderObjectCount;
 	float invGlobalScale, invGlobalScaleSqr;
+
+	void globalScaleChanged();
 
 	void screenshot();
 
@@ -1348,13 +1349,13 @@ protected:
 
 	std::string appName;
 	bool mouseConstraint;
-	int mouseCircle;
+	float mouseCircle;
 	
 	bool doMouseConstraint();
 	
 	virtual void onMouseInput(){}
 	bool doScreenshot;
-	int baseCullRadius;
+	float baseCullRadius;
 	bool initSoundLibrary(const std::string &defaultDevice);
 	bool initInputLibrary();
 	bool initJoystickLibrary(int numSticks=1);

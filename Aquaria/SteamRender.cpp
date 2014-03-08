@@ -46,7 +46,7 @@ void SteamRender::onRender()
 
 	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
 	{
-		if (p->effectOn)
+		if (p->active)
 		{
 
 			int w2 = p->rect.getWidth()/2;

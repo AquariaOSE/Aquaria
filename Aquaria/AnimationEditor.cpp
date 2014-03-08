@@ -593,6 +593,7 @@ void AnimationEditor::zoomOut()
 	if (dsq->isNested()) return;
 
 	core->globalScale -= Vector(ANIM_EDIT_ZOOM, ANIM_EDIT_ZOOM);
+	core->globalScaleChanged();
 }
 
 void AnimationEditor::zoomIn()
@@ -600,6 +601,7 @@ void AnimationEditor::zoomIn()
 	if (dsq->isNested()) return;
 
 	core->globalScale += Vector(ANIM_EDIT_ZOOM, ANIM_EDIT_ZOOM);
+	core->globalScaleChanged();
 }
 
 void AnimationEditor::reorderKeys()

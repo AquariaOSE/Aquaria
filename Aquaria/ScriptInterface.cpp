@@ -693,6 +693,7 @@ static void safePath(lua_State *L, const std::string& path)
 #define luaReturnStr(str)	do {lua_pushstring(L, (str)); return 1;} while(0)
 #define luaReturnVec2(x,y)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); return 2;} while(0)
 #define luaReturnVec3(x,y,z)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); lua_pushnumber(L, (z)); return 3;} while(0)
+#define luaReturnVec4(x,y,z,w)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); lua_pushnumber(L, (z)); lua_pushnumber(L, (w)); return 4;} while(0)
 #define luaReturnNil()		return 0;
 
 // Set the global "v" to the instance's local variable table.  Must be
@@ -4024,12 +4025,12 @@ luaFunc(cam_setPosition)
 	bool pingPong = getBool(L, 5);
 	bool ease = getBool(L, 6);
 
-	Vector p = dsq->game->getCameraPositionFor(Vector(x,y));
+	Vector p(x,y);
 
 	dsq->game->cameraInterp.stop();
 	dsq->game->cameraInterp.interpolateTo(p, time, loopType, pingPong, ease);
 
-	dsq->cameraPos = p;
+	dsq->cameraPos = dsq->game->getCameraPositionFor(dsq->game->cameraInterp);
 	luaReturnNil();
 }
 
@@ -4752,6 +4753,12 @@ luaFunc(node_setActive)
 		p->active = v;
 	}
 	luaReturnNil();
+}
+
+luaFunc(node_isActive)
+{
+	Path *p = path(L);
+	luaReturnBool(p ? p->active : false);
 }
 
 luaFunc(node_setCursorActivation)
@@ -5516,7 +5523,7 @@ luaFunc(entity_isInRect)
 {
 	Entity *e = entity(L);
 	bool v= false;
-	int x1, y1, x2, y2;
+	float x1, y1, x2, y2;
 	x1 = lua_tonumber(L, 2);
 	y1 = lua_tonumber(L, 3);
 	x2 = lua_tonumber(L, 4);
@@ -5957,11 +5964,23 @@ luaFunc(overrideZoom)
 	luaReturnNil();
 }
 
+luaFunc(getZoom)
+{
+	luaReturnNum(dsq->globalScale.x);
+}
+
 luaFunc(disableOverrideZoom)
 {
 	dsq->game->toggleOverrideZoom(false);
 	luaReturnNil();
 }
+
+luaFunc(setMaxLookDistance)
+{
+	dsq->game->maxLookDistance = lua_tonumber(L, 1);
+	luaReturnNil();
+}
+
 
 // dt, range, mod
 luaFunc(entity_doSpellAvoidance)
@@ -7203,20 +7222,6 @@ luaFunc(getEntityByID)
 	luaReturnPtr(found);
 }
 
-luaFunc(node_setEffectOn)
-{
-	Path *p = path(L, 1);
-	if (p)
-		p->setEffectOn(getBool(L, 2));
-	luaReturnNil();
-}
-
-luaFunc(node_isEffectOn)
-{
-	Path *p = path(L, 1);
-	luaReturnBool(p ? p->effectOn : false);
-}
-
 luaFunc(node_activate)
 {
 	Path *p = path(L);
@@ -7503,7 +7508,7 @@ luaFunc(toggleSteam)
 	bool on = getBool(L, 1);
 	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
 	{
-		p->setEffectOn(on);
+		p->setActive(on);
 	}
 	luaReturnBool(on);
 }
@@ -8610,6 +8615,11 @@ luaFunc(getUserInputString)
 	luaReturnStr(dsq->getUserInputString(getString(L, 1), getString(L, 2), true).c_str());
 }
 
+luaFunc(getMaxCameraValues)
+{
+	luaReturnVec4(dsq->game->cameraMin.x, dsq->game->cameraMin.y, dsq->game->cameraMax.x, dsq->game->cameraMax.y);
+}
+
 
 luaFunc(inv_isFull)
 {
@@ -9426,6 +9436,7 @@ static const struct {
 	luaRegister(findPath),
 	luaRegister(castLine),
 	luaRegister(getUserInputString),
+	luaRegister(getMaxCameraValues),
 
 	luaRegister(isFlag),
 
@@ -9640,8 +9651,6 @@ static const struct {
 	luaRegister(node_getContent),
 	luaRegister(node_getAmount),
 	luaRegister(node_getSize),
-	luaRegister(node_setEffectOn),
-	luaRegister(node_isEffectOn),
 	luaRegister(node_getShape),
 
 	luaRegister(toggleSteam),
@@ -9674,6 +9683,7 @@ static const struct {
 	luaRegister(entity_changeHealth),
 
 	luaRegister(node_setActive),
+	luaRegister(node_isActive),
 
 
 	luaRegister(setSceneColor),
@@ -9715,6 +9725,8 @@ static const struct {
 
 	luaRegister(overrideZoom),
 	luaRegister(disableOverrideZoom),
+	luaRegister(getZoom),
+	luaRegister(setMaxLookDistance),
 
 
 
@@ -9884,6 +9896,9 @@ static const struct {
 	{"getIngredientGfx", l_inv_getGfx},
 
 	{"bone_setColor", l_bone_color},
+
+	{"node_setEffectOn", l_node_setActive},
+	{"node_isEffectOn", l_node_isActive},
 
 };
 

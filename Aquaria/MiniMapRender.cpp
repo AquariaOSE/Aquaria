@@ -273,7 +273,7 @@ void MiniMapRender::onUpdate(float dt)
 		{
 			for (Path *p = dsq->game->getFirstPathOfType(PATH_RADARHIDE); p; p = p->nextOfType)
 			{
-				if (p->isCoordinateInside(dsq->game->avatar->position))
+				if (p->active && p->isCoordinateInside(dsq->game->avatar->position))
 				{
 					radarHide = true;
 					break;

@@ -1360,7 +1360,6 @@ public:
 	std::string getEntityFlagName(Entity *e);
 	std::string getUserInputString(std::string label, std::string t="", bool allowNonLowerCase=false);
 	Vector getUserInputDirection(std::string label);
-	Vector getCameraCenter();
 	bool onPickedSaveSlot(AquariaSaveSlot *slot);
 	void doSaveSlotMenu(SaveSlotMode ssm, const Vector &position = Vector(0,0,0));
 	void doModSelect();
@@ -1377,7 +1376,6 @@ public:
 	std::string getDialogueFilename(const std::string &f);
 
 	bool isShakingCamera();
-	//Element *getSolidElementNear(Vector pos, int rad);
 
 	std::string languagePack;
 
