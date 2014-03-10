@@ -1426,7 +1426,7 @@ void Avatar::openSingingInterface()
 			//core->setMousePosition(Vector(400,300));
 		}
 
-		core->setMouseConstraintCircle(singingInterfaceRadius);
+		core->setMouseConstraintCircle(core->center, singingInterfaceRadius);
 		stopRoll();
 		singing = true;
 		currentSongIdx = SONG_NONE;
