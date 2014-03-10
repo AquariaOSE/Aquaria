@@ -8060,6 +8060,18 @@ luaFunc(getMouseWheelChange)
 	luaReturnNum(core->mouse.scrollWheelChange);
 }
 
+luaFunc(setMouseConstraintCircle)
+{
+	core->setMouseConstraintCircle(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)), lua_tonumber(L, 3));
+	luaReturnNil();
+}
+
+luaFunc(setMouseConstraint)
+{
+	core->setMouseConstraint(getBool(L, 1));
+	luaReturnNil();
+}
+
 luaFunc(fade)
 {
 	dsq->overlay->color.interpolateTo(Vector(lua_tonumber(L, 3), lua_tonumber(L, 4), lua_tonumber(L, 5)), lua_tonumber(L, 6));
@@ -9114,6 +9126,8 @@ static const struct {
 	luaRegister(getMousePos),
 	luaRegister(getMouseWorldPos),
 	luaRegister(getMouseWheelChange),
+	luaRegister(setMouseConstraintCircle),
+	luaRegister(setMouseConstraint),
 
 	luaRegister(resetContinuity),
 

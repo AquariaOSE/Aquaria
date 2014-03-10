@@ -1037,7 +1037,7 @@ public:
 	void removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag = DESTROY_RENDER_OBJECT);
 
 	void setMouseConstraint(bool on);
-	void setMouseConstraintCircle(float mouseCircle);
+	void setMouseConstraintCircle(const Vector& pos, float mouseCircle);
 	
 	void setReentryInputGrab(int on);
 	
@@ -1350,6 +1350,7 @@ protected:
 	std::string appName;
 	bool mouseConstraint;
 	float mouseCircle;
+	Vector mouseConstraintCenter;
 	
 	bool doMouseConstraint();
 	
