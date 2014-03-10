@@ -3296,10 +3296,12 @@ void Core::setMouseConstraint(bool on)
 	mouseConstraint = on;
 }
 
-void Core::setMouseConstraintCircle(float circle)
+void Core::setMouseConstraintCircle(const Vector& pos, float circle)
 {
 	mouseConstraint = true;
 	mouseCircle = circle;
+	mouseConstraintCenter = pos;
+	mouseConstraintCenter.z = 0;
 }
 
 /*
@@ -3333,7 +3335,7 @@ bool Core::doMouseConstraint()
 	{
 		//- core->getVirtualOffX()
 		//- virtualOffX
-		Vector h = Vector(core->center.x , core->center.y);
+		Vector h = mouseConstraintCenter;
 		Vector d = mouse.position - h;
 		if (!d.isLength2DIn(mouseCircle))
 		{
