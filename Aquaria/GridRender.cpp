@@ -166,7 +166,7 @@ void SongLineRender::newPoint(const Vector &pt, const Vector &color)
 		s.color = color;
 		pts.push_back(s);
 		if (pts.size() > maxx)
-			pts.pop_front();
+			pts.erase(pts.begin());
 	}
 	else if (!pts.empty() && inRange)
 	{
