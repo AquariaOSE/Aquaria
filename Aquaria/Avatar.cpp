@@ -574,6 +574,7 @@ void SongIcon::openNote()
 
 	float glowLife = 0.5;
 
+	{
 	Quad *q = new Quad("particles/glow", position);
 	q->scale.interpolateTo(Vector(10, 10), glowLife+0.1f);
 	q->alpha.ensureData();
@@ -585,6 +586,8 @@ void SongIcon::openNote()
 	q->setBlendType(RenderObject::BLEND_ADD);
 	q->followCamera = 1;
 	dsq->game->addRenderObject(q, LR_HUD);
+	q->setDecayRate(1/(glowLife+0.1f));
+	}
 
 	{
 	std::ostringstream os2;
@@ -603,6 +606,7 @@ void SongIcon::openNote()
 	//q->setBlendType(RenderObject::BLEND_ADD);
 	q->followCamera = 1;
 	dsq->game->addRenderObject(q, LR_HUD);
+	q->setDecayRate(1/(glowLife+0.1f));
 	}
 
 	avatar->songInterfaceTimer = 1.0;
