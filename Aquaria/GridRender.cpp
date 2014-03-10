@@ -166,16 +166,7 @@ void SongLineRender::newPoint(const Vector &pt, const Vector &color)
 		s.color = color;
 		pts.push_back(s);
 		if (pts.size() > maxx)
-		{
-			std::vector<SongLinePoint> copy;
-			copy = pts;
-			pts.clear();
-			for (int i = 1; i < copy.size(); i++)
-			{
-				pts.push_back(copy[i]);
-			}
-		}
-			
+			pts.pop_front();
 	}
 	else if (!pts.empty() && inRange)
 	{
