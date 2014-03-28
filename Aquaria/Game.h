@@ -661,14 +661,14 @@ public:
 	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc=0, int *colSegment=0);
 
 	bool collideCircleVsCircle(Entity *a, Entity *b);
-	Bone *collideSkeletalVsCircle(Entity *skeletal, Entity *circle);
+	Bone *collideSkeletalVsCircle(Entity *skeletal, RenderObject *circle);
 	Bone *collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius);
 	bool collideCircleVsLine(RenderObject *r, Vector start, Vector end, float radius);
 	bool collideCircleVsLineAngle(RenderObject *r, float angle, float startLen, float endLen, float radius, Vector basePos);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius);
 	void handleShotCollisions(Entity *e, bool hasShield=false);
 	void handleShotCollisionsSkeletal(Entity *e);
-	void handleShotCollisionsHair(Entity *e, int num = 0);
+	void handleShotCollisionsHair(Entity *e, int num = 0, float perc = 0);
 
 	std::vector<ElementTemplate> elementTemplates;
 	std::string sceneName;

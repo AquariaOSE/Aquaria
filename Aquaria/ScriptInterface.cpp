@@ -5075,7 +5075,7 @@ luaFunc(entity_handleShotCollisionsHair)
 	Entity *e = entity(L);
 	if (e)
 	{
-		dsq->game->handleShotCollisionsHair(e, lua_tonumber(L, 2));
+		dsq->game->handleShotCollisionsHair(e, lua_tointeger(L, 2), lua_tonumber(L, 3));
 	}
 	luaReturnNil();
 }
@@ -5083,11 +5083,22 @@ luaFunc(entity_handleShotCollisionsHair)
 luaFunc(entity_collideSkeletalVsCircle)
 {
 	Entity *e = entity(L);
-	Entity *e2 = entity(L,2);
+	RenderObject *e2 = robj(L,2);
 	Bone *b = 0;
 	if (e && e2)
 	{
 		b = dsq->game->collideSkeletalVsCircle(e,e2);
+	}
+	luaReturnPtr(b);
+}
+
+luaFunc(entity_collideSkeletalVsCirclePos)
+{
+	Entity *e = entity(L);
+	Bone *b = 0;
+	if (e)
+	{
+		b = dsq->game->collideSkeletalVsCircle(e, Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4));
 	}
 	luaReturnPtr(b);
 }
@@ -9598,6 +9609,7 @@ static const struct {
 	luaRegister(entity_handleShotCollisionsSkeletal),
 	luaRegister(entity_handleShotCollisionsHair),
 	luaRegister(entity_collideSkeletalVsCircle),
+	luaRegister(entity_collideSkeletalVsCirclePos),
 	luaRegister(entity_collideSkeletalVsLine),
 	luaRegister(entity_collideSkeletalVsCircleForListByName),
 	luaRegister(entity_collideCircleVsLine),
