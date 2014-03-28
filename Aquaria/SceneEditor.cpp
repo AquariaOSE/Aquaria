@@ -740,6 +740,7 @@ void SceneEditor::init()
 	addAction(ACTION_BGLAYER14,		KEY_COMMA);
 	addAction(ACTION_BGLAYER15,		KEY_PERIOD);
 	addAction(ACTION_BGLAYER16,		KEY_SLASH);
+	addAction(ACTION_BGLAYER16,		KEY_MINUS); // HACK: for german keyboard layout -- FG
 
 	addAction(ACTION_MULTISELECT,	KEY_LALT);
 
