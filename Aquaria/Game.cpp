@@ -8191,11 +8191,9 @@ bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, float rad
 }
 
 // NOTE THIS FUNCTION ASSUMES THAT IF A BONE ISN'T AT FULL ALPHA (1.0) IT IS DISABLED
-Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Entity *circle)
+Bone *Game::collideSkeletalVsCircle(Entity *skeletal, RenderObject *circle)
 {
-	Vector pos = circle->position;
-
-	return collideSkeletalVsCircle(skeletal, pos, circle->collideRadius);
+	return collideSkeletalVsCircle(skeletal, circle->position, circle->collideRadius);
 }
 
 Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius)
@@ -8464,14 +8462,14 @@ void Game::handleShotCollisionsSkeletal(Entity *e)
 	}
 }
 
-void Game::handleShotCollisionsHair(Entity *e, int num)
+void Game::handleShotCollisionsHair(Entity *e, int num, float perc)
 {
 	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
 		Shot *shot = Shot::shots[i];
 		if (shot->isActive() && isEntityCollideWithShot(e, shot))
 		{
-			bool b = collideHairVsCircle(e, num, shot->position, 8);
+			bool b = collideHairVsCircle(e, num, shot->position, 8, perc);
 			if (b)
 			{
 				lastCollidePosition = shot->position;
