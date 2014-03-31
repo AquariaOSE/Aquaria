@@ -58,6 +58,8 @@ void PathFinding::forceMinimumPath(VectorPath &path, const Vector &start, const 
 void PathFinding::molestPath(VectorPath &path)
 {
 	int sz=path.getNumPathNodes();
+	if(!sz)
+		return;
 
 	int i = 0;
 	// make normals
