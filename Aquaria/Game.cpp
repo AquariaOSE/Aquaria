@@ -8414,7 +8414,6 @@ bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 void Game::handleShotCollisions(Entity *e, bool hasShield)
 {
 	BBGE_PROF(Game_handleShotCollisions);
-	bool isRegValid=true;
 	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
 		Shot *shot = Shot::shots[i];
@@ -8428,7 +8427,7 @@ void Game::handleShotCollisions(Entity *e, bool hasShield)
 			if ((collidePoint - shot->position).isLength2DIn(shot->collideRadius + e->collideRadius))
 			{
 				lastCollidePosition = shot->position;
-				shot->hitEntity(e,0,isRegValid);
+				shot->hitEntity(e,0);
 			}
 		}
 	}
