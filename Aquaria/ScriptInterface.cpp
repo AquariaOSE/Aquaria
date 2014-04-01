@@ -67,6 +67,7 @@ static const char * const interfaceFunctions[] = {
 	"activate",
 	"animationKey",
 	"castSong",
+	"canShotHit",
 	"cookFailure",
 	"damage",
 	"deathNotify",
