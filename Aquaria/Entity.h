@@ -243,6 +243,7 @@ public:
 	//virtual void onCollide(Entity *e);
 
 	virtual bool damage(const DamageData &d);
+	virtual bool canShotHit(const DamageData &d) { return true; }
 
 	virtual void songNote(int note);
 	virtual void songNoteDone(int note, float len);

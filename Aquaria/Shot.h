@@ -94,7 +94,7 @@ public:
 	float maxSpeed;
 
 	void fire(bool playSfx = true);
-	void hitEntity(Entity *e, Bone *b, bool isValid=true);
+	void hitEntity(Entity *e, Bone *b);
 	
 	void noSegs();
 
