@@ -8,7 +8,7 @@
 
 // checks to enforce correct including
 #ifdef TTVFS_VFS_H
-#error Oops, TTVFS_VFS_H is defined, someone messed up and included VFS.h wrongly.
+#error Oops, TTVFS_VFS_H is defined, someone messed up and included ttvfs.h wrongly.
 #endif
 
 #include "VFSDefines.h"
@@ -17,30 +17,6 @@
 #include <cstring>
 #include <string>
 #include <cassert>
-
-VFS_NAMESPACE_START
-
-inline char *allocHelper(allocator_func alloc, size_t size)
-{
-    return alloc ? (char*)alloc(size) : new char[size];
-}
-
-inline char *allocHelperExtra(allocator_func alloc, size_t size, size_t extra)
-{
-    char *p = (char*)allocHelper(alloc, size + extra);
-    memset(p + size, 0, extra);
-    return p;
-}
-
-template <typename T> inline void deleteHelper(delete_func deletor, T *mem)
-{
-    if(deletor)
-        deletor(mem);
-    else
-        delete [] mem;
-}
-
-VFS_NAMESPACE_END
 
 
 #if _MSC_VER
@@ -52,6 +28,22 @@ VFS_NAMESPACE_END
 #endif
 #   pragma warning(disable: 4355) // 'this' : used in base member initializer list
 #endif
+
+template <typename DST, typename SRC> inline DST safecast(SRC p)
+{
+#ifndef NDEBUG
+    assert(!p || static_cast<DST>(p) == dynamic_cast<DST>(p));
+#endif
+    return static_cast<DST>(p);
+}
+
+template <typename DST, typename SRC> inline DST safecastNonNull(SRC p)
+{
+#ifndef NDEBUG
+    assert(p && static_cast<DST>(p) == dynamic_cast<DST>(p));
+#endif
+    return static_cast<DST>(p);
+}
 
 
 #endif

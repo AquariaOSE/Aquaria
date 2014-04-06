@@ -7,6 +7,7 @@
 #ifndef VFS_TOOLS_H
 #define VFS_TOOLS_H
 
+#include <cstdlib>
 #include <deque>
 #include <string>
 
@@ -16,24 +17,23 @@ VFS_NAMESPACE_START
 
 typedef std::deque<std::string> StringList;
 
-void stringToUpper(std::string& s);
-void stringToLower(std::string& s);
-void GetFileList(const char *, StringList& files);
-void GetDirList(const char *, StringList& dirs, int depth = 0); // recursion depth: 0 = subdirs of current, 1 = subdirs one level down, ...,  -1 = deep recursion
+// these return false if the queried dir does not exist
+bool GetFileList(const char *, StringList& files);
+bool GetDirList(const char *, StringList& dirs, int depth = 0); // recursion depth: 0 = subdirs of current, 1 = subdirs one level down, ...,  -1 = deep recursion
+
 bool FileExists(const char *);
 bool IsDirectory(const char *);
 bool CreateDir(const char*);
 bool CreateDirRec(const char*);
-vfspos GetFileSize(const char*);
-std::string FixSlashes(const std::string& s);
-std::string FixPath(const std::string& s);
-const char *PathToFileName(const char *str);
+bool GetFileSize(const char*, vfspos&);
+void FixSlashes(std::string& s);
+void FixPath(std::string& s);
+const char *GetBaseNameFromPath(const char *str);
 void MakeSlashTerminated(std::string& s);
-std::string StripFileExtension(const std::string& s);
-std::string StripLastPath(const std::string& s);
+void StripFileExtension(std::string& s);
+void StripLastPath(std::string& s);
 bool WildcardMatch(const char *str, const char *pattern);
 size_t strnNLcpy(char *dst, const char *src, unsigned int n = -1);
-char *fastcat(char *s, const char *add);
 
 template <class T> void StrSplit(const std::string &src, const std::string &sep, T& container, bool keepEmpty = false)
 {
@@ -55,45 +55,22 @@ template <class T> void StrSplit(const std::string &src, const std::string &sep,
         container.push_back(s);
 }
 
-inline static size_t stringhash(const char *s)
+template <typename T> void SkipSelfPath(T *& s)
 {
-    size_t h = 0;
-    for( ; *s; ++s)
-    {
-        h += *s;
-        h += ( h << 10 );
-        h ^= ( h >> 6 );
-    }
-
-    h += ( h << 3 );
-    h ^= ( h >> 11 );
-    h += ( h << 15 );
-
-    return h;
+    while(s[0] == '.' && s[1] == '/')
+        s += 2;
+    if(s[0] == '.' && !s[1])
+        ++s;
 }
 
-inline static size_t stringhash_nocase(const char *s)
+inline std::string joinPath(std::string base, const char *sub)
 {
-    size_t h = 0;
-    for( ; *s; ++s)
-    {
-        h += tolower(*s);
-        h += ( h << 10 );
-        h ^= ( h >> 6 );
-    }
-
-    h += ( h << 3 );
-    h ^= ( h >> 11 );
-    h += ( h << 15 );
-
-    return h;
+    if(!*sub)
+        return base;
+    if(*sub != '/' && base.length() && base[base.length()-1] != '/')
+        base += '/';
+    return base + sub;
 }
-
-#ifdef VFS_IGNORE_CASE
-#  define STRINGHASH(s) stringhash_nocase(s)
-#else
-#  define STRINGHASH(s) stringhash(s)
-#endif
 
 VFS_NAMESPACE_END
 

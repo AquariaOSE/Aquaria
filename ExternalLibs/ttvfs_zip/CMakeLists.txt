@@ -6,6 +6,8 @@ set(ttvfs_zip_SRC
     VFSFileZip.h
     VFSZipArchiveLoader.cpp
     VFSZipArchiveLoader.h
+    VFSZipArchiveRef.cpp
+    VFSZipArchiveRef.h
     miniz.c
     miniz.h
 )
