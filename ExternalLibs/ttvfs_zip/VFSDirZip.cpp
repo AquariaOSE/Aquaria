@@ -9,99 +9,68 @@
 VFS_NAMESPACE_START
 
 
-static size_t zip_read_func(void *pOpaque, mz_uint64 file_ofs, void *pBuf, size_t n)
+
+ZipDir::ZipDir(ZipArchiveRef *handle, const char *fullpath, bool canLoad)
+: Dir(fullpath, NULL)
+, _archiveHandle(handle)
+, _canLoad(canLoad)
+, _couldLoad(canLoad)
 {
-    VFSFile *vf = (VFSFile*)pOpaque;
-    mz_int64 cur_ofs = vf->getpos();
-    if((mz_int64)file_ofs < 0)
-        return 0;
-    if(cur_ofs != (mz_int64)file_ofs && !vf->seek((vfspos)file_ofs))
-        return 0;
-    return vf->read(pBuf, n);
 }
 
-static bool zip_reader_init_vfsfile(mz_zip_archive *pZip, VFSFile *vf, mz_uint32 flags)
-{
-    if(!(pZip || vf))
-        return false;
-    vf->open("rb");
-    mz_uint64 file_size = vf->size();
-    if(!file_size)
-    {
-        vf->close();
-        return false;
-    }
-    pZip->m_pRead = zip_read_func;
-    pZip->m_pIO_opaque = vf;
-    if (!mz_zip_reader_init(pZip, file_size, flags))
-    {
-        vf->close();
-        return false;
-    }
-    return true;
-}
-
-
-VFSDirZip::VFSDirZip(VFSFile *zf)
-: VFSDir(zf->fullname()), _zf(zf)
-{
-    _zf->ref++;
-    _setOrigin(this);
-    memset(&_zip, 0, sizeof(_zip));
-}
-
-VFSDirZip::~VFSDirZip()
+ZipDir::~ZipDir()
 {
     close();
-    _zf->ref--;
 }
 
-bool VFSDirZip::close(void)
+
+void ZipDir::close()
 {
-    mz_zip_reader_end(&_zip);
-    _zf->close();
-    return true;
+    _archiveHandle->close();
+    _canLoad = _couldLoad; // allow loading again after re-opening (in case archive was replaced)
 }
 
-VFSDir *VFSDirZip::createNew(const char *dir) const
+DirBase *ZipDir::createNew(const char *fullpath) const
 {
-    return VFSDir::createNew(dir); // inside a Zip file; only the base dir can be a real VFSDirZip.
+    const ZipArchiveRef *czref = _archiveHandle;
+    ZipArchiveRef *zref = const_cast<ZipArchiveRef*>(czref);
+    return new ZipDir(zref, fullpath, false);
 }
 
-unsigned int VFSDirZip::load(bool /*ignored*/)
+#define MZ ((mz_zip_archive*)_archiveHandle->mz)
+
+void ZipDir::load()
 {
-    close();
+    if(!_canLoad)
+        return;
 
-    if(!zip_reader_init_vfsfile(&_zip, _zf, 0))
-        return 0;
+    _archiveHandle->openRead();
 
-    unsigned int files = mz_zip_reader_get_num_files(&_zip);
+    const unsigned int files = mz_zip_reader_get_num_files(MZ);
+    const size_t len = fullnameLen();
 
     mz_zip_archive_file_stat fs;
     for (unsigned int i = 0; i < files; ++i)
     {
-        // FIXME: do we want empty dirs in the tree?
-        if(mz_zip_reader_is_file_a_directory(&_zip, i))
+        if(mz_zip_reader_is_file_encrypted(MZ, i))
             continue;
-        if(mz_zip_reader_is_file_encrypted(&_zip, i))
+        if(!mz_zip_reader_file_stat(MZ, i, &fs))
             continue;
-        if(!mz_zip_reader_file_stat(&_zip, i, &fs))
+        if(mz_zip_reader_is_file_a_directory(MZ, i))
+        {
+            getDir(fs.m_filename, true);
             continue;
+        }
         if(getFile(fs.m_filename))
             continue;
 
-        VFSFileZip *vf = new VFSFileZip(&_zip);
-        vf->_setOrigin(this);
-        memcpy(vf->getZipFileStat(), &fs, sizeof(mz_zip_archive_file_stat));
-        vf->_init();
-        addRecursive(vf, true, VFSDir::NONE);
-        vf->ref--;
+        ZipFile *vf = new ZipFile(fs.m_filename, _archiveHandle, (vfspos)fs.m_uncomp_size, fs.m_file_index);
+        addRecursive(vf, len);
     }
 
-    // Not necessary to keep open all the time, VFSFileZip will re-open the archive if needed
-    //close();
-
-    return files;
+    _canLoad = false;
 }
+
+
 
 VFS_NAMESPACE_END

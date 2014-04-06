@@ -9,6 +9,12 @@
 
 VFS_NAMESPACE_START
 
+VFSLoader::VFSLoader()
+: root(NULL)
+{
+}
+
+
 #if !defined(_WIN32) && defined(VFS_IGNORE_CASE)
 
 #include <dirent.h>
@@ -78,31 +84,37 @@ static bool findFileHarder(char *fn)
 #endif
 
 
-VFSFile *VFSLoaderDisk::Load(const char *fn, const char * /*ignored*/)
+
+DiskLoader::DiskLoader()
+{
+    root = new DiskDir("", this);
+}
+
+File *DiskLoader::Load(const char *fn, const char * /*ignored*/)
 {
     if(FileExists(fn))
-        return new VFSFileReal(fn); // must contain full file name
+        return new DiskFile(fn); // must contain full file name
 
-    VFSFileReal *vf = NULL;
+    DiskFile *vf = NULL;
 
 #if !defined(_WIN32) && defined(VFS_IGNORE_CASE)
     size_t s = strlen(fn);
     char *t = (char*)VFS_STACK_ALLOC(s+1);
     memcpy(t, fn, s+1); // copy terminating '\0' as well
     if(findFileHarder(&t[0])) // fixes the filename on the way
-        vf = new VFSFileReal(&t[0]);
+        vf = new DiskFile(&t[0]);
     VFS_STACK_FREE(t);
 #endif
 
     return vf;
 }
 
-VFSDir *VFSLoaderDisk::LoadDir(const char *fn, const char * /*ignored*/)
+Dir *DiskLoader::LoadDir(const char *fn, const char * /*ignored*/)
 {
-    if(IsDirectory(fn))
-        return new VFSDirReal(fn); // must contain full file name
+    if(!IsDirectory(fn))
+        return NULL;
 
-    VFSDirReal *ret = NULL;
+    DiskDir *ret = NULL;
 
 #if !defined(_WIN32) && defined(VFS_IGNORE_CASE)
     size_t s = strlen(fn);
@@ -110,12 +122,12 @@ VFSDir *VFSLoaderDisk::LoadDir(const char *fn, const char * /*ignored*/)
     memcpy(t, fn, s+1); // copy terminating '\0' as well
     if(findFileHarder(&t[0])) // fixes the filename on the way
     {
-        ret = new VFSDirReal(&t[0]);
+        fn = &t[0];
     }
     VFS_STACK_FREE(t);
 #endif
 
-    return ret;
+    return safecastNonNull<DiskDir*>(getRoot()->getDir(fn, true, false));
 }
 
 VFS_NAMESPACE_END

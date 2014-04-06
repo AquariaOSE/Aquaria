@@ -1,21 +1,16 @@
 // VFSTools.cpp - useful functions and misc stuff
 // For conditions of distribution and use, see copyright notice in VFS.h
 
-#include "VFSInternal.h"
-#include "VFSFileFuncs.h"
+#include "VFSTools.h"
 
-#include <cstdlib>
 #include <algorithm>
 #include <cctype>
-#include <stack>
-#include <cstdio>
-
-#include "VFSTools.h"
 
 
 #if _WIN32
 #   define WIN32_LEAN_AND_MEAN
 #   include <windows.h>
+#   include <io.h>
 #else
 #  ifdef __HAIKU__
 #    include <dirent.h>
@@ -30,15 +25,6 @@
 
 VFS_NAMESPACE_START
 
-void stringToLower(std::string& s)
-{
-    std::transform(s.begin(), s.end(), s.begin(), tolower);
-}
-
-void stringToUpper(std::string& s)
-{
-    std::transform(s.begin(), s.end(), s.begin(), toupper);
-}
 
 #if !_WIN32
 #ifdef DT_DIR
@@ -97,7 +83,7 @@ static bool _IsDir(const char *path, dirent *dp)
     char *pathname = (char*)alloca(len1 + 1 + len2 + 1 + 13);
     strcpy (pathname, path);
 
-	/* Avoid UNC-path "//name" on Cygwin.  */
+    /* Avoid UNC-path "//name" on Cygwin.  */
     if (len1 > 0 && pathname[len1 - 1] != '/')
         strcat (pathname, "/");
 
@@ -119,104 +105,75 @@ static bool _IsFile(const char *path, dirent *dp)
 
 // returns list of *plain* file names in given directory,
 // without paths, and without anything else
-void GetFileList(const char *path, StringList& files)
+bool GetFileList(const char *path, StringList& files)
 {
 #if !_WIN32
     DIR * dirp;
     struct dirent * dp;
     dirp = opendir(path);
-    if(dirp)
-    {
-        while((dp=readdir(dirp)) != NULL)
-        {
-            if (_IsFile(path, dp)) // only add if it is not a directory
-            {
-                std::string s(dp->d_name);
-                files.push_back(s);
-            }
-        }
-        closedir(dirp);
-    }
+    if(!dirp)
+        return false;
 
-# else
+    while((dp=readdir(dirp)) != NULL)
+    {
+        if (_IsFile(path, dp)) // only add if it is not a directory
+        {
+            std::string s(dp->d_name);
+            files.push_back(s);
+        }
+    }
+    closedir(dirp);
+    return true;
+
+#else
 
     WIN32_FIND_DATA fil;
     std::string search(path);
     MakeSlashTerminated(search);
     search += "*";
     HANDLE hFil = FindFirstFile(search.c_str(),&fil);
-    if(hFil != INVALID_HANDLE_VALUE)
+    if(hFil == INVALID_HANDLE_VALUE)
+        return false;
+
+    do
     {
-        do
+        if(!(fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
         {
-            if(!(fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY))
-            {
-                std::string s(fil.cFileName);
-                files.push_back(s);
-            }
+            std::string s(fil.cFileName);
+            files.push_back(s);
         }
-        while(FindNextFile(hFil, &fil));
-
-        FindClose(hFil);
     }
+    while(FindNextFile(hFil, &fil));
 
-# endif
+    FindClose(hFil);
+    return true;
+
+#endif
 }
 
 // returns a list of directory names in the given directory, *without* the source dir.
 // if getting the dir list recursively, all paths are added, except *again* the top source dir beeing queried.
-void GetDirList(const char *path, StringList &dirs, int depth /* = 0 */)
+bool GetDirList(const char *path, StringList &dirs, int depth /* = 0 */)
 {
 #if !_WIN32
     DIR * dirp;
     struct dirent * dp;
     dirp = opendir(path);
-    if(dirp)
-    {
-        std::string pathstr(path);
-        MakeSlashTerminated(pathstr);
-        while((dp = readdir(dirp))) // assignment is intentional
-        {
-            if (_IsDir(path, dp)) // only add if it is a directory
-            {
-                if(strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
-                {
-                    dirs.push_back(dp->d_name);
-                    if (depth) // needing a better way to do that
-                    {
-                        std::string d = dp->d_name;
-                        std::string subdir = pathstr + d;
-                        MakeSlashTerminated(d);
-                        StringList newdirs;
-                        GetDirList(subdir.c_str(), newdirs, depth - 1);
-                        for(std::deque<std::string>::iterator it = newdirs.begin(); it != newdirs.end(); ++it)
-                            dirs.push_back(d + *it);
-                    }
-                }
-            }
-        }
-        closedir(dirp);
-    }
+    if(!dirp)
+        return false;
 
-#else
     std::string pathstr(path);
     MakeSlashTerminated(pathstr);
-    WIN32_FIND_DATA fil;
-    HANDLE hFil = FindFirstFile((pathstr + '*').c_str(),&fil);
-    if(hFil != INVALID_HANDLE_VALUE)
+    while((dp = readdir(dirp))) // assignment is intentional
     {
-        do
+        if (_IsDir(path, dp)) // only add if it is a directory
         {
-            if( fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+            if(strcmp(dp->d_name, ".") != 0 && strcmp(dp->d_name, "..") != 0)
             {
-                if (!strcmp(fil.cFileName, ".") || !strcmp(fil.cFileName, ".."))
-                    continue;
-
-                dirs.push_back(fil.cFileName);
-
-                if (depth) // need a better way to do that
+                dirs.push_back(dp->d_name);
+                if (depth) // needing a better way to do that
                 {
-                    std::string d = fil.cFileName;
+                    std::string d = dp->d_name;
                     std::string subdir = pathstr + d;
                     MakeSlashTerminated(d);
                     StringList newdirs;
@@ -226,24 +183,52 @@ void GetDirList(const char *path, StringList &dirs, int depth /* = 0 */)
                 }
             }
         }
-        while(FindNextFile(hFil, &fil));
-
-        FindClose(hFil);
     }
+    closedir(dirp);
+    return true;
+
+#else
+
+    std::string pathstr(path);
+    MakeSlashTerminated(pathstr);
+    WIN32_FIND_DATA fil;
+    HANDLE hFil = FindFirstFile((pathstr + '*').c_str(),&fil);
+    if(hFil == INVALID_HANDLE_VALUE)
+        return false;
+
+    do
+    {
+        if( fil.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY )
+        {
+            if (!strcmp(fil.cFileName, ".") || !strcmp(fil.cFileName, ".."))
+                continue;
+
+            dirs.push_back(fil.cFileName);
+
+            if (depth) // need a better way to do that
+            {
+                std::string d = fil.cFileName;
+                std::string subdir = pathstr + d;
+                MakeSlashTerminated(d);
+                StringList newdirs;
+                GetDirList(subdir.c_str(), newdirs, depth - 1);
+                for(std::deque<std::string>::iterator it = newdirs.begin(); it != newdirs.end(); ++it)
+                    dirs.push_back(d + *it);
+            }
+        }
+    }
+    while(FindNextFile(hFil, &fil));
+
+    FindClose(hFil);
+    return true;
 
 #endif
 }
 
 bool FileExists(const char *fn)
 {
-#ifdef _WIN32
-    void *fp = real_fopen(fn, "rb");
-    if(fp)
-    {
-        real_fclose(fp);
-        return true;
-    }
-    return false;
+#if _WIN32
+    return _access(fn, 0) == 0;
 #else
     return access(fn, F_OK) == 0;
 #endif
@@ -285,33 +270,35 @@ bool CreateDirRec(const char *dir)
     return result || last;
 }
 
-vfspos GetFileSize(const char* fn)
+bool GetFileSize(const char* fn, vfspos& size)
 {
+    vfspos sz = 0;
 #ifdef VFS_LARGEFILE_SUPPORT
 # ifdef _MSC_VER
     struct _stat64 st;
     if(_stat64(fn, &st))
-        return 0;
-    return st.st_size;
+        return false;
+    sz = st.st_size;
 # else // _MSC_VER
     struct stat64 st;
     if(stat64(fn, &st))
-        return 0;
-    return st.st_size;
+        return false;
+    sz = st.st_size;
 # endif
 #else // VFS_LARGEFILE_SUPPORT
     struct stat st;
     if(stat(fn, &st))
-        return 0;
-    return st.st_size;
+        return false;
+    sz = st.st_size;
 #endif
+    size = sz;
+    return true;
 }
 
-std::string FixSlashes(const std::string& s)
+void FixSlashes(std::string& s)
 {
-    std::string r;
-    r.reserve(s.length() + 1);
     char last = 0, cur;
+    size_t wpos = 0;
     for(size_t i = 0; i < s.length(); ++i)
     {
         cur = s[i];
@@ -319,29 +306,35 @@ std::string FixSlashes(const std::string& s)
             cur = '/';
         if(last == '/' && cur == '/')
             continue;
-        r += cur;
+        s[wpos++] = cur;
         last = cur;
     }
-    return r;
+    s.resize(wpos);
 }
 
-std::string FixPath(const std::string& s)
+void FixPath(std::string& s)
 {
     if(s.empty())
-        return s;
+        return;
     const char *p = s.c_str();
     while(p[0] == '.' && (p[1] == '/' || p[1] == '\\'))
         p += 2;
     if(!*p)
-        return "";
-    char end = s[s.length() - 1];
-    if(end == '/' || end == '\\')
     {
-        std::string r(p);
-        r.erase(r.length() - 1); // strip trailing '/'
-        return FixSlashes(r);
+        s.clear();
+        return;
     }
-    return FixSlashes(p);
+    size_t len = s.length();
+    while(len)
+    {
+        char end = s[len - 1];
+        if(end == '/' || end == '\\') // strip trailing '/'
+            --len;
+        else
+            break;
+    }
+    s.resize(len);
+    FixSlashes(s);
 }
 
 bool IsDirectory(const char *s)
@@ -369,36 +362,46 @@ void MakeSlashTerminated(std::string& s)
 }
 
 // extracts the file name from a given path
-const char *PathToFileName(const char *str)
+const char *GetBaseNameFromPath(const char *str)
 {
     const char *p = strrchr(str, '/');
     return p ? p+1 : str;
 }
 
-std::string StripFileExtension(const std::string& s)
+void StripFileExtension(std::string& s)
 {
     size_t pos = s.find_last_of('.');
     size_t pos2 = s.find_last_of('/');
-    if(pos != std::string::npos && (pos2 < pos || pos2 == std::string::npos))
-        return s.substr(0, pos);
-
-    return s;
+    if(pos != std::string::npos && (pos2 == std::string::npos || pos2 < pos))
+        s.resize(pos+1);
 }
 
-std::string StripLastPath(const std::string& s)
+void StripLastPath(std::string& s)
 {
-    if(s.empty())
-        return "";
+    size_t len = s.length();
+    while(len)
+    {
+        char end = s[len - 1];
+        if(end == '/' || end == '\\') // strip trailing '/'
+            --len;
+        else
+            break;
+    }
+    s.resize(len);
 
-    if(s[s.length() - 1] == '/')
-        return StripLastPath(s.substr(0, s.length() - 1));
+    if(s.empty())
+        return;
 
     size_t pos = s.find_last_of('/');
     if(pos == std::string::npos)
-        return ""; // nothing remains
+    {
+        s.clear();
+        return; // nothing remains
+    }
 
-    return s.substr(0, pos);
+    s.resize(pos+1);
 }
+
 
 // from http://board.byuu.org/viewtopic.php?f=10&t=1089&start=15
 bool WildcardMatch(const char *str, const char *pattern)
@@ -475,17 +478,6 @@ size_t strnNLcpy(char *dst, const char *src, unsigned int n /* = -1 */)
     *dst++ = 0;
 
     return dst - olddst;
-}
-
-// Directly appends 'add' to 's', ensuring that 's' is null-terminated.
-// Returns the next write position for fastcat (the null byte at the end).
-char *fastcat(char *s, const char *add)
-{
-    size_t len = strlen(add);
-    memcpy(s, add, len);
-    s += len;
-    *(s + 1) = 0;
-    return s;
 }
 
 
