@@ -807,12 +807,16 @@ std::vector<std::string> getFileList(std::string path, std::string type, int par
 	return list;
 }
 
-#if defined(BBGE_BUILD_MACOSX)
+#if defined(BBGE_BUILD_MACOSX) && !SDL_VERSION_ATLEAST(2,0,0)
 void cocoaMessageBox(const std::string &title, const std::string &msg);
 #endif
 
 void messageBox(const std::string& title, const std::string &msg)
 {
+#if SDL_VERSION_ATLEAST(2,0,0)
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, title.c_str(),
+							 msg.c_str, NULL);
+#else
 #ifdef BBGE_BUILD_WINDOWS
 	MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
 #elif defined(BBGE_BUILD_MACOSX)
@@ -822,6 +826,7 @@ void messageBox(const std::string& title, const std::string &msg)
 	fprintf(stderr, "%s: %s\n", title.c_str(), msg.c_str());
 #else
 #error Please define your platform.
+#endif
 #endif
 }
 
