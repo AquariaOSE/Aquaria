@@ -1,4 +1,6 @@
+#include "VFSInternal.h"
 #include "VFSZipArchiveRef.h"
+#include <stdio.h>
 #include "miniz.h"
 
 

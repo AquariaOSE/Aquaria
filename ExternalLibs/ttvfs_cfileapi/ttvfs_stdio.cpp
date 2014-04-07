@@ -2,8 +2,9 @@
 
 #include "ttvfs.h"
 #include "ttvfs_stdio.h"
-#include <cassert>
+#include <assert.h>
 #include <sstream>
+#include <stdio.h>
 
 
 static ttvfs::Root *vfs = NULL;
