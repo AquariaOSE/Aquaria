@@ -14,9 +14,18 @@
 #include "VFSDefines.h"
 
 #if defined(VFS_LARGEFILE_SUPPORT)
+# ifndef _LARGEFILE_SOURCE
 #  define _LARGEFILE_SOURCE
+# endif
+# ifndef _LARGEFILE64_SOURCE
 #  define _LARGEFILE64_SOURCE
+# endif
+# ifdef _FILE_OFFSET_BITS
+#  undef _FILE_OFFSET_BITS
+# endif
+# ifndef _FILE_OFFSET_BITS
 #  define _FILE_OFFSET_BITS 64
+# endif
 #endif
 
 #if _MSC_VER

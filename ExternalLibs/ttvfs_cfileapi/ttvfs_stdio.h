@@ -23,6 +23,8 @@
 
 #include <iostream>
 #include <sstream>
+#include <stdio.h>
+
 #include <ttvfs.h>
 
 typedef ttvfs::File VFILE;

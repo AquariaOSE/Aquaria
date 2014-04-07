@@ -2,6 +2,8 @@
 #include "VFSInternal.h"
 #include "VFSFileFuncs.h"
 
+#include <stdio.h>
+
 VFS_NAMESPACE_START
 
 // Compile time assertion to make sure things work as expected
