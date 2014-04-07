@@ -426,7 +426,9 @@ SET(AQUARIA_SRCS_UNUSED
 )
 
 IF(MACOSX)
-    SET(COCOA_SRCS "${BBGEDIR}/Cocoa.mm")
+    IF(AQUARIA_USE_SDL)
+        SET(COCOA_SRCS "${BBGEDIR}/Cocoa.mm")
+    ENDIF(AQUARIA_USE_SDL)
 ENDIF(MACOSX)
 
 # Bit Blot Game Engine sources...
