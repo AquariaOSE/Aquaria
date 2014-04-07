@@ -98,23 +98,20 @@ vfspos ZipFile::getpos() const
     return _pos;
 }
 
-unsigned int ZipFile::read(void *dst, unsigned int bytes)
+size_t ZipFile::read(void *dst, size_t bytes)
 {
     if(!_buf && !unpack())
         return 0;
 
     char *startptr = _buf + _pos;
     char *endptr = _buf + size();
-    bytes = std::min((unsigned int)(endptr - startptr), bytes); // limit in case reading over buffer size
-    //if(_mode.find('b') == std::string::npos)
-    //    strnNLcpy((char*)dst, (const char*)startptr, bytes); // non-binary == text mode
-    //else
-        memcpy(dst, startptr, bytes); //  binary copy
+    bytes = std::min<size_t>(endptr - startptr, bytes); // limit in case reading over buffer size
+    memcpy(dst, startptr, bytes); //  binary copy
     _pos += bytes;
     return bytes;
 }
 
-unsigned int ZipFile::write(const void *src, unsigned int bytes)
+size_t ZipFile::write(const void *src, size_t bytes)
 {
     // TODO: implement actually writing to the underlying Zip file.
 

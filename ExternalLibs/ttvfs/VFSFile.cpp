@@ -2,11 +2,12 @@
 // For conditions of distribution and use, see copyright notice in VFS.h
 
 #include "VFSInternal.h"
+#include <stdio.h> // for SEEK_* constants
+
 #include "VFSFile.h"
 #include "VFSTools.h"
 #include "VFSFileFuncs.h"
 
-#include <cstdio> // for SEEK_* constants
 
 VFS_NAMESPACE_START
 
@@ -74,12 +75,12 @@ vfspos DiskFile::getpos() const
     return _fh ? real_ftell((FILE*)_fh) : npos;
 }
 
-unsigned int DiskFile::read(void *dst, size_t bytes)
+size_t DiskFile::read(void *dst, size_t bytes)
 {
     return _fh ? real_fread(dst, 1, bytes, (FILE*)_fh) : 0;
 }
 
-unsigned int DiskFile::write(const void *src, size_t bytes)
+size_t DiskFile::write(const void *src, size_t bytes)
 {
     return _fh ? real_fwrite(src, 1, bytes, (FILE*)_fh) : 0;
 }
@@ -150,21 +151,21 @@ bool MemFile::seek(vfspos pos, int whence)
     return false;
 }
 
-unsigned int MemFile::read(void *dst, unsigned int bytes)
+size_t MemFile::read(void *dst, size_t bytes)
 {
     if(iseof())
         return 0;
-    unsigned int rem = std::min<unsigned int>((unsigned int)(_size - _pos), bytes);
+    size_t rem = std::min((size_t)(_size - _pos), bytes);
 
     memcpy(dst, (char*)_buf + _pos, rem);
     return rem;
 }
 
-unsigned int MemFile::write(const void *src, unsigned int bytes)
+size_t MemFile::write(const void *src, size_t bytes)
 {
     if(iseof())
         return 0;
-    unsigned int rem = std::min<unsigned int>((unsigned int)(_size - _pos), bytes);
+    size_t rem = std::min((size_t)(_size - _pos), bytes);
 
     memcpy((char*)_buf + _pos, src, rem);
     return rem;

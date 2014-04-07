@@ -18,8 +18,8 @@ public:
     virtual bool seek(vfspos pos, int whence);
     virtual bool flush();
     virtual vfspos getpos() const;
-    virtual unsigned int read(void *dst, unsigned int bytes);
-    virtual unsigned int write(const void *src, unsigned int bytes);
+    virtual size_t read(void *dst, size_t bytes);
+    virtual size_t write(const void *src, size_t bytes);
     virtual vfspos size();
     virtual const char *getType() const { return "ZipFile"; }
 

@@ -21,23 +21,16 @@
 #define VFS_IGNORE_CASE
 
 
-// These are used for small, temporary memory allocations that can remain on the stack.
-// If alloca is available, this is the preferred way.
-#include <cstdlib>
-#ifdef _WIN32
-#  include <malloc.h> // MSVC/MinGW still need this for alloca. Seems to be windows-specific failure
-#endif
-#define VFS_STACK_ALLOC(size) alloca(size)
-#define VFS_STACK_FREE(ptr)   /* no need to free anything here */
-// Fail-safe:
-//#define VFS_STACK_ALLOC(size) malloc(size)
-//#define VFS_STACK_FREE(ptr)  free(ptr)
-
 /* --- End of config section --- */
 
 
 #define VFS_NAMESPACE_START namespace ttvfs {
 #define VFS_NAMESPACE_END }
+
+
+#if !defined(_MSC_VER)
+#  include <stdint.h>
+#endif
 
 VFS_NAMESPACE_START
 
