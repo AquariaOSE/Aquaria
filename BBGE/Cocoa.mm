@@ -14,7 +14,7 @@ void cocoaMessageBox(const std::string &title, const std::string &msg)
     @autoreleasepool {
         NSString *nstitle = @(title.c_str());
         NSString *nsmsg = @(msg.c_str());
-        NSRunAlertPanel(nstitle, nsmsg, nil, nil, nil);
+        NSRunAlertPanel(nstitle, @"%@", nil, nil, nil, nsmsg);
     }
 }
 
