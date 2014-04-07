@@ -121,13 +121,16 @@ Dir *DiskLoader::LoadDir(const char *fn, const char * /*ignored*/)
     char *t = (char*)VFS_STACK_ALLOC(s+1);
     memcpy(t, fn, s+1); // copy terminating '\0' as well
     if(findFileHarder(&t[0])) // fixes the filename on the way
-    {
         fn = &t[0];
-    }
+#endif
+
+    ret = safecastNonNull<DiskDir*>(getRoot()->getDir(fn, true, false));
+
+#if !defined(_WIN32) && defined(VFS_IGNORE_CASE)
     VFS_STACK_FREE(t);
 #endif
 
-    return safecastNonNull<DiskDir*>(getRoot()->getDir(fn, true, false));
+    return ret;
 }
 
 VFS_NAMESPACE_END

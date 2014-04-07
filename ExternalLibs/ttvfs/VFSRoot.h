@@ -41,7 +41,7 @@ public:
     /** Mount a directory in the tree to a different location. Requires a previous call to Prepare().
         This can be imagined like the contents of a directory appearing in a different location.
         Be careful not to create circles! */
-    bool Mount(const char *src, const char *dest);
+    void Mount(const char *src, const char *dest);
 
     /** Drops a directory from the tree. Internally, this calls Reload(false), 
         which is a heavy operation compared to Mount(). Be warned. */
@@ -51,7 +51,7 @@ public:
         add into the subdir stored in the Dir object. The tree will be extended if target dir does not exist.
         Files in the tree will be replaced if already existing.
         Like with Mount(); be careful not to create cycles. */
-    bool AddVFSDir(DirBase *dir, const char *subdir = NULL);
+    void AddVFSDir(DirBase *dir, const char *subdir = NULL);
 
     /** Add an archive file to the tree, which can then be addressed like a folder,
         e.g. "path/to/example.zip/file.txt".
@@ -61,6 +61,7 @@ public:
         Read the comments in VFSArchiveLoader.h for an explanation how it works.
         If you have no idea, leave it NULL, because it can easily cause a crash if not used carefully. */
     Dir *AddArchive(const char *arch, void *opaque = NULL);
+    Dir *AddArchive(File *file, const char *path = NULL, void *opaque = NULL);
 
     /** Add a loader that can look for files on demand.
         Do not add more then once instance of a loader type. */

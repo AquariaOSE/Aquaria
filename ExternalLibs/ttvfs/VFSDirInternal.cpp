@@ -42,6 +42,9 @@ void InternalDir::close()
 
 void InternalDir::_addMountDir(CountedPtr<DirBase> d)
 {
+    if(d.content() == this)
+        return;
+
     // move to end of vector if already mounted
     for(MountedDirs::iterator it = _mountedDirs.begin(); it != _mountedDirs.end(); ++it)
         if(*it == d)
@@ -162,7 +165,15 @@ bool InternalDir::_addToView(char *path, DirView& view)
     return added;
 }
 
+File *InternalDir::getFileFromSubdir(const char *subdir, const char *file)
+{
+    for(MountedDirs::reverse_iterator it = _mountedDirs.rbegin(); it != _mountedDirs.rend(); ++it)
+        if(File* f = (*it)->getFileFromSubdir(subdir, file))
+            return f;
 
+    InternalDir *d = safecast<InternalDir*>(DirBase::getDirByName(subdir, false, false)); // vcall not required here
+    return d ? d->getFile(file) : NULL;
+}
 
 
 VFS_NAMESPACE_END

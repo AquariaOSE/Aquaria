@@ -65,9 +65,12 @@ bool DirView::_addToView(char *path, DirView& view)
     return true;
 }
 
-static void __test__()
+File *DirView::getFileFromSubdir(const char *subdir, const char *file)
 {
-	new DirView;
+    for(ViewList::reverse_iterator it = _view.rbegin(); it != _view.rend(); ++it)
+        if(File* f = (*it)->getFileFromSubdir(subdir, file))
+            return f;
+    return NULL;
 }
 
 VFS_NAMESPACE_END
