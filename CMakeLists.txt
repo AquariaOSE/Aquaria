@@ -280,7 +280,7 @@ ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL_DYNAMIC=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_FMOD_OPENAL_BRIDGE=1)
 IF(AQUARIA_USE_VFS)
     ADD_DEFINITIONS(-DBBGE_BUILD_VFS=1)
-    ADD_DEFINITIONS(-VFS_ENABLE_C_API=1)
+    ADD_DEFINITIONS(-DVFS_ENABLE_C_API=1)
     INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs)
     INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs_zip)
     INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs_cfileapi)
@@ -484,13 +484,11 @@ SET(BBGE_SRCS
     ${BBGEDIR}/FmodOpenALBridge.cpp
     ${COCOA_SRCS}
     ${EXTLIBDIR}/DeflateCompressor.cpp
-    ${EXTLIBDIR}/FileAPI.cpp
     ${EXTLIBDIR}/glfont2/glfont2.cpp
     ${EXTLIBDIR}/glpng/glpng.c
     ${EXTLIBDIR}/tinyxml.cpp
     ${EXTLIBDIR}/tinyxmlerror.cpp
     ${EXTLIBDIR}/tinyxmlparser.cpp
-    ${EXTLIBDIR}/FileAPI.cpp
     ${EXTLIBDIR}/minihttp.cpp
     ${EXTLIBDIR}/JPS.h
 )
