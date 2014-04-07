@@ -107,18 +107,19 @@ InStream::InStream(const char *fn)
 bool InStream::open(const char *fn)
 {
     ttvfs::File *vf = vfs->GetFile(fn);
-    if(vf && vf->open("r"))
+    if(!vf || !vf->open("r"))
     {
-        size_t sz = (size_t)vf->size();
-        std::string s;
-        s.resize(sz);
-        vf->read(&s[0], sz);
-        str(s);
-        vf->close();
-        return true;
+        setstate(std::ios::failbit);
+        return false;
     }
-    setstate(std::ios::failbit);
-    return false;
+    size_t sz = (size_t)vf->size();
+    std::string s;
+    s.resize(sz);
+    size_t bytes = vf->read(&s[0], sz);
+    s.resize(bytes);
+    str(s);
+    vf->close();
+    return true;
 }
 
 int ttvfs_stdio_fsize(VFILE *f, size_t *sizep)

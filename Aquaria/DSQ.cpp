@@ -2804,19 +2804,13 @@ bool DSQ::mountModPackage(const std::string& pkg)
 	{
 		// Load archive only if no such directory exists already (prevent loading multiple times)
 		vd = vfs.AddArchive(pkg.c_str());
-		if(vd)
-			debugLog("Package: Loaded file " + pkg);
-		else
+		if(!vd)
 		{
 			debugLog("Package: Unable to load " + pkg);
 			return false;
 		}
 	}
-	if(!vfs.Mount(pkg.c_str(), mod.getBaseModPath().c_str()))
-	{
-		debugLog("Package: Failed to mount: " + pkg);
-		return false;
-	}
+	vfs.Mount(pkg.c_str(), mod.getBaseModPath().c_str());
 	debugLog("Package: Mounted " + pkg + " as archive in _mods");
 	return true;
 #else

@@ -13,16 +13,17 @@ class DirView : public DirBase
 {
 public:
     DirView();
-    ~DirView();
+    virtual ~DirView();
     void init(const char *);
     void add(DirBase *);
 
-    virtual File *getFileByName(const char *fn, bool lazyLoad = true);
-    virtual void forEachDir(DirEnumCallback f, void *user = NULL, bool safe = false);
-    virtual void forEachFile(FileEnumCallback f, void *user = NULL, bool safe = false);
+    File *getFileByName(const char *fn, bool lazyLoad = true);
+    void forEachDir(DirEnumCallback f, void *user = NULL, bool safe = false);
+    void forEachFile(FileEnumCallback f, void *user = NULL, bool safe = false);
+    File *getFileFromSubdir(const char *subdir, const char *file);
 
-    virtual const char *getType() const { return "DirView"; }
-    virtual DirBase *createNew(const char *dir) const { return NULL; }
+    const char *getType() const { return "DirView"; }
+    DirBase *createNew(const char *dir) const { return NULL; }
 
     bool _addToView(char *path, DirView& view);
 

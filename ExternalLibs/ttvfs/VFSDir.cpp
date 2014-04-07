@@ -21,55 +21,21 @@ DirBase::~DirBase()
 {
 }
 
-File *DirBase::getFile(const char *fn, bool lazyLoad /* = true */)
+File *DirBase::getFile(const char *fn)
 {
-    while(fn[0] == '.' && fn[1] == '/') // skip ./
-        fn += 2;
+    const char *slashpos = strchr(fn, '/');
+    if(!slashpos)
+        return getFileByName(fn, true);
 
-    char *slashpos = (char *)strchr(fn, '/');
+    const size_t len = slashpos - fn;
+    char *dirname = (char*)VFS_STACK_ALLOC(len + 1);
+    memcpy(dirname, fn, len);
+    dirname[len] = 0;
 
-    // if there is a '/' in the string, descend into subdir and continue there
-    if(slashpos)
-    {
-        // "" (the empty directory name) is allowed, so we can't return 'this' when hitting an empty string the first time.
-        // This whole mess is required for absolute unix-style paths ("/home/foo/..."),
-        // which, to integrate into the tree properly, sit in the root directory's ""-subdir.
-        // FIXME: Bad paths (double-slashes and the like) need to be normalized elsewhere, currently!
-
-        size_t len = strlen(fn);
-        char *dup = (char*)VFS_STACK_ALLOC(len + 1);
-        memcpy(dup, fn, len + 1); // also copy the null-byte
-        slashpos = dup + (slashpos - fn); // use direct offset, not to have to recount again the first time
-        DirBase *subdir = this;
-        const char *ptr = dup;
-
-        goto pos_known;
-        do
-        {
-            ptr = slashpos + 1;
-            while(ptr[0] == '.' && ptr[1] == '/') // skip ./
-                ptr += 2;
-            slashpos = (char *)strchr(ptr, '/');
-            if(!slashpos)
-                break;
-
-        pos_known:
-            *slashpos = 0;
-            subdir = subdir->getDirByName(ptr, true, true);
-        }
-        while(subdir);
-        VFS_STACK_FREE(dup);
-        if(!subdir)
-            return NULL;
-        // restore pointer into original string, by offset
-        ptr = fn + (ptr - dup);
-        return subdir->getFileByName(ptr, lazyLoad);
-    }
-
-    // no subdir? file must be in this dir now.
-    return getFileByName(fn, lazyLoad);
+    File *f = getFileFromSubdir(dirname, slashpos + 1);
+    VFS_STACK_FREE(dirname);
+    return f;
 }
-
 
 DirBase *DirBase::getDir(const char *subdir, bool forceCreate /* = false */, bool lazyLoad /* = true */, bool useSubtrees /* = true */)
 {
@@ -203,7 +169,6 @@ File *Dir::getFileByName(const char *fn, bool lazyLoad /* = true */)
         return NULL;
 
     // Lazy-load file if it's not in the tree yet
-    // TODO: get rid of alloc
     std::string fn2 = joinPath(fullname(), GetBaseNameFromPath(fn));
     File *f = _loader->Load(fn2.c_str(), fn2.c_str());
     if(f)
@@ -267,7 +232,6 @@ bool Dir::addRecursive(File *f, size_t skip /* = 0 */)
         {
             char *dirname = (char*)VFS_STACK_ALLOC(prefixLen);
             --prefixLen; // -1 to strip the trailing '/'. That's the position where to put the terminating null byte.
-            ++skip;
             memcpy(dirname, f->fullname() + skip, prefixLen); // copy trailing null byte
             dirname[prefixLen] = 0;
             vdir = safecastNonNull<Dir*>(getDir(dirname, true));
@@ -313,6 +277,12 @@ DirBase *Dir::getDirByName(const char *dn, bool lazyLoad /* = true */, bool useS
     return sub;
 }
 
+File *Dir::getFileFromSubdir(const char *subdir, const char *file)
+{
+    Dir *d = safecast<Dir*>(getDirByName(subdir, true, false)); // useSubtrees is irrelevant here
+    return d ? d->getFile(file) : NULL;
+}
+
 
 
 // ----- DiskDir start here -----
@@ -337,12 +307,7 @@ void DiskDir::load()
     GetFileList(fullname(), li);
     for(StringList::iterator it = li.begin(); it != li.end(); ++it)
     {
-        // TODO: use stack alloc
-        std::string tmp = fullname();
-        tmp += '/';
-        tmp += *it;
-
-        DiskFile *f = new DiskFile(tmp.c_str());
+        DiskFile *f = new DiskFile(joinPath(fullname(), it->c_str()).c_str());
         _files[f->name()] = f;
     }
 
@@ -350,12 +315,8 @@ void DiskDir::load()
     GetDirList(fullname(), li, 0);
     for(StringList::iterator it = li.begin(); it != li.end(); ++it)
     {
-        // TODO: use stack alloc
-        std::string full(fullname());
-        full += '/';
-        full += *it; // GetDirList() always returns relative paths
-
-        Dir *d = createNew(full.c_str());
+        // GetDirList() returns relative paths, so need to join
+        Dir *d = createNew(joinPath(fullname(), it->c_str()).c_str());
         _subdirs[d->name()] = d;
     }
 }

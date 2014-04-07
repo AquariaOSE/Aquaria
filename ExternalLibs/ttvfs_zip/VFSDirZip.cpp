@@ -47,7 +47,7 @@ void ZipDir::load()
     _archiveHandle->openRead();
 
     const unsigned int files = mz_zip_reader_get_num_files(MZ);
-    const size_t len = fullnameLen();
+    const size_t len = fullnameLen() + 1; // +1 for trailing '/' when used as path name in addRecursive()
 
     mz_zip_archive_file_stat fs;
     for (unsigned int i = 0; i < files; ++i)

@@ -26,6 +26,7 @@ public:
     void forEachDir(DirEnumCallback f, void *user = NULL, bool safe = false);
     File *getFileByName(const char *fn, bool lazyLoad = true);
     DirBase *getDirByName(const char *fn, bool lazyLoad = true, bool useSubtrees = true);
+    File *getFileFromSubdir(const char *subdir, const char *file);
     void close();
 
 protected:

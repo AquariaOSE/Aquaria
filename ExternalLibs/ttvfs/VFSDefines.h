@@ -8,7 +8,7 @@
 
 // Define this to allow dealing with files > 4 GB, using non-standard functions.
 // This may or may not work with your platform/compiler, good luck.
-#define VFS_LARGEFILE_SUPPORT
+//#define VFS_LARGEFILE_SUPPORT
 
 // Define this to make all operations case insensitive.
 // Windows systems generally don't care much, but for Linux and Mac this can be used

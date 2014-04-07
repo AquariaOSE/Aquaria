@@ -51,7 +51,6 @@ Root::Root()
 
 Root::~Root()
 {
-    Clear();
 }
 
 void Root::Clear()
@@ -63,32 +62,27 @@ void Root::Clear()
     archLdrs.clear();
 }
 
-bool Root::Mount(const char *src, const char *dest)
+void Root::Mount(const char *src, const char *dest)
 {
     return AddVFSDir(GetDir(src, true), dest);
 }
 
-bool Root::AddVFSDir(DirBase *dir, const char *subdir /* = NULL */)
+void Root::AddVFSDir(DirBase *dir, const char *subdir /* = NULL */)
 {
-    if(!dir)
-        return false;
     if(!subdir)
         subdir = dir->fullname();
-
     InternalDir *into = safecastNonNull<InternalDir*>(merged->getDir(subdir, true, true, false));
     into->_addMountDir(dir);
-
-    return true;
 }
 
 bool Root::Unmount(const char *src, const char *dest)
 {
     DirBase *vdsrc = GetDir(src, false);
-    InternalDir *vddest = safecastNonNull<InternalDir*>(GetDir(dest, false));
+    InternalDir *vddest = safecast<InternalDir*>(GetDir(dest, false));
     if(!vdsrc || !vddest)
         return false;
 
-    vddest->_removeMountDir(vdsrc); // FIXME: verify this works
+    vddest->_removeMountDir(vdsrc);
     return true;
 }
 
@@ -102,17 +96,20 @@ void Root::AddArchiveLoader(VFSArchiveLoader *ldr)
 {
     archLdrs.push_back(ldr);
 }
-
 Dir *Root::AddArchive(const char *arch, void *opaque /* = NULL */)
 {
-    File *af = GetFile(arch);
-    if(!af)
+    return AddArchive(GetFile(arch), arch, opaque);
+}
+
+Dir *Root::AddArchive(File *file, const char *path /* = NULL */, void *opaque /* = NULL */)
+{
+    if(!file || !file->open("rb"))
         return NULL;
 
     Dir *ad = NULL;
     VFSLoader *fileLdr = NULL;
     for(ArchiveLoaderArray::iterator it = archLdrs.begin(); it != archLdrs.end(); ++it)
-        if((ad = (*it)->Load(af, &fileLdr, opaque)))
+        if((ad = (*it)->Load(file, &fileLdr, opaque)))
             break;
     if(!ad)
         return NULL;
@@ -120,7 +117,7 @@ Dir *Root::AddArchive(const char *arch, void *opaque /* = NULL */)
     if(fileLdr)
         loaders.push_back(fileLdr);
 
-    AddVFSDir(ad, arch);
+    AddVFSDir(ad, path ? path : file->fullname());
 
     return ad;
 }
