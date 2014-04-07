@@ -23,6 +23,9 @@ DirBase::~DirBase()
 
 File *DirBase::getFile(const char *fn)
 {
+    while(fn[0] == '.' && fn[1] == '/')
+        fn += 2;
+
     const char *slashpos = strchr(fn, '/');
     if(!slashpos)
         return getFileByName(fn, true);
