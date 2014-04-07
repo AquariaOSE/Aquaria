@@ -36,7 +36,7 @@ distribution.
 #pragma warning( disable : 4786 )
 #endif
 
-#include "FileAPI.h"
+#include "ttvfs_stdio.h"
 
 #include <ctype.h>
 #include <stdlib.h>
