@@ -138,7 +138,7 @@ void DirBase::forEachDir(DirEnumCallback f, void *user /* = NULL */, bool safe /
 
 DirBase *DirBase::getDirByName(const char *dn, bool /* unused: lazyLoad = true */, bool useSubtrees /* = true */)
 {
-    Dirs::const_iterator it = _subdirs.find(dn);
+    Dirs::iterator it = _subdirs.find(dn);
     return it != _subdirs.end() ? it->second : NULL;
 }
 

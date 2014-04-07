@@ -1,11 +1,11 @@
 // VFSTools.cpp - useful functions and misc stuff
 // For conditions of distribution and use, see copyright notice in VFS.h
 
+#include "VFSInternal.h"
 #include "VFSTools.h"
 
 #include <algorithm>
-#include <cctype>
-
+#include <ctype.h>
 
 #if _WIN32
 #   define WIN32_LEAN_AND_MEAN
@@ -273,19 +273,12 @@ bool CreateDirRec(const char *dir)
 bool GetFileSize(const char* fn, vfspos& size)
 {
     vfspos sz = 0;
-#ifdef VFS_LARGEFILE_SUPPORT
-# ifdef _MSC_VER
+#if defined(VFS_LARGEFILE_SUPPORT) && defined(_MSC_VER)
     struct _stat64 st;
     if(_stat64(fn, &st))
         return false;
     sz = st.st_size;
-# else // _MSC_VER
-    struct stat64 st;
-    if(stat64(fn, &st))
-        return false;
-    sz = st.st_size;
-# endif
-#else // VFS_LARGEFILE_SUPPORT
+#else
     struct stat st;
     if(stat(fn, &st))
         return false;

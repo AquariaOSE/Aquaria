@@ -7,7 +7,7 @@
 #ifndef VFS_TOOLS_H
 #define VFS_TOOLS_H
 
-#include <cstdlib>
+#include <stdlib.h>
 #include <deque>
 #include <string>
 

@@ -13,21 +13,41 @@
 
 #include "VFSDefines.h"
 
-#include <cstdlib>
-#include <cstring>
-#include <string>
-#include <cassert>
-
+#if defined(VFS_LARGEFILE_SUPPORT)
+#  define _LARGEFILE_SOURCE
+#  define _LARGEFILE64_SOURCE
+#  define _FILE_OFFSET_BITS 64
+#endif
 
 #if _MSC_VER
 # ifndef _CRT_SECURE_NO_WARNINGS
 #   define _CRT_SECURE_NO_WARNINGS
 # endif
-#ifndef _CRT_SECURE_NO_DEPRECATE
+# ifndef _CRT_SECURE_NO_DEPRECATE
 #   define _CRT_SECURE_NO_DEPRECATE
+# endif
 #endif
-#   pragma warning(disable: 4355) // 'this' : used in base member initializer list
+
+// These are used for small, temporary memory allocations that can remain on the stack.
+// If alloca is available, this is the preferred way.
+#include <stdlib.h>
+#ifdef _WIN32
+#  include <malloc.h> // MSVC/MinGW still need this for alloca. Seems to be windows-specific failure
 #endif
+#define VFS_STACK_ALLOC(size) alloca(size)
+#define VFS_STACK_FREE(ptr)   /* no need to free anything here */
+// Fail-safe:
+//#define VFS_STACK_ALLOC(size) malloc(size)
+//#define VFS_STACK_FREE(ptr)  free(ptr)
+
+
+#include <string.h>
+#include <string>
+#include <assert.h>
+
+
+
+VFS_NAMESPACE_START
 
 template <typename DST, typename SRC> inline DST safecast(SRC p)
 {
@@ -45,5 +65,6 @@ template <typename DST, typename SRC> inline DST safecastNonNull(SRC p)
     return static_cast<DST>(p);
 }
 
+VFS_NAMESPACE_END
 
 #endif
