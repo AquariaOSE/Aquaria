@@ -813,12 +813,11 @@ void cocoaMessageBox(const std::string &title, const std::string &msg);
 
 void messageBox(const std::string& title, const std::string &msg)
 {
-#if SDL_VERSION_ATLEAST(2,0,0)
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, title.c_str(),
-							 msg.c_str, NULL);
-#else
 #ifdef BBGE_BUILD_WINDOWS
-	MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
+    MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
+#elif SDL_VERSION_ATLEAST(2,0,0)
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, title.c_str(),
+							 msg.c_str(), NULL);
 #elif defined(BBGE_BUILD_MACOSX)
 	cocoaMessageBox(title, msg);
 #elif defined(BBGE_BUILD_UNIX)
@@ -826,7 +825,6 @@ void messageBox(const std::string& title, const std::string &msg)
 	fprintf(stderr, "%s: %s\n", title.c_str(), msg.c_str());
 #else
 #error Please define your platform.
-#endif
 #endif
 }
 
