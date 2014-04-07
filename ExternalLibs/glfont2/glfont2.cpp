@@ -7,7 +7,7 @@
 
 //STL headers
 #include <string>
-#include "FileAPI.h"
+#include "ttvfs_stdio.h"
 #include "ByteBuffer.h"
 using namespace std;
 
@@ -53,26 +53,22 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	//Destroy the old font if there was one, just to be safe
 	Destroy();
 
-
-#ifdef BBGE_BUILD_VFS
-	//Open input file
-	ttvfs::VFSFile *vf = vfs.GetFile(file_name);
-	if (!vf)
-		return false;
-	ByteBuffer bb((void*)vf->getBuf(), vf->size(), ByteBuffer::TAKE_OVER);
-	vf->dropBuf(false);
-#else
+	
 	VFILE *fh = vfopen(file_name, "rb");
 	if (!fh)
 		return false;
-	vfseek(fh, 0, SEEK_END);
-	long int sz = vftell(fh);
-	vfseek(fh, 0, SEEK_SET);
+
+	size_t sz = 0;
+	if(vfsize(fh, &sz) < 0)
+	{
+		vfclose(fh);
+		return false;
+	}
+
 	ByteBuffer bb(sz);
 	bb.resize(sz);
 	vfread(bb.contents(), 1, sz, fh);
 	vfclose(fh);
-#endif
 
 	// Read the header from file
 	header.tex = tex;
