@@ -317,8 +317,10 @@ void FixPath(std::string& s)
         s.clear();
         return;
     }
+    if(s.c_str() != p)
+        s = p;
     size_t len = s.length();
-    while(len)
+    while(len > 1) // remove all trailing slashes unless the first char is a slash -- leave it there for absolute unix paths
     {
         char end = s[len - 1];
         if(end == '/' || end == '\\') // strip trailing '/'
@@ -354,9 +356,12 @@ void MakeSlashTerminated(std::string& s)
         s += '/';
 }
 
-// extracts the file name from a given path
+// extracts the file name (part after the last /) from a given path
+// returns the string "/" as-is.
 const char *GetBaseNameFromPath(const char *str)
 {
+    if(str[0] == '/' && !str[1])
+        return str;
     const char *p = strrchr(str, '/');
     return p ? p+1 : str;
 }

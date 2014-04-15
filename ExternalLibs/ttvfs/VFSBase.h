@@ -14,7 +14,7 @@ VFS_NAMESPACE_START
 class VFSBase : public Refcounted
 {
 public:
-    virtual ~VFSBase() {}
+    virtual ~VFSBase();
 
     /** Returns the plain file name. Never NULL. */
     inline const char *name() const { return _name; }

@@ -7,7 +7,7 @@
 #include <vector>
 #include <list>
 #include <string>
-#include <iostream>
+#include <iosfwd>
 
 #include "VFSRefcounted.h"
 
@@ -43,7 +43,7 @@ public:
         Be careful not to create circles! */
     void Mount(const char *src, const char *dest);
 
-    /** Drops a directory from the tree. Internally, this calls Reload(false), 
+    /** Drops a directory from the tree. Internally, this calls Reload(false),
         which is a heavy operation compared to Mount(). Be warned. */
     bool Unmount(const char *src, const char *dest);
 
@@ -72,7 +72,7 @@ public:
         it is sent through each registered loader until one of them can recognize
         the format and open it. */
     void AddArchiveLoader(VFSArchiveLoader *ldr);
-    
+
     /** Get a file from the merged tree. Asks loaders if the file is not in the tree.
         If found by a loader, the file will be added to the tree. */
     File *GetFile(const char *fn);
@@ -103,7 +103,7 @@ public:
     DirBase *GetDir(const char* dn, bool create = false);
 
     // DEBUG STUFF
-    void debugDumpTree(std::ostream& os, Dir *start = NULL);
+    void debugDumpTree(std::ostream& os, const char *path, int level);
 
 protected:
 

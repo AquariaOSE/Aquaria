@@ -11,10 +11,12 @@ VFSBase::VFSBase()
 {
 }
 
+VFSBase::~VFSBase()
+{
+}
+
 void VFSBase::_setName(const char *n)
 {
-    if(!n)
-        return;
     _fullname = n;
     FixPath(_fullname);
     _name = GetBaseNameFromPath(_fullname.c_str());

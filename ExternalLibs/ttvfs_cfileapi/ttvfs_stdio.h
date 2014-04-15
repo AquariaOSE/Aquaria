@@ -25,8 +25,11 @@
 #include <sstream>
 #include <stdio.h>
 
-#include <ttvfs.h>
-
+namespace ttvfs
+{
+    class File;
+    class Root;
+};
 typedef ttvfs::File VFILE;
 
 
