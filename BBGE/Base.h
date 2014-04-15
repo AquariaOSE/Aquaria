@@ -295,6 +295,7 @@ void triggerBreakpoint();
 bool createDir(const std::string& d);
 
 #ifdef BBGE_BUILD_VFS
+namespace ttvfs { class Root; }
 extern ttvfs::Root vfs; // in Base.cpp
 #endif
 
