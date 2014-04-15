@@ -1,17 +1,18 @@
 #include "VFSInternal.h"
 #include "VFSZipArchiveLoader.h"
 #include "VFSDirZip.h"
+#include "VFSZipArchiveRef.h"
 
 VFS_NAMESPACE_START
 
-VFSDir *VFSZipArchiveLoader::Load(VFSFile *arch, VFSLoader ** /*unused*/, void * /*unused*/)
+Dir *VFSZipArchiveLoader::Load(File *arch, VFSLoader ** /*unused*/, void * /*unused*/)
 {
-    VFSDirZip *vd = new VFSDirZip(arch);
-    if(vd->load(true))
-        return vd;
-
-    vd->ref--;
-    return NULL;
+    CountedPtr<ZipArchiveRef> zref = new ZipArchiveRef(arch);
+    if(!zref->init() || !zref->openRead())
+        return NULL;
+    ZipDir *vd = new ZipDir(zref, arch->fullname(), true);
+    vd->load();
+    return vd;
 }
 
 VFS_NAMESPACE_END

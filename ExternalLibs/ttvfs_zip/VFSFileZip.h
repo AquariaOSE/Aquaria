@@ -2,38 +2,36 @@
 #define VFSFILE_ZIP_H
 
 #include "VFSFile.h"
-#include "miniz.h"
+#include "VFSZipArchiveRef.h"
 
 VFS_NAMESPACE_START
 
-class VFSFileZip : public VFSFile
+class ZipFile : public File
 {
 public:
-    VFSFileZip(mz_zip_archive *zip);
-    virtual ~VFSFileZip();
+    ZipFile(const char *name, ZipArchiveRef *zref, vfspos uncompSize, unsigned int fileIdx);
+    virtual ~ZipFile();
     virtual bool open(const char *mode = NULL);
-    virtual bool isopen(void) const;
-    virtual bool iseof(void) const;
-    virtual bool close(void);
-    virtual bool seek(vfspos pos);
-    virtual bool flush(void);
-    virtual vfspos getpos(void) const;
-    virtual unsigned int read(void *dst, unsigned int bytes);
-    virtual unsigned int write(const void *src, unsigned int bytes);
-    virtual vfspos size(void);
-    virtual const void *getBuf(allocator_func alloc = NULL, delete_func del = NULL);
-    virtual void dropBuf(bool del);
-    virtual const char *getType(void) const { return "Zip"; }
-
-    inline mz_zip_archive_file_stat *getZipFileStat(void) { return &_zipstat; }
-    void _init();
+    virtual bool isopen() const;
+    virtual bool iseof() const;
+    virtual void close();
+    virtual bool seek(vfspos pos, int whence);
+    virtual bool flush();
+    virtual vfspos getpos() const;
+    virtual size_t read(void *dst, size_t bytes);
+    virtual size_t write(const void *src, size_t bytes);
+    virtual vfspos size();
+    virtual const char *getType() const { return "ZipFile"; }
 
 protected:
-    unsigned int _pos;
+    bool unpack();
+
+    char *_buf;
+    vfspos _pos;
+    CountedPtr<ZipArchiveRef> _archiveHandle;
+    vfspos _uncompSize;
+    unsigned int _fileIdx;
     std::string _mode;
-    mz_zip_archive_file_stat _zipstat;
-    mz_zip_archive *_zip;
-    char *_fixedStr; // for \n fixed string in text mode. cleared when mode is changed
 };
 
 VFS_NAMESPACE_END

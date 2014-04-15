@@ -43,6 +43,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <assert.h>
 
+#ifdef BBGE_BUILD_VFS
+#  include "ttvfs.h"
+#  ifndef VFS_IGNORE_CASE
+#    error Must define VFS_IGNORE_CASE, see VFSDefines.h
+#  endif
+   ttvfs::Root vfs; // extern
+#endif
+
 Vector getDirVector(Direction dir)
 {
 	switch(dir)
@@ -489,26 +497,15 @@ void debugLog(const std::string &s)
 // delete[] when no longer needed.
 char *readFile(const std::string& path, unsigned long *size_ret)
 {
-	long fileSize;
-#ifdef BBGE_BUILD_VFS
-	VFILE *vf = vfs.GetFile(path.c_str());
-	if (!vf)
-		return NULL;
-	char *buffer = (char*)vf->getBuf(NULL, NULL);
-	fileSize = vf->size();
-	vf->dropBuf(false); // unlink buffer from file
-#else
-	FILE *f = fopen(path.c_str(), "rb");
+	VFILE *f = vfopen(path.c_str(), "rb");
 	if (!f)
 		return NULL;
 
-
-	if (fseek(f, 0, SEEK_END) != 0
-	 || (fileSize = ftell(f)) < 0
-	 || fseek(f, 0, SEEK_SET) != 0)
+	size_t fileSize = 0;
+	if(vfsize(f, &fileSize) < 0)
 	{
 		debugLog(path + ": Failed to get file size");
-		fclose(f);
+		vfclose(f);
 		return NULL;
 	}
 
@@ -519,23 +516,22 @@ char *readFile(const std::string& path, unsigned long *size_ret)
 		os << path << ": Not enough memory for file ("
 		   << (fileSize+1) << " bytes)";
 		debugLog(os.str());
-		fclose(f);
+		vfclose(f);
 		return NULL;
 	}
 
-	long bytesRead = fread(buffer, 1, fileSize, f);
+	long bytesRead = vfread(buffer, 1, fileSize, f);
 	if (bytesRead != fileSize)
 	{
 		std::ostringstream os;
 		os << path << ": Failed to read file (only got "
 		   << bytesRead << " of " << fileSize << " bytes)";
 		debugLog(os.str());
-		fclose(f);
+		vfclose(f);
 		return NULL;
 	}
-	fclose(f);
+	vfclose(f);
 	buffer[fileSize] = 0;
-#endif
 
 	if (size_ret)
 		*size_ret = fileSize;
@@ -630,21 +626,19 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 {
 	if (path.empty()) return;
 
-
 #ifdef BBGE_BUILD_VFS
-	ttvfs::VFSDir *vd = vfs.GetDir(path.c_str(), true); // add to tree if it wasn't loaded before
-	if(!vd)
+	ttvfs::DirView view;
+	if(!vfs.FillDirView(path.c_str(), view))
 	{
 		debugLog("Path '" + path + "' does not exist");
 		return;
 	}
-	vd->load(false);
 	vfscallback_s dat;
 	dat.path = &path;
 	dat.ext = type.length() ? type.c_str() : NULL;
 	dat.param = param;
 	dat.callback = callback;
-	vd->forEachFile(forEachFile_vfscallback, &dat, true);
+	view.forEachFile(forEachFile_vfscallback, &dat, true);
 
 	return;
 	// -------------------------------------
@@ -817,14 +811,17 @@ std::vector<std::string> getFileList(std::string path, std::string type, int par
 	return list;
 }
 
-#if defined(BBGE_BUILD_MACOSX)
+#if defined(BBGE_BUILD_MACOSX) && !SDL_VERSION_ATLEAST(2,0,0)
 void cocoaMessageBox(const std::string &title, const std::string &msg);
 #endif
 
 void messageBox(const std::string& title, const std::string &msg)
 {
 #ifdef BBGE_BUILD_WINDOWS
-	MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
+    MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
+#elif SDL_VERSION_ATLEAST(2,0,0)
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, title.c_str(),
+							 msg.c_str(), NULL);
 #elif defined(BBGE_BUILD_MACOSX)
 	cocoaMessageBox(title, msg);
 #elif defined(BBGE_BUILD_UNIX)

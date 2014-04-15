@@ -815,16 +815,17 @@ static bool findFile_helper(const char *rawname, std::string &fname)
 static int loadFile_helper(lua_State *L, const char *fn)
 {
 #ifdef BBGE_BUILD_VFS
-	VFILE *vf = vfs.GetFile(fn);
-	if (!vf)
+	unsigned long size = 0;
+	const char *data = readFile(fn, &size);
+	if (!data)
 	{
 		lua_pushfstring(L, "cannot open %s", fn);
 		return LUA_ERRFILE;
 	}
 	else
 	{
-		int result = luaL_loadbuffer(L, (const char*)vf->getBuf(), vf->size(), fn);
-		vf->dropBuf(true);
+		int result = luaL_loadbuffer(L, data, size, fn);
+		delete [] data;
 		return result;
 	}
 #else

@@ -7,7 +7,8 @@
 #include "VFSDir.h"
 #include "VFSLoader.h"
 
-VFS_NAMESPACE_START
+//#include <stdio.h>
+
 
 #if !defined(_WIN32) && defined(VFS_IGNORE_CASE)
 
@@ -78,42 +79,66 @@ static bool findFileHarder(char *fn)
 #endif
 
 
-VFSFile *VFSLoaderDisk::Load(const char *fn, const char * /*ignored*/)
+VFS_NAMESPACE_START
+
+VFSLoader::VFSLoader()
+: root(NULL)
+{
+}
+
+DiskLoader::DiskLoader()
+{
+    root = new DiskDir("", this);
+}
+
+File *DiskLoader::Load(const char *fn, const char * /*ignored*/)
 {
     if(FileExists(fn))
-        return new VFSFileReal(fn); // must contain full file name
+        return new DiskFile(fn); // must contain full file name
 
-    VFSFileReal *vf = NULL;
+    DiskFile *vf = NULL;
 
 #if !defined(_WIN32) && defined(VFS_IGNORE_CASE)
     size_t s = strlen(fn);
     char *t = (char*)VFS_STACK_ALLOC(s+1);
     memcpy(t, fn, s+1); // copy terminating '\0' as well
     if(findFileHarder(&t[0])) // fixes the filename on the way
-        vf = new VFSFileReal(&t[0]);
+        vf = new DiskFile(&t[0]);
     VFS_STACK_FREE(t);
 #endif
 
     return vf;
 }
 
-VFSDir *VFSLoaderDisk::LoadDir(const char *fn, const char * /*ignored*/)
+Dir *DiskLoader::LoadDir(const char *fn, const char * /*ignored*/)
 {
-    if(IsDirectory(fn))
-        return new VFSDirReal(fn); // must contain full file name
+    //printf("DiskLoader: Trying [%s]...\n", fn);
 
-    VFSDirReal *ret = NULL;
+    if(!IsDirectory(fn))
+        return NULL;
+
+    DiskDir *ret = NULL;
 
 #if !defined(_WIN32) && defined(VFS_IGNORE_CASE)
     size_t s = strlen(fn);
     char *t = (char*)VFS_STACK_ALLOC(s+1);
     memcpy(t, fn, s+1); // copy terminating '\0' as well
     if(findFileHarder(&t[0])) // fixes the filename on the way
-    {
-        ret = new VFSDirReal(&t[0]);
-    }
+        fn = &t[0];
+#endif
+
+    assert(getRoot()->_getDirEx(fn, fn, false, false, false).first == NULL); // makes no sense to fire up the loader if it's already in the tree
+
+    ret = safecastNonNull<DiskDir*>(getRoot()->_createAndInsertSubtree(fn));
+
+#if !defined(_WIN32) && defined(VFS_IGNORE_CASE)
     VFS_STACK_FREE(t);
 #endif
+
+    /*if(ret)
+        printf("DiskLoader: [%s] OK as [%s]\n", fn, ret->fullname());
+    else
+        printf("DiskLoader: [%s] FAILED\n", fn);*/
 
     return ret;
 }
