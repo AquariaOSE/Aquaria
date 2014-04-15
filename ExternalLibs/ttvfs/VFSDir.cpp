@@ -10,6 +10,8 @@
 #include "VFSDirView.h"
 #include "VFSLoader.h"
 
+//#include <stdio.h>
+
 VFS_NAMESPACE_START
 
 DirBase::DirBase(const char *fullpath)
@@ -30,23 +32,34 @@ File *DirBase::getFile(const char *fn)
     if(!slashpos)
         return getFileByName(fn, true);
 
-    const size_t len = slashpos - fn;
-    char *dirname = (char*)VFS_STACK_ALLOC(len + 1);
-    memcpy(dirname, fn, len);
-    dirname[len] = 0;
+    size_t copysize = std::max<size_t>(slashpos - fn, 1); // always copy the '/' if it's the first char
+    char * const dirname = (char*)VFS_STACK_ALLOC(copysize + 1);
+    memcpy(dirname, fn, copysize);
+    dirname[copysize] = 0;
 
     File *f = getFileFromSubdir(dirname, slashpos + 1);
     VFS_STACK_FREE(dirname);
     return f;
 }
 
-DirBase *DirBase::getDir(const char *subdir, bool forceCreate /* = false */, bool lazyLoad /* = true */, bool useSubtrees /* = true */)
+DirBase *DirBase::getDir(const char *subdir)
 {
+    // TODO: get rid of alloc
+    std::string fullpath = joinPath(fullname(), subdir);
+    return _getDirEx(subdir, fullpath.c_str(), false, true, true).first;
+}
+
+// returns requested subdir or NULL as first, and last existing subdir in the tree as second.
+std::pair<DirBase*, DirBase*> DirBase::_getDirEx(const char *subdir, const char * const fullpath,
+                                                  bool forceCreate /* = false */, bool lazyLoad /* = true */, bool useSubtrees /* = true */)
+{
+    //printf("DirBase::_getDirEx [%s] in [%s]\n", subdir, fullname());
     SkipSelfPath(subdir);
     if(!subdir[0])
-        return this;
+        return std::make_pair(this, this);
 
     DirBase *ret = NULL;
+    DirBase *last = NULL;
     char *slashpos = (char *)strchr(subdir, '/');
 
     // if there is a '/' in the string, descend into subdir and continue there
@@ -54,73 +67,92 @@ DirBase *DirBase::getDir(const char *subdir, bool forceCreate /* = false */, boo
     {
         // from a/b/c, cut out the a, without the trailing '/'.
         const char *sub = slashpos + 1;
-        size_t copysize = slashpos - subdir;
+        size_t copysize = std::max<size_t>(slashpos - subdir, 1); // always copy the '/' if it's the first char
         char * const t = (char*)VFS_STACK_ALLOC(copysize + 1);
         memcpy(t, subdir, copysize);
         t[copysize] = 0;
-        
+
         if(DirBase *dir = getDirByName(t, lazyLoad, useSubtrees))
         {
-            // TODO: get rid of recursion
-            ret = dir->getDir(sub, forceCreate, lazyLoad); // descend into subdirs
-        }
-        else if(forceCreate)
-        {
-            // -> newname = fullname() + '/' + t
-            size_t fullLen = fullnameLen();
-            DirBase *ins;
-            if(fullLen)
-            {
-                char * const newname = (char*)VFS_STACK_ALLOC(fullLen + copysize + 2);
-                char *ptr = newname;
-                memcpy(ptr, fullname(), fullLen);
-                ptr += fullLen;
-                *ptr++ = '/';
-                memcpy(ptr, t, copysize);
-                ptr[copysize] = 0;
-                ins = createNew(newname);
-                VFS_STACK_FREE(newname);
-            }
-            else
-                ins = createNew(t);
-
-            _subdirs[ins->name()] = ins;
-            ret = ins->getDir(sub, true, lazyLoad); // create remaining structure
+            std::pair<DirBase*, DirBase*> subpair = dir->_getDirEx(sub, fullpath, forceCreate, lazyLoad); // descend into subdirs
+            ret = subpair.first;
         }
     }
     else
     {
         if(DirBase *dir = getDirByName(subdir, lazyLoad, useSubtrees))
             ret = dir;
-        else if(forceCreate)
-        {
-            size_t fullLen = fullnameLen();
-            if(fullLen)
-            {
-                // -> newname = fullname() + '/' + subdir
-                size_t subdirLen = strlen(subdir);
-                char * const newname = (char*)VFS_STACK_ALLOC(fullLen + subdirLen + 2);
-                char *ptr = newname;
-                memcpy(ptr, fullname(), fullLen);
-                ptr += fullLen;
-                *ptr++ = '/';
-                memcpy(ptr, subdir, subdirLen);
-                ptr[subdirLen] = 0;
-
-                ret = createNew(newname);
-                VFS_STACK_FREE(newname);
-            }
-            else
-            {
-                ret = createNew(subdir);
-            }
-
-            _subdirs[ret->name()] = ret;
-        }
     }
 
+    if(forceCreate && !ret)
+        ret = _createAndInsertSubtree(subdir);
+
+    return std::make_pair(ret, this);
+}
+
+DirBase *DirBase::_createAndInsertSubtree(const char *subdir)
+{
+    size_t subdirLen = strlen(subdir);
+    char * const buf = (char*)VFS_STACK_ALLOC(subdirLen + 2);
+    buf[0] = '/';
+    memcpy(buf+1, subdir, subdirLen + 1); //copy terminating \0 too
+    char *s = buf+1;
+
+    DirBase *curdir = this;
+    while(*s)
+    {
+        char *slashpos = strchr(s, '/');
+        if(slashpos)
+        {
+            if(slashpos == buf+1) // only check this in first round
+            {
+                s = buf;
+                //printf("abs buf: [%s]\n", buf);
+            }
+            *slashpos = 0;
+            //printf("_createAndInsertSubtree: [%s]\n", s);
+        }
+
+        DirBase *nextdir = curdir->DirBase::getDirByName(s, false, false); // last 2 params are not relevant
+        if(!nextdir)
+            nextdir = curdir->_createNewSubdir(s);
+        curdir->_subdirs[nextdir->name()] = nextdir;
+        curdir = nextdir;
+        if(!slashpos)
+            break;
+        s = slashpos + 1;
+    }
+
+    VFS_STACK_FREE(buf);
+    return curdir;
+}
+
+DirBase *DirBase::_createNewSubdir(const char *subdir) const
+{
+    assert(*subdir);
+    //printf("_createNewSubdir: [%s]\n", subdir);
+    // -> newname = fullname() + '/' + subdir
+    size_t fullLen = fullnameLen();
+    size_t subdirLen = strlen(subdir);
+    char * const newname = (char*)VFS_STACK_ALLOC(fullLen + subdirLen + 2);
+    char *ptr = newname;
+    if(fullLen)
+    {
+        memcpy(ptr, fullname(), fullLen);
+        ptr += fullLen;
+        if(ptr[-1] != '/')
+            *ptr++ = '/';
+    }
+
+    memcpy(ptr, subdir, subdirLen + 1); // copy terminating \0 too
+    //printf("_createNewSubdir: newname = [%s]\n", newname);
+    DirBase *ret = createNew(newname);
+    //printf("_createNewSubdir: fullname = [%s]\n", ret->fullname());
+    VFS_STACK_FREE(newname);
     return ret;
 }
+
+
 
 static void _iterDirs(Dirs &m, DirEnumCallback f, void *user)
 {
@@ -141,6 +173,9 @@ void DirBase::forEachDir(DirEnumCallback f, void *user /* = NULL */, bool safe /
 
 DirBase *DirBase::getDirByName(const char *dn, bool /* unused: lazyLoad = true */, bool useSubtrees /* = true */)
 {
+    if(!dn[0] || (dn[0] == '.' && !dn[1]))
+        return this;
+
     Dirs::iterator it = _subdirs.find(dn);
     return it != _subdirs.end() ? it->second : NULL;
 }
@@ -197,6 +232,13 @@ void Dir::forEachFile(FileEnumCallback f, void *user /* = NULL */, bool safe /* 
         _iterFiles(_files, f, user);
 }
 
+void Dir::forEachDir(DirEnumCallback f, void *user /* = NULL */, bool safe /* = false */)
+{
+    load();
+    DirBase::forEachDir(f, user, safe);
+}
+
+
 
 bool Dir::add(File *f)
 {
@@ -222,7 +264,7 @@ bool Dir::addRecursive(File *f, size_t skip /* = 0 */)
 {
     if(!f)
         return false;
-    
+
     Dir *vdir = this;
     if(f->fullnameLen() - f->nameLen() > skip)
     {
@@ -231,13 +273,14 @@ bool Dir::addRecursive(File *f, size_t skip /* = 0 */)
 
         // prefixLen == 0 is invalid, prefixLen == 1 is just a single '/', which will be stripped away below.
         // in both cases, just use 'this'.
+        // FIXME: will this be a problem for absolute paths?
         if(prefixLen > 1)
         {
             char *dirname = (char*)VFS_STACK_ALLOC(prefixLen);
             --prefixLen; // -1 to strip the trailing '/'. That's the position where to put the terminating null byte.
             memcpy(dirname, f->fullname() + skip, prefixLen); // copy trailing null byte
             dirname[prefixLen] = 0;
-            vdir = safecastNonNull<Dir*>(getDir(dirname, true));
+            vdir = safecastNonNull<Dir*>(_getDirEx(dirname, dirname, true, true).first);
             VFS_STACK_FREE(dirname);
         }
     }
@@ -271,12 +314,19 @@ DirBase *Dir::getDirByName(const char *dn, bool lazyLoad /* = true */, bool useS
     if(!lazyLoad || !_loader)
         return NULL;
 
+    // Fix for absolute paths: No dir should have '/' (or any other absolute dirs) as subdir.
+    if(fullnameLen() && dn[0] == '/')
+        return NULL;
+
     // Lazy-load file if it's not in the tree yet
     // TODO: get rid of alloc
     std::string fn2 = joinPath(fullname(), dn);
     sub = _loader->LoadDir(fn2.c_str(), fn2.c_str());
     if(sub)
+    {
         _subdirs[sub->name()] = sub;
+        //printf("Lazy loaded: [%s]\n", sub->fullname());
+    }
     return sub;
 }
 

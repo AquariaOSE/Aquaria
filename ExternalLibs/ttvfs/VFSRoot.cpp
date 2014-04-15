@@ -1,7 +1,7 @@
 // VFSRoot.cpp - glues it all together and makes use simple
 // For conditions of distribution and use, see copyright notice in VFS.h
 
-#include <iostream> // for debug only, see EOF
+#include <set>
 
 #include "VFSInternal.h"
 #include "VFSRoot.h"
@@ -11,6 +11,9 @@
 #include "VFSFile.h"
 #include "VFSLoader.h"
 #include "VFSArchiveLoader.h"
+#include "VFSDirView.h"
+
+//#include <stdio.h>
 
 #ifdef _DEBUG
 #  include <cassert>
@@ -71,7 +74,7 @@ void Root::AddVFSDir(DirBase *dir, const char *subdir /* = NULL */)
 {
     if(!subdir)
         subdir = dir->fullname();
-    InternalDir *into = safecastNonNull<InternalDir*>(merged->getDir(subdir, true, true, false));
+    InternalDir *into = safecastNonNull<InternalDir*>(merged->_getDirEx(subdir, subdir, true, true, false).first);
     into->_addMountDir(dir);
 }
 
@@ -96,6 +99,7 @@ void Root::AddArchiveLoader(VFSArchiveLoader *ldr)
 {
     archLdrs.push_back(ldr);
 }
+
 Dir *Root::AddArchive(const char *arch, void *opaque /* = NULL */)
 {
     return AddArchive(GetFile(arch), arch, opaque);
@@ -161,7 +165,8 @@ InternalDir *Root::_GetDirByLoader(VFSLoader *ldr, const char *fn, const char *u
     InternalDir *ret = NULL;
     if(realdir)
     {
-        ret = safecastNonNull<InternalDir*>(merged->getDir(fn, true, true, false));
+        //ret = safecastNonNull<InternalDir*>(merged->_getDirEx(fn, fn, true, true, false).first);
+        ret = safecastNonNull<InternalDir*>(merged->_createAndInsertSubtree(fn));
         ret->_addMountDir(realdir);
     }
     return ret;
@@ -169,6 +174,7 @@ InternalDir *Root::_GetDirByLoader(VFSLoader *ldr, const char *fn, const char *u
 
 DirBase *Root::GetDir(const char* dn, bool create /* = false */)
 {
+    //printf("Root  ::getDir [%s]\n", dn);
     const char *unmangled = dn;
     std::string fixed = dn; // TODO: get rid of alloc
     FixPath(fixed);
@@ -185,7 +191,7 @@ DirBase *Root::GetDir(const char* dn, bool create /* = false */)
                 break;
 
         if(!vd && create)
-            vd = safecastNonNull<InternalDir*>(merged->getDir(dn, true)); // typecast is for debug checking only
+            vd = safecastNonNull<InternalDir*>(merged->_createAndInsertSubtree(dn)); // typecast is for debug checking only
     }
 
     //printf("VFS: GetDir '%s' -> '%s' (%s:%p)\n", dn, vd ? vd->fullname() : "NULL", vd ? vd->getType() : "?", vd);
@@ -200,6 +206,7 @@ DirBase *Root::GetDirRoot()
 
 bool Root::FillDirView(const char *path, DirView& view)
 {
+    //printf("Root::FillDirView [%s]\n", path);
     return merged->fillView(path, view);
 }
 
@@ -213,54 +220,57 @@ void Root::ClearGarbage()
 
 // DEBUG STUFF
 
-
 struct _DbgParams
 {
-    _DbgParams(std::ostream& os_, DirBase *parent_, const std::string& sp_)
-        : os(os_), parent(parent_), sp(sp_) {}
+    _DbgParams(std::ostream& os_, const std::string& path, const std::string& sp_)
+        : os(os_), mypath(path), sp(sp_) {}
 
     std::ostream& os;
-    DirBase *parent;
+    std::string mypath;
     const std::string& sp;
+    std::set<std::string> dirnames;
 };
 
 static void _DumpFile(File *vf, void *user)
 {
     _DbgParams& p = *((_DbgParams*)user);
-
-    p.os << p.sp << "f|" << vf->name() << " [" << vf->getType() << ", ref " << vf->getRefCount() << ", 0x" << vf << "]";
-
-    if(strncmp(p.parent->fullname(), vf->fullname(), p.parent->fullnameLen()))
-        p.os << " <-- {" << vf->fullname() << "} ***********";
-
-    p.os << std::endl;
+    p.os << p.sp << " F:" << vf->fullname() << " [" << vf->getType() << ", ref " << vf->getRefCount() << ", 0x" << vf << "]" << std::endl;
 }
 
-static void _DumpTreeRecursive(DirBase *vd, void *user)
+
+static void _DumpDir(DirBase *vd, void *user)
 {
     _DbgParams& p = *((_DbgParams*)user);
-
-    std::string sub = p.sp + "  ";
-
-    p.os << p.sp << "d|" << vd->name() << " [" << vd->getType() << ", ref " << vd->getRefCount() << ", 0x" << vd << "]";
-
-    if(p.parent && strncmp(p.parent->fullname(), vd->fullname(), strlen(p.parent->fullname())))
-        p.os << " <-- {" << vd->fullname() << "} ***********";
-    p.os << std::endl;
-
-    _DbgParams recP(p.os, vd, sub);
-
-    vd->forEachDir(_DumpTreeRecursive, &recP);
-
-    vd->forEachFile(_DumpFile, &recP);
-
+    if(!(vd->fullname()[0] == '/' && vd->fullnameLen() == 1)) // don't recurse down the root dir.
+        p.dirnames.insert(vd->name());
+    p.os << p.sp << "D : " << vd->fullname() << " [" << vd->getType() << ", ref " << vd->getRefCount() << ", 0x" << vd << "]" << std::endl;
 }
 
-void Root::debugDumpTree(std::ostream& os, Dir *start /* = NULL */)
+static void _DumpTree(_DbgParams& p, Root& vfs, int level)
 {
-    _DbgParams recP(os, NULL, "");
-    DirBase *d = start ? start : GetDirRoot();
-    _DumpTreeRecursive(d, &recP);
+    p.os << ">> [" << p.mypath << "]" << std::endl;
+    DirView view;
+    vfs.FillDirView(p.mypath.c_str(), view);
+
+    view.forEachDir(_DumpDir, &p);
+    view.forEachFile(_DumpFile, &p);
+
+    if(!level)
+        return;
+
+    std::string sub = p.sp + "  ";
+    for(std::set<std::string>::iterator it = p.dirnames.begin(); it != p.dirnames.end(); ++it)
+    {
+        _DbgParams recP(p.os, joinPath(p.mypath, it->c_str()), sub);
+        _DumpTree(recP, vfs, level - 1);
+    }
+}
+
+void Root::debugDumpTree(std::ostream& os, const char *path, int level)
+{
+    os << ">>> FILE TREE DUMP <<<" << std::endl;
+    _DbgParams recP(os, path, "");
+    _DumpTree(recP, *this, level);
 }
 
 

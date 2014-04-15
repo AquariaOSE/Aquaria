@@ -114,6 +114,7 @@ size_t ZipFile::read(void *dst, size_t bytes)
 size_t ZipFile::write(const void *src, size_t bytes)
 {
     // TODO: implement actually writing to the underlying Zip file.
+    //printf("NYI: ZipFile::write()");
 
     return 0;
 }
@@ -130,7 +131,10 @@ bool ZipFile::unpack()
     delete [] _buf;
 
     if(!_archiveHandle->openRead())
+    {
+        //assert(0 && "ZipFile unpack: Failed to openRead");
         return false; // can happen if the underlying zip file was deleted
+    }
 
     // In case of text data, make sure the buffer is always terminated with '\0'.
     // Won't hurt for binary data, so just do it in all cases.
@@ -141,6 +145,7 @@ bool ZipFile::unpack()
 
     if(!mz_zip_reader_extract_to_mem(MZ, _fileIdx, _buf, sz, 0))
     {
+        //assert(0 && "ZipFile unpack: Failed mz_zip_reader_extract_to_mem");
         delete [] _buf;
         _buf = NULL;
         return false; // this should not happen

@@ -7,12 +7,7 @@
 #include "VFSDir.h"
 #include "VFSLoader.h"
 
-VFS_NAMESPACE_START
-
-VFSLoader::VFSLoader()
-: root(NULL)
-{
-}
+//#include <stdio.h>
 
 
 #if !defined(_WIN32) && defined(VFS_IGNORE_CASE)
@@ -84,6 +79,12 @@ static bool findFileHarder(char *fn)
 #endif
 
 
+VFS_NAMESPACE_START
+
+VFSLoader::VFSLoader()
+: root(NULL)
+{
+}
 
 DiskLoader::DiskLoader()
 {
@@ -111,6 +112,8 @@ File *DiskLoader::Load(const char *fn, const char * /*ignored*/)
 
 Dir *DiskLoader::LoadDir(const char *fn, const char * /*ignored*/)
 {
+    //printf("DiskLoader: Trying [%s]...\n", fn);
+
     if(!IsDirectory(fn))
         return NULL;
 
@@ -124,11 +127,18 @@ Dir *DiskLoader::LoadDir(const char *fn, const char * /*ignored*/)
         fn = &t[0];
 #endif
 
-    ret = safecastNonNull<DiskDir*>(getRoot()->getDir(fn, true, false));
+    assert(getRoot()->_getDirEx(fn, fn, false, false, false).first == NULL); // makes no sense to fire up the loader if it's already in the tree
+
+    ret = safecastNonNull<DiskDir*>(getRoot()->_createAndInsertSubtree(fn));
 
 #if !defined(_WIN32) && defined(VFS_IGNORE_CASE)
     VFS_STACK_FREE(t);
 #endif
+
+    /*if(ret)
+        printf("DiskLoader: [%s] OK as [%s]\n", fn, ret->fullname());
+    else
+        printf("DiskLoader: [%s] FAILED\n", fn);*/
 
     return ret;
 }

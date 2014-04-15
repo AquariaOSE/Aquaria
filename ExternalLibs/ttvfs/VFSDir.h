@@ -83,7 +83,8 @@ public:
     /** Returns a subdir, descends if necessary. If forceCreate is true,
     create directory tree if it does not exist, and return the originally requested
     subdir. Otherwise return NULL if not found. */
-    DirBase *getDir(const char *subdir, bool forceCreate = false, bool lazyLoad = true, bool useSubtrees = true);
+    DirBase *getDir(const char *subdir);
+    std::pair<DirBase*, DirBase*> _getDirEx(const char *subdir, const char * const fullpath, bool forceCreate = false, bool lazyLoad = true, bool useSubtrees = true);
 
     /** Returns a file from this dir's file map.
     Expects the actual file name without path - does NOT descend. */
@@ -102,13 +103,18 @@ public:
     virtual void clearGarbage();
 
     virtual bool _addToView(char *path, DirView& view) = 0;
+    DirBase *_createNewSubdir(const char *name) const;
+    DirBase *_createAndInsertSubtree(const char *name);
 
 protected:
 
     /** Creates a new dir of the same type to be used as child of this. */
     virtual DirBase *createNew(const char *dir) const = 0;
 
+
+
     Dirs _subdirs;
+
 };
 
 class Dir : public DirBase
@@ -131,6 +137,7 @@ public:
     virtual void load() = 0;
 
     void forEachFile(FileEnumCallback f, void *user = NULL, bool safe = false);
+    void forEachDir(DirEnumCallback f, void *user = NULL, bool safe = false);
 
     virtual void clearGarbage();
 

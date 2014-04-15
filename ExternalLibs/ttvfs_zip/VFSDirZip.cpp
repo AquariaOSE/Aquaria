@@ -58,7 +58,7 @@ void ZipDir::load()
             continue;
         if(mz_zip_reader_is_file_a_directory(MZ, i))
         {
-            getDir(fs.m_filename, true);
+            _createAndInsertSubtree(fs.m_filename);
             continue;
         }
         if(getFile(fs.m_filename))
