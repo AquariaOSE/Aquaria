@@ -44,8 +44,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h>
 
 #ifdef BBGE_BUILD_VFS
-#include "ttvfs.h"
-ttvfs::Root vfs; // extern
+#  include "ttvfs.h"
+#  ifndef VFS_IGNORE_CASE
+#    error Must define VFS_IGNORE_CASE, see VFSDefines.h
+#  endif
+   ttvfs::Root vfs; // extern
 #endif
 
 Vector getDirVector(Direction dir)
