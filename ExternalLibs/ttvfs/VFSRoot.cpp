@@ -14,6 +14,7 @@
 #include "VFSDirView.h"
 
 //#include <stdio.h>
+#include <iostream>
 
 #ifdef _DEBUG
 #  include <cassert>
