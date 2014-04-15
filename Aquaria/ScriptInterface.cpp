@@ -3008,6 +3008,9 @@ luaFunc(entity_playSfx)
 		sfx.maxdist = lua_tonumber(L, 7);
 		sfx.relative = false;
 		sfx.positional = true;
+		Vector pos = e->position + e->offset;
+		sfx.x = pos.x;
+		sfx.y = pos.y;
 
 		h = core->sound->playSfx(sfx);
 		if (fadeOut != 0)
