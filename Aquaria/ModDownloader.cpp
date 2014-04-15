@@ -7,6 +7,7 @@
 #include "ModSelector.h"
 #include "Network.h"
 #include "tinyxml.h"
+#include "ttvfs.h"
 
 using Network::NetEvent;
 using Network::NE_ABORT;

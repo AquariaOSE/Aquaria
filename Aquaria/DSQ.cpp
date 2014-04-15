@@ -45,6 +45,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include <sys/stat.h>
 #endif
 
+#ifdef BBGE_BUILD_VFS
+#include "ttvfs.h"
+#endif
+
 #ifdef BBGE_BUILD_UNIX
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -2124,14 +2128,20 @@ void DSQ::loadMods()
 {
 	modEntries.clear();
 
-#ifdef BBGE_BUILD_VFS
+	std::string modpath = mod.getBaseModPath();
+	debugLog("loadMods: " + modpath);
 
+#ifdef BBGE_BUILD_VFS
 	// first load the packages, then enumerate XMLs
-	forEachFile(mod.getBaseModPath(), ".aqmod", loadModPackagesCallback, 0);
+	forEachFile(modpath, ".aqmod", loadModPackagesCallback, 0);
 #endif
 
-	forEachFile(mod.getBaseModPath(), ".xml", loadModsCallback, 0);
+	forEachFile(modpath, ".xml", loadModsCallback, 0);
 	selectedMod = 0;
+
+	std::ostringstream os;
+	os << "loadMods done, " << modEntries.size() << " entries";
+	debugLog(os.str());
 }
 
 void DSQ::applyPatches()
@@ -2139,11 +2149,8 @@ void DSQ::applyPatches()
 #ifndef AQUARIA_DEMO
 #ifdef BBGE_BUILD_VFS
 
-	// This is to allow files in patches to override files in mods on non-win32 systems (theoretically)
-	if(!vfs.GetDir("_mods"))
-	{
-		vfs.Mount(mod.getBaseModPath().c_str(), "_mods");
-	}
+	// This is to allow files in patches to override files in mods on non-win32 systems
+	vfs.Mount(mod.getBaseModPath().c_str(), "_mods");
 
 	loadMods();
 
@@ -2204,6 +2211,7 @@ void DSQ::refreshResourcesForPatch(const std::string& name)
 	os << "refreshResourcesForPatch - " << files.size() << " to refresh";
 	debugLog(os.str());
 
+	int reloaded = 0;
 	if(files.size())
 	{
 		for(int i = 0; i < dsq->resources.size(); ++i)
@@ -2213,6 +2221,9 @@ void DSQ::refreshResourcesForPatch(const std::string& name)
 				r->reload();
 		}
 	}
+	os.str("");
+	os << "refreshResourcesForPatch - " << reloaded << " textures reloaded";
+	debugLog(os.str());
 }
 #else
 void DSQ::refreshResourcesForPatch(const std::string& name) {}

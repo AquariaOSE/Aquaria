@@ -67,7 +67,7 @@ void Root::Clear()
 
 void Root::Mount(const char *src, const char *dest)
 {
-    return AddVFSDir(GetDir(src, true), dest);
+    AddVFSDir(GetDir(src, true), dest);
 }
 
 void Root::AddVFSDir(DirBase *dir, const char *subdir /* = NULL */)
