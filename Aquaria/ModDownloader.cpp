@@ -7,6 +7,7 @@
 #include "ModSelector.h"
 #include "Network.h"
 #include "tinyxml.h"
+#include "ttvfs.h"
 
 using Network::NetEvent;
 using Network::NE_ABORT;
@@ -108,10 +109,6 @@ void ModDL::init()
 {
 	tempDir = dsq->getUserDataFolder() + "/webcache";
 	createDir(tempDir.c_str());
-
-	ttvfs::VFSDir *vd = vfs.GetDir(tempDir.c_str());
-	if(vd)
-		vd->load(false);
 }
 
 bool ModDL::hasUrlFileCached(const std::string& url)
@@ -372,7 +369,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 		std::string localIcon = remoteToLocalName(iconurl);
 
 		size_t localIconSize = 0;
-		if(ttvfs::VFSFile *vf = vfs.GetFile(localIcon.c_str()))
+		if(ttvfs::File *vf = vfs.GetFile(localIcon.c_str()))
 		{
 			localIconSize = vf->size();
 		}
@@ -396,7 +393,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 			{
 				std::string modpkg = dsq->mod.getBaseModPath() + localname;
 				modpkg += ".aqmod";
-				ttvfs::VFSFile *vf = vfs.GetFile(modpkg.c_str());
+				ttvfs::File *vf = vfs.GetFile(modpkg.c_str());
 				if(vf)
 				{
 					size_t sz = vf->size();
@@ -498,13 +495,9 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 		// the mod file can already exist, and if it does, it will most likely be mounted.
 		// zip archives are locked and cannot be deleted/replaced, so we need to unload it first.
 		// this effectively closes the file handle only, nothing else.
-		ttvfs::VFSDir *vd = vfs.GetDir(moddir.c_str());
+		ttvfs::DirBase *vd = vfs.GetDir(moddir.c_str());
 		if(vd)
-		{
-			ttvfs::VFSBase *origin = vd->getOrigin();
-			if(origin)
-				origin->close();
-		}
+			vd->close();
 
 		std::string archiveFile = moddir + ".aqmod";
 
@@ -520,8 +513,7 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 
 		if(vd)
 		{
-			// Dir already exists, just remount everything
-			vfs.Reload();
+			// Nothing to do
 		}
 		else if(!dsq->mountModPackage(archiveFile))
 		{

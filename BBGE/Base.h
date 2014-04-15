@@ -141,7 +141,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Rect.h"
 
 #include "math.h"
-#include "FileAPI.h"
+#include "ttvfs_stdio.h"
 
 #ifdef BBGE_BUILD_LINUX
 #  include <sys/types.h>
@@ -171,16 +171,6 @@ enum Direction
 #include "Event.h"
 
 #include "Vector.h"
-
-
-#define FOR_ALL(object, type, object_iterator)\
-	{\
-		for (type::iterator object_iterator = object.begin(); object_iterator != object.end(); ++object_iterator)\
-		{\
-
-#define END_FOR_ALL\
-		}\
-	}\
 
 
 const float SQRT2		= 1.41421356;
@@ -304,5 +294,9 @@ void triggerBreakpoint();
 
 bool createDir(const std::string& d);
 
+#ifdef BBGE_BUILD_VFS
+namespace ttvfs { class Root; }
+extern ttvfs::Root vfs; // in Base.cpp
+#endif
 
 #endif

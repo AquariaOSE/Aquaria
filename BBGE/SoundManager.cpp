@@ -134,73 +134,68 @@ using namespace SoundCore;
 
 FMOD_RESULT F_CALLBACK myopen(const char *name, int unicode, unsigned int *filesize, void **handle, void **userdata)
 {
-    if (name)
-    {
-        VFILE *fp;
+	if (name)
+	{
+		VFILE *fp = vfopen(name, "rb");
+		if (!fp)
+			return FMOD_ERR_FILE_NOTFOUND;
+		size_t sz = 0;
+		if(vfsize(fp, &sz) < 0)
+		{
+			vfclose(fp);
+			return FMOD_ERR_FILE_NOTFOUND;
+		}
 
-        fp = vfopen(name, "rb");
-        if (!fp)
-        {
-            return FMOD_ERR_FILE_NOTFOUND;
-        }
+		*filesize = (unsigned int)sz;
+		*userdata = (void *)0x12345678;
+		*handle = fp;
+	}
 
-#ifdef BBGE_BUILD_VFS
-        *filesize = fp->size();
-#else
-        vfseek(fp, 0, SEEK_END);
-        *filesize = ftell(fp);
-        vfseek(fp, 0, SEEK_SET);
-#endif
-
-        *userdata = (void *)0x12345678;
-        *handle = fp;
-    }
-
-    return FMOD_OK;
+	return FMOD_OK;
 }
 
 FMOD_RESULT F_CALLBACK myclose(void *handle, void *userdata)
 {
-    if (!handle)
-    {
-        return FMOD_ERR_INVALID_PARAM;
-    }
+	if (!handle)
+	{
+		return FMOD_ERR_INVALID_PARAM;
+	}
 
-    vfclose((VFILE *)handle);
+	vfclose((VFILE *)handle);
 
-    return FMOD_OK;
+	return FMOD_OK;
 }
 
 FMOD_RESULT F_CALLBACK myread(void *handle, void *buffer, unsigned int sizebytes, unsigned int *bytesread, void *userdata)
 {
-    if (!handle)
-    {
-        return FMOD_ERR_INVALID_PARAM;
-    }
+	if (!handle)
+	{
+		return FMOD_ERR_INVALID_PARAM;
+	}
 
-    if (bytesread)
-    {
-        *bytesread = (int)vfread(buffer, 1, sizebytes, (VFILE *)handle);
-    
-        if (*bytesread < sizebytes)
-        {
-            return FMOD_ERR_FILE_EOF;
-        }
-    }
+	if (bytesread)
+	{
+		*bytesread = (int)vfread(buffer, 1, sizebytes, (VFILE *)handle);
 
-    return FMOD_OK;
+		if (*bytesread < sizebytes)
+		{
+			return FMOD_ERR_FILE_EOF;
+		}
+	}
+
+	return FMOD_OK;
 }
 
 FMOD_RESULT F_CALLBACK myseek(void *handle, unsigned int pos, void *userdata)
 {
-    if (!handle)
-    {
-        return FMOD_ERR_INVALID_PARAM;
-    }
+	if (!handle)
+	{
+		return FMOD_ERR_INVALID_PARAM;
+	}
 
-    vfseek((VFILE *)handle, pos, SEEK_SET);
+	vfseek((VFILE *)handle, pos, SEEK_SET);
 
-    return FMOD_OK;
+	return FMOD_OK;
 }
 
 

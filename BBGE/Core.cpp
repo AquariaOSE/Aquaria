@@ -57,10 +57,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	Vector unchange;
 #endif
 
+#ifdef BBGE_BUILD_VFS
+#include "ttvfs.h"
+#endif
+
 Core *core = 0;
 
 #ifdef BBGE_BUILD_WINDOWS
 	HICON icon_windows = 0;
+#endif
+
+#ifndef KMOD_GUI
+	#define KMOD_GUI KMOD_META
 #endif
 
 void Core::initIcon()
@@ -5136,33 +5144,21 @@ void Core::setupFileAccess()
 	if(!ttvfs::checkCompat())
 		exit_error("ttvfs not compatible");
 
+	ttvfs_setroot(&vfs);
+
+	vfs.AddLoader(new ttvfs::DiskLoader);
 	vfs.AddArchiveLoader(new ttvfs::VFSZipArchiveLoader);
 
-	if(!vfs.LoadFileSysRoot(false))
-	{
-		exit_error("Failed to setup file access");
-	}
-	
-	vfs.Prepare();
-
-
-	ttvfs::VFSDir *override = vfs.GetDir("override");
-	if(override)
-	{
-		debugLog("Mounting override dir...");
-		override->load(true);
-		vfs.Mount("override", "", true);
-	}
+	vfs.Mount("override", "");
 
 	// If we ever want to read from a container...
-	//vfs.AddArchive("aqfiles.zip", false, "");
+	//vfs.AddArchive("aqfiles.zip");
 
 	if(_extraDataDir.length())
 	{
 		debugLog("Mounting extra data dir: " + _extraDataDir);
-		vfs.MountExternalPath(_extraDataDir.c_str(), "", true, true);
+		vfs.Mount(_extraDataDir.c_str(), "");
 	}
-
 
 	debugLog("Done");
 #endif

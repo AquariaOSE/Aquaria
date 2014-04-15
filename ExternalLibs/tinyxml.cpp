@@ -953,17 +953,10 @@ bool TiXmlDocument::LoadFile( VFILE* file, TiXmlEncoding encoding )
 	location.Clear();
 
 	// Get the file size, so we can pre-allocate the string. HUGE speed impact.
-	long length = 0;
-#ifdef BBGE_BUILD_VFS
-	length = file->size();
-#else
-	fseek( file, 0, SEEK_END );
-	length = ftell( file );
-	fseek( file, 0, SEEK_SET );
-#endif
+	size_t length = 0;
 
 	// Strange case, but good to handle up front.
-	if ( length <= 0 )
+	if ( vfsize(file, &length) < 0 || length <= 0 )
 	{
 		SetError( TIXML_ERROR_DOCUMENT_EMPTY, 0, 0, TIXML_ENCODING_UNKNOWN );
 		return false;
@@ -990,15 +983,6 @@ bool TiXmlDocument::LoadFile( VFILE* file, TiXmlEncoding encoding )
 	}
 	*/
 
-#ifdef BBGE_BUILD_VFS
-	char *buf = (char*)file->getBuf();
-	file->dropBuf(false);
-	if (!buf)
-	{
-		SetError( TIXML_ERROR_OPENING_FILE, 0, 0, TIXML_ENCODING_UNKNOWN );
-		return false;
-	}
-#else
 	char* buf = new char[ length+1 ];
 	buf[0] = 0;
 
@@ -1007,7 +991,6 @@ bool TiXmlDocument::LoadFile( VFILE* file, TiXmlEncoding encoding )
 		SetError( TIXML_ERROR_OPENING_FILE, 0, 0, TIXML_ENCODING_UNKNOWN );
 		return false;
 	}
-#endif
 
 	return LoadMem(buf, length, encoding);
 }

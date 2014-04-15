@@ -82,6 +82,7 @@ while(true)
 #include <vector>
 #include <map>
 #include <cmath>
+#include <stdlib.h>
 
 #ifdef _DEBUG
 #include <cassert>

@@ -2,14 +2,15 @@
 #define VFS_ARCHIVE_LOADER_H
 
 #include "VFSDefines.h"
+#include "VFSRefcounted.h"
 
 VFS_NAMESPACE_START
 
-class VFSDir;
-class VFSFile;
+class Dir;
+class File;
 class VFSLoader;
 
-// Generic Archive loader interface that is supposed to return a valid VFSDir pointer when it
+// Generic Archive loader interface that is supposed to return a valid Dir pointer when it
 // was able to load 'arch' as an archive, and NULL if there was an error or the loader is
 // unable to load that file type.
 // 'asSubdir' - if this is true, the archive will be accessible as a folder (as in "test.zip/file.dat"),
@@ -24,12 +25,12 @@ class VFSLoader;
 //            modify this object.
 //            The const char parameter is a string unique for each loader (to prevent accessing the pointer
 //            in a wrong way by the wrong loader). Example below.
-class VFSArchiveLoader
+class VFSArchiveLoader : public Refcounted
 {
 public:
     virtual ~VFSArchiveLoader() {}
 
-    virtual VFSDir *Load(VFSFile *arch, VFSLoader **ldr, void *opaque = NULL) = 0;
+    virtual Dir *Load(File *arch, VFSLoader **ldr, void *opaque = NULL) = 0;
 };
 
 /* A possible struct for 'opaque' would be:
