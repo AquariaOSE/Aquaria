@@ -9,7 +9,7 @@ VFS_NAMESPACE_START
 class ZipFile : public File
 {
 public:
-    ZipFile(const char *name, ZipArchiveRef *zref, vfspos uncompSize, unsigned int fileIdx);
+    ZipFile(const char *name, ZipArchiveRef *zref, unsigned int fileIdx);
     virtual ~ZipFile();
     virtual bool open(const char *mode = NULL);
     virtual bool isopen() const;
@@ -29,7 +29,7 @@ protected:
     char *_buf;
     vfspos _pos;
     CountedPtr<ZipArchiveRef> _archiveHandle;
-    vfspos _uncompSize;
+    vfspos _bufSize;
     unsigned int _fileIdx;
     std::string _mode;
 };
