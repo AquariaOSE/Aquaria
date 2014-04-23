@@ -159,7 +159,7 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 
 	SearchGrid grid;
 	JPS::PathVector path;
-	if(JPS::findPath(path, grid, start.x, start.y, goal.x, goal.y, 10))
+	if(JPS::findPath(path, grid, start.x, start.y, goal.x, goal.y, 1))
 	{
 		vp.addPathNode(ro->position, 0);
 		generateVectorPath(path, vp, offx, offy);
