@@ -1,22 +1,22 @@
+#include "VFSDefines.h"
+#include "VFSInternal.h"
 #include "VFSFileFuncs.h"
 
-// this is for POSIX - define before including any stdio headers
-#ifdef VFS_LARGEFILE_SUPPORT
-#    ifndef _MSC_VER
-#        define _FILE_OFFSET_BITS 64
-#    endif
-#endif
-
-#include "VFSInternal.h"
-
-#include <cstdio>
-
-// Compile time assertion to make sure things work as expected
-#if defined(VFS_LARGEFILE_SUPPORT) && !defined(_MSC_VER)
-static void _dummy_() { switch(0) { case 4: case sizeof(off_t): ; } }
-#endif
+#include <stdio.h>
 
 VFS_NAMESPACE_START
+
+// Compile time assertion to make sure things work as expected
+#if defined(VFS_LARGEFILE_SUPPORT)
+static void _dummy_()
+{
+    switch(0) { case 0:; case 4: case sizeof(vfspos): ; }
+#ifndef _MSC_VER
+    switch(0) { case 0:; case 4: case sizeof(off_t): ; }
+#endif
+}
+#endif
+
 
 void *real_fopen(const char *name, const char *mode)
 {

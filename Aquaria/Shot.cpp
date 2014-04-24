@@ -59,6 +59,7 @@ ShotData::ShotData()
 	homingMax = 0;
 	homingIncr = 0;
 	dieOnHit = 1;
+	dieOnKill = false;
 	hitEnts = 1;
 	wallHitRadius = 0;
 	rotateToVel = 1;
@@ -241,6 +242,8 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 			inf >> dieOnHit;
 		else if (token == "IgnoreShield")
 			inf >> ignoreShield;
+		else if (token == "DieOnKill")
+			inf >> dieOnKill;
 		else
 		{
 			// if having weirdness, check for these
@@ -555,7 +558,7 @@ bool Shot::isHitEnts() const
 	return false;
 }
 
-void Shot::hitEntity(Entity *e, Bone *b, bool isValid)
+void Shot::hitEntity(Entity *e, Bone *b)
 {
 	if (!dead)
 	{
@@ -564,12 +567,6 @@ void Shot::hitEntity(Entity *e, Bone *b, bool isValid)
 
 		if (e)
 		{
-			if (damageType == DT_AVATAR_BITE)
-			{
-				//debugLog("Shot::hitEntity bittenEntities.push_back");
-				dsq->game->avatar->bittenEntities.push_back(e);
-			}
-
 			DamageData d;
 			d.attacker = firer;
 			d.bone = b;
@@ -581,6 +578,16 @@ void Shot::hitEntity(Entity *e, Bone *b, bool isValid)
 				d.effectTime = shotData->effectTime;
 			if ((firer && firer->getEntityType() == ET_AVATAR))
 				d.form = dsq->continuity.form;
+
+			if (!e->canShotHit(d))
+				return;
+
+
+			if (damageType == DT_AVATAR_BITE)
+			{
+				//debugLog("Shot::hitEntity bittenEntities.push_back");
+				dsq->game->avatar->bittenEntities.push_back(e);
+			}
 
 			bool damaged = e->damage(d);
 
@@ -595,7 +602,7 @@ void Shot::hitEntity(Entity *e, Bone *b, bool isValid)
 
 			if (e->isEntityDead())
 			{
-				die = false;
+				die = shotData ? shotData->dieOnKill : false;
 			}
 
 			if (firer)

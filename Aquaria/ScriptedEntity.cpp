@@ -38,6 +38,7 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	becomeSolidDelay = false;
 	strandSpacing = 10;
 	animKeyFunc = true;
+	canShotHitFunc = true;
 	//runningActivation = false;
 
 	setEntityType(et);
@@ -560,6 +561,26 @@ void ScriptedEntity::lightFlare()
 	{
 		script->call("lightFlare", this);
 	}
+}
+
+bool ScriptedEntity::canShotHit(const DamageData &d)
+{
+	bool doDefault = true;
+	if (script && canShotHitFunc)
+	{
+		if (!script->call("canShotHit", this, d.attacker, d.bone, int(d.damageType), d.damage, d.hitPos.x, d.hitPos.y, d.shot, &doDefault))
+		{
+			debugLog(name + ": canShotHit function failed");
+			canShotHitFunc = false;
+		}
+	}
+
+	if (doDefault)
+	{
+		return Entity::canShotHit(d);
+	}
+
+	return false;
 }
 
 bool ScriptedEntity::damage(const DamageData &d)

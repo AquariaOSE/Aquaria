@@ -1,3 +1,6 @@
+#ifndef VFS_FILE_FUNCS_H
+#define VFS_FILE_FUNCS_H
+
 #include "VFSDefines.h"
 
 
@@ -13,3 +16,5 @@ int real_feof(void *fh);
 int real_fflush(void *fh);
 
 VFS_NAMESPACE_END
+
+#endif

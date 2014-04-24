@@ -249,7 +249,7 @@ void GameOver::applyState()
 	//core->sound->fadeOut(transTime);
 	StateObject::applyState();
 	core->globalScale = Vector(1,1);
-	core->cameraPos.stop();
+	core->globalScaleChanged();
 	core->cameraPos = Vector(0,0,0);
 
 	core->sound->playSfx("Death");

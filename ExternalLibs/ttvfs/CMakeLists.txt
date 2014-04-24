@@ -1,25 +1,26 @@
 
 set(ttvfs_SRC
-    VFS.h
+    ttvfs.h
     VFSArchiveLoader.h
-    VFSAtomic.cpp
-    VFSAtomic.h
     VFSBase.cpp
     VFSBase.h
     VFSDefines.h
     VFSDir.cpp
     VFSDir.h
+    VFSDirInternal.cpp
+    VFSDirInternal.h
+    VFSDirView.cpp
+    VFSDirView.h
     VFSFile.cpp
     VFSFile.h
     VFSFileFuncs.cpp
     VFSFileFuncs.h
-    VFSHashmap.h
-    VFSHelper.cpp
-    VFSHelper.h
     VFSInternal.h
     VFSLoader.cpp
     VFSLoader.h
-    VFSSelfRefCounter.h
+    VFSRefcounted.h
+    VFSRoot.h
+    VFSRoot.cpp
     VFSSystemPaths.cpp
     VFSSystemPaths.h
     VFSTools.cpp

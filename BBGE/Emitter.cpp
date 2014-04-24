@@ -284,6 +284,8 @@ void Emitter::onRender()
 
 	if (hasRot)
 	{
+		Vector colorMult = data.inheritColor ? pe->color : Vector(1, 1, 1);
+		float alphaMult = data.inheritAlpha ? pe->alpha.x : 1;
 		for (Particles::iterator i = particles.begin(); i != particles.end(); i++)
 		{
 			Particle *p = *i;
@@ -293,7 +295,8 @@ void Emitter::onRender()
 				const float dy = h2 * p->scale.y;
 
 #ifdef BBGE_BUILD_OPENGL
-				glColor4f(p->color.x, p->color.y, p->color.z, p->alpha.x);
+				Vector col = p->color * colorMult;
+				glColor4f(col.x, col.y, col.z, p->alpha.x * alphaMult);
 
 				
 				if (p->rot.z != 0 || p->rot.isInterpolating())

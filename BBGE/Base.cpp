@@ -33,6 +33,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #if defined(BBGE_BUILD_UNIX)
 	#include <sys/types.h>
 	#include <dirent.h>
+	#include <sys/stat.h>
+	#include <errno.h>
 #endif
 
 #if defined(BBGE_BUILD_MACOSX)
@@ -40,6 +42,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #include <assert.h>
+
+#ifdef BBGE_BUILD_VFS
+#  include "ttvfs.h"
+#  ifndef VFS_IGNORE_CASE
+#    error Must define VFS_IGNORE_CASE, see VFSDefines.h
+#  endif
+   ttvfs::Root vfs; // extern
+#endif
 
 Vector getDirVector(Direction dir)
 {
@@ -105,7 +115,7 @@ Direction getNextDirClockwise(Direction dir)
 void sizePowerOf2Texture(int &v)
 {
 	int p = 8, use=0;
-	do 
+	do
 	{
 		use = 1 << p;
 		p++;
@@ -152,6 +162,60 @@ unsigned hash(const std::string &string)
 
 /* hash * 33 + c */
 
+
+static unsigned char lowerToUpperTable[256];
+static unsigned char upperToLowerTable[256];
+
+void initCharTranslationTables(const std::map<unsigned char, unsigned char>& tab)
+{
+	for (unsigned int i = 0; i < 256; ++i)
+	{
+		lowerToUpperTable[i] = i;
+		upperToLowerTable[i] = i;
+	}
+	for (unsigned char i = 'a'; i <= 'z'; ++i)
+	{
+		lowerToUpperTable[i] = i - 'a' + 'A';
+		upperToLowerTable[i - 'a' + 'A'] = i;
+	}
+
+	for (std::map<unsigned char, unsigned char>::const_iterator it = tab.begin(); it != tab.end(); ++it)
+	{
+		lowerToUpperTable[it->first] = it->second;
+		upperToLowerTable[it->second] = it->first;
+	}
+}
+
+struct TransatableStaticInit
+{
+	TransatableStaticInit()
+	{
+		std::map<unsigned char, unsigned char> dummy;
+		initCharTranslationTables(dummy);
+	}
+};
+static TransatableStaticInit _transtable_static_init;
+
+static unsigned char charIsUpper(unsigned char c)
+{
+	return c == upperToLowerTable[c];
+}
+
+static unsigned char charIsLower(unsigned char c)
+{
+	return c == lowerToUpperTable[c];
+}
+
+static unsigned char charToLower(unsigned char c)
+{
+	return upperToLowerTable[c];
+}
+
+static unsigned char charToUpper(unsigned char c)
+{
+	return lowerToUpperTable[c];
+}
+
 std::string splitCamelCase(const std::string &input)
 {
 	std::string result;
@@ -160,7 +224,7 @@ std::string splitCamelCase(const std::string &input)
 	{
 		if (last == 1)
 		{
-			if (input[i] >= 'A' && input[i] <= 'Z')
+			if (charIsUpper(input[i]))
 			{
 				result += ' ';
 			}
@@ -168,7 +232,7 @@ std::string splitCamelCase(const std::string &input)
 
 		result += input[i];
 
-		if (input[i] >= 'A' && input[i] <= 'Z')
+		if (charIsUpper(input[i]))
 		{
 			last = 2;
 		}
@@ -199,22 +263,6 @@ std::string numToZeroString(int num, int zeroes)
 bool isVectorInRect(const Vector &vec, const Vector &coord1, const Vector &coord2)
 {
 	return (vec.x > coord1.x && vec.x < coord2.x && vec.y > coord1.y && vec.y < coord2.y);
-}
-
-static char charToUpper(char c)
-{
-	if (c >= 'a' && c <= 'z') c = c - 'a' + 'A';
-	if ((unsigned char)c >= 0xE0 && (unsigned char)c <= 0xFF)
-		c = c - 0xE0 + 0xC0;
-	return c;
-}
-
-static char charToLower(char c)
-{
-	if (c >= 'A' && c <= 'Z') c = c-'A' + 'a';
-	if ((unsigned char)c >= 0xC0 && (unsigned char)c <= 0xDF)
-		c = c-0xC0+0xE0;
-	return c;
 }
 
 void stringToUpper(std::string &s)
@@ -449,26 +497,15 @@ void debugLog(const std::string &s)
 // delete[] when no longer needed.
 char *readFile(const std::string& path, unsigned long *size_ret)
 {
-	long fileSize;
-#ifdef BBGE_BUILD_VFS
-	VFILE *vf = vfs.GetFile(path.c_str());
-	if (!vf)
-		return NULL;
-	char *buffer = (char*)vf->getBuf(NULL, NULL);
-	fileSize = vf->size();
-	vf->dropBuf(false); // unlink buffer from file
-#else
-	FILE *f = fopen(path.c_str(), "rb");
+	VFILE *f = vfopen(path.c_str(), "rb");
 	if (!f)
 		return NULL;
 
-
-	if (fseek(f, 0, SEEK_END) != 0
-	 || (fileSize = ftell(f)) < 0
-	 || fseek(f, 0, SEEK_SET) != 0)
+	size_t fileSize = 0;
+	if(vfsize(f, &fileSize) < 0)
 	{
 		debugLog(path + ": Failed to get file size");
-		fclose(f);
+		vfclose(f);
 		return NULL;
 	}
 
@@ -479,23 +516,22 @@ char *readFile(const std::string& path, unsigned long *size_ret)
 		os << path << ": Not enough memory for file ("
 		   << (fileSize+1) << " bytes)";
 		debugLog(os.str());
-		fclose(f);
+		vfclose(f);
 		return NULL;
 	}
 
-	long bytesRead = fread(buffer, 1, fileSize, f);
+	long bytesRead = vfread(buffer, 1, fileSize, f);
 	if (bytesRead != fileSize)
 	{
 		std::ostringstream os;
 		os << path << ": Failed to read file (only got "
 		   << bytesRead << " of " << fileSize << " bytes)";
 		debugLog(os.str());
-		fclose(f);
+		vfclose(f);
 		return NULL;
 	}
-	fclose(f);
+	vfclose(f);
 	buffer[fileSize] = 0;
-#endif
 
 	if (size_ret)
 		*size_ret = fileSize;
@@ -590,21 +626,19 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 {
 	if (path.empty()) return;
 
-
 #ifdef BBGE_BUILD_VFS
-	ttvfs::VFSDir *vd = vfs.GetDir(path.c_str(), true); // add to tree if it wasn't loaded before
-	if(!vd)
+	ttvfs::DirView view;
+	if(!vfs.FillDirView(path.c_str(), view))
 	{
 		debugLog("Path '" + path + "' does not exist");
 		return;
 	}
-	vd->load(false);
 	vfscallback_s dat;
 	dat.path = &path;
 	dat.ext = type.length() ? type.c_str() : NULL;
 	dat.param = param;
 	dat.callback = callback;
-	vd->forEachFile(forEachFile_vfscallback, &dat, true);
+	view.forEachFile(forEachFile_vfscallback, &dat, true);
 
 	return;
 	// -------------------------------------
@@ -777,14 +811,17 @@ std::vector<std::string> getFileList(std::string path, std::string type, int par
 	return list;
 }
 
-#if defined(BBGE_BUILD_MACOSX)
+#if defined(BBGE_BUILD_MACOSX) && !SDL_VERSION_ATLEAST(2,0,0)
 void cocoaMessageBox(const std::string &title, const std::string &msg);
 #endif
 
 void messageBox(const std::string& title, const std::string &msg)
 {
 #ifdef BBGE_BUILD_WINDOWS
-	MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
+    MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
+#elif SDL_VERSION_ATLEAST(2,0,0)
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, title.c_str(),
+							 msg.c_str(), NULL);
 #elif defined(BBGE_BUILD_MACOSX)
 	cocoaMessageBox(title, msg);
 #elif defined(BBGE_BUILD_UNIX)
@@ -1130,6 +1167,38 @@ void triggerBreakpoint()
 #else
 	raise(SIGTRAP);
 #endif
+}
+
+bool createDir(const std::string& d)
+{
+	bool success = false;
+	int err = 0;
+#if defined(BBGE_BUILD_UNIX)
+	if (!mkdir(d.c_str(), S_IRWXU))
+		success = true;
+	else
+	{
+		err = errno;
+		if (err == EEXIST)
+			success = true;
+	}
+#elif defined(BBGE_BUILD_WINDOWS)
+	if (CreateDirectoryA(d.c_str(), NULL))
+		success = true;
+	else
+	{
+		err = GetLastError();
+		if(err == ERROR_ALREADY_EXISTS)
+			success = true;
+	}
+#endif
+	if (!success)
+	{
+		std::ostringstream os;
+		os <<  "Failed to create directory: [" << d << "], error code: " << err;
+		debugLog(os.str());
+	}
+	return success;
 }
 
 

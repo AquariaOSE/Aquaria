@@ -559,6 +559,8 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		setUsedLocale(system.locale);
 	}
 
+	core->initLocalization();
+
 	if (doApply)
 		apply();
 }

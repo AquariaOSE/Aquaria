@@ -42,7 +42,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ogg/ogg.h"
 #include "vorbis/vorbisfile.h"
 
-#include "FileAPI.h"
 #include "MT.h"
 
 #ifndef _DEBUG
@@ -1488,7 +1487,6 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
 
         long nread = vfread(data, 1, size, io);
         vfclose(io);
-        vfclear(io);
         if (nread != size)
         {
             debugLog("Failed to read data from " + std::string(fname));

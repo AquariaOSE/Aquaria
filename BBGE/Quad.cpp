@@ -727,7 +727,7 @@ void Quad::flipVertical()
 
 void Quad::refreshRepeatTextureToFill()
 {
-	if (repeatingTextureToFill)
+	if (repeatingTextureToFill && texture)
 	{
 		upperLeftTextureCoordinates.x = texOff.x;
 		upperLeftTextureCoordinates.y = texOff.y;

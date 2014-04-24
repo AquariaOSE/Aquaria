@@ -1,6 +1,6 @@
 /* ttvfs -- tiny tree virtual file system
 
-// VFS.h - all the necessary includes to get a basic VFS working
+// ttvfs.h - all the necessary includes to get a basic VFS working
 // Only include externally, not inside the library.
 
 See VFSDefines.h for compile configration.
@@ -33,43 +33,43 @@ THE SOFTWARE.
 #define TTVFS_VFS_H
 
 #include "VFSDefines.h"
+#include <cstring>
 
 VFS_NAMESPACE_START
-bool _checkCompatInternal(bool large, bool nocase, bool hashmap, unsigned int vfspos_size);
+
+bool _checkCompatInternal(_AbiCheck *abi);
 
 /** It is recommended to call this function early in your code
     and ensure it returns true - if it does not, compiler settings
     are inconsistent, which may cause otherwise hard to detect problems. */
-inline static bool checkCompat(void)
+inline static bool checkCompat()
 {
+    _AbiCheck abi;
+    memset(&abi, 0, sizeof(abi));
+    abi.structSize = sizeof(abi);
+    abi.vfsposSize = sizeof(vfspos);
+
 #ifdef VFS_LARGEFILE_SUPPORT
-    bool largefile = true;
-#else
-    bool largefile = false;
+    abi.largefile = 1;
 #endif
 
 #ifdef VFS_IGNORE_CASE
-    bool nocase = true;
-#else
-    bool nocase = false;
+    abi.nocase = 1;
 #endif
 
-#ifdef VFS_USE_HASHMAP
-    bool hashmap = true;
-#else
-    bool hashmap = false;
-#endif
-    return _checkCompatInternal(largefile, nocase, hashmap, sizeof(vfspos));
+    return _checkCompatInternal(&abi);
 }
 VFS_NAMESPACE_END
 
 
-#include <cstring>
 #include <string>
-#include "VFSHelper.h"
+#include "VFSRoot.h"
 #include "VFSFile.h"
 #include "VFSDir.h"
+#include "VFSDirView.h"
 #include "VFSSystemPaths.h"
+#include "VFSTools.h"
+#include "VFSLoader.h"
 
 
 // Check to enforce correct including.

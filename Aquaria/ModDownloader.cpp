@@ -7,10 +7,7 @@
 #include "ModSelector.h"
 #include "Network.h"
 #include "tinyxml.h"
-
-#ifdef BBGE_BUILD_UNIX
-#include <sys/stat.h>
-#endif
+#include "ttvfs.h"
 
 using Network::NetEvent;
 using Network::NE_ABORT;
@@ -21,16 +18,6 @@ using Network::NE_UPDATE;
 // external, global
 ModDL moddl;
 
-
-// TODO: move this to Base.cpp and replace other similar occurrances
-static void createDir(const char *d)
-{
-#if defined(BBGE_BUILD_UNIX)
-	mkdir(d, S_IRWXU);
-#elif defined(BBGE_BUILD_WINDOWS)
-	CreateDirectoryA(d, NULL);
-#endif
-}
 
 // .../_mods/<MODNAME>
 // .../_mods/<MODNAME>.zip
@@ -122,10 +109,6 @@ void ModDL::init()
 {
 	tempDir = dsq->getUserDataFolder() + "/webcache";
 	createDir(tempDir.c_str());
-
-	ttvfs::VFSDir *vd = vfs.GetDir(tempDir.c_str());
-	if(vd)
-		vd->load(false);
 }
 
 bool ModDL::hasUrlFileCached(const std::string& url)
@@ -156,7 +139,7 @@ void ModDL::GetModlist(const std::string& url, bool allowChaining, bool first)
 {
 	if(first)
 		knownServers.clear();
-	
+
 	// Prevent recursion, self-linking, or cycle linking.
 	// In theory, this allows setting up a server network
 	// where each server links to any servers it knows,
@@ -184,7 +167,7 @@ void ModDL::GetModlist(const std::string& url, bool allowChaining, bool first)
 	std::ostringstream os;
 	os << "Fetching mods list [" << url << "], chain: " << allowChaining;
 	debugLog(os.str());
-	
+
 	std::string localName = remoteToLocalName(url);
 
 	debugLog("... to: " + localName);
@@ -240,7 +223,7 @@ void ModDL::NotifyModlist(ModlistRequest *rq, NetEvent ev, size_t recvd, size_t 
 		}
 		return;
 	}
-	
+
 	if(scr)
 	{
 		scr->globeIcon->alpha.stop();
@@ -289,7 +272,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 			<Properties type="patch" /> //-- optional tag, if not given, "mod" is assumed. Can be "mod", "patch", or "weblink".
 						// if type=="weblink", <Package url> will be opened with the default web browser.
 		</AquariaMod>
-		
+
 		<AquariaMod>
 		...
 		</AquariaMod>
@@ -386,7 +369,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 		std::string localIcon = remoteToLocalName(iconurl);
 
 		size_t localIconSize = 0;
-		if(ttvfs::VFSFile *vf = vfs.GetFile(localIcon.c_str()))
+		if(ttvfs::File *vf = vfs.GetFile(localIcon.c_str()))
 		{
 			localIconSize = vf->size();
 		}
@@ -410,7 +393,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 			{
 				std::string modpkg = dsq->mod.getBaseModPath() + localname;
 				modpkg += ".aqmod";
-				ttvfs::VFSFile *vf = vfs.GetFile(modpkg.c_str());
+				ttvfs::File *vf = vfs.GetFile(modpkg.c_str());
 				if(vf)
 				{
 					size_t sz = vf->size();
@@ -512,13 +495,9 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 		// the mod file can already exist, and if it does, it will most likely be mounted.
 		// zip archives are locked and cannot be deleted/replaced, so we need to unload it first.
 		// this effectively closes the file handle only, nothing else.
-		ttvfs::VFSDir *vd = vfs.GetDir(moddir.c_str());
+		ttvfs::DirBase *vd = vfs.GetDir(moddir.c_str());
 		if(vd)
-		{
-			ttvfs::VFSBase *origin = vd->getOrigin();
-			if(origin)
-				origin->close();
-		}
+			vd->close();
 
 		std::string archiveFile = moddir + ".aqmod";
 
@@ -526,7 +505,7 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 		remove(archiveFile.c_str());
 		if(rename(rq->tempFilename.c_str(), archiveFile.c_str()))
 		{
-			debugLog("Could not rename mod " + rq->tempFilename + " to " + archiveFile);
+			dsq->screenMessage("Failed to rename mod\n" + rq->tempFilename + "\n  to\n" + archiveFile);
 			return;
 		}
 		else
@@ -534,10 +513,9 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 
 		if(vd)
 		{
-			// Dir already exists, just remount everything
-			vfs.Reload();
+			// Nothing to do
 		}
-		else if(!dsq->mountModPackage(archiveFile)) 
+		else if(!dsq->mountModPackage(archiveFile))
 		{
 			// make package readable (so that the icon can be shown)
 			// But only if it wasn't mounted before!

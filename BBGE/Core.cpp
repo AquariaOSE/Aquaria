@@ -57,10 +57,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	Vector unchange;
 #endif
 
+#ifdef BBGE_BUILD_VFS
+#include "ttvfs.h"
+#endif
+
 Core *core = 0;
 
 #ifdef BBGE_BUILD_WINDOWS
 	HICON icon_windows = 0;
+#endif
+
+#ifndef KMOD_GUI
+	#define KMOD_GUI KMOD_META
 #endif
 
 void Core::initIcon()
@@ -899,7 +907,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
         envr = ".";  // oh well.
 	const std::string home(envr);
 
-	mkdir(home.c_str(), 0700);  // just in case.
+	createDir(home);  // just in case.
 
 	// "/home/icculus/.Aquaria" or something. Spaces are okay.
 	#ifdef BBGE_BUILD_MACOSX
@@ -909,11 +917,12 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	#endif
 
 	userDataFolder = home + "/" + prefix + userDataSubFolder;
-	mkdir(userDataFolder.c_str(), 0700);
+	createDir(userDataFolder);
 	debugLogPath = userDataFolder + "/";
-	mkdir((userDataFolder + "/screenshots").c_str(), 0700);
+	createDir(userDataFolder + "/screenshots");
 	std::string prefpath(getPreferencesFolder());
-	mkdir(prefpath.c_str(), 0700);
+	createDir(prefpath);
+
 #else
 	debugLogPath = "";
 	userDataFolder = ".";
@@ -929,7 +938,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 		// not sure about this right now -- FG
 		/*else
 		{
-			puts("Working directory is not writeable...");
+			puts("Working directory is not writable...");
 			char pathbuf[MAX_PATH];
 			if(SHGetSpecialFolderPathA(NULL, &pathbuf[0], CSIDL_APPDATA, 0))
 			{
@@ -941,7 +950,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 						userDataFolder[i] = '/';
 				debugLogPath = userDataFolder + "/";
 				puts(("Using \"" + userDataFolder + "\" as user directory.").c_str());
-				CreateDirectoryA(userDataFolder.c_str(), NULL);
+				createDir(userDataFolder);
 				checkWritable(userDataFolder, true, true);
 			}
 			else
@@ -1293,6 +1302,8 @@ void Core::init()
 
 	initInputCodeMap();
 
+	initLocalization();
+
 	//glfwSetWindowSizeCallback(lockWindowSize);
 }
 
@@ -1316,12 +1327,12 @@ bool Core::initSoundLibrary(const std::string &defaultDevice)
 
 Vector Core::getGameCursorPosition()
 {
-	return core->cameraPos + mouse.position * Vector(1/core->globalScale.x, 1/core->globalScale.y, 1);
+	return getGamePosition(mouse.position);
 }
 
 Vector Core::getGamePosition(const Vector &v)
 {
-	return core->cameraPos + (v * Vector(1/core->globalScale.x, 1/core->globalScale.y, 1));
+	return cameraPos + (v * invGlobalScale);
 }
 
 bool Core::getMouseButtonState(int m)
@@ -1792,8 +1803,8 @@ void Core::onUpdate(float dt)
 
 	//script.update(dt);
 
-	cameraPos.update(dt);
 	globalScale.update(dt);
+	core->globalScaleChanged();
 
 	if (afterEffectManager)
 	{
@@ -1812,6 +1823,12 @@ void Core::onUpdate(float dt)
 			}
 		}
 	}
+}
+
+void Core::globalScaleChanged()
+{
+	invGlobalScale = 1.0f/globalScale.x;
+	invGlobalScaleSqr = invGlobalScale * invGlobalScale;
 }
 
 Vector Core::getClearColor()
@@ -2409,7 +2426,7 @@ void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 	virtualWidth = pixelScaleX;
 	//MAX(virtualWidth, 800);
 	virtualHeight = pixelScaleY;//int((pixelScale*aspectY)/aspectX);					//assumes 4:3 aspect ratio
-	this->baseCullRadius = sqrtf(sqr(getVirtualWidth()/2) + sqr(getVirtualHeight()/2));
+	this->baseCullRadius = 1.1f * sqrtf(sqr(getVirtualWidth()/2) + sqr(getVirtualHeight()/2));
 
 	std::ostringstream os;
 	os << "virtual(" << virtualWidth << ", " << virtualHeight << ")";
@@ -3287,10 +3304,12 @@ void Core::setMouseConstraint(bool on)
 	mouseConstraint = on;
 }
 
-void Core::setMouseConstraintCircle(int circle)
+void Core::setMouseConstraintCircle(const Vector& pos, float circle)
 {
 	mouseConstraint = true;
 	mouseCircle = circle;
+	mouseConstraintCenter = pos;
+	mouseConstraintCenter.z = 0;
 }
 
 /*
@@ -3324,7 +3343,7 @@ bool Core::doMouseConstraint()
 	{
 		//- core->getVirtualOffX()
 		//- virtualOffX
-		Vector h = Vector(core->center.x , core->center.y);
+		Vector h = mouseConstraintCenter;
 		Vector d = mouse.position - h;
 		if (!d.isLength2DIn(mouseCircle))
 		{
@@ -3558,7 +3577,11 @@ void Core::pollEvents()
 			case SDL_KEYDOWN:
 			{
 				#if __APPLE__
-				if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_GUI))
+					#if SDL_VERSION_ATLEAST(2, 0, 0)
+						if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_GUI))
+					#else
+						if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_META))
+					#endif
 				#else
 				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
 				#endif
@@ -4044,20 +4067,9 @@ void Core::cacheRender()
 
 void Core::updateCullData()
 {
-	// update cull data
-	//this->cullRadius = int((getVirtualWidth())*invGlobalScale);
-	this->cullRadius = baseCullRadius * invGlobalScale;
-	this->cullRadiusSqr = (float)this->cullRadius * (float)this->cullRadius;
-	this->cullCenter = cameraPos + Vector(400.0f*invGlobalScale,300.0f*invGlobalScale);
-	screenCullX1 = cameraPos.x;
-	screenCullX2 = cameraPos.x + 800*invGlobalScale;
-	screenCullY1 = cameraPos.y;
-	screenCullY2 = cameraPos.y + 600*invGlobalScale;
-
-	
-	int cx = core->cameraPos.x + 400*invGlobalScale;
-	int cy = core->cameraPos.y + 300*invGlobalScale;
-	screenCenter = Vector(cx, cy);
+	cullRadius = baseCullRadius * invGlobalScale;
+	cullRadiusSqr = cullRadius * cullRadius;
+	screenCenter = cullCenter = cameraPos + Vector(400.0f*invGlobalScale,300.0f*invGlobalScale);
 }
 
 void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
@@ -4072,11 +4084,10 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 		endLayer = overrideEndLayer;
 	}
 
+	globalScaleChanged();
+
 	if (core->minimized) return;
 	onRender();
-
-	invGlobalScale = 1.0f/globalScale.x;
-	invGlobalScaleSqr = invGlobalScale * invGlobalScale;
 
 	RenderObject::lastTextureApplied = 0;
 
@@ -5133,34 +5144,42 @@ void Core::setupFileAccess()
 	if(!ttvfs::checkCompat())
 		exit_error("ttvfs not compatible");
 
+	ttvfs_setroot(&vfs);
+
+	vfs.AddLoader(new ttvfs::DiskLoader);
 	vfs.AddArchiveLoader(new ttvfs::VFSZipArchiveLoader);
 
-	if(!vfs.LoadFileSysRoot(false))
-	{
-		exit_error("Failed to setup file access");
-	}
-	
-	vfs.Prepare();
-
-
-	ttvfs::VFSDir *override = vfs.GetDir("override");
-	if(override)
-	{
-		debugLog("Mounting override dir...");
-		override->load(true);
-		vfs.Mount("override", "", true);
-	}
+	vfs.Mount("override", "");
 
 	// If we ever want to read from a container...
-	//vfs.AddArchive("aqfiles.zip", false, "");
+	//vfs.AddArchive("aqfiles.zip");
 
 	if(_extraDataDir.length())
 	{
 		debugLog("Mounting extra data dir: " + _extraDataDir);
-		vfs.MountExternalPath(_extraDataDir.c_str(), "", true, true);
+		vfs.Mount(_extraDataDir.c_str(), "");
 	}
-
 
 	debugLog("Done");
 #endif
 }
+
+void Core::initLocalization()
+{
+	InStream in(localisePath("data/localecase.txt"));
+	if(!in)
+	{
+		debugLog("data/localecase.txt does not exist, using internal locale data");
+		return;
+	}
+
+	std::string low, up;
+	std::map<unsigned char, unsigned char> trans;
+	while(in)
+	{
+		in >> low >> up;
+		trans[low[0]] = up[0];
+	}
+	initCharTranslationTables(trans);
+}
+

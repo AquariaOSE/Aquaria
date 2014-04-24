@@ -72,6 +72,8 @@ struct SpawnParticleData
 	float counter;
 	float spawnTimeOffset;
 	bool spawnLocal;
+	bool inheritColor;
+	bool inheritAlpha;
 
 	float lastDTDifference;
 	int groupRender;

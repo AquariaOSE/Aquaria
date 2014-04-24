@@ -574,6 +574,7 @@ void SongIcon::openNote()
 
 	float glowLife = 0.5;
 
+	{
 	Quad *q = new Quad("particles/glow", position);
 	q->scale.interpolateTo(Vector(10, 10), glowLife+0.1f);
 	q->alpha.ensureData();
@@ -585,6 +586,8 @@ void SongIcon::openNote()
 	q->setBlendType(RenderObject::BLEND_ADD);
 	q->followCamera = 1;
 	dsq->game->addRenderObject(q, LR_HUD);
+	q->setDecayRate(1/(glowLife+0.1f));
+	}
 
 	{
 	std::ostringstream os2;
@@ -603,6 +606,7 @@ void SongIcon::openNote()
 	//q->setBlendType(RenderObject::BLEND_ADD);
 	q->followCamera = 1;
 	dsq->game->addRenderObject(q, LR_HUD);
+	q->setDecayRate(1/(glowLife+0.1f));
 	}
 
 	avatar->songInterfaceTimer = 1.0;
@@ -1422,7 +1426,7 @@ void Avatar::openSingingInterface()
 			//core->setMousePosition(Vector(400,300));
 		}
 
-		core->setMouseConstraintCircle(singingInterfaceRadius);
+		core->setMouseConstraintCircle(core->center, singingInterfaceRadius);
 		stopRoll();
 		singing = true;
 		currentSongIdx = SONG_NONE;
@@ -2508,6 +2512,7 @@ void Avatar::formAbility(int ability)
 								dsq->shakeCamera(25, 2);
 
 								core->globalScale = Vector(0.4, 0.4);
+								core->globalScaleChanged();
 								myZoom = Vector(0.4, 0.4);
 
 								/*
@@ -4212,20 +4217,6 @@ void Avatar::destroy()
 	}
 
 	avatar = 0;
-}
-
-void Avatar::toggleZoom()
-{
-	if (core->globalScale.isInterpolating()) return;
-	if (core->globalScale.x == 1)
-		core->globalScale.interpolateTo(Vector(0.75,0.75),0.2);
-	else if (core->globalScale.x == 0.75)
-		core->globalScale.interpolateTo(Vector(0.5,0.5),0.2);
-	else if (core->globalScale.x == 0.5)
-		core->globalScale.interpolateTo(Vector(0.25,0.25),0.2);
-	else if (core->globalScale.x == 0.25)
-		core->globalScale.interpolateTo(Vector(1,1),0.2);
-
 }
 
 void Avatar::startBackFlip()
@@ -6887,6 +6878,7 @@ void Avatar::onUpdate(float dt)
 				core->globalScale.x = myZoom.x;
 				core->globalScale.y = myZoom.y;
 			}
+			core->globalScaleChanged();
 
 		}
 
@@ -7200,10 +7192,10 @@ bool Avatar::checkWarpAreas()
 	{
 		bool warp = false;
 		Path *p = dsq->game->getPath(i);
-		if (!p->nodes.empty())
+		if (p && p->active && !p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];
-			if (p && n)
+			if (n)
 			{
 				Vector backPos;
 				if (!p->vox.empty())

@@ -8,50 +8,72 @@
 
 // checks to enforce correct including
 #ifdef TTVFS_VFS_H
-#error Oops, TTVFS_VFS_H is defined, someone messed up and included VFS.h wrongly.
+#error Oops, TTVFS_VFS_H is defined, someone messed up and included ttvfs.h wrongly.
 #endif
 
 #include "VFSDefines.h"
 
-#include <cstdlib>
-#include <cstring>
-#include <string>
-#include <cassert>
-
-VFS_NAMESPACE_START
-
-inline char *allocHelper(allocator_func alloc, size_t size)
-{
-    return alloc ? (char*)alloc(size) : new char[size];
-}
-
-inline char *allocHelperExtra(allocator_func alloc, size_t size, size_t extra)
-{
-    char *p = (char*)allocHelper(alloc, size + extra);
-    memset(p + size, 0, extra);
-    return p;
-}
-
-template <typename T> inline void deleteHelper(delete_func deletor, T *mem)
-{
-    if(deletor)
-        deletor(mem);
-    else
-        delete [] mem;
-}
-
-VFS_NAMESPACE_END
-
+#if defined(VFS_LARGEFILE_SUPPORT)
+# ifndef _LARGEFILE_SOURCE
+#  define _LARGEFILE_SOURCE
+# endif
+# ifndef _LARGEFILE64_SOURCE
+#  define _LARGEFILE64_SOURCE
+# endif
+# ifdef _FILE_OFFSET_BITS
+#  undef _FILE_OFFSET_BITS
+# endif
+# ifndef _FILE_OFFSET_BITS
+#  define _FILE_OFFSET_BITS 64
+# endif
+#endif
 
 #if _MSC_VER
 # ifndef _CRT_SECURE_NO_WARNINGS
 #   define _CRT_SECURE_NO_WARNINGS
 # endif
-#ifndef _CRT_SECURE_NO_DEPRECATE
+# ifndef _CRT_SECURE_NO_DEPRECATE
 #   define _CRT_SECURE_NO_DEPRECATE
-#endif
-#   pragma warning(disable: 4355) // 'this' : used in base member initializer list
+# endif
 #endif
 
+// These are used for small, temporary memory allocations that can remain on the stack.
+// If alloca is available, this is the preferred way.
+#include <stdlib.h>
+#ifdef _WIN32
+#  include <malloc.h> // MSVC/MinGW still need this for alloca. Seems to be windows-specific failure
+#endif
+#define VFS_STACK_ALLOC(size) alloca(size)
+#define VFS_STACK_FREE(ptr)   /* no need to free anything here */
+// Fail-safe:
+//#define VFS_STACK_ALLOC(size) malloc(size)
+//#define VFS_STACK_FREE(ptr)  free(ptr)
+
+
+#include <string.h>
+#include <string>
+#include <assert.h>
+
+
+
+VFS_NAMESPACE_START
+
+template <typename DST, typename SRC> inline DST safecast(SRC p)
+{
+#ifndef NDEBUG
+    assert(!p || static_cast<DST>(p) == dynamic_cast<DST>(p));
+#endif
+    return static_cast<DST>(p);
+}
+
+template <typename DST, typename SRC> inline DST safecastNonNull(SRC p)
+{
+#ifndef NDEBUG
+    assert(p && static_cast<DST>(p) == dynamic_cast<DST>(p));
+#endif
+    return static_cast<DST>(p);
+}
+
+VFS_NAMESPACE_END
 
 #endif

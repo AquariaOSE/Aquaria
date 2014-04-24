@@ -220,17 +220,10 @@ void VectorPath::splice(const VectorPath &path, int sz)
 	}
 }
 
-void VectorPath::removeNodes(int startInclusive, int endInclusive)
+void VectorPath::removeNodes(unsigned int startInclusive, unsigned int endInclusive)
 {
-	std::vector<VectorPathNode> copy = pathNodes;
-	pathNodes.clear();
-	for (int i = 0; i < copy.size(); i++)
-	{
-		if (i < startInclusive || i > endInclusive)
-		{
-			pathNodes.push_back(copy[i]);
-		}
-	}
+	// end iterator is exclusive, so max. end + 1
+	pathNodes.erase(pathNodes.begin() + startInclusive, pathNodes.begin() + std::min<size_t>(pathNodes.size(), endInclusive+1));
 }
 
 void VectorPath::prepend(const VectorPath &path)
@@ -273,15 +266,10 @@ void VectorPath::cut(int n)
 	}
 }
 
-void VectorPath::removeNode(int t)
+void VectorPath::removeNode(unsigned int t)
 {
-	std::vector<VectorPathNode> copy = pathNodes;
-	pathNodes.clear();
-	for (int i = 0; i < copy.size(); i++)
-	{
-		if (i != t)
-			pathNodes.push_back(copy[i]);
-	}
+	if(t < pathNodes.size())
+		pathNodes.erase(pathNodes.begin() + t);
 }
 
 Vector VectorPath::getValue(float usePercent)

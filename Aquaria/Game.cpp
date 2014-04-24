@@ -1543,7 +1543,7 @@ void Game::pickupIngredientEffects(IngredientData *data)
 	ingOffYTimer = 2;
 }
 
-void Game::hideInGameMenu(bool effects)
+void Game::hideInGameMenu(bool effects, bool cancel)
 {
 	if (isCooking) return;
 	if (FoodSlot::foodSlotIndex != -1) return;
@@ -1577,8 +1577,11 @@ void Game::hideInGameMenu(bool effects)
 		}
 
 		dsq->continuity.lastMenuPage = currentMenuPage;
+		if(cancel && (optionsMenu || keyConfigMenu))
+			onOptionsCancel();
+		else
+			toggleOptionsMenu(false);
 
-		toggleOptionsMenu(false);
 		if (!optionsOnly)
 		{
 			toggleFoodMenu(false);
@@ -2154,8 +2157,6 @@ void Game::reconstructGrid(bool force)
 	}
 
 	trimGrid();
-
-	dsq->pathFinding.generateZones();
 }
 
 void Game::trimGrid()
@@ -5735,7 +5736,7 @@ int game_collideParticle(Vector pos)
 	if (!aboveWaterLine)
 	{
 		Path *p = dsq->game->getNearestPath(pos, PATH_WATERBUBBLE);
-		if (p)
+		if (p && p->active)
 		{
 			if (p->isCoordinateInside(pos))
 			{
@@ -6174,6 +6175,7 @@ void Game::applyState()
 	backgroundImageRepeat = 1;
 	grad = 0;
 	maxZoom = -1;
+	maxLookDistance = 600;
 	saveFile = 0;
 	deathTimer = 0.9;
 	runGameOverScript = false;
@@ -6669,13 +6671,13 @@ void Game::applyState()
 
 	core->cacheRender();
 
-	core->cameraPos.stop();
 	cameraInterp.stop();
 
 	core->globalScale = dsq->continuity.zoom;
+	//core->globalScaleChanged();
 	avatar->myZoom = dsq->continuity.zoom;
 
-	cameraInterp = getCameraPositionFor(avatar->position);
+	cameraInterp = avatar->position;
 	core->cameraPos = getCameraPositionFor(avatar->position);
 
 	core->sort();
@@ -7449,7 +7451,9 @@ void Game::overrideZoom(float sz, float t)
 	else
 	{
 		dsq->game->toggleOverrideZoom(true);
+		dsq->globalScale.stop();
 		dsq->globalScale.interpolateTo(Vector(sz, sz), t);
+		dsq->globalScaleChanged();
 	}
 }
 
@@ -8187,11 +8191,9 @@ bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, float rad
 }
 
 // NOTE THIS FUNCTION ASSUMES THAT IF A BONE ISN'T AT FULL ALPHA (1.0) IT IS DISABLED
-Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Entity *circle)
+Bone *Game::collideSkeletalVsCircle(Entity *skeletal, RenderObject *circle)
 {
-	Vector pos = circle->position;
-
-	return collideSkeletalVsCircle(skeletal, pos, circle->collideRadius);
+	return collideSkeletalVsCircle(skeletal, circle->position, circle->collideRadius);
 }
 
 Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius)
@@ -8412,7 +8414,6 @@ bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 void Game::handleShotCollisions(Entity *e, bool hasShield)
 {
 	BBGE_PROF(Game_handleShotCollisions);
-	bool isRegValid=true;
 	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
 		Shot *shot = Shot::shots[i];
@@ -8426,7 +8427,7 @@ void Game::handleShotCollisions(Entity *e, bool hasShield)
 			if ((collidePoint - shot->position).isLength2DIn(shot->collideRadius + e->collideRadius))
 			{
 				lastCollidePosition = shot->position;
-				shot->hitEntity(e,0,isRegValid);
+				shot->hitEntity(e,0);
 			}
 		}
 	}
@@ -8460,14 +8461,14 @@ void Game::handleShotCollisionsSkeletal(Entity *e)
 	}
 }
 
-void Game::handleShotCollisionsHair(Entity *e, int num)
+void Game::handleShotCollisionsHair(Entity *e, int num, float perc)
 {
 	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
 		Shot *shot = Shot::shots[i];
 		if (shot->isActive() && isEntityCollideWithShot(e, shot))
 		{
-			bool b = collideHairVsCircle(e, num, shot->position, 8);
+			bool b = collideHairVsCircle(e, num, shot->position, 8, perc);
 			if (b)
 			{
 				lastCollidePosition = shot->position;
@@ -8534,13 +8535,7 @@ void Game::toggleGridRender()
 
 Vector Game::getCameraPositionFor(const Vector &pos)
 {
-	Vector dest = pos;
-
-	Vector v;
-	dest += v + Vector(-400/core->globalScale.x,-300/core->globalScale.y);
-	dest.z = 0;
-
-	return dest;
+	return Vector(pos.x - 400 * core->invGlobalScale, pos.y - 300 * core->invGlobalScale, 0);
 }
 
 void Game::setParallaxTextureCoordinates(Quad *q, float speed)
@@ -10218,7 +10213,7 @@ void Game::update(float dt)
 			FOR_ENTITIES(i)
 			{
 				Entity *e = *i;
-				int sqrLen = (dsq->getGameCursorPosition() - e->position).getSquaredLength2D();
+				float sqrLen = (dsq->getGameCursorPosition() - e->position).getSquaredLength2D();
 				if (sqrLen < sqr(e->activationRadius)
 					&& (avatar->position-e->position).getSquaredLength2D() < sqr(e->activationRange)
 					&& e->activationType == Entity::ACT_CLICK
@@ -10295,16 +10290,16 @@ void Game::update(float dt)
 	{
 		if (!isPaused())
 			waterLevel.update(dt);
-		cameraInterp.update(dt);
+
 		if (cameraFollow)
 		{
-			Vector dest = getCameraPositionFor(*cameraFollow);
+			Vector dest = *cameraFollow;
 			
 			if (avatar)
 			{
 				if (avatar->looking && !dsq->game->isPaused()) {
 					Vector diff = avatar->getAim();//dsq->getGameCursorPosition() - avatar->position;
-					diff.capLength2D(600);
+					diff.capLength2D(maxLookDistance);
 					dest += diff;
 				}
 				else {
@@ -10312,43 +10307,21 @@ void Game::update(float dt)
 				}
 			}
 
-			/*
-			if (avatar)
-			{
-				if (!dsq->game->isPaused() && core->mouse.buttons.middle && !dsq->game->avatar->isSinging() && dsq->game->avatar->isInputEnabled())
-				{
-					Vector diff = avatar->getAim();//dsq->getGameCursorPosition() - avatar->position;
-					diff.capLength2D(600);
-
-					avatar->looking = 1;
-					dest += diff;
-				}
-				else
-				{
-					avatar->looking = 0;
-				}
-			}
-			*/
-			
-
 			if (cameraLerpDelay==0)
 			{
 				//cameraLerpDelay = 0.15;
 				cameraLerpDelay = vars->defaultCameraLerpDelay;
 			}
+			Vector oldCamPos = dsq->cameraPos;
+			cameraInterp.stop();
 			cameraInterp.interpolateTo(dest, cameraLerpDelay);
-
-			dsq->cameraPos.x = cameraInterp.x;
-			dsq->cameraPos.y = cameraInterp.y;
-
-			// constrainCamera
+			dsq->cameraPos = getCameraPositionFor(cameraInterp);
 			constrainCamera();
-			/*
-			if (cam_region)
-				ConstrainToRegion(&ek->cameraPos, cam_region, core->getVirtualWidth()*(core->globalScale.x), core->getVirtualHeight()*(core->globalScale.y));
-				*/
+
+			float dd = (dsq->cameraPos - oldCamPos).getLength2D();
 		}
 
+		cameraInterp.update(dt);
 	}
 
 }
@@ -10483,20 +10456,14 @@ void Game::warpCameraTo(RenderObject *r)
 void Game::warpCameraTo(Vector position)
 {
 	cameraInterp.stop();
-	cameraInterp = getCameraPositionFor(position);
-	dsq->cameraPos.x = cameraInterp.x;
-	dsq->cameraPos.y = cameraInterp.y;
+	cameraInterp = position;
+	dsq->cameraPos = getCameraPositionFor(position);
 }
 
 void Game::snapCam()
 {
 	if (cameraFollow)
-	{
-		Vector p = getCameraPositionFor(*cameraFollow);
-		cameraInterp.interpolateTo(p,0);
-		cameraInterp = p;
-		core->cameraPos = p;
-	}
+		warpCameraTo(*cameraFollow);
 }
 
 ElementTemplate Game::getElementTemplateForLetter(int i)
@@ -10757,6 +10724,7 @@ void Game::removeState()
 
 	dsq->game->avatar->myZoom = Vector(1,1);
 	dsq->globalScale = Vector(1,1);
+	core->globalScaleChanged();
 
 	for (int i = 0; i < getNumPaths(); i++)
 	{
