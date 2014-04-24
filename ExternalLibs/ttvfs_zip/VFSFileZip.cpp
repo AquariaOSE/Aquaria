@@ -2,196 +2,174 @@
 #include "VFSInternal.h"
 #include "VFSTools.h"
 #include "VFSDir.h"
+#include <stdio.h>
+#include "miniz.h"
 
 VFS_NAMESPACE_START
 
-// From miniz.c
-//#define MZ_ZIP_MODE_READING 2
 
-
-static bool zip_reader_reopen_vfsfile(mz_zip_archive *pZip, mz_uint32 flags)
+ZipFile::ZipFile(const char *name, ZipArchiveRef *zref, unsigned int fileIdx)
+: File(joinPath(zref->fullname(), name).c_str())
+, _buf(NULL)
+, _pos(0)
+, _archiveHandle(zref)
+, _bufSize(0)
+, _fileIdx(fileIdx)
+, _mode("rb") // binary mode by default
 {
-    if(!(pZip && pZip->m_pIO_opaque && pZip->m_pRead))
-        return false;
-    VFSFile *vf = (VFSFile*)pZip->m_pIO_opaque;
-    if(!vf->isopen())
-        if(!vf->open("rb"))
-            return false;
-    if(pZip->m_zip_mode == MZ_ZIP_MODE_READING)
-        return true;
-    mz_uint64 file_size = vf->size();
-    if(!file_size)
-    {
-        vf->close();
-        return false;
-    }
-    if (!mz_zip_reader_init(pZip, file_size, flags))
-    {
-        vf->close();
-        return false;
-    }
-    return true;
+}
+
+ZipFile::~ZipFile()
+{
+    close();
 }
 
 
-VFSFileZip::VFSFileZip(mz_zip_archive *zip)
-: VFSFile(NULL), _fixedStr(NULL), _zip(zip)
+bool ZipFile::open(const char *mode /* = NULL */)
 {
-    _mode = "b"; // binary mode by default
     _pos = 0;
-}
-
-void VFSFileZip::_init()
-{
-    _setName(_zipstat.m_filename);
-}
-
-VFSFileZip::~VFSFileZip()
-{
-    dropBuf(true);
-}
-
-bool VFSFileZip::open(const char *mode /* = NULL */)
-{
-    VFS_GUARD_OPT(this);
-
-    _pos = 0;
-    if(mode)
+    if(!mode)
+        mode = "rb";
+    if(_mode != mode)
     {
-        if(_fixedStr && _mode != mode)
-        {
-            delete [] _fixedStr;
-            _fixedStr = NULL;
-        }
-
+        delete [] _buf;
+        _buf = NULL;
         _mode = mode;
     }
     return true; // does not have to be opened
 }
 
-bool VFSFileZip::isopen(void) const
+bool ZipFile::isopen() const
 {
     return true; // is always open
 }
 
-bool VFSFileZip::iseof(void) const
+bool ZipFile::iseof() const
 {
-    VFS_GUARD_OPT(this);
-    return _pos >= _zipstat.m_uncomp_size;
+    return _pos >= _bufSize;
 }
 
-bool VFSFileZip::close(void)
+void ZipFile::close()
 {
-    //return flush(); // TODO: write to zip file on close
+    //flush(); // TODO: write to zip file on close
+
+    delete []_buf;
+    _buf = NULL;
+    _bufSize = 0;
+}
+
+bool ZipFile::seek(vfspos pos, int whence)
+{
+    const vfspos end = 0xFFFFFFFF;
+    switch(whence)
+    {
+        case SEEK_SET:
+            if(pos >= end) // zip files have uint32 range only
+                return false;
+            _pos = pos;
+            break;
+
+        case SEEK_CUR:
+            if(_pos + pos >= end)
+                return false;
+            _pos += pos;
+            break;
+
+        case SEEK_END:
+            if(pos >= _bufSize)
+                return false;
+            _pos = _bufSize - pos;
+            break;
+
+        default:
+            return false;
+    }
 
     return true;
 }
 
-bool VFSFileZip::seek(vfspos pos)
-{
-    if(pos >= 0xFFFFFFFF) // zip files have uint32 range only
-        return false;
-
-    VFS_GUARD_OPT(this);
-    _pos = (unsigned int)pos;
-    return true;
-}
-
-bool VFSFileZip::flush(void)
+bool ZipFile::flush()
 {
     // FIXME: use this to actually write to zip file?
     return false;
 }
 
-vfspos VFSFileZip::getpos(void) const
+vfspos ZipFile::getpos() const
 {
-    VFS_GUARD_OPT(this);
     return _pos;
 }
 
-unsigned int VFSFileZip::read(void *dst, unsigned int bytes)
+size_t ZipFile::read(void *dst, size_t bytes)
 {
-    VFS_GUARD_OPT(this);
-    char *mem = (char*)getBuf();
-    char *startptr = mem + _pos;
-    char *endptr = mem + size();
-    bytes = std::min((unsigned int)(endptr - startptr), bytes); // limit in case reading over buffer size
-    if(_mode.find('b') == std::string::npos)
-        strnNLcpy((char*)dst, (const char*)startptr, bytes); // non-binary == text mode
-    else
-        memcpy(dst, startptr, bytes); //  binary copy
+    if(!_buf && !unpack())
+        return 0;
+
+    char *startptr = _buf + _pos;
+    char *endptr = _buf + size();
+    bytes = std::min<size_t>(endptr - startptr, bytes); // limit in case reading over buffer size
+    memcpy(dst, startptr, bytes); //  binary copy
     _pos += bytes;
     return bytes;
 }
 
-unsigned int VFSFileZip::write(const void *src, unsigned int bytes)
+size_t ZipFile::write(const void *src, size_t bytes)
 {
-    /*VFS_GUARD_OPT(this);
-    if(getpos() + bytes >= size())
-        size(getpos() + bytes); // enlarge if necessary
+    // TODO: implement actually writing to the underlying Zip file.
+    //printf("NYI: ZipFile::write()");
 
-    memcpy(_buf + getpos(), src, bytes);
-
-    // TODO: implement actually writing to the Zip file.
-
-    return bytes;*/
-
-    return VFSFile::write(src, bytes);
+    return 0;
 }
 
-vfspos VFSFileZip::size(void)
+#define MZ ((mz_zip_archive*)_archiveHandle->mz)
+
+vfspos ZipFile::size()
 {
-    VFS_GUARD_OPT(this);
-    return (vfspos)_zipstat.m_uncomp_size;
+    if(_buf && _bufSize)
+        return _bufSize;
+
+    if(!_archiveHandle->openRead())
+        return npos;
+
+    // FIXME: this is not 100% safe. The file index may change if the zip file is changed externally while closed
+    mz_zip_archive_file_stat zstat;
+    if(!mz_zip_reader_file_stat(MZ, _fileIdx, &zstat))
+        return npos;
+
+    return (vfspos)zstat.m_uncomp_size;
 }
 
-const void *VFSFileZip::getBuf(allocator_func alloc /* = NULL */, delete_func del /* = NULL */)
+bool ZipFile::unpack()
 {
-    assert(!alloc == !del); // either both or none may be defined. Checked extra early to prevent possible errors later.
+    close(); // delete the buffer
 
-    VFS_GUARD_OPT(this);
-    // _fixedStr gets deleted on mode change, so doing this check here is fine
-    if(_fixedStr)
-        return _fixedStr;
+    const vfspos sz = size(); // will reopen the file
+    if(sz < 0)
+        return false;
 
+    _buf = new char[sz + 1];
     if(!_buf)
+        return false;
+
+    if(!mz_zip_reader_extract_to_mem(MZ, _fileIdx, _buf, sz, 0))
     {
-        size_t sz = (size_t)size();
-        _buf = allocHelperExtra(alloc, sz, 4);
-        if(!_buf)
-            return NULL;
-        _delfunc = del;
-
-        if(!zip_reader_reopen_vfsfile(_zip, 0))
-            return NULL; // can happen if the underlying zip file was deleted
-        if(!mz_zip_reader_extract_to_mem(_zip, _zipstat.m_file_index, _buf, sz, 0))
-            return NULL; // this should not happen
-
-        if(_mode.find("b") == std::string::npos) // text mode?
-        {
-            _fixedStr = allocHelperExtra(alloc, sz, 4);
-            strnNLcpy(_fixedStr, (const char*)_buf);
-
-            // FIXME: is this really correct?
-            VFSFile::dropBuf(true);
-
-            return _fixedStr;
-        }
-
+        //assert(0 && "ZipFile unpack: Failed mz_zip_reader_extract_to_mem");
+        delete [] _buf;
+        _buf = NULL;
+        return false; // this should not happen
     }
 
-    return _buf;
+    _bufSize = sz;
+
+    // In case of text data, make sure the buffer is always terminated with '\0'.
+    // Won't hurt for binary data, so just do it in all cases.
+    _buf[sz] = 0;
+    if(_mode.find("b") == std::string::npos) // text mode?
+    {
+        _bufSize = (vfspos)strnNLcpy(_buf, _buf);
+    }
+
+    return true;
 }
 
-void VFSFileZip::dropBuf(bool del)
-{
-    VFSFile::dropBuf(del);
-
-    VFS_GUARD_OPT(this);
-    if(del)
-        delBuf(_fixedStr);
-    _fixedStr = NULL;
-
-}
 
 VFS_NAMESPACE_END

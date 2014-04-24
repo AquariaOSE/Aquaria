@@ -276,6 +276,8 @@ void Mod::setActive(bool a)
 	{
 		if (!active)
 		{
+			dsq->unloadMods();
+
 			mapRevealMethod = REVEAL_UNSPECIFIED;
 			setLocalisationModPath("");
 			name = path = "";

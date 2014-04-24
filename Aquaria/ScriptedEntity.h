@@ -55,6 +55,8 @@ public:
 	void sporesDropped(const Vector &pos, int type);
 
 	bool damage(const DamageData &d);
+	bool canShotHit(const DamageData &d);
+
 	void song(SongType songType);
 
 	void startPull();
@@ -73,7 +75,7 @@ public:
 	std::string deathParticleEffect;
 
 	ParticleEffect pullEmitter;
-	int manaBallAmount;
+	float manaBallAmount;
 	
 	void initEmitter(int emit, const std::string &file);
 	void startEmitter(int emit);
@@ -109,6 +111,7 @@ protected:
 	void onEnterState(int action);
 	void onExitState(int action);
 	virtual void deathNotify(RenderObject *r);
+	bool canShotHitFunc;
 };
 
 #endif

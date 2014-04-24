@@ -404,6 +404,16 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 				inf >> tmp;
 				inf >> currentEmitter->data.suckIndex >> currentEmitter->data.suckStr;
 			}
+			else if (token == "InheritColor")
+			{
+				inf >> tmp;
+				inf >> currentEmitter->data.inheritColor;
+			}
+			else if (token == "InheritAlpha")
+			{
+				inf >> tmp;
+				inf >> currentEmitter->data.inheritAlpha;
+			}
 		}
 	}
 }

@@ -204,7 +204,7 @@ public:
 
 	void moveNextWidgets(float dt);
 
-	std::vector<SkeletalSprite> undoHistory;
+	std::deque<SkeletalSprite> undoHistory;
 
 	int undoEntry;
 

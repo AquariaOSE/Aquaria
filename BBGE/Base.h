@@ -141,7 +141,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Rect.h"
 
 #include "math.h"
-#include "FileAPI.h"
+#include "ttvfs_stdio.h"
 
 #ifdef BBGE_BUILD_LINUX
 #  include <sys/types.h>
@@ -173,16 +173,6 @@ enum Direction
 #include "Vector.h"
 
 
-#define FOR_ALL(object, type, object_iterator)\
-	{\
-		for (type::iterator object_iterator = object.begin(); object_iterator != object.end(); ++object_iterator)\
-		{\
-
-#define END_FOR_ALL\
-		}\
-	}\
-
-
 const float SQRT2		= 1.41421356;
 
 const float PI			= 3.14159265;
@@ -204,6 +194,7 @@ struct IntPair
 std::string numToZeroString(int num, int zeroes);
 bool chance(int perc);
 bool chancef(float p);
+void initCharTranslationTables(const std::map<unsigned char, unsigned char>& tab);
 void stringToUpper(std::string &s);
 void stringToLower(std::string &s);
 void stringToLowerUserData(std::string &s);
@@ -301,5 +292,11 @@ std::string spacesToUnderscores(const std::string &str);
 
 void triggerBreakpoint();
 
+bool createDir(const std::string& d);
+
+#ifdef BBGE_BUILD_VFS
+namespace ttvfs { class Root; }
+extern ttvfs::Root vfs; // in Base.cpp
+#endif
 
 #endif

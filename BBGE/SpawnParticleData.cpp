@@ -70,4 +70,6 @@ SpawnParticleData::SpawnParticleData()
 	groupRender = 0;
 	pauseLevel = 0;
 	copyParentFlip = 0;
+	inheritColor = false;
+	inheritAlpha = false;
 }

@@ -72,7 +72,7 @@ public:
 	void autoKern();
 	void setBitmapFontEffect(BitmapFontEffect bfe);
 	void render();
-	float getHeight();
+	virtual float getHeight();
 	void unloadDevice();
 	void reloadDevice();
 

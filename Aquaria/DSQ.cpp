@@ -45,6 +45,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include <sys/stat.h>
 #endif
 
+#ifdef BBGE_BUILD_VFS
+#include "ttvfs.h"
+#endif
+
 #ifdef BBGE_BUILD_UNIX
 #include <sys/types.h>
 #include <sys/stat.h>
@@ -62,7 +66,7 @@ static void Linux_CopyTree(const char *src, const char *dst)
 
     if (S_ISDIR(statbuf.st_mode))
     {
-        mkdir(dst, 0700);  // don't care if this fails.
+        createDir(dst);  // don't care if this fails.
         DIR *dirp = opendir(src);
         if (dirp == NULL)
             return;
@@ -156,8 +160,6 @@ Vector savesz;
 DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 : Core(fileSystem, extraDataDir, LR_MAX, APPNAME, PARTICLE_AMOUNT_DEFAULT, "Aquaria")
 {
-	// 2048
-	//createDirectory(getSaveDirectory());
 	dsq = this;
 
 	cutscene_bg = 0;
@@ -358,28 +360,6 @@ ElementEffect DSQ::getElementEffectByIndex(int e)
 	empty.type = EFX_NONE;
 
 	return empty;
-}
-/*
-Element *DSQ::getSolidElementNear(Vector pos, int rad)
-{
-	Element *closestE = 0;
-	int closestDist = -1;
-	for (int i = 0; i < elements.size(); i++)
-	{
-		Element *e = elements[i];
-		int dist = (e->position - pos).getSquaredLength2D();
-		if (e->isElementActive() && e->elementFlag == EF_SOLID && dist < sqr(rad) && (dist < closestDist || closestDist==-1))
-		{
-			closestDist = dist;
-			closestE = e;
-		}
-	}
-	return closestE;
-}
-*/
-Vector DSQ::getCameraCenter()
-{
-	return cameraPos; //+ Vector(400*(1.0f/core->globalScale.x),300*(1.0f/core->globalScale.x));
 }
 
 void DSQ::centerMessage(const std::string &text, float y, int type)
@@ -705,7 +685,7 @@ void DSQ::debugMenu()
 					Entity *e = dsq->getEntityByNameNoCase(entityName);
 					if (e)
 					{
-						dsq->cameraPos = e->position;
+						dsq->cameraPos = game->getCameraPositionFor(e->position);
 					}
 				}
 				else if (c == 'C')
@@ -947,14 +927,10 @@ This build is not yet final, and as such there are a couple things lacking. They
 		Linux_CopyTree(core->adjustFilenameCase("_mods").c_str(), core->adjustFilenameCase(fn).c_str());
 #endif
 
-	std::string p1 = getUserDataFolder();
-	std::string p2 = getUserDataFolder() + "/save";
-#if defined(BBGE_BUILD_UNIX)
-	mkdir(p1.c_str(), S_IRWXU);
-	mkdir(p2.c_str(), S_IRWXU);
-#elif defined(BBGE_BUILD_WINDOWS)
-	CreateDirectoryA(p2.c_str(), NULL);
-#endif
+	createDir(getUserDataFolder());
+	createDir(getUserDataFolder() + "/save");
+	createDir(getUserDataFolder() + "/_mods");
+	createDir(getUserDataFolder() + "/screenshots");
 
 	addStateInstance(game = new Game);
 	addStateInstance(new GameOver);
@@ -2152,14 +2128,20 @@ void DSQ::loadMods()
 {
 	modEntries.clear();
 
-#ifdef BBGE_BUILD_VFS
+	std::string modpath = mod.getBaseModPath();
+	debugLog("loadMods: " + modpath);
 
+#ifdef BBGE_BUILD_VFS
 	// first load the packages, then enumerate XMLs
-	forEachFile(mod.getBaseModPath(), ".aqmod", loadModPackagesCallback, 0);
+	forEachFile(modpath, ".aqmod", loadModPackagesCallback, 0);
 #endif
 
-	forEachFile(mod.getBaseModPath(), ".xml", loadModsCallback, 0);
+	forEachFile(modpath, ".xml", loadModsCallback, 0);
 	selectedMod = 0;
+
+	std::ostringstream os;
+	os << "loadMods done, " << modEntries.size() << " entries";
+	debugLog(os.str());
 }
 
 void DSQ::applyPatches()
@@ -2167,11 +2149,8 @@ void DSQ::applyPatches()
 #ifndef AQUARIA_DEMO
 #ifdef BBGE_BUILD_VFS
 
-	// This is to allow files in patches to override files in mods on non-win32 systems (theoretically)
-	if(!vfs.GetDir("_mods"))
-	{
-		vfs.MountExternalPath(mod.getBaseModPath().c_str(), "_mods");
-	}
+	// This is to allow files in patches to override files in mods on non-win32 systems
+	vfs.Mount(mod.getBaseModPath().c_str(), "_mods");
 
 	loadMods();
 
@@ -2187,23 +2166,23 @@ void DSQ::applyPatches()
 
 #ifdef BBGE_BUILD_VFS
 
-static void refr_pushback(ttvfs::VFSDir *vd, void *user)
+static void refr_pushback(ttvfs::DirBase *vd, void *user)
 {
-    std::list<ttvfs::VFSDir*> *li = (std::list<ttvfs::VFSDir*>*)user;
-    li->push_back(vd);
+	std::list<std::string> *li = (std::list<std::string>*)user;
+	li->push_back(vd->fullname());
 }
 
 static void refr_insert(VFILE *vf, void *user)
 {
-    // texture names are like: "naija/naija2-frontleg3" - no .png extension, and no gfx/ path
-    std::set<std::string>*files = (std::set<std::string>*)user;
-    std::string t = vf->fullname();
-    size_t dotpos = t.rfind('.');
-    size_t pathstart = t.find("gfx/");
-    if(dotpos == std::string::npos || pathstart == std::string::npos || dotpos < pathstart)
-        return; // whoops
+	// texture names are like: "naija/naija2-frontleg3" - no .png extension, and no gfx/ path
+	std::set<std::string>*files = (std::set<std::string>*)user;
+	std::string t = vf->fullname();
+	size_t dotpos = t.rfind('.');
+	size_t pathstart = t.find("gfx/");
+	if(dotpos == std::string::npos || pathstart == std::string::npos || dotpos < pathstart)
+		return; // whoops
 
-    files->insert(t.substr(pathstart + 4, dotpos - (pathstart + 4)));
+	files->insert(t.substr(pathstart + 4, dotpos - (pathstart + 4)));
 }
 
 
@@ -2212,20 +2191,19 @@ static void refr_insert(VFILE *vf, void *user)
 // thus directly using "gfx" subdir should be fine...
 void DSQ::refreshResourcesForPatch(const std::string& name)
 {
-	ttvfs::VFSDir *vd = vfs.GetDir((mod.getBaseModPath() + name + "/gfx").c_str()); // only textures are resources, anyways
-	if(!vd)
-		return;
-
-	std::list<ttvfs::VFSDir*> left;
+	std::list<std::string> left;
 	std::set<std::string> files;
-	left.push_back(vd);
-
+	left.push_back(mod.getBaseModPath() + name + "/gfx");
+	ttvfs::DirView view;
 	do
 	{
-		vd = left.front();
+		std::string dirname = left.front();
 		left.pop_front();
-		vd->forEachDir(refr_pushback, &left);
-		vd->forEachFile(refr_insert, &files);
+		if(vfs.FillDirView(dirname.c_str(), view))
+		{
+			view.forEachDir(refr_pushback, &left);
+			view.forEachFile(refr_insert, &files);
+		}
 	}
 	while(left.size());
 
@@ -2233,12 +2211,19 @@ void DSQ::refreshResourcesForPatch(const std::string& name)
 	os << "refreshResourcesForPatch - " << files.size() << " to refresh";
 	debugLog(os.str());
 
-	for(int i = 0; i < dsq->resources.size(); ++i)
+	int reloaded = 0;
+	if(files.size())
 	{
-		Resource *r = dsq->resources[i];
-		if(files.find(r->name) != files.end())
-			r->reload();
+		for(int i = 0; i < dsq->resources.size(); ++i)
+		{
+			Resource *r = dsq->resources[i];
+			if(files.find(r->name) != files.end())
+				r->reload();
+		}
 	}
+	os.str("");
+	os << "refreshResourcesForPatch - " << reloaded << " textures reloaded";
+	debugLog(os.str());
 }
 #else
 void DSQ::refreshResourcesForPatch(const std::string& name) {}
@@ -2254,7 +2239,7 @@ void DSQ::applyPatch(const std::string& name)
 	std::string src = mod.getBaseModPath();
 	src += name;
 	debugLog("Apply patch: " + src);
-	vfs.Mount(src.c_str(), "", true);
+	vfs.Mount(src.c_str(), "");
 
 	activePatches.insert(name);
 	refreshResourcesForPatch(name);
@@ -2670,6 +2655,8 @@ void DSQ::clearMenu(float t)
 
 void DSQ::screenMessage(const std::string &msg)
 {
+	debugLog(msg);
+
 	DebugFont *b = new DebugFont();
 	b->position = Vector(16,300);
 	b->setFontSize(10);
@@ -2823,12 +2810,18 @@ bool DSQ::modIsKnown(const std::string& name)
 bool DSQ::mountModPackage(const std::string& pkg)
 {
 #ifdef BBGE_BUILD_VFS
-	ttvfs::VFSDir *vd = vfs.AddArchive(pkg.c_str(), false, mod.getBaseModPath().c_str());
+	ttvfs::DirBase *vd = vfs.GetDir(pkg.c_str());
 	if (!vd)
 	{
-		debugLog("Package: Unable to load " + pkg);
-		return false;
+		// Load archive only if no such directory exists already (prevent loading multiple times)
+		vd = vfs.AddArchive(pkg.c_str());
+		if(!vd)
+		{
+			debugLog("Package: Unable to load " + pkg);
+			return false;
+		}
 	}
+	vfs.Mount(pkg.c_str(), mod.getBaseModPath().c_str());
 	debugLog("Package: Mounted " + pkg + " as archive in _mods");
 	return true;
 #else
@@ -2838,12 +2831,9 @@ bool DSQ::mountModPackage(const std::string& pkg)
 }
 
 #ifdef BBGE_BUILD_VFS
-static void _CloseSubdirCallback(ttvfs::VFSDir *vd, void*)
+static void _CloseSubdirCallback(ttvfs::DirBase *vd, void*)
 {
 	vd->close();
-	ttvfs::VFSBase *origin = vd->getOrigin();
-	if(origin)
-		origin->close();
 }
 #endif
 
@@ -2851,9 +2841,9 @@ static void _CloseSubdirCallback(ttvfs::VFSDir *vd, void*)
 void DSQ::unloadMods()
 {
 #ifdef BBGE_BUILD_VFS
-	ttvfs::VFSDir *mods = vfs.GetDir(mod.getBaseModPath().c_str());
-	if(mods)
-		mods->forEachDir(_CloseSubdirCallback);
+	ttvfs::DirView view;
+	if(vfs.FillDirView(mod.getBaseModPath().c_str(), view))
+		view.forEachDir(_CloseSubdirCallback);
 #endif
 }
 

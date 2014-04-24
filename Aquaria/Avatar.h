@@ -442,7 +442,6 @@ protected:
 	int getBeamWidth();
 	Vector getWallNormal(TileVector t);
 	bool checkWarpAreas();
-	void toggleZoom();
 
 	float splashDelay;
 	//Hair *hair;

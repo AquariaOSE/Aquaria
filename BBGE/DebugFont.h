@@ -33,6 +33,7 @@ public:
 	void setFontSize(int sz);
 	int getNumLines() { return lines.size(); }
 	virtual void setAlign(Align align);
+	virtual float getHeight();
 protected:
 	int fontDrawSize, textWidth;
 	void formatText();

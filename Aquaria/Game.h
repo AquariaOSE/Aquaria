@@ -661,14 +661,14 @@ public:
 	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc=0, int *colSegment=0);
 
 	bool collideCircleVsCircle(Entity *a, Entity *b);
-	Bone *collideSkeletalVsCircle(Entity *skeletal, Entity *circle);
+	Bone *collideSkeletalVsCircle(Entity *skeletal, RenderObject *circle);
 	Bone *collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius);
 	bool collideCircleVsLine(RenderObject *r, Vector start, Vector end, float radius);
 	bool collideCircleVsLineAngle(RenderObject *r, float angle, float startLen, float endLen, float radius, Vector basePos);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius);
 	void handleShotCollisions(Entity *e, bool hasShield=false);
 	void handleShotCollisionsSkeletal(Entity *e);
-	void handleShotCollisionsHair(Entity *e, int num = 0);
+	void handleShotCollisionsHair(Entity *e, int num = 0, float perc = 0);
 
 	std::vector<ElementTemplate> elementTemplates;
 	std::string sceneName;
@@ -708,6 +708,7 @@ public:
 	void resetFromTitle();
 
 	float maxZoom;
+	float maxLookDistance;
 
 	void setParallaxTextureCoordinates(Quad *q, float speed);
 
@@ -786,7 +787,7 @@ public:
 	void loadEntityTypeList();
 	std::vector<EntitySaveData> entitySaveData;
 	int getIdxForEntityType(std::string type);
-	void hideInGameMenu(bool effects=true);
+	void hideInGameMenu(bool effects=true, bool cancel=false);
 	void showInGameMenu(bool force=false, bool optionsOnly=false, MenuPage menuPage = MENUPAGE_NONE);
 	bool optionsOnly;
 
@@ -1207,8 +1208,9 @@ int Game::getGridRaw(unsigned int x, unsigned int y) const
 inline
 int Game::getGrid(const TileVector &tile) const
 {
-	if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return OT_INVISIBLE;
-	return grid[tile.x][tile.y];
+	//if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return OT_INVISIBLE;
+	//return grid[tile.x][tile.y];
+	return (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID)) ? grid[tile.x][tile.y] : OT_INVISIBLE;
 }
 
 inline
