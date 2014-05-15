@@ -78,10 +78,11 @@ class UserSettings
 public:
 	struct System
 	{
-		System() { debugLogOn = 0; devModeOn = 0; }
+		System() { debugLogOn = 0; devModeOn = 0; allowDangerousScriptFunctions = 0; }
 		int debugLogOn;
 		std::string locale;
 		int devModeOn;
+		int allowDangerousScriptFunctions;
 	} system;
 
 	struct Audio
