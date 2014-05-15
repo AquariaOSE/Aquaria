@@ -37,7 +37,7 @@ public:
 	void molestPath(VectorPath &path);
 	void generatePath(RenderObject *go, TileVector g1, TileVector g2, int offx=0, int offy=0);
 
-	bool generatePathSimple(VectorPath& path, const Vector& start, const Vector& end, unsigned int step = 0);
+	bool generatePathSimple(VectorPath& path, const Vector& start, const Vector& end, unsigned int step = 0, unsigned int obs = 0);
 };
 
 #endif

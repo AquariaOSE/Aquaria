@@ -587,6 +587,14 @@ enum ObsType
 
 	// set by entities
 	OT_INVISIBLEENT = 0x20,
+
+	// mask for all bits that block
+	OT_BLOCKING = OT_MASK_BLACK | OT_INVISIBLE | OT_INVISIBLEIN | OT_HURT | OT_INVISIBLEENT,
+
+	// free for use, not colliding by default
+	OT_USER1 = 0x40,
+	OT_USER2 = 0x80,
+	OT_USER_MASK = OT_USER1 | OT_USER2,
 };
 
 struct EntitySaveData
@@ -620,12 +628,14 @@ public:
 
 	std::string getSelectedChoice() { return selectedChoice; }
 
-	int getGrid(const TileVector &tile) const;
-	int getGridRaw(unsigned int x, unsigned int y) const;
-	const signed char *getGridColumn(int tileX);
-	void setGrid(const TileVector &tile, int v);
-	bool isObstructed(const TileVector &tile, int t = -1) const;
+	ObsType getGrid(const TileVector &tile) const;
+	ObsType getGridRaw(const TileVector &tile) const;
+	unsigned char *getGridColumn(int tileX);
+	void setGrid(const TileVector &tile, ObsType v);
+	void addGrid(const TileVector &tile, ObsType v);
+	bool isObstructed(const TileVector &tile, int t = OT_BLOCKING) const;
 	void trimGrid();
+	void dilateGrid(unsigned int radius, ObsType test, ObsType set, ObsType allowOverwrite);
 
 	void clearPointers();
 
@@ -655,7 +665,6 @@ public:
 
 	void registerSporeDrop(const Vector &pos, int t);
 
-	bool collideBoxWithGrid(const Vector& position, int w, int h);
 	bool collideCircleWithGrid(const Vector& position, float r);
 
 	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc=0, int *colSegment=0);
@@ -959,7 +968,7 @@ public:
 	void createGradient();
 
 	std::string saveMusic;
-	GridRender *gridRender, *gridRender2, *gridRender3, *edgeRender, *gridRenderEnt;
+	GridRender *gridRender, *gridRender2, *gridRender3, *edgeRender, *gridRenderEnt, *gridRenderUser1, *gridRenderUser2;
 	void toggleGridRender();
 	ElementUpdateList elementUpdateList;
 	ElementUpdateList elementInteractionList;
@@ -1174,7 +1183,7 @@ protected:
 	void toggleSceneEditor();
 #endif
 
-	signed char grid[MAX_GRID][MAX_GRID];
+	unsigned char grid[MAX_GRID][MAX_GRID];
 
 
 	Quad *bg, *bg2;
@@ -1200,21 +1209,23 @@ extern Game *game;
 // INLINE FUNCTIONS
 
 inline
-int Game::getGridRaw(unsigned int x, unsigned int y) const
+ObsType Game::getGridRaw(const TileVector &tile) const
 {
-	return grid[x][y];
+	return (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID))
+		? ObsType(grid[tile.x][tile.y])
+		: OT_INVISIBLE;
 }
 
 inline
-int Game::getGrid(const TileVector &tile) const
+ObsType Game::getGrid(const TileVector &tile) const
 {
-	//if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return OT_INVISIBLE;
-	//return grid[tile.x][tile.y];
-	return (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID)) ? grid[tile.x][tile.y] : OT_INVISIBLE;
+	return (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID))
+		? ObsType(grid[tile.x][tile.y] & OT_BLOCKING)
+		: OT_INVISIBLE;
 }
 
 inline
-const signed char *Game::getGridColumn(int tileX)
+unsigned char *Game::getGridColumn(int tileX)
 {
 	if (tileX < 0)
 		return grid[0];
@@ -1225,14 +1236,21 @@ const signed char *Game::getGridColumn(int tileX)
 }
 
 inline
-void Game::setGrid(const TileVector &tile, int v)
+void Game::setGrid(const TileVector &tile, ObsType v)
 {
-	if (tile.x < 0 || tile.x >= MAX_GRID || tile.y < 0 || tile.y >= MAX_GRID) return;
-	grid[tile.x][tile.y] = v;
+	if (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID))
+		grid[tile.x][tile.y] = v;
 }
 
 inline
-bool Game::isObstructed(const TileVector &tile, int t /* = -1 */) const
+void Game::addGrid(const TileVector &tile, ObsType v)
+{
+	if (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID))
+		grid[tile.x][tile.y] |= v;
+}
+
+inline
+bool Game::isObstructed(const TileVector &tile, int t /* = OT_BLOCKING */) const
 {
 	return (getGrid(tile) & t);
 }
