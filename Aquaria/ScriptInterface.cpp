@@ -60,6 +60,9 @@ bool complainOnGlobalVar = false;
 // thread-local variable.
 bool complainOnUndefLocal = false;
 
+// Set to true to make 'os' and 'io' Lua tables accessible
+bool allowUnsafeFunctions = false;
+
 
 // List of all interface functions called by C++ code, terminated by NULL.
 static const char * const interfaceFunctions[] = {
@@ -10650,6 +10653,8 @@ void ScriptInterface::init()
 	complainOnGlobalVar = devmode;
 	complainOnUndefLocal = devmode;
 
+	allowUnsafeFunctions = dsq->user.system.allowDangerousScriptFunctions;
+
 	if (!baseState)
 		baseState = createLuaVM();
 }
@@ -10669,11 +10674,15 @@ void *ScriptInterface::the_alloc(void *ud, void *ptr, size_t osize, size_t nsize
 lua_State *ScriptInterface::createLuaVM()
 {
 	lua_State *state = lua_newstate(the_alloc, this);	/* opens Lua */
-	luaopen_base(state);			/* opens the basic library */
-	luaopen_table(state);			/* opens the table library */
-	luaopen_string(state);			/* opens the string lib. */
-	luaopen_math(state);			/* opens the math lib. */
-	luaopen_debug(state);
+	luaL_openlibs(state);
+
+	if(!allowUnsafeFunctions)
+	{
+		lua_pushnil(state);
+		lua_setglobal(state, "os");
+		lua_pushnil(state);
+		lua_setglobal(state, "io");
+	}
 
 	// Set up various tables for state management:
 
