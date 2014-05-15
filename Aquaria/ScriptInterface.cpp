@@ -2898,6 +2898,16 @@ luaFunc(reconstructEntityGrid)
 	luaReturnNil();
 }
 
+luaFunc(dilateGrid)
+{
+	unsigned int radius = lua_tointeger(L, 1);
+	ObsType test = (ObsType)lua_tointeger(L, 2);
+	ObsType set = (ObsType)lua_tointeger(L, 3);
+	ObsType allowOverwrite = (ObsType)lua_tointeger(L, 4);
+	dsq->game->dilateGrid(radius, test, set, allowOverwrite);
+	luaReturnNil();
+}
+
 luaFunc(entity_setCanLeaveWater)
 {
 	Entity *e = entity(L);
@@ -8347,6 +8357,11 @@ luaFunc(getObstruction)
 	luaReturnInt(dsq->game->getGrid(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)))));
 }
 
+luaFunc(getGridRaw)
+{
+	luaReturnInt(dsq->game->getGridRaw(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)))));
+}
+
 luaFunc(isObstructedBlock)
 {
 	float x = lua_tonumber(L, 1);
@@ -8568,13 +8583,14 @@ luaFunc(isShuttingDownGameState)
 	luaReturnBool(dsq->game->isShuttingDownGameState());
 }
 
-// startx, starty, endx, endy [, step, xtab, ytab]
+// startx, starty, endx, endy [, step, xtab, ytab, obsMask]
 luaFunc(findPath)
 {
 	VectorPath path;
 	Vector start(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
-	if(!dsq->pathFinding.generatePathSimple(path, start, end, lua_tointeger(L, 5)))
+	ObsType obs = ObsType(lua_tointeger(L, 8));
+	if(!dsq->pathFinding.generatePathSimple(path, start, end, lua_tointeger(L, 5), obs))
 		luaReturnBool(false);
 
 	const unsigned num = path.getNumPathNodes();
@@ -8964,6 +8980,7 @@ static const struct {
 
 	luaRegister(reconstructGrid),
 	luaRegister(reconstructEntityGrid),
+	luaRegister(dilateGrid),
 
 	luaRegister(ing_hasIET),
 	luaRegister(ing_getIngredientName),
@@ -9463,6 +9480,7 @@ static const struct {
 	luaRegister(isObstructed),
 	luaRegister(isObstructedBlock),
 	luaRegister(getObstruction),
+	luaRegister(getGridRaw),
 	luaRegister(findPath),
 	luaRegister(castLine),
 	luaRegister(getUserInputString),
@@ -10597,6 +10615,11 @@ static const struct {
 	luaConstant(OT_INVISIBLEIN),
 	luaConstant(OT_HURT),
 	luaConstant(OT_INVISIBLEENT),
+	luaConstant(OT_USER1),
+	luaConstant(OT_USER2),
+	luaConstant(OT_MASK_BLACK),
+	luaConstant(OT_BLOCKING),
+	luaConstant(OT_USER_MASK),
 
 	luaConstant(SEE_MAP_NEVER),
 	luaConstant(SEE_MAP_DEFAULT),

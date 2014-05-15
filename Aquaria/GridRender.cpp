@@ -66,30 +66,6 @@ inline static void doRenderGrid(int x, int startCol, int endCol)
 
 void GridRender::onRender()
 {
-	switch(obsType)
-	{
-	case OT_INVISIBLE:
-		core->setColor(1, 0, 0, alpha.getValue());
-	break;
-	case OT_INVISIBLEIN:
-		core->setColor(1, 0.5, 0, alpha.getValue());
-	break;
-	case OT_INVISIBLEENT:
-		core->setColor(0, 1, 0.5, alpha.getValue());
-	break;
-	case OT_BLACK:
-		core->setColor(0, 0, 0, 1);
-	break;
-	case OT_BLACKINVIS:
-		core->setColor(0.3, 0, 0.6, alpha.getValue());
-	break;
-	case OT_HURT:
-		core->setColor(1, 1, 0, alpha.getValue());
-	break;
-	default:
-	break;
-	}
-
 	const signed char obsType = this->obsType;
 	Vector camPos = core->cameraPos;
 	camPos.x -= core->getVirtualOffX() * (core->invGlobalScale);
@@ -112,11 +88,11 @@ void GridRender::onRender()
 		return;
 	for (int x = startX; x <= endX; ++x)
 	{
-		const signed char *gridColumn = dsq->game->getGridColumn(x);
+		const unsigned char *gridColumn = dsq->game->getGridColumn(x);
 		int startCol = -1, y;
 
 		// fast-forward to next drawable byte
-		if(const signed char *next = (const signed char*)memchr(gridColumn + startY, obsType, endY - startY + 1)) // find next byte with correct obs type
+		if(const unsigned char *next = (const unsigned char*)memchr(gridColumn + startY, obsType, endY - startY + 1)) // find next byte with correct obs type
 		{
 			y = next - gridColumn; // will get incremented right away, which is okay, because we alrady set startCol
 			startCol = y;
@@ -131,7 +107,7 @@ void GridRender::onRender()
 				doRenderGrid(x, startCol, y - 1);
 
 				// fast-forward to next drawable byte
-				if(const signed char *next = (const signed char*)memchr(gridColumn + y, obsType, endY - y)) // find next byte with correct obs type
+				if(const unsigned char *next = (const unsigned char*)memchr(gridColumn + y, obsType, endY - y)) // find next byte with correct obs type
 				{
 					y = next - gridColumn; // will get incremented right away, which is okay, because we alrady set startCol
 					startCol = y;
