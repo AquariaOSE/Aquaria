@@ -8,12 +8,12 @@
 VFS_NAMESPACE_START
 
 
-ZipFile::ZipFile(const char *name, ZipArchiveRef *zref, vfspos uncompSize, unsigned int fileIdx)
+ZipFile::ZipFile(const char *name, ZipArchiveRef *zref, unsigned int fileIdx)
 : File(joinPath(zref->fullname(), name).c_str())
 , _buf(NULL)
 , _pos(0)
 , _archiveHandle(zref)
-, _uncompSize(uncompSize)
+, _bufSize(0)
 , _fileIdx(fileIdx)
 , _mode("rb") // binary mode by default
 {
@@ -46,7 +46,7 @@ bool ZipFile::isopen() const
 
 bool ZipFile::iseof() const
 {
-    return _pos >= _uncompSize;
+    return _pos >= _bufSize;
 }
 
 void ZipFile::close()
@@ -55,6 +55,7 @@ void ZipFile::close()
 
     delete []_buf;
     _buf = NULL;
+    _bufSize = 0;
 }
 
 bool ZipFile::seek(vfspos pos, int whence)
@@ -75,9 +76,9 @@ bool ZipFile::seek(vfspos pos, int whence)
             break;
 
         case SEEK_END:
-            if(pos >= _uncompSize)
+            if(pos >= _bufSize)
                 return false;
-            _pos = _uncompSize - pos;
+            _pos = _bufSize - pos;
             break;
 
         default:
@@ -119,26 +120,32 @@ size_t ZipFile::write(const void *src, size_t bytes)
     return 0;
 }
 
+#define MZ ((mz_zip_archive*)_archiveHandle->mz)
+
 vfspos ZipFile::size()
 {
-    return (vfspos)_uncompSize;
-}
+    if(_buf && _bufSize)
+        return _bufSize;
 
-#define MZ ((mz_zip_archive*)_archiveHandle->mz)
+    if(!_archiveHandle->openRead())
+        return npos;
+
+    // FIXME: this is not 100% safe. The file index may change if the zip file is changed externally while closed
+    mz_zip_archive_file_stat zstat;
+    if(!mz_zip_reader_file_stat(MZ, _fileIdx, &zstat))
+        return npos;
+
+    return (vfspos)zstat.m_uncomp_size;
+}
 
 bool ZipFile::unpack()
 {
-    delete [] _buf;
+    close(); // delete the buffer
 
-    if(!_archiveHandle->openRead())
-    {
-        //assert(0 && "ZipFile unpack: Failed to openRead");
-        return false; // can happen if the underlying zip file was deleted
-    }
+    const vfspos sz = size(); // will reopen the file
+    if(sz < 0)
+        return false;
 
-    // In case of text data, make sure the buffer is always terminated with '\0'.
-    // Won't hurt for binary data, so just do it in all cases.
-    size_t sz = (size_t)size();
     _buf = new char[sz + 1];
     if(!_buf)
         return false;
@@ -151,10 +158,14 @@ bool ZipFile::unpack()
         return false; // this should not happen
     }
 
+    _bufSize = sz;
+
+    // In case of text data, make sure the buffer is always terminated with '\0'.
+    // Won't hurt for binary data, so just do it in all cases.
     _buf[sz] = 0;
     if(_mode.find("b") == std::string::npos) // text mode?
     {
-        _uncompSize = strnNLcpy(_buf, _buf);
+        _bufSize = (vfspos)strnNLcpy(_buf, _buf);
     }
 
     return true;

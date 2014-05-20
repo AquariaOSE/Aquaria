@@ -21,7 +21,7 @@ File::~File()
 }
 
 DiskFile::DiskFile(const char *name /* = NULL */)
-: File(name), _fh(NULL), _buf(NULL)
+: File(name), _fh(NULL)
 {
 }
 
