@@ -1509,13 +1509,13 @@ bool Entity::isSittingOnInvisibleIn()
 	{
 		for (int y = 0; y < 4; y++)
 		{
-			if (dsq->game->getGrid(TileVector(t.x+x, t.y+y))==OT_INVISIBLEIN)
+			if (dsq->game->isObstructed(TileVector(t.x+x, t.y+y), OT_INVISIBLEIN))
 				return true;
-			if (dsq->game->getGrid(TileVector(t.x-x, t.y+y))==OT_INVISIBLEIN)
+			if (dsq->game->isObstructed(TileVector(t.x-x, t.y+y), OT_INVISIBLEIN))
 				return true;
-			if (dsq->game->getGrid(TileVector(t.x+x, t.y-y))==OT_INVISIBLEIN)
+			if (dsq->game->isObstructed(TileVector(t.x+x, t.y-y), OT_INVISIBLEIN))
 				return true;
-			if (dsq->game->getGrid(TileVector(t.x-x, t.y-y))==OT_INVISIBLEIN)
+			if (dsq->game->isObstructed(TileVector(t.x-x, t.y-y), OT_INVISIBLEIN))
 				return true;
 		}
 	}
@@ -3055,6 +3055,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 	int minDist=-1;
 	TileVector t(position);
 	TileVector useTile;
+	const int blockObs = ~ignoreObs;
 
 	float totalDist = sqrtf(float(sqr((search*2)*TILE_SIZE)+sqr((search*2)*TILE_SIZE)));
 	for (int x = -search; x <= search; x++)
@@ -3069,7 +3070,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, i
 			}
 			if (waterBlocked || dsq->game->isObstructed(checkT))
 			{
-				if (dsq->game->getGrid(checkT) != ignoreObs)
+				if (dsq->game->isObstructed(checkT, blockObs))
 				{
 					Vector vtc(t.x+x, t.y+y);
 					Vector vt(t.x, t.y);

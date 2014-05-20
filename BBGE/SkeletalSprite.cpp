@@ -1694,17 +1694,14 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 
 Animation *SkeletalSprite::getCurrentAnimation(int layer)
 {
-	return animLayers[layer].getCurrentAnimation();
+	return layer < animLayers.size() ? animLayers[layer].getCurrentAnimation() : NULL;
 }
 
 void SkeletalSprite::setTime(float time, int layer)
 {
-	animLayers[layer].timer = time;
+	if(layer < animLayers.size())
+		animLayers[layer].timer = time;
 }
-
-// hack:
-// calculate based on frames
-const int lerpAvg = 3;
 
 void AnimationLayer::updateBones()
 {

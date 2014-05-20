@@ -813,7 +813,10 @@ void loadBitForTexPrecache()
 void DSQ::setVersionLabelText()
 {
 #ifdef AQUARIA_OVERRIDE_VERSION_STRING
-	versionLabel->setText(AQUARIA_OVERRIDE_VERSION_STRING);
+	std::string overrideText = AQUARIA_OVERRIDE_VERSION_STRING;
+	if(user.system.allowDangerousScriptFunctions)
+		overrideText += continuity.stringBank.get(2050);
+	versionLabel->setText(overrideText);
 	return;
 #endif
 
@@ -847,6 +850,9 @@ void DSQ::setVersionLabelText()
 	#ifdef AQUARIA_CUSTOM_BUILD_ID
 	os << AQUARIA_CUSTOM_BUILD_ID;
 	#endif
+
+	if(user.system.allowDangerousScriptFunctions)
+		os << continuity.stringBank.get(2050);
 
 	versionLabel->setText(os.str());
 }
@@ -907,13 +913,13 @@ This build is not yet final, and as such there are a couple things lacking. They
 	// steam gets inited in here
 	Core::init();
 
-	dsq->continuity.stringBank.load();
+	continuity.stringBank.load();
 
 	vars = &v;
 	v.load();
 
 	// steam callbacks are inited here
-	dsq->continuity.init();
+	continuity.init();
 
 	// do copy stuff
 #ifdef BBGE_BUILD_UNIX
