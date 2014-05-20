@@ -78,7 +78,6 @@ public:
 protected:
     
     void *_fh; // FILE*
-    void *_buf;
 };
 
 class MemFile : public File

@@ -2350,6 +2350,8 @@ void Continuity::upgradeHealth()
 
 void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData, int scrShotWidth, int scrShotHeight)
 {
+	refreshAvatarData(dsq->game->avatar);
+
 	if (position.isZero())
 	{
 		position = dsq->game->avatar->position;
