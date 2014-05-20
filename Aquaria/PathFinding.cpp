@@ -24,16 +24,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include "Game.h"
 
-class SearchGrid
+class SearchGridRaw
 {
 public:
-	SearchGrid() : game(dsq->game) {}
+	SearchGridRaw(ObsType blocking) : game(dsq->game), blockingObsBits(blocking) {}
 	inline bool operator()(unsigned x, unsigned y) const
 	{
-		return game->getGrid(TileVector(x, y)) == OT_EMPTY;
+		return (game->getGridRaw(TileVector(x, y)) & blockingObsBits) == OT_EMPTY;
 	}
 
 private:
+	const ObsType blockingObsBits;
 	const Game *game;
 };
 
@@ -157,7 +158,7 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 	VectorPath& vp = ro->position.data->path;
 	vp.clear();
 
-	SearchGrid grid;
+	SearchGridRaw grid(OT_BLOCKING);
 	JPS::PathVector path;
 	if(JPS::findPath(path, grid, start.x, start.y, goal.x, goal.y, 1))
 	{
@@ -166,9 +167,12 @@ void PathFinding::generatePath(RenderObject *ro, TileVector start, TileVector go
 	}
 }
 
-bool PathFinding::generatePathSimple(VectorPath& path, const Vector& start, const Vector& end, unsigned int step /* = 0 */)
+bool PathFinding::generatePathSimple(VectorPath& path, const Vector& start, const Vector& end, unsigned int step /* = 0 */, unsigned int obs /* = 0 */)
 {
-	SearchGrid grid;
+	if(obs == OT_EMPTY)
+		obs = OT_BLOCKING;
+
+	SearchGridRaw grid((ObsType)obs);
 	JPS::PathVector p;
 	TileVector tstart(start);
 	TileVector tend(end);

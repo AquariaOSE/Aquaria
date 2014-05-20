@@ -60,6 +60,12 @@ void UserSettings::save()
 				xml_devmode.SetAttribute("on", system.devModeOn);
 			}
 			xml_system.InsertEndChild(xml_devmode);
+
+			TiXmlElement xml_unsafe("AllowDangerousScriptFunctions");
+			{
+				xml_unsafe.SetAttribute("on", system.allowDangerousScriptFunctions);
+			}
+			xml_system.InsertEndChild(xml_unsafe);
 		}
 		doc.InsertEndChild(xml_system);
 
@@ -381,6 +387,12 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		if (xml_devmode)
 		{
 			xml_devmode->Attribute("on", &system.devModeOn);
+		}
+
+		TiXmlElement *xml_unsafe = xml_system->FirstChildElement("AllowDangerousScriptFunctions");
+		if (xml_unsafe)
+		{
+			xml_unsafe->Attribute("on", &system.allowDangerousScriptFunctions);
 		}
 	}
 

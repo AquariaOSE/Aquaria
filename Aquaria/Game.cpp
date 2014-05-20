@@ -2075,8 +2075,8 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 
 			//dsq->game->setGrid(TileVector(tpos.x+(w2*TILE_SIZE)+(x/TILE_SIZE), tpos.y+(h2*TILE_SIZE)+(y/TILE_SIZE)), obsType);
 			TileVector tvec(tpos.x+w2+x, tpos.y+h2+y);
-			if (dsq->game->getGrid(tvec) == OT_EMPTY)
-				dsq->game->setGrid(tvec, obsType);
+			if (!dsq->game->isObstructed(tvec))
+				dsq->game->addGrid(tvec, obsType);
 
 		}
 		glPopMatrix();
@@ -2103,7 +2103,7 @@ void Game::clearDynamicGrid(unsigned char maskbyte /* = OT_MASK_BLACK */)
 	// otherwise there is a chance to write a few bytes over the end of the buffer -- FG
 	compile_assert(sizeof(grid) % sizeof(uint32) == 0);
 
-	signed char *gridstart = &grid[0][0];
+	unsigned char *gridstart = &grid[0][0];
 	uint32 *gridend = (uint32*)(gridstart + sizeof(grid));
 	uint32 *gridptr = (uint32*)gridstart;
 	// mask out specific bytes
@@ -2165,9 +2165,9 @@ void Game::trimGrid()
 	// from beeing drawn. (The maps were designed with this mind...)
 	for (int x = 0; x < MAX_GRID; x++)
 	{
-		const signed char *curCol   = dsq->game->getGridColumn(x);
-		const signed char *leftCol  = dsq->game->getGridColumn(x-1);
-		const signed char *rightCol = dsq->game->getGridColumn(x+1);
+		const unsigned char *curCol   = grid[x]; // safe
+		const unsigned char *leftCol  = dsq->game->getGridColumn(x-1); // unsafe
+		const unsigned char *rightCol = dsq->game->getGridColumn(x+1); // unsafe
 		for (int y = 0; y < MAX_GRID; y++)
 		{
 			if (curCol[y] & OT_MASK_BLACK)
@@ -2176,6 +2176,66 @@ void Game::trimGrid()
 					setGrid(TileVector(x, y), OT_BLACKINVIS);
 			}
 		}
+	}
+}
+
+void Game::dilateGrid(unsigned int radius, ObsType test, ObsType set, ObsType allowOverwrite)
+{
+	if(!radius)
+		return;
+	const int lim = MAX_GRID - radius;
+	const unsigned int denyOverwrite = ~allowOverwrite;
+	// Box dilation is separable, so we do a two-pass by axis
+	int dilate = 0;
+
+	// dilate rows
+	for (int y = 0; y < MAX_GRID; ++y)
+	{
+		for (int x = radius; x < lim; ++x)
+		{
+			if (grid[x][y] & test)
+			{
+				dilate = 2 * radius;
+				goto doDilate1;
+			}
+			if(dilate)
+			{
+				--dilate;
+				doDilate1:
+				if((grid[x - radius][y] & denyOverwrite) == OT_EMPTY)
+					grid[x - radius][y] |= set;
+			}
+		}
+		assert(lim + dilate < MAX_GRID);
+		for(int x = 0; x < dilate; ++x)
+			if(!(grid[x][y - radius] & test))
+				grid[x][y - radius] |= set;
+	}
+
+	// dilate colums
+	dilate = 0;
+	for (int x = 0; x < MAX_GRID; ++x)
+	{
+		unsigned char * const curCol = grid[x];
+		for (int y = radius; y < lim; ++y)
+		{
+			if (curCol[y] & test)
+			{
+				dilate = 2 * radius;
+				goto doDilate2;
+			}
+			if(dilate)
+			{
+				--dilate;
+				doDilate2:
+				if((curCol[y - radius] & denyOverwrite) == OT_EMPTY)
+					curCol[y - radius] |= set;
+			}
+		}
+		assert(lim + dilate < MAX_GRID);
+		for(int y = 0; y < dilate; ++y)
+			if(!(curCol[y - radius] & test))
+				curCol[y - radius] |= set;
 	}
 }
 
@@ -6451,30 +6511,46 @@ void Game::applyState()
 	addRenderObject(songLineRender, LR_HUD);
 
 	gridRender = new GridRender(OT_INVISIBLE);
+	gridRender->color = Vector(1, 0, 0);
 	addRenderObject(gridRender, LR_DEBUG_TEXT);
 	gridRender->alpha = 0;
 
 	gridRender2 = new GridRender(OT_HURT);
+	gridRender2->color = Vector(1, 1, 0);
 	addRenderObject(gridRender2, LR_DEBUG_TEXT);
 	gridRender2->alpha = 0;
 
 	gridRender3 = new GridRender(OT_INVISIBLEIN);
+	gridRender3->color = Vector(1, 0.5f, 0);
 	addRenderObject(gridRender3, LR_DEBUG_TEXT);
 	gridRender3->alpha = 0;
 
 	edgeRender = new GridRender(OT_BLACKINVIS);
+	edgeRender->color = Vector(0.3f, 0, 0.6f);
 	addRenderObject(edgeRender, LR_DEBUG_TEXT);
 	edgeRender->alpha = 0;
 
 	gridRenderEnt = new GridRender(OT_INVISIBLEENT);
+	gridRenderEnt->color = Vector(0, 1, 0.5);
 	addRenderObject(gridRenderEnt, LR_DEBUG_TEXT);
 	gridRenderEnt->alpha = 0;
+
+	gridRenderUser1 = new GridRender(OT_USER1);
+	addRenderObject(gridRenderUser1, LR_DEBUG_TEXT);
+	gridRenderUser1->color = Vector(1, 0, 1);
+	gridRenderUser1->alpha = 0;
+
+	gridRenderUser2 = new GridRender(OT_USER2);
+	addRenderObject(gridRenderUser2, LR_DEBUG_TEXT);
+	gridRenderUser2->color = Vector(1, 1, 1);
+	gridRenderUser2->alpha = 0;
 
 	waterSurfaceRender = new WaterSurfaceRender();
 	//waterSurfaceRender->setRenderPass(-1);
 	addRenderObject(waterSurfaceRender, LR_WATERSURFACE);
 
 	GridRender *blackRender = new GridRender(OT_BLACK);
+	blackRender->color = Vector(0, 0, 0);
 	//blackRender->alpha = 0;
 	blackRender->blendEnabled = false;
 	addRenderObject(blackRender, LR_ELEMENTS4);
@@ -8515,22 +8591,17 @@ void Game::toggleMiniMapRender(int v)
 void Game::toggleGridRender()
 {
 	float t = 0;
+	float a = 0;
 	if (gridRender->alpha == 0)
-	{
-		gridRender->alpha.interpolateTo(0.5, t);
-		gridRender2->alpha.interpolateTo(0.5, t);
-		gridRender3->alpha.interpolateTo(0.5, t);
-		edgeRender->alpha.interpolateTo(0.5, t);
-		gridRenderEnt->alpha.interpolateTo(0.5, t);
-	}
-	else if (gridRender->alpha == 0.5)
-	{
-		gridRender->alpha.interpolateTo(0, t);
-		gridRender2->alpha.interpolateTo(0, t);
-		gridRender3->alpha.interpolateTo(0, t);
-		edgeRender->alpha.interpolateTo(0, t);
-		gridRenderEnt->alpha.interpolateTo(0, t);
-	}
+		a = 0.5f;
+
+	gridRender->alpha.interpolateTo(a, t);
+	gridRender2->alpha.interpolateTo(a, t);
+	gridRender3->alpha.interpolateTo(a, t);
+	edgeRender->alpha.interpolateTo(a, t);
+	gridRenderEnt->alpha.interpolateTo(a, t);
+	gridRenderUser1->alpha.interpolateTo(a, t);
+	gridRenderUser2->alpha.interpolateTo(a, t);
 }
 
 Vector Game::getCameraPositionFor(const Vector &pos)
@@ -10624,7 +10695,7 @@ void Game::setGrid(ElementTemplate *et, Vector position, float rot360)
 		}
 		TileVector s(t.x+x, t.y+y);
 		//Vector v = Vector(position.x+et->grid[i].x*TILE_SIZE, position.y+et->grid[i].y*TILE_SIZE);
-		setGrid(s, 1);
+		setGrid(s, OT_INVISIBLE);
 	}
 }
 
@@ -10752,6 +10823,12 @@ void Game::removeState()
 
 	miniMapRender = 0;
 	gridRender = 0;
+	gridRender2 = 0;
+	gridRender3 = 0;
+	edgeRender = 0;
+	gridRenderEnt = 0;
+	gridRenderUser1 = 0;
+	gridRenderUser2 = 0;
 	worldMapRender = 0;
 	//core->sound->stopStreamingOgg();
 
@@ -10921,44 +10998,6 @@ bool Game::collideCircleWithGrid(const Vector& position, float r)
 	lastCollideTileType = OT_EMPTY;
 	return false;
 }
-
-bool Game::collideBoxWithGrid(const Vector& position, int hw, int hh)
-{
-	Vector tile = position;
-	TileVector t(tile);
-	tile.x = t.x;
-	tile.y = t.y;
-
-	float hsz = TILE_SIZE/2;
-	int xrange=1,yrange=1;
-	xrange = (hw/TILE_SIZE)+1;
-	yrange = (hh/TILE_SIZE)+1;
-	for (int x = tile.x-xrange; x <= tile.x+xrange; x++)
-	{
-		for (int y = tile.y-yrange; y <= tile.y+yrange; y++)
-		{
-			int v = this->getGrid(TileVector(x, y));
-			if (v == 1)
-			{
-				if (tile.x == x && tile.y == y) return true;
-				float rx = (x*TILE_SIZE)+TILE_SIZE/2;
-				float ry = (y*TILE_SIZE)+TILE_SIZE/2;
-
-
-				if (isBoxIn(position, Vector(hw, hh), Vector(rx, ry), Vector(hsz, hsz)))
-				{
-					return true;
-				}
-				if (isBoxIn(Vector(rx, ry), Vector(hsz, hsz), position, Vector(hw, hh)))
-				{
-					return true;
-				}
-			}
-		}
-	}
-	return false;
-}
-
 
 void Game::learnedRecipe(Recipe *r, bool effects)
 {

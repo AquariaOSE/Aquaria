@@ -3561,7 +3561,7 @@ void Avatar::lockToWall()
 		while(0);
 	}
 
-	if (dsq->game->getGrid(t)==OT_HURT && isDamageTarget(DT_WALLHURT))
+	if (dsq->game->isObstructed(t, OT_HURT) && isDamageTarget(DT_WALLHURT))
 	{
 		good = false;
 	}
@@ -3612,16 +3612,16 @@ void Avatar::lockToWall()
 			Vector offdiff = t.worldVector() - position;
 			if (!offdiff.isZero())
 			{
-				if (tileType != OT_INVISIBLEIN)
+				if (tileType & OT_INVISIBLEIN)
 				{
 					Vector adjust = offdiff;
-					adjust.setLength2D(TILE_SIZE*2);
+					adjust.setLength2D(TILE_SIZE/2);
 					offdiff -= adjust;
 				}
 				else
 				{
 					Vector adjust = offdiff;
-					adjust.setLength2D(TILE_SIZE/2);
+					adjust.setLength2D(TILE_SIZE*2);
 					offdiff -= adjust;
 				}
 			}
