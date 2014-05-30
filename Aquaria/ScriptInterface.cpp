@@ -10682,6 +10682,8 @@ lua_State *ScriptInterface::createLuaVM()
 		lua_setglobal(state, "os");
 		lua_pushnil(state);
 		lua_setglobal(state, "io");
+		lua_pushnil(state);
+		lua_setglobal(state, "package");
 	}
 
 	// Set up various tables for state management:
