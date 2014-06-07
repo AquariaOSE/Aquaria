@@ -1,5 +1,5 @@
 /*
- * PNG loader library for OpenGL v1.45 (10/07/00)
+ * PNG loader library for OpenGL v1.46 (02/06/14)
  * by Ben Wyatt ben@wyatt100.freeserve.co.uk
  * Using LibPNG 1.0.2 and ZLib 1.1.3
  *
@@ -20,6 +20,8 @@
  * 3. This notice must not be removed or altered from any source distribution.
  */
 
+// Fixed for use in Aquaria -- fg
+
 #ifndef _GLPNG_H_
 #define _GLPNG_H_
 
@@ -29,7 +31,7 @@
 extern "C" {
 #endif
 
-	/*
+/*
 #ifdef _MSC_VER
 	#ifdef _DEBUG
 		#pragma comment (lib, "glpngd.lib")
@@ -37,7 +39,7 @@ extern "C" {
 		#pragma comment (lib, "glpng.lib")
 	#endif
 #endif
-	*/
+*/
 
 /* XXX This is from Win32's <windef.h> */
 #ifndef APIENTRY
@@ -59,7 +61,7 @@ extern "C" {
 #define PNG_SIMPLEMIPMAP PNG_SIMPLEMIPMAPS
 
 /* Transparency parameters */
-#define PNG_LUMINANCEALPHA	-4
+#define PNG_LUMINANCEALPHA -4
 #define PNG_CALLBACKT -3 /* Call the callback function to generate alpha   */
 #define PNG_ALPHA     -2 /* Use alpha channel in PNG file, if there is one */
 #define PNG_SOLID     -1 /* No transparency                                */
@@ -72,7 +74,6 @@ extern "C" {
 #define PNG_BLEND6     6 /* a = (r*r+g*g+b*b)/3                            */
 #define PNG_BLEND7     7 /* a = (r*r+g*g+b*b)/4                            */
 #define PNG_BLEND8     8 /* a = sqrt(r*r+g*g+b*b)                          */
-
 
 typedef struct {
 	unsigned int Width;
@@ -113,4 +114,3 @@ extern void APIENTRY pngSetStandardOrientation(int standardorientation);
 #endif
 
 #endif
-
