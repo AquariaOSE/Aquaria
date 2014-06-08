@@ -28,13 +28,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/BitmapFont.h"
 #include "../BBGE/ScreenTransition.h"
 #include "../BBGE/Precacher.h"
-#include "../ExternalLibs/tinyxml.h"
 #include "AquariaMenuItem.h"
 #include "ScriptInterface.h"
 
 #include "PathFinding.h"
 
 #include "TTFFont.h"
+
+#include "tinyxml2.h"
+using namespace tinyxml2;
 
 #define AQUARIA_BUILD_MAPVIS
 
@@ -286,8 +288,8 @@ public:
 	void shutdown();
 	bool isShuttingDown();
 
-	static bool loadModXML(TiXmlDocument *d, std::string modName);
-	static ModType getTypeFromXML(TiXmlElement *xml);
+	static bool loadModXML(XMLDocument *d, std::string modName);
+	static ModType getTypeFromXML(XMLElement *xml);
 
 	WorldMapRevealMethod mapRevealMethod;
 
@@ -939,7 +941,7 @@ public:
 	void		setStringFlag(std::string flag, std::string v);
 
 	void saveFile(int slot, Vector position=Vector(0,0,0), unsigned char *scrShotData=0, int scrShotWidth=0, int scrShotHeight=0);
-	void loadFileData(int slot, TiXmlDocument &doc);
+	void loadFileData(int slot, XMLDocument &doc);
 	void loadFile(int slot);
 
 	void castSong(int num);
@@ -1622,7 +1624,7 @@ protected:
 	std::vector <AquariaSaveSlot*> saveSlots;
 
 	BitmapText *expText, *moneyText;
-	TiXmlDocument *xmlDoc;
+	XMLDocument *xmlDoc;
 
 	void clearMenu(float t = 0.01);
 	std::vector <RenderObject*> menu;

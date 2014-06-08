@@ -26,7 +26,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "GridRender.h"
 #include "DeflateCompressor.h"
 
-#include "../ExternalLibs/tinyxml.h"
+#include "tinyxml2.h"
+using namespace tinyxml2;
 
 #define MAX_EATS			8
 
@@ -1251,9 +1252,9 @@ std::string Continuity::getInternalFormName()
 
 void Continuity::loadIntoSongBank(const std::string &file)
 {
-	TiXmlDocument doc;
-	doc.LoadFile(file);
-	TiXmlElement *song = doc.FirstChildElement("Song");
+	XMLDocument doc;
+	doc.LoadFile(file.c_str());
+	XMLElement *song = doc.FirstChildElement("Song");
 	while (song)
 	{
 		Song s;
@@ -2359,13 +2360,13 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 	dsq->user.save();
 
-	TiXmlDocument doc;
+	XMLDocument doc;
 
-	TiXmlElement version("Version");
+	XMLElement *version = doc.NewElement("Version");
 	{
-		version.SetAttribute("major",		VERSION_MAJOR);
-		version.SetAttribute("minor",		VERSION_MINOR);
-		version.SetAttribute("revision",	VERSION_REVISION);
+		version->SetAttribute("major",		VERSION_MAJOR);
+		version->SetAttribute("minor",		VERSION_MINOR);
+		version->SetAttribute("revision",	VERSION_REVISION);
 	}
 	doc.InsertEndChild(version);
 
@@ -2373,24 +2374,24 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	{
 		if ((*i).first.find("CHOICE_")!=std::string::npos) continue;
 		if ((*i).first.find("TEMP_")!=std::string::npos) continue;
-		TiXmlElement flag("Flag");
-		flag.SetAttribute("name", (*i).first);
-		flag.SetAttribute("value", (*i).second);
+		XMLElement *flag = doc.NewElement("Flag");
+		flag->SetAttribute("name", (*i).first.c_str());
+		flag->SetAttribute("value", (*i).second);
 		doc.InsertEndChild(flag);
 	}
 
-	TiXmlElement efx("EFX");
+	XMLElement *efx = doc.NewElement("EFX");
 	{
 		std::ostringstream os;
 		for (EntityFlags::iterator i = entityFlags.begin(); i != entityFlags.end(); i++)
 		{
 			os << (*i).first << " " << (*i).second << " ";
 		}
-		efx.SetAttribute("a", os.str());
+		efx->SetAttribute("a", os.str().c_str());
 	}
 	doc.InsertEndChild(efx);
 
-	TiXmlElement gems("Gems");
+	XMLElement *gems = doc.NewElement("Gems");
 	{
 		std::ostringstream os;
 		bool hasUserString = false;
@@ -2407,7 +2408,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			if (hasUserString)
 				os << spacesToUnderscores((*i).userString) << " ";
 		}
-		gems.SetAttribute("c", os.str());
+		gems->SetAttribute("c", os.str().c_str());
 
 		// This is the format used in the android version. Keeping this commented out for now,
 		// but it should be used instead of the code above in some time -- FG
@@ -2431,13 +2432,13 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			if (hasUserString)
 				os << spacesToUnderscores((*i).userString) << " ";
 		}
-		gems.SetAttribute("d", os.str());
+		gems->SetAttribute("d", os.str());
 		*/
 
 	}
 	doc.InsertEndChild(gems);
 
-	TiXmlElement worldMap("WorldMap");
+	XMLElement *worldMap = doc.NewElement("WorldMap");
 	{
 		std::ostringstream os;
 		for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
@@ -2448,7 +2449,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 				os << tile->index << " ";
 			}
 		}
-		worldMap.SetAttribute("b", os.str());
+		worldMap->SetAttribute("b", os.str().c_str());
 
 #ifdef AQUARIA_BUILD_MAPVIS
 		if (dsq->game->worldMapRender)
@@ -2461,13 +2462,13 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 				tile->dataToString(os);
 				os << " ";
 			}
-			worldMap.SetAttribute("va", os.str());
+			worldMap->SetAttribute("va", os.str().c_str());
 		}
 #endif
 	}
 	doc.InsertEndChild(worldMap);
 
-	TiXmlElement vox("VO");
+	XMLElement *vox = doc.NewElement("VO");
 	{
 		std::ostringstream os;
 		for (int i = 0; i < dsq->continuity.voiceOversPlayed.size(); i++)
@@ -2475,11 +2476,11 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 			os << dsq->continuity.voiceOversPlayed[i] << " ";
 		}
-		vox.SetAttribute("v", os.str());
+		vox->SetAttribute("v", os.str().c_str());
 	}
 	doc.InsertEndChild(vox);
 
-	TiXmlElement eats("eats");
+	XMLElement *eats = doc.NewElement("eats");
 	{
 		std::ostringstream os;
 		int num = naijaEats.size();
@@ -2489,11 +2490,11 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			EatData *eat = &naijaEats[i];
 			os << eat->name << " "  << eat->shot << " " << eat->ammo << " " << eat->ammoUnitSize << " ";
 		}
-		eats.SetAttribute("a", os.str());
+		eats->SetAttribute("a", os.str().c_str());
 	}
 	doc.InsertEndChild(eats);
 
-	TiXmlElement bcn("bcn");
+	XMLElement *bcn = doc.NewElement("bcn");
 	{
 		std::ostringstream os;
 		for (Beacons::iterator i = beacons.begin(); i != beacons.end(); i++)
@@ -2503,42 +2504,42 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			os << data->color.x << " " << data->color.y << " " << data->color.z << " ";
 			os << data->pos.x << " " << data->pos.y << " " << data->pos.z << " ";
 		}
-		bcn.SetAttribute("a", os.str());
+		bcn->SetAttribute("a", os.str().c_str());
 	}
 	doc.InsertEndChild(bcn);
 
-	TiXmlElement s("Story");
+	XMLElement *s = doc.NewElement("Story");
 	{
 		std::ostringstream os;
 		os << story;
-		s.SetAttribute("v", os.str());
+		s->SetAttribute("v", os.str().c_str());
 		doc.InsertEndChild(s);
 	}
 
 	for (StringFlags::iterator i = stringFlags.begin(); i != stringFlags.end(); i++)
 	{
 		if ((*i).first.find("TEMP_")!=std::string::npos) continue;
-		TiXmlElement stringFlag("StringFlag");
-		stringFlag.SetAttribute("name", (*i).first);
-		stringFlag.SetAttribute("value", (*i).second);
+		XMLElement *stringFlag = doc.NewElement("StringFlag");
+		stringFlag->SetAttribute("name", (*i).first.c_str());
+		stringFlag->SetAttribute("value", (*i).second.c_str());
 		doc.InsertEndChild(stringFlag);
 	}
 
-	TiXmlElement startData("StartData");
-	startData.SetAttribute("x", int(position.x));
-	startData.SetAttribute("y", int(position.y));
-	startData.SetAttribute("scene", dsq->game->sceneName);
-	startData.SetAttribute("exp", dsq->continuity.exp);
-	startData.SetAttribute("h", dsq->continuity.maxHealth);
-	startData.SetAttribute("ch", dsq->continuity.health);
-	startData.SetAttribute("naijaModel", dsq->continuity.naijaModel);
-	startData.SetAttribute("costume", dsq->continuity.costume);
-	startData.SetAttribute("form", dsq->continuity.form);
+	XMLElement *startData = doc.NewElement("StartData");
+	startData->SetAttribute("x", int(position.x));
+	startData->SetAttribute("y", int(position.y));
+	startData->SetAttribute("scene", dsq->game->sceneName.c_str());
+	startData->SetAttribute("exp", dsq->continuity.exp);
+	startData->SetAttribute("h", dsq->continuity.maxHealth);
+	startData->SetAttribute("ch", dsq->continuity.health);
+	startData->SetAttribute("naijaModel", dsq->continuity.naijaModel.c_str());
+	startData->SetAttribute("costume", dsq->continuity.costume.c_str());
+	startData->SetAttribute("form", dsq->continuity.form);
 	if (dsq->mod.isActive())
-		startData.SetAttribute("mod", dsq->mod.getName());
+		startData->SetAttribute("mod", dsq->mod.getName().c_str());
 	std::ostringstream secondsOS;
 	secondsOS << dsq->continuity.seconds;
-	startData.SetAttribute("seconds", secondsOS.str());
+	startData->SetAttribute("seconds", secondsOS.str().c_str());
 	std::ostringstream os2;
 	for (int i = 0; i < SONG_MAX; i++)
 	{
@@ -2547,7 +2548,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			os2 << i << " ";
 		}
 	}
-	startData.SetAttribute("songs", os2.str());
+	startData->SetAttribute("songs", os2.str().c_str());
 
 	// new format as used by android version
 	std::ostringstream ingrNames;
@@ -2556,7 +2557,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		IngredientData *data = ingredients[i];
 		ingrNames << data->name << " " << data->amount << " ";
 	}
-	startData.SetAttribute("ingrNames", ingrNames.str());
+	startData->SetAttribute("ingrNames", ingrNames.str().c_str());
 
 	// for compatibility with older versions
 	std::ostringstream ingrOs;
@@ -2565,14 +2566,14 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		IngredientData *data = ingredients[i];
 		ingrOs << data->getIndex() << " " << data->amount << " ";
 	}
-	startData.SetAttribute("ingr", ingrOs.str());
+	startData->SetAttribute("ingr", ingrOs.str().c_str());
 
 	std::ostringstream recOs;
 	for (int i = 0; i < recipes.size(); i++)
 	{
 		recOs << recipes[i].isKnown() << " ";
 	}
-	startData.SetAttribute("rec", recOs.str());
+	startData->SetAttribute("rec", recOs.str().c_str());
 
 	std::ostringstream os3;
 	for (int i = 0; i < FORMUPGRADE_MAX; i++)
@@ -2582,7 +2583,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			os3 << i << " ";
 		}
 	}
-	startData.SetAttribute("formUpgrades", os3.str());
+	startData->SetAttribute("formUpgrades", os3.str().c_str());
 
 	std::ostringstream fos;
 	fos << MAX_FLAGS << " ";
@@ -2590,7 +2591,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	{
 		fos << intFlags[i] << " ";
 	}
-	startData.SetAttribute("intFlags", fos.str());
+	startData->SetAttribute("intFlags", fos.str().c_str());
 
 	// Additional data for the android version
 
@@ -2598,7 +2599,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	do { if((cond) && (val)) { \
 		std::ostringstream osf; \
 		osf << (val); \
-		startData.SetAttribute(name, osf.str()); \
+		startData->SetAttribute(name, osf.str().c_str()); \
 	}} while(0)
 
 	SINGLE_FLOAT_ATTR("blind", dsq->game->avatar->state.blind, dsq->game->avatar->state.blindTimer.getValue());
@@ -2614,7 +2615,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	do { if(((timer).isActive()) && (val)) { \
 		std::ostringstream osf; \
 		osf << (val) << " " << ((timer).getValue()); \
-		startData.SetAttribute((name), osf.str()); \
+		startData->SetAttribute((name), osf.str().c_str()); \
 	}} while(0)
 
 	TIMER_AND_VALUE_ATTR("biteMult", biteMultTimer, biteMult);
@@ -2631,14 +2632,14 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	{
 		std::ostringstream osp;
 		osp << poison << " " << poisonTimer.getValue() << " " << poisonBitTimer.getValue();
-		startData.SetAttribute("poison", osp.str());
+		startData->SetAttribute("poison", osp.str().c_str());
 	}
 
 	if(dsq->game->avatar->activeAura != AURA_NONE)
 	{
 		std::ostringstream osa;
 		osa << dsq->game->avatar->activeAura << " " << dsq->game->avatar->auraTimer;
-		startData.SetAttribute("aura", osa.str());
+		startData->SetAttribute("aura", osa.str().c_str());
 	}
 
 	// FIXME: Web is a bit weird. There are 2 webBitTimer variables in use, one in Continuity, one in Avatar.
@@ -2655,7 +2656,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			Vector v = w->getPoint(i);
 			osw << v.x << " " << v.y << " ";
 		}
-		startData.SetAttribute("web", osw.str());
+		startData->SetAttribute("web", osw.str().c_str());
 	}
 
 	// end extra android data
@@ -2671,11 +2672,11 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		return;
 	}
 
-	TiXmlPrinter printer;
+	XMLPrinter printer;
 	doc.Accept( &printer );
 	const char* xmlstr = printer.CStr();
 	ZlibCompressor z;
-	z.init((void*)xmlstr, printer.Size(), ZlibCompressor::REUSE);
+	z.init((void*)xmlstr, printer.CStrSize(), ZlibCompressor::REUSE);
 	z.SetForceCompression(true);
 	z.Compress(3);
 	std::ostringstream os;
@@ -2696,7 +2697,7 @@ std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
 	return os.str();
 }
 
-void Continuity::loadFileData(int slot, TiXmlDocument &doc)
+void Continuity::loadFileData(int slot, XMLDocument &doc)
 {
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
 	if(!exists(teh_file))
@@ -2711,9 +2712,9 @@ void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 			errorLog("Failed to decompress save file: " + teh_file);
 			return;
 		}
-		if (!doc.LoadMem(buf, size))
+		if (doc.Parse(buf, size) != XML_SUCCESS)
 		{
-			errorLog("Failed to load save data: " + teh_file + " -- Error: " + doc.ErrorDesc());
+			errorLog("Failed to load save data: " + teh_file + " -- Error: " + doc.GetErrorStr1());
 			return;
 		}
 	}
@@ -2721,7 +2722,7 @@ void Continuity::loadFileData(int slot, TiXmlDocument &doc)
 	teh_file = dsq->continuity.getSaveFileName(slot, "xml");
 	if (exists(teh_file))
 	{
-		if (!doc.LoadFile(teh_file))
+		if (doc.LoadFile(teh_file.c_str()) != XML_SUCCESS)
 			errorLog("Failed to load save data: " + teh_file);
 	}
 }
@@ -2730,10 +2731,10 @@ void Continuity::loadFile(int slot)
 {
 	dsq->user.save();
 
-	TiXmlDocument doc;
+	XMLDocument doc;
 	loadFileData(slot, doc);
 
-	TiXmlElement *startData = doc.FirstChildElement("StartData");
+	XMLElement *startData = doc.FirstChildElement("StartData");
 	if (startData)
 	{
 		if (startData->Attribute("mod"))
@@ -2749,7 +2750,7 @@ void Continuity::loadFile(int slot)
 	this->reset();
 
 	int versionMajor=-1, versionMinor=-1, versionRevision=-1;
-	TiXmlElement *xmlVersion = doc.FirstChildElement("Version");
+	XMLElement *xmlVersion = doc.FirstChildElement("Version");
 	if (xmlVersion)
 	{
 		versionMajor = atoi(xmlVersion->Attribute("major"));
@@ -2757,7 +2758,7 @@ void Continuity::loadFile(int slot)
 		versionRevision = atoi(xmlVersion->Attribute("revision"));
 	}
 
-	TiXmlElement *e = doc.FirstChildElement("Flag");
+	XMLElement *e = doc.FirstChildElement("Flag");
 	while (e)
 	{
 		dsq->continuity.setFlag(e->Attribute("name"), atoi(e->Attribute("value")));
@@ -2779,7 +2780,7 @@ void Continuity::loadFile(int slot)
 	}
 	*/
 
-	TiXmlElement *efx = doc.FirstChildElement("EFX");
+	XMLElement *efx = doc.FirstChildElement("EFX");
 	if (efx)
 	{
 		if (efx->Attribute("a"))
@@ -2793,7 +2794,7 @@ void Continuity::loadFile(int slot)
 		}
 	}
 
-	TiXmlElement *eats = doc.FirstChildElement("eats");
+	XMLElement *eats = doc.FirstChildElement("eats");
 	if (eats)
 	{
 		if (eats->Attribute("a"))
@@ -2811,7 +2812,7 @@ void Continuity::loadFile(int slot)
 		}
 	}
 
-	TiXmlElement *bcn = doc.FirstChildElement("bcn");
+	XMLElement *bcn = doc.FirstChildElement("bcn");
 	if (bcn)
 	{
 		if (bcn->Attribute("a"))
@@ -2834,7 +2835,7 @@ void Continuity::loadFile(int slot)
 		}
 	}
 
-	TiXmlElement *vox = doc.FirstChildElement("VO");
+	XMLElement *vox = doc.FirstChildElement("VO");
 	if (vox)
 	{
 		std::string s = vox->Attribute("v");
@@ -2846,7 +2847,7 @@ void Continuity::loadFile(int slot)
 		}
 	}
 
-	TiXmlElement *gems = doc.FirstChildElement("Gems");
+	XMLElement *gems = doc.FirstChildElement("Gems");
 	if (gems)
 	{
 		if (gems->Attribute("a"))
@@ -2978,7 +2979,7 @@ void Continuity::loadFile(int slot)
 		}
 	}
 
-	TiXmlElement *worldMap = doc.FirstChildElement("WorldMap");
+	XMLElement *worldMap = doc.FirstChildElement("WorldMap");
 	if (worldMap)
 	{
 		if (worldMap->Attribute("b"))
@@ -3023,14 +3024,14 @@ void Continuity::loadFile(int slot)
 	}
 
 
-	TiXmlElement *s = doc.FirstChildElement("Story");
+	XMLElement *s = doc.FirstChildElement("Story");
 	if (s)
 	{
 		std::istringstream is(s->Attribute("v"));
 		is >> story;
 	}
 
-	TiXmlElement *e2 = doc.FirstChildElement("StringFlag");
+	XMLElement *e2 = doc.FirstChildElement("StringFlag");
 	while (e2)
 	{
 		dsq->continuity.setStringFlag(e2->Attribute("name"), e2->Attribute("value"));

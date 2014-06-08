@@ -77,20 +77,20 @@ void Demo::save(const std::string &name)
 	
 	std::string filename = "" + name + ".demo";
 
-	TiXmlDocument doc;
+	XMLDocument doc;
 
 	// UNFINISHED
 	for (int i = 0; i < frames.size(); i++)
 	{
 		//DemoFrame *frame = &frames[i];
-		TiXmlElement xmlDemoFrame("DemoFrame");
+		XMLElement *xmlDemoFrame = doc.NewElement("DemoFrame");
 		std::ostringstream os;
 		//os << frame->avatarPos.x << " " << frame->avatarPos.y << " " << frame->mouse;
-		//xmlDemoFrame.SetAttribute("a", os.str());
+		//xmlDemoFrame->SetAttribute("a", os.str().c_str());
 		doc.InsertEndChild(xmlDemoFrame);
 	}
 
-	doc.SaveFile(filename);
+	doc.SaveFile(filename.c_str());
 }
 
 void Demo::load(const std::string &name)
@@ -101,8 +101,8 @@ void Demo::load(const std::string &name)
 	// UNFINISHED
 	std::string filename = "" + name + ".demo";
 
-	TiXmlDocument doc;
-	doc.LoadFile(filename);
+	XMLDocument doc;
+	doc.LoadFile(filename.c_str());
 
 	//doc.FirstChildElement("");
 }
