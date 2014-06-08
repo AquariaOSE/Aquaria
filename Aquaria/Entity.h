@@ -22,13 +22,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ENTITY_H
 
 #include "../BBGE/StateMachine.h"
-#include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/SkeletalSprite.h"
 #include "../BBGE/ScriptObject.h"
 
 #include "DSQ.h"
 #include "Path.h"
 #include "Hair.h"
+
+#include "tinyxml2.h"
+using namespace tinyxml2;
 
 class ManaBall;
 class Path;
@@ -267,8 +269,8 @@ public:
 	Entity *followEntity;
 	Entity *ridingOnEntity;
 	bool canBeTargetedByAvatar;
-	virtual void saveExtraData(TiXmlElement *xml){}
-	virtual void loadExtraData(TiXmlElement *xml){}
+	virtual void saveExtraData(XMLElement *xml){}
+	virtual void loadExtraData(XMLElement *xml){}
 	Vector startPos;
 	void getEXP(unsigned int exp);
 	void rotateToVec(Vector addVec, float time, float offsetAngle=0);

@@ -58,7 +58,7 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	glowText->position = text1->position = Vector(-175, -25);
 
 
-	TiXmlDocument doc;
+	XMLDocument doc;
 	dsq->continuity.loadFileData(slot, doc);
 
 	std::string description = getSaveDescription(doc);
@@ -283,9 +283,9 @@ void AquariaSaveSlot::onUpdate(float dt)
 }
 
 
-std::string AquariaSaveSlot::getSaveDescription(const TiXmlDocument &doc)
+std::string AquariaSaveSlot::getSaveDescription(const XMLDocument &doc)
 {
-	const TiXmlElement *startData = doc.FirstChildElement("StartData");
+	const XMLElement *startData = doc.FirstChildElement("StartData");
 	if (!startData)
 		return "";
 

@@ -19,29 +19,37 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "SkeletalSprite.h"
-#include "../ExternalLibs/tinyxml.h"
 #include "Core.h"
 #include "Particles.h"
 #include "MathFunctions.h"
 #include "SimpleIStringStream.h"
+
+#include "tinyxml2.h"
+using namespace tinyxml2;
 
 std::string SkeletalSprite::animationPath				= "data/animations/";
 std::string SkeletalSprite::skinPath					= "skins/";
 
 std::string SkeletalSprite::secondaryAnimationPath		= "";
 
-static std::map<std::string, TiXmlDocument> skelCache;
+static std::map<std::string, XMLDocument*> skelCache;
 
-static TiXmlDocument& _retrieveSkeletalXML(const std::string& name)
+static XMLDocument *_retrieveSkeletalXML(const std::string& name)
 {
-	TiXmlDocument& doc = skelCache[name];
-	if (!doc.RootElement())
-		doc.LoadFile(name);
+	XMLDocument *doc = skelCache[name];
+	if (!doc) {
+		doc = new XMLDocument();
+		doc->LoadFile(name.c_str());
+		skelCache[name] = doc;
+	}
 	return doc;
 }
 
 void SkeletalSprite::clearCache()
 {
+	for (std::map<std::string, XMLDocument*>::iterator i = skelCache.begin(); i != skelCache.end(); i++)
+		delete i->second;
+
 	skelCache.clear();
 }
 
@@ -862,13 +870,13 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 	}
 
 	int i = 0;
-	TiXmlDocument& xml = _retrieveSkeletalXML(file);
-	xml.Clear();
+	XMLDocument *xml = _retrieveSkeletalXML(file);
+	xml->Clear();
 
-	TiXmlElement animationLayers("AnimationLayers");
+	XMLElement *animationLayers = xml->NewElement("AnimationLayers");
 	for (i = 0; i < animLayers.size(); i++)
 	{
-		TiXmlElement animationLayer("AnimationLayer");
+		XMLElement *animationLayer = xml->NewElement("AnimationLayer");
 		if (animLayers[i].ignoreBones.size() > 0)
 		{
 			std::ostringstream os;
@@ -876,7 +884,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			{
 				os << animLayers[i].ignoreBones[j] << " ";
 			}
-			animationLayer.SetAttribute("ignore", os.str());
+			animationLayer->SetAttribute("ignore", os.str().c_str());
 		}
 		if (animLayers[i].includeBones.size() > 0)
 		{
@@ -885,33 +893,33 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			{
 				os << animLayers[i].includeBones[j] << " ";
 			}
-			animationLayer.SetAttribute("include", os.str());
+			animationLayer->SetAttribute("include", os.str().c_str());
 		}
 		if (!animLayers[i].name.empty())
 		{
-			animationLayer.SetAttribute("name", animLayers[i].name);
+			animationLayer->SetAttribute("name", animLayers[i].name.c_str());
 		}
 
-		animationLayers.InsertEndChild(animationLayer);
+		animationLayers->InsertEndChild(animationLayer);
 	}
-	xml.InsertEndChild(animationLayers);
+	xml->InsertEndChild(animationLayers);
 
 
-	TiXmlElement bones("Bones");
+	XMLElement *bones = xml->NewElement("Bones");
 	for (i = 0; i < this->bones.size(); i++)
 	{
-		TiXmlElement bone("Bone");
-		bone.SetAttribute("idx", this->bones[i]->boneIdx);
-		bone.SetAttribute("gfx", this->bones[i]->gfx);
-		bone.SetAttribute("pidx", this->bones[i]->pidx);
-		bone.SetAttribute("name", this->bones[i]->name);
-		bone.SetAttribute("fh", this->bones[i]->isfh());
-		bone.SetAttribute("fv", this->bones[i]->isfv());
-		bone.SetAttribute("gc", this->bones[i]->generateCollisionMask);
-		bone.SetAttribute("cr", this->bones[i]->collideRadius);
+		XMLElement *bone = xml->NewElement("Bone");
+		bone->SetAttribute("idx", this->bones[i]->boneIdx);
+		bone->SetAttribute("gfx", this->bones[i]->gfx.c_str());
+		bone->SetAttribute("pidx", this->bones[i]->pidx);
+		bone->SetAttribute("name", this->bones[i]->name.c_str());
+		bone->SetAttribute("fh", this->bones[i]->isfh());
+		bone->SetAttribute("fv", this->bones[i]->isfv());
+		bone->SetAttribute("gc", this->bones[i]->generateCollisionMask);
+		bone->SetAttribute("cr", this->bones[i]->collideRadius);
 		if (!this->bones[i]->renderQuad)
 		{
-			bone.SetAttribute("rq", this->bones[i]->fileRenderQuad);
+			bone->SetAttribute("rq", this->bones[i]->fileRenderQuad);
 		}
 		if (!this->bones[i]->collisionRects.empty())
 		{
@@ -924,49 +932,49 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 				r->getCWH(&x, &y, &w, &h);
 				os << x << " " << y << " " << w << " " << h << " ";
 			}
-			bone.SetAttribute("crects", os.str());
+			bone->SetAttribute("crects", os.str().c_str());
 		}
 		std::ostringstream os;
 		os << this->bones[i]->collidePosition.x << " " << this->bones[i]->collidePosition.y;
-		bone.SetAttribute("cp", os.str());
+		bone->SetAttribute("cp", os.str().c_str());
 		if (this->bones[i]->rbp)
-			bone.SetAttribute("rbp", this->bones[i]->rbp);
+			bone->SetAttribute("rbp", this->bones[i]->rbp);
 		if (this->bones[i]->getRenderPass())
-			bone.SetAttribute("pass", this->bones[i]->getRenderPass());
+			bone->SetAttribute("pass", this->bones[i]->getRenderPass());
 		if (this->bones[i]->offset.x)
-			bone.SetAttribute("offx", this->bones[i]->offset.x);
+			bone->SetAttribute("offx", this->bones[i]->offset.x);
 		if (this->bones[i]->offset.y)
-			bone.SetAttribute("offy", this->bones[i]->offset.y);
+			bone->SetAttribute("offy", this->bones[i]->offset.y);
 		if (!this->bones[i]->prt.empty())
-			bone.SetAttribute("prt", this->bones[i]->prt);
+			bone->SetAttribute("prt", this->bones[i]->prt.c_str());
 		if (!this->bones[i]->changeStrip.empty())
 		{
 			std::ostringstream os;
 			os << this->bones[i]->stripVert << " " << this->bones[i]->changeStrip.size();
-			bone.SetAttribute("strip", os.str());
+			bone->SetAttribute("strip", os.str().c_str());
 		}
 		if (!this->bones[i]->internalOffset.isZero())
 		{
 			std::ostringstream os;
 			os << this->bones[i]->internalOffset.x << " " << this->bones[i]->internalOffset.y;
-			bone.SetAttribute("io", os.str());
+			bone->SetAttribute("io", os.str().c_str());
 		}
 		if (this->bones[i]->isRepeatingTextureToFill())
 		{
-			bone.SetAttribute("rt", 1);
+			bone->SetAttribute("rt", 1);
 		}
 		if (this->bones[i]->originalScale.x != 1 || this->bones[i]->originalScale.y != 1)
 		{
 			std::ostringstream os;
 			os << this->bones[i]->originalScale.x << " " << this->bones[i]->originalScale.y;
-			bone.SetAttribute("sz", os.str());
+			bone->SetAttribute("sz", os.str().c_str());
 		}
 		/*
 		if (this->bones[i]->color.x != 1 || this->bones[i]->color.y != 1 || this->bones[i]->color.z != 1)
 		{
 			std::ostringstream os;
 			os << this->bones[i]->color.x << " " << this->bones[i]->color.y << " " << this->bones[i]->color.z;
-			bone.SetAttribute("color", os.str());
+			bone->SetAttribute("color", os.str().c_str());
 		}
 		*/
 
@@ -977,37 +985,37 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			Particle *p = dynamic_cast<Particle*>(*j);
 			if (q && !b && !p)
 			{
-				TiXmlElement frame("Frame");
-				frame.SetAttribute("gfx", q->texture->name);
+				XMLElement *frame = xml->NewElement("Frame");
+				frame->SetAttribute("gfx", q->texture->name.c_str());
 				if (q->getRenderPass() != 0)
 				{
-					frame.SetAttribute("pass", q->getRenderPass());
+					frame->SetAttribute("pass", q->getRenderPass());
 				}
-				bone.InsertEndChild(frame);
+				bone->InsertEndChild(frame);
 			}
 		}
-		bones.InsertEndChild(bone);
+		bones->InsertEndChild(bone);
 	}
-	xml.InsertEndChild(bones);
+	xml->InsertEndChild(bones);
 
-	TiXmlElement animations("Animations");
+	XMLElement *animations = xml->NewElement("Animations");
 	for (i = 0; i < this->animations.size(); i++)
 	{
 		Animation *a = &this->animations[i];
-		TiXmlElement animation("Animation");
-		animation.SetAttribute("name", a->name);
+		XMLElement *animation = xml->NewElement("Animation");
+		animation->SetAttribute("name", a->name.c_str());
 		for (int j = 0; j < a->keyframes.size(); j++)
 		{
-			TiXmlElement key("Key");
+			XMLElement *key = xml->NewElement("Key");
 			if (!a->keyframes[j].sound.empty())
-				key.SetAttribute("sound", a->keyframes[j].sound);
+				key->SetAttribute("sound", a->keyframes[j].sound.c_str());
 			if (!a->keyframes[j].cmd.empty())
 			{
-				key.SetAttribute("cmd", a->keyframes[j].cmd);
+				key->SetAttribute("cmd", a->keyframes[j].cmd.c_str());
 			}
 			if (a->keyframes[j].lerpType != 0)
 			{
-				key.SetAttribute("lerp", a->keyframes[j].lerpType);
+				key->SetAttribute("lerp", a->keyframes[j].lerpType);
 			}
 			std::ostringstream os;
 			os << a->keyframes[j].t << " ";
@@ -1028,16 +1036,16 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			}
 			std::string szoss = szos.str();
 			if (!szoss.empty())
-				key.SetAttribute("sz", szoss.c_str());
+				key->SetAttribute("sz", szoss.c_str());
 
-			key.SetAttribute("e", os.str());
+			key->SetAttribute("e", os.str().c_str());
 
-			animation.InsertEndChild(key);
+			animation->InsertEndChild(key);
 		}
-		animations.InsertEndChild(animation);
+		animations->InsertEndChild(animation);
 	}
-	xml.InsertEndChild(animations);
-	return xml.SaveFile(file);
+	xml->InsertEndChild(animations);
+	return xml->SaveFile(file.c_str());
 }
 
 int SkeletalSprite::getBoneIdx(Bone *b)
@@ -1181,12 +1189,12 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 		errorLog("Could not load skin[" + file + "]");
 		return;
 	}
-	TiXmlDocument& d = _retrieveSkeletalXML(file);
+	XMLDocument *d = _retrieveSkeletalXML(file);
 
-	TiXmlElement *bonesXml = d.FirstChildElement("Bones");
+	XMLElement *bonesXml = d->FirstChildElement("Bones");
 	if (bonesXml)
 	{
-		TiXmlElement *boneXml = bonesXml->FirstChildElement("Bone");
+		XMLElement *boneXml = bonesXml->FirstChildElement("Bone");
 		while (boneXml)
 		{
 			int idx = atoi(boneXml->Attribute("idx"));
@@ -1316,10 +1324,10 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 
 	loaded = true;
 	
-	TiXmlDocument& xml = _retrieveSkeletalXML(file);
-	xml.LoadFile(file.c_str());
+	XMLDocument *xml = _retrieveSkeletalXML(file);
+	xml->LoadFile(file.c_str());
 
-	TiXmlElement *bones = xml.FirstChildElement("Bones");
+	XMLElement *bones = xml->FirstChildElement("Bones");
 	if (bones)
 	{
 		if (bones->Attribute("scale"))
@@ -1328,7 +1336,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			is >> scale.x >> scale.y;
 		}
 
-		TiXmlElement *bone = bones->FirstChildElement("Bone");
+		XMLElement *bone = bones->FirstChildElement("Bone");
 		while(bone)
 		{
 			int idx = atoi(bone->Attribute("idx"));
@@ -1400,7 +1408,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					//e->start();
 				}
 			}
-			TiXmlElement *fr=0;
+			XMLElement *fr=0;
 			fr = bone->FirstChildElement("Frame");
 			int frc=0;
 			while(fr)
@@ -1528,10 +1536,10 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 	}
 
 	animLayers.clear();
-	TiXmlElement *animationLayers = xml.FirstChildElement("AnimationLayers");
+	XMLElement *animationLayers = xml->FirstChildElement("AnimationLayers");
 	if (animationLayers)
 	{
-		TiXmlElement *animationLayer = animationLayers->FirstChildElement("AnimationLayer");
+		XMLElement *animationLayer = animationLayers->FirstChildElement("AnimationLayer");
 		while (animationLayer)
 		{
 			AnimationLayer newAnimationLayer;
@@ -1564,17 +1572,17 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 	}
 
 	animations.clear();
-	TiXmlElement *animations = xml.FirstChildElement("Animations");
+	XMLElement *animations = xml->FirstChildElement("Animations");
 	if (animations)
 	{
-		TiXmlElement *animation = animations->FirstChildElement("Animation");
+		XMLElement *animation = animations->FirstChildElement("Animation");
 		while(animation)
 		{
 			Animation newAnimation;
 			newAnimation.name = animation->Attribute("name");
 			stringToLower(newAnimation.name);
 
-			TiXmlElement *key = animation->FirstChildElement("Key");
+			XMLElement *key = animation->FirstChildElement("Key");
 			while (key)
 			{
 				SkeletalKeyframe newSkeletalKeyframe;
