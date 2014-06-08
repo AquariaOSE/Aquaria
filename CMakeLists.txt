@@ -344,7 +344,10 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     IF(AQUARIA_GCC_HAS_STACKPROT)
         ADD_DEFINITIONS(-fno-stack-protector)
     ENDIF(AQUARIA_GCC_HAS_STACKPROT)
-    
+
+    # We knowingly apply offsetof to non-POD types.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
+
     # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
     # Exceptions are not used, excluding support for release builds adds less bulk as well.
     set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "Flags used for release builds" FORCE)
