@@ -189,22 +189,6 @@
 				RelativePath="..\..\ExternalLibs\minihttp.h"
 				>
 			</File>
-			<File
-				RelativePath="..\..\ExternalLibs\tinyxml.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\ExternalLibs\tinyxml.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\ExternalLibs\tinyxmlerror.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\ExternalLibs\tinyxmlparser.cpp"
-				>
-			</File>
 			<Filter
 				Name="glpng"
 				>
@@ -1565,6 +1549,18 @@
 			Filter="rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav"
 			UniqueIdentifier="{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}"
 			>
+		</Filter>
+		<Filter
+			Name="tinyxml2"
+			>
+			<File
+				RelativePath="..\..\ExternalLibs\tinyxml2.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\tinyxml2.h"
+				>
+			</File>
 		</Filter>
 	</Files>
 	<Globals>

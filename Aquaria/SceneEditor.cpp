@@ -1169,7 +1169,7 @@ void SceneEditor::deleteSelected()
 
 void SceneEditor::updateSaveFileEnemyPosition(Entity *ent)
 {
-	TiXmlElement *exml = dsq->game->saveFile->FirstChildElement("Enemy");
+	XMLElement *exml = dsq->game->saveFile->FirstChildElement("Enemy");
 	while (exml)
 	{
 		int x = atoi(exml->Attribute("x"));
