@@ -6,8 +6,10 @@
 #include "ModDownloader.h"
 #include "ModSelector.h"
 #include "Network.h"
-#include "tinyxml.h"
 #include "ttvfs.h"
+
+#include "tinyxml2.h"
+using namespace tinyxml2;
 
 using Network::NetEvent;
 using Network::NE_ABORT;
@@ -247,8 +249,8 @@ void ModDL::NotifyModlist(ModlistRequest *rq, NetEvent ev, size_t recvd, size_t 
 
 bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 {
-	TiXmlDocument xml;
-	if(!xml.LoadFile(fn))
+	XMLDocument xml;
+	if(xml.LoadFile(fn.c_str()) != XML_SUCCESS)
 	{
 		debugLog("Failed to parse downloaded XML: " + fn);
 		return false;
@@ -279,7 +281,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 	<ModList>
 	*/
 
-	TiXmlElement *modlist = xml.FirstChildElement("ModList");
+	XMLElement *modlist = xml.FirstChildElement("ModList");
 	if(!modlist)
 	{
 		debugLog("ModList root tag not found");
@@ -288,11 +290,10 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 
 	if(allowChaining)
 	{
-		TiXmlElement *servx = modlist->FirstChildElement("Server");
+		XMLElement *servx = modlist->FirstChildElement("Server");
 		while(servx)
 		{
-			int chain = 0;
-			servx->Attribute("chain", &chain);
+			int chain = servx->IntAttribute("chain");
 			if(const char *url = servx->Attribute("url"))
 				GetModlist(url, chain, false);
 
@@ -300,7 +301,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 		}
 	}
 
-	TiXmlElement *modx = modlist->FirstChildElement("AquariaMod");
+	XMLElement *modx = modlist->FirstChildElement("AquariaMod");
 	while(modx)
 	{
 		std::string namestr, descstr, iconurl, pkgurl, confirmStr, localname;
@@ -308,7 +309,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 		ModPackageType pkgtype = MPT_MOD;
 		int serverSize = 0;
 		int serverIconSize = 0;
-		TiXmlElement *fullname, *desc, *icon, *pkg, *confirm, *props, *web;
+		XMLElement *fullname, *desc, *icon, *pkg, *confirm, *props, *web;
 		fullname = modx->FirstChildElement("Fullname");
 		desc = modx->FirstChildElement("Description");
 		icon = modx->FirstChildElement("Icon");
@@ -327,8 +328,8 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 		{
 			if(icon->Attribute("url"))
 				iconurl = icon->Attribute("url");
-			if(icon->Attribute("size"))
-				icon->Attribute("size", &serverIconSize);
+
+			serverIconSize = icon->IntAttribute("size");
 		}
 
 		if(props && props->Attribute("type"))
@@ -352,8 +353,7 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 			if(pkg->Attribute("saveAs"))
 				localname = _PathToModName(pkg->Attribute("saveAs"));
 
-			if(pkg->Attribute("size"))
-				pkg->Attribute("size", &serverSize);
+			serverSize = pkg->IntAttribute("size");
 		}
 
 		if(confirm && confirm->Attribute("text"))

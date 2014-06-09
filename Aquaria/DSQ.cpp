@@ -2075,11 +2075,11 @@ void DSQ::loadModsCallback(const std::string &filename, intptr_t param)
 	m.path = name;
 	m.id = dsq->modEntries.size();
 
-	TiXmlDocument d;
+	XMLDocument d;
 	if(!Mod::loadModXML(&d, name))
 	{
 		std::ostringstream os;
-		os << "Failed to load mod xml: " << filename << " -- Error: " << d.ErrorDesc();
+		os << "Failed to load mod xml: " << filename << " -- Error: " << d.GetErrorStr1();
 		dsq->debugLog(os.str());
 		return;
 	}

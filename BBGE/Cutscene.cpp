@@ -48,7 +48,7 @@ void Cutscene::load(const std::string &f)
 
 	doc.LoadFile(f.c_str());
 
-	TiXmlElement *e = doc.FirstChildElement("time");
+	XMLElement *e = doc.FirstChildElement("time");
 	while (e)
 	{
 		CutsceneMarker m;
@@ -94,7 +94,7 @@ void Cutscene::playMarker(CutsceneMarker *m)
 {
 	if (m)
 	{
-		TiXmlElement *r=0;
+		XMLElement *r=0;
 		if (r = m->e->FirstChildElement("quad"))
 		{
 			id = r->Attribute("id");

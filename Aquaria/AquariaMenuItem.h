@@ -24,11 +24,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/BitmapFont.h"
 #include "../BBGE/Quad.h"
 #include "../BBGE/ActionMapper.h"
-#include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/Slider.h"
 #include "../BBGE/DebugFont.h"
 #include "../BBGE/TTFFont.h"
 #include "../BBGE/RoundedRect.h"
+
+#include "tinyxml2.h"
+using namespace tinyxml2;
 
 class AquariaGuiElement
 {
@@ -76,7 +78,7 @@ public:
 	void setLabel(const std::string &label);
 	EventPtr event;
 	BitmapText *font, *glowFont;
-	TiXmlElement *ability, *xmlItem;
+	XMLElement *ability, *xmlItem;
 	int choice;
 	Quad *glow, *quad;
 	void useQuad(const std::string &tex);
@@ -111,7 +113,7 @@ public:
 
 	bool mbDown;
 
-	static std::string getSaveDescription(const TiXmlDocument &doc);
+	static std::string getSaveDescription(const XMLDocument &doc);
 
 protected:
 	void onUpdate(float dt);

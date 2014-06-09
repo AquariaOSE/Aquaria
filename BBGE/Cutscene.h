@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 struct CutsceneMarker
 {
 	float t;
-	TiXmlElement *e;
+	XMLElement *e;
 };
 
 class Cutscene
@@ -40,7 +40,7 @@ public:
 
 	void update(float dt);
 
-	TiXmlDocument file;
+	XMLDocument file;
 
 	std::vector <CutsceneMarker> markers;
 
