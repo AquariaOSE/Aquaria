@@ -1538,7 +1538,7 @@ luaFunc(obj_setUpdateCull)
 {
 	RenderObject *r = robj(L);;
 	if (r)
-		r->updateCull = lua_tonumber(L, 2);
+		r->updateCull = lua_tointeger(L, 2);
 	luaReturnNil();
 }
 
