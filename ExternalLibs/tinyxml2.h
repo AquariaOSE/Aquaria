@@ -1530,7 +1530,7 @@ public:
     	Returns XML_NO_ERROR (0) on success, or
     	an errorID.
     */
-    XMLError LoadFile( const char* filename );
+    //XMLError LoadFile( const char* filename );
 
     /**
     	Load an XML file from disk. You are responsible
@@ -1539,7 +1539,7 @@ public:
     	Returns XML_NO_ERROR (0) on success, or
     	an errorID.
     */
-    XMLError LoadFile( FILE* );
+    //XMLError LoadFile( FILE* );
 
     /**
     	Save the XML file to disk.

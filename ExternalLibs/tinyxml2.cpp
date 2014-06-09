@@ -21,6 +21,9 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
+// Disabled LoadFile() functions to catch misuse - Aquaria uses its own VFS, not FILE* -- fg
+
+
 #include "tinyxml2.h"
 
 #include <new>		// yes, this one new style header, is in the Android SDK.
@@ -1662,7 +1665,7 @@ XMLUnknown* XMLDocument::NewUnknown( const char* str )
     return unk;
 }
 
-
+/*
 XMLError XMLDocument::LoadFile( const char* filename )
 {
     Clear();
@@ -1724,7 +1727,7 @@ XMLError XMLDocument::LoadFile( FILE* fp )
     ParseDeep( _charBuffer + (p-_charBuffer), 0 );
     return _errorID;
 }
-
+*/
 
 XMLError XMLDocument::SaveFile( const char* filename, bool compact )
 {
