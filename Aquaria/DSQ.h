@@ -1624,7 +1624,6 @@ protected:
 	std::vector <AquariaSaveSlot*> saveSlots;
 
 	BitmapText *expText, *moneyText;
-	XMLDocument *xmlDoc;
 
 	void clearMenu(float t = 0.01);
 	std::vector <RenderObject*> menu;
