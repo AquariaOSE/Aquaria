@@ -301,16 +301,23 @@ void UserSettings::loadDefaults(bool doApply)
 
 void UserSettings::load(bool doApply, const std::string &overrideFile)
 {
-	XMLDocument doc;
+	std::string filename;
 
 #if defined(BBGE_BUILD_UNIX)
-	doc.LoadFile((dsq->getPreferencesFolder() + "/" + userSettingsFilename).c_str());
+	filename = dsq->getPreferencesFolder() + "/" + userSettingsFilename;
 #elif defined(BBGE_BUILD_WINDOWS)
 	if (!overrideFile.empty())
-		doc.LoadFile(overrideFile.c_str());
+		filename = overrideFile;
 	else
-		doc.LoadFile(userSettingsFilename.c_str());
+		filename = userSettingsFilename;
 #endif
+
+	XMLDocument doc;
+	if(readXML(filename, doc) != XML_SUCCESS)
+	{
+		errorLog("UserSettings: Malformed XML, continuing with defaults");
+		doc.Clear(); // just in case
+	}
 
 	version.settingsVersion = 0;
 
