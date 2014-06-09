@@ -4197,12 +4197,15 @@ bool Game::loadSceneXML(std::string scene)
 		//errorLog("Could not find [" + fn + "]");
 		//msg("Could not find map [" + fn + "]");
 		std::string s = "Could not find map [" + fn + "]";
-		debugLog(s);
 		dsq->screenMessage(s);
 		return false;
 	}
 	XMLDocument doc;
-	doc.LoadFile(fn.c_str());
+	if(readXML(fn, doc) != XML_SUCCESS)
+	{
+		dsq->screenMessage("Could not load scene [" + fn + "] - Malformed XML");
+		return false;
+	}
 	if (saveFile)
 	{
 		delete saveFile;

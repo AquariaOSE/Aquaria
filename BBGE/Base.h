@@ -143,6 +143,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "math.h"
 #include "ttvfs_stdio.h"
 
+#include "tinyxml2.h"
+
 #ifdef BBGE_BUILD_LINUX
 #  include <sys/types.h>
 #  include <stdint.h>
@@ -204,6 +206,8 @@ bool exists(const std::string &f, bool makeFatal = false, bool skipVFS = false);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
 char *readFile(const std::string& path, unsigned long *size_ret = 0);
+tinyxml2::XMLDocument *readXML(const std::string& fn, tinyxml2::XMLError *perr = 0);
+tinyxml2::XMLError readXML(const std::string& fn, tinyxml2::XMLDocument& doc);
 char *readCompressedFile(std::string path, unsigned long *size_ret = 0);
 void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param);
 std::string stripEndlineForUnix(const std::string &in);

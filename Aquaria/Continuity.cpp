@@ -1253,7 +1253,12 @@ std::string Continuity::getInternalFormName()
 void Continuity::loadIntoSongBank(const std::string &file)
 {
 	XMLDocument doc;
-	doc.LoadFile(file.c_str());
+	if(readXML(file, doc) != XML_SUCCESS)
+	{
+		errorLog("Failed to load song bank: Malformed XML");
+		return;
+	}
+
 	XMLElement *song = doc.FirstChildElement("Song");
 	while (song)
 	{
@@ -2722,7 +2727,7 @@ void Continuity::loadFileData(int slot, XMLDocument &doc)
 	teh_file = dsq->continuity.getSaveFileName(slot, "xml");
 	if (exists(teh_file))
 	{
-		if (doc.LoadFile(teh_file.c_str()) != XML_SUCCESS)
+		if (readXML(teh_file, doc) != XML_SUCCESS)
 			errorLog("Failed to load save data: " + teh_file);
 	}
 }

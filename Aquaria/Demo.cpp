@@ -77,6 +77,7 @@ void Demo::save(const std::string &name)
 	
 	std::string filename = "" + name + ".demo";
 
+	/*
 	XMLDocument doc;
 
 	// UNFINISHED
@@ -91,6 +92,7 @@ void Demo::save(const std::string &name)
 	}
 
 	doc.SaveFile(filename.c_str());
+	*/
 }
 
 void Demo::load(const std::string &name)
@@ -101,8 +103,8 @@ void Demo::load(const std::string &name)
 	// UNFINISHED
 	std::string filename = "" + name + ".demo";
 
-	XMLDocument doc;
-	doc.LoadFile(filename.c_str());
+	//XMLDocument doc;
+	//doc.LoadFile(filename.c_str());
 
 	//doc.FirstChildElement("");
 }

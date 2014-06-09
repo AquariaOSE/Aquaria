@@ -36,20 +36,19 @@ static std::map<std::string, XMLDocument*> skelCache;
 
 static XMLDocument *_retrieveSkeletalXML(const std::string& name)
 {
-	XMLDocument *doc = skelCache[name];
-	if (!doc) {
-		doc = new XMLDocument();
-		doc->LoadFile(name.c_str());
+	std::map<std::string, XMLDocument*>::iterator it = skelCache.find(name);
+	if(it != skelCache.end())
+		return it->second;
+
+	XMLDocument *doc = readXML(name);
+	if(doc)
 		skelCache[name] = doc;
-	}
+
 	return doc;
 }
 
 void SkeletalSprite::clearCache()
 {
-	for (std::map<std::string, XMLDocument*>::iterator i = skelCache.begin(); i != skelCache.end(); i++)
-		delete i->second;
-
 	skelCache.clear();
 }
 
@@ -1316,16 +1315,21 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 	if (!exists(file))
 	{
 		filenameLoaded = "";
-		errorLog("Could not load skeletal[" + file + "]");
+		errorLog("Could not load skeletal[" + file + "] - File not found.");
 		return;
 	}
 
 	file = core->adjustFilenameCase(file);
 
-	loaded = true;
-	
 	XMLDocument *xml = _retrieveSkeletalXML(file);
-	xml->LoadFile(file.c_str());
+	if(!xml)
+	{
+		filenameLoaded = "";
+		errorLog("Could not load skeletal[" + file + "] - Malformed XML.");
+		return;
+	}
+
+	loaded = true;
 
 	XMLElement *bones = xml->FirstChildElement("Bones");
 	if (bones)
