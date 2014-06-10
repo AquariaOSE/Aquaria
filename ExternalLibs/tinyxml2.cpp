@@ -653,7 +653,10 @@ void XMLNode::DeleteChild( XMLNode* node )
 XMLNode* XMLNode::InsertEndChild( XMLNode* addThis )
 {
 	if (addThis->_document != _document)
+	{
+		TIXMLASSERT( false );
 		return 0;
+	}
 
 	if (addThis->_parent)
 		addThis->_parent->Unlink( addThis );
@@ -684,7 +687,10 @@ XMLNode* XMLNode::InsertEndChild( XMLNode* addThis )
 XMLNode* XMLNode::InsertFirstChild( XMLNode* addThis )
 {
 	if (addThis->_document != _document)
+	{
+		TIXMLASSERT( false );
 		return 0;
+	}
 
 	if (addThis->_parent)
 		addThis->_parent->Unlink( addThis );
@@ -716,11 +722,15 @@ XMLNode* XMLNode::InsertFirstChild( XMLNode* addThis )
 XMLNode* XMLNode::InsertAfterChild( XMLNode* afterThis, XMLNode* addThis )
 {
 	if (addThis->_document != _document)
+	{
+		TIXMLASSERT( false );
 		return 0;
+	}
 
     TIXMLASSERT( afterThis->_parent == this );
 
     if ( afterThis->_parent != this ) {
+		TIXMLASSERT( false );
         return 0;
     }
 
@@ -1596,7 +1606,7 @@ XMLDocument::~XMLDocument()
     _commentPool.Trace( "comment" );
     _attributePool.Trace( "attribute" );
 #endif
-
+/* // Geez, this is broken -- fg
 #ifdef DEBUG
 	if ( Error() == false ) {
 		TIXMLASSERT( _elementPool.CurrentAllocs()   == _elementPool.Untracked() );
@@ -1605,6 +1615,7 @@ XMLDocument::~XMLDocument()
 		TIXMLASSERT( _commentPool.CurrentAllocs()   == _commentPool.Untracked() );
 	}
 #endif
+*/
 }
 
 
