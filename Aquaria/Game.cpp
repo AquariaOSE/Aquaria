@@ -4247,7 +4247,7 @@ bool Game::loadSceneXML(std::string scene)
 		l->position = Vector(atoi(lensFlare->Attribute("x")),atoi(lensFlare->Attribute("y")));
 		addRenderObject(l, LR_LIGHTING);
 
-		XMLElement *lSF = doc.NewElement("LensFlare");
+		XMLElement *lSF = saveFile->NewElement("LensFlare");
 		lSF->SetAttribute("inc", lensFlare->Attribute("inc"));
 		lSF->SetAttribute("x", lensFlare->Attribute("x"));
 		lSF->SetAttribute("y", lensFlare->Attribute("y"));
@@ -4262,7 +4262,7 @@ bool Game::loadSceneXML(std::string scene)
 	XMLElement *level = doc.FirstChildElement("Level");
 	if (level)
 	{
-		XMLElement *levelSF = doc.NewElement("Level");
+		XMLElement *levelSF = saveFile->NewElement("Level");
 		if (level->Attribute("tileset"))
 		{
 			elementTemplatePack = level->Attribute("tileset");
@@ -4595,7 +4595,7 @@ bool Game::loadSceneXML(std::string scene)
 	XMLElement *quad = doc.FirstChildElement("Quad");
 	while (quad)
 	{
-		XMLElement *qSF = doc.NewElement("Quad");
+		XMLElement *qSF = saveFile->NewElement("Quad");
 		int x=0, y=0, z=0;
 		int w=0,h=0;
 		bool cull=true;
@@ -4855,7 +4855,7 @@ bool Game::loadSceneXML(std::string scene)
 
 		schoolFish = schoolFish->NextSiblingElement("SchoolFish");
 
-		XMLElement *newSF = doc.NewElement("SchoolFish");
+		XMLElement *newSF = saveFile->NewElement("SchoolFish");
 		newSF->SetAttribute("x", x);
 		newSF->SetAttribute("y", y);
 		newSF->SetAttribute("id", id);
@@ -5308,20 +5308,27 @@ bool Game::saveScene(std::string scene)
 
 	std::string fn = getSceneFilename(scene);
 
-	XMLPrinter printer;
-	this->saveFile->Print(&printer);
-
 	XMLDocument saveFile;
-	saveFile.Parse(printer.CStr(), printer.CStrSize());
+
+	// hackish: Deep-clone XML doc
+	{
+		XMLPrinter printer;
+		this->saveFile->Print(&printer);
+
+		XMLError xmlerr = saveFile.Parse(printer.CStr(), printer.CStrSize());
+		if(xmlerr != XML_SUCCESS)
+		{
+			std::ostringstream os;
+			os << "Game::saveScene(): Whoops? Deep cloning level XML failed: Error " << xmlerr;
+			errorLog(os.str());
+		}
+	}
 
 	XMLElement *level = saveFile.FirstChildElement("Level");
-
-	XMLElement *levelLocal = saveFile.NewElement("Level");
-	bool addIt = false;
-	if (!level)
+	if(!level)
 	{
-		level = levelLocal;
-		addIt = true;
+		level = saveFile.NewElement("Level");
+		saveFile.InsertFirstChild(level);
 	}
 
 	if (level)
@@ -5346,11 +5353,6 @@ bool Game::saveScene(std::string scene)
 		{
 			level->SetAttribute("music", saveMusic.c_str());
 		}
-	}
-
-	if (addIt)
-	{
-		saveFile.InsertEndChild(levelLocal);
 	}
 
 	/*
@@ -5500,7 +5502,7 @@ bool Game::saveScene(std::string scene)
 	}
 	*/
 
-	bool result =  saveFile.SaveFile(fn.c_str());
+	bool result =  saveFile.SaveFile(fn.c_str()) == XML_SUCCESS;
 	if (result)
 		debugLog("Successfully saved map: " + fn);
 	else

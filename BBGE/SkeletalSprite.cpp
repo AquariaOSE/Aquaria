@@ -1044,7 +1044,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		animations->InsertEndChild(animation);
 	}
 	xml->InsertEndChild(animations);
-	return xml->SaveFile(file.c_str());
+	return xml->SaveFile(file.c_str()) == XML_SUCCESS;
 }
 
 int SkeletalSprite::getBoneIdx(Bone *b)
