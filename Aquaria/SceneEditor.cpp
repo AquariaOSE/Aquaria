@@ -980,7 +980,7 @@ void SceneEditor::setGridPattern9()
 
 void SceneEditor::moveToFront()
 {
-	if (editingElement)
+	if (editingElement && !core->getShiftState())
 	{
 		std::vector<Element*> copy = dsq->getElementsCopy();
 		dsq->clearElements();
@@ -999,7 +999,7 @@ void SceneEditor::moveToFront()
 
 void SceneEditor::moveToBack()
 {
-	if (editingElement)
+	if (editingElement && !core->getShiftState())
 	{
 		std::vector<Element*> copy = dsq->getElementsCopy();
 		dsq->clearElements();
@@ -1328,6 +1328,7 @@ void SceneEditor::enterScaleState()
 			dummy.rotation = Vector(0,0,0);
 			dummy.scale = Vector(1,1,1);
 			oldScale = dummy.scale;
+			oldRepeatScale = Vector(1, 1); // not handled for multi-selection
 			cursorOffset = dsq->getGameCursorPosition();
 			groupCenter = getSelectedElementsCenter();
 			for (int i = 0; i < selectedElements.size(); i++)
@@ -1344,6 +1345,7 @@ void SceneEditor::enterScaleState()
 			oldPosition = editingElement->position;
 			state = ES_SCALING;
 			oldScale = editingElement->scale;
+			oldRepeatScale = editingElement->repeatToFillScale;
 			cursorOffset = dsq->getGameCursorPosition();
 		}
 	}
@@ -3377,7 +3379,7 @@ void SceneEditor::update(float dt)
 			break;
 			case ES_SCALING:
 			{
-				bool right=false, middle=false, down=false, uni=false;
+				bool right=false, middle=false, down=false, uni=false, repeatScale=false;
 				bool noSide = 0;
 				if (cursorOffset.x > oldPosition.x+10)
 					right = true;
@@ -3416,6 +3418,10 @@ void SceneEditor::update(float dt)
 							add.y = add.x;
 							uni = true;
 						}
+
+						repeatScale = core->getKeyState(KEY_X);
+						if(repeatScale)
+							add *= 0.1f;
 					}
 				}
 				if (!selectedElements.empty())
@@ -3438,14 +3444,16 @@ void SceneEditor::update(float dt)
 				}
 				else if (editingElement)
 				{
+					Vector& editVec = repeatScale ? editingElement->repeatToFillScale : editingElement->scale;
 					if (core->getCtrlState())
 					{
-						editingElement->scale = Vector(1,1);
+						editVec = Vector(1,1);
 					}
 					else
 					{
-						editingElement->scale=oldScale + add;
-						if (!uni)
+						//editingElement->scale=oldScale + add;
+						editVec = (repeatScale ? oldRepeatScale : oldScale) + add;
+						if (!uni && !repeatScale)
 						{
 							if (!middle)
 							{
@@ -3466,10 +3474,10 @@ void SceneEditor::update(float dt)
 								}
 							}
 						}
-						if (editingElement->scale.x < MIN_SIZE)
-							editingElement->scale.x  = MIN_SIZE;
-						if (editingElement->scale.y < MIN_SIZE)
-							editingElement->scale.y  = MIN_SIZE;
+						if (editVec.x < MIN_SIZE)
+							editVec.x  = MIN_SIZE;
+						if (editVec.y < MIN_SIZE)
+							editVec.y  = MIN_SIZE;
 					}
 
 					editingElement->refreshRepeatTextureToFill();
