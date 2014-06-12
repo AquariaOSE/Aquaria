@@ -4886,11 +4886,14 @@ bool Game::loadSceneXML(std::string scene)
 		boxElement = boxElement->NextSiblingElement("BoxElement");
 	}
 	*/
+	std::vector<Element*> loadedElements;
+	loadedElements.reserve(200);
 	XMLElement *simpleElements = doc.FirstChildElement("SE");
 	while (simpleElements)
 	{
 		int idx, x, y, rot;
 		float sz,sz2;
+		loadedElements.clear();
 		if (simpleElements->Attribute("d"))
 		{
 			SimpleIStringStream is(simpleElements->Attribute("d"));
@@ -4899,6 +4902,7 @@ bool Game::loadSceneXML(std::string scene)
 				is >> x >> y >> rot;
 				Element *e = createElement(idx, Vector(x,y), 4);
 				e->rotation.z = rot;
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("e"))
@@ -4910,6 +4914,7 @@ bool Game::loadSceneXML(std::string scene)
 				is2 >> x >> y >> rot;
 				Element *e = createElement(idx, Vector(x,y), l);
 				e->rotation.z = rot;
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("f"))
@@ -4922,6 +4927,7 @@ bool Game::loadSceneXML(std::string scene)
 				Element *e = createElement(idx, Vector(x,y), l);
 				e->scale = Vector(sz,sz);
 				e->rotation.z = rot;
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("g"))
@@ -4939,6 +4945,7 @@ bool Game::loadSceneXML(std::string scene)
 					e->flipVertical();
 				e->scale = Vector(sz,sz);
 				e->rotation.z = rot;
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("h"))
@@ -4960,6 +4967,7 @@ bool Game::loadSceneXML(std::string scene)
 					e->flipVertical();
 				e->scale = Vector(sz,sz);
 				e->rotation.z = rot;
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("i"))
@@ -4984,6 +4992,7 @@ bool Game::loadSceneXML(std::string scene)
 				e->scale = Vector(sz,sz);
 				e->rotation.z = rot;
 				e->setElementEffectByIndex(efxIdx);
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("j"))
@@ -5011,6 +5020,7 @@ bool Game::loadSceneXML(std::string scene)
 				e->setElementEffectByIndex(efxIdx);
 				if (repeat)
 					e->repeatTextureToFill(true);
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("k"))
@@ -5047,6 +5057,25 @@ bool Game::loadSceneXML(std::string scene)
 				{
 					c=0;
 					addProgress();
+				}
+
+				loadedElements.push_back(e);
+			}
+		}
+		if (simpleElements->Attribute("repeatScale"))
+		{
+			SimpleIStringStream is2(simpleElements->Attribute("repeatScale"));
+			for(size_t i = 0; i < loadedElements.size(); ++i)
+			{
+				Element *e = loadedElements[i];
+				if(e->isRepeatingTextureToFill())
+				{
+					float repeatScaleX = 1, repeatScaleY = 1;
+					if(!(is2 >> repeatScaleX >> repeatScaleY))
+						break;
+					e->repeatToFillScale.x = repeatScaleX;
+					e->repeatToFillScale.y = repeatScaleY;
+					e->refreshRepeatTextureToFill();
 				}
 			}
 		}
@@ -5431,12 +5460,31 @@ bool Game::saveScene(std::string scene)
 	}
 
 	std::ostringstream simpleElements[LR_MAX];
+	std::ostringstream simpleElements_repeatScale[LR_MAX];
 
 
 	for (i = 0; i < dsq->getNumElements(); i++)
 	{
 		Element *e = dsq->getElement(i);
-		simpleElements[e->bgLayer] << e->templateIdx << " " << int(e->position.x) << " " << int(e->position.y) << " " << int(e->rotation.z) << " " << e->scale.x << " " << e->scale.y << " " << int(e->isfh()) << " " << int(e->isfv()) << " " << e->elementFlag << " " << e->getElementEffectIndex() << " " << e->isRepeatingTextureToFill() << " ";
+		std::ostringstream& SE = simpleElements[e->bgLayer];
+		SE << e->templateIdx << " "
+		   << int(e->position.x) << " "
+		   << int(e->position.y) << " "
+		   << int(e->rotation.z) << " "
+		   << e->scale.x << " "
+		   << e->scale.y << " "
+		   << int(e->isfh()) << " "
+		   << int(e->isfv()) << " "
+		   << e->elementFlag << " "
+		   << e->getElementEffectIndex()<< " "
+		   << e->isRepeatingTextureToFill() << " ";
+
+		if(e->isRepeatingTextureToFill())
+		{
+			std::ostringstream& SE_rs = simpleElements_repeatScale[e->bgLayer];
+			SE_rs << e->repeatToFillScale.x << " "
+			      << e->repeatToFillScale.y << " ";
+		}
 	}
 
 	if (dsq->game->entitySaveData.size() > 0)
@@ -5471,6 +5519,9 @@ bool Game::saveScene(std::string scene)
 			XMLElement *simpleElementsXML = saveFile.NewElement("SE");
 			simpleElementsXML->SetAttribute("k", s.c_str());
 			simpleElementsXML->SetAttribute("l", i);
+			std::string repeatScaleStr = simpleElements_repeatScale[i].str();
+			if(!repeatScaleStr.empty())
+				simpleElementsXML->SetAttribute("repeatScale", repeatScaleStr.c_str());
 			saveFile.InsertEndChild(simpleElementsXML);
 		}
 	}

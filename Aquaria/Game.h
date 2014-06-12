@@ -520,7 +520,7 @@ protected:
 	void enterRotateState();
 	void enterMoveState();
 
-	Vector oldPosition, oldRotation, oldScale, cursorOffset;
+	Vector oldPosition, oldRotation, oldScale, cursorOffset, oldRepeatScale;
 
 	Entity *movingEntity;
 	void updateDrawingWarpArea(char c, int k);
