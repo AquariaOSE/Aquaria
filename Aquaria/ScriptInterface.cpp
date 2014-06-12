@@ -2186,12 +2186,24 @@ luaFunc(shot_setAimVector)
 
 luaFunc(shot_getEffectTime)
 {
+	if (lua_isstring(L, 1))
+	{
+		ShotData *data = Shot::getShotData(lua_tostring(L, 1));
+		luaReturnNum(data ? data->effectTime : 0.0f);
+	}
+
 	Shot *shot = getShot(L);
 	luaReturnNum((shot && shot->shotData) ? shot->shotData->effectTime : 0.0f);
 }
 
 luaFunc(shot_isIgnoreShield)
 {
+	if (lua_isstring(L, 1))
+	{
+		ShotData *data = Shot::getShotData(lua_tostring(L, 1));
+		luaReturnBool(data ? data->ignoreShield : false);
+	}
+
 	Shot *shot = getShot(L);
 	luaReturnBool((shot && shot->shotData) ? shot->shotData->ignoreShield : false);
 }
@@ -2253,12 +2265,24 @@ luaFunc(shot_getDamage)
 
 luaFunc(shot_getDamageType)
 {
+	if (lua_isstring(L, 1))
+	{
+		ShotData *data = Shot::getShotData(lua_tostring(L, 1));
+		luaReturnInt(data ? data->damageType : 0);
+	}
+
 	Shot *shot = getShot(L);
 	luaReturnNum(shot ? shot->getDamageType() : DT_NONE);
 }
 
 luaFunc(shot_getMaxSpeed)
 {
+	if (lua_isstring(L, 1))
+	{
+		ShotData *data = Shot::getShotData(lua_tostring(L, 1));
+		luaReturnNum(data ? data->maxSpeed : 0.0f);
+	}
+
 	Shot *shot = getShot(L);
 	luaReturnNum(shot ? shot->maxSpeed : 0.0f);
 }
@@ -2273,6 +2297,12 @@ luaFunc(shot_setMaxSpeed)
 
 luaFunc(shot_getHomingness)
 {
+	if (lua_isstring(L, 1))
+	{
+		ShotData *data = Shot::getShotData(lua_tostring(L, 1));
+		luaReturnNum(data ? data->homing : 0.0f);
+	}
+
 	Shot *shot = getShot(L);
 	luaReturnNum(shot ? shot->homingness : 0.0f);
 }
@@ -2287,6 +2317,12 @@ luaFunc(shot_setHomingness)
 
 luaFunc(shot_getLifeTime)
 {
+	if (lua_isstring(L, 1))
+	{
+		ShotData *data = Shot::getShotData(lua_tostring(L, 1));
+		luaReturnNum(data ? data->lifeTime : 0.0f);
+	}
+
 	Shot *shot = getShot(L);
 	luaReturnNum(shot ? shot->lifeTime : 0.0f);
 }
@@ -2317,6 +2353,12 @@ luaFunc(shot_setCheckDamageTarget)
 
 luaFunc(shot_isCheckDamageTarget)
 {
+	if (lua_isstring(L, 1))
+	{
+		ShotData *data = Shot::getShotData(lua_tostring(L, 1));
+		luaReturnBool(data ? data->checkDamageTarget : false);
+	}
+
 	Shot *shot = getShot(L);
 	luaReturnBool(shot ? shot->checkDamageTarget : false);
 }
