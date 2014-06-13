@@ -1252,8 +1252,14 @@ std::string Continuity::getInternalFormName()
 
 void Continuity::loadIntoSongBank(const std::string &file)
 {
+	if(!exists(file))
+		return;
+
 	XMLDocument doc;
-	if(readXML(file, doc) != XML_SUCCESS)
+	XMLError err = readXML(file, doc);
+	if(err == XML_ERROR_EMPTY_DOCUMENT)
+		return;
+	if(err != XML_SUCCESS)
 	{
 		errorLog("Failed to load song bank: Malformed XML");
 		return;
