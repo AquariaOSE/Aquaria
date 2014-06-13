@@ -180,7 +180,7 @@ if(NOT SDL_FOUND)
     else(AQUARIA_USE_SDL2)
         set(SDLDIR "${EXTLIBDIR}/SDL12")
     endif(AQUARIA_USE_SDL2)
-    
+
     if(MACOSX)
         set(SDL_INCLUDE_DIR "${SDLDIR}/include")
         message(STATUS "Using internal copy of SDL")
@@ -222,6 +222,18 @@ if (NOT OPENAL_FOUND)
     endif(WIN32)
 endif (NOT OPENAL_FOUND)
 
+### TinyXML2
+
+OPTION(AQUARIA_INTERNAL_TINYXML2 "Always use included TinyXML2 library" ${WIN32_TRUE})
+if(NOT AQUARIA_INTERNAL_TINYXML2)
+    find_package(TinyXML2)
+endif(NOT AQUARIA_INTERNAL_TINYXML2)
+if (AQUARIA_INTERNAL_TINYXML2 OR NOT TINYXML2_FOUND)
+    message(STATUS "Using internal copy of TinyXML2")
+    set(TINYXML2_INCLUDE_DIR "${EXTLIBDIR}")
+    set(TINYXML2_SRCS "${EXTLIBDIR}/tinyxml2.cpp")
+endif (AQUARIA_INTERNAL_TINYXML2 OR NOT TINYXML2_FOUND)
+
 ################ End of external libraries
 
 INCLUDE_DIRECTORIES(${BBGEDIR})
@@ -235,6 +247,7 @@ INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OGGVORBIS_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${TINYXML2_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${EXTLIBDIR})
 
 
@@ -333,7 +346,10 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     IF(AQUARIA_GCC_HAS_STACKPROT)
         ADD_DEFINITIONS(-fno-stack-protector)
     ENDIF(AQUARIA_GCC_HAS_STACKPROT)
-    
+
+    # We knowingly apply offsetof to non-POD types.
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
+
     # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
     # Exceptions are not used, excluding support for release builds adds less bulk as well.
     set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "Flags used for release builds" FORCE)
@@ -486,9 +502,6 @@ SET(BBGE_SRCS
     ${EXTLIBDIR}/DeflateCompressor.cpp
     ${EXTLIBDIR}/glfont2/glfont2.cpp
     ${EXTLIBDIR}/glpng/glpng.c
-    ${EXTLIBDIR}/tinyxml.cpp
-    ${EXTLIBDIR}/tinyxmlerror.cpp
-    ${EXTLIBDIR}/tinyxmlparser.cpp
     ${EXTLIBDIR}/minihttp.cpp
     ${EXTLIBDIR}/JPS.h
 )
@@ -661,9 +674,13 @@ SET(LUA_SRCS
     ${LUASRCDIR}/ldump.c
     ${LUASRCDIR}/lfunc.c
     ${LUASRCDIR}/lgc.c
+    ${LUASRCDIR}/linit.c
+    ${LUASRCDIR}/liolib.c
     ${LUASRCDIR}/lmem.c
+    ${LUASRCDIR}/loadlib.c
     ${LUASRCDIR}/lobject.c
     ${LUASRCDIR}/lopcodes.c
+    ${LUASRCDIR}/loslib.c
     ${LUASRCDIR}/lstate.c
     ${LUASRCDIR}/lstring.c
     ${LUASRCDIR}/ltable.c
@@ -736,6 +753,12 @@ IF(OGGVORBIS_FOUND)
 ELSE(OGGVORBIS_FOUND)
     SET(OPTIONAL_SRCS ${OPTIONAL_SRCS} ${OGGVORBIS_SRCS})
 ENDIF(OGGVORBIS_FOUND)
+
+IF(TINYXML2_FOUND)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${TINYXML2_LIBRARIES})
+ELSE(TINYXML2_FOUND)
+   SET(OPTIONAL_SRCS ${OPTIONAL_SRCS} ${TINYXML2_SRCS})
+ENDIF(TINYXML2_FOUND)
 
 ADD_EXECUTABLE(aquaria ${EXETYPE}
     ${AQUARIA_SRCS}

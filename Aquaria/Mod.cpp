@@ -83,9 +83,10 @@ bool Mod::isEditorBlocked()
 	return blockEditor;
 }
 
-bool Mod::loadModXML(TiXmlDocument *d, std::string modName)
+bool Mod::loadModXML(XMLDocument *d, std::string modName)
 {
-	return d->LoadFile(baseModPath + modName + ".xml");
+	return readXML((baseModPath + modName + ".xml").c_str(), *d) == XML_SUCCESS;
+
 }
 
 const std::string& Mod::getBaseModPath() const
@@ -108,46 +109,25 @@ void Mod::load(const std::string &p)
 
 	setActive(true);
 	
-	TiXmlDocument d;
+	XMLDocument d;
 	loadModXML(&d, p);
 	
-	TiXmlElement *mod = d.FirstChildElement("AquariaMod");
+	XMLElement *mod = d.FirstChildElement("AquariaMod");
 	if (mod)
 	{
-		TiXmlElement *props = mod->FirstChildElement("Properties");
+		XMLElement *props = mod->FirstChildElement("Properties");
 		if (props)
 		{
-			if (props->Attribute("recache")){
-				props->Attribute("recache", &doRecache);
-			}
+			props->QueryIntAttribute("recache", &doRecache);
+			props->QueryIntAttribute("debugMenu", &debugMenu);
+			props->QueryBoolAttribute("hasWorldMap", &hasMap);
+			props->QueryBoolAttribute("blockEditor", &blockEditor);
 
-			if (props->Attribute("runBG")){
-				int runBG = 0;
-				props->Attribute("runBG", &runBG);
-				if (runBG){
-					core->settings.runInBackground = true;
-				}
-			}
+			if (props->BoolAttribute("runBG"))
+				core->settings.runInBackground = true;
 
-			if (props->Attribute("debugMenu")) {
-				props->Attribute("debugMenu", &debugMenu);
-			}
-
-			if (props->Attribute("hasWorldMap")) {
-				int t;
-				props->Attribute("hasWorldMap", &t);
-				hasMap = t;
-			}
-			if (props->Attribute("blockEditor")) {
-				int t;
-				props->Attribute("blockEditor", &t);
-				blockEditor = t;
-			}
-			if (props->Attribute("worldMapRevealMethod")) {
-				int t;
-				props->Attribute("worldMapRevealMethod", &t);
-				mapRevealMethod = (WorldMapRevealMethod)t;
-			}
+			if (props->Attribute("worldMapRevealMethod"))
+				mapRevealMethod = (WorldMapRevealMethod) props->IntAttribute("worldMapRevealMethod");
 		}
 	}
 
@@ -321,11 +301,11 @@ void Mod::update(float dt)
 	}
 }
 
-ModType Mod::getTypeFromXML(TiXmlElement *xml) // should be <AquariaMod>...</AquariaMod> - element
+ModType Mod::getTypeFromXML(XMLElement *xml) // should be <AquariaMod>...</AquariaMod> - element
 {
 	if(xml)
 	{
-		TiXmlElement *prop = xml->FirstChildElement("Properties");
+		XMLElement *prop = xml->FirstChildElement("Properties");
 		if(prop)
 		{
 			const char *type = prop->Attribute("type");

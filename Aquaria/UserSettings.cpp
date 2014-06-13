@@ -25,7 +25,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include "Game.h"
 	#include "Avatar.h"
 #else
-	#include "../ExternalLibs/tinyxml.h"
+	#include "tinyxml2.h"
+	using namespace tinyxml2;
 #endif
 
 
@@ -33,274 +34,249 @@ void UserSettings::save()
 {
 	//initInputCodeMap();
 
-	TiXmlDocument doc;
+	XMLDocument doc;
 	{
-		TiXmlElement xml_version("Version");
+		XMLElement *xml_version = doc.NewElement("Version");
 		{
-			xml_version.SetAttribute("settingsVersion", VERSION_USERSETTINGS);
+			xml_version->SetAttribute("settingsVersion", VERSION_USERSETTINGS);
 		}
 		doc.InsertEndChild(xml_version);
 
-		TiXmlElement xml_system("System");
+		XMLElement *xml_system = doc.NewElement("System");
 		{
-			TiXmlElement xml_debugLog("DebugLog");
+			XMLElement *xml_debugLog = doc.NewElement("DebugLog");
 			{
-				xml_debugLog.SetAttribute("on", system.debugLogOn);
+				xml_debugLog->SetAttribute("on", system.debugLogOn);
 			}
-			xml_system.InsertEndChild(xml_debugLog);
+			xml_system->InsertEndChild(xml_debugLog);
 
-			TiXmlElement xml_locale("Locale");
+			XMLElement *xml_locale = doc.NewElement("Locale");
 			{
-				xml_locale.SetAttribute("name", system.locale);
+				xml_locale->SetAttribute("name", system.locale.c_str());
 			}
-			xml_system.InsertEndChild(xml_locale);
+			xml_system->InsertEndChild(xml_locale);
 
-			TiXmlElement xml_devmode("DeveloperMode");
+			XMLElement *xml_devmode = doc.NewElement("DeveloperMode");
 			{
-				xml_devmode.SetAttribute("on", system.devModeOn);
+				xml_devmode->SetAttribute("on", system.devModeOn);
 			}
-			xml_system.InsertEndChild(xml_devmode);
+			xml_system->InsertEndChild(xml_devmode);
 
-			TiXmlElement xml_unsafe("AllowDangerousScriptFunctions");
+			XMLElement *xml_unsafe = doc.NewElement("AllowDangerousScriptFunctions");
 			{
-				xml_unsafe.SetAttribute("on", system.allowDangerousScriptFunctions);
+				xml_unsafe->SetAttribute("on", system.allowDangerousScriptFunctions);
 			}
-			xml_system.InsertEndChild(xml_unsafe);
+			xml_system->InsertEndChild(xml_unsafe);
 		}
 		doc.InsertEndChild(xml_system);
 
-		TiXmlElement xml_audio("Audio");
+		XMLElement *xml_audio = doc.NewElement("Audio");
 		{
-			TiXmlElement xml_microphone("Mic");
+			XMLElement *xml_microphone = doc.NewElement("Mic");
 			{
-				xml_microphone.SetAttribute("on", audio.micOn);
-				xml_microphone.SetAttribute("octave", audio.octave);
+				xml_microphone->SetAttribute("on", audio.micOn);
+				xml_microphone->SetAttribute("octave", audio.octave);
 			}
-			xml_audio.InsertEndChild(xml_microphone);
+			xml_audio->InsertEndChild(xml_microphone);
 
-			TiXmlElement xml_volume("Volume");
+			XMLElement *xml_volume = doc.NewElement("Volume");
 			{
-				xml_volume.SetDoubleAttribute("sfx", double(audio.sfxvol));
-				xml_volume.SetDoubleAttribute("vox", double(audio.voxvol));
-				xml_volume.SetDoubleAttribute("mus", double(audio.musvol));
-				xml_volume.SetAttribute("subs", audio.subtitles);
+				xml_volume->SetAttribute("sfx", double(audio.sfxvol));
+				xml_volume->SetAttribute("vox", double(audio.voxvol));
+				xml_volume->SetAttribute("mus", double(audio.musvol));
+				xml_volume->SetAttribute("subs", audio.subtitles);
 			}
-			xml_audio.InsertEndChild(xml_volume);
+			xml_audio->InsertEndChild(xml_volume);
 
-			TiXmlElement xml_device("Device");
+			XMLElement *xml_device = doc.NewElement("Device");
 			{
-				xml_device.SetAttribute("name", audio.deviceName);
+				xml_device->SetAttribute("name", audio.deviceName.c_str());
 			}
-			xml_audio.InsertEndChild(xml_device);
+			xml_audio->InsertEndChild(xml_device);
 
-			TiXmlElement xml_prebuf("Prebuffer");
+			XMLElement *xml_prebuf = doc.NewElement("Prebuffer");
 			{
-				xml_prebuf.SetAttribute("on", audio.prebuffer);
+				xml_prebuf->SetAttribute("on", audio.prebuffer);
 			}
-			xml_audio.InsertEndChild(xml_prebuf);
+			xml_audio->InsertEndChild(xml_prebuf);
 		}
 		doc.InsertEndChild(xml_audio);
 
-		TiXmlElement xml_video("Video");
+		XMLElement *xml_video = doc.NewElement("Video");
 		{
-			TiXmlElement xml_blur("Blur");
+			XMLElement *xml_blur = doc.NewElement("Blur");
 			{
-				xml_blur.SetAttribute("on", video.blur);
+				xml_blur->SetAttribute("on", video.blur);
 			}
-			xml_video.InsertEndChild(xml_blur);
+			xml_video->InsertEndChild(xml_blur);
 
-			TiXmlElement xml_noteEffects("NoteEffects");
+			XMLElement *xml_noteEffects = doc.NewElement("NoteEffects");
 			{
-				xml_noteEffects.SetAttribute("on", video.noteEffects);
+				xml_noteEffects->SetAttribute("on", video.noteEffects);
 			}
-			xml_video.InsertEndChild(xml_noteEffects);
+			xml_video->InsertEndChild(xml_noteEffects);
 
-			TiXmlElement xml_fpsSmoothing("FpsSmoothing");
+			XMLElement *xml_fpsSmoothing = doc.NewElement("FpsSmoothing");
 			{
-				xml_fpsSmoothing.SetAttribute("v", video.fpsSmoothing);
+				xml_fpsSmoothing->SetAttribute("v", video.fpsSmoothing);
 			}
-			xml_video.InsertEndChild(xml_fpsSmoothing);
+			xml_video->InsertEndChild(xml_fpsSmoothing);
 
-			TiXmlElement xml_parallax("Parallax");
+			XMLElement *xml_parallax = doc.NewElement("Parallax");
 			std::ostringstream os;
 			os << video.parallaxOn0 << " " << video.parallaxOn1 << " " << video.parallaxOn2;
-			xml_parallax.SetAttribute("on", os.str());
-			xml_video.InsertEndChild(xml_parallax);
+			xml_parallax->SetAttribute("on", os.str().c_str());
+			xml_video->InsertEndChild(xml_parallax);
 
-			TiXmlElement xml_numParticles("NumParticles");
-			xml_numParticles.SetAttribute("v", video.numParticles);
-			xml_video.InsertEndChild(xml_numParticles);
+			XMLElement *xml_numParticles = doc.NewElement("NumParticles");
+			xml_numParticles->SetAttribute("v", video.numParticles);
+			xml_video->InsertEndChild(xml_numParticles);
 
-			TiXmlElement xml_screenMode("ScreenMode");
+			XMLElement *xml_screenMode = doc.NewElement("ScreenMode");
 			{
-				xml_screenMode.SetAttribute("resx",				video.resx);
-				xml_screenMode.SetAttribute("resy",				video.resy);
-				xml_screenMode.SetAttribute("bits",				video.bits);
-				xml_screenMode.SetAttribute("fbuffer",			video.fbuffer);
-				xml_screenMode.SetAttribute("full",				video.full);
-				xml_screenMode.SetAttribute("vsync",			video.vsync);
-				xml_screenMode.SetAttribute("darkfbuffer",		video.darkfbuffer);
-				xml_screenMode.SetAttribute("darkbuffersize",	video.darkbuffersize);
-				xml_screenMode.SetAttribute("displaylists",		video.displaylists);
+				xml_screenMode->SetAttribute("resx",				video.resx);
+				xml_screenMode->SetAttribute("resy",				video.resy);
+				xml_screenMode->SetAttribute("bits",				video.bits);
+				xml_screenMode->SetAttribute("fbuffer",			video.fbuffer);
+				xml_screenMode->SetAttribute("full",				video.full);
+				xml_screenMode->SetAttribute("vsync",			video.vsync);
+				xml_screenMode->SetAttribute("darkfbuffer",		video.darkfbuffer);
+				xml_screenMode->SetAttribute("darkbuffersize",	video.darkbuffersize);
+				xml_screenMode->SetAttribute("displaylists",		video.displaylists);
 			}
-			xml_video.InsertEndChild(xml_screenMode);
+			xml_video->InsertEndChild(xml_screenMode);
 
-			TiXmlElement xml_saveSlotScreens("SaveSlotScreens");
+			XMLElement *xml_saveSlotScreens = doc.NewElement("SaveSlotScreens");
 			{
-				xml_saveSlotScreens.SetAttribute("on", video.saveSlotScreens);
+				xml_saveSlotScreens->SetAttribute("on", video.saveSlotScreens);
 			}
-			xml_video.InsertEndChild(xml_saveSlotScreens);
+			xml_video->InsertEndChild(xml_saveSlotScreens);
 
-			TiXmlElement xml_worldMap("WorldMap");
+			XMLElement *xml_worldMap = doc.NewElement("WorldMap");
 			{
-				xml_worldMap.SetAttribute("revealMethod", video.worldMapRevealMethod);
+				xml_worldMap->SetAttribute("revealMethod", video.worldMapRevealMethod);
 			}
-			xml_video.InsertEndChild(xml_worldMap);
+			xml_video->InsertEndChild(xml_worldMap);
 		}
 		doc.InsertEndChild(xml_video);
 
 
-		TiXmlElement xml_control("Control");
+		XMLElement *xml_control = doc.NewElement("Control");
 		{
-			TiXmlElement xml_toolTipsOn("ToolTipsOn");
+			XMLElement *xml_toolTipsOn = doc.NewElement("ToolTipsOn");
 			{
-				xml_toolTipsOn.SetAttribute("on", control.toolTipsOn);
+				xml_toolTipsOn->SetAttribute("on", control.toolTipsOn);
 			}
-			xml_control.InsertEndChild(xml_toolTipsOn);
+			xml_control->InsertEndChild(xml_toolTipsOn);
 
-			TiXmlElement xml_joystickEnabled("JoystickEnabled");
+			XMLElement *xml_joystickEnabled = doc.NewElement("JoystickEnabled");
 			{
-				xml_joystickEnabled.SetAttribute("on", control.joystickEnabled);
+				xml_joystickEnabled->SetAttribute("on", control.joystickEnabled);
 			}
-			xml_control.InsertEndChild(xml_joystickEnabled);
+			xml_control->InsertEndChild(xml_joystickEnabled);
 
-			TiXmlElement xml_autoAim("AutoAim");
+			XMLElement *xml_autoAim = doc.NewElement("AutoAim");
 			{
-				xml_autoAim.SetAttribute("on", control.autoAim);
+				xml_autoAim->SetAttribute("on", control.autoAim);
 			}
-			xml_control.InsertEndChild(xml_autoAim);
+			xml_control->InsertEndChild(xml_autoAim);
 
-			TiXmlElement xml_targeting("Targeting");
+			XMLElement *xml_targeting = doc.NewElement("Targeting");
 			{
-				xml_targeting.SetAttribute("on", control.targeting);
+				xml_targeting->SetAttribute("on", control.targeting);
 			}
-			xml_control.InsertEndChild(xml_targeting);
+			xml_control->InsertEndChild(xml_targeting);
 
-			TiXmlElement xml_joyCursorSpeed("JoyCursorSpeed");
+			XMLElement *xml_joyCursorSpeed = doc.NewElement("JoyCursorSpeed");
 			{
-				xml_joyCursorSpeed.SetDoubleAttribute("v", double(control.joyCursorSpeed));
+				xml_joyCursorSpeed->SetAttribute("v", double(control.joyCursorSpeed));
 			}
-			xml_control.InsertEndChild(xml_joyCursorSpeed);
+			xml_control->InsertEndChild(xml_joyCursorSpeed);
 
-			TiXmlElement xml_joyAxes("JoyAxes");
+			XMLElement *xml_joyAxes = doc.NewElement("JoyAxes");
 			{
-				xml_joyAxes.SetAttribute("s1ax", control.s1ax);
-				xml_joyAxes.SetAttribute("s1ay", control.s1ay);
-				xml_joyAxes.SetAttribute("s2ax", control.s2ax);
-				xml_joyAxes.SetAttribute("s2ay", control.s2ay);
-				xml_joyAxes.SetDoubleAttribute("s1dead", double(control.s1dead));
-				xml_joyAxes.SetDoubleAttribute("s2dead", double(control.s2dead));
+				xml_joyAxes->SetAttribute("s1ax", control.s1ax);
+				xml_joyAxes->SetAttribute("s1ay", control.s1ay);
+				xml_joyAxes->SetAttribute("s2ax", control.s2ax);
+				xml_joyAxes->SetAttribute("s2ay", control.s2ay);
+				xml_joyAxes->SetAttribute("s1dead", double(control.s1dead));
+				xml_joyAxes->SetAttribute("s2dead", double(control.s2dead));
 			}
-			xml_control.InsertEndChild(xml_joyAxes);
+			xml_control->InsertEndChild(xml_joyAxes);
 
-			TiXmlElement xml_actionSet("ActionSet");
+			XMLElement *xml_actionSet = doc.NewElement("ActionSet");
 			{
 				for (int i = 0; i < control.actionSet.inputSet.size(); i++)
 				{
-					TiXmlElement xml_action("Action");
+					XMLElement *xml_action = doc.NewElement("Action");
 					ActionInput *actionInput = &control.actionSet.inputSet[i];
-					xml_action.SetAttribute("name", actionInput->name);
-					xml_action.SetAttribute("input", actionInput->toString());
+					xml_action->SetAttribute("name", actionInput->name.c_str());
+					xml_action->SetAttribute("input", actionInput->toString().c_str());
 
-					xml_actionSet.InsertEndChild(xml_action);
+					xml_actionSet->InsertEndChild(xml_action);
 				}
 			}
-			xml_control.InsertEndChild(xml_actionSet);
+			xml_control->InsertEndChild(xml_actionSet);
 		}
 		doc.InsertEndChild(xml_control);
 
-		TiXmlElement xml_demo("Demo");
+		XMLElement *xml_demo = doc.NewElement("Demo");
 		{
-			TiXmlElement xml_warpKeys("WarpKeys");
+			XMLElement *xml_warpKeys = doc.NewElement("WarpKeys");
 			{
-				xml_warpKeys.SetAttribute("on", demo.warpKeys);
+				xml_warpKeys->SetAttribute("on", demo.warpKeys);
 			}
-			xml_demo.InsertEndChild(xml_warpKeys);
+			xml_demo->InsertEndChild(xml_warpKeys);
 
-			TiXmlElement xml_intro("Intro2");
+			XMLElement *xml_intro = doc.NewElement("Intro2");
 			{
-				xml_intro.SetAttribute("on", demo.intro);
+				xml_intro->SetAttribute("on", demo.intro);
 			}
-			xml_demo.InsertEndChild(xml_intro);
+			xml_demo->InsertEndChild(xml_intro);
 
-			TiXmlElement xml_shortLogos("ShortLogos");
+			XMLElement *xml_shortLogos = doc.NewElement("ShortLogos");
 			{
-				xml_shortLogos.SetAttribute("on", demo.shortLogos);
+				xml_shortLogos->SetAttribute("on", demo.shortLogos);
 			}
-			xml_demo.InsertEndChild(xml_shortLogos);
+			xml_demo->InsertEndChild(xml_shortLogos);
 		}
 		doc.InsertEndChild(xml_demo);
 
-		TiXmlElement xml_data("Data");
+		XMLElement *xml_data = doc.NewElement("Data");
 		{
-			xml_data.SetAttribute("savePage",			data.savePage);
-			xml_data.SetAttribute("saveSlot",			data.saveSlot);
+			xml_data->SetAttribute("savePage",			data.savePage);
+			xml_data->SetAttribute("saveSlot",			data.saveSlot);
 
 			std::ostringstream ss;
 			for (std::set<std::string>::iterator it = dsq->activePatches.begin(); it != dsq->activePatches.end(); ++it)
 				ss << *it << " ";
-			xml_data.SetAttribute("activePatches",	ss.str());
+			xml_data->SetAttribute("activePatches",	ss.str().c_str());
 		}
 		doc.InsertEndChild(xml_data);
 
-		TiXmlElement xml_net("Network");
+		XMLElement *xml_net = doc.NewElement("Network");
 		{
-			xml_net.SetAttribute("masterServer",		network.masterServer);
+			xml_net->SetAttribute("masterServer", network.masterServer.c_str());
 		}
 		doc.InsertEndChild(xml_net);
 
 	}
 
 #if defined(BBGE_BUILD_UNIX)
-	doc.SaveFile(dsq->getPreferencesFolder() + "/" + userSettingsFilename);
+	doc.SaveFile((dsq->getPreferencesFolder() + "/" + userSettingsFilename).c_str());
 #elif defined(BBGE_BUILD_WINDOWS)
-	doc.SaveFile(userSettingsFilename);
+	doc.SaveFile(userSettingsFilename.c_str());
 #endif
 
 	//clearInputCodeMap();
 }
 
-void readInt(TiXmlElement *xml, const std::string &elem, std::string att, int *toChange)
+static void readInt(XMLElement *xml, const char *elem, const char *att, int *toChange)
 {
 	if (xml)
 	{
-		TiXmlElement *xml2 = xml->FirstChildElement(elem);
-		if (xml2)
-		{
-			const std::string *s = xml2->Attribute(att);
-			if (s) {
-				const char *c = s->c_str();
-				if (c)
-				{
-					*toChange = atoi(c);
-				}
-			}
-		}
-	}
-}
-
-void readIntAtt(TiXmlElement *xml, std::string att, int *toChange)
-{
-	if (xml)
-	{
-		const std::string *s = xml->Attribute(att);
-		if (s) {
-			const char *c = s->c_str();
-			if (c)
-			{
-				*toChange = atoi(c);
-			}
-		}
+		XMLElement *xml2 = xml->FirstChildElement(elem);
+		if (xml2) xml2->QueryIntAttribute(att, toChange);
 	}
 }
 
@@ -325,23 +301,30 @@ void UserSettings::loadDefaults(bool doApply)
 
 void UserSettings::load(bool doApply, const std::string &overrideFile)
 {
-	TiXmlDocument doc;
+	std::string filename;
 
 #if defined(BBGE_BUILD_UNIX)
-	doc.LoadFile(dsq->getPreferencesFolder() + "/" + userSettingsFilename);
+	filename = dsq->getPreferencesFolder() + "/" + userSettingsFilename;
 #elif defined(BBGE_BUILD_WINDOWS)
 	if (!overrideFile.empty())
-		doc.LoadFile(overrideFile);
+		filename = overrideFile;
 	else
-		doc.LoadFile(userSettingsFilename);
+		filename = userSettingsFilename;
 #endif
+
+	XMLDocument doc;
+	if(readXML(filename, doc) != XML_SUCCESS)
+	{
+		errorLog("UserSettings: Malformed XML, continuing with defaults");
+		doc.Clear(); // just in case
+	}
 
 	version.settingsVersion = 0;
 
-	TiXmlElement *xml_version = doc.FirstChildElement("Version");
+	XMLElement *xml_version = doc.FirstChildElement("Version");
 	if (xml_version)
 	{
-		xml_version->Attribute("settingsVersion", &version.settingsVersion);
+		version.settingsVersion = xml_version->IntAttribute("settingsVersion");
 	}
 
 	control.actionSet.clearActions();
@@ -368,67 +351,66 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	control.actionSet.addActionInput("Look");
 	control.actionSet.addActionInput("ToggleHelp");
 
-	TiXmlElement *xml_system = doc.FirstChildElement("System");
+	XMLElement *xml_system = doc.FirstChildElement("System");
 	if (xml_system)
 	{
-		TiXmlElement *xml_debugLog = xml_system->FirstChildElement("DebugLog");
+		XMLElement *xml_debugLog = xml_system->FirstChildElement("DebugLog");
 		if (xml_debugLog)
 		{
-			xml_debugLog->Attribute("on", &system.debugLogOn);
+			system.debugLogOn = xml_debugLog->IntAttribute("on");
 		}
 
-		TiXmlElement *xml_locale = xml_system->FirstChildElement("Locale");
+		XMLElement *xml_locale = xml_system->FirstChildElement("Locale");
 		if (xml_locale)
 		{
 			system.locale = xml_locale->Attribute("name");
 		}
 
-		TiXmlElement *xml_devmode = xml_system->FirstChildElement("DeveloperMode");
+		XMLElement *xml_devmode = xml_system->FirstChildElement("DeveloperMode");
 		if (xml_devmode)
 		{
-			xml_devmode->Attribute("on", &system.devModeOn);
+			system.devModeOn = xml_devmode->IntAttribute("on");
 		}
 
-		TiXmlElement *xml_unsafe = xml_system->FirstChildElement("AllowDangerousScriptFunctions");
+		XMLElement *xml_unsafe = xml_system->FirstChildElement("AllowDangerousScriptFunctions");
 		if (xml_unsafe)
 		{
-			xml_unsafe->Attribute("on", &system.allowDangerousScriptFunctions);
+			system.allowDangerousScriptFunctions = xml_unsafe->IntAttribute("on");
 		}
 	}
 
-	TiXmlElement *xml_audio = doc.FirstChildElement("Audio");
+	XMLElement *xml_audio = doc.FirstChildElement("Audio");
 	if (xml_audio)
 	{
-		TiXmlElement *xml_microphone = xml_audio->FirstChildElement("Mic");
+		XMLElement *xml_microphone = xml_audio->FirstChildElement("Mic");
 		if (xml_microphone)
 		{
-			xml_microphone->Attribute("on", &audio.micOn);
-			xml_microphone->Attribute("octave", &audio.octave);
+			audio.micOn = xml_microphone->IntAttribute("on");
+			audio.octave = xml_microphone->IntAttribute("octave");
 		}
 
-		TiXmlElement *xml_volume = xml_audio->FirstChildElement("Volume");
+		XMLElement *xml_volume = xml_audio->FirstChildElement("Volume");
 		if (xml_volume)
 		{
-			double d;
-			xml_volume->Attribute("sfx", &d), audio.sfxvol = d;
-			xml_volume->Attribute("vox", &d), audio.voxvol = d;
-			xml_volume->Attribute("mus", &d), audio.musvol = d;
-			xml_volume->Attribute("subs", &audio.subtitles);
+			audio.sfxvol = xml_volume->DoubleAttribute("sfx");
+			audio.voxvol = xml_volume->DoubleAttribute("vox");
+			audio.musvol = xml_volume->DoubleAttribute("mus");
+			audio.subtitles = xml_volume->IntAttribute("subs");
 		}
 
-		TiXmlElement *xml_device = xml_audio->FirstChildElement("Device");
+		XMLElement *xml_device = xml_audio->FirstChildElement("Device");
 		if (xml_device)
 		{
 			audio.deviceName = xml_device->Attribute("name");
 		}
 
-		TiXmlElement *xml_prebuf = xml_audio->FirstChildElement("Prebuffer");
+		XMLElement *xml_prebuf = xml_audio->FirstChildElement("Prebuffer");
 		if (xml_prebuf)
 		{
-			xml_prebuf->Attribute("on", &audio.prebuffer);
+			audio.prebuffer = xml_prebuf->IntAttribute("on");
 		}
 	}
-	TiXmlElement *xml_video = doc.FirstChildElement("Video");
+	XMLElement *xml_video = doc.FirstChildElement("Video");
 	if (xml_video)
 	{
 		readInt(xml_video, "Blur", "on", &video.blur);
@@ -440,7 +422,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		/*
 		readInt(xml_video, "Parallax", "on", &video.parallaxOn);
 		*/
-		TiXmlElement *xml_parallax = xml_video->FirstChildElement("Parallax");
+		XMLElement *xml_parallax = xml_video->FirstChildElement("Parallax");
 		if (xml_parallax)
 		{
 			if (xml_parallax->Attribute("on"))
@@ -452,18 +434,18 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 
 		readInt(xml_video, "NumParticles", "v", &video.numParticles);
 
-		TiXmlElement *xml_screenMode = xml_video->FirstChildElement("ScreenMode");
+		XMLElement *xml_screenMode = xml_video->FirstChildElement("ScreenMode");
 		if (xml_screenMode)
 		{
-			readIntAtt(xml_screenMode, "resx",				&video.resx);
-			readIntAtt(xml_screenMode, "resy",				&video.resy);
-			readIntAtt(xml_screenMode, "bits",				&video.bits);
-			readIntAtt(xml_screenMode, "fbuffer",			&video.fbuffer);
-			readIntAtt(xml_screenMode, "full",				&video.full);
-			readIntAtt(xml_screenMode, "vsync",				&video.vsync);
-			readIntAtt(xml_screenMode, "darkfbuffer",		&video.darkfbuffer);
-			readIntAtt(xml_screenMode, "darkbuffersize",	&video.darkbuffersize);
-			readIntAtt(xml_screenMode, "displaylists",		&video.displaylists);
+			xml_screenMode->QueryIntAttribute("resx",			&video.resx);
+			xml_screenMode->QueryIntAttribute("resy",			&video.resy);
+			xml_screenMode->QueryIntAttribute("bits",			&video.bits);
+			xml_screenMode->QueryIntAttribute("fbuffer",		&video.fbuffer);
+			xml_screenMode->QueryIntAttribute("full",			&video.full);
+			xml_screenMode->QueryIntAttribute("vsync",			&video.vsync);
+			xml_screenMode->QueryIntAttribute("darkfbuffer",	&video.darkfbuffer);
+			xml_screenMode->QueryIntAttribute("darkbuffersize",	&video.darkbuffersize);
+			xml_screenMode->QueryIntAttribute("displaylists",	&video.displaylists);
 		}
 
 		readInt(xml_video, "SaveSlotScreens", "on", &video.saveSlotScreens);
@@ -471,7 +453,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		readInt(xml_video, "WorldMap", "revealMethod", &video.worldMapRevealMethod);
 	}
 
-	TiXmlElement *xml_control = doc.FirstChildElement("Control");
+	XMLElement *xml_control = doc.FirstChildElement("Control");
 	if (xml_control)
 	{
 		readInt(xml_control, "JoystickEnabled", "on", &control.joystickEnabled);
@@ -480,30 +462,25 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 
 		readInt(xml_control, "Targeting", "on", &control.targeting);
 
-		TiXmlElement *xml_joyCursorSpeed = xml_control->FirstChildElement("JoyCursorSpeed");
+		XMLElement *xml_joyCursorSpeed = xml_control->FirstChildElement("JoyCursorSpeed");
 		if (xml_joyCursorSpeed)
-		{
-			double d;
-			if (xml_joyCursorSpeed->Attribute("v"))
-				xml_joyCursorSpeed->Attribute("v", &d), control.joyCursorSpeed = d;
-		}
+			xml_joyCursorSpeed->QueryFloatAttribute("v", &control.joyCursorSpeed);
 
-		TiXmlElement *xml_joyAxes = xml_control->FirstChildElement("JoyAxes");
+		XMLElement *xml_joyAxes = xml_control->FirstChildElement("JoyAxes");
 		if (xml_joyAxes)
 		{
-			xml_joyAxes->Attribute("s1ax", &control.s1ax);
-			xml_joyAxes->Attribute("s1ay", &control.s1ay);
-			xml_joyAxes->Attribute("s2ax", &control.s2ax);
-			xml_joyAxes->Attribute("s2ay", &control.s2ay);
-			double d;
-			xml_joyAxes->Attribute("s1dead", &d), control.s1dead = d;
-			xml_joyAxes->Attribute("s2dead", &d), control.s2dead = d;
+			control.s1ax = xml_joyAxes->IntAttribute("s1ax");
+			control.s1ay = xml_joyAxes->IntAttribute("s1ay");
+			control.s2ax = xml_joyAxes->IntAttribute("s2ax");
+			control.s2ay = xml_joyAxes->IntAttribute("s2ay");
+			control.s1dead = xml_joyAxes->DoubleAttribute("s1dead");
+			control.s2dead = xml_joyAxes->DoubleAttribute("s2dead");
 		}
 
-		TiXmlElement *xml_actionSet = xml_control->FirstChildElement("ActionSet");
+		XMLElement *xml_actionSet = xml_control->FirstChildElement("ActionSet");
 		if (xml_actionSet)
 		{
-			TiXmlElement *xml_action = 0;
+			XMLElement *xml_action = 0;
 			xml_action = xml_actionSet->FirstChildElement();
 			while (xml_action)
 			{
@@ -522,7 +499,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		readInt(xml_control, "ToolTipsOn", "on", &control.toolTipsOn);
 	}
 
-	TiXmlElement *xml_demo = doc.FirstChildElement("Demo");
+	XMLElement *xml_demo = doc.FirstChildElement("Demo");
 	if (xml_demo)
 	{
 		readInt(xml_demo, "WarpKeys", "on", &demo.warpKeys);
@@ -530,11 +507,11 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		readInt(xml_demo, "ShortLogos", "on", &demo.shortLogos);
 	}
 
-	TiXmlElement *xml_data = doc.FirstChildElement("Data");
+	XMLElement *xml_data = doc.FirstChildElement("Data");
 	if (xml_data)
 	{
-		readIntAtt(xml_data, "savePage", &data.savePage);
-		readIntAtt(xml_data, "saveSlot", &data.saveSlot);
+		xml_data->QueryIntAttribute("savePage", &data.savePage);
+		xml_data->QueryIntAttribute("saveSlot", &data.saveSlot);
 
 		if(const char *patchlist = xml_data->Attribute("activePatches"))
 		{
@@ -549,7 +526,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		}
 	}
 
-	TiXmlElement *xml_net = doc.FirstChildElement("Network");
+	XMLElement *xml_net = doc.FirstChildElement("Network");
 	if (xml_net)
 	{
 		const char *serv = xml_net->Attribute("masterServer");

@@ -2407,14 +2407,14 @@ bool Game::removeEntity(Entity *selected)
 {
 	selected->setState(Entity::STATE_DEAD);
 	selected->safeKill();
-	TiXmlElement *e = this->saveFile->FirstChildElement("Enemy");
+	XMLElement *e = this->saveFile->FirstChildElement("Enemy");
 	while (e)
 	{
 		int x = atoi(e->Attribute("x"));
 		int y = atoi(e->Attribute("y"));
 		if (int(selected->startPos.x) == x && int(selected->startPos.y) == y)
 		{
-			this->saveFile->RemoveChild(e);
+			this->saveFile->DeleteChild(e);
 			//delete e;
 			return true;
 		}
@@ -4197,12 +4197,15 @@ bool Game::loadSceneXML(std::string scene)
 		//errorLog("Could not find [" + fn + "]");
 		//msg("Could not find map [" + fn + "]");
 		std::string s = "Could not find map [" + fn + "]";
-		debugLog(s);
 		dsq->screenMessage(s);
 		return false;
 	}
-	TiXmlDocument doc;
-	doc.LoadFile(fn);
+	XMLDocument doc;
+	if(readXML(fn, doc) != XML_SUCCESS)
+	{
+		dsq->screenMessage("Could not load scene [" + fn + "] - Malformed XML");
+		return false;
+	}
 	if (saveFile)
 	{
 		delete saveFile;
@@ -4210,14 +4213,14 @@ bool Game::loadSceneXML(std::string scene)
 	}
 	if (!saveFile)
 	{
-		saveFile = new TiXmlDocument();
+		saveFile = new XMLDocument();
 	}
 
 	addProgress();
 
 	clearObsRows();
 	warpAreas.clear();
-	TiXmlElement *lensFlare = doc.FirstChildElement("LensFlare");
+	XMLElement *lensFlare = doc.FirstChildElement("LensFlare");
 	while (lensFlare)
 	{
 		LensFlare *l = new LensFlare;
@@ -4244,33 +4247,33 @@ bool Game::loadSceneXML(std::string scene)
 		l->position = Vector(atoi(lensFlare->Attribute("x")),atoi(lensFlare->Attribute("y")));
 		addRenderObject(l, LR_LIGHTING);
 
-		TiXmlElement lSF("LensFlare");
-		lSF.SetAttribute("inc", lensFlare->Attribute("inc"));
-		lSF.SetAttribute("x", lensFlare->Attribute("x"));
-		lSF.SetAttribute("y", lensFlare->Attribute("y"));
-		lSF.SetAttribute("tex", lensFlare->Attribute("tex"));
-		lSF.SetAttribute("w", lensFlare->Attribute("w"));
-		lSF.SetAttribute("h", lensFlare->Attribute("h"));
-		lSF.SetAttribute("maxLen", lensFlare->Attribute("maxLen"));
+		XMLElement *lSF = saveFile->NewElement("LensFlare");
+		lSF->SetAttribute("inc", lensFlare->Attribute("inc"));
+		lSF->SetAttribute("x", lensFlare->Attribute("x"));
+		lSF->SetAttribute("y", lensFlare->Attribute("y"));
+		lSF->SetAttribute("tex", lensFlare->Attribute("tex"));
+		lSF->SetAttribute("w", lensFlare->Attribute("w"));
+		lSF->SetAttribute("h", lensFlare->Attribute("h"));
+		lSF->SetAttribute("maxLen", lensFlare->Attribute("maxLen"));
 		saveFile->InsertEndChild(lSF);
 
 		lensFlare = lensFlare->NextSiblingElement("LensFlare");
 	}
-	TiXmlElement *level = doc.FirstChildElement("Level");
+	XMLElement *level = doc.FirstChildElement("Level");
 	if (level)
 	{
-		TiXmlElement levelSF("Level");
+		XMLElement *levelSF = saveFile->NewElement("Level");
 		if (level->Attribute("tileset"))
 		{
 			elementTemplatePack = level->Attribute("tileset");
 			loadElementTemplates(elementTemplatePack);
-			levelSF.SetAttribute("tileset", elementTemplatePack);
+			levelSF->SetAttribute("tileset", elementTemplatePack.c_str());
 		}
 		else if (level->Attribute("elementTemplatePack"))
 		{
 			elementTemplatePack = level->Attribute("elementTemplatePack");
 			loadElementTemplates(elementTemplatePack);
-			levelSF.SetAttribute("tileset", elementTemplatePack);
+			levelSF->SetAttribute("tileset", elementTemplatePack.c_str());
 		}
 		else
 			return false;
@@ -4280,28 +4283,28 @@ bool Game::loadSceneXML(std::string scene)
 			useWaterLevel = true;
 			waterLevel = atoi(level->Attribute("waterLevel"));
 			saveWaterLevel = atoi(level->Attribute("waterLevel"));
-			levelSF.SetAttribute("waterLevel", waterLevel.x);
+			levelSF->SetAttribute("waterLevel", waterLevel.x);
 		}
 		if (level->Attribute("worldMapIndex"))
 		{
 			worldMapIndex = atoi(level->Attribute("worldMapIndex"));
-			levelSF.SetAttribute("worldMapIndex", worldMapIndex);
+			levelSF->SetAttribute("worldMapIndex", worldMapIndex);
 		}
 
 		if (level->Attribute("bgSfxLoop"))
 		{
 			bgSfxLoop = level->Attribute("bgSfxLoop");
-			levelSF.SetAttribute("bgSfxLoop", bgSfxLoop);
+			levelSF->SetAttribute("bgSfxLoop", bgSfxLoop.c_str());
 		}
 		if (level->Attribute("airSfxLoop"))
 		{
 			airSfxLoop = level->Attribute("airSfxLoop");
-			levelSF.SetAttribute("airSfxLoop", airSfxLoop);
+			levelSF->SetAttribute("airSfxLoop", airSfxLoop.c_str());
 		}
 		if (level->Attribute("bnat"))
 		{
 			bNatural = atoi(level->Attribute("bnat"));
-			levelSF.SetAttribute("bnat", 1);
+			levelSF->SetAttribute("bnat", 1);
 		}
 		else
 		{
@@ -4313,7 +4316,7 @@ bool Game::loadSceneXML(std::string scene)
 		{
 			int v = (atoi(level->Attribute("darkLayer")));
 
-			levelSF.SetAttribute("darkLayer", v);
+			levelSF->SetAttribute("darkLayer", v);
 		}
 		*/
 		dsq->darkLayer.toggle(true);
@@ -4322,13 +4325,13 @@ bool Game::loadSceneXML(std::string scene)
 		{
 			SimpleIStringStream is(level->Attribute("bgRepeat"));
 			is >> backgroundImageRepeat;
-			levelSF.SetAttribute("bgRepeat", level->Attribute("bgRepeat"));
+			levelSF->SetAttribute("bgRepeat", level->Attribute("bgRepeat"));
 		}
 		if (level->Attribute("cameraConstrained"))
 		{
 			SimpleIStringStream is(level->Attribute("cameraConstrained"));
 			is >> cameraConstrained;
-			levelSF.SetAttribute("cameraConstrained", cameraConstrained);
+			levelSF->SetAttribute("cameraConstrained", cameraConstrained);
 			std::ostringstream os;
 			os << "cameraConstrained: " << cameraConstrained;
 			debugLog(os.str());
@@ -4338,12 +4341,12 @@ bool Game::loadSceneXML(std::string scene)
 			maxZoom = atof(level->Attribute("maxZoom"));
 			std::ostringstream os;
 			os << maxZoom;
-			levelSF.SetAttribute("maxZoom", os.str());
+			levelSF->SetAttribute("maxZoom", os.str().c_str());
 		}
 		if (level->Attribute("natureForm"))
 		{
 			sceneNatureForm = level->Attribute("natureForm");
-			levelSF.SetAttribute("natureForm", sceneNatureForm);
+			levelSF->SetAttribute("natureForm", sceneNatureForm.c_str());
 		}
 		if (level->Attribute("bg"))
 		{
@@ -4359,7 +4362,7 @@ bool Game::loadSceneXML(std::string scene)
 
 				bg->setTexture(tex);
 				bg->setWidthHeight(900,600);
-				levelSF.SetAttribute("bg", tex);
+				levelSF->SetAttribute("bg", tex.c_str());
 			}
 			else
 			{
@@ -4378,16 +4381,16 @@ bool Game::loadSceneXML(std::string scene)
 			{
 				SimpleIStringStream is(level->Attribute("gradTop"));
 				is >> gradTop.x >> gradTop.y >> gradTop.z;
-				levelSF.SetAttribute("gradTop", level->Attribute("gradTop"));
+				levelSF->SetAttribute("gradTop", level->Attribute("gradTop"));
 			}
 			if (level->Attribute("gradBtm"))
 			{
 				SimpleIStringStream is(level->Attribute("gradBtm"));
 				is >> gradBtm.x >> gradBtm.y >> gradBtm.z;
-				levelSF.SetAttribute("gradBtm", level->Attribute("gradBtm"));
+				levelSF->SetAttribute("gradBtm", level->Attribute("gradBtm"));
 			}
 			createGradient();
-			levelSF.SetAttribute("gradient", 1);
+			levelSF->SetAttribute("gradient", 1);
 		}
 
 		if (level->Attribute("parallax"))
@@ -4412,7 +4415,7 @@ bool Game::loadSceneXML(std::string scene)
 			l->followCamera = g;
 			l = &dsq->renderObjectLayers[LR_ELEMENTS16];
 			l->followCamera = b;
-			levelSF.SetAttribute("parallax", level->Attribute("parallax"));
+			levelSF->SetAttribute("parallax", level->Attribute("parallax"));
 		}
 
 		if (level->Attribute("parallaxLock"))
@@ -4435,7 +4438,7 @@ bool Game::loadSceneXML(std::string scene)
 			l = &dsq->renderObjectLayers[LR_ELEMENTS16];
 			l->followCameraLock = b;
 
-			levelSF.SetAttribute("parallaxLock", level->Attribute("parallaxLock"));
+			levelSF->SetAttribute("parallaxLock", level->Attribute("parallaxLock"));
 		}
 
 		if (level->Attribute("bg2"))
@@ -4452,7 +4455,7 @@ bool Game::loadSceneXML(std::string scene)
 				*/
 				bg2->setTexture(tex);
 				bg2->setWidthHeight(900,600);
-				levelSF.SetAttribute("bg2", tex);
+				levelSF->SetAttribute("bg2", tex.c_str());
 
 			}
 			else
@@ -4480,16 +4483,16 @@ bool Game::loadSceneXML(std::string scene)
 				int x = atoi(level->Attribute("bd-x"));
 				int y = atoi(level->Attribute("bd-y"));
 				backdropQuad->position = Vector(x,y);
-				levelSF.SetAttribute("bd-x", x);
-				levelSF.SetAttribute("bd-y", y);
+				levelSF->SetAttribute("bd-x", x);
+				levelSF->SetAttribute("bd-y", y);
 			}
 			if (level->Attribute("bd-w") && level->Attribute("bd-h"))
 			{
 				int w = atoi(level->Attribute("bd-w"));
 				int h = atoi(level->Attribute("bd-h"));
 				backdropQuad->setWidthHeight(w, h);
-				levelSF.SetAttribute("bd-w", w);
-				levelSF.SetAttribute("bd-h", h);
+				levelSF->SetAttribute("bd-w", w);
+				levelSF->SetAttribute("bd-h", h);
 			}
 			backdropQuad->toggleCull(false);
 			//backdropQuad->followCamera = 1;
@@ -4500,7 +4503,7 @@ bool Game::loadSceneXML(std::string scene)
 				Vector((backdropQuad->getWidth()*backdropQuad->scale.x)/2.0f,
 				(backdropQuad->getHeight()*backdropQuad->scale.y)/2.0f);
 			// save
-			levelSF.SetAttribute("backdrop", backdrop.c_str());
+			levelSF->SetAttribute("backdrop", backdrop.c_str());
 			//backdrop="cavebg" bd-w="2400" bd-h="2400"
 		}
 		musicToPlay = "";
@@ -4508,7 +4511,7 @@ bool Game::loadSceneXML(std::string scene)
 		{
 			setMusicToPlay(level->Attribute("music"));
 			saveMusic = level->Attribute("music");
-			levelSF.SetAttribute("music", level->Attribute("music"));
+			levelSF->SetAttribute("music", level->Attribute("music"));
 			/*
 			// if using SDL_Mixer
 			if (!core->sound->isPlayingMusic(musicToPlay))
@@ -4521,7 +4524,7 @@ bool Game::loadSceneXML(std::string scene)
 		{
 			SimpleIStringStream in(level->Attribute("sceneColor"));
 			in >> sceneColor.x >> sceneColor.y >> sceneColor.z;
-			levelSF.SetAttribute("sceneColor", level->Attribute("sceneColor"));
+			levelSF->SetAttribute("sceneColor", level->Attribute("sceneColor"));
 		}
 
 		saveFile->InsertEndChild(levelSF);
@@ -4529,7 +4532,7 @@ bool Game::loadSceneXML(std::string scene)
 	else
 		return false;
 
-	TiXmlElement *obs = doc.FirstChildElement("Obs");
+	XMLElement *obs = doc.FirstChildElement("Obs");
 	if (obs)
 	{
 		int tx, ty, len;
@@ -4542,7 +4545,7 @@ bool Game::loadSceneXML(std::string scene)
 		addProgress();
 	}
 
-	TiXmlElement *pathXml = doc.FirstChildElement("Path");
+	XMLElement *pathXml = doc.FirstChildElement("Path");
 	while (pathXml)
 	{
 		Path *path = new Path;
@@ -4554,7 +4557,7 @@ bool Game::loadSceneXML(std::string scene)
 			path.active = atoi(pathXml->Attribute("active"));
 		}
 		*/
-		TiXmlElement *nodeXml = pathXml->FirstChildElement("Node");
+		XMLElement *nodeXml = pathXml->FirstChildElement("Node");
 		while (nodeXml)
 		{
 			PathNode node;
@@ -4589,27 +4592,27 @@ bool Game::loadSceneXML(std::string scene)
 		pathXml = pathXml->NextSiblingElement("Path");
 	}
 
-	TiXmlElement *quad = doc.FirstChildElement("Quad");
+	XMLElement *quad = doc.FirstChildElement("Quad");
 	while (quad)
 	{
-		TiXmlElement qSF("Quad");
+		XMLElement *qSF = saveFile->NewElement("Quad");
 		int x=0, y=0, z=0;
 		int w=0,h=0;
 		bool cull=true;
 		bool solid = false;
 		std::string justify;
 		std::string tex;
-		qSF.SetAttribute("x", x = atoi(quad->Attribute("x")));
-		qSF.SetAttribute("y", y = atoi(quad->Attribute("y")));
-		//qSF.SetAttribute("z", z = atoi(quad->Attribute("z")));
-		qSF.SetAttribute("w", w = atoi(quad->Attribute("w")));
-		qSF.SetAttribute("h", h = atoi(quad->Attribute("h")));
-		qSF.SetAttribute("tex", tex = (quad->Attribute("tex")));
-		qSF.SetAttribute("cull", cull = atoi(quad->Attribute("cull")));
-		qSF.SetAttribute("justify", justify = (quad->Attribute("justify")));
+		qSF->SetAttribute("x", x = atoi(quad->Attribute("x")));
+		qSF->SetAttribute("y", y = atoi(quad->Attribute("y")));
+		//qSF->SetAttribute("z", z = atoi(quad->Attribute("z")));
+		qSF->SetAttribute("w", w = atoi(quad->Attribute("w")));
+		qSF->SetAttribute("h", h = atoi(quad->Attribute("h")));
+		qSF->SetAttribute("tex", (tex = (quad->Attribute("tex"))).c_str());
+		qSF->SetAttribute("cull", cull = atoi(quad->Attribute("cull")));
+		qSF->SetAttribute("justify", (justify = (quad->Attribute("justify"))).c_str());
 
 		if (quad->Attribute("solid"))
-			qSF.SetAttribute("solid", solid = atoi(quad->Attribute("solid")));
+			qSF->SetAttribute("solid", solid = atoi(quad->Attribute("solid")));
 
 		Quad *q = new Quad;
 		q->position = Vector(x,y,z);
@@ -4636,25 +4639,23 @@ bool Game::loadSceneXML(std::string scene)
 		quad = quad->NextSiblingElement("Quad");
 	}
 
-	TiXmlElement *floater = doc.FirstChildElement("Floater");
+	XMLElement *floater = doc.FirstChildElement("Floater");
 	while(floater)
 	{
-		TiXmlElement nSF("Floater");
+		XMLElement *nSF = doc.NewElement("Floater");
 		if (!floater->Attribute("boxW") || !floater->Attribute("boxH"))
 		{
 			errorLog ("no boxW/boxH");
 			break;
 		}
 		int boxW, boxH, x, y, fx, fy;
-		std::string tex;
-		nSF.SetAttribute("boxW", boxW = atoi(floater->Attribute("boxW")));
-		nSF.SetAttribute("boxH", boxH = atoi(floater->Attribute("boxH")));
-		tex = floater->Attribute("tex");
-		nSF.SetAttribute("tex", tex);
-		nSF.SetAttribute("x", x = atoi(floater->Attribute("x")));
-		nSF.SetAttribute("y", y = atoi(floater->Attribute("y")));
-		nSF.SetAttribute("fx", fx = atoi(floater->Attribute("fx")));
-		nSF.SetAttribute("fy", fy = atoi(floater->Attribute("fy")));
+		nSF->SetAttribute("boxW", boxW = atoi(floater->Attribute("boxW")));
+		nSF->SetAttribute("boxH", boxH = atoi(floater->Attribute("boxH")));
+		nSF->SetAttribute("tex", floater->Attribute("tex"));
+		nSF->SetAttribute("x", x = atoi(floater->Attribute("x")));
+		nSF->SetAttribute("y", y = atoi(floater->Attribute("y")));
+		nSF->SetAttribute("fx", fx = atoi(floater->Attribute("fx")));
+		nSF->SetAttribute("fy", fy = atoi(floater->Attribute("fy")));
 
 		/*
 		Floater *f = new Floater(Vector(x,y), Vector(fx, fy), boxW, boxH, tex);
@@ -4668,10 +4669,10 @@ bool Game::loadSceneXML(std::string scene)
 	}
 
 	/*
-	TiXmlElement *breakable = doc.FirstChildElement("Breakable");
+	XMLElement *breakable = doc.FirstChildElement("Breakable");
 	while(breakable)
 	{
-		TiXmlElement nSF("Breakable");
+		XMLElement *nSF = doc.NewElement("Breakable");
 		if (!breakable->Attribute("boxW") || !breakable->Attribute("boxH"))
 		{
 			errorLog ("Breakable error.. no boxW/boxH");
@@ -4679,19 +4680,19 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		int boxW, boxH;
 		std::string tex;
-		nSF.SetAttribute("boxW", boxW = atoi(breakable->Attribute("boxW")));
-		nSF.SetAttribute("boxH", boxH = atoi(breakable->Attribute("boxH")));
+		nSF->SetAttribute("boxW", boxW = atoi(breakable->Attribute("boxW")));
+		nSF->SetAttribute("boxH", boxH = atoi(breakable->Attribute("boxH")));
 		tex = breakable->Attribute("tex");
-		nSF.SetAttribute("tex", tex);
+		nSF->SetAttribute("tex", tex);
 		Breakable *n = new Breakable(boxW, boxH, tex);
 		{
-			nSF.SetAttribute("x", n->position.x = atoi(breakable->Attribute("x")));
-			nSF.SetAttribute("y", n->position.y = atoi(breakable->Attribute("y")));
+			nSF->SetAttribute("x", n->position.x = atoi(breakable->Attribute("x")));
+			nSF->SetAttribute("y", n->position.y = atoi(breakable->Attribute("y")));
 			int w=0, h=0;
 			if (breakable->Attribute("w"))
-				nSF.SetAttribute("w", w = atoi(breakable->Attribute("w")));
+				nSF->SetAttribute("w", w = atoi(breakable->Attribute("w")));
 			if (breakable->Attribute("h"))
-				nSF.SetAttribute("h", h= atoi(breakable->Attribute("h")));
+				nSF->SetAttribute("h", h= atoi(breakable->Attribute("h")));
 			if (w != 0 && h != 0)
 			{
 				n->setWidthHeight(w, h);
@@ -4703,31 +4704,31 @@ bool Game::loadSceneXML(std::string scene)
 	}
 	*/
 
-	TiXmlElement *warpArea = doc.FirstChildElement("WarpArea");
+	XMLElement *warpArea = doc.FirstChildElement("WarpArea");
 	while(warpArea)
 	{
-		TiXmlElement waSF("WarpArea");
+		XMLElement *waSF = doc.NewElement("WarpArea");
 		WarpArea a;
-		waSF.SetAttribute("x", a.position.x = atoi(warpArea->Attribute("x")));
-		waSF.SetAttribute("y", a.position.y = atoi(warpArea->Attribute("y")));
+		waSF->SetAttribute("x", a.position.x = atoi(warpArea->Attribute("x")));
+		waSF->SetAttribute("y", a.position.y = atoi(warpArea->Attribute("y")));
 		if (warpArea->Attribute("radius"))
-			waSF.SetAttribute("radius", a.radius = atoi(warpArea->Attribute("radius")));
+			waSF->SetAttribute("radius", a.radius = atoi(warpArea->Attribute("radius")));
 		bool isRect = false;
 		if (warpArea->Attribute("w"))
 		{
 			isRect = true;
-			waSF.SetAttribute("w", a.w = atoi(warpArea->Attribute("w")));
-			waSF.SetAttribute("h", a.h = atoi(warpArea->Attribute("h")));
+			waSF->SetAttribute("w", a.w = atoi(warpArea->Attribute("w")));
+			waSF->SetAttribute("h", a.h = atoi(warpArea->Attribute("h")));
 		}
 		if (warpArea->Attribute("g"))
 		{
-			waSF.SetAttribute("g", a.generated = atoi(warpArea->Attribute("g")));
+			waSF->SetAttribute("g", a.generated = atoi(warpArea->Attribute("g")));
 		}
 		std::string sceneString = warpArea->Attribute("scene");
-		waSF.SetAttribute("scene", sceneString.c_str());
+		waSF->SetAttribute("scene", sceneString.c_str());
 		/*
-		waSF.SetAttribute("ax", a.avatarPosition.x = atoi(warpArea->Attribute("ax")));
-		waSF.SetAttribute("ay", a.avatarPosition.y = atoi(warpArea->Attribute("ay")));
+		waSF->SetAttribute("ax", a.avatarPosition.x = atoi(warpArea->Attribute("ax")));
+		waSF->SetAttribute("ay", a.avatarPosition.y = atoi(warpArea->Attribute("ay")));
 		*/
 
 		SimpleIStringStream is(sceneString);
@@ -4757,7 +4758,7 @@ bool Game::loadSceneXML(std::string scene)
 		warpArea = warpArea->NextSiblingElement("WarpArea");
 	}
 
-	TiXmlElement *schoolFish = doc.FirstChildElement("SchoolFish");
+	XMLElement *schoolFish = doc.FirstChildElement("SchoolFish");
 	while(schoolFish)
 	{
 		int num = atoi(schoolFish->Attribute("num"));
@@ -4854,27 +4855,27 @@ bool Game::loadSceneXML(std::string scene)
 
 		schoolFish = schoolFish->NextSiblingElement("SchoolFish");
 
-		TiXmlElement newSF("SchoolFish");
-		newSF.SetAttribute("x", x);
-		newSF.SetAttribute("y", y);
-		newSF.SetAttribute("id", id);
-		newSF.SetAttribute("num", num);
+		XMLElement *newSF = saveFile->NewElement("SchoolFish");
+		newSF->SetAttribute("x", x);
+		newSF->SetAttribute("y", y);
+		newSF->SetAttribute("id", id);
+		newSF->SetAttribute("num", num);
 
 		if (range != 0)
-			newSF.SetAttribute("range", range);
+			newSF->SetAttribute("range", range);
 		if (maxSpeed != 0)
-			newSF.SetAttribute("maxSpeed", maxSpeed);
+			newSF->SetAttribute("maxSpeed", maxSpeed);
 		if (layer != 0)
-			newSF.SetAttribute("layer", layer);
+			newSF->SetAttribute("layer", layer);
 		if (!gfx.empty())
-			newSF.SetAttribute("gfx", gfx.c_str());
+			newSF->SetAttribute("gfx", gfx.c_str());
 		if (size != 1)
-			newSF.SetAttribute("size", size);
+			newSF->SetAttribute("size", size);
 
 		saveFile->InsertEndChild(newSF);
 	}
 	/*
-	TiXmlElement *boxElement = doc.FirstChildElement("BoxElement");
+	XMLElement *boxElement = doc.FirstChildElement("BoxElement");
 	while (boxElement)
 	{
 		BoxElement *b = new BoxElement(atoi(boxElement->Attribute("w")), atoi(boxElement->Attribute("h")));
@@ -4885,11 +4886,14 @@ bool Game::loadSceneXML(std::string scene)
 		boxElement = boxElement->NextSiblingElement("BoxElement");
 	}
 	*/
-	TiXmlElement *simpleElements = doc.FirstChildElement("SE");
+	std::vector<Element*> loadedElements;
+	loadedElements.reserve(200);
+	XMLElement *simpleElements = doc.FirstChildElement("SE");
 	while (simpleElements)
 	{
 		int idx, x, y, rot;
 		float sz,sz2;
+		loadedElements.clear();
 		if (simpleElements->Attribute("d"))
 		{
 			SimpleIStringStream is(simpleElements->Attribute("d"));
@@ -4898,6 +4902,7 @@ bool Game::loadSceneXML(std::string scene)
 				is >> x >> y >> rot;
 				Element *e = createElement(idx, Vector(x,y), 4);
 				e->rotation.z = rot;
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("e"))
@@ -4909,6 +4914,7 @@ bool Game::loadSceneXML(std::string scene)
 				is2 >> x >> y >> rot;
 				Element *e = createElement(idx, Vector(x,y), l);
 				e->rotation.z = rot;
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("f"))
@@ -4921,6 +4927,7 @@ bool Game::loadSceneXML(std::string scene)
 				Element *e = createElement(idx, Vector(x,y), l);
 				e->scale = Vector(sz,sz);
 				e->rotation.z = rot;
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("g"))
@@ -4938,6 +4945,7 @@ bool Game::loadSceneXML(std::string scene)
 					e->flipVertical();
 				e->scale = Vector(sz,sz);
 				e->rotation.z = rot;
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("h"))
@@ -4959,6 +4967,7 @@ bool Game::loadSceneXML(std::string scene)
 					e->flipVertical();
 				e->scale = Vector(sz,sz);
 				e->rotation.z = rot;
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("i"))
@@ -4983,6 +4992,7 @@ bool Game::loadSceneXML(std::string scene)
 				e->scale = Vector(sz,sz);
 				e->rotation.z = rot;
 				e->setElementEffectByIndex(efxIdx);
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("j"))
@@ -5010,6 +5020,7 @@ bool Game::loadSceneXML(std::string scene)
 				e->setElementEffectByIndex(efxIdx);
 				if (repeat)
 					e->repeatTextureToFill(true);
+				loadedElements.push_back(e);
 			}
 		}
 		if (simpleElements->Attribute("k"))
@@ -5047,12 +5058,31 @@ bool Game::loadSceneXML(std::string scene)
 					c=0;
 					addProgress();
 				}
+
+				loadedElements.push_back(e);
+			}
+		}
+		if (simpleElements->Attribute("repeatScale"))
+		{
+			SimpleIStringStream is2(simpleElements->Attribute("repeatScale"));
+			for(size_t i = 0; i < loadedElements.size(); ++i)
+			{
+				Element *e = loadedElements[i];
+				if(e->isRepeatingTextureToFill())
+				{
+					float repeatScaleX = 1, repeatScaleY = 1;
+					if(!(is2 >> repeatScaleX >> repeatScaleY))
+						break;
+					e->repeatToFillScale.x = repeatScaleX;
+					e->repeatToFillScale.y = repeatScaleY;
+					e->refreshRepeatTextureToFill();
+				}
 			}
 		}
 		simpleElements = simpleElements->NextSiblingElement("SE");
 	}
 
-	TiXmlElement *element = doc.FirstChildElement("Element");
+	XMLElement *element = doc.FirstChildElement("Element");
 	while (element)
 	{
 		if (element->Attribute("idx"))
@@ -5099,7 +5129,7 @@ bool Game::loadSceneXML(std::string scene)
 	this->reconstructGrid(true);
 
 	/*
-	TiXmlElement *enemyNode = doc.FirstChildElement("Enemy");
+	XMLElement *enemyNode = doc.FirstChildElement("Enemy");
 	while(enemyNode)
 	{
 		Vector pos;
@@ -5119,7 +5149,7 @@ bool Game::loadSceneXML(std::string scene)
 		enemyNode = enemyNode->NextSiblingElement("Enemy");
 	}
 	*/
-	TiXmlElement *entitiesNode = doc.FirstChildElement("Entities");
+	XMLElement *entitiesNode = doc.FirstChildElement("Entities");
 	while(entitiesNode)
 	{
 		if (entitiesNode->Attribute("j"))
@@ -5307,16 +5337,27 @@ bool Game::saveScene(std::string scene)
 
 	std::string fn = getSceneFilename(scene);
 
-	TiXmlDocument saveFile(*this->saveFile);
-	//this->saveFile->CopyTo(&saveFile);
-	TiXmlElement *level = saveFile.FirstChildElement("Level");
+	XMLDocument saveFile;
 
-	TiXmlElement levelLocal("Level");
-	bool addIt = false;
-	if (!level)
+	// hackish: Deep-clone XML doc
 	{
-		level = &levelLocal;
-		addIt = true;
+		XMLPrinter printer;
+		this->saveFile->Print(&printer);
+
+		XMLError xmlerr = saveFile.Parse(printer.CStr(), printer.CStrSize());
+		if(xmlerr != XML_SUCCESS)
+		{
+			std::ostringstream os;
+			os << "Game::saveScene(): Whoops? Deep cloning level XML failed: Error " << xmlerr;
+			errorLog(os.str());
+		}
+	}
+
+	XMLElement *level = saveFile.FirstChildElement("Level");
+	if(!level)
+	{
+		level = saveFile.NewElement("Level");
+		saveFile.InsertFirstChild(level);
 	}
 
 	if (level)
@@ -5329,36 +5370,31 @@ bool Game::saveScene(std::string scene)
 
 			std::ostringstream os;
 			os << gradTop.x << " " << gradTop.y << " " << gradTop.z;
-			level->SetAttribute("gradTop", os.str());
+			level->SetAttribute("gradTop", os.str().c_str());
 
 			std::ostringstream os2;
 			os2 << gradBtm.x << " " << gradBtm.y << " " << gradBtm.z;
-			level->SetAttribute("gradBtm", os2.str());
+			level->SetAttribute("gradBtm", os2.str().c_str());
 
 		}
 
 		if (!saveMusic.empty())
 		{
-			level->SetAttribute("music", saveMusic);
+			level->SetAttribute("music", saveMusic.c_str());
 		}
 	}
 
-	if (addIt)
-	{
-		saveFile.InsertEndChild(levelLocal);
-	}
-
 	/*
-	TiXmlElement level("Level");
-	level.SetAttribute("elementTemplatePack", elementTemplatePack);
+	XMLElement *level = doc.NewElement("Level");
+	level->SetAttribute("elementTemplatePack", elementTemplatePack);
 	if (bg)
 	{
 		int pos = bg->texture->name.find_last_of('/')+1;
 		int pos2 = bg->texture->name.find_last_of('.');
-		level.SetAttribute("bg", bg->texture->name.substr(pos, pos2-pos));
+		level->SetAttribute("bg", bg->texture->name.substr(pos, pos2-pos));
 		std::ostringstream os;
 		os << sceneColor.x << " " << sceneColor.y << " " << sceneColor.z;
-		level.SetAttribute("sceneColor", os.str());
+		level->SetAttribute("sceneColor", os.str());
 	}
 	saveFile->InsertEndChild(level);
 	*/
@@ -5369,32 +5405,32 @@ bool Game::saveScene(std::string scene)
 	{
 		obs << obsRows[i].tx << " " << obsRows[i].ty << " " << obsRows[i].len << " ";
 	}
-	TiXmlElement obsXml("Obs");
-	obsXml.SetAttribute("d", obs.str());
+	XMLElement *obsXml = saveFile.NewElement("Obs");
+	obsXml->SetAttribute("d", obs.str().c_str());
 	saveFile.InsertEndChild(obsXml);
 
 
 	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
-		TiXmlElement pathXml("Path");
+		XMLElement *pathXml = saveFile.NewElement("Path");
 		Path *p = dsq->game->getPath(i);
-		pathXml.SetAttribute("name", p->name);
-		//pathXml.SetAttribute("active", p->active);
+		pathXml->SetAttribute("name", p->name.c_str());
+		//pathXml->SetAttribute("active", p->active);
 		for (int n = 0; n < p->nodes.size(); n++)
 		{
-			TiXmlElement nodeXml("Node");
+			XMLElement *nodeXml = saveFile.NewElement("Node");
 			std::ostringstream os;
 			os << int(p->nodes[n].position.x) << " " << int(p->nodes[n].position.y);
-			nodeXml.SetAttribute("pos", os.str().c_str());
+			nodeXml->SetAttribute("pos", os.str().c_str());
 			std::ostringstream os2;
 			os2 << p->rect.getWidth() << " " << p->rect.getHeight();
-			nodeXml.SetAttribute("rect", os2.str().c_str());
-			nodeXml.SetAttribute("shape", (int)p->pathShape);
+			nodeXml->SetAttribute("rect", os2.str().c_str());
+			nodeXml->SetAttribute("shape", (int)p->pathShape);
 			if (p->nodes[n].maxSpeed != -1)
 			{
-				nodeXml.SetAttribute("ms", p->nodes[n].maxSpeed);
+				nodeXml->SetAttribute("ms", p->nodes[n].maxSpeed);
 			}
-			pathXml.InsertEndChild(nodeXml);
+			pathXml->InsertEndChild(nodeXml);
 		}
 		saveFile.InsertEndChild(pathXml);
 	}
@@ -5402,39 +5438,58 @@ bool Game::saveScene(std::string scene)
 	for (i = 0; i < dsq->game->warpAreas.size(); i++)
 	{
 		WarpArea a = dsq->game->warpAreas[i];
-		TiXmlElement waSF("WarpArea");
-		waSF.SetAttribute("x", a.position.x);
-		waSF.SetAttribute("y", a.position.y);
+		XMLElement *waSF = saveFile.NewElement("WarpArea");
+		waSF->SetAttribute("x", a.position.x);
+		waSF->SetAttribute("y", a.position.y);
 		if (a.radius > 0)
-			waSF.SetAttribute("radius", a.radius);
+			waSF->SetAttribute("radius", a.radius);
 		else if (a.w > 0 && a.h > 0)
 		{
-			waSF.SetAttribute("w", a.w);
-			waSF.SetAttribute("h", a.h);
+			waSF->SetAttribute("w", a.w);
+			waSF->SetAttribute("h", a.h);
 		}
 		if (a.generated)
 		{
-			waSF.SetAttribute("g", 1);
+			waSF->SetAttribute("g", 1);
 		}
 		std::ostringstream os;
 		os << a.sceneName << " " << a.warpAreaType << " " << a.spawnOffset.x << " " << a.spawnOffset.y;
-		waSF.SetAttribute("scene", os.str().c_str());
+		waSF->SetAttribute("scene", os.str().c_str());
 
 		saveFile.InsertEndChild(waSF);
 	}
 
 	std::ostringstream simpleElements[LR_MAX];
+	std::ostringstream simpleElements_repeatScale[LR_MAX];
 
 
 	for (i = 0; i < dsq->getNumElements(); i++)
 	{
 		Element *e = dsq->getElement(i);
-		simpleElements[e->bgLayer] << e->templateIdx << " " << int(e->position.x) << " " << int(e->position.y) << " " << int(e->rotation.z) << " " << e->scale.x << " " << e->scale.y << " " << int(e->isfh()) << " " << int(e->isfv()) << " " << e->elementFlag << " " << e->getElementEffectIndex() << " " << e->isRepeatingTextureToFill() << " ";
+		std::ostringstream& SE = simpleElements[e->bgLayer];
+		SE << e->templateIdx << " "
+		   << int(e->position.x) << " "
+		   << int(e->position.y) << " "
+		   << int(e->rotation.z) << " "
+		   << e->scale.x << " "
+		   << e->scale.y << " "
+		   << int(e->isfh()) << " "
+		   << int(e->isfv()) << " "
+		   << e->elementFlag << " "
+		   << e->getElementEffectIndex()<< " "
+		   << e->isRepeatingTextureToFill() << " ";
+
+		if(e->isRepeatingTextureToFill())
+		{
+			std::ostringstream& SE_rs = simpleElements_repeatScale[e->bgLayer];
+			SE_rs << e->repeatToFillScale.x << " "
+			      << e->repeatToFillScale.y << " ";
+		}
 	}
 
 	if (dsq->game->entitySaveData.size() > 0)
 	{
-		TiXmlElement entitiesNode("Entities");
+		XMLElement *entitiesNode = saveFile.NewElement("Entities");
 
 		std::ostringstream os;
 		for (int i = 0; i < dsq->game->entitySaveData.size(); i++)
@@ -5452,7 +5507,7 @@ bool Game::saveScene(std::string scene)
 			// group ID no longer used
 			os << e->x << " " << e->y << " " << e->rot << " " << 0 << " " << e->id << " ";
 		}
-		entitiesNode.SetAttribute("j", os.str());
+		entitiesNode->SetAttribute("j", os.str().c_str());
 		saveFile.InsertEndChild(entitiesNode);
 	}
 
@@ -5461,9 +5516,12 @@ bool Game::saveScene(std::string scene)
 		std::string s = simpleElements[i].str();
 		if (!s.empty())
 		{
-			TiXmlElement simpleElementsXML("SE");
-			simpleElementsXML.SetAttribute("k", s.c_str());
-			simpleElementsXML.SetAttribute("l", i);
+			XMLElement *simpleElementsXML = saveFile.NewElement("SE");
+			simpleElementsXML->SetAttribute("k", s.c_str());
+			simpleElementsXML->SetAttribute("l", i);
+			std::string repeatScaleStr = simpleElements_repeatScale[i].str();
+			if(!repeatScaleStr.empty())
+				simpleElementsXML->SetAttribute("repeatScale", repeatScaleStr.c_str());
 			saveFile.InsertEndChild(simpleElementsXML);
 		}
 	}
@@ -5475,27 +5533,27 @@ bool Game::saveScene(std::string scene)
 		LightShaft *l = dynamic_cast<LightShaft*>(*i);
 		if (l)
 		{
-			TiXmlElement lightShaft("LightShaft");
-			lightShaft.SetAttribute("x", l->position.x);
-			lightShaft.SetAttribute("y", l->position.y);
+			XMLElement *lightShaft = saveFile.NewElement("LightShaft");
+			lightShaft->SetAttribute("x", l->position.x);
+			lightShaft->SetAttribute("y", l->position.y);
 			std::ostringstream os;
 			os << l->getDir().x;
-			lightShaft.SetAttribute("dirx", os.str());
+			lightShaft->SetAttribute("dirx", os.str());
 			std::ostringstream os2;
 			os2 << l->getDir().y;
-			lightShaft.SetAttribute("diry", os2.str());
+			lightShaft->SetAttribute("diry", os2.str());
 			std::ostringstream os3;
 			os3 << l->shaftWidth;
-			lightShaft.SetAttribute("w", os3.str());
+			lightShaft->SetAttribute("w", os3.str());
 
-			//lightShaft.SetAttribute("dirx", int(l->getDir().x*1000));
-			//lightShaft.SetAttribute("diry", int(l->getDir().y*1000));
+			//lightShaft->SetAttribute("dirx", int(l->getDir().x*1000));
+			//lightShaft->SetAttribute("diry", int(l->getDir().y*1000));
 			saveFile.InsertEndChild(lightShaft);
 		}
 	}
 	*/
 
-	bool result =  saveFile.SaveFile(fn);
+	bool result =  saveFile.SaveFile(fn.c_str()) == XML_SUCCESS;
 	if (result)
 		debugLog("Successfully saved map: " + fn);
 	else
@@ -6402,9 +6460,18 @@ void Game::applyState()
 	}
 #endif
 
-/*
-	if (liFlag == 100)
-	*/
+	worldMapRender = 0;
+	dsq->continuity.worldMap.revealMap(sceneToLoad);
+
+	debugLog("Creating WorldMapRender");
+	if(dsq->mod.isActive() && dsq->mod.mapRevealMethod != REVEAL_UNSPECIFIED)
+		WorldMapRender::setRevealMethod(dsq->mod.mapRevealMethod);
+	else
+		WorldMapRender::setRevealMethod((WorldMapRevealMethod)dsq->user.video.worldMapRevealMethod);
+
+	worldMapRender = new WorldMapRender;
+	addRenderObject(worldMapRender, LR_WORLDMAP);
+
 
 	if (verbose) debugLog("Creating Avatar");
 	avatar = new Avatar();
@@ -6467,8 +6534,6 @@ void Game::applyState()
 	}
 	if (verbose) debugLog("...Done");
 	backupSceneColor = sceneColor;
-
-	dsq->continuity.worldMap.revealMap(sceneName);
 
 	colorTest();
 
@@ -6597,18 +6662,6 @@ void Game::applyState()
 	timerText->alpha = 0;
 	timerText->followCamera = 1;
 	addRenderObject(timerText, LR_MINIMAP);
-
-	worldMapRender = 0;
-
-	if(dsq->mod.isActive() && dsq->mod.mapRevealMethod != REVEAL_UNSPECIFIED)
-		WorldMapRender::setRevealMethod(dsq->mod.mapRevealMethod);
-	else
-		WorldMapRender::setRevealMethod((WorldMapRevealMethod)dsq->user.video.worldMapRevealMethod);
-
-	worldMapRender = new WorldMapRender;
-	addRenderObject(worldMapRender, LR_WORLDMAP);
-	// to hide minimap
-	//miniMapRender->position += Vector(800,0);
 
 	sceneToLoad="";
 

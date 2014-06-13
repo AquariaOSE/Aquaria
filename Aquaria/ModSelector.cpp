@@ -22,13 +22,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "DSQ.h"
 #include "AquariaProgressBar.h"
-#include "tinyxml.h"
 #include "ModSelector.h"
 #include <algorithm>
 
 #ifdef BBGE_BUILD_VFS
 #include "ModDownloader.h"
 #endif
+
+#include "tinyxml2.h"
+using namespace tinyxml2;
 
 #define MOD_ICON_SIZE 150
 #define MINI_ICON_SIZE 32
@@ -551,16 +553,16 @@ void ModIcon::loadEntry(const ModEntry& entry)
 		useQuad(texToLoad);
 	quad->setWidthHeight(MOD_ICON_SIZE, MOD_ICON_SIZE);
 
-	TiXmlDocument d;
+	XMLDocument d;
 
 	dsq->mod.loadModXML(&d, entry.path);
 
 	std::string ds = dsq->continuity.stringBank.get(2009);
 
-	TiXmlElement *top = d.FirstChildElement("AquariaMod");
+	XMLElement *top = d.FirstChildElement("AquariaMod");
 	if (top)
 	{
-		TiXmlElement *desc = top->FirstChildElement("Description");
+		XMLElement *desc = top->FirstChildElement("Description");
 		if (desc)
 		{
 			if (desc->Attribute("text"))
@@ -568,7 +570,7 @@ void ModIcon::loadEntry(const ModEntry& entry)
 				ds = desc->Attribute("text");
 			}
 		}
-		TiXmlElement *fullname = top->FirstChildElement("Fullname");
+		XMLElement *fullname = top->FirstChildElement("Fullname");
 		if (fullname)
 		{
 			if (fullname->Attribute("text"))
