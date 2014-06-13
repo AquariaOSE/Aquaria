@@ -2,20 +2,21 @@
 #define JUMP_POINT_SEARCH_H
 
 // Public domain Jump Point Search implementation by False.Genesis
+// Very fast pathfinding for uniform cost grids.
+// Supports incremental pathfinding.
+
 // Please keep the following source information intact when you use this file in your own projects:
 // This file originates from: https://github.com/fgenesis/jps
 // Based on the paper http://users.cecs.anu.edu.au/~dharabor/data/papers/harabor-grastien-aaai11.pdf
 // by Daniel Harabor & Alban Grastien.
 // Jumper (https://github.com/Yonaba/Jumper) and PathFinding.js (https://github.com/qiao/PathFinding.js)
 // served as reference for this implementation.
+// If you use this, attribution would be nice, but is not necessary.
 
 // ====== COMPILE CONFIG ======
 
 // If this is defined, compare all jumps against recursive reference implementation (only if _DEBUG is defined)
 //#define JPS_VERIFY
-
-// NYI
-//#define JPS_USE_HASHMAP
 
 // ============================
 
@@ -74,15 +75,36 @@ while(true)
 		search.freeMemory();
 }
 
-// Further remarks can be found at the bottom of this file.
+// Further remarks about the super lazy single-call function can be found at the bottom of this file.
+
+// -------------------------------
+// --- Incremental pathfinding ---
+// -------------------------------
+
+First, call findPathInit(Position start, Position end). Don't forget to check the return value,
+as it may return NO_PATH if one or both of the points are obstructed,
+or FOUND_PATH if the points are equal and not obstructed.
+If it returns NEED_MORE_STEPS then the next part can start.
+
+Repeatedly call findPathStep(int limit) until it returns NO_PATH or FOUND_PATH.
+For consistency, you will want to ensure that the grid does not change between subsequent calls;
+if the grid changes, parts of the path may go through a now obstructed area.
+If limit is 0, it will perform the pathfinding in one go. Values > 0 abort the search
+as soon as possible after the number of steps was exceeded, returning NEED_MORE_STEPS.
+Use getStepsDone() after some test runs to find a good value for the limit.
+
+Lastly, generate the actual path points from a successful run via findPathFinish(PathVector& path, unsigned step = 0).
+Like described above, path points are appended, and granularity can be adjusted with the step parameter.
+Returns false if the pathfinding did not finish or generating the path failed.
+
 */
 
 
+#include <stdlib.h>
 #include <algorithm>
 #include <vector>
 #include <map>
 #include <cmath>
-#include <stdlib.h>
 
 #ifdef _DEBUG
 #include <cassert>
@@ -91,11 +113,15 @@ while(true)
 #define JPS_ASSERT(cond)
 #endif
 
-#ifdef JPS_USE_HASHMAP
-#include "JPSUtilHashmap.h"
-#endif
 
 namespace JPS {
+
+enum Result
+{
+	NO_PATH = 0,
+	FOUND_PATH = 1,
+	NEED_MORE_STEPS = 2
+};
 
 struct Position
 {
@@ -215,25 +241,32 @@ template <typename GRID> class Searcher
 {
 public:
 	Searcher(const GRID& g)
-		: grid(g), skip(1)
+		: grid(g), endNode(NULL), skip(1), stepsRemain(0), stepsDone(0)
 	{}
 
-	void freeMemory();
-
+	// single-call
 	bool findPath(PathVector& path, Position start, Position end, unsigned step = 0);
+
+	// incremental pathfinding
+	Result findPathInit(Position start, Position end);
+	Result findPathStep(int limit);
+	bool findPathFinish(PathVector& path, unsigned step = 0);
+
+	// misc
+	void freeMemory();
 	inline void setSkip(int s) { skip = std::max(1, s); }
+	inline size_t getStepsDone() const { return stepsDone; }
+	inline size_t getNodesExpanded() const { return nodegrid.size(); }
 
 private:
 
-#ifdef JPS_USE_HASHMAP
-	typedef Util::HashMap<Position, Node> NodeGrid;
-#else
 	typedef std::map<Position, Node> NodeGrid;
-#endif
 
 	const GRID& grid;
 	Node *endNode;
 	int skip;
+	int stepsRemain;
+	size_t stepsDone;
 	OpenList open;
 
 	NodeGrid nodegrid;
@@ -241,11 +274,11 @@ private:
 	Node *getNode(const Position& pos);
 	void identifySuccessors(const Node *n);
 	unsigned findNeighbors(const Node *n, Position *wptr) const;
-	Position jumpP(const Position& p, const Position& src) const;
-	Position jumpD(Position p, int dx, int dy) const;
-	Position jumpX(Position p, int dx) const;
-	Position jumpY(Position p, int dy) const;
-	void generatePath(PathVector& path, unsigned step) const;
+	Position jumpP(const Position& p, const Position& src);
+	Position jumpD(Position p, int dx, int dy);
+	Position jumpX(Position p, int dx);
+	Position jumpY(Position p, int dy);
+	bool generatePath(PathVector& path, unsigned step) const;
 #ifdef JPS_VERIFY
 	Position jumpPRec(const Position& p, const Position& src) const;
 #endif
@@ -257,7 +290,7 @@ template <typename GRID> inline Node *Searcher<GRID>::getNode(const Position& po
 	return &nodegrid.insert(std::make_pair(pos, Node(pos))).first->second;
 }
 
-template <typename GRID> Position Searcher<GRID>::jumpP(const Position &p, const Position& src) const
+template <typename GRID> Position Searcher<GRID>::jumpP(const Position &p, const Position& src)
 {
 	JPS_ASSERT(grid(p.x, p.y));
 
@@ -277,32 +310,34 @@ template <typename GRID> Position Searcher<GRID>::jumpP(const Position &p, const
 	return npos;
 }
 
-template <typename GRID> Position Searcher<GRID>::jumpD(Position p, int dx, int dy) const
+template <typename GRID> Position Searcher<GRID>::jumpD(Position p, int dx, int dy)
 {
 	JPS_ASSERT(grid(p.x, p.y));
 	JPS_ASSERT(dx && dy);
 
 	const Position& endpos = endNode->pos;
+	int steps = 0;
 
 	while(true)
 	{
 		if(p == endpos)
-			return p;
+			break;
 
+		++steps;
 		const unsigned x = p.x;
 		const unsigned y = p.y;
 
 		if( (grid(x-dx, y+dy) && !grid(x-dx, y)) || (grid(x+dx, y-dy) && !grid(x, y-dy)) )
-			return p;
+			break;
 
 		const bool gdx = grid(x+dx, y);
 		const bool gdy = grid(x, y+dy);
 
 		if(gdx && jumpX(Pos(x+dx, y), dx).isValid())
-			return p;
+			break;
 
 		if(gdy && jumpY(Pos(x, y+dy), dy).isValid())
-			return p;
+			break;
 
 		if((gdx || gdy) && grid(x+dx, y+dy))
 		{
@@ -310,13 +345,17 @@ template <typename GRID> Position Searcher<GRID>::jumpD(Position p, int dx, int 
 			p.y += dy;
 		}
 		else
+		{
+			p = npos;
 			break;
+		}
 	}
-
-	return npos;
+	stepsDone += (unsigned)steps;
+	stepsRemain -= steps;
+	return p;
 }
 
-template <typename GRID> inline Position Searcher<GRID>::jumpX(Position p, int dx) const
+template <typename GRID> inline Position Searcher<GRID>::jumpX(Position p, int dx)
 {
 	JPS_ASSERT(dx);
 	JPS_ASSERT(grid(p.x, p.y));
@@ -324,6 +363,7 @@ template <typename GRID> inline Position Searcher<GRID>::jumpX(Position p, int d
 	const unsigned y = p.y;
 	const Position& endpos = endNode->pos;
 	const int skip = this->skip;
+	int steps = 0;
 
 	unsigned a = ~((!!grid(p.x, y+skip)) | ((!!grid(p.x, y-skip)) << 1));
 
@@ -333,16 +373,24 @@ template <typename GRID> inline Position Searcher<GRID>::jumpX(Position p, int d
 		const unsigned b = (!!grid(xx, y+skip)) | ((!!grid(xx, y-skip)) << 1);
 
 		if((b & a) || p == endpos)
-			return p;
+			break;
 		if(!grid(xx, y))
-			return npos;
+		{
+			p = npos;
+			break;
+		}
 
 		p.x += dx;
 		a = ~b;
+		++steps;
 	}
+
+	stepsDone += (unsigned)steps;
+	stepsRemain -= steps;
+	return p;
 }
 
-template <typename GRID> inline Position Searcher<GRID>::jumpY(Position p, int dy) const
+template <typename GRID> inline Position Searcher<GRID>::jumpY(Position p, int dy)
 {
 	JPS_ASSERT(dy);
 	JPS_ASSERT(grid(p.x, p.y));
@@ -350,6 +398,7 @@ template <typename GRID> inline Position Searcher<GRID>::jumpY(Position p, int d
 	const unsigned x = p.x;
 	const Position& endpos = endNode->pos;
 	const int skip = this->skip;
+	int steps = 0;
 
 	unsigned a = ~((!!grid(x+skip, p.y)) | ((!!grid(x-skip, p.y)) << 1));
 
@@ -359,13 +408,20 @@ template <typename GRID> inline Position Searcher<GRID>::jumpY(Position p, int d
 		const unsigned b = (!!grid(x+skip, yy)) | ((!!grid(x-skip, yy)) << 1);
 
 		if((a & b) || p == endpos)
-			return p;
+			break;
 		if(!grid(x, yy))
-			return npos;
+		{
+			p = npos;
+			break;
+		}
 
 		p.y += dy;
 		a = ~b;
 	}
+
+	stepsDone += (unsigned)steps;
+	stepsRemain -= steps;
+	return p;
 }
 
 #ifdef JPS_VERIFY
@@ -547,13 +603,17 @@ template <typename GRID> void Searcher<GRID>::identifySuccessors(const Node *n)
 	}
 }
 
-template <typename GRID> void Searcher<GRID>::generatePath(PathVector& path, unsigned step) const
+template <typename GRID> bool Searcher<GRID>::generatePath(PathVector& path, unsigned step) const
 {
+	if(!endNode)
+		return false;
 	size_t offset = path.size();
 	if(step)
 	{
 		const Node *next = endNode;
 		const Node *prev = endNode->parent;
+		if(!prev)
+			return false;
 		do
 		{
 			const unsigned x = next->pos.x, y = next->pos.y;
@@ -580,6 +640,8 @@ template <typename GRID> void Searcher<GRID>::generatePath(PathVector& path, uns
 	else
 	{
 		const Node *next = endNode;
+		if(!next->parent)
+			return false;
 		do
 		{
 			path.push_back(next->pos);
@@ -588,12 +650,42 @@ template <typename GRID> void Searcher<GRID>::generatePath(PathVector& path, uns
 		while (next->parent);
 	}
 	std::reverse(path.begin() + offset, path.end());
+	return true;
 }
 
 template <typename GRID> bool Searcher<GRID>::findPath(PathVector& path, Position start, Position end, unsigned step /* = 0 */)
 {
+	Result res = findPathInit(start, end);
+
+	// If this is true, the resulting path is empty (findPathFinish() would fail, so this needs to be checked before)
+	if(res == FOUND_PATH)
+		return true;
+
+	while(true)
+	{
+		switch(res)
+		{
+			case NEED_MORE_STEPS:
+				res = findPathStep(0);
+				break; // the switch
+
+			case FOUND_PATH:
+				return findPathFinish(path, step);
+
+			case NO_PATH:
+			default:
+				return false;
+		}
+	}
+}
+
+template <typename GRID> Result Searcher<GRID>::findPathInit(Position start, Position end)
+{
 	for(NodeGrid::iterator it = nodegrid.begin(); it != nodegrid.end(); ++it)
 		it->second.clearState();
+	open.clear();
+	endNode = NULL;
+	stepsDone = 0;
 
 	// If skip is > 1, make sure the points are aligned so that the search will always hit them
 	start.x = (start.x / skip) * skip;
@@ -605,44 +697,54 @@ template <typename GRID> bool Searcher<GRID>::findPath(PathVector& path, Positio
 	{
 		// There is only a path if this single position is walkable.
 		// But since the starting position is omitted, there is nothing to do here.
-		return grid(end.x, end.y);
+		return grid(end.x, end.y) ? FOUND_PATH : NO_PATH;
 	}
 
 	// If start or end point are obstructed, don't even start
 	if(!grid(start.x, start.y) || !grid(end.x, end.y))
-		return false;
+		return NO_PATH;
 
 	open.push(getNode(start));
 	endNode = getNode(end);
 	JPS_ASSERT(endNode);
 
+	return NEED_MORE_STEPS;
+}
+
+template <typename GRID> Result Searcher<GRID>::findPathStep(int limit)
+{
+	stepsRemain = limit;
 	do
 	{
+		if(open.empty())
+			return NO_PATH;
 		Node *n = open.pop();
 		n->setClosed();
 		if(n == endNode)
-		{
-			open.clear();
-			generatePath(path, step);
-			return true;
-		}
+			return FOUND_PATH;
 		identifySuccessors(n);
 	}
-	while (!open.empty());
-	return false;
+	while(stepsRemain >= 0);
+	return NEED_MORE_STEPS;
+}
+
+template<typename GRID> bool Searcher<GRID>::findPathFinish(PathVector& path, unsigned step /* = 0 */)
+{
+	return generatePath(path, step);
 }
 
 template<typename GRID> void Searcher<GRID>::freeMemory()
 {
 	NodeGrid v;
 	nodegrid.swap(v);
+	endNode = NULL;
+	open.clear();
 	// other containers known to be empty.
 }
 
 } // end namespace Internal
 
 using Internal::Searcher;
-
 
 // Single-call convenience function
 //
@@ -667,12 +769,19 @@ using Internal::Searcher;
 //       Warning: Start and end positions will be rounded down to the nearest <skip>-aligned position,
 //       so make sure to give appropriate positions so they do not end up in a wall.
 //       This will also skip through walls if they are less than <skip> blocks thick at any reachable position.
-template <typename GRID> bool findPath(PathVector& path, const GRID& grid, unsigned startx, unsigned starty, unsigned endx, unsigned endy, unsigned step = 0, int skip = 1)
+template <typename GRID> bool findPath(PathVector& path, const GRID& grid, unsigned startx, unsigned starty, unsigned endx, unsigned endy,
+                                       unsigned step = 0, int skip = 0, // optional params
+                                       size_t *stepsDone = NULL, size_t *nodesExpanded = NULL // for information
+                                       )
 {
-	JPS_ASSERT(skip >= 1);
 	Searcher<GRID> search(grid);
 	search.setSkip(skip);
-	return search.findPath(path, Pos(startx, starty), Pos(endx, endy), step);
+	bool found = search.findPath(path, Pos(startx, starty), Pos(endx, endy), step);
+	if(stepsDone)
+		*stepsDone = search.getStepsDone();
+	if(nodesExpanded)
+		*nodesExpanded = search.getNodesExpanded();
+	return found;
 }
 
 

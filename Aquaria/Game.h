@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef GAME_H
 #define GAME_H
 
-#include "../ExternalLibs/tinyxml.h"
 #include "../BBGE/DebugFont.h"
 #include "../ExternalLibs/glpng.h"
 
@@ -31,6 +30,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "TileVector.h"
 #include "Shot.h"
 #include "AquariaProgressBar.h"
+
+#include "tinyxml2.h"
+using namespace tinyxml2;
 
 
 class RecipeMenuEntry : public RenderObject
@@ -518,7 +520,7 @@ protected:
 	void enterRotateState();
 	void enterMoveState();
 
-	Vector oldPosition, oldRotation, oldScale, cursorOffset;
+	Vector oldPosition, oldRotation, oldScale, cursorOffset, oldRepeatScale;
 
 	Entity *movingEntity;
 	void updateDrawingWarpArea(char c, int k);
@@ -721,7 +723,7 @@ public:
 
 	void setParallaxTextureCoordinates(Quad *q, float speed);
 
-	TiXmlDocument *saveFile;
+	XMLDocument *saveFile;
 
 	Vector positionToAvatar;
 	float getCoverage(Vector pos, int sampleArea = 5);
