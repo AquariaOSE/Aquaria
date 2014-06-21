@@ -675,7 +675,7 @@ static void safePath(lua_State *L, const std::string& path)
 	{
 		if(path[0] == '/')
 		{
-			if(!(dsq->mod.isActive() && path.substr(0, dsq->mod.getBaseModPath().length()) == dsq->mod.getBaseModPath())
+			if(!(dsq->mod.isActive() && path.substr(0, dsq->mod.getBaseModPath().length()) == dsq->mod.getBaseModPath()))
 			{
 				lua_pushliteral(L, "Absolute paths are not allowed");
 				lua_error(L);
