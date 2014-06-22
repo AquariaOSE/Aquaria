@@ -2388,6 +2388,104 @@ luaFunc(shot_getTargetPoint)
 	luaReturnInt(shot ? shot->targetPt : 0);
 }
 
+luaFunc(shot_canHitEntity)
+{
+	Shot *shot = getShot(L);
+	Entity *e = entity(L, 2);
+	bool hit = false;
+	if(shot && e && shot->isActive() && dsq->game->isEntityCollideWithShot(e, shot))
+	{
+		DamageData d;
+		d.attacker = shot->firer;
+		d.damage = shot->getDamage();
+		d.damageType = shot->getDamageType();
+		d.shot = shot;
+		hit = e->canShotHit(d);
+	}
+	luaReturnBool(hit);
+}
+
+
+typedef std::pair<Shot*, float> ShotDistancePair;
+static std::vector<ShotDistancePair> filteredShots(20);
+static int filteredShotIdx = 0;
+
+static bool _shotDistanceCmp(const ShotDistancePair& a, const ShotDistancePair& b)
+{
+	return a.second < b.second;
+}
+static bool _shotDistanceEq(const ShotDistancePair& a, const ShotDistancePair& b)
+{
+	return a.first == b.first;
+}
+
+static size_t _shotFilter(lua_State *L)
+{
+	const Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	const float radius = lua_tonumber(L, 3);
+	const DamageType dt = lua_isnumber(L, 5) ? (DamageType)lua_tointeger(L, 5) : DT_NONE;
+
+	const float sqrRadius = radius * radius;
+	float distsq;
+	const bool skipRadiusCheck = radius <= 0;
+	size_t added = 0;
+	for(Shot::Shots::iterator it = Shot::shots.begin(); it != Shot::shots.end(); ++it)
+	{
+		Shot *s = *it;
+		
+		if (s->isActive() && s->life >= 1.0f)
+		{
+			if (dt == DT_NONE || s->getDamageType() == dt)
+			{
+				if (skipRadiusCheck || (distsq = (s->position - p).getSquaredLength2D()) <= sqrRadius)
+				{
+					filteredShots.push_back(std::make_pair(s, distsq));
+					++added;
+				}
+			}
+		}
+	}
+	if(added)
+	{
+		std::sort(filteredShots.begin(), filteredShots.end(), _shotDistanceCmp);
+		std::vector<ShotDistancePair>::iterator newend = std::unique(filteredShots.begin(), filteredShots.end(), _shotDistanceEq);
+		filteredShots.resize(std::distance(filteredShots.begin(), newend));
+	}
+
+	// Add terminator if there is none
+	if(filteredShots.size() && filteredShots.back().first)
+		filteredShots.push_back(std::make_pair((Shot*)NULL, 0.0f)); // terminator
+
+	filteredShotIdx = 0; // Reset getNextFilteredShot() iteration index
+
+	return added;
+}
+
+luaFunc(filterNearestShots)
+{
+	filteredShots.clear();
+	luaReturnInt(_shotFilter(L));
+}
+
+luaFunc(filterNearestShotsAdd)
+{
+	// Remove terminator if there is one
+	if(filteredShots.size() && !filteredShots.back().first)
+		filteredShots.pop_back();
+	luaReturnInt(_shotFilter(L));
+}
+
+luaFunc(getNextFilteredShot)
+{
+	ShotDistancePair sp = filteredShots[filteredShotIdx];
+	if (sp.first)
+		++filteredShotIdx;
+	luaPushPointer(L, sp.first);
+	lua_pushnumber(L, sp.second);
+	return 2;
+}
+
+
 luaFunc(entity_setVel)
 {
 	Entity *e = entity(L);
@@ -7599,7 +7697,7 @@ luaFunc(getNextEntity)
 
 typedef std::pair<Entity*, float> EntityDistancePair;
 static std::vector<EntityDistancePair> filteredEntities(20);
-static int filteredIdx = 0;
+static int filteredEntityIdx = 0;
 
 static bool _entityDistanceCmp(const EntityDistancePair& a, const EntityDistancePair& b)
 {
@@ -7658,7 +7756,7 @@ static size_t _entityFilter(lua_State *L)
 	if(filteredEntities.size() && filteredEntities.back().first)
 		filteredEntities.push_back(std::make_pair((Entity*)NULL, 0.0f)); // terminator
 
-	filteredIdx = 0; // Reset getNextFilteredEntity() iteration index
+	filteredEntityIdx = 0; // Reset getNextFilteredEntity() iteration index
 
 	return added;
 }
@@ -7679,9 +7777,9 @@ luaFunc(filterNearestEntitiesAdd)
 
 luaFunc(getNextFilteredEntity)
 {
-	EntityDistancePair ep = filteredEntities[filteredIdx];
+	EntityDistancePair ep = filteredEntities[filteredEntityIdx];
 	if (ep.first)
-		++filteredIdx;
+		++filteredEntityIdx;
 	luaPushPointer(L, ep.first);
 	lua_pushnumber(L, ep.second);
 	return 2;
@@ -9675,6 +9773,10 @@ static const struct {
 	luaRegister(shot_setTrailPrt),
 	luaRegister(shot_setTargetPoint),
 	luaRegister(shot_getTargetPoint),
+	luaRegister(shot_canHitEntity),
+	luaRegister(filterNearestShots),
+	luaRegister(filterNearestShotsAdd),
+	luaRegister(getNextFilteredShot),
 	luaRegister(entity_pathBurst),
 	luaRegister(entity_handleShotCollisions),
 	luaRegister(entity_handleShotCollisionsSkeletal),
