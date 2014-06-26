@@ -254,6 +254,8 @@
 		5538C527195CDF2B00A3877A /* locales in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5538C523195CDF2200A3877A /* locales */; };
 		5538C528195CDF2B00A3877A /* scripts in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5538C524195CDF2200A3877A /* scripts */; };
 		5538C52A195CE3B000A3877A /* _mods in CopyFiles */ = {isa = PBXBuildFile; fileRef = 5538C529195CE39D00A3877A /* _mods */; };
+		55FDEB4A195CE84800F71997 /* Media.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 55FDEB49195CE84800F71997 /* Media.xcassets */; };
+		55FDEB4D195CEA3500F71997 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 55FDEB4F195CEA3500F71997 /* InfoPlist.strings */; };
 		58CCE4C06FDA4D198A7B9E61 /* VFSDir.cpp in Sources */ = {isa = PBXBuildFile; fileRef = E0A6DA4E31A14C6CA6BC3106 /* VFSDir.cpp */; settings = {COMPILER_FLAGS = ""; }; };
 		71CA88256357412A904AF0D3 /* VFSFile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 3CD9A1517B5C41E3A18E6BDC /* VFSFile.cpp */; settings = {COMPILER_FLAGS = ""; }; };
 		7CADD68A6E5041D89E7D3F69 /* VFSLoader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 83CA00527B26433A8C6EAAF2 /* VFSLoader.cpp */; settings = {COMPILER_FLAGS = ""; }; };
@@ -422,6 +424,8 @@
 		5538C529195CE39D00A3877A /* _mods */ = {isa = PBXFileReference; lastKnownFileType = folder; name = _mods; path = game_scripts/_mods; sourceTree = "<group>"; };
 		5550B1FA51714F6E84448113 /* GameplayVariables.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = GameplayVariables.cpp; path = Aquaria/GameplayVariables.cpp; sourceTree = SOURCE_ROOT; };
 		55E339731E1D4D89BAF42829 /* Intro.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Intro.cpp; path = Aquaria/Intro.cpp; sourceTree = SOURCE_ROOT; };
+		55FDEB49195CE84800F71997 /* Media.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; name = Media.xcassets; path = MacOSX/Media.xcassets; sourceTree = "<group>"; };
+		55FDEB4E195CEA3500F71997 /* en */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = en; path = en.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		56319ECB57184ED2B7C00447 /* envelope.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = envelope.c; path = "ExternalLibs/libvorbis-1.3.3/lib/envelope.c"; sourceTree = SOURCE_ROOT; };
 		57CF69E6269A44B9BC6DEA82 /* States.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = States.cpp; path = Aquaria/States.cpp; sourceTree = SOURCE_ROOT; };
 		57FBD1FEB4644653987F275A /* pngrutil.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = pngrutil.c; path = ExternalLibs/glpng/png/pngrutil.c; sourceTree = SOURCE_ROOT; };
@@ -601,7 +605,6 @@
 		F5ECC59C97424C128ECEE93A /* type1cid.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = type1cid.c; path = ExternalLibs/freetype2/src/cid/type1cid.c; sourceTree = SOURCE_ROOT; };
 		F7C090C0C9FA4BC29FC5EE16 /* Path.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Path.cpp; path = Aquaria/Path.cpp; sourceTree = SOURCE_ROOT; };
 		F81D9BD1812F49FA9A8997A3 /* ParticleEditor.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ParticleEditor.cpp; path = Aquaria/ParticleEditor.cpp; sourceTree = SOURCE_ROOT; };
-		F85BECA060A7407B9F3AB2B3 /* CMakeLists.txt */ = {isa = PBXFileReference; explicitFileType = sourcecode.text; fileEncoding = 4; lastKnownFileType = text; path = CMakeLists.txt; sourceTree = SOURCE_ROOT; };
 		F8BF79D30F574AB5995F4374 /* VFSRoot.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = VFSRoot.cpp; path = ExternalLibs/ttvfs/VFSRoot.cpp; sourceTree = SOURCE_ROOT; };
 		F91ABD399AC445A4908A060F /* Entity.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Entity.cpp; path = Aquaria/Entity.cpp; sourceTree = SOURCE_ROOT; };
 		FA13A10DFFFD4C0686D5D3D0 /* VFSInternal.h */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.h; fileEncoding = 4; name = VFSInternal.h; path = ExternalLibs/ttvfs/VFSInternal.h; sourceTree = SOURCE_ROOT; };
@@ -642,13 +645,6 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		0C0E7CE0D2F14B9897850CDB /* CMake Rules */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "CMake Rules";
-			sourceTree = "<group>";
-		};
 		121244E7C6224D7394B182D2 /* Header Files */ = {
 			isa = PBXGroup;
 			children = (
@@ -692,11 +688,13 @@
 			isa = PBXGroup;
 			children = (
 				5538C51D195CDE3400A3877A /* Info.plist */,
+				55FDEB4F195CEA3500F71997 /* InfoPlist.strings */,
 				5538C529195CE39D00A3877A /* _mods */,
 				5538C521195CDF2200A3877A /* data */,
 				5538C522195CDF2200A3877A /* gfx */,
 				5538C523195CDF2200A3877A /* locales */,
 				5538C524195CDF2200A3877A /* scripts */,
+				55FDEB49195CE84800F71997 /* Media.xcassets */,
 			);
 			name = Resources;
 			sourceTree = "<group>";
@@ -791,13 +789,6 @@
 			name = FreeType;
 			sourceTree = "<group>";
 		};
-		582CE177DA4B46CC83E7DAB8 /* CMake Rules */ = {
-			isa = PBXGroup;
-			children = (
-			);
-			name = "CMake Rules";
-			sourceTree = "<group>";
-		};
 		5EE8F534CDE4468BB3D6DCFA = {
 			isa = PBXGroup;
 			children = (
@@ -826,30 +817,11 @@
 			name = "Source Files";
 			sourceTree = "<group>";
 		};
-		89C6A359FF684E4D85D62DB5 /* ZERO_CHECK */ = {
-			isa = PBXGroup;
-			children = (
-				0C0E7CE0D2F14B9897850CDB /* CMake Rules */,
-				F85BECA060A7407B9F3AB2B3 /* CMakeLists.txt */,
-			);
-			name = ZERO_CHECK;
-			sourceTree = "<group>";
-		};
-		8C3E8CC385BA48FCA1B0CEEA /* ALL_BUILD */ = {
-			isa = PBXGroup;
-			children = (
-				582CE177DA4B46CC83E7DAB8 /* CMake Rules */,
-				F85BECA060A7407B9F3AB2B3 /* CMakeLists.txt */,
-			);
-			name = ALL_BUILD;
-			sourceTree = "<group>";
-		};
 		974ED060D86A473EA488FF0A /* aquaria */ = {
 			isa = PBXGroup;
 			children = (
 				F38109AD3EAD47519C0E54D2 /* Source Files */,
 				3A26E1B058034922A93413FA /* Header Files */,
-				F85BECA060A7407B9F3AB2B3 /* CMakeLists.txt */,
 			);
 			name = aquaria;
 			sourceTree = "<group>";
@@ -877,8 +849,6 @@
 		D4CC238F1CDC4500B06F4255 /* Sources */ = {
 			isa = PBXGroup;
 			children = (
-				8C3E8CC385BA48FCA1B0CEEA /* ALL_BUILD */,
-				89C6A359FF684E4D85D62DB5 /* ZERO_CHECK */,
 				974ED060D86A473EA488FF0A /* aquaria */,
 				422371241D2C4812A17DD0CD /* ttvfs */,
 				74E8E817B1734FA6903D250B /* ttvfs_zip */,
@@ -1247,6 +1217,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				55FDEB4A195CE84800F71997 /* Media.xcassets in Resources */,
+				55FDEB4D195CEA3500F71997 /* InfoPlist.strings in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1561,6 +1533,18 @@
 		};
 /* End PBXTargetDependency section */
 
+/* Begin PBXVariantGroup section */
+		55FDEB4F195CEA3500F71997 /* InfoPlist.strings */ = {
+			isa = PBXVariantGroup;
+			children = (
+				55FDEB4E195CEA3500F71997 /* en */,
+			);
+			name = InfoPlist.strings;
+			path = MacOSX;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
+
 /* Begin XCBuildConfiguration section */
 		07208D0AFF1849C39F5F4008 /* RelWithDebInfo */ = {
 			isa = XCBuildConfiguration;
@@ -1802,6 +1786,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Aquaria;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				FRAMEWORK_SEARCH_PATHS = (
@@ -1861,6 +1846,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Aquaria;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -1921,6 +1907,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Aquaria;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
@@ -1981,6 +1968,7 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = Aquaria;
 				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
