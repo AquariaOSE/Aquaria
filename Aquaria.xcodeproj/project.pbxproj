@@ -6,36 +6,6 @@
 	objectVersion = 46;
 	objects = {
 
-/* Begin PBXAggregateTarget section */
-		1894A66743F54D1E8D1BADDC /* ALL_BUILD */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = 837C262AD91C430496BA0D95 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */;
-			buildPhases = (
-				4356E3D846AE46E883D37016 /* CMake Rules */,
-			);
-			dependencies = (
-				5538C4BD195CD3D200A3877A /* PBXTargetDependency */,
-				81AA70C75185425C8E6344D9 /* PBXTargetDependency */,
-				DEAF324F14454E65A15F7C5A /* PBXTargetDependency */,
-				6841A1C88F714F8493768A30 /* PBXTargetDependency */,
-				4324A8F511FC4DAE8B5E7D95 /* PBXTargetDependency */,
-			);
-			name = ALL_BUILD;
-			productName = ALL_BUILD;
-		};
-		38EE2E7E9F514EEFB2D3EBE2 /* ZERO_CHECK */ = {
-			isa = PBXAggregateTarget;
-			buildConfigurationList = C1C0C6350B7240DC8D7AD3ED /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */;
-			buildPhases = (
-				709E4398A3414D6491540DE0 /* CMake Rules */,
-			);
-			dependencies = (
-			);
-			name = ZERO_CHECK;
-			productName = ZERO_CHECK;
-		};
-/* End PBXAggregateTarget section */
-
 /* Begin PBXBuildFile section */
 		1884F3EF37394C6CA04035E2 /* miniz.c in Sources */ = {isa = PBXBuildFile; fileRef = 8E50AABF2C8147EB92E5C763 /* miniz.c */; settings = {COMPILER_FLAGS = ""; }; };
 		20FEEF87B2C74A1D810A3945 /* VFSBase.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 4518A29468FD474B8E2A9C85 /* VFSBase.cpp */; settings = {COMPILER_FLAGS = ""; }; };
@@ -298,27 +268,6 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		10C4D3AD8982449184EC5338 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 38EE2E7E9F514EEFB2D3EBE2;
-			remoteInfo = ZERO_CHECK;
-		};
-		4989F641444F4DDE9340E6A0 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = A2727C95291B439291E768B2;
-			remoteInfo = ttvfs;
-		};
-		5538C4B4195CD3C800A3877A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 38EE2E7E9F514EEFB2D3EBE2;
-			remoteInfo = ZERO_CHECK;
-		};
 		5538C4B6195CD3C800A3877A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
@@ -340,13 +289,6 @@
 			remoteGlobalIDString = C909122F0C28454F8D13254E;
 			remoteInfo = ttvfs_cfileapi;
 		};
-		5538C4BC195CD3D200A3877A /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 5538C398195CD30100A3877A;
-			remoteInfo = "Aquaria-app";
-		};
 		5538C51A195CD91C00A3877A /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
@@ -354,47 +296,12 @@
 			remoteGlobalIDString = 5538C4CA195CD8AD00A3877A;
 			remoteInfo = FreeType;
 		};
-		73760938576A4FD0A50EDEF3 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 38EE2E7E9F514EEFB2D3EBE2;
-			remoteInfo = ZERO_CHECK;
-		};
 		C0338BC29633489EA4DCA631 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
 			proxyType = 1;
 			remoteGlobalIDString = A2727C95291B439291E768B2;
 			remoteInfo = ttvfs;
-		};
-		DC68B949FA5943CF8FBB0E4D /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 38EE2E7E9F514EEFB2D3EBE2;
-			remoteInfo = ZERO_CHECK;
-		};
-		F867086BB64C465C9386AA99 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 0E8C018AF514496C871DF406;
-			remoteInfo = ttvfs_zip;
-		};
-		F8AF709A2EE34699A1B2E906 /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = 38EE2E7E9F514EEFB2D3EBE2;
-			remoteInfo = ZERO_CHECK;
-		};
-		F8CD6FA73DE7406AAB103B5E /* PBXContainerItemProxy */ = {
-			isa = PBXContainerItemProxy;
-			containerPortal = 9DFAC3F1836C45228B975C1E /* Project object */;
-			proxyType = 1;
-			remoteGlobalIDString = C909122F0C28454F8D13254E;
-			remoteInfo = ttvfs_cfileapi;
 		};
 /* End PBXContainerItemProxy section */
 
@@ -496,7 +403,7 @@
 		52E45E3FB9A14459B971208B /* ManaBall.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ManaBall.cpp; path = Aquaria/ManaBall.cpp; sourceTree = SOURCE_ROOT; };
 		544FDA274BA04D89BA7DB551 /* Effects.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Effects.cpp; path = BBGE/Effects.cpp; sourceTree = SOURCE_ROOT; };
 		54BAAE9222E44048977B68A6 /* bdf.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; name = bdf.c; path = ExternalLibs/freetype2/src/bdf/bdf.c; sourceTree = SOURCE_ROOT; };
-		5538C399195CD30100A3877A /* Aquaria-app.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = "Aquaria-app.app"; sourceTree = BUILT_PRODUCTS_DIR; };
+		5538C399195CD30100A3877A /* Aquaria.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Aquaria.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		5538C39B195CD30100A3877A /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
 		5538C39E195CD30100A3877A /* AppKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AppKit.framework; path = System/Library/Frameworks/AppKit.framework; sourceTree = SDKROOT; };
 		5538C39F195CD30100A3877A /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = System/Library/Frameworks/CoreData.framework; sourceTree = SDKROOT; };
@@ -961,7 +868,7 @@
 				86E89DE81D7E491C9603290E /* libttvfs.a */,
 				C2478A2174B84036B40060ED /* libttvfs_zip.a */,
 				8AEC9F5D7E3541418ED5E356 /* libttvfs_cfileapi.a */,
-				5538C399195CD30100A3877A /* Aquaria-app.app */,
+				5538C399195CD30100A3877A /* Aquaria.app */,
 				5538C4CB195CD8AD00A3877A /* libFreeType.a */,
 			);
 			name = Products;
@@ -1230,7 +1137,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				174DA356170A4624AC72C95A /* PBXTargetDependency */,
 			);
 			name = ttvfs_zip;
 			productName = ttvfs_zip;
@@ -1253,11 +1159,10 @@
 				5538C4B7195CD3C800A3877A /* PBXTargetDependency */,
 				5538C4B9195CD3C800A3877A /* PBXTargetDependency */,
 				5538C4BB195CD3C800A3877A /* PBXTargetDependency */,
-				5538C4B5195CD3C800A3877A /* PBXTargetDependency */,
 			);
 			name = Aquaria;
 			productName = "Aquaria-app";
-			productReference = 5538C399195CD30100A3877A /* Aquaria-app.app */;
+			productReference = 5538C399195CD30100A3877A /* Aquaria.app */;
 			productType = "com.apple.product-type.application";
 		};
 		5538C4CA195CD8AD00A3877A /* FreeType */ = {
@@ -1286,7 +1191,6 @@
 			buildRules = (
 			);
 			dependencies = (
-				657067572A294CC084CE0332 /* PBXTargetDependency */,
 			);
 			name = ttvfs;
 			productName = ttvfs;
@@ -1303,7 +1207,6 @@
 			);
 			dependencies = (
 				5F69D52B091A4AB6847C74DE /* PBXTargetDependency */,
-				73747669A3B24ABBAF056572 /* PBXTargetDependency */,
 			);
 			name = ttvfs_cfileapi;
 			productName = ttvfs_cfileapi;
@@ -1330,8 +1233,6 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				1894A66743F54D1E8D1BADDC /* ALL_BUILD */,
-				38EE2E7E9F514EEFB2D3EBE2 /* ZERO_CHECK */,
 				A2727C95291B439291E768B2 /* ttvfs */,
 				0E8C018AF514496C871DF406 /* ttvfs_zip */,
 				C909122F0C28454F8D13254E /* ttvfs_cfileapi */,
@@ -1350,31 +1251,6 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXResourcesBuildPhase section */
-
-/* Begin PBXShellScriptBuildPhase section */
-		4356E3D846AE46E883D37016 /* CMake Rules */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			name = "CMake Rules";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "make -C /Users/cwbetts/makestuff/aquaria/Aquaria_experimental -f /Users/cwbetts/makestuff/aquaria/Aquaria_experimental/CMakeScripts/ALL_BUILD_cmakeRulesBuildPhase.make$CONFIGURATION all";
-			showEnvVarsInLog = 0;
-		};
-		709E4398A3414D6491540DE0 /* CMake Rules */ = {
-			isa = PBXShellScriptBuildPhase;
-			buildActionMask = 2147483647;
-			files = (
-			);
-			name = "CMake Rules";
-			runOnlyForDeploymentPostprocessing = 0;
-			shellPath = /bin/sh;
-			shellScript = "make -C /Users/cwbetts/makestuff/aquaria/Aquaria_experimental -f /Users/cwbetts/makestuff/aquaria/Aquaria_experimental/CMakeScripts/ZERO_CHECK_cmakeRulesBuildPhase.make$CONFIGURATION all";
-			showEnvVarsInLog = 0;
-		};
-/* End PBXShellScriptBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
 		5538C395195CD30100A3877A /* Sources */ = {
@@ -1658,21 +1534,6 @@
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		174DA356170A4624AC72C95A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 38EE2E7E9F514EEFB2D3EBE2 /* ZERO_CHECK */;
-			targetProxy = F8AF709A2EE34699A1B2E906 /* PBXContainerItemProxy */;
-		};
-		4324A8F511FC4DAE8B5E7D95 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 38EE2E7E9F514EEFB2D3EBE2 /* ZERO_CHECK */;
-			targetProxy = DC68B949FA5943CF8FBB0E4D /* PBXContainerItemProxy */;
-		};
-		5538C4B5195CD3C800A3877A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 38EE2E7E9F514EEFB2D3EBE2 /* ZERO_CHECK */;
-			targetProxy = 5538C4B4195CD3C800A3877A /* PBXContainerItemProxy */;
-		};
 		5538C4B7195CD3C800A3877A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = A2727C95291B439291E768B2 /* ttvfs */;
@@ -1688,11 +1549,6 @@
 			target = C909122F0C28454F8D13254E /* ttvfs_cfileapi */;
 			targetProxy = 5538C4BA195CD3C800A3877A /* PBXContainerItemProxy */;
 		};
-		5538C4BD195CD3D200A3877A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 5538C398195CD30100A3877A /* Aquaria */;
-			targetProxy = 5538C4BC195CD3D200A3877A /* PBXContainerItemProxy */;
-		};
 		5538C51B195CD91C00A3877A /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = 5538C4CA195CD8AD00A3877A /* FreeType */;
@@ -1702,31 +1558,6 @@
 			isa = PBXTargetDependency;
 			target = A2727C95291B439291E768B2 /* ttvfs */;
 			targetProxy = C0338BC29633489EA4DCA631 /* PBXContainerItemProxy */;
-		};
-		657067572A294CC084CE0332 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 38EE2E7E9F514EEFB2D3EBE2 /* ZERO_CHECK */;
-			targetProxy = 10C4D3AD8982449184EC5338 /* PBXContainerItemProxy */;
-		};
-		6841A1C88F714F8493768A30 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = C909122F0C28454F8D13254E /* ttvfs_cfileapi */;
-			targetProxy = F8CD6FA73DE7406AAB103B5E /* PBXContainerItemProxy */;
-		};
-		73747669A3B24ABBAF056572 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 38EE2E7E9F514EEFB2D3EBE2 /* ZERO_CHECK */;
-			targetProxy = 73760938576A4FD0A50EDEF3 /* PBXContainerItemProxy */;
-		};
-		81AA70C75185425C8E6344D9 /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = A2727C95291B439291E768B2 /* ttvfs */;
-			targetProxy = 4989F641444F4DDE9340E6A0 /* PBXContainerItemProxy */;
-		};
-		DEAF324F14454E65A15F7C5A /* PBXTargetDependency */ = {
-			isa = PBXTargetDependency;
-			target = 0E8C018AF514496C871DF406 /* ttvfs_zip */;
-			targetProxy = F867086BB64C465C9386AA99 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -1853,70 +1684,6 @@
 			};
 			name = Release;
 		};
-		2C5F4452F8BE488E8507E973 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"'BBGE_BUILD_ACHIEVEMENTS_INTERNAL=1'",
-					"'GL_GLEXT_LEGACY=1'",
-					"'HAVE_PUTENV=1'",
-					"'TIXML_USE_STL=1'",
-					"'BBGE_SKIP_CONFIG_HEADERS=1'",
-					"'BBGE_BUILD_SDL=1'",
-					"'BBGE_BUILD_FRAMEBUFFER=1'",
-					"'BBGE_BUILD_SHADERS=1'",
-					"'BBGE_BUILD_OPENGL=1'",
-					"'BBGE_BUILD_OPENGL_DYNAMIC=1'",
-					"'BBGE_BUILD_FMOD_OPENAL_BRIDGE=1'",
-					"'BBGE_BUILD_VFS=1'",
-					"'VFS_ENABLE_C_API=1'",
-					"'BBGE_BUILD_SDL2=1'",
-					"'AQUARIA_BUILD_CONSOLE=1'",
-					"'AQUARIA_BUILD_SCENEEDITOR=1'",
-					"'BBGE_BUILD_UNIX=1'",
-					"'BBGE_BUILD_MACOSX=1'",
-					"'LUA_USE_ULONGJMP=1'",
-					HAVE_STRCASECMP,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE/GL,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/glpng/png,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/Aquaria,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/FTGL/include,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/freetype2/include,
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/lua-5.1.4/src",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libogg-1.3.0/include",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libvorbis-1.3.3/include",
-					/Library/Frameworks/SDL.framework/Headers,
-					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/OpenAL.framework/Headers,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_zip,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_cfileapi,
-				);
-				INSTALL_PATH = "";
-				OTHER_CFLAGS = "  ";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = /Users/cwbetts/makestuff/aquaria/Aquaria_experimental;
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Debug;
-		};
 		30D8701492E94186AB9A823D /* RelWithDebInfo */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -1973,70 +1740,6 @@
 				SECTORDER_FLAGS = "";
 			};
 			name = RelWithDebInfo;
-		};
-		3103D28A58894B3396CC5286 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"'BBGE_BUILD_ACHIEVEMENTS_INTERNAL=1'",
-					"'GL_GLEXT_LEGACY=1'",
-					"'HAVE_PUTENV=1'",
-					"'TIXML_USE_STL=1'",
-					"'BBGE_SKIP_CONFIG_HEADERS=1'",
-					"'BBGE_BUILD_SDL=1'",
-					"'BBGE_BUILD_FRAMEBUFFER=1'",
-					"'BBGE_BUILD_SHADERS=1'",
-					"'BBGE_BUILD_OPENGL=1'",
-					"'BBGE_BUILD_OPENGL_DYNAMIC=1'",
-					"'BBGE_BUILD_FMOD_OPENAL_BRIDGE=1'",
-					"'BBGE_BUILD_VFS=1'",
-					"'VFS_ENABLE_C_API=1'",
-					"'BBGE_BUILD_SDL2=1'",
-					"'AQUARIA_BUILD_CONSOLE=1'",
-					"'AQUARIA_BUILD_SCENEEDITOR=1'",
-					"'BBGE_BUILD_UNIX=1'",
-					"'BBGE_BUILD_MACOSX=1'",
-					"'LUA_USE_ULONGJMP=1'",
-					HAVE_STRCASECMP,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE/GL,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/glpng/png,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/Aquaria,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/FTGL/include,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/freetype2/include,
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/lua-5.1.4/src",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libogg-1.3.0/include",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libvorbis-1.3.3/include",
-					/Library/Frameworks/SDL.framework/Headers,
-					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/OpenAL.framework/Headers,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_zip,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_cfileapi,
-				);
-				INSTALL_PATH = "";
-				OTHER_CFLAGS = "  ";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				SYMROOT = /Users/cwbetts/makestuff/aquaria/Aquaria_experimental;
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Release;
 		};
 		41F6709F64C44B1B9ADDFD59 /* MinSizeRel */ = {
 			isa = XCBuildConfiguration;
@@ -2095,70 +1798,6 @@
 			};
 			name = MinSizeRel;
 		};
-		5198E2C9908A4BFB99C6EC83 /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"'BBGE_BUILD_ACHIEVEMENTS_INTERNAL=1'",
-					"'GL_GLEXT_LEGACY=1'",
-					"'HAVE_PUTENV=1'",
-					"'TIXML_USE_STL=1'",
-					"'BBGE_SKIP_CONFIG_HEADERS=1'",
-					"'BBGE_BUILD_SDL=1'",
-					"'BBGE_BUILD_FRAMEBUFFER=1'",
-					"'BBGE_BUILD_SHADERS=1'",
-					"'BBGE_BUILD_OPENGL=1'",
-					"'BBGE_BUILD_OPENGL_DYNAMIC=1'",
-					"'BBGE_BUILD_FMOD_OPENAL_BRIDGE=1'",
-					"'BBGE_BUILD_VFS=1'",
-					"'VFS_ENABLE_C_API=1'",
-					"'BBGE_BUILD_SDL2=1'",
-					"'AQUARIA_BUILD_CONSOLE=1'",
-					"'AQUARIA_BUILD_SCENEEDITOR=1'",
-					"'BBGE_BUILD_UNIX=1'",
-					"'BBGE_BUILD_MACOSX=1'",
-					"'LUA_USE_ULONGJMP=1'",
-					HAVE_STRCASECMP,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE/GL,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/glpng/png,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/Aquaria,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/FTGL/include,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/freetype2/include,
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/lua-5.1.4/src",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libogg-1.3.0/include",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libvorbis-1.3.3/include",
-					/Library/Frameworks/SDL.framework/Headers,
-					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/OpenAL.framework/Headers,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_zip,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_cfileapi,
-				);
-				INSTALL_PATH = "";
-				OTHER_CFLAGS = "  ";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = /Users/cwbetts/makestuff/aquaria/Aquaria_experimental;
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Release;
-		};
 		5538C3C8195CD30200A3877A /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2212,8 +1851,8 @@
 					"\"${SRCROOT}\"/ExternalLibs/ttvfs_cfileapi",
 				);
 				INFOPLIST_FILE = MacOSX/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Debug;
@@ -2272,8 +1911,8 @@
 					"\"${SRCROOT}\"/ExternalLibs/ttvfs_cfileapi",
 				);
 				INFOPLIST_FILE = MacOSX/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = app;
 			};
 			name = Release;
@@ -2332,8 +1971,8 @@
 					"\"${SRCROOT}\"/ExternalLibs/ttvfs_cfileapi",
 				);
 				INFOPLIST_FILE = MacOSX/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = app;
 			};
 			name = MinSizeRel;
@@ -2392,8 +2031,8 @@
 					"\"${SRCROOT}\"/ExternalLibs/ttvfs_cfileapi",
 				);
 				INFOPLIST_FILE = MacOSX/Info.plist;
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				SKIP_INSTALL = NO;
 				WRAPPER_EXTENSION = app;
 			};
 			name = RelWithDebInfo;
@@ -2425,7 +2064,6 @@
 					"\"${SRCROOT}\"/ExternalLibs/freetype2/include",
 					"$(inherited)",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Debug;
@@ -2455,7 +2093,6 @@
 					"\"${SRCROOT}\"/ExternalLibs/freetype2/include",
 					"$(inherited)",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = Release;
@@ -2485,7 +2122,6 @@
 					"\"${SRCROOT}\"/ExternalLibs/freetype2/include",
 					"$(inherited)",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = MinSizeRel;
@@ -2515,7 +2151,6 @@
 					"\"${SRCROOT}\"/ExternalLibs/freetype2/include",
 					"$(inherited)",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.9;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 			};
 			name = RelWithDebInfo;
@@ -2748,70 +2383,6 @@
 			};
 			name = MinSizeRel;
 		};
-		82CB23E5B61F4ABEB611A5C9 /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"'BBGE_BUILD_ACHIEVEMENTS_INTERNAL=1'",
-					"'GL_GLEXT_LEGACY=1'",
-					"'HAVE_PUTENV=1'",
-					"'TIXML_USE_STL=1'",
-					"'BBGE_SKIP_CONFIG_HEADERS=1'",
-					"'BBGE_BUILD_SDL=1'",
-					"'BBGE_BUILD_FRAMEBUFFER=1'",
-					"'BBGE_BUILD_SHADERS=1'",
-					"'BBGE_BUILD_OPENGL=1'",
-					"'BBGE_BUILD_OPENGL_DYNAMIC=1'",
-					"'BBGE_BUILD_FMOD_OPENAL_BRIDGE=1'",
-					"'BBGE_BUILD_VFS=1'",
-					"'VFS_ENABLE_C_API=1'",
-					"'BBGE_BUILD_SDL2=1'",
-					"'AQUARIA_BUILD_CONSOLE=1'",
-					"'AQUARIA_BUILD_SCENEEDITOR=1'",
-					"'BBGE_BUILD_UNIX=1'",
-					"'BBGE_BUILD_MACOSX=1'",
-					"'LUA_USE_ULONGJMP=1'",
-					HAVE_STRCASECMP,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE/GL,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/glpng/png,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/Aquaria,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/FTGL/include,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/freetype2/include,
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/lua-5.1.4/src",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libogg-1.3.0/include",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libvorbis-1.3.3/include",
-					/Library/Frameworks/SDL.framework/Headers,
-					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/OpenAL.framework/Headers,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_zip,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_cfileapi,
-				);
-				INSTALL_PATH = "";
-				OTHER_CFLAGS = "  ";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				SYMROOT = /Users/cwbetts/makestuff/aquaria/Aquaria_experimental;
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = Debug;
-		};
 		8CB9161798004A7BB76A7F15 /* RelWithDebInfo */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -2837,6 +2408,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = RelWithDebInfo;
@@ -2897,70 +2469,6 @@
 				SECTORDER_FLAGS = "";
 			};
 			name = Debug;
-		};
-		B049C1DE1A3D499B8445FC68 /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"'BBGE_BUILD_ACHIEVEMENTS_INTERNAL=1'",
-					"'GL_GLEXT_LEGACY=1'",
-					"'HAVE_PUTENV=1'",
-					"'TIXML_USE_STL=1'",
-					"'BBGE_SKIP_CONFIG_HEADERS=1'",
-					"'BBGE_BUILD_SDL=1'",
-					"'BBGE_BUILD_FRAMEBUFFER=1'",
-					"'BBGE_BUILD_SHADERS=1'",
-					"'BBGE_BUILD_OPENGL=1'",
-					"'BBGE_BUILD_OPENGL_DYNAMIC=1'",
-					"'BBGE_BUILD_FMOD_OPENAL_BRIDGE=1'",
-					"'BBGE_BUILD_VFS=1'",
-					"'VFS_ENABLE_C_API=1'",
-					"'BBGE_BUILD_SDL2=1'",
-					"'AQUARIA_BUILD_CONSOLE=1'",
-					"'AQUARIA_BUILD_SCENEEDITOR=1'",
-					"'BBGE_BUILD_UNIX=1'",
-					"'BBGE_BUILD_MACOSX=1'",
-					"'LUA_USE_ULONGJMP=1'",
-					HAVE_STRCASECMP,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE/GL,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/glpng/png,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/Aquaria,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/FTGL/include,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/freetype2/include,
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/lua-5.1.4/src",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libogg-1.3.0/include",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libvorbis-1.3.3/include",
-					/Library/Frameworks/SDL.framework/Headers,
-					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/OpenAL.framework/Headers,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_zip,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_cfileapi,
-				);
-				INSTALL_PATH = "";
-				OTHER_CFLAGS = "  ";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				SYMROOT = /Users/cwbetts/makestuff/aquaria/Aquaria_experimental;
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = RelWithDebInfo;
 		};
 		B660549908D943A7A89C9063 /* MinSizeRel */ = {
 			isa = XCBuildConfiguration;
@@ -3107,6 +2615,7 @@
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
 			};
 			name = MinSizeRel;
 		};
@@ -3136,136 +2645,9 @@
 				LLVM_LTO = YES;
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
 			};
 			name = Release;
-		};
-		D391563416EB4E4E99B96284 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"'BBGE_BUILD_ACHIEVEMENTS_INTERNAL=1'",
-					"'GL_GLEXT_LEGACY=1'",
-					"'HAVE_PUTENV=1'",
-					"'TIXML_USE_STL=1'",
-					"'BBGE_SKIP_CONFIG_HEADERS=1'",
-					"'BBGE_BUILD_SDL=1'",
-					"'BBGE_BUILD_FRAMEBUFFER=1'",
-					"'BBGE_BUILD_SHADERS=1'",
-					"'BBGE_BUILD_OPENGL=1'",
-					"'BBGE_BUILD_OPENGL_DYNAMIC=1'",
-					"'BBGE_BUILD_FMOD_OPENAL_BRIDGE=1'",
-					"'BBGE_BUILD_VFS=1'",
-					"'VFS_ENABLE_C_API=1'",
-					"'BBGE_BUILD_SDL2=1'",
-					"'AQUARIA_BUILD_CONSOLE=1'",
-					"'AQUARIA_BUILD_SCENEEDITOR=1'",
-					"'BBGE_BUILD_UNIX=1'",
-					"'BBGE_BUILD_MACOSX=1'",
-					"'LUA_USE_ULONGJMP=1'",
-					HAVE_STRCASECMP,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE/GL,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/glpng/png,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/Aquaria,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/FTGL/include,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/freetype2/include,
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/lua-5.1.4/src",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libogg-1.3.0/include",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libvorbis-1.3.3/include",
-					/Library/Frameworks/SDL.framework/Headers,
-					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/OpenAL.framework/Headers,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_zip,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_cfileapi,
-				);
-				INSTALL_PATH = "";
-				OTHER_CFLAGS = "  ";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = /Users/cwbetts/makestuff/aquaria/Aquaria_experimental;
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = MinSizeRel;
-		};
-		D85B8FDE835B4B51BA67019E /* RelWithDebInfo */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"'BBGE_BUILD_ACHIEVEMENTS_INTERNAL=1'",
-					"'GL_GLEXT_LEGACY=1'",
-					"'HAVE_PUTENV=1'",
-					"'TIXML_USE_STL=1'",
-					"'BBGE_SKIP_CONFIG_HEADERS=1'",
-					"'BBGE_BUILD_SDL=1'",
-					"'BBGE_BUILD_FRAMEBUFFER=1'",
-					"'BBGE_BUILD_SHADERS=1'",
-					"'BBGE_BUILD_OPENGL=1'",
-					"'BBGE_BUILD_OPENGL_DYNAMIC=1'",
-					"'BBGE_BUILD_FMOD_OPENAL_BRIDGE=1'",
-					"'BBGE_BUILD_VFS=1'",
-					"'VFS_ENABLE_C_API=1'",
-					"'BBGE_BUILD_SDL2=1'",
-					"'AQUARIA_BUILD_CONSOLE=1'",
-					"'AQUARIA_BUILD_SCENEEDITOR=1'",
-					"'BBGE_BUILD_UNIX=1'",
-					"'BBGE_BUILD_MACOSX=1'",
-					"'LUA_USE_ULONGJMP=1'",
-					HAVE_STRCASECMP,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE/GL,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/glpng/png,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/Aquaria,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/FTGL/include,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/freetype2/include,
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/lua-5.1.4/src",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libogg-1.3.0/include",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libvorbis-1.3.3/include",
-					/Library/Frameworks/SDL.framework/Headers,
-					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/OpenAL.framework/Headers,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_zip,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_cfileapi,
-				);
-				INSTALL_PATH = "";
-				OTHER_CFLAGS = "  ";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ALL_BUILD;
-				SECTORDER_FLAGS = "";
-				SYMROOT = /Users/cwbetts/makestuff/aquaria/Aquaria_experimental;
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = RelWithDebInfo;
 		};
 		E66883E95A564B29B5BF67B4 /* Debug */ = {
 			isa = XCBuildConfiguration;
@@ -3355,73 +2737,10 @@
 				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = macosx;
+				SKIP_INSTALL = YES;
 				STRIP_INSTALLED_PRODUCT = NO;
 			};
 			name = Debug;
-		};
-		FF89490178D44013972C7817 /* MinSizeRel */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-				COMBINE_HIDPI_IMAGES = YES;
-				GCC_GENERATE_DEBUGGING_SYMBOLS = NO;
-				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
-				GCC_OPTIMIZATION_LEVEL = 0;
-				GCC_PREPROCESSOR_DEFINITIONS = (
-					"'CMAKE_INTDIR=\"$(CONFIGURATION)$(EFFECTIVE_PLATFORM_NAME)\"'",
-					"'BBGE_BUILD_ACHIEVEMENTS_INTERNAL=1'",
-					"'GL_GLEXT_LEGACY=1'",
-					"'HAVE_PUTENV=1'",
-					"'TIXML_USE_STL=1'",
-					"'BBGE_SKIP_CONFIG_HEADERS=1'",
-					"'BBGE_BUILD_SDL=1'",
-					"'BBGE_BUILD_FRAMEBUFFER=1'",
-					"'BBGE_BUILD_SHADERS=1'",
-					"'BBGE_BUILD_OPENGL=1'",
-					"'BBGE_BUILD_OPENGL_DYNAMIC=1'",
-					"'BBGE_BUILD_FMOD_OPENAL_BRIDGE=1'",
-					"'BBGE_BUILD_VFS=1'",
-					"'VFS_ENABLE_C_API=1'",
-					"'BBGE_BUILD_SDL2=1'",
-					"'AQUARIA_BUILD_CONSOLE=1'",
-					"'AQUARIA_BUILD_SCENEEDITOR=1'",
-					"'BBGE_BUILD_UNIX=1'",
-					"'BBGE_BUILD_MACOSX=1'",
-					"'LUA_USE_ULONGJMP=1'",
-					HAVE_STRCASECMP,
-				);
-				GCC_SYMBOLS_PRIVATE_EXTERN = NO;
-				HEADER_SEARCH_PATHS = (
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/BBGE/GL,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/glpng/png,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/Aquaria,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/FTGL/include,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/freetype2/include,
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/lua-5.1.4/src",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libogg-1.3.0/include",
-					"/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/libvorbis-1.3.3/include",
-					/Library/Frameworks/SDL.framework/Headers,
-					/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/System/Library/Frameworks/OpenAL.framework/Headers,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_zip,
-					/Users/cwbetts/makestuff/aquaria/Aquaria_experimental/ExternalLibs/ttvfs_cfileapi,
-				);
-				INSTALL_PATH = "";
-				OTHER_CFLAGS = "  ";
-				OTHER_LDFLAGS = " ";
-				OTHER_REZFLAGS = "";
-				PRODUCT_NAME = ZERO_CHECK;
-				SECTORDER_FLAGS = "";
-				SYMROOT = /Users/cwbetts/makestuff/aquaria/Aquaria_experimental;
-				USE_HEADERMAP = NO;
-				WARNING_CFLAGS = (
-					"-Wmost",
-					"-Wno-four-char-constants",
-					"-Wno-unknown-pragmas",
-				);
-			};
-			name = MinSizeRel;
 		};
 /* End XCBuildConfiguration section */
 
@@ -3435,7 +2754,7 @@
 				8CB9161798004A7BB76A7F15 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		493DD87177204A74AC645904 /* Build configuration list for PBXNativeTarget "ttvfs" */ = {
 			isa = XCConfigurationList;
@@ -3446,7 +2765,7 @@
 				6E8DDF9F7354461E917AC674 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		4E0F1EFEA6E24675AC9FAF10 /* Build configuration list for PBXNativeTarget "ttvfs_zip" */ = {
 			isa = XCConfigurationList;
@@ -3457,7 +2776,7 @@
 				30D8701492E94186AB9A823D /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		5538C3C7195CD30200A3877A /* Build configuration list for PBXNativeTarget "Aquaria" */ = {
 			isa = XCConfigurationList;
@@ -3468,7 +2787,7 @@
 				5538C3CB195CD30200A3877A /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		5538C4E6195CD8AE00A3877A /* Build configuration list for PBXNativeTarget "FreeType" */ = {
 			isa = XCConfigurationList;
@@ -3479,7 +2798,7 @@
 				5538C4EA195CD8AE00A3877A /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 		5C39E338C8834CC385A4B60D /* Build configuration list for PBXNativeTarget "ttvfs_cfileapi" */ = {
 			isa = XCConfigurationList;
@@ -3490,29 +2809,7 @@
 				07208D0AFF1849C39F5F4008 /* RelWithDebInfo */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
-		837C262AD91C430496BA0D95 /* Build configuration list for PBXAggregateTarget "ALL_BUILD" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				2C5F4452F8BE488E8507E973 /* Debug */,
-				5198E2C9908A4BFB99C6EC83 /* Release */,
-				D391563416EB4E4E99B96284 /* MinSizeRel */,
-				D85B8FDE835B4B51BA67019E /* RelWithDebInfo */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
-		};
-		C1C0C6350B7240DC8D7AD3ED /* Build configuration list for PBXAggregateTarget "ZERO_CHECK" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				82CB23E5B61F4ABEB611A5C9 /* Debug */,
-				3103D28A58894B3396CC5286 /* Release */,
-				FF89490178D44013972C7817 /* MinSizeRel */,
-				B049C1DE1A3D499B8445FC68 /* RelWithDebInfo */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Debug;
+			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
