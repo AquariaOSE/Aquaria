@@ -23,3 +23,7 @@ bin/*
 *.diff
 
 !.gitignore
+
+xcuserdata
+project.xcworkspace
+*.xccheckout
