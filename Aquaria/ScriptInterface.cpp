@@ -2426,7 +2426,7 @@ static size_t _shotFilter(lua_State *L)
 	const DamageType dt = lua_isnumber(L, 5) ? (DamageType)lua_tointeger(L, 5) : DT_NONE;
 
 	const float sqrRadius = radius * radius;
-	float distsq;
+	float distsq = 0;
 	const bool skipRadiusCheck = radius <= 0;
 	size_t added = 0;
 	for(Shot::Shots::iterator it = Shot::shots.begin(); it != Shot::shots.end(); ++it)

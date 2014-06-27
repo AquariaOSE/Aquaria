@@ -155,7 +155,7 @@ void Emitter::onUpdate(float dt)
 		}
 
 		int spawnCount;
-		float spawnPerc;
+		float spawnPerc = 0;
 		if (data.justOne)
 		{
 			if (data.didOne)

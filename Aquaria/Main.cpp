@@ -40,9 +40,9 @@ static void MakeRan(void)
 #endif
 }
 
+#if defined(BBGE_BUILD_WINDOWS)
 static void StartAQConfig()
 {
-#if defined(BBGE_BUILD_WINDOWS)
     if (!exists("ran", false, true))
     {
         MakeRan();
@@ -53,8 +53,8 @@ static void StartAQConfig()
         }
     }
     remove("ran");
-#endif
 }
+#endif
 
 static void CheckConfig(void)
 {
