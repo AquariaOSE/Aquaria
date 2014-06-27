@@ -1,0 +1,33 @@
+//
+//  Aquaria.pch
+//  Aquaria
+//
+//  Created by C.W. Betts on 6/27/14.
+//
+//
+
+#ifndef Aquaria_Aquaria_pch
+#define Aquaria_Aquaria_pch
+
+#include <OpenAL/al.h>
+#include <OpenAL/alc.h>
+
+#include "gl.h"
+#include "glext.h"
+
+#ifdef __cplusplus
+#include <string>
+#include <vector>
+#include <sstream>
+#include <cmath>
+#include <float.h>
+#include "Base.h"
+#include "Texture.h"
+#include "Flags.h"
+#include "ScriptObject.h"
+#include "DSQ.h"
+#include "RenderObject.h"
+#include "Core.h"
+#endif
+
+#endif
