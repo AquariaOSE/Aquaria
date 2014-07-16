@@ -1752,6 +1752,7 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				5538C398195CD30100A3877A /* Aquaria */,
 				A2727C95291B439291E768B2 /* ttvfs */,
 				0E8C018AF514496C871DF406 /* ttvfs_zip */,
 				C909122F0C28454F8D13254E /* ttvfs_cfileapi */,
@@ -1762,7 +1763,6 @@
 				5597E652195DD301004D9EFF /* glpng */,
 				5597E6D1195DD8C4004D9EFF /* glfont2 */,
 				5597E6EA195DDA58004D9EFF /* Aquaria-Standalones */,
-				5538C398195CD30100A3877A /* Aquaria */,
 			);
 		};
 /* End PBXProject section */
