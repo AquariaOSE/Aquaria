@@ -1099,26 +1099,6 @@ void RenderObject::lookAt(const Vector &pos, float t, float minAngle, float maxA
 	rotation.interpolateTo(Vector(0,0,angle), t);
 }
 
-void RenderObject::removeAllChildren()
-{	
-	if (!children.empty())
-	{
-		removeChild(children.front());
-		removeAllChildren();
-	}
-}
-
-void RenderObject::recursivelyRemoveEveryChild()
-{
-	if (!children.empty())
-	{
-		RenderObject *child = (children.front());
-		child->recursivelyRemoveEveryChild();
-		removeChild(child);
-		recursivelyRemoveEveryChild();
-	}
-}
-
 void RenderObject::update(float dt)
 {
 	if (ignoreUpdate)
@@ -1149,8 +1129,14 @@ void RenderObject::update(float dt)
 
 void RenderObject::removeChild(RenderObject *r)
 {
-	children.remove(r);
 	r->parent = 0;
+	Children::iterator oldend = children.end();
+	Children::iterator newend = std::remove(children.begin(), oldend, r);
+	if(oldend != newend)
+	{
+		children.resize(std::distance(children.begin(), newend));
+		return;
+	}
 
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
@@ -1301,29 +1287,6 @@ void RenderObject::onUpdate(float dt)
 //	updateCullVariables();
 }
 
-void RenderObject::propogateAlpha()
-{
-	/*
-	if (!shareAlphaWithChildren) return;
-	for (int i = 0; i < children.size(); i++)
-	{
-		children[i]->alpha = this->alpha * children[i]->parentAlphaModifier.getValue();
-		children[i]->propogateAlpha();
-	}
-
-	*/
-	/*
-	if (shareAlphaWithChildren && !children.empty())
-	{
-		for (int i = 0; i < children.size(); i++)
-		{
-
-			//children[i]->alpha = this->alpha * children[i]->parentAlphaModifier.getValue();
-		}
-	}
-	*/
-}
-
 void RenderObject::unloadDevice()
 {
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
@@ -1375,7 +1338,7 @@ void RenderObject::addChild(RenderObject *r, ParentManaged pm, RenderBeforeParen
 	if (order == CHILD_BACK)
 		children.push_back(r);
 	else
-		children.push_front(r);
+		children.insert(children.begin(), r);
 
 	r->pm = pm;
 
@@ -1405,15 +1368,6 @@ void RenderObject::setPositionSnapTo(InterpolatedVector *positionSnapTo)
 void RenderObject::setOverrideCullRadius(float ovr)
 {
 	overrideCullRadiusSqr = ovr * ovr;
-}
-
-void RenderObject::propogateParentManagedStatic()
-{
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
-	{
-		(*i)->pm = PM_STATIC;
-		(*i)->propogateParentManagedStatic();
-	}
 }
 
 bool RenderObject::isCoordinateInRadius(const Vector &pos, float r)
