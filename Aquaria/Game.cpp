@@ -9328,7 +9328,7 @@ void Game::toggleKeyConfigMenu(bool f)
 
 		//group_keyConfig->children[group_keyConfig->children.size()-3]
 
-		RenderObjectList::reverse_iterator i = group_keyConfig->children.rbegin();
+		RenderObject::Children::reverse_iterator i = group_keyConfig->children.rbegin();
 		AquariaKeyConfig *upright0 = (AquariaKeyConfig*)(*i);
 		i++;
 		AquariaKeyConfig *upright = (AquariaKeyConfig*)(*i);

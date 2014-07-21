@@ -153,6 +153,9 @@ void ScriptedEntity::initEmitter(int emit, const std::string &file)
 
 void ScriptedEntity::startEmitter(int emit)
 {
+	if(emit >= emitters.size())
+		return;
+
 	if (emitters[emit])
 	{
 		emitters[emit]->start();
@@ -161,6 +164,9 @@ void ScriptedEntity::startEmitter(int emit)
 
 void ScriptedEntity::stopEmitter(int emit)
 {
+	if(emit >= emitters.size())
+		return;
+
 	if (emitters[emit])
 	{
 		emitters[emit]->stop();

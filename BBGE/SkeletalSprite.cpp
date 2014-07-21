@@ -1144,16 +1144,10 @@ void SkeletalSprite::prevAnimation()
 void SkeletalSprite::deleteBones()
 {
 	bones.clear();
-	if (!children.empty())
+	for(Children::iterator it = children.begin(); it != children.end(); ++it)
 	{
-		// remove child had better be recursive
-		Bone *b = (Bone*)children.front();
-		//removeChild(b);
-		b->destroy();
-		delete b;
-		deleteBones();
+		(*it)->safeKill();
 	}
-	children.clear();
 	bones.clear();
 }
 

@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include "Game.h"
 
+
 class SearchGridRaw
 {
 public:
@@ -33,9 +34,17 @@ public:
 		return (game->getGridRaw(TileVector(x, y)) & blockingObsBits) == OT_EMPTY;
 	}
 
-private:
-	const ObsType blockingObsBits;
+	ObsType blockingObsBits;
 	const Game *game;
+};
+
+class PathFinding::State : public ScriptObject
+{
+public:
+	State(ObsType obs) : grid(obs), searcher(grid), result(JPS::NO_PATH) {}
+	SearchGridRaw grid;
+	JPS::Searcher<SearchGridRaw> searcher;
+	JPS::Result result;
 };
 
 static void generateVectorPath(const JPS::PathVector& rawpath, VectorPath& vp, int offx, int offy)
@@ -124,7 +133,7 @@ void PathFinding::molestPath(VectorPath &path)
 		lastSuccessNode = 0;
 		hadSuccess = false;
 		Vector node = path.getPathNode(i)->value;
-		for (int j = sz-3; j >= i+adjust; j--)
+		for (int j = sz-1; j >= i+adjust; j--)
 		{
 			Vector target = path.getPathNode(j)->value;
 			if (dsq->game->trace(node, target))
@@ -183,3 +192,55 @@ bool PathFinding::generatePathSimple(VectorPath& path, const Vector& start, cons
 	molestPath(path);
 	return true;
 }
+
+PathFinding::State *PathFinding::initFindPath()
+{
+	State *state = new PathFinding::State(OT_BLOCKING);
+	return state;
+}
+
+void PathFinding::deleteFindPath(State *state)
+{
+	delete state;
+}
+
+void PathFinding::beginFindPath(PathFinding::State *state, const Vector& start, const Vector& end, unsigned int obs /* = 0 */)
+{
+	if(obs == OT_EMPTY)
+		obs = OT_BLOCKING;
+
+	state->grid.blockingObsBits = (ObsType)obs;
+	JPS::Position istart = JPS::Pos(start.x, start.y);
+	JPS::Position iend = JPS::Pos(end.x, end.y);
+	state->result = state->searcher.findPathInit(istart, iend);
+}
+
+bool PathFinding::updateFindPath(PathFinding::State *state, int limit)
+{
+	int oldres = state->result;
+	if(oldres == JPS::NEED_MORE_STEPS)
+	{
+		state->result = state->searcher.findPathStep(limit);
+		return oldres != state->result;
+	}
+	return true; // done
+}
+
+bool PathFinding::finishFindPath(PathFinding::State *state, VectorPath& path, unsigned step /* = 0 */)
+{
+	if(state->result != JPS::FOUND_PATH)
+		return false;
+
+	JPS::PathVector rawpath;
+	state->searcher.findPathFinish(rawpath, step);
+	generateVectorPath(rawpath, path, 0, 0);
+	molestPath(path);
+	return true;
+}
+
+void PathFinding::getStats(PathFinding::State *state, unsigned& stepsDone, unsigned& nodesExpanded)
+{
+	stepsDone = (unsigned)state->searcher.getStepsDone();
+	nodesExpanded = (unsigned)state->searcher.getNodesExpanded();
+}
+
