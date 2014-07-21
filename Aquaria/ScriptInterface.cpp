@@ -36,6 +36,7 @@ extern "C"
 #include "Web.h"
 #include "GridRender.h"
 #include "AfterEffect.h"
+#include "PathFinding.h"
 #include <algorithm>
 
 #include "../BBGE/MathFunctions.h"
@@ -8729,6 +8730,43 @@ luaFunc(isShuttingDownGameState)
 	luaReturnBool(dsq->game->isShuttingDownGameState());
 }
 
+static void _fillPathfindTables(lua_State *L, VectorPath& path, int xs_idx, int ys_idx)
+{
+	const unsigned num = path.getNumPathNodes();
+
+	if(lua_istable(L, xs_idx))
+		lua_pushvalue(L, xs_idx);
+	else
+		lua_createtable(L, num, 0);
+
+	if(lua_istable(L, ys_idx))
+		lua_pushvalue(L, ys_idx);
+	else
+		lua_createtable(L, num, 0);
+
+	// [..., xs, yx]
+	for(unsigned i = 0; i < num; ++i)
+	{
+		const VectorPathNode *n = path.getPathNode(i);
+		lua_pushnumber(L, n->value.x);  // [..., xs, ys, x]
+		lua_rawseti(L, -3, i+1);        // [..., xs, ys]
+		lua_pushnumber(L, n->value.y);  // [..., xs, ys, y]
+		lua_rawseti(L, -2, i+1);        // [..., xs, ys]
+	}
+	// terminate tables
+	lua_pushnil(L);            // [..., xs, ys, nil]
+	lua_rawseti(L, -3, num+1); // [..., xs, ys]
+	lua_pushnil(L);            // [..., xs, ys, nil]
+	lua_rawseti(L, -2, num+1); // [..., xs, ys]
+}
+
+static int _pathfindDelete(lua_State *L)
+{
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	PathFinding::deleteFindPath(state);
+	return 0;
+}
+
 // startx, starty, endx, endy [, step, xtab, ytab, obsMask]
 luaFunc(findPath)
 {
@@ -8736,39 +8774,65 @@ luaFunc(findPath)
 	Vector start(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
 	ObsType obs = ObsType(lua_tointeger(L, 8));
-	if(!dsq->pathFinding.generatePathSimple(path, start, end, lua_tointeger(L, 5), obs))
+	if(!PathFinding::generatePathSimple(path, start, end, lua_tointeger(L, 5), obs))
 		luaReturnBool(false);
 
 	const unsigned num = path.getNumPathNodes();
 	lua_pushinteger(L, num);
 
-	if(lua_istable(L, 6))
-		lua_pushvalue(L, 6);
-	else
-		lua_createtable(L, num, 0);
-
-	if(lua_istable(L, 7))
-		lua_pushvalue(L, 7);
-	else
-		lua_createtable(L, num, 0);
-
-	// [true, xs, yx]
-
-	for(unsigned i = 0; i < num; ++i)
-	{
-		const VectorPathNode *n = path.getPathNode(i);
-		lua_pushnumber(L, n->value.x);  // [num, xs, ys, x]
-		lua_rawseti(L, -3, i+1);        // [num, xs, ys]
-		lua_pushnumber(L, n->value.y);  // [num, xs, ys, y]
-		lua_rawseti(L, -2, i+1);        // [num, xs, ys]
-	}
-	// terminate tables
-	lua_pushnil(L);            // [num xs, ys, nil]
-	lua_rawseti(L, -3, num+1); // [num, xs, ys]
-	lua_pushnil(L);            // [num, xs, ys, nil]
-	lua_rawseti(L, -2, num+1); // [num, xs, ys]
+	_fillPathfindTables(L, path, 6, 7);
 
 	return 3; // found path?, x positions, y positions
+}
+
+luaFunc(createFindPath)
+{
+	PathFinding::State **statep = (PathFinding::State**)lua_newuserdata(L, sizeof(void*));
+	*statep = PathFinding::initFindPath();
+	luaL_getmetatable(L, "pathfinder");
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+luaFunc(findPathBegin)
+{
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	Vector start(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
+	ObsType obs = ObsType(lua_tointeger(L, 8));
+	PathFinding::beginFindPath(state, start, end, obs);
+	luaReturnNil();
+}
+
+luaFunc(findPathUpdate)
+{
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	int limit = lua_tointeger(L, 2);
+	bool done = PathFinding::updateFindPath(state, limit);
+	luaReturnBool(done);
+}
+
+luaFunc(findPathFinish)
+{
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	VectorPath path;
+	bool found = PathFinding::finishFindPath(state, path);
+	if(!found)
+		luaReturnBool(false);
+
+	lua_pushinteger(L, (int)path.getNumPathNodes());
+	_fillPathfindTables(L, path, 2, 3);
+	return 3;
+}
+
+luaFunc(findPathGetStats)
+{
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	unsigned stepsDone, nodesExpanded;
+	PathFinding::getStats(state, stepsDone, nodesExpanded);
+	lua_pushinteger(L, stepsDone);
+	lua_pushinteger(L, nodesExpanded);
+	return 2;
 }
 
 luaFunc(castLine)
@@ -8777,14 +8841,14 @@ luaFunc(castLine)
 	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
 	int tiletype = lua_tointeger(L, 5);
 	if(!tiletype)
-		tiletype = -1;
+		tiletype = OT_BLOCKING;
 	Vector step = end - v;
 	int steps = step.getLength2D() / TILE_SIZE;
 	step.setLength2D(TILE_SIZE);
 
 	for(int i = 0; i < steps; ++i)
 	{
-		if(dsq->game->isObstructed(TileVector(v), tiletype))
+		if(dsq->game->getGridRaw(TileVector(v)) & tiletype)
 		{
 			lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
 			lua_pushnumber(L, v.x);
@@ -9628,6 +9692,11 @@ static const struct {
 	luaRegister(getObstruction),
 	luaRegister(getGridRaw),
 	luaRegister(findPath),
+	luaRegister(createFindPath),
+	luaRegister(findPathBegin),
+	luaRegister(findPathUpdate),
+	luaRegister(findPathFinish),
+	luaRegister(findPathGetStats),
 	luaRegister(castLine),
 	luaRegister(getUserInputString),
 	luaRegister(getMaxCameraValues),
@@ -10880,6 +10949,13 @@ lua_State *ScriptInterface::createLuaVM()
 
 	// In case a script errors outside of any protected environment, report and exit.
 	lua_atpanic(state, l_panicHandler);
+
+	// Register Lua classes
+	luaL_newmetatable(state, "pathfinder");
+	lua_pushliteral(state, "__gc");
+	lua_pushcfunction(state, _pathfindDelete);
+	lua_settable(state, -3);
+	lua_pop(state, 1);
 
 	// All done, return the new state.
 	return state;
