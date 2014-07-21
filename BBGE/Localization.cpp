@@ -7,7 +7,6 @@
 #endif
 
 #ifdef BBGE_BUILD_MACOSX
-#include <Carbon/Carbon.h>
 #include <CoreFoundation/CFLocale.h>
 #include <CoreFoundation/CFString.h>
 
@@ -112,13 +111,11 @@ std::string getSystemLocale()
 	if ((buf = (CFStringRef)CFLocaleGetValue(locale, kCFLocaleLanguageCode)) != NULL)
 	{
 		localeStr = _CFToStdString(buf);
-		CFRelease(buf);
 
 		if ((buf = (CFStringRef)CFLocaleGetValue(locale, kCFLocaleCountryCode)) != NULL)
 		{
 			localeStr += "_";
 			localeStr += _CFToStdString(buf);
-			CFRelease(buf);
 		}
 	}
 
