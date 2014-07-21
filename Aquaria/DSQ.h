@@ -31,8 +31,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AquariaMenuItem.h"
 #include "ScriptInterface.h"
 
-#include "PathFinding.h"
-
 #include "TTFFont.h"
 
 #include "tinyxml2.h"
@@ -1397,7 +1395,6 @@ public:
 
 	void jumpToSection(InStream &inFile, const std::string &section);
 
-	PathFinding pathFinding;
 	void runGesture(const std::string &line);
 	void generateCollisionMask(RenderObject *r);
 	void toggleRenderCollisionShapes();

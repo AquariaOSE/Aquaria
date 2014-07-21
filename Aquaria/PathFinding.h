@@ -30,14 +30,23 @@ class RenderObject;
 class SearchGrid;
 class Game;
 
-class PathFinding
+namespace PathFinding
 {
-public:
+	class State;
+
 	void forceMinimumPath(VectorPath &path, const Vector &start, const Vector &dest);
 	void molestPath(VectorPath &path);
 	void generatePath(RenderObject *go, TileVector g1, TileVector g2, int offx=0, int offy=0);
 
 	bool generatePathSimple(VectorPath& path, const Vector& start, const Vector& end, unsigned int step = 0, unsigned int obs = 0);
+
+	State *initFindPath();
+	void deleteFindPath(State *state);
+
+	void beginFindPath(State *state, const Vector& start, const Vector& end, unsigned int obs = 0);
+	bool updateFindPath(State *state, int limit);
+	bool finishFindPath(State *state, VectorPath& path, unsigned step = 0);
+	void getStats(State *state, unsigned& stepsDone, unsigned& nodesExpanded);
 };
 
 #endif
