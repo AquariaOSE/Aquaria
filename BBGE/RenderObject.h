@@ -167,8 +167,6 @@ public:
 
 	void addChild(RenderObject *r, ParentManaged pm, RenderBeforeParent rbp = RBP_NONE, ChildOrder order = CHILD_BACK);
 	void removeChild(RenderObject *r);
-	void removeAllChildren();
-	void recursivelyRemoveEveryChild();
 
 	Vector getRealPosition();
 	Vector getRealScale();
@@ -279,7 +277,7 @@ public:
 	InterpolatedVector *positionSnapTo;
 
 	//DestroyType destroyType;
-	typedef std::list<RenderObject*> Children;
+	typedef std::vector<RenderObject*> Children;
 	Children children, childGarbage;
 
 	//Flags flags;
@@ -311,10 +309,6 @@ protected:
 	virtual void onUpdate(float dt);
 	virtual void deathNotify(RenderObject *r);
 	virtual void onEndOfLife() {}
-
-	// spread parentManagedStatic flag to the entire child tree
-	void propogateParentManagedStatic();
-	void propogateAlpha();
 
 	inline void updateLife(float dt)
 	{
