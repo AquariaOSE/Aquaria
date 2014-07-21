@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 #include "ScriptedEntity.h"
 #include "Shot.h"
+#include "PathFinding.h"
 
 //Shader Entity::blurShader;
 
@@ -485,10 +486,10 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 
 	swimPath = swim;
 	//debugLog("Generating path to: " + path->name);
-	dsq->pathFinding.generatePath(this, TileVector(start), TileVector(dest));
-	int sz = position.data->path.getNumPathNodes();
-	position.data->path.addPathNode(path->nodes[0].position, 1);
-	VectorPath old = position.data->path;
+	PathFinding::generatePath(this, TileVector(start), TileVector(dest));
+	//int sz = position.data->path.getNumPathNodes();
+	//position.data->path.addPathNode(path->nodes[0].position, 1);
+	//VectorPath old = position.data->path;
 	/*std::ostringstream os;
 	os << "Path length: " << sz;
 	debugLog(os.str());*/
@@ -509,12 +510,12 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 
 	//debugLog("Molesting Path");
 
-	dsq->pathFinding.molestPath(position.data->path);
+	PathFinding::molestPath(position.data->path);
 	//position.data->path.realPercentageCalc();
 	//position.data->path.cut(4);
 
 	//debugLog("forcing path to minimum 2 nodes");
-	dsq->pathFinding.forceMinimumPath(position.data->path, start, dest);
+	PathFinding::forceMinimumPath(position.data->path, start, dest);
 	//debugLog("Done");
 
 	//debugLog("Calculating Time");
