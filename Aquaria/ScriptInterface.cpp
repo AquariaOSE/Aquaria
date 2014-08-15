@@ -891,6 +891,7 @@ MakeTypeCheckFunc(isNode, SCO_PATH);
 MakeTypeCheckFunc(isObject, SCO_RENDEROBJECT);
 MakeTypeCheckFunc(isEntity, SCO_ENTITY)
 MakeTypeCheckFunc(isScriptedEntity, SCO_SCRIPTED_ENTITY)
+MakeTypeCheckFunc(isBone, SCO_BONE)
 MakeTypeCheckFunc(isShot, SCO_SHOT)
 MakeTypeCheckFunc(isWeb, SCO_WEB)
 MakeTypeCheckFunc(isIng, SCO_INGREDIENT)
@@ -10121,6 +10122,7 @@ static const struct {
 	luaRegister(isObject),
 	luaRegister(isEntity),
 	luaRegister(isScriptedEntity),
+	luaRegister(isBone),
 	luaRegister(isShot),
 	luaRegister(isWeb),
 	luaRegister(isIng),
