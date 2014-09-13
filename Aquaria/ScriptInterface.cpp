@@ -5525,7 +5525,7 @@ luaFunc(entity_doElementInteraction)
 		if (!touchWidth)
 			touchWidth = 16;
 
-		ElementUpdateList& elems = dsq->game->elementUpdateList;
+		ElementUpdateList& elems = dsq->game->elementInteractionList;
 		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
 		{
 			(*it)->doInteraction(e, mult, touchWidth);

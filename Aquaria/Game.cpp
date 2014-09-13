@@ -10824,6 +10824,7 @@ void Game::removeState()
 	core->particlesPaused = false;
 
 	elementUpdateList.clear();
+	elementInteractionList.clear();
 
 	dsq->setCursor(CURSOR_NORMAL);
 	dsq->darkLayer.toggle(0);
