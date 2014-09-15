@@ -547,13 +547,13 @@ tinyxml2::XMLError readXML(const std::string& fn, tinyxml2::XMLDocument& doc)
 	return err;
 }
 
-tinyxml2::XMLDocument *readXML(const std::string& fn, tinyxml2::XMLError *perr /* = 0 */)
+tinyxml2::XMLDocument *readXML(const std::string& fn, tinyxml2::XMLError *perr /* = 0 */, bool keepEmpty /* = false */)
 {
 	tinyxml2::XMLDocument *doc = new tinyxml2::XMLDocument();
 	tinyxml2::XMLError err = readXML(fn, *doc);
 	if(perr)
 		*perr = err;
-	if(err != tinyxml2::XML_SUCCESS)
+	if(err != tinyxml2::XML_SUCCESS && !keepEmpty)
 	{
 		delete doc;
 		doc = NULL;
