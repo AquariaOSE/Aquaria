@@ -1181,6 +1181,7 @@ luaFunc(obj_addChild)
 	RenderObject *r = robj(L);
 	RenderObject *which = robj(L, 2);
 	bool takeOwnership = getBool(L, 3);
+	bool front = getBool(L, 4);
 	if (r && which)
 	{
 		if (takeOwnership)
@@ -1190,7 +1191,7 @@ luaFunc(obj_addChild)
 			dsq->getState(dsq->game->name)->removeRenderObjectFromList(which);
 			which->setStateDataObject(NULL);
 			core->removeRenderObject(which, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-			r->addChild(which, PM_POINTER);
+			r->addChild(which, PM_POINTER, RBP_NONE, front ? CHILD_FRONT : CHILD_BACK);
 		}
 		else
 			r->addChild(which, PM_STATIC);
