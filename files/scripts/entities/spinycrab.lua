@@ -119,6 +119,9 @@ function enterState(me)
 		quad_alpha(v.glow, 0, 3)
 		bone_alpha(v.eyes, 0, 3)
 		entity_animate(me, "runAway", -1)
+	elseif entity_isState(me, STATE_DEAD) then
+		quad_delete(v.glow)
+		v.glow = 0
 	end
 end
 
