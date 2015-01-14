@@ -5920,11 +5920,11 @@ void Game::rebuildElementUpdateList()
 			{
 				elementUpdateList.push_back(e);
 			}
-			ElementEffect ee = dsq->getElementEffectByIndex(e->getElementEffectIndex());
-			if(ee.type == EFX_WAVY)
-			{
-				elementInteractionList.push_back(e);
-			}
+		}
+		ElementEffect ee = dsq->getElementEffectByIndex(e->getElementEffectIndex());
+		if(ee.type == EFX_WAVY)
+		{
+			elementInteractionList.push_back(e);
 		}
 	}
 }
