@@ -7127,7 +7127,7 @@ void Avatar::onUpdate(float dt)
 
 	if(!core->particlesPaused && elementEffectMult > 0)
 	{
-		ElementUpdateList& elems = dsq->game->elementUpdateList;
+		ElementUpdateList& elems = dsq->game->elementInteractionList;
 		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
 		{
 			(*it)->doInteraction(this, elementEffectMult, 16);

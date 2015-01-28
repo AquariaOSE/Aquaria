@@ -84,12 +84,8 @@ void Element::doInteraction(Entity *ent, float mult, float touchWidth)
 			eff->hitPerc = hitPerc;
 			eff->touchVel = ent->vel;
 			eff->effectMult = mult;
-			return;
 		}
 	}
-	//eff->touchVel = Vector(0, 0);
-	//eff->hitPerc = 0;
-	eff->touching = false;
 }
 
 void Element::updateEffects(float dt)
@@ -110,6 +106,7 @@ void Element::updateEffects(float dt)
 
 			if (eff->touching)
 			{
+				eff->touching = false;
 				float ramp = eff->touchVel.getLength2D()/800.0f;
 				if (ramp < 0)	ramp = 0;
 				if (ramp > 1)	ramp = 1;

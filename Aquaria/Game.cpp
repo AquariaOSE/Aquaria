@@ -5910,22 +5910,14 @@ void Game::rebuildElementUpdateList()
 	elementUpdateList.clear();
 	elementInteractionList.clear();
 	for (int i = 0; i < dsq->getNumElements(); i++)
-	//for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
 	{
-		//RenderObjectLayer *rl = dsq->getRenderObjectLayer(i);
 		Element *e = dsq->getElement(i);
-		if (e && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
-		{
-			if (e->getElementEffectIndex() != -1)
-			{
-				elementUpdateList.push_back(e);
-			}
-			ElementEffect ee = dsq->getElementEffectByIndex(e->getElementEffectIndex());
-			if(ee.type == EFX_WAVY)
-			{
-				elementInteractionList.push_back(e);
-			}
-		}
+		const int eeidx = e->getElementEffectIndex();
+		if (eeidx != -1 && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
+			elementUpdateList.push_back(e);
+		ElementEffect ee = dsq->getElementEffectByIndex(eeidx);
+		if(ee.type == EFX_WAVY)
+			elementInteractionList.push_back(e);
 	}
 }
 
@@ -6460,18 +6452,9 @@ void Game::applyState()
 	}
 #endif
 
-	worldMapRender = 0;
-	dsq->continuity.worldMap.revealMap(sceneToLoad);
-
-	debugLog("Creating WorldMapRender");
-	if(dsq->mod.isActive() && dsq->mod.mapRevealMethod != REVEAL_UNSPECIFIED)
-		WorldMapRender::setRevealMethod(dsq->mod.mapRevealMethod);
-	else
-		WorldMapRender::setRevealMethod((WorldMapRevealMethod)dsq->user.video.worldMapRevealMethod);
-
-	worldMapRender = new WorldMapRender;
-	addRenderObject(worldMapRender, LR_WORLDMAP);
-
+/*
+	if (liFlag == 100)
+	*/
 
 	if (verbose) debugLog("Creating Avatar");
 	avatar = new Avatar();
@@ -6534,6 +6517,8 @@ void Game::applyState()
 	}
 	if (verbose) debugLog("...Done");
 	backupSceneColor = sceneColor;
+
+	dsq->continuity.worldMap.revealMap(sceneName);
 
 	colorTest();
 
@@ -6662,6 +6647,18 @@ void Game::applyState()
 	timerText->alpha = 0;
 	timerText->followCamera = 1;
 	addRenderObject(timerText, LR_MINIMAP);
+
+	worldMapRender = 0;
+
+	if(dsq->mod.isActive() && dsq->mod.mapRevealMethod != REVEAL_UNSPECIFIED)
+		WorldMapRender::setRevealMethod(dsq->mod.mapRevealMethod);
+	else
+		WorldMapRender::setRevealMethod((WorldMapRevealMethod)dsq->user.video.worldMapRevealMethod);
+
+	worldMapRender = new WorldMapRender;
+	addRenderObject(worldMapRender, LR_WORLDMAP);
+	// to hide minimap
+	//miniMapRender->position += Vector(800,0);
 
 	sceneToLoad="";
 
@@ -10819,6 +10816,7 @@ void Game::removeState()
 	core->particlesPaused = false;
 
 	elementUpdateList.clear();
+	elementInteractionList.clear();
 
 	dsq->setCursor(CURSOR_NORMAL);
 	dsq->darkLayer.toggle(0);

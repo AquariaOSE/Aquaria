@@ -38,6 +38,7 @@ extern "C"
 #include "AfterEffect.h"
 #include "PathFinding.h"
 #include <algorithm>
+#include "Gradient.h"
 
 #include "../BBGE/MathFunctions.h"
 
@@ -891,6 +892,7 @@ MakeTypeCheckFunc(isNode, SCO_PATH);
 MakeTypeCheckFunc(isObject, SCO_RENDEROBJECT);
 MakeTypeCheckFunc(isEntity, SCO_ENTITY)
 MakeTypeCheckFunc(isScriptedEntity, SCO_SCRIPTED_ENTITY)
+MakeTypeCheckFunc(isBone, SCO_BONE)
 MakeTypeCheckFunc(isShot, SCO_SHOT)
 MakeTypeCheckFunc(isWeb, SCO_WEB)
 MakeTypeCheckFunc(isIng, SCO_INGREDIENT)
@@ -1180,6 +1182,7 @@ luaFunc(obj_addChild)
 	RenderObject *r = robj(L);
 	RenderObject *which = robj(L, 2);
 	bool takeOwnership = getBool(L, 3);
+	bool front = getBool(L, 4);
 	if (r && which)
 	{
 		if (takeOwnership)
@@ -1189,7 +1192,7 @@ luaFunc(obj_addChild)
 			dsq->getState(dsq->game->name)->removeRenderObjectFromList(which);
 			which->setStateDataObject(NULL);
 			core->removeRenderObject(which, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-			r->addChild(which, PM_POINTER);
+			r->addChild(which, PM_POINTER, RBP_NONE, front ? CHILD_FRONT : CHILD_BACK);
 		}
 		else
 			r->addChild(which, PM_STATIC);
@@ -5524,7 +5527,7 @@ luaFunc(entity_doElementInteraction)
 		if (!touchWidth)
 			touchWidth = 16;
 
-		ElementUpdateList& elems = dsq->game->elementUpdateList;
+		ElementUpdateList& elems = dsq->game->elementInteractionList;
 		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
 		{
 			(*it)->doInteraction(e, mult, touchWidth);
@@ -8974,6 +8977,19 @@ luaFunc(learnRecipe)
 	luaReturnNil();
 }
 
+luaFunc(setBGGradient)
+{
+	if(!dsq->game->grad)
+		dsq->game->createGradient();
+	Vector c1(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
+	Vector c2(lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
+	if(getBool(L, 7))
+		dsq->game->grad->makeHorizontal(c1, c2);
+	else
+		dsq->game->grad->makeVertical(c1, c2);
+	luaReturnNil();
+}
+
 luaFunc(createDebugText)
 {
 	DebugFont *txt = new DebugFont(lua_tointeger(L, 2), getString(L, 1));
@@ -10080,6 +10096,7 @@ static const struct {
 	luaRegister(getScreenVirtualSize),
 	luaRegister(isMiniMapCursorOkay),
 	luaRegister(isShuttingDownGameState),
+	luaRegister(setBGGradient),
 
 	luaRegister(inv_isFull),
 	luaRegister(inv_getMaxAmount),
@@ -10121,6 +10138,7 @@ static const struct {
 	luaRegister(isObject),
 	luaRegister(isEntity),
 	luaRegister(isScriptedEntity),
+	luaRegister(isBone),
 	luaRegister(isShot),
 	luaRegister(isWeb),
 	luaRegister(isIng),

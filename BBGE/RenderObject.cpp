@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "MathFunctions.h"
 
 #include <assert.h>
+#include <algorithm>
 
 bool	RenderObject::renderCollisionShape			= false;
 int		RenderObject::lastTextureApplied			= 0;
@@ -467,13 +468,29 @@ void RenderObject::toggleCull(bool value)
 
 void RenderObject::moveToFront()
 {
-	if (layer != -1)
+	if(RenderObject *p = parent)
+	{
+		if(p->children.size() && p->children[0] != this)
+		{
+			p->removeChild(this);
+			p->addChild(this, (ParentManaged)this->pm, RBP_NONE, CHILD_FRONT);
+		}
+	}
+	else if (layer != -1)
 		core->renderObjectLayers[this->layer].moveToFront(this);
 }
 
 void RenderObject::moveToBack()
 {
-	if (layer != -1)
+	if(RenderObject *p = parent)
+	{
+		if(p->children.size() && p->children[p->children.size()-1] != this)
+		{
+			p->removeChild(this);
+			p->addChild(this, (ParentManaged)this->pm, RBP_NONE, CHILD_BACK);
+		}
+	}
+	else if (layer != -1)
 		core->renderObjectLayers[this->layer].moveToBack(this);
 }
 

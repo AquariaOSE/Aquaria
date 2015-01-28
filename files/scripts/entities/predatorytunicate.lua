@@ -143,27 +143,28 @@ function update(me, dt)
 		entity_setState(me, STATE_IDLE)
 	end
 	]]--
-	
-	if entity_isState(me, STATE_TRAP) and v.trappedEnt ~= 0 then
-		entity_setPosition(v.trappedEnt, v.hx, v.hy, 0.1)
+    
+	if v.trappedEnt ~= 0 then
 		if entity_isDead(v.trappedEnt) then
 			v.trappedEnt = 0
 			entity_setState(me, STATE_IDLE)
-		end		
-	elseif entity_isState(me, STATE_TRAPPED) and v.trappedEnt ~= 0 then
-		entity_setPosition(v.trappedEnt, v.hx, v.hy)
-		v.hurtTimer = v.hurtTimer + dt
-		if v.hurtTimer > 1 then
-			if entity_getEntityType(v.trappedEnt) == ET_ENEMY then
-				entity_damage(v.trappedEnt, me, 2, DT_ENEMY_TRAP)
-			else
-				entity_damage(v.trappedEnt, me, 1, DT_ENEMY_TRAP)
+		elseif entity_isState(me, STATE_TRAP) then
+			entity_setPosition(v.trappedEnt, v.hx, v.hy, 0.1)
+		elseif entity_isState(me, STATE_TRAPPED) then
+			entity_setPosition(v.trappedEnt, v.hx, v.hy)
+			v.hurtTimer = v.hurtTimer + dt
+			if v.hurtTimer > 1 then
+				if entity_getEntityType(v.trappedEnt) == ET_ENEMY then
+					entity_damage(v.trappedEnt, me, 2, DT_ENEMY_TRAP)
+				else
+					entity_damage(v.trappedEnt, me, 1, DT_ENEMY_TRAP)
+				end
+				if entity_isDead(v.trappedEnt) then
+					v.trappedEnt = 0
+					entity_setState(me, STATE_IDLE)
+				end
+				v.hurtTimer = 0
 			end
-			if entity_isDead(v.trappedEnt) then
-				v.trappedEnt = 0
-				entity_setState(me, STATE_IDLE)
-			end
-			v.hurtTimer = 0
 		end
 	end
 end
