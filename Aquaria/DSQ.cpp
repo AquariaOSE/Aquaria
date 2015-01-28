@@ -4829,7 +4829,12 @@ void DSQ::modifyDt(float &dt)
 	if (isDeveloperKeys())
 	{
 		if (core->getKeyState(KEY_G))
-			dt *= 4;
+		{
+			if(core->getShiftState())
+				dt *= 10;
+			else
+				dt *= 4;
+		}
 		else if (core->getKeyState(KEY_F))
 		{
 			if (core->getShiftState())

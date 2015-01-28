@@ -34,13 +34,13 @@ std::string SkeletalSprite::secondaryAnimationPath		= "";
 
 static std::map<std::string, XMLDocument*> skelCache;
 
-static XMLDocument *_retrieveSkeletalXML(const std::string& name)
+static XMLDocument *_retrieveSkeletalXML(const std::string& name, bool keepEmpty)
 {
 	std::map<std::string, XMLDocument*>::iterator it = skelCache.find(name);
 	if(it != skelCache.end())
 		return it->second;
 
-	XMLDocument *doc = readXML(name);
+	XMLDocument *doc = readXML(name, NULL, keepEmpty);
 	if(doc)
 		skelCache[name] = doc;
 
@@ -49,6 +49,8 @@ static XMLDocument *_retrieveSkeletalXML(const std::string& name)
 
 void SkeletalSprite::clearCache()
 {
+	for(std::map<std::string, XMLDocument*>::iterator it = skelCache.begin(); it != skelCache.end(); ++it)
+		delete it->second;
 	skelCache.clear();
 }
 
@@ -869,7 +871,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 	}
 
 	int i = 0;
-	XMLDocument *xml = _retrieveSkeletalXML(file);
+	XMLDocument *xml = _retrieveSkeletalXML(file, true);
 	xml->Clear();
 
 	XMLElement *animationLayers = xml->NewElement("AnimationLayers");
@@ -1179,10 +1181,15 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 
 	if (!exists(file))
 	{
-		errorLog("Could not load skin[" + file + "]");
+		errorLog("Could not load skin[" + file + "] - File not found.");
 		return;
 	}
-	XMLDocument *d = _retrieveSkeletalXML(file);
+	XMLDocument *d = _retrieveSkeletalXML(file, false);
+	if(!d)
+	{
+		errorLog("Could not load skin[" + file + "] - Malformed XML.");
+		return;
+	}
 
 	XMLElement *bonesXml = d->FirstChildElement("Bones");
 	if (bonesXml)
@@ -1315,7 +1322,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 
 	file = core->adjustFilenameCase(file);
 
-	XMLDocument *xml = _retrieveSkeletalXML(file);
+	XMLDocument *xml = _retrieveSkeletalXML(file, false);
 	if(!xml)
 	{
 		filenameLoaded = "";
