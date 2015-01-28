@@ -5910,22 +5910,14 @@ void Game::rebuildElementUpdateList()
 	elementUpdateList.clear();
 	elementInteractionList.clear();
 	for (int i = 0; i < dsq->getNumElements(); i++)
-	//for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
 	{
-		//RenderObjectLayer *rl = dsq->getRenderObjectLayer(i);
 		Element *e = dsq->getElement(i);
-		if (e && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
-		{
-			if (e->getElementEffectIndex() != -1)
-			{
-				elementUpdateList.push_back(e);
-			}
-		}
-		ElementEffect ee = dsq->getElementEffectByIndex(e->getElementEffectIndex());
+		const int eeidx = e->getElementEffectIndex();
+		if (eeidx != -1 && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
+			elementUpdateList.push_back(e);
+		ElementEffect ee = dsq->getElementEffectByIndex(eeidx);
 		if(ee.type == EFX_WAVY)
-		{
 			elementInteractionList.push_back(e);
-		}
 	}
 }
 
