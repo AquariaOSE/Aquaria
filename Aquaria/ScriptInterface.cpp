@@ -38,6 +38,7 @@ extern "C"
 #include "AfterEffect.h"
 #include "PathFinding.h"
 #include <algorithm>
+#include "Gradient.h"
 
 #include "../BBGE/MathFunctions.h"
 
@@ -8976,6 +8977,19 @@ luaFunc(learnRecipe)
 	luaReturnNil();
 }
 
+luaFunc(setBGGradient)
+{
+	if(!dsq->game->grad)
+		dsq->game->createGradient();
+	Vector c1(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
+	Vector c2(lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
+	if(getBool(L, 7))
+		dsq->game->grad->makeHorizontal(c1, c2);
+	else
+		dsq->game->grad->makeVertical(c1, c2);
+	luaReturnNil();
+}
+
 luaFunc(createDebugText)
 {
 	DebugFont *txt = new DebugFont(lua_tointeger(L, 2), getString(L, 1));
@@ -10082,6 +10096,7 @@ static const struct {
 	luaRegister(getScreenVirtualSize),
 	luaRegister(isMiniMapCursorOkay),
 	luaRegister(isShuttingDownGameState),
+	luaRegister(setBGGradient),
 
 	luaRegister(inv_isFull),
 	luaRegister(inv_getMaxAmount),
