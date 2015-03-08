@@ -52,6 +52,24 @@ float DebugFont::getHeight()
 	return fontDrawSize * lines.size() * 1.5f; // vspc in render()
 }
 
+float DebugFont::getStringWidth(const std::string& text)
+{
+	int maxchars = 0;
+	int c = 0;
+	for (size_t i = 0; i < text.size(); i++)
+	{
+		if(text[i] == '\n')
+		{
+			maxchars = std::max(maxchars, c);
+			c = 0;
+		}
+		else
+			++c;
+	}
+	maxchars = std::max(maxchars, c);
+	return float(fontDrawSize * maxchars);
+}
+
 void DebugFont::formatText()
 {
 	std::string text;

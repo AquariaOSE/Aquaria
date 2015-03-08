@@ -75,6 +75,7 @@ public:
 	virtual float getHeight();
 	void unloadDevice();
 	void reloadDevice();
+	virtual float getStringWidth(const std::string& text);
 
 	int getNumLines();
 protected:

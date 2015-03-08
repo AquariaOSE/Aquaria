@@ -8651,7 +8651,7 @@ luaFunc(avatar_updatePosition)
 
 luaFunc(avatar_toggleMovement)
 {
-	dsq->game->avatar->toggleMovement((bool)lua_tointeger(L, 1));
+	dsq->game->avatar->toggleMovement(getBool(L));
 	luaReturnNil();
 }
 
@@ -9045,6 +9045,12 @@ luaFunc(text_getHeight)
 {
 	BaseText *txt = getText(L);
 	luaReturnNum(txt ? txt->getHeight() : 0.0f);
+}
+
+luaFunc(text_getStringWidth)
+{
+	BaseText *txt = getText(L);
+	luaReturnNum(txt ? txt->getStringWidth(getString(L, 2)) : 0.0f);
 }
 
 luaFunc(loadShader)
@@ -10120,6 +10126,7 @@ static const struct {
 	luaRegister(text_setWidth),
 	luaRegister(text_setAlign),
 	luaRegister(text_getHeight),
+	luaRegister(text_getStringWidth),
 
 	luaRegister(loadShader),
 	luaRegister(createShader),
