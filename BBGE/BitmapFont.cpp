@@ -425,6 +425,30 @@ int BitmapText::getNumLines()
 	return lines.size();
 }
 
+float BitmapText::getStringWidth(const std::string& text)
+{
+	std::string tmp;
+	int maxsize = 0;
+	tmp.reserve(text.length());
+	for (size_t i = 0; i < text.size(); i++)
+	{
+		if(text[i] == '\n')
+		{
+			std::pair<int, int> dim;
+			bmpFont->font.GetStringSize(tmp, &dim);
+			maxsize = std::max(maxsize, dim.first);
+			tmp.resize(0);
+		}
+		else
+			tmp += text[i];
+	}
+	std::pair<int, int> dim;
+	bmpFont->font.GetStringSize(tmp, &dim);
+	maxsize = std::max(maxsize, dim.first);
+
+	return maxsize * bmpFont->scale;
+}
+
 /*
 BitmapText::BitmapText() : RenderObject()
 {

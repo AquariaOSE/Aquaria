@@ -14,6 +14,7 @@ public:
 	virtual void setFontSize(int sz) = 0;
 	virtual void setAlign(Align a) = 0;
 	virtual float getHeight() = 0;
+	virtual float getStringWidth(const std::string& text) = 0;
 
 };
 
