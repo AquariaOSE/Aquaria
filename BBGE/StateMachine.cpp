@@ -28,7 +28,6 @@ StateMachine::StateMachine ()
 	enqueuedState = nextState = prevState = currentState = STATE_NONE;
 
 	stateCounter = 0;
-	currentStateData = enqueuedStateData = 0;
 }
 
 int StateMachine::getState()
@@ -46,7 +45,7 @@ int StateMachine::getPrevState()
 	return prevState;
 }
   
-void StateMachine::perform(int state, float time, void *stateData)
+void StateMachine::perform(int state, float time)
 {
 	//debugLog("in perform");
 	stateExtraDT = 0;
@@ -56,33 +55,30 @@ void StateMachine::perform(int state, float time, void *stateData)
 	
 	// do this to prevent scripts from repeating endlessly when running main loops
 	enqueuedState = STATE_NONE;
-	enqueuedStateData = 0;
 
  	onExitState(currentState);
 	stateCounter = 0;
 	stateTime = time;
 	currentState = state;
 	nextState = STATE_NONE;
-	this->currentStateData = stateData;
 	//debugLog("onActionInit");
 	onEnterState(currentState);
 	
 	//debugLog("done");
 }	 
 
-void StateMachine::setState(int state, float time, bool force, void *stateData)
+void StateMachine::setState(int state, float time, bool force)
 {
 	if (canSetState(state))
 	{
 		if (force)
 		{
-			perform(state, time, stateData);
+			perform(state, time);
 		}
 		else
 		{
 			enqueuedState = state;
 			enqueuedTime = time;
-			enqueuedStateData = stateData;
 		}
 	}
 }
@@ -140,64 +136,9 @@ void StateMachine::onUpdate (float dt)
 	}
 	if (enqueuedState != STATE_NONE)
 	{
-		perform(enqueuedState, enqueuedTime, enqueuedStateData);
+		perform(enqueuedState, enqueuedTime);
 		enqueuedState = STATE_NONE;
 		enqueuedTime = -1;
 	}
 }
 
-void StateMachine::addCooldown(int state, float time)
-{
-	Cooldown c;
-	c.state = state;
-	c.timer.start(time);
-	cooldowns.push_back(c);
-}
-
-bool StateMachine::isCooldown(int state)
-{
-	for (Cooldowns::iterator i = cooldowns.begin(); i != cooldowns.end(); i++)
-	{
-		if ((*i).state == state && (*i).timer.isActive())
-		{
-			return true;
-		}
-	}
-	return false;
-}
-
-void StateMachine::removeCooldown(int state)
-{
-	for (Cooldowns::iterator i = cooldowns.begin(); i != cooldowns.end(); i++)
-	{
-		if ((*i).state == state)
-		{
-			cooldowns.erase(i);
-			break;
-		}
-	}
-}
-
-void StateMachine::updateCooldowns(float dt)
-{
-	std::queue<int> coolqueue;
-
-	for (Cooldowns::iterator i = cooldowns.begin(); i != cooldowns.end(); i++)
-	{
-		Cooldown *c = &((*i));
-		if (c->timer.updateCheck(dt)) {
-			coolqueue.push(c->state);
-		}
-	}
-
-	while (!coolqueue.empty())
-	{
-		removeCooldown(coolqueue.back());
-		coolqueue.pop();
-	}
-}
-
-void StateMachine::clearCooldowns()
-{
-	cooldowns.clear();
-}
