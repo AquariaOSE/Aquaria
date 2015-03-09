@@ -68,6 +68,7 @@ Texture::Texture() : Resource()
 
 	repeat = false;
 	repeating = false;
+	failed = false;
 	pngSetStandardOrientation(0);
 
 	ow = oh = -1;
@@ -273,11 +274,13 @@ void Texture::reload()
 void Texture::load(std::string file)
 {
 	Texture::textureError = TEXERR_OK;
+	failed = false;
 
 	if (file.size()<4)
 	{
 		errorLog("Texture Name is Empty or Too Short");
 		Texture::textureError = TEXERR_FILENOTFOUND;
+		failed = true;
 		return;
 	}
 
@@ -365,6 +368,7 @@ void Texture::load(std::string file)
 			Texture::textureError = TEXERR_FILENOTFOUND;
 			width = 64;
 			height = 64;
+			failed = true;
 		}
 	}
 	else
@@ -375,6 +379,7 @@ void Texture::load(std::string file)
 		Texture::textureError = TEXERR_FILENOTFOUND;
 		width = 64;
 		height = 64;
+		failed = true;
 	}
 }
 
@@ -464,6 +469,7 @@ void Texture::loadPNG(const std::string &file)
 		width = 64;
 		height = 64;
 		Texture::textureError = TEXERR_FILENOTFOUND;
+		failed = true;
 	}
 
 	if(memptr)

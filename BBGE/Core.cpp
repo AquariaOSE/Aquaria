@@ -4484,7 +4484,7 @@ Texture *Core::doTextureAdd(const std::string &texture, const std::string &loadN
 	{
 		t->addRef();
 
-		Texture::textureError = TEXERR_OK;
+		Texture::textureError = t->failed ? TEXERR_FILENOTFOUND : TEXERR_OK;
 
 		/*
 		std::ostringstream os;

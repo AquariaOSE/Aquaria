@@ -1328,8 +1328,11 @@ void RenderObject::setTexture(const std::string &n)
 	if (name.empty())
         return;
 
-    if(texture && texture->name == core->getInternalTextureName(name))
+    if(texture && !texture->failed && texture->name == core->getInternalTextureName(name))
+	{
+		Texture::textureError = TEXERR_OK;
         return; // no texture change
+	}
 
     Texture *oldtex = texture;
 	Texture *t = core->addTexture(name);
