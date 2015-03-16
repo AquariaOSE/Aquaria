@@ -1368,7 +1368,19 @@ void Continuity::loadEatBank()
 {
 	eats.clear();
 
-	InStream inf("data/eats.txt");
+	std::string file;
+	bool found = false;
+	if (dsq->mod.isActive())
+	{
+		file = dsq->mod.getPath() + "eats.txt";
+		if(exists(file))
+			found = true;
+	}
+
+	if(!found)
+		file = "data/eats.txt";
+
+	InStream inf(file.c_str());
 
 	EatData curData;
 	std::string read;
