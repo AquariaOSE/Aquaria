@@ -964,11 +964,6 @@ class Core : public ActionMapper, public StateManager
 {
 public:
 
-	enum RemoveResource
-	{
-		DESTROY = 0,
-		NO_DESTROY
-	};
 	// init
 	Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
 	void initPlatform(const std::string &filesystem);
@@ -1023,13 +1018,12 @@ public:
 	void enable2D(int pixelScaleX=0, int pixelScaleY=0, bool forcePixelScale=false);
 	void addRenderObject(RenderObject *o, int layer=0);
 	void switchRenderObjectLayer(RenderObject *o, int toLayer);
-	void addResource(Resource *r);
-	Resource *findResource(const std::string &name);
-	Texture *findTexture(const std::string &name);
-	void removeResource(std::string name, RemoveResource removeFlag);
+	void addTexture(Texture *r);
+	CountedPtr<Texture> findTexture(const std::string &name);
+	void removeTexture(Texture *res);
+	void clearResources();
 
-	Texture *addTexture(const std::string &texture);
-	void removeTexture(std::string texture);
+	CountedPtr<Texture> addTexture(const std::string &texture);
 
 	PostProcessingFX postProcessingFx;
 
@@ -1047,7 +1041,6 @@ public:
 
 	void enqueueRenderObjectDeletion(RenderObject *object);
 	void clearGarbage();
-	void clearResources();
 
 
 	bool isNested() { return nestedMains > 1; }
@@ -1103,8 +1096,7 @@ public:
 		HINSTANCE	hInstance;		// Holds The Instance Of The Application
 	#endif
 
-	std::vector<Resource*>resources;
-	std::vector<std::string> resourceNames;
+	std::vector<Texture*> resources;
 
 	RenderObjectLayer *getRenderObjectLayer(int i);
 	std::vector <int> renderObjectLayerOrder;
@@ -1247,7 +1239,6 @@ public:
 	
 
 	Joystick joystick;
-	std::string getInternalTextureName(const std::string &name);
 	void setClearColor(const Vector &c);
 	Vector getClearColor();
 	int flipMouseButtons;
@@ -1337,7 +1328,7 @@ protected:
 
 	virtual void onReloadResources();
 
-	Texture* doTextureAdd(const std::string &texture, const std::string &name, std::string internalTextureName);
+	std::pair<CountedPtr<Texture>, TextureLoadResult> doTextureAdd(const std::string &texture, const std::string &name, std::string internalTextureName);
 	
 	void deleteRenderObjectMemory(RenderObject *r);
 	bool _hasFocus;
@@ -1397,6 +1388,8 @@ protected:
 	bool _fullscreen;
 
 	int numSavedScreenshots;
+
+	CountedPtr<Texture> texError;
 
 	//unsigned int windowWidth, windowHeight;
 

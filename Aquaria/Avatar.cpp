@@ -4115,8 +4115,7 @@ void Avatar::refreshNormalForm()
 		hair->alphaMod = 1.0;
 		if (!c.empty() && c!="Naija")
 		{
-			hair->setTexture("naija/cape-"+c);
-			if (Texture::textureError != TEXERR_OK)
+			if(!hair->setTexture("naija/cape-"+c))
 				hair->alphaMod = 0;
 		}
 		else

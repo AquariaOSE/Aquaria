@@ -416,11 +416,8 @@ void RenderObject::destroy()
 		parent->removeChild(this);
 		parent = 0;
 	}
-	if (texture)
-	{
-		texture->removeRef(); 
-		texture = 0;
-	}
+
+	texture = NULL;
 }
 
 void RenderObject::copyProperties(RenderObject *target)
@@ -1320,26 +1317,20 @@ void RenderObject::reloadDevice()
 	}
 }
 
-void RenderObject::setTexture(const std::string &n)
+bool RenderObject::setTexture(const std::string &n)
 {
 	std::string name = n;
 	stringToLowerUserData(name);
 
 	if (name.empty())
-        return;
+		return false;
 
-    if(texture && !texture->failed && texture->name == core->getInternalTextureName(name))
-	{
-		Texture::textureError = TEXERR_OK;
-        return; // no texture change
-	}
+	if(texture && name == texture->name)
+		return true; // no texture change
 
-    Texture *oldtex = texture;
-	Texture *t = core->addTexture(name);
-	setTexturePointer(t, NO_ADD_REF);
-
-    if (oldtex)
-        oldtex->removeRef();
+	CountedPtr<Texture> tex = core->addTexture(name);
+	setTexturePointer(tex);
+	return !!tex;
 }
 
 float RenderObject::getSortDepth()

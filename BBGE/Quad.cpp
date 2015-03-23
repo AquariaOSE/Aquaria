@@ -798,6 +798,11 @@ void Quad::onSetTexture()
 		width = this->texture->width;
 		height = this->texture->height;
 	}
+	else
+	{
+		width = 64;
+		height = 64;
+	}
 }
 
 PauseQuad::PauseQuad() : Quad(), pauseLevel(0)

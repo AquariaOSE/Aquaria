@@ -2222,7 +2222,7 @@ void DSQ::refreshResourcesForPatch(const std::string& name)
 	{
 		for(int i = 0; i < dsq->resources.size(); ++i)
 		{
-			Resource *r = dsq->resources[i];
+			Texture *r = dsq->resources[i];
 			if(files.find(r->name) != files.end())
 				r->reload();
 		}
@@ -2313,7 +2313,7 @@ void DSQ::shutdown()
 	SkeletalSprite::clearCache();
 
 
-	cursor->setTexturePointer(0, RenderObject::NO_ADD_REF);
+	cursor->setTexturePointer(0);
 
 	UNREFTEX(texCursor);
 	UNREFTEX(texCursorSwim);
@@ -2410,7 +2410,7 @@ void DSQ::setTexturePointers()
 	texCursorSing = core->addTexture("cursor-sing");
 
 	if (cursor)
-		cursor->setTexturePointer(texCursor, RenderObject::NO_ADD_REF);
+		cursor->setTexturePointer(texCursor);
 }
 
 void DSQ::setCursor(CursorType type)
@@ -2418,22 +2418,22 @@ void DSQ::setCursor(CursorType type)
 	switch(type)
 	{
 	case CURSOR_NORMAL:
-		cursor->setTexturePointer(texCursor, RenderObject::NO_ADD_REF);
+		cursor->setTexturePointer(texCursor);
 	break;
 	case CURSOR_LOOK:
-		cursor->setTexturePointer(texCursorLook, RenderObject::NO_ADD_REF);
+		cursor->setTexturePointer(texCursorLook);
 	break;
 	case CURSOR_BURST:
-		cursor->setTexturePointer(texCursorBurst, RenderObject::NO_ADD_REF);
+		cursor->setTexturePointer(texCursorBurst);
 	break;
 	case CURSOR_SWIM:
-		cursor->setTexturePointer(texCursorSwim, RenderObject::NO_ADD_REF);
+		cursor->setTexturePointer(texCursorSwim);
 	break;
 	case CURSOR_SING:
-		cursor->setTexturePointer(texCursorSing, RenderObject::NO_ADD_REF);
+		cursor->setTexturePointer(texCursorSing);
 	break;
 	default:
-		cursor->setTexturePointer(texCursor, RenderObject::NO_ADD_REF);
+		cursor->setTexturePointer(texCursor);
 	break;
 	}
 }
@@ -4550,7 +4550,7 @@ void DSQ::onUpdate(float dt)
 	if (isDeveloperKeys() && fpsText && cmDebug && cmDebug->alpha == 1)
 	{
 		std::ostringstream os;
-		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount << " | RC: " << Core::dbg_numRenderCalls;
+		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount << " | RC: " << Core::dbg_numRenderCalls << " | RES: " << core->resources.size();
 		os << " | p: " << core->processedRenderObjectCount << " | t: " << core->totalRenderObjectCount;
 		os << " | s: " << dsq->continuity.seconds;
 		os << " | evQ: " << core->eventQueue.getSize();

@@ -1262,7 +1262,7 @@ public:
 	Quad *bar_left, *bar_right, *bar_up, *bar_down;
 	Quad *barFade_left, *barFade_right;
 
-	Texture *texCursor, *texCursorSwim, *texCursorBurst, *texCursorSing, *texCursorLook;
+	CountedPtr<Texture> texCursor, texCursorSwim, texCursorBurst, texCursorSing, texCursorLook;
 
 	void setBlackBarsColor(Vector color);
 	
