@@ -847,16 +847,17 @@ void AquariaMenuItem::useSound(const std::string &tex)
 	useSfx = tex;
 }
 
-void AquariaMenuItem::useQuad(const std::string &tex)
+bool AquariaMenuItem::useQuad(const std::string &tex)
 {
 	if (quad)
 	{
 		debugLog("trying to call useQuad twice on the same object");
-		return;
+		return true;
 	}
 	quad = new Quad;
-	quad->setTexture(tex);
+	bool good = quad->setTexture(tex);
 	addChild(quad, PM_POINTER);
+	return good;
 }
 
 void AquariaMenuItem::useGlow(const std::string &tex, int w, int h)

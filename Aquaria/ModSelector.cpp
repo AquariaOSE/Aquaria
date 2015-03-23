@@ -640,8 +640,7 @@ bool ModIconOnline::fixIcon()
 			quad->setDecayRate(2);
 			quad = 0;
 		}
-		useQuad(iconfile);
-		result = Texture::textureError == TEXERR_OK;
+		result = useQuad(iconfile);
 	}
 	if(!quad)
 	{

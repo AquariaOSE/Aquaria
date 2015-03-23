@@ -83,18 +83,14 @@ public:
 
 	static RenderObjectLayer *rlayer;
 
-	enum AddRefChoice { NO_ADD_REF = 0, ADD_REF = 1};
-
-	void setTexturePointer(Texture *t, AddRefChoice addRefChoice)
+	void setTexturePointer(CountedPtr<Texture> t)
 	{
 		this->texture = t;
-		if (addRefChoice == ADD_REF)
-			texture->addRef();
 		onSetTexture();
 	}
 
 	void setStateDataObject(StateData *state);
-	void setTexture(const std::string &name);
+	bool setTexture(const std::string &name);
 
 	void toggleAlpha(float t = 0.2);
 	void matrixChain();
@@ -239,7 +235,7 @@ public:
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
 	InterpolatedVector velocity, gravity;
 
-	Texture *texture;
+	CountedPtr<Texture> texture;
 
 	//int mode;
 

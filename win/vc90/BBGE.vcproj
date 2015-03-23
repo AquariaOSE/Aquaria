@@ -397,6 +397,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\Refcounted.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\RenderObject.cpp"
 				>
 			</File>
@@ -414,14 +418,6 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\RenderRect.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\Resource.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\Resource.h"
 				>
 			</File>
 			<File

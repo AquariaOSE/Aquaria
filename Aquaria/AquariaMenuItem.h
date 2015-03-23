@@ -81,7 +81,7 @@ public:
 	XMLElement *ability, *xmlItem;
 	int choice;
 	Quad *glow, *quad;
-	void useQuad(const std::string &tex);
+	bool useQuad(const std::string &tex);
 	void useGlow(const std::string &tex, int w, int h);
 	void useSound(const std::string &tex);
 	

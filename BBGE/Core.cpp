@@ -4240,26 +4240,13 @@ void Core::showBuffer()
 // when destroy is called on them
 void Core::clearResources()
 {
-	std::vector<Resource*> deletedResources;
-	int i;
-	for (i = 0; i < resources.size(); i++)
+	if(resources.size())
 	{
-		int j = 0;
-		for (j = 0; j < deletedResources.size(); j++)
-		{
-			if (deletedResources[j] == resources[i])
-				break;
-		}
-		if (j == deletedResources.size())
-		{
-			deletedResources.push_back (resources[i]);
-			Resource *r = resources[i];
-			r->destroy();
-			delete r;
-		}
+		debugLog("Warning: The following resources were not cleared:");
+		for(size_t i = 0; i < resources.size(); ++i)
+			debugLog(resources[i]->name);
+		resources.clear(); // nothing we can do; refcounting is messed up
 	}
-	resourceNames.clear();
-	resources.clear();
 }
 
 void Core::shutdownInputLibrary()
@@ -4408,20 +4395,7 @@ bool Core::exists(const std::string &filename)
 	return ::exists(filename, false); // defined in Base.cpp
 }
 
-Resource* Core::findResource(const std::string &name)
-{
-	for (int i = 0; i < resources.size(); i++)
-	{
-		if (resources[i]->name == name)
-		{
-			return resources[i];
-		}
-	}
-	return 0;
-}
-
-
-Texture* Core::findTexture(const std::string &name)
+CountedPtr<Texture> Core::findTexture(const std::string &name)
 {
 	//stringToUpper(name);
 	//std::ofstream out("texturefind.log");
@@ -4432,17 +4406,10 @@ Texture* Core::findTexture(const std::string &name)
 		//NOTE: ensure all names are lowercase before this point
 		if (resources[i]->name == name)
 		{
-			return (Texture*)resources[i];
+			return resources[i];
 		}
 	}
 	return 0;
-}
-
-std::string Core::getInternalTextureName(const std::string &name)
-{
-	std::string n = name;
-	stringToUpper(n);
-	return n;
 }
 
 // This handles unix/win32 relative paths: ./rel/path
@@ -4462,7 +4429,7 @@ std::string Core::getTextureLoadName(const std::string &texture)
 	return loadName;
 }
 
-Texture *Core::doTextureAdd(const std::string &texture, const std::string &loadName, std::string internalTextureName)
+std::pair<CountedPtr<Texture>, TextureLoadResult> Core::doTextureAdd(const std::string &texture, const std::string &loadName, std::string internalTextureName)
 {
 	if (texture.empty() || !ISPATHROOT(texture))
 	{
@@ -4479,47 +4446,32 @@ Texture *Core::doTextureAdd(const std::string &texture, const std::string &loadN
 	}
 
 	stringToLowerUserData(internalTextureName);
-	Texture *t = core->findTexture(internalTextureName);
+	CountedPtr<Texture> t = core->findTexture(internalTextureName);
 	if (t)
-	{
-		t->addRef();
-
-		Texture::textureError = t->failed ? TEXERR_FILENOTFOUND : TEXERR_OK;
-
-		/*
-		std::ostringstream os;
-		os << "reference texture: " << internalTextureName << " ref: " << t->getRef();
-		debugLog(os.str());
-		*/
-
-		//msg ("found texture " + internalTextureName);
-		return t;
-	}
+		return std::make_pair(t, TEX_SUCCESS);
 
 	t = new Texture;
 	t->name = internalTextureName;
-	t->load(loadName);
-	t->addRef();
-	//resources.push_back (t);
-	addResource(t);
+	unsigned res = TEX_FAILED;
 
-	if (debugLogTextures)
+	if(t->load(loadName))
+		res |= (TEX_LOADED | TEX_SUCCESS);
+	else
 	{
-		std::ostringstream os;
-		os << "LOADED TEXTURE FROM DISK: [" << internalTextureName << "] ref: " << t->getRef() << " idx: " << resources.size()-1;
-		debugLog(os.str());
+		t->width = 64;
+		t->height = 64;
 	}
 
-	return t;
+	return std::make_pair(t, (TextureLoadResult)res);
 }
 
-Texture* Core::addTexture(const std::string &textureName)
+CountedPtr<Texture> Core::addTexture(const std::string &textureName)
 {
-	if (textureName.empty()) return 0;
+	if (textureName.empty()) return NULL;
 
 	BBGE_PROF(Core_addTexture);
 
-	Texture *texPointer = 0;
+	std::pair<CountedPtr<Texture>, TextureLoadResult> texResult;
 
 	std::string texture = textureName;
 	stringToLowerUserData(texture);
@@ -4537,29 +4489,33 @@ Texture* Core::addTexture(const std::string &textureName)
 		std::string ln = loadName;
 		texture = secondaryTexturePath + texture;
 		loadName = texture;
-		texPointer = doTextureAdd(texture, loadName, internalTextureName);
-		if (Texture::textureError != TEXERR_OK)
-		{
-			if (texPointer)
-			{
-				texPointer->destroy();
-				texPointer = 0;
-			}
-			texPointer = doTextureAdd(t, ln, internalTextureName);
-		}
+		texResult = doTextureAdd(texture, loadName, internalTextureName);
+		if (!texResult.second)
+			texResult = doTextureAdd(t, ln, internalTextureName);
 	}
 	else
-		texPointer = doTextureAdd(texture, loadName, internalTextureName);
+		texResult = doTextureAdd(texture, loadName, internalTextureName);
 
-	return texPointer;
+	addTexture(texResult.first.content());
+
+	if(debugLogTextures)
+	{
+		if (texResult.second & TEX_LOADED)
+		{
+			std::ostringstream os;
+			os << "LOADED TEXTURE FROM DISK: [" << internalTextureName << "] idx: " << resources.size()-1;
+			debugLog(os.str());
+		}
+		else if(!(texResult.second & TEX_SUCCESS))
+		{
+			std::ostringstream os;
+			os << "FAILED TO LOAD TEXTURE: [" << internalTextureName << "] idx: " << resources.size()-1;
+			debugLog(os.str());
+		}
+	}
+
+	return texResult.first;
 }
-
-void Core::removeTexture(std::string texture)
-{
-	//std::string internalName = baseTextureDirectory + texture;
-	removeResource(texture, DESTROY);
-}
-
 
 void Core::addRenderObject(RenderObject *o, int layer)
 {
@@ -4603,59 +4559,36 @@ void Core::reloadResources()
 	onReloadResources();
 }
 
-void Core::addResource(Resource *r)
+void Core::addTexture(Texture *r)
 {
+	for(size_t i = 0; i < resources.size(); ++i)
+		if(resources[i] == r)
+			return;
+
 	resources.push_back(r);
-	resourceNames.push_back(r->name);
 	if (r->name.empty())
 	{
 		debugLog("Empty name resource added");
 	}
 }
 
-void Core::removeResource(std::string name, RemoveResource removeFlag)
+void Core::removeTexture(Texture *res)
 {
-	//Resource *r = findResource(name);
-	//int idx = 0;
-	int i = 0;
-	std::vector<Resource*>copy;
-	copy = resources;
-	resources.clear();
+	std::vector<Texture*> copy;
+	copy.swap(resources);
 
-
-	std::vector <std::string> copyNames;
-	copyNames = resourceNames;
-	resourceNames.clear();
-
-	bool isDestroyed = false;
-
-
-	for (i = 0; i < copy.size(); i++)
+	for (size_t i = 0; i < copy.size(); ++i)
 	{
-#ifdef _DEBUG
-			std::string s = copy[i]->name;
-#endif
-		if (!isDestroyed && copy[i]->name == name)
+		if (copy[i] == res)
 		{
-			if (removeFlag == DESTROY)
-			{
-				copy[i]->destroy();
-				delete copy[i];
-				isDestroyed = true;
-			}
-			continue;
-		}
-		// also remove other entries of the same resource
-		else if (isDestroyed && copyNames[i] == name)
-		{
-			continue;
-		}
-		else
-		{
-			resources.push_back(copy[i]);
-			resourceNames.push_back(copy[i]->name);
+			copy[i]->destroy();
+			copy[i] = copy.back();
+			copy.pop_back();
+			break;
 		}
 	}
+
+	resources.swap(copy);
 }
 
 void Core::deleteRenderObjectMemory(RenderObject *r)
@@ -4709,25 +4642,6 @@ void Core::clearGarbage()
 	}
 
 	garbage.clear();
-
-	// to clear resources
-	for (std::vector<Resource*>::iterator i = resources.begin(); i != resources.end(); )
-	{
-		if ((*i)->getRef() == 0)
-		{
-			clearedGarbageFlag = true;
-			delete (*i);
-			i = resources.erase(i);
-			continue;
-		}
-
-		if ((*i)->getRef() < 0)
-		{
-			errorLog("Texture ref < 0");
-		}
-
-		i++;
-	}
 }
 
 bool Core::canChangeState()

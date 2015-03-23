@@ -48,7 +48,7 @@ struct BmpFont
 	Vector fontTopColor;
 	Vector fontBtmColor;
 
-	Texture *overrideTexture;
+	CountedPtr<Texture> overrideTexture;
 };
 
 class BitmapText : public BaseText

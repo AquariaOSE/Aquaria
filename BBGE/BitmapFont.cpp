@@ -45,11 +45,8 @@ void BmpFont::destroy()
 		font.Destroy();
 		loaded = false;
 	}
-	if (overrideTexture)
-	{
-		overrideTexture->removeRef();
-		overrideTexture = 0;
-	}
+
+	overrideTexture = NULL;
 }
 
 void BmpFont::load(const std::string &file, float scale, bool loadTexture)

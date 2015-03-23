@@ -482,7 +482,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/RenderObject.cpp
     ${BBGEDIR}/RenderObjectLayer.cpp
     ${BBGEDIR}/RenderRect.cpp
-    ${BBGEDIR}/Resource.cpp
     ${BBGEDIR}/RoundedRect.cpp
     ${BBGEDIR}/ScreenTransition.cpp
     ${BBGEDIR}/ScriptObject.cpp
