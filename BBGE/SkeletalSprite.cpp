@@ -1291,10 +1291,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 	filenameLoaded = "";
 	loaded = false;
 	stopAnimation();
-	for (int i = 0; i < animLayers.size(); i++)
-	{
-		animLayers[i].currentAnimation = 0;
-	}
+	animLayers.clear();
 	deleteBones();
 
 
