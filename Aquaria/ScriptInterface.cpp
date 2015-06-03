@@ -1545,10 +1545,15 @@ luaFunc(obj_setUpdateCull)
 {
 	RenderObject *r = robj(L);;
 	if (r)
-		r->updateCull = lua_tointeger(L, 2);
+		r->updateCull = lua_tonumber(L, 2);
 	luaReturnNil();
 }
 
+luaFunc(obj_getUpdateCull)
+{
+	RenderObject *r = robj(L);;
+	luaReturnNum(r ? r->updateCull : 0.0f);
+}
 
 luaFunc(obj_setPositionX)
 {
@@ -1836,6 +1841,7 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  setCull		) \
 	RO_FUNC(getter, prefix,  setCullRadius	) \
 	RO_FUNC(getter, prefix,  setUpdateCull	) \
+	RO_FUNC(getter, prefix,  getUpdateCull	) \
 	RO_FUNC(getter, prefix,  setRenderPass	) \
 	RO_FUNC(getter, prefix,  setOverrideRenderPass	) \
 	RO_FUNC(getter, prefix,  setPositionX	) \
@@ -4850,12 +4856,13 @@ luaFunc(getWallNormal)
 	x = lua_tonumber(L, 1);
 	y = lua_tonumber(L, 2);
 	int range = lua_tointeger(L, 3);
+	int obs  = lua_tointeger(L, 4);
 	if (range == 0)
-	{
 		range = 5;
-	}
+	if (!obs)
+		obs = OT_BLOCKING;
 
-	Vector n = dsq->game->getWallNormal(Vector(x, y), range);
+	Vector n = dsq->game->getWallNormal(Vector(x, y), range, NULL, obs);
 
 	luaReturnVec2(n.x, n.y);
 }
@@ -7866,7 +7873,7 @@ luaFunc(entity_offsetUpdate)
 	Entity *e = entity(L);
 	if (e)
 	{
-		int uc = e->updateCull;
+		float uc = e->updateCull;
 		e->updateCull = -1;
 		float t = float(rand()%10000)/1000.0f;
 		e->update(t);
@@ -9150,6 +9157,24 @@ luaFunc(pe_isRunning)
 	luaReturnBool(pe && pe->isRunning());
 }
 
+luaFunc(getPerformanceCounter)
+{
+#ifdef BBGE_BUILD_SDL2
+	luaReturnNum((lua_Number)SDL_GetPerformanceCounter());
+#else
+	luaReturnNum((lua_Number)SDL_GetTicks());
+#endif
+}
+
+luaFunc(getPerformanceFreq)
+{
+#ifdef BBGE_BUILD_SDL2
+	luaReturnNum((lua_Number)SDL_GetPerformanceFrequency());
+#else
+	luaReturnNum((lua_Number)1000);
+#endif
+}
+
 //--------------------------------------------------------------------------------------------
 
 #define luaRegister(func)	{#func, l_##func}
@@ -10153,6 +10178,10 @@ static const struct {
 	luaRegister(isText),
 	luaRegister(isShader),
 	luaRegister(isParticleEffect),
+
+	luaRegister(getPerformanceCounter),
+	luaRegister(getPerformanceFreq),
+
 
 
 #undef MK_FUNC

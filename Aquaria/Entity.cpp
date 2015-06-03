@@ -1151,7 +1151,7 @@ void Entity::update(float dt)
 	Vector backupPos = position;
 	Vector backupVel = vel;
 
-	bool doUpdate = (updateCull == -1 || (position - core->screenCenter).isLength2DIn(updateCull));
+	bool doUpdate = (updateCull < 0 || (position - core->screenCenter).isLength2DIn(updateCull));
 	if (doUpdate && !(pauseFreeze && dsq->game->isPaused()))
 	{
 
