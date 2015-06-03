@@ -267,7 +267,7 @@ public:
 	bool shareColorWithChildren;
 
 	bool cull;
-	int updateCull;
+	float updateCull;
 	int layer;
 
 	InterpolatedVector *positionSnapTo;
