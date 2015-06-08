@@ -1113,9 +1113,7 @@ luaFunc(obj_setBlendType)
 luaFunc(obj_setTexture)
 {
 	RenderObject *r = robj(L);
-	if (r)
-		r->setTexture(getString(L, 2));
-	luaReturnNil();
+	luaReturnBool(r ? r->setTexture(getString(L, 2)) : false);
 }
 
 luaFunc(obj_getTexture)
@@ -4916,6 +4914,21 @@ luaFunc(getStringFlag)
 	luaReturnStr(dsq->continuity.getStringFlag(getString(L, 1)).c_str());
 }
 
+luaFunc(node_setEmitter)
+{
+	Path *p = path(L);
+	if(p)
+		p->setEmitter(getString(L, 2));
+	luaReturnPtr(p->emitter);
+}
+
+luaFunc(node_getEmitter)
+{
+	Path *p = path(L);
+	luaReturnPtr(p ? p->emitter : NULL);
+}
+
+
 luaFunc(node_setActive)
 {
 	Path *p = path(L);
@@ -4923,6 +4936,13 @@ luaFunc(node_setActive)
 	if (p)
 	{
 		p->active = v;
+		if(p->emitter)
+		{
+			if(v)
+				p->emitter->start();
+			else
+				p->emitter->stop();
+		}
 	}
 	luaReturnNil();
 }
@@ -6489,7 +6509,7 @@ luaFunc(playSfx)
 	if (sfx.vol <= 0)
 		sfx.vol = 1;
 	sfx.loops = lua_tointeger(L, 4);
-	if(lua_isnumber(L, 6) && lua_isnumber(L, 7))
+	if(lua_isnumber(L, 5) && lua_isnumber(L, 6))
 	{
 		sfx.x = lua_tonumber(L, 5);
 		sfx.y =  lua_tonumber(L, 6);
@@ -9999,6 +10019,8 @@ static const struct {
 
 	luaRegister(node_setActive),
 	luaRegister(node_isActive),
+	luaRegister(node_setEmitter),
+	luaRegister(node_getEmitter),
 
 
 	luaRegister(setSceneColor),
