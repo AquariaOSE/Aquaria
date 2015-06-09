@@ -1023,7 +1023,7 @@ public:
 	void removeTexture(Texture *res);
 	void clearResources();
 
-	CountedPtr<Texture> addTexture(const std::string &texture);
+	CountedPtr<Texture> addTexture(const std::string &texture, TextureLoadResult *pLoadResult = 0);
 
 	PostProcessingFX postProcessingFx;
 

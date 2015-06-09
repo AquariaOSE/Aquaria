@@ -1328,9 +1328,10 @@ bool RenderObject::setTexture(const std::string &n)
 	if(texture && name == texture->name)
 		return true; // no texture change
 
-	CountedPtr<Texture> tex = core->addTexture(name);
+	TextureLoadResult res = TEX_FAILED;
+	CountedPtr<Texture> tex = core->addTexture(name, &res);
 	setTexturePointer(tex);
-	return !!tex;
+	return !!tex && res != TEX_FAILED;
 }
 
 float RenderObject::getSortDepth()
