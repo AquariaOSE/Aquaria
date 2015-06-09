@@ -4465,14 +4465,18 @@ std::pair<CountedPtr<Texture>, TextureLoadResult> Core::doTextureAdd(const std::
 	return std::make_pair(t, (TextureLoadResult)res);
 }
 
-CountedPtr<Texture> Core::addTexture(const std::string &textureName)
+CountedPtr<Texture> Core::addTexture(const std::string &textureName, TextureLoadResult *pLoadResult /* = 0 */)
 {
-	if (textureName.empty()) return NULL;
-
 	BBGE_PROF(Core_addTexture);
 
-	std::pair<CountedPtr<Texture>, TextureLoadResult> texResult;
+	if (textureName.empty())
+	{
+		if(pLoadResult)
+			*pLoadResult = TEX_FAILED;
+		return NULL;
+	}
 
+	std::pair<CountedPtr<Texture>, TextureLoadResult> texResult;
 	std::string texture = textureName;
 	stringToLowerUserData(texture);
 	std::string internalTextureName = texture;
@@ -4513,7 +4517,8 @@ CountedPtr<Texture> Core::addTexture(const std::string &textureName)
 			debugLog(os.str());
 		}
 	}
-
+	if(pLoadResult)
+		*pLoadResult = texResult.second;
 	return texResult.first;
 }
 
