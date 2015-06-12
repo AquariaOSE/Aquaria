@@ -3661,7 +3661,8 @@ void Continuity::reset()
 
 	speedTypes.clear();
 	InStream inFile("data/speedtypes.txt");
-	int n, spd;
+	int n;
+	float spd;
 	while (inFile >> n)
 	{
 		inFile >> spd;
@@ -3679,7 +3680,7 @@ void Continuity::reset()
 	core->resetTimer();
 }
 
-int Continuity::getSpeedType(int speedType)
+float Continuity::getSpeedType(int speedType)
 {
 	if (speedType >= speedTypes.size() || speedType < 0)
 	{

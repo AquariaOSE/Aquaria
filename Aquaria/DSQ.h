@@ -992,7 +992,7 @@ public:
 	float getStory();
 	void setStory(float v);
 
-	int getSpeedType(int speedType);
+	float getSpeedType(int speedType);
 	void setNaijaModel(std::string model);
 
 
@@ -1159,7 +1159,7 @@ public:
 
 protected:
 	std::vector<EatData> eats;
-	std::vector<int> speedTypes;
+	std::vector<float> speedTypes;
 	float story;
 	WorldType worldType;
 
@@ -1395,7 +1395,6 @@ public:
 
 	void jumpToSection(InStream &inFile, const std::string &section);
 
-	void runGesture(const std::string &line);
 	void generateCollisionMask(RenderObject *r);
 	void toggleRenderCollisionShapes();
 
