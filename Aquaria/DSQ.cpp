@@ -3869,58 +3869,6 @@ void DSQ::jumpToSection(InStream &inFile, const std::string &section)
 	debugLog("could not find section [" + section + "]");
 }
 
-
-void DSQ::runGesture(const std::string &line)
-{
-	std::istringstream is(line);
-	std::string target;
-	is >> target;
-	debugLog("Gesture: " + line);
-	if (target == "entity")
-	{
-		std::string entName;
-		is >> entName;
-		Entity *e = getEntityByName(entName);
-		if (e)
-		{
-			std::string cmd;
-			is >> cmd;
-			if (cmd=="anim" || cmd=="animate")
-			{
-				std::string anim;
-				is >> anim;
-				int loop = 0;
-				int group = 0;
-				if (anim == "idle")
-				{
-					e->skeletalSprite.stopAllAnimations();
-					loop = -1;
-				}
-				if (line.find("upperBody")!=std::string::npos)
-				{
-					group = 1;
-				}
-				if (line.find("loop")!=std::string::npos)
-				{
-					loop = -1;
-				}
-				if (line.find("stopAll")!=std::string::npos)
-				{
-					e->skeletalSprite.stopAllAnimations();
-				}
-				e->skeletalSprite.transitionAnimate(anim, 0.2, loop, group);
-			}
-			else if (cmd == "moveToNode")
-			{
-				std::string node;
-				is >> node;
-				Path *p = dsq->game->getPathByName(node);
-				e->moveToNode(p, 0);
-			}
-		}
-	}
-}
-
 bool DSQ::runScript(const std::string &name, const std::string &function, bool ignoremissing /* = false */)
 {
 	if (!scriptInterface.runScript(name, function, ignoremissing))

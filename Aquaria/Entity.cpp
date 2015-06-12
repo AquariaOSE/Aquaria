@@ -255,7 +255,7 @@ Entity::Entity()
 	//debugLog("dsq->addEntity()");
 
 	dsq->addEntity(this);
-	maxSpeed = oldMaxSpeed = 300;
+	maxSpeed = 300;
 	entityDead = false;
 	health = maxHealth = 5;
 	invincibleBreak = false;
@@ -440,43 +440,45 @@ void Entity::setName(const std::string &name)
 	this->name = name;
 }
 
-void Entity::followPath(Path *p, int speedType, int dir, bool deleteOnEnd)
+float Entity::followPath(Path *p, float speed, int dir, bool deleteOnEnd)
 {
-	if (p)
-	{
-		deleteOnPathEnd = deleteOnEnd;
+	if(!speed)
+		speed = getMaxSpeed();
+	deleteOnPathEnd = deleteOnEnd;
 
-		position.stopPath();
-		position.ensureData();
-		position.data->path.clear();
-		if (dir)
+	position.stopPath();
+	position.ensureData();
+	position.data->path.clear();
+	if (dir)
+	{
+		for (int i = p->nodes.size()-1; i >=0; i--)
 		{
-			for (int i = p->nodes.size()-1; i >=0; i--)
-			{
-				PathNode pn = p->nodes[i];
-				position.data->path.addPathNode(pn.position, 1.0f-(float(i/float(p->nodes.size()))));
-			}
+			PathNode pn = p->nodes[i];
+			position.data->path.addPathNode(pn.position, 1.0f-(float(i/float(p->nodes.size()))));
 		}
-		else
-		{
-			for (int i = 0; i < p->nodes.size(); i++)
-			{
-				PathNode pn = p->nodes[i];
-				position.data->path.addPathNode(pn.position, float(i/float(p->nodes.size())));
-			}
-		}
-		//debugLog("Calculating Time");
-		float time = position.data->path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
-		//debugLog("Starting");
-		position.data->path.getPathNode(0)->value = position;
-		position.startPath(time);//, 1.0f/2.0f);
 	}
+	else
+	{
+		for (int i = 0; i < p->nodes.size(); i++)
+		{
+			PathNode pn = p->nodes[i];
+			position.data->path.addPathNode(pn.position, float(i/float(p->nodes.size())));
+		}
+	}
+	//debugLog("Calculating Time");
+	float time = position.data->path.getLength()/speed;
+	//debugLog("Starting");
+	position.data->path.getPathNode(0)->value = position;
+	position.startPath(time);//, 1.0f/2.0f);
+	return time;
 }
 
-void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
+float Entity::moveToPos(Vector dest, float speed, int dieOnPathEnd, bool swim)
 {
+	if(!speed)
+		speed = getMaxSpeed();
+
 	Vector start = position;
-	Vector dest = path->nodes[0].position;
 	followEntity = 0;
 	//watchingEntity = 0;
 
@@ -519,7 +521,7 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 	//debugLog("Done");
 
 	//debugLog("Calculating Time");
-	float time = position.data->path.getLength()/(float)dsq->continuity.getSpeedType(speedType);
+	float time = position.data->path.getLength()/speed;
 	//debugLog("Starting");
 	position.data->path.getPathNode(0)->value = position;
 	position.startPath(time);//, 1.0f/2.0f);
@@ -536,6 +538,8 @@ void Entity::moveToNode(Path *path, int speedType, int dieOnPathEnd, bool swim)
 
 	//position.startSpeedPath(dsq->continuity.getSpeedType(speedType));
 	//position.startPath(((position.data->path.getNumPathNodes()*TILE_SIZE*4)-2)/dsq->continuity.getSpeedType(speedType));
+
+	return time;
 }
 
 void Entity::stopFollowingPath()
@@ -1010,7 +1014,7 @@ bool Entity::isNearObstruction(int sz, int type, TileVector *hitTile)
 	return v;
 }
 
-bool Entity::touchAvatarDamage(int radius, float dmg, const Vector &override, int speed, float pushTime, Vector collidePos)
+bool Entity::touchAvatarDamage(int radius, float dmg, const Vector &override, float speed, float pushTime, Vector collidePos)
 {
 	if (isv(EV_BEASTBURST, 1) && isDamageTarget(DT_AVATAR_BITE) && dsq->continuity.form == FORM_BEAST && dsq->game->avatar->bursting)
 	{
@@ -2213,7 +2217,7 @@ bool Entity::isUnderWater(const Vector &override)
 	return false;
 }
 
-void Entity::push(const Vector &vec, float time, int maxSpeed, float dmg)
+void Entity::push(const Vector &vec, float time, float maxSpeed, float dmg)
 {
 	if (!this->isEntityDead())
 	{
@@ -2234,9 +2238,9 @@ void Entity::push(const Vector &vec, float time, int maxSpeed, float dmg)
 	//vel += pushVec;
 }
 
-void Entity::setMaxSpeed(int ms)
+void Entity::setMaxSpeed(float ms)
 {
-	maxSpeed = oldMaxSpeed = ms;
+	maxSpeed = ms;
 }
 
 int Entity::getMaxSpeed()
@@ -2395,11 +2399,6 @@ void Entity::onEnterState(int action)
 {
 	switch (action)
 	{
-	case STATE_IDLE:
-	{
-		maxSpeed = oldMaxSpeed;
-	}
-	break;
 	case STATE_DEAD:
 	{
 		if (!isGoingToBeEaten())
@@ -3020,7 +3019,7 @@ void Entity::shotHitEntity(Entity *hit, Shot *shot, Bone *b)
 {
 }
 
-bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, int overrideMaxSpeed, int ignoreObs, bool onlyVP)
+bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, float overrideMaxSpeed, int ignoreObs, bool onlyVP)
 {
 	Vector accum;
 	int c = 0;

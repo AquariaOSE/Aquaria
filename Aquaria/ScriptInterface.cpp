@@ -3326,45 +3326,67 @@ luaFunc(entity_moveToNode)
 {
 	Entity *e = entity(L);
 	Path *p = path(L, 2);
+	float time = 0;
 	if (e && p)
 	{
-		e->moveToNode(p, lua_tointeger(L, 3), lua_tointeger(L, 4), 0);
+		float speed = dsq->continuity.getSpeedType(lua_tointeger(L, 3));
+		time = e->moveToPos(p->nodes[0].position, speed, lua_tointeger(L, 4), 0);
 	}
-	luaReturnNil();
+	luaReturnNum(time);
 }
 
 luaFunc(entity_swimToNode)
 {
 	Entity *e = entity(L);
 	Path *p = path(L, 2);
+	float time = 0;
 	if (e && p)
 	{
-		e->moveToNode(p, lua_tointeger(L, 3), lua_tointeger(L, 4), 1);
-		/*
-		ScriptedEntity *se = dynamic_cast<ScriptedEntity*>(e);
-		se->swimPath = true;
-		*/
+		float speed = dsq->continuity.getSpeedType(lua_tointeger(L, 3));
+		time = e->moveToPos(p->nodes[0].position, speed, lua_tointeger(L, 4), 1);
 	}
-	luaReturnNil();
+	luaReturnNum(time);
 }
 
 luaFunc(entity_swimToPosition)
 {
 	Entity *e = entity(L);
-	//Path *p = path(L, 2);
-	Path p;
-	PathNode n;
-	n.position = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	p.nodes.push_back(n);
+	float time = 0;
 	if (e)
 	{
-		e->moveToNode(&p, lua_tointeger(L, 4), lua_tointeger(L, 5), 1);
-		/*
-		ScriptedEntity *se = dynamic_cast<ScriptedEntity*>(e);
-		se->swimPath = true;
-		*/
+		float speed = dsq->continuity.getSpeedType(lua_tointeger(L, 4));
+		time = e->moveToPos(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), speed, lua_tointeger(L, 5), 1);
 	}
-	luaReturnNil();
+	luaReturnNum(time);
+}
+
+luaFunc(entity_moveToNodeSpeed)
+{
+	Entity *e = entity(L);
+	Path *p = path(L, 2);
+	float time = 0;
+	if (e && p)
+		time = e->moveToPos(p->nodes[0].position, lua_tonumber(L, 3), lua_tointeger(L, 4), 0);
+	luaReturnNum(time);
+}
+
+luaFunc(entity_swimToNodeSpeed)
+{
+	Entity *e = entity(L);
+	Path *p = path(L, 2);
+	float time = 0;
+	if (e && p)
+		time = e->moveToPos(p->nodes[0].position, lua_tonumber(L, 3), lua_tointeger(L, 4), 1);
+	luaReturnNum(time);
+}
+
+luaFunc(entity_swimToPositionSpeed)
+{
+	Entity *e = entity(L);
+	float time = 0;
+	if (e)
+		time = e->moveToPos(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tointeger(L, 5), 1);
+	luaReturnNum(time);
 }
 
 
@@ -3650,15 +3672,30 @@ luaFunc(loadMap)
 luaFunc(entity_followPath)
 {
 	Entity *e = entity(L);
+	float time = 0;
 	if (e)
 	{
 		Path *p = path(L, 2);
 		int speedType = lua_tointeger(L, 3);
 		int dir = lua_tointeger(L, 4);
-
-		e->followPath(p, speedType, dir);
+		float speed = dsq->continuity.getSpeedType(speedType);
+		time = e->followPath(p, speed, dir);
 	}
-	luaReturnNil();
+	luaReturnNum(time);
+}
+
+luaFunc(entity_followPathSpeed)
+{
+	Entity *e = entity(L);
+	float time = 0;
+	if (e)
+	{
+		Path *p = path(L, 2);
+		float speed = lua_tonumber(L, 3);
+		int dir = lua_tointeger(L, 4);
+		time = e->followPath(p, speed, dir);
+	}
+	luaReturnNum(time);
 }
 
 luaFunc(spawnIngredient)
@@ -6058,7 +6095,7 @@ luaFunc(entity_setMaxSpeed)
 {
 	Entity *e = entity(L);
 	if (e)
-		e->setMaxSpeed(lua_tointeger(L, 2));
+		e->setMaxSpeed(lua_tonumber(L, 2));
 
 	luaReturnNil();
 }
@@ -9599,6 +9636,7 @@ static const struct {
 	luaRegister(entity_stopInterpolating),
 
 	luaRegister(entity_followPath),
+	luaRegister(entity_followPathSpeed),
 	luaRegister(entity_isFollowingPath),
 	luaRegister(entity_followEntity),
 	luaRegister(entity_sound),
@@ -9852,6 +9890,7 @@ static const struct {
 
 	luaRegister(entity_warpToNode),
 	luaRegister(entity_moveToNode),
+	luaRegister(entity_moveToNodeSpeed),
 
 	luaRegister(cam_toNode),
 	luaRegister(cam_snap),
@@ -9866,7 +9905,9 @@ static const struct {
 	luaRegister(entity_flipToVel),
 
 	luaRegister(entity_swimToNode),
+	luaRegister(entity_swimToNodeSpeed),
 	luaRegister(entity_swimToPosition),
+	luaRegister(entity_swimToPositionSpeed),
 
 
 	luaRegister(createShot),
