@@ -3137,6 +3137,11 @@ luaFunc(createShot)
 	luaReturnPtr(s);
 }
 
+luaFunc(isSkippingCutscene)
+{
+	luaReturnBool(dsq->isSkippingCutscene());
+}
+
 // deprecated, use entity_playSfx
 luaFunc(entity_sound)
 {
@@ -9995,6 +10000,7 @@ static const struct {
 	luaRegister(getNumberOfEntitiesNamed),
 
 	luaRegister(isNested),
+	luaRegister(isSkippingCutscene),
 
 	luaRegister(entity_idle),
 	luaRegister(entity_stopAllAnimations),
