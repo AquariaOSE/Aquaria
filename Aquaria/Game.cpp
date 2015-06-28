@@ -42,8 +42,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 std::vector<std::string> allowedMaps;
 
-const int PATH_ACTIVATION_RANGE		 = 800;
-
 Vector worldLeftCenter(217,250), worldRightCenter(575, 250);
 Vector opt_save_original = Vector(350, 350), opt_cancel_original = Vector(450, 350);
 
@@ -10369,7 +10367,7 @@ void Game::update(float dt)
 			{
 				Vector diff = p->nodes[0].position - dsq->game->avatar->position;
 
-				if (p->isCoordinateInside(dsq->game->avatar->position) || diff.getSquaredLength2D() < sqr(PATH_ACTIVATION_RANGE))
+				if (p->isCoordinateInside(dsq->game->avatar->position) || diff.getSquaredLength2D() < sqr(p->activationRange))
 				{
 					//if (trace(avatar->position, p->nodes[0].position))
 					{

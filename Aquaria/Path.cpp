@@ -54,6 +54,7 @@ Path::Path()
 	warpType = 0;
 	spiritFreeze = true;
 	pauseFreeze = true;
+	activationRange = 800;
 }
 
 void Path::clampPosition(Vector *pos, float radius)

@@ -5006,6 +5006,14 @@ luaFunc(node_setCursorActivation)
 	luaReturnNil();
 }
 
+luaFunc(node_setActivationRange)
+{
+	Path *p = path(L);
+	if(p)
+		p->activationRange = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
 luaFunc(node_setCatchActions)
 {
 	Path *p = path(L);
@@ -10053,6 +10061,7 @@ static const struct {
 	luaRegister(entity_isName),
 
 
+	luaRegister(node_setActivationRange),
 	luaRegister(node_setCursorActivation),
 	luaRegister(node_setCatchActions),
 
