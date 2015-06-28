@@ -145,6 +145,7 @@ public:
 	bool pauseFreeze;
 
 	PathShape pathShape;
+	float activationRange;
 
 
 	void parseWarpNodeData(const std::string &dataString);
