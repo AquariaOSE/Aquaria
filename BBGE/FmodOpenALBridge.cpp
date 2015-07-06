@@ -630,7 +630,7 @@ class OpenALSound
 {
 public:
     OpenALSound(VFILE *_fp, const bool _looping); // ctor for ogg streamed from file
-    OpenALSound(void *_data, long _size, const bool _looping); // ctor for ogg streamed from memory
+    OpenALSound(void *_data, size_t _size, const bool _looping); // ctor for ogg streamed from memory
     OpenALSound(ALuint _bid, const bool _looping); // ctor for raw samples already assigned an opanAL buffer ID
     VFILE *getFile() const { return fp; }
     const void *getData() const { return data; }
@@ -647,7 +647,7 @@ public:
 private:
     VFILE * const fp;
     void * const data;  // Only used if fp==NULL
-    const long size;    // Only used if fp==NULL
+    const size_t size;    // Only used if fp==NULL
     const bool looping;
     int refcount;
     const bool raw; // true if buffer holds raw PCM data
@@ -667,7 +667,7 @@ OpenALSound::OpenALSound(VFILE *_fp, const bool _looping)
 {
 }
 
-OpenALSound::OpenALSound(void *_data, long _size, const bool _looping)
+OpenALSound::OpenALSound(void *_data, size_t _size, const bool _looping)
     : fp(NULL)
     , data(_data)
     , size(_size)
@@ -1436,6 +1436,11 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
     VFILE *io = vfopen(core->adjustFilenameCase(fname).c_str(), "rb");
     if (io == NULL)
         return FMOD_ERR_INTERNAL;
+    size_t filesize = 0;
+    if(vfsize(io, &filesize))
+        return FMOD_ERR_INTERNAL;
+    if(!filesize)
+        return FMOD_ERR_INTERNAL;
 
     if (mode & FMOD_CREATESTREAM)
     {
@@ -1468,16 +1473,7 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
     else
     {
         // Create streaming memory decoder
-        vfseek(io, 0, SEEK_END);
-        long size = vftell(io);
-        if (vfseek(io, 0, SEEK_SET) != 0)
-        {
-            debugLog("Seek error on " + std::string(fname));
-            vfclose(io);
-            return FMOD_ERR_INTERNAL;
-        }
-
-        void *data = malloc(size);
+        void *data = malloc(filesize);
         if (data == NULL)
         {
             debugLog("Out of memory for " + std::string(fname));
@@ -1485,16 +1481,16 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
             return FMOD_ERR_INTERNAL;
         }
 
-        long nread = vfread(data, 1, size, io);
+        size_t nread = vfread(data, 1, filesize, io);
         vfclose(io);
-        if (nread != size)
+        if (nread != filesize)
         {
             debugLog("Failed to read data from " + std::string(fname));
             free(data);
             return FMOD_ERR_INTERNAL;
         }
 
-        *sound = (Sound *) new OpenALSound(data, size, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
+        *sound = (Sound *) new OpenALSound(data, filesize, (((mode & FMOD_LOOP_OFF) == 0) && (mode & FMOD_LOOP_NORMAL)));
         retval = FMOD_OK;
     }
 
