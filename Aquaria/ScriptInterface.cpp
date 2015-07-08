@@ -8466,6 +8466,44 @@ luaFunc(setGemPosition)
 	luaReturnBool(result);
 }
 
+luaFunc(setGemName)
+{
+	int gemId = lua_tointeger(L, 1);
+	bool result = false;
+
+	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	{
+		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
+		std::advance(it, gemId);
+		GemData& gem = *it;
+		gem.name = getString(L, 2);
+		result = true;
+	}
+	else
+		debugLog("setGemName: invalid index");
+
+	luaReturnBool(result);
+}
+
+luaFunc(setGemBlink)
+{
+	int gemId = lua_tointeger(L, 1);
+	bool result = false;
+
+	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	{
+		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
+		std::advance(it, gemId);
+		GemData& gem = *it;
+		gem.blink = getBool(L, 2);
+		result = true;
+	}
+	else
+		debugLog("setGemBlink: invalid index");
+
+	luaReturnBool(result);
+}
+
 luaFunc(removeGem)
 {
 	int gemId = lua_tointeger(L, 1);
@@ -9762,6 +9800,8 @@ static const struct {
 
 	luaRegister(pickupGem),
 	luaRegister(setGemPosition),
+	luaRegister(setGemName),
+	luaRegister(setGemBlink),
 	luaRegister(removeGem),
 	luaRegister(setBeacon),
 	luaRegister(getBeacon),
