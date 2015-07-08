@@ -620,12 +620,13 @@ class Path;
 
 struct GemData
 {
-	GemData() { canMove=false; }
+	GemData() { canMove=false; blink = false; }
 	std::string name;
 	std::string userString;
 	std::string mapName;
-	bool canMove;
 	Vector pos;
+	bool canMove;
+	bool blink; // not saved
 };
 
 struct BeaconData

@@ -1344,7 +1344,7 @@ void WorldMapRender::addAllGems()
 	for (Continuity::Gems::reverse_iterator i = dsq->continuity.gems.rbegin(); i != dsq->continuity.gems.rend(); i++)
 	{
 		GemMover *g = addGem(&(*i));
-		if (c == dsq->continuity.gems.size()-1)
+		if (c == dsq->continuity.gems.size()-1 || i->blink)
 			g->setBlink(true);
 		else
 			g->setBlink(false);
