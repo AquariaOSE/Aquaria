@@ -93,7 +93,6 @@ public:
 	bool setTexture(const std::string &name);
 
 	void toggleAlpha(float t = 0.2);
-	void matrixChain();
 
 	virtual void update(float dt);
 	bool isDead() const {return _dead;}
@@ -130,8 +129,8 @@ public:
 	virtual void flipHorizontal();
 	virtual void flipVertical();
 
-	bool isfh() { return _fh; }
-	bool isfv() { return _fv; }
+	bool isfh() const { return _fh; }
+	bool isfv() const { return _fv; }
 
 	// recursive
 	bool isfhr();

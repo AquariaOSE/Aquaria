@@ -25,6 +25,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h>
 #include <algorithm>
 
+#ifdef BBGE_USE_GLM
+#include "glm/glm.hpp"
+#include "glm/gtx/transform.hpp"
+#endif
+
 bool	RenderObject::renderCollisionShape			= false;
 int		RenderObject::lastTextureApplied			= 0;
 bool	RenderObject::lastTextureRepeat				= false;
@@ -292,24 +297,51 @@ Vector RenderObject::getInvRotPosition(const Vector &vec)
 #endif
 }
 
-void RenderObject::matrixChain()
+#ifdef BBGE_USE_GLM
+static glm::mat4 matrixChain(const RenderObject *ro)
 {
-	if (parent)
-		parent->matrixChain();
+	glm::mat4 tranformMatrix = glm::scale(
+		glm::translate(
+			glm::rotate(
+				glm::translate(
+					ro->getParent() ? matrixChain(ro->getParent()) : glm::mat4(1.0f),
+					glm::vec3(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0)
+				),
+				ro->rotation.z + ro->rotationOffset.z,
+				glm::vec3(0, 0, 1)
+			),
+			glm::vec3(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0.0f)
+		),
+		glm::vec3(ro->scale.x, ro->scale.y, 0.0f)
+	);
+
+	if (ro->isfh())
+		tranformMatrix *= glm::rotate(180.0f, 0.0f, 1.0f, 0.0f);
+
+	tranformMatrix *= glm::translate(ro->internalOffset.x, ro->internalOffset.y, 0.0f);
+
+	return tranformMatrix;
+}
+#else
+static void matrixChain(RenderObject *ro)
+{
+	if (RenderObject *parent = ro->getParent())
+		matrixChain(parent);
 	
 #ifdef BBGE_BUILD_OPENGL
-	glTranslatef(position.x+offset.x, position.y+offset.y, 0);
-	glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
-	glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, 0);
-	glScalef(scale.x, scale.y, 0);
-	if (isfh())
+	glTranslatef(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0);
+	glRotatef(ro->rotation.z+ro->rotationOffset.z, 0, 0, 1);
+	glTranslatef(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0);
+	glScalef(ro->scale.x, ro->scale.y, 0);
+	if (ro->isfh())
 	{
 		//glDisable(GL_CULL_FACE);
 		glRotatef(180, 0, 1, 0);
 	}
-	glTranslatef(internalOffset.x, internalOffset.y, 0);
+	glTranslatef(ro->internalOffset.x, ro->internalOffset.y, 0);
 #endif
 }
+#endif
 
 float RenderObject::getWorldRotation()
 {
@@ -330,11 +362,19 @@ Vector RenderObject::getWorldPositionAndRotation()
 
 Vector RenderObject::getWorldCollidePosition(const Vector &vec)
 {
+#ifdef BBGE_USE_GLM
+	glm::mat4 transformMatrix = glm::translate(
+		matrixChain(this),
+		glm::vec3(collidePosition.x + vec.x, collidePosition.y + vec.y, 0.0f)
+	);
+
+	return Vector(transformMatrix[3][0], transformMatrix[3][1], 0);
+#else
 #ifdef BBGE_BUILD_OPENGL
 	glPushMatrix();
 	glLoadIdentity();
 
-	matrixChain();
+	matrixChain(this);
 	glTranslatef(collidePosition.x+vec.x, collidePosition.y+vec.y, 0);
 
 	float m[16];
@@ -346,6 +386,7 @@ Vector RenderObject::getWorldCollidePosition(const Vector &vec)
 	return Vector(x,y,0);
 #elif BBGE_BUILD_DIRECTX
 	return vec;
+#endif
 #endif
 }
 
