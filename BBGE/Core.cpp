@@ -2138,7 +2138,7 @@ void Core::enumerateScreenModes()
 		SDL_GetDisplayMode(0, i, &mode);
 		if (mode.w && mode.h && (mode.w > mode.h))
 		{
-			screenModes.push_back(ScreenMode(i, mode.w, mode.h));
+			screenModes.push_back(ScreenMode(i, mode.w, mode.h, mode.refresh_rate));
 		}
 	}
 

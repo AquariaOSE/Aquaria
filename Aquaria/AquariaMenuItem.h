@@ -195,7 +195,7 @@ class AquariaComboBox;
 class AquariaComboBoxItem : public Quad
 {
 public:
-	AquariaComboBoxItem(const std::string &str, int idx, AquariaComboBox *combo);
+	AquariaComboBoxItem(const std::string &str, int idx, AquariaComboBox *combo, Vector textscale);
 
 protected:
 	void onUpdate(float dt);
@@ -210,7 +210,7 @@ protected:
 class AquariaComboBox : public RenderObject
 {
 public:
-	AquariaComboBox();
+	AquariaComboBox(Vector textscale = Vector(1, 1));
 
 	void destroy();
 
@@ -242,6 +242,7 @@ protected:
 	int selectedItem;
 	float scrollDelay;
 	bool firstScroll;
+	Vector textscale;
 
 	std::vector<AquariaComboBoxItem*> shownItems;
 };

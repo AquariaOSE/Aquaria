@@ -3382,12 +3382,14 @@ void Game::createInGameMenu()
 	resolutionLabel->position = Vector(160, 260);
 	options->addChild(resolutionLabel, PM_POINTER);
 
-	resBox = new AquariaComboBox();
+	resBox = new AquariaComboBox(Vector(0.7f, 1.0f));
 	resBox->position = Vector(196, 285);
 	for (i = 0; i < core->screenModes.size(); i++)
 	{
 		std::ostringstream os;
 		os << core->screenModes[i].x << "x" << core->screenModes[i].y;
+		if(core->screenModes[i].hz)
+			os << " (" << core->screenModes[i].hz << "hz)";
 		resBox->addItem(os.str());
 		if (core->screenModes[i].x == dsq->user.video.resx && core->screenModes[i].y == dsq->user.video.resy)
 		{
