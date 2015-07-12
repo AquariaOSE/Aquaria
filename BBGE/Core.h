@@ -70,10 +70,10 @@ enum TimeUpdateType
 
 struct ScreenMode
 {
-	ScreenMode() { idx = x = y = 0; }
-	ScreenMode(int i, int x, int y) : idx(i), x(x), y(y) {}
+	ScreenMode() { idx = x = y = hz = 0; }
+	ScreenMode(int i, int x, int y, int hz) : idx(i), x(x), y(y), hz(hz) {}
 
-	int idx, x, y;
+	int idx, x, y, hz;
 };
 
 struct CoreSettings

@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define SCROLL_DELAY				0.1f
 #define SCROLL_DELAY_FIRST			0.4f
 
-AquariaComboBox::AquariaComboBox() : RenderObject()
+AquariaComboBox::AquariaComboBox(Vector textscale) : RenderObject()
 {
 	//Quad *bar, *window, *scrollBtnUp, *scrollBtnDown, *scrollBar;
 	bar = new Quad("gui/combo-drop", Vector(0,0));
@@ -47,6 +47,7 @@ AquariaComboBox::AquariaComboBox() : RenderObject()
 	selectedItemLabel->setFontSize(8);
 	selectedItemLabel->offset.y = -10;
 	selectedItemLabel->position.x = -50;
+	selectedItemLabel->scale = textscale;
 	addChild(selectedItemLabel, PM_POINTER);
 
 	numDrops = 8;
@@ -62,6 +63,8 @@ AquariaComboBox::AquariaComboBox() : RenderObject()
 
 	scrollDelay = 0;
 	firstScroll = 0;
+
+	this->textscale = textscale;
 }
 
 void AquariaComboBox::destroy()
@@ -230,7 +233,7 @@ void AquariaComboBox::open(float t)
 	{
 		if (i < items.size())
 		{
-			AquariaComboBoxItem *a = new AquariaComboBoxItem(items[i], i, this);
+			AquariaComboBoxItem *a = new AquariaComboBoxItem(items[i], i, this, textscale);
 			a->alpha = 0;
 			a->alpha.interpolateTo(1, t);
 			a->position.y = (a->getHeight()+2) * ((i-scroll)+1);
@@ -335,7 +338,7 @@ int AquariaComboBox::addItem(const std::string &n)
 Vector unselectedColor(0.7, 0.7, 0.7);
 Vector selectedColor(1,1,1);
 
-AquariaComboBoxItem::AquariaComboBoxItem(const std::string &str, int idx, AquariaComboBox *combo) : Quad()
+AquariaComboBoxItem::AquariaComboBoxItem(const std::string &str, int idx, AquariaComboBox *combo, Vector textscale) : Quad()
 {
 	this->combo = combo;
 	index = idx;
@@ -348,6 +351,7 @@ AquariaComboBoxItem::AquariaComboBoxItem(const std::string &str, int idx, Aquari
 	label->setText(str);
 	label->offset.y = -10;
 	label->position.x = -50;
+	label->scale = textscale;
 	addChild(label, PM_POINTER);
 
 	color = unselectedColor;
