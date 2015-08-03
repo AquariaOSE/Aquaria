@@ -53,8 +53,6 @@ namespace WorldMapRenderNamespace
 
 	std::vector<Quad *> tiles;
 
-	std::vector<Quad *> particles;
-
 	Quad *activeQuad=0, *lastActiveQuad=0, *originalActiveQuad=0;
 	Quad *lastVisQuad=0, *visQuad=0;
 	WorldMapTile *lastVisTile=0;
