@@ -876,7 +876,26 @@ luaFunc(fileExists)
 	safePath(L, s);
 	std::string res;
 	bool there = findFile_helper(s.c_str(), res);
-	luaReturnBool(there);
+	lua_pushboolean(L, there);
+	lua_pushstring(L, res.c_str());
+	return 2;
+}
+
+luaFunc(getModName)
+{
+	luaReturnStr(dsq->mod.isActive() ? dsq->mod.getName().c_str() : "");
+}
+
+luaFunc(getModPath)
+{
+	std::string path;
+	if (dsq->mod.isActive())
+	{
+		path = dsq->mod.getPath();
+		if(path[path.length() - 1] != '/')
+			path += '/';
+	}
+	luaReturnStr(path.c_str());
 }
 
 
@@ -9297,6 +9316,8 @@ static const struct {
 	{"loadfile", l_loadfile_caseinsensitive},
 
 	luaRegister(fileExists),
+	luaRegister(getModName),
+	luaRegister(getModPath),
 
 	luaRegister(debugBreak),
 	luaRegister(setIgnoreAction),
