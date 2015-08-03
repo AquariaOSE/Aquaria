@@ -23,19 +23,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 #include "../BBGE/AfterEffect.h"
 
-float strengthSeparation = 1;
-float strengthAlignment = 0.8;
-float strengthAvoidance = 1;
-float strengthCohesion = 0.5;
+const float strengthSeparation = 1;
+const float strengthAlignment = 0.8f;
+const float strengthAvoidance = 1;
+const float strengthCohesion = 0.5f;
 
-float avoidanceDistance = 128;
-float separationDistance = 128;
-float minUrgency = 5;//0.05;
-float maxUrgency = 10;//0.1;
-float maxSpeed = 400; // 1
-float maxChange = maxSpeed*maxUrgency;
+const float avoidanceDistance = 128;
+const float separationDistance = 128;
+const float minUrgency = 5;//0.05;
+const float maxUrgency = 10;//0.1;
+const float maxSpeed = 400; // 1
+const float maxChange = maxSpeed*maxUrgency;
 
-float velocityScale = 1;
+const float velocityScale = 1;
 
 
 SchoolFish::SchoolFish(const std::string &texname) : FlockEntity()
