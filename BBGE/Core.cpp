@@ -2165,7 +2165,7 @@ void Core::enumerateScreenModes()
 		{
 			if (modes[i]->w > modes[i]->h)
 			{
-				screenModes.push_back(ScreenMode(i, modes[i]->w, modes[i]->h));
+				screenModes.push_back(ScreenMode(i, modes[i]->w, modes[i]->h, 0));
 			}
 		}
 	}
