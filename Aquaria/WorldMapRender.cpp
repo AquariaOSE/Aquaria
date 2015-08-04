@@ -48,12 +48,10 @@ namespace WorldMapRenderNamespace
 		VIS_WRITE		= 1  // Uses render-to-texture instead
 	};
 
-	VisMethod visMethod = VIS_VERTEX;
+	const VisMethod visMethod = VIS_VERTEX;
 	WorldMapRevealMethod revMethod = REVEAL_DEFAULT;
 
 	std::vector<Quad *> tiles;
-
-	std::vector<Quad *> particles;
 
 	Quad *activeQuad=0, *lastActiveQuad=0, *originalActiveQuad=0;
 	Quad *lastVisQuad=0, *visQuad=0;
@@ -512,6 +510,7 @@ static void tileDataToVis(WorldMapTile *tile, Vector **vis)
 
 	if (data != 0)
 	{
+		const float a = tile->prerevealed ? 0.4f :  baseMapSegAlpha;
 		const unsigned int rowSize = MAPVIS_SUBDIV/8;
 		for (unsigned int y = 0; y < MAPVIS_SUBDIV; y++, data += rowSize)
 		{
@@ -520,18 +519,19 @@ static void tileDataToVis(WorldMapTile *tile, Vector **vis)
 				unsigned char dataByte = data[x/8];
 				for (unsigned int x2 = 0; x2 < 8; x2++)
 				{
-					vis[x+x2][y].z = (dataByte & (1 << x2)) ? visibleMapSegAlpha : baseMapSegAlpha;
+					vis[x+x2][y].z = (dataByte & (1 << x2)) ? visibleMapSegAlpha : a;
 				}
 			}
 		}
 	}
 	else
 	{
+		const float a = tile->prerevealed ? 0.4f :  baseMapSegAlpha;
 		for (int x = 0; x < MAPVIS_SUBDIV; x++)
 		{
 			for (int y = 0; y < MAPVIS_SUBDIV; y++)
 			{
-				vis[x][y].z = baseMapSegAlpha;
+				vis[x][y].z = a;
 			}
 		}
 		return;
@@ -1342,7 +1342,7 @@ void WorldMapRender::addAllGems()
 	for (Continuity::Gems::reverse_iterator i = dsq->continuity.gems.rbegin(); i != dsq->continuity.gems.rend(); i++)
 	{
 		GemMover *g = addGem(&(*i));
-		if (c == dsq->continuity.gems.size()-1)
+		if (c == dsq->continuity.gems.size()-1 || i->blink)
 			g->setBlink(true);
 		else
 			g->setBlink(false);

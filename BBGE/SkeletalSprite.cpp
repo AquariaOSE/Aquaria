@@ -34,13 +34,13 @@ std::string SkeletalSprite::secondaryAnimationPath		= "";
 
 static std::map<std::string, XMLDocument*> skelCache;
 
-static XMLDocument *_retrieveSkeletalXML(const std::string& name)
+static XMLDocument *_retrieveSkeletalXML(const std::string& name, bool keepEmpty)
 {
 	std::map<std::string, XMLDocument*>::iterator it = skelCache.find(name);
 	if(it != skelCache.end())
 		return it->second;
 
-	XMLDocument *doc = readXML(name);
+	XMLDocument *doc = readXML(name, NULL, keepEmpty);
 	if(doc)
 		skelCache[name] = doc;
 
@@ -49,6 +49,8 @@ static XMLDocument *_retrieveSkeletalXML(const std::string& name)
 
 void SkeletalSprite::clearCache()
 {
+	for(std::map<std::string, XMLDocument*>::iterator it = skelCache.begin(); it != skelCache.end(); ++it)
+		delete it->second;
 	skelCache.clear();
 }
 
@@ -869,7 +871,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 	}
 
 	int i = 0;
-	XMLDocument *xml = _retrieveSkeletalXML(file);
+	XMLDocument *xml = _retrieveSkeletalXML(file, true);
 	xml->Clear();
 
 	XMLElement *animationLayers = xml->NewElement("AnimationLayers");
@@ -1144,16 +1146,10 @@ void SkeletalSprite::prevAnimation()
 void SkeletalSprite::deleteBones()
 {
 	bones.clear();
-	if (!children.empty())
+	for(Children::iterator it = children.begin(); it != children.end(); ++it)
 	{
-		// remove child had better be recursive
-		Bone *b = (Bone*)children.front();
-		//removeChild(b);
-		b->destroy();
-		delete b;
-		deleteBones();
+		(*it)->safeKill();
 	}
-	children.clear();
 	bones.clear();
 }
 
@@ -1185,10 +1181,15 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 
 	if (!exists(file))
 	{
-		errorLog("Could not load skin[" + file + "]");
+		errorLog("Could not load skin[" + file + "] - File not found.");
 		return;
 	}
-	XMLDocument *d = _retrieveSkeletalXML(file);
+	XMLDocument *d = _retrieveSkeletalXML(file, false);
+	if(!d)
+	{
+		errorLog("Could not load skin[" + file + "] - Malformed XML.");
+		return;
+	}
 
 	XMLElement *bonesXml = d->FirstChildElement("Bones");
 	if (bonesXml)
@@ -1290,10 +1291,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 	filenameLoaded = "";
 	loaded = false;
 	stopAnimation();
-	for (int i = 0; i < animLayers.size(); i++)
-	{
-		animLayers[i].currentAnimation = 0;
-	}
+	animLayers.clear();
 	deleteBones();
 
 
@@ -1321,7 +1319,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 
 	file = core->adjustFilenameCase(file);
 
-	XMLDocument *xml = _retrieveSkeletalXML(file);
+	XMLDocument *xml = _retrieveSkeletalXML(file, false);
 	if(!xml)
 	{
 		filenameLoaded = "";

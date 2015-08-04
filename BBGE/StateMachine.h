@@ -23,20 +23,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Base.h"
 
-struct Cooldown
-{
-	int state;
-	Timer timer;
-};
-typedef std::list<Cooldown> Cooldowns;
-
 class StateMachine
 {
 public:
 	StateMachine ();
 	virtual ~StateMachine() {}
 	
-	void setState(int state, float time = -1, bool force = false, void* stateData=0);
+	void setState(int state, float time = -1, bool force = false);
 	void stopState(int state);
 	bool isState(int state);
 	int getState();
@@ -51,15 +44,8 @@ public:
 	};	
 	virtual bool canSetState(int state);
 
-	void addCooldown(int state, float time);
-	void removeCooldown(int state);
-	void updateCooldowns(float dt);
-	bool isCooldown(int state);
-	void clearCooldowns();
 protected:
-	void *currentStateData;
-	void *enqueuedStateData;
-	void perform(int state, float time = -1, void *stateData=0);
+	void perform(int state, float time = -1);
 	virtual void onEnterState(int state);
 	virtual void onExitState(int state);
 
@@ -71,7 +57,6 @@ protected:
 	{ stateCounter = 0; }
 
 private:
-	Cooldowns cooldowns;
 	float stateCounter;
  
 };

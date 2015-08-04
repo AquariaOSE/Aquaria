@@ -21,7 +21,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __texture__
 #define __texture__
 
-#include "Resource.h"
+#include "Base.h"
+
+enum TextureLoadResult
+{
+	TEX_FAILED  = 0x00,
+	TEX_SUCCESS = 0x01,
+	TEX_LOADED  = 0x02,
+};
 
 struct ImageTGA
 {
@@ -31,24 +38,16 @@ struct ImageTGA
 	unsigned char *data;	// The image pixel data
 };
 
-enum TexErr
-{
-	TEXERR_OK				= 0,
-	TEXERR_FILENOTFOUND		= 1,
-	TEXERR_MAX
-};
-
-class Texture : public Resource
+class Texture : public Refcounted
 {
 public:
 	Texture();
 	~Texture();
 
-	void load(std::string file);
+	bool load(std::string file);
 	void apply(bool repeatOverride=false);
 	void unbind();
 	void unload();
-	void setLayer(int layer);
 
 	int getPixelWidth();
 	int getPixelHeight();
@@ -67,7 +66,6 @@ public:
 #ifdef BBGE_BUILD_OPENGL
 	static GLint filter;
 	static GLint format;
-	void setID (int id);
 	GLuint textures[1];
 #endif
 #ifdef BBGE_BUILD_DIRECTX
@@ -76,26 +74,26 @@ public:
 
 	void reload();
 
-	static TexErr textureError;
-
 	void write(int tx, int ty, int w, int h, const unsigned char *pixels);
 	void read(int tx, int ty, int w, int h, unsigned char *pixels);
 
 	unsigned char *getBufferAndSize(int *w, int *h, unsigned int *size); // returned memory must be free()'d
 
+	std::string name;
+
 protected:
 	std::string loadName;
 
 	// internal load functions
-	void loadPNG(const std::string &file);
-	void loadTGA(const std::string &file);
-	void loadZGA(const std::string &file);
-	void loadTGA(ImageTGA *tga);
+	bool loadPNG(const std::string &file);
+	bool loadTGA(const std::string &file);
+	bool loadZGA(const std::string &file);
+	bool loadTGA(ImageTGA *tga);
 
 	int ow, oh;
 	
 };
 
-#define UNREFTEX(x) if (x) {x->removeRef(); x=0;}
+#define UNREFTEX(x) if (x) {x = NULL;}
 
 #endif

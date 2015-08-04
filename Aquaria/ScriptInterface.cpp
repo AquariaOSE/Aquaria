@@ -36,7 +36,9 @@ extern "C"
 #include "Web.h"
 #include "GridRender.h"
 #include "AfterEffect.h"
+#include "PathFinding.h"
 #include <algorithm>
+#include "Gradient.h"
 
 #include "../BBGE/MathFunctions.h"
 
@@ -874,7 +876,26 @@ luaFunc(fileExists)
 	safePath(L, s);
 	std::string res;
 	bool there = findFile_helper(s.c_str(), res);
-	luaReturnBool(there);
+	lua_pushboolean(L, there);
+	lua_pushstring(L, res.c_str());
+	return 2;
+}
+
+luaFunc(getModName)
+{
+	luaReturnStr(dsq->mod.isActive() ? dsq->mod.getName().c_str() : "");
+}
+
+luaFunc(getModPath)
+{
+	std::string path;
+	if (dsq->mod.isActive())
+	{
+		path = dsq->mod.getPath();
+		if(path[path.length() - 1] != '/')
+			path += '/';
+	}
+	luaReturnStr(path.c_str());
 }
 
 
@@ -890,6 +911,7 @@ MakeTypeCheckFunc(isNode, SCO_PATH);
 MakeTypeCheckFunc(isObject, SCO_RENDEROBJECT);
 MakeTypeCheckFunc(isEntity, SCO_ENTITY)
 MakeTypeCheckFunc(isScriptedEntity, SCO_SCRIPTED_ENTITY)
+MakeTypeCheckFunc(isBone, SCO_BONE)
 MakeTypeCheckFunc(isShot, SCO_SHOT)
 MakeTypeCheckFunc(isWeb, SCO_WEB)
 MakeTypeCheckFunc(isIng, SCO_INGREDIENT)
@@ -1110,9 +1132,7 @@ luaFunc(obj_setBlendType)
 luaFunc(obj_setTexture)
 {
 	RenderObject *r = robj(L);
-	if (r)
-		r->setTexture(getString(L, 2));
-	luaReturnNil();
+	luaReturnBool(r ? r->setTexture(getString(L, 2)) : false);
 }
 
 luaFunc(obj_getTexture)
@@ -1179,6 +1199,7 @@ luaFunc(obj_addChild)
 	RenderObject *r = robj(L);
 	RenderObject *which = robj(L, 2);
 	bool takeOwnership = getBool(L, 3);
+	bool front = getBool(L, 4);
 	if (r && which)
 	{
 		if (takeOwnership)
@@ -1188,7 +1209,7 @@ luaFunc(obj_addChild)
 			dsq->getState(dsq->game->name)->removeRenderObjectFromList(which);
 			which->setStateDataObject(NULL);
 			core->removeRenderObject(which, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-			r->addChild(which, PM_POINTER);
+			r->addChild(which, PM_POINTER, RBP_NONE, front ? CHILD_FRONT : CHILD_BACK);
 		}
 		else
 			r->addChild(which, PM_STATIC);
@@ -1541,10 +1562,15 @@ luaFunc(obj_setUpdateCull)
 {
 	RenderObject *r = robj(L);;
 	if (r)
-		r->updateCull = lua_tointeger(L, 2);
+		r->updateCull = lua_tonumber(L, 2);
 	luaReturnNil();
 }
 
+luaFunc(obj_getUpdateCull)
+{
+	RenderObject *r = robj(L);;
+	luaReturnNum(r ? r->updateCull : 0.0f);
+}
 
 luaFunc(obj_setPositionX)
 {
@@ -1832,6 +1858,7 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  setCull		) \
 	RO_FUNC(getter, prefix,  setCullRadius	) \
 	RO_FUNC(getter, prefix,  setUpdateCull	) \
+	RO_FUNC(getter, prefix,  getUpdateCull	) \
 	RO_FUNC(getter, prefix,  setRenderPass	) \
 	RO_FUNC(getter, prefix,  setOverrideRenderPass	) \
 	RO_FUNC(getter, prefix,  setPositionX	) \
@@ -3129,6 +3156,11 @@ luaFunc(createShot)
 	luaReturnPtr(s);
 }
 
+luaFunc(isSkippingCutscene)
+{
+	luaReturnBool(dsq->isSkippingCutscene());
+}
+
 // deprecated, use entity_playSfx
 luaFunc(entity_sound)
 {
@@ -3318,45 +3350,67 @@ luaFunc(entity_moveToNode)
 {
 	Entity *e = entity(L);
 	Path *p = path(L, 2);
+	float time = 0;
 	if (e && p)
 	{
-		e->moveToNode(p, lua_tointeger(L, 3), lua_tointeger(L, 4), 0);
+		float speed = dsq->continuity.getSpeedType(lua_tointeger(L, 3));
+		time = e->moveToPos(p->nodes[0].position, speed, lua_tointeger(L, 4), 0);
 	}
-	luaReturnNil();
+	luaReturnNum(time);
 }
 
 luaFunc(entity_swimToNode)
 {
 	Entity *e = entity(L);
 	Path *p = path(L, 2);
+	float time = 0;
 	if (e && p)
 	{
-		e->moveToNode(p, lua_tointeger(L, 3), lua_tointeger(L, 4), 1);
-		/*
-		ScriptedEntity *se = dynamic_cast<ScriptedEntity*>(e);
-		se->swimPath = true;
-		*/
+		float speed = dsq->continuity.getSpeedType(lua_tointeger(L, 3));
+		time = e->moveToPos(p->nodes[0].position, speed, lua_tointeger(L, 4), 1);
 	}
-	luaReturnNil();
+	luaReturnNum(time);
 }
 
 luaFunc(entity_swimToPosition)
 {
 	Entity *e = entity(L);
-	//Path *p = path(L, 2);
-	Path p;
-	PathNode n;
-	n.position = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-	p.nodes.push_back(n);
+	float time = 0;
 	if (e)
 	{
-		e->moveToNode(&p, lua_tointeger(L, 4), lua_tointeger(L, 5), 1);
-		/*
-		ScriptedEntity *se = dynamic_cast<ScriptedEntity*>(e);
-		se->swimPath = true;
-		*/
+		float speed = dsq->continuity.getSpeedType(lua_tointeger(L, 4));
+		time = e->moveToPos(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), speed, lua_tointeger(L, 5), 1);
 	}
-	luaReturnNil();
+	luaReturnNum(time);
+}
+
+luaFunc(entity_moveToNodeSpeed)
+{
+	Entity *e = entity(L);
+	Path *p = path(L, 2);
+	float time = 0;
+	if (e && p)
+		time = e->moveToPos(p->nodes[0].position, lua_tonumber(L, 3), lua_tointeger(L, 4), 0);
+	luaReturnNum(time);
+}
+
+luaFunc(entity_swimToNodeSpeed)
+{
+	Entity *e = entity(L);
+	Path *p = path(L, 2);
+	float time = 0;
+	if (e && p)
+		time = e->moveToPos(p->nodes[0].position, lua_tonumber(L, 3), lua_tointeger(L, 4), 1);
+	luaReturnNum(time);
+}
+
+luaFunc(entity_swimToPositionSpeed)
+{
+	Entity *e = entity(L);
+	float time = 0;
+	if (e)
+		time = e->moveToPos(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tointeger(L, 5), 1);
+	luaReturnNum(time);
 }
 
 
@@ -3642,15 +3696,30 @@ luaFunc(loadMap)
 luaFunc(entity_followPath)
 {
 	Entity *e = entity(L);
+	float time = 0;
 	if (e)
 	{
 		Path *p = path(L, 2);
 		int speedType = lua_tointeger(L, 3);
 		int dir = lua_tointeger(L, 4);
-
-		e->followPath(p, speedType, dir);
+		float speed = dsq->continuity.getSpeedType(speedType);
+		time = e->followPath(p, speed, dir);
 	}
-	luaReturnNil();
+	luaReturnNum(time);
+}
+
+luaFunc(entity_followPathSpeed)
+{
+	Entity *e = entity(L);
+	float time = 0;
+	if (e)
+	{
+		Path *p = path(L, 2);
+		float speed = lua_tonumber(L, 3);
+		int dir = lua_tointeger(L, 4);
+		time = e->followPath(p, speed, dir);
+	}
+	luaReturnNum(time);
 }
 
 luaFunc(spawnIngredient)
@@ -4846,12 +4915,13 @@ luaFunc(getWallNormal)
 	x = lua_tonumber(L, 1);
 	y = lua_tonumber(L, 2);
 	int range = lua_tointeger(L, 3);
+	int obs  = lua_tointeger(L, 4);
 	if (range == 0)
-	{
 		range = 5;
-	}
+	if (!obs)
+		obs = OT_BLOCKING;
 
-	Vector n = dsq->game->getWallNormal(Vector(x, y), range);
+	Vector n = dsq->game->getWallNormal(Vector(x, y), range, NULL, obs);
 
 	luaReturnVec2(n.x, n.y);
 }
@@ -4905,6 +4975,21 @@ luaFunc(getStringFlag)
 	luaReturnStr(dsq->continuity.getStringFlag(getString(L, 1)).c_str());
 }
 
+luaFunc(node_setEmitter)
+{
+	Path *p = path(L);
+	if(p)
+		p->setEmitter(getString(L, 2));
+	luaReturnPtr(p->emitter);
+}
+
+luaFunc(node_getEmitter)
+{
+	Path *p = path(L);
+	luaReturnPtr(p ? p->emitter : NULL);
+}
+
+
 luaFunc(node_setActive)
 {
 	Path *p = path(L);
@@ -4912,6 +4997,13 @@ luaFunc(node_setActive)
 	if (p)
 	{
 		p->active = v;
+		if(p->emitter)
+		{
+			if(v)
+				p->emitter->start();
+			else
+				p->emitter->stop();
+		}
 	}
 	luaReturnNil();
 }
@@ -4930,6 +5022,14 @@ luaFunc(node_setCursorActivation)
 	{
 		p->cursorActivation = v;
 	}
+	luaReturnNil();
+}
+
+luaFunc(node_setActivationRange)
+{
+	Path *p = path(L);
+	if(p)
+		p->activationRange = lua_tonumber(L, 2);
 	luaReturnNil();
 }
 
@@ -5523,7 +5623,7 @@ luaFunc(entity_doElementInteraction)
 		if (!touchWidth)
 			touchWidth = 16;
 
-		ElementUpdateList& elems = dsq->game->elementUpdateList;
+		ElementUpdateList& elems = dsq->game->elementInteractionList;
 		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
 		{
 			(*it)->doInteraction(e, mult, touchWidth);
@@ -6027,7 +6127,7 @@ luaFunc(entity_setMaxSpeed)
 {
 	Entity *e = entity(L);
 	if (e)
-		e->setMaxSpeed(lua_tointeger(L, 2));
+		e->setMaxSpeed(lua_tonumber(L, 2));
 
 	luaReturnNil();
 }
@@ -6478,7 +6578,7 @@ luaFunc(playSfx)
 	if (sfx.vol <= 0)
 		sfx.vol = 1;
 	sfx.loops = lua_tointeger(L, 4);
-	if(lua_isnumber(L, 6) && lua_isnumber(L, 7))
+	if(lua_isnumber(L, 5) && lua_isnumber(L, 6))
 	{
 		sfx.x = lua_tonumber(L, 5);
 		sfx.y =  lua_tonumber(L, 6);
@@ -7862,7 +7962,7 @@ luaFunc(entity_offsetUpdate)
 	Entity *e = entity(L);
 	if (e)
 	{
-		int uc = e->updateCull;
+		float uc = e->updateCull;
 		e->updateCull = -1;
 		float t = float(rand()%10000)/1000.0f;
 		e->update(t);
@@ -8385,6 +8485,44 @@ luaFunc(setGemPosition)
 	luaReturnBool(result);
 }
 
+luaFunc(setGemName)
+{
+	int gemId = lua_tointeger(L, 1);
+	bool result = false;
+
+	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	{
+		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
+		std::advance(it, gemId);
+		GemData& gem = *it;
+		gem.name = getString(L, 2);
+		result = true;
+	}
+	else
+		debugLog("setGemName: invalid index");
+
+	luaReturnBool(result);
+}
+
+luaFunc(setGemBlink)
+{
+	int gemId = lua_tointeger(L, 1);
+	bool result = false;
+
+	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	{
+		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
+		std::advance(it, gemId);
+		GemData& gem = *it;
+		gem.blink = getBool(L, 2);
+		result = true;
+	}
+	else
+		debugLog("setGemBlink: invalid index");
+
+	luaReturnBool(result);
+}
+
 luaFunc(removeGem)
 {
 	int gemId = lua_tointeger(L, 1);
@@ -8647,7 +8785,7 @@ luaFunc(avatar_updatePosition)
 
 luaFunc(avatar_toggleMovement)
 {
-	dsq->game->avatar->toggleMovement((bool)lua_tointeger(L, 1));
+	dsq->game->avatar->toggleMovement(getBool(L));
 	luaReturnNil();
 }
 
@@ -8729,6 +8867,43 @@ luaFunc(isShuttingDownGameState)
 	luaReturnBool(dsq->game->isShuttingDownGameState());
 }
 
+static void _fillPathfindTables(lua_State *L, VectorPath& path, int xs_idx, int ys_idx)
+{
+	const unsigned num = path.getNumPathNodes();
+
+	if(lua_istable(L, xs_idx))
+		lua_pushvalue(L, xs_idx);
+	else
+		lua_createtable(L, num, 0);
+
+	if(lua_istable(L, ys_idx))
+		lua_pushvalue(L, ys_idx);
+	else
+		lua_createtable(L, num, 0);
+
+	// [..., xs, yx]
+	for(unsigned i = 0; i < num; ++i)
+	{
+		const VectorPathNode *n = path.getPathNode(i);
+		lua_pushnumber(L, n->value.x);  // [..., xs, ys, x]
+		lua_rawseti(L, -3, i+1);        // [..., xs, ys]
+		lua_pushnumber(L, n->value.y);  // [..., xs, ys, y]
+		lua_rawseti(L, -2, i+1);        // [..., xs, ys]
+	}
+	// terminate tables
+	lua_pushnil(L);            // [..., xs, ys, nil]
+	lua_rawseti(L, -3, num+1); // [..., xs, ys]
+	lua_pushnil(L);            // [..., xs, ys, nil]
+	lua_rawseti(L, -2, num+1); // [..., xs, ys]
+}
+
+static int _pathfindDelete(lua_State *L)
+{
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	PathFinding::deleteFindPath(state);
+	return 0;
+}
+
 // startx, starty, endx, endy [, step, xtab, ytab, obsMask]
 luaFunc(findPath)
 {
@@ -8736,39 +8911,65 @@ luaFunc(findPath)
 	Vector start(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
 	ObsType obs = ObsType(lua_tointeger(L, 8));
-	if(!dsq->pathFinding.generatePathSimple(path, start, end, lua_tointeger(L, 5), obs))
+	if(!PathFinding::generatePathSimple(path, start, end, lua_tointeger(L, 5), obs))
 		luaReturnBool(false);
 
 	const unsigned num = path.getNumPathNodes();
 	lua_pushinteger(L, num);
 
-	if(lua_istable(L, 6))
-		lua_pushvalue(L, 6);
-	else
-		lua_createtable(L, num, 0);
-
-	if(lua_istable(L, 7))
-		lua_pushvalue(L, 7);
-	else
-		lua_createtable(L, num, 0);
-
-	// [true, xs, yx]
-
-	for(unsigned i = 0; i < num; ++i)
-	{
-		const VectorPathNode *n = path.getPathNode(i);
-		lua_pushnumber(L, n->value.x);  // [num, xs, ys, x]
-		lua_rawseti(L, -3, i+1);        // [num, xs, ys]
-		lua_pushnumber(L, n->value.y);  // [num, xs, ys, y]
-		lua_rawseti(L, -2, i+1);        // [num, xs, ys]
-	}
-	// terminate tables
-	lua_pushnil(L);            // [num xs, ys, nil]
-	lua_rawseti(L, -3, num+1); // [num, xs, ys]
-	lua_pushnil(L);            // [num, xs, ys, nil]
-	lua_rawseti(L, -2, num+1); // [num, xs, ys]
+	_fillPathfindTables(L, path, 6, 7);
 
 	return 3; // found path?, x positions, y positions
+}
+
+luaFunc(createFindPath)
+{
+	PathFinding::State **statep = (PathFinding::State**)lua_newuserdata(L, sizeof(void*));
+	*statep = PathFinding::initFindPath();
+	luaL_getmetatable(L, "pathfinder");
+	lua_setmetatable(L, -2);
+	return 1;
+}
+
+luaFunc(findPathBegin)
+{
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	Vector start(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
+	ObsType obs = ObsType(lua_tointeger(L, 8));
+	PathFinding::beginFindPath(state, start, end, obs);
+	luaReturnNil();
+}
+
+luaFunc(findPathUpdate)
+{
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	int limit = lua_tointeger(L, 2);
+	bool done = PathFinding::updateFindPath(state, limit);
+	luaReturnBool(done);
+}
+
+luaFunc(findPathFinish)
+{
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	VectorPath path;
+	bool found = PathFinding::finishFindPath(state, path);
+	if(!found)
+		luaReturnBool(false);
+
+	lua_pushinteger(L, (int)path.getNumPathNodes());
+	_fillPathfindTables(L, path, 2, 3);
+	return 3;
+}
+
+luaFunc(findPathGetStats)
+{
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	unsigned stepsDone, nodesExpanded;
+	PathFinding::getStats(state, stepsDone, nodesExpanded);
+	lua_pushinteger(L, stepsDone);
+	lua_pushinteger(L, nodesExpanded);
+	return 2;
 }
 
 luaFunc(castLine)
@@ -8777,14 +8978,14 @@ luaFunc(castLine)
 	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
 	int tiletype = lua_tointeger(L, 5);
 	if(!tiletype)
-		tiletype = -1;
+		tiletype = OT_BLOCKING;
 	Vector step = end - v;
 	int steps = step.getLength2D() / TILE_SIZE;
 	step.setLength2D(TILE_SIZE);
 
 	for(int i = 0; i < steps; ++i)
 	{
-		if(dsq->game->isObstructed(TileVector(v), tiletype))
+		if(dsq->game->getGridRaw(TileVector(v)) & tiletype)
 		{
 			lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
 			lua_pushnumber(L, v.x);
@@ -8910,6 +9111,19 @@ luaFunc(learnRecipe)
 	luaReturnNil();
 }
 
+luaFunc(setBGGradient)
+{
+	if(!dsq->game->grad)
+		dsq->game->createGradient();
+	Vector c1(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
+	Vector c2(lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
+	if(getBool(L, 7))
+		dsq->game->grad->makeHorizontal(c1, c2);
+	else
+		dsq->game->grad->makeVertical(c1, c2);
+	luaReturnNil();
+}
+
 luaFunc(createDebugText)
 {
 	DebugFont *txt = new DebugFont(lua_tointeger(L, 2), getString(L, 1));
@@ -8965,6 +9179,12 @@ luaFunc(text_getHeight)
 {
 	BaseText *txt = getText(L);
 	luaReturnNum(txt ? txt->getHeight() : 0.0f);
+}
+
+luaFunc(text_getStringWidth)
+{
+	BaseText *txt = getText(L);
+	luaReturnNum(txt ? txt->getStringWidth(getString(L, 2)) : 0.0f);
 }
 
 luaFunc(loadShader)
@@ -9064,6 +9284,24 @@ luaFunc(pe_isRunning)
 	luaReturnBool(pe && pe->isRunning());
 }
 
+luaFunc(getPerformanceCounter)
+{
+#ifdef BBGE_BUILD_SDL2
+	luaReturnNum((lua_Number)SDL_GetPerformanceCounter());
+#else
+	luaReturnNum((lua_Number)SDL_GetTicks());
+#endif
+}
+
+luaFunc(getPerformanceFreq)
+{
+#ifdef BBGE_BUILD_SDL2
+	luaReturnNum((lua_Number)SDL_GetPerformanceFrequency());
+#else
+	luaReturnNum((lua_Number)1000);
+#endif
+}
+
 //--------------------------------------------------------------------------------------------
 
 #define luaRegister(func)	{#func, l_##func}
@@ -9078,6 +9316,8 @@ static const struct {
 	{"loadfile", l_loadfile_caseinsensitive},
 
 	luaRegister(fileExists),
+	luaRegister(getModName),
+	luaRegister(getModPath),
 
 	luaRegister(debugBreak),
 	luaRegister(setIgnoreAction),
@@ -9468,6 +9708,7 @@ static const struct {
 	luaRegister(entity_stopInterpolating),
 
 	luaRegister(entity_followPath),
+	luaRegister(entity_followPathSpeed),
 	luaRegister(entity_isFollowingPath),
 	luaRegister(entity_followEntity),
 	luaRegister(entity_sound),
@@ -9580,6 +9821,8 @@ static const struct {
 
 	luaRegister(pickupGem),
 	luaRegister(setGemPosition),
+	luaRegister(setGemName),
+	luaRegister(setGemBlink),
 	luaRegister(removeGem),
 	luaRegister(setBeacon),
 	luaRegister(getBeacon),
@@ -9628,6 +9871,11 @@ static const struct {
 	luaRegister(getObstruction),
 	luaRegister(getGridRaw),
 	luaRegister(findPath),
+	luaRegister(createFindPath),
+	luaRegister(findPathBegin),
+	luaRegister(findPathUpdate),
+	luaRegister(findPathFinish),
+	luaRegister(findPathGetStats),
 	luaRegister(castLine),
 	luaRegister(getUserInputString),
 	luaRegister(getMaxCameraValues),
@@ -9716,6 +9964,7 @@ static const struct {
 
 	luaRegister(entity_warpToNode),
 	luaRegister(entity_moveToNode),
+	luaRegister(entity_moveToNodeSpeed),
 
 	luaRegister(cam_toNode),
 	luaRegister(cam_snap),
@@ -9730,7 +9979,9 @@ static const struct {
 	luaRegister(entity_flipToVel),
 
 	luaRegister(entity_swimToNode),
+	luaRegister(entity_swimToNodeSpeed),
 	luaRegister(entity_swimToPosition),
+	luaRegister(entity_swimToPositionSpeed),
 
 
 	luaRegister(createShot),
@@ -9818,6 +10069,7 @@ static const struct {
 	luaRegister(getNumberOfEntitiesNamed),
 
 	luaRegister(isNested),
+	luaRegister(isSkippingCutscene),
 
 	luaRegister(entity_idle),
 	luaRegister(entity_stopAllAnimations),
@@ -9870,6 +10122,7 @@ static const struct {
 	luaRegister(entity_isName),
 
 
+	luaRegister(node_setActivationRange),
 	luaRegister(node_setCursorActivation),
 	luaRegister(node_setCatchActions),
 
@@ -9883,6 +10136,8 @@ static const struct {
 
 	luaRegister(node_setActive),
 	luaRegister(node_isActive),
+	luaRegister(node_setEmitter),
+	luaRegister(node_getEmitter),
 
 
 	luaRegister(setSceneColor),
@@ -10011,6 +10266,7 @@ static const struct {
 	luaRegister(getScreenVirtualSize),
 	luaRegister(isMiniMapCursorOkay),
 	luaRegister(isShuttingDownGameState),
+	luaRegister(setBGGradient),
 
 	luaRegister(inv_isFull),
 	luaRegister(inv_getMaxAmount),
@@ -10034,6 +10290,7 @@ static const struct {
 	luaRegister(text_setWidth),
 	luaRegister(text_setAlign),
 	luaRegister(text_getHeight),
+	luaRegister(text_getStringWidth),
 
 	luaRegister(loadShader),
 	luaRegister(createShader),
@@ -10052,6 +10309,7 @@ static const struct {
 	luaRegister(isObject),
 	luaRegister(isEntity),
 	luaRegister(isScriptedEntity),
+	luaRegister(isBone),
 	luaRegister(isShot),
 	luaRegister(isWeb),
 	luaRegister(isIng),
@@ -10059,6 +10317,10 @@ static const struct {
 	luaRegister(isText),
 	luaRegister(isShader),
 	luaRegister(isParticleEffect),
+
+	luaRegister(getPerformanceCounter),
+	luaRegister(getPerformanceFreq),
+
 
 
 #undef MK_FUNC
@@ -10880,6 +11142,13 @@ lua_State *ScriptInterface::createLuaVM()
 
 	// In case a script errors outside of any protected environment, report and exit.
 	lua_atpanic(state, l_panicHandler);
+
+	// Register Lua classes
+	luaL_newmetatable(state, "pathfinder");
+	lua_pushliteral(state, "__gc");
+	lua_pushcfunction(state, _pathfindDelete);
+	lua_settable(state, -3);
+	lua_pop(state, 1);
 
 	// All done, return the new state.
 	return state;

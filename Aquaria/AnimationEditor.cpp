@@ -1415,6 +1415,7 @@ void AnimationEditor::load()
 	std::string file = dsq->getUserInputString("Enter anim file to load:");
 	if (file.empty())		return;
 	this->editingFile = file;
+	SkeletalSprite::clearCache();
 	loadFile();
 }
 
@@ -1426,6 +1427,7 @@ void AnimationEditor::loadSkin()
 	if (file.empty())		return;
 	//this->editingFile = file;
 	//loadFile();
+	SkeletalSprite::clearCache();
 	editSprite->loadSkin(file);
 }
 

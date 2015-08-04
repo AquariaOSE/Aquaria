@@ -1368,7 +1368,19 @@ void Continuity::loadEatBank()
 {
 	eats.clear();
 
-	InStream inf("data/eats.txt");
+	std::string file;
+	bool found = false;
+	if (dsq->mod.isActive())
+	{
+		file = dsq->mod.getPath() + "eats.txt";
+		if(exists(file))
+			found = true;
+	}
+
+	if(!found)
+		file = "data/eats.txt";
+
+	InStream inf(file.c_str());
 
 	EatData curData;
 	std::string read;
@@ -3649,7 +3661,8 @@ void Continuity::reset()
 
 	speedTypes.clear();
 	InStream inFile("data/speedtypes.txt");
-	int n, spd;
+	int n;
+	float spd;
 	while (inFile >> n)
 	{
 		inFile >> spd;
@@ -3667,7 +3680,7 @@ void Continuity::reset()
 	core->resetTimer();
 }
 
-int Continuity::getSpeedType(int speedType)
+float Continuity::getSpeedType(int speedType)
 {
 	if (speedType >= speedTypes.size() || speedType < 0)
 	{

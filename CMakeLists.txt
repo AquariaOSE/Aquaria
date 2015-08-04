@@ -31,6 +31,7 @@ OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
 OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional features." TRUE)
 
 OPTION(AQUARIA_USE_SDL2 "Use SDL2" FALSE)
+OPTION(AQUARIA_USE_GLM "Use GLM for matrix math" TRUE)
 
 # No Steamworks SDK for Linux at the moment. Roll our own achievements.
 ADD_DEFINITIONS(-DBBGE_BUILD_ACHIEVEMENTS_INTERNAL=1)
@@ -303,6 +304,10 @@ IF(AQUARIA_USE_SDL2)
     ADD_DEFINITIONS(-DBBGE_BUILD_SDL2=1)
 ENDIF(AQUARIA_USE_SDL2)
 
+IF(AQUARIA_USE_GLM)
+    ADD_DEFINITIONS(-DBBGE_USE_GLM=1)
+ENDIF(AQUARIA_USE_GLM)
+
 IF(AQUARIA_DEMO_BUILD)
     message(STATUS "Demo build.")
     ADD_DEFINITIONS(-DAQUARIA_DEMO=1)
@@ -482,7 +487,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/RenderObject.cpp
     ${BBGEDIR}/RenderObjectLayer.cpp
     ${BBGEDIR}/RenderRect.cpp
-    ${BBGEDIR}/Resource.cpp
     ${BBGEDIR}/RoundedRect.cpp
     ${BBGEDIR}/ScreenTransition.cpp
     ${BBGEDIR}/ScriptObject.cpp
@@ -714,7 +718,7 @@ ENDIF(WIN32)
 IF(MACOSX)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Carbon")
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework Cocoa")
-    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework OpenAL")
+    #SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} "-framework OpenAL")
 ENDIF(MACOSX)
 
 IF(HAIKU)

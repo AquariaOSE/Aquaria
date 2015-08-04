@@ -45,11 +45,8 @@ void BmpFont::destroy()
 		font.Destroy();
 		loaded = false;
 	}
-	if (overrideTexture)
-	{
-		overrideTexture->removeRef();
-		overrideTexture = 0;
-	}
+
+	overrideTexture = NULL;
 }
 
 void BmpFont::load(const std::string &file, float scale, bool loadTexture)
@@ -423,6 +420,30 @@ bool BitmapText::isScrollingText()
 int BitmapText::getNumLines()
 {
 	return lines.size();
+}
+
+float BitmapText::getStringWidth(const std::string& text)
+{
+	std::string tmp;
+	int maxsize = 0;
+	tmp.reserve(text.length());
+	for (size_t i = 0; i < text.size(); i++)
+	{
+		if(text[i] == '\n')
+		{
+			std::pair<int, int> dim;
+			bmpFont->font.GetStringSize(tmp, &dim);
+			maxsize = std::max(maxsize, dim.first);
+			tmp.resize(0);
+		}
+		else
+			tmp += text[i];
+	}
+	std::pair<int, int> dim;
+	bmpFont->font.GetStringSize(tmp, &dim);
+	maxsize = std::max(maxsize, dim.first);
+
+	return maxsize * bmpFont->scale;
 }
 
 /*

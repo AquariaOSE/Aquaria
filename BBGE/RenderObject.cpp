@@ -23,6 +23,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "MathFunctions.h"
 
 #include <assert.h>
+#include <algorithm>
+
+#ifdef BBGE_USE_GLM
+#include "glm/glm.hpp"
+#include "glm/gtx/transform.hpp"
+#endif
 
 bool	RenderObject::renderCollisionShape			= false;
 int		RenderObject::lastTextureApplied			= 0;
@@ -291,24 +297,51 @@ Vector RenderObject::getInvRotPosition(const Vector &vec)
 #endif
 }
 
-void RenderObject::matrixChain()
+#ifdef BBGE_USE_GLM
+static glm::mat4 matrixChain(const RenderObject *ro)
 {
-	if (parent)
-		parent->matrixChain();
+	glm::mat4 tranformMatrix = glm::scale(
+		glm::translate(
+			glm::rotate(
+				glm::translate(
+					ro->getParent() ? matrixChain(ro->getParent()) : glm::mat4(1.0f),
+					glm::vec3(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0)
+				),
+				ro->rotation.z + ro->rotationOffset.z,
+				glm::vec3(0, 0, 1)
+			),
+			glm::vec3(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0.0f)
+		),
+		glm::vec3(ro->scale.x, ro->scale.y, 0.0f)
+	);
+
+	if (ro->isfh())
+		tranformMatrix *= glm::rotate(180.0f, 0.0f, 1.0f, 0.0f);
+
+	tranformMatrix *= glm::translate(ro->internalOffset.x, ro->internalOffset.y, 0.0f);
+
+	return tranformMatrix;
+}
+#else
+static void matrixChain(RenderObject *ro)
+{
+	if (RenderObject *parent = ro->getParent())
+		matrixChain(parent);
 	
 #ifdef BBGE_BUILD_OPENGL
-	glTranslatef(position.x+offset.x, position.y+offset.y, 0);
-	glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
-	glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, 0);
-	glScalef(scale.x, scale.y, 0);
-	if (isfh())
+	glTranslatef(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0);
+	glRotatef(ro->rotation.z+ro->rotationOffset.z, 0, 0, 1);
+	glTranslatef(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0);
+	glScalef(ro->scale.x, ro->scale.y, 0);
+	if (ro->isfh())
 	{
 		//glDisable(GL_CULL_FACE);
 		glRotatef(180, 0, 1, 0);
 	}
-	glTranslatef(internalOffset.x, internalOffset.y, 0);
+	glTranslatef(ro->internalOffset.x, ro->internalOffset.y, 0);
 #endif
 }
+#endif
 
 float RenderObject::getWorldRotation()
 {
@@ -329,11 +362,19 @@ Vector RenderObject::getWorldPositionAndRotation()
 
 Vector RenderObject::getWorldCollidePosition(const Vector &vec)
 {
+#ifdef BBGE_USE_GLM
+	glm::mat4 transformMatrix = glm::translate(
+		matrixChain(this),
+		glm::vec3(collidePosition.x + vec.x, collidePosition.y + vec.y, 0.0f)
+	);
+
+	return Vector(transformMatrix[3][0], transformMatrix[3][1], 0);
+#else
 #ifdef BBGE_BUILD_OPENGL
 	glPushMatrix();
 	glLoadIdentity();
 
-	matrixChain();
+	matrixChain(this);
 	glTranslatef(collidePosition.x+vec.x, collidePosition.y+vec.y, 0);
 
 	float m[16];
@@ -345,6 +386,7 @@ Vector RenderObject::getWorldCollidePosition(const Vector &vec)
 	return Vector(x,y,0);
 #elif BBGE_BUILD_DIRECTX
 	return vec;
+#endif
 #endif
 }
 
@@ -415,11 +457,8 @@ void RenderObject::destroy()
 		parent->removeChild(this);
 		parent = 0;
 	}
-	if (texture)
-	{
-		texture->removeRef(); 
-		texture = 0;
-	}
+
+	texture = NULL;
 }
 
 void RenderObject::copyProperties(RenderObject *target)
@@ -467,13 +506,29 @@ void RenderObject::toggleCull(bool value)
 
 void RenderObject::moveToFront()
 {
-	if (layer != -1)
+	if(RenderObject *p = parent)
+	{
+		if(p->children.size() && p->children[0] != this)
+		{
+			p->removeChild(this);
+			p->addChild(this, (ParentManaged)this->pm, RBP_NONE, CHILD_FRONT);
+		}
+	}
+	else if (layer != -1)
 		core->renderObjectLayers[this->layer].moveToFront(this);
 }
 
 void RenderObject::moveToBack()
 {
-	if (layer != -1)
+	if(RenderObject *p = parent)
+	{
+		if(p->children.size() && p->children[p->children.size()-1] != this)
+		{
+			p->removeChild(this);
+			p->addChild(this, (ParentManaged)this->pm, RBP_NONE, CHILD_BACK);
+		}
+	}
+	else if (layer != -1)
 		core->renderObjectLayers[this->layer].moveToBack(this);
 }
 
@@ -1099,26 +1154,6 @@ void RenderObject::lookAt(const Vector &pos, float t, float minAngle, float maxA
 	rotation.interpolateTo(Vector(0,0,angle), t);
 }
 
-void RenderObject::removeAllChildren()
-{	
-	if (!children.empty())
-	{
-		removeChild(children.front());
-		removeAllChildren();
-	}
-}
-
-void RenderObject::recursivelyRemoveEveryChild()
-{
-	if (!children.empty())
-	{
-		RenderObject *child = (children.front());
-		child->recursivelyRemoveEveryChild();
-		removeChild(child);
-		recursivelyRemoveEveryChild();
-	}
-}
-
 void RenderObject::update(float dt)
 {
 	if (ignoreUpdate)
@@ -1149,8 +1184,14 @@ void RenderObject::update(float dt)
 
 void RenderObject::removeChild(RenderObject *r)
 {
-	children.remove(r);
 	r->parent = 0;
+	Children::iterator oldend = children.end();
+	Children::iterator newend = std::remove(children.begin(), oldend, r);
+	if(oldend != newend)
+	{
+		children.resize(std::distance(children.begin(), newend));
+		return;
+	}
 
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
@@ -1301,29 +1342,6 @@ void RenderObject::onUpdate(float dt)
 //	updateCullVariables();
 }
 
-void RenderObject::propogateAlpha()
-{
-	/*
-	if (!shareAlphaWithChildren) return;
-	for (int i = 0; i < children.size(); i++)
-	{
-		children[i]->alpha = this->alpha * children[i]->parentAlphaModifier.getValue();
-		children[i]->propogateAlpha();
-	}
-
-	*/
-	/*
-	if (shareAlphaWithChildren && !children.empty())
-	{
-		for (int i = 0; i < children.size(); i++)
-		{
-
-			//children[i]->alpha = this->alpha * children[i]->parentAlphaModifier.getValue();
-		}
-	}
-	*/
-}
-
 void RenderObject::unloadDevice()
 {
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
@@ -1340,23 +1358,21 @@ void RenderObject::reloadDevice()
 	}
 }
 
-void RenderObject::setTexture(const std::string &n)
+bool RenderObject::setTexture(const std::string &n)
 {
 	std::string name = n;
 	stringToLowerUserData(name);
 
 	if (name.empty())
-        return;
+		return false;
 
-    if(texture && texture->name == core->getInternalTextureName(name))
-        return; // no texture change
+	if(texture && name == texture->name)
+		return true; // no texture change
 
-    Texture *oldtex = texture;
-	Texture *t = core->addTexture(name);
-	setTexturePointer(t, NO_ADD_REF);
-
-    if (oldtex)
-        oldtex->removeRef();
+	TextureLoadResult res = TEX_FAILED;
+	CountedPtr<Texture> tex = core->addTexture(name, &res);
+	setTexturePointer(tex);
+	return !!tex && res != TEX_FAILED;
 }
 
 float RenderObject::getSortDepth()
@@ -1375,7 +1391,7 @@ void RenderObject::addChild(RenderObject *r, ParentManaged pm, RenderBeforeParen
 	if (order == CHILD_BACK)
 		children.push_back(r);
 	else
-		children.push_front(r);
+		children.insert(children.begin(), r);
 
 	r->pm = pm;
 
@@ -1405,15 +1421,6 @@ void RenderObject::setPositionSnapTo(InterpolatedVector *positionSnapTo)
 void RenderObject::setOverrideCullRadius(float ovr)
 {
 	overrideCullRadiusSqr = ovr * ovr;
-}
-
-void RenderObject::propogateParentManagedStatic()
-{
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
-	{
-		(*i)->pm = PM_STATIC;
-		(*i)->propogateParentManagedStatic();
-	}
 }
 
 bool RenderObject::isCoordinateInRadius(const Vector &pos, float r)

@@ -48,7 +48,7 @@ struct BmpFont
 	Vector fontTopColor;
 	Vector fontBtmColor;
 
-	Texture *overrideTexture;
+	CountedPtr<Texture> overrideTexture;
 };
 
 class BitmapText : public BaseText
@@ -75,6 +75,7 @@ public:
 	virtual float getHeight();
 	void unloadDevice();
 	void reloadDevice();
+	virtual float getStringWidth(const std::string& text);
 
 	int getNumLines();
 protected:

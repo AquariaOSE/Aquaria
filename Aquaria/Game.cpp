@@ -42,8 +42,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 std::vector<std::string> allowedMaps;
 
-const int PATH_ACTIVATION_RANGE		 = 800;
-
 Vector worldLeftCenter(217,250), worldRightCenter(575, 250);
 Vector opt_save_original = Vector(350, 350), opt_cancel_original = Vector(450, 350);
 
@@ -3384,12 +3382,14 @@ void Game::createInGameMenu()
 	resolutionLabel->position = Vector(160, 260);
 	options->addChild(resolutionLabel, PM_POINTER);
 
-	resBox = new AquariaComboBox();
+	resBox = new AquariaComboBox(Vector(0.7f, 1.0f));
 	resBox->position = Vector(196, 285);
 	for (i = 0; i < core->screenModes.size(); i++)
 	{
 		std::ostringstream os;
 		os << core->screenModes[i].x << "x" << core->screenModes[i].y;
+		if(core->screenModes[i].hz)
+			os << " (" << core->screenModes[i].hz << "hz)";
 		resBox->addItem(os.str());
 		if (core->screenModes[i].x == dsq->user.video.resx && core->screenModes[i].y == dsq->user.video.resy)
 		{
@@ -5910,22 +5910,14 @@ void Game::rebuildElementUpdateList()
 	elementUpdateList.clear();
 	elementInteractionList.clear();
 	for (int i = 0; i < dsq->getNumElements(); i++)
-	//for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
 	{
-		//RenderObjectLayer *rl = dsq->getRenderObjectLayer(i);
 		Element *e = dsq->getElement(i);
-		if (e && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
-		{
-			if (e->getElementEffectIndex() != -1)
-			{
-				elementUpdateList.push_back(e);
-			}
-			ElementEffect ee = dsq->getElementEffectByIndex(e->getElementEffectIndex());
-			if(ee.type == EFX_WAVY)
-			{
-				elementInteractionList.push_back(e);
-			}
-		}
+		const int eeidx = e->getElementEffectIndex();
+		if (eeidx != -1 && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
+			elementUpdateList.push_back(e);
+		ElementEffect ee = dsq->getElementEffectByIndex(eeidx);
+		if(ee.type == EFX_WAVY)
+			elementInteractionList.push_back(e);
 	}
 }
 
@@ -6460,18 +6452,9 @@ void Game::applyState()
 	}
 #endif
 
-	worldMapRender = 0;
-	dsq->continuity.worldMap.revealMap(sceneToLoad);
-
-	debugLog("Creating WorldMapRender");
-	if(dsq->mod.isActive() && dsq->mod.mapRevealMethod != REVEAL_UNSPECIFIED)
-		WorldMapRender::setRevealMethod(dsq->mod.mapRevealMethod);
-	else
-		WorldMapRender::setRevealMethod((WorldMapRevealMethod)dsq->user.video.worldMapRevealMethod);
-
-	worldMapRender = new WorldMapRender;
-	addRenderObject(worldMapRender, LR_WORLDMAP);
-
+/*
+	if (liFlag == 100)
+	*/
 
 	if (verbose) debugLog("Creating Avatar");
 	avatar = new Avatar();
@@ -6534,6 +6517,8 @@ void Game::applyState()
 	}
 	if (verbose) debugLog("...Done");
 	backupSceneColor = sceneColor;
+
+	dsq->continuity.worldMap.revealMap(sceneName);
 
 	colorTest();
 
@@ -6662,6 +6647,18 @@ void Game::applyState()
 	timerText->alpha = 0;
 	timerText->followCamera = 1;
 	addRenderObject(timerText, LR_MINIMAP);
+
+	worldMapRender = 0;
+
+	if(dsq->mod.isActive() && dsq->mod.mapRevealMethod != REVEAL_UNSPECIFIED)
+		WorldMapRender::setRevealMethod(dsq->mod.mapRevealMethod);
+	else
+		WorldMapRender::setRevealMethod((WorldMapRevealMethod)dsq->user.video.worldMapRevealMethod);
+
+	worldMapRender = new WorldMapRender;
+	addRenderObject(worldMapRender, LR_WORLDMAP);
+	// to hide minimap
+	//miniMapRender->position += Vector(800,0);
 
 	sceneToLoad="";
 
@@ -9328,7 +9325,7 @@ void Game::toggleKeyConfigMenu(bool f)
 
 		//group_keyConfig->children[group_keyConfig->children.size()-3]
 
-		RenderObjectList::reverse_iterator i = group_keyConfig->children.rbegin();
+		RenderObject::Children::reverse_iterator i = group_keyConfig->children.rbegin();
 		AquariaKeyConfig *upright0 = (AquariaKeyConfig*)(*i);
 		i++;
 		AquariaKeyConfig *upright = (AquariaKeyConfig*)(*i);
@@ -10372,7 +10369,7 @@ void Game::update(float dt)
 			{
 				Vector diff = p->nodes[0].position - dsq->game->avatar->position;
 
-				if (p->isCoordinateInside(dsq->game->avatar->position) || diff.getSquaredLength2D() < sqr(PATH_ACTIVATION_RANGE))
+				if (p->isCoordinateInside(dsq->game->avatar->position) || diff.getSquaredLength2D() < sqr(p->activationRange))
 				{
 					//if (trace(avatar->position, p->nodes[0].position))
 					{
@@ -10819,6 +10816,7 @@ void Game::removeState()
 	core->particlesPaused = false;
 
 	elementUpdateList.clear();
+	elementInteractionList.clear();
 
 	dsq->setCursor(CURSOR_NORMAL);
 	dsq->darkLayer.toggle(0);

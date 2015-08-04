@@ -4110,33 +4110,16 @@ void Avatar::refreshNormalForm()
 	if (c.empty())
 		c = "Naija";
 	refreshModel("Naija", c);
-	if (true)
+	if(hair)
 	{
-		if (hair)
-			hair->alphaMod = 1.0;
+		hair->alphaMod = 1.0;
 		if (!c.empty() && c!="Naija")
 		{
-			if (exists(core->getBaseTextureDirectory() + "naija/cape-"+c+".png"))
-			{
-				if (hair)
-					hair->setTexture("naija/cape-"+c);
-			}
-			else
-			{
-				if (hair)
-					hair->alphaMod = 0;
-			}
+			if(!hair->setTexture("naija/cape-"+c))
+				hair->alphaMod = 0;
 		}
 		else
-		{
-			if (hair)
-				hair->setTexture("naija/cape");
-		}
-	}
-	else
-	{
-		if (hair)
-			hair->alphaMod = 0.0;
+			hair->setTexture("naija/cape");
 	}
 }
 
@@ -7127,7 +7110,7 @@ void Avatar::onUpdate(float dt)
 
 	if(!core->particlesPaused && elementEffectMult > 0)
 	{
-		ElementUpdateList& elems = dsq->game->elementUpdateList;
+		ElementUpdateList& elems = dsq->game->elementInteractionList;
 		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
 		{
 			(*it)->doInteraction(this, elementEffectMult, 16);

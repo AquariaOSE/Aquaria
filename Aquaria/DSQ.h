@@ -31,8 +31,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AquariaMenuItem.h"
 #include "ScriptInterface.h"
 
-#include "PathFinding.h"
-
 #include "TTFFont.h"
 
 #include "tinyxml2.h"
@@ -622,12 +620,13 @@ class Path;
 
 struct GemData
 {
-	GemData() { canMove=false; }
+	GemData() { canMove=false; blink = false; }
 	std::string name;
 	std::string userString;
 	std::string mapName;
-	bool canMove;
 	Vector pos;
+	bool canMove;
+	bool blink; // not saved
 };
 
 struct BeaconData
@@ -994,7 +993,7 @@ public:
 	float getStory();
 	void setStory(float v);
 
-	int getSpeedType(int speedType);
+	float getSpeedType(int speedType);
 	void setNaijaModel(std::string model);
 
 
@@ -1161,7 +1160,7 @@ public:
 
 protected:
 	std::vector<EatData> eats;
-	std::vector<int> speedTypes;
+	std::vector<float> speedTypes;
 	float story;
 	WorldType worldType;
 
@@ -1264,7 +1263,7 @@ public:
 	Quad *bar_left, *bar_right, *bar_up, *bar_down;
 	Quad *barFade_left, *barFade_right;
 
-	Texture *texCursor, *texCursorSwim, *texCursorBurst, *texCursorSing, *texCursorLook;
+	CountedPtr<Texture> texCursor, texCursorSwim, texCursorBurst, texCursorSing, texCursorLook;
 
 	void setBlackBarsColor(Vector color);
 	
@@ -1397,8 +1396,6 @@ public:
 
 	void jumpToSection(InStream &inFile, const std::string &section);
 
-	PathFinding pathFinding;
-	void runGesture(const std::string &line);
 	void generateCollisionMask(RenderObject *r);
 	void toggleRenderCollisionShapes();
 

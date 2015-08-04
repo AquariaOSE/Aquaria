@@ -54,9 +54,8 @@ bool Texture::useMipMaps = true;
 #endif
 */
 
-TexErr Texture::textureError = TEXERR_OK;
 
-Texture::Texture() : Resource()
+Texture::Texture()
 {
 #ifdef BBGE_BUILD_OPENGL
 	textures[0] = 0;
@@ -69,7 +68,6 @@ Texture::Texture() : Resource()
 	repeat = false;
 	repeating = false;
 	pngSetStandardOrientation(0);
-
 	ow = oh = -1;
 }
 
@@ -151,7 +149,6 @@ void Texture::write(int tx, int ty, int w, int h, const unsigned char *pixels)
 
 void Texture::unload()
 {
-	Resource::unload();
 #ifdef BBGE_BUILD_OPENGL
 	if (textures[0])
 	{
@@ -166,8 +163,6 @@ void Texture::unload()
 
 		glDeleteTextures(1, &textures[0]);
 		textures[0] = 0;
-
-		//removeRef();
 	}
 #endif
 }
@@ -185,10 +180,7 @@ void Texture::destroy()
 	}
 #endif
 
-	if (!core->isShuttingDown())
-		core->removeTexture(this->name);
-
-//	Resource::destroy();
+	core->removeTexture(this);
 }
 
 int Texture::getPixelWidth()
@@ -255,8 +247,6 @@ int Texture::getPixelHeight()
 
 void Texture::reload()
 {
-	Resource::reload();
-
 	debugLog("RELOADING TEXTURE: " + name + " with loadName " + loadName + "...");
 
 	unload();
@@ -270,15 +260,12 @@ void Texture::reload()
 	debugLog("DONE");
 }
 
-void Texture::load(std::string file)
+bool Texture::load(std::string file)
 {
-	Texture::textureError = TEXERR_OK;
-
 	if (file.size()<4)
 	{
 		errorLog("Texture Name is Empty or Too Short");
-		Texture::textureError = TEXERR_FILENOTFOUND;
-		return;
+		return false;
 	}
 
 	stringToLowerUserData(file);
@@ -332,7 +319,7 @@ void Texture::load(std::string file)
 		{
 
 #ifdef BBGE_BUILD_OPENGL
-			loadPNG(file);
+			return loadPNG(file);
 #endif
 
 #ifdef BBGE_BUILD_DIRECTX
@@ -353,18 +340,15 @@ void Texture::load(std::string file)
 		}
 		else if (post == "zga")
 		{
-			loadZGA(file);
+			return loadZGA(file);
 		}
 		else if (post == "tga")
 		{
-			loadTGA(file);
+			return loadTGA(file);
 		}
 		else
 		{
 			debugLog("unknown image file type: " + file);
-			Texture::textureError = TEXERR_FILENOTFOUND;
-			width = 64;
-			height = 64;
 		}
 	}
 	else
@@ -372,10 +356,8 @@ void Texture::load(std::string file)
 		// load default image / leave white
 		if (core->debugLogTextures)
 			debugLog("***Could not find texture: " + file);
-		Texture::textureError = TEXERR_FILENOTFOUND;
-		width = 64;
-		height = 64;
 	}
+	return false;
 }
 
 void Texture::apply(bool repeatOverride)
@@ -411,18 +393,10 @@ void Texture::unbind()
 {
 }
 
-#ifdef BBGE_BUILD_OPENGL
-
-void Texture::setID(int id)
+bool Texture::loadPNG(const std::string &file)
 {
-	textures[0] = id;
-}
-
-#endif
-
-void Texture::loadPNG(const std::string &file)
-{
-	if (file.empty()) return;
+	if (file.empty()) return false;
+	bool good = false;
 
 #ifdef BBGE_BUILD_OPENGL
 
@@ -430,7 +404,7 @@ void Texture::loadPNG(const std::string &file)
 	pngInfo info;
 
 	int pngType = PNG_ALPHA;
-
+	
 	if (format != 0)
 	{
 		if (format == GL_LUMINANCE_ALPHA)
@@ -455,30 +429,29 @@ void Texture::loadPNG(const std::string &file)
 	{
 		width = info.Width;
 		height = info.Height;
+		good = true;
 	}
 	else
 	{
 		fail:
 
 		debugLog("Can't load PNG file: " + file);
-		width = 64;
-		height = 64;
-		Texture::textureError = TEXERR_FILENOTFOUND;
 	}
 
 	if(memptr)
 		delete [] memptr;
 
 #endif
+	return good;
 }
 
 // internal load functions
-void Texture::loadTGA(const std::string &file)
+bool Texture::loadTGA(const std::string &file)
 {
-	loadTGA(TGAload(file.c_str()));
+	return loadTGA(TGAload(file.c_str()));
 }
 
-void Texture::loadZGA(const std::string &file)
+bool Texture::loadZGA(const std::string &file)
 {
 	unsigned long size = 0;
 	char *buf = readCompressedFile(file, &size);
@@ -486,15 +459,15 @@ void Texture::loadZGA(const std::string &file)
 	if (!tga)
 	{
 		debugLog("Can't load ZGA File: " + file);
-		return;
+		return false;
 	}
-	loadTGA(tga);
+	return loadTGA(tga);
 }
 
-void Texture::loadTGA(ImageTGA *imageTGA)
+bool Texture::loadTGA(ImageTGA *imageTGA)
 {
 	if (!imageTGA)
-		return;
+		return false;
 
 	glGenTextures(1, &textures[0]);
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
@@ -512,6 +485,8 @@ void Texture::loadTGA(ImageTGA *imageTGA)
 	if (imageTGA->data)
 		delete[] (imageTGA->data);
 	free (imageTGA);
+
+	return true;
 }
 
 

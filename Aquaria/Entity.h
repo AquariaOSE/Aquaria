@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include "Path.h"
 #include "Hair.h"
+#include "TileVector.h"
 
 #include "tinyxml2.h"
 using namespace tinyxml2;
@@ -232,7 +233,7 @@ public:
 
 	void heal(float a, int type=0);
 
-	void push(const Vector &vec, float time, int maxSpeed, float dmg);
+	void push(const Vector &vec, float time, float maxSpeed, float dmg);
 
 	bool canSetState(int state);
 	
@@ -311,9 +312,9 @@ public:
 	};
 	virtual void onNotify(Entity *notify){}
 	//void followPath(Path *p, int spd, int loop, bool deleteOnEnd = false);
-	void followPath(Path *p, int speedType, int dir, bool deleteOnEnd = false);
+	float followPath(Path *p, float speed, int dir, bool deleteOnEnd = false);
 	Entity *attachedTo;
-	bool touchAvatarDamage(int radius, float dmg, const Vector &override=Vector(-1,-1,-1), int speed=0, float pushTime = 0, Vector collidePos = Vector(0,0,0));
+	bool touchAvatarDamage(int radius, float dmg, const Vector &override=Vector(-1,-1,-1), float speed=0, float pushTime = 0, Vector collidePos = Vector(0,0,0));
 
 	void moveTowards(Vector p, float dt, int spd);
 	void moveAround(Vector p, float dt, int spd, int d);
@@ -326,10 +327,10 @@ public:
 	void moveAroundEntity(float dt, int spd, int d, Entity *e);
 	void moveTowardsGroupCenter(float dt, int spd);
 	void moveTowardsGroupHeading(float dt, int spd);
-	bool doCollisionAvoidance(float dt, int search, float mod, Vector *v = 0, int overrideMaxSpeed=0, int ignoreObs=0, bool onlyVP=false);
+	bool doCollisionAvoidance(float dt, int search, float mod, Vector *v = 0, float overrideMaxSpeed=0, int ignoreObs=0, bool onlyVP=false);
 	void doSpellAvoidance(float dt, int range, float mod);
 	void doEntityAvoidance(float dt, int range, float mod, Entity *ignore =0);
-	void setMaxSpeed(int ms);
+	void setMaxSpeed(float ms);
 	Entity *findTarget(int dist, int type, int t=0);
 	//bool hasTarget() { return target != 0; }
 	bool hasTarget(int t=0);
@@ -352,7 +353,7 @@ public:
 	void overideMaxSpeed(int ms, float time);
 	void disableOverideMaxSpeed();
 	int currentEntityTarget;
-	void moveToNode(Path *path, int speedType, int dieOnPathEnd=0, bool swim = false);
+	float moveToPos(Vector pos, float speed, int dieOnPathEnd=0, bool swim = false);
 	bool isHit();
 	bool pathBurst(bool wallJump = false);
 	Timer burstTimer;
@@ -598,7 +599,7 @@ protected:
 
 	void updateBoneLock();
 
-	int pushMaxSpeed;
+	float pushMaxSpeed;
 	std::string currentAnim;
 	
 
@@ -609,8 +610,7 @@ protected:
 private:
 
 
-	int maxSpeed;
-	int oldMaxSpeed;
+	float maxSpeed;
 
 	bool stopSoundsOnDeath;
 

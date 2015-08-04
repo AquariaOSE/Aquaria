@@ -54,6 +54,7 @@ Path::Path()
 	warpType = 0;
 	spiritFreeze = true;
 	pauseFreeze = true;
+	activationRange = 800;
 }
 
 void Path::clampPosition(Vector *pos, float radius)
@@ -450,14 +451,23 @@ void Path::refreshScript()
 		//core->removeRenderObject(&emitter, Core::DO_NOT_DESTROY_RENDER_OBJECT);
 		//core->getTopStateData()->addRenderObject(&emitter, LR_PARTICLES);
 
-		if (emitter)
-		{
-			emitter->safeKill();
-			emitter = 0;
-		}
+		setEmitter(particleEffect);
+	}
+}
+
+void Path::setEmitter(const std::string& name)
+{
+	if (emitter)
+	{
+		emitter->safeKill();
+		emitter = 0;
+	}
+	if(!name.empty())
+	{
 		emitter = new ParticleEffect;
-		emitter->load(particleEffect);
-		emitter->start();
+		emitter->load(name);
+		if(active)
+			emitter->start();
 		if (!nodes.empty())
 		{
 			emitter->position = nodes[0].position;

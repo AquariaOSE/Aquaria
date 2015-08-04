@@ -66,14 +66,14 @@ namespace MiniMapRenderSpace
 	const int healthMarkerSize = 20;
 
 
-	Texture *texCook = 0;
-	Texture *texWaterBit = 0;
-	Texture *texMinimapBtm = 0;
-	Texture *texMinimapTop = 0;
-	Texture *texRipple = 0;
-	Texture *texNaija = 0;
-	Texture *texHealthBar = 0;
-	Texture *texMarker = 0;
+	CountedPtr<Texture> texCook = 0;
+	CountedPtr<Texture> texWaterBit = 0;
+	CountedPtr<Texture> texMinimapBtm = 0;
+	CountedPtr<Texture> texMinimapTop = 0;
+	CountedPtr<Texture> texRipple = 0;
+	CountedPtr<Texture> texNaija = 0;
+	CountedPtr<Texture> texHealthBar = 0;
+	CountedPtr<Texture> texMarker = 0;
 
 	float waterSin = 0;
 

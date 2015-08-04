@@ -83,21 +83,16 @@ public:
 
 	static RenderObjectLayer *rlayer;
 
-	enum AddRefChoice { NO_ADD_REF = 0, ADD_REF = 1};
-
-	void setTexturePointer(Texture *t, AddRefChoice addRefChoice)
+	void setTexturePointer(CountedPtr<Texture> t)
 	{
 		this->texture = t;
-		if (addRefChoice == ADD_REF)
-			texture->addRef();
 		onSetTexture();
 	}
 
 	void setStateDataObject(StateData *state);
-	void setTexture(const std::string &name);
+	bool setTexture(const std::string &name);
 
 	void toggleAlpha(float t = 0.2);
-	void matrixChain();
 
 	virtual void update(float dt);
 	bool isDead() const {return _dead;}
@@ -134,8 +129,8 @@ public:
 	virtual void flipHorizontal();
 	virtual void flipVertical();
 
-	bool isfh() { return _fh; }
-	bool isfv() { return _fv; }
+	bool isfh() const { return _fh; }
+	bool isfv() const { return _fv; }
 
 	// recursive
 	bool isfhr();
@@ -167,8 +162,6 @@ public:
 
 	void addChild(RenderObject *r, ParentManaged pm, RenderBeforeParent rbp = RBP_NONE, ChildOrder order = CHILD_BACK);
 	void removeChild(RenderObject *r);
-	void removeAllChildren();
-	void recursivelyRemoveEveryChild();
 
 	Vector getRealPosition();
 	Vector getRealScale();
@@ -241,7 +234,7 @@ public:
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
 	InterpolatedVector velocity, gravity;
 
-	Texture *texture;
+	CountedPtr<Texture> texture;
 
 	//int mode;
 
@@ -273,13 +266,13 @@ public:
 	bool shareColorWithChildren;
 
 	bool cull;
-	int updateCull;
+	float updateCull;
 	int layer;
 
 	InterpolatedVector *positionSnapTo;
 
 	//DestroyType destroyType;
-	typedef std::list<RenderObject*> Children;
+	typedef std::vector<RenderObject*> Children;
 	Children children, childGarbage;
 
 	//Flags flags;
@@ -311,10 +304,6 @@ protected:
 	virtual void onUpdate(float dt);
 	virtual void deathNotify(RenderObject *r);
 	virtual void onEndOfLife() {}
-
-	// spread parentManagedStatic flag to the entire child tree
-	void propogateParentManagedStatic();
-	void propogateAlpha();
 
 	inline void updateLife(float dt)
 	{

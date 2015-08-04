@@ -89,6 +89,7 @@ public:
 	void update(float dt);
 	void setActive(bool v);
 	bool action(int id, int state);
+	void setEmitter(const std::string& name);
 
 	PathNode *getPathNode(int idx);
 	bool isCoordinateInside(const Vector &pos, int rad=0);
@@ -144,6 +145,7 @@ public:
 	bool pauseFreeze;
 
 	PathShape pathShape;
+	float activationRange;
 
 
 	void parseWarpNodeData(const std::string &dataString);
