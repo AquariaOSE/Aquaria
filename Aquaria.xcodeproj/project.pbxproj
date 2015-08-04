@@ -461,7 +461,7 @@
 		5538C4CB195CD8AD00A3877A /* libFreeType.a */ = {isa = PBXFileReference; explicitFileType = archive.ar; includeInIndex = 0; path = libFreeType.a; sourceTree = BUILT_PRODUCTS_DIR; };
 		5538C4D8195CD8AE00A3877A /* XCTest.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = XCTest.framework; path = Library/Frameworks/XCTest.framework; sourceTree = DEVELOPER_DIR; };
 		5538C51D195CDE3400A3877A /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		5538C51E195CDED900A3877A /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = ../../../../../Library/Frameworks/SDL2.framework; sourceTree = "<group>"; };
+		5538C51E195CDED900A3877A /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = SDL2.framework; path = /Library/Frameworks/SDL2.framework; sourceTree = "<absolute>"; };
 		5538C521195CDF2200A3877A /* data */ = {isa = PBXFileReference; lastKnownFileType = folder; name = data; path = ../files/data; sourceTree = "<group>"; };
 		5538C522195CDF2200A3877A /* gfx */ = {isa = PBXFileReference; lastKnownFileType = folder; name = gfx; path = ../files/gfx; sourceTree = "<group>"; };
 		5538C523195CDF2200A3877A /* locales */ = {isa = PBXFileReference; lastKnownFileType = folder; name = locales; path = ../files/locales; sourceTree = "<group>"; };
@@ -2235,6 +2235,7 @@
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = MacOSX/Aquaria.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2258,6 +2259,7 @@
 					"BBGE_BUILD_MACOSX=1",
 					"LUA_USE_ULONGJMP=1",
 					HAVE_STRCASECMP,
+					BBGE_USE_GLM,
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -2295,6 +2297,7 @@
 					"$(inherited)",
 					"$(LOCAL_LIBRARY_DIR)/Frameworks",
 				);
+				GCC_INLINES_ARE_PRIVATE_EXTERN = NO;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = MacOSX/Aquaria.pch;
 				GCC_PREPROCESSOR_DEFINITIONS = (
@@ -2318,6 +2321,7 @@
 					"BBGE_BUILD_MACOSX=1",
 					"LUA_USE_ULONGJMP=1",
 					HAVE_STRCASECMP,
+					BBGE_USE_GLM,
 					"$(inherited)",
 				);
 				HEADER_SEARCH_PATHS = (
@@ -3312,6 +3316,7 @@
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_OPTIMIZATION_LEVEL = s;
 				GCC_PREPROCESSOR_DEFINITIONS = NDEBUG;
+				GCC_SYMBOLS_PRIVATE_EXTERN = YES;
 				GCC_WARN_64_TO_32_BIT_CONVERSION = NO;
 				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
 				GCC_WARN_UNDECLARED_SELECTOR = YES;
