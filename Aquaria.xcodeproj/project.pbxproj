@@ -106,7 +106,6 @@
 		5538C42B195CD39E00A3877A /* RenderObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 6C7F473C9A8F44FEA050812E /* RenderObject.cpp */; };
 		5538C42C195CD39E00A3877A /* RenderObjectLayer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 1D66E06F11504DDC8096848F /* RenderObjectLayer.cpp */; };
 		5538C42D195CD39E00A3877A /* RenderRect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 96AC31CCFF3C46DCA4328D4F /* RenderRect.cpp */; };
-		5538C42E195CD39E00A3877A /* Resource.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 0AD1305E18A947298F3C1B44 /* Resource.cpp */; };
 		5538C42F195CD39E00A3877A /* RoundedRect.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 872103CCB775444F97E64D22 /* RoundedRect.cpp */; };
 		5538C430195CD39E00A3877A /* ScreenTransition.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 5BE5FBE98C6A4C888F155311 /* ScreenTransition.cpp */; };
 		5538C431195CD39E00A3877A /* ScriptObject.cpp in Sources */ = {isa = PBXBuildFile; fileRef = 985A8A1FD2C54D7AB96F6CB7 /* ScriptObject.cpp */; };
@@ -380,7 +379,6 @@
 		0761347C3C9F43CDBC89BC69 /* ftgasp.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; path = ftgasp.c; sourceTree = "<group>"; };
 		08109169CFEE4554ABE616F3 /* ModDownloader.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = ModDownloader.cpp; path = Aquaria/ModDownloader.cpp; sourceTree = SOURCE_ROOT; };
 		088B8A4FF3354DFBADAAB618 /* lopcodes.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; path = lopcodes.c; sourceTree = "<group>"; };
-		0AD1305E18A947298F3C1B44 /* Resource.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; path = Resource.cpp; sourceTree = "<group>"; };
 		0B3EC9598F08429C95D99B88 /* ftlcdfil.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; path = ftlcdfil.c; sourceTree = "<group>"; };
 		0CF5B1AB6A614994B1B6763D /* Game.cpp */ = {isa = PBXFileReference; explicitFileType = sourcecode.cpp.cpp; fileEncoding = 4; name = Game.cpp; path = Aquaria/Game.cpp; sourceTree = SOURCE_ROOT; };
 		0E0B11D5B98D4B78BCB0F0FA /* lstring.c */ = {isa = PBXFileReference; explicitFileType = sourcecode.c.c; fileEncoding = 4; path = lstring.c; sourceTree = "<group>"; };
@@ -557,7 +555,6 @@
 		5597E611195DD030004D9EFF /* Rect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Rect.h; sourceTree = "<group>"; };
 		5597E612195DD030004D9EFF /* RenderObject_inline.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RenderObject_inline.h; sourceTree = "<group>"; };
 		5597E613195DD030004D9EFF /* RenderObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RenderObject.h; sourceTree = "<group>"; };
-		5597E614195DD030004D9EFF /* Resource.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = Resource.h; sourceTree = "<group>"; };
 		5597E615195DD030004D9EFF /* RoundedRect.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = RoundedRect.h; sourceTree = "<group>"; };
 		5597E616195DD030004D9EFF /* ScreenTransition.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ScreenTransition.h; sourceTree = "<group>"; };
 		5597E617195DD030004D9EFF /* ScriptObject.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = ScriptObject.h; sourceTree = "<group>"; };
@@ -1111,7 +1108,6 @@
 				5597E611195DD030004D9EFF /* Rect.h */,
 				5597E612195DD030004D9EFF /* RenderObject_inline.h */,
 				5597E613195DD030004D9EFF /* RenderObject.h */,
-				5597E614195DD030004D9EFF /* Resource.h */,
 				5597E615195DD030004D9EFF /* RoundedRect.h */,
 				5597E616195DD030004D9EFF /* ScreenTransition.h */,
 				5597E617195DD030004D9EFF /* ScriptObject.h */,
@@ -1160,7 +1156,6 @@
 				6C7F473C9A8F44FEA050812E /* RenderObject.cpp */,
 				1D66E06F11504DDC8096848F /* RenderObjectLayer.cpp */,
 				96AC31CCFF3C46DCA4328D4F /* RenderRect.cpp */,
-				0AD1305E18A947298F3C1B44 /* Resource.cpp */,
 				872103CCB775444F97E64D22 /* RoundedRect.cpp */,
 				5BE5FBE98C6A4C888F155311 /* ScreenTransition.cpp */,
 				985A8A1FD2C54D7AB96F6CB7 /* ScriptObject.cpp */,
@@ -1739,6 +1734,7 @@
 			isa = PBXProject;
 			attributes = {
 				BuildIndependentTargetsInParallel = YES;
+				LastUpgradeCheck = 0700;
 			};
 			buildConfigurationList = 07274BB2829343B48257672D /* Build configuration list for PBXProject "Aquaria" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -1820,7 +1816,6 @@
 				5538C3F3195CD39E00A3877A /* ParticleEditor.cpp in Sources */,
 				5538C425195CD39E00A3877A /* ParticleManager.cpp in Sources */,
 				5538C3F8195CD39E00A3877A /* SFXLoops.cpp in Sources */,
-				5538C42E195CD39E00A3877A /* Resource.cpp in Sources */,
 				5538C41F195CD39E00A3877A /* LensFlare.cpp in Sources */,
 				5538C43B195CD39E00A3877A /* Texture.cpp in Sources */,
 				5538C412195CD39E00A3877A /* Collision.cpp in Sources */,
@@ -3403,6 +3398,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_OPTIMIZATION_LEVEL = 0;
