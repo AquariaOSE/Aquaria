@@ -1372,7 +1372,10 @@ void WorldMapRender::toggle(bool turnON)
 
 	if (!this->on && !dsq->game->avatar->isInputEnabled()) return;
 
-	if (dsq->game->avatar && (dsq->game->avatar->isInDarkness() && dsq->continuity.form != FORM_SUN))
+	const SeeMapMode mapmode = dsq->game->avatar->getSeeMapMode();
+
+	if (mapmode == SEE_MAP_NEVER
+		|| (mapmode == SEE_MAP_DEFAULT && dsq->game->avatar->isInDarkness() && dsq->continuity.form != FORM_SUN))
 	{
 		core->sound->playSfx("denied");
 		return;
