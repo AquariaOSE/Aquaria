@@ -1732,6 +1732,23 @@ luaFunc(quad_isRepeatTexture)
 	luaReturnBool(b ? b->isRepeatingTextureToFill() : false);
 }
 
+luaFunc(quad_setTexOffset)
+{
+	Quad *b = getQuad(L);
+	if (b)
+		b->texOff = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
+	luaReturnNil();
+}
+
+luaFunc(quad_getTexOffset)
+{
+	Quad *b = getQuad(L);
+	Vector v;
+	if (b)
+		v = b->texOff;
+	luaReturnVec2(v.x, v.y);
+}
+
 luaFunc(quad_setRenderBorder)
 {
 	Quad *b = getQuad(L);
@@ -1891,7 +1908,9 @@ luaFunc(quad_getBorderAlpha)
 	Q_FUNC(getter, prefix,  setRenderCenter	) \
 	Q_FUNC(getter, prefix,  isRenderCenter	) \
 	Q_FUNC(getter, prefix,  borderAlpha		) \
-	Q_FUNC(getter, prefix,  getBorderAlpha	)
+	Q_FUNC(getter, prefix,  getBorderAlpha	) \
+	Q_FUNC(getter, prefix,  setTexOffset	) \
+	Q_FUNC(getter, prefix,  getTexOffset	)
 
 // This should reflect the internal class hierarchy,
 // e.g. a Beam is a Quad, so it can use quad_* functions
@@ -9134,7 +9153,7 @@ luaFunc(createDebugText)
 
 luaFunc(createBitmapText)
 {
-	BmpFont *font = &dsq->smallFont; // make this configurable?
+	BmpFont *font = &dsq->smallFont;
 	BitmapText *txt = new BitmapText(font);
 	txt->setText(getString(L, 1));
 	txt->setFontSize(lua_tointeger(L, 2));
@@ -9142,6 +9161,27 @@ luaFunc(createBitmapText)
 	dsq->game->addRenderObject(txt, LR_HUD);
 	luaReturnPtr(txt);
 }
+
+static int createArialText(lua_State *L, TTFFont *font)
+{
+	TTFText *txt = new TTFText(font);
+	txt->setText(getString(L, 1));
+	//txt->setFontSize(lua_tointeger(L, 2)); // not supported; param is ignored for API compat with the create*Text functions
+	txt->position = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4));
+	dsq->game->addRenderObject(txt, LR_HUD);
+	luaReturnPtr(txt);
+}
+
+luaFunc(createArialTextBig)
+{
+	return createArialText(L, &dsq->fontArialBig);
+}
+
+luaFunc(createArialTextSmall)
+{
+	return createArialText(L, &dsq->fontArialSmall);
+}
+
 
 luaFunc(text_setText)
 {
@@ -10285,6 +10325,8 @@ static const struct {
 
 	luaRegister(createDebugText),
 	luaRegister(createBitmapText),
+	luaRegister(createArialTextBig),
+	luaRegister(createArialTextSmall),
 	luaRegister(text_setText),
 	luaRegister(text_setFontSize),
 	luaRegister(text_setWidth),

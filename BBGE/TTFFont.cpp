@@ -56,7 +56,7 @@ void TTFFont::create(const unsigned char *data, unsigned long datalen, int sz)
 	font->FaceSize(sz);
 }
 
-TTFText::TTFText(TTFFont *font) : RenderObject(), font(font)
+TTFText::TTFText(TTFFont *f) : font(f)
 {
 	align = ALIGN_LEFT;
 	hw = 0;
@@ -97,9 +97,7 @@ void TTFText::updateAlign()
 
 float TTFText::getWidth()
 {
-	float llx, lly, llz, urx, ury, urz;
-	font->font->BBox(originalText.c_str(), llx, lly, llz, urx, ury, urz);
-	return urx - llx;
+	return getStringWidth(originalText);
 }
 
 float TTFText::getHeight()
@@ -107,6 +105,13 @@ float TTFText::getHeight()
 	float llx, lly, llz, urx, ury, urz;
 	font->font->BBox(originalText.c_str(), llx, lly, llz, urx, ury, urz);
 	return ury - lly;
+}
+
+float TTFText::getStringWidth(const std::string& s)
+{
+	float llx, lly, llz, urx, ury, urz;
+	font->font->BBox(s.c_str(), llx, lly, llz, urx, ury, urz);
+	return urx - llx;
 }
 
 float TTFText::getFullHeight()
@@ -125,6 +130,10 @@ void TTFText::setWidth(int width)
 
 	updateAlign();
 	updateFormatting();
+}
+
+void TTFText::setFontSize(int)
+{
 }
 
 void TTFText::updateFormatting()

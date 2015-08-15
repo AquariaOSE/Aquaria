@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define BBGE_TTFFONT_H
 
 #include "Base.h"
-#include "RenderObject.h"
+#include "BaseText.h"
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -43,7 +43,7 @@ struct TTFFont
 	FTGLTextureFont *font;
 };
 
-class TTFText : public RenderObject
+class TTFText : public BaseText
 {
 public:
 	TTFText(TTFFont *font);
@@ -53,6 +53,8 @@ public:
 	float getWidth();
 	float getHeight();
 	float getFullHeight();
+	void setFontSize(int); // dummy
+	float getStringWidth(const std::string& s);
 	bool shadow;
 	int findLine(const std::string &label);
 	int getLineHeight();
