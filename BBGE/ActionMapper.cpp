@@ -127,7 +127,8 @@ void ActionMapper::addAction (int actionID, int k)
 
 	if (ad)
 	{
-		ad->buttonList.push_back(k);
+		if(std::find(ad->buttonList.begin(), ad->buttonList.end(), k) == ad->buttonList.end())
+			ad->buttonList.push_back(k);
 		keyDownMap[k] = core->getKeyState(k);
 	}
 }
