@@ -33,6 +33,7 @@
 #  include <unistd.h>
 #  include <fcntl.h>
 #  include <sys/socket.h>
+#  include <netinet/in.h>
 #  include <netdb.h>
 #  define SOCKET_ERROR (-1)
 #  define INVALID_SOCKET (SOCKET)(~0)
