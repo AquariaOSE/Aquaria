@@ -317,6 +317,10 @@ ELSE(AQUARIA_DEMO_BUILD)
     ADD_DEFINITIONS(-DAQUARIA_BUILD_SCENEEDITOR=1)
 ENDIF(AQUARIA_DEMO_BUILD)
 
+IF(CMAKE_BUILD_TYPE STREQUAL "Release")
+    ADD_DEFINITIONS(-DNDEBUG) # MSVC defines this in release mode by default, gcc/mingw do not
+    message(STATUS "This is a release build.")
+ENDIF(CMAKE_BUILD_TYPE STREQUAL "Release")
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
     ADD_DEFINITIONS(-D_DEBUG) # MSVC defines this in debug mode by default, gcc/mingw do not
     message(STATUS "This is a debug build.")
@@ -358,8 +362,8 @@ IF(CMAKE_COMPILER_IS_GNUCC)
 
     # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
     # Exceptions are not used, excluding support for release builds adds less bulk as well.
-    set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "Flags used for release builds" FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
+    set(CMAKE_C_FLAGS_RELEASE "-O2" CACHE STRING "Flags used for release builds" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
 
     # !!! FIXME: probably not safe long-term.
     # CMake mailing list had this hack for getting rid of -rdynamic:
