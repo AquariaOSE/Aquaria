@@ -227,13 +227,14 @@ endif (NOT OPENAL_FOUND)
 
 OPTION(AQUARIA_INTERNAL_TINYXML2 "Always use included TinyXML2 library" ${WIN32_TRUE})
 if(NOT AQUARIA_INTERNAL_TINYXML2)
+    set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
     find_package(TinyXML2)
 endif(NOT AQUARIA_INTERNAL_TINYXML2)
-if (AQUARIA_INTERNAL_TINYXML2 OR NOT TINYXML2_FOUND)
+if(NOT TINYXML2_FOUND)
     message(STATUS "Using internal copy of TinyXML2")
-    set(TINYXML2_INCLUDE_DIR "${EXTLIBDIR}")
+    set(TINYXML2_INCLUDE_DIRS "${EXTLIBDIR}")
     set(TINYXML2_SRCS "${EXTLIBDIR}/tinyxml2.cpp")
-endif (AQUARIA_INTERNAL_TINYXML2 OR NOT TINYXML2_FOUND)
+endif(NOT TINYXML2_FOUND)
 
 ################ End of external libraries
 
@@ -248,7 +249,7 @@ INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OGGVORBIS_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${SDL_INCLUDE_DIR})
 INCLUDE_DIRECTORIES(${OPENAL_INCLUDE_DIR})
-INCLUDE_DIRECTORIES(${TINYXML2_INCLUDE_DIR})
+INCLUDE_DIRECTORIES(${TINYXML2_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${EXTLIBDIR})
 
 
@@ -316,6 +317,10 @@ ELSE(AQUARIA_DEMO_BUILD)
     ADD_DEFINITIONS(-DAQUARIA_BUILD_SCENEEDITOR=1)
 ENDIF(AQUARIA_DEMO_BUILD)
 
+IF(CMAKE_BUILD_TYPE STREQUAL "Release")
+    ADD_DEFINITIONS(-DNDEBUG) # MSVC defines this in release mode by default, gcc/mingw do not
+    message(STATUS "This is a release build.")
+ENDIF(CMAKE_BUILD_TYPE STREQUAL "Release")
 IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
     ADD_DEFINITIONS(-D_DEBUG) # MSVC defines this in debug mode by default, gcc/mingw do not
     message(STATUS "This is a debug build.")
@@ -352,13 +357,10 @@ IF(CMAKE_COMPILER_IS_GNUCC)
         ADD_DEFINITIONS(-fno-stack-protector)
     ENDIF(AQUARIA_GCC_HAS_STACKPROT)
 
-    # We knowingly apply offsetof to non-POD types.
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wno-invalid-offsetof")
-
     # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
     # Exceptions are not used, excluding support for release builds adds less bulk as well.
-    set(CMAKE_C_FLAGS_RELEASE "-O2 -DNDEBUG" CACHE STRING "Flags used for release builds" FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -DNDEBUG -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
+    set(CMAKE_C_FLAGS_RELEASE "-O2" CACHE STRING "Flags used for release builds" FORCE)
+    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
 
     # !!! FIXME: probably not safe long-term.
     # CMake mailing list had this hack for getting rid of -rdynamic:
@@ -445,6 +447,14 @@ SET(AQUARIA_SRCS_UNUSED
     ${SRCDIR}/StarRenderer.cpp
     ${SRCDIR}/WaterFont.cpp
 )
+
+IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
+SET_SOURCE_FILES_PROPERTIES(
+    # We knowingly apply offsetof to non-POD types.
+    ${SRCDIR}/ScriptInterface.cpp
+    PROPERTIES COMPILE_FLAGS "-Wno-invalid-offsetof"
+)
+ENDIF()
 
 IF(MACOSX)
     IF(NOT AQUARIA_USE_SDL2)
