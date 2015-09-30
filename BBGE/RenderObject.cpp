@@ -316,10 +316,9 @@ static glm::mat4 matrixChain(const RenderObject *ro)
 	);
 
 	if (ro->isfh())
-		tranformMatrix *= glm::rotate(180.0f, 0.0f, 1.0f, 0.0f);
+		tranformMatrix *= glm::rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
-	tranformMatrix *= glm::translate(ro->internalOffset.x, ro->internalOffset.y, 0.0f);
-
+	tranformMatrix *= glm::translate(glm::vec3(ro->internalOffset.x, ro->internalOffset.y, 0.0f));
 	return tranformMatrix;
 }
 #else
