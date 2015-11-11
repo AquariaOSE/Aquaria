@@ -26,6 +26,7 @@ DebugFont::DebugFont(int initSz, const std::string &initText)
 	followCamera = 1;
 	fontDrawSize = 5;
 	textWidth = 800;
+	maxW = 0;
 	if (initSz)
 	{
 		setFontSize(initSz);
@@ -37,12 +38,12 @@ DebugFont::DebugFont(int initSz, const std::string &initText)
 	}
 }
 
-void DebugFont::setWidth(int width)
+void DebugFont::setWidth(float width)
 {
 	textWidth = width;
 }
 
-void DebugFont::setFontSize(int sz)
+void DebugFont::setFontSize(float sz)
 {
 	fontDrawSize = sz;
 }
@@ -67,7 +68,12 @@ float DebugFont::getStringWidth(const std::string& text)
 			++c;
 	}
 	maxchars = std::max(maxchars, c);
-	return float(fontDrawSize * maxchars);
+	return fontDrawSize * maxchars * (1.4f * 0.75f);
+}
+
+float DebugFont::getActualWidth()
+{
+	return maxW * (1.4f * 0.75f); // numbers taken from onRender()
 }
 
 void DebugFont::formatText()
@@ -77,8 +83,8 @@ void DebugFont::formatText()
 	lines.clear();
 	std::string currentLine;
 	int lastSpace = -1;
-	int currentWidth = 0;
-	int alignWidth = 0;
+	float currentWidth = 0;
+	maxW = 0;
 	for (int i = 0; i < text.size(); i++)
 	{
 		currentWidth += fontDrawSize;
@@ -93,7 +99,7 @@ void DebugFont::formatText()
 			int tsz = text.size();
 			text = text.substr(lastSpace+1, tsz);
 			i = 0;
-			alignWidth = currentWidth;
+			maxW = std::max(maxW, currentWidth);
 			currentWidth = 0;
 			lastSpace = 0;
 			continue;
@@ -104,8 +110,7 @@ void DebugFont::formatText()
 			lastSpace = i;
 		}
 	}
-	if (alignWidth == 0)
-		alignWidth = currentWidth;
+	maxW = std::max(maxW, currentWidth);
 	if (!text.empty() && (text.size() > 1 || text[0] != ' '))
 	{
 		lines.push_back(text);

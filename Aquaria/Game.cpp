@@ -10024,9 +10024,9 @@ const float helpTextScrollClickTime = -helpTextScrollSpeed;
 void Game::onHelpDown()
 {	
 	float to = helpText->offset.y - helpTextScrollClickAmount;
-	if (to < -helpText->getFullHeight() + core->getVirtualHeight())
+	if (to < -helpText->getHeight() + core->getVirtualHeight())
 	{
-		to = -helpText->getFullHeight() + core->getVirtualHeight();
+		to = -helpText->getHeight() + core->getVirtualHeight();
 	}
 	helpText->offset.interpolateTo(Vector(0, to), helpTextScrollClickTime);
 }
@@ -10052,9 +10052,9 @@ void Game::update(float dt)
 		{
 			helpText->offset.stop();
 			helpText->offset.y -= helpTextScrollSpeed * dt;
-			if (helpText->offset.y < -helpText->getFullHeight() + core->getVirtualHeight())
+			if (helpText->offset.y < -helpText->getHeight() + core->getVirtualHeight())
 			{
-				helpText->offset.y = -helpText->getFullHeight() + core->getVirtualHeight();
+				helpText->offset.y = -helpText->getHeight() + core->getVirtualHeight();
 			}
 		}
 		if (isActing(ACTION_SWIMUP))

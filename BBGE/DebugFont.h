@@ -29,19 +29,21 @@ class DebugFont : public BaseText
 public:
 	DebugFont(int initFontSize=0, const std::string &initText="");
 	void setText(const std::string &text);
-	void setWidth(int width);
-	void setFontSize(int sz);
+	void setWidth(float width);
+	void setFontSize(float sz);
 	int getNumLines() { return lines.size(); }
 	virtual void setAlign(Align align);
 	virtual float getHeight();
 	virtual float getStringWidth(const std::string& text);
+	virtual float getActualWidth();
 protected:
-	int fontDrawSize, textWidth;
+	float fontDrawSize, textWidth;
 	void formatText();
 	void onRender();
 	std::string text;
 	std::vector<std::string> lines;
 	Align align;
+	float maxW;
 };
 
 class Quad;

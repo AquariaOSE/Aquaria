@@ -9195,7 +9195,7 @@ luaFunc(text_setFontSize)
 {
 	BaseText *txt = getText(L);
 	if (txt)
-		txt->setFontSize(lua_tointeger(L, 2));
+		txt->setFontSize(lua_tonumber(L, 2));
 	luaReturnNil();
 }
 
@@ -9203,7 +9203,7 @@ luaFunc(text_setWidth)
 {
 	BaseText *txt = getText(L);
 	if (txt)
-		txt->setWidth(lua_tointeger(L, 2));
+		txt->setWidth(lua_tonumber(L, 2));
 	luaReturnNil();
 }
 
@@ -9225,6 +9225,12 @@ luaFunc(text_getStringWidth)
 {
 	BaseText *txt = getText(L);
 	luaReturnNum(txt ? txt->getStringWidth(getString(L, 2)) : 0.0f);
+}
+
+luaFunc(text_getActualWidth)
+{
+	BaseText *txt = getText(L);
+	luaReturnNum(txt ? txt->getActualWidth() : 0.0f);
 }
 
 luaFunc(loadShader)
@@ -10333,6 +10339,7 @@ static const struct {
 	luaRegister(text_setAlign),
 	luaRegister(text_getHeight),
 	luaRegister(text_getStringWidth),
+	luaRegister(text_getActualWidth),
 
 	luaRegister(loadShader),
 	luaRegister(createShader),

@@ -56,10 +56,10 @@ class BitmapText : public BaseText
 public:
 	BitmapText(BmpFont *bmpFont);
 	void setText(const std::string &text);
-	void setWidth(int width);
-	int getSetWidth(); // get the width that was set
+	void setWidth(float width);
+	float getSetWidth(); // get the width that was set
 	void scrollText(const std::string &text, float scrollSpeed);
-	void setFontSize(int sz);
+	void setFontSize(float sz);
 	bool isScrollingText();
 	void stopScrollingText();
 	bool isEmpty();
@@ -75,7 +75,8 @@ public:
 	virtual float getHeight();
 	void unloadDevice();
 	void reloadDevice();
-	virtual float getStringWidth(const std::string& text);
+	float getStringWidth(const std::string& text);
+	float getActualWidth() { return maxW; }
 
 	int getNumLines();
 protected:
@@ -89,18 +90,19 @@ protected:
 	int currentScrollLine;
 	int currentScrollChar;
 	Align align;
-	int alignWidth;
+	float alignWidth;
 	typedef std::map<char, float> SpacingMap;
 	SpacingMap spacingMap;
 	void formatText();
-	int fontDrawSize;
+	float fontDrawSize;
 	void onRender();
 	typedef std::vector<std::string> Lines;
 	Lines lines;
 	typedef std::vector<Vector> ColorIndices;
 	std::vector<ColorIndices> colorIndices;
 	std::string text;
-	int textWidth;
+	float textWidth;
+	float maxW;
 };
 
 #endif

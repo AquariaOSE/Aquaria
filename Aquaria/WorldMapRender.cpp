@@ -323,7 +323,7 @@ public:
 		text->setAlign(ALIGN_CENTER);
 
 		textBG = new RoundedRect();
-		textBG->setWidthHeight(text->getWidth() + 20, 25, 10);  // 30
+		textBG->setWidthHeight(text->getActualWidth() + 20, 25, 10);  // 30
 		textBG->alpha = 0;
 		textBG->followCamera = 1;
 		game->addRenderObject(textBG, LR_WORLDMAPHUD);
