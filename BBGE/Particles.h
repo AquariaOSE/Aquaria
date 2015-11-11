@@ -184,13 +184,13 @@ protected:
 
 struct ParticleInfluence
 {
-	ParticleInfluence(Vector pos, int spd, int size, bool pull)
+	ParticleInfluence(Vector pos, float spd, float size, bool pull)
 		: pos(pos), spd(spd), size(size), pull(pull)
 	{}
-	ParticleInfluence() { size=0; pull=0; spd=0; }
-	int size;
-	int spd;
+	ParticleInfluence() : size(0), spd(0), pull(false) {}
 	Vector pos;
+	float size;
+	float spd;
 	bool pull;
 };
 
@@ -242,7 +242,7 @@ protected:
 
 	int oldFree;
 
-	typedef std::list<ParticleInfluence> Influences;
+	typedef std::vector<ParticleInfluence> Influences;
 	Influences influences;
 
 	int size, used, free, halfSize;
