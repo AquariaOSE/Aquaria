@@ -132,12 +132,12 @@ void BitmapText::setText(const std::string &text)
 	formatText();
 }
 
-void BitmapText::setWidth(int width)
+void BitmapText::setWidth(float width)
 {
 	textWidth = width;
 }
 
-int BitmapText::getSetWidth()
+float BitmapText::getSetWidth()
 {
 	return textWidth;
 }
@@ -155,8 +155,9 @@ void BitmapText::formatText()
 	lines.clear();
 	std::string currentLine;
 	int lastSpace = -1;
-	int currentWidth = 0;
+	float currentWidth = 0;
 	alignWidth = 0;
+	maxW = 0;
 	for (int i = 0; i < text.size(); i++)
 	{		
 		//currentWidth += spacingMap[text[i]]*fontDrawSize;
@@ -174,6 +175,7 @@ void BitmapText::formatText()
 			text = text.substr(lastSpace+1, tsz);
 			i = 0;
 			alignWidth = currentWidth;
+			maxW = std::max(currentWidth, maxW);
 			currentWidth = 0;
 			lastSpace = 0;
 			continue;
@@ -182,8 +184,9 @@ void BitmapText::formatText()
 		if (text[i] == ' ')
 		{
 			lastSpace = i;
-		}		
+		}
 	}
+	maxW = std::max(currentWidth, maxW);
 	if (alignWidth == 0)
 		alignWidth = currentWidth;
 	if (!text.empty() && (text.size() > 1 || text[0] != ' '))
@@ -248,7 +251,7 @@ void BitmapText::scrollText(const std::string &text, float scrollSpeed)
 	currentScrollChar = 0;
 }
 
-void BitmapText::setFontSize(int sz)
+void BitmapText::setFontSize(float sz)
 {
 	this->fontDrawSize = sz;
 }

@@ -53,17 +53,16 @@ public:
 	TTFText(TTFFont *font);
 	void setText(const std::string &txt);
 	void setAlign(Align align);
-	void setWidth(int width);
-	float getWidth();
+	void setWidth(float width);
 	float getHeight();
-	float getFullHeight();
-	void setFontSize(int); // dummy
+	float getActualWidth() { return maxW; }
+	void setFontSize(float); // dummy
 	float getStringWidth(const std::string& s);
 	bool shadow;
 	int findLine(const std::string &label);
-	int getLineHeight();
+	float getLineHeight();
 protected:
-	int width;
+	float width;
 	float lineHeight;
 	void updateAlign();
 	Align align;
@@ -75,6 +74,7 @@ protected:
 	std::vector<std::string> text;
 	TTFFont *font;
 	int hw,h;
+	float maxW;
 };
 
 #endif

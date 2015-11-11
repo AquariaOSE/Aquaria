@@ -3562,7 +3562,7 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 			text.resize(text.size()-1);
 			inputText->setText(text);
 		}
-		if (inputText->getWidth() < 800-60)
+		if (inputText->getActualWidth() < 800-60)
 		{
 			doAlphabetInputKey(KEY_A, 'a', (char*)&map, &text, 'A');
 			doAlphabetInputKey(KEY_B, 'b', (char*)&map, &text, 'B');
