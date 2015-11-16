@@ -6203,7 +6203,7 @@ luaFunc(entity_getBoneByIdx)
 		int n = 0;
 		if (lua_isnumber(L, 2))
 		{
-			n = lua_tonumber(L, 2);
+			n = lua_tointeger(L, 2);
 			b = e->skeletalSprite.getBoneByIdx(n);
 		}
 	}
@@ -6214,6 +6214,23 @@ luaFunc(entity_getBoneByName)
 {
 	Entity *e = entity(L);
 	luaReturnPtr(e ? e->skeletalSprite.getBoneByName(getString(L, 2)) : NULL);
+}
+
+luaFunc(entity_getBoneByInternalId)
+{
+	Entity *e = entity(L);
+	if(!e)
+		luaReturnPtr(NULL);
+	size_t i = lua_tointeger(L, 1);
+	if(i >= e->skeletalSprite.bones.size())
+		luaReturnPtr(NULL);
+	luaReturnPtr(e->skeletalSprite.bones[i]);
+}
+
+luaFunc(entity_getNumBones)
+{
+	Entity *e = entity(L);
+	luaReturnInt(e ? (int)e->skeletalSprite.bones.size() : 0);
 }
 
 luaFunc(bone_getIndex)
@@ -9221,6 +9238,18 @@ luaFunc(text_getHeight)
 	luaReturnNum(txt ? txt->getHeight() : 0.0f);
 }
 
+luaFunc(text_getLineHeight)
+{
+	BaseText *txt = getText(L);
+	luaReturnNum(txt ? txt->getLineHeight() : 0.0f);
+}
+
+luaFunc(text_getNumLines)
+{
+	BaseText *txt = getText(L);
+	luaReturnInt(txt ? txt->getNumLines() : 0);
+}
+
 luaFunc(text_getStringWidth)
 {
 	BaseText *txt = getText(L);
@@ -10122,6 +10151,8 @@ static const struct {
 
 	luaRegister(entity_getBoneByIdx),
 	luaRegister(entity_getBoneByName),
+	luaRegister(entity_getBoneByInternalId),
+	luaRegister(entity_getNumBones),
 
 
 
@@ -10340,6 +10371,8 @@ static const struct {
 	luaRegister(text_getHeight),
 	luaRegister(text_getStringWidth),
 	luaRegister(text_getActualWidth),
+	luaRegister(text_getLineHeight),
+	luaRegister(text_getNumLines),
 
 	luaRegister(loadShader),
 	luaRegister(createShader),

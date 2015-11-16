@@ -96,6 +96,10 @@ void TTFText::updateAlign()
 	}
 }
 
+int TTFText::getNumLines()
+{
+	return (int)text.size();
+}
 
 float TTFText::getHeight()
 {
