@@ -34,6 +34,7 @@ public:
 	int getNumLines() { return lines.size(); }
 	virtual void setAlign(Align align);
 	virtual float getHeight();
+	virtual float getLineHeight();
 	virtual float getStringWidth(const std::string& text);
 	virtual float getActualWidth();
 protected:

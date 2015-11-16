@@ -61,6 +61,7 @@ public:
 	bool shadow;
 	int findLine(const std::string &label);
 	float getLineHeight();
+	int getNumLines();
 protected:
 	float width;
 	float lineHeight;

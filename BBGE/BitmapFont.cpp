@@ -148,6 +148,11 @@ float BitmapText::getHeight()
 	return lines.size()*sz;
 }
 
+float BitmapText::getLineHeight()
+{
+	return bmpFont->font.GetCharHeight('A') * bmpFont->scale;
+}
+
 void BitmapText::formatText()
 {
 	std::string text;

@@ -77,8 +77,9 @@ public:
 	void reloadDevice();
 	float getStringWidth(const std::string& text);
 	float getActualWidth() { return maxW; }
-
+	float getLineHeight();
 	int getNumLines();
+
 protected:
 	float scrollSpeed;
 	BmpFont *bmpFont;
