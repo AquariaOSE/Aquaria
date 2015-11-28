@@ -507,10 +507,10 @@ void RenderObject::moveToFront()
 {
 	if(RenderObject *p = parent)
 	{
-		if(p->children.size() && p->children[0] != this)
+		if(p->children.size() && p->children[p->children.size()-1] != this)
 		{
 			p->removeChild(this);
-			p->addChild(this, (ParentManaged)this->pm, RBP_NONE, CHILD_FRONT);
+			p->addChild(this, (ParentManaged)this->pm, RBP_NONE, CHILD_BACK); // To back of list -> rendered on top
 		}
 	}
 	else if (layer != -1)
@@ -521,10 +521,10 @@ void RenderObject::moveToBack()
 {
 	if(RenderObject *p = parent)
 	{
-		if(p->children.size() && p->children[p->children.size()-1] != this)
+		if(p->children.size() && p->children[0] != this)
 		{
 			p->removeChild(this);
-			p->addChild(this, (ParentManaged)this->pm, RBP_NONE, CHILD_BACK);
+			p->addChild(this, (ParentManaged)this->pm, RBP_NONE, CHILD_FRONT); // To front of list -> rendered first, below everything else
 		}
 	}
 	else if (layer != -1)
