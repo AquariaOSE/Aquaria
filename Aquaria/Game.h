@@ -465,7 +465,6 @@ public:
 	bool multiSelecting;
 	Vector multiSelectPoint;
 	std::vector <Element*> selectedElements;
-	void fixEntityIDs();
 
 	Vector groupCenter;
 	Vector getSelectedElementsCenter();
@@ -1088,7 +1087,6 @@ protected:
 	Quad *options;
 
 	Quad *image;
-	void assignEntitiesUniqueIDs();
 	void initEntities();
 
 

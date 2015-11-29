@@ -2659,7 +2659,7 @@ Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool 
 		}
 		else
 		{
-			e->assignUniqueID();
+			e->assignUniqueID(!createSaveData); // when entity is placed on map, give positive ID; otherwise, if script-spawned, give negative ID
 		}
 	}
 
@@ -2716,19 +2716,6 @@ void Game::initEntities()
 			e->init();
 		}
 	}
-}
-
-void Game::assignEntitiesUniqueIDs()
-{
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e && e->entityID == 0)
-		{
-			e->assignUniqueID();
-		}
-	}
-
 }
 
 EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e, Vector pos)
