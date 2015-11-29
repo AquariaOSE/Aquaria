@@ -1864,15 +1864,6 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 	}
 }
 
-void SceneEditor::fixEntityIDs()
-{
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		e->assignUniqueID();
-	}
-}
-
 void SceneEditor::generateLevel()
 {
 	//pngSetStandardOrientation(0);

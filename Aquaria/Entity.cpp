@@ -220,7 +220,6 @@ Entity::Entity()
 	//energyChargeTarget = energyShotTarget = true;
 	deathSound = "GenericDeath";
 	entityID = 0;
-	//assignUniqueID();
 	hair = 0;
 	maxSpeedLerp = 1;
 	fillGridFromQuad = false;
@@ -1141,17 +1140,6 @@ void Entity::frozenUpdate(float dt)
 
 void Entity::update(float dt)
 {
-	/*
-	if (position.isnan())
-		position = backupPos;
-	if (vel.isnan())
-		vel = backupVel;
-	*/
-	/*
-	if (entityID == 0)
-		assignUniqueID();
-	*/
-
 	Vector backupPos = position;
 	Vector backupVel = vel;
 
@@ -2956,9 +2944,10 @@ void Entity::fillGrid()
 	}
 }
 
-void Entity::assignUniqueID()
+void Entity::assignUniqueID(bool temporary)
 {
-	int id = 1;
+	const int inc = temporary ? -1 : 1;
+	int id = inc;
 	while (1)
 	{
 		bool isFree = true;
@@ -2978,7 +2967,7 @@ void Entity::assignUniqueID()
 		{
 			break;
 		}
-		id++;
+		id += inc;
 	}
 	entityID = id;
 }
@@ -2996,7 +2985,7 @@ void Entity::setID(int id)
 				std::ostringstream os;
 				os << "ID conflict between " << name << " and " << e->name;
 				debugLog(os.str());
-				e->assignUniqueID();
+				e->assignUniqueID(e->getID() < 0);
 			}
 		}
 	}
