@@ -1129,6 +1129,12 @@ luaFunc(obj_setBlendType)
 	luaReturnNil();
 }
 
+luaFunc(obj_getBlendType)
+{
+	RenderObject *r = robj(L);
+	luaReturnInt(r ? r->blendType : 0);
+}
+
 luaFunc(obj_setTexture)
 {
 	RenderObject *r = robj(L);
@@ -1831,6 +1837,7 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  x				) \
 	RO_FUNC(getter, prefix,  y				) \
 	RO_FUNC(getter, prefix,  setBlendType	) \
+	RO_FUNC(getter, prefix,  getBlendType	) \
 	RO_FUNC(getter, prefix,  setTexture		) \
 	RO_FUNC(getter, prefix,  delete			) \
 	RO_FUNC(getter, prefix,  getLife		) \
@@ -6219,12 +6226,8 @@ luaFunc(entity_getBoneByName)
 luaFunc(entity_getBoneByInternalId)
 {
 	Entity *e = entity(L);
-	if(!e)
-		luaReturnPtr(NULL);
-	size_t i = lua_tointeger(L, 1);
-	if(i >= e->skeletalSprite.bones.size())
-		luaReturnPtr(NULL);
-	luaReturnPtr(e->skeletalSprite.bones[i]);
+	size_t i = lua_tointeger(L, 2);
+	luaReturnPtr((e && i < e->skeletalSprite.bones.size()) ? e->skeletalSprite.bones[i] : NULL);
 }
 
 luaFunc(entity_getNumBones)
