@@ -65,12 +65,7 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	if (description.length() > 0)
 	{
 		std::ostringstream os;
-		os << dsq->continuity.stringBank.get(2002) << " ";
-		if (dsq->isDeveloperKeys())
-			os << slot;
-		else
-			os << (slot+1);
-		os << " - " << description;
+		os << dsq->continuity.stringBank.get(2002) << " " << (slot+1) << " - " << description;
 		text1->setText(os.str());
 		glowText->setText(os.str());
 
@@ -292,11 +287,7 @@ std::string AquariaSaveSlot::getSaveDescription(const XMLDocument &doc)
 	int hours, minutes, seconds;
 	hours = minutes = seconds = 0;
 
-	int exp = 0, money = 0, time = 0;
-	if (startData->Attribute("exp"))
-		exp = atoi(startData->Attribute("exp"));
-	if (startData->Attribute("money"))
-		money = atoi(startData->Attribute("money"));
+	int time = 0;
 	if (startData->Attribute("seconds"))
 	{
 		std::istringstream is(startData->Attribute("seconds"));
