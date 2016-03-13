@@ -4429,7 +4429,7 @@ std::string Core::getTextureLoadName(const std::string &texture)
 	return loadName;
 }
 
-std::pair<CountedPtr<Texture>, TextureLoadResult> Core::doTextureAdd(const std::string &texture, const std::string &loadName, std::string internalTextureName)
+CountedPtr<Texture> Core::doTextureAdd(const std::string &texture, const std::string &loadName, std::string internalTextureName)
 {
 	if (texture.empty() || !ISPATHROOT(texture))
 	{
@@ -4448,35 +4448,28 @@ std::pair<CountedPtr<Texture>, TextureLoadResult> Core::doTextureAdd(const std::
 	stringToLowerUserData(internalTextureName);
 	CountedPtr<Texture> t = core->findTexture(internalTextureName);
 	if (t)
-		return std::make_pair(t, TEX_SUCCESS);
+		return t;
 
 	t = new Texture;
 	t->name = internalTextureName;
-	unsigned res = TEX_FAILED;
 
-	if(t->load(loadName))
-		res |= (TEX_LOADED | TEX_SUCCESS);
-	else
+	if(!t->load(loadName))
 	{
 		t->width = 64;
 		t->height = 64;
 	}
 
-	return std::make_pair(t, (TextureLoadResult)res);
+	return t;
 }
 
-CountedPtr<Texture> Core::addTexture(const std::string &textureName, TextureLoadResult *pLoadResult /* = 0 */)
+CountedPtr<Texture> Core::addTexture(const std::string &textureName)
 {
 	BBGE_PROF(Core_addTexture);
 
 	if (textureName.empty())
-	{
-		if(pLoadResult)
-			*pLoadResult = TEX_FAILED;
 		return NULL;
-	}
 
-	std::pair<CountedPtr<Texture>, TextureLoadResult> texResult;
+	CountedPtr<Texture> ptex;
 	std::string texture = textureName;
 	stringToLowerUserData(texture);
 	std::string internalTextureName = texture;
@@ -4493,33 +4486,31 @@ CountedPtr<Texture> Core::addTexture(const std::string &textureName, TextureLoad
 		std::string ln = loadName;
 		texture = secondaryTexturePath + texture;
 		loadName = texture;
-		texResult = doTextureAdd(texture, loadName, internalTextureName);
-		if (!texResult.second)
-			texResult = doTextureAdd(t, ln, internalTextureName);
+		ptex = doTextureAdd(texture, loadName, internalTextureName);
+		if (!ptex || ptex->getLoadResult() == TEX_FAILED)
+			ptex = doTextureAdd(t, ln, internalTextureName);
 	}
 	else
-		texResult = doTextureAdd(texture, loadName, internalTextureName);
+		ptex = doTextureAdd(texture, loadName, internalTextureName);
 
-	addTexture(texResult.first.content());
+	addTexture(ptex.content());
 
 	if(debugLogTextures)
 	{
-		if (texResult.second & TEX_LOADED)
+		if (ptex)
 		{
 			std::ostringstream os;
 			os << "LOADED TEXTURE FROM DISK: [" << internalTextureName << "] idx: " << resources.size()-1;
 			debugLog(os.str());
 		}
-		else if(!(texResult.second & TEX_SUCCESS))
+		else if(ptex->getLoadResult() != TEX_SUCCESS)
 		{
 			std::ostringstream os;
 			os << "FAILED TO LOAD TEXTURE: [" << internalTextureName << "] idx: " << resources.size()-1;
 			debugLog(os.str());
 		}
 	}
-	if(pLoadResult)
-		*pLoadResult = texResult.second;
-	return texResult.first;
+	return ptex;
 }
 
 void Core::addRenderObject(RenderObject *o, int layer)

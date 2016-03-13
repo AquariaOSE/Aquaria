@@ -69,6 +69,7 @@ Texture::Texture()
 	repeating = false;
 	pngSetStandardOrientation(0);
 	ow = oh = -1;
+	loadResult = TEX_FAILED;
 }
 
 Texture::~Texture()
@@ -262,6 +263,7 @@ void Texture::reload()
 
 bool Texture::load(std::string file)
 {
+	loadResult = TEX_FAILED;
 	if (file.size()<4)
 	{
 		errorLog("Texture Name is Empty or Too Short");
@@ -430,6 +432,7 @@ bool Texture::loadPNG(const std::string &file)
 		width = info.Width;
 		height = info.Height;
 		good = true;
+		loadResult = TEX_SUCCESS;
 	}
 	else
 	{
@@ -486,6 +489,7 @@ bool Texture::loadTGA(ImageTGA *imageTGA)
 		delete[] (imageTGA->data);
 	free (imageTGA);
 
+	loadResult = TEX_SUCCESS;
 	return true;
 }
 

@@ -1023,7 +1023,7 @@ public:
 	void removeTexture(Texture *res);
 	void clearResources();
 
-	CountedPtr<Texture> addTexture(const std::string &texture, TextureLoadResult *pLoadResult = 0);
+	CountedPtr<Texture> addTexture(const std::string &texture);
 
 	PostProcessingFX postProcessingFx;
 
@@ -1328,7 +1328,7 @@ protected:
 
 	virtual void onReloadResources();
 
-	std::pair<CountedPtr<Texture>, TextureLoadResult> doTextureAdd(const std::string &texture, const std::string &name, std::string internalTextureName);
+	CountedPtr<Texture> doTextureAdd(const std::string &texture, const std::string &name, std::string internalTextureName);
 	
 	void deleteRenderObjectMemory(RenderObject *r);
 	bool _hasFocus;

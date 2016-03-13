@@ -23,11 +23,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Base.h"
 
+
 enum TextureLoadResult
 {
-	TEX_FAILED  = 0x00,
-	TEX_SUCCESS = 0x01,
-	TEX_LOADED  = 0x02,
+	TEX_FAILED,
+	TEX_SUCCESS
 };
 
 struct ImageTGA
@@ -81,6 +81,8 @@ public:
 
 	std::string name;
 
+	TextureLoadResult getLoadResult() const { return loadResult; }
+
 protected:
 	std::string loadName;
 
@@ -91,6 +93,7 @@ protected:
 	bool loadTGA(ImageTGA *tga);
 
 	int ow, oh;
+	TextureLoadResult loadResult;
 	
 };
 
