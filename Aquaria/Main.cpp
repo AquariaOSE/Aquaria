@@ -99,8 +99,7 @@ static void CheckConfig(void)
 			dsqParam = AQUARIA_DEFAULT_DATA_DIR;
 #endif
 #ifdef AQUARIA_EXTRA_DATA_DIR
-		if(!envPath)
-			extraDataDir = AQUARIA_EXTRA_DATA_DIR;
+		extraDataDir = AQUARIA_EXTRA_DATA_DIR;
 #endif
 
 #endif
