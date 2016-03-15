@@ -277,32 +277,8 @@ void AquariaSaveSlot::onUpdate(float dt)
 	}
 }
 
-
-std::string AquariaSaveSlot::getSaveDescription(const XMLDocument &doc)
+static std::string getPrettySceneName_internal(const XMLElement *startData)
 {
-	const XMLElement *startData = doc.FirstChildElement("StartData");
-	if (!startData)
-		return "";
-
-	int hours, minutes, seconds;
-	hours = minutes = seconds = 0;
-
-	int time = 0;
-	if (startData->Attribute("seconds"))
-	{
-		std::istringstream is(startData->Attribute("seconds"));
-		is >> time;
-	}
-
-	float s = dsq->continuity.seconds;
-	dsq->continuity.seconds = time;
-	dsq->continuity.getHoursMinutesSeconds(&hours, &minutes, &seconds);
-	
-	/*
-	std::ostringstream os;
-	os << "Slot: " << slot << " - " << startData->Attribute("scene") << " - exp: " << exp << " - wealth: " << money;
-	os << " Time: " << hours << ": " << minutes << ": " << seconds << " T: " << time;
-	*/
 	std::string location = startData->Attribute("scene");
 	stringToLower(location);
 	if (location.find("boilerroom")!=std::string::npos)
@@ -406,6 +382,31 @@ std::string AquariaSaveSlot::getSaveDescription(const XMLDocument &doc)
 	{
 		location = dsq->continuity.stringBank.get(1029);
 	}
+	return location;
+}
+
+std::string AquariaSaveSlot::getSaveDescription(const XMLDocument &doc)
+{
+	const XMLElement *startData = doc.FirstChildElement("StartData");
+	if (!startData)
+		return "";
+
+	int hours, minutes, seconds;
+	hours = minutes = seconds = 0;
+
+	int time = 0;
+	if (startData->Attribute("seconds"))
+	{
+		std::istringstream is(startData->Attribute("seconds"));
+		is >> time;
+	}
+
+	float s = dsq->continuity.seconds;
+	dsq->continuity.seconds = time;
+	dsq->continuity.getHoursMinutesSeconds(&hours, &minutes, &seconds);
+	
+	const char *loccstr = startData->Attribute("sceneDisplayName");
+	std::string location = (loccstr && *loccstr) ? loccstr : getPrettySceneName_internal(startData);
 
 	std::string showLoc;
 	if (dsq->isDeveloperKeys())
