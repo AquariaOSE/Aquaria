@@ -2552,6 +2552,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	startData->SetAttribute("x", int(position.x));
 	startData->SetAttribute("y", int(position.y));
 	startData->SetAttribute("scene", dsq->game->sceneName.c_str());
+	startData->SetAttribute("sceneDisplayName", dsq->game->sceneDisplayName.c_str());
 	startData->SetAttribute("exp", dsq->continuity.exp);
 	startData->SetAttribute("h", dsq->continuity.maxHealth);
 	startData->SetAttribute("ch", dsq->continuity.health);

@@ -681,7 +681,7 @@ public:
 	void handleShotCollisionsHair(Entity *e, int num = 0, float perc = 0);
 
 	std::vector<ElementTemplate> elementTemplates;
-	std::string sceneName;
+	std::string sceneName, sceneDisplayName;
 
 	ElementTemplate *getElementTemplateByIdx(int idx);
 

@@ -4683,6 +4683,12 @@ luaFunc(saveMenu)
 	luaReturnNil();
 }
 
+luaFunc(setSceneDisplayNameInSave)
+{
+	dsq->game->sceneDisplayName = getString(L);
+	luaReturnNil();
+}
+
 luaFunc(pause)
 {
 	dsq->game->togglePause(1);
@@ -9878,6 +9884,7 @@ static const struct {
 
 	luaRegister(savePoint),
 	luaRegister(saveMenu),
+	luaRegister(setSceneDisplayNameInSave),
 	luaRegister(wait),
 	luaRegister(watch),
 
