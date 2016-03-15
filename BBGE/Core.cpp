@@ -4453,7 +4453,13 @@ CountedPtr<Texture> Core::doTextureAdd(const std::string &texture, const std::st
 	t = new Texture;
 	t->name = internalTextureName;
 
-	if(!t->load(loadName))
+	if(t->load(loadName))
+	{
+		std::ostringstream os;
+		os << "LOADED TEXTURE FROM DISK: [" << internalTextureName << "] idx: " << resources.size()-1;
+		debugLog(os.str());
+	}
+	else
 	{
 		t->width = 64;
 		t->height = 64;
@@ -4497,13 +4503,7 @@ CountedPtr<Texture> Core::addTexture(const std::string &textureName)
 
 	if(debugLogTextures)
 	{
-		if (ptex)
-		{
-			std::ostringstream os;
-			os << "LOADED TEXTURE FROM DISK: [" << internalTextureName << "] idx: " << resources.size()-1;
-			debugLog(os.str());
-		}
-		else if(ptex->getLoadResult() != TEX_SUCCESS)
+		if(!ptex || ptex->getLoadResult() != TEX_SUCCESS)
 		{
 			std::ostringstream os;
 			os << "FAILED TO LOAD TEXTURE: [" << internalTextureName << "] idx: " << resources.size()-1;
