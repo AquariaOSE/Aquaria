@@ -572,6 +572,7 @@ typedef std::vector<QuadList> QuadArray;
 typedef std::vector<Element*> ElementUpdateList;
 
 // Note: although this is a bitmask, only one of these values may be set at a time!
+// This is because GridRender and most Lua scripts check via ==, not for bits set (Lua 5.1 doesn't have bit ops)
 enum ObsType
 {
 	OT_EMPTY		= 0x00,
@@ -596,6 +597,8 @@ enum ObsType
 	OT_USER1 = 0x40,
 	OT_USER2 = 0x80,
 	OT_USER_MASK = OT_USER1 | OT_USER2,
+
+	OT_OUTOFBOUNDS = 0xff
 };
 
 struct EntitySaveData
@@ -635,6 +638,7 @@ public:
 	void setGrid(const TileVector &tile, ObsType v);
 	void addGrid(const TileVector &tile, ObsType v);
 	bool isObstructed(const TileVector &tile, int t = OT_BLOCKING) const;
+	bool isObstructedRaw(const TileVector &tile, int t) const;
 	void trimGrid();
 	void dilateGrid(unsigned int radius, ObsType test, ObsType set, ObsType allowOverwrite);
 
@@ -1213,7 +1217,7 @@ ObsType Game::getGridRaw(const TileVector &tile) const
 {
 	return (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID))
 		? ObsType(grid[tile.x][tile.y])
-		: OT_INVISIBLE;
+		: OT_OUTOFBOUNDS;
 }
 
 inline
@@ -1253,6 +1257,12 @@ inline
 bool Game::isObstructed(const TileVector &tile, int t /* = OT_BLOCKING */) const
 {
 	return (getGrid(tile) & t);
+}
+
+inline
+bool Game::isObstructedRaw(const TileVector &tile, int t) const
+{
+	return (getGridRaw(tile) & t);
 }
 
 #endif
