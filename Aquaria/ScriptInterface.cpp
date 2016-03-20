@@ -898,6 +898,17 @@ luaFunc(getModPath)
 	luaReturnStr(path.c_str());
 }
 
+luaFunc(getInterfaceFunctionNames)
+{
+	lua_newtable(L);
+	for(unsigned i = 0; interfaceFunctions[i]; ++i)
+	{
+		lua_pushstring(L, interfaceFunctions[i]);
+		lua_rawseti(L, -2, i+1);
+	}
+	return 1;
+}
+
 
 
 // ----- RenderObject common functions -----
@@ -8681,6 +8692,12 @@ luaFunc(isObstructed)
 	luaReturnBool(dsq->game->isObstructed(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2))), obs ? obs : -1));
 }
 
+luaFunc(isObstructedRaw)
+{
+	int obs = lua_tointeger(L, 3);
+	luaReturnBool(dsq->game->isObstructedRaw(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2))), obs));
+}
+
 luaFunc(getObstruction)
 {
 	luaReturnInt(dsq->game->getGrid(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)))));
@@ -9402,6 +9419,7 @@ static const struct {
 	luaRegister(fileExists),
 	luaRegister(getModName),
 	luaRegister(getModPath),
+	luaRegister(getInterfaceFunctionNames),
 
 	luaRegister(debugBreak),
 	luaRegister(setIgnoreAction),
@@ -9952,6 +9970,7 @@ static const struct {
 
 	luaRegister(singSong),
 	luaRegister(isObstructed),
+	luaRegister(isObstructedRaw),
 	luaRegister(isObstructedBlock),
 	luaRegister(getObstruction),
 	luaRegister(getGridRaw),
@@ -11124,6 +11143,7 @@ static const struct {
 	luaConstant(OT_MASK_BLACK),
 	luaConstant(OT_BLOCKING),
 	luaConstant(OT_USER_MASK),
+	luaConstant(OT_OUTOFBOUNDS),
 
 	luaConstant(SEE_MAP_NEVER),
 	luaConstant(SEE_MAP_DEFAULT),
