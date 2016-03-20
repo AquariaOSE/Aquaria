@@ -190,44 +190,6 @@ void Quad::resetGrid()
 	}
 }
 
-void Quad::spawnChildClone(float t)
-{
-	if (!this->texture) return;
-	Quad *q = new Quad;
-	q->setTexture(this->texture->name);
-	q->setLife(t+0.1f);
-	q->setDecayRate(1);
-	q->width = this->width;
-	q->height = this->height;
-	q->alpha = 1;
-	q->alpha.interpolateTo(0, t);
-	if (isfh())
-		q->flipHorizontal();
-	q->position = this->position;
-	q->followCamera = this->followCamera;
-	q->scale = this->scale;
-	q->offset = this->offset;
-	q->blendType = this->blendType;
-
-	//q->parentManagedPointer = true;
-	//q->renderBeforeParent = false;
-	core->getTopStateData()->addRenderObject(q, this->layer);
-	//addChild(q);
-}
-/*
-smoothly transition to texture
-by creating a copy of the current quad on top and fading it out
-*/
-void Quad::setTextureSmooth(const std::string &texture, float t)
-{
-	if (this->texture && !this->texture->name.empty())
-	{
-		spawnChildClone(t);
-		//core->getTopStateData()->addRenderObject(q, this->layer);
-	}
-	this->setTexture(texture);
-}
-
 void Quad::initQuad()
 {
 	repeatToFillScale = Vector(1,1);

@@ -52,10 +52,6 @@ public:
 
 	void flipVertical();
 	void flipHorizontal();
-	void setTextureSmooth(const std::string &texture, float t);
-	void spawnChildClone(float t);
-	void burn();
-	void unburn();
 	void setWidthHeight(float w, float h=-1);
 	void setWidth(float w);
 	void setHeight(float h);
@@ -64,7 +60,6 @@ public:
 	
 	void setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);	
 	void setDrawGridAlpha(int x, int y, float alpha);
-	void calculateQuadLighting();
 	void repeatTextureToFill(bool on);
 	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatingTextureToFill; }
