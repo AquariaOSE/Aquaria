@@ -515,8 +515,7 @@ public:
 		return *this;
 	}
 
-	enum InterpolateToFlag { NONE=0, IS_LOOPING };
-	float interpolateTo (Vector vec, float timePeriod, int loopType = 0, bool pingPong = false, bool ease = false, InterpolateToFlag flag = NONE);
+	float interpolateTo (Vector vec, float timePeriod, int loopType = 0, bool pingPong = false, bool ease = false);
 	void inline update(float dt)
 	{
 		if (!data)
