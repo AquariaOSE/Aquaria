@@ -396,7 +396,7 @@ Vector VectorPath::getValue(float usePercent)
 
 /*************************************************************************/
 
-float InterpolatedVector::interpolateTo(Vector vec, float timePeriod, int loopType, bool pingPong, bool ease, InterpolateToFlag flag)
+float InterpolatedVector::interpolateTo(Vector vec, float timePeriod, int loopType, bool pingPong, bool ease)
 {
 	if (timePeriod == 0)
 	{
@@ -550,14 +550,14 @@ void InterpolatedVector::doInterpolate(float dt)
 
 			if (data->pingPong)
 			{
-				interpolateTo (data->from, data->timePeriod, data->loopType, data->pingPong, data->ease, IS_LOOPING);
+				interpolateTo (data->from, data->timePeriod, data->loopType, data->pingPong, data->ease);
 			}
 			else
 			{
 				this->x = data->from.x;
 				this->y = data->from.y;
 				this->z = data->from.z;
-				interpolateTo (data->target, data->timePeriod, data->loopType, data->pingPong, data->ease, IS_LOOPING);
+				interpolateTo (data->target, data->timePeriod, data->loopType, data->pingPong, data->ease);
 			}
 		}
 
