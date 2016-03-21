@@ -286,9 +286,15 @@ Entity::Entity()
 	setDamageTarget(DT_AVATAR_SEED, false);
 
 	stopSoundsOnDeath = false;
+	minimapIcon = 0;
 
 
 	//debugLog("End Entity::Entity()");
+}
+
+Entity::~Entity()
+{
+	delete minimapIcon;
 }
 
 void Entity::setDeathScene(bool v)
@@ -1238,6 +1244,9 @@ void Entity::update(float dt)
 		vel = backupVel;
 
 	updateSoundPosition();
+
+	if(minimapIcon)
+		minimapIcon->update(dt);
 }
 
 void Entity::postUpdate(float dt)
@@ -2413,6 +2422,10 @@ void Entity::onEnterState(int action)
 			hair->fadeAlphaWithLife = 1;
 			hair = 0;
 		}
+		if(minimapIcon)
+		{
+			minimapIcon->alpha.interpolateTo(0, 0.1f);
+		}
 
 	}
 	break;
@@ -3148,4 +3161,11 @@ bool Entity::isEntityInside()
 void Entity::updateSoundPosition()
 {
 	SoundHolder::updateSoundPosition(position.x + offset.x, position.y + offset.y);
+}
+
+MinimapIcon *Entity::ensureMinimapIcon()
+{
+	if(!minimapIcon)
+		minimapIcon = new MinimapIcon;
+	return minimapIcon;
 }

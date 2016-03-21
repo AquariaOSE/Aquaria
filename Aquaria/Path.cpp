@@ -32,7 +32,6 @@ Path::Path()
 	pathShape = PATHSHAPE_RECT;
 	toFlip = -1;
 	replayVox = 0;
-	naijaHome = false;
 	addEmitter = false;
 	emitter = 0;
 	active = true;
@@ -55,6 +54,7 @@ Path::Path()
 	spiritFreeze = true;
 	pauseFreeze = true;
 	activationRange = 800;
+	minimapIcon = 0;
 }
 
 void Path::clampPosition(Vector *pos, float radius)
@@ -207,6 +207,9 @@ int Path::getDown()
 
 void Path::destroy()
 {
+	delete minimapIcon;
+	minimapIcon = NULL;
+
 	if (emitter)
 	{
 		emitter->safeKill();
@@ -346,6 +349,11 @@ void Path::refreshScript()
 	else if (label == "cook")
 	{
 		pathType = PATH_COOK;
+		ensureMinimapIcon();
+		minimapIcon->setTexture("gui/icon-food");
+		minimapIcon->size = Vector(16, 16);
+		minimapIcon->scaleWithDistance = false;
+		minimapIcon->throbMult = 0.0f;
 	}
 	else if (label == "zoom")
 	{
@@ -371,6 +379,10 @@ void Path::refreshScript()
 	else if (label == "savepoint")
 	{
 		pathType = PATH_SAVEPOINT;
+		ensureMinimapIcon();
+		minimapIcon->setTexture("gui/minimap/ripple");
+		minimapIcon->color = Vector(1, 0, 0);
+		minimapIcon->alpha = 0.75f;
 	}
 	else if (label == "steam")
 	{
@@ -405,6 +417,10 @@ void Path::refreshScript()
 		else if (type == "out")
 			localWarpType = LOCALWARP_OUT;
 		pathType = PATH_WARP;
+
+		ensureMinimapIcon();
+		minimapIcon->setTexture("gui/minimap/ripple");
+		minimapIcon->alpha = 0.75f;
 	}
 	else if (label == "vox" || label == "voice")
 	{
@@ -422,10 +438,12 @@ void Path::refreshScript()
 		// warpType is just char, which does not automatically skip spaces like strings would
 		warpType = warpTypeStr.length() ? warpTypeStr[0] : 0;
 
+		ensureMinimapIcon();
+		minimapIcon->setTexture("gui/minimap/ripple");
+		minimapIcon->alpha = 0.75f;
 		if (warpMap.find("vedha")!=std::string::npos)
-		{
-			naijaHome = true;
-		}
+			minimapIcon->color = Vector(1.0f, 0.9f, 0.2f);
+
 		pathType = PATH_WARP;
 	}
 	else if (label == "se")
@@ -489,6 +507,9 @@ void Path::init()
 
 void Path::update(float dt)
 {
+	if(minimapIcon)
+		minimapIcon->update(dt);
+
 	if (!(pauseFreeze && dsq->game->isPaused()) && !(spiritFreeze && dsq->game->isWorldPaused()))
 	{
 		if (addEmitter && emitter)
@@ -730,4 +751,11 @@ int Path::messageVariadic(lua_State *L, int nparams)
 void Path::luaDebugMsg(const std::string &func, const std::string &msg)
 {
 	debugLog("luaScriptError: Path [" + name + "]: " + func + " : " + msg);
+}
+
+MinimapIcon *Path::ensureMinimapIcon()
+{
+	if(!minimapIcon)
+		minimapIcon = new MinimapIcon;
+	return minimapIcon;
 }

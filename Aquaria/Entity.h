@@ -35,6 +35,7 @@ using namespace tinyxml2;
 
 class ManaBall;
 class Path;
+struct MinimapIcon;
 
 struct BoneLock
 {
@@ -202,6 +203,7 @@ class Entity : public Quad, public StateMachine, public SoundHolder
 {
 public:
 	Entity();
+	virtual ~Entity();
 	virtual void init(){}
 	virtual void postInit(){}
 
@@ -501,6 +503,9 @@ public:
 
 	Vector getPushVec() const { return pushVec; }
 	float getPushDamage() const { return pushDamage; }
+
+	MinimapIcon *minimapIcon;
+	MinimapIcon *ensureMinimapIcon();
 
 protected:
 	bool calledEntityDied;

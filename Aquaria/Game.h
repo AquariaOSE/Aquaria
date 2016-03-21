@@ -135,6 +135,20 @@ enum EditTypes
 };
 #endif
 
+// impl is in Minimap.cpp
+struct MinimapIcon
+{
+	MinimapIcon();
+	bool setTexture(std::string);
+	void update(float dt);
+	CountedPtr<Texture> tex;
+	InterpolatedVector color, alpha, size;
+	float throbMult;
+	bool scaleWithDistance;
+
+	static const Vector defaultSize;
+};
+
 class ManaBall : public Quad
 {
 public:

@@ -32,6 +32,10 @@ CollideEntity::CollideEntity() : Entity()
 	this->updateCull = 4000;
 }
 
+CollideEntity::~CollideEntity()
+{
+}
+
 void CollideEntity::entityDied(Entity *e)
 {
 	Entity::entityDied(e);
