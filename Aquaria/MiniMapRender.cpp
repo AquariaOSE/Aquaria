@@ -47,8 +47,6 @@ namespace MiniMapRenderSpace
 	const float iconBaseSize = 14;
 	// Additional radius added (or subtracted) by "throb" effect
 	const float iconThrobSize = 6;
-	// Size of cooking icon (fixed)
-	const float iconCookSize = 16;
 	// Maximum offset of warp/save/cooking icons from center of minimap
 	const float iconMaxOffset = miniMapRadius * miniMapScale * (7.0f/8.0f);
 	// Distance at which the icon decreases to minimum size
@@ -66,11 +64,9 @@ namespace MiniMapRenderSpace
 	const int healthMarkerSize = 20;
 
 
-	CountedPtr<Texture> texCook = 0;
 	CountedPtr<Texture> texWaterBit = 0;
 	CountedPtr<Texture> texMinimapBtm = 0;
 	CountedPtr<Texture> texMinimapTop = 0;
-	CountedPtr<Texture> texRipple = 0;
 	CountedPtr<Texture> texNaija = 0;
 	CountedPtr<Texture> texHealthBar = 0;
 	CountedPtr<Texture> texMarker = 0;
@@ -91,6 +87,69 @@ namespace MiniMapRenderSpace
 
 using namespace MiniMapRenderSpace;
 
+const Vector MinimapIcon::defaultSize(iconBaseSize, iconBaseSize);
+
+MinimapIcon::MinimapIcon()
+: color(1,1,1), alpha(1), size(defaultSize), throbMult(iconThrobSize), scaleWithDistance(true)
+{
+}
+
+void MinimapIcon::update(float dt)
+{
+	color.update(dt);
+	alpha.update(dt);
+	size.update(dt);
+}
+
+
+// pretty much copied from RenderObject::setTexture()
+static bool _setTex(CountedPtr<Texture> &tex, std::string name)
+{
+	stringToLowerUserData(name);
+
+	if (name.empty())
+	{
+		tex = NULL;
+		return false;
+	}
+
+	if(tex && tex->getLoadResult() == TEX_SUCCESS && name == tex->name)
+		return true; // no texture change
+
+	tex = core->addTexture(name);
+	return tex && tex->getLoadResult() == TEX_SUCCESS;
+}
+
+bool MinimapIcon::setTexture(std::string name)
+{
+	return _setTex(tex, name);
+}
+
+bool MiniMapRender::setWaterBitTex(const std::string& name)
+{
+	return _setTex(texWaterBit, name);
+}
+bool MiniMapRender::setTopTex(const std::string& name)
+{
+	return _setTex(texMinimapTop, name);
+}
+bool MiniMapRender::setBottomTex(const std::string& name)
+{
+	return _setTex(texMinimapBtm, name);
+}
+bool MiniMapRender::setAvatarTex(const std::string& name)
+{
+	return _setTex(texNaija, name);
+}
+bool MiniMapRender::setHealthBarTex(const std::string& name)
+{
+	return _setTex(texHealthBar, name);
+}
+bool MiniMapRender::setMaxHealthMarkerTex(const std::string& name)
+{
+	return _setTex(texMarker, name);
+}
+
 MiniMapRender::MiniMapRender() : RenderObject()
 {
 	toggleOn = 1;
@@ -108,13 +167,11 @@ MiniMapRender::MiniMapRender() : RenderObject()
 	cull = false;
 	lightLevel = 1.0;
 
-	texCook				= core->addTexture("GUI/ICON-FOOD");
-	texWaterBit			= core->addTexture("GUI/MINIMAP/WATERBIT");
-	texMinimapBtm		= core->addTexture("GUI/MINIMAP/BTM");
-	texMinimapTop		= core->addTexture("GUI/MINIMAP/TOP");
-	texRipple			= core->addTexture("GUI/MINIMAP/RIPPLE");
-	texNaija			= core->addTexture("GEMS/NAIJA-TOKEN");
-	texHealthBar		= core->addTexture("PARTICLES/glow-masked"); 
+	texWaterBit			= core->addTexture("gui/minimap/waterbit");
+	texMinimapBtm		= core->addTexture("gui/minimap/btm");
+	texMinimapTop		= core->addTexture("gui/minimap/top");
+	texNaija			= core->addTexture("gems/naija-token");
+	texHealthBar		= core->addTexture("particles/glow-masked"); 
 	texMarker			= core->addTexture("gui/minimap/marker");
 
 	buttons.clear();
@@ -164,11 +221,9 @@ void MiniMapRender::destroy()
 {
 	RenderObject::destroy();
 
-	UNREFTEX(texCook);
 	UNREFTEX(texWaterBit);
 	UNREFTEX(texMinimapBtm);
 	UNREFTEX(texMinimapTop);
-	UNREFTEX(texRipple);
 	UNREFTEX(texNaija);
 	UNREFTEX(texHealthBar);
 	UNREFTEX(texMarker);
@@ -541,14 +596,10 @@ void MiniMapRender::onRender()
 
 	if (!radarHide)
 	{
-		const float factor = sinf(game->getTimer()*PI);
-		const float iconSize = iconBaseSize + factor*iconThrobSize;
-		texRipple->apply();
-		// FIXME: use getFirstPathOfType?
 		for (int i = 0; i < dsq->game->getNumPaths(); i++)
 		{
 			Path *p = dsq->game->getPath(i);
-			if (!p->nodes.empty() && (p->pathType==PATH_COOK || p->pathType==PATH_SAVEPOINT || p->pathType==PATH_WARP))
+			if (!p->nodes.empty() && p->minimapIcon)
 			{
 				bool render = true;
 				Path *p2 = dsq->game->getNearestPath(p->nodes[0].position, PATH_RADARHIDE);
@@ -562,94 +613,17 @@ void MiniMapRender::onRender()
 
 				if (render)
 				{
-					Vector pt(p->nodes[0].position);
-					Vector d = pt - dsq->game->avatar->position;
-					const float len = d.getLength2D();
-					float iconScale;
-					if (len < iconMaxOffset)
-					{
-						iconScale = 1;
-					}
-					else
-					{
-						d *= iconMaxOffset / len;
-						float k;
-						if (len < iconMaxDistance)
-							k = ((iconMaxDistance - len) / (iconMaxDistance - iconMaxOffset));
-						else
-							k = 0;
-						iconScale = iconMinScale + k*(1-iconMinScale);
-					}
-					const Vector miniMapPos = Vector(d)*Vector(1.0f/miniMapScale, 1.0f/miniMapScale);
-
-					switch(p->pathType)
-					{
-					case PATH_COOK:
-					{
-						glColor4f(1, 1, 1, 1);
-
-						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
-						const float sz = iconCookSize * iconScale;
-
-						texCook->apply();
-
-						glBegin(GL_QUADS);
-							glTexCoord2f(0, 1);
-							glVertex2f(-sz, sz);
-							glTexCoord2f(1, 1);
-							glVertex2f(sz, sz);
-							glTexCoord2f(1, 0);
-							glVertex2f(sz, -sz);
-							glTexCoord2f(0, 0);
-							glVertex2f(-sz, -sz);
-						glEnd();
-
-						glTranslatef(-miniMapPos.x, -miniMapPos.y, 0);
-						texRipple->apply();
-						render = false;  // Skip common rendering code
-					}
-					break;
-					case PATH_SAVEPOINT:
-					{
-						glColor4f(1.0, 0, 0, alphaValue*0.75f);
-					}
-					break;
-					case PATH_WARP:
-					{
-						if (p->naijaHome)
-						{
-							glColor4f(1.0, 0.9, 0.2, alphaValue*0.75f);	
-						}
-						else
-						{
-							glColor4f(1.0, 1.0, 1.0, alphaValue*0.75f);
-						}
-					}
-					break;
-					}
-
-					if (render)
-					{
-						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
-						const float sz = iconSize * iconScale;
-
-						glBegin(GL_QUADS);
-							glTexCoord2f(0, 1);
-							glVertex2f(-sz, sz);
-							glTexCoord2f(1, 1);
-							glVertex2f(sz, sz);
-							glTexCoord2f(1, 0);
-							glVertex2f(sz, -sz);
-							glTexCoord2f(0, 0);
-							glVertex2f(-sz, -sz);
-						glEnd();
-
-						glTranslatef(-miniMapPos.x, -miniMapPos.y, 0);
-					}
+					renderIcon(p->minimapIcon, p->nodes[0].position);
 				}
 			}
 		}
-		texRipple->unbind();
+
+		FOR_ENTITIES(i)
+		{
+			Entity *e = *i;
+			if(e->minimapIcon)
+				renderIcon(e->minimapIcon, e->position);
+		}
 	}
 
 	glColor4f(1,1,1, alphaValue);
@@ -789,3 +763,48 @@ void MiniMapRender::onRender()
 #endif
 }
 
+void MiniMapRender::renderIcon(MinimapIcon *ico, const Vector& pos)
+{
+	if(!ico->tex)
+		return;
+	Vector d = pos - dsq->game->avatar->position;
+	const float len = d.getLength2D();
+	float iconScale;
+	if (len < iconMaxOffset || !ico->scaleWithDistance)
+	{
+		iconScale = 1;
+	}
+	else
+	{
+		d *= iconMaxOffset / len;
+		float k;
+		if (len < iconMaxDistance)
+			k = ((iconMaxDistance - len) / (iconMaxDistance - iconMaxOffset));
+		else
+			k = 0;
+		iconScale = iconMinScale + k*(1-iconMinScale);
+	}
+
+	ico->tex->apply();
+	const Vector c = ico->color;
+	const float a = ico->alpha.x * this->alpha.x;
+	glColor4f(c.x, c.y, c.z, a);
+
+	const Vector miniMapPos = Vector(d)*Vector(1.0f/miniMapScale, 1.0f/miniMapScale);
+	const float factor = sinf(game->getTimer()*PI);
+	const float addSize = factor * ico->throbMult;
+	const Vector sz = (ico->size + Vector(addSize, addSize)) * iconScale;
+	glPushMatrix();
+		glTranslatef(miniMapPos.x, miniMapPos.y, 0);
+		glBegin(GL_QUADS);
+			glTexCoord2f(0, 1);
+			glVertex2f(-sz.x, sz.y);
+			glTexCoord2f(1, 1);
+			glVertex2f(sz.x, sz.y);
+			glTexCoord2f(1, 0);
+			glVertex2f(sz.x, -sz.y);
+			glTexCoord2f(0, 0);
+			glVertex2f(-sz.x, -sz.y);
+		glEnd();
+	glPopMatrix();
+}

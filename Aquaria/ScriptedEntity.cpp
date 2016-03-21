@@ -80,6 +80,10 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	}
 }
 
+ScriptedEntity::~ScriptedEntity()
+{
+}
+
 void ScriptedEntity::setAutoSkeletalUpdate(bool v)
 {
 	skeletalSprite.ignoreUpdate = !v;
@@ -814,4 +818,3 @@ void ScriptedEntity::deathNotify(RenderObject *r)
 	}
 	CollideEntity::deathNotify(r);
 }
-

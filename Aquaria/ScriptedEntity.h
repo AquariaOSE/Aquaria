@@ -30,6 +30,7 @@ class ScriptedEntity : public CollideEntity, public Segmented
 {
 public:
 	ScriptedEntity(const std::string &scriptName, Vector position, EntityType et = ET_ENEMY);
+	virtual ~ScriptedEntity();
 	void init();
 	void postInit();
 	void destroy();
@@ -76,7 +77,7 @@ public:
 
 	ParticleEffect pullEmitter;
 	float manaBallAmount;
-	
+
 	void initEmitter(int emit, const std::string &file);
 	void startEmitter(int emit);
 	void stopEmitter(int emit);

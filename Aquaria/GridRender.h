@@ -63,8 +63,17 @@ protected:
 	float lightLevel;
 	void onUpdate(float dt);
 	void onRender();
+	void renderIcon(MinimapIcon *ico, const Vector& pos);
 
 	InterpolatedVector lerp;
+
+public:
+	static bool setWaterBitTex(const std::string& name);
+	static bool setTopTex(const std::string& name);
+	static bool setBottomTex(const std::string& name);
+	static bool setAvatarTex(const std::string& name);
+	static bool setHealthBarTex(const std::string& name);
+	static bool setMaxHealthMarkerTex(const std::string& name);
 };
 
 class WorldMapRender : public RenderObject, public ActionMapper

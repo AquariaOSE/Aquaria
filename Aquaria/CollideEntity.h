@@ -27,6 +27,7 @@ class CollideEntity : public Entity
 {
 public:
 	CollideEntity();
+	virtual ~CollideEntity();
 	float bounceAmount;
 	float weight;
 	void updateMovement(float dt);	

@@ -9403,6 +9403,108 @@ luaFunc(getPerformanceFreq)
 #endif
 }
 
+// ---------- Minimap related ------------------
+
+luaFunc(getMinimapRender)
+{
+	luaReturnPtr(dsq->game->miniMapRender);
+}
+
+luaFunc(minimap_setWaterBitTex)
+{
+	luaReturnBool(MiniMapRender::setWaterBitTex(getString(L)));
+}
+luaFunc(minimap_setTopTex)
+{
+	luaReturnBool(MiniMapRender::setTopTex(getString(L)));
+}
+luaFunc(minimap_setBottomTex)
+{
+	luaReturnBool(MiniMapRender::setBottomTex(getString(L)));
+}
+luaFunc(minimap_setAvatarIconTex)
+{
+	luaReturnBool(MiniMapRender::setAvatarTex(getString(L)));
+}
+luaFunc(minimap_setHealthBarTex)
+{
+	luaReturnBool(MiniMapRender::setAvatarTex(getString(L)));
+}
+luaFunc(minimap_setMaxHealthMarkerTex)
+{
+	luaReturnBool(MiniMapRender::setMaxHealthMarkerTex(getString(L)));
+}
+
+template<typename T>
+int mmicon_delete(lua_State *L, T *obj)
+{
+	delete obj->minimapIcon;
+	obj->minimapIcon = NULL;
+	luaReturnNil();
+}
+template<typename T>
+int mmicon_tex(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	MinimapIcon *ico = obj->ensureMinimapIcon();
+	bool good = ico->setTexture(getString(L, 2));
+	luaReturnBool(good);
+}
+template<typename T>
+int mmicon_size(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	luaReturnNum(interpolateVec2(L, obj->ensureMinimapIcon()->size, 2));
+}
+template<typename T>
+int mmicon_color(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	luaReturnNum(interpolateVec3(L, obj->ensureMinimapIcon()->color, 2));
+}
+template<typename T>
+int mmicon_alpha(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	luaReturnNum(interpolateVec1(L, obj->ensureMinimapIcon()->alpha, 2));
+}
+template<typename T>
+int mmicon_scaleWithDistance(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	obj->ensureMinimapIcon()->scaleWithDistance = getBool(L, 2);
+	luaReturnNil();
+}
+template<typename T>
+int mmicon_throb(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	obj->ensureMinimapIcon()->throbMult = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(entity_mmicon_delete) { return mmicon_delete(L, entity(L)); }
+luaFunc(entity_mmicon_tex) { return mmicon_tex(L, entity(L)); }
+luaFunc(entity_mmicon_size) { return mmicon_size(L, entity(L)); }
+luaFunc(entity_mmicon_color) { return mmicon_color(L, entity(L)); }
+luaFunc(entity_mmicon_alpha) { return mmicon_alpha(L, entity(L)); }
+luaFunc(entity_mmicon_scaleWithDistance) { return mmicon_scaleWithDistance(L, entity(L)); }
+luaFunc(entity_mmicon_throb) { return mmicon_throb(L, entity(L)); }
+
+luaFunc(node_mmicon_delete) { return mmicon_delete(L, path(L)); }
+luaFunc(node_mmicon_tex) { return mmicon_tex(L, path(L)); }
+luaFunc(node_mmicon_size) { return mmicon_size(L, path(L)); }
+luaFunc(node_mmicon_color) { return mmicon_color(L, path(L)); }
+luaFunc(node_mmicon_alpha) { return mmicon_alpha(L, path(L)); }
+luaFunc(node_mmicon_scaleWithDistance) { return mmicon_scaleWithDistance(L, path(L)); }
+luaFunc(node_mmicon_throb) { return mmicon_throb(L, path(L)); }
+
 //--------------------------------------------------------------------------------------------
 
 #define luaRegister(func)	{#func, l_##func}
@@ -10432,7 +10534,26 @@ static const struct {
 	luaRegister(getPerformanceCounter),
 	luaRegister(getPerformanceFreq),
 
-
+	luaRegister(getMinimapRender),
+	luaRegister(minimap_setWaterBitTex),
+	luaRegister(minimap_setTopTex),
+	luaRegister(minimap_setBottomTex),
+	luaRegister(minimap_setAvatarIconTex),
+	luaRegister(minimap_setHealthBarTex),
+	luaRegister(entity_mmicon_delete),
+	luaRegister(entity_mmicon_tex),
+	luaRegister(entity_mmicon_size),
+	luaRegister(entity_mmicon_color),
+	luaRegister(entity_mmicon_alpha),
+	luaRegister(entity_mmicon_scaleWithDistance),
+	luaRegister(entity_mmicon_throb),
+	luaRegister(node_mmicon_delete),
+	luaRegister(node_mmicon_tex),
+	luaRegister(node_mmicon_size),
+	luaRegister(node_mmicon_color),
+	luaRegister(node_mmicon_alpha),
+	luaRegister(node_mmicon_scaleWithDistance),
+	luaRegister(node_mmicon_throb),
 
 #undef MK_FUNC
 #undef MK_ALIAS
