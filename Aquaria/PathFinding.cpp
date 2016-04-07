@@ -217,11 +217,10 @@ void PathFinding::beginFindPath(PathFinding::State *state, const Vector& start, 
 
 bool PathFinding::updateFindPath(PathFinding::State *state, int limit)
 {
-	int oldres = state->result;
-	if(oldres == JPS::NEED_MORE_STEPS)
+	if(state->result == JPS::NEED_MORE_STEPS)
 	{
 		state->result = state->searcher.findPathStep(limit);
-		return oldres != state->result;
+		return state->result != JPS::NEED_MORE_STEPS;
 	}
 	return true; // done
 }
@@ -229,7 +228,7 @@ bool PathFinding::updateFindPath(PathFinding::State *state, int limit)
 bool PathFinding::finishFindPath(PathFinding::State *state, VectorPath& path, unsigned step /* = 0 */)
 {
 	if(state->result != JPS::FOUND_PATH)
-		return false;
+		return state->result == JPS::EMPTY_PATH;
 
 	JPS::PathVector rawpath;
 	state->searcher.findPathFinish(rawpath, step);
