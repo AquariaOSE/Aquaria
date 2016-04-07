@@ -8996,9 +8996,9 @@ luaFunc(createFindPath)
 luaFunc(findPathBegin)
 {
 	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
-	Vector start(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
-	ObsType obs = ObsType(lua_tointeger(L, 8));
+	Vector start(lua_tonumber(L, 2), lua_tonumber(L, 3));
+	Vector end(lua_tonumber(L, 4), lua_tonumber(L, 5));
+	ObsType obs = ObsType(lua_tointeger(L, 6));
 	PathFinding::beginFindPath(state, start, end, obs);
 	luaReturnNil();
 }
@@ -9015,12 +9015,12 @@ luaFunc(findPathFinish)
 {
 	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
 	VectorPath path;
-	bool found = PathFinding::finishFindPath(state, path);
+	bool found = PathFinding::finishFindPath(state, path, lua_tointeger(L, 2));
 	if(!found)
 		luaReturnBool(false);
 
 	lua_pushinteger(L, (int)path.getNumPathNodes());
-	_fillPathfindTables(L, path, 2, 3);
+	_fillPathfindTables(L, path, 3, 4);
 	return 3;
 }
 
@@ -9041,20 +9041,38 @@ luaFunc(castLine)
 	int tiletype = lua_tointeger(L, 5);
 	if(!tiletype)
 		tiletype = OT_BLOCKING;
+	bool invert = getBool(L, 6);
 	Vector step = end - v;
 	int steps = step.getLength2D() / TILE_SIZE;
 	step.setLength2D(TILE_SIZE);
 
-	for(int i = 0; i < steps; ++i)
+	if(!invert)
 	{
-		if(dsq->game->getGridRaw(TileVector(v)) & tiletype)
+		for(int i = 0; i < steps; ++i)
 		{
-			lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
-			lua_pushnumber(L, v.x);
-			lua_pushnumber(L, v.y);
-			return 3;
+			if(dsq->game->getGridRaw(TileVector(v)) & tiletype)
+			{
+				lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
+				lua_pushnumber(L, v.x);
+				lua_pushnumber(L, v.y);
+				return 3;
+			}
+			v += step;
 		}
-		v += step;
+	}
+	else
+	{
+		for(int i = 0; i < steps; ++i)
+		{
+			if(!(dsq->game->getGridRaw(TileVector(v)) & tiletype))
+			{
+				lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
+				lua_pushnumber(L, v.x);
+				lua_pushnumber(L, v.y);
+				return 3;
+			}
+			v += step;
+		}
 	}
 
 	lua_pushboolean(L, false);
