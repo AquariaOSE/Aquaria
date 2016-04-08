@@ -9034,6 +9034,13 @@ luaFunc(findPathGetStats)
 	return 2;
 }
 
+luaFunc(findPathFreeMemory)
+{
+    PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+    PathFinding::purgeFindPath(state);
+    luaReturnNil();
+}
+
 luaFunc(castLine)
 {
 	Vector v(lua_tonumber(L, 1), lua_tonumber(L, 2));
@@ -10100,6 +10107,7 @@ static const struct {
 	luaRegister(findPathUpdate),
 	luaRegister(findPathFinish),
 	luaRegister(findPathGetStats),
+	luaRegister(findPathFreeMemory),
 	luaRegister(castLine),
 	luaRegister(getUserInputString),
 	luaRegister(getMaxCameraValues),
