@@ -769,20 +769,19 @@ void MiniMapRender::renderIcon(MinimapIcon *ico, const Vector& pos)
 		return;
 	Vector d = pos - dsq->game->avatar->position;
 	const float len = d.getLength2D();
-	float iconScale;
-	if (len < iconMaxOffset || !ico->scaleWithDistance)
+	float iconScale = 1;
+	if (len >= iconMaxOffset)
 	{
-		iconScale = 1;
-	}
-	else
-	{
-		d *= iconMaxOffset / len;
-		float k;
-		if (len < iconMaxDistance)
-			k = ((iconMaxDistance - len) / (iconMaxDistance - iconMaxOffset));
-		else
-			k = 0;
-		iconScale = iconMinScale + k*(1-iconMinScale);
+		d *= iconMaxOffset / len; // clamp to outer circle distance
+		if(ico->scaleWithDistance)
+		{
+			float k;
+			if (len < iconMaxDistance)
+				k = ((iconMaxDistance - len) / (iconMaxDistance - iconMaxOffset));
+			else
+				k = 0;
+			iconScale = iconMinScale + k*(1-iconMinScale);
+	 	}
 	}
 
 	ico->tex->apply();
