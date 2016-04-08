@@ -239,6 +239,11 @@ bool PathFinding::finishFindPath(PathFinding::State *state, VectorPath& path, un
 	return true;
 }
 
+void PathFinding::purgeFindPath(PathFinding::State *state)
+{
+	state->searcher.freeMemory();
+}
+
 void PathFinding::getStats(PathFinding::State *state, unsigned& stepsDone, unsigned& nodesExpanded)
 {
 	stepsDone = (unsigned)state->searcher.getStepsDone();
