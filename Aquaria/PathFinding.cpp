@@ -210,8 +210,10 @@ void PathFinding::beginFindPath(PathFinding::State *state, const Vector& start, 
 		obs = OT_BLOCKING;
 
 	state->grid.blockingObsBits = (ObsType)obs;
-	JPS::Position istart = JPS::Pos(start.x, start.y);
-	JPS::Position iend = JPS::Pos(end.x, end.y);
+	TileVector tstart(start);
+	TileVector tend(end);
+	JPS::Position istart = JPS::Pos(tstart.x, tstart.y);
+	JPS::Position iend = JPS::Pos(tend.x, tend.y);
 	state->result = state->searcher.findPathInit(istart, iend);
 }
 
