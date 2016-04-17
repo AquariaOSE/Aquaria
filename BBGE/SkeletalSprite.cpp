@@ -78,6 +78,7 @@ Bone::Bone() : Quad()
 
 	minDist = maxDist = 128;
 	reverse = false;
+	originalRenderPass = 0;
 }
 /*
 void Bone::createStrip(bool vert, int num)
@@ -358,6 +359,13 @@ void BoneCommand::parse(Bone *b, SimpleIStringStream &is)
 		command = AC_SEGS_START;
 	else if (type=="AC_SEGS_STOP")
 		command = AC_SEGS_STOP;
+	else if (type == "AC_SET_PASS")
+	{
+		command = AC_SET_PASS;
+		is >> slot;
+	}
+	else if(type == "AC_RESET_PASS")
+		command = AC_RESET_PASS;
 }
 
 void BoneCommand::run()
@@ -397,6 +405,12 @@ void BoneCommand::run()
 		if (e)
 			e->stop();
 	}
+	break;
+	case AC_SET_PASS:
+		b->setRenderPass(slot);
+	break;
+	case AC_RESET_PASS:
+		b->setRenderPass(b->originalRenderPass);
 	break;
 	}
 }
@@ -558,6 +572,8 @@ bool AnimationLayer::createTransitionAnimation(const std::string& anim, float ti
 
 void AnimationLayer::stopAnimation()
 {
+	if(s->loaded && getCurrentAnimation()->resetPassOnEnd)
+		resetPass();
 	animating = false;
 	if (!enqueuedAnimation.empty())
 	{
@@ -575,6 +591,11 @@ bool AnimationLayer::isAnimating()
 float AnimationLayer::getAnimationLength()
 {
 	return animationLength;
+}
+
+Animation::Animation()
+: resetPassOnEnd(false)
+{
 }
 
 int Animation::getNumKeyframes()
@@ -940,8 +961,8 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		bone->SetAttribute("cp", os.str().c_str());
 		if (this->bones[i]->rbp)
 			bone->SetAttribute("rbp", this->bones[i]->rbp);
-		if (this->bones[i]->getRenderPass())
-			bone->SetAttribute("pass", this->bones[i]->getRenderPass());
+		if (this->bones[i]->originalRenderPass)
+			bone->SetAttribute("pass", this->bones[i]->originalRenderPass);
 		if (this->bones[i]->offset.x)
 			bone->SetAttribute("offx", this->bones[i]->offset.x);
 		if (this->bones[i]->offset.y)
@@ -1005,6 +1026,8 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		Animation *a = &this->animations[i];
 		XMLElement *animation = xml->NewElement("Animation");
 		animation->SetAttribute("name", a->name.c_str());
+		if(a->resetPassOnEnd)
+			animation->SetAttribute("resetPassOnEnd", a->resetPassOnEnd);
 		for (int j = 0; j < a->keyframes.size(); j++)
 		{
 			XMLElement *key = xml->NewElement("Key");
@@ -1438,7 +1461,9 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			}
 			if (bone->Attribute("pass"))
 			{
-				newb->setRenderPass(atoi(bone->Attribute("pass")));
+				int pass = atoi(bone->Attribute("pass"));
+				newb->originalRenderPass = pass;
+				newb->setRenderPass(pass);
 			}
 			if (bone->Attribute("gc"))
 			{
@@ -1582,6 +1607,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 		{
 			Animation newAnimation;
 			newAnimation.name = animation->Attribute("name");
+			newAnimation.resetPassOnEnd = animation->BoolAttribute("resetPassOnEnd");
 			stringToLower(newAnimation.name);
 
 			XMLElement *key = animation->FirstChildElement("Key");
@@ -1713,6 +1739,35 @@ void SkeletalSprite::setTime(float time, int layer)
 		animLayers[layer].timer = time;
 }
 
+void AnimationLayer::resetPass()
+{
+	for (int i = 0; i < s->bones.size(); i++)
+	{
+		Bone *b = s->bones[i];
+		if (contains(b))
+			b->setRenderPass(b->originalRenderPass);
+	}
+}
+
+bool AnimationLayer::contains(const Bone *b) const
+{
+	const int idx = b->boneIdx;
+	if (!ignoreBones.empty())
+	{
+		for (int j = 0; j < ignoreBones.size(); j++)
+			if (idx == ignoreBones[j])
+				return false;
+	}
+	else if (!includeBones.empty())
+	{
+		for (int j = 0; j < includeBones.size(); j++)
+			if (idx == includeBones[j])
+				return true;
+	}
+
+	return true;
+}
+
 void AnimationLayer::updateBones()
 {
 	if (!animating && !(&s->animLayers[0] == this) && fallThru == 0) return;
@@ -1755,10 +1810,8 @@ void AnimationLayer::updateBones()
 	}
 	lastNewKey = key2;
 
-	bool c = 0;
 	for (int i = 0; i < s->bones.size(); i++)
 	{
-		int idx = s->bones[i]->boneIdx;
 		Bone *b = s->bones[i];
 
 		if (b->segmentChain == 1)
@@ -1767,31 +1820,9 @@ void AnimationLayer::updateBones()
 		}
 		if (b->segmentChain < 2)
 		{
-			c=0;
-			if (!ignoreBones.empty())
+			if (b->animated != Bone::ANIM_NONE && contains(b))
 			{
-				for (int j = 0; j < ignoreBones.size(); j++)
-				{
-					if (idx == ignoreBones[j])
-					{	c=1; break; }
-				}
-			}
-			else if (!includeBones.empty())
-			{
-				c = 1;
-				for (int j = 0; j < includeBones.size(); j++)
-				{
-					if (idx == includeBones[j])
-					{	c=0; break; }
-				}
-			}
-			if (b->animated==Bone::ANIM_NONE)
-			{
-				c = 1;
-			}
-			if (!c)
-			{
-
+				int idx = b->boneIdx;
 				BoneKeyframe *bkey1 = key1->getBoneKeyframe(idx);
 				BoneKeyframe *bkey2 = key2->getBoneKeyframe(idx);
 				if (bkey1 && bkey2)

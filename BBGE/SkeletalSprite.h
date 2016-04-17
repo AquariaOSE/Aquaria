@@ -33,7 +33,9 @@ enum AnimationCommand
 	AC_SEGS_START		,
 	AC_FRM_SHOW			,
 	AC_SND_PLAY			,
-	AC_SEGS_STOP
+	AC_SEGS_STOP,
+	AC_SET_PASS,
+	AC_RESET_PASS,
 };
 
 class ParticleEffect;
@@ -80,7 +82,7 @@ public:
 	Vector segmentOffset;
 
 	bool fileRenderQuad;
-
+	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
 
 protected:
 	int minDist, maxDist, reverse;
@@ -131,6 +133,7 @@ public:
 class Animation
 {
 public:
+	Animation();
 	std::string name;
 	typedef std::vector <SkeletalKeyframe> Keyframes;
 	Keyframes keyframes;
@@ -146,6 +149,7 @@ public:
 	int getSkeletalKeyframeIndex(SkeletalKeyframe *skey);
 	int getNumKeyframes();
 	void reverse();
+	bool resetPassOnEnd;
 };
 
 class SkeletalSprite;
@@ -170,6 +174,8 @@ public:
 	float transitionAnimate(std::string anim, float time, int loop);
 	void setTimeMultiplier(float t);
 	bool isAnimating();
+	bool contains(const Bone *b) const;
+	void resetPass();
 	//float lerp(float v1, float v2, float dt, int lerpType);
 	
 	//----

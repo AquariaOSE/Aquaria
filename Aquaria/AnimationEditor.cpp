@@ -746,6 +746,8 @@ void AnimationEditor::update(float dt)
 	}
 
 	Vector ebdata;
+	int pass = 0;
+	int origpass = 0;
 
 	if (editingBone)
 	{
@@ -753,11 +755,13 @@ void AnimationEditor::update(float dt)
 		ebdata.x = editingBone->position.x;
 		ebdata.y = editingBone->position.y;
 		ebdata.z = editingBone->rotation.z;
+		pass = editingBone->getRenderPass();
+		origpass = editingBone->originalRenderPass;
 	}
 	text->setText(os.str());
 
 	char t2buf[128];
-	sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f  strip: %d", ebdata.x, ebdata.y, ebdata.z, selectedStripPoint);
+	sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f  strip: %d pass: %d (%d)", ebdata.x, ebdata.y, ebdata.z, selectedStripPoint, pass, origpass);
 	text2->setText(t2buf);
 
 	if (core->mouse.buttons.middle)
