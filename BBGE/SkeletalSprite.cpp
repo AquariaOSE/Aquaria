@@ -311,7 +311,7 @@ void Bone::updateSegments()
 	}
 }
 
-void BoneCommand::parse(Bone *b, SimpleIStringStream &is)
+bool BoneCommand::parse(Bone *b, SimpleIStringStream &is)
 {
 	std::string type;
 	is >> type;
@@ -366,6 +366,14 @@ void BoneCommand::parse(Bone *b, SimpleIStringStream &is)
 	}
 	else if(type == "AC_RESET_PASS")
 		command = AC_RESET_PASS;
+	else // fail
+	{
+		std::ostringstream os;
+		os << "Failed to parse bone command string: invalid command: " << type;
+		errorLog(os.str());
+	}
+
+	return true;
 }
 
 void BoneCommand::run()
@@ -1701,8 +1709,15 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 						if (b)
 						{
 							BoneCommand bcmd;
-							bcmd.parse(b, is);
+							if(!bcmd.parse(b, is))
+								break;
 							newSkeletalKeyframe.commands.push_back(bcmd);
+						}
+						else
+						{
+							std::ostringstream os;
+							os << "SkeletalSprite::loadSkeletal: File " << fn << " anim " << newAnimation.name << " specifies non-existing bone idx " << bidx;
+							errorLog(os.str());
 						}
 					}
 				}
