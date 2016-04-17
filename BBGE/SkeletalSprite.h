@@ -92,7 +92,7 @@ protected:
 class BoneCommand
 {
 public:
-	void parse(Bone *b, SimpleIStringStream &is);
+	bool parse(Bone *b, SimpleIStringStream &is);
 	void run();
 	AnimationCommand command;
 	Bone *b;
