@@ -1778,6 +1778,7 @@ bool AnimationLayer::contains(const Bone *b) const
 		for (int j = 0; j < includeBones.size(); j++)
 			if (idx == includeBones[j])
 				return true;
+		return false;
 	}
 
 	return true;
