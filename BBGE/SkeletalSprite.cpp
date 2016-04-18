@@ -78,6 +78,7 @@ Bone::Bone() : Quad()
 
 	minDist = maxDist = 128;
 	reverse = false;
+	selectable = true;
 	originalRenderPass = 0;
 }
 /*
@@ -951,6 +952,10 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		{
 			bone->SetAttribute("rq", this->bones[i]->fileRenderQuad);
 		}
+		if (!this->bones[i]->selectable)
+		{
+			bone->SetAttribute("sel", this->bones[i]->selectable);
+		}
 		if (!this->bones[i]->collisionRects.empty())
 		{
 			std::ostringstream os;
@@ -1545,6 +1550,10 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				SimpleIStringStream in(bone->Attribute("color"));
 				in >> newb->color.x >> newb->color.y >> newb->color.z;
 			}
+			if (bone->Attribute("sel"))
+			{
+				newb->selectable = bone->BoolAttribute("sel");
+			}
 			bone = bone->NextSiblingElement("Bone");
 		}
 		// attach bones
@@ -1941,7 +1950,7 @@ Bone* SkeletalSprite::getSelectedBone(bool mouseBased)
 			if (bones[i]->renderQuad || core->getShiftState())
 			{
 				bones[i]->color = Vector(1,1,1);
-				if (bones[i]->renderQuad && bones[i]->isCoordinateInsideWorld(p))
+				if (bones[i]->selectable && bones[i]->renderQuad && bones[i]->isCoordinateInsideWorld(p))
 				{
 					float dist = (bones[i]->getWorldPosition() - p).getSquaredLength2D();
 					if (dist <= closestDist)
@@ -1986,17 +1995,31 @@ void SkeletalSprite::setSelectedBone(int b)
 
 void SkeletalSprite::selectPrevBone()
 {
-	selectedBone++;
-	if (selectedBone >= bones.size())
-		selectedBone = 0;
+	const int oldsel = selectedBone;
+	do
+	{
+		selectedBone++;
+		if(selectedBone == oldsel)
+			break;
+		if (selectedBone >= bones.size())
+			selectedBone = 0;
+	}
+	while (!bones[selectedBone]->selectable);
 	updateSelectedBoneColor();
 }
 
 void SkeletalSprite::selectNextBone()
 {
-	selectedBone--;
-	if (selectedBone < 0)
-		selectedBone = bones.size()-1;
+	const int oldsel = selectedBone;
+	do
+	{
+		selectedBone--;
+		if(selectedBone == oldsel)
+			break;
+		if (selectedBone < 0)
+			selectedBone = bones.size()-1;
+	}
+	while (!bones[selectedBone]->selectable);
 	updateSelectedBoneColor();
 }
 
