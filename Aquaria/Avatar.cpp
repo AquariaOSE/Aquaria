@@ -2260,7 +2260,8 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 
 	Vector dir;
 	Vector p = position;
-	p = boneLeftArm->getWorldPosition();
+	if(boneLeftArm)
+		p = boneLeftArm->getWorldPosition();
 	//&& !dsq->game->isObstructed(TileVector(position))
 	/*
 	if (dsq->inputMode == INPUT_MOUSE && state.lockedToWall )
@@ -4153,15 +4154,16 @@ void Avatar::refreshModel(std::string file, const std::string &skin, bool forceI
 	if (file == "naija")
 	{
 		bone_head = skeletalSprite.getBoneByIdx(1);
-		boneRightFoot = skeletalSprite.getBoneByName("RightFoot");
-		boneLeftFoot = skeletalSprite.getBoneByName("LeftFoot");
-		boneRightArm = skeletalSprite.getBoneByName("RightArm");
 		boneLeftArm = skeletalSprite.getBoneByName("LeftArm");
 		boneFish2 = skeletalSprite.getBoneByName("Fish2");
-		boneFish2->alpha = 0;
+		if(boneFish2)
+			boneFish2->alpha = 0;
 		bone_dualFormGlow = skeletalSprite.getBoneByName("DualFormGlow");
-		bone_dualFormGlow->scale = 0;
-		bone_dualFormGlow->setBlendType(BLEND_ADD);
+		if (bone_dualFormGlow)
+		{
+			bone_dualFormGlow->scale = 0;
+			bone_dualFormGlow->setBlendType(BLEND_ADD);
+		}
 
 		boneLeftHand = skeletalSprite.getBoneByName("LeftArm");
 		boneRightHand = skeletalSprite.getBoneByName("RightArm");
@@ -4170,7 +4172,7 @@ void Avatar::refreshModel(std::string file, const std::string &skin, bool forceI
 	{
 		bone_dualFormGlow = 0;
 		bone_head = 0;
-		boneRightFoot = boneLeftFoot = boneRightArm = boneLeftArm = boneFish2 = skeletalSprite.getBoneByIdx(0);
+		boneLeftArm = boneFish2 = 0;
 		boneLeftHand = boneRightHand = 0;
 	}
 

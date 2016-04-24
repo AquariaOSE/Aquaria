@@ -303,7 +303,7 @@ public:
 
 	Vector getHeadPosition();
 
-	Bone *boneRightFoot, *boneLeftFoot, *boneRightArm, *boneLeftArm, *boneFish2, *bone_head;
+	Bone *boneLeftArm, *boneFish2, *bone_head;
 	Bone *boneLeftHand, *boneRightHand;
 
 	void startFlourish();
