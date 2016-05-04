@@ -351,7 +351,6 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 
 void drawCircle(float radius, int stepSize)
 {
-#ifdef BBGE_BUILD_OPENGL
 	//glDisable(GL_CULL_FACE);
 
 	glBegin(GL_POLYGON);
@@ -364,7 +363,6 @@ void drawCircle(float radius, int stepSize)
 	glEnd();
 
 	//glEnable(GL_CULL_FACE);
-#endif
 }
 
 void exit_error(const std::string &message)
@@ -385,9 +383,7 @@ std::string parseCommand(const std::string &line, const std::string &command)
 
 void glColor3_256(int r, int g, int b)
 {
-#ifdef BBGE_BUILD_OPENGL
 	glColor4f(float(r)/256.0f, float(g)/256.0f, float(b)/256.0f, 1.0f);
-#endif
 }
 
 bool chance(int perc)
@@ -930,14 +926,12 @@ GLuint generateEmptyTexture(int quality)											// Create An Empty Texture
 
 	memset(data, 0, size);	// Clear Storage Memory
 
-#ifdef BBGE_BUILD_OPENGL
 	glGenTextures(1, &txtnumber);								// Create 1 Texture
 	glBindTexture(GL_TEXTURE_2D, txtnumber);					// Bind The Texture
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, quality, quality, 0,
 		GL_RGBA, GL_UNSIGNED_BYTE, data);						// Build Texture Using Information In data
-#endif
 
 	delete [] data;												// Release data
 

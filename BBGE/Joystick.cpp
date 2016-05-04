@@ -89,13 +89,11 @@ Joystick::Joystick()
 {
 	xinited = false;
 	stickIndex = -1;
-#ifdef BBGE_BUILD_SDL
 #  ifdef BBGE_BUILD_SDL2
 	sdl_controller = NULL;
 	sdl_haptic = NULL;
 #  endif
 	sdl_joy = NULL;
-#endif
 #if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
 	eventfd = -1;
 	effectid = -1;
@@ -124,11 +122,8 @@ Joystick::Joystick()
 
 void Joystick::init(int stick)
 {
-#if defined(BBGE_BUILD_SDL) || defined(__LINUX__)
 	std::ostringstream os;
-#endif
 
-#ifdef BBGE_BUILD_SDL
 	stickIndex = stick;
 	const int numJoy = SDL_NumJoysticks();
 	os << "Found [" << numJoy << "] joysticks";
@@ -184,7 +179,6 @@ void Joystick::init(int stick)
 	{
 		debugLog("Not enough Joystick(s) found");
 	}
-#endif
 	
 #if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
 	os.seekp(0);
@@ -233,9 +227,6 @@ void Joystick::init(int stick)
 
 	debugLog("after catch");
 
-#if !defined(BBGE_BUILD_SDL)
-	inited = xinited;
-#endif
 #endif
 }
 
@@ -250,7 +241,6 @@ void Joystick::shutdown()
 		eventfd = -1;
 	}
 #endif
-#ifdef BBGE_BUILD_SDL
 #ifdef BBGE_BUILD_SDL2
 	if (sdl_haptic)
 	{
@@ -269,7 +259,6 @@ void Joystick::shutdown()
 		SDL_JoystickClose(sdl_joy);
 		sdl_joy = 0;
 	}
-#endif
 }
 
 void Joystick::rumble(float leftMotor, float rightMotor, float time)
@@ -389,7 +378,6 @@ void Joystick::callibrate(Vector &calvec, float deadZone)
 
 void Joystick::update(float dt)
 {
-#ifdef BBGE_BUILD_SDL
 	if (core->joystickEnabled && inited && sdl_joy && stickIndex != -1)
 	{
 #ifdef BBGE_BUILD_SDL2
@@ -499,7 +487,6 @@ void Joystick::update(float dt)
 
 
 	}
-#endif
 
 	if (clearRumbleTime >= 0)
 	{
@@ -533,24 +520,6 @@ void Joystick::update(float dt)
 		
 		
 
-#if !defined(BBGE_BUILD_SDL)
-
-		buttons[0] = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_A?DOWN:UP;
-		buttons[1] = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_B?DOWN:UP;
-		buttons[2] = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_X?DOWN:UP;
-		buttons[3] = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_Y?DOWN:UP;
-
-		position = Vector(xinp.Gamepad.sThumbLX, xinp.Gamepad.sThumbLY)/32768.0f;
-		position.y = -rightStick.y;
-
-		rightStick = Vector(xinp.Gamepad.sThumbRX, xinp.Gamepad.sThumbRY)/32768.0f;
-		rightStick.y = -rightStick.y;
-
-		callibrate(position, deadZone1);
-
-		callibrate(rightStick, deadZone2);
-
-#endif
 
 		btnStart = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_START;
 		btnSelect = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_BACK;

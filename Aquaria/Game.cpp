@@ -1949,7 +1949,6 @@ void Game::clearObsRows()
 
 void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 {
-#ifdef BBGE_BUILD_OPENGL
 	if (q->texture)
 	{
 		std::vector<TileVector> obs;
@@ -2079,7 +2078,6 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 		}
 		glPopMatrix();
 	}
-#endif
 }
 
 std::string Game::getNoteName(int n, const std::string &pre)
@@ -2764,7 +2762,6 @@ void Game::setTimerText(float time)
 
 void Game::generateCollisionMask(Quad *q, float overrideCollideRadius /* = 0 */)
 {
-#ifdef BBGE_BUILD_OPENGL
 	if (q->texture)
 	{
 		q->collidePosition = Vector(0,0,0);
@@ -2869,7 +2866,6 @@ void Game::generateCollisionMask(Quad *q, float overrideCollideRadius /* = 0 */)
 			rot += 360;
 		*/
 	}
-#endif
 }
 
 void Game::addPath(Path *p)

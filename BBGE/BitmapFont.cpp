@@ -56,14 +56,12 @@ void BmpFont::load(const std::string &file, float scale, bool loadTexture)
 
 	this->scale = scale;
 
-#ifdef BBGE_BUILD_OPENGL
 	GLuint id=0;
 	glGenTextures(1, &id);
 
 	if (!font.Create(file.c_str(), id, loadTexture))
 		return;
 
-#endif
 
 	loaded = true;
 }
@@ -316,7 +314,6 @@ void BitmapText::onRender()
 	float top_color[3] = {bmpFont->fontTopColor.x*color.x, bmpFont->fontTopColor.y*color.y, bmpFont->fontTopColor.z*color.z};
 	float bottom_color[3] = {bmpFont->fontBtmColor.x*color.x, bmpFont->fontBtmColor.y*color.y, bmpFont->fontBtmColor.z*color.z};
 
-#ifdef BBGE_BUILD_OPENGL
 	glEnable(GL_TEXTURE_2D);
 	/*
 	glEnable(GL_BLEND);
@@ -382,7 +379,6 @@ void BitmapText::onRender()
 	//glEnable(GL_CULL_FACE);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-#endif
 }
 
 void BitmapText::unloadDevice()

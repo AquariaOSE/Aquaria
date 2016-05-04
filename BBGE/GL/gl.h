@@ -1635,9 +1635,6 @@ WINGDIAPI void APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei hei
 # undef __DEFINED_GLAPI
 #endif
 
-#ifndef GL_GLEXT_LEGACY
-#include <GL/glext.h>
-#endif
 
 #ifdef __cplusplus
 }

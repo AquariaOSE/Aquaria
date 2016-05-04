@@ -42,7 +42,6 @@ void OutlineRect::setLineSize(int ls)
 
 void OutlineRect::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	glLineWidth(lineSize);
 	glBegin(GL_LINES);
 		// l
@@ -71,7 +70,6 @@ void OutlineRect::onRender()
 			glVertex2f(0,h2);
 		glEnd();
 	}
-#endif
 }
 
 

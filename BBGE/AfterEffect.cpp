@@ -177,7 +177,6 @@ void AfterEffectManager::render()
 {
 	assert(core->frameBuffer.isInited());
 
-#ifdef BBGE_BUILD_OPENGL
 	glPushMatrix();
 
 	glDisable (GL_ALPHA_TEST);
@@ -191,12 +190,10 @@ void AfterEffectManager::render()
 	renderGrid();
 	//renderGridPoints();
 	glPopMatrix();
-#endif
 }
 
 void AfterEffectManager::renderGrid()
 {
-#ifdef BBGE_BUILD_OPENGL
 
 	int firstShader = -1;
 	int lastShader = -1;
@@ -355,12 +352,10 @@ void AfterEffectManager::renderGrid()
 	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);	
 	//if (bRenderGridPoints)
 	//	renderGridPoints();
-#endif
 }
 
 void AfterEffectManager::renderGridPoints()
 {
-#ifdef BBGE_BUILD_OPENGL
 	glColor4f(0.0f,0.0f,0.0f,1.0f);
 	for (int i = 0; i < (xDivs); i++)
 	{
@@ -374,7 +369,6 @@ void AfterEffectManager::renderGridPoints()
 		glEnd();
 		}
 	}
-#endif
 }
 
 void AfterEffectManager::unloadDevice()

@@ -31,7 +31,6 @@ Light::Light()
 
 void Light::apply()
 {
-#ifdef BBGE_BUILD_OPENGL
 	int t = GL_LIGHT0;
 	switch (num)
 	{
@@ -57,7 +56,6 @@ void Light::apply()
 	{
 		glDisable(t);
 	}
-#endif
 }
 
 void Light::update (float dt)

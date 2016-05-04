@@ -132,7 +132,6 @@ void DebugFont::onRender()
 {
 	const float vspc = 1.5;
 
-#ifdef BBGE_BUILD_OPENGL
 	for (int i = 0; i < lines.size(); i++)
 	{
 		//float width = (lines[i].size()-1) * fontDrawSize * 1.4f * 0.75f;
@@ -152,7 +151,6 @@ void DebugFont::onRender()
 			glTranslatef(width*0.5f, 0, 0);
 		}
 	}
-#endif
 }
 
 void DebugFont::setAlign(Align align)

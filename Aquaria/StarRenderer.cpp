@@ -34,7 +34,6 @@ StarRenderer::StarRenderer(int num, int range) : RenderObject()
 
 void StarRenderer::render()
 {	
-#ifdef BBGE_BUILD_OPENGL
 	core->enable3D();
 	glLoadIdentity();
 	glTranslatef(position.x, position.y, position.z);
@@ -60,7 +59,6 @@ void StarRenderer::render()
 	glMatrixMode(GL_MODELVIEW);
 	glPopMatrix();
 	*/
-#endif
 }
 
 void StarRenderer::onRender()

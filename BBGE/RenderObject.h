@@ -277,10 +277,6 @@ public:
 
 	//Flags flags;
 
-#ifdef BBGE_BUILD_DIRECTX
-	bool useDXTransform;
-	//D3DXMATRIX matrix;
-#endif
 
 	float collideRadius;
 	Vector collidePosition;

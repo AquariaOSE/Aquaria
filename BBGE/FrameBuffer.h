@@ -44,9 +44,7 @@ public:
 	void unloadDevice();
 	void reloadDevice();
 
-#if defined(BBGE_BUILD_SDL)
 	static void resetOpenGL();
-#endif
 
 protected:
 	int _w, _h;
