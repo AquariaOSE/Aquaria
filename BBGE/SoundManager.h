@@ -29,9 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define BBGE_BUILD_FMODEX
 
-#ifdef BBGE_BUILD_OPENALOGG
-	const int BBGE_AUDIO_NOCHANNEL		= -1;
-#elif defined(BBGE_BUILD_FMODEX)
+#ifdef BBGE_BUILD_FMODEX
 	const int BBGE_AUDIO_NOCHANNEL		= 0;
 #endif
 
@@ -40,9 +38,7 @@ const int BBGE_AUDIO_LOOPNONE		= 0;
 
 namespace SoundCore
 {
-#if defined(BBGE_BUILD_OPENALOGG)
-	//struct Buffer;
-#elif defined(BBGE_BUILD_FMODEX)
+#ifdef BBGE_BUILD_FMODEX
 	typedef void *Buffer;
 #endif
 }
