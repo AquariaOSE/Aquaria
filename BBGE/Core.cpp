@@ -181,16 +181,6 @@ void Core::resetGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 
 void Core::toggleScreenMode(int t)
 {
-#ifdef BBGE_BUILD_GLFW
-/*
-		glfwCloseWindow();
-
-		createWindow(800,600,32,false,"");
-		initGraphicsLibrary(false, true);
-		enable2D(800);
-		//reloadResources();
-		*/
-#endif
 	sound->pause();
 	resetGraphics(-1, -1, t);
 	cacheRender();
@@ -724,10 +714,6 @@ void Core::init()
 
 	flags.set(CF_CLEARBUFFERS);
 	quitNestedMainFlag = false;
-#ifdef BBGE_BUILD_GLFW
-	if (!glfwInit())
-		exit(0);
-#endif
 #ifndef BBGE_BUILD_SDL2
 	// Disable relative mouse motion at the edges of the screen, which breaks
 	// mouse control for absolute input devices like Wacom tablets and touchscreens.
@@ -802,9 +788,6 @@ bool Core::getMouseButtonState(int m)
 
 bool Core::getKeyState(int k)
 {
-#ifdef BBGE_BUILD_GLFW
-	return glfwGetKey(k)==GLFW_PRESS;
-#endif
 
 	if (k >= KEY_MAXARRAY || k < 0)
 	{
@@ -1260,9 +1243,6 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 	
 	glFinish();
 
-#ifdef BBGE_BUILD_GLFW
-	glfwSwapInterval(vsync);
-#endif
 
 
 
@@ -1400,21 +1380,6 @@ void Core::applyState(const std::string &state)
 	StateManager::applyState(state);
 }
 
-#ifdef BBGE_BUILD_GLFW
-void GLFWCALL windowResize(int w, int h)
-{
-	// this gets called on minimize + restore?
-	if (w == 0 && h == 0)
-	{
-		core->minimized = true;
-		return;
-	}
-	else
-		core->minimized = false;
-	if (w != core->width || h != core->height)
-		glfwSetWindowSize(core->width,core->height);
-}
-#endif
 
 
 #ifdef BBGE_BUILD_WINDOWS
@@ -1461,72 +1426,6 @@ bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::s
 	redBits = greenBits = blueBits = alphaBits = 0;
 	return true;
 
-#ifdef BBGE_BUILD_GLFW
-	int redbits, greenbits, bluebits, alphabits;
-	redbits = greenbits = bluebits = 8;
-	alphabits = 0;
-	switch(bits)
-	{
-	case 16:
-		redbits = 5;
-		greenbits = 6;
-		bluebits = 5;
-	break;
-	case 24:
-		redbits = 8;
-		bluebits = 8;
-		greenbits = 8;
-		alphabits = 0;
-	break;
-	case 32:
-		redbits = 8;
-		greenbits = 8;
-		bluebits = 8;
-		alphabits = 8;
-	break;
-	case 8:
-		redbits = 2;
-		greenbits = 2;
-		bluebits = 2;
-	break;
-	}
-	if (glfwOpenWindow(width, height, redbits, greenbits, bluebits, 0, 0, 0, fullscreen ? GLFW_FULLSCREEN : GLFW_WINDOW) == GL_TRUE)
-	{
-		glfwSetWindowTitle(windowTitle.c_str());
-		resize(width,height);
-
-
-#ifdef BBGE_BUILD_WINDOWS
-		this->hWnd = (HWND)glfwGetWindowHandle();
-
-		if (!fullscreen)	centerWindow(hWnd);
-#endif
-
-		glfwSetWindowSizeCallback(windowResize);
-
-		redBits = glfwGetWindowParam(GLFW_RED_BITS);
-		blueBits = glfwGetWindowParam(GLFW_BLUE_BITS);
-		greenBits = glfwGetWindowParam(GLFW_GREEN_BITS);
-		alphaBits = glfwGetWindowParam(GLFW_ALPHA_BITS);
-
-		if (redBits < 8 && (bits == 32 || bits == 24))
-		{
-			int sayBits = 32;
-			std::ostringstream os;
-			os << "(" << width << ", " << height << ") " << sayBits << "-bit mode could not be enabled. Please try setting your desktop to " << sayBits << "-bit color depth";
-			if (!fullscreen)
-				os << ", or try running in fullscreen.";
-			else
-				os << ".";
-			os << " This resolution may not be supported on your machine.";
-			errorLog(os.str());
-			exit(0); return false;
-		}
-		return true;
-	}
-	else
-		return false;
-#endif
 
 }
 
@@ -1773,9 +1672,6 @@ void Core::quitNestedMain()
 
 void Core::resetTimer()
 {
-#ifdef BBGE_BUILD_GLFW
-	glfwSetTime(0);
-#endif
 	nowTicks = thenTicks = SDL_GetTicks();
 
 	for (int i = 0; i < avgFPS.size(); i++)
@@ -1793,9 +1689,6 @@ void Core::setMousePosition(const Vector &p)
 	Vector lp = core->mouse.position;
 
 	core->mouse.position = p;
-#if !defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_GLFW)
-	glfwSetMousePos(p.x,p.y);
-#endif
 	float px = p.x + virtualOffX;
 	float py = p.y;// + virtualOffY;
 
@@ -1917,10 +1810,6 @@ void Core::main(float runTime)
 	bool wasInactive = false;
 #endif
 
-#ifdef BBGE_BUILD_GLFW
-	if (runTime == -1)
-		glfwSetTime(0);
-#endif
 
 	nowTicks = thenTicks = SDL_GetTicks();
 
@@ -1939,11 +1828,6 @@ void Core::main(float runTime)
 		BBGE_PROF(Core_main);
 
 
-#ifdef BBGE_BUILD_GLFW
-		if (verbose) debugLog("glfwSetTime");
-		dt = glfwGetTime();
-		glfwSetTime(0);
-#endif
 
 
 		if (timeUpdateType == TIMEUPDATE_DYNAMIC)
@@ -3190,10 +3074,6 @@ void Core::showBuffer()
 	//glFlush();
 #endif
 
-#ifdef BBGE_BUILD_GLFW
-	glfwSwapBuffers();
-	//_glfwPlatSwapBuffers();
-#endif
 }
 
 // WARNING: only for use during shutdown
@@ -3311,12 +3191,6 @@ void Core::shutdown()
 
 
 
-#ifdef BBGE_BUILD_GLFW
-	debugLog("Terminate GLFW...");
-		//killGlWindow();
-		glfwTerminate();
-	debugLog("OK");
-#endif
 
 #ifdef BBGE_BUILD_VFS
 	debugLog("Unload VFS...");

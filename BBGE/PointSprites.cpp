@@ -39,10 +39,6 @@ void PointSprites::init()
     }
     else
     {
-#ifdef BBGE_BUILD_GLFW
-        glPointParameterfARB  = (PFNGLPOINTPARAMETERFARBPROC)glfwGetProcAddress("glPointParameterfARB");
-        glPointParameterfvARB = (PFNGLPOINTPARAMETERFVARBPROC)glfwGetProcAddress("glPointParameterfvARB");
-#endif
 
         glPointParameterfARB  = (PFNGLPOINTPARAMETERFARBPROC)SDL_GL_GetProcAddress("glPointParameterfARB");
         glPointParameterfvARB = (PFNGLPOINTPARAMETERFVARBPROC)SDL_GL_GetProcAddress("glPointParameterfvARB");

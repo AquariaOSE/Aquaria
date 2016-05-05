@@ -820,11 +820,6 @@ bool SoundManager::isPlayingMusic()
 
 #endif
 
-#ifdef BBGE_BUILD_BASS20
-
-	return musicStream != 0;
-
-#endif
 
 	return false;
 }
