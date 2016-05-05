@@ -33,7 +33,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Shot.h"
 #include "GridRender.h"
 #include "AutoMap.h"
-#include "PackRead.h"
 
 #include "RoundedRect.h"
 #include "TTFFont.h"

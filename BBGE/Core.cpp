@@ -1272,7 +1272,6 @@ void Core::init()
 {
 	setupFileAccess();
 
-	flags.set(CF_CLEARBUFFERS);
 	quitNestedMainFlag = false;
 #ifdef BBGE_BUILD_GLFW
 	if (!glfwInit())
@@ -2805,7 +2804,7 @@ std::string getScreenshotFilename()
 	}
 }
 
-uint32 Core::getTicks()
+unsigned Core::getTicks()
 {
 #ifdef BBGE_BUILD_SDL
 	return SDL_GetTicks();
@@ -3264,15 +3263,7 @@ void Core::sort()
 
 void Core::clearBuffers()
 {
-	if (flags.get(CF_CLEARBUFFERS))
-	{
-#ifdef BBGE_BUILD_OPENGL
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-		g_pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(int(clearColor.x*255),int(clearColor.y*255),int(clearColor.z*255)), 1.0f, 0 );
-#endif
-	}
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
 }
 
 void Core::setupRenderPositionAndScale()

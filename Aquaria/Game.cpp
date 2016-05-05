@@ -2099,14 +2099,14 @@ void Game::clearDynamicGrid(unsigned char maskbyte /* = OT_MASK_BLACK */)
 {
 	// just to be sure in case the grid/type sizes change,
 	// otherwise there is a chance to write a few bytes over the end of the buffer -- FG
-	compile_assert(sizeof(grid) % sizeof(uint32) == 0);
+	compile_assert(sizeof(grid) % sizeof(unsigned) == 0);
 
 	unsigned char *gridstart = &grid[0][0];
-	uint32 *gridend = (uint32*)(gridstart + sizeof(grid));
-	uint32 *gridptr = (uint32*)gridstart;
+	unsigned *gridend = (unsigned*)(gridstart + sizeof(grid));
+	unsigned *gridptr = (unsigned*)gridstart;
 	// mask out specific bytes
 	// use full uint32 rounds instead of single-bytes to speed things up.
-	const uint32 mask = maskbyte | (maskbyte << 8) | (maskbyte << 16) | (maskbyte << 24);
+	const unsigned mask = maskbyte | (maskbyte << 8) | (maskbyte << 16) | (maskbyte << 24);
 	do
 	{
 		*gridptr &= mask;

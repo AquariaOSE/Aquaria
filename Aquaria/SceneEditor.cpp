@@ -3517,8 +3517,8 @@ void SceneEditor::prevEntityType()
 void SceneEditor::dumpObs()
 {
 	TileVector tv;
-	unsigned char *data = new unsigned char[MAX_GRID * MAX_GRID * sizeof(uint32)];
-	uint32 *ptr = (uint32*)data;
+	unsigned char *data = new unsigned char[MAX_GRID * MAX_GRID * sizeof(unsigned)];
+	unsigned *ptr = (unsigned*)data;
 	for(tv.y = MAX_GRID - 1; ; --tv.y)
 	{
 		for(tv.x = 0; tv.x < MAX_GRID; ++tv.x)

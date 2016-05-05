@@ -35,9 +35,6 @@ BUILD_LINUX
 #include "ActionMapper.h"
 #include "Event.h"
 #include "StateManager.h"
-#include "Light.h"
-#include "Flags.h"
-//#include "Scripting.h"
 #include "Effects.h"
 #include "Localization.h"
 
@@ -1052,7 +1049,7 @@ public:
 
 	void updateCursorFromJoystick(float dt, int spd);
 
-	uint32 getTicks();
+	unsigned getTicks();
 
 	float stopWatch(int d);
 
@@ -1205,7 +1202,6 @@ public:
 	
 	int currentLayerPass;
 	int keys[KEY_MAXARRAY];
-	Flags flags;
 	virtual void debugLog(const std::string &s);
 	virtual void errorLog(const std::string &s);
 	void messageBox(const std::string &title, const std::string &msg);

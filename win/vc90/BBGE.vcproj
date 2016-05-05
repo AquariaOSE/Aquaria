@@ -225,18 +225,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\Collision.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\Collision.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\CommonEvents.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\BBGE\Core.cpp"
 				>
 			</File>
@@ -281,14 +269,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\Flags.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\Flags.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\BBGE\FmodOpenALBridge.cpp"
 				>
 			</File>
@@ -318,6 +298,10 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\LensFlare.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\LensFlare.h"
 				>
 			</File>
 			<File
