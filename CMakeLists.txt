@@ -476,15 +476,12 @@ SET(BBGE_SRCS
     ${BBGEDIR}/AfterEffect.cpp
     ${BBGEDIR}/Base.cpp
     ${BBGEDIR}/BitmapFont.cpp
-    ${BBGEDIR}/Collision.cpp
     ${BBGEDIR}/Core.cpp
-    ${BBGEDIR}/Cube.cpp
     ${BBGEDIR}/DarkLayer.cpp
     ${BBGEDIR}/DebugFont.cpp
     ${BBGEDIR}/Effects.cpp
     ${BBGEDIR}/Emitter.cpp
     ${BBGEDIR}/Event.cpp
-    ${BBGEDIR}/Flags.cpp
     ${BBGEDIR}/FrameBuffer.cpp
     ${BBGEDIR}/Gradient.cpp
     ${BBGEDIR}/Joystick.cpp
