@@ -452,7 +452,6 @@ void WorldMapRender::setProperTileColor(WorldMapTile *tile)
 	}
 }
 
-#ifdef AQUARIA_BUILD_MAPVIS
 
 static void tileDataToVis(WorldMapTile *tile, Vector **vis)
 {
@@ -565,13 +564,11 @@ static void resetTileAlpha(WorldMapTile *tile, const unsigned char *savedTexData
 	tile->q->texture->write(0, 0, tile->q->texture->width, tile->q->texture->height, savedTexData);
 }
 
-#endif  // AQUARIA_BUILD_MAPVIS
 
 
 void WorldMapRender::setVis(WorldMapTile *tile)
 {
 	if (!tile) return;
-#ifdef AQUARIA_BUILD_MAPVIS
 
 
 	tile->q->color = Vector(1,1,1);
@@ -589,13 +586,11 @@ void WorldMapRender::setVis(WorldMapTile *tile)
 
 	lastVisQuad = tile->q;
 	lastVisTile = tile;
-#endif
 }
 
 void WorldMapRender::clearVis(WorldMapTile *tile)
 {
 	if (!tile) return;
-#ifdef AQUARIA_BUILD_MAPVIS
 	if (visMethod == VIS_VERTEX)
 	{
 		if (tile->q)
@@ -610,7 +605,6 @@ void WorldMapRender::clearVis(WorldMapTile *tile)
 			savedTexData = 0;
 		}
 	}
-#endif
 }
 
 
@@ -1151,7 +1145,6 @@ void WorldMapRender::onUpdate(float dt)
 	}
 	else
 	{
-#ifdef AQUARIA_BUILD_MAPVIS
 		if (!dsq->isInCutscene() && dsq->game->avatar && activeTile
 	#ifdef AQUARIA_BUILD_SCENEEDITOR
 			&& !dsq->game->sceneEditor.isOn()
@@ -1193,7 +1186,6 @@ void WorldMapRender::onUpdate(float dt)
 				}
 			}
 		}
-#endif
 	}
 
 	lastMousePosition = core->mouse.position;
