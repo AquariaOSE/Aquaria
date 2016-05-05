@@ -578,11 +578,6 @@ void UserSettings::apply()
 	if (dsq->game)
 	{
 		dsq->game->bindInput();
-
-		if (dsq->game->avatar)
-		{
-			dsq->game->avatar->updateHeartbeatSfx();
-		}
 	}
 
 	dsq->bindInput();

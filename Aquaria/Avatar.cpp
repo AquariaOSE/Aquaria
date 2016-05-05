@@ -35,14 +35,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef AQ_TEST_QUADTRAIL
 	#include "QuadTrail.h"
 
-	QuadTrail *quadTrail = 0;
+	static QuadTrail *quadTrail = 0;
 #endif
-
-Path *lastWaterBubble = 0;
-bool lastJumpOutFromWaterBubble = false;
-
-bool useSpiritDistance = true;
-bool inSpiritWorld = false;
 
 const float MULT_DMG_CRABCOSTUME = 0.75;
 const float MULT_DMG_FISHFORM = 1.5;
@@ -127,16 +121,6 @@ const float COLLIDE_MOD_FISH = 0.1f;
 
 const int requiredDualFormCharge = 3;
 
-bool usingDigital = false;
-
-Bone *bone_head = 0;
-Bone *bone_dualFormGlow = 0;
-
-
-bool _isUnderWater;
-
-//HRECORD avatarRecord = 0;
-
 
 Vector Target::getWorldPosition()
 {
@@ -207,11 +191,6 @@ void Avatar::bindInput()
 
 }
 
-int Avatar::getNotesOpen()
-{
-	return SongIcon::notesOpen;
-}
-
 // note: z is set to 1.0 when we want the aim to be used as the shot direction
 // otherwise the shot will head straight to the target
 Vector Avatar::getAim()
@@ -254,34 +233,9 @@ Vector Avatar::getForwardAim()
 	return aim;
 }
 
-void Avatar::postInit()
-{
-	// post init isn't early enough
-	/*
-	Entity::postInit();
-	*/
-}
-
 void Avatar::onAnimationKeyPassed(int key)
 {
 	Entity::onAnimationKeyPassed(key);
-}
-
-void Avatar::doBounce()
-{
-	float ba = 0.75;
-	if (isRolling())
-		ba = 1.0;
-	float len = vel.getLength2D();
-	Vector I = vel/len;
-	Vector N = dsq->game->getWallNormal(position);
-
-	if (!N.isZero())
-	{
-		//2*(-I dot N)*N + I
-		vel = 2*(-I.dot(N))*N + I;
-		vel.setLength2D(len*ba);
-	}
 }
 
 Vector randCirclePos(Vector position, int radius)
@@ -1236,54 +1190,9 @@ void Avatar::playHitSound()
 	core->sound->playSfx(os.str());
 }
 
-const int beatHealth = 3;
-void Avatar::updateHeartbeatSfx(float t)
-{
-	/*
-	if (heartbeat)
-	{
-		BASS_CHANNELINFO info;
-		BASS_ChannelGetInfo(heartbeat, &info);
-		int num = (beatHealth - health);
-		float wantFreq = 1000 + num*300;
-		float useFreq = ((wantFreq*info.freq)/1000.0f);
-		float vol = 75 + (num*25)*0.5f;
-		vol *= (core->sound->getUseSfxVol()/100.0f);
-		//int vol = 100;
-		BASS_ChannelSlideAttributes(heartbeat, useFreq, vol, -101, 1000.0f*t);
-	}
-	*/
-}
-
 void Avatar::onHealthChange(float change)
 {
 	updateDamageVisualEffects();
-
-	if (health <= beatHealth && health > 0)
-	{
-		/*
-		if (!heartbeat)
-		{
-			//debugLog("starting heartbeat");
-			heartbeat = core->sound->playSfx("Heartbeat", 255, 0, 1000, 1);
-			//core->sound->playSfx("Heartbeat");
-		}
-		*/
-		updateHeartbeatSfx(0.5);
-	}
-	if (health > beatHealth)
-	{
-		/*
-		if (heartbeat)
-		{
-			//debugLog("stopping heartbeat");
-			BASS_CHANNELINFO info;
-			BASS_ChannelGetInfo(heartbeat, &info);
-			BASS_ChannelSlideAttributes(heartbeat, info.freq, -2, -101, 1000*2);
-			heartbeat = 0;
-		}
-		*/
-	}
 }
 
 void Avatar::revive()
@@ -1458,7 +1367,6 @@ void Avatar::closeSingingInterface()
 	if (singing)
 	{
 		core->setMouseConstraint(false);
-		usingDigital = false;
 		quickSongCastDelay = 1;
 
 		// HACK: this prevents being "locked" away from the seahorse... so naija can
@@ -1791,8 +1699,6 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		{
 			skeletalSprite.alphaMod = 0;
 			canChangeForm = false;
-			useSpiritDistance = false;
-			inSpiritWorld = true;
 		}
 		/*
 		if (hair)
@@ -1826,15 +1732,9 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 	//}
 }
 
-int Avatar::getLastNote()
-{
-	return lastNote;
-}
-
 void Avatar::singNote(int note)
 {
 	currentSong.notes.push_back(note);
-	lastNote = note;
 }
 
 void Avatar::updateSingingInterface(float dt)
@@ -2139,20 +2039,6 @@ void Avatar::updateTargets(float dt, bool override)
 	}
 }
 
-void Avatar::loseTargets()
-{
-	for (int i = 0; i < targets.size(); i++)
-	{
-		Entity *e = targets[i].e;
-		if (e)
-		{
-			lostTarget(i, targets[i].e);
-			targets[i].e = 0;
-			targetUpdateDelay = maxTargetDelay;
-		}
-	}
-}
-
 void Avatar::updateTargetQuads(float dt)
 {
 
@@ -2424,18 +2310,6 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	}
 
 	return firedShot;
-}
-
-Vector Avatar::getFacing()
-{
-	if (vel.isLength2DIn(2) && rotation.z == 0)
-	{
-		if (isfh())
-			return Vector(1,0);
-		else
-			return Vector(-1,0);
-	}
-	return getForward();
 }
 
 void Avatar::switchDualFormMode()
@@ -2942,8 +2816,7 @@ void Avatar::formAbility(int ability)
 				Path *p = dsq->game->getNearestPath(position, PATH_SPIRITPORTAL);
 				if (p && p->isCoordinateInside(position))
 				{
-					if (inSpiritWorld)
-						changeForm(FORM_NORMAL);
+					changeForm(FORM_NORMAL);
 					dsq->game->warpToSceneFromNode(p);
 				}
 			}
@@ -3444,15 +3317,6 @@ Vector Avatar::getWallNormal(TileVector t)
 	return dsq->game->getWallNormal(t.worldVector(), 5)*-1;
 }
 
-int Avatar::getSingingInterfaceRadius()
-{
-	return singingInterfaceRadius;
-}
-
-int Avatar::getOpenSingingInterfaceRadius()
-{
-	return openSingingInterfaceRadius;
-}
 
 bool Avatar::isSwimming()
 {
@@ -3799,6 +3663,16 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	web = 0;
 
+	bone_dualFormGlow = 0;
+	bone_head = 0;
+	boneLeftHand = 0;
+	boneRightHand = 0;
+	boneLeftArm = 0;
+	boneFish2 = 0;
+
+	lastWaterBubble = 0;
+	lastJumpOutFromWaterBubble = false;
+
 	lastBurstType = BURST_NONE;
 	dsq->loops.shield = BBGE_AUDIO_NOCHANNEL;
 	leftHandEmitter = rightHandEmitter = 0;
@@ -3808,7 +3682,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	dsq->loops.charge = BBGE_AUDIO_NOCHANNEL;
 	//heartbeat = 0;
 
-	lastNote = -1;
 	headTextureTimer = 0;
 	bone_dualFormGlow = 0;
 	//dsq->continuity.dualFormCharge = 0;
@@ -3825,6 +3698,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	songInterfaceTimer = 0;
 	quickSongCastDelay = 0;
 	flourish = false;
+	_isUnderWater = false;
 
 	blockSinging = false;
 	singing = false;
@@ -4183,7 +4057,6 @@ void Avatar::refreshModel(std::string file, const std::string &skin, bool forceI
 
 Avatar::~Avatar()
 {
-	songIcons.clear();
 }
 
 void Avatar::destroy()
@@ -4664,50 +4537,6 @@ void Avatar::render()
 void Avatar::onRender()
 {
 	Entity::onRender();
-}
-
-int Avatar::getBeamWidth()
-{
-	const int MAX_BEAM_LEN = 50;
-	Vector mov = dsq->getGameCursorPosition() - this->position;
-	mov.setLength2D(1);
-	TileVector t(position);
-	Vector tile(t.x, t.y);
-	int c = 0;
-	while (c < MAX_BEAM_LEN)
-	{
-		bool hit = false;
-		tile += mov;
-		TileVector t;
-		t.x = int(tile.x);
-		t.y = int(tile.y);
-		if (dsq->game->isObstructed(t))
-		{
-			hit = true;
-		}
-
-		FOR_ENTITIES(i)
-		{
-			Entity *e = *i;
-			if (e != this)
-			{
-				TileVector et(e->position);
-				Vector t1(et.x, et.y);
-				Vector t2(tile.x, tile.y);
-				Vector diff = t1-t2;
-				if (diff.getSquaredLength2D() <= 1)
-				{
-					// HACK: replace damage function
-					//e->damage(1, 0, this);
-					hit = true;
-				}
-			}
-		}
-		if (hit)
-			break;
-		c++;
-	}
-	return c * TILE_SIZE;
 }
 
 void Avatar::onEnterState(int action)
@@ -5943,16 +5772,6 @@ void Avatar::onUpdate(float dt)
 			tripCount ++;
 			if (tripCount > 10)
 			{
-				/*
-				// hacktastic
-				EMOTE_NAIJAEVILLAUGH	= 0
-				EMOTE_NAIJAGIGGLE		= 1
-				EMOTE_NAIJALAUGH		= 2
-				EMOTE_NAIJASADSIGH		= 3
-				EMOTE_NAIJASIGH			= 4
-				EMOTE_NAIJAWOW			= 5
-				EMOTE_NAIJAUGH			= 6
-				*/
 				float p = dsq->continuity.tripTimer.getPerc();
 				if (p > 0.6f)
 				{
@@ -5971,9 +5790,9 @@ void Avatar::onUpdate(float dt)
 					if (chance(80))
 					{
 						if (chance(60))
-							dsq->emote.playSfx(2);
+							dsq->emote.playSfx(EMOTE_NAIJALAUGH);
 						else
-							dsq->emote.playSfx(0);
+							dsq->emote.playSfx(EMOTE_NAIJAEVILLAUGH);
 					}
 				}
 				else
@@ -5984,7 +5803,7 @@ void Avatar::onUpdate(float dt)
 						dsq->shakeCamera(5, 4);
 					tripper->color.interpolateTo(Vector(1, 0.2, 0.2), 3);
 					if (chance(75))
-						dsq->emote.playSfx(6);
+						dsq->emote.playSfx(EMOTE_NAIJAUGH);
 				}
 
 				tripCount = 0;
@@ -6042,14 +5861,11 @@ void Avatar::onUpdate(float dt)
 
 	if (dsq->continuity.form == FORM_SPIRIT)
 	{
-		if (useSpiritDistance)
+		if (formTimer > 1)
 		{
-			if (formTimer > 1)
+			if (!(bodyPosition - position).isLength2DIn(SPIRIT_RANGE))
 			{
-				if (!(bodyPosition - position).isLength2DIn(SPIRIT_RANGE))
-				{
-					changeForm(FORM_NORMAL);
-				}
+				changeForm(FORM_NORMAL);
 			}
 		}
 		// here
