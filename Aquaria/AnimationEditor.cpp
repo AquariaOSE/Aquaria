@@ -618,11 +618,11 @@ void AnimationEditor::rebuildKeyframeWidgets()
 		offx = keyframeWidgets[i]->offset.x;
 	}
 	keyframeWidgets.clear();
-	for (int i = 0; i < 1000; i++)
+	if (Animation *a = editSprite->getCurrentAnimation())
 	{
-		if (editSprite->getCurrentAnimation())
+		for (int i = 0; i < 1000; i++)
 		{
-			SkeletalKeyframe *key = editSprite->getCurrentAnimation()->getKeyframe(i);
+			SkeletalKeyframe *key = a->getKeyframe(i);
 			if (!key) break;
 			KeyframeWidget *k = new KeyframeWidget(i);
 			k->offset.x = offx;
