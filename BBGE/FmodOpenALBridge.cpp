@@ -139,17 +139,11 @@ private:
     bool stopped; // true if enqueued deletion
     unsigned int samples_done;  // Number of samples played and dequeued
 
-#ifdef BBGE_BUILD_SDL
     static SDL_Thread *decoderThread;
     static LockedQueue<OggDecoder*> decoderQ;
     static volatile bool stop_thread;
     static std::list<OggDecoder*> decoderList; // used by decoder thread only
 
-#else
-#warning Threads not supported, music may cut out on area changes!
-// ... because the stream runs out of decoded data while the area is
-// still loading, so OpenAL aborts playback.
-#endif
 
     static void detachDecoder(OggDecoder *);
 };
@@ -181,16 +175,13 @@ static const ov_callbacks ogg_memory_callbacks = {
     OggDecoder::mem_tell
 };
 
-#ifdef BBGE_BUILD_SDL
 SDL_Thread *OggDecoder::decoderThread = NULL;
 LockedQueue<OggDecoder*> OggDecoder::decoderQ;
 volatile bool OggDecoder::stop_thread;
 std::list<OggDecoder*> OggDecoder::decoderList;
-#endif
 
 void OggDecoder::startDecoderThread()
 {
-#ifdef BBGE_BUILD_SDL
     stop_thread = false;
 #ifdef BBGE_BUILD_SDL2
     decoderThread = SDL_CreateThread((int (*)(void *))decode_loop, "OggDecoder", NULL);
@@ -202,12 +193,10 @@ void OggDecoder::startDecoderThread()
         debugLog("Failed to create Ogg Vorbis decode thread: "
                  + std::string(SDL_GetError()));
     }
-#endif
 }
 
 void OggDecoder::stopDecoderThread()
 {
-#ifdef BBGE_BUILD_SDL
     if (decoderThread)
     {
         stop_thread = true;
@@ -215,27 +204,22 @@ void OggDecoder::stopDecoderThread()
         SDL_WaitThread(decoderThread, NULL);
         decoderThread = NULL;
     }
-#endif
 }
 
 void OggDecoder::detachDecoder(OggDecoder *ogg)
 {
-#ifdef BBGE_BUILD_SDL
     if(decoderThread)
     {
         ogg->thread = true;
         decoderQ.push(ogg);
     }
-#endif
 }
 
 void OggDecoder::decode_loop(OggDecoder *this_)
 {
     while (!this_->stop_thread)
     {
-#ifdef BBGE_BUILD_SDL
         SDL_Delay(10);
-#endif
         // Transfer decoder to this background thread
         OggDecoder *ogg;
         while(decoderQ.pop(ogg))

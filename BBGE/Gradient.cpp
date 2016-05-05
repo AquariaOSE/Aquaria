@@ -59,14 +59,6 @@ void Gradient::makeHorizontal(Vector c1, Vector c2)
 
 void Gradient::onRender()
 {
-#ifdef BBGE_BUILD_DIRECTX
-	core->blitD3DGradient
-		(	ulc0.getD3DColor(alpha.x),
-			ulc1.getD3DColor(alpha.x),
-			ulc2.getD3DColor(alpha.x),
-			ulc3.getD3DColor(alpha.x));
-#endif
-#ifdef BBGE_BUILD_OPENGL
 	//glNormal3f(0, 0, 1);
 
 	glBegin(GL_QUADS);
@@ -100,6 +92,5 @@ void Gradient::onRender()
 		glVertex3f(-0.5, 0.5, 0);
 		*/
 	glEnd();
-#endif
 }
 

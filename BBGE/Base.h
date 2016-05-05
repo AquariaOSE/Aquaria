@@ -60,46 +60,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include <glfw.h>
 	#include "glext.h"
 	//#include "glext.h"
-#elif BBGE_BUILD_DIRECTX
-
-	#if defined(BBGE_BUILD_X360) && !defined(BBGE_BUILD_WINDOWS)
-
-		#include <xtl.h>
-		#include <ppcintrinsics.h>
-
-	#endif // _XBOX
-
-	#if defined(BBGE_BUILD_X360) && defined(BBGE_BUILD_WINDOWS)
-		// Using the win32\ path prefix on the D3D include files makes sure that the Xbox 360 
-		// version of D3D is used, not the DirectX SDK version.
-		#include <win32\vs2005\d3d9.h>
-		#include <win32\vs2005\d3dx9.h>
-		#pragma warning(disable:4100)
-
-		#include "XTLOnPC.h"
-
-	#endif // _PC
-
-	#if defined(BBGE_BUILD_X360)
-		#include <xgraphics.h>
-		#include <xboxmath.h>
-		#include <stdio.h>
-		#include <stdarg.h>
-		#include <assert.h>
-	#endif
 #endif
 
-#ifdef BBGE_BUILD_SDL
 
 	#include "SDL.h"
 
-#endif
 
-#if defined(BBGE_BUILD_OPENGL)
 	#define GL_GLEXT_LEGACY 1
 	#include "gl.h"
 	#include "glext.h"
-#endif
 
 #define compile_assert(pred) switch(0){case 0:case (pred):;}
 
@@ -233,9 +202,6 @@ Direction getOppositeDir(Direction dir);
 Direction getNextDirClockwise(Direction dir);
 Vector colorRGB(int r, int g, int b);
 
-#ifdef BBGE_BUILD_DIRECTX
-	typedef unsigned int GLuint;
-#endif
 GLuint generateEmptyTexture(int res);
 
 //void pForEachFile(std::string path, std::string type, void callback(const std::string &filename, int param), int param);

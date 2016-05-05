@@ -50,7 +50,6 @@ void Strand::onUpdate(float dt)
 
 void Strand::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	const int numSegments = segments.size();
 	if (numSegments == 0) return;
 
@@ -90,5 +89,4 @@ void Strand::onRender()
 		glVertex2f(segments[i]->position.x, segments[i]->position.y);
 	}
 	glEnd();
-#endif
 }

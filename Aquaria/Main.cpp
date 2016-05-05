@@ -66,20 +66,6 @@ static void CheckConfig(void)
 }
 
 
-#if defined(BBGE_BUILD_WINDOWS) && !defined(BBGE_BUILD_SDL)
-	int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
-						HINSTANCE	hPrevInstance,		// Previous Instance
-						LPSTR		lpCmdLine,			// Command Line Parameters
-						int			nCmdShow)			// Window Show State
-	{
-		#ifdef _DEBUG
-			_CrtSetDbgFlag ( _CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF); 
-			_CrtSetReportMode ( _CRT_ERROR, _CRTDBG_MODE_DEBUG);
-		#endif
-
-        std::string dsqParam = GetCommandLine();
-
-#else
 
 	extern "C" int main(int argc,char *argv[])
 	{
@@ -102,7 +88,6 @@ static void CheckConfig(void)
 		extraDataDir = AQUARIA_EXTRA_DATA_DIR;
 #endif
 
-#endif
 
         CheckConfig();
 

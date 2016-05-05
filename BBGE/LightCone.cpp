@@ -28,7 +28,6 @@ LightCone::LightCone() : RenderObject()
 
 void LightCone::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	RenderObject::onRender();
 	glBegin(GL_QUADS);
 		//glNormal3f( 0.0f, 0, 1.0f);
@@ -41,5 +40,4 @@ void LightCone::onRender()
 		glColor4f(color.x, color.y, color.z,0*alpha.x);
 		glVertex3f(-spread/2,  length,  0);
 	glEnd();
-#endif
 }

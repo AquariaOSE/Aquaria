@@ -58,7 +58,6 @@ void QuadTrail::onRender()
 {
 	if (numPoints < 2) return;
 
-#ifdef BBGE_BUILD_OPENGL
 	//glDisable(GL_CULL_FACE);
 	int c = 0;
 	Vector p, diff, dl, dr;
@@ -114,7 +113,6 @@ void QuadTrail::onRender()
 			glVertex2f((*i).point.x, (*i).point.y);
 		}
 	glEnd();
-#endif
 }
 
 void QuadTrail::onUpdate(float dt)

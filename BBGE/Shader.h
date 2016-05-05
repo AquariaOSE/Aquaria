@@ -45,10 +45,8 @@ public:
 protected:
 	std::string vertFile, fragFile;
 	std::string vertSrc, fragSrc;
-#ifdef BBGE_BUILD_OPENGL
 	GLuint g_programObj;
 	int numUniforms;
-#endif
 
 private:
 	static void staticInit();
