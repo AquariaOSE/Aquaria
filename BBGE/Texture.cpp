@@ -31,10 +31,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 
-#ifdef Z2D_J2K
-
-	#include "..\j2k-codec\j2k-codec.h"
-#endif
 
 	GLint Texture::filter = GL_LINEAR;
 
