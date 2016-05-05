@@ -837,10 +837,6 @@ bool Core::initInputLibrary()
 {
 	core->mouse.position = Vector(getWindowWidth()/2, getWindowHeight()/2);
 
-#ifdef BBGE_BUILD_GFLW
-	glfwDisable(GLFW_MOUSE_CURSOR);
-
-#endif
 	for (int i = 0; i < KEY_MAXARRAY; i++)
 	{
 		keys[i] = 0;
@@ -2760,9 +2756,7 @@ void Core::shutdownJoystickLibrary()
 {
 	if (joystickEnabled) {
 		joystick.shutdown();
-#ifdef BBGE_BUIDL_SDL
 		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-#endif
 		joystickEnabled = false;
 	}
 }
