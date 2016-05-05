@@ -515,14 +515,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Aquaria\WaterFont.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Aquaria\WaterFont.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Aquaria\WaterSurfaceRender.cpp"
 				>
 			</File>
