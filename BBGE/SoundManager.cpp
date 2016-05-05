@@ -756,7 +756,7 @@ void SoundManager::update(float dt)
 
 #endif
 
-#if defined(BBGE_BUILD_BASS20) || defined(BBGE_BUILD_FMODEX) || defined(BBGE_BUILD_SDLMIXER)
+#if defined(BBGE_BUILD_FMODEX)
 	if (wasPlayingVoice && !isPlayingVoice())
 	{
 		wasPlayingVoice = false;
