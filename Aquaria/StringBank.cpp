@@ -48,7 +48,7 @@ void StringBank::load()
 
 void StringBank::_load(const std::string &file)
 {
-	//debugLog("StringBank::load("+file+")");
+
 
 	InStream in(file.c_str());
 
@@ -59,9 +59,7 @@ void StringBank::_load(const std::string &file)
 	{
 		std::getline(in, line);
 
-		//std::ostringstream os;
-		//os << idx << ": StringBank Read Line: " << line;
-		//debugLog(os.str());
+
 
 		if (!line.empty() && line[0] == ' ')
 			line = line.substr(1, line.size());

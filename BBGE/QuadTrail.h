@@ -50,7 +50,7 @@ public:
 
 	float lifeRate;
 protected:
-	
+
 	Vector backOffset;
 	int numPoints;
 	int maxPoints;

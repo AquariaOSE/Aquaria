@@ -114,7 +114,7 @@ void Cutscene::playMarker(CutsceneMarker *m)
 		}
 		if (r = m->e->FirstChildElement(""))
 		{
-			
+
 		}
 	}
 }

@@ -217,7 +217,7 @@ public:
 		ACT_RANGE = 1
 	};
 	void destroy();
-	//void damage(int amount, Spell *spell=0, Entity *attacker=0);
+
 	bool isEntityDead() const {return entityDead;}
 	std::string name;
 	Vector vel;
@@ -238,14 +238,13 @@ public:
 	void push(const Vector &vec, float time, float maxSpeed, float dmg);
 
 	bool canSetState(int state);
-	
+
 	virtual void message(const std::string &msg, int v) {}
 	virtual int messageVariadic(lua_State *L, int nparams) { return 0; }
 
 	bool isUnderWater(const Vector &o=Vector());
 
-	//virtual void onHitBySpell(Spell *spell) {}
-	//virtual void onCollide(Entity *e);
+
 
 	virtual bool damage(const DamageData &d);
 	virtual bool canShotHit(const DamageData &d) { return true; }
@@ -313,7 +312,7 @@ public:
 		STATE_TITLE			=24
 	};
 	virtual void onNotify(Entity *notify){}
-	//void followPath(Path *p, int spd, int loop, bool deleteOnEnd = false);
+
 	float followPath(Path *p, float speed, int dir, bool deleteOnEnd = false);
 	Entity *attachedTo;
 	bool touchAvatarDamage(int radius, float dmg, const Vector &override=Vector(-1,-1,-1), float speed=0, float pushTime = 0, Vector collidePos = Vector(0,0,0));
@@ -334,7 +333,7 @@ public:
 	void doEntityAvoidance(float dt, int range, float mod, Entity *ignore =0);
 	void setMaxSpeed(float ms);
 	Entity *findTarget(int dist, int type, int t=0);
-	//bool hasTarget() { return target != 0; }
+
 	bool hasTarget(int t=0);
 	bool isTargetInRange(int range, int t=0);
 	void doGlint(const Vector &position, const Vector &scale=Vector(2,2), const std::string &tex="Glint", RenderObject::BlendTypes bt=BLEND_DEFAULT);
@@ -419,10 +418,7 @@ public:
 	Vector ridingOnEntityOffset;
 	void moveOutOfWall();
 	bool isSittingOnInvisibleIn();
-	/*
-	void setCrawling(bool on) { crawling = on; }
-	bool isCrawling() { return crawling; }
-	*/
+
 	void flipToVel();
 	bool isInCurrent() { return inCurrent; }
 	void clearTargetPoints();
@@ -456,10 +452,10 @@ public:
 	void clampToHit();
 	bool updateLocalWarpAreas(bool affectAvatar);
 	virtual void entityDied(Entity *e);
-	//bool registerEntityDied;
+
 	bool clampToSurface(int tcheck=0, Vector usePos=Vector(0,0), TileVector hitTile=TileVector(0,0));
 	bool checkSurface(int tcheck, int state, float statet);
-	//static Shader blurShader;
+
 	std::string naijaReaction;
 	Vector lookAtPoint;
 	Vector getLookAtPoint();
@@ -533,7 +529,7 @@ protected:
 	int lance;
 	Bone *lanceBone;
 	void updateLance(float dt);
-	//InterpolatedVector blurShaderAnim;
+
 
 
 	int fhScale, fvScale;
@@ -555,9 +551,9 @@ protected:
 
 	Vector getMoveVel();
 	DisabledDamageTypes disabledDamageTypes;
-	//bool crawling;
 
-	//Vector backupPos, backupVel;
+
+
 	virtual void onIdle() {}
 	virtual void onHeal(int type){}
 	virtual void onDamage(DamageData &d){}
@@ -578,7 +574,7 @@ protected:
 
 	virtual void onFreeze(){}
 
-	//Entity *target;
+
 	std::vector<Entity*>targets;
 	virtual void onAlwaysUpdate(float dt){}
 	virtual void onUpdateFrozen(float dt){}
@@ -589,7 +585,7 @@ protected:
 
 	void onEnterState(int action);
 	void onExitState(int action);
-	//virtual bool onDamage(int amount, Spell *spell, Entity *attacker);
+
 	bool invincibleBreak;
 
 	bool entityDead;
@@ -606,10 +602,10 @@ protected:
 
 	float pushMaxSpeed;
 	std::string currentAnim;
-	
+
 
 protected:
-	
+
 	Timer poisonTimer, poisonBitTimer;
 	float poison;
 private:

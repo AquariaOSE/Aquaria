@@ -50,11 +50,7 @@ class CollisionShape
 public:
 	CollisionShape();
 
-	/*
-	void addCollisionGroup(int group);
-	void removeCollisionGroup(int group);
-	void canCollideWithGroup();
-	*/
+
 
 	void updatePosition(const Vector &position);
 
@@ -93,17 +89,14 @@ public:
 	Vector offsetPosition;
 
 	bool compareLayer(CollisionShape &c);
-	//bool compareMask(CollisionShape &c);
+
 	int getLayer() { return layer; }
 	void setLayer(int layer) { this->layer = layer; }
 
 	bool project;
 protected:
 	int layer;
-	/*
-	typedef std::vector<int> CollisionLayerMask;
-	CollisionLayerMask colliderMask, collideeMask;
-	*/
+
 	std::vector<Vector> corners;
 	Vector position;
 	bool active;
@@ -116,31 +109,6 @@ protected:
 	Type type;
 };
 
-/*
-class CollisionObject
-{
-public:
-	void onCollision();
-	void collide()
-	{
-		CollisionResult c;
-		for (int i = 0; i < collisionManager->colliders.size(); i++)
-		{
-			c = findOverlap(collisionManager->colliders[i]->collisionShape);
-			if (c.collided)
-			{
-				position -= c.overlap;
-				collisionShape.position =
-			}
-		}
-	}
-};
 
-class CollisionManager
-{
-public:
-	void addCollider(
-};
-*/
 
 #endif

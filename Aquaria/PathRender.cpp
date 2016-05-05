@@ -22,14 +22,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 PathRender::PathRender() : RenderObject()
 {
-	//color = Vector(1, 0, 0);
+
 	position.z = 5;
 	cull = false;
 	alpha = 0.5f;
 }
 
 void PathRender::onRender()
-{	
+{
 	const int pathcount = dsq->game->getNumPaths();
 	if (pathcount <= 0)
 		return;
@@ -67,9 +67,9 @@ void PathRender::onRender()
 						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y2);
 						glVertex2f(nd->position.x+p->rect.x2, nd->position.y+p->rect.y2);
 						glVertex2f(nd->position.x+p->rect.x2, nd->position.y+p->rect.y1);
-						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y1);														
+						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y1);
 					glEnd();
-			
+
 					glColor4f(1, 1, 1, 0.3);
 					glBegin(GL_LINES);
 						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y1);
@@ -103,7 +103,7 @@ void PathRender::onRender()
 				glColor4f(1, 0.5, 0.5, a);
 
 			glPushMatrix();
-			glTranslatef(nd->position.x, nd->position.y, 0);			
+			glTranslatef(nd->position.x, nd->position.y, 0);
 			drawCircle(32);
 			glPopMatrix();
 		}

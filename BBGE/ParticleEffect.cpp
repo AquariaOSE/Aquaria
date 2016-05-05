@@ -54,18 +54,7 @@ void ParticleEffect::transfer(ParticleEffect *pe)
 		Emitter *e = pe->addNewEmitter();
 		e->data = (*i)->data;
 		e->setTexture(e->data.texture);
-		/*
-		if (e->data.flipH)
-		{
-			if (!e->isfh())
-				e->flipHorizontal();
-		}
-		else
-		{
-			if (e->isfh())
-				e->flipHorizontal();
-		}
-		*/
+
 	}
 }
 
@@ -112,7 +101,7 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 	Emitter *currentEmitter = 0;
 	while (inf >> token)
 	{
-		//debugLog("Token: " + token);
+
 		if (token == "[Emitter]")
 		{
 			state = 1;
@@ -156,11 +145,7 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			currentEmitter->data.color.data->path.addPathNode(Vector(x,y,z), t);
 			currentEmitter->data.color.startPath(currentEmitter->data.life);
 
-			/*
-			std::ostringstream os;
-			os << "colorNode: " << t << ", " << x << ", " << y << ", " << z;
-			debugLog(os.str());
-			*/
+
 		}
 		if (state == 3 && currentEmitter)
 		{
@@ -172,11 +157,7 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			currentEmitter->data.number.data->path.addPathNode(num, t);
 			currentEmitter->data.number.startPath(currentEmitter->data.life);
 
-			/*
-			std::ostringstream os;
-			os << "numberNode: " << t << ", " << num;
-			debugLog(os.str());
-			*/
+
 		}
 		if (state == 4 && currentEmitter)
 		{
@@ -188,11 +169,7 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			currentEmitter->data.alpha.data->path.addPathNode(num, t);
 			currentEmitter->data.alpha.startPath(currentEmitter->data.life);
 
-			/*
-			std::ostringstream os;
-			os << "alphaNode: " << t << ", " << num;
-			debugLog(os.str());
-			*/
+
 		}
 		if (state == 5 && currentEmitter)
 		{
@@ -204,11 +181,7 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			currentEmitter->data.rotation.data->path.addPathNode(Vector(0,0,num), t);
 			currentEmitter->data.rotation.startPath(currentEmitter->data.life);
 
-			/*
-			std::ostringstream os;
-			os << "rotationNode: " << t << ", " << num;
-			debugLog(os.str());
-			*/
+
 		}
 		if (state == 6 && currentEmitter)
 		{
@@ -220,11 +193,7 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			currentEmitter->data.scale.data->path.addPathNode(Vector(sx, sy), t);
 			currentEmitter->data.scale.startPath(currentEmitter->data.life);
 
-			/*
-			std::ostringstream os;
-			os << "scaleNode: " << t << ", " << sx << ", " << sy;
-			debugLog(os.str());
-			*/
+
 		}
 
 
@@ -422,12 +391,7 @@ void ParticleEffect::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
 
-	/*
-	for (Emitters::iterator i = emitters.begin(); i != emitters.end(); i++)
-	{
-		(*i)->update(dt);
-	}
-	*/
+
 
 	if (effectLifeCounter == 0)
 	{

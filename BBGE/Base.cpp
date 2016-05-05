@@ -160,7 +160,6 @@ unsigned hash(const std::string &string)
     return hash;
 }
 
-/* hash * 33 + c */
 
 
 static unsigned char lowerToUpperTable[256];
@@ -351,7 +350,7 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 
 void drawCircle(float radius, int stepSize)
 {
-	//glDisable(GL_CULL_FACE);
+
 
 	glBegin(GL_POLYGON);
 	{
@@ -362,7 +361,7 @@ void drawCircle(float radius, int stepSize)
 	}
 	glEnd();
 
-	//glEnable(GL_CULL_FACE);
+
 }
 
 void exit_error(const std::string &message)
@@ -400,68 +399,7 @@ bool chancef(float p)
 	return ((rand()%100) <= p*100);
 }
 
-/*
-PHYSFS_file *openRead(const std::string &f)
-{
 
-	PHYSFS_file *file = PHYSFS_openRead(f.c_str());
-	if (!file)
-	{
-		errorLog ("Could not open [" + f + "]");
-		exit(0);
-	}
-
-	return file;
-}
-
-
-void pfread(void *buffer, PHYSFS_uint32 size, PHYSFS_uint32 objs, PHYSFS_file *handle)
-{
-	PHYSFS_read(handle, buffer, size, objs);
-}
-
-void pfseek(PHYSFS_file *handle,PHYSFS_uint64 byte,int origin)
-{
-	if (origin == SEEK_CUR)
-	{
-		byte += PHYSFS_tell(handle);
-	}
-	PHYSFS_seek(handle,byte);
-}
-
-void pfclose(PHYSFS_file *handle)
-{
-	PHYSFS_close(handle);
-}
-
-std::string pLoadStream(const std::string &filename)
-{
-	PHYSFS_file *f = openRead(filename.c_str());
-	int len = PHYSFS_fileLength(f);
-	std::string s;
-	for (int i = 0; i < len; i++)
-	{
-		char p;
-		PHYSFS_read(f, &p, sizeof(char), 1);
-		s += p;
-	}
-	//std::istringstream is(s);
-
-	PHYSFS_close(f);
-	return s;
-
-}
-
-
-void pSaveStream(const std::string &filename, std::ostringstream &os)
-{
-	PHYSFS_file *f = PHYSFS_openWrite(filename.c_str());
-	//int size = os.str().size();
-	//PHYSFS_write(f, (void*)size, sizeof(int), 1);
-	PHYSFS_write(f, (void*)os.str().c_str(), sizeof(char)*os.str().size(), 1);
-	PHYSFS_close(f);
-}
-*/
 
 void errorLog(const std::string &s)
 {
@@ -557,29 +495,7 @@ tinyxml2::XMLDocument *readXML(const std::string& fn, tinyxml2::XMLError *perr /
 	return doc;
 }
 
-/*
-void pForEachFile(std::string path, std::string type, void callback(const std::string &filename, int param), int param)
-{
-	char **rc = PHYSFS_enumerateFiles(path.c_str());
-	char **i;
 
-	for (i = rc; *i != NULL; i++)
-	{
-		std::string s(*i);
-		int p=0;
-		if ((p=s.find('.'))!=std::string::npos)
-		{
-			std::string ext = s.susbtr(p, s.getLength2D());
-			if (ext == type)
-			{
-				callback(fielnameafhghaha
-			}
-		}
-	}
-
- PHYSFS_freeList(rc);
-}
-*/
 
 void doSingleFile(const std::string &path, const std::string &type, std::string filename, void callback(const std::string &filename, int param), int param)
 {
@@ -588,9 +504,9 @@ void doSingleFile(const std::string &path, const std::string &type, std::string 
 		std::string search = filename;
 		stringToLower(search);
 		std::string filetype = filename.substr(search.size()-4, search.size());
-		//stringToUpper(filetype);
-		//debugLog("comparing: " + filetype + " and: " + type);
-		//if (filetype==type)
+
+
+
 		debugLog("checking:" + search + " for type:" + type);
 		if (search.find(type)!=std::string::npos)
 		{
@@ -721,9 +637,7 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 	}
 
 
-	//std::string add = "%s*" + type;
 
-	//sprintf(szDir, "%s*", path.c_str());
 	sprintf(szDir, "%s\\*", path.c_str());
 
 	stringToUpper(type);
@@ -732,7 +646,7 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
     hList = FindFirstFile(szDir, &FileData);
     if (hList == INVALID_HANDLE_VALUE)
     {
-        //printf("No files found\n\n");
+
 		debugLog("No files of type " + type + " found in path " + path);
     }
     else
@@ -744,13 +658,13 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
             // Check the object is a directory or not
             //printf("%*s%s\n", indent, "", FileData.cFileName);
 			std::string filename = FileData.cFileName;
-			//debugLog("found: " + filename);
+
 			if (filename.size()>4)
 			{
 
 				std::string filetype = filename.substr(filename.size()-4, filename.size());
 				stringToUpper(filetype);
-				//debugLog("comparing: " + filetype + " and: " + type);
+
 				if (filetype==type)
 				{
 					callback(path+filename, param);
@@ -760,12 +674,7 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 
             if (!FindNextFile(hList, &FileData))
             {
-				/*
-                if (GetLastError() == ERROR_NO_MORE_FILES)
-                {
-                    fFinished = TRUE;
-                }
-				*/
+
 				fFinished = TRUE;
             }
         }
@@ -806,19 +715,14 @@ std::vector<std::string> getFileList(std::string path, std::string type, int par
 			std::string filename = FileData.cFileName;
 			if (filename.size()>4 && filename.substr(filename.size()-4, filename.size())==type)
 			{
-				//callback(path+filename, param);
+
 				list.push_back (filename);
 			}
 
 
             if (!FindNextFile(hList, &FileData))
             {
-				/*
-                if (GetLastError() == ERROR_NO_MORE_FILES)
-                {
-                    fFinished = TRUE;
-                }
-				*/
+
 				fFinished = TRUE;
             }
         }
@@ -879,18 +783,7 @@ Vector getNearestPointOnLine(Vector a, Vector b, Vector c)
 	return nearest;
 }
 
-/*
-bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius)
-{
-	Vector p = getNearestPointOnLine(lineStart, lineEnd, point);
-	Vector diff = p - point;
-	std::ostringstream os;
-	os << "s(" << lineStart.x << ", " << lineStart.y << ") e(";
-	os << lineEnd.x << ", " << lineEnd.y << ") - p(" << point.x << ", " << point.y << ")";
-	debugLog(os.str());
-	return (diff.getSquaredLength2D() < sqr(radius));
-}
-*/
+
 
 bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius, Vector *closestP)
 {

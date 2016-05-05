@@ -145,7 +145,7 @@ RenderObject::RenderObject()
 	_fv = false;
 	_fh = false;
 	updateCull = -1;
-	//rotateFirst = true;
+
 	layer = LR_NONE;
 	cull = true;
 
@@ -153,7 +153,7 @@ RenderObject::RenderObject()
 
 	positionSnapTo = 0;
 
-	//updateMultiplier = 1;
+
 	blendEnabled = true;
 	texture = 0;
 	width = 0;
@@ -161,7 +161,7 @@ RenderObject::RenderObject()
 	scale = Vector(1,1,1);
 	color = Vector(1,1,1);
 	alpha.x = 1;
-	//mode = 0;
+
 	life = maxLife = 1;
 	decayRate = 0;
 	_dead = false;
@@ -169,14 +169,14 @@ RenderObject::RenderObject()
 	_static = false;
 	fadeAlphaWithLife = false;
 	blendType = BLEND_DEFAULT;
-	//lifeAlphaFadeMultiplier = 1;
+
 	followCamera = 0;
 	stateData = 0;
 	parent = 0;
-	//useColor = true;
+
 	renderBeforeParent = false;
-	//followXOnly = false;
-	//renderOrigin = false;
+
+
 	colorIsSaved = false;
 	shareAlphaWithChildren = false;
 	shareColorWithChildren = false;
@@ -225,21 +225,21 @@ Vector RenderObject::getInvRotPosition(const Vector &vec)
 		chain.push_back(p);
 		p = p->parent;
 	}
-	
+
 	for (int i = chain.size()-1; i >= 0; i--)
 	{
 		glRotatef(-(chain[i]->rotation.z+chain[i]->rotationOffset.z), 0, 0, 1);
-	
+
 		if (chain[i]->isfh())
 		{
-			//glDisable(GL_CULL_FACE);
+
 			glRotatef(180, 0, 1, 0);
 		}
 	}
 
 	if (vec.x != 0 || vec.y != 0)
 	{
-		//glRotatef(this->rotation.z, 0,0,1,this->rotation.z);
+
 		glTranslatef(vec.x, vec.y, 0);
 	}
 
@@ -282,14 +282,14 @@ static void matrixChain(RenderObject *ro)
 {
 	if (RenderObject *parent = ro->getParent())
 		matrixChain(parent);
-	
+
 	glTranslatef(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0);
 	glRotatef(ro->rotation.z+ro->rotationOffset.z, 0, 0, 1);
 	glTranslatef(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0);
 	glScalef(ro->scale.x, ro->scale.y, 0);
 	if (ro->isfh())
 	{
-		//glDisable(GL_CULL_FACE);
+
 		glRotatef(180, 0, 1, 0);
 	}
 	glTranslatef(ro->internalOffset.x, ro->internalOffset.y, 0);
@@ -357,28 +357,14 @@ void RenderObject::flipHorizontal()
 	{
 		onFH();
 	}
-	/*
-	if (wasFlippedHorizontal && !_fh)
-		for (int i = 0; i < this->collisionMask.size(); i++)
-			collisionMask[i].x = -collisionMask[i].x;
-	else if (!wasFlippedHorizontal && _fh)
-		for (int i = 0; i < this->collisionMask.size(); i++)
-			collisionMask[i].x = -collisionMask[i].x;
-	*/
+
 }
 
 void RenderObject::flipVertical()
 {
-	//bool wasFlippedVertical = _fv;
+
 	_fv = !_fv;
-	/*
-	if (wasFlippedVertical && !_fv)
-		for (int i = 0; i < this->collisionMask.size(); i++)
-			collisionMask[i].y = -collisionMask[i].y;
-	else if (!wasFlippedVertical && _fv)
-		for (int i = 0; i < this->collisionMask.size(); i++)
-			collisionMask[i].y = -collisionMask[i].y;
-	*/
+
 }
 
 void RenderObject::destroy()
@@ -568,7 +554,7 @@ void RenderObject::render()
 				return;
 		}
 	}
-	
+
 	if (motionBlur || motionBlurTransition)
 	{
 		Vector oldPos = position;
@@ -585,7 +571,7 @@ void RenderObject::render()
 				alpha *= motionBlurTransitionTimer;
 			}
 			renderCall();
-		}		
+		}
 		position = oldPos;
 		alpha.x = oldAlpha;
 		rotation.z = oldRotZ;
@@ -599,7 +585,7 @@ void RenderObject::render()
 void RenderObject::renderCall()
 {
 
-	//RenderObjectLayer *rlayer = core->getRenderObjectLayer(getTopLayer());
+
 
 	if (positionSnapTo)
 		this->position = *positionSnapTo;
@@ -634,7 +620,7 @@ void RenderObject::renderCall()
 				glTranslatef(position.x, position.y, position.z);
 				if (isfh())
 				{
-					//glDisable(GL_CULL_FACE);
+
 					glRotatef(180, 0, 1, 0);
 				}
 
@@ -647,7 +633,7 @@ void RenderObject::renderCall()
 				glTranslatef(pos.x, pos.y, pos.z);
 				if (isfh())
 				{
-					//glDisable(GL_CULL_FACE);
+
 					glRotatef(180, 0, 1, 0);
 				}
 				glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
@@ -662,7 +648,7 @@ void RenderObject::renderCall()
 			{
 				glLineWidth(4);
 				glEnable(GL_BLEND);
-				
+
 				int i = 0;
 				glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
 				glBindTexture(GL_TEXTURE_2D, 0);
@@ -685,43 +671,20 @@ void RenderObject::renderCall()
 				glEnd();
 			}
 
-			glRotatef(rotation.z+rotationOffset.z, 0, 0, 1); 
+			glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
 			if (isfh())
 			{
-				//glDisable(GL_CULL_FACE);
+
 				glRotatef(180, 0, 1, 0);
 			}
 		}
-				
+
 		glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, beforeScaleOffset.z);
 		glScalef(scale.x, scale.y, 1);
 		glTranslatef(internalOffset.x, internalOffset.y, internalOffset.z);
 
 
-		//glDisable(GL_CULL_FACE);
-		/* Never set anywhere.  --achurch
-		if (renderOrigin)
-		{
-#ifdef BBGE_BUILD_OPENGL
-			  glBegin(GL_TRIANGLES);
-				glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-				glVertex3f(0.0f, 5.0f, 0.0f);
-				glVertex3f(50.0f, 0.0f, 0.0f);
-				glVertex3f(0.0f, -5.0f, 0.0f);
 
-				glColor4f(0.0f, 1.0f, 0.0f, 1.0f);
-				glVertex3f(0.0f, 0.0f, 5.0f);
-				glVertex3f(0.0f, 50.0f, 0.0f);
-				glVertex3f(0.0f, 0.0f, -5.0f);
-
-				glColor4f(0.0f, 0.0f, 1.0f, 1.0f);
-				glVertex3f(5.0f, 0.0f, 0.0f);
-				glVertex3f(0.0f, 0.0f, 50.0f);
-				glVertex3f(-5.0f, 0.0f, 0.0f);
-			glEnd();
-#endif
-		}
-		*/
 	}
 
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
@@ -731,14 +694,14 @@ void RenderObject::renderCall()
 	}
 
 
-	//if (useColor)
+
 	{
 		if (rlayer)
 			glColor4f(color.x * rlayer->color.x, color.y * rlayer->color.y, color.z * rlayer->color.z, alpha.x*alphaMod);
 		else
 			glColor4f(color.x, color.y, color.z, alpha.x*alphaMod);
 	}
-	
+
 	if (texture)
 	{
 
@@ -758,7 +721,7 @@ void RenderObject::renderCall()
 			lastTextureRepeat = repeatTexture;
 		}
 	}
-	
+
 	applyBlendType();
 
 
@@ -782,7 +745,7 @@ void RenderObject::renderCall()
 	if (doRender)
 		onRender();
 
-		//collisionShape.render();
+
 	if (!RENDEROBJECT_SHAREATTRIBUTES)
 	{
 		glPopAttrib();
@@ -812,9 +775,8 @@ void RenderObject::renderCollision()
 		glPushMatrix();
 		glBindTexture(GL_TEXTURE_2D, 0);
 
-		//glLoadIdentity();
-		//core->setupRenderPositionAndScale();
-		
+
+
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glColor4f(1.0f, 0.5f, 1.0f, 0.5f);
@@ -849,16 +811,12 @@ void RenderObject::renderCollision()
 		glPushAttrib(GL_ALL_ATTRIB_BITS);
 		glPushMatrix();
 		glBindTexture(GL_TEXTURE_2D, 0);
-		
-		/*
-		glTranslatef(-offset.x, -offset.y,0);		
-		glTranslatef(collidePosition.x, collidePosition.y,0);
-		*/
-		
-		
+
+
+
 		glLoadIdentity();
 		core->setupRenderPositionAndScale();
-		
+
 
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -868,27 +826,22 @@ void RenderObject::renderCollision()
 		for (int i = 0; i < transformedCollisionMask.size(); i++)
 			{
 			Vector collide = this->transformedCollisionMask[i];
-			//Vector collide = getWorldCollidePosition(collisionMask[i]);
-			//Vector collide = collisionMask[i];
-			/*
-			if (isPieceFlippedHorizontal())
-			{
-				collide.x = -collide.x;
-			}
-			*/
+
+
+
 			glTranslatef(collide.x, collide.y, 0);
 			RenderObject *parent = this->getTopParent();
 			if (parent)
 				drawCircle(collideRadius*parent->scale.x, 45);
 			glTranslatef(-collide.x, -collide.y, 0);
 		}
-		
-		//glTranslatef(-collidePosition.x, -collidePosition.y,0);
+
+
 		glDisable(GL_BLEND);
 		glPopMatrix();
 		glPopAttrib();
 
-		//glTranslatef(offset.x, offset.y,0);
+
 	}
 	else if (collideRadius > 0)
 	{
@@ -897,12 +850,12 @@ void RenderObject::renderCollision()
 		core->setupRenderPositionAndScale();
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glTranslatef(position.x+offset.x, position.y+offset.y, 0);
-		//glScalef(scale.x, scale.y, 0);
+
 		glTranslatef(internalOffset.x, internalOffset.y, 0);
 		glEnable(GL_BLEND);
-		//glTranslatef(collidePosition.x, collidePosition.y,0);
-		//glEnable(GL_ALPHA_TEST);
-		//glAlphaFunc(GL_GREATER, 0);
+
+
+
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glColor4f(1,0,0,0.5);
 		drawCircle(collideRadius, 8);
@@ -942,14 +895,10 @@ Vector RenderObject::getCollisionMaskNormal(int index)
 	if (!sum.isZero())
 	{
 		sum /= num;
-		
+
 		sum.normalize2D();
 
-		/*
-		std::ostringstream os;
-		os << "found [" << num << "] circles, got normal [" << sum.x << ", " << sum.y << "]";
-		debugLog(os.str());
-		*/
+
 	}
 
 	return sum;
@@ -959,12 +908,12 @@ void RenderObject::lookAt(const Vector &pos, float t, float minAngle, float maxA
 {
 	Vector myPos = this->getWorldPosition();
 	float angle = 0;
-	
+
 	if (myPos.x == pos.x && myPos.y == pos.y)
 	{
 		return;
 	}
-	MathFunctions::calculateAngleBetweenVectorsInDegrees(myPos, pos, angle);	
+	MathFunctions::calculateAngleBetweenVectorsInDegrees(myPos, pos, angle);
 
 	RenderObject *p = parent;
 	while (p)
@@ -976,21 +925,9 @@ void RenderObject::lookAt(const Vector &pos, float t, float minAngle, float maxA
 	if (isPieceFlippedHorizontal())
 	{
 		angle = 180-angle;
-		
-		/*
-		minAngle = -minAngle;
-		maxAngle = -maxAngle;
-		std::swap(minAngle, maxAngle);
-		*/
-		//std::swap(minAngle, maxAngle);
-		/*
-		minAngle = -(180+minAngle);
-		maxAngle = -(180+maxAngle);
-		*/
-		/*
-		if (minAngle > maxAngle)
-			std::swap(minAngle, maxAngle);
-		*/
+
+
+
 		offset = -offset;
 	}
 	angle += offset;
@@ -1030,7 +967,7 @@ void RenderObject::update(float dt)
 	}
 	if (!isDead())
 	{
-		//dt *= updateMultiplier;
+
 		onUpdate(dt);
 
 		if (isHidden())
@@ -1076,19 +1013,16 @@ void RenderObject::safeKill()
 	alpha = 0;
 	life = 0;
 	onEndOfLife();
-	//deathEvent.call();
+
 	for (RenderObjectList::iterator i = deathNotifications.begin(); i != deathNotifications.end(); i++)
 	{
 		(*i)->deathNotify(this);
 	}
-	//dead = true;
+
 	if (this->parent)
 	{
 		parent->enqueueChildDeletion(this);
-		/*
-		parent->removeChild(this);
-		core->enqueueRenderObjectDeletion(this);
-		*/
+
 	}
 	else
 	{
@@ -1112,12 +1046,7 @@ Vector RenderObject::getForward()
 	Vector r = v - getWorldCollidePosition();
 	r.normalize2D();
 
-	/*
-	std::ostringstream os;
-	os << "forward v(" << v.x << ", " << v.y << ") ";
-	os << "r(" << r.x << ", " << r.y << ") ";
-	debugLog(os.str());
-	*/
+
 	return r;
 }
 
@@ -1134,7 +1063,7 @@ Vector RenderObject::getAbsoluteRotation()
 void RenderObject::onUpdate(float dt)
 {
 	if (isDead()) return;
-	//collisionShape.updatePosition(position);
+
 	updateLife(dt);
 
 	// FIXME: We might not need to do lifetime checks either; I just
@@ -1166,7 +1095,7 @@ void RenderObject::onUpdate(float dt)
 			(*i)->update(dt);
 		}
 	}
-	
+
 	if (!childGarbage.empty())
 	{
 		for (Children::iterator i = childGarbage.begin(); i != childGarbage.end(); i++)
@@ -1203,7 +1132,7 @@ void RenderObject::onUpdate(float dt)
 		}
 	}
 
-//	updateCullVariables();
+
 }
 
 void RenderObject::unloadDevice()
@@ -1289,6 +1218,6 @@ void RenderObject::setOverrideCullRadius(float ovr)
 bool RenderObject::isCoordinateInRadius(const Vector &pos, float r)
 {
 	Vector d = pos-getRealPosition();
-	
+
 	return (d.getSquaredLength2D() < r*r);
 }

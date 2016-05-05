@@ -2,7 +2,7 @@
 #include "DSQ.h"
 #include "Network.h"
 #include "ByteBuffer.h"
-//#include "VFSTools.h"
+
 #include "MT.h"
 #include <map>
 #include <set>
@@ -44,7 +44,7 @@ public:
 protected:
 	virtual void _OnClose()
 	{
-		//puts("_OnClose()");
+
 		minihttp::HttpSocket::_OnClose();
 
 		const Request& r = GetCurrentRequest();
@@ -57,7 +57,7 @@ protected:
 	}
 	virtual void _OnOpen()
 	{
-		//puts("_OnOpen()");
+
 		minihttp::HttpSocket::_OnOpen();
 
 		const Request& r = GetCurrentRequest();
@@ -68,7 +68,7 @@ protected:
 	{
 		const Request& r = GetCurrentRequest();
 		RequestData *data = (RequestData*)(r.user);
-		//printf("_OnRequestDone(): %s\n", r.resource.c_str());
+
 		if(data->fp)
 		{
 			fclose(data->fp);
@@ -91,11 +91,7 @@ protected:
 	{
 		if(!size)
 			return;
-		/*if(GetStatusCode() != minihttp::HTTP_OK)
-		{
-			printf("NETWORK: Got %u bytes with status code %u", size, GetStatusCode());
-			return;
-		}*/
+
 		const Request& r = GetCurrentRequest();
 		RequestData *data = (RequestData*)(r.user);
 		if(!data->fp && !data->fail)

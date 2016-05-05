@@ -33,15 +33,7 @@ Quad::Quad(const std::string &tex, const Vector &pos)
 	setTexture(tex);
 }
 
-/*
-void Quad::initDefaultVBO()
-{
-}
 
-void Quad::shutdownDefaultVBO()
-{
-}
-*/
 
 void Quad::setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo)
 {
@@ -67,7 +59,7 @@ void Quad::setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy,
 		createGrid(x, y);
 
 		gridTimer = 0;
-		
+
 		doUpdateGrid = true;
 	}
 }
@@ -95,10 +87,10 @@ void Quad::setStrip(const std::vector<Vector> &st)
 void Quad::createGrid(int xd, int yd)
 {
 	deleteGrid();
-	
+
 	xDivs = xd;
 	yDivs = yd;
-	
+
 	drawGrid = new Vector * [xDivs];
 	for (int i = 0; i < xDivs; i++)
 	{
@@ -108,7 +100,7 @@ void Quad::createGrid(int xd, int yd)
 			drawGrid[i][j].z = 1;
 		}
 	}
-	
+
 	resetGrid();
 }
 
@@ -166,7 +158,7 @@ void Quad::resetStrip()
 	{
 		for (int i = 0; i < strip.size(); i++)
 		{
-			//float v = (i/(float)(strip.size()-1))-0.5f;
+
 			float v = (i/(float(strip.size())));
 			strip[i].x = v;
 			strip[i].y = 0;
@@ -197,39 +189,37 @@ void Quad::initQuad()
 	gridTimer = 0;
 	xDivs = 0;
 	yDivs = 0;
-	
+
 	doUpdateGrid = false;
 
 	autoWidth = autoHeight = 0;
 
-	//debugLog("Quad::initQuad()");
+
 
 	repeatingTextureToFill = false;
-	
+
 	drawGrid = 0;
 
 	renderBorder = false;
 	renderCenter = true;
 	width = 2; height = 2;
-	//llalpha = Vector(1);
-	//lralpha = Vector(1);
-	//ulalpha = Vector(1);
-	//uralpha = Vector(1);
-	//oriented = false;
+
+
+
 	upperLeftTextureCoordinates = Vector(0,0);
 	lowerRightTextureCoordinates = Vector(1,1);
 	renderQuad = true;
-	//debugLog("End Quad::initQuad()");
+
 }
 
 Quad::Quad() : RenderObject()
 {
 	addType(SCO_QUAD);
 	borderAlpha = 0.5;
-	//debugLog("Quad::Quad()");
+
 	initQuad();
-	//debugLog("End Quad::Quad()");
-	//textureSize = Vector(1,1);
+
+
 }
 
 void Quad::deleteGrid()
@@ -311,7 +301,7 @@ bool Quad::isCoordinateInsideWorldRect(const Vector &coord, int w, int h)
 
 void Quad::updateGrid(float dt)
 {
-	//if (xDivs == 0 && yDivs == 0) return;
+
 	if (!doUpdateGrid) return;
 
 	if (gridType == GRID_WAVY)
@@ -372,10 +362,7 @@ void Quad::renderGrid()
 	const float blue  = this->color.z;
 	const float alpha = this->alpha.x * this->alphaMod;
 
-	/*
-	glDisable(GL_BLEND);
-	glDisable(GL_CULL_FACE);
-	*/
+
 	glBegin(GL_QUADS);
 	float u0 = baseX;
 	float u1 = u0 + incX;
@@ -390,26 +377,26 @@ void Quad::renderGrid()
 
 				glColor4f(red, green, blue, alpha*drawGrid[i][j].z);
 				glTexCoord2f(u0, v0);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u0-baseX, v0-baseY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0);
+
+
 				glVertex2f(w*drawGrid[i][j].x,		h*drawGrid[i][j].y);
-				//
+
 				glColor4f(red, green, blue, alpha*drawGrid[i][j+1].z);
 				glTexCoord2f(u0, v1);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u0-baseX, v1-baseY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,(float)(screenHeight/(yDivs-1))/16);
+
+
 				glVertex2f(w*drawGrid[i][j+1].x,		h*drawGrid[i][j+1].y);
-				//
+
 				glColor4f(red, green, blue, alpha*drawGrid[i+1][j+1].z);
 				glTexCoord2f(u1, v1);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u1-baseX, v1-baseY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,(float)(screenHeight/(yDivs-1))/16);
+
+
 				glVertex2f(w*drawGrid[i+1][j+1].x,	h*drawGrid[i+1][j+1].y);
-				//
+
 				glColor4f(red, green, blue, alpha*drawGrid[i+1][j].z);
 				glTexCoord2f(u1, v0);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u1-baseX, v0-baseY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,0);
+
+
 				glVertex2f(w*drawGrid[i+1][j].x,		h*drawGrid[i+1][j].y);
 			}
 		}
@@ -457,8 +444,8 @@ void Quad::onRender()
 
 	if (!strip.empty())
 	{
-		//glDisable(GL_BLEND);gggg
-		//glDisable(GL_CULL_FACE);
+
+
 
 		const float texBits = 1.0f / (strip.size()-1);
 
@@ -476,7 +463,7 @@ void Quad::onRender()
 		}
 		glEnd();
 
-		//glEnable(GL_CULL_FACE);
+
 		glBindTexture( GL_TEXTURE_2D, 0 );
 		glColor4f(1,0,0,1);
 		glPointSize(64);

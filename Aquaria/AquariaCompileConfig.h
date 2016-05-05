@@ -5,7 +5,7 @@
 // Define BBGE_SKIP_CONFIG_HEADERS to use CMake-only configuration.
 #ifndef BBGE_SKIP_CONFIG_HEADERS
 
-    //#define AQUARIA_DEMO 1
+
     #define AQUARIA_BUILD_CONSOLE 1
     #define AQUARIA_BUILD_SCENEEDITOR 1
 

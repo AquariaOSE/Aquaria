@@ -34,26 +34,8 @@ BoxElement::BoxElement(int width, int height) : Element(BOX)
 	hh = height/2 + 10;
 	this->color = 0;
 	cull = true;
-	//cull = false;
+
 }
 
-/*
-bool BoxElement::isOnScreen()
-{
-	// HACK: biased towards being fast for rows
-	//if (alpha.x < 1.0f) return false;
-	//if (!cull) return true;
 
-	if (this->position.y + hh >= core->screenCullY1
-		&& this->position.y - hh <= core->screenCullY2)
-	{
-		if (this->position.x + ww >= core->screenCullX1
-			&& this->position.x - ww <= core->screenCullX2)
-		{
-			return true;
-		}
-	}
 
-	return false;
-}
-*/

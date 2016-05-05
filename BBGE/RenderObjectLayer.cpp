@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 RenderObjectLayer::RenderObjectLayer()
 	: renderObjects(BASE_ARRAY_SIZE)
-{	
+{
 	followCamera = NO_FOLLOW_CAMERA;
 	visible = true;
 	startPass = endPass = 0;
@@ -38,7 +38,7 @@ RenderObjectLayer::RenderObjectLayer()
 	color = Vector(1,1,1);
 
 	displayListValid = false;
-	
+
 	const int size = renderObjects.size();
 	for (int i = 0; i < size; i++)
 		renderObjects[i] = 0;

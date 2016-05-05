@@ -73,8 +73,8 @@ void Core::initIcon()
 {
 #ifdef BBGE_BUILD_WINDOWS
 	HINSTANCE handle = ::GetModuleHandle(NULL);
-	//if (icon_windows)
-	//	::DestroyIcon(icon_windows);
+
+
 
 	icon_windows = ::LoadIcon(handle, "icon");
 
@@ -82,8 +82,8 @@ void Core::initIcon()
 	SDL_VERSION(&wminfo.version)
 	if (SDL_GetWindowWMInfo(gScreen, &wminfo) != 1)
 	{
-		//errorLog("wrong SDL version");
-		// error: wrong SDL version
+
+
 	}
 
 	HWND hwnd = wminfo.info.win.window;
@@ -169,7 +169,7 @@ void Core::resetGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 	shutdownGraphicsLibrary();
 
 	initGraphicsLibrary(w, h, fullscreen, vsync, bpp);
-	
+
 	enable2DWide(w, h);
 
 	reloadResources();
@@ -190,14 +190,11 @@ void Core::toggleScreenMode(int t)
 
 void Core::updateCursorFromJoystick(float dt, int spd)
 {
-	//debugLog("updating mouse from joystick");
+
 
 	core->mouse.position += joystick.position*dt*spd;
 
-/*
-	if (!joystick.position.isZero())
-		setMousePosition(core->mouse.position);
-	*/
+
 
 	doMouseConstraint();
 }
@@ -218,10 +215,6 @@ RenderObjectLayer *Core::getRenderObjectLayer(int i)
 
 
 
-
-
-
-
 void Core::setColor(float r, float g, float b, float a)
 {
 	glColor4f(r, g, b, a);
@@ -229,7 +222,7 @@ void Core::setColor(float r, float g, float b, float a)
 
 void Core::bindTexture(int stage, unsigned int handle)
 {
-	//glBindTexture(GL_TEXTURE_2D, handle);
+
 }
 
 void Core::translateMatrixStack(float x, float y, float z)
@@ -344,7 +337,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 
 	if (userDataSubFolder.empty())
 		userDataSubFolder = appName;
-		
+
 #if defined(BBGE_BUILD_UNIX)
 	const char *envr = getenv("HOME");
 	if (envr == NULL)
@@ -409,7 +402,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	debugLogActive = true;
 
 	debugLogTextures = true;
-	
+
 	grabInputOnReentry = -1;
 
 	srand(time(NULL));
@@ -425,10 +418,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 
 	viewOffX = viewOffY = 0;
 
-	/*
-	aspectX = 1440;  //4.0f;
-	aspectY = 900;   //3.0f;
-	*/
+
 
 	particleManager = new ParticleManager(particleSize);
 	nowTicks = thenTicks = 0;
@@ -480,8 +470,8 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 		keys[i] = 0;
 	}
 
-	aspect = (aspectX/aspectY);//320.0f/240.0f;
-	//1.3333334f;
+	aspect = (aspectX/aspectY);
+
 
 	globalResolutionScale = globalScale = Vector(1,1,1);
 
@@ -495,7 +485,7 @@ void Core::initPlatform(const std::string &filesystem)
 #if defined(BBGE_BUILD_MACOSX) && !defined(BBGE_BUILD_MACOSX_NOBUNDLEPATH)
 	// FIXME: filesystem not handled
 	CFBundleRef mainBundle = CFBundleGetMainBundle();
-	//CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
+
 	CFURLRef resourcesURL = CFBundleCopyBundleURL(mainBundle);
 	char path[PATH_MAX];
 	if (!CFURLGetFileSystemRepresentation(resourcesURL, TRUE, (UInt8 *)path, PATH_MAX))
@@ -724,13 +714,8 @@ void Core::init()
 	{
 		exit_error("Failed to init SDL");
 	}
-	
-	/*
-#ifdef BBGE_BUILD_DIRECTX
-	if (!glfwInit())
-		exit(0);
-#endif
-		*/
+
+
 	loopDone = false;
 	clearedGarbageFlag = false;
 
@@ -738,7 +723,7 @@ void Core::init()
 
 	initLocalization();
 
-	//glfwSetWindowSizeCallback(lockWindowSize);
+
 }
 
 void Core::initRenderObjectLayers(int num)
@@ -806,48 +791,32 @@ bool Core::getKeyState(int k)
 	return 0;
 }
 
-//#ifdef BBGE_BUILD_DIRECTX
 
-//float sensitivity = 1.0;
 
 Vector joychange;
 Vector lastjoy;
 void readJoystickData()
 {
-	/*
-	if (core->joystickEnabled && core->numJoysticks > 0)
-	{
-		//DIJOYSTATE2 js;
-		core->joysticks[0]->poll(&core->joystate);
 
-		Vector joy = Vector(core->joystate.lX, core->joystate.lY);
-		joychange = joy-lastjoy;
-		lastjoy = joy;
-		core->joystickPosition = Vector(core->joystate.lX - (65536/2), core->joystate.lY - (65536/2));
-		core->joystickPosition /= (65536/2);
 
-		// HACK: super hacky!!
-		core->mouse.buttons.left = (core->joystate.rgbButtons[0] & 0x80) ? Buttons::DOWN : Buttons::UP;
-		core->mouse.buttons.right = (core->joystate.rgbButtons[1] & 0x80) ? Buttons::DOWN : Buttons::UP;
-	}
-	*/
+
 }
 
 void readMouseData()
 {
-	//core->mouse.position += dMouse;
+
 }
 
 void readKeyData()
 {
 
 }
-//#endif
+
 
 
 bool Core::initJoystickLibrary(int numSticks)
 {
-	//joystickEnabled = false;
+
 #ifdef BBGE_BUILD_SDL2
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER);
 #else
@@ -858,32 +827,8 @@ bool Core::initJoystickLibrary(int numSticks)
 		joystick.init(0);
 
 	joystickEnabled = true;
-	/*
-	numJoysticks = Joystick::deviceCount();
-	std::ostringstream os;
-	os << "Found " << numJoysticks << " joysticks";
-	debugLog(os.str());
-	if (numJoysticks > 0)
-	{
-		if (numJoysticks > 4)
-			numJoysticks = 4;
 
-		// HACK: memory leak... add code to clean this up!
-		for (int i = 0; i < numJoysticks; i++) {
-			joysticks[i] = new Joystick(i);
-			joysticks[i]->open();
 
-			// Print the name of the joystick.
-			char name[MAX_PATH];
-			joysticks[i]->deviceName(name);
-			std::ostringstream os;
-			os << "   Joystick " << i << ": " << name;
-			debugLog(os.str());
-		}
-		joystickEnabled = true;
-		return true;
-	}
-	*/
 
 	return true;
 }
@@ -894,7 +839,7 @@ bool Core::initInputLibrary()
 
 #ifdef BBGE_BUILD_GFLW
 	glfwDisable(GLFW_MOUSE_CURSOR);
-	//glfwEnable( GLFW_SYSTEM_KEYS );
+
 #endif
 	for (int i = 0; i < KEY_MAXARRAY; i++)
 	{
@@ -903,8 +848,6 @@ bool Core::initInputLibrary()
 
 
 
-	// joystick init
-//#endif
 	return true;
 }
 
@@ -926,58 +869,9 @@ void Core::onUpdate(float dt)
 
 
 
-
-
-
-	/*
-	std::ostringstream os;
-	os << "x: " << joystate.lX << " y: " << joystate.lY;
-	os << " frx: " << joystate.lFRx << " fry: " << joystate.lFRy;
-	debugLog(os.str());
-	*/
-
-	/*
-	if (joystickOverrideMouse && !joychange.isZero())
-	{
-		Vector joy(joystate.lX, joystate.lY);
-		//core->mouse.position += joychange * 0.001f;
-		core->mouse.position = Vector(400,300) + ((joy * 600) / (65536/2))-300;
-	}
-	*/
-
-
-	/*
-
-	*/
-
-
-	/*
-	if (mouse.position.x < 0)
-		mouse.position.x = 0;
-	if (mouse.position.x > core->getVirtualWidth())
-		mouse.position.x = core->getVirtualWidth();
-	if (mouse.position.y < 0)
-		mouse.position.y = 0;
-	if (mouse.position.y > core->getVirtualHeight())
-		mouse.position.y = core->getVirtualHeight();
-	*/
-
 	onMouseInput();
 
-	/*
-#ifdef BBGE_BUILD_GLFW
-	glfwSetMousePos(mouse.position.x, mouse.position.y);
-#endif
-	*/
-	//core->mouse.change = core->mouse.position - core->mouse.lastPosition;
 
-	//core->mouse.scrollWheelChange = core->mouse.scrollWheel - core->mouse.lastScrollWheel;
-
-
-
-
-
-	//script.update(dt);
 
 	globalScale.update(dt);
 	core->globalScaleChanged();
@@ -1081,15 +975,15 @@ static bool lookup_all_glsyms(void)
 
 
 bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync, int bpp, bool recreate)
-{	
+{
 	static bool didOnce = false;
-	
+
 	aspectX = width;
 	aspectY = height;
 
 	aspect = (aspectX/aspectY);
 
-	
+
 
 	this->width = width;
 	this->height = height;
@@ -1100,8 +994,6 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 	_hasFocus = false;
 
 
-	//setenv("SDL_VIDEO_CENTERED", "1", 1);
-	//SDL_putenv("SDL_VIDEO_WINDOW_POS=400,300");
 
 #ifndef BBGE_BUILD_SDL2
 #if !defined(BBGE_BUILD_MACOSX)
@@ -1111,7 +1003,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 	SDL_putenv((char *) "SDL_VIDEO_CENTERED=1");
 #endif
 #endif
-	//SDL_putenv((char *) "LIBGL_DEBUG=verbose"); // temp, to track errors on linux with nouveau drivers.
+
 
 	if (recreate)
 	{
@@ -1137,7 +1029,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 
 	setSDLGLAttributes();
 
-	//if (!didOnce)
+
 	{
 #ifdef BBGE_BUILD_SDL2
 		Uint32 flags = 0;
@@ -1222,34 +1114,23 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 		keys[i] = 0;
 	}
 
-/*
-#ifdef BBGE_BUILD_WINDOWS
-	SDL_SysWMinfo wmInfo;
-	SDL_GetWMInfo(&wmInfo);
-	hWnd = wmInfo.window;
-#endif
-*/
 
 
 	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);				// Black Background
 	glClearDepth(1.0);								// Depth Buffer Setup
 	glDisable(GL_CULL_FACE);
-	
-	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+
 
 	glLoadIdentity();
-	
+
 	glFinish();
 
 
 
-
-
-
 	setClearColor(clearColor);
-	
+
 	clearBuffers();
 	showBuffer();
 
@@ -1277,7 +1158,7 @@ void Core::enumerateScreenModes()
 		debugLog("No modes available!");
 		return;
 	}
-	
+
 	for (int i = 0; i < modecount; i++) {
 		SDL_GetDisplayMode(0, i, &mode);
 		if (mode.w && mode.h && (mode.w > mode.h))
@@ -1367,8 +1248,8 @@ void Core::shutdownGraphicsLibrary(bool killVideo)
 void Core::quit()
 {
 	enqueueJumpState("STATE_QUIT");
-	//loopDone = true;
-	//popAllStates();
+
+
 }
 
 void Core::applyState(const std::string &state)
@@ -1401,22 +1282,11 @@ void centerWindow(HWND hwnd)
 	y -= (rcWnd.bottom - rcWnd.top)/2;
     // Set top and left to center main window on desktop
     ::SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
-//	::ShowWindow(hwnd, 1);
+
 }
 #endif
 
-/*
-void Core::adjustWindowPosition(int x, int y)
-{
-#ifdef BBGE_BUILD_WINDOWS
-	RECT rcWnd;
-	::GetWindowRect(hWnd, &rcWnd);
-	rcWnd.left += x;
-	rcWnd.top += y;
-	::SetWindowPos(hWnd, HWND_TOP, rcWnd.left, rcWnd.top, 0, 0, SWP_NOSIZE);
-#endif
-}
-*/
+
 
 bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::string windowTitle)
 {
@@ -1465,19 +1335,15 @@ bbgePerspective(float fovy, float aspect, float zNear, float zFar)
 
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 {
-	/*
-	piScaleX = pixelScaleX;
-	piScaleY = pixelScaleY;
-	*/
+
 	virtualWidth = pixelScaleX;
-	//MAX(virtualWidth, 800);
-	virtualHeight = pixelScaleY;//int((pixelScale*aspectY)/aspectX);					//assumes 4:3 aspect ratio
+	virtualHeight = pixelScaleY;	//assumes 4:3 aspect ratio
 	this->baseCullRadius = 1.1f * sqrtf(sqr(getVirtualWidth()/2) + sqr(getVirtualHeight()/2));
 
 	std::ostringstream os;
 	os << "virtual(" << virtualWidth << ", " << virtualHeight << ")";
 	debugLog(os.str());
-	
+
 	vw2 = virtualWidth/2;
 	vh2 = virtualHeight/2;
 
@@ -1511,13 +1377,13 @@ void Core::enable2DWide(int rx, int ry)
 	if (aspect >= 1.3f)
 	{
 		int vw = int(float(baseVirtualHeight) * (float(rx)/float(ry)));
-		//vw = MAX(vw, baseVirtualWidth);
+
 		core->enable2D(vw, baseVirtualHeight, 1);
 	}
 	else
 	{
 		int vh = int(float(baseVirtualWidth) * (float(ry)/float(rx)));
-		//vh = MAX(vh, baseVirtualHeight);
+
 		core->enable2D(baseVirtualWidth, vh, 1);
 	}
 }
@@ -1529,33 +1395,14 @@ static void bbgeOrtho2D(float left, float right, float bottom, float top)
 
 void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 {
-	// why do this again? don't really get it
-	/*
-	if (mode == MODE_2D)
-	{
-		if (forcePixelScale || (pixelScaleX!=0 && core->width!=pixelScaleX) || (pixelScaleY!=0 && core->height!=pixelScaleY))
-		{
-			float widthFactor = core->width/float(pixelScaleX);
-			float heightFactor = core->height/float(pixelScaleY);
-			core->globalResolutionScale = Vector(widthFactor,heightFactor,1.0f);
-			setPixelScale(pixelScaleX, pixelScaleY);
 
-			std::ostringstream os;
-			os << "top of call: ";
-			os << "widthFactor: " << widthFactor;
-			os << "heightFactor: " << heightFactor;
-			debugLog(os.str());
-		}
-		return;
-	}
-	*/
-	
+
 
     GLint viewPort[4];
     glGetIntegerv(GL_VIEWPORT, viewPort);
 
     glMatrixMode(GL_PROJECTION);
-    //glPushMatrix();
+
     glLoadIdentity();
 
 	float vw=0,vh=0;
@@ -1579,53 +1426,12 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 
 
 
-	/*
-	vh = float(baseVirtualHeight * viewPort[2]) / float(baseVirtualWidth);
-
-	viewOffY = (viewPort[3] - vh) * 0.5f;
-	*/
-	
-
-	/*
-	std::ostringstream os;
-	os << "vw: " << vw << " OFFX: " << viewOffX << " ";
-	os << "vh: " << vh << " OFFY: " << viewOffY;
-	debugLog(os.str());
-	*/
-
-
-	/*
-	float aspect = float(width) / float (height);
-
-	if (aspect < 1.3f)
-	{
-		viewOffX *= 0.5f;
-	}
-	*/
-
-	
-//#else
-//	int offx=0,offy=0;
-//#endif
-
-	//+offx
-	//-offx
-	//glOrtho(0.0f,viewPort[2],viewPort[3],0.0f,-1000.0f,1000.0f);
-	//glOrtho(0.0f+offx,viewPort[2]+offx,viewPort[3]+offy,0.0f+offy,-1.0f,1.0f);
 	bbgeOrtho2D(0.0f-viewOffX,viewPort[2]-viewOffX,viewPort[3]-viewOffY,0.0f-viewOffY);
-	/*
-	static bool doOnce = false;
-	if (!doOnce)
-	{
-		glOrtho(0.0f,viewPort[2],viewPort[3],0.0f,-10.0f,10.0f);
-		doOnce = true;
-	}
-	*/
-	//glOrtho(-viewPort[2]/2,viewPort[2]/2,viewPort[3]/2,-viewPort[3]/2,-10.0f,10.0f);
-    //glOrtho(0, viewPort[2], 0, viewPort[3], -100, 100);
+
+
 
     glMatrixMode(GL_MODELVIEW);
-    //glPushMatrix();
+
     glLoadIdentity();
 
 	setupRenderPositionAndScale();
@@ -1633,33 +1439,21 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 
 	if (forcePixelScale || (pixelScaleX!=0 && core->width!=pixelScaleX) || (pixelScaleY!=0 && core->height!=pixelScaleY))
 	{
-		/*
-		float f = core->width/float(pixelScale);
-		core->globalResolutionScale = Vector(f,f,1.0f);
-		*/
-		//debugLog("HEEEREEE");
+
+
 		float widthFactor = core->width/float(pixelScaleX);
 		float heightFactor = core->height/float(pixelScaleY);
-		//float heightFactor = 
+
 		core->globalResolutionScale = Vector(widthFactor,heightFactor,1.0f);
 		setPixelScale(pixelScaleX, pixelScaleY);
 
-		//core->globalResolutionScale = Vector(1.5,1.5,1);
-		/*
-		std::ostringstream os;
-		os << "bottom of call: ";
-		os << "widthFactor: " << widthFactor;
-		os << " heightFactor: " << heightFactor;
-		debugLog(os.str());
-		*/
+
+
 	}
 	setPixelScale(pixelScaleX, pixelScaleY);
 
-	//core->globalResolutionScale.x = 1.6;
 
-	//setupRenderPositionAndScale();
 
-	
 }
 
 void Core::quitNestedMain()
@@ -1690,7 +1484,7 @@ void Core::setMousePosition(const Vector &p)
 
 	core->mouse.position = p;
 	float px = p.x + virtualOffX;
-	float py = p.y;// + virtualOffY;
+	float py = p.y;
 
 	#ifdef BBGE_BUILD_SDL2
 	SDL_WarpMouseInWindow(gScreen, px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
@@ -1698,16 +1492,8 @@ void Core::setMousePosition(const Vector &p)
 	SDL_WarpMouse( px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
 	#endif
 
-	/*
-	ignoreNextMouse = true;
-	unchange = core->mouse.position - lp;
-	*/
 
-	/*
-	std::ostringstream os;
-	os << "setting position (" << p.x << ", " << p.y << ")";
-	debugLog(os.str());
-	*/
+
 }
 
 // used to update all render objects either uniformly or as part of a time sliced update process
@@ -1798,13 +1584,13 @@ void Core::main(float runTime)
 	// cannot nest loops when the game is over
 	if (loopDone) return;
 
-	//QueryPerformanceCounter((LARGE_INTEGER*)&lastTime);
-	//QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
+
+
 	float dt;
 	float counter = 0;
 	int frames = 0;
 	float real_dt = 0;
-	//std::ofstream out("debug.log");
+
 
 #if (!defined(_DEBUG) || defined(BBGE_BUILD_UNIX)) && defined(BBGE_BUILD_SDL)
 	bool wasInactive = false;
@@ -1813,20 +1599,15 @@ void Core::main(float runTime)
 
 	nowTicks = thenTicks = SDL_GetTicks();
 
-	//int i;
+
 
 	nestedMains++;
-	// HACK: Why block this?
-	/*
-	if (nestedMains > 1 && runTime <= 0)
-		return;
-	*/
 
 
-	while((runTime == -1 && !loopDone) || (runTime >0))									// Loop That Runs While done=FALSE
+
+	while((runTime == -1 && !loopDone) || (runTime >0))
 	{
 		BBGE_PROF(Core_main);
-
 
 
 
@@ -1834,29 +1615,15 @@ void Core::main(float runTime)
 		{
 			nowTicks = SDL_GetTicks();
 		}
-		/*
-		else
-		{
-			if (nowTicks == 0)
-			{
-				nowTicks = SDL_GetTicks();
-			}
-		}
-		*/
+
 		dt = (nowTicks-thenTicks)/1000.0;
 		thenTicks = nowTicks;
-		//thenTicks = SDL_GetTicks();
+
 
 		if (verbose) debugLog("avgFPS");
 		if (!avgFPS.empty())
 		{
-			/*
-			if (avgFPS[0] <= 0)
-			{
-				for (int i = 0; i < avgFPS.size(); i++)
-					avgFPS[i] = dt;
-			}
-			*/
+
 			int i = 0;
 			for (i = avgFPS.size()-1; i > 0; i--)
 			{
@@ -1874,16 +1641,12 @@ void Core::main(float runTime)
 					n ++;
 				}
 			}
-			if (n > 0) // && n == avgFPS.size() ??
+			if (n > 0)
 			{
 				c /= n;
 				dt = c;
 			}
-			/*
-			std::ostringstream os;
-			os << dt;
-			debugLog(os.str());
-			*/
+
 		}
 
 #if !defined(_DEBUG) && defined(BBGE_BUILD_SDL)
@@ -1897,7 +1660,7 @@ void Core::main(float runTime)
 				if (wasInactive)
 				{
 					debugLog("WINDOW ACTIVE");
-					
+
 					setReentryInputGrab(1);
 
 					wasInactive = false;
@@ -1922,7 +1685,7 @@ void Core::main(float runTime)
 					while (!isWindowFocus())
 					{
 						pollEvents();
-						//debugLog("app not in input focus");
+
 						onBackgroundUpdate();
 
 						resetTimer();
@@ -1945,7 +1708,7 @@ void Core::main(float runTime)
 					sound->resume();
 
 					resetTimer();
-					
+
 					SDL_ShowCursor(SDL_DISABLE);
 
 					continue;
@@ -2056,7 +1819,7 @@ void Core::main(float runTime)
 			saveScreenshotTGA(getScreenshotFilename());
 			prepScreen(0);
 		}
-		
+
 		// wait
 		if (timeUpdateType == TIMEUPDATE_FIXED)
 		{
@@ -2067,32 +1830,28 @@ void Core::main(float runTime)
 
 			avg_diff_count++;
 			avg_diff += diff;
-			
+
 			char buf[256];
 			sprintf(buf, "real_dt: %5.4f \n realFPS: %5.4f \n fixedFPS: %5.4f \n diff: %5.4f \n delay: %5.4f \n avgdiff: %5.8f", float(real_dt), float(real_dt>0?(1.0f/real_dt):0.0f), float(fixedFPS), float(diff), float(diff*1000), float(avg_diff/(float)avg_diff_count));
 			fpsDebugString = buf;
 
-			/*
-			std::ostringstream os;
-			os << "real_dt: " << real_dt << "\n realFPS: " << (1.0/real_dt) << "\n fixedFPS: " << fixedFPS << "\n diff: " << diff << "\n delay: " << diff*1000;
-			fpsDebugString = os.str();
-			*/
+
 
 			nowTicks = SDL_GetTicks();
-			
+
 			if (diff > 0)
 			{
-				//Sleep(diff*1000);
-				//SDL_Delay(diff*1000);
+
+
 				while ((SDL_GetTicks() - nowTicks) < (diff*1000))
 				{
-					//wend, bitch
+
 				}
 			}
 
-			//nowTicks = SDL_GetTicks();
 
-		}	
+
+		}
 	}
 	if (verbose) debugLog("bottom of function");
 	quitNestedMainFlag = false;
@@ -2122,33 +1881,8 @@ void Core::sortLayer(int layer)
 
 void Core::sort()
 {
-	/*
-	if (sortEnabled)
-		renderObjects.sort(RenderObject_lt);
-	*/
-	// sort layeres independantly
 
-	/*
-	for (int i = renderObjects.size()-1; i >= 0; i--)
-	{
-		bool flipped = false;
-		for (int j = 0; j < i; j++)
-		{
-			//position.z
-			//position.z
-			//!renderObjects[j]->parent && !renderObjects[j+1]->parent &&
-			if (renderObjects[j]->getSortDepth() > renderObjects[j+1]->getSortDepth())
-			{
-				RenderObject *temp;
-				temp = renderObjects[j];
-				renderObjects[j] = renderObjects[j+1];
-				renderObjects[j+1] = temp;
-				flipped = true;
-			}
-		}
-		if (!flipped) break;
-	}
-	*/
+
 
 }
 
@@ -2178,12 +1912,7 @@ void Core::initFrameBuffer()
 
 void Core::setMouseConstraint(bool on)
 {
-/*
-	if (mouseConstraint && !on)
-	{
-		setMousePosition(mouse.position);
-	}
-	*/
+
 	mouseConstraint = on;
 }
 
@@ -2195,15 +1924,7 @@ void Core::setMouseConstraintCircle(const Vector& pos, float circle)
 	mouseConstraintCenter.z = 0;
 }
 
-/*
-void Core::clearKeys()
-{
-	for (int i = 0; i < KEY_MAXARRAY; i++)
-	{
-		keys[i] = 0;
-	}
-}
-*/
+
 
 int Core::getVirtualOffX()
 {
@@ -2224,15 +1945,15 @@ bool Core::doMouseConstraint()
 {
 	if (mouseConstraint)
 	{
-		//- core->getVirtualOffX()
-		//- virtualOffX
+
+
 		Vector h = mouseConstraintCenter;
 		Vector d = mouse.position - h;
 		if (!d.isLength2DIn(mouseCircle))
 		{
 			d.setLength2D(mouseCircle);
 			mouse.position = h+d;
-			//warpMouse = true;
+
 			return true;
 		}
 	}
@@ -2289,8 +2010,8 @@ static sdlKeyMap *initSDLKeymap(void)
 
 	SETKEYMAP(KEY_BACKSPACE, SDLK_BACKSPACE);
 
-	//SETKEYMAP(KEY_CAPSLOCK, DIK_CAPSLOCK);
-	//SETKEYMAP(KEY_CIRCUMFLEX, DIK_CIRCUMFLEX);
+
+
 	SETKEYMAP(KEY_LALT, SDLK_LALT);
 	SETKEYMAP(KEY_RALT, SDLK_RALT);
 	SETKEYMAP(KEY_LSHIFT, SDLK_LSHIFT);
@@ -2309,7 +2030,7 @@ static sdlKeyMap *initSDLKeymap(void)
 	SETKEYMAP(KEY_SEMICOLON, SDLK_SEMICOLON);
 	SETKEYMAP(KEY_LBRACKET, SDLK_LEFTBRACKET);
 	SETKEYMAP(KEY_RBRACKET, SDLK_RIGHTBRACKET);
-	//SETKEYMAP(KEY_RALT, GLFW_SETKEYMAP(KEY_RALT);
+
 	SETKEYMAP(KEY_TILDE, SDLK_BACKQUOTE);
 	SETKEYMAP(KEY_0, SDLK_0);
 	SETKEYMAP(KEY_1, SDLK_1);
@@ -2383,8 +2104,8 @@ static sdlKeyMap *initSDLKeymap(void)
 	SETKEYMAP(KEY_F15, SDLK_F15);
 
 	SETKEYMAP(KEY_ESCAPE, SDLK_ESCAPE);
-	//SETKEYMAP(KEY_ANYKEY, 4059);
-	//SETKEYMAP(KEY_MAXARRAY, SDLK_LAST+1
+
+
 
 	#undef SETKEYMAP
 
@@ -2409,13 +2130,7 @@ void Core::pollEvents()
 {
 	bool warpMouse=false;
 
-	/*
-	Uint8 *keystate = SDL_GetKeyState(NULL);
-	for (int i = 0; i < KEY_MAXARRAY; i++)
-	{
-		keys[i] = keystate[i];
-	}
-	*/
+
 
 	if (updateMouse)
 	{
@@ -2446,11 +2161,9 @@ void Core::pollEvents()
 
 
 
-
-
 	SDL_Event event;
 
-	
+
 
 	while ( SDL_PollEvent (&event) ) {
 		switch (event.type) {
@@ -2472,7 +2185,7 @@ void Core::pollEvents()
 
 				if ((event.key.keysym.sym == SDLK_g) && (event.key.keysym.mod & KMOD_CTRL))
 				{
-					// toggle mouse grab with the magic hotkey.
+
 					grabInputOnReentry = (grabInputOnReentry)?0:-1;
 					setReentryInputGrab(1);
 				}
@@ -2515,8 +2228,8 @@ void Core::pollEvents()
 				{
 					SDL_Quit();
 					_exit(0);
-					//loopDone = true;
-					//quit();
+
+
 				}
 			}
 			break;
@@ -2571,26 +2284,13 @@ void Core::pollEvents()
 			case SDL_QUIT:
 				SDL_Quit();
 				_exit(0);
-				//loopDone = true;
-				//quit();
+
+
 			break;
 
 			case SDL_SYSWMEVENT:
 			{
-				/*
-				debugLog("SYSWM!");
-				if (event.syswm.type == WM_ACTIVATE)
-				{
-					debugLog("ACTIVE");
-					this->unloadDevice();
-					this->reloadDevice();
-				}
-				else
-				{
-					debugLog("NOT ACTIVE");
-					this->unloadDevice();
-				}
-				*/
+
 			}
 			break;
 
@@ -2615,18 +2315,14 @@ void Core::pollEvents()
 
 void Core::print(int x, int y, const char *str, float sz)
 {
-	//Prof(Core_print);
-	/*
-	glLoadIdentity();
-	core->setupRenderPositionAndScale();
-	*/
-	///glPushAttrib(GL_ALL_ATTRIB_BITS);
+
+
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glPushMatrix();
-	//sz *= 8;
-	//float osz = sz;
+
+
 	float xx = x;
 	float yy = y;
 	glTranslatef(x, y-0.5f*sz, 0);
@@ -2635,13 +2331,7 @@ void Core::print(int x, int y, const char *str, float sz)
 	bool isLower = false, wasLower = false;
 	int c=0;
 
-	/*
-	if (a == 1)
-		glDisable(GL_BLEND);
-	else
-		glEnable(GL_BLEND);
-	glColor4f(r,g,b,a);
-	*/
+
 	glLineWidth(1);
 	glScalef(sz*0.75f, sz, 1);
 
@@ -2654,15 +2344,7 @@ void Core::print(int x, int y, const char *str, float sz)
 		else
 			isLower = false;
 
-		/*
-		if (isLower)
-			glScalef(sz*0.5f, sz*0.5f, 1);
-		else if (wasLower)
-		{
-			glScalef(sz, sz, 1);
-			wasLower = false;
-		}
-		*/
+
 
 		switch(toupper(str[c]))
 		{
@@ -2911,11 +2593,7 @@ void Core::print(int x, int y, const char *str, float sz)
 			_VLN(xx, y+1, xx+1, y);
 		break;
 		default:
-			/*
-			std::ostringstream os;
-			os << "Core::print doesn't know char: " << str[c];
-			debugLog(os.str());
-			*/
+
 		break;
 		}
 		if (isLower)
@@ -2929,7 +2607,7 @@ void Core::print(int x, int y, const char *str, float sz)
 	glEnd();
 
 	glPopMatrix();
-	//glPopAttrib();
+
 
 }
 
@@ -2953,7 +2631,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 {
 
 	BBGE_PROF(Core_render);
-	//HWND hwnd = _glfwWin.Wnd;
+
 
 	if (startLayer == -1 && endLayer == -1 && overrideStartLayer != 0)
 	{
@@ -2990,21 +2668,10 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 
 
-	/*
-	//default
-	if (renderObjectLayerOrder.empty())
-	{
-		renderObjectLayerOrder.resize(renderObjectLayers.size());
-		for (int i = 0; i < renderObjectLayerOrder.size(); i++)
-		{
-			renderObjectLayerOrder[i] = i;
-		}
-	}
-	*/
 	RenderObject::rlayer = 0;
 
 	for (int c = 0; c < renderObjectLayerOrder.size(); c++)
-	//for (int i = 0; i < renderObjectLayers.size(); i++)
+
 	{
 		int i = renderObjectLayerOrder[c];
 		if (i == -1) continue;
@@ -3021,12 +2688,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 		if (darkLayer.isUsed() )
 		{
-			/*
-			if (i == darkLayer.getLayer())
-			{
-				darkLayer.preRender();
-			}
-			*/
+
 			if (i == darkLayer.getRenderLayer())
 			{
 				darkLayer.render();
@@ -3071,7 +2733,7 @@ void Core::showBuffer()
 	SDL_GL_SwapWindow(gScreen);
 #else
 	SDL_GL_SwapBuffers();
-	//glFlush();
+
 #endif
 
 }
@@ -3109,11 +2771,7 @@ void Core::clearRenderObjects()
 {
 	for (int i = 0; i < renderObjectLayers.size(); i++)
 	{
-		/*
-		for (int j = 0; j < renderObjectLayers[i].renderObjects.size(); j++)
-		{
-			RenderObject *r = renderObjectLayers[i].renderObjects[j];
-		*/
+
 		RenderObject *r = renderObjectLayers[i].getFirst();
 		while (r)
 		{
@@ -3191,7 +2849,6 @@ void Core::shutdown()
 
 
 
-
 #ifdef BBGE_BUILD_VFS
 	debugLog("Unload VFS...");
 		vfs.Clear();
@@ -3220,8 +2877,8 @@ bool Core::exists(const std::string &filename)
 
 CountedPtr<Texture> Core::findTexture(const std::string &name)
 {
-	//stringToUpper(name);
-	//std::ofstream out("texturefind.log");
+
+
 	int sz = resources.size();
 	for (int i = 0; i < sz; i++)
 	{
@@ -3412,7 +3069,7 @@ void Core::removeTexture(Texture *res)
 
 void Core::deleteRenderObjectMemory(RenderObject *r)
 {
-	//if (!r->allocStatic)
+
 	delete r;
 }
 
@@ -3436,7 +3093,7 @@ void Core::removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag)
 
 void Core::enqueueRenderObjectDeletion(RenderObject *object)
 {
-	if (!object->_dead) // && !object->staticallyAllocated)
+	if (!object->_dead)
 	{
 		garbage.push_back (object);
 		object->_dead = true;
@@ -3468,17 +3125,7 @@ bool Core::canChangeState()
 	return (nestedMains<=1);
 }
 
-/*
-int Core::getVirtualWidth()
-{
-	return virtualWidth;
-}
 
-int Core::getVirtualHeight()
-{
-	return virtualHeight;
-}
-*/
 
 // Take a screenshot of the specified region of the screen and store it
 // in a 32bpp pixel buffer.  delete[] the returned buffer when it's no
@@ -3564,7 +3211,7 @@ void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop3
 	unsigned int size = sizeof(unsigned char) * w * h * 3;
 	imageData = (unsigned char *)malloc(size);
 
-	float wbit = fsz;//+1;
+	float wbit = fsz;
 	float hbit = ((fsz)*(3.0f/4.0f));
 
 	int width = core->width-1;
@@ -3595,25 +3242,8 @@ void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop3
 	debugLog(os.str());
 
 	glRasterPos2i(0, 0);
-	
-	/*
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-	glDisable(GL_BLEND);
 
-	glDisable(GL_ALPHA_TEST); glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST); glDisable(GL_DITHER); glDisable(GL_FOG);
-	glDisable(GL_LIGHTING); glDisable(GL_LOGIC_OP);
-	glDisable(GL_STENCIL_TEST); glDisable(GL_TEXTURE_1D);
-	glDisable(GL_TEXTURE_2D); glPixelTransferi(GL_MAP_COLOR,
-		GL_FALSE); glPixelTransferi(GL_RED_SCALE, 1);
-	glPixelTransferi(GL_RED_BIAS, 0); glPixelTransferi(GL_GREEN_SCALE, 1);
-	glPixelTransferi(GL_GREEN_BIAS, 0); glPixelTransferi(GL_BLUE_SCALE, 1);
-	glPixelTransferi(GL_BLUE_BIAS, 0); glPixelTransferi(GL_ALPHA_SCALE, 1);
-	glPixelTransferi(GL_ALPHA_BIAS, 0);
-	*/
-
-	//glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	debugLog("pixel zoom");
 	glPixelZoom(zx,zy);
@@ -3633,7 +3263,7 @@ void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop3
 	tgaSave(filename.c_str(),w,h,savebits,imageData);
 
 	debugLog("pop");
-	//glPopAttrib();
+
 
 	debugLog("done");
 }
@@ -3677,11 +3307,9 @@ void Core::save64x64ScreenshotTGA(const std::string &filename)
 	tgaSave(filename.c_str(),64,64,32,imageData);
 	glPixelZoom(1,1);
 
-	// do NOT free imageData here
-	// it IS freed in tgaSave
-	//free(imageData);
-}
 
+
+}
 
 
 
@@ -3782,7 +3410,7 @@ int Core::tgaSaveSeries(char		*filename,
  void Core::screenshot()
  {
 	 doScreenshot = true;
-//	ilutGLScreenie();
+
  }
 
 

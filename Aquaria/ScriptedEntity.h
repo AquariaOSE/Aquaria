@@ -50,7 +50,7 @@ public:
 	void entityDied(Entity *e);
 	void message(const std::string &msg, int v);
 	int messageVariadic(lua_State *L, int nparams);
-	
+
 	static bool runningActivation;
 
 	void sporesDropped(const Vector &pos, int type);
@@ -101,8 +101,8 @@ protected:
 	void onAlwaysUpdate(float dt);
 	void updateStrands(float dt);
 	bool animKeyFunc;
-	//void onPathEnd();
-	
+
+
 	void onExitTimer();
 	float myTimer;
 	void onHitWall();

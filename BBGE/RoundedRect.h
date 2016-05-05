@@ -40,7 +40,7 @@ public:
 	int getHeight() { return height; }
 	int getRadius() { return radius; }
 
-	
+
 protected:
 	void onUpdate(float dt);
 	void onRender();

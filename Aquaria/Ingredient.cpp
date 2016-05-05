@@ -38,7 +38,7 @@ bool IngredientData::hasIET(IngredientEffectType iet)
 	for (IngredientEffects::iterator i = effects.begin(); i != effects.end(); i++)
 	{
 		if ((*i).type == iet)
-			return true; 
+			return true;
 	}
 	return false;
 }
@@ -59,7 +59,7 @@ Ingredient::Ingredient(const Vector &pos, IngredientData *data, int amount)
 		velocity = randVector(mag)*0.5f + Vector(0, -mag)*0.5f;
 	else
 		velocity = Vector(0,-mag*0.5f);
-	gravity = Vector(0, 250); //300
+	gravity = Vector(0, 250);
 	scale = Vector(0.2,0.2);
 	scale.interpolateTo(Vector(1, 1), 0.75);
 
@@ -89,7 +89,7 @@ bool Ingredient::isRotKind()
 
 IngredientData *Ingredient::getIngredientData()
 {
-	return data;	
+	return data;
 }
 
 void Ingredient::eat(Entity *e)
@@ -110,12 +110,7 @@ void Ingredient::onUpdate(float dt)
 	if (dsq->game->collideCircleWithGrid(position, 24))
 	{
 		position = lastPosition;
-		/*
-		if (velocity.x < velocity.y)
-			velocity.x = -velocity.x;
-		else
-			velocity.y = -velocity.y;
-		*/
+
 		velocity = 0;
 	}
 
@@ -145,7 +140,7 @@ void Ingredient::onUpdate(float dt)
 			dsq->game->pickupIngredientEffects(data);
 
 			dsq->spawnParticleEffect("IngredientCollect", position);
-			
+
 			dsq->sound->playSfx("pickup-ingredient");
 		}
 	}

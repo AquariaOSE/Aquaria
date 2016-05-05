@@ -58,7 +58,7 @@ public:
 	EventPtr event;
 	bool quitMain;
 	int buttonID;
-	
+
 protected:
 	void onUpdate(float dt);
 	Quad *highlight;

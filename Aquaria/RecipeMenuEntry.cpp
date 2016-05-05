@@ -36,12 +36,12 @@ namespace RecipeMenuNamespace
 }
 
 using namespace RecipeMenuNamespace;
-	
+
 RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe)
 {
 	selected = 0;
-	//	Quad *result, *i1, *i2, *i3;
-	//	Recipe *recipe;
+
+
 
 	data = dsq->continuity.getIngredientDataByName(recipe->result);
 	if (data)
@@ -51,16 +51,16 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 		glow->setBlendType(BLEND_ADD);
 		glow->alphaMod = 0;
 		addChild(glow, PM_POINTER);
-		
+
 		result = new Quad("ingredients/" + data->gfx, Vector(-100,0));
 		result->scale = Vector(0.7, 0.7);
 		addChild(result, PM_POINTER);
-		
+
 		BitmapText *text = new BitmapText(&dsq->smallFont);
 		text->scale = Vector(0.7, 0.7);
 		text->color = 0;
 		text->position = result->position + Vector(0, 18);
-		
+
 		text->setText(processFoodName(data->displayName));
 		addChild(text, PM_POINTER);
 	}
@@ -70,7 +70,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 	addChild(equals, PM_POINTER);
 
 	int c = 0;
-	//int size = (recipe->names.size() + recipe->types.size())-1;
+
 	int size=0;
 
 	for (int i = 0; i < recipe->names.size(); i++)
@@ -81,7 +81,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 
 	size --;
 
-	
+
 	for (int i = 0; i < recipe->names.size(); i++)
 	{
 		debugLog("recipe name: " + recipe->names[i].name);
@@ -93,21 +93,21 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 				ing[c] = new Quad("ingredients/" + data->gfx, Vector(100*c,0));
 				ing[c]->scale = Vector(0.7, 0.7);
 				addChild(ing[c], PM_POINTER);
-				
+
 				BitmapText *text = new BitmapText(&dsq->smallFont);
 				text->scale = Vector(0.7, 0.7);
 				text->color = 0;
 				text->position = ing[c]->position + Vector(0, 18);
 				text->setText(processFoodName(data->displayName));
 				addChild(text, PM_POINTER);
-				
+
 				if (c < size)
 				{
 					Quad *plus = new Quad("gui/recipe-plus", Vector(100*c+50, 0));
 					plus->scale = Vector(0.7, 0.7);
 					addChild(plus, PM_POINTER);
 				}
-				
+
 				c++;
 				if (c > 3)
 				{
@@ -117,17 +117,17 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 			}
 		}
 	}
-	
+
 	for (int i = 0; i < recipe->types.size(); i++)
 	{
-		//debugLog("recipe type: " + recipe->types[i].typeName);
+
 		for (int j = 0; j < recipe->types[i].amount; j++)
 		{
 			// any type of whatever...
 			BitmapText *text = new BitmapText(&dsq->smallFont);
 			text->color = 0;
 			text->scale = Vector(0.8, 0.8);
-			text->position = Vector(100*c, 0); //-20
+			text->position = Vector(100*c, 0);
 
 			std::string typeName = dsq->continuity.getIngredientDisplayName(recipe->types[i].typeName);
 
@@ -139,16 +139,16 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 			text->setText(typeName);
 
 			addChild(text, PM_POINTER);
-			
+
 			if (c < size)
 			{
 				Quad *plus = new Quad("gui/recipe-plus", Vector(100*c+50, 0));
 				plus->scale = Vector(0.7, 0.7);
 				addChild(plus, PM_POINTER);
 			}
-			
+
 			c++;
-		}	
+		}
 	}
 
 	description = 0;
@@ -180,15 +180,15 @@ void RecipeMenuEntry::onUpdate(float dt)
 			glow->alphaMod = 0.2;
 
 			std::ostringstream ds;
-			//ds << data->name << ": ";
-			//ds << "* ";
+
+
 			for (int i = 0; i < data->effects.size(); i++)
 			{
 				ds << dsq->continuity.getIEString(data, i);
 				if (i == data->effects.size()-1)
 				{
-					// do nothing
-					//ds << ".";
+
+
 				}
 				else
 				{
@@ -198,7 +198,7 @@ void RecipeMenuEntry::onUpdate(float dt)
 
 			game->recipeMenu.description->setText(ds.str());
 			game->recipeMenu.description->offset = Vector(0, -10 * (game->recipeMenu.description->getNumLines()-1));
-			// description->setText(ds.str());
+
 			selected = 1;
 		}
 		else
@@ -235,7 +235,7 @@ void RecipeMenu::slide(RenderObject *r, bool in, float t)
 	if (in)
 	{
 		r->alpha = 1;
-		//r->alpha.interpolateTo(1, 0.2);
+
 		r->offset = Vector(0,oy);
 		r->offset.interpolateTo(Vector(0,0), t, 0, 0, 1);
 	}
@@ -261,20 +261,15 @@ int RecipeMenu::getNumKnown()
 
 int RecipeMenu::getNumPages()
 {
-	int numKnown = dsq->continuity.recipes.size();//getNumKnown();
+	int numKnown = dsq->continuity.recipes.size();
 	int numPages = (numKnown/pageSize);
 
-	/*
-	for (int i = 0; i < dsq->continuity.recipes.size(); i++)
-	{
-		debugLog("r: " + dsq->continuity.recipes[i].result);
-	}
-	*/
-	
+
+
 	std::ostringstream os;
 	os << "numKnown: " << numKnown << " pagesSize: " << pageSize << " numPages: " << numPages;
 	debugLog(os.str());
-	
+
 	return numPages;
 }
 
@@ -285,12 +280,12 @@ void RecipeMenu::goPrevPage()
 	dsq->sound->playSfx("recipemenu-pageturn");
 
 	destroyPage();
-	
+
 	currentPage--;
-	
+
 	if (currentPage < 0)
 		currentPage = getNumPages();
-		
+
 	createPage(currentPage);
 }
 
@@ -301,15 +296,15 @@ void RecipeMenu::goNextPage()
 	dsq->sound->playSfx("recipemenu-pageturn");
 
 	destroyPage();
-	
+
 	currentPage++;
-	
+
 	int pages = getNumPages();
 	if (currentPage > pages)
 	{
 		currentPage = 0;
 	}
-	
+
 	createPage(currentPage);
 }
 
@@ -324,7 +319,7 @@ void RecipeMenu::toggle(bool on, bool watch)
 	debugLog("RecipeMenu::toggle");
 
 	toggling = true;
-	
+
 	float t = 0.6;
 
 	if (on)
@@ -350,7 +345,7 @@ void RecipeMenu::toggle(bool on, bool watch)
 		}
 
 		createPage(currentPage);
-		
+
 		nextPage->alpha.interpolateTo(1, 0.2);
 		prevPage->alpha.interpolateTo(1, 0.2);
 	}
@@ -365,7 +360,7 @@ void RecipeMenu::toggle(bool on, bool watch)
 
 		if (this->on)
 			dsq->sound->playSfx("recipemenu-close");
-		
+
 		nextPage->alpha = 0;
 		prevPage->alpha = 0;
 
@@ -395,7 +390,7 @@ void RecipeMenu::createPage(int p)
 				{
 					RecipeMenuEntry *r = new RecipeMenuEntry(&dsq->continuity.recipes[i]);
 					recipeMenuEntries.push_back(r);
-					//80 + num * 70
+
 					r->position = Vector(500-5, 65 + num * 70);
 					dsq->game->addRenderObject(r, scroll->layer);
 					num++;
@@ -409,21 +404,21 @@ void RecipeMenu::createPage(int p)
 			}
 		}
 	}
-	
+
 	if (num == 0)
 	{
-		
+
 	}
 
 	description = new BitmapText(&dsq->smallFont);
 	description->followCamera = 1;
 	description->scale = Vector(0.7, 0.7);
 	description->setAlign(ALIGN_LEFT);
-	description->position = Vector(364, 334); //most recent: (364, 334) //348, 328 
+	description->position = Vector(364, 334); //most recent: (364, 334) //348, 328
 	description->color = Vector(0,0,0);//Vector(0.7,0,0);
 	description->setText("");
 	description->setWidth(500); // 1000??
-	
+
 	dsq->game->addRenderObject(description, scroll->layer);
 
 	std::ostringstream os2;

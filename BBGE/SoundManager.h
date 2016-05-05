@@ -183,19 +183,6 @@ public:
 	void pause();
 	void resume();
 
-	/*
-	void setMusVol(float v, float t=0);
-	void setSfxVol(float v, float t=0);
-	void setVoxVol(float v, float t=0);
-
-	void setMusMul(float v, float t=0);
-	void setSfxMul(float v, float t=0);
-	void setVoxMul(float v, float t=0);
-
-	float getTotalSfxVol();
-	float getTotalMusVol();
-	float getTotalVoxVol();
-	*/
 
 
 	float getVoiceTime();
@@ -256,8 +243,6 @@ private:
 
 
 extern SoundManager *sound;
-
-
 
 
 

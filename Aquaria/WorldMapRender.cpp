@@ -67,7 +67,7 @@ namespace WorldMapRenderNamespace
 	bool editorActive=false;
 
 	Quad *tophud=0;
-	
+
 	Gradient *underlay = 0;
 }
 
@@ -157,44 +157,35 @@ public:
 	BeaconRender(BeaconData *beaconData) : Quad(), beaconData(beaconData)
 	{
 		renderQuad = false;
-		setTexture("gui/minimap/ripple"); //"particles/softring"); // or whatever
+		setTexture("gui/minimap/ripple");
 		position = beaconData->pos;
 		truePosition = beaconData->pos;
 		followCamera = 1;
-		/*
-		scale = Vector(0.2, 0.2);
-		scale.interpolateTo(Vector(0.5, 0.5), 0.75, -1, 1, 1);
-		*/
+
 		alpha = 0.5;
 		color = beaconData->color;
 
-		/*
-		pe = new ParticleEffect();
-		pe->load("sparkle");
-		pe->followCamera = 1;
-		pe->start();
-		core->addRenderObject(pe, LR_PARTICLES);
-		*/
+
 		spawnBitTimer = 0;
 	}
-	
-	//float spawnBitTimer;
+
+
 	Vector truePosition;
 
 	ParticleEffect *pe;
-	
+
 	float spawnBitTimer;
-	
-	
+
+
 	void render()
 	{
-		//setProperPosition();
+
 		Quad::render();
 	}
-	
+
 protected:
 	BeaconData *beaconData;
-	
+
 	void setProperPosition()
 	{
 		Vector wp = parent->getWorldCollidePosition(truePosition);
@@ -215,13 +206,13 @@ protected:
 		Vector move = wp - getWorldPosition();
 		position += move;
 	}
-	
-	
+
+
 	void onUpdate(float dt)
 	{
 		Quad::onUpdate(dt);
-		
-		//setProperPosition();
+
+
 
 		if (!dsq->game->worldMapRender->isOn()) return;
 
@@ -244,7 +235,7 @@ protected:
 				int x = sinf(radius)*len;
 				int y = cosf(radius)*len;
 
-				//truePosition +
+
 				float t = 0.75;
 				WorldMapBoundQuad *q = new WorldMapBoundQuad(Vector(x, y, 0));
 				q->setTexture("particles/glow");
@@ -257,16 +248,15 @@ protected:
 				q->color = color;
 
 				q->scale = Vector(pscale, pscale);
-				//q->fadeAlphaWithLife = 1;
+
 				q->setLife(1);
 				q->setDecayRate(1.0f/t);
-				
+
 				q->setBlendType(BLEND_ADD);
 				addChild(q, PM_POINTER);
 
-				//std::ostringstream os;
-				//os << "children: " << children.size();
-				//debugLog(os.str());
+
+
 			}
 			else
 			{
@@ -276,9 +266,6 @@ protected:
 
 
 
-		/*
-
-		*/
 	}
 
 };
@@ -295,41 +282,26 @@ public:
 		blinkTimer = 0;
 		alphaMod = 0.66;
 		canMove = gemData->canMove;
-		//canMove = true;
-		//gemData->userString = "HI THERE!";
+
+
 
 		std::string useString = gemData->userString;
 
-		/*
-		if (gemData->userString.empty())
-		{
-			if (gemData->name == "savepoint")
-				useString = "Memory Crystal";
-			if (gemData->name == "cook")
-				useString = "Kitchen";
-		}
-		*/
 
-		/*
-		text = new BitmapText(&dsq->smallFont);
-		text->position = Vector(0, -20);
-		text->setText(gemData->userString);
-		addChild(text, PM_POINTER);
-		*/
 
-		text = new TTFText(&dsq->fontArialSmall);//new DebugFont(10, useString);
-		text->offset = Vector(0, 4); //Vector(0,5);
+		text = new TTFText(&dsq->fontArialSmall);
+		text->offset = Vector(0, 4);
 		text->setText(useString);
 		text->setAlign(ALIGN_CENTER);
 
 		textBG = new RoundedRect();
-		textBG->setWidthHeight(text->getActualWidth() + 20, 25, 10);  // 30
+		textBG->setWidthHeight(text->getActualWidth() + 20, 25, 10);
 		textBG->alpha = 0;
 		textBG->followCamera = 1;
 		game->addRenderObject(textBG, LR_WORLDMAPHUD);
 
 		textBG->addChild(text, PM_POINTER);
-		//game->addRenderObject(text, LR_WORLDMAPHUD);
+
 	}
 
 	void destroy()
@@ -348,32 +320,16 @@ public:
 	{
 		this->blink = blink;
 
-		//if (blink)
-		//{
-		//	scale = Vector(0.5, 0.5);
-		//	scale.interpolateTo(Vector(1,1), 0.5, -1, 1);
-		//	/*
-		//	alpha = 0.5;
-		//	alpha.interpolateTo(1, 0.5, -1, 1);
-		//	*/
-		//}
-		//else
-		//{
-		//	scale.stop();
-		//	scale = Vector(1,1);
-		//	/*
-		//	alpha.stop();
-		//	alpha = 1;
-		//	*/
-		//}
+
+
 	}
 	bool canMove;
 protected:
-	
+
 	float blinkTimer;
 	bool blink;
 	GemData *gemData;
-	//BitmapText *text;
+
 	TTFText *text;
 	RoundedRect *textBG;
 	void onUpdate(float dt)
@@ -386,7 +342,7 @@ protected:
 			sz.x = sz.y = zoomMin;
 		if (sz.x > zoomMax)
 			sz.x = sz.y = zoomMax;
-		
+
 		if (sz.x > 1.0f)
 		{
 			scale.x = (1.0f/sz.x);
@@ -421,22 +377,22 @@ protected:
 				{
 					core->sound->playSfx("Gem-Move");
 					mover = this;
-					//offset = Vector(position - core->mouse.position);
-					//position += core->mouse.position - wp;
-					//offset = Vector(0, 4);
+
+
+
 				}
 			}
 			else if (mover == this)
 			{
-				//position = core->mouse.position;
+
 				position += (core->mouse.position - wp)/parent->scale.x;
 				if (!core->mouse.buttons.left)
 				{
 					mover = 0;
 					core->sound->playSfx("Gem-Place");
-					//position += offset;
-					//offset = Vector(0,0);
-					//offset = Vector(0,0);
+
+
+
 					gemData->pos = position;
 				}
 			}
@@ -450,20 +406,14 @@ protected:
 
 		if ((core->mouse.position - wp).isLength2DIn(GEM_GRAB))
 		{
-			//text->alpha.interpolateTo(1, 0.1);
-			/*
-			if (!gemData->userString.empty())
-			textBG->alpha.interpolateTo(1, 0.1);
-			*/
+
+
 			if (!gemData->userString.empty())
 				textBG->show();
 		}
 		else
 		{
-			/*
-			text->alpha.interpolateTo(0, 0.1);
-			textBG->alpha.interpolateTo(0, 0.1);
-			*/
+
 			if (textBG->alpha == 1)
 				textBG->hide();
 		}
@@ -622,17 +572,11 @@ void WorldMapRender::setVis(WorldMapTile *tile)
 {
 	if (!tile) return;
 #ifdef AQUARIA_BUILD_MAPVIS
-	/*
-	if (lastVisQuad)
-	{
-		lastVisQuad->alphaMod = 0.5;
-		lastVisQuad->color = Vector(0.7, 0.8, 1);
-	}
-	*/
+
 
 	tile->q->color = Vector(1,1,1);
 	tile->q->alphaMod = 1;
-	
+
 	if (visMethod == VIS_VERTEX)
 	{
 		tile->q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
@@ -704,19 +648,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 
 	savedTexData = 0;
 
-	/*
-	bg = new Quad("", Vector(400,300));
-	bg->setWidthHeight(810, 610);
-	bg->setSegs(32, 32, 0.5, 0.5, 0.008, 0.008, 2.0, 1);
-	bg->alphaMod = 0.5;
-	bg->alpha = 0;
-	bg->followCamera = 1;
-	bg->repeatTextureToFill(true);
-	//bg->parentManagedPointer = 1;
-	dsq->game->addRenderObject(bg, LR_MESSAGEBOX);
 
-	bg->renderQuad = false;
-	*/
 
 	int num = dsq->continuity.worldMap.getNumWorldMapTiles();
 	std::string n = dsq->game->sceneName;
@@ -750,7 +682,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			q->alphaMod = 0;
 
 			tile->q = q;
-			
+
 			q->setWidthHeight(q->getWidth()*tile->scale, q->getHeight()*tile->scale);
 			q->scale = Vector(0.25f*tile->scale2, 0.25f*tile->scale2);
 
@@ -769,7 +701,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 				activeTile->q->color = Vector(1,1,1);
 				activeTile->q->alphaMod = 1;
 			}
-		
+
 			addChild(q, PM_POINTER);
 
 			tiles.push_back(q);
@@ -789,14 +721,14 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	tophud->alpha = 0;
 	dsq->game->addRenderObject(tophud, LR_WORLDMAPHUD);
 
-	//int fontSize = 6;
+
 	float aly = 26, aly2 = 18;
 	float sz = 0.6;
 
 	//hover
 	areaLabel = new BitmapText(&dsq->smallFont);
 	areaLabel->scale = Vector(sz,sz);
-	//areaLabel->setFontSize(fontSize);
+
 	areaLabel->setAlign(ALIGN_CENTER);
 	areaLabel->followCamera = 1;
 	areaLabel->position = Vector(150,aly);
@@ -805,7 +737,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 
 	//in
 	areaLabel2 = new BitmapText(&dsq->smallFont);
-	//areaLabel2->setFontSize(fontSize);
+
 	areaLabel2->scale = Vector(sz,sz);
 	areaLabel2->followCamera = 1;
 	areaLabel2->setAlign(ALIGN_CENTER);
@@ -816,7 +748,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	//select
 	areaLabel3 = new BitmapText(&dsq->smallFont);
 	areaLabel3->scale = Vector(sz,sz);
-	//areaLabel3->setFontSize(fontSize);
+
 	areaLabel3->followCamera = 1;
 	areaLabel3->setAlign(ALIGN_CENTER);
 	areaLabel3->position = Vector(650, aly);
@@ -831,9 +763,9 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	originalActiveTile = activeTile;
 
 	bindInput();
-	
+
 	underlay = new Gradient;
-	//underlay->makeVertical(Vector(0.5,0.5,1), Vector(0,0,0.5));
+
 	underlay->makeVertical(Vector(0.25,0.25,0.5), Vector(0,0,0.25));
 	underlay->position = Vector(400,300);
 	underlay->autoWidth = AUTO_VIRTUALWIDTH;
@@ -852,14 +784,14 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	addHintQuad2->alpha = 0;
 	dsq->game->addRenderObject(addHintQuad2, LR_WORLDMAPHUD);
 
-	//helpButton->event.set(MakeFunctionEvent(WorldMapRender, onToggleHelpScreen));
+
 	helpButton = new AquariaMenuItem;
 	helpButton->event.setActionMapperCallback(this, ACTION_TOGGLEHELPSCREEN, 0);
 	helpButton->useQuad("gui/icon-help");
 	helpButton->useGlow("particles/glow", 40, 40);
 	helpButton->useSound("Click");
 	helpButton->alpha = 0;
-	//helpButton->position = Vector(800-20, 20);
+
 	dsq->game->addRenderObject(helpButton, LR_WORLDMAPHUD);
 }
 
@@ -886,7 +818,7 @@ void WorldMapRender::bindInput()
 
 void WorldMapRender::destroy()
 {
-	//clearVis(activeTile);
+
 	for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
 	{
 		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
@@ -939,7 +871,7 @@ void WorldMapRender::onUpdate(float dt)
 
 	if (alpha.x > 0)
 	{
-		//if (activeTile && activeTile==originalActiveTile && !gemMovers.empty())
+
 		if (originalActiveTile && !gemMovers.empty())
 		{
 			gemMovers.back()->position = getAvatarWorldMapPosition();
@@ -975,7 +907,7 @@ void WorldMapRender::onUpdate(float dt)
 						if (q)
 						{
 							d = (q->getWorldPosition() - core->mouse.position).getSquaredLength2D();
-							
+
 							if (q->isCoordinateInsideWorld(core->mouse.position) && (sd == -1 || d < sd))
 							{
 								sd = d;
@@ -993,7 +925,7 @@ void WorldMapRender::onUpdate(float dt)
 				{
 					areaLabel3->setText(dsq->continuity.stringBank.get(activeTile->stringIndex));
 				}
-	
+
 				if (selectedTile)
 				{
 					areaLabel->setText(dsq->continuity.stringBank.get(selectedTile->stringIndex));
@@ -1009,7 +941,7 @@ void WorldMapRender::onUpdate(float dt)
 
 								activeTile = selectedTile;
 								activeQuad = activeTile->q;
-								//activeTile->gridPos = activeTile->q->position;
+
 								if (activeQuad)
 								{
 									dsq->clickRingEffect(activeQuad->getWorldPosition(), 0);
@@ -1126,7 +1058,7 @@ void WorldMapRender::onUpdate(float dt)
 			zoomMax = exteriorZoomMax;
 		}
 
-		float scrollAmount = 0.2;//0.25;
+		float scrollAmount = 0.2;
 
 		if (core->mouse.scrollWheelChange)
 		{
@@ -1357,7 +1289,7 @@ void WorldMapRender::toggle(bool turnON)
 	if (alpha.isInterpolating()) return;
 
 	if (dsq->mod.isActive() && !dsq->mod.hasWorldMap()) return;
-	
+
 	if (dsq->isNested()) return;
 
 	if (!dsq->game->avatar) return;
@@ -1367,7 +1299,7 @@ void WorldMapRender::toggle(bool turnON)
 	if (dsq->game->isInGameMenu()) return;
 
 	if (!dsq->game->isActive()) return;
-	
+
 	if (turnON && dsq->game->isPaused()) return;
 
 	if (!this->on && !dsq->game->avatar->isInputEnabled()) return;
@@ -1387,7 +1319,7 @@ void WorldMapRender::toggle(bool turnON)
 	{
 		restoreVel = dsq->game->avatar->vel;
 		dsq->game->avatar->vel = Vector(0,0,0);
-		//dsq->game->avatar->idle();
+
 		dsq->game->togglePause(true);
 
 		core->sound->playSfx("menu-open");
@@ -1435,23 +1367,23 @@ void WorldMapRender::toggle(bool turnON)
 
 		alpha.interpolateTo(1, 0.2);
 
-		
-		//dsq->game->hudUnderlay->alpha.interpolateTo(WORLDMAP_UNDERLAY_ALPHA, 0.2);
+
+
 		underlay->alpha.interpolateTo(WORLDMAP_UNDERLAY_ALPHA, 0.2);
 
 		addHintQuad1->alpha.interpolateTo(1.0, 0.2);
 		addHintQuad2->alpha.interpolateTo(1.0, 0.2);
 		helpButton->alpha.interpolateTo(1.0, 0.2);
-		
+
 		addAllGems();
-		
+
 		for (Continuity::Beacons::reverse_iterator i = dsq->continuity.beacons.rbegin(); i != dsq->continuity.beacons.rend(); i++)
 		{
 			if ((*i).on)
 			{
 				BeaconRender *b = new BeaconRender(&(*i));
-				//b->position = (*i).pos;
-				//game->addRenderObject(b, layer+1);
+
+
 				addChild(b, PM_POINTER);
 				beaconRenders.push_back(b);
 			}
@@ -1496,14 +1428,6 @@ void WorldMapRender::toggle(bool turnON)
 		}
 
 
-		//setVis(activeTile);
-		/*
-		for (int i = 0; i < LR_MENU; i++)
-		{
-			RenderObjectLayer *rl = dsq->getRenderObjectLayer(i);
-			rl->visible = true;
-		}
-		*/
 
 		core->sound->playSfx("Menu-Close");
 
@@ -1513,7 +1437,7 @@ void WorldMapRender::toggle(bool turnON)
 		alpha.interpolateTo(0, 0.2);
 
 		dsq->game->togglePause(false);
-		//dsq->game->hudUnderlay->alpha.interpolateTo(0, 0.2);
+
 		underlay->alpha.interpolateTo(0, 0.2);
 		addHintQuad1->alpha.interpolateTo(0, 0.2);
 		addHintQuad2->alpha.interpolateTo(0, 0.2);
@@ -1522,14 +1446,14 @@ void WorldMapRender::toggle(bool turnON)
 
 		for (GemMovers::iterator i = gemMovers.begin(); i != gemMovers.end(); i++)
 		{
-			//removeChild(*i);
+
 			(*i)->safeKill();
 		}
 		gemMovers.clear();
-		
+
 		for (BeaconRenders::iterator i = beaconRenders.begin(); i != beaconRenders.end(); i++)
 		{
-			//removeChild(*i);
+
 			(*i)->safeKill();
 		}
 		beaconRenders.clear();
@@ -1546,7 +1470,7 @@ void WorldMapRender::createGemHint(const std::string &gfx)
 		doubleClickTimer = 0;
 		GemData *g = dsq->continuity.pickupGem(gfx, false);
 		g->canMove = 1;
-		g->pos = getAvatarWorldMapPosition();// + Vector(0, -20);
+		g->pos = getAvatarWorldMapPosition();
 		g->userString = useString;
 		addGem(g);
 		fixGems();
@@ -1614,25 +1538,6 @@ void WorldMapRender::action (int id, int state)
 
 		}
 
-		/*
-		if (id == ACTION_PRIMARY && state)
-		{
-			if (doubleClickTimer > 0)
-			{
-				doubleClickTimer = 0;
-				GemData *g = dsq->continuity.pickupGem("pyramidyellow", false);
-				g->canMove = 1;
-				g->userString = dsq->getUserInputString("Enter Map Hint Name:", "");
-				addGem(g);
-			}
-			else
-			{
-				if (doubleClickTimer == 0)
-				{
-					doubleClickTimer = DOUBLE_CLICK_DELAY;
-				}
-			}
-		}
-		*/
+
 	}
 }

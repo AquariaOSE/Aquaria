@@ -355,7 +355,7 @@ bool OggDecoder::preStart(ALuint source)
     /* NOTE: The failure to use alGetError() here and elsewhere is
      * intentional -- since alGetError() writes to a global buffer and
      * is thus not thread-safe, we can't use it either in the decoding
-     * threads _or_ here in the main thread.  In this case, we rely on 
+     * threads _or_ here in the main thread.  In this case, we rely on
      * the specification that failing OpenAL calls do not modify return
      * parameters to detect failure; for functions that do not return
      * values, we have no choice but to hope for the best.  (From a
@@ -1279,7 +1279,6 @@ void OpenALChannel::setSound(OpenALSound *_sound)
     if (sound)
         sound->reference();
 }
-
 
 
 

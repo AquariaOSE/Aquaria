@@ -123,7 +123,7 @@ public:
 		blendType = bt;
 	}
 
-	//enum DestroyType { RANDOM=0, REMOVE_STATE };
+
 	virtual void destroy();
 
 	virtual void flipHorizontal();
@@ -183,7 +183,7 @@ public:
 	const RenderObject &operator=(const RenderObject &r);
 
 	void toggleCull(bool value);
-	
+
 	void safeKill();
 
 	void enqueueChildDeletion(RenderObject *r);
@@ -245,18 +245,14 @@ public:
 	unsigned char blendType;
 
 	float life;
-	//float lifeAlphaFadeMultiplier;
+
 	float followCamera;
 
-	//bool useColor;
+
 	bool renderBeforeParent;
 	bool updateAfterParent;
 
-	//bool followXOnly;
-	//bool renderOrigin;
 
-	//float updateMultiplier;
-	//EventPtr deathEvent;
 
 	bool colorIsSaved;  // Used for both color and alpha
 	Vector savedColor;  // Saved values from setColorMult()
@@ -271,11 +267,10 @@ public:
 
 	InterpolatedVector *positionSnapTo;
 
-	//DestroyType destroyType;
+
 	typedef std::vector<RenderObject*> Children;
 	Children children, childGarbage;
 
-	//Flags flags;
 
 
 	float collideRadius;
@@ -290,7 +285,7 @@ public:
 
 	bool ignoreUpdate;
 	bool useOldDT;
-	
+
 protected:
 	virtual void onFH(){}
 	virtual void onFV(){}
@@ -313,7 +308,7 @@ protected:
 		}
 		if (fadeAlphaWithLife && !alpha.isInterpolating())
 		{
-			//alpha = ((life*lifeAlphaFadeMultiplier)/maxLife);
+
 			alpha = life/maxLife;
 		}
 	}
@@ -325,7 +320,6 @@ protected:
 	void renderCollision();
 
 	bool repeatTexture;
-	//ParentManaged pm;
 	unsigned char pm;  // unsigned char to save space
 	typedef std::list<RenderObject*> RenderObjectList;
 	RenderObjectList deathNotifications;
@@ -341,7 +335,7 @@ protected:
 	bool _hidden;
 	bool _static;
 	bool _fv, _fh;
-	//bool rotateFirst;
+
 	int idx;
 	RenderObject *parent;
 	StateData *stateData;

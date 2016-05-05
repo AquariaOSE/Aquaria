@@ -255,7 +255,7 @@ void WorldMap::_load(const std::string &file)
 	std::string line;
 
 	InStream in(file.c_str());
-	
+
 	while (std::getline(in, line))
 	{
 		WorldMapTile t;
@@ -337,17 +337,7 @@ WorldMapTile *WorldMap::getWorldMapTileByIndex(int index)
 	return 0;
 }
 
-/*
 
-
-
-void WorldMap::revealMapIndex(int index)
-{
-	if (index < 0 || index >= worldMapTiles.size()) return;
-
-	worldMapTiles[index].revealed = true;
-}
-*/
 
 void WorldMap::hideMap()
 {

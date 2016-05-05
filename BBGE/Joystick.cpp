@@ -134,7 +134,7 @@ void Joystick::init(int stick)
 	{
 		debugLog("Not enough Joystick(s) found");
 	}
-	
+
 #if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
 	os.seekp(0);
 	os << "AQUARIA_EVENT_JOYSTICK" << stick;
@@ -245,24 +245,24 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 				effect.u.rumble.strong_magnitude = (uint16_t) (rightMotor * 0xffff);
 				effect.u.rumble.weak_magnitude = (uint16_t) (leftMotor * 0xffff);
 			}
-	
+
 			if (ioctl(eventfd, EVIOCSFF, &effect) == -1) {
 				debugLog(std::string("Upload rumble effect: ") + strerror(errno));
 				return;
 			}
-	
+
 			event.time.tv_sec = 0;
 			event.time.tv_usec = 0;
 			event.type = EV_FF;
 			event.code = effectid = effect.id;
-	
+
 			if (leftMotor == 0 && rightMotor == 0) {
 				event.value = 0;
 			}
 			else {
 				event.value = 1;
 			}
-	
+
 			if (write(eventfd, (const void*) &event, sizeof(event)) == -1) {
 				debugLog(std::string("Play rumble effect: ") + strerror(errno));
 			}
@@ -273,7 +273,7 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 
 void Joystick::callibrate(Vector &calvec, float deadZone)
 {
-	//float len = position.getLength2D();
+
 	if (calvec.isLength2DIn(deadZone))
 	{
 		calvec = Vector(0,0,0);
@@ -281,7 +281,7 @@ void Joystick::callibrate(Vector &calvec, float deadZone)
 	else
 	{
 		if (!calvec.isZero())
-		{				
+		{
 			Vector pos2 = calvec;
 			pos2.setLength2D(deadZone);
 			calvec -= pos2;
@@ -364,23 +364,14 @@ void Joystick::update(float dt)
 		rightStick.y = yaxis2/32768.0f;
 #endif
 
-		/*
-		std::ostringstream os;
-		os << "joy(" << position.x << ", " << position.y << ")";
-		debugLog(os.str());
-		*/
 
 
 		callibrate(position, deadZone1);
 
 		callibrate(rightStick, deadZone2);
-		
 
-		/*
-		std::ostringstream os2;
-		os2 << "joy2(" << position.x << ", " << position.y << ")";
-		debugLog(os2.str());
-		*/
+
+
 #ifdef BBGE_BUILD_SDL2
 		if (sdl_controller)
 		{
@@ -398,17 +389,7 @@ void Joystick::update(float dt)
 		for (int i = 0; i < maxJoyBtns; i++)
 			buttons[i] = SDL_JoystickGetButton(sdl_joy, i)?DOWN:UP;
 #endif
-		/*
-		unsigned char btns[maxJoyBtns];
-		glfwGetJoystickButtons(GLFW_JOYSTICK_1, btns, maxJoyBtns);
-		for (int i = 0; i < maxJoyBtns; i++)
-		{
-			if (btns[i] == GLFW_PRESS)
-				buttons[i] = DOWN;
-			else
-				buttons[i] = UP;
-		}
-		*/
+
 
 
 	}
@@ -422,13 +403,8 @@ void Joystick::update(float dt)
 		}
 	}
 
-		
-		
-		/*
-		std::ostringstream os;
-		os << "j-pos(" << position.x << ", " << position.y << " - b0[" << buttons[0] << "]) - len[" << len << "]";
-		debugLog(os.str());
-		*/
+
+
 }
 
 bool Joystick::anyButton()

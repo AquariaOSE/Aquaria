@@ -24,18 +24,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 GridRender::GridRender(ObsType obsType) : RenderObject()
 {
 	color = Vector(1, 0, 0);
-	//color = Vector(0.2,0.2,1);
+
 	position.z = 5;
 	cull = false;
 	alpha = 0.5f;
 	this->obsType = obsType;
 	blendEnabled = false;
-	//setTexture("grid");
+
 }
 
 void GridRender::onUpdate(float dt)
 {
-	RenderObject::onUpdate(dt);	
+	RenderObject::onUpdate(dt);
 	if (obsType != OT_BLACK) { blendEnabled = true; }
 }
 
@@ -150,7 +150,7 @@ void SongLineRender::clear()
 void SongLineRender::onRender()
 {
 	int w=core->getWindowWidth();
-	//core->getWindowWidth(&w);
+
 	int ls = (4*w)/1024.0f;
 	if (ls < 0)
 		ls = 1;
@@ -163,7 +163,7 @@ void SongLineRender::onRender()
 		if (i < alphaLine)
 			a = float(i)/float(alphaLine);
 		else
-			a = 1;		
+			a = 1;
 		glColor4f(pts[i].color.x, pts[i].color.y, pts[i].color.z, a);
 		glVertex2f(pts[i].pt.x, pts[i].pt.y);
 	}
