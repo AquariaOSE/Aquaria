@@ -20,14 +20,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Core.h"
 
-#ifdef RLT_FIXED
 	#define BASE_ARRAY_SIZE 100  // Size of an object array in a new layer
-#endif
 
 RenderObjectLayer::RenderObjectLayer()
-#ifdef RLT_FIXED
 	: renderObjects(BASE_ARRAY_SIZE)
-#endif
 {	
 	followCamera = NO_FOLLOW_CAMERA;
 	visible = true;
@@ -43,13 +39,11 @@ RenderObjectLayer::RenderObjectLayer()
 
 	displayListValid = false;
 	
-#ifdef RLT_FIXED
 	const int size = renderObjects.size();
 	for (int i = 0; i < size; i++)
 		renderObjects[i] = 0;
 	objectCount = 0;
 	firstFreeIdx = 0;
-#endif
 }
 
 RenderObjectLayer::~RenderObjectLayer()
@@ -68,19 +62,12 @@ void RenderObjectLayer::setOptimizeStatic(bool opt)
 	clearDisplayList();
 }
 
-#ifdef RLT_DYNAMIC
-bool sortRenderObjectsByDepth(RenderObject *r1, RenderObject *r2)
-{
-	return r1->getSortDepth() < r2->getSortDepth();
-}
-#endif
 
 void RenderObjectLayer::sort()
 {
 	if (optimizeStatic && displayListValid)
 		return;  // Assume the order hasn't changed
 
-#ifdef RLT_FIXED
 	// Compress the list before sorting to boost speed.
 	const int size = renderObjects.size();
 	int from, to;
@@ -141,15 +128,10 @@ void RenderObjectLayer::sort()
 			sortDepths[best] = d;
 		}
 	}
-#endif
-#ifdef RLT_DYNAMIC
-	renderObjectList.sort(sortRenderObjectsByDepth);
-#endif
 }
 
 void RenderObjectLayer::add(RenderObject* r)
 {
-#ifdef RLT_FIXED
 	int size = renderObjects.size();
 	if (firstFreeIdx >= size)
 	{
@@ -166,20 +148,12 @@ void RenderObjectLayer::add(RenderObject* r)
 		if (!renderObjects[firstFreeIdx])
 			break;
 	}
-#endif
-#ifdef RLT_DYNAMIC
-	renderObjectList.push_back(r);
-#endif
-#ifdef RLT_MAP
-	renderObjectMap[intptr_t(r)] = r;
-#endif
 
 	clearDisplayList();
 }
 
 void RenderObjectLayer::remove(RenderObject* r)
 {
-#ifdef RLT_FIXED
 	const int idx = r->getIdx();
 	if (idx < 0 || idx >= renderObjects.size())
 	{
@@ -196,20 +170,12 @@ void RenderObjectLayer::remove(RenderObject* r)
 	if (idx < firstFreeIdx)
 		firstFreeIdx = idx;
 	r->setIdx(-1);
-#endif
-#ifdef RLT_DYNAMIC
-	renderObjectList.remove(r);
-#endif
-#ifdef RLT_MAP
-	renderObjectMap[intptr_t(r)] = 0;
-#endif
 
 	clearDisplayList();
 }
 
 void RenderObjectLayer::moveToFront(RenderObject *r)
 {
-#ifdef RLT_FIXED
 	const int size = renderObjects.size();
 	const int curIdx = r->getIdx();
 	int lastUsed;
@@ -267,18 +233,12 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 		while (renderObjects[firstFreeIdx])
 			firstFreeIdx++;
 	}
-#endif  // RLT_FIXED
-#ifdef RLT_DYNAMIC
-	renderObjectList.remove(r);
-	renderObjectList.push_back(r);
-#endif
 
 	clearDisplayList();
 }
 
 void RenderObjectLayer::moveToBack(RenderObject *r)
 {
-#ifdef RLT_FIXED
 	const int size = renderObjects.size();
 	const int curIdx = r->getIdx();
 	int firstUsed;
@@ -341,11 +301,6 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 				break;
 		}
 	}
-#endif  // RLT_FIXED
-#ifdef RLT_DYNAMIC
-        renderObjectList.remove(r);
-	renderObjectList.push_front(r);
-#endif
 
 	clearDisplayList();
 }

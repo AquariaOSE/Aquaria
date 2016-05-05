@@ -332,48 +332,17 @@ public:
 
 	inline bool empty()
 	{
-	#ifdef RLT_FIXED
 		return objectCount == 0;
-	#endif
-	#ifdef RLT_DYNAMIC
-		return renderObjectList.empty();
-	#endif
-		return false;
 	}
 
 	inline RenderObject *getFirst()
 	{
-	#ifdef RLT_DYNAMIC
-		if (renderObjectList.empty()) return 0;
-		iter = renderObjectList.begin();
-		return *iter;
-	#endif
-	#ifdef RLT_MAP
-		if (renderObjectMap.empty()) return 0;
-		iter = renderObjectMap.begin();
-		return (*iter).second;
-	#endif
-	#ifdef RLT_FIXED
 		iter = 0;
 		return getNext();
-	#endif
 	}
 
 	RenderObject *getNext()
 	{
-	#ifdef RLT_DYNAMIC
-		if (iter == renderObjectList.end()) return 0;
-		iter++;
-		if (iter == renderObjectList.end()) return 0;
-		return *iter;
-	#endif
-	#ifdef RLT_MAP
-		if (iter == renderObjectMap.end()) return 0;
-		iter++;
-		if (iter == renderObjectMap.end()) return 0;
-		return (*iter).second;
-	#endif
-	#ifdef RLT_FIXED
 		const int size = renderObjects.size();
 		int i;
 		for (i = iter; i < size; i++)
@@ -391,7 +360,6 @@ public:
 			iter = i;
 			return 0;
 		}
-	#endif
 		return 0;
 	}
 
@@ -427,20 +395,10 @@ protected:
 	};
 	std::vector<DisplayListElement> displayList;
 
-#ifdef RLT_DYNAMIC
-	RenderObjectList renderObjectList;
-	RenderObjectList::iterator iter;
-#endif
-#ifdef RLT_MAP
-	RenderObjectMap renderObjectMap;
-	RenderObjectMap::iterator iter;
-#endif
-#ifdef RLT_FIXED
 	RenderObjects renderObjects;
 	int objectCount;
 	int firstFreeIdx;
 	int iter;
-#endif
 };
 
 class Core : public ActionMapper, public StateManager
