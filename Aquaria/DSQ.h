@@ -161,7 +161,7 @@ enum AquariaActions
 	ACTION_MULTISELECT				,
 
 	ACTION_TOGGLEWORLDMAPEDITOR		,
-	
+
 	ACTION_LOOK						,
 	ACTION_TOGGLEHELPSCREEN,
 	ACTION_PLACE_AVATAR,
@@ -191,16 +191,7 @@ enum WorldMapRevealMethod
 };
 
 
-/*
-class Title;
-class GameOver;
-class Logo;
-class Entity;
-class SCLogo;
-class IntroText;
-class AnimationEditor;
-class Intro;
-*/
+
 struct SubLine
 {
 	SubLine() { timeStamp = 0; }
@@ -229,7 +220,7 @@ public:
 	void go(const std::string &subs);
 	void update(float dt);
 	void end();
-	
+
 	void hide(float t = 0);
 	void show(float t = 0);
 
@@ -268,11 +259,11 @@ public:
 	void start();
 	void stop();
 	void load(const std::string &path);
-	
+
 	void update(float dt);
 
 	void recache();
-	
+
 	const std::string& getBaseModPath() const;
 
 	bool isActive();
@@ -282,7 +273,7 @@ public:
 
 	const std::string& getPath() const;
 	const std::string& getName() const;
-	
+
 	void shutdown();
 	bool isShuttingDown();
 
@@ -551,23 +542,7 @@ enum Layers
 
 class Avatar;
 
-/*
-class GardenHoleData
-{
-public:
-	GardenHoleData();
-	float timePlanted, timeLastChecked, lastTimeGrown;
-	int plantedItem;
-	unsigned int state;
-	int slotsUsed;
-};
 
-class GardenData
-{
-public:
-	GardenHoleData holeData[256];
-};
-*/
 
 #define MAPVIS_SUBDIV 64
 
@@ -857,12 +832,7 @@ const int FLAG_SECRET03 = 236;
 const int FLAG_COLLECTIBLE_START = 500;
 const int FLAG_COLLECTIBLE_END = 600;
 
-/*
-const int FLAG_PET_NAUTILUS		= 601;
-const int FLAG_PET_DUMBO		= 602;
-const int FLAG_PET_BLASTER		= 603;
-const int FLAG_PET_PIRANHA		= 604;
-*/
+
 
 struct PetData
 {
@@ -907,7 +877,7 @@ public:
 	void drop(int type);
 
 	void entityDied(Entity *eDead);
-	
+
 	void achieve(const std::string &achievement);
 
 	void initFoodSort();
@@ -1016,7 +986,7 @@ public:
 
 	Song *getSongByIndex(int idx);
 
-	
+
 	bool hasSong(int song);
 	int getSongTypeBySlot(int slot);
 	int getSongSlotByType(int type);
@@ -1037,7 +1007,7 @@ public:
 
 	typedef std::list<GemData> Gems;
 	Gems gems;
-	
+
 	typedef std::list<BeaconData> Beacons;
 	Beacons beacons;
 
@@ -1084,7 +1054,7 @@ public:
 
 	void removeEmptyIngredients();
 	void spawnAllIngredients(const Vector &position);
-	
+
 	std::vector<std::string> unsortedOrder;
 
 	typedef std::vector<Recipe> Recipes;
@@ -1149,10 +1119,10 @@ public:
 
 	enum { DUALFORM_NAIJA = 0, DUALFORM_LI = 1 };
 	int dualFormMode, dualFormCharge;
-	
+
 	BeaconData *getBeaconByIndex(int index);
 	void setBeacon(int index, bool v, Vector pos=Vector(0,0,0), Vector color=Vector(1,1,1));
-	
+
 	int foodSortType;
 	std::vector<FoodSortOrder> sortByType, sortByHeal, sortByIngredients, sortByUnsort;
 
@@ -1250,7 +1220,7 @@ public:
 
 	void init();
 	void shutdown();
-	
+
 	void toggleInputGrabPlat(bool on);
 
 	void toggleBlackBars(bool on, float t=0);
@@ -1266,7 +1236,7 @@ public:
 	CountedPtr<Texture> texCursor, texCursorSwim, texCursorBurst, texCursorSing, texCursorLook;
 
 	void setBlackBarsColor(Vector color);
-	
+
 	void toggleFullscreen();
 
 	void setTexturePointers();
@@ -1293,7 +1263,7 @@ public:
 	Game *game;
 
 	bool isQuitFlag();
-	
+
 	void jiggleCursor();
 
 	SFXLoops loops;
@@ -1466,7 +1436,7 @@ public:
 	void setStory();
 
 	bool disableMiniMapOnNoInput;
-	
+
 	std::string returnToScene;
 
 	Demo demo;
@@ -1477,7 +1447,7 @@ public:
 #endif
 	BitmapText *versionLabel;
 	ProfRender *profRender;
-	
+
 	void setVersionLabelText();
 
 	float menuSelectDelay;
@@ -1515,7 +1485,7 @@ public:
 
 	void loadFonts();
 
-	
+
 	void instantQuit();
 
 	void centerText(const std::string &text);
@@ -1548,13 +1518,13 @@ public:
 	};
 
 	Difficulty difficulty;
-	
+
 	std::string getSaveDirectory();
 
 	void clickRingEffect(Vector position, int type=0, Vector color=Vector(1,1,1), float ut=0);
-	
+
 	void bindInput();
-	
+
 	void forceInputGrabOff();
 
 	int weird;

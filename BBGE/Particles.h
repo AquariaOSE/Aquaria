@@ -231,7 +231,7 @@ public:
 
 protected:
 
-	
+
 
 	std::vector<Vector> suckPositions;
 	int numActive;

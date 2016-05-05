@@ -116,12 +116,12 @@ using namespace SoundCore;
 
     1. use F_CALLBACK.  Do NOT force cast your own function to fmod's callback type.
     2. return FMOD_ERR_FILE_NOTFOUND in open as required.
-    3. return number of bytes read in read callback.  Do not get the size and count 
+    3. return number of bytes read in read callback.  Do not get the size and count
        around the wrong way in fread for example, this would return 1 instead of the number of bytes read.
 
     QUESTIONS:
 
-    1. Why does fmod seek to the end and read?  Because it is looking for ID3V1 tags.  
+    1. Why does fmod seek to the end and read?  Because it is looking for ID3V1 tags.
        Use FMOD_IGNORETAGS in System::createSound / System::createStream if you don't like this behaviour.
 
 */
@@ -216,7 +216,7 @@ void SoundManager::pause()
 	debugLog("update");
 	result = SoundCore::system->update();
 	checkError();
-	
+
 	debugLog("done");
 }
 
@@ -286,7 +286,7 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 	debugLog("system::create");
 	result = FMOD::System_Create(&SoundCore::system);
     if (checkError()) goto get_out;
-   
+
 	debugLog("getVersion");
     result = SoundCore::system->getVersion(&version);
     if (checkError()) goto get_out;
@@ -322,7 +322,7 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 		debugLog("err_output_createbuffer, speaker mode");
 		result = SoundCore::system->setSpeakerMode(FMOD_SPEAKERMODE_STEREO);
         if (checkError()) goto get_out;
-        
+
 		debugLog("init 2");
         result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0); /* Replace with whatever channel count and flags you use! */
 		if (checkError()) goto get_out;
@@ -332,30 +332,7 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 	SoundCore::system->getNumChannels(&channels);
 #endif
 
-	//FMOD::Debug_SetLevel(FMOD_DEBUG_LEVEL_ALL);
 
-	/*
-	result = FMOD::System_Create(&SoundCore::system);		// Create the main system object.
-	if (checkError())
-	{
-		exit(-1);
-	}
-
-	result = SoundCore::system->init(64, FMOD_INIT_NORMAL, 0);	// Initialize FMOD.
-	if (result == FMOD_ERR_OUTPUT_CREATEBUFFER)
-	{
-		debugLog("FMOD_ERR_OUTPUT_CREATEBUFFER, setting stereo speaker mode");
-		SoundCore::system->setSpeakerMode(FMOD_SPEAKERMODE_STEREO);
-		result = SoundCore::system->init(64, FMOD_INIT_NORMAL, 0);
-		if (checkError())
-			exit(-1);
-	}
-	else
-	{
-		if (checkError())
-			exit(-1);
-	}
-	*/
 
 	debugLog("set file system");
 	result = SoundCore::system->setFileSystem(myopen, myclose, myread, myseek, 2048);
@@ -386,12 +363,6 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 	if (checkError()) { dspReverb = 0; }
 
 
-	//dspReverb->setParameter(FMOD_DSP_REVERB_ROOMSIZE, 0.5);
-	//dspReverb->setParameter(FMOD_DSP_REVERB_DAMP, 0.5);
-	//dspReverb->setParameter(FMOD_DSP_REVERB_WETMIX, 0.33);
-	//dspReverb->setParameter(FMOD_DSP_REVERB_DRYMIX, 0.66);
-	//dspReverb->setParameter(FMOD_DSP_REVERB_WIDTH, 1.0);
-	//dspReverb->setParameter(FMOD_DSP_REVERB_MODE, 0); // 0 or 1
 
 	if (dspReverb)
 	{
@@ -495,18 +466,14 @@ void SoundManager::setMusicFader(float v, float t)
 		return;
 	}
 
-	/*
-	std::ostringstream os;
-	os << "musicFader " << v << " over " << t;
-	debugLog(os.str());
-	*/
+
 
 	musVol.interpolateTo(Vector(musVol.x, v, musVol.z), t);
 }
 
 void SoundManager::error(const std::string &errMsg)
 {
-	//std::cout << errMsg << std::endl;
+
 	errorLog(errMsg);
 }
 
@@ -544,36 +511,35 @@ void SoundManager::stopAll()
 
 void SoundManager::onVoiceEnded()
 {
-	//debugLog("Voice Ended!");
+
 	event_stopVoice.call();
-	//debugLog("checking vox queue");
+
 
 	if (dspReverb)
 		dspReverb->remove();
 
 	if (!voxQueue.empty())
 	{
-		//debugLog("calling playVoice");
-		
+
+
 		std::string vox = voxQueue.front();
-		
-		//debugLog("popping voxQueue");
+
+
 		if (!voxQueue.empty())
 			voxQueue.pop();
-			
-		//debugLog("calling playVoice");
+
+
 		playVoice(vox, SVT_INTERRUPT);
 	}
 	else
 	{
-		//debugLog("setting music fader");
+
 		setMusicFader(1, 1);
 		sfxFader = 1;
 	}
 
 
 
-	//debugLog("done onVoiceEnded");
 }
 
 
@@ -639,10 +605,10 @@ void SoundManager::update(float dt)
 	if (musicChannel)
 	{
 		// fader value
-		
+
 		result = musicChannel->setVolume(musVol.y*1.0f);
 		checkError();
-		
+
 
 		if (musVol.y <= 0 && stopMusicOnFadeOut)
 		{
@@ -711,7 +677,7 @@ void SoundManager::update(float dt)
 					continue;
 				}
 			}
-	
+
 			if (f->c)
 			{
 				f->c->setVolume(f->v);
@@ -844,7 +810,7 @@ void SoundManager::setSfxChannelsVolume(float v)
 
 bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float vmod)
 {
-	//debugLog("playVoice, masterSoundLock: " + name);
+
 
 	if (!enabled) return false;
 
@@ -853,7 +819,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 
 	n = name;
 	stringToLower(n);
-	
+
 	if (!voicePath2.empty())
 	{
 		fn = voicePath2 + name + fileType;
@@ -942,7 +908,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 		}
 
 		if (voiceStream)
-		{		
+		{
 
 			if (!reverbKeyword.empty())
 			{
@@ -951,7 +917,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 				if (dspReverb)
 				{
 					bool active = false;
-					
+
 					result = dspReverb->getActive(&active);
 					checkError();
 
@@ -981,7 +947,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 
 			result = voiceChannel->setChannelGroup(group_vox);
 			checkError();
-			
+
 			if (vmod != -1)
 			{
 				result = voiceChannel->setVolume(vmod);
@@ -991,10 +957,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 			result = voiceChannel->setPriority(1);
 			checkError();
 
-			/*
-			result = dspReverb->remove();
-			checkError();
-			*/
+
 
 			voiceChannel->setFrequency(1);
 			voiceChannel->setCallback(NULL);
@@ -1043,7 +1006,7 @@ void *SoundManager::playSfx(const PlaySfx &play)
 
 	FMOD::Channel *channel = 0;
 	FMOD::Sound *sound = 0;
-	
+
 
 	if (play.handle)
 		sound = (FMOD::Sound*)play.handle;
@@ -1137,11 +1100,7 @@ bool SoundManager::isPlayingMusic(const std::string &name)
 		std::string test = name;
 		stringToLower(test);
 
-		/*
-		std::ostringstream os;
-		os << "checking lastMusic: " << lastMusic << " test: " << test;
-		debugLog(os.str());
-		*/
+
 
 		if (test == lastMusic)
 			return true;
@@ -1242,7 +1201,7 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 
 	if (musicStream)
 	{
-		
+
 
 		result = SoundCore::system->playSound(FMOD_CHANNEL_FREE, musicStream, true, &musicChannel);
 		checkError();
@@ -1376,7 +1335,7 @@ void loadCacheSoundsCallback (const std::string &filename, intptr_t param)
 	sm = (SoundManager*)param;
 	if (!sm->enabled)
 	{
-		//sm->erorr();
+
 		debugLog("Disabled: Won't Load Sample ["+filename+"]");
 		return;
 	}
@@ -1486,15 +1445,7 @@ Buffer SoundManager::loadLocalSound(const std::string &filename)
 
 void SoundManager::setMusicSpeed(float speed)
 {
-	/*
-	FMOD_CAPS caps;
-	FMOD_SPEAKERMODE speakerMode;
-	int minf, maxf;
-	SoundCore::system->getDriverCaps(0, &caps, &minf, &maxf, &speakerMode);
-	std::ostringstream os;
-	os << "minf: " << minf << " maxf: " << maxf;
-	debugLog(os.str());
-	*/
+
 
 	musicChannel->setFrequency(speed);
 }

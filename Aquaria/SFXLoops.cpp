@@ -32,7 +32,7 @@ void SFXLoops::updateVolume()
 	core->sound->updateChannelVolume(roll);
 	core->sound->updateChannelVolume(charge);
 	core->sound->updateChannelVolume(shield);
-	core->sound->updateChannelVolume(current);	
+	core->sound->updateChannelVolume(current);
 	core->sound->updateChannelVolume(trip);
 }
 

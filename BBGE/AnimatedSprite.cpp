@@ -31,11 +31,11 @@ AnimData::AnimData()
 
 AnimatedSprite::AnimatedSprite() : Quad()
 {
-	//debugLog("AnimatedSprite::AnimatedSprite()");
+
 	frame = 0;
 	animator.setUpdatee(&frame);
 	animationTime.setUpdatee (&animator.timePeriod);
-	//debugLog("End AnimatedSprite::AnimatedSprite()");
+
 }
 
 void AnimatedSprite::animate (AnimData &animData)

@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "BitmapFont.h"
 #include "Core.h"
-//#include "DSQ.h"
+
 
 using namespace glfont;
 
@@ -79,13 +79,13 @@ BitmapText::BitmapText(BmpFont *bmpFont)
 	align = ALIGN_CENTER;
 	textWidth = 600;
 	this->fontDrawSize = 24;
-	//color = Vector(0.5,0.5,1);
+
 	cull = false;
-	//setTexture(font);
+
 
 	alignWidth = 0;
 
-	//fontTextureTest = core->addTexture("font");
+
 }
 
 void BitmapText::autoKern()
@@ -162,8 +162,8 @@ void BitmapText::formatText()
 	alignWidth = 0;
 	maxW = 0;
 	for (int i = 0; i < text.size(); i++)
-	{		
-		//currentWidth += spacingMap[text[i]]*fontDrawSize;
+	{
+
 		float sz = bmpFont->font.GetCharWidth(text[i])*bmpFont->scale;
 		currentWidth += sz;
 
@@ -216,24 +216,7 @@ void BitmapText::updateWordColoring()
 		}
 	}
 
-	/*
-	for (int i = 0; i < lines.size(); i++)
-	{
-		int c = 0;
-		for (int t = 0; t < dsq->continuity.wordColoring.size(); t++)
-		{
-			WordColoring *w = &dsq->continuity.wordColoring[t];
-			if ((c = lines[i].find(w->word)) != std::string::npos)
-			{
-				for (int j = c; j < c + w->word.size(); j++)
-				{
-					colorIndices[i][j] = w->color;
-				}
-			}
-		}
-	}
-	*/
-	//lines.push_back(text);
+
 
 }
 
@@ -315,13 +298,8 @@ void BitmapText::onRender()
 	float bottom_color[3] = {bmpFont->fontBtmColor.x*color.x, bmpFont->fontBtmColor.y*color.y, bmpFont->fontBtmColor.z*color.z};
 
 	glEnable(GL_TEXTURE_2D);
-	/*
-	glEnable(GL_BLEND);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	*/
-	//glDisable(GL_CULL_FACE);
 
-	//glScalef(1, -1, 0);
+
 
 	bmpFont->font.Begin();
 
@@ -350,11 +328,7 @@ void BitmapText::onRender()
 				x = -sz.first*0.5f*bmpFont->scale;
 			}
 			float la = 1.0f-(scrollDelay/scrollSpeed);
-			/*
-			std::ostringstream os;
-			os << "la: " << la;
-			debugLog(os.str());
-			*/
+
 
 			bmpFont->font.DrawString(theLine, bmpFont->scale, x, y, top_color, bottom_color, alpha.x, la);
 			y += adj;
@@ -375,8 +349,8 @@ void BitmapText::onRender()
 			y += adj;
 		}
 	}
-	
-	//glEnable(GL_CULL_FACE);
+
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 }
@@ -450,33 +424,4 @@ float BitmapText::getStringWidth(const std::string& text)
 	return maxsize * bmpFont->scale;
 }
 
-/*
-BitmapText::BitmapText() : RenderObject()
-{
-	cull = false;
-	followCamera = 1;
-	scrollSpeed = 0.1f;
-}
 
-void BitmapText::scrollText(const std::string &text, float scrollSpeed)
-{
-	setText(text);
-	this->scrollSpeed = scrollSpeed;
-}
-
-void BitmapText::setText(const std::string &text)
-{
-	this->text = text;
-}
-
-std::string BitmapText::getText()
-{
-	return text;
-}
-
-void BitmapText::onRender()
-{
-	CTextDrawer::GetSingleton().SetColor(color.x, color.y, color.z, alpha.getValue());
-	dsq->print(position.x, 600 - (position.y + 16*2), text);
-}
-*/

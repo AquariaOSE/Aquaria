@@ -58,8 +58,8 @@ void Strand::onRender()
 	glLineWidth(1);
 
 	glBegin(GL_LINE_STRIP);
-	//glColor4f(0.25,0.25,0.5,1);
-	// Use fixed-point math to speed things up.  --achurch
+
+
 	unsigned int r = (unsigned int)(color.x * (255<<8));
 	unsigned int g = (unsigned int)(color.y * (255<<8));
 	unsigned int b = (unsigned int)(color.z * (255<<8));

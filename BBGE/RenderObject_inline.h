@@ -24,7 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 inline bool RenderObject::isOnScreen()
 {
 	if (followCamera == 1) return true;
-	//if (followCamera != 0) return true;
+
 
 	// note: radii are sqr-ed for speed
 	const float cullRadiusSqr = (getCullRadiusSqr() * core->invGlobalScaleSqr) + core->cullRadiusSqr;

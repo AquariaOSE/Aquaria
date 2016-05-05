@@ -51,15 +51,15 @@ public:
 
 	int getPixelWidth();
 	int getPixelHeight();
-	
+
 	void destroy();
-	
+
 
 	int width, height;
 
 	static ImageTGA *TGAload(const char* filename);
 	static ImageTGA *TGAloadMem(void *mem, int size);
-	
+
 	static bool useMipMaps;
 	bool repeat, repeating;
 
@@ -89,7 +89,7 @@ protected:
 
 	int ow, oh;
 	TextureLoadResult loadResult;
-	
+
 };
 
 #define UNREFTEX(x) if (x) {x = NULL;}

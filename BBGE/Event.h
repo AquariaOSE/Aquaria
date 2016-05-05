@@ -80,7 +80,7 @@ enum EventManage
 {
 	EVM_NONE	= 0,
 	EVM_CLEANUP	= 1,
-	EVM_MAX		
+	EVM_MAX
 };
 
 class ActionMapper;

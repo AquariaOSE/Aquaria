@@ -37,12 +37,8 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	box->setWidthHeight(450, 96);
 	box->alphaMod = 0;
 	addChild(box, PM_POINTER);
-	//setTexture("dialogue-bg");
-	//setTexture("HintBox");
-	//renderQuad = false;
-	
 
-	//shareAlphaWithChildren = 1;
+
 
 	text1 = new BitmapText(&dsq->smallFont);
 	text1->setFontSize(14);
@@ -122,7 +118,7 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	core->resetTimer();
 	screen->upperLeftTextureCoordinates = Vector(0, 1);
 	screen->lowerRightTextureCoordinates = Vector(1, 0.25);
-	//screen->scale = Vector(0.4, 0.3);
+
 
 	if (screen->getWidth() == 0)
 		screen->color = 0;
@@ -131,7 +127,7 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	screen->position = Vector(-250, 0) + Vector(-1.5, -1.6);
 	addChild(screen, PM_POINTER);
 
-	closed = false;	
+	closed = false;
 
 	selected = false;
 }
@@ -147,7 +143,7 @@ void AquariaSaveSlot::hide()
 	glowText->alpha.interpolateTo(0, 0.5);
 	box->alpha.interpolateTo(0, 0.5);
 	if (!selected)
-	{		
+	{
 		screen->alpha.interpolateTo(0, 0.5);
 	}
 }
@@ -155,12 +151,12 @@ void AquariaSaveSlot::hide()
 void AquariaSaveSlot::close(bool trans)
 {
 	done = true;
-	
+
 	if (trans)
 	{
 		screen->alpha.interpolateTo(0, 0.1);
 		text1->alpha.interpolateTo(0, 0.1);
-	
+
 		setLife(1);
 		setDecayRate(10);
 		fadeAlphaWithLife = 1;
@@ -171,7 +167,7 @@ void AquariaSaveSlot::close(bool trans)
 		setDecayRate(2);
 		fadeAlphaWithLife = 1;
 	}
-	//shareAlphaWithChildren = 1;
+
 }
 
 void AquariaSaveSlot::transition()
@@ -204,10 +200,10 @@ void AquariaSaveSlot::onUpdate(float dt)
 			if (core->mouse.position.x < position.x + 150 && core->mouse.position.x > position.x - 300
 				&& core->mouse.position.y < position.y+32 && core->mouse.position.y > position.y-32)
 			{
-				//setBlendType(BLEND_ADD);
+
 				glowText->alpha.interpolateTo(0.5, 0.2);
 				screen->color.interpolateTo(Vector(1,1,1), 0.1);
-				//screen->scale.interpolateTo(Vector(1.2, 1.2), 0.2);
+
 				if ((core->mouse.buttons.left || core->mouse.buttons.right) && !mbDown)
 				{
 					mbDown = true;
@@ -218,22 +214,22 @@ void AquariaSaveSlot::onUpdate(float dt)
 					if (!(empty && dsq->saveSlotMode == SSM_LOAD))
 					{
 						selected = true;
-						// pick this file
-						dsq->playMenuSelectSfx();					
+
+						dsq->playMenuSelectSfx();
 
 						closed = true;
 						if (dsq->saveSlotMode == SSM_LOAD)
 						{
-							//dsq->clearSaveSlots();
+
 							dsq->hideSaveSlots();
 							this->moveToFront();
-							//screen->enableMotionBlur(10, 5);
+
 							screen->position.interpolateTo(Vector(400-position.x, 300-position.y), 1.0, 0, 0, 1);
 							dsq->tfader->alpha.interpolateTo(1, 1);
 							dsq->toggleCursor(false);
 							core->main(1);
-							
-							//core->main(2);						
+
+
 						}
 
 						bool didIt = dsq->onPickedSaveSlot(this);
@@ -241,10 +237,9 @@ void AquariaSaveSlot::onUpdate(float dt)
 						if (didIt)
 						{
 							done = true;
-							
-							//alpha = 0.9;
-							//setBlendType(BLEND_DEFAULT);
-							//glowText->alpha.interpolateTo(0, 0.2);
+
+
+
 							return;
 						}
 						else
@@ -258,7 +253,7 @@ void AquariaSaveSlot::onUpdate(float dt)
 			else
 			{
 				glowText->alpha.interpolateTo(0, 0.2);
-				//screen->scale.interpolateTo(Vector(1, 1), 0.2);
+
 				screen->color.interpolateTo(Vector(0.7, 0.7, 1), 0.3);
 			}
 			if ((core->mouse.buttons.left || core->mouse.buttons.right) && !mbDown)
@@ -404,7 +399,7 @@ std::string AquariaSaveSlot::getSaveDescription(const XMLDocument &doc)
 	float s = dsq->continuity.seconds;
 	dsq->continuity.seconds = time;
 	dsq->continuity.getHoursMinutesSeconds(&hours, &minutes, &seconds);
-	
+
 	const char *loccstr = startData->Attribute("sceneDisplayName");
 	std::string location = (loccstr && *loccstr) ? loccstr : getPrettySceneName_internal(startData);
 
@@ -416,8 +411,8 @@ std::string AquariaSaveSlot::getSaveDescription(const XMLDocument &doc)
 	std::ostringstream os;
 	os << location << std::endl;
 	os << hours << ":" << numToZeroString(minutes, 2) << showLoc;
-	// << ": " << seconds;
-	//" T: " << time;
+
+
 
 	dsq->continuity.seconds = s;
 

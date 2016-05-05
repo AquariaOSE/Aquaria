@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 SteamRender::SteamRender() : RenderObject()
 {
 	cull = false;
-	//alpha = 0.1f;
+
 	alpha = 0.7;
 	setTexture("Particles/Steam");
 	texture->repeat = true;
@@ -40,8 +40,8 @@ void SteamRender::onUpdate(float dt)
 
 void SteamRender::onRender()
 {
-	//glDisable(GL_CULL_FACE);
-	//int qs = 0;
+
+
 
 	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
 	{
@@ -83,7 +83,7 @@ void SteamRender::onRender()
 							const float len = diff.getLength2D();
 							const float texScale = len/256.0f;
 
-							//qs++;
+
 							glBegin(GL_QUAD_STRIP);
 								glColor4f(1,1,1,0);
 								glTexCoord2f((0)*texScale+p->animOffset, 0);
@@ -120,6 +120,6 @@ void SteamRender::onRender()
 		}
 	}
 
-	//glEnable(GL_CULL_FACE);
+
 }
 

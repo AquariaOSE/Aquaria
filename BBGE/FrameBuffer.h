@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class FrameBuffer
 {
 public:
-	FrameBuffer();	
+	FrameBuffer();
 	~FrameBuffer();
 	bool init(int width, int height, bool fitToScreen=false, GLint filter=GL_LINEAR);
 	bool isInited() { return inited; }
@@ -40,7 +40,7 @@ public:
 	int getHeight() { return h; }
 	float getWidthP();
 	float getHeightP();
-	
+
 	void unloadDevice();
 	void reloadDevice();
 

@@ -50,7 +50,7 @@ void Emote::playSfx(int index)
 	if (emoteTimer > 0)							return;
 
 	int r = 0;
-	
+
 	if (emotes[index].variations > 1)
 	{
 		r = (rand()%emotes[index].variations)+1;

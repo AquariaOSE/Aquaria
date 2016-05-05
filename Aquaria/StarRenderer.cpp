@@ -33,7 +33,7 @@ StarRenderer::StarRenderer(int num, int range) : RenderObject()
 }
 
 void StarRenderer::render()
-{	
+{
 	core->enable3D();
 	glLoadIdentity();
 	glTranslatef(position.x, position.y, position.z);

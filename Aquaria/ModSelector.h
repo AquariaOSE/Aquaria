@@ -149,7 +149,7 @@ public:
 
 	void showPanel(int id);
 	void updateFade();
-	
+
 	void initModAndPatchPanel();
 	void initNetPanel();
 

@@ -32,7 +32,7 @@ public:
 	int frameStart, frameEnd, datafile;
 	float time;
 	int loop;
-	bool pingPong;	
+	bool pingPong;
 };
 
 
@@ -55,7 +55,7 @@ public:
 		return animator.interpolating;
 	}
 
-	
+
 
 protected:
 	virtual void onAnimData(AnimData &animData);

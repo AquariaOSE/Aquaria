@@ -63,7 +63,7 @@ bool DarkLayer::isUsed()
 	//HACK: disabling dark layer for temporary testing build
 	// MAKE SURE TO RESTORE THIS CODE TO THE WAY IT WAS
 	return layer > -1 && active;
-	//return false;
+
 }
 
 void DarkLayer::setLayers(int layer, int rl)
@@ -79,7 +79,7 @@ void DarkLayer::init(int quality, bool useFrameBufferParam)
 	this->quality = quality;
 
 	if (useFrameBuffer)
-	{		
+	{
 		if (!frameBuffer.init(quality, quality))
 			useFrameBuffer = false;
 		else
@@ -110,26 +110,25 @@ void DarkLayer::preRender()
 		if (verbose) debugLog("viewport");
 
 		glViewport(0,0,quality,quality);
-		//core->clearBuffers();
-		
-		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		
+
+
+
 		if (verbose) debugLog("startCapture");
 
 		if (useFrameBuffer)
 			frameBuffer.startCapture();
 
 		if (verbose) debugLog("clearColor");
-		
+
 		glClearColor(1,1,1,1);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		if (verbose) debugLog("render");
-		
-		core->render(layer, layer, false); 
+
+		core->render(layer, layer, false);
 
 		if (verbose) debugLog("endCapture");
-		
+
 		if (useFrameBuffer)
 			frameBuffer.endCapture();
 		else
@@ -140,15 +139,13 @@ void DarkLayer::preRender()
 		}
 
 		if (verbose) debugLog("viewport");
-		
+
 		glViewport(0, 0, core->width, core->height);
 		glClearColor(0,0,0,0);
-		
+
 		if (verbose) debugLog("done");
-		/*				
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-		*/
-		//glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, quality, quality, 0);
+
+
 	}
 }
 
@@ -158,24 +155,20 @@ void DarkLayer::render()
 	{
 		glPushMatrix();
 		glLoadIdentity();
-		//float percentX = (float)core->width/(float)quality;
-		//float percentY = (float)core->height/(float)quality;
-		
+
+
+
 		glEnable(GL_TEXTURE_2D);
 		if (useFrameBuffer)
 			frameBuffer.bindTexture();
 		else
 			glBindTexture(GL_TEXTURE_2D,texture);
-		
-		//glDisable(GL_BLEND);	
-		
-		glEnable(GL_BLEND);	
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		
-		//glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		//glBlendFunc(GL_ZERO, GL_SRC_COLOR);
 
-		//glBlendEquation(GL_FUNC_SUBTRACT);
+
+
+		glEnable(GL_BLEND);
+
+
 
 		// subtractive blend! (using color)
 		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
@@ -189,9 +182,9 @@ void DarkLayer::render()
 		{
 			debugLog("darkLayer: invalid operation");
 		}
-		
-		//glBlendFunc(GL_SRC_ALPHA_SATURATE, GL_ONE);
-		//glBlendFunc(GL_ONE_MINUS_SRC_COLOR, GL_ONE_MINUS_SRC_ALPHA);
+
+
+
 		glColor4f(1,1,1,1);
 
 		float width  =  core->getWindowWidth();
@@ -216,7 +209,7 @@ void DarkLayer::render()
 		glEnd();
 
 		glPopMatrix();
-		
+
 		RenderObject::lastTextureApplied = 0;
 		glBindTexture(GL_TEXTURE_2D, 0);
 

@@ -29,11 +29,11 @@ class DFSprite : public AnimatedSprite
 {
 public:
 	DFSprite();
-	//~DFSprite();
+
 	void destroy();
 
-	//void animate();
-	
+
+
 	int findDatafile(const std::string &name);
 	void selectDatafile(int index);
 	void selectDatafile(AnimData &animData);
