@@ -24,8 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <Winver.h>
 #include <Windows.h>
 
-#include "resource.h" // Might as well use what's there, even though it's questionable.
-
 #define AQUARIA_RC_FILEVERSION 1,1,3,999
 #define AQUARIA_RC_PRODUCTVERSION 1,1,3,0
 #define AQUARIA_RC_PRODUCTVERSION_STRING "1.1.3"
