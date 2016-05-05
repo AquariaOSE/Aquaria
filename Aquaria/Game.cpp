@@ -9581,8 +9581,6 @@ void Game::updateOptionsMenu(float dt)
 			{
 				dsq->sound->playSfx("denied");
 				dsq->loops.updateVolume();
-				if (dsq->game->avatar)
-					dsq->game->avatar->updateHeartbeatSfx();
 			}
 			if (voxslider->isGrabbed())
 			{
