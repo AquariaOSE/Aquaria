@@ -32,11 +32,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //#define AQ_TEST_QUADTRAIL
 
-#ifdef AQ_TEST_QUADTRAIL
-	#include "QuadTrail.h"
-
-	QuadTrail *quadTrail = 0;
-#endif
 
 Path *lastWaterBubble = 0;
 bool lastJumpOutFromWaterBubble = false;
@@ -3787,12 +3782,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	urchinDelay = 0;
 	jellyDelay = 0;
-#ifdef AQ_TEST_QUADTRAIL
-	quadTrail = new QuadTrail(100, 32);
-	quadTrail->setTexture("Particles/QuadTrail");
-	quadTrail->setBlendType(BLEND_ADD);
-	dsq->game->addRenderObject(quadTrail, LR_PARTICLES);
-#endif
 
 	curWebPoint = 0;
 
@@ -5588,9 +5577,6 @@ void Avatar::onUpdate(float dt)
 
 	looking = 0;
 
-#ifdef AQ_TEST_QUADTRAIL
-	quadTrail->addPoint(position);
-#endif
 
 	if (lightFormGlow)
 	{

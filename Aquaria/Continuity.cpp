@@ -2430,7 +2430,6 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		}
 		worldMap->SetAttribute("b", os.str().c_str());
 
-#ifdef AQUARIA_BUILD_MAPVIS
 		if (dsq->game->worldMapRender)
 		{
 			std::ostringstream os;
@@ -2443,7 +2442,6 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			}
 			worldMap->SetAttribute("va", os.str().c_str());
 		}
-#endif
 	}
 	doc.InsertEndChild(worldMap);
 
@@ -2961,7 +2959,6 @@ void Continuity::loadFile(int slot)
 		}
 
 
-#ifdef AQUARIA_BUILD_MAPVIS
 		if (worldMap->Attribute("va") && dsq->continuity.worldMap.getNumWorldMapTiles())
 		{
 			std::istringstream is(worldMap->Attribute("va"));
@@ -2987,7 +2984,6 @@ void Continuity::loadFile(int slot)
 				tile->stringToData(is);
 			}
 		}
-#endif
 	}
 
 
