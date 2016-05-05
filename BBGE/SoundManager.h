@@ -27,19 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <set>
 #include "Vector.h"
 
-// if using SDL_MIXER
-//const int BBGE_AUDIO_NOCHANNEL		= -1;
-
-
-
 #define BBGE_BUILD_FMODEX
-
-//#define BBGE_BUILD_BASS20
-//#define BBGE_BUILD_SDLMIXER
-//#define BBGE_BUILD_IRRKLANG
-//#define BBGE_BUILD_OPENALOGG
-
-
 
 #ifdef BBGE_BUILD_OPENALOGG
 	const int BBGE_AUDIO_NOCHANNEL		= -1;
