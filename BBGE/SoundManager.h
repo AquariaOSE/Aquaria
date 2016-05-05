@@ -29,18 +29,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define BBGE_BUILD_FMODEX
 
-#ifdef BBGE_BUILD_FMODEX
-	const int BBGE_AUDIO_NOCHANNEL		= 0;
-#endif
-
+const int BBGE_AUDIO_NOCHANNEL		= 0;
 const int BBGE_AUDIO_LOOPINFINITE	= -1;
 const int BBGE_AUDIO_LOOPNONE		= 0;
 
 namespace SoundCore
 {
-#ifdef BBGE_BUILD_FMODEX
 	typedef void *Buffer;
-#endif
 }
 
 enum SoundEffectType
