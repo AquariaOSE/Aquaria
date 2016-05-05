@@ -21,51 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Core.h"
 
-#if defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_XINPUT) 
-	#include "Xinput.h"
-
-#if defined(BBGE_BUILD_DELAYXINPUT)
-	#include <DelayImp.h>
-#endif
-
-/*
-	HRESULT (WINAPI *XInputGetState)(HINSTANCE hinst, DWORD dwVersion, REFIID riidltf, LPVOID *ppvOut, LPUNKNOWN punkOuter) = 0;
-
-if ( (winp.hInstDI = LoadLibrary( "dinput.dll" )) == 0 )
-
-
-if (!pDirectInput8Create) {
-	pDirectInput8Create = (HRESULT (__stdcall *)(HINSTANCE, DWORD ,REFIID, LPVOID *, LPUNKNOWN)) GetProcAddress(winp.hInstDI,"DirectInput8Create");
-
-	if (!pDirectInput8Create) {
-		error(L"Couldn't get DI proc addr\n");
-	}
-} 
-
-	bool importXInput()
-	{
-
-	}
-*/
-
-
-
-
-bool tryXInput()
-{
-	__try
-	{
-		XINPUT_STATE xinp;
-		XInputGetState(0, &xinp);
-	}
-	__except (EXCEPTION_EXECUTE_HANDLER)
-	{
-		return false;
-	}
-	return true;
-}
-
-#endif
 
 #ifdef __LINUX__
 #include <sys/types.h>
@@ -217,17 +172,6 @@ void Joystick::init(int stick)
 	}
 #endif
 
-#ifdef BBGE_BUILD_XINPUT
-	debugLog("about to init xinput");
-
-	xinited = tryXInput();
-
-	if (!xinited)
-		debugLog("XInput not found, not installed?");
-
-	debugLog("after catch");
-
-#endif
 }
 
 void Joystick::shutdown()
@@ -281,25 +225,6 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 			}
 		}
 
-#elif defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_XINPUT)
-		XINPUT_VIBRATION vib;
-		vib.wLeftMotorSpeed = WORD(leftMotor*65535);
-		vib.wRightMotorSpeed = WORD(rightMotor*65535);
-		
-		clearRumbleTime = time;
-		DWORD d = XInputSetState(0, &vib);
-		if (d == ERROR_SUCCESS)
-		{
-			//debugLog("success");
-		}
-		else if (d == ERROR_DEVICE_NOT_CONNECTED)
-		{
-			//debugLog("joystick not connected");
-		}
-		else
-		{
-			//unknown error
-		}
 #elif defined(__LINUX__)
 		if (eventfd >= 0) {
 			struct ff_effect effect;
@@ -497,34 +422,6 @@ void Joystick::update(float dt)
 		}
 	}
 
-#if defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_XINPUT)
-	if (inited && xinited)
-	{
-		XINPUT_STATE xinp;
-		XInputGetState(0, &xinp);
-		
-		leftTrigger = float(xinp.Gamepad.bLeftTrigger)/255.0f;
-		rightTrigger = float(xinp.Gamepad.bRightTrigger)/255.0f;
-
-		leftShoulder = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER;
-		rightShoulder = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER;
-
-		leftThumb = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB;
-		rightThumb = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB;
-		
-		dpadUp = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP;
-		dpadDown = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
-		dpadLeft = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
-		dpadRight = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
-
-		
-		
-
-
-		btnStart = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_START;
-		btnSelect = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_BACK;
-	}
-#endif
 		
 		
 		/*

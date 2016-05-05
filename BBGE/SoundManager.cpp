@@ -1214,9 +1214,6 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 	{
 		if (isPlayingMusic(name))
 		{
-			#ifdef BBGE_BUILD_OPENALOGG
-				if (masterSoundLock) SDL_mutexV(masterSoundLock);
-			#endif
 			return false;
 		}
 	}
