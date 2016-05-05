@@ -26,9 +26,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <vector> 
 #include "Event.h"
 
-#ifdef BBGE_BUILD_DIRECTX
-	#include <d3dx9.h>
-#endif
 typedef float scalar_t;
 
 class Vector
@@ -392,12 +389,6 @@ public:
 			z += 360;
 	 }
 
-#ifdef BBGE_BUILD_DIRECTX
-	 const D3DCOLOR getD3DColor(float alpha)
-	 {
-		 return D3DCOLOR_RGBA(int(x*255), int(y*255), int(z*255), int(alpha*255));
-	 }
-#endif
 	 void rotate2DRad(float rad);
 	 void rotate2D360(float angle);
 };

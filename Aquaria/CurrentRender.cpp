@@ -60,7 +60,6 @@ void CurrentRender::onUpdate(float dt)
 
 void CurrentRender::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	// note: Leave cull_face disabled!?
 	//glDisable(GL_CULL_FACE);
 	//int qs = 0;
@@ -316,7 +315,6 @@ void CurrentRender::onRender()
 	debugLog(os.str());
 	*/
 
-#endif
 
 }
 

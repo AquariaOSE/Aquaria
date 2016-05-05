@@ -347,7 +347,6 @@ void Quad::renderGrid()
 	if (xDivs < 2 || yDivs < 2)
 		return;
 
-#ifdef BBGE_BUILD_OPENGL
 	const float percentX = fabsf(this->lowerRightTextureCoordinates.x - this->upperLeftTextureCoordinates.x);
 	const float percentY = fabsf(this->upperLeftTextureCoordinates.y - this->lowerRightTextureCoordinates.y);
 
@@ -438,7 +437,6 @@ void Quad::renderGrid()
 		if (texture)
 			glBindTexture(GL_TEXTURE_2D, texture->textures[0]);
 	}
-#endif
 }
 
 void Quad::repeatTextureToFill(bool on)
@@ -453,7 +451,6 @@ void Quad::onRender()
 {
 	if (!renderQuad) return;
 
-#ifdef BBGE_BUILD_OPENGL
 
 	float _w2 = width/2.0f;
 	float _h2 = height/2.0f;
@@ -547,123 +544,6 @@ void Quad::onRender()
 		RenderObject::lastTextureApplied = 0;
 	}
 
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	//core->setColor(color.x, color.y, color.z, alpha.x);
-	//if (!children.empty() || useDXTransform)
-	if (true)
-	{
-		if (this->texture)
-		{
-			if (upperLeftTextureCoordinates.x != 0 || upperLeftTextureCoordinates.y != 0
-				|| lowerRightTextureCoordinates.x != 1 || lowerRightTextureCoordinates.y != 1)
-			{
-				//core->blitD3DEx(this->texture->d3dTexture, fontDrawSize/2, fontDrawSize/2, u, v-ybit, u+xbit, v+ybit-ybit);
-				core->blitD3DEx(this->texture->d3dTexture, width, height, upperLeftTextureCoordinates.x, upperLeftTextureCoordinates.y, lowerRightTextureCoordinates.x, lowerRightTextureCoordinates.y);
-			}
-			else
-				core->blitD3D(this->texture->d3dTexture, width, height);
-		}
-		else
-		{
-			core->blitD3D(0, width, height);
-		}
-	}
-	else
-	{
-		if (this->texture)
-			core->blitD3DPreTrans(this->texture->d3dTexture, position.x+offset.x, position.y+offset.y, width*scale.x, width.y*scale.y);
-		else
-			core->blitD3DPreTrans(0, position.x+offset.x, position.y+offset.y, width*scale.x, width.y*scale.y);
-	}
-
-	/*
-	if (this->texture)
-	{
-		core->getD3DSprite()->Begin(D3DXSPRITE_ALPHABLEND);
-		D3DXVECTOR2 scaling((1.0f/float(this->texture->width))*width*scale.x,
-			(1.0f/float(this->texture->height))*height*scale.y);
-		if (isfh())
-			scaling.x = -scaling.x;
-		D3DXVECTOR2 spriteCentre=D3DXVECTOR2((this->texture->width/2), (this->texture->height/2));
-		///scale.x
-		//D3DXVECTOR2 trans=D3DXVECTOR2(position.x, position.y);
-
-
-		if (blendType == BLEND_DEFAULT)
-		{
-			core->getD3DDevice()->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
-			core->getD3DDevice()->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-		}
-		else
-		{
-			core->getD3DDevice()->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
-			core->getD3DDevice()->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_ONE );
-		}
-
-		D3DXVECTOR2 rotationCentre = spriteCentre;
-		D3DXVECTOR2 trans=D3DXVECTOR2(position.x,position.y) - spriteCentre;
-		if (followCamera != 1)
-		{
-			trans.x -= core->cameraPos.x;
-			trans.y -= core->cameraPos.y;
-		}
-		D3DXMATRIX mat, scale, final;
-		//D3DXVECTOR2 centre = trans + spriteCentre;
-		float rotation = (this->rotation.z*PI)/180.0f;
-		//D3DXVECTOR2 scaling((1.0f/float(this->texture->width))*width*scale.x,(1.0f/float(this->texture->height))*height*scale.y);
-
-		//D3DXVECTOR2 scaling(1,1);
-		const D3DCOLOR d3dColor=D3DCOLOR_ARGB(int(alpha.x*255), int(color.x*255), int(color.y*255), int(color.z*255));
-		//const D3DCOLOR d3dColor=D3DCOLOR_ARGB(int(alpha.x*255), int(color.x*255), int(color.y*255), int(color.z*255));
-		FLOAT scalingRotation = 0;
-		//D3DXMatrixTransformation2D(&mat,NULL,0.0,&scaling,&spriteCentre,rotation,&trans);
-		D3DXMatrixTransformation2D(&mat,
-			&spriteCentre,
-			scalingRotation,
-			&scaling,
-			&spriteCentre,
-			rotation,
-			&trans
-		);
-
-		if (followCamera != 1)
-		{
-			D3DXMatrixScaling(&scale,core->globalScale.x*core->globalResolutionScale.x,core->globalScale.y*core->globalResolutionScale.y,1);
-			D3DXMatrixMultiply(&final, &mat, &scale);
-
-			core->getD3DSprite()->SetTransform(&final);
-		}
-		else
-		{
-			D3DXMatrixScaling(&scale,core->globalResolutionScale.x,core->globalResolutionScale.y,1);
-			D3DXMatrixMultiply(&final, &mat, &scale);
-			core->getD3DSprite()->SetTransform(&final);
-		}
-
-
-		//mat = scale * mat;
-
-		if (this->texture)
-		{
-			core->getD3DSprite()->Draw(this->texture->d3dTexture,NULL,NULL,NULL,d3dColor);//0xFFFFFFFF);//d3dColor);
-			core->getD3DSprite()->End();
-		}
-		else
-		{
-			core->getD3DSprite()->End();
-			D3DRECT rect;
-			rect.x1 = trans.x - this->width/2;
-			rect.x2 = trans.x + this->width/2;
-			rect.y1 = trans.y - this->height/2;
-			rect.y2 = trans.y + this->height/2;
-			core->getD3DDevice()->Clear(1,&rect,D3DCLEAR_TARGET,d3dColor,0,0);
-		}
-		//core->getD3DSprite()->End();
-	}
-	*/
-
-#endif
 }
 
 

@@ -93,7 +93,6 @@ std::string getMapTemplateFilename()
 
 void WarpAreaRender::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	for (int i = 0; i < dsq->game->warpAreas.size(); i++)
 	{
 		WarpArea *a = &dsq->game->warpAreas[i];
@@ -141,53 +140,6 @@ void WarpAreaRender::onRender()
 		}
 		glTranslatef(-a->position.x, -a->position.y,0);
 	}
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	for (int i = 0; i < dsq->game->warpAreas.size(); i++)
-	{
-		WarpArea *a = &dsq->game->warpAreas[i];
-		core->translateMatrixStack(a->position.x, a->position.y);
-		switch (a->warpAreaType[0])
-		{
-		case 'B':
-			core->setColor(0, 0, 1, alpha.x);
-		break;
-		case 'R':
-			core->setColor(1,0,0,alpha.x);
-		break;
-		case 'G':
-			core->setColor(0,1,0,alpha.x);
-		break;
-		case 'Y':
-			core->setColor(1,1,0,alpha.x);
-		break;
-		case 'P':
-			core->setColor(1,0,1,alpha.x);
-		break;
-		}
-		if (a->radius)
-		{
-		//	drawCircle(a->radius);
-		}
-		else
-		{
-			core->applyMatrixStackToWorld();
-			core->blitD3D(0, a->w*2, a->h*2);
-			/*
-			glBegin(GL_QUADS);
-			{
-				glVertex2f(-a->w,-a->h);
-				glVertex2f(-a->w,a->h);
-				glVertex2f(a->w,a->h);
-				glVertex2f(a->w,-a->h);
-			}
-			glEnd();
-			*/
-		}
-		core->translateMatrixStack(-a->position.x, -a->position.y);
-		//glTranslatef(-a->position.x, -a->position.y,0);
-	}
-#endif
 }
 
 SceneEditor::SceneEditor() : ActionMapper(), on(false)

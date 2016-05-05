@@ -257,9 +257,7 @@ void Emitter::onRender()
 
 	if (!data.spawnLocal)
 	{
-#ifdef BBGE_BUILD_OPENGL
 		glLoadIdentity();
-#endif
 		/*
 		if (pe && pe->followCamera)
 		{
@@ -294,7 +292,6 @@ void Emitter::onRender()
 				const float dx = w2 * p->scale.x;
 				const float dy = h2 * p->scale.y;
 
-#ifdef BBGE_BUILD_OPENGL
 				Vector col = p->color * colorMult;
 				glColor4f(col.x, col.y, col.z, p->alpha.x * alphaMult);
 
@@ -355,13 +352,11 @@ void Emitter::onRender()
 						glVertex2f(x-dx, y-dy);
 					glEnd();
 				}
-#endif
 			}
 		}
 	}
 	else
 	{
-#ifdef BBGE_BUILD_OPENGL
 		glBegin(GL_QUADS);
 		for (Particles::iterator i = particles.begin(); i != particles.end(); i++)
 		{
@@ -389,7 +384,6 @@ void Emitter::onRender()
 			}
 		}
 		glEnd();
-#endif
 	}
 
 

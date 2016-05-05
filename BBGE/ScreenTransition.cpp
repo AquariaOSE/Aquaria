@@ -52,7 +52,6 @@ void ScreenTransition::createTexture()
 	}
 	*/
 
-#ifdef BBGE_BUILD_OPENGL
 	//create our texture
 	glGenTextures(1,&screen_texture);
 	glBindTexture(GL_TEXTURE_2D, screen_texture);
@@ -63,7 +62,6 @@ void ScreenTransition::createTexture()
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);		//GL_NEAREST);		//GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D,0,3, textureWidth, textureHeight, 0 , GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glBindTexture(GL_TEXTURE_2D,0);
-#endif
 
 /*
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -73,13 +71,11 @@ void ScreenTransition::createTexture()
 
 void ScreenTransition::destroyTexture()
 {
-#ifdef BBGE_BUILD_OPENGL
 	if (screen_texture)
 	{
 		glDeleteTextures(1, &screen_texture);
 		screen_texture = 0;
 	}
-#endif
 }
 
 void ScreenTransition::unloadDevice()
@@ -104,14 +100,12 @@ void ScreenTransition::capture()
 	errorLog(os.str());
 	*/
 	
-#ifdef BBGE_BUILD_OPENGL
 	if (screen_texture)
 	{
 		glBindTexture(GL_TEXTURE_2D,screen_texture);
 		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, windowWidth, windowHeight);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}
-#endif
 
 	core->showBuffer();
 }
@@ -138,7 +132,6 @@ void ScreenTransition::onRender()
 {
 	if (alpha.x == 0) return;
 	
-#ifdef BBGE_BUILD_OPENGL
 	float width2 = float(width)/2;
 	float height2 = float(height)/2;
 	
@@ -185,6 +178,5 @@ void ScreenTransition::onRender()
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
 	RenderObject::lastTextureApplied = 0;
-#endif
 }
 

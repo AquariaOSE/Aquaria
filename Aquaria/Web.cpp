@@ -153,7 +153,6 @@ void Web::onUpdate(float dt)
 
 void Web::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	glBindTexture(GL_TEXTURE_2D, 0);
 	//glDisable(GL_BLEND);
 	
@@ -172,5 +171,4 @@ void Web::onRender()
 		
 	}
 	glEnd();
-#endif
 }

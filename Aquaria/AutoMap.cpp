@@ -278,7 +278,6 @@ void AutoMap::onRender()
 //	if (!doRender) return;
 	if (alpha.x == 0) return;
 
-#ifdef BBGE_BUILD_OPENGL
 	glBindTexture(GL_TEXTURE_2D, 0);
 	RenderObject::lastTextureApplied = 0;
 	float alphaValue = alpha.x;
@@ -399,7 +398,6 @@ void AutoMap::onRender()
 	glColor4f(0.5,0.75,1, alphaValue*0.5f);
 	drawCircle(blip.x*16, 8);
 
-#endif
 
 }
 

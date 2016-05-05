@@ -141,7 +141,6 @@ void Beam::render()
 
 void Beam::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	//glDisable(GL_CULL_FACE);
 	Vector diff = endPos - position;
 	Vector side = diff;
@@ -160,7 +159,6 @@ void Beam::onRender()
 		glTexCoord2f(0, 1);
 		glVertex2f(sideRight.x, sideRight.y);
 	glEnd();
-#endif
 }
 
 void Beam::onUpdate(float dt)

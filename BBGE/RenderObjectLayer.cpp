@@ -364,9 +364,7 @@ void RenderObjectLayer::renderPass(int pass)
 		{
 			if (displayList[i].isList)
 			{
-#ifdef BBGE_BUILD_OPENGL
 				glCallList(displayList[i].u.listID);
-#endif
 				RenderObject::lastTextureApplied = 0;
 			}
 			else
@@ -430,7 +428,6 @@ void RenderObjectLayer::generateDisplayList()
 			}
 			else
 			{
-#ifdef BBGE_BUILD_OPENGL
 				int listID = glGenLists(1);
 				if (listID != 0)
 				{
@@ -450,16 +447,13 @@ void RenderObjectLayer::generateDisplayList()
 				}
 				else
 					debugLog("glGenLists failed");
-#endif
 			}
 		}
 		else
 		{
 			if (lastWasStatic)
 			{
-#ifdef BBGE_BUILD_OPENGL
 				glEndList();
-#endif
 				lastWasStatic = false;
 			}
 		}
@@ -477,9 +471,7 @@ void RenderObjectLayer::generateDisplayList()
 
 	if (lastWasStatic)
 	{
-#ifdef BBGE_BUILD_OPENGL
 		glEndList();
-#endif
 	}
 
 	displayList.resize(listLength);

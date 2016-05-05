@@ -37,7 +37,6 @@ class TimelineRender : public RenderObject
 {
 	void onRender()
 	{
-#ifdef BBGE_BUILD_OPENGL
 		glLineWidth(1);
 		glBegin(GL_LINES);
 		glColor4f(1, 1, 1, 1);
@@ -47,7 +46,6 @@ class TimelineRender : public RenderObject
 			glVertex3f(x, 5, 0);
 		}
 		glEnd();
-#endif
 	}
 };
 

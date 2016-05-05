@@ -39,7 +39,6 @@ void Vector::rotate2DRad(float rad)
 
 Vector getRotatedVector(const Vector &vec, float rot)
 {
-#ifdef BBGE_BUILD_OPENGL
 	glPushMatrix();
 	glLoadIdentity();
 
@@ -59,9 +58,6 @@ Vector getRotatedVector(const Vector &vec, float rot)
 
 	glPopMatrix();
 	return Vector(x,y,z);
-#elif defined(BBGE_BUILD_DIRECTX)
-	return vec;
-#endif
 }
 
 // note update this from float lerp

@@ -125,7 +125,6 @@ HairNode *Hair::getHairNode(int idx)
 
 void Hair::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	//glDisable(GL_CULL_FACE);
 
 	glBegin(GL_QUAD_STRIP);
@@ -189,7 +188,6 @@ void Hair::onRender()
 
 	*/
 	//glEnable(GL_CULL_FACE);
-#endif
 }
 
 void Hair::onUpdate(float dt)

@@ -203,7 +203,6 @@ float CollisionShape::getX2()
 
 void CollisionShape::render()
 {
-#ifdef BBGE_BUILD_OPENGL
 	glTranslatef(offsetPosition.x, offsetPosition.y,0);
 	switch(getType())
 	{
@@ -245,7 +244,6 @@ void CollisionShape::render()
 	}
 
 	glTranslatef(-offsetPosition.x, -offsetPosition.y,0);
-#endif
 	//glDisable(GL_BLEND);
 	
 }

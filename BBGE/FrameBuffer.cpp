@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 //WARNING: FrameBuffer objects have to have reloadDevice/unloadDevice called manually!
 
 #ifdef BBGE_BUILD_FRAMEBUFFER
-#if defined(BBGE_BUILD_OPENGL)
 	PFNGLISRENDERBUFFEREXTPROC glIsRenderbufferEXT = NULL;
 	PFNGLBINDRENDERBUFFEREXTPROC glBindRenderbufferEXT = NULL;
 	PFNGLDELETERENDERBUFFERSEXTPROC glDeleteRenderbuffersEXT = NULL;
@@ -42,7 +41,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT = NULL;
 	PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT = NULL;
 	PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
-#endif
 #endif
 
 FrameBuffer::FrameBuffer()
@@ -123,7 +121,6 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 	w=width;
 	h=height;
 
-#ifdef BBGE_BUILD_OPENGL
 	char *ext = (char*)glGetString( GL_EXTENSIONS );
 
 	std::ostringstream os;
@@ -137,7 +134,6 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 	}
 	else
 	{
-#if defined(BBGE_BUILD_SDL)
 		if (!glIsRenderbufferEXT)
 		{
 			glIsRenderbufferEXT = (PFNGLISRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glIsRenderbufferEXT");
@@ -158,7 +154,6 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 			glGetFramebufferAttachmentParameterivEXT = (PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC)SDL_GL_GetProcAddress("glGetFramebufferAttachmentParameterivEXT");
 			glGenerateMipmapEXT = (PFNGLGENERATEMIPMAPEXTPROC)SDL_GL_GetProcAddress("glGenerateMipmapEXT");
 		}
-#endif
 
 		if( !glIsRenderbufferEXT || !glBindRenderbufferEXT || !glDeleteRenderbuffersEXT ||
 			!glGenRenderbuffersEXT || !glRenderbufferStorageEXT || !glGetRenderbufferParameterivEXT ||
@@ -219,7 +214,6 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	
-#endif
 	debugLog("Done");
 	inited = true;
 	enabled = true;
@@ -237,7 +231,6 @@ void FrameBuffer::unloadDevice()
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
 
-#ifdef BBGE_BUILD_OPENGL
 
 	if (glDeleteFramebuffersEXT == NULL)
 	{
@@ -274,13 +267,11 @@ void FrameBuffer::unloadDevice()
 		glDeleteRenderbuffersEXT(1, &g_depthRenderBuffer);
 		g_depthRenderBuffer = 0;
 	}
-#endif
 
 #endif
 	debugLog("done");
 }
 
-#if defined(BBGE_BUILD_SDL)
 void FrameBuffer::resetOpenGL()
 {
 #if defined(BBGE_BUILD_FRAMEBUFFER)
@@ -305,7 +296,6 @@ void FrameBuffer::resetOpenGL()
 	glGenerateMipmapEXT = NULL;
 #endif
 }
-#endif
 
 void FrameBuffer::reloadDevice()
 {
@@ -317,7 +307,6 @@ void FrameBuffer::startCapture()
 {
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
-#ifdef BBGE_BUILD_OPENGL
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, g_frameBuffer );
 	//glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, g_depthRenderBuffer );
 	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, g_dynamicTextureID, 0 );
@@ -325,7 +314,6 @@ void FrameBuffer::startCapture()
 
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 
-#endif
 
 #endif
 }
@@ -334,9 +322,7 @@ void FrameBuffer::endCapture()
 {
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
-#ifdef BBGE_BUILD_OPENGL
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
-#endif
 
 #endif
 }
@@ -345,9 +331,7 @@ void FrameBuffer::bindTexture()
 {
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
-#ifdef BBGE_BUILD_OPENGL
 	glBindTexture( GL_TEXTURE_2D, g_dynamicTextureID );
-#endif
 
 #endif
 }

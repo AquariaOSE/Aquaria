@@ -30,7 +30,6 @@ PathRender::PathRender() : RenderObject()
 
 void PathRender::onRender()
 {	
-#ifdef BBGE_BUILD_OPENGL
 	const int pathcount = dsq->game->getNumPaths();
 	if (pathcount <= 0)
 		return;
@@ -109,5 +108,4 @@ void PathRender::onRender()
 			glPopMatrix();
 		}
 	}
-#endif
 }

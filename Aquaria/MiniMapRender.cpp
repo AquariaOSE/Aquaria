@@ -475,7 +475,6 @@ void MiniMapRender::onUpdate(float dt)
 
 void MiniMapRender::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	RenderObject::lastTextureApplied = 0;
@@ -760,7 +759,6 @@ void MiniMapRender::onRender()
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-#endif
 }
 
 void MiniMapRender::renderIcon(MinimapIcon *ico, const Vector& pos)

@@ -63,14 +63,9 @@ public:
 	static bool useMipMaps;
 	bool repeat, repeating;
 
-#ifdef BBGE_BUILD_OPENGL
 	static GLint filter;
 	static GLint format;
 	GLuint textures[1];
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	LPDIRECT3DTEXTURE9 d3dTexture;
-#endif
 
 	void reload();
 

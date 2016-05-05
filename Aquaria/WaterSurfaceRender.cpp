@@ -188,7 +188,6 @@ void WaterSurfaceRender::render()
 
 void WaterSurfaceRender::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	if (dsq->game->waterLevel == 0) return;
 	if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
 	{
@@ -256,5 +255,4 @@ void WaterSurfaceRender::onRender()
 
 
 	//glDisable(GL_SCISSOR_TEST);
-#endif
 }

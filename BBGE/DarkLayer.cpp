@@ -40,10 +40,8 @@ void DarkLayer::unloadDevice()
 		frameBuffer.unloadDevice();
 	else
 	{
-#ifdef BBGE_BUILD_OPENGL
 		if (texture)
 			glDeleteTextures(1, &texture);
-#endif
 	}
 }
 
@@ -106,7 +104,6 @@ void DarkLayer::toggle(bool on)
 
 void DarkLayer::preRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	bool verbose = core->coreVerboseDebug;
 	if (layer != -1)
 	{
@@ -153,12 +150,10 @@ void DarkLayer::preRender()
 		*/
 		//glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, quality, quality, 0);
 	}
-#endif
 }
 
 void DarkLayer::render()
 {
-#ifdef BBGE_BUILD_OPENGL
 	if (renderLayer != -1)
 	{
 		glPushMatrix();
@@ -226,5 +221,4 @@ void DarkLayer::render()
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 	}
-#endif
 }
