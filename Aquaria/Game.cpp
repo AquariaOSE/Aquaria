@@ -8395,21 +8395,15 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius)
 	{
 		Bone *b = skeletal->skeletalSprite.bones[i];
 
-		if (b->alpha.x == 1 && b->renderQuad)
+		if (b->alpha.x == 1 && b->renderQuad &&
+			(!b->collisionMask.empty() || b->collideRadius) // check this here to avoid calculating getWorldCollidePosition() if not necessary
+		)
 		{
 			float checkRadius = sqr(radius+b->collisionMaskRadius);
 			Vector bonePos = b->getWorldCollidePosition();
 			float dist = (bonePos - pos).getSquaredLength2D();
-			// BOUND RECT METHOD
-			if (!b->collisionRects.empty())
-			{
-				for (int i = 0; i < b->collisionRects.size(); i++)
-				{
-					b->collisionRects[i].isCoordinateInside(pos, radius);
-				}
-			}
 			// MULTIPLE CIRCLES METHOD
-			else if (!b->collisionMask.empty())
+			if (!b->collisionMask.empty())
 			{
 				if (dist < checkRadius)
 				{

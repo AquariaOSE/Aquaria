@@ -937,46 +937,6 @@ void RenderObject::renderCall()
 
 void RenderObject::renderCollision()
 {
-	if (!collisionRects.empty())
-	{
-#ifdef BBGE_BUILD_OPENGL
-		glPushAttrib(GL_ALL_ATTRIB_BITS);
-		glPushMatrix();
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		//glLoadIdentity();
-		//core->setupRenderPositionAndScale();
-		
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColor4f(1.0f, 0.5f, 1.0f, 0.5f);
-		glPointSize(5);
-
-		for (int i = 0; i < collisionRects.size(); i++)
-		{
-			RectShape *r = &collisionRects[i];
-
-			glBegin(GL_QUADS);
-				glVertex3f(r->x1, r->y1, 0);
-				glVertex3f(r->x1, r->y2, 0);
-				glVertex3f(r->x2, r->y2, 0);
-				glVertex3f(r->x2, r->y1, 0);
-			glEnd();
-			glBegin(GL_POINTS);
-				glVertex3f(r->x1, r->y1, 0);
-				glVertex3f(r->x1, r->y2, 0);
-				glVertex3f(r->x2, r->y2, 0);
-				glVertex3f(r->x2, r->y1, 0);
-			glEnd();
-		}
-
-		glPopMatrix();
-		glDisable(GL_BLEND);
-
-		glPopAttrib();
-#endif
-	}
-
 	if (!collisionMask.empty())
 	{
 #ifdef BBGE_BUILD_OPENGL
