@@ -364,7 +364,7 @@ Vector RenderObject::getWorldCollidePosition(const Vector &vec)
 #ifdef BBGE_USE_GLM
 	glm::mat4 transformMatrix = glm::translate(
 		matrixChain(this),
-		glm::vec3(collidePosition.x + vec.x, collidePosition.y + vec.y, 0.0f)
+		glm::vec3(vec.x, vec.y, 0.0f)
 	);
 
 	return Vector(transformMatrix[3][0], transformMatrix[3][1], 0);
@@ -374,7 +374,7 @@ Vector RenderObject::getWorldCollidePosition(const Vector &vec)
 	glLoadIdentity();
 
 	matrixChain(this);
-	glTranslatef(collidePosition.x+vec.x, collidePosition.y+vec.y, 0);
+	glTranslatef(vec.x, vec.y, 0);
 
 	float m[16];
 	glGetFloatv(GL_MODELVIEW_MATRIX, m);

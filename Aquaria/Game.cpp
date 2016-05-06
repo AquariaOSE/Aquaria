@@ -2767,7 +2767,6 @@ void Game::generateCollisionMask(Quad *q, float overrideCollideRadius /* = 0 */)
 #ifdef BBGE_BUILD_OPENGL
 	if (q->texture)
 	{
-		q->collidePosition = Vector(0,0,0);
 		if (overrideCollideRadius)
 			q->collideRadius = overrideCollideRadius;
 		else

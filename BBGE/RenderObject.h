@@ -282,7 +282,6 @@ public:
 #endif
 
 	float collideRadius;
-	Vector collidePosition;
 	std::vector<Vector> collisionMask;
 	std::vector<Vector> transformedCollisionMask;
 
