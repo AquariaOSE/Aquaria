@@ -969,9 +969,6 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			}
 			bone->SetAttribute("crects", os.str().c_str());
 		}
-		std::ostringstream os;
-		os << this->bones[i]->collidePosition.x << " " << this->bones[i]->collidePosition.y;
-		bone->SetAttribute("cp", os.str().c_str());
 		if (this->bones[i]->rbp)
 			bone->SetAttribute("rbp", this->bones[i]->rbp);
 		if (this->bones[i]->originalRenderPass)
@@ -1129,7 +1126,7 @@ Bone *SkeletalSprite::getBoneByIdx(int idx)
 	return 0;
 }
 
-Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std::string name, float cr, bool fh, bool fv, const Vector &cp)
+Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std::string name, float cr, bool fh, bool fv)
 {
 	Bone *b = new Bone;
 	b->boneIdx = idx;
@@ -1140,7 +1137,6 @@ Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std:
 	b->renderBeforeParent = rbp;
 	b->pidx = pidx;
 	b->collideRadius = cr;
-	b->collidePosition = cp;
 	b->name = name;
 	//core->generateCollisionMask(b);
 	if (fh)
@@ -1381,7 +1377,6 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			int pidx = -1, rbp=0, cr=0, fh=0, fv=0;
 
 			std::string name;
-			Vector cp;
 			if (bone->Attribute("pidx"))
 				pidx = atoi(bone->Attribute("pidx"));
 			if (bone->Attribute("rbp"))
@@ -1395,18 +1390,9 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				fh = atoi(bone->Attribute("fh"));
 			if (bone->Attribute("fv"))
 				fv = atoi(bone->Attribute("fv"));
-			if (bone->Attribute("cp"))
-			{
-				SimpleIStringStream is(bone->Attribute("cp"));
-				is >> cp.x >> cp.y;
-			}
-
-
-
-
 
 			std::string gfx = bone->Attribute("gfx");
-			Bone *newb = initBone(idx, gfx, pidx, rbp, name, cr, fh, fv, cp);
+			Bone *newb = initBone(idx, gfx, pidx, rbp, name, cr, fh, fv);
 			if (bone->Attribute("offx"))
 				newb->offset.x = atoi(bone->Attribute("offx"));
 			if (bone->Attribute("offy"))
