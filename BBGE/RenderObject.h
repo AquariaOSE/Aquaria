@@ -68,8 +68,6 @@ struct MotionBlurFrame
 	float rotz;
 };
 
-typedef std::vector<RectShape> CollideRects;
-
 class RenderObjectLayer;
 
 class RenderObject : public ScriptObject
@@ -285,7 +283,6 @@ public:
 	std::vector<Vector> collisionMask;
 	std::vector<Vector> transformedCollisionMask;
 
-	CollideRects collisionRects;
 	float collisionMaskRadius;
 
 	float alphaMod;

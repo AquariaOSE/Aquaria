@@ -956,19 +956,6 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		{
 			bone->SetAttribute("sel", this->bones[i]->selectable);
 		}
-		if (!this->bones[i]->collisionRects.empty())
-		{
-			std::ostringstream os;
-			os << this->bones[i]->collisionRects.size() << " ";
-			for (int j = 0; j < this->bones[i]->collisionRects.size(); j++)
-			{
-				RectShape *r = &this->bones[i]->collisionRects[j];
-				int x, y, w, h;
-				r->getCWH(&x, &y, &w, &h);
-				os << x << " " << y << " " << w << " " << h << " ";
-			}
-			bone->SetAttribute("crects", os.str().c_str());
-		}
 		if (this->bones[i]->rbp)
 			bone->SetAttribute("rbp", this->bones[i]->rbp);
 		if (this->bones[i]->originalRenderPass)
@@ -1397,22 +1384,6 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				newb->offset.x = atoi(bone->Attribute("offx"));
 			if (bone->Attribute("offy"))
 				newb->offset.y = atoi(bone->Attribute("offy"));
-
-			if (bone->Attribute("crects"))
-			{
-				SimpleIStringStream is(bone->Attribute("crects"));
-				int num = 0;
-				is >> num;
-				for (int i = 0; i < num; i++)
-				{
-					RectShape r;
-					int x, y, w, h;
-					is >> x >> y >> w >> h;
-					r.setCWH(x, y, w, h);
-
-					newb->collisionRects.push_back(r);
-				}
-			}
 
 			if (bone->Attribute("prt"))
 			{
