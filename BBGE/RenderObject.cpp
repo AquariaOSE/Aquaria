@@ -1363,7 +1363,10 @@ bool RenderObject::setTexture(const std::string &n)
 	stringToLowerUserData(name);
 
 	if (name.empty())
+	{
+		setTexturePointer(NULL);
 		return false;
+	}
 
 	if(texture && name == texture->name)
 		return true; // no texture change
