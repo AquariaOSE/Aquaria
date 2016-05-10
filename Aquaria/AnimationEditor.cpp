@@ -37,7 +37,6 @@ class TimelineRender : public RenderObject
 {
 	void onRender()
 	{
-#ifdef BBGE_BUILD_OPENGL
 		glLineWidth(1);
 		glBegin(GL_LINES);
 		glColor4f(1, 1, 1, 1);
@@ -47,7 +46,6 @@ class TimelineRender : public RenderObject
 			glVertex3f(x, 5, 0);
 		}
 		glEnd();
-#endif
 	}
 };
 
@@ -100,11 +98,7 @@ void KeyframeWidget::shiftRight()
 
 void KeyframeWidget::onUpdate(float dt)
 {
-	/*
-		if (this->key == ae->currentKey)
-			color = Vector(0.75, 0.75, 1);
-		else
-	*/
+
 	Quad::onUpdate(dt);
 	if (life != 1 || ae->editSprite->isAnimating()) return;
 	switch(ae->editSprite->getCurrentAnimation()->getKeyframe(this->key)->lerpType)
@@ -139,7 +133,7 @@ void KeyframeWidget::onUpdate(float dt)
 	{
 		if (core->mouse.buttons.left)
 		{
-			//ae->selectionLocked = false;
+
 			movingWidget = this;
 			ae->currentKey = this->key;
 		}
@@ -236,7 +230,7 @@ void AnimationEditor::applyState()
 	editSprite->cull = false;
 	editSprite->loadSkeletal(editingFile);
 	editSprite->position = Vector(400,300);
-	//editSprite->scale = Vector(0.5, 0.5);
+
 
 	addAction(MakeFunctionEvent(AnimationEditor, lmbu), ActionMapper::MOUSE_BUTTON_LEFT, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, lmbd), ActionMapper::MOUSE_BUTTON_LEFT, 1);
@@ -271,7 +265,7 @@ void AnimationEditor::applyState()
 	addAction(MakeFunctionEvent(AnimationEditor, undo), KEY_Z, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, redo), KEY_Y, 0);
 
-	//addAction(MakeFunctionEvent(AnimationEditor, lockSelection), KEY_L, 0);
+
 	addAction(MakeFunctionEvent(AnimationEditor, cycleLerpType), KEY_L, 0);
 
 	addAction(MakeFunctionEvent(AnimationEditor, selectPrevBone), KEY_UP, 0);
@@ -294,32 +288,12 @@ void AnimationEditor::applyState()
 
 
 
-	/*
-	addAction("mbl", KEY_A);
-	addAction("mbr", KEY_D);
-	addAction("mbu", KEY_W);
-	addAction("mbd", KEY_S);
-	*/
-
-
 	addAction(ACTION_SWIMLEFT,	KEY_J);
 	addAction(ACTION_SWIMRIGHT, KEY_K);
 	addAction(ACTION_SWIMUP,	KEY_UP);
 	addAction(ACTION_SWIMDOWN,	KEY_DOWN);
 
-	/*
-	addAction(ACTION_BONELEFT,		KEY_NUMPAD4);
-	addAction(ACTION_BONERIGHT,		KEY_NUMPAD6);
-	addAction(ACTION_BONEUP,		KEY_NUMPAD8);
-	addAction(ACTION_BONEDOWN,		KEY_NUMPAD2);
-	*/
 
-	//addAction("", );
-
-	/*
-	addAction(MakeFunctionEvent(AnimationEditor, zoomOut), KEY_NUMPAD2, 0);
-	addAction(MakeFunctionEvent(AnimationEditor, zoomIn), KEY_NUMPAD8, 0);
-	*/
 
 	addRenderObject(editSprite, LR_ENTITIES);
 
@@ -620,11 +594,11 @@ void AnimationEditor::rebuildKeyframeWidgets()
 		offx = keyframeWidgets[i]->offset.x;
 	}
 	keyframeWidgets.clear();
-	for (int i = 0; i < 1000; i++)
+	if (Animation *a = editSprite->getCurrentAnimation())
 	{
-		if (editSprite->getCurrentAnimation())
+		for (int i = 0; i < 1000; i++)
 		{
-			SkeletalKeyframe *key = editSprite->getCurrentAnimation()->getKeyframe(i);
+			SkeletalKeyframe *key = a->getKeyframe(i);
 			if (!key) break;
 			KeyframeWidget *k = new KeyframeWidget(i);
 			k->offset.x = offx;
@@ -670,35 +644,9 @@ void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 
 				b->strip[selectedStripPoint] = sel->changeStrip[selectedStripPoint] += mov*0.006f;
 				sel->setGridPoints(sel->stripVert, sel->strip);
-				/*
 
 
-				float sz = sel->getStripSegmentSize();
-				for (int i = selectedStripPoint; i > 0; i--)
-				{
-					Vector diff = sel->changeStrip[i] - sel->changeStrip[i-1];
-					if (!diff.isLength2DIn(sz))
-					{
-						diff.setLength2D(sz);
-						sel->changeStrip[i-1] = sel->changeStrip[i] - diff;
-					}
-				}
-				for (int i = selectedStripPoint; i < sel->changeStrip.size()-1; i++)
-				{
-					Vector diff = sel->changeStrip[i] - sel->changeStrip[i+1];
-					if (!diff.isLength2DIn(sz))
-					{
-						diff.setLength2D(sz);
-						sel->changeStrip[i+1] = sel->changeStrip[i] - diff;
-					}
-				}
 
-				b->strip = sel->changeStrip;
-
-
-				*/
-
-				//sel->setStrip(sel->changeStrip);
 			}
 		}
 	}
@@ -710,7 +658,7 @@ void AnimationEditor::selectPrevBone()
 
 	if (editingStrip)
 	{
-		//moveBoneStripPoint(Vector(0, 1));
+
 	}
 	else
 	{
@@ -724,7 +672,7 @@ void AnimationEditor::selectNextBone()
 
 	if (editingStrip)
 	{
-		//moveBoneStripPoint(Vector(0, -1));
+
 	}
 	else
 	{
@@ -767,7 +715,7 @@ void AnimationEditor::update(float dt)
 	if (core->mouse.buttons.middle)
 	{
 		editSprite->position += core->mouse.change;
-		//core->setMousePosition(Vector(400,300));
+
 	}
 
 	if (editingStrip)
@@ -811,29 +759,7 @@ void AnimationEditor::update(float dt)
 			updateEditingBone();
 		if (editingBone)
 		{
-			/*
-			float amt = dt;
-			if (isActing("mbl"))
-			{
-				editingBone->position.x -= amt;
-				applyTranslation();
-			}
-			if (isActing("mbr"))
-			{
-				editingBone->position.x += amt;
-				applyTranslation();
-			}
-			if (isActing("mbu"))
-			{
-				editingBone->position.y -= amt;
-				applyTranslation();
-			}
-			if (isActing("mbd"))
-			{
-				editingBone->position.y += amt;
-				applyTranslation();
-			}
-			*/
+
 		}
 	}
 	if (editingBone && boneEdit == 1)
@@ -1053,8 +979,8 @@ void AnimationEditor::lmbd()
 {
 	pushUndo();
 	updateEditingBone();
-	if (editingBone /*&& (editSprite->position - core->mouse.position).isLength2DIn(400)*/
-		/*&& core->mouse.position.x > 200 && core->mouse.position.y < 560*/
+	if (editingBone
+
 		&& core->mouse.position.x > 400-200 && core->mouse.position.x < 400+200
 		&& core->mouse.position.y > 300-200 && core->mouse.position.y < 300+200
 		)
@@ -1148,7 +1074,7 @@ void AnimationEditor::rmbd()
 	updateEditingBone();
 	if (editingBone)
 	{
-		//cursorOffset = editingBone->position + editSprite->position - core->mouse.position;
+
 		cursorOffset = core->mouse.position;
 		rotOffset = editingBone->rotation.z;
 		boneEdit = 2;
@@ -1307,8 +1233,8 @@ void AnimationEditor::rmbu()
 
 void AnimationEditor::mmbd()
 {
-	//editingBone = editSprite->getSelectedBone(ignoreBone);
-	//cloneBoneAhead();
+
+
 }
 
 void AnimationEditor::cloneBoneAhead()
@@ -1429,8 +1355,8 @@ void AnimationEditor::loadSkin()
 
 	std::string file = dsq->getUserInputString("Enter skin file to load:");
 	if (file.empty())		return;
-	//this->editingFile = file;
-	//loadFile();
+
+
 	SkeletalSprite::clearCache();
 	editSprite->loadSkin(file);
 }
@@ -1453,7 +1379,7 @@ void AnimationEditor::moveNextWidgets(float dt)
 			s = 1;
 		}
 	}
-	
+
 }
 
 void AnimationEditor::toggleRenderBorders()

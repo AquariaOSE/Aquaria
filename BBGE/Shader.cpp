@@ -66,10 +66,7 @@ void Shader::staticInit()
 		//This extension string indicates that the OpenGL Shading Language,
 		// version 1.00, is supported.
 		debugLog("GL_ARB_shading_language_100 extension was not found");
-		/*
-		MessageBox(NULL,"GL_ARB_shading_language_100 extension was not found",
-		"ERROR",MB_OK|MB_ICONEXCLAMATION);
-		*/
+
 		goto end;
 	}
 
@@ -80,7 +77,6 @@ void Shader::staticInit()
 	}
 	else
 	{
-#ifdef BBGE_BUILD_SDL
 		glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
 		glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)SDL_GL_GetProcAddress("glDeleteObjectARB");
 		glUseProgramObjectARB     = (PFNGLUSEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glUseProgramObjectARB");
@@ -101,11 +97,10 @@ void Shader::staticInit()
 		glUniform2ivARB           = (PFNGLUNIFORM2IVARBPROC)SDL_GL_GetProcAddress("glUniform2ivARB");
 		glUniform3ivARB           = (PFNGLUNIFORM3IVARBPROC)SDL_GL_GetProcAddress("glUniform3ivARB");
 		glUniform4ivARB           = (PFNGLUNIFORM4IVARBPROC)SDL_GL_GetProcAddress("glUniform4ivARB");
-#endif
 
 		if( !glCreateProgramObjectARB || !glDeleteObjectARB || !glUseProgramObjectARB ||
-			!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB || 
-			!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB || 
+			!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB ||
+			!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB ||
 			!glLinkProgramARB || !glGetUniformLocationARB || !glGetActiveUniformARB ||
 			!glUniform1fvARB || !glUniform2fvARB || !glUniform3fvARB || !glUniform4fvARB ||
 			!glUniform1ivARB || !glUniform2ivARB || !glUniform3ivARB || !glUniform4ivARB)
@@ -134,9 +129,7 @@ Shader::Shader()
 	numUniforms = -1;
 	uniformsDirty = false;
 
-#ifdef BBGE_BUILD_OPENGL
 	g_programObj = 0;
-#endif
 }
 
 Shader::~Shader()
@@ -403,7 +396,7 @@ void Shader::_queryUniforms()
 			memset(&u.data, 0, sizeof(u.data));
 		u.dirty = true;
 		u.type = type;
-		
+
 		if(add)
 			uniforms.push_back(u);
 		else

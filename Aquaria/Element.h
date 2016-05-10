@@ -43,7 +43,7 @@ enum ElementFlag
 };
 
 struct ElementEffectData
-{	
+{
 	ElementEffectData();
 
 	int elementEffectType;

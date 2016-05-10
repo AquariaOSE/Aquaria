@@ -37,7 +37,7 @@ void Emitter::destroy()
 	}
 	particles.clear();
 	Quad::destroy();
-	//particleManager->setFree(firstFree);
+
 }
 
 void Emitter::spawnParticle(float perc)
@@ -46,7 +46,7 @@ void Emitter::spawnParticle(float perc)
 	Particle *p = particleManager->getFreeParticle(this);
 
 	p->active = true;
-	
+
 	p->life = data.life;
 	setBlendType(data.blendType);
 
@@ -105,14 +105,7 @@ void Emitter::spawnParticle(float perc)
 		p->rot.data->target.z += p->rot.z;
 	}
 
-	/*
-	if (data.calculateVelocityToCenter)
-	{
-		Vector pos = p->position - this->position;
-		pos.setLength2D(1);
-		quad->velocity = -p*particles[i].velocityMagnitude.x;
-	}
-	*/
+
 
 	if (data.randomVelocityMagnitude > 0)
 	{
@@ -137,13 +130,8 @@ Vector Emitter::getSpawnPosition()
 void Emitter::onUpdate(float dt)
 {
 	Quad::onUpdate(dt);
-	
-	/*
-	for (Particles::iterator i = particles.begin(); i != particles.end(); i++)
-	{
-		particleManager->updateParticle(*i, dt);
-	}
-	*/
+
+
 
 	if (pe->isRunning() && core->particlesPaused <= data.pauseLevel)
 	{
@@ -232,16 +220,7 @@ void Emitter::removeParticle(Particle *p)
 	}
 	else
 		particles.remove(p);
-	/*
-	for (Particles::reverse_iterator i = particles.rbegin(); i != particles.rend(); i++)
-	{
-		if (*i == p)
-		{
-			particles.erase(i);
-			return;
-		}
-	}
-	*/
+
 }
 
 void Emitter::render()
@@ -257,20 +236,8 @@ void Emitter::onRender()
 
 	if (!data.spawnLocal)
 	{
-#ifdef BBGE_BUILD_OPENGL
 		glLoadIdentity();
-#endif
-		/*
-		if (pe && pe->followCamera)
-		{
-			glLoadIdentity();
-			glScalef(core->globalResolutionScale.x, core->globalResolutionScale.y,0);
-		}
-		else
-		{
-			core->setupRenderPositionAndScale();
-		}
-		*/
+
 		core->setupRenderPositionAndScale();
 	}
 
@@ -294,32 +261,26 @@ void Emitter::onRender()
 				const float dx = w2 * p->scale.x;
 				const float dy = h2 * p->scale.y;
 
-#ifdef BBGE_BUILD_OPENGL
 				Vector col = p->color * colorMult;
 				glColor4f(col.x, col.y, col.z, p->alpha.x * alphaMult);
 
-				
+
 				if (p->rot.z != 0 || p->rot.isInterpolating())
 				{
 					glPushMatrix();
-						
+
 						glTranslatef(p->pos.x, p->pos.y,0);
 
 						glRotatef(p->rot.z, 0, 0, 1);
 
 						if (data.flipH || (data.copyParentFlip && (pe->isfh() || (pe->getParent() && pe->getParent()->isfh()))))
 						{
-							//glDisable(GL_CULL_FACE);
+
 							glRotatef(180, 0, 1, 0);
 						}
 
-						/*
-						if (data.flipV || (data.copyParentFlip && (this->isfv() || (parent && parent->isfv()))))
-						{
-							glDisable(GL_CULL_FACE);
-						}
-						*/
-						
+
+
 						glBegin(GL_QUADS);
 							glTexCoord2f(0,1);
 							glVertex2f(-dx, +dy);
@@ -329,7 +290,7 @@ void Emitter::onRender()
 
 							glTexCoord2f(1,0);
 							glVertex2f(+dx, -dy);
-						
+
 							glTexCoord2f(0,0);
 							glVertex2f(-dx, -dy);
 						glEnd();
@@ -350,18 +311,16 @@ void Emitter::onRender()
 
 						glTexCoord2f(1,0);
 						glVertex2f(x+dx, y-dy);
-					
+
 						glTexCoord2f(0,0);
 						glVertex2f(x-dx, y-dy);
 					glEnd();
 				}
-#endif
 			}
 		}
 	}
 	else
 	{
-#ifdef BBGE_BUILD_OPENGL
 		glBegin(GL_QUADS);
 		for (Particles::iterator i = particles.begin(); i != particles.end(); i++)
 		{
@@ -374,7 +333,7 @@ void Emitter::onRender()
 				const float dy = h2 * p->scale.y;
 
 				glColor4f(p->color.x, p->color.y, p->color.z, p->alpha.x);
-	
+
 				glTexCoord2f(0,1);
 				glVertex2f(x-dx, y+dy);
 
@@ -383,34 +342,14 @@ void Emitter::onRender()
 
 				glTexCoord2f(1,0);
 				glVertex2f(x+dx, y-dy);
-			
+
 				glTexCoord2f(0,0);
 				glVertex2f(x-dx, y-dy);
 			}
 		}
 		glEnd();
-#endif
 	}
 
 
 
-	/*
-	glDisable(GL_TEXTURE_2D);
-	glPointSize(4);
-	glBegin(GL_POINTS);
-	
-	for (Particles::iterator i = particles.begin(); i != particles.end(); i++)
-	{
-		Particle *p = *i;
-		if (p->active)
-		{
-			glColor4f(1, 0, 0, 1);
-			x = p->pos.x;
-			y = p->pos.y;
-			glVertex2f(x, y);
-		}
-	}
-	glEnd();
-	glEnable(GL_TEXTURE_2D);
-	*/
 }

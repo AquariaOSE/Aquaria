@@ -191,34 +191,9 @@ void ParticleManager::endParticle(Particle *p)
 	}
 	if (p->index != -1)
 	{
-		/*
-		// set free if the neighbours are also free
-		int backupFree = free;
-		int oldFree = p->index;
-		free = oldFree;
-		nextFree();
-		if (!particles[free].active)
-		{
-			free = oldFree;
-			prevFree();
-			if (!particles[free].active)
-			{
-				// good to go!
-			}
-			else
-			{
-				free = backupFree;
-			}
-		}
-		else
-		{
-			free = backupFree;
-		}
-		*/
-		//if (p->index > free)
-		//{
-		//free = p->index;
-		//}
+
+
+
 	}
 	p->reset();
 }
@@ -273,67 +248,11 @@ Particle *ParticleManager::stomp()
 	}
 	while (p->active);
 
-	/*
-	int nFree = free;
-	int pFree = free;
 
-	nextFree();
-	nFree = free;
-
-	free = bFree;
-	prevFree();
-	pFree = free;
-
-	do
-	{
-		free = nFree;
-		p = &particles[free];
-		idx = free;
-		nextFree();
-		nFree = free;
-
-		if (p->active)
-		{
-			free = pFree;
-			p = &particles[free];
-			idx = free;
-			prevFree();
-			pFree = free;
-		}
-		c++;
-		if (c >= spreadCheck)
-		{
-			exceed = true;
-			break;
-		}
-	}
-	while (p->active);
-	*/
-	/*
-	if (p->active)
-	{
-		c = 0;
-		free = backupFree;
-		nextFree();
-		do
-		{
-			p = &particles[free];
-			idx = free;
-			nextFree();
-			c++;
-			if (c >= 8)
-			{
-				exceed = true;
-				break;
-			}
-		}
-		while (p->active);
-	}
-	*/
 
 	if (exceed)
 	{
-		//debugLog("EXCEEDED");
+
 	}
 
 	endParticle(p);
@@ -341,27 +260,7 @@ Particle *ParticleManager::stomp()
 	return p;
 }
 
-/*
-const int FREELISTSIZE = 32;
 
-void ParticleManager::getFreeList(int list)
-{
-	for (int i = 0; i < FREELISTSIZE; i++)
-	{
-		if (freeList[curList] != -1)
-		{
-			Particle *p = &particles[freeList[curList]];
-			freeList[curList] = -1;
-			return p;
-		}
-	}
-	return 0;
-}
-
-void ParticleManager::addFreeList()
-{
-}
-*/
 
 Particle *ParticleManager::getFreeParticle(Emitter *emitter)
 {
@@ -382,21 +281,6 @@ Particle *ParticleManager::getFreeParticle(Emitter *emitter)
 		p->index = free;
 		nextFree(spread);
 	}
-
-	/*
-	static int lpstep = 0;
-	if (c > lpstep)
-		lpstep = c;
-	std::ostringstream os;
-	os << "psteps: " << c << " largest: " << lpstep;
-	debugLog(os.str());
-	*/
-
-
-	/*
-	p = &particles[free];
-	nextFree();
-	*/
 
 
 

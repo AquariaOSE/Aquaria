@@ -51,26 +51,21 @@ public:
 
 	int getPixelWidth();
 	int getPixelHeight();
-	
+
 	void destroy();
-	
+
 
 	int width, height;
 
 	static ImageTGA *TGAload(const char* filename);
 	static ImageTGA *TGAloadMem(void *mem, int size);
-	
+
 	static bool useMipMaps;
 	bool repeat, repeating;
 
-#ifdef BBGE_BUILD_OPENGL
 	static GLint filter;
 	static GLint format;
 	GLuint textures[1];
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	LPDIRECT3DTEXTURE9 d3dTexture;
-#endif
 
 	void reload();
 
@@ -94,7 +89,7 @@ protected:
 
 	int ow, oh;
 	TextureLoadResult loadResult;
-	
+
 };
 
 #define UNREFTEX(x) if (x) {x = NULL;}

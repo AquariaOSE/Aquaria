@@ -29,40 +29,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdint.h>
 #endif
 
-//#include "pngLoad.h"
-//#include "jpeg/jpeglib.h"
-/*
-#include <il/il.h>
-#include <il/ilu.h>
-#include <il/ilut.h>
-*/
-#ifdef Z2D_J2K
-//..\j2k-codec\j2k-codec.lib
-	#include "..\j2k-codec\j2k-codec.h"
-#endif
 
-#ifdef BBGE_BUILD_OPENGL
+
+
 	GLint Texture::filter = GL_LINEAR;
 
 	GLint Texture::format = 0;
-#endif
 bool Texture::useMipMaps = true;
 
-/*
-#ifdef BBGE_BUILD_OPENGL
-#include "glext/glext.h"
-#endif
-*/
 
 
 Texture::Texture()
 {
-#ifdef BBGE_BUILD_OPENGL
 	textures[0] = 0;
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	d3dTexture = 0;
-#endif
 	width = height = 0;
 
 	repeat = false;
@@ -79,7 +58,6 @@ Texture::~Texture()
 
 void Texture::read(int tx, int ty, int w, int h, unsigned char *pixels)
 {
-#ifdef BBGE_BUILD_OPENGL
 	if (tx == 0 && ty == 0 && w == this->width && h == this->height)
 	{
 		glBindTexture(GL_TEXTURE_2D, textures[0]);
@@ -94,12 +72,10 @@ void Texture::read(int tx, int ty, int w, int h, unsigned char *pixels)
 		   << tx << "," << ty << "+" << w << "x" << h << ")";
 		debugLog(os.str());
 	}
-#endif
 }
 
 void Texture::write(int tx, int ty, int w, int h, const unsigned char *pixels)
 {
-#ifdef BBGE_BUILD_OPENGL
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 
 	glTexSubImage2D(GL_TEXTURE_2D, 0,
@@ -145,12 +121,10 @@ void Texture::write(int tx, int ty, int w, int h, const unsigned char *pixels)
 
 	  pixels   Specifies a pointer to the image data in memory.
 	  */
-#endif
 }
 
 void Texture::unload()
 {
-#ifdef BBGE_BUILD_OPENGL
 	if (textures[0])
 	{
 		ow = width;
@@ -165,28 +139,17 @@ void Texture::unload()
 		glDeleteTextures(1, &textures[0]);
 		textures[0] = 0;
 	}
-#endif
 }
 
 void Texture::destroy()
 {
-#ifdef BBGE_BUILD_OPENGL
 	unload();
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	if (d3dTexture)
-	{
-		d3dTexture->Release();
-		d3dTexture = 0;
-	}
-#endif
 
 	core->removeTexture(this);
 }
 
 int Texture::getPixelWidth()
 {
-#ifdef BBGE_BUILD_OPENGL
 	int w = 0, h = 0;
 	unsigned int size = 0;
 	unsigned char *data = getBufferAndSize(&w, &h, &size);
@@ -210,14 +173,10 @@ int Texture::getPixelWidth()
 	}
 	free(data);
 	return largestx - smallestx;
-#elif defined(BBGE_BUILD_DIRECTX)
-	return 0;
-#endif
 }
 
 int Texture::getPixelHeight()
 {
-#ifdef BBGE_BUILD_OPENGL
 	int w = 0, h = 0;
 	unsigned int size = 0;
 	unsigned char *data = getBufferAndSize(&w, &h, &size);
@@ -241,9 +200,6 @@ int Texture::getPixelHeight()
 	}
 	free(data);
 	return largesty - smallesty;
-#elif defined(BBGE_BUILD_DIRECTX)
-	return 0;
-#endif
 }
 
 void Texture::reload()
@@ -253,11 +209,7 @@ void Texture::reload()
 	unload();
 	load(loadName);
 
-	/*if (ow != -1 && oh != -1)
-	{
-		width = ow;
-		height = oh;
-	}*/
+
 	debugLog("DONE");
 }
 
@@ -287,12 +239,7 @@ bool Texture::load(std::string file)
 			pos = std::string::npos;
 	}
 
-	/*if (core->debugLogTextures)
-	{
-		std::ostringstream os;
-		os << "pos [" << pos << "], file :" << file;
-		debugLog(os.str());
-	}*/
+
 
 	bool found = exists(file);
 
@@ -310,35 +257,14 @@ bool Texture::load(std::string file)
 		file = localisePathInternalModpath(file);
 		file = core->adjustFilenameCase(file);
 
-		/*
-		std::ostringstream os;
-		os << "Loading texture [" << file << "]";
-		debugLog(os.str());
-		*/
+
 		std::string post = file.substr(file.size()-3, 3);
 		stringToLower(post);
 		if (post == "png")
 		{
 
-#ifdef BBGE_BUILD_OPENGL
 			return loadPNG(file);
-#endif
 
-#ifdef BBGE_BUILD_DIRECTX
-			D3DXCreateTextureFromFile(core->getD3DDevice(),  file.c_str(),	&this->d3dTexture);
-			if (!d3dTexture)
-			{
-				errorLog ("failed to load texture");
-			}
-			else
-			{
-				D3DSURFACE_DESC desc;
-				this->d3dTexture->GetLevelDesc(0,&desc);
-
-				width = desc.Width;
-				height = desc.Height;
-			}
-#endif
 		}
 		else if (post == "zga")
 		{
@@ -364,7 +290,6 @@ bool Texture::load(std::string file)
 
 void Texture::apply(bool repeatOverride)
 {
-#ifdef BBGE_BUILD_OPENGL
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	if (repeat || repeatOverride)
 	{
@@ -384,11 +309,6 @@ void Texture::apply(bool repeatOverride)
 			repeating = false;
 		}
 	}
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	core->getD3DDevice()->SetTexture(0, d3dTexture);
-
-#endif
 }
 
 void Texture::unbind()
@@ -400,13 +320,12 @@ bool Texture::loadPNG(const std::string &file)
 	if (file.empty()) return false;
 	bool good = false;
 
-#ifdef BBGE_BUILD_OPENGL
 
 
 	pngInfo info;
 
 	int pngType = PNG_ALPHA;
-	
+
 	if (format != 0)
 	{
 		if (format == GL_LUMINANCE_ALPHA)
@@ -444,7 +363,6 @@ bool Texture::loadPNG(const std::string &file)
 	if(memptr)
 		delete [] memptr;
 
-#endif
 	return good;
 }
 

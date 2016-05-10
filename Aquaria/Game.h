@@ -58,7 +58,7 @@ struct RecipeMenu
 	Quad *scrollEnd;
 	BitmapText *header, *page, *description;
 	AquariaMenuItem *nextPage, *prevPage;
-	
+
 
 	void toggle(bool on, bool watch=false);
 	void createPage(int p);
@@ -68,7 +68,7 @@ struct RecipeMenu
 	void goPrevPage();
 	int getNumPages();
 	int getNumKnown();
-	
+
 	int currentPage;
 
 	bool on;
@@ -100,7 +100,7 @@ const float MIN_SIZE = 0.1;
 	#undef AQUARIA_BUILD_SCENEEDITOR
 #endif
 
-//#include "GridRender.h"
+
 class GridRender;
 class MiniMapRender;
 class WaterSurfaceRender;
@@ -487,9 +487,9 @@ public:
 
 	void updateSelectedElementPosition(Vector position);
 	int selectedEntityType;
-	//int curEntity;
+
 	SelectedEntity selectedEntity;
-	//EntityGroups::iterator page;
+
 	int entityPageNum;
 
 	void checkForRebuild();
@@ -633,7 +633,7 @@ public:
 	void removeState();
 	void update(float dt);
 	void onLeftMouseButton();
-	//std::vector<Item*>items;
+
 
 	Avatar *avatar;
 	Entity *li;
@@ -642,7 +642,7 @@ public:
 
 	FoodSlot *moveFoodSlotToFront;
 
-	//void doChoiceMenu(Vector position, std::vector<std::string> choices);
+
 
 	std::string getSelectedChoice() { return selectedChoice; }
 
@@ -824,8 +824,8 @@ public:
 
 	Precacher tileCache;
 
-	//void cameraPanToNode(Path *p, int speed=500);
-	//void cameraRestore();
+
+
 	void setCameraFollow(Vector *position);
 	Shot *fireShot(Entity *firer, const std::string &particleEffect, Vector position, bool big, Vector direction, Entity *target, int homing=0, int velLenOverride=0, int targetPt=-1);
 	Shot *fireShot(const std::string &bankShot, Entity *firer, Entity *target=0, const Vector &pos=Vector(0,0,0), const Vector &aim=Vector(0,0,0), bool playSfx=true);
@@ -910,7 +910,7 @@ public:
 
 	void selectEntityFromGroups();
 	InterpolatedVector cameraInterp;
-	//InterpolatedVector tintColor;
+
 	float getWaterLevel();
 	void setMusicToPlay(const std::string &musicToPlay);
 	Vector lastCollidePosition;
@@ -1047,7 +1047,7 @@ protected:
 	bool isCooking;
 
 	void doMenuSectionHighlight(int sect);
-	
+
 	float cookDelay;
 
 	float ingOffY;
@@ -1058,7 +1058,7 @@ protected:
 	void onPrevRecipePage();
 	void onNextRecipePage();
 
-	
+
 
 	typedef std::vector<IngredientData*> CookList;
 	CookList cookList;
@@ -1163,12 +1163,7 @@ protected:
 
 	float deathTimer;
 
-	/*
-	void onAssignMenuScreenItemToSlot0();
-	void onAssignMenuScreenItemToSlot1();
-	void onAssignMenuScreenItemToSlot2();
-	void onAssignMenuScreenItemToSlot3();
-	*/
+
 
 	void onInGameMenuInventory();
 	void onInGameMenuSpellBook();

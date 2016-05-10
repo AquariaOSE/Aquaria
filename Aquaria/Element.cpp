@@ -100,7 +100,6 @@ void Element::updateEffects(float dt)
 		/// check player position
 	{
 		// if a big wavy doesn't work, this is probably why
-		//if ((position - ent->position).isLength2DIn(1024))
 		{
 			ElementEffectData *eff = this->eff;
 
@@ -142,7 +141,7 @@ void Element::updateEffects(float dt)
 							eff->wavy[i].x = eff->wavy[i].x*eff->wavyLerpIn + (eff->wavySave[i].x*(1.0f-eff->wavyLerpIn));
 					}
 				}
-				
+
 				if (eff->wavyLerpIn < 1)
 				{
 					eff->wavyLerpIn += dt*lerpSpd;
@@ -163,9 +162,9 @@ void Element::updateEffects(float dt)
 						eff->wavyMagnitude = 0;
 				}
 
-				//std::cout << "setting grid from wav w/ wavyWaving\n";
+
 				setGridFromWavy();
-				
+
 			}
 			else
 			{
@@ -210,7 +209,7 @@ void Element::setGridFromWavy()
 {
 	if (drawGrid)
 	{
-		//std::cout << "set grid from wavy (" << xDivs << ", " << yDivs << ")\n"
+
 		const float w = float(getWidth());
 		for (int x = 0; x < xDivs-1; x++)
 		{
@@ -220,7 +219,7 @@ void Element::setGridFromWavy()
 				const float tmp = eff->wavy[wavy_y].x / w;
 				if (wavy_y < eff->wavy.size())
 				{
-					
+
 					drawGrid[x][y].x = tmp - 0.5f;
 					drawGrid[x+1][y].x = tmp + 0.5f;
 				}
@@ -262,11 +261,7 @@ void Element::setElementEffectByIndex(int eidx)
 	break;
 	case EFX_WAVY:
 	{
-		/*
-		char buf[256];
-		sprintf(buf, "setting wavy segsy: %d radius: %d min: %d max: %d", e.segsy, e.wavy_radius, e.wavy_min, e.wavy_max);
-		debugLog(buf);
-		*/
+
 		eff->wavy.resize(e.segsy);
 		float bity = float(getHeight())/float(e.segsy);
 		for (int i = 0; i < eff->wavy.size(); i++)
@@ -287,7 +282,7 @@ void Element::setElementEffectByIndex(int eidx)
 		setStatic(true);
 	break;
 	}
-	
+
 	if (eff)
 	{
 		eff->elementEffectIndex = eidx;
@@ -317,10 +312,10 @@ void Element::render()
 				renderBorderColor = Vector(1,1,1);
 		}
 		renderBorder = true;
-		//errorLog("!^!^$");
+
 	}
 #endif
-	
+
 	Quad::render();
 
 	renderBorder = false;
@@ -340,11 +335,11 @@ void Element::fillGrid()
 		}
 		else if (elementFlag == EF_SOLID2)
 		{
-			dsq->game->fillGridFromQuad(this, OT_INVISIBLE, false); 
+			dsq->game->fillGridFromQuad(this, OT_INVISIBLE, false);
 		}
 		else if (elementFlag == EF_SOLID3)
 		{
-			dsq->game->fillGridFromQuad(this, OT_INVISIBLEIN, false); 
+			dsq->game->fillGridFromQuad(this, OT_INVISIBLEIN, false);
 		}
 	}
 }

@@ -18,7 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#include "Web.h"	
+#include "Web.h"
 #include "DSQ.h"
 #include "Game.h"
 #include "Avatar.h"
@@ -40,9 +40,9 @@ void Web::setParentEntity(Entity *e)
 }
 
 void Web::killAllWebs()
-{	
+{
 	std::queue<Web*>shotDeleteQueue;
-	for (Webs::iterator i = webs.begin(); i != webs.end(); i++)	
+	for (Webs::iterator i = webs.begin(); i != webs.end(); i++)
 	{
 		shotDeleteQueue.push(*i);
 	}
@@ -136,14 +136,7 @@ void Web::onUpdate(float dt)
 				}
 				if (hit)
 				{
-					/*
-					if (!e->vel.isZero())
-					{
-						Vector n = e->vel;
-						n.setLength2D(e->getv(EV_WEBSLOW)*dt);
-						e->vel -= n;
-					}
-					*/
+
 					e->vel /= float(e->getv(EV_WEBSLOW)) * dt;
 				}
 			}
@@ -153,24 +146,22 @@ void Web::onUpdate(float dt)
 
 void Web::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	glBindTexture(GL_TEXTURE_2D, 0);
-	//glDisable(GL_BLEND);
-	
+
+
 	glLineWidth(4);
-	//glDisable(GL_CULL_FACE);
+
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBegin(GL_LINES);
 	for (int i = 0; i < points.size()-1; i++)
-	{		
-		
+	{
+
 		glColor4f(1, 1, 1, 0.5f*alpha.x);
 		glVertex3f(points[i].x, points[i].y, 0);
 		glColor4f(1, 1, 1, 0.5f*alpha.x);
 		glVertex3f(points[i+1].x, points[i+1].y, 0);
-		
+
 	}
 	glEnd();
-#endif
 }

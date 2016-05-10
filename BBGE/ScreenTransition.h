@@ -40,11 +40,9 @@ protected:
 	int windowWidth, windowHeight;
 	void onRender();
 	float width, height;
-	//void onUpdate(float dt);
 
-#ifdef BBGE_BUILD_OPENGL
+
 	GLuint screen_texture;
-#endif
 };
 
 #endif

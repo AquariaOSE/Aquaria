@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 void UserSettings::save()
 {
-	//initInputCodeMap();
+
 
 	XMLDocument doc;
 	{
@@ -268,7 +268,7 @@ void UserSettings::save()
 	doc.SaveFile(userSettingsFilename.c_str());
 #endif
 
-	//clearInputCodeMap();
+
 }
 
 static void readInt(XMLElement *xml, const char *elem, const char *att, int *toChange)
@@ -328,7 +328,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	}
 
 	control.actionSet.clearActions();
-	//initInputCodeMap();
+
 
 	control.actionSet.addActionInput("lmb");
 	control.actionSet.addActionInput("rmb");
@@ -419,9 +419,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 
 		readInt(xml_video, "FpsSmoothing", "v", &video.fpsSmoothing);
 
-		/*
-		readInt(xml_video, "Parallax", "on", &video.parallaxOn);
-		*/
+
 		XMLElement *xml_parallax = xml_video->FirstChildElement("Parallax");
 		if (xml_parallax)
 		{
@@ -534,7 +532,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			network.masterServer = serv;
 	}
 
-	//clearInputCodeMap();
+
 
 	if (system.locale.empty())
 	{

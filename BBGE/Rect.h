@@ -45,8 +45,8 @@ public:
 	}
 	void setCWH(int x, int y, int w, int h)
 	{
-		//int w2 = w*0.5f;
-		//int h2 = h*0.5f;
+
+
 		const int w2 = w / 2;
 		const int h2 = h / 2;
 		x1 = x - w2;

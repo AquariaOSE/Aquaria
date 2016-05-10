@@ -39,7 +39,7 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	strandSpacing = 10;
 	animKeyFunc = true;
 	canShotHitFunc = true;
-	//runningActivation = false;
+
 
 	setEntityType(et);
 	myTimer = 0;
@@ -118,7 +118,7 @@ void ScriptedEntity::warpSegments()
 }
 
 void ScriptedEntity::init()
-{	
+{
 	if (script)
 	{
 		if (!script->call("init", this))
@@ -129,7 +129,7 @@ void ScriptedEntity::init()
 }
 
 void ScriptedEntity::postInit()
-{	
+{
 	if (script)
 	{
 		if (!script->call("postInit", this))
@@ -207,7 +207,7 @@ void ScriptedEntity::initSegments(int numSegments, int minDist, int maxDist, std
 		else
 			q->setTexture(bodyTex);
 		q->setWidthHeight(w, h);
-		
+
 		if (i > 0 && i < segments.size()-1 && taper !=0)
 			q->scale = Vector(1.0f-(i*taper), 1-(i*taper));
 		dsq->game->addRenderObject(q, LR_ENTITIES);
@@ -231,7 +231,7 @@ void ScriptedEntity::setupEntity(const std::string &tex, int lcode)
 
 void ScriptedEntity::setupBasicEntity(const std::string& texture, int health, int manaBall, int exp, int money, float collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer)
 {
-	//this->updateCull = updateCull;
+
 	updateCull = -1;
 
 	if (texture.empty())
@@ -326,7 +326,7 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 										e->sound("RockHit");
 										dsq->spawnParticleEffect("rockhit", e->position, 0, 0);
 									}
-									//e->push(vel, 0.2, 500, 0);
+
 									Vector add = vel;
 									add.setLength2D(5000*dt);
 									e->vel += add;
@@ -343,7 +343,7 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 		}
 
 		if (isPullable())
-		{		
+		{
 			Entity *followEntity = dsq->game->avatar;
 			if (followEntity && dsq->game->avatar->pullTarget == this)
 			{
@@ -354,13 +354,13 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 				}
 				else if (!dist.isLength2DIn(800))
 				{
-					// break;
+
 					vel.setZero();
 					dsq->game->avatar->pullTarget->stopPull();
 					dsq->game->avatar->pullTarget = 0;
 				}
 				else if (!dist.isLength2DIn(128))
-				{				
+				{
 					Vector v = dist;
 					int moveSpeed = 1000;
 					moveSpeed = 4000;
@@ -390,7 +390,7 @@ void ScriptedEntity::updateStrands(float dt)
 	if (strands.empty()) return;
 	float angle = rotation.z;
 	angle = (PI*(360-(angle-90)))/180.0;
-	//angle = (180*angle)/PI;
+
 	float sz = (strands.size()/2);
 	for (int i = 0; i < strands.size(); i++)
 	{
@@ -434,7 +434,7 @@ void ScriptedEntity::shiftWorlds(WorldType lastWorld, WorldType worldType)
 }
 
 void ScriptedEntity::startPull()
-{	
+{
 	Entity::startPull();
 	beforePullMaxSpeed = getMaxSpeed();
 	becomeSolidDelay = false;
@@ -642,7 +642,7 @@ void ScriptedEntity::songNoteDone(int note, float len)
 
 void ScriptedEntity::becomeSolid()
 {
-	//vel = 0;
+
 	float oldRot = 0;
 	bool doRot=false;
 	Vector n = dsq->game->getWallNormal(position);
@@ -683,7 +683,7 @@ void ScriptedEntity::onHitWall()
 	{
 		becomeSolidDelay = true;
 	}
-	
+
 	if (isEntityProperty(EP_BLOCKER) && !fillGridFromQuad)
 	{
 		Vector n = dsq->game->getWallNormal(position);
@@ -703,10 +703,10 @@ void ScriptedEntity::onHitWall()
 }
 
 void ScriptedEntity::activate()
-{	
+{
 	if (runningActivation) return;
 	Entity::activate();
-	
+
 	runningActivation = true;
 	if (script)
 	{
@@ -762,7 +762,7 @@ void ScriptedEntity::onDieEaten()
 void ScriptedEntity::onEnterState(int action)
 {
 	CollideEntity::onEnterState(action);
-	
+
 	if (script)
 	{
 		if (!script->call("enterState", this))
@@ -772,7 +772,7 @@ void ScriptedEntity::onEnterState(int action)
 	{
 	case STATE_DEAD:
 		if (!isGoingToBeEaten())
-		{			
+		{
 			doDeathEffects(manaBallAmount);
 			dsq->spawnParticleEffect(deathParticleEffect, position);
 			onDieNormal();
@@ -799,7 +799,7 @@ void ScriptedEntity::onEnterState(int action)
 
 void ScriptedEntity::onExitState(int action)
 {
-	
+
 	if (script)
 	{
 		if (!script->call("exitState", this))

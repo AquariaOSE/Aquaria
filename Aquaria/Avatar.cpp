@@ -26,17 +26,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Shot.h"
 #include "GridRender.h"
 
-//#include "CommonEvents.h"
-
-//#include <float.h>
-
-//#define AQ_TEST_QUADTRAIL
-
-#ifdef AQ_TEST_QUADTRAIL
-	#include "QuadTrail.h"
-
-	static QuadTrail *quadTrail = 0;
-#endif
 
 const float MULT_DMG_CRABCOSTUME = 0.75;
 const float MULT_DMG_FISHFORM = 1.5;
@@ -165,7 +154,7 @@ void Avatar::bindInput()
 	dsq->user.control.actionSet.importAction(this, "SongSlot8",		ACTION_SONGSLOT8);
 	dsq->user.control.actionSet.importAction(this, "SongSlot9",		ACTION_SONGSLOT9);
 	dsq->user.control.actionSet.importAction(this, "SongSlot10",	ACTION_SONGSLOT10);
-	
+
 	dsq->user.control.actionSet.importAction(this, "Look",			ACTION_LOOK);
 
 	/*
@@ -174,7 +163,7 @@ void Avatar::bindInput()
 	dsq->user.control.actionSet.importAction(this, "SongSlot7", "f7");
 	dsq->user.control.actionSet.importAction(this, "SongSlot8", "f8");
 	*/
-	
+
 	dsq->user.control.actionSet.importAction(this, "Roll",			ACTION_ROLL);
 
 	/*
@@ -1091,7 +1080,7 @@ void Avatar::onDamage(DamageData &d)
 			core->sound->playSfx("Poison");
 		else
 			core->sound->playSfx("Pain");
-			
+
 
 		setHeadTexture("Pain", 1);
 
@@ -1151,7 +1140,7 @@ void Avatar::onDamage(DamageData &d)
 							dsq->emote.playSfx(EMOTE_NAIJALOW);
 							dsq->game->hasPlayedLow = 1;
 						}
-						
+
 
 						dsq->gameSpeed.ensureData();
 						dsq->gameSpeed.data->path.clear();
@@ -1639,7 +1628,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		refreshModel("FishForm", "");
 		//rotationOffset.interpolateTo(Vector(0,0,-90), 0.5);
 		//refreshModel("NaijaFish", "");
-		
+
 		collideRadius = COLLIDE_RADIUS_FISH;
 		setCanLockToWall(false);
 		setCollisionAvoidanceData(COLLIDE_RANGE_FISH, COLLIDE_MOD_FISH);
@@ -1970,7 +1959,7 @@ void Avatar::updateTargets(float dt, bool override)
 			// crappy hack for now, assuming one target:
 			targets.clear();
 
-			
+
 			Vector dir = getAim();
 			Vector checkPos = position + dir;
 			Vector distPos = position;
@@ -1991,7 +1980,7 @@ void Avatar::updateTargets(float dt, bool override)
 						if (!override && core->mouse.buttons.right)
 						{
 							maxTargetDelay = 90;
-							
+
 							dsq->spawnParticleEffect("TargetAquired", t.pos);
 							wasDown = true;
 						}
@@ -2048,7 +2037,7 @@ void Avatar::updateTargetQuads(float dt)
 	/*
 	for (int i = 0; i < targetQuads.size(); i++)
 	{
-		
+
 	}
 	*/
 
@@ -2104,7 +2093,7 @@ void Avatar::updateTargetQuads(float dt)
 			//targetQuads[i]->position.interpolateTo(dsq->getGameCursorPosition(),tt);
 			/*
 			std::ostringstream os;
-			os << "setting targetQuads[i] to game cursor, is running = " << targetQuads[i]->isRunning(); 
+			os << "setting targetQuads[i] to game cursor, is running = " << targetQuads[i]->isRunning();
 			debugLog(os.str());
 			*/
 
@@ -2290,7 +2279,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	{
 		checkUpgradeForShot(s);
 
-		
+
 
 		skeletalSprite.transitionAnimate("fireBlast", 0.1, 0, ANIMLAYER_ARMOVERRIDE);
 		s->position = p;
@@ -2371,9 +2360,9 @@ void Avatar::formAbility(int ability)
 				{
 					if (dsq->continuity.dualFormMode == Continuity::DUALFORM_NAIJA)
 					{
-						
+
 						// ~~~~~~~~~~ SOUL SCREAM
-						
+
 						if (chargeLevelAttained == 1)
 						{
 							if (dsq->continuity.dualFormCharge >= requiredDualFormCharge)
@@ -2869,7 +2858,7 @@ int Avatar::getNumShots()
 void Avatar::doShock(const std::string &shotName)
 {
 
-	
+
 
 	int c = 0;
 	//int maxHit = 2 + dsq->continuity.getSpellLevel(SPELL_SHOCK)*2;
@@ -2947,7 +2936,6 @@ void Avatar::doShock(const std::string &shotName)
 	Vector aim = getAim();
 	aim.normalize2D();
 	int sz = entitiesToHit.size();
-
 
 
 
@@ -3443,7 +3431,7 @@ void Avatar::lockToWall()
 		{
 			if (!dsq->mod.isActive() && !dsq->continuity.getFlag("lockedToWall"))
 			{
-				
+
 				if (!dsq->game->isControlHint()){
 					dsq->continuity.setFlag("lockedToWall", 1);
 					dsq->game->setControlHint(dsq->continuity.stringBank.get(13), 1, 0, 0, 6, "", true);
@@ -3649,15 +3637,9 @@ void Avatar::clearWeb()
 Avatar::Avatar() : Entity(), ActionMapper()
 {
 	canDie = true;
-	
+
 	urchinDelay = 0;
 	jellyDelay = 0;
-#ifdef AQ_TEST_QUADTRAIL
-	quadTrail = new QuadTrail(100, 32);
-	quadTrail->setTexture("Particles/QuadTrail");
-	quadTrail->setBlendType(BLEND_ADD);
-	dsq->game->addRenderObject(quadTrail, LR_PARTICLES);
-#endif
 
 	curWebPoint = 0;
 
@@ -3842,18 +3824,18 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	{
 		targetQuads[i] = new ParticleEffect;
 		/*
-		targetQuads[i]->setTexture("missingImage"); 
+		targetQuads[i]->setTexture("missingImage");
 		targetQuads[i]->alpha = 0;
 		*/
 		targetQuads[i]->load("EnergyBlastTarget");
 
 		// HACK: should have its own layer?
 		dsq->game->addRenderObject(targetQuads[i], LR_PARTICLES);
-	} 
+	}
 
 	lightFormGlow = new Quad("Naija/LightFormGlow", 0);
 	lightFormGlow->alpha = 0;
-	
+
 	lightFormGlow->scale.interpolateTo(Vector(5.5, 5.5), 0.4, -1, 1);
 	//lightFormGlow->positionSnapTo = &position;
 	dsq->game->addRenderObject(lightFormGlow, LR_ELEMENTS13);
@@ -4218,7 +4200,7 @@ void Avatar::startWallBurst(bool useCursor)
 					wallPushVec = wallNormal;
 				else
 				{
-					wallPushVec = (goDir*0.5f + wallNormal*0.5f);	
+					wallPushVec = (goDir*0.5f + wallNormal*0.5f);
 				}
 			}
 				//wallPushVec = (goDir*0.9f + wallNormal*0.1f);
@@ -4297,7 +4279,7 @@ Vector Avatar::getVectorToCursor(bool trueMouse)
 {
 	//return getVectorToCursorFromScreenCentre();
 	Vector pos = dsq->getGameCursorPosition();
-	
+
 
 	if (!trueMouse && dsq->inputMode != INPUT_MOUSE)
 		return getFakeCursorPosition();
@@ -4775,7 +4757,7 @@ void Avatar::setHeadTexture(const std::string &name, float time)
 	if (dsq->continuity.form == FORM_NORMAL /*&& dsq->continuity.costume.empty()*/)
 	{
 		if (!name.empty() && (nocasecmp(lastHeadTexture, "singing")==0)) return;
-	
+
 		lastHeadTexture = name;
 		stringToUpper(lastHeadTexture);
 		std::string t = "Naija/";
@@ -5044,7 +5026,7 @@ void Avatar::updateRoll(float dt)
 			stopRoll();
 		}
 	}
-	
+
 	if (!_isUnderWater && isActing(ACTION_ROLL))
 	{
 		stopRoll();
@@ -5090,7 +5072,7 @@ void Avatar::updateRoll(float dt)
 		if (rollDelay <= 0)
 			stopRoll();
 	}
-	
+
 	if (isActing(ACTION_ROLL))
 	{
 		if (_isUnderWater)
@@ -5109,7 +5091,7 @@ void Avatar::updateRoll(float dt)
 				rotation.z -= amt;
 			}
 			rotation.capRotZ360();
-			
+
 			rollDelay = 1.0;
 		}
 	}
@@ -5418,9 +5400,6 @@ void Avatar::onUpdate(float dt)
 
 	looking = 0;
 
-#ifdef AQ_TEST_QUADTRAIL
-	quadTrail->addPoint(position);
-#endif
 
 	if (lightFormGlow)
 	{
@@ -5476,7 +5455,7 @@ void Avatar::onUpdate(float dt)
 				curWebPoint = web->addPoint(position);
 			}
 		}
-		
+
 		if (!dsq->game->isPaused() && isActing(ACTION_LOOK) && !dsq->game->avatar->isSinging() && dsq->game->avatar->isInputEnabled() && !dsq->game->isInGameMenu())
 		{
 			looking = 1;
@@ -5623,7 +5602,7 @@ void Avatar::onUpdate(float dt)
 				core->sound->playSfx("NaijaGasp");
 				core->main(0.75);
 
-				
+
 
 				dsq->voiceOnce("Naija_VeilCrossing");
 				core->main(10*0.1f);
@@ -6102,7 +6081,7 @@ void Avatar::onUpdate(float dt)
 						jellyDelay -= dt;
 						if (jellyDelay < 0)
 						{
-							jellyDelay = JELLYCOSTUME_HEALDELAY; 
+							jellyDelay = JELLYCOSTUME_HEALDELAY;
 
 							Vector d;
 							if (!vel.isZero())
@@ -6213,7 +6192,7 @@ void Avatar::onUpdate(float dt)
 			bool isMovingSlow = false;
 
 			float len = 0;
-			
+
 			if (dsq->isMiniMapCursorOkay() && !isActing(ACTION_ROLL) &&
 				_isUnderWater && !riding && !boneLock.on &&
 				(movingOn || ((dsq->inputMode == INPUT_JOYSTICK || dsq->inputMode== INPUT_KEYBOARD) || (core->mouse.buttons.left || bursting))))
@@ -6797,7 +6776,7 @@ void Avatar::onUpdate(float dt)
 
 								//debugLog("above water bounce");
 
-								
+
 
 								Vector n = getWallNormal(TileVector(lastPosition));
 								n *= vel.getLength2D();
@@ -6816,7 +6795,7 @@ void Avatar::onUpdate(float dt)
 								if (vel.y < 0)
 								{
 									//debugLog("Vel less than 0");
-									
+
 								}
 								if (vel.y == 0)
 								{
@@ -6827,14 +6806,14 @@ void Avatar::onUpdate(float dt)
 
 								if (vel.isLength2DIn(500))
 									vel.setLength2D(500);
-								
+
 
 								vel.capLength2D(800);
 
 								position = lastPosition;
 								this->doCollisionAvoidance(1, 4, 0.5, 0, 500);
 
-								
+
 								/*
 								vel = -vel;
 								if (vel.y < 0)

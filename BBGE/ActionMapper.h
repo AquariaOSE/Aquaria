@@ -44,44 +44,36 @@ struct ActionData
 class ActionMapper
 {
 public:
-	
+
 	// funcs
 	ActionMapper();
 	virtual ~ActionMapper();
-	//void addAction (const std::string &action, int k);
+
 	void addAction(Event *event, int k, int state=-1);
 	void addAction(int actionID, int k);
-	/*
-	void addMouseButtonAction (const std::string &action, int b);
-	void addJoystickButtonAction (const std::string &action, int b);
-	void addJoystickDPadAction (const std::string &action, int dir);
-	int getDPad(int dir);
-	*/
+
 	void removeAction(int actionID);
 	void removeAllActions();
 
 	bool isActing(int actionID);
 	virtual void action(int actionID, int state){}
 
-	
+
 	void clearActions();
 
 	bool isInputEnabled() { return inputEnabled; }
-	
+
 	// vars
-	
+
 	typedef std::list<ActionData> ActionDataSet;
 	ActionDataSet actionData;
 
 	typedef std::map <int, int> KeyDownMap;
 	KeyDownMap keyDownMap;
-	
+
 	bool cleared;
 
 
-
-	//typedef std::map <std::string, int> StringIntMap;
-	//StringIntMap stateCheckMap;
 
 	enum {
 		MOUSE_BUTTON_LEFT	=  999,
@@ -106,7 +98,7 @@ public:
 		JOY1_BUTTON_15		= 2015,
 		JOY1_BUTTON_16		= 2016,
 
-		//JOY1_BUTTON_X360_START=2011,
+
 		X360_BTN_START		= 3016,
 		X360_BTN_BACK		= 3017,
 
@@ -122,13 +114,13 @@ public:
 
 	enum { DPAD_LEFT = 0, DPAD_RIGHT, DPAD_UP, DPAD_DOWN };
 
-	//int getKeyForAction(std::string action);
+
 
 	virtual void enableInput();
 	virtual void disableInput();
-	/*void loadActionSet(const std::string &fn);*/
-	//nasty hack
-	//void forceUpdate(float dt);
+
+
+
 	Event *addCreatedEvent(Event *event);
 	void clearCreatedEvents();
 
@@ -146,7 +138,6 @@ protected:
 };
 
 #endif
-
 
 
 

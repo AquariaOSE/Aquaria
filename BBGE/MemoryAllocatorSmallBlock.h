@@ -79,8 +79,8 @@ private:
 
     inline unsigned int GetIndexForElemSize(unsigned int elemSize)
     {
-        //ASSERT(elemSize);
-        //ASSERT(elemSize <= _blockSizeMax);
+
+
         return ((elemSize + (_blockSizeIncr - 1)) / _blockSizeIncr) - 1;
     }
 

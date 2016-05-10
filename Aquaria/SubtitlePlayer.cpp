@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/DebugFont.h"
 #include "../BBGE/BitmapFont.h"
 
-//#define DISABLE_SUBS
+
 
 SubtitlePlayer::SubtitlePlayer()
 {
@@ -130,7 +130,7 @@ void SubtitlePlayer::update(float dt)
 			// set text
 			debugLog(subLines[curLine].line);
 			dsq->subtext->scrollText(subLines[curLine].line, 0.02);
-			//dsq->subtext->scrollText(subLines[curLine].line, 0.1);
+
 			// advance
 			curLine++;
 		}
