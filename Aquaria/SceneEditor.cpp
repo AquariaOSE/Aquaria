@@ -93,7 +93,6 @@ std::string getMapTemplateFilename()
 
 void WarpAreaRender::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 	for (int i = 0; i < dsq->game->warpAreas.size(); i++)
 	{
 		WarpArea *a = &dsq->game->warpAreas[i];
@@ -141,53 +140,6 @@ void WarpAreaRender::onRender()
 		}
 		glTranslatef(-a->position.x, -a->position.y,0);
 	}
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	for (int i = 0; i < dsq->game->warpAreas.size(); i++)
-	{
-		WarpArea *a = &dsq->game->warpAreas[i];
-		core->translateMatrixStack(a->position.x, a->position.y);
-		switch (a->warpAreaType[0])
-		{
-		case 'B':
-			core->setColor(0, 0, 1, alpha.x);
-		break;
-		case 'R':
-			core->setColor(1,0,0,alpha.x);
-		break;
-		case 'G':
-			core->setColor(0,1,0,alpha.x);
-		break;
-		case 'Y':
-			core->setColor(1,1,0,alpha.x);
-		break;
-		case 'P':
-			core->setColor(1,0,1,alpha.x);
-		break;
-		}
-		if (a->radius)
-		{
-		//	drawCircle(a->radius);
-		}
-		else
-		{
-			core->applyMatrixStackToWorld();
-			core->blitD3D(0, a->w*2, a->h*2);
-			/*
-			glBegin(GL_QUADS);
-			{
-				glVertex2f(-a->w,-a->h);
-				glVertex2f(-a->w,a->h);
-				glVertex2f(a->w,a->h);
-				glVertex2f(a->w,-a->h);
-			}
-			glEnd();
-			*/
-		}
-		core->translateMatrixStack(-a->position.x, -a->position.y);
-		//glTranslatef(-a->position.x, -a->position.y,0);
-	}
-#endif
 }
 
 SceneEditor::SceneEditor() : ActionMapper(), on(false)
@@ -217,8 +169,8 @@ void SceneEditor::changeDepth()
 {
 	if (editingElement)
 	{
-		//editingElement->parallax = 0.9;
-		//editingElement->followCamera = 0.001;
+
+
 		editingElement->followCamera = 0.9;
 		editingElement->cull = false;
 	}
@@ -280,7 +232,7 @@ public:
 		if (doubleClickTimer > 0)
 			doubleClickTimer -= dt;
 		Quad::onUpdate(dt);
-		//if ()
+
 
 		if (dsq->game->sceneEditor.selectedEntity.name == selectedEntity.name
 			|| (entType != -1 && dsq->game->sceneEditor.selectedEntity.typeListIndex == entType))
@@ -311,7 +263,7 @@ public:
 				{
 					dsq->game->sceneEditor.selectedEntity.setName(selectedEntity.name, selectedEntity.prevGfx);
 				}
-				//se_changedEntityType = true;
+
 				if (doubleClickTimer > 0)
 				{
 					doubleClickTimer = 0;
@@ -486,11 +438,7 @@ void SceneEditor::addMainMenuItem(const std::string &label, int bid)
 
 void SceneEditor::openMainMenu()
 {
-	/*
-	core->clearDebugMenu();
-	core->addDebugMenuItem("", bid);
-	core->doModalDebugMenu();
-	*/
+
 
 	if (core->getNestedMains()>1)
 	{
@@ -520,12 +468,9 @@ void SceneEditor::openMainMenu()
 	addMainMenuItem("EDIT NODES                             (F7)",			108);
 	addMainMenuItem("REGEN COLLISIONS                    (ALT-R)",			103);
 	addMainMenuItem("RECACHE TEXTURES					(CTRL-R)",			130);
-//	addMainMenuItem("REFRESH DATAFILES					   (F11)",			117);
+
 	addMainMenuItem("REGEN ROCK FROM MAPTEMPLATE       (F11+F12)",			116);
-	/*
-	addMainMenuItem("RE-TEMPLATE                           (F11)",			104);
-	addMainMenuItem("RE-SKIN                               (F12)",			105);
-	*/
+
 	addMainMenuItem("SET BG GRADIENT",										110);
 	addMainMenuItem("SET MUSIC",											111);
 	addMainMenuItem("ENTITY GROUPS                      (CTRL-E)",			112);
@@ -589,7 +534,7 @@ void SceneEditor::init()
 	btnMenu->label->setText("Menu");
 	btnMenu->followCamera = 1;
 	btnMenu->alpha = 0;
-	//btnMenu->event.set(MakeFunctionEvent(SceneEditor, openMainMenu));
+
 	dsq->game->addRenderObject(btnMenu, LR_HUD);
 
 	selectedEntityType = 0;
@@ -601,7 +546,7 @@ void SceneEditor::init()
 
 	text->followCamera = 1;
 	text->position = Vector(125,20,4.5);
-	//text->setAlign(ALIGN_CENTER);
+
 	dsq->game->addRenderObject(text, LR_HUD);
 	text->alpha = 0;
 	selectedVariation = -1;
@@ -613,13 +558,12 @@ void SceneEditor::init()
 	dsq->game->addRenderObject(boxPromo, LR_HUD);
 	on = false;
 
-	//addAction(MakeFunctionEvent(SceneEditor, addSpringPlant), KEY_K, 0);
+
 
 	addAction(MakeFunctionEvent(SceneEditor, loadScene), KEY_F1, 0);
 	addAction(MakeFunctionEvent(SceneEditor, saveScene), KEY_F2, 0);
 
-	// removed in fc3
-	//addAction(MakeFunctionEvent(SceneEditor, setGroup), KEY_G, 0);
+
 
 	addAction(MakeFunctionEvent(SceneEditor, moveToBack), KEY_Z, 0);
 	addAction(MakeFunctionEvent(SceneEditor, moveToFront), KEY_X, 0);
@@ -639,12 +583,6 @@ void SceneEditor::init()
 	addAction(MakeFunctionEvent(SceneEditor, alignVert), KEY_V, 1);
 
 
-
-/*
-	addAction(MakeFunctionEvent(SceneEditor, placeEntity), KEY_U, 0);
-	addAction(MakeFunctionEvent(SceneEditor, removeEntity), KEY_I, 0);
-	*/
-	//addAction(MakeFunctionEvent(SceneEditor, changeDepth), KEY_N, 0);
 
 	addAction(MakeFunctionEvent(SceneEditor, placeElement), KEY_SPACE, 1);
 
@@ -667,7 +605,7 @@ void SceneEditor::init()
 	addAction(MakeFunctionEvent(SceneEditor, generateLevel), KEY_F11, 0);
 	addAction(MakeFunctionEvent(SceneEditor, skinLevel), KEY_F12, 0);
 
-	//addAction(MakeFunctionEvent(SceneEditor, regenLevel), KEY_F12, 0);
+
 
 	addAction(MakeFunctionEvent(SceneEditor, nextEntityType), KEY_RIGHT, 0);
 	addAction(MakeFunctionEvent(SceneEditor, prevEntityType), KEY_LEFT, 0);
@@ -698,17 +636,6 @@ void SceneEditor::init()
 
 	addAction(MakeFunctionEvent(SceneEditor, dumpObs), KEY_F8, 0);
 
-
-	/*
-	// OLD CRAP
-	addAction(MakeFunctionEvent(SceneEditor, rotateElement), KEY_MULTIPLY, 0);
-	addAction(MakeFunctionEvent(SceneEditor, rotateElement2), KEY_DIVIDE, 0);
-	addAction(MakeFunctionEvent(SceneEditor, scaleElementUp), KEY_NUMPAD7, 0);
-	addAction(MakeFunctionEvent(SceneEditor, scaleElementDown), KEY_NUMPAD1, 0);
-	addAction(MakeFunctionEvent(SceneEditor, scaleElement1), KEY_NUMPAD0, 0);
-	addAction(MakeFunctionEvent(SceneEditor, nextVariation), KEY_UP, 0);
-	addAction(MakeFunctionEvent(SceneEditor, prevVariation), KEY_DOWN, 0);
-	*/
 
 
 	addAction(ACTION_ZOOMIN,		KEY_PGUP);
@@ -844,10 +771,10 @@ void SceneEditor::alignVert()
 
 void SceneEditor::createAquarian()
 {
-	//if (dsq->mod.isActive())	return;
+
 	static bool inCreateAqurian = false;
 	if (inCreateAqurian) return;
-	//if (dsq->game->isPaused()) return;
+
 	inCreateAqurian = true;
 	std::string t = dsq->getUserInputString("Enter Aquarian:", "");
 	stringToUpper(t);
@@ -863,7 +790,7 @@ void SceneEditor::createAquarian()
 		{
 			v = 1024+26;
 		}
-		//ElementTemplate et = dsq->game->getElementTemplateForLetter(v);
+
 		dsq->game->createElement(v, startPos + Vector(64*i,0), this->bgLayer);
 	}
 	inCreateAqurian = false;
@@ -935,7 +862,7 @@ void SceneEditor::toggleWarpAreaRender()
 		warpAreaRender->alpha.x = 0.5;
 	else if (warpAreaRender->alpha.x >= 0.5f)
 		warpAreaRender->alpha.x = 0;
-		//warpAreaRender->alpha.interpolateTo(1, 0.2);
+
 }
 
 
@@ -1038,7 +965,7 @@ void SceneEditor::editModeEntities()
 	//target->alpha.interpolateTo(0, 0.5);
 	editType = ET_ENTITIES;
 
-	//dsq->game->entityTypeList[curEntity].prevGfx
+
 	placer->setTexture(selectedEntity.prevGfx);
 	placer->alpha = 0.5;
 	pathRender->alpha = 0;
@@ -1066,7 +993,7 @@ Element *SceneEditor::getElementAtCursor()
 	{
 		if (e->life == 1)
 		{
-			if (e->isCoordinateInside(dsq->getGameCursorPosition()))//, minSelectionSize
+			if (e->isCoordinateInside(dsq->getGameCursorPosition()))
 			{
 				Vector v = dsq->getGameCursorPosition() - e->position;
 				int dist = v.getSquaredLength2D();
@@ -1157,11 +1084,8 @@ void SceneEditor::deleteSelected()
 				}
 				else
 					p->removeNode(selectedNode);
-				/*
-				if (p->nodes.size() > 1)
-					p->nodes.resize(p->nodes.size()-1);
-				*/
-				//selectedIdx = -1;
+
+
 			}
 		}
 	}
@@ -1362,11 +1286,7 @@ void SceneEditor::updateEntitySaveData(Entity *editingEntity)
 {
 	if (editingEntity)
 	{
-		/*
-		std::ostringstream os;
-		os << "oldPos (" << oldPosition.x << ", " << oldPosition.y << ")";
-		debugLog(os.str());
-		*/
+
 		EntitySaveData *d = dsq->game->getEntitySaveDataForEntity(editingEntity, oldPosition);
 		if (d)
 		{
@@ -1374,22 +1294,18 @@ void SceneEditor::updateEntitySaveData(Entity *editingEntity)
 			os << "idx1: " << d->idx << " ";
 			os << "idx2: " << editingEntity->entityTypeIdx << " ";
 			os << "name: " << editingEntity->name;
-			//os << "state: " << editingEntity->getState();
+
 			debugLog(os.str());
-			//debugLog("changing entity save data");
+
 			d->x = editingEntity->position.x;
 			d->y = editingEntity->position.y;
 			editingEntity->startPos = Vector(d->x, d->y);
-			/*
-			std::ostringstream os2;
-			os2 << "setting savedata rot to: " << d->rot;
-			debugLog(os2.str());
-			*/
+
 			d->rot = editingEntity->rotation.z;
 		}
 		else
 		{
-			//debugLog("didn't get entity save data");
+
 		}
 	}
 }
@@ -1458,7 +1374,7 @@ void SceneEditor::mouseButtonRightUp()
 		checkForRebuild();
 	}
 	state = ES_SELECTING;
-	//dsq->game->reconstructGrid();
+
 }
 
 
@@ -1664,7 +1580,7 @@ bool getGrassPixel(pngRawInfo *png, int x, int y)
 {
 	if (x >= png->Width || y >= png->Height || x < 0 || y < 0) return false;
 
-	//int c = ((x*png->Width)*3)+y*3;
+
 	int c = (y*png->Width)*png->Components + x*png->Components;
 	if (png->Data[c] == 128 &&
 		png->Data[c+1] == 255 &&
@@ -1738,21 +1654,15 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 				)
 				)
 			{
-				// do color check
-				/*
-				int ci = x+(y*png->Height);
-				if (png->data[ci] < pixelColor.x &&
-					png->data[ci+1] < pixelColor.y &&
-					png->data[ci+2] < pixelColor.z)
-				{
-				*/
+
+
 				float dist=0;
 				wallNormal = dsq->game->getWallNormal(t.worldVector(), 5, &dist, OT_MASK_BLACK);
 				offset = wallNormal*(-TILE_SIZE*0.6f);
 				MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), wallNormal, rot);
 				rot = 180-(360-rot);
 				addTile = true;
-				//}
+
 			}
 
 			if (addTile)
@@ -1788,7 +1698,7 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 						Element *e = dsq->getElement(i);
 						if (e->templateIdx <= 4 && e->templateIdx >= 1)
 						{
-							if ((p - e->position).getSquaredLength2D() < sqr(120))//sqr(60*3+10)) // 120
+							if ((p - e->position).getSquaredLength2D() < sqr(120))
 							{
 								cantUse[e->templateIdx-1]++;
 							}
@@ -1811,40 +1721,6 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 					e->offset = offset;
 
 
-					/*
-					bool addGrass = false;
-					int search = 2;
-					for (int dx = -search; dx < search; dx++)
-					{
-						for (int dy = -search; dy < search; dy++)
-						{
-							if (getGrassPixel(png, x+dx, y+dy))
-							{
-								//std::ostringstream os;
-								//os << "found grass pixel at (" << x+dx << ", " << y+dy << ")";
-								//debugLog(os.str());
-								//errorLog ("add grass");
-								addGrass = true;
-								break;
-							}
-						}
-					}
-
-					if (addGrass)
-					{
-						//Vector detailPos = p + wallNormal*48;
-						Element *grassE = dsq->game->createElement(5, p, 0, &q);
-							//dsq->game->createElement(5, detailPos, 6, &q);
-						//grassE->offset = offset;
-					}
-					*/
-
-
-					/*
-					float sz = ((rand()%1000)/4000.0f);
-					e->scale = Vector(1+sz, 1+sz, 1);
-					*/
-
 
 					idx++;
 					if(idx > 4)
@@ -1866,13 +1742,11 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 
 void SceneEditor::generateLevel()
 {
-	//pngSetStandardOrientation(0);
-	std::string file=getMapTemplateFilename();
-	//pngInfo info;
-	//PNG_ALPHA
 
-	//errorLog("generate level");
-	// Y R G B P
+	std::string file=getMapTemplateFilename();
+
+
+
 		int maxX=0, maxY=0;
 	const int YELLOW=0, RED=1, GREEN=2, BLUE=3, PURPLE=4, ORANGE=5, BROWN=6, MAX=7;
 	int firstColorX[MAX], firstColorY[MAX];
@@ -1894,10 +1768,10 @@ void SceneEditor::generateLevel()
 	bool success = pngLoadRaw(file.c_str(), &rawinfo);
 	if (success)
 	{
-		//dsq->elements.clear();
+
 		std::vector<Row> rows;
 		std::vector<Vector> positions;
-		const int maxRowCount = 9999;//9999;//9999;
+		const int maxRowCount = 9999;
 		int rowCount = 0;
 		if (rawinfo.Components < 3)
 		{
@@ -1905,7 +1779,7 @@ void SceneEditor::generateLevel()
 		}
 		int scale = TILE_SIZE;
 		int c = 0;
-		//for (int y = rawinfo.Height-1; y >= 0; y--)
+
 		for (int y = 0; y < rawinfo.Height; y++)
 		{
 			Vector lastElement;
@@ -1950,7 +1824,7 @@ void SceneEditor::generateLevel()
 				}
 				for (int i = 0; i < MAX; i++)
 				{
-					//if (checkWarpPixel(rawinfo.Data, c, colorVects[i]))
+
 					bool p1, p2, p3;
 					p1=p2=p3=false;
 					int diff;
@@ -1960,25 +1834,7 @@ void SceneEditor::generateLevel()
 					p2 = (diff < 5);
 					diff = fabsf((colorVects[i].z*255) - rawinfo.Data[c+2]);
 					p3 = (diff < 5);
-					/*
-					p1 = (colorVects[i].x == 1 && rawinfo.Data[c] > 200);
-					if (!p1)
-					{
-						p1 = (colorVects[i].x == 0 && rawinfo.Data[c] < 32);
-					}
-					p2 = (colorVects[i].y == 1 && rawinfo.Data[c+1] > 200);
-					if (!p2)
-					{
-						p2 = (colorVects[i].y == 0 && rawinfo.Data[c+1] < 32);
-						if (!p2)
-						{
-							p2 = (colorVects[i].y == 0.5f && rawinfo.Data[c+1] > 96 && rawinfo.Data[c+1] < 164);
-						}
-					}
-					p3 = (colorVects[i].z == 1 && rawinfo.Data[c+2] > 200);
-					if (!p3)
-						p3 = (colorVects[i].z == 0 && rawinfo.Data[c+2] < 32);
-					*/
+
 					if (p1 && p2 && p3)
 					{
 						lastColorX[i] = x;
@@ -1990,63 +1846,25 @@ void SceneEditor::generateLevel()
 						}
 					}
 				}
-				/*
-				else if (checkPixel(1, 0, 0))
-				{
-					lastColorX[RED] = x;
-					lastColorY[RED] = y;
-					if (firstColorX[RED] == -1)
-					{
-						firstColorX[RED] = x;
-						firstColorY[RED] = y;
-					}
-				}
-				*/
-				/*
-				else if (	rawinfo.Data[c]		> 200	&&
-							rawinfo.Data[c+1]	< 32	&&
-							rawinfo.Data[c+2]	< 32)
-				{
 
-				}
-				else if (rawinfo.
-				*/
+
 
 				c += rawinfo.Components;
 				if ((e==0 && firstRowElement) || (firstRowElement && rowCount >= maxRowCount && hasLastElement)
 					|| (firstRowElement && x == rawinfo.Width-1))
 				{
-					/*
-					if (x == rawinfo.Width-1)
-						row.x2 = rawinfo.Width-1;
-					else
-					{
-					*/
-					// HACK: it crashes here:
-					// because lastElement is garbage data
-					// fixed!
+
+
+
 					if (hasLastElement)
 						row.x2 = lastElement.x;
-					//}
+
 
 					hasLastElement = false;
 					firstRowElement = 0;
 
 					bool add = true;
-					/*
-					for (int i = 0; i < rows.size(); i++)
-					{
-						if (rows[i].x1 == row.x1 && rows[i].x2 == row.x2)
-						{
-							if (abs(rows[i].y - row.y) <= TILE_SIZE+1)
-							{
-								rows[i].rows++;
-								add = false;
-								break;
-							}
-						}
-					}
-					*/
+
 					if (add)
 						rows.push_back(row);
 				}
@@ -2073,7 +1891,7 @@ void SceneEditor::generateLevel()
 		for (i = 0; i < rows.size(); i++)
 		{
 			int w = rows[i].x2 - rows[i].x1;
-			//int h = scale * rows[i].rows;
+
 			int useY = rows[i].y;
 			if (rows[i].rows > 1)
 			{
@@ -2131,7 +1949,7 @@ void SceneEditor::generateLevel()
 		this->skinMinY = 4;
 		this->skinMaxX = maxX;
 		this->skinMaxY = maxY;
-		//skinLevel(&rawinfo, 4, 4, maxX, maxY);
+
 		if (rawinfo.Data != NULL)
 			free(rawinfo.Data);
 	}
@@ -2294,9 +2112,7 @@ void SceneEditor::action(int id, int state)
 		this->bgLayer = newLayer;
 
 	}
-	/*
-	Vector multiSelectPoint, secondMultiSelectPoint;
-	*/
+
 	if (id == ACTION_MULTISELECT && this->state == ES_SELECTING)
 	{
 		if (state)
@@ -2398,7 +2214,7 @@ void destroyEntityPage()
 	}
 	if (se_grad)
 	{
-		//se_grad->safeKill();
+
 		se_grad->setLife(1);
 		se_grad->setDecayRate(10);
 		se_grad->fadeAlphaWithLife = 1;
@@ -2421,8 +2237,8 @@ void createEntityPage()
 	destroyEntityPage();
 
 	se_grad = new Quad();
-	//Gradient()
-	//se_grad->makeHorizontal(Vector(0,0,0.3), Vector(0,0,0.1));
+
+
 	se_grad->scale = Vector(800, 500);
 	se_grad->position = Vector(400,350);
 	se_grad->followCamera = 1;
@@ -2472,7 +2288,7 @@ void createEntityPage()
 			{
 				q->setWidthHeight((q->getWidth()*sizing) / q->getHeight(), sizing);
 			}
-			//q->setWidthHeight(sizing, sizing);
+
 			q->followCamera = 1;
 			dsq->game->addRenderObject(q, LR_HUD);
 			qs.push_back(q);
@@ -2528,12 +2344,12 @@ void SceneEditor::selectEntityFromGroups()
 			if (core->mouse.position.y < 100)
 				break;
 		}
-		
+
 		if (core->getKeyState(KEY_ESCAPE))
 			break;
 		if (core->getKeyState(KEY_SPACE))
 			break;
-		
+
 		if (!core->getKeyState(KEY_E))
 			ld = false;
 		else if (!ld)
@@ -2541,7 +2357,7 @@ void SceneEditor::selectEntityFromGroups()
 			ld=true;
 			nextEntityPage();
 		}
-		
+
 		if (!core->getKeyState(KEY_R))
 			rd = !true;
 		else if (!rd)
@@ -2713,7 +2529,7 @@ void SceneEditor::prevElement()
 			cycleElementPrev(editingElement);
 			editingElement = 0;
 		}
-		else 
+		else
 		{
 			doPrevElement();
 		}
@@ -2874,7 +2690,7 @@ void SceneEditor::cloneSelectedElement()
 			Element *e = dsq->game->createElement(e1->templateIdx, placer->position + Vector(40,40), e1->bgLayer, e1);
 			e->elementFlag = e1->elementFlag;
 			e->setElementEffectByIndex(e1->getElementEffectIndex());
-			//e->repeatTextureToFill(e1->isRepeatingTextureToFill());
+
 		}
 		dsq->game->reconstructGrid();
 	}
@@ -2938,7 +2754,7 @@ void SceneEditor::toggle(bool on)
 		movingEntity = 0;
 		dsq->toggleCursor(true);
 		dsq->setCursor(CURSOR_NORMAL);
-		//core->flags.set(CF_CLEARBUFFERS);
+
 
 		dsq->darkLayer.toggle(false);
 
@@ -2959,7 +2775,7 @@ void SceneEditor::toggle(bool on)
 	else
 	{
 		btnMenu->alpha = 0;
-		//dsq->game->reconstructGrid();
+
 		selectedElements.clear();
 		for (int i = 0; i < 9; i++)
 			dsq->getRenderObjectLayer(LR_ELEMENTS1+i)->visible = true;
@@ -2976,7 +2792,7 @@ void SceneEditor::toggle(bool on)
 			dsq->game->avatar->enableInput();
 		text->alpha.interpolateTo(0, 0.2);
 		placer->alpha.interpolateTo(0, 0.2);
-		//core->flags.unset(CF_CLEARBUFFERS);
+
 		dsq->darkLayer.toggle(true);
 
 		dsq->game->rebuildElementUpdateList();
@@ -2998,8 +2814,8 @@ void SceneEditor::updateText()
 	std::ostringstream os;
 	os << dsq->game->sceneName << " bgL[" << bgLayer << "] (" <<
 		(int)dsq->cameraPos.x << "," << (int)dsq->cameraPos.y << ") ("
-		//<< (int)dsq->game->avatar->position.x
-		//<< "," << (int)dsq->game->avatar->position.y << "," << (int)dsq->game->avatar->position.z << ")" << " ("
+
+
 		<< (int)dsq->getGameCursorPosition().x << "," << (int)dsq->getGameCursorPosition().y << ")" << " ";
 	switch(editType)
 	{
@@ -3254,7 +3070,7 @@ void SceneEditor::update(float dt)
 							smallestDist = dist;
 							selectedIdx = i;
 							selectedNode = n;
-							//return;
+
 						}
 					}
 				}
@@ -3442,7 +3258,7 @@ void SceneEditor::update(float dt)
 					}
 					else
 					{
-						//editingElement->scale=oldScale + add;
+
 						editVec = (repeatScale ? oldRepeatScale : oldScale) + add;
 						if (!uni && !repeatScale)
 						{

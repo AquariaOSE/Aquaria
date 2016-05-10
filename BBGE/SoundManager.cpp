@@ -23,20 +23,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SoundManager.h"
 #include "Base.h"
 
-#if defined(BBGE_BUILD_FMODEX)
-    #ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
-	#include "FmodOpenALBridge.h"
-	#else
-	#include <fmod.h>
-	#include <fmod.hpp>
-	#ifdef BBGE_BUILD_WINDOWS
-		#pragma comment(lib, "fmodex_vc.lib")
-	#endif
-	#endif
+#ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
+    #include "FmodOpenALBridge.h"
+#else
+    #include <fmod.h>
+    #include <fmod.hpp>
+    #ifdef BBGE_BUILD_WINDOWS
+	#pragma comment(lib, "fmodex_vc.lib")
+    #endif
 #endif
 
-#ifdef BBGE_BUILD_FMODEX
-#endif
 
 SoundManager *sound = 0;
 
@@ -48,7 +44,6 @@ std::string fileType = ".ogg";
 
 namespace SoundCore
 {
-#ifdef BBGE_BUILD_FMODEX
 
 	typedef std::map<std::string, FMOD::Sound*> SoundMap;
 	SoundMap soundMap;
@@ -110,7 +105,6 @@ namespace SoundCore
 		}
 		fadeChs.push_back(fadeCh);
 	}
-#endif
 }
 
 using namespace SoundCore;
@@ -121,12 +115,12 @@ using namespace SoundCore;
 
     1. use F_CALLBACK.  Do NOT force cast your own function to fmod's callback type.
     2. return FMOD_ERR_FILE_NOTFOUND in open as required.
-    3. return number of bytes read in read callback.  Do not get the size and count 
+    3. return number of bytes read in read callback.  Do not get the size and count
        around the wrong way in fread for example, this would return 1 instead of the number of bytes read.
 
     QUESTIONS:
 
-    1. Why does fmod seek to the end and read?  Because it is looking for ID3V1 tags.  
+    1. Why does fmod seek to the end and read?  Because it is looking for ID3V1 tags.
        Use FMOD_IGNORETAGS in System::createSound / System::createStream if you don't like this behaviour.
 
 */
@@ -200,7 +194,6 @@ FMOD_RESULT F_CALLBACK myseek(void *handle, unsigned int pos, void *userdata)
 
 void SoundManager::pause()
 {
-#ifdef BBGE_BUILD_FMODEX
 	debugLog("SoundManager::pause");
 
 	debugLog("mus");
@@ -222,14 +215,12 @@ void SoundManager::pause()
 	debugLog("update");
 	result = SoundCore::system->update();
 	checkError();
-	
+
 	debugLog("done");
-#endif
 }
 
 void SoundManager::resume()
 {
-#ifdef BBGE_BUILD_FMODEX
 	debugLog("SoundManager::resume");
 
 	debugLog("mus");
@@ -253,7 +244,6 @@ void SoundManager::resume()
 	checkError();
 
 	debugLog("done");
-#endif
 }
 
 Buffer SoundManager::getBuffer(const std::string &name)
@@ -285,7 +275,6 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 
 	loadProgressCallback = NULL;
 
-#ifdef BBGE_BUILD_FMODEX
 
 	int channels	= 128;
 
@@ -296,7 +285,7 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 	debugLog("system::create");
 	result = FMOD::System_Create(&SoundCore::system);
     if (checkError()) goto get_out;
-   
+
 	debugLog("getVersion");
     result = SoundCore::system->getVersion(&version);
     if (checkError()) goto get_out;
@@ -332,7 +321,7 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 		debugLog("err_output_createbuffer, speaker mode");
 		result = SoundCore::system->setSpeakerMode(FMOD_SPEAKERMODE_STEREO);
         if (checkError()) goto get_out;
-        
+
 		debugLog("init 2");
         result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0); /* Replace with whatever channel count and flags you use! */
 		if (checkError()) goto get_out;
@@ -342,30 +331,7 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 	SoundCore::system->getNumChannels(&channels);
 #endif
 
-	//FMOD::Debug_SetLevel(FMOD_DEBUG_LEVEL_ALL);
 
-	/*
-	result = FMOD::System_Create(&SoundCore::system);		// Create the main system object.
-	if (checkError())
-	{
-		exit(-1);
-	}
-
-	result = SoundCore::system->init(64, FMOD_INIT_NORMAL, 0);	// Initialize FMOD.
-	if (result == FMOD_ERR_OUTPUT_CREATEBUFFER)
-	{
-		debugLog("FMOD_ERR_OUTPUT_CREATEBUFFER, setting stereo speaker mode");
-		SoundCore::system->setSpeakerMode(FMOD_SPEAKERMODE_STEREO);
-		result = SoundCore::system->init(64, FMOD_INIT_NORMAL, 0);
-		if (checkError())
-			exit(-1);
-	}
-	else
-	{
-		if (checkError())
-			exit(-1);
-	}
-	*/
 
 	debugLog("set file system");
 	result = SoundCore::system->setFileSystem(myopen, myclose, myread, myseek, 2048);
@@ -396,12 +362,6 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 	if (checkError()) { dspReverb = 0; }
 
 
-	//dspReverb->setParameter(FMOD_DSP_REVERB_ROOMSIZE, 0.5);
-	//dspReverb->setParameter(FMOD_DSP_REVERB_DAMP, 0.5);
-	//dspReverb->setParameter(FMOD_DSP_REVERB_WETMIX, 0.33);
-	//dspReverb->setParameter(FMOD_DSP_REVERB_DRYMIX, 0.66);
-	//dspReverb->setParameter(FMOD_DSP_REVERB_WIDTH, 1.0);
-	//dspReverb->setParameter(FMOD_DSP_REVERB_MODE, 0); // 0 or 1
 
 	if (dspReverb)
 	{
@@ -414,7 +374,6 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 	}
 
 
-#endif
 
 	enabled = true;
 
@@ -438,7 +397,6 @@ void SoundManager::toggleEffectMusic(SoundEffectType effect, bool on)
 {
 	if (!enabled) return;
 
-#ifdef BBGE_BUILD_FMODEX
 
 	bool active = false;
 
@@ -454,7 +412,6 @@ void SoundManager::toggleEffectMusic(SoundEffectType effect, bool on)
 	break;
 	}
 
-#endif
 }
 
 
@@ -508,25 +465,14 @@ void SoundManager::setMusicFader(float v, float t)
 		return;
 	}
 
-	/*
-	std::ostringstream os;
-	os << "musicFader " << v << " over " << t;
-	debugLog(os.str());
-	*/
+
 
 	musVol.interpolateTo(Vector(musVol.x, v, musVol.z), t);
-
-#ifdef BBGE_BUILD_FMODEX
-	/*
-	result = group_mus->setVolume(musVol.x*musVol.y*v);
-	checkError();
-	*/
-#endif
 }
 
 void SoundManager::error(const std::string &errMsg)
 {
-	//std::cout << errMsg << std::endl;
+
 	errorLog(errMsg);
 }
 
@@ -549,17 +495,13 @@ SoundManager::~SoundManager()
 	}
 	soundMap.clear();
 
-#ifdef BBGE_BUILD_FMODEX
 	SoundCore::system->release();
-#endif
 }
 
 void SoundManager::stopAllSfx()
 {
-#ifdef BBGE_BUILD_FMODEX
 	if (group_sfx)
 		group_sfx->stop();
-#endif
 }
 
 void SoundManager::stopAll()
@@ -568,36 +510,35 @@ void SoundManager::stopAll()
 
 void SoundManager::onVoiceEnded()
 {
-	//debugLog("Voice Ended!");
+
 	event_stopVoice.call();
-	//debugLog("checking vox queue");
+
 
 	if (dspReverb)
 		dspReverb->remove();
 
 	if (!voxQueue.empty())
 	{
-		//debugLog("calling playVoice");
-		
+
+
 		std::string vox = voxQueue.front();
-		
-		//debugLog("popping voxQueue");
+
+
 		if (!voxQueue.empty())
 			voxQueue.pop();
-			
-		//debugLog("calling playVoice");
+
+
 		playVoice(vox, SVT_INTERRUPT);
 	}
 	else
 	{
-		//debugLog("setting music fader");
+
 		setMusicFader(1, 1);
 		sfxFader = 1;
 	}
 
 
 
-	//debugLog("done onVoiceEnded");
 }
 
 
@@ -607,19 +548,16 @@ bool SoundManager::isPaused()
 
 	if (!enabled) return paused;
 
-#ifdef BBGE_BUILD_FMODEX
 
 	result = masterChannelGroup->getPaused(&paused);
 	checkError();
 
-#endif
 
 	return paused;
 }
 
 void SoundManager::clearFadingSfx()
 {
-#ifdef BBGE_BUILD_FMODEX
 
 	SoundCore::FadeChs::iterator i = fadeChs.begin();
 	for (; i != fadeChs.end(); i++)
@@ -633,7 +571,6 @@ void SoundManager::clearFadingSfx()
 	}
 	SoundCore::fadeChs.clear();
 
-#endif
 
 }
 
@@ -647,7 +584,6 @@ void SoundManager::update(float dt)
 	musVol.update(dt);
 
 
-#ifdef BBGE_BUILD_FMODEX
 
 	if (musicChannel)
 	{
@@ -668,10 +604,10 @@ void SoundManager::update(float dt)
 	if (musicChannel)
 	{
 		// fader value
-		
+
 		result = musicChannel->setVolume(musVol.y*1.0f);
 		checkError();
-		
+
 
 		if (musVol.y <= 0 && stopMusicOnFadeOut)
 		{
@@ -740,7 +676,7 @@ void SoundManager::update(float dt)
 					continue;
 				}
 			}
-	
+
 			if (f->c)
 			{
 				f->c->setVolume(f->v);
@@ -753,15 +689,12 @@ void SoundManager::update(float dt)
 
 	SoundCore::system->update();
 
-#endif
 
-#if defined(BBGE_BUILD_BASS20) || defined(BBGE_BUILD_FMODEX) || defined(BBGE_BUILD_SDLMIXER)
 	if (wasPlayingVoice && !isPlayingVoice())
 	{
 		wasPlayingVoice = false;
 		onVoiceEnded();
 	}
-#endif
 }
 
 void SoundManager::fadeMusic(SoundFadeType sft, float t)
@@ -770,7 +703,6 @@ void SoundManager::fadeMusic(SoundFadeType sft, float t)
 	{
 	case SFT_CROSS:
 	{
-#ifdef BBGE_BUILD_FMODEX
 		if (musicChannel2)
 		{
 			musicChannel2->stop();
@@ -789,16 +721,13 @@ void SoundManager::fadeMusic(SoundFadeType sft, float t)
 		musicFader2Volume = musVol.y;
 		musicFader2Time = musicFader2Timer = t;
 
-#endif
 
 	}
 	break;
 	case SFT_OUT:
 		setMusicFader(0, t);
 
-#ifdef BBGE_BUILD_FMODEX
 		stopMusicOnFadeOut = true;
-#endif
 	break;
 	default:
 		//setMusMul(0, t);
@@ -808,7 +737,6 @@ void SoundManager::fadeMusic(SoundFadeType sft, float t)
 
 bool SoundManager::isPlayingMusic()
 {
-#ifdef BBGE_BUILD_FMODEX
 
 	if (musicChannel)
 	{
@@ -817,13 +745,7 @@ bool SoundManager::isPlayingMusic()
 		return b;
 	}
 
-#endif
 
-#ifdef BBGE_BUILD_BASS20
-
-	return musicStream != 0;
-
-#endif
 
 	return false;
 }
@@ -832,12 +754,10 @@ void SoundManager::setMusicVolume(float v)
 {
 	musVol.x = v;
 
-#ifdef BBGE_BUILD_FMODEX
 
 	result = group_mus->setVolume(v);
 	checkError();
 
-#endif
 }
 
 void SoundManager::setSfxVolume(float v)
@@ -854,15 +774,12 @@ void SoundManager::setVoiceVolume(float v)
 {
 	voxVol.x = v;
 
-#ifdef BBGE_BUILD_FMODEX
 	result = group_vox->setVolume(v);
 	checkError();
-#endif
 }
 
 bool SoundManager::isPlayingVoice()
 {
-#ifdef BBGE_BUILD_FMODEX
 
 	if (voiceChannel)
 	{
@@ -882,7 +799,6 @@ bool SoundManager::isPlayingVoice()
 		return b;
 	}
 
-#endif
 
 	return false;
 }
@@ -893,7 +809,7 @@ void SoundManager::setSfxChannelsVolume(float v)
 
 bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float vmod)
 {
-	//debugLog("playVoice, masterSoundLock: " + name);
+
 
 	if (!enabled) return false;
 
@@ -902,7 +818,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 
 	n = name;
 	stringToLower(n);
-	
+
 	if (!voicePath2.empty())
 	{
 		fn = voicePath2 + name + fileType;
@@ -953,12 +869,10 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 
 	if (playNow)
 	{
-#ifdef BBGE_BUILD_FMODEX
 		if (voiceStream)
 		{
 			stopVoice();
 		}
-#endif
 
 		debugLog("play now");
 
@@ -979,7 +893,6 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 			}
 		}
 
-#ifdef BBGE_BUILD_FMODEX
 
 
 		// FMOD_DEFAULT uses the defaults.  These are the same as FMOD_LOOP_OFF | FMOD_2D | FMOD_HARDWARE.
@@ -994,7 +907,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 		}
 
 		if (voiceStream)
-		{		
+		{
 
 			if (!reverbKeyword.empty())
 			{
@@ -1003,7 +916,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 				if (dspReverb)
 				{
 					bool active = false;
-					
+
 					result = dspReverb->getActive(&active);
 					checkError();
 
@@ -1033,7 +946,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 
 			result = voiceChannel->setChannelGroup(group_vox);
 			checkError();
-			
+
 			if (vmod != -1)
 			{
 				result = voiceChannel->setVolume(vmod);
@@ -1043,10 +956,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 			result = voiceChannel->setPriority(1);
 			checkError();
 
-			/*
-			result = dspReverb->remove();
-			checkError();
-			*/
+
 
 			voiceChannel->setFrequency(1);
 			voiceChannel->setCallback(NULL);
@@ -1061,7 +971,6 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 			wasPlayingVoice = true;
 		}
 
-#endif
 
 		lastVoice = n;
 		event_playVoice.call();
@@ -1077,7 +986,6 @@ void SoundManager::updateChannelVolume(void *ch, float v)
 
 float SoundManager::getVoiceTime()
 {
-#ifdef BBGE_BUILD_FMODEX
 
 	if (isPlayingVoice())
 	{
@@ -1086,7 +994,6 @@ float SoundManager::getVoiceTime()
 		return float(position) * 0.001f;
 	}
 
-#endif
 
 	return 0;
 }
@@ -1095,11 +1002,10 @@ void *SoundManager::playSfx(const PlaySfx &play)
 {
 	if (!enabled) return 0;
 
-#ifdef BBGE_BUILD_FMODEX
 
 	FMOD::Channel *channel = 0;
 	FMOD::Sound *sound = 0;
-	
+
 
 	if (play.handle)
 		sound = (FMOD::Sound*)play.handle;
@@ -1168,7 +1074,6 @@ void *SoundManager::playSfx(const PlaySfx &play)
 	checkError();
 
 	return channel;
-#endif
 
 
 	return 0;
@@ -1194,11 +1099,7 @@ bool SoundManager::isPlayingMusic(const std::string &name)
 		std::string test = name;
 		stringToLower(test);
 
-		/*
-		std::ostringstream os;
-		os << "checking lastMusic: " << lastMusic << " test: " << test;
-		debugLog(os.str());
-		*/
+
 
 		if (test == lastMusic)
 			return true;
@@ -1218,9 +1119,6 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 	{
 		if (isPlayingMusic(name))
 		{
-			#ifdef BBGE_BUILD_OPENALOGG
-				if (masterSoundLock) SDL_mutexV(masterSoundLock);
-			#endif
 			return false;
 		}
 	}
@@ -1251,7 +1149,6 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 	lastMusic = name;
 	stringToLower(lastMusic);
 
-#ifdef BBGE_BUILD_FMODEX
 
 	if (sft == SFT_CROSS)
 	{
@@ -1303,7 +1200,7 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 
 	if (musicStream)
 	{
-		
+
 
 		result = SoundCore::system->playSound(FMOD_CHANNEL_FREE, musicStream, true, &musicChannel);
 		checkError();
@@ -1345,7 +1242,6 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 	{
 		debugLog("Failed to create music stream: " + fn);
 	}
-#endif
 
 	return true;
 }
@@ -1353,7 +1249,6 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 
 void SoundManager::stopMusic()
 {
-#ifdef BBGE_BUILD_FMODEX
 	if (musicChannel)
 	{
 		musicChannel->stop();
@@ -1366,14 +1261,12 @@ void SoundManager::stopMusic()
 		musicStream = 0;
 		musicChannel = 0;
 	}
-#endif
 	playingMusicOnce = false;
 	lastMusic = "";
 }
 
 void SoundManager::stopSfx(void *channel)
 {
-#ifdef BBGE_BUILD_FMODEX
 	if (!channel) return;
 	FMOD::Channel *ch = (FMOD::Channel*)channel;
 	if (ch)
@@ -1382,12 +1275,10 @@ void SoundManager::stopSfx(void *channel)
 		checkError();
 		ch = 0;
 	}
-#endif
 }
 
 void SoundManager::fadeSfx(void *channel, SoundFadeType sft, float t)
 {
-#ifdef BBGE_BUILD_FMODEX
 	if (!channel) return;
 	if (sft == SFT_OUT)
 	{
@@ -1403,13 +1294,11 @@ void SoundManager::fadeSfx(void *channel, SoundFadeType sft, float t)
 			SoundCore::addFadeCh(f);
 		}
 	}
-#endif
 }
 
 void SoundManager::stopVoice()
 {
 
-#ifdef BBGE_BUILD_FMODEX
 	if (voiceChannel)
 	{
 		bool playing = false;
@@ -1430,7 +1319,6 @@ void SoundManager::stopVoice()
 		voiceStream = 0;
 	}
 	onVoiceEnded();
-#endif
 
 }
 
@@ -1446,7 +1334,7 @@ void loadCacheSoundsCallback (const std::string &filename, intptr_t param)
 	sm = (SoundManager*)param;
 	if (!sm->enabled)
 	{
-		//sm->erorr();
+
 		debugLog("Disabled: Won't Load Sample ["+filename+"]");
 		return;
 	}
@@ -1513,7 +1401,6 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 
 	stringToLower(name);
 
-#ifdef BBGE_BUILD_FMODEX
 
 	FMOD::Sound * sound = SoundCore::soundMap[name];
 
@@ -1540,11 +1427,8 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	}
 
 	return sound;
-#endif
 
-#ifdef BBGE_BUILD_FMODEX
 
-#endif
 
 	return Buffer();
 }
@@ -1553,24 +1437,14 @@ Buffer SoundManager::loadLocalSound(const std::string &filename)
 {
 	Buffer b = loadSoundIntoBank(filename, localSoundPath, fileType, SFXLOAD_LOCAL);
 
-#ifdef BBGE_BUILD_FMODEX
 	return b;
-#endif
 
 	return BBGE_AUDIO_NOCHANNEL;
 }
 
 void SoundManager::setMusicSpeed(float speed)
 {
-	/*
-	FMOD_CAPS caps;
-	FMOD_SPEAKERMODE speakerMode;
-	int minf, maxf;
-	SoundCore::system->getDriverCaps(0, &caps, &minf, &maxf, &speakerMode);
-	std::ostringstream os;
-	os << "minf: " << minf << " maxf: " << maxf;
-	debugLog(os.str());
-	*/
+
 
 	musicChannel->setFrequency(speed);
 }
@@ -1583,7 +1457,6 @@ void SoundManager::setModSpeed(float speed)
 
 void SoundManager::clearLocalSounds()
 {
-#ifdef BBGE_BUILD_FMODEX
 	for (LocalSounds::iterator i = localSounds.begin(); i != localSounds.end(); i++)
 	{
 		std::string snd = (*i);
@@ -1593,12 +1466,10 @@ void SoundManager::clearLocalSounds()
 		soundMap[snd] = 0;
 	}
 	localSounds.clear();
-#endif
 }
 
 bool SoundManager::checkError()
 {
-#ifdef BBGE_BUILD_FMODEX
 	if (result != FMOD_OK)
 	{
 		std::ostringstream os;
@@ -1640,7 +1511,6 @@ bool SoundManager::checkError()
 		debugLog(os.str());
 		return true;
 	}
-#endif
 	return false;
 }
 

@@ -38,68 +38,7 @@ ActionInput *ActionSet::getActionInputByName(const std::string &name)
 	return 0;
 }
 
-//void ActionSet::loadAction(const std::string &name, int inputCode, InputSetType set)
-//{
-//	ActionInput *a = getActionInputByName(name);
-//	if (!a)
-//	{
-//		ActionInput newa;
-//		newa.name = name;
-//		inputSet.push_back(newa);
-//		a = getActionInputByName(name);
-//		
-//		if (!a) return;
-//	}
-//
-//	switch(set)
-//	{
-//	case INPUTSET_KEY:
-//		a->keyCodes.push_back(inputCode);
-//	break;
-//	case INPUTSET_JOY:
-//		a->joyCodes.push_back(inputCode);
-//	break;
-//	case INPUTSET_MOUSE:
-//		a->mouseCodes.push_back(inputCode);
-//	break;
-//	case INPUTSET_GENERAL:
-//	default:
-//		a->inputCodes.push_back(inputCode);
-//	break;
-//	}
-//}
-//
-//void ActionSet::loadAction(const std::string &name, const std::vector<int> &inputCodes, InputSetType set)
-//{
-//
-//	ActionInput *a = getActionInputByName(name);
-//	if (!a)
-//	{
-//		ActionInput newa;
-//		newa.name = name;
-//		inputSet.push_back(newa);
-//		a = getActionInputByName(name);
-//		
-//		if (!a) return;
-//	}
-//
-//	switch(set)
-//	{
-//	case INPUTSET_KEY:
-//		a->keyCodes = inputCodes;
-//	break;
-//	case INPUTSET_JOY:
-//		a->joyCodes = inputCodes;
-//	break;
-//	case INPUTSET_MOUSE:
-//		a->mouseCodes = inputCodes;
-//	break;
-//	case INPUTSET_GENERAL:
-//	default:
-//		a->inputCodes = inputCodes;
-//	break;
-//	}
-//}
+
 
 void ActionSet::importAction(ActionMapper *mapper, const std::string &name, int actionID)
 {
@@ -168,7 +107,7 @@ ActionInput *ActionSet::addActionInput(const std::string &name)
 std::string ActionSet::insertInputIntoString(const std::string &string)
 {
 	std::string str = string;
-	
+
 	int start = str.find('{');
 	int end = str.find('}');
 	if (start == std::string::npos || end == std::string::npos)
@@ -177,18 +116,18 @@ std::string ActionSet::insertInputIntoString(const std::string &string)
 	stringToLower(code);
 	std::string part1 = str.substr(0, start);
 	std::string part3 = str.substr(end+1, str.size());
-	
-	//{ToggleHelp:k0}
+
+
 	int thing = code.find(':');
 	std::string input = code.substr(0, thing);
 	std::string button = code.substr(thing+1, code.size());
-	
+
 	char buttonType;
 	int buttonNum;
-	
+
 	std::istringstream is(button);
 	is >> buttonType >> buttonNum;
-	
+
 	ActionInput *actionInput=0;
 	actionInput = getActionInputByName(input);
 	if (!actionInput)
@@ -209,7 +148,7 @@ std::string ActionSet::insertInputIntoString(const std::string &string)
 			inputCode = actionInput->mse[buttonNum];
 			break;
 	}
-	
+
 	std::string part2 = getInputCodeToUserString(inputCode);
 	return part1 + part2 + part3;
 }

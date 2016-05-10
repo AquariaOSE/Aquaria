@@ -118,7 +118,7 @@ public:
 	bool blind;
 	bool wasUnderWater;
 	float shotDelay;
-	//Timer shockTimer;
+
 	Timer useItemDelay;
 	Timer lockToWallDelay;
 	float spellCharge;
@@ -146,7 +146,7 @@ public:
 	float burstDelay;
 	bool bursting;
 	BurstType lastBurstType;
-	//void damage(int amount);
+
 	bool isCharging();
 	void setBlind(float time);
 
@@ -265,7 +265,7 @@ public:
 
 	float songInterfaceTimer;
 	void removeEatData(int idx);
-	//std::list<Entity*>bittenEntities;
+
 	typedef std::list<Entity*> BittenEntities;
 	BittenEntities bittenEntities;
 	Target getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override=false, std::vector<Target> *ignore=0, EntityList *entityList=0);
@@ -306,7 +306,7 @@ public:
 	float rollDelay;
 
 	bool canSetBoneLock();
-	
+
 	void revert();
 	void doBindSong();
 	void doShieldSong();
@@ -333,7 +333,7 @@ public:
 	float elementEffectMult;
 
 	bool blockBackFlip;
-	
+
 protected:
 	void setSongIconPositions();
 
@@ -386,7 +386,7 @@ protected:
 	void updateCursor(float dt);
 	bool rolling;
 	int rollDidOne;
-	
+
 	void startRoll(int dir);
 	void stopRoll();
 	int getQuadrantDirection(int lastQuad, int quad);
@@ -431,9 +431,9 @@ protected:
 	bool checkWarpAreas();
 
 	float splashDelay;
-	//Hair *hair;
 
-	//Item *currentItem;
+
+
 	void onUpdate(float dt);
 	void onRender();
 

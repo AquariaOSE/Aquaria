@@ -171,7 +171,7 @@ MiniMapRender::MiniMapRender() : RenderObject()
 	texMinimapBtm		= core->addTexture("gui/minimap/btm");
 	texMinimapTop		= core->addTexture("gui/minimap/top");
 	texNaija			= core->addTexture("gems/naija-token");
-	texHealthBar		= core->addTexture("particles/glow-masked"); 
+	texHealthBar		= core->addTexture("particles/glow-masked");
 	texMarker			= core->addTexture("gui/minimap/marker");
 
 	buttons.clear();
@@ -295,7 +295,7 @@ float MiniMapRender::getMiniMapHeight() const
 
 void MiniMapRender::onUpdate(float dt)
 {
-	RenderObject::onUpdate(dt);	
+	RenderObject::onUpdate(dt);
 
 	position.x = core->getVirtualWidth() - core->getVirtualOffX() - getMiniMapWidth()/2;
 	position.y = 600 - getMiniMapHeight()/2;
@@ -323,7 +323,7 @@ void MiniMapRender::onUpdate(float dt)
 		{
 			radarHide = true;
 		}
-		
+
 		if(!radarHide)
 		{
 			for (Path *p = dsq->game->getFirstPathOfType(PATH_RADARHIDE); p; p = p->nextOfType)
@@ -378,7 +378,7 @@ void MiniMapRender::onUpdate(float dt)
 
 	_isCursorIn = false;
 	if (alpha.x == 1)
-	{		
+	{
 		if (!dsq->game->isInGameMenu() && (!dsq->game->isPaused() || (dsq->game->isPaused() && dsq->game->worldMapRender->isOn())))
 		{
 			if (isCursorInButtons())
@@ -433,7 +433,7 @@ void MiniMapRender::onUpdate(float dt)
 						{
 							if (doubleClickDelay > 0 && !core->isStateJumpPending())
 							{
-								
+
 								if (dsq->continuity.gems.empty())
 									dsq->continuity.pickupGem("Naija-Token");
 
@@ -475,7 +475,6 @@ void MiniMapRender::onUpdate(float dt)
 
 void MiniMapRender::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	RenderObject::lastTextureApplied = 0;
@@ -760,7 +759,6 @@ void MiniMapRender::onRender()
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-#endif
 }
 
 void MiniMapRender::renderIcon(MinimapIcon *ico, const Vector& pos)

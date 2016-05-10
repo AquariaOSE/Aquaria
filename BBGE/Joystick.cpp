@@ -21,51 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Core.h"
 
-#if defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_XINPUT) 
-	#include "Xinput.h"
-
-#if defined(BBGE_BUILD_DELAYXINPUT)
-	#include <DelayImp.h>
-#endif
-
-/*
-	HRESULT (WINAPI *XInputGetState)(HINSTANCE hinst, DWORD dwVersion, REFIID riidltf, LPVOID *ppvOut, LPUNKNOWN punkOuter) = 0;
-
-if ( (winp.hInstDI = LoadLibrary( "dinput.dll" )) == 0 )
-
-
-if (!pDirectInput8Create) {
-	pDirectInput8Create = (HRESULT (__stdcall *)(HINSTANCE, DWORD ,REFIID, LPVOID *, LPUNKNOWN)) GetProcAddress(winp.hInstDI,"DirectInput8Create");
-
-	if (!pDirectInput8Create) {
-		error(L"Couldn't get DI proc addr\n");
-	}
-} 
-
-	bool importXInput()
-	{
-
-	}
-*/
-
-
-
-
-bool tryXInput()
-{
-	__try
-	{
-		XINPUT_STATE xinp;
-		XInputGetState(0, &xinp);
-	}
-	__except (EXCEPTION_EXECUTE_HANDLER)
-	{
-		return false;
-	}
-	return true;
-}
-
-#endif
 
 #ifdef __LINUX__
 #include <sys/types.h>
@@ -89,13 +44,11 @@ Joystick::Joystick()
 {
 	xinited = false;
 	stickIndex = -1;
-#ifdef BBGE_BUILD_SDL
 #  ifdef BBGE_BUILD_SDL2
 	sdl_controller = NULL;
 	sdl_haptic = NULL;
 #  endif
 	sdl_joy = NULL;
-#endif
 #if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
 	eventfd = -1;
 	effectid = -1;
@@ -124,11 +77,8 @@ Joystick::Joystick()
 
 void Joystick::init(int stick)
 {
-#if defined(BBGE_BUILD_SDL) || defined(__LINUX__)
 	std::ostringstream os;
-#endif
 
-#ifdef BBGE_BUILD_SDL
 	stickIndex = stick;
 	const int numJoy = SDL_NumJoysticks();
 	os << "Found [" << numJoy << "] joysticks";
@@ -184,8 +134,7 @@ void Joystick::init(int stick)
 	{
 		debugLog("Not enough Joystick(s) found");
 	}
-#endif
-	
+
 #if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
 	os.seekp(0);
 	os << "AQUARIA_EVENT_JOYSTICK" << stick;
@@ -223,20 +172,6 @@ void Joystick::init(int stick)
 	}
 #endif
 
-#ifdef BBGE_BUILD_XINPUT
-	debugLog("about to init xinput");
-
-	xinited = tryXInput();
-
-	if (!xinited)
-		debugLog("XInput not found, not installed?");
-
-	debugLog("after catch");
-
-#if !defined(BBGE_BUILD_SDL)
-	inited = xinited;
-#endif
-#endif
 }
 
 void Joystick::shutdown()
@@ -250,7 +185,6 @@ void Joystick::shutdown()
 		eventfd = -1;
 	}
 #endif
-#ifdef BBGE_BUILD_SDL
 #ifdef BBGE_BUILD_SDL2
 	if (sdl_haptic)
 	{
@@ -269,7 +203,6 @@ void Joystick::shutdown()
 		SDL_JoystickClose(sdl_joy);
 		sdl_joy = 0;
 	}
-#endif
 }
 
 void Joystick::rumble(float leftMotor, float rightMotor, float time)
@@ -292,25 +225,6 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 			}
 		}
 
-#elif defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_XINPUT)
-		XINPUT_VIBRATION vib;
-		vib.wLeftMotorSpeed = WORD(leftMotor*65535);
-		vib.wRightMotorSpeed = WORD(rightMotor*65535);
-		
-		clearRumbleTime = time;
-		DWORD d = XInputSetState(0, &vib);
-		if (d == ERROR_SUCCESS)
-		{
-			//debugLog("success");
-		}
-		else if (d == ERROR_DEVICE_NOT_CONNECTED)
-		{
-			//debugLog("joystick not connected");
-		}
-		else
-		{
-			//unknown error
-		}
 #elif defined(__LINUX__)
 		if (eventfd >= 0) {
 			struct ff_effect effect;
@@ -331,24 +245,24 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 				effect.u.rumble.strong_magnitude = (uint16_t) (rightMotor * 0xffff);
 				effect.u.rumble.weak_magnitude = (uint16_t) (leftMotor * 0xffff);
 			}
-	
+
 			if (ioctl(eventfd, EVIOCSFF, &effect) == -1) {
 				debugLog(std::string("Upload rumble effect: ") + strerror(errno));
 				return;
 			}
-	
+
 			event.time.tv_sec = 0;
 			event.time.tv_usec = 0;
 			event.type = EV_FF;
 			event.code = effectid = effect.id;
-	
+
 			if (leftMotor == 0 && rightMotor == 0) {
 				event.value = 0;
 			}
 			else {
 				event.value = 1;
 			}
-	
+
 			if (write(eventfd, (const void*) &event, sizeof(event)) == -1) {
 				debugLog(std::string("Play rumble effect: ") + strerror(errno));
 			}
@@ -359,7 +273,7 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 
 void Joystick::callibrate(Vector &calvec, float deadZone)
 {
-	//float len = position.getLength2D();
+
 	if (calvec.isLength2DIn(deadZone))
 	{
 		calvec = Vector(0,0,0);
@@ -367,7 +281,7 @@ void Joystick::callibrate(Vector &calvec, float deadZone)
 	else
 	{
 		if (!calvec.isZero())
-		{				
+		{
 			Vector pos2 = calvec;
 			pos2.setLength2D(deadZone);
 			calvec -= pos2;
@@ -389,7 +303,6 @@ void Joystick::callibrate(Vector &calvec, float deadZone)
 
 void Joystick::update(float dt)
 {
-#ifdef BBGE_BUILD_SDL
 	if (core->joystickEnabled && inited && sdl_joy && stickIndex != -1)
 	{
 #ifdef BBGE_BUILD_SDL2
@@ -451,23 +364,14 @@ void Joystick::update(float dt)
 		rightStick.y = yaxis2/32768.0f;
 #endif
 
-		/*
-		std::ostringstream os;
-		os << "joy(" << position.x << ", " << position.y << ")";
-		debugLog(os.str());
-		*/
 
 
 		callibrate(position, deadZone1);
 
 		callibrate(rightStick, deadZone2);
-		
 
-		/*
-		std::ostringstream os2;
-		os2 << "joy2(" << position.x << ", " << position.y << ")";
-		debugLog(os2.str());
-		*/
+
+
 #ifdef BBGE_BUILD_SDL2
 		if (sdl_controller)
 		{
@@ -485,21 +389,10 @@ void Joystick::update(float dt)
 		for (int i = 0; i < maxJoyBtns; i++)
 			buttons[i] = SDL_JoystickGetButton(sdl_joy, i)?DOWN:UP;
 #endif
-		/*
-		unsigned char btns[maxJoyBtns];
-		glfwGetJoystickButtons(GLFW_JOYSTICK_1, btns, maxJoyBtns);
-		for (int i = 0; i < maxJoyBtns; i++)
-		{
-			if (btns[i] == GLFW_PRESS)
-				buttons[i] = DOWN;
-			else
-				buttons[i] = UP;
-		}
-		*/
+
 
 
 	}
-#endif
 
 	if (clearRumbleTime >= 0)
 	{
@@ -510,59 +403,8 @@ void Joystick::update(float dt)
 		}
 	}
 
-#if defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_XINPUT)
-	if (inited && xinited)
-	{
-		XINPUT_STATE xinp;
-		XInputGetState(0, &xinp);
-		
-		leftTrigger = float(xinp.Gamepad.bLeftTrigger)/255.0f;
-		rightTrigger = float(xinp.Gamepad.bRightTrigger)/255.0f;
 
-		leftShoulder = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_SHOULDER;
-		rightShoulder = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_SHOULDER;
 
-		leftThumb = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_LEFT_THUMB;
-		rightThumb = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_RIGHT_THUMB;
-		
-		dpadUp = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_UP;
-		dpadDown = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_DOWN;
-		dpadLeft = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_LEFT;
-		dpadRight = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_DPAD_RIGHT;
-
-		
-		
-
-#if !defined(BBGE_BUILD_SDL)
-
-		buttons[0] = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_A?DOWN:UP;
-		buttons[1] = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_B?DOWN:UP;
-		buttons[2] = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_X?DOWN:UP;
-		buttons[3] = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_Y?DOWN:UP;
-
-		position = Vector(xinp.Gamepad.sThumbLX, xinp.Gamepad.sThumbLY)/32768.0f;
-		position.y = -rightStick.y;
-
-		rightStick = Vector(xinp.Gamepad.sThumbRX, xinp.Gamepad.sThumbRY)/32768.0f;
-		rightStick.y = -rightStick.y;
-
-		callibrate(position, deadZone1);
-
-		callibrate(rightStick, deadZone2);
-
-#endif
-
-		btnStart = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_START;
-		btnSelect = xinp.Gamepad.wButtons & XINPUT_GAMEPAD_BACK;
-	}
-#endif
-		
-		
-		/*
-		std::ostringstream os;
-		os << "j-pos(" << position.x << ", " << position.y << " - b0[" << buttons[0] << "]) - len[" << len << "]";
-		debugLog(os.str());
-		*/
 }
 
 bool Joystick::anyButton()

@@ -39,13 +39,12 @@ public:
 
 	ActionInput *addActionInput(const std::string &name);
 
-	//void loadAction(const std::string &name, int inputCode, InputSetType set);
-	//void loadAction(const std::string &name, const std::vector<int> &inputCodes, InputSetType set=INPUTSET_GENERAL);
+
 
 	ActionInput *getActionInputByName(const std::string &name);
 
 	ActionInputSet inputSet;
-	
+
 	std::string insertInputIntoString(const std::string &string);
 };
 

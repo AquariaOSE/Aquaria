@@ -63,7 +63,7 @@ public:
 	std::map<int, ParticleEffect*> emitters;
 	std::string prt;
 	std::vector<Vector> changeStrip;
-	
+
 	bool generateCollisionMask;
 	int animated;
 	Vector originalScale;
@@ -77,7 +77,7 @@ public:
 
 	SkeletalSprite *skeleton;
 
-	
+
 	void setSegmentProps(int minDist, int maxDist, bool reverse);
 	Vector segmentOffset;
 
@@ -142,7 +142,7 @@ public:
 	SkeletalKeyframe *getLastKeyframe();
 	SkeletalKeyframe *getFirstKeyframe();
 	SkeletalKeyframe *getPrevKeyframe(float t);
-	SkeletalKeyframe *getNextKeyframe(float t);	
+	SkeletalKeyframe *getNextKeyframe(float t);
 	void cloneKey(int key, float toffset);
 	void deleteKey(int key);
 	void reorderKeyframes();
@@ -158,10 +158,10 @@ class SkeletalSprite;
 class AnimationLayer
 {
 public:
-	
+
 	//----
 	AnimationLayer();
-	void setSkeletalSprite(SkeletalSprite *s);	
+	void setSkeletalSprite(SkeletalSprite *s);
 	Animation *getCurrentAnimation();
 	void animate(const std::string &animation, int loop);
 	void update(float dt);
@@ -177,8 +177,7 @@ public:
 	bool isAnimating();
 	bool contains(const Bone *b) const;
 	void resetPass();
-	//float lerp(float v1, float v2, float dt, int lerpType);
-	
+
 	//----
 	float fallThru;
 	float fallThruSpeed;
@@ -188,7 +187,7 @@ public:
 	SkeletalSprite *s;
 
 	SkeletalKeyframe *lastNewKey;
-	//int index;
+
 	float timer;
 	int loop;
 	Animation blendAnimation;
@@ -201,13 +200,13 @@ public:
 	int currentAnimation;
 	bool animating;
 
-	
+
 };
 
 class SkeletalSprite : public RenderObject
 {
 public:
-	
+
 	SkeletalSprite();
 	void loadSkeletal(const std::string &fn);
 	bool saveSkeletal(const std::string &fn);
@@ -216,9 +215,9 @@ public:
 	Bone *getBoneByIdx(int idx);
 	Bone *getBoneByName(const std::string &name);
 	void animate(const std::string &animation, int loop = 0, int layer=0);
-	
 
-	
+
+
 	void setTime(float time, int layer=0);
 
 	void updateBones();
@@ -230,12 +229,12 @@ public:
 
 	bool isAnimating(int layer=0);
 
-	void setTimeMultiplier(float t, int layer=0);	
+	void setTimeMultiplier(float t, int layer=0);
 
 	Bone* getSelectedBone(bool mouseBased = true);
 	Animation *getCurrentAnimation(int layer=0);
 
-	
+
 	void nextAnimation();
 	void prevAnimation();
 	void lastAnimation();
@@ -244,9 +243,9 @@ public:
 
 
 	void setFreeze(bool f);
-	
-	
-	
+
+
+
 	Animation *getAnimation(const std::string& anim);
 
 	std::vector<Animation> animations;
@@ -270,7 +269,7 @@ public:
 
 	static std::string animationPath, skinPath, secondaryAnimationPath;
 	static void clearCache();
-	
+
 protected:
 	bool frozen;
 	RenderObject *animKeyNotify;

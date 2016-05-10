@@ -69,15 +69,15 @@ struct ShotData
 	Vector gravity;
 
 	void bankLoad(const std::string &file, const std::string &path);
-	
+
 };
 
 class Shot : public Quad, public Segmented
 {
 public:
-	//Shot(DamageType damageType, Entity *firer, Vector pos, Entity *target, std::string tex="", float homingness=1000, int maxSpeed=400, int segments=10, float segMin=0.1, float segMax=5, float damage = 1, float lifeTime = 0);
+
 	Shot();
-	//void destroy();
+
 	void reflectFromEntity(Entity *e);
 	void setParticleEffect(const std::string &particleEffect);
 	typedef std::vector<Shot*> Shots;
@@ -95,7 +95,7 @@ public:
 
 	void fire(bool playSfx = true);
 	void hitEntity(Entity *e, Bone *b);
-	
+
 	void noSegs();
 
 	void rotateToVec(Vector addVec, float time, int offsetAngle);
@@ -156,7 +156,7 @@ public:
 	Beam(Vector pos, float angle);
 	typedef std::list<Beam*> Beams;
 	static Beams beams;
-	//static void targetDied(Entity *t);
+
 	static void killAllBeams();
 
 	float angle;

@@ -99,13 +99,13 @@ struct PlayStats
 	// maybe
 	int timesPlayed;			// # of times the game started
 	int timesPoisoned;			// # of times the poison applied gets called on Naija
-	
+
 	int timesUsedTurtle;		// # of times trans turtle is used (how to check?)
 	int timesRideSeahorse;		// # of times ride seahorse
 	int timesLeptOutOfWater;	// # of times Naija goes not underwater after being underwater
 	int timesBackflipped;		// # of times Naija does a backflip, check in Avatar.cpp
 	float highestDive;			// ...?
-	
+
 	int creaturesConsumed;		// # of times swallow creatures, check in Avatar.cpp
 	int sealoafsConsumed;		// # of sealoafs eaten
 	int creaturesKilled;		//
