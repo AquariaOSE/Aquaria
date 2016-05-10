@@ -13,53 +13,11 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 See the GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program; if not, write to the Free Software
-Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
 #include "ActionMapper.h"
 #include "Core.h"
 
-//bool ActionMapper::isActing(const std::string &action)
-//{
-//	ButtonList::iterator i = actionMap[action].begin();
-//	for (; i != actionMap[action].end(); i++)
-//	{
-//		if (keyDownMap[(*i)])
-//			return true;
-//	}
-//	return false;
-// //return keyDownMap[actionMap[action]];
-//}
-
-//bool ActionMapper::isActing(int actionID)
-//{
-//	std::string action = "A";
-//	action[0] = char(actionID);
-//	ButtonList::iterator i = actionMap[action].begin();
-//	for (; i != actionMap[action].end(); i++)
-//	{
-//		if (keyDownMap[(*i)])
-//			return true;
-//	}
-//	return false;
-// //return keyDownMap[actionMap[action]];
-//}
-
-//void ActionMapper::addAction (const std::string &action, int k)
-//{
-//	actionMap[action].push_back(k);
-//	keyDownMap[k] = core->getKeyState(k);
-//}
-//
-//void ActionMapper::addAction (int actionID, int k)
-//{
-//	std::string action = "A";
-//	action[0] = char(actionID);
-//	actionMap[action].push_back(k);
-//	keyDownMap[k] = core->getKeyState(k);
-//}
 
 ActionMapper::ActionMapper()
 {
@@ -104,11 +62,7 @@ void ActionMapper::addAction (int actionID, int k)
 
 	if (ad)
 	{
-		/*
-		std::ostringstream os;
-		os << "Action ID [" << actionID << "] already exists!";
-		debugLog(os.str());
-		*/
+
 	}
 	else
 	{
@@ -166,55 +120,7 @@ void ActionMapper::clearCreatedEvents()
 	createdEvents.clear();
 }
 
-/*
-void ActionMapper::addMouseButtonAction (const std::string &action, int b)
-{
-	actionMap[action].push_back (0-b);
-	keyDownMap[0-b] = mouse_b & b;
-}
 
-void ActionMapper::addJoystickButtonAction (const std::string &action, int b)
-{
-	if (num_joysticks)
-	{
-		actionMap[action].push_back (b+9000);
-		keyDownMap[b+9000] = joy[0].button[b].b;
-	}
-}
-
-int ActionMapper::getDPad(int dir)
-{
-//	for (int = 0; i < joy[0].num_sticks; i++)
-	//int s = 4;
-	int s = 0;
-	switch (dir)
-	{
-	case 0:
-		return (joy[0].stick[s].axis[0].d1);
-	break;
-	case 1:
-		return (joy[0].stick[s].axis[0].d2);
-	break;
-	case 2:
-		return (joy[0].stick[s].axis[1].d1);
-	break;
-	case 3:
-		return (joy[0].stick[s].axis[1].d2);
-	break;
-	}
-	return 0;
-}
-
-
-void ActionMapper::addJoystickDPadAction (const std::string &action, int dir)
-{
-	if (num_joysticks)
-	{
-		actionMap[action].push_back (dir+8000);
-		keyDownMap[dir+8000] = getDPad(dir);
-	}
-}
-*/
 
 void ActionMapper::enableInput()
 {
@@ -235,7 +141,7 @@ void ActionMapper::removeAction(int actionID)
 		for (; i != ad->buttonList.end(); i++)
 		{
 			int k = (*i);
-			cleared = true; // it's a hack, but it works	
+			cleared = true; // it's a hack, but it works
 			keyDownMap.erase(k);
 		}
 		for (ActionDataSet::iterator i = actionData.begin(); i != actionData.end();)
@@ -248,19 +154,7 @@ void ActionMapper::removeAction(int actionID)
 	}
 }
 
-//int ActionMapper::getKeyForAction (std::string action)
-//{
-//	ButtonList b = actionMap[action];
-//	if (!b.empty())
-//	{
-//		return b[0];
-//	}
-//	else
-//	{
-//		debugLog ("no action: " +action);
-//		return -1;
-//	}
-//}
+
 
 bool ActionMapper::pollAction(int actionID)
 {
@@ -272,7 +166,7 @@ bool ActionMapper::pollAction(int actionID)
 		ButtonList *blist = &ad->buttonList;
 		ButtonList::iterator j;
 		j = blist->begin();
-		
+
 		for (; j != blist->end(); j++)
 		{
 			if (getKeyState((*j)))
@@ -316,11 +210,11 @@ bool ActionMapper::getKeyState(int k)
 	else if (k == MOUSE_BUTTON_MIDDLE)
 	{
 		keyState = (core->mouse.buttons.middle == DOWN);
-	}			
+	}
 	else if (k >= JOY1_BUTTON_0 && k <= JOY1_BUTTON_16)
 	{
 		int v = k - JOY1_BUTTON_0;
-		
+
 		if (core->joystickEnabled)
 			keyState = core->joystick.buttons[v];
 	}
@@ -369,13 +263,10 @@ bool ActionMapper::getKeyState(int k)
 }
 
 void ActionMapper::onUpdate (float dt)
-{	
+{
 	if (inUpdate) return;
 	inUpdate = true;
-	/*
-	if (num_joysticks)
-		poll_joystick();
-	*/
+
 	if (cleared) cleared = false;
 	ActionDataSet::iterator i;
 	KeyDownMap oldKeyDownMap = keyDownMap;
@@ -392,7 +283,7 @@ void ActionMapper::onUpdate (float dt)
 			keyState = getKeyState(k);
 
 			if (keyState != oldKeyDownMap[k])
-			{				
+			{
 				keyDownMap[k] = keyState;
 				if (inputEnabled)
 				{
@@ -417,7 +308,7 @@ void ActionMapper::onUpdate (float dt)
 
 out:
 	inUpdate = false;
-//		keyDownMap[k] = ;
+
 }
 
 void ActionMapper::clearActions()

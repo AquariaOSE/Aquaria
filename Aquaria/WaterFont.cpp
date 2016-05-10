@@ -50,31 +50,30 @@ void spawnWaterFontParticle(RenderObject *me, Vector position, int size, float l
 	q->color.data->path.addPathNode(Vector(0,0,1),1.0);
 	q->color.startPath(t);
 
-	//q->color = Vector(1, 0.5, 0);
+
 	q->alpha.ensureData();
 	q->alpha.data->path.addPathNode(0, 0);
 	q->alpha.data->path.addPathNode(0.2, 0.5);
 	q->alpha.data->path.addPathNode(0, 1.0);
 	q->alpha.startPath(t);
 	q->velocity = Vector(sinf(angle)*spd,cosf(angle)*spd);
-	//q->velocity += vel;
+
 	q->setLife(1.0);
 	q->setDecayRate(1.0f/t);
 	q->rotation.z = rand()%360;
 	q->setWidthHeight(size, size);
 	q->position = position;
 	q->cull = false;
-	//q->influenced = 16;
+
 
 	dsq->game->addRenderObject(q, layer);
-	//me->addChild(q);
-	//me->renderBeforeParent = false;
-	//me->parentManagedPointer = true;
-	//q->update(interval);
+
+
+
 }
 
 
-//const float interval = 0.012;
+
 const float interval = 0.08;
 void WaterFont::onUpdate(float dt)
 {
@@ -89,11 +88,7 @@ void WaterFont::onUpdate(float dt)
 		for (int i = 0; i < dist; i++)
 		{
 			Vector p(rand()%(int(ep.x-sp.x))+sp.x, rand()%(int(ep.y-sp.y))+sp.y);
-			/*
-			std::ostringstream os;
-			os << "p(" << p.x << ", " << p.y << ")";
-			debugLog(os.str());
-			*/
+
 			Vector d(rand()%200-100,rand()%200-100);
 			d *= 0.01f;
 			spawnWaterFontParticle(this, p, 64, 1.2, LR_PARTICLES);

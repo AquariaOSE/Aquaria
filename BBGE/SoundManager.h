@@ -27,36 +27,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <set>
 #include "Vector.h"
 
-// if using SDL_MIXER
-//const int BBGE_AUDIO_NOCHANNEL		= -1;
-
-
-
 #define BBGE_BUILD_FMODEX
 
-//#define BBGE_BUILD_BASS20
-//#define BBGE_BUILD_SDLMIXER
-//#define BBGE_BUILD_IRRKLANG
-//#define BBGE_BUILD_OPENALOGG
-
-
-
-#ifdef BBGE_BUILD_OPENALOGG
-	const int BBGE_AUDIO_NOCHANNEL		= -1;
-#elif defined(BBGE_BUILD_FMODEX)
-	const int BBGE_AUDIO_NOCHANNEL		= 0;
-#endif
-
+const int BBGE_AUDIO_NOCHANNEL		= 0;
 const int BBGE_AUDIO_LOOPINFINITE	= -1;
 const int BBGE_AUDIO_LOOPNONE		= 0;
 
 namespace SoundCore
 {
-#if defined(BBGE_BUILD_OPENALOGG)
-	//struct Buffer;
-#elif defined(BBGE_BUILD_FMODEX)
 	typedef void *Buffer;
-#endif
 }
 
 enum SoundEffectType
@@ -204,19 +183,6 @@ public:
 	void pause();
 	void resume();
 
-	/*
-	void setMusVol(float v, float t=0);
-	void setSfxVol(float v, float t=0);
-	void setVoxVol(float v, float t=0);
-
-	void setMusMul(float v, float t=0);
-	void setSfxMul(float v, float t=0);
-	void setVoxMul(float v, float t=0);
-
-	float getTotalSfxVol();
-	float getTotalMusVol();
-	float getTotalVoxVol();
-	*/
 
 
 	float getVoiceTime();
@@ -277,8 +243,6 @@ private:
 
 
 extern SoundManager *sound;
-
-
 
 
 

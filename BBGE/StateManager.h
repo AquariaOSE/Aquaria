@@ -55,7 +55,7 @@ public:
 	StateObject();
 	virtual ~StateObject();
 	void action(int id, int state);
-	
+
 	virtual void applyState(){}
 	virtual void removeState();
 	virtual void update(float dt);
@@ -75,19 +75,19 @@ public:
 	StateManager();
 	~StateManager();
 
-	
+
 	void clearStateObjects();
 
 	virtual void applyState (const std::string &state) {}
 	virtual void removeState (std::string state);
 
-	
+
 	void enqueueJumpState (const std::string &state, bool force = false, bool staged = false);
 	bool isStateJumpPending();
 	void pushState(const std::string &state);
 	void popState();
 	void popAllStates();
-	
+
 
 	StateData *getState(const std::string &state);
 	StateData *getTopStateData();
@@ -120,7 +120,7 @@ protected:
 	typedef std::map<std::string, StateObject*> StateObjectMap;
 	StateObjectMap stateObjects;
 
-	
+
 private:
 	void jumpState (const std::string &state); // call enqueueJumpState
 };

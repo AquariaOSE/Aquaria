@@ -39,28 +39,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #ifdef BBGE_BUILD_WINDOWS
 
-	//#include "iprof/prof.h"
-	//#define BBGE_PROF(x) Prof(x)
+
 
 	#define BBGE_PROF(x)
 
-/*
-	//#ifdef BBGE_BUILD_DIRECTX
-	#define DIRECTINPUT_VERSION 0x0800
-	#include <dinput.h>
-	//#endif
-*/
+
 
 #else
 	#define BBGE_PROF(x)
 
 #endif
 
-#ifdef BBGE_BUILD_GLFW
-	#include <glfw.h>
-	#include "glext.h"
-	//#include "glext.h"
-#endif
 
 
 	#include "SDL.h"
@@ -105,7 +94,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <queue>
 #include <map>
 #include <stack>
-//#include <typeinfo.h>
+
 
 #include "Rect.h"
 
@@ -204,18 +193,7 @@ Vector colorRGB(int r, int g, int b);
 
 GLuint generateEmptyTexture(int res);
 
-//void pForEachFile(std::string path, std::string type, void callback(const std::string &filename, int param), int param);
 
-/*
-void pfread(void *buffer, PHYSFS_uint32 size, PHYSFS_uint32 objs, PHYSFS_file *handle);
-void pfseek(PHYSFS_file *handle,PHYSFS_uint64 byte,int origin);
-void pfclose(PHYSFS_file *handle);
-
-
-PHYSFS_file *openRead(const std::string &f);
-std::string pLoadStream(const std::string &filename);
-void pSaveStream(const std::string &filename, std::ostringstream &os);
-*/
 
 void drawCircle(float radius, int steps=1);
 bool isVectorInRect(const Vector &vec, const Vector &coord1, const Vector &coord2);
@@ -253,8 +231,7 @@ enum LerpType
 
 float lerp(const float &v1, const float &v2, float dt, int lerpType);
 
-//int packFile(const std::string &sourcef, const std::string &destf, int level);
-//int unpackFile(const std::string &sourcef, const std::string &destf);
+
 
 void openURL(const std::string &url);
 

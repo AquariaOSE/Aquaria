@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 AquariaComboBox::AquariaComboBox(Vector textscale) : RenderObject()
 {
-	//Quad *bar, *window, *scrollBtnUp, *scrollBtnDown, *scrollBar;
+
 	bar = new Quad("gui/combo-drop", Vector(0,0));
 	addChild(bar, PM_POINTER);
 
@@ -120,7 +120,7 @@ void AquariaComboBox::onUpdate(float dt)
 	if (alpha.x < 1)
 		return;
 
-	//window->alpha.interpolateTo(1, 0.2);
+
 
 	if (enqueuedSelectItem != -1)
 	{
@@ -375,7 +375,7 @@ void AquariaComboBoxItem::onUpdate(float dt)
 	{
 		color = selectedColor;
 		label->color = selectedColor;
-		//alphaMod = 1;
+
 		if (!mb && core->mouse.buttons.left)
 		{
 			mb = true;
@@ -396,6 +396,6 @@ void AquariaComboBoxItem::onUpdate(float dt)
 		label->color = unselectedColor;
 
 		mb = false;
-		//alphaMod = 0.5;
+
 	}
 }

@@ -345,7 +345,7 @@ void Shot::loadBankShot(const std::string &ident, Shot *setter)
 	{
 		std::string id = ident;
 		stringToLower(id);
-		//setter->shotData = &shotBank[id];
+
 		setter->applyShotData(&shotBank[id]);
 	}
 }
@@ -470,7 +470,7 @@ void Shot::onHitWall()
 		if (!shotData->spawnEntity.empty())
 		{
 			dsq->game->createEntity(shotData->spawnEntity, 0, position, 0, false, "", ET_ENEMY, true);
-				//(shotData->spawnEntity, 0, position, 0, false, "");
+
 			if (shotData->spawnEntity == "NatureFormFlowers")
 			{
 				dsq->game->registerSporeDrop(position, 0);
@@ -518,9 +518,9 @@ void Shot::reflectFromEntity(Entity *e)
 	{
 		firer = e;
 		target = oldFirer;
-		//int d = (int)dt;
-		//d += DT_AVATAR;oll
-		//damageType = DamageType(d);
+
+
+
 	}
 }
 
@@ -542,11 +542,7 @@ void Shot::targetDied(Entity *target)
 	}
 
 
-	/*
-	std::ostringstream os;
-	os << "# of shots in list: " << c;
-	debugLog(os.str());
-	*/
+
 }
 
 bool Shot::isHitEnts() const
@@ -585,13 +581,13 @@ void Shot::hitEntity(Entity *e, Bone *b)
 
 			if (damageType == DT_AVATAR_BITE)
 			{
-				//debugLog("Shot::hitEntity bittenEntities.push_back");
+
 				dsq->game->avatar->bittenEntities.push_back(e);
 			}
 
 			bool damaged = e->damage(d);
 
-			// doesn't have anything to do with effectTime
+
 			if (shotData)
 			{
 				if (!damaged && checkDamageTarget && !shotData->alwaysDoHitEffects)
@@ -611,11 +607,11 @@ void Shot::hitEntity(Entity *e, Bone *b)
 			}
 
 
-			//debugLog("Shot hit enemy: " + e->name);
+
 		}
 		else
 		{
-			//debugLog("Shot hit 0 enemy");
+
 		}
 
 		if (doEffects)
@@ -640,7 +636,7 @@ void Shot::hitEntity(Entity *e, Bone *b)
 		}
 	}
 
-	//d.bone = c.bone;
+
 }
 
 void Shot::noSegs()
@@ -679,11 +675,7 @@ void Shot::setAimVector(const Vector &aim)
 	{
 		velocity.setLength2D(shotData->maxSpeed);
 	}
-	/*
-	std::ostringstream os;
-	os << "setting aim vector(" << aim.x << ", " << aim.y << ") to vel(" << velocity.x << ", " << velocity.y << ")";
-	debugLog(os.str());
-	*/
+
 }
 
 void Shot::setTarget(Entity *target)
@@ -737,7 +729,7 @@ void Shot::onUpdate(float dt)
 	{
 		if (velocity.isZero())
 		{
-			//velocity = Vector(rand()%100-50, rand()%100-50);
+
 		}
 		else if (velocity.isLength2DIn(maxSpeed*0.75f))
 		{
@@ -745,18 +737,7 @@ void Shot::onUpdate(float dt)
 		}
 	}
 
-	/*
-	if (!gravity.isZero())
-	{
-		velocity += shotData->gravity * dt;
-	}
-	*/
 
-	/*
-	std::ostringstream os;
-	os << "shotVel(" << velocity.x << ", " << velocity.y << ")";
-	debugLog(os.str());
-	*/
 
 	homingness += shotData->homingIncr*dt;
 	if (shotData->homingMax != 0 && homingness > shotData->homingMax)
@@ -779,7 +760,7 @@ void Shot::onUpdate(float dt)
 		add.setLength2D(shotData->rotIncr);
 		velocity += add * dt;
 	}
-	//emitter.update(dt);
+
 	if (emitter)
 	{
 		emitter->position = position + offset;
@@ -814,7 +795,7 @@ void Shot::onUpdate(float dt)
 				return;
 			}
 		}
-		//TileVector t(position);
+
 		Vector diff;
 		if (target)
 			diff = target->getTargetPoint(targetPt) - this->position;
@@ -846,13 +827,13 @@ void Shot::onUpdate(float dt)
 
 						if (!N.isZero())
 						{
-							//2*(-I dot N)*N + I
+
 							velocity = 2*(-I.dot(N))*N + I;
 							velocity *= len;
 						}
 						break;
 					}
-					// fall through
+
 				}
 				default:
 				{

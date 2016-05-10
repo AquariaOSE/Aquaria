@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include "Game.h"
 #include "Avatar.h"
-//const float key = 0.1;
+
 Demo::Demo()
 {
 	time = 0;
@@ -38,11 +38,11 @@ void Demo::toggleRecord(bool on)
 		mode = DEMOMODE_RECORD;
 		time = 0;
 		timeDiff = 0;
-		frame = 0;	
+		frame = 0;
 	}
 	else
 	{
-		mode = DEMOMODE_NONE;		
+		mode = DEMOMODE_NONE;
 	}
 }
 
@@ -54,7 +54,7 @@ void Demo::togglePlayback(bool on)
 		mode = DEMOMODE_PLAYBACK;
 		time = 0;
 		timeDiff = 0;
-		frame = 0;		
+		frame = 0;
 	}
 	else
 	{
@@ -74,25 +74,11 @@ void Demo::save(const std::string &name)
 {
 	togglePlayback(false);
 	toggleRecord(false);
-	
+
 	std::string filename = "" + name + ".demo";
 
-	/*
-	XMLDocument doc;
 
-	// UNFINISHED
-	for (int i = 0; i < frames.size(); i++)
-	{
-		//DemoFrame *frame = &frames[i];
-		XMLElement *xmlDemoFrame = doc.NewElement("DemoFrame");
-		std::ostringstream os;
-		//os << frame->avatarPos.x << " " << frame->avatarPos.y << " " << frame->mouse;
-		//xmlDemoFrame->SetAttribute("a", os.str().c_str());
-		doc.InsertEndChild(xmlDemoFrame);
-	}
 
-	doc.SaveFile(filename.c_str());
-	*/
 }
 
 void Demo::load(const std::string &name)
@@ -103,10 +89,8 @@ void Demo::load(const std::string &name)
 	// UNFINISHED
 	std::string filename = "" + name + ".demo";
 
-	//XMLDocument doc;
-	//doc.LoadFile(filename.c_str());
 
-	//doc.FirstChildElement("");
+
 }
 
 void Demo::clearRecordedFrames()
@@ -124,7 +108,7 @@ void Demo::update(float dt)
 	if (core->getNestedMains() > 1) return;
 
 	if (mode == DEMOMODE_RECORD)
-	{		
+	{
 		DemoFrame f;
 		f.avatarPos = dsq->game->avatar->position;
 		f.vel = dsq->game->avatar->vel;
@@ -136,13 +120,7 @@ void Demo::update(float dt)
 
 		frames.push_back(f);
 
-		/*
-		timeDiff += dt;
-		if (timeDiff > key)
-		{
-			timeDiff -= key;
-		}
-		*/
+
 		time += dt;
 
 		if (getQuitKey())
@@ -153,18 +131,18 @@ void Demo::update(float dt)
 	}
 	else if (mode == DEMOMODE_PLAYBACK)
 	{
-		//core->updateMouse = false;
+
 		while (frame < frames.size())
 		{
 			DemoFrame *f = &frames[frame];
 			if (f->t <= time) {
 				// temporarily deactivate for seahorse footage
-				
+
 				dsq->game->avatar->vel = f->vel;
 				dsq->game->avatar->vel2 = f->vel2;
 				dsq->game->avatar->rotation.z = f->rot;
 				dsq->game->avatar->position = f->avatarPos;
-				
+
 
 				core->mouse = f->mouse;
 
@@ -174,18 +152,18 @@ void Demo::update(float dt)
 			{
 				break;
 			}
-			
-			//
+
+
 		}
 		time += dt;
-		//core->updateMouse = true;
 
-		if (getQuitKey() || (!frames.empty() && frame >= frames.size())) {	
+
+		if (getQuitKey() || (!frames.empty() && frame >= frames.size())) {
 			togglePlayback(false);
 			dsq->centerMessage(dsq->continuity.stringBank.get(2011));
 		}
 
-		
+
 	}
 }
 

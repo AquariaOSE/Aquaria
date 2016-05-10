@@ -50,7 +50,7 @@ void Light::apply()
 		glLightfv(t, GL_AMBIENT, ambient.getv4(v, 1));
 		glLightfv(t, GL_DIFFUSE, diffuse.getv4(v, 1));
 		glLightfv(t, GL_POSITION, position.getv4(v, 0));
-		
+
 	}
 	else
 	{

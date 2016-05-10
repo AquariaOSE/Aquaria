@@ -58,7 +58,7 @@ void PathFinding::forceMinimumPath(VectorPath &path, const Vector &start, const 
 {
 	if (path.getNumPathNodes() <= 2)
 	{
-		//debugLog(" Path is <= 2 nodes... setting up simple path");
+
 		path.clear();
 		path.addPathNode(start, 0);
 		path.addPathNode(dest, 1);
@@ -105,7 +105,7 @@ void PathFinding::molestPath(VectorPath &path)
 			}
 		}
 	}
-	
+
 	// use wall normal to push out node a bit
 	std::vector<Vector> newNormals;
 	newNormals.resize(normals.size());

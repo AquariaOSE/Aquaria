@@ -51,7 +51,7 @@ public:
 		this->timeMultiplier = timeMultiplier;
 	}
 	float timeMultiplier;
-	//void go();
+
 	void update(float dt, Vector ** drawGrid, int xDivs, int yDivs);
 
 	float waveLength;

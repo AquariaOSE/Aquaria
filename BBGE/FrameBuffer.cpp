@@ -83,7 +83,7 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 	std::ostringstream oss;
 	oss << "Vendor: [" << glGetString(GL_VENDOR) << "] Renderer: [" << glGetString(GL_RENDERER) << "]";
 	debugLog(oss.str());
-	
+
 	std::string renderer = (const char*)glGetString(GL_RENDERER);
 	if (renderer.find("Intel GMA 950") != std::string::npos)
 	{
@@ -92,7 +92,7 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 	}
 
 #endif
-	
+
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
 	_w = width;
@@ -113,10 +113,7 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 	_fitToScreen = fitToScreen;
 	if (width == 0 || height == 0)
 		return false;
-	/*
-	if (width > height)
-		height = width;
-	*/
+
 
 	w=width;
 	h=height;
@@ -213,7 +210,7 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-	
+
 	debugLog("Done");
 	inited = true;
 	enabled = true;
@@ -308,7 +305,7 @@ void FrameBuffer::startCapture()
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, g_frameBuffer );
-	//glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, g_depthRenderBuffer );
+
 	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, g_dynamicTextureID, 0 );
 	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, g_depthRenderBuffer );
 

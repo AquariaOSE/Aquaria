@@ -33,9 +33,9 @@ void refreshBaseModPath()
 Mod::Mod()
 {
 	clear();
-	
+
 	enqueueModStart = 0;
-	
+
 	shuttingDown = false;
 }
 
@@ -92,12 +92,12 @@ bool Mod::loadModXML(XMLDocument *d, std::string modName)
 const std::string& Mod::getBaseModPath() const
 {
 	refreshBaseModPath();
-	
+
 	return baseModPath;
 }
 
 void Mod::load(const std::string &p)
-{	
+{
 	clear();
 
 	refreshBaseModPath();
@@ -108,10 +108,10 @@ void Mod::load(const std::string &p)
 	setLocalisationModPath(path);
 
 	setActive(true);
-	
+
 	XMLDocument d;
 	loadModXML(&d, p);
-	
+
 	XMLElement *mod = d.FirstChildElement("AquariaMod");
 	if (mod)
 	{
@@ -204,7 +204,7 @@ void Mod::start()
 	core->main(t);
 
 	core->sound->stopMusic();
-	
+
 	enqueueModStart = 1;
 	dsq->recentSaveSlot = -1;
 }
@@ -296,7 +296,7 @@ void Mod::update(float dt)
 	if (enqueueModStart)
 	{
 		enqueueModStart = 0;
-		
+
 		applyStart();
 	}
 }

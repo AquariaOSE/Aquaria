@@ -35,7 +35,7 @@ RoundedRect::RoundedRect() : RenderObject()
 	height = 100;
 
 	radius = 20;
-	
+
 	cull = false;
 
 	canMove = false;
@@ -91,21 +91,21 @@ void RoundedRect::onUpdate(float dt)
 		{
 			if (moving == this)
 			{
-				// do stuff
+
 
 				moving = 0;
 			}
-			
+
 		}
 	}
 }
 
 void RoundedRect::onRender()
 {
-	//glBindTexture(GL_TEXTURE_2D, 0);
+
 	int w2 = width/2;
 	int h2 = height/2;
-	//glDisable(GL_CULL_FACE);
+
 	float iter = 0.1f;
 
 	glBegin(GL_QUADS);
@@ -146,20 +146,20 @@ void RoundedRect::onRender()
 			glVertex3f(-w2 + x1, h2 + 0, 0);
 		}
 	}
-	
+
 	//middle, top, btm
 	glVertex3f(-w2, -h2 - radius, 0);
 	glVertex3f(w2, -h2 - radius, 0);
 	glVertex3f(w2, h2 + radius, 0);
 	glVertex3f(-w2, h2 + radius, 0);
 
-	// left 
+	// left
 	glVertex3f(-w2 - radius, -h2, 0);
 	glVertex3f(-w2, -h2, 0);
 	glVertex3f(-w2, h2, 0);
 	glVertex3f(-w2 - radius, h2, 0);
 
-	// right 
+	// right
 	glVertex3f(w2 + radius, -h2, 0);
 	glVertex3f(w2, -h2, 0);
 	glVertex3f(w2, h2, 0);
@@ -167,7 +167,7 @@ void RoundedRect::onRender()
 
 	glEnd();
 
-	//glEnable(GL_CULL_FACE);
+
 }
 
 void RoundedRect::show()
@@ -195,7 +195,7 @@ void RoundedRect::hide()
 
 RoundButton::RoundButton(const std::string &labelText, TTFFont *font) : RenderObject()
 {
-	//label = new
+
 	label = new TTFText(font);
 	label->setAlign(ALIGN_CENTER);
 	label->offset += Vector(0, 3);
@@ -214,7 +214,7 @@ void RoundButton::setWidthHeight(int w, int h, int radius)
 	width = w;
 	height = h;
 }
-	
+
 void RoundButton::onUpdate(float dt)
 {
 	if (noNested && core->isNested()) return;

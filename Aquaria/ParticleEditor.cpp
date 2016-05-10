@@ -46,8 +46,8 @@ void ParticleEditor::applyState()
 
 	addAction(MakeFunctionEvent(ParticleEditor, load), KEY_F1, 0);
 	addAction(MakeFunctionEvent(ParticleEditor, reload), KEY_F5, 0);
-	//addAction(MakeFunctionEvent(ParticleEditor, start), KEY_F5, 0);
-	//addAction(MakeFunctionEvent(ParticleEditor, stop), KEY_F6, 0);
+
+
 	addAction(MakeFunctionEvent(ParticleEditor, start), MOUSE_BUTTON_LEFT, 0);
 	addAction(MakeFunctionEvent(ParticleEditor, stop), MOUSE_BUTTON_RIGHT, 0);
 
@@ -64,8 +64,8 @@ void ParticleEditor::applyState()
 	core->cameraPos = Vector(0,0);
 
 	emitter = new ParticleEffect;
-	//emitter->followCamera = 1;
-	//emitter->position = Vector(400,300);
+
+
 	addRenderObject(emitter, LR_ENTITIES);
 
 	dsq->overlay->alpha.interpolateTo(0, 0.5);

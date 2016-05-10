@@ -81,13 +81,7 @@ Bone::Bone() : Quad()
 	selectable = true;
 	originalRenderPass = 0;
 }
-/*
-void Bone::createStrip(bool vert, int num)
-{
-	Quad::createStrip(vert, num);
-	changeStrip.resize(num);
-}
-*/
+
 
 void Bone::destroy()
 {
@@ -143,7 +137,7 @@ Quad* Bone::addFrame(const std::string &gfx)
 
 void Bone::showFrame(int idx)
 {
-	//float t = 0.1;
+
 	int c = 0;
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
@@ -181,11 +175,7 @@ void Bone::showFrame(int idx)
 
 void Bone::setAnimated(int b)
 {
-	/*
-	std::ostringstream os;
-	os << "setting animated: " << b;
-	debugLog(os.str());
-	*/
+
 
 	animated = b;
 }
@@ -200,10 +190,7 @@ void Bone::setSegmentProps(int minDist, int maxDist, bool reverse)
 
 void Bone::updateSegment(Bone *b, const Vector &diff)
 {
-	/*
-	int maxDist, minDist;
-	maxDist = minDist = 128;
-	*/
+
 
 	float angle = -1;
 	if (diff.getSquaredLength2D() > sqr(maxDist))
@@ -215,21 +202,17 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
 	}
-	else if (diff.getSquaredLength2D() > sqr(minDist)) // 6.3
+	else if (diff.getSquaredLength2D() > sqr(minDist))
 	{
 		b->position += diff*0.05f;
 
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
 
-		//b->rotation.interpolateTo(Vector(0,0,angle),0.2);
+
 	}
 	if (angle != -1)
 	{
-		/*
-		std::ostringstream os;
-		os << "rotz: " << b->rotation.z << " angle: " << angle;
-		debugLog(os.str());
-		*/
+
 
 		if (b->rotation.z >= 270 && angle < 90)
 		{
@@ -246,35 +229,15 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 
 		b->rotation.interpolateTo(Vector(0,0,angle),0.2);
 	}
-	/*
-	else
-	{
-		float angle;
-		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
-		b->rotation.interpolateTo(Vector(0,0,angle),0);
-	}
-	*/
+
 }
 
 void Bone::updateSegments()
 {
 	if (segmentChain>0 && !segments.empty())
 	{
-		//bool reverse = true;
 
-		/*
-		std::vector<Bone*> segments;
-		Bone *child = (Bone*)(this->children.front());
-		while (child)
-		{
-			segments.push_back(child);
 
-			if (child->children.empty())
-				child = 0;
-			else
-				child = (Bone*)(child->children.front());
-		}
-		*/
 
 		if (!reverse)
 		{
@@ -336,25 +299,13 @@ bool BoneCommand::parse(Bone *b, SimpleIStringStream &is)
 	{
 		command = AC_PRT_START;
 		is >> slot;
-		/*
-		Emitter *e = b->emitters[slot];
-		if (e)
-		{
-			e->start();
-		}
-		*/
+
 	}
 	else if (type=="AC_PRT_STOP")
 	{
 		command = AC_PRT_STOP;
 		is >> slot;
-		/*
-		Emitter *e = b->emitters[slot];
-		if (e)
-		{
-			e->stop();
-		}
-		*/
+
 	}
 	else if (type=="AC_SEGS_START")
 		command = AC_SEGS_START;
@@ -379,7 +330,7 @@ bool BoneCommand::parse(Bone *b, SimpleIStringStream &is)
 
 void BoneCommand::run()
 {
-	//debugLog("running CMD");
+
 	switch(command)
 	{
 	case AC_SND_PLAY:
@@ -429,7 +380,7 @@ AnimationLayer::AnimationLayer()
 {
 	lastNewKey = 0;
 	fallThru= 0;
-	//index = -1;
+
 	timer = 0;
 	loop = 0;
 	enqueuedAnimationLoop = 0;
@@ -482,7 +433,7 @@ void AnimationLayer::playAnimation(int idx, int loop)
 		fallThruSpeed = 10;
 	}
 	timeMultiplier = 1;
-	//currentKeyframe = 0;
+
 	currentAnimation = idx;
 	timer = 0;
 	animating = true;
@@ -490,7 +441,7 @@ void AnimationLayer::playAnimation(int idx, int loop)
 	this->loop = loop;
 
 	animationLength = getCurrentAnimation()->getAnimationLength();
-	//doNextKeyframe();
+
 }
 
 void AnimationLayer::enqueueAnimation(const std::string& anim, int loop)
@@ -547,7 +498,7 @@ Animation* AnimationLayer::getCurrentAnimation()
 
 bool AnimationLayer::createTransitionAnimation(const std::string& anim, float time)
 {
-	//Animation *a = getCurrentAnimation();
+
 	Animation *to = s->getAnimation(anim);
 	if (!to) return false;
 	blendAnimation.keyframes.clear();
@@ -653,10 +604,7 @@ SkeletalKeyframe *Animation::getFirstKeyframe()
 
 void Animation::reorderKeyframes()
 {
-	/*
-	std::vector<SkeletalKeyframe> copy = this->keyframes;
-	keyframes.clear();
-	*/
+
 	for (int i = 0; i < keyframes.size(); i++)
 	{
 		for (int j = 0; j < keyframes.size()-1; j++)
@@ -747,7 +695,7 @@ SkeletalKeyframe *Animation::getNextKeyframe(float t)
 			break;
 		}
 	}
-//	kf++;
+
 	if (kf == -1)
 		return 0;
 	if (kf >= keyframes.size())
@@ -831,17 +779,12 @@ void SkeletalSprite::onUpdate(float dt)
 		}
 	}
 
-	/*
-	for (int i = 0; i < bones.size(); i++)
-	{
-		bones[i]->update(dt);
-	}
-	*/
+
 	for (i = 0; i < animLayers.size(); i++)
 	{
 		animLayers[i].update(dt);
 	}
-	//updateBones();
+
 }
 
 void AnimationLayer::update(float dt)
@@ -1004,14 +947,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			os << this->bones[i]->originalScale.x << " " << this->bones[i]->originalScale.y;
 			bone->SetAttribute("sz", os.str().c_str());
 		}
-		/*
-		if (this->bones[i]->color.x != 1 || this->bones[i]->color.y != 1 || this->bones[i]->color.z != 1)
-		{
-			std::ostringstream os;
-			os << this->bones[i]->color.x << " " << this->bones[i]->color.y << " " << this->bones[i]->color.z;
-			bone->SetAttribute("color", os.str().c_str());
-		}
-		*/
+
 
 		for (Children::iterator j = this->bones[i]->children.begin(); j != this->bones[i]->children.end(); j++)
 		{
@@ -1142,7 +1078,7 @@ Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std:
 	b->collideRadius = cr;
 	b->collidePosition = cp;
 	b->name = name;
-	//core->generateCollisionMask(b);
+
 	if (fh)
 		b->flipHorizontal();
 	if (fv)
@@ -1273,25 +1209,8 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 						b->flipVertical();
 				}
 
-				/*
-				if (boneXml->Attribute("a"))
-				{
-					float alpha = 0;
-					boneXml->Attribute("a", &alpha);
-					b->alpha = alpha;
-				}
-				*/
-				/*
-				// this is for SKINS
-				if (boneXml->Attribute("sz"))
-				{
-					float v1, v2;
-					SimpleIStringStream is(boneXml->Attribute("sz"));
-					is >> v1 >> v2;
-					b->scale = Vector(v1,v2);
-					b->originalScale = b->scale;
-				}
-				*/
+
+
 			}
 			else
 			{
@@ -1400,8 +1319,6 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				SimpleIStringStream is(bone->Attribute("cp"));
 				is >> cp.x >> cp.y;
 			}
-
-
 
 
 
@@ -1660,7 +1577,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 							for (int i = 0; i < b.strip.size(); i++)
 							{
 								is >> b.strip[i].x >> b.strip[i].y;
-								//b.strip[i].y *= 10;
+
 							}
 						}
 						if (key->Attribute("sz"))
@@ -1803,10 +1720,7 @@ void AnimationLayer::updateBones()
 	float t1 = key1->t;
 	float t2 = key2->t;
 
-	/*
-	if (key1 == key2)
-		stopAnimation();
-	*/
+
 
 	float diff = t2-t1;
 	float dt;
@@ -1914,16 +1828,7 @@ void SkeletalSprite::updateBones()
 			animLayers[i].updateBones();
 		}
 	}
-	/*
-	for (int i = animLayers.size()-1; i >= 0; i--)
-	{
-		if (animLayers[i].animating)
-		{
-			animLayers[i].updateBones();
-			return;
-		}
-	}
-	*/
+
 
 }
 

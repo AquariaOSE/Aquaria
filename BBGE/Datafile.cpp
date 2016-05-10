@@ -54,72 +54,18 @@ Texture* Datafile::get(int idx)
 	{
 		std::ostringstream os;
 		os << "index [" << idx << "] out of range - textureName[" << this->name << "]";
-		errorLog (os.str());		
+		errorLog (os.str());
 	}
 	return textures[idx];
 }
-/*
-void Datafile::load(const std::string &name, int w, int h)
-{
-	this->w = w;
-	this->h = h;
-	std::ifstream in;
-	in.open(name);
-	std::string read;
-	while (std::getline(in,read))
-	{
-		Texture *t = new Texture;
-		t->loadFromString(read);
-	}
-}
 
-void Datafile::save(const std::string &datafile)
-{
-	std::ofstream out;
-}
-*/
 
 
 void Datafile::loadFromAVI(const std::string &aviFile)
 {
-	/*
-	AviRender a(aviFile);
-
-	bool done = false;
-	float time = 0;
-	int counter = 20;
-	while (!done)
-	{
-//		GLuint id;
-		//a.bindFrameToTexture(time, &id);
-		//if (id)
-		{
-			Texture *texture = new Texture;
-			//a.setCurrentFrameAsTexture();
-			//texture->id = a.id;
-			a.bindFrameToTexture(time, texture->id, texture->imageData);
-
-			//texture->setID(id);
-			texture->width = 512;
-			texture->height = 512;
-			addTexture(texture);
-			//texture->addRef();
-			//frame ++;
-		}
 
 
-		counter --;
-		if (counter <= 0)
-			done = true;
 
-		time += 1;
-		//frame++;
-		
-	}
-	
-	//a.getCurrentFrameAsTexture();
-
-*/
 }
 
 void Datafile::loadTextureRange(const std::string &file, const std::string &type, int start, int end)
@@ -129,7 +75,7 @@ void Datafile::loadTextureRange(const std::string &file, const std::string &type
 
 		std::ostringstream num_os;
 		num_os << t;
-		
+
 		std::ostringstream os;
 		os << file;
 

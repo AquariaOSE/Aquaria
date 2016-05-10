@@ -40,7 +40,7 @@ protected:
 	int windowWidth, windowHeight;
 	void onRender();
 	float width, height;
-	//void onUpdate(float dt);
+
 
 	GLuint screen_texture;
 };

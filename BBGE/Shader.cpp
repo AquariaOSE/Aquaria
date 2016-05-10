@@ -66,10 +66,7 @@ void Shader::staticInit()
 		//This extension string indicates that the OpenGL Shading Language,
 		// version 1.00, is supported.
 		debugLog("GL_ARB_shading_language_100 extension was not found");
-		/*
-		MessageBox(NULL,"GL_ARB_shading_language_100 extension was not found",
-		"ERROR",MB_OK|MB_ICONEXCLAMATION);
-		*/
+
 		goto end;
 	}
 
@@ -102,8 +99,8 @@ void Shader::staticInit()
 		glUniform4ivARB           = (PFNGLUNIFORM4IVARBPROC)SDL_GL_GetProcAddress("glUniform4ivARB");
 
 		if( !glCreateProgramObjectARB || !glDeleteObjectARB || !glUseProgramObjectARB ||
-			!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB || 
-			!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB || 
+			!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB ||
+			!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB ||
 			!glLinkProgramARB || !glGetUniformLocationARB || !glGetActiveUniformARB ||
 			!glUniform1fvARB || !glUniform2fvARB || !glUniform3fvARB || !glUniform4fvARB ||
 			!glUniform1ivARB || !glUniform2ivARB || !glUniform3ivARB || !glUniform4ivARB)
@@ -399,7 +396,7 @@ void Shader::_queryUniforms()
 			memset(&u.data, 0, sizeof(u.data));
 		u.dirty = true;
 		u.type = type;
-		
+
 		if(add)
 			uniforms.push_back(u);
 		else

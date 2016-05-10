@@ -43,9 +43,9 @@ public:
 		return textures.size();
 	}
 protected:
-	//void load(const std::string &name);
+
 	std::string name;
-	
+
 
 	int w, h;
 

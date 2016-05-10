@@ -35,7 +35,7 @@ public:
 	void update(float dt);
 protected:
 
-	
+
 };
 
 #endif

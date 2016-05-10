@@ -35,7 +35,7 @@ OggStream::OggStream()
 void OggStream::open(std::string path)
 {
     int result;
-    
+
     oggFile = fopen(core->adjustFilenameCase(path.c_str()), "rb");
 
 	if (!oggFile)
@@ -45,11 +45,11 @@ void OggStream::open(std::string path)
 	}
 
     result = ov_open(oggFile, &oggStream, NULL, 0);
-	
+
 	if (result < 0)
     {
         fclose(oggFile);
-        
+
 		sound->error(std::string("Could not open Ogg stream. ") + errorString(result));
 		return;
     }
@@ -61,13 +61,13 @@ void OggStream::open(std::string path)
         format = AL_FORMAT_MONO16;
     else
         format = AL_FORMAT_STEREO16;
-        
-        
+
+
     alGenBuffers(2, buffers);
     check();
     alGenSources(1, &source);
     check();
-    
+
     alSource3f(source, AL_POSITION,        0.0, 0.0, 0.0);
     alSource3f(source, AL_VELOCITY,        0.0, 0.0, 0.0);
     alSource3f(source, AL_DIRECTION,       0.0, 0.0, 0.0);
@@ -110,41 +110,41 @@ void OggStream::display()
         << "bitrate window  " << vorbisInfo->bitrate_window  << "\n"
         << "\n"
         << "vendor " << vorbisComment->vendor << "\n";
-        
+
     for(int i = 0; i < vorbisComment->comments; i++)
 		std::cout << "   " << vorbisComment->user_comments[i] << "\n";
-        
+
 	std::cout << std::endl;
 }
 
 bool OggStream::play(bool l)
-{	
+{
 	BBGE_PROF(OggStream::play);
     if(isPlaying())
         return true;
-        
+
     if(!stream(buffers[0]))
         return false;
-        
+
     if(!stream(buffers[1]))
         return false;
 
 	loop=l;
-    
+
     alSourceQueueBuffers(source, 2, buffers);
     alSourcePlay(source);
-    
+
     return true;
 }
 
 bool OggStream::isPlaying()
 {
     ALenum state;
-    
+
 	if (source)
 	{
 		alGetSourcei(source, AL_SOURCE_STATE, &state);
-    
+
 		return (state == AL_PLAYING);
 	}
 
@@ -165,7 +165,7 @@ void OggStream::setGain(float gain)
 			case(AL_INVALID_VALUE):
 				sound->error("Invalid value for gain");
 			break;
-			default:			
+			default:
 				sound->error("Error trying to set gain!");
 			break;
 		}
@@ -189,7 +189,7 @@ bool OggStream::update()
     while(processed--)
     {
         ALuint buffer;
-        
+
         alSourceUnqueueBuffers(source, 1, &buffer);
         check();
 
@@ -217,13 +217,13 @@ bool OggStream::stream(ALuint buffer)
     while(size < BUFFER_SIZE)
     {
         result = ov_read(&oggStream, pcm + size, BUFFER_SIZE - size, 0, 2, 1, &section);
-    
+
         if(result > 0)
             size += result;
         else
 		{	if(result < 0) {} else break;	}
     }
-    
+
     if(size == 0)
 	{
 		if (loop)
@@ -238,7 +238,7 @@ bool OggStream::stream(ALuint buffer)
 			while(size < BUFFER_SIZE)
 			{
 				result = ov_read(&oggStream, pcm + size, BUFFER_SIZE - size, 0, 2, 1, &section);
-			
+
 				if(result > 0)
 					size += result;
 				else
@@ -250,10 +250,10 @@ bool OggStream::stream(ALuint buffer)
 			return false;
 		}
 	}
-        
+
     alBufferData(buffer, format, pcm, size, vorbisInfo->rate);
-    //check();
-    
+
+
     return true;
 }
 
@@ -261,13 +261,13 @@ void OggStream::empty()
 {
 	if (!source) return;
     int queued;
-    
+
     alGetSourcei(source, AL_BUFFERS_QUEUED, &queued);
-    
+
     while(queued--)
     {
         ALuint buffer;
-    
+
         alSourceUnqueueBuffers(source, 1, &buffer);
         check();
     }

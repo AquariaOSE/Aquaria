@@ -34,7 +34,7 @@ void ScreenTransition::createTexture()
 {
 	width = core->getVirtualWidth();
 	height = core->getVirtualHeight();
-	
+
 	windowWidth = core->getWindowWidth();
 	windowHeight = core->getWindowHeight();
 
@@ -44,13 +44,7 @@ void ScreenTransition::createTexture()
 	sizePowerOf2Texture(textureWidth);
 	sizePowerOf2Texture(textureHeight);
 
-	/*
-	if (windowWidth>1024)
-	{
-		textureWidth = 2048;
-		textureHeight = 1024;
-	}
-	*/
+
 
 	//create our texture
 	glGenTextures(1,&screen_texture);
@@ -63,10 +57,7 @@ void ScreenTransition::createTexture()
 	glTexImage2D(GL_TEXTURE_2D,0,3, textureWidth, textureHeight, 0 , GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glBindTexture(GL_TEXTURE_2D,0);
 
-/*
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-*/
+
 }
 
 void ScreenTransition::destroyTexture()
@@ -91,15 +82,11 @@ void ScreenTransition::reloadDevice()
 }
 
 void ScreenTransition::capture()
-{	
+{
 	core->render();
 
-	/*
-	std::ostringstream os;
-	os << "windowWidth [" << windowWidth << "] windowHeight [" << windowHeight << "]";
-	errorLog(os.str());
-	*/
-	
+
+
 	if (screen_texture)
 	{
 		glBindTexture(GL_TEXTURE_2D,screen_texture);
@@ -131,27 +118,18 @@ bool ScreenTransition::isGoing()
 void ScreenTransition::onRender()
 {
 	if (alpha.x == 0) return;
-	
+
 	float width2 = float(width)/2;
 	float height2 = float(height)/2;
-	
+
 	const float pw = float(windowWidth)/float(textureWidth);
 	const float ph = float(windowHeight)/float(textureHeight);
-	
-	/*
-	std::ostringstream os;
-	os << "wh(" << width2 << ", " << height2 << ") p(" << pw << ", " << ph << ")";
-	debugLog(os.str());
-	*/
-	
+
+
+
 	glBindTexture(GL_TEXTURE_2D, screen_texture);
-	//glBindTexture(GL_TEXTURE_2D, 0);
-	// 16/10 = 1.6
-	// 16/9 = 1.77777
-	// 4/3 = 1.33333
-	
-	// fix slight offset in 16/10 resolution
-	// only on mac?
+
+
 
 #if 0 //def BBGE_BUILD_MACOSX
 	float aspect = float(core->width) / float(core->height);
@@ -163,8 +141,8 @@ void ScreenTransition::onRender()
 #endif
 
 	glBegin(GL_QUADS);
-		//glNormal3f( 0.0f, 0.0f, 1.0f);
-		//glColor4f(color.x, color.y, color.z, alpha.getValue());
+
+
 		glTexCoord2d(0, 0);
 		glVertex3f(-width2, height2,  0.0);
 		glTexCoord2d(pw, 0);
@@ -176,7 +154,7 @@ void ScreenTransition::onRender()
 	glEnd();
 
 	glBindTexture(GL_TEXTURE_2D, 0);
-	
+
 	RenderObject::lastTextureApplied = 0;
 }
 

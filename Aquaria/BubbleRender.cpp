@@ -41,7 +41,7 @@ void BubbleRender::rebuild()
 }
 
 void BubbleRender::onRender()
-{	
+{
 	for (int i = 0; i < bubbles.size(); i++)
 	{
 		if (bubbles[i].x > core->screenCullX1 && bubbles[i].x < core->screenCullX2)
