@@ -84,7 +84,7 @@ public:
 	bool useQuad(const std::string &tex);
 	void useGlow(const std::string &tex, int w, int h);
 	void useSound(const std::string &tex);
-	
+
 	virtual bool isCursorInMenuItem();
 	Vector getGuiPosition();
 	bool isGuiVisible();
@@ -120,7 +120,7 @@ protected:
 	bool selected;
 	static bool closed;
 	bool done;
-	
+
 	int slotIndex;
 	bool empty;
 	Quad *gfx;
@@ -168,9 +168,9 @@ public:
 	bool isGuiVisible();
 
 	static AquariaKeyConfig *waitingForInput;
-	
+
 	void setLock(int lock);
-	
+
 protected:
 	int locked;
 	void toggleEnterKey(int on);
@@ -179,13 +179,13 @@ protected:
 
 	bool keyDown;
 
-	
+
 	std::string actionInputName;
 	InputSetType inputSetType;
 	int inputIdx;
 
-	//BitmapText *label;
-	//DebugFont *keyConfigFont;
+
+
 	TTFText *keyConfigFont;
 	Quad *bg;
 };
@@ -247,18 +247,6 @@ protected:
 	std::vector<AquariaComboBoxItem*> shownItems;
 };
 
-/*
-class SelectionList : public RenderObject
-{
-public:
-	SelectionList(std::string file, std::string font, int items);
-	void reload();
 
-	virtual void onSelect(int idx){}
-protected:
-	void load();
-	std::vector<std::string> list;
-};
-*/
 
 #endif

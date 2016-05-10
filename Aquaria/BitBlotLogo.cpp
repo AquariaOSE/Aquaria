@@ -32,39 +32,31 @@ bool BitBlotLogo::watchQuit(float time)
 {
 	core->main(time);
 	return false;
-/*
-	dsq->watch(time);
-	if (quitFlag > 0)
-	{
-		skipLogo();
-		return true;
-	}
-	return false;
-*/
+
 }
 
 void BitBlotLogo::doShortBitBlot()
 {
 	dsq->overlay->color = Vector(0,0,0);
 	dsq->overlay->alpha = 0;
-	
+
 	dsq->overlay2->color = Vector(1,1,1);
 	dsq->overlay2->alpha = 1;
 	dsq->overlay2->alpha.interpolateTo(0, 0.25);
-	
+
 	Quad *bg = new Quad;
 	bg->setWidthHeight(800, 600);
 	bg->position = Vector(400,300);
 	bg->followCamera = 1;
 	addRenderObject(bg, LR_HUD);
-	
+
 	Quad *logo = new Quad("BitBlot/Logo.png", Vector(400,300));
 	logo->followCamera = 1;
 	logo->scale = Vector(0.6,0.6);
 	addRenderObject(logo, LR_HUD);
-	
+
 	core->main(1.5);
-	
+
 	dsq->overlay2->alpha.interpolateTo(1, 0.5);
 	core->main(0.5);
 }
@@ -78,7 +70,7 @@ void BitBlotLogo::skipLogo()
 
 void BitBlotLogo::getOut()
 {
-	//dsq->continuity.reset();
+
 
 #ifdef AQUARIA_DEMO
 	dsq->title();
@@ -91,17 +83,17 @@ void BitBlotLogo::getOut()
 }
 
 void BitBlotLogo::applyState()
-{	
+{
 	StateObject::applyState();
 	quitFlag = 0;
 	logo = 0;
 	dsq->toggleCursor(0);
 	dsq->toggleBlackBars(1);
-	//dsq->setBlackBarsColor(Vector(1,1,1));
+
 	dsq->jiggleCursor();
-	
+
 	dsq->forceInputGrabOff();
-	
+
 	if (dsq->user.demo.shortLogos)
 	{
 		skipLogo();
@@ -109,7 +101,7 @@ void BitBlotLogo::applyState()
 	}
 
 	logo = 1;
-	
+
 	if (core->getKeyState(KEY_ESCAPE))
 	{
 		skipLogo();
@@ -127,7 +119,7 @@ void BitBlotLogo::applyState()
 	landscape->followCamera = 1;
 	landscape->alpha = 1;
 	landscape->shareAlphaWithChildren = 1;
-	
+
 
 	for (int i = 2; i < 5 + rand()%10; i++)
 	{
@@ -143,7 +135,7 @@ void BitBlotLogo::applyState()
 		bird->update((rand()%100)*0.1f);
 	}
 
-	//if (true)
+
 	if (rand()%100 < 40)
 	{
 		SkeletalSprite *dragon = new SkeletalSprite();
@@ -161,7 +153,7 @@ void BitBlotLogo::applyState()
 	}
 
 	std::vector<SkeletalSprite*> windmills;
-	int numWindmills = rand()%3; 
+	int numWindmills = rand()%3;
 	for (int i = 0; i < numWindmills; i++)
 	{
 		SkeletalSprite *windmill = new SkeletalSprite();
@@ -215,7 +207,7 @@ void BitBlotLogo::applyState()
 	logob->scale = Vector(0.6, 0.6);
 	logob->offset = Vector(-4, 0);
 	logob->offset.interpolateTo(Vector(4,0), 0.05, -1, 1);
-	
+
 	addRenderObject(logob, LR_ENTITIES);
 
 	RenderObject *lines = new RenderObject();
@@ -254,12 +246,12 @@ void BitBlotLogo::applyState()
 
 	dsq->overlay->alpha.interpolateTo(0, 1);
 
-	//sound->playSfx("BBSplash");
+
 	sound->playMusic("bblogo", SLT_NONE);
 
 	if (watchQuit(1.0)) return;
 
-	//sound->playSfx("normalform");
+
 
 	dsq->overlay2->color = Vector(1,1,1);
 
@@ -272,23 +264,20 @@ void BitBlotLogo::applyState()
 
 	sound->playSfx("normalform");
 
-	//landscape->alpha.interpolateTo(1, 2);
+
 	white->alpha.interpolateTo(0, 2);
 
 	landscape->position.interpolateTo(Vector(400,400), 5);
 
-	/*
-	if (core->afterEffectManager)
-		core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter, 0.1,0.03,30,0.2f, 0.5));
-	*/
+
 
 	landscape->scale.interpolateTo(Vector(1.1, 1.1), 5);
 
 	scanline->alpha.interpolateTo(0, 1);
-	//scanline->scale.interpolateTo(Vector(5, 5), 1);
+
 
 	logo->scale.interpolateTo(Vector(2, 2), 1);
-	//logo->offset.interpolateTo(Vector(0, -300), 1);
+
 	logo->alpha.interpolateTo(0, 1);
 
 	lines->alpha.interpolateTo(0, 4);
@@ -300,36 +289,12 @@ void BitBlotLogo::applyState()
 
 	dsq->overlay2->alpha.interpolateTo(1, 2);
 	if (watchQuit(2.0)) return;
-	
-	
+
+
 	getOut();
 
-	/*
-	// BOING
-	dsq->toggleCursor(0);
-	Quad *logo = new Quad("BitBlot/Logo.png", Vector(400,300));
-	logo->followCamera = 1;
-	addRenderObject(logo);
-	//logo->scale = Vector(0.6, 0.6);
-	logo->scale = Vector(0, 0);
-	core->setClearColor(Vector(1,1,1));
-	dsq->overlay->alpha = 1;
-	dsq->overlay->alpha.interpolateTo(0, 1);
-	core->main(0.5);
 
-	logo->scale.path.addPathNode(Vector(0,0), 0);
-	logo->scale.path.addPathNode(Vector(0,0), 0.4);
-	logo->scale.path.addPathNode(Vector(1.2,1.2), 0.8);
-	logo->scale.path.addPathNode(Vector(1.0, 1.0), 0.85);
-	logo->scale.path.addPathNode(Vector(1.1, 1.1), 0.95);
-	logo->scale.path.addPathNode(Vector(1,1), 1.0);
-	logo->scale.startPath(1);
 
-	core->main(2);
-
-	dsq->overlay->alpha.interpolateTo(1, 1.5);
-	core->main(1.5);
-	*/
 }
 
 void BitBlotLogo::removeState()
@@ -341,15 +306,7 @@ void BitBlotLogo::removeState()
 void BitBlotLogo::update(float dt)
 {
 	StateObject::update(dt);
-	
-	/*
-	if (quitFlag == 0)
-	{
-		if (core->getKeyState(KEY_ESCAPE))
-		{
-			quitFlag = 1;
-		}
-	}
-	*/
+
+
 }
 

@@ -25,16 +25,16 @@ void Interpolator::stop ()
 	interpolating = false;
 }
 
-void Interpolator::setUpdatee (float *u) 
-{ 
-	updatee = u; 
+void Interpolator::setUpdatee (float *u)
+{
+	updatee = u;
 }
 
 void Interpolator::interpolateTo (float interTo, float time, int ltype)
 {
-	if (!updatee) 
+	if (!updatee)
 	{
-		errorLog ("No updatee set for interpolator!"); 
+		errorLog ("No updatee set for interpolator!");
 		return;
 	}
 
@@ -110,48 +110,9 @@ void Interpolator::update (float dt)
 			*updatee += speed * dt;
 			if(*updatee > 255) *updatee = 0;
 			if(*updatee < 0) *updatee = 255;
-			/*
-			timePassed += speed *dt;
 
- 			if (timePassed >= timePeriod)
-    		{
-    			*updatee = to;
-    			interpolating = false;
-    			if (loopType != 0)
-    			{
-    				if (loopType > 0)
-    					loopType -= 1;
-   					if (pingPong)
-     				 interpolateTo (from, timePeriod, loopType);
-   				    else
-			        {
-	                 *updatee = from;
-	                 interpolateTo (to, timePeriod, loopType);
-			        }
-    			}
-    		}
-    		else
-    		{
-    			*updatee = (to - from) * (timePassed / timePeriod);
-    			*updatee += from;
-    		}
-			*/
-			/*
-			if (updatee >= to)
-			{
-				if (pingPong)
-				{
-					interpolateTo (from, timePeriod, loopType);
-					//if(*updatee > to) *updatee = 0;
-					//if(*updatee < from) *updatee = 255;
-				}
-				else
-				{
-					*updatee = from;
-					interpolateTo (to, timePeriod, loopType);
-				}
-			}
-			*/
+
+
 		}
 		}
 	}

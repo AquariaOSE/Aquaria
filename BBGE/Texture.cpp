@@ -29,28 +29,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdint.h>
 #endif
 
-//#include "pngLoad.h"
-//#include "jpeg/jpeglib.h"
-/*
-#include <il/il.h>
-#include <il/ilu.h>
-#include <il/ilut.h>
-*/
-#ifdef Z2D_J2K
-//..\j2k-codec\j2k-codec.lib
-	#include "..\j2k-codec\j2k-codec.h"
-#endif
+
+
 
 	GLint Texture::filter = GL_LINEAR;
 
 	GLint Texture::format = 0;
 bool Texture::useMipMaps = true;
 
-/*
-#ifdef BBGE_BUILD_OPENGL
-#include "glext/glext.h"
-#endif
-*/
 
 
 Texture::Texture()
@@ -223,11 +209,7 @@ void Texture::reload()
 	unload();
 	load(loadName);
 
-	/*if (ow != -1 && oh != -1)
-	{
-		width = ow;
-		height = oh;
-	}*/
+
 	debugLog("DONE");
 }
 
@@ -257,12 +239,7 @@ bool Texture::load(std::string file)
 			pos = std::string::npos;
 	}
 
-	/*if (core->debugLogTextures)
-	{
-		std::ostringstream os;
-		os << "pos [" << pos << "], file :" << file;
-		debugLog(os.str());
-	}*/
+
 
 	bool found = exists(file);
 
@@ -280,11 +257,7 @@ bool Texture::load(std::string file)
 		file = localisePathInternalModpath(file);
 		file = core->adjustFilenameCase(file);
 
-		/*
-		std::ostringstream os;
-		os << "Loading texture [" << file << "]";
-		debugLog(os.str());
-		*/
+
 		std::string post = file.substr(file.size()-3, 3);
 		stringToLower(post);
 		if (post == "png")
@@ -352,7 +325,7 @@ bool Texture::loadPNG(const std::string &file)
 	pngInfo info;
 
 	int pngType = PNG_ALPHA;
-	
+
 	if (format != 0)
 	{
 		if (format == GL_LUMINANCE_ALPHA)

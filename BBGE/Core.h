@@ -37,17 +37,13 @@ BUILD_LINUX
 #include "StateManager.h"
 #include "Light.h"
 #include "Flags.h"
-//#include "Scripting.h"
+
 #include "Effects.h"
 #include "Localization.h"
 
 #include "DarkLayer.h"
 
-/*
-#ifdef BBGE_BUILD_WINDOWS
-	#include "Joystick.h"
-#endif
-*/
+
 
 #include "FrameBuffer.h"
 #include "Shader.h"
@@ -107,13 +103,8 @@ const int baseVirtualHeight		= 600;
 
 enum GameKeys
 {
-	// replace with GLFW equivalent
-	/*
-	KEY_DOWNARROW = GLFW_KEY_DOWN,
-	KEY_RIGHTARROW = GLFW_KEY_RIGHT,
-	KEY_UPARROW = GLFW_KEY_UP,
-	KEY_LEFTARROW = GLFW_KEY_LEFT,
-	*/
+
+
 
 	KEY_LSUPER,
 	KEY_RSUPER,
@@ -122,8 +113,8 @@ enum GameKeys
 	KEY_BACKSPACE,
 	KEY_PRINTSCREEN,
 
-	//KEY_CAPSLOCK,
-	//KEY_CIRCUMFLEX,
+
+
 	KEY_LALT,
 	KEY_RALT,
 	KEY_LSHIFT,
@@ -142,7 +133,7 @@ enum GameKeys
 	KEY_SEMICOLON,
 	KEY_LBRACKET,
 	KEY_RBRACKET,
-	//KEY_RALT,
+
 	KEY_TILDE,
     KEY_0,
     KEY_1,
@@ -237,7 +228,7 @@ struct MouseButtons
 		right = UP;
 		middle = UP;
 	}
-	
+
 	ButtonState left, right, middle;
 };
 
@@ -306,10 +297,10 @@ enum FollowCameraLock
 	FCL_VERT		= 2
 };
 
-//RenderObject Layer Type (enable only one)
-//#define RLT_DYNAMIC		// Dynamic list
-#define RLT_FIXED		// Static array
-//#define RLT_MAP		// Mapping
+
+
+#define RLT_FIXED
+
 
 typedef std::vector <RenderObject*> RenderObjects;
 typedef std::list <RenderObject*> RenderObjectList;
@@ -332,48 +323,17 @@ public:
 
 	inline bool empty()
 	{
-	#ifdef RLT_FIXED
 		return objectCount == 0;
-	#endif
-	#ifdef RLT_DYNAMIC
-		return renderObjectList.empty();
-	#endif
-		return false;
 	}
 
 	inline RenderObject *getFirst()
 	{
-	#ifdef RLT_DYNAMIC
-		if (renderObjectList.empty()) return 0;
-		iter = renderObjectList.begin();
-		return *iter;
-	#endif
-	#ifdef RLT_MAP
-		if (renderObjectMap.empty()) return 0;
-		iter = renderObjectMap.begin();
-		return (*iter).second;
-	#endif
-	#ifdef RLT_FIXED
 		iter = 0;
 		return getNext();
-	#endif
 	}
 
 	RenderObject *getNext()
 	{
-	#ifdef RLT_DYNAMIC
-		if (iter == renderObjectList.end()) return 0;
-		iter++;
-		if (iter == renderObjectList.end()) return 0;
-		return *iter;
-	#endif
-	#ifdef RLT_MAP
-		if (iter == renderObjectMap.end()) return 0;
-		iter++;
-		if (iter == renderObjectMap.end()) return 0;
-		return (*iter).second;
-	#endif
-	#ifdef RLT_FIXED
 		const int size = renderObjects.size();
 		int i;
 		for (i = iter; i < size; i++)
@@ -391,7 +351,6 @@ public:
 			iter = i;
 			return 0;
 		}
-	#endif
 		return 0;
 	}
 
@@ -427,20 +386,10 @@ protected:
 	};
 	std::vector<DisplayListElement> displayList;
 
-#ifdef RLT_DYNAMIC
-	RenderObjectList renderObjectList;
-	RenderObjectList::iterator iter;
-#endif
-#ifdef RLT_MAP
-	RenderObjectMap renderObjectMap;
-	RenderObjectMap::iterator iter;
-#endif
-#ifdef RLT_FIXED
 	RenderObjects renderObjects;
 	int objectCount;
 	int firstFreeIdx;
 	int iter;
-#endif
 };
 
 class Core : public ActionMapper, public StateManager
@@ -457,10 +406,10 @@ public:
 	void initRenderObjectLayers(int num);
 
 	void applyState(const std::string &state);
-	//bool createGlWindow(char* title, int width, int height, int bits, bool fullscreenflag);
+
 	bool createWindow(int width, int height, int bits, bool fullscreen, std::string windowTitle="");
-	//void setWindowTitle(const std::string &title); // func not yet written
-	void clearBuffers();	
+
+	void clearBuffers();
 	void render(int startLayer=-1, int endLayer=-1, bool useFrameBufferIfAvail=true);
 	void showBuffer();
 	void quit();
@@ -475,7 +424,7 @@ public:
 
 	void reloadResources();
 	void unloadResources();
-	
+
 	std::string getPreferencesFolder();
 	std::string getUserDataFolder();
 
@@ -486,9 +435,9 @@ public:
 
 	virtual void shutdown();
 
-	void main(float runTime = -1); // can use main 
+	void main(float runTime = -1); // can use main
 
-	//void adjustWindowPosition(int x, int y);
+
 
 	// state functions
 
@@ -515,9 +464,9 @@ public:
 
 	void setMouseConstraint(bool on);
 	void setMouseConstraintCircle(const Vector& pos, float mouseCircle);
-	
+
 	void setReentryInputGrab(int on);
-	
+
 	void action(int id, int state){}
 
 	bool exists(const std::string &file);
@@ -545,15 +494,7 @@ public:
 
 	void resetGraphics(int w, int h, int fullscreen=-1, int vsync=-1, int bpp=-1);
 
-/*
-#ifdef BBGE_BUILD_OPENGL
-	void getWindowHeight(int *height)
-	{glfwGetWindowSize(0, height);}
 
-	void getWindowWidth(int *width)
-	{glfwGetWindowSize(width, 0);}
-#endif
-*/
 
 	void setDockIcon(const std::string &ident);
 
@@ -583,7 +524,7 @@ public:
 
 	RenderObjectLayer *getRenderObjectLayer(int i);
 	std::vector <int> renderObjectLayerOrder;
-	//typedef std::list<RenderObject*> RenderObjects;
+
 	typedef std::vector<RenderObjectLayer> RenderObjectLayers;
 	RenderObjectLayers renderObjectLayers;
 
@@ -616,7 +557,6 @@ public:
 
 	ParticleManager *particleManager;
 
-	//Scripting::Script script;
 
 
 	void setBaseTextureDirectory(const std::string &baseTextureDirectory)
@@ -663,18 +603,18 @@ public:
 
 	void applyMatrixStackToWorld();
 	void translateMatrixStack(float x, float y, float z=0);
-	//void translateMatrixStackRelative(float x, float y, float z=0);
+
 	void rotateMatrixStack(float x, float y, float z);
 	void scaleMatrixStack(float x, float y, float z=1);
 	void rotateMatrixStack(float z);
 	void setColor(float r, float g, float b, float a);
 
 	void bindTexture(int stage, unsigned int handle);
-	
+
 
 	bool getKeyState(int k);
 	bool getMouseButtonState(int m);
-	
+
 	int currentLayerPass;
 	int keys[KEY_MAXARRAY];
 	Flags flags;
@@ -695,20 +635,16 @@ public:
 	void setupRenderPositionAndScale();
 	void setupGlobalResolutionScale();
 
-	
+
 	int particlesPaused;
 
-	//JoystickData joystickData[4];
+
 	bool joystickEnabled;
 	bool joystickOverrideMouse;
-	/*
-	int numJoysticks;
-	DIJOYSTATE2 joystate;
-	Joystick* joysticks[4];
-	*/
+
 
 	bool debugLogTextures;
-	
+
 
 	Joystick joystick;
 	void setClearColor(const Vector &c);
@@ -724,7 +660,7 @@ public:
 	bool frameOutputMode;
 
 	int overrideStartLayer, overrideEndLayer;
-	
+
 	void setWindowCaption(const std::string &caption, const std::string &icon);
 
 	ParticleEffect* createParticleEffect(const std::string &name, const Vector &position, int layer, float rotz=0);
@@ -757,7 +693,7 @@ public:
 	Vector center;
 
 	void enable2DWide(int rx, int ry);
-	
+
 	void enumerateScreenModes();
 
 	std::vector<ScreenMode> screenModes;
@@ -795,13 +731,13 @@ protected:
 
 	float old_dt;
 	float current_dt;
-	
+
 	std::string debugLogPath;
 
 	virtual void onReloadResources();
 
 	CountedPtr<Texture> doTextureAdd(const std::string &texture, const std::string &name, std::string internalTextureName);
-	
+
 	void deleteRenderObjectMemory(RenderObject *r);
 	bool _hasFocus;
 	bool lib_graphics, lib_sound, lib_input;
@@ -814,9 +750,9 @@ protected:
 	bool mouseConstraint;
 	float mouseCircle;
 	Vector mouseConstraintCenter;
-	
+
 	bool doMouseConstraint();
-	
+
 	virtual void onMouseInput(){}
 	bool doScreenshot;
 	float baseCullRadius;
@@ -837,10 +773,10 @@ protected:
 	bool sortFlag;
 	virtual void modifyDt(float &dt){}
 	void setPixelScale(int pixelScaleX, int pixelScaleY);
-	
+
 
 	int virtualHeight, virtualWidth;
-	
+
 	bool shuttingDown;
 	bool quitNestedMainFlag;
 	bool clearedGarbageFlag;
@@ -853,7 +789,7 @@ protected:
 	std::ofstream _logOut;
 
 	int nowTicks, thenTicks;
-	
+
 	int _vsync, _bpp;
 	bool _fullscreen;
 
@@ -861,9 +797,8 @@ protected:
 
 	CountedPtr<Texture> texError;
 
-	//unsigned int windowWidth, windowHeight;
 
-	
+
 	int tgaSaveSeries(char	*filename,  short int width, short int height, unsigned char pixelDepth, unsigned char *imageData);
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}

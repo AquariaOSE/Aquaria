@@ -28,15 +28,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 Bubble::Bubble() : Quad()
 {
 	setTexture("particles/bubble");
-	/*
-	this->life = 10;
-	this->decayRate = 1;
-	*/
+
 	this->alpha = 0.5f;
 	this->speed = rand()%10+20;
 	this->width = 32;
 	this->height = 32;
-	//this->scale = Vector(0.5f, 0.5f, 0.5f);
+
 }
 
 void Bubble::onUpdate(float dt)
@@ -64,12 +61,12 @@ void Intro2::applyState()
 
 	ActionMapper::clearActions();
 
-	//addAction(MakeFunctionEvent(Intro2, skipIntro), KEY_ESCAPE, 0);
+
 
 	dsq->subtitlePlayer.show(0.5f);
 
 	core->resetCamera();
-	
+
 	dsq->jiggleCursor();
 
 	dsq->setCutscene(1,1);
@@ -78,8 +75,7 @@ void Intro2::applyState()
 	dsq->overlay->alpha.interpolateTo(0, 40);
 	dsq->toggleCursor(0);
 
-	// OLD WAY of skipping
-	//dsq->user.control.actionSet.importAction(this, "Escape",		ACTION_ESC);
+
 
 	Quad *frame4 = new Quad;
 	{
@@ -110,96 +106,11 @@ void Intro2::applyState()
 
 	dsq->voice("Naija_Intro-music");
 
-	
+
 	while (dsq->sound->isPlayingVoice())
 		dsq->main(FRAME_TIME);
 
-	/*
-	while (dsq->sound->isPlayingVoice())
-	{
-		if (isActing(ACTION_ESC))
-		{
-			while (isActing(ACTION_ESC) && dsq->sound->isPlayingVoice())
-			{
-				core->main(FRAME_TIME);
-			}
-			dsq->overlay->alpha.interpolateTo(1, 1);
-			dsq->stopVoice();
-			dsq->main(1);
-			dsq->newGame();
-			return;
-		}
-		core->main(FRAME_TIME);
-	}
-	*/
 
-	/*
-	Quad *frame3 = new Quad;
-	{
-		frame3->setTexture("gameover-0002");
-		frame3->position = Vector(400,300);
-		frame3->width = 600;
-		frame3->height = 600;
-	}
-	addRenderObject(frame3, LR_BACKGROUND);
-
-	Quad *frame2 = new Quad;
-	{
-		frame2->setTexture("gameover-0003");
-		frame2->position = Vector(400,300);
-		frame2->width = 600;
-		frame2->height = 600;
-	}
-	addRenderObject(frame2, LR_BACKGROUND);
-
-	Quad *frame1 = new Quad;
-	{
-		frame1->setTexture("gameover-0004");
-		frame1->position = Vector(400,300);
-		frame1->width = 600;
-		frame1->height = 600;
-	}
-	addRenderObject(frame1, LR_BACKGROUND);
-	*/
-
-	/*
-	dsq->voice("Naija_Intro1");
-	while (dsq->isStreamingVoice())		core->main(1);
-	*/
-
-	/*
-	frame1->alpha.interpolateTo(0, 1);
-	core->main(1);
-	*/
-
-	/*
-	dsq->voice("Naija_Intro2");
-	while (dsq->isStreamingVoice())		core->main(1);
-	*/
-
-	//frame2->alpha.interpolateTo(0, 1);
-
-	/*
-	dsq->voice("Naija_Intro3");
-	while (dsq->isStreamingVoice())		core->main(1);
-	*/
-
-	/*
-	frame3->alpha.interpolateTo(0, 1);
-	core->main(1);
-	*/
-
-	/*
-	dsq->voice("Naija_Intro3");
-	while (dsq->isStreamingVoice())		core->main(1);
-	*/
-
-	//frame4->alpha.interpolateTo(0, 1);
-
-	/*
-	dsq->voice("Naija_Intro4");
-	while (dsq->isStreamingVoice())		core->main(1);
-	*/
 
 	emitter->stop();
 	emitter2->start();
@@ -245,8 +156,8 @@ void GameOver::applyState()
 	const bool frameOutputGameOver = false;
 
 	core->sound->fadeMusic(SFT_OUT, 1);
-	//float transTime = 0.01;
-	//core->sound->fadeOut(transTime);
+
+
 	StateObject::applyState();
 	core->globalScale = Vector(1,1);
 	core->globalScaleChanged();
@@ -267,18 +178,6 @@ void GameOver::applyState()
 		q->position = Vector(400,300,-0.1);
 	}
 	addRenderObject(q);
-
-	/*
-	BitmapText *b = new BitmapText(&dsq->font);
-	{
-		int sz = 64;
-		b->setFontSize(sz);
-		b->setText("GAME OVER");
-		b->position = Vector(400+sz/2,300-sz/2);
-	}
-	addRenderObject(b);
-	*/
-	//core->main(transTime);
 
 
 
@@ -331,11 +230,10 @@ void GameOver::applyState()
 		core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter, 0.07,0.03,30,0.2f, 1.1));
 	}
 
-	//dsq->screenTransition->transition(0);
+
 	dsq->overlay->alpha = 0;
 
-	//core->main(0.1);
-	//frame3->alpha.interpolateTo(0, GO_ANIM_TIME);
+
 
 	core->main(GO_ANIM_TIME);
 	frame4->alpha.interpolateTo(0, GO_ANIM_TIME);
@@ -351,24 +249,18 @@ void GameOver::applyState()
 	core->main(GO_ANIM_TIME);
 
 	core->main(1.5);
-	//core->sound->streamMusic("Requiem", 0);
+
 
 
 	if (dsq->recentSaveSlot != -1)
 	{
-		// game over recent save load
+
 		dsq->sound->stopMusic();
 		float transferSeconds = dsq->continuity.seconds;
 		dsq->continuity.loadFile(dsq->recentSaveSlot);
-		
-		/*
-		//float lastLoadSeconds = dsq->continuity.seconds;
-		// time spent on a session that ended with death is the 
-		// difference between the current total time and the last save time?
-		// nope.
-		// ignore doing the above for now!
-		*/
-		
+
+
+
 		dsq->continuity.seconds = transferSeconds;
 		dsq->game->transitionToScene(dsq->game->sceneToLoad);
 	}
@@ -376,20 +268,16 @@ void GameOver::applyState()
 		dsq->title();
 
 
-	//core->main(transTime);
 
 	if (frameOutputGameOver)
 		core->frameOutputMode = false;
 
-	/*
-	addAction(MakeFunctionEvent(GameOver, onClick), ActionMapper::MOUSE_BUTTON_LEFT, 0);
-	timer = 1;
-	*/
+
 }
 
 void GameOver::removeState()
 {
-	//dsq->screenTransition->capture();
+
 	StateObject::removeState();
 	frame3 = frame2 = frame1 = 0;
 }
@@ -410,30 +298,7 @@ void GameOver::update(float dt)
 			timer = 0;
 	}
 
-	/*
-	if (frame1 && frame2 && frame3)
-	{
-		if (frame3->alpha.x == 0 && !frame3->alpha.isInterpolating())
-		{
-			if (frame2->alpha.x == 0 && !frame2->alpha.isInterpolating())
-			{
-				if (frame1->alpha.x == 0 && !frame1->alpha.isInterpolating())
-				{
-					frame1=frame2=frame3=0;
-				}
-				else if (!frame1->alpha.isInterpolating())
-				{
-					frame1->alpha.interpolateTo(0, 0.8);
 
-				}
-			}
-			else if (!frame2->alpha.isInterpolating())
-			{
-				frame2->alpha.interpolateTo(0, GO_ANIM_TIME);
-			}
-		}
-	}
-	*/
 }
 
 namespace NagStuff
@@ -442,10 +307,7 @@ namespace NagStuff
 	int ic=0;
 	const int numScreens = 11;
 	float screenTimer = 0;
-	/*
-	const float screenTime = 7;
-	const float nagFadeTime = 3;
-	*/
+
 	const float screenTime = 3;
 	const float nagFadeTime = 1;
 };
@@ -477,7 +339,7 @@ void Nag::applyState()
 
 	core->setInputGrab(false);
 	grab = false;
-	
+
 
 	dsq->overlay2->alpha = 0;
 	dsq->stopVoice();
@@ -489,8 +351,8 @@ void Nag::applyState()
 
 	AquariaMenuItem *buy = new AquariaMenuItem();
 	buy->followCamera = 1;
-	buy->position = Vector(630, 400); //300, 540);
-	//buy->setLabel("Buy");
+	buy->position = Vector(630, 400);
+
 	buy->useGlow("particles/glow", 480, 128);
 	buy->event.set(MakeFunctionEvent(Nag, onBuy));
 	buy->setDirMove(DIR_LEFT, buy);
@@ -501,7 +363,7 @@ void Nag::applyState()
 	AquariaMenuItem *exit = new AquariaMenuItem();
 	exit->followCamera = 1;
 	exit->position = Vector(732, 543);
-	//exit->setLabel("Exit");
+
 	exit->useGlow("particles/glow", 128, 64);
 	exit->event.set(MakeFunctionEvent(Nag, onExit));
 	exit->setDirMove(DIR_LEFT, exit);
@@ -518,7 +380,7 @@ void Nag::applyState()
 	ic = 0;
 	irot.clear();
 
-	//Vector framePos(235, 405);
+
 	Vector framePos(240, 400);
 	Vector frameScale(0.98, 0.98);
 

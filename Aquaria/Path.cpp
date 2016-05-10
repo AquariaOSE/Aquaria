@@ -391,7 +391,7 @@ void Path::refreshScript()
 		std::string dummy;
 		is >> dummy;
 
-		float v = 0; 
+		float v = 0;
 		is >> v;
 		if (v != 0)
 			currentMod = v;
@@ -454,20 +454,15 @@ void Path::refreshScript()
 		spawnEnemyDistance = 0;
 		is >> dummy >> spawnEnemyName >> spawnEnemyDistance >> spawnEnemyNumber;
 		neverSpawned = true;
-		/*
-		if (!spawnedEntity && !nodes.empty())
-		{
-			spawnedEntity = dsq->game->createEntity(spawnEnemyName, 0, nodes[0].position, 0, false, "");
-		}
-		*/
+
 	}
 	else if (label == "pe")
 	{
 		std::string dummy, particleEffect;
 		SimpleIStringStream is(name);
 		is >> dummy >> particleEffect;
-		//core->removeRenderObject(&emitter, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-		//core->getTopStateData()->addRenderObject(&emitter, LR_PARTICLES);
+
+
 
 		setEmitter(particleEffect);
 	}
@@ -552,10 +547,7 @@ void Path::update(float dt)
 		if (pathType == PATH_CURRENT && !dsq->game->isWorldPaused())
 		{
 			animOffset -= currentMod*(dt/830);
-			/*
-			while (animOffset < -1.0f)
-				animOffset += 1.0f;
-			*/
+
 		}
 		if (pathType == PATH_GEM && dsq->game->avatar)
 		{
@@ -603,10 +595,7 @@ void Path::update(float dt)
 					Entity *e = *i;
 					if (e)
 					{
-						/*
-						if (e->getEntityType() == ET_AVATAR && dsq->continuity.form == FORM_SPIRIT)
-							continue;
-						*/
+
 						if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.5f))
 						{
 							if (e->getEntityType() == ET_AVATAR)
@@ -621,24 +610,13 @@ void Path::update(float dt)
 								d.damage = 0.1;
 								d.damageType = DT_STEAM;
 								e->damage(d);
-								//a->position = a->lastPosition;
+
 							}
 							Vector push;
 
 							push = e->position - dsq->game->lastCollidePosition;
 
-							// old method:
-							/*
-							int d1 = ((mid + left)-e->position).getSquaredLength2D();
-							if (((mid + right)-e->position).getSquaredLength2D() < d1)
-							{
-								push = right;
-							}
-							else
-							{
-								push = left;
-							}
-							*/
+
 
 							push.setLength2D(1000*dt);
 							if (e->vel2.isLength2DIn(1000) && !e->isNearObstruction(3))
@@ -650,11 +628,7 @@ void Path::update(float dt)
 							if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.25f))
 							{
 								push.setLength2D(100);
-								/*
-								Vector oldVel = e->vel;
-								Vector nvel = v;
-								nvel.setLength2D(e->vel);
-								*/
+
 								e->vel = 0;
 								e->vel += push;
 							}

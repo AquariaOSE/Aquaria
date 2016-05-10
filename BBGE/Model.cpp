@@ -30,7 +30,7 @@ const std::string modelPath = "models/";
 Model::Model() : RenderObject()
 {
 	m_calModel = 0;
-	//, coreModel("poot")
+
 	m_calCoreModel = new CalCoreModel("model");
 	if (!m_calCoreModel)
 	{
@@ -242,13 +242,7 @@ bool Model::load(const std::string& _strFilename)
   // set the material set of the whole model
   m_calModel->setMaterialSet(0);
 
-  // set initial animation state
-  /*
-  m_state = STATE_MOTION;
-  m_calModel->getMixer()->blendCycle(m_animationId[STATE_MOTION], m_motionBlend[0], 0.0f);
-  m_calModel->getMixer()->blendCycle(m_animationId[STATE_MOTION + 1], m_motionBlend[1], 0.0f);
-  m_calModel->getMixer()->blendCycle(m_animationId[STATE_MOTION + 2], m_motionBlend[2], 0.0f);
-  */
+
 
   return true;
 }
@@ -379,7 +373,7 @@ void Model::renderMesh(bool bWireframe, bool bLight)
         }
 
         // draw the submesh
-        
+
         if(sizeof(CalIndex)==2)
 			  glDrawElements(GL_TRIANGLES, faceCount * 3, GL_UNSIGNED_SHORT, &meshFaces[0][0]);
 		  else
@@ -393,20 +387,8 @@ void Model::renderMesh(bool bWireframe, bool bLight)
           glDisable(GL_TEXTURE_2D);
         }
 
-// DEBUG-CODE //////////////////////////////////////////////////////////////////
-/*
-glBegin(GL_LINES);
-glColor3f(1.0f, 1.0f, 1.0f);
-int vertexId;
-for(vertexId = 0; vertexId < vertexCount; vertexId++)
-{
-const float scale = 0.3f;
-  glVertex3f(meshVertices[vertexId][0], meshVertices[vertexId][1], meshVertices[vertexId][2]);
-  glVertex3f(meshVertices[vertexId][0] + meshNormals[vertexId][0] * scale, meshVertices[vertexId][1] + meshNormals[vertexId][1] * scale, meshVertices[vertexId][2] + meshNormals[vertexId][2] * scale);
-}
-glEnd();
-*/
-////////////////////////////////////////////////////////////////////////////////
+
+
       }
     }
   }
@@ -437,10 +419,7 @@ glEnd();
 
 void Model::onRender()
 {
-	/*
-	glClearDepth(1.0f);
-	core->resize3D();
-	*/
+
 
 	glEnable(GL_DEPTH_TEST);							// Enables Depth Testing
 	glDepthFunc(GL_LEQUAL);								// The Type Of Depth Testing To Do
@@ -452,7 +431,7 @@ void Model::onRender()
 
 	// check if we need to render the mesh
 	renderMesh(false, false);
-	
+
 	glEnable(GL_TEXTURE_2D);
 
 	glDisable(GL_DEPTH_TEST);

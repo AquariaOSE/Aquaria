@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 CurrentRender::CurrentRender() : RenderObject()
 {
 	cull = false;
-	//alpha = 0.2f;
+
 	setTexture("Particles/Current");
 	texture->repeat = true;
 	rippleDelay = 2;
@@ -35,27 +35,8 @@ void CurrentRender::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
 
-	/*
-	rippleDelay -= dt;
-	if (rippleDelay < 0)
-	{
-		for (int i = 0; i < dsq->game->paths.size()-1; i++)
-		{
-			Path *p = dsq->game->paths[i];
-			for (int n = 0; n < p->nodes.size()-1; i++)
-			{
-				PathNode *n1 = &p->nodes[n];
-				PathNode *n2 = &p->nodes[n+1];
-				Vector diff = n2->position - n1->position;
-				Vector pos = n1->position + diff*p->animOffset;
-				// spawn effect at pos
-				if (core->afterEffectManager)
-					core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),pos,0.04,0.06,15,0.2f));
-			}
-		}
-		rippleDelay = 1.0;
-	}
-	*/
+
+
 }
 
 void CurrentRender::onRender()
@@ -68,85 +49,11 @@ void CurrentRender::onRender()
 		if (p->active)
 		{
 
-			/*
-			std::ostringstream os;
-			os << "animOffset: " << p->animOffset;
-			debugLog(os.str());
-			*/
+
 
 			int w2 = p->rect.getWidth()/2;
 
-			/*
-			if (false)
-			{
-				float offset = 0;
-				glBegin(GL_QUAD_STRIP);
-				int sz = p->nodes.size();
-				float len = 0;
 
-
-				float totalLength = 0;
-				for (int n = 0; n < sz-1; n++)
-				{
-					totalLength += (p->nodes[n+1].position - p->nodes[n].position).getLength2D();
-				}
-
-				float texScale = totalLength/256.0f;
-
-				Vector p1, p2, diff, pl, pr;
-				for (int n = 0; n < sz; n++)
-				{
-					PathNode *n1 = &p->nodes[n];
-					p1 = n1->position;
-					if (n == sz-1)
-					{
-						PathNode *n2 = &p->nodes[n-1];
-						p2 = n2->position;
-						diff = p1-p2;
-					}
-					else
-					{
-						PathNode *n2 = &p->nodes[n+1];
-						p2 = n2->position;
-						diff = p2-p1;
-					}
-					len = diff.getLength2D();
-					float add = len/totalLength;
-					//texScale = len/totalLength;
-
-					pl = diff.getPerpendicularLeft();
-					pr = diff.getPerpendicularRight();
-
-					pl.setLength2D(w2);
-					pr.setLength2D(w2);
-					Vector r1 = p1+pl;
-
-					Vector r4 = p1+pr;
-
-
-					if (n == 0 || n == sz-1)
-					{
-						glColor4f(1, 1, 1, 0);
-					}
-					else
-					{
-						glColor4f(1, 1, 1, 1);
-					}
-					//(0+p->animOffset)*texScale +
-					glTexCoord2f((offset)*texScale+p->animOffset, 0);
-					glVertex2f(r1.x, r1.y);
-
-					glTexCoord2f((offset)*texScale+p->animOffset, 1);
-					//(0+p->animOffset)*texScale +
-					glVertex2f(r4.x, r4.y);
-
-					offset += add;
-
-				}
-				glEnd();
-			}
-			else
-			*/
 
 			if (true)
 			{
@@ -164,23 +71,7 @@ void CurrentRender::onRender()
 					p2 += d*0.75f;
 					diff = p2 - p1;
 
-					//bool edge = false;
 
-					/*
-					if (n == 0)
-					{
-						p1 -= diff*0.25f;
-						edge = true;
-					}
-
-					if (n == sz-1)
-					{
-						p2 += diff*0.25f;
-						edge = true;
-					}
-
-					diff = p2-p1;
-					*/
 
 					if (!diff.isZero())
 					{
@@ -201,21 +92,12 @@ void CurrentRender::onRender()
 						Vector r8 = p2+pr;
 						float len = diff.getLength2D();
 						float texScale = len/256.0f;
-						//float texScale2 = texScale;
 
-						/*
-						if (edge)
-							texScale *= 2;
-						*/
 
-						/*
-						if (edge)
-							texScale2 *= 4;
-						*/
 
 						if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius+p->rect.getWidth()/2.0f))
 						{
-							//qs++;
+
 
 							glBegin(GL_QUAD_STRIP);
 								glColor4f(1,1,1,0);
@@ -273,7 +155,7 @@ void CurrentRender::onRender()
 
 					if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius))
 					{
-						//qs++;
+
 						glBegin(GL_QUADS);
 							if (n==0)
 								glColor4f(1,1,1,0);
@@ -304,16 +186,10 @@ void CurrentRender::onRender()
 				}
 			}
 		}
-		//glEnd();
+
 
 	}
-	//glEnable(GL_CULL_FACE);
 
-	/*
-	std::ostringstream os;
-	os << "current quads: " << qs;
-	debugLog(os.str());
-	*/
 
 
 }

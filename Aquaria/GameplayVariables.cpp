@@ -56,11 +56,7 @@ void GameplayVariables::load()
 	inFile >> s >> zoomNaija;
 	inFile >> s >> maxOutOfWaterSpeed;
 	inFile >> s >> defaultCameraLerpDelay;
-	/*
-	inFile >> s >> initialId;
-	inFile >> s >> initialEgo;
-	inFile >> s >> initialSuperEgo;
-	*/
+
 	inFile.close();
 }
 

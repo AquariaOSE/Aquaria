@@ -233,15 +233,7 @@ int TTFText::findLine(const std::string &label)
 
 void TTFText::onRender()
 {
-	/*
-	glColor4f(0,0,0,0.5);
-	glBegin(GL_QUADS);
-	glVertex2f(-hw, h/2);
-	glVertex2f(hw, h/2);
-	glVertex2f(hw, -h/2);
-	glVertex2f(-hw, -h/2);
-	glEnd();
-	*/
+
 
 	for (int i = 0; i < text.size(); i++)
 	{
@@ -268,12 +260,5 @@ void TTFText::onRender()
 	RenderObject::lastTextureApplied = 0;
 
 
-	/*
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glLineWidth(2);
-	glBegin(GL_LINES);
-	glVertex2f(-hw, 5);
-	glVertex2f(hw, 5);
-	glEnd();
-	*/
+
 }

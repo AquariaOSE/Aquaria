@@ -251,7 +251,7 @@ void FoodHolder::setIngredient(IngredientData *i, bool effects)
 		if (effects)
 		{
 			core->sound->playSfx("Wok");
-			
+
 			ing->scale.ensureData();
 			ing->scale.data->path.clear();
 			ing->scale.data->path.addPathNode(Vector(1,1),0);
@@ -560,7 +560,7 @@ void FoodSlot::onUpdate(float dt)
 
 									dsq->game->foodLabel->alpha.interpolateTo(0, 2);
 									dsq->game->foodDescription->alpha.interpolateTo(0, 2);
-									
+
 									break;
 									//return;
 								}
@@ -814,7 +814,7 @@ void TreasureSlot::onUpdate(float dt)
 				if (doubleClickTimer > 0)
 				{
 					doubleClickTimer = 0;
-					
+
 					dsq->game->onUseTreasure(flag);
 				}
 				else
@@ -822,7 +822,7 @@ void TreasureSlot::onUpdate(float dt)
 					dsq->sound->playSfx("treasure-select", 0.5);
 					dsq->spawnParticleEffect("menu-switch", worldRightCenter, 0, 0, LR_HUD3, 1);
 
-					
+
 
 					dsq->game->treasureLabel->setText(treasureName);
 					dsq->game->treasureLabel->alpha = 1;
@@ -889,7 +889,7 @@ void TreasureSlot::refresh()
 			h = sz;
 			w = (width*sz)/height;
 		}
-		
+
 		setWidthHeight(w*scl, h*scl);
 
 		std::string parse = dsq->continuity.stringBank.get(flag);
@@ -1122,7 +1122,7 @@ Ingredient *Game::spawnIngredient(const std::string &ing, const Vector &pos, int
 	Ingredient *i = 0;
 	for (int c = 0; c < times; c++)
 	{
-		//HACK: 
+		//HACK:
 		if (nocasecmp(ing, "poultice")==0)
 			use = "LeafPoultice";
 
@@ -1295,7 +1295,7 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 	if (avatar && core->getNestedMains()==1 && !avatar->isSinging() && (ignoreInput || avatar->isInputEnabled()))
 	{
 		//dsq->toggleInputGrabPlat(false);
-		
+
 		dsq->game->clearControlHint();
 
 		selectedTreasureFlag = -1;
@@ -1449,7 +1449,7 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 				useMenuPage = dsq->continuity.lastMenuPage;
 			}
 		}
-			
+
 
 		switch(useMenuPage)
 		{
@@ -1490,7 +1490,7 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 			}
 		}
 		}
-		
+
 
 		if (!optionsOnly)
 		{
@@ -1500,14 +1500,14 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 
 				menu[i]->alpha.interpolateTo(1, 0.15);
 			}
-			
+
 			menuIconGlow->alpha.interpolateTo(1, 0.5);
 		}
 
 		menuOpenTimer = 0;
 
 		inGameMenu = true;
-		
+
 
 
 		dsq->routeShoulder = false;
@@ -1515,7 +1515,7 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 
 		dsq->screenTransition->transition(MENUPAGETRANSTIME);
 
-		
+
 
 		if (optionsOnly)
 		{
@@ -1553,7 +1553,7 @@ void Game::hideInGameMenu(bool effects, bool cancel)
 			resBox->close();
 
 		//dsq->toggleInputGrabPlat(true);
-	
+
 		if (effects)
 			core->sound->playSfx("Menu-Close");
 
@@ -1588,7 +1588,7 @@ void Game::hideInGameMenu(bool effects, bool cancel)
 			toggleMainMenu(false);
 			toggleKeyConfigMenu(false);
 		}
-		
+
 		menuIconGlow->alpha = 0;
 
 		for (i = 0; i < menu.size(); i++)
@@ -1614,8 +1614,8 @@ void Game::hideInGameMenu(bool effects, bool cancel)
 		menuBg->alpha.interpolateTo(0, t);
 		menuBg->scale.interpolateTo(menuBg->scale*0.5f, t);
 		menuBg2->alpha.interpolateTo(0, t);
-		
-		
+
+
 
 		if (menuSongs)
 			menuSongs->alpha.interpolateTo(0, t);
@@ -1645,8 +1645,7 @@ void Game::hideInGameMenu(bool effects, bool cancel)
 
 		for (int i = 0; i < songTips.size(); i++)
 			songTips[i]->alpha = 0;
-			
-		
+
 
 
 		for (int i = 0; i < dropIngrNames.size(); i++)
@@ -1654,7 +1653,7 @@ void Game::hideInGameMenu(bool effects, bool cancel)
 			dsq->game->spawnIngredient(dropIngrNames[i], avatar->position + Vector(0,-96), 1, 1);
 		}
 		dropIngrNames.clear();
-		
+
 		if (effects)
 			dsq->quitNestedMain();
 
@@ -1866,7 +1865,7 @@ void Game::transitionToScene(std::string scene)
 	}
 	sceneToLoad = scene;
 	stringToLower(sceneToLoad);
-	
+
 	core->enqueueJumpState("Game", false);
 }
 
@@ -3214,10 +3213,10 @@ void Game::sortFood()
 				dsq->continuity.sortByUnsort.push_back(FoodSortOrder(IT_NONE, IET_NONE, dsq->continuity.ingredients[i].name));
 	}
 	*/
-	
+
 	std::vector<std::string> foodHolderNames;
 	foodHolderNames.resize(foodHolders.size());
-	
+
 	for (int i = 0; i < foodHolders.size(); i++) {
 		IngredientData *ing = foodHolders[i]->getIngredient();
 		if (ing) {
@@ -3230,22 +3229,22 @@ void Game::sortFood()
 	dsq->continuity.foodSortType++;
 	if (dsq->continuity.foodSortType >= MAX_FOODSORT)
 		dsq->continuity.foodSortType = 0;
-	
+
 	dsq->continuity.sortFood();
-	
+
 	// rebuild the page
-	
+
 	refreshFoodSlots(false);
-	
+
 	/*
 	toggleFoodMenu(false);
 	toggleFoodMenu(true);
 	*/
-	
+
 	dsq->sound->playSfx("shuffle");
 	dsq->sound->playSfx("menu-switch", 0.5);
 	dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
-	
+
 	for (int i = 0; i < foodHolders.size(); i++) {
 		if (!foodHolderNames[i].empty()) {
 			IngredientData *ing = dsq->continuity.getIngredientHeldByName(foodHolderNames[i]);
@@ -3333,7 +3332,7 @@ void Game::createInGameMenu()
 	int h = controllabels->getHeight();
 	controllabels->position = Vector(checkx-16-w/2.0f, checky + h/2.0f - 14);
 	options->addChild(controllabels, PM_POINTER);
-	
+
 
 
 	int scheckx=270;
@@ -3468,7 +3467,7 @@ void Game::createInGameMenu()
 
 
 	// Vector(575,250);
-	
+
 
 	songLabel = new BitmapText(&dsq->smallFont);
 	{
@@ -3480,7 +3479,6 @@ void Game::createInGameMenu()
 		songLabel->scale = Vector(1.2, 1.2);
 	}
 	menuBg->addChild(songLabel, PM_POINTER);
-
 
 
 
@@ -3576,24 +3574,24 @@ void Game::createInGameMenu()
 	int offy = -20;
 
 #define SB(x) dsq->continuity.stringBank.get(x)
-	
+
 	TTFText *header_action = new TTFText(&dsq->fontArialSmall);
 	header_action->setText(SB(2101));
 	header_action->position = Vector(140, 80+offy);
 	group_keyConfig->addChild(header_action, PM_POINTER);
-	
+
 	TTFText *header_key1 = new TTFText(&dsq->fontArialSmall);
 	header_key1->setText(SB(2102));
 	header_key1->position = Vector(350, 80+offy);
 	header_key1->setAlign(ALIGN_CENTER);
 	group_keyConfig->addChild(header_key1, PM_POINTER);
-	
+
 	TTFText *header_key2 = new TTFText(&dsq->fontArialSmall);
 	header_key2->setText(SB(2103));
 	header_key2->position = Vector(475, 80+offy);
 	header_key2->setAlign(ALIGN_CENTER);
 	group_keyConfig->addChild(header_key2, PM_POINTER);
-	
+
 	TTFText *header_joy = new TTFText(&dsq->fontArialSmall);
 	header_joy->setText(SB(2104));
 	header_joy->position = Vector(600, 80+offy);
@@ -3617,7 +3615,7 @@ void Game::createInGameMenu()
 	AquariaKeyConfig* s1y = addAxesConfigLine(group_keyConfig, SB(2118), "s1ay", 340+offy, 130);
 	AquariaKeyConfig* s2x = addAxesConfigLine(group_keyConfig, SB(2119), "s2ax", 340+offy, 260);
 	AquariaKeyConfig* s2y = addAxesConfigLine(group_keyConfig, SB(2120), "s2ay", 340+offy, 380);
-	
+
 	s1x->setDirMove(DIR_LEFT, s1x);
 	s1x->setDirMove(DIR_RIGHT, s1y);
 
@@ -3631,7 +3629,7 @@ void Game::createInGameMenu()
 	s2y->setDirMove(DIR_RIGHT, s2y);
 
 	offy += 20;
-	
+
 	addKeyConfigLine(group_keyConfig, SB(2121), "PrevPage",		340+offy);
 	addKeyConfigLine(group_keyConfig, SB(2122), "NextPage",		360+offy);
 	addKeyConfigLine(group_keyConfig, SB(2123), "CookFood",		380+offy);
@@ -3640,7 +3638,7 @@ void Game::createInGameMenu()
 	addKeyConfigLine(group_keyConfig, SB(2126), "FoodDrop",		440+offy);
 
 	addKeyConfigLine(group_keyConfig, SB(2127), "Look",			460+offy);
-	
+
 	addKeyConfigLine(group_keyConfig, SB(2128), "ToggleHelp",	480+offy);
 
 #undef SB
@@ -3653,7 +3651,7 @@ void Game::createInGameMenu()
 	group_keyConfig->position = Vector(0, -40);
 
 	addRenderObject(group_keyConfig, LR_OVERLAY);
-	
+
 
 	cook = new AquariaMenuItem;
 	cook->useQuad("Gui/cook-button");
@@ -3771,7 +3769,7 @@ void Game::createInGameMenu()
 	showRecipe->followCamera = 1;
 	showRecipe->position = Vector(575,250);
 	addRenderObject(showRecipe, LR_MENU);
-	
+
 	float scrollx = 555;
 	recipeMenu.scroll = new Quad("gui/recipe-scroll", Vector(scrollx, 200));
 	recipeMenu.scroll->followCamera = 1;
@@ -3798,7 +3796,7 @@ void Game::createInGameMenu()
 	recipeMenu.page->setText(dsq->continuity.stringBank.get(2006));
 	recipeMenu.page->alpha = 0;
 	addRenderObject(recipeMenu.page, LR_RECIPES);
-	
+
 	recipeMenu.prevPage = new AquariaMenuItem;
 	recipeMenu.prevPage->useQuad("Gui/arrow-left");
 	recipeMenu.prevPage->useSound("click");
@@ -3839,8 +3837,6 @@ void Game::createInGameMenu()
 	foodHolders[3]->alpha = 0;
 	foodHolders[3]->position = rightCenter + Vector(96, 150);
 	menuBg->addChild(foodHolders[3], PM_POINTER);
-
-
 
 
 
@@ -3950,13 +3946,13 @@ void Game::createInGameMenu()
 	menu[4]->position = Vector(400,ty+10);
 
 	int gs = 40;
-	
+
 	menu[5]->event.set(MakeFunctionEvent(Game, switchToSongMenu));
 	menu[5]->useQuad("gui/icon-songs");
 	menu[5]->useGlow("particles/glow", gs, gs);
 	menu[5]->useSound("Click");
 	menu[5]->position = Vector(400-60, 350);
-	
+
 	menuIconGlow = new Quad("particles/glow", menu[5]->position);
 	menuIconGlow->alphaMod = 0.4;
 	menuIconGlow->alpha = 0;
@@ -4011,7 +4007,7 @@ void Game::createInGameMenu()
 
 	((AquariaMenuItem*)menu[4])->setDirMove(DIR_UP, ((AquariaMenuItem*)menu[6]));
 
-	
+
 
 // ---------- FOOD MENU
 
@@ -4023,7 +4019,7 @@ void Game::createInGameMenu()
 	for (i = 0; i < foodSlots.size(); i++)
 	{
 		foodSlots[i] = new FoodSlot(i);
-		
+
 		float angle = (float(food)/float(foodSlots.size()))*PI*2;
 		foodSlots[i]->position = worldCenter + Vector(sinf(angle), cosf(angle))*foodSlotRadius;
 
@@ -4070,7 +4066,7 @@ void Game::createInGameMenu()
 
 // ---------- TREASURES
 
-	
+
 	int treasureSlotRadius = 96;
 
 	treasureSlots.resize(treasurePageSize);
@@ -6124,16 +6120,16 @@ void Game::toggleWorldMap()
 void Game::applyState()
 {
 	bool verbose = true;
-	applyingState = true;	
+	applyingState = true;
 
 	helpText = 0;
 	helpUp = helpDown = 0;
 	inHelpScreen = false;
 	helpBG = 0;
 	helpBG2 = 0;
-	
+
 	dsq->returnToScene = "";
-	
+
 	// new place where mods get stopped!
 	// this lets recaching work
 	// (presumably because there has been time for the garbage to be cleared)
@@ -6152,7 +6148,7 @@ void Game::applyState()
 	enqueuedPreviewRecipe = 0;
 
 	dsq->toggleBlackBars(false);
-	
+
 	dsq->setTexturePointers();
 
 
@@ -6223,9 +6219,9 @@ void Game::applyState()
 	{
 		dsq->game->setElementLayerVisible(i-LR_ELEMENTS1, true);
 	}
-	
+
 	dsq->applyParallaxUserSettings();
-	
+
 	controlHintTimer = 0;
 	cameraConstrained = true;
 	// reset parallax
@@ -6459,14 +6455,11 @@ void Game::applyState()
 
 
 
-
 	if (toFlip == 1)
 	{
 		dsq->game->avatar->flipHorizontal();
 		toFlip = -1;
 	}
-
-	
 
 
 
@@ -6940,7 +6933,7 @@ void Game::applyState()
 	{
 		dsq->toggleCursor(true, 0.5);
 	}
-	
+
 	dsq->forceInputGrabOff();
 
 	debugLog("Game::applyState Done");
@@ -7363,7 +7356,7 @@ void Game::onCook()
 				goto endcook;
 		}
 	}
-	
+
 	if(!data)
 	{
 		dsq->sound->playSfx("Denied");
@@ -7409,7 +7402,7 @@ void Game::onCook()
 
 		//dsq->main(0.2);
 
-		
+
 		if (longAnim)
 		{
 			float ft = 0.8;
@@ -7716,7 +7709,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 		controlHint_image->alpha.interpolateTo(0, hintTransTime);
 	}
 
-	
+
 	controlHint_text->position.x = 400 - controlHint_text->getSetWidth()/2 + 25;
 		//400 - controlHint_bg->getWidth()/2 + 25;
 	controlHint_text->setAlign(ALIGN_LEFT);
@@ -7855,7 +7848,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 
 		helpWasPaused = isPaused();
 		togglePause(true);
-		
+
 		std::string data;
 
 // These say "Mac" but we use them on Linux, too.
@@ -7876,7 +7869,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		}
 		fname = localisePath("data/help_start.txt");
 		appendFileToString(data, fname);
-		
+
 // These say "Mac" but we use them on Linux, too.
 #if defined(BBGE_BUILD_UNIX)
 		fname = localisePath("data/help_end_mac.txt");
@@ -7924,7 +7917,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 			int line = helpText->findLine(label);
 			helpText->offset.interpolateTo(Vector(0, -helpText->getLineHeight()*line), -1200);
 		}
-		
+
 		//helpText->offset.interpolateTo(Vector(0, -400), 4, -1, 1);
 		//test->position = Vector(400,300);
 		addRenderObject(helpText, LR_HELP);
@@ -7969,7 +7962,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		{
 			core->getRenderObjectLayer(i)->visible = false;
 		}
-		
+
 		core->resetTimer();
 
 		dsq->screenTransition->transition(MENUPAGETRANSTIME);
@@ -8450,7 +8443,7 @@ void Game::preLocalWarp(LocalWarpType localWarpType)
 	{
 		dsq->game->avatar->warpInLocal = Vector(0,0,0);
 	}
-	
+
 	dsq->screenTransition->capture();
 	core->resetTimer();
 }
@@ -9095,7 +9088,7 @@ void Game::toggleFoodMenu(bool f)
 		if (dsq->game->avatar)
 		{
 			Path *p=0;
-			if (dsq->continuity.getFlag(FLAG_UPGRADE_WOK) > 0 
+			if (dsq->continuity.getFlag(FLAG_UPGRADE_WOK) > 0
 				|| ((p=dsq->game->getNearestPath(dsq->game->avatar->position, PATH_COOK))
 				&& p->isCoordinateInside(dsq->game->avatar->position)))
 			{
@@ -9176,7 +9169,7 @@ void Game::toggleFoodMenu(bool f)
 		foodLabel->alphaMod = 0;
 		foodLabel->alpha = 0;
 		foodDescription->alpha = 0;
-		foodSort->alpha = 0;	
+		foodSort->alpha = 0;
 		showRecipe->alpha = 0;
 
 		liCrystal->alpha = 0;
@@ -9279,7 +9272,7 @@ void Game::toggleKeyConfigMenu(bool f)
 {
 	const float t = 0;
 	playingSongInMenu = -1;
-	
+
 
 	if (f && !keyConfigMenu)
 	{
@@ -9325,13 +9318,13 @@ void Game::toggleKeyConfigMenu(bool f)
 
 		opt_cancel->alpha = 1;
 		opt_save->alpha = 1;
-		
+
 
 		opt_save->position = opt_save_original + Vector(0, 120);
 		opt_cancel->position = opt_cancel_original + Vector(0, 120);
 
 		opt_cancel->setFocus(true);
-		
+
 		menuIconGlow->alpha = 0;
 
 		//dsq->screenTransition->transition(MENUPAGETRANSTIME);
@@ -9348,7 +9341,7 @@ void Game::toggleKeyConfigMenu(bool f)
 
 		opt_save->position = opt_save_original;
 		opt_cancel->position = opt_cancel_original;
-		
+
 		menuIconGlow->alpha = 1;
 	}
 }
@@ -9367,7 +9360,7 @@ void Game::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 		{
 			dsq->continuity.lastOptionsMenuPage = currentMenuPage;
 		}
-	
+
 		toggleFoodMenu(false);
 		optionsMenu = true;
 		voxslider->setValue(dsq->user.audio.voxvol);
@@ -9437,7 +9430,7 @@ void Game::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 		liCrystal->alpha = 1;
 
 		optionsMenu = true;
-		
+
 		menuIconGlow->alpha = 0;
 
 		/*
@@ -9450,7 +9443,7 @@ void Game::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 		lips->alpha = 0;
 
 		keyConfigButton->alpha = 0;
-		
+
 		options->alpha.interpolateTo(0, t);
 
 		opt_cancel->alpha = 0;
@@ -9468,7 +9461,7 @@ void Game::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 		optionsMenu = false;
 
 
-	
+
 		if (!optionsOnly)
 		{
 			for (int i = 0; i <= 1; i++)
@@ -9506,12 +9499,12 @@ void Game::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 
 			//((AquariaMenuItem*)menu[4])->setFocus(true);
 
-			
+
 			menuBg2->alpha.interpolateTo(1, t);
 		}
-		
+
 		menuIconGlow->alpha = 1;
-		
+
 	}
 }
 
@@ -9757,7 +9750,7 @@ void Game::updateCursor(float dt)
 		// instant during map fadeout).
 		if (dsq->inputMode == INPUT_MOUSE || isSceneEditorActive() || dsq->game->isPaused())
 			dsq->cursor->alphaMod = 0.5;
-		
+
 		/*
 		dsq->cursor->offset.stop();
 		dsq->cursor->offset = Vector(0,0);
@@ -10005,7 +9998,7 @@ const float helpTextScrollSpeed = 800.0f;
 const float helpTextScrollClickAmount = 340.0f;
 const float helpTextScrollClickTime = -helpTextScrollSpeed;
 void Game::onHelpDown()
-{	
+{
 	float to = helpText->offset.y - helpTextScrollClickAmount;
 	if (to < -helpText->getHeight() + core->getVirtualHeight())
 	{
@@ -10398,7 +10391,7 @@ void Game::update(float dt)
 		if (cameraFollow)
 		{
 			Vector dest = *cameraFollow;
-			
+
 			if (avatar)
 			{
 				if (avatar->looking && !dsq->game->isPaused()) {
@@ -10737,7 +10730,7 @@ void Game::removeState()
 	const float fadeTime = 0.25;
 
 	dsq->toggleVersionLabel(false);
-	
+
 	dsq->subtitlePlayer.hide(fadeTime);
 
 	dropIngrNames.clear();

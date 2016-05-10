@@ -28,7 +28,7 @@ class StateMachine
 public:
 	StateMachine ();
 	virtual ~StateMachine() {}
-	
+
 	void setState(int state, float time = -1, bool force = false);
 	void stopState(int state);
 	bool isState(int state);
@@ -41,7 +41,7 @@ public:
 	enum
 	{
 		STATE_NONE = -1
-	};	
+	};
 	virtual bool canSetState(int state);
 
 protected:
@@ -51,14 +51,14 @@ protected:
 
 	int currentState, nextState, prevState, enqueuedState;
 	float stateTime, enqueuedTime, stateExtraDT;
-	
+
 	void onUpdate (float dt);
 	void resetStateCounter()
 	{ stateCounter = 0; }
 
 private:
 	float stateCounter;
- 
+
 };
 
 #endif

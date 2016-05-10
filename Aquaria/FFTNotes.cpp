@@ -43,11 +43,7 @@ int FFTNotes::getNoteFromFFT(int fft, int octave)
 	if (fft == 0)
 		return -1;
 	int v = data[fft]-1;
-	/*
-	std::ostringstream os;
-	os << "fftv: " << v;
-	debugLog(os.str());
-	*/
+
 	if (v == (octave+1)*10)
 	{
 		v = 7;
@@ -57,6 +53,6 @@ int FFTNotes::getNoteFromFFT(int fft, int octave)
 		v = -1;
 	}
 	if (v != -1)
-		v -= octave*10; // : )
+		v -= octave*10;
 	return v;
 }

@@ -134,7 +134,7 @@ void DebugFont::onRender()
 
 	for (int i = 0; i < lines.size(); i++)
 	{
-		//float width = (lines[i].size()-1) * fontDrawSize * 1.4f * 0.75f;
+
 		float width = (lines[i].size()) * fontDrawSize * 1.4f * 0.75f;
 		if (align == ALIGN_CENTER)
 		{

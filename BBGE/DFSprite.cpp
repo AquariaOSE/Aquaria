@@ -23,21 +23,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 DFSprite::DFSprite() : AnimatedSprite()
 {
-	//debugLog("DFSprite::DFSprite()");
+
 	currentDatafile = 0;
-	//debugLog("End DFSprite::DFSprite()");
+
 }
 
-/*
-DFSprite::~DFSprite()
-{
-	destroy();
-}
-*/
+
 
 void DFSprite::destroy()
 {
-	//make sure that animatedSprite::destroy() doesn't 
+	//make sure that animatedSprite::destroy() doesn't
 	// destroy our texture
 	// since its just a pointer to a texture in the datafile
 	texture = 0;
@@ -63,12 +58,9 @@ void DFSprite::onUpdate(float dt)
 void DFSprite::onSetTexture()
 {
 	Quad::onSetTexture();
-	/*
-	width = texture->width;
-	height = texture->height;
-	*/
 
-	//scale = Vector(texture->width, texture->height,0);
+
+
 }
 
 // returns index of datafile with the specified name

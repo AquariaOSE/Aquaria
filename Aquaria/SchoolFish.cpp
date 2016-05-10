@@ -50,12 +50,8 @@ SchoolFish::SchoolFish(const std::string &texname) : FlockEntity()
 	float randScale = float(rand()%200)/1000.0f;
 	scale = Vector(0.6f-randScale, 0.6f-randScale);
 
-	/*
-	float randColor = float(rand()%250)/1000.0f;
-	color = Vector(1-randColor, 1-randColor, 1-randColor);
-	*/
 
-	//color.interpolateTo(Vector(0.5, 0.5, 0.5), 2, -1, 1);
+
 	color.ensureData();
 	color.data->path.addPathNode(Vector(1,1,1), 0);
 	color.data->path.addPathNode(Vector(1,1,1), 0.5);
@@ -72,30 +68,24 @@ SchoolFish::SchoolFish(const std::string &texname) : FlockEntity()
 	setEntityType(ET_ENEMY);
 	canBeTargetedByAvatar = true;
 	health = maxHealth = 1;
-	//scale = Vector(0.5, 0.5);
+
 	avoidTime=0;
 	vel = Vector(-minUrgency, 0);
 	setTexture(texname);
 	flockType = FLOCK_FISH;
-	//updateCull = -1;
+
 	updateCull = 4000;
 	collideRadius = 20;
 
-	//2 32 0.1 0.1 -0.03 0 4 0
+
 	setSegs(8, 2, 0.1, 0.9, 0, -0.03, 8, 0);
 
-	/*
-	setDamageTarget(DT_AVATAR_SPORECHILD, false);
-	setDamageTarget(DT_AVATAR_ENERGYBLAST, false);
-	*/
-	//setAllDamageTargets(true);
+
+
 	setDamageTarget(DT_AVATAR_LIZAP, false);
-	/*
-	setDamageTarget(DT_AVATAR_ENERGYBLAST, false);
-	setDamageTarget(DT_AVATAR_SHOCK, false);
-	*/
-	//setDamageTarget(DT_AVATAR_BITE, true);
-//	updateCull = 10248;
+
+
+
 	targetPriority = -1;
 
 	setEatType(EAT_FILE, "SchoolFish");
@@ -111,7 +101,7 @@ void SchoolFish::onEnterState(int action)
 	Entity::onEnterState(action);
 	if (action == STATE_DEAD)
 	{
-		//rotation.interpolateTo(Vector(0,0,180), 2);
+
 		vel.setLength2D(vel.getLength2D()*-1);
 
 		oldFlockID = flock ? flock->flockID : -1;
@@ -119,24 +109,11 @@ void SchoolFish::onEnterState(int action)
 
 		doDeathEffects(0, false);
 
-		/*
-		alpha = 0;
-		alphaMod = 0;
-		*/
+
 		respawnTimer = 20 + rand()%20;
 		alphaMod = 0;
-		/*
-		this->setLife(2);
-		this->setDecayRate(1);
-		this->fadeAlphaWithLife = true;
-		*/
 
-		/*
-		dsq->game->spawnIngredient("FishOil", position, 10);
-		dsq->game->spawnIngredient("FishMeat", position, 10);
-		dsq->game->spawnIngredient("SmallEgg", position, 10);
-		dsq->game->spawnIngredient("PlantLeaf", position, 60);
-		*/
+
 
 		if (!isGoingToBeEaten())
 		{
@@ -182,54 +159,27 @@ void SchoolFish::updateVelocity(Vector &accumulator)
 	vel.z = 0;
 	if (fabsf(vel.y) > fabsf(vel.x))
 	{
-		/*
-		float sign = vel.y / fabsf(vel.y);
-		vel.y = fabsf(vel.x) * sign;
-		*/
-		//std::swap(vel.x, vel.y);
-		// going up 
-		/*
-		float len = vel.getLength2D();
-		if (vel.y < 0)
-		{
-			if (vel.x < 0)
-				vel.y = vel.x;
-			else
-				vel.y = -vel.x;
-		}
-		else
-		{
-			if (vel.x < 0)
-				vel.y = -vel.x;
-			else
-				vel.y = vel.x;
-		}
-		vel.setLength2D(len);
-		*/
+
+
+
 	}
 }
 
 inline
 void SchoolFish::avoid(Vector &accumulator, Vector pos, bool inv)
 {
-	//accumulator = Vector(0,0,0);
+
 	Vector change;
 	if (inv)
 		change = pos - this->position;
 	else
 		change = this->position - pos;
-	//change = position;
-	//change -= this->position;
-	change.setLength2D(maxUrgency);
-    //change |= maxUrgency;
 
-	//change = Vector(100,0);
-	//avoidTime = 2;
-	/*
-	std::ostringstream os;
-	os << "change(" << change.x << ", " << change.y << ")";
-	debugLog (os.str());
-	*/
+
+	change.setLength2D(maxUrgency);
+
+
+
 	accumulator += change;
 }
 
@@ -256,7 +206,6 @@ void SchoolFish::applyAvoidance(Vector &accumulator)
 	}
 
 
-	//return;
 
 	if (avoidTime>0) return;
 
@@ -285,7 +234,7 @@ void SchoolFish::applyAvoidance(Vector &accumulator)
 		const float tileMult = (float)TILE_SIZE / (float)obsCount;
 		Vector change(obsSumX*tileMult, obsSumY*tileMult);
 		change += position - t0.worldVector();
-		//change |= 200;
+
 
 		float dist = change.getLength2D();
 		float ratio = dist / radius;
@@ -346,7 +295,7 @@ void SchoolFish::applyCohesion(Vector &accumulator)
 			change = dsq->game->avatar->position - position;
 			change.setLength2D(maxUrgency*strengthCohesion);
 			accumulator += change;
-			//avoid(accumulator, dsq->game->avatar->position, true);
+
 		}
 	}
 }
@@ -382,47 +331,8 @@ void SchoolFish::applySeparation(Vector &accumulator)
 void SchoolFish::onUpdate(float dt)
 {
 	BBGE_PROF(SchoolFish_onUpdate);
-	/*
-	Quad::onUpdate(dt);
-	return;
-	*/
-
-	/*
-	if (dsq->continuity.form == FORM_BEAST)
-		this->activationType = ACT_CLICK;
-	else
-		this->activationType = ACT_NONE;
-	*/
 
 
-	/*
-	if (burstDelay == 0)
-	{
-		maxSpeedLerp = 2;
-		Vector v = getNormal();
-		vel = 0;
-		v *= -5000;
-		vel += v;
-		//float t = (100 + rand()%100)/100.0f;
-		float t = 2;
-		maxSpeedLerp.interpolateTo(1, t);
-		burstDelay = 10;// + (rand()%100)/100.0f;
-		//rotateToVec(v, 0, 90);
-		//rotation.interpolateTo(0, 1);
-
-		if (v.x > 0 && !isfh())
-		{
-			flipHorizontal();
-			flipDelay = 0.5;
-		}
-		if (v.x < 0 && isfh())
-		{
-			flipHorizontal();
-			flipDelay = 0.5;
-		}
-	}
-	else
-	*/
 
 	{
 		burstDelay -= dt;
@@ -437,13 +347,8 @@ void SchoolFish::onUpdate(float dt)
 
 	if (this->layer < LR_ENTITIES)
 	{
-		//debugLog("background fish!");
-		/*
-		setDamageTarget(DT_AVATAR_SHOCK, false);
-		setDamageTarget(DT_AVATAR_BITE, false);
-		setDamageTarget(DT_AVATAR_VOMIT, false);
-		setDamageTarget(DT_AVATAR_ENERGYBLAST, false);
-		*/
+
+
 		setEntityType(ET_NEUTRAL);
 		collideRadius = 0;
 	}
@@ -463,18 +368,7 @@ void SchoolFish::onUpdate(float dt)
 	}
 	else
 	{
-		/*
-		if (layer == LR_ENTITIES || layer == LR_ENTITIES2)
-		{
-			rippleTimer -= dt;
-			if (rippleTimer < 0)
-			{
-				if (core->afterEffectManager)
-					core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),position,0.04,0.06,15,0.2f));
-				rippleTimer = 0.5;
-			}
-		}
-		*/
+
 
 		FlockEntity::onUpdate(dt);
 
@@ -482,31 +376,7 @@ void SchoolFish::onUpdate(float dt)
 			dsq->game->handleShotCollisions(this);
 
 
-		/*
-		soundDelay -= dt;
-		if (soundDelay <= 0)
-		{
-			//sound(swimSound, 1000 + rand()%100);
-			soundDelay = 4+(rand()%50)/100.0f;
-		}
-		*/
-		/*
-	1.    if distance_to(closest_boid) <= too_close then set direction away from closest_boid
-	2.    speed_of_neighbors := average(speed(x), for all x where distance_to(x) <= neighborhood_size)
-			direction_of_neighbors := avg(direction(x), for all x where distance_to(x) <= neighborhood_size)
-			if speed < speed_of_neighbors then increase speed
-			if speed > speed_of_neighbors then decrease speed
-			turn towards direction_of_neighbors
-	3.    position_of_neighbors := avg(position(x), for all x where distance_to(x) <= neighborhood_size)
-			turn towards position_of_neighbors
-		*/
 
-
-		/*
-		FlockPiece flock;
-		getFlockInRange(160, &flock);
-		*/
-		// if flock in 160 ?
 		if (true)
 		{
 			VectorSet newDirection;
@@ -530,10 +400,6 @@ void SchoolFish::onUpdate(float dt)
 			applyAvoidance(accumulator);
 			updateVelocity(accumulator);
 
-			/*
-			if (dsq->game->isValidTarget(this, 0))
-				doSpellAvoidance(dt, 96, dodgeAbility);
-			*/
 
 
 			Vector lastPosition = position;
@@ -542,57 +408,21 @@ void SchoolFish::onUpdate(float dt)
 			if (dsq->game->isObstructed(position))
 			{
 				position = lastPosition;
-				/*
-				Vector newPosition = position;
-				position = Vector(newPosition.x, lastPosition.y);
-				if (dsq->game->isObstructed(position))
-				{
-					position = Vector(lastPosition.x, newPosition.y);
-					if (dsq->game->isObstructed(position))
-					{
-						position = lastPosition;
-					}
-				}
-				*/
+
 			}
 
-			//updateCurrents(dt);
+
 			updateVel2(dt);
 
 
-			/*
-			if (flipDelay > 0)
-			{
-				flipDelay -= dt;
-				if (flipDelay < 0)
-				{
-					flipDelay = 0;
-				}
-			}
-			*/
 
 			flipDelay = 0;
 
-			//dir.normalize2D();
+
 			if (flipDelay <= 0)
 			{
 				const float amt = 0;
-				/*
 
-				if (fabsf(dir.x) > fabsf(dir.y))
-				{
-					if (dir.x > amt && !isfh())
-					{
-						flipHorizontal();
-						flipDelay = 0.5;
-					}
-					if (dir.x < -amt && isfh())
-					{
-						flipHorizontal();
-						flipDelay = 0.5;
-					}
-				}
-				*/
 				if (vel.x > amt && !isfh())
 				{
 					flipHorizontal();
@@ -604,7 +434,6 @@ void SchoolFish::onUpdate(float dt)
 			}
 
 
-			//rotateToVec(accumulator, 5, 90);
 
 			float angle = atan2f(dir.x<0 ? -dir.y : dir.y, fabsf(dir.x));
 			angle = ((angle*180)/PI);
@@ -613,11 +442,11 @@ void SchoolFish::onUpdate(float dt)
 				angle = 45;
 			if (angle < -45)
 				angle = -45;
-			
+
 
 			rotation = Vector(0,0,angle);
 
-			//rotation.interpolateTo(Vector(0, 0, angle), 0);
+
 		}
 
 	}
@@ -626,19 +455,6 @@ void SchoolFish::onUpdate(float dt)
 void SchoolFish::onRender()
 {
 	FlockEntity::onRender();
-	/*
-	glDisable(GL_BLEND);
-	glPointSize(12);
-	glDisable(GL_LIGHTING);
-	glColor3f(1,1,1);
-	glBegin(GL_POINTS);
 
-		glVertex3f(0,0,0);
-	glEnd();
-	glBegin(GL_LINES);
-		glVertex3f(0,0,0);
-		glVertex3f(vel.x*50, vel.y*50, 0);
-	glEnd();
-	*/
 }
 

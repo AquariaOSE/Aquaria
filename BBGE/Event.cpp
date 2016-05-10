@@ -221,7 +221,7 @@ void Timer::update(float dt)
 		}
 	break;
 	case 2:
-		timer += dt; 
+		timer += dt;
 	break;
 	}
 }
@@ -239,5 +239,5 @@ float Timer::getValue()
 {
 	return timer;
 }
-//EventPtr endEvent, startEvent;
+
 

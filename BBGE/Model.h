@@ -36,7 +36,7 @@ public:
 
 	bool load(const std::string &file);
 
-	
+
 protected:
 	void onUpdate(float dt);
 
@@ -44,7 +44,7 @@ protected:
 	void renderMesh(bool bWireframe, bool bLight);
 
 protected:
-	//int m_state;
+
 	CalCoreModel* m_calCoreModel;
 	CalModel* m_calModel;
 	int m_animationId[16];

@@ -2108,7 +2108,7 @@ luaFunc(getNoteColor)
 
 luaFunc(getRandNote)
 {
-	//int note = lua_tointeger(L, 1);
+
 
 	luaReturnNum(dsq->getRandNote());
 }
@@ -2230,11 +2230,7 @@ luaFunc(shot_setOut)
 		Vector adjust = shot->velocity;
 		adjust.setLength2D(outness);
 		shot->position += adjust;
-		/*
-		std::ostringstream os;
-		os << "out(" << adjust.x << ", " << adjust.y << ")";
-		debugLog(os.str());
-		*/
+
 	}
 	luaReturnNil();
 }
@@ -2496,7 +2492,7 @@ static size_t _shotFilter(lua_State *L)
 	for(Shot::Shots::iterator it = Shot::shots.begin(); it != Shot::shots.end(); ++it)
 	{
 		Shot *s = *it;
-		
+
 		if (s->isActive() && s->life >= 1.0f)
 		{
 			if (dt == DT_NONE || s->getDamageType() == dt)
@@ -2693,7 +2689,7 @@ luaFunc(entity_getBoneLockEntity)
 	{
 		BoneLock *b = e->getBoneLock();
 		ent = b->entity;
-		//ent = e->boneLock.entity;
+
 	}
 	luaReturnPtr(ent);
 }
@@ -2953,11 +2949,7 @@ luaFunc(isWithin)
 	Vector v1 = getVector(L, 1);
 	Vector v2 = getVector(L, 3);
 	float dist = lua_tonumber(L, 5);
-	/*
-	std::ostringstream os;
-	os << "v1(" << v1.x << ", " << v1.y << ") v2(" << v2.x << ", " << v2.y << ")";
-	debugLog(os.str());
-	*/
+
 	Vector d = v2-v1;
 	bool v = false;
 	if (d.isLength2DIn(dist))
@@ -4049,29 +4041,13 @@ luaFunc(entity_isNearGround)
 		Vector v = dsq->game->getWallNormal(e->position, sampleArea);
 		if (!v.isZero())
 		{
-			//if (v.y < -0.5f && fabsf(v.x) < 0.4f)
+
 			if (v.y < 0 && fabsf(v.x) < 0.6f)
 			{
 				value = true;
 			}
 		}
-		/*
-		Vector v = e->position + Vector(0,e->collideRadius + TILE_SIZE/2);
-		std::ostringstream os;
-		os << "checking (" << v.x << ", " << v.y << ")";
-		debugLog(os.str());
-		TileVector t(v);
-		TileVector c;
-		for (int i = -5; i < 5; i++)
-		{
-			c.x = t.x+i;
-			c.y = t.y;
-			if (dsq->game->isObstructed(t))
-			{
-				value = true;
-			}
-		}
-		*/
+
 	}
 	luaReturnBool(value);
 }
@@ -4680,7 +4656,7 @@ luaFunc(savePoint)
 	Vector position;
 	if (p)
 	{
-		//dsq->game->avatar->moveToNode(p, 0, 0, 1);
+
 		position = p->nodes[0].position;
 	}
 
@@ -4818,7 +4794,7 @@ luaFunc(entity_damage)
 	if (e)
 	{
 		DamageData d;
-		//d.attacker = e;
+
 		d.attacker = lua_isuserdata(L, 2) ? entity(L, 2) : NULL;
 		d.damage = lua_tonumber(L, 3);
 		d.damageType = (DamageType)lua_tointeger(L, 4);
@@ -4991,11 +4967,7 @@ luaFunc(decrFlag)
 
 luaFunc(setFlag)
 {
-	/*
-	if (lua_isstring(L, 1))
-		dsq->continuity.setFlag(lua_tostring(L, 1), lua_tonumber(L, 2));
-	else
-	*/
+
 	dsq->continuity.setFlag(lua_tointeger(L, 1), lua_tointeger(L, 2));
 	luaReturnNil();
 }
@@ -5003,11 +4975,7 @@ luaFunc(setFlag)
 luaFunc(getFlag)
 {
 	int v = 0;
-	/*
-	if (lua_isstring(L, 1))
-		v = dsq->continuity.getFlag(lua_tostring(L, 1));
-	else if (lua_isnumber(L, 1))
-	*/
+
 	v = dsq->continuity.getFlag(lua_tointeger(L, 1));
 
 	luaReturnNum(v);
@@ -6688,7 +6656,7 @@ luaFunc(playMusic)
 luaFunc(playMusicStraight)
 {
 	dsq->sound->setMusicFader(1,0);
-	dsq->sound->playMusic(getString(L, 1), SLT_LOOP, SFT_IN, 0.5); //SFT_IN, 0.1);//, SFT_IN, 0.2);
+	dsq->sound->playMusic(getString(L, 1), SLT_LOOP, SFT_IN, 0.5);
 	luaReturnNil();
 }
 
@@ -6813,7 +6781,7 @@ luaFunc(entity_adjustPositionBySurfaceNormal)
 			e->position += v;
 		}
 		e->setv(EV_CRAWLING, 0);
-		//e->setCrawling(false);
+
 	}
 	luaReturnNil();
 }
@@ -6827,16 +6795,10 @@ luaFunc(entity_moveAlongSurface)
 	{
 		e->lastPosition = e->position;
 
-		//if (!e->position.isInterpolating())
+
 		{
 
 
-			/*
-			if (dsq->game->isObstructed(TileVector(e->position)))
-			{
-				e->moveOutOfWall();
-			}
-			*/
 
 			Vector v;
 			if (e->ridingOnEntity)
@@ -6846,58 +6808,22 @@ luaFunc(entity_moveAlongSurface)
 			}
 			else
 				v = dsq->game->getWallNormal(e->position);
-			//int outFromWall = lua_tointeger(L, 5);
+
 			int outFromWall = e->getv(EV_WALLOUT);
 			bool invisibleIn = e->isSittingOnInvisibleIn();
 
-			/*
-			if (invisibleIn)
-				debugLog("Found invisibleIn");
-			else
-				debugLog("NOT FOUND");
-			*/
 
-			/*
-			for (int x = -2; x < 2; x++)
-			{
-				for (int y = -2; y< 2; y++)
-				{
-					if (dsq->game->getGrid(TileVector(x,y))== OT_INVISIBLEIN)
-					{
-						debugLog("found invisible in");
-						invisibleIn = true;
-						break;
-					}
-				}
-			}
-			*/
+
 			if (invisibleIn)
 				outFromWall -= TILE_SIZE;
 			float t = 0.1;
 			e->offset.interpolateTo(v*outFromWall, t);
-			/*
-			if (outFromWall)
-			{
-				//e->lastWallOffset = dsq->game->getWallNormal(e->position)*outFromWall;
-				//e->offset.interpolateTo(dsq->game->getWallNormal(e->position)*outFromWall, time*2);
-				//e->offset = v*outFromWall;
 
-				//float t = 0;
-				e->offset.interpolateTo(v*outFromWall, t);
-				//pos += e->lastWallOffset;
-			}
-			else
-			{
-				e->offset.interpolateTo(Vector(0,0), t);
-				//e->offset.interpolateTo(Vector(0,0), time*2);
-				//e->lastWallOffset = Vector(0,0);g
-			}
-			*/
-			// HACK: make this an optional parameter?
-			//e->rotateToVec(v, 0.1);
+
+
 			float dt = lua_tonumber(L, 2);
 			float speed = lua_tonumber(L, 3);
-			//int climbHeight = lua_tonumber(L, 4);
+
 			Vector mov;
 			if (e->surfaceMoveDir==1)
 				mov = Vector(v.y, -v.x);
@@ -6910,49 +6836,8 @@ luaFunc(entity_moveAlongSurface)
 
 			e->vel = 0;
 
-			/*
-			float adjustbit = float(speed)/float(TILE_SIZE);
-			if (e->isNearObstruction(0))
-			{
-				Vector n = dsq->game->getWallNormal(e->position);
-				if (!n.isZero())
-				{
-					Vector sp = e->position;
-					e->position += n * adjustbit * dt;
-				}
-			}
-			if (!e->isNearObstruction(1))
-			{
-				Vector n = dsq->game->getWallNormal(e->position);
-				if (!n.isZero())
-				{
-					Vector sp = e->position;
-					e->position -= n * adjustbit * dt;
-				}
-			}
-			*/
-				/*
-				Vector sp = e->position;
-				e->clampToSurface();
-				*/
-				/*
-				e->position = sp;
-				e->internalOffset.interpolateTo(e->position-sp, 0.2);
-				*/
-				/*
-				e->position = e->lastPosition;
-				e->position.interpolateTo(to*0.5f + e->position*0.5f, 0.5);
-				*/
-					/*
-					Vector to = e->position;
-					e->position = e->lastPosition;
-					e->position.interpolateTo(to, 0.5);
-					*/
-					/*
-					e->position = sp;
-					e->internalOffset.interpolateTo(e->position - sp, 0.2);
-					*/
-					//e->clampToSurface(0.1);
+
+
 		}
 	}
 
@@ -6961,7 +6846,7 @@ luaFunc(entity_moveAlongSurface)
 
 luaFunc(entity_rotateToSurfaceNormal)
 {
-	//ScriptedEntity *e = scriptedEntity(L);
+
 	Entity *e = entity(L);
 	float t = lua_tonumber(L, 2);
 	int n = lua_tointeger(L, 3);
@@ -6970,7 +6855,7 @@ luaFunc(entity_rotateToSurfaceNormal)
 	{
 		e->rotateToSurfaceNormal(t, n, rot);
 	}
-	//Entity *e = entity(L);
+
 
 	luaReturnNil();
 }
@@ -7219,11 +7104,7 @@ luaFunc(entity_pullEntities)
 					Vector pull = pos - ent->position;
 					pull.setLength2D(float(len) * dt);
 					ent->vel2 += pull;
-					/*
-					std::ostringstream os;
-					os << "ent: " << ent->name << " + (" << pull.x << ", " << pull.y << ")";
-					debugLog(os.str());
-					*/
+
 				}
 			}
 		}
@@ -7267,7 +7148,7 @@ luaFunc(entity_isRidingOnEntity)
 		luaReturnPtr(NULL);
 }
 
-//entity_setProperty(me, EP_SOLID, true)
+
 luaFunc(entity_isProperty)
 {
 	Entity *e = entity(L);
@@ -7279,7 +7160,7 @@ luaFunc(entity_isProperty)
 	luaReturnBool(v);
 }
 
-//entity_setProperty(me, EP_SOLID, true)
+
 luaFunc(entity_setProperty)
 {
 	Entity *e = entity(L);
@@ -7335,10 +7216,7 @@ luaFunc(entity_hurtTarget)
 		d.damage = lua_tointeger(L, 2);
 		e->getTargetEntity(e->currentEntityTarget)->damage(d);
 	}
-	/*
-	if (e && e->getTargetEntity())
-		e->getTargetEntity(e->currentEntityTarget)->damage(lua_tointeger(L, 2), 0, e);
-	*/
+
 	luaReturnNil();
 }
 
@@ -8194,7 +8072,7 @@ luaFunc(entity_getTarget)
 	if (e)
 	{
 		retEnt = e->getTargetEntity(lua_tonumber(L, 2));
-		//e->activate();
+
 	}
 	luaReturnPtr(retEnt);
 }
@@ -8815,11 +8693,7 @@ luaFunc(entity_getFlag)
 luaFunc(isFlag)
 {
 	int v = 0;
-	/*
-	if (lua_isstring(L, 1))
-		v = dsq->continuity.getFlag(lua_tostring(L, 1));
-	else if (lua_isnumber(L, 1))
-	*/
+
 	bool f = false;
 	if (lua_isnumber(L, 1))
 	{
@@ -8831,11 +8705,7 @@ luaFunc(isFlag)
 		v = dsq->continuity.getFlag(getString(L, 1));
 		f = (v == lua_tointeger(L, 2));
 	}
-	/*
-	int f = 0;
-	dsq->continuity.getFlag(lua_tostring(L, 1));
 
-	*/
 	luaReturnBool(f);
 }
 

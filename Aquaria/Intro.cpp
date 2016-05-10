@@ -227,7 +227,7 @@ void Intro::update(float dt)
 
 		dsq->toggleBlackBars(1);
 		dsq->setBlackBarsColor(Vector(0,0,0));
-		
+
 		cachy.precacheTex("intro/*.png");
 
 		meteors.clear();
@@ -245,7 +245,7 @@ void Intro::update(float dt)
 		dsq->sound->loadLocalSound("aqfocus");
 		dsq->sound->loadLocalSound("thewave");
 		dsq->sound->loadLocalSound("screaming");
-		
+
 
 		SkeletalSprite *citybg = new SkeletalSprite();
 		citybg->loadSkeletal("citybg");
@@ -278,7 +278,7 @@ void Intro::update(float dt)
 		}
 		addRenderObject(eric, LR_ENTITIES);
 
-	
+
 
 		dsq->overlay->alpha = 0;
 		dsq->overlay2->alpha = 0;
@@ -288,7 +288,7 @@ void Intro::update(float dt)
 		dsq->overlay2->color.interpolateTo(Vector(0,0,0), 1);
 
 		dsq->overlay2->alpha = 1;
-		
+
 		core->cacheRender();
 
 
@@ -404,7 +404,7 @@ void Intro::update(float dt)
 
 		// -- floating city in clouds
 
-		
+
 		dsq->setClearColor(Vector(0.4,0.4,0.4));
 
 		/*
@@ -474,7 +474,7 @@ void Intro::update(float dt)
 
 		if (waitQuit(2)) return;
 
-		
+
 
 		// -- window
 
@@ -514,7 +514,7 @@ void Intro::update(float dt)
 		ericHead->alpha = 0;
 
 
-		
+
 		// -- brush
 
 		float brusht=7;
@@ -544,7 +544,7 @@ void Intro::update(float dt)
 		dsq->sound->playSfx("aqfocus", 0.8);
 
 		if (waitQuit(1.5)) return;
-		
+
 
 		if (waitQuit(2)) return;
 
@@ -764,8 +764,6 @@ void Intro::update(float dt)
 		if (waitQuit(1.9)) return;
 
 
-		
-
 
 		dsq->overlay->color = Vector(0,0,0);
 		dsq->fade(1, 0.1);
@@ -817,7 +815,7 @@ void Intro::update(float dt)
 		play4.name = "bgloop-interior";
 		play4.loops = -1;
 		play4.time = 1;
-		play4.fade = SFT_IN; 
+		play4.fade = SFT_IN;
 		void *bgLoop = dsq->sound->playSfx(play4);
 
 		if (waitQuit(3)) return;
@@ -835,7 +833,7 @@ void Intro::update(float dt)
 		core->sound->playVoice("titleb");
 
 		dsq->sound->playSfx("heartbeat", 0.2);
-		
+
 		if (waitQuit(2.5)) return;
 
 		underwaterBG->alphaMod = 0;

@@ -58,7 +58,7 @@ void QuadTrail::onRender()
 {
 	if (numPoints < 2) return;
 
-	//glDisable(GL_CULL_FACE);
+
 	int c = 0;
 	Vector p, diff, dl, dr;
 	Vector lastPoint;

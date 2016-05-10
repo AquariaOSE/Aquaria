@@ -86,8 +86,8 @@ void ManaBall::onUpdate(float dt)
 			this->scale.interpolateTo(Vector(0,0),1);
 			setLife(1);
 			setDecayRate(1);
-			//this->shareAlphaWithChildren = 1;
-			//this->fadeAlphaWithLife = 1;
+
+
 		}
 	}
 
@@ -99,7 +99,7 @@ void ManaBall::onUpdate(float dt)
 			if (diff.isLength2DIn(96))
 			{
 				use(dsq->game->avatar);
-				//position.interpolateTo(dsq->game->avatar->position, 0.5);
+
 			}
 			else
 			{
@@ -122,7 +122,7 @@ void ManaBall::onUpdate(float dt)
 		else
 		{
 			position.interpolateTo(dsq->game->avatar->position, 0.2);
-			//position = ;
+
 		}
 	}
 	position.z = 0.5;

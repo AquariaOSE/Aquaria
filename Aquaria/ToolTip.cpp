@@ -54,7 +54,7 @@ void ToolTip::setText(const std::string &t, const Vector &center, int width)
 	int height = 0;
 
 	back->position = center;
-	
+
 	text->setWidth(width - 40);
 
 	text->setText(t);
@@ -62,7 +62,7 @@ void ToolTip::setText(const std::string &t, const Vector &center, int width)
 
 	back->setWidthHeight(width, height);
 
-	text->position = center - Vector(width,height)*0.5f + Vector(5, 5);	
+	text->position = center - Vector(width,height)*0.5f + Vector(5, 5);
 }
 
 void ToolTip::setArea(const Vector &p1, const Vector &p2)
@@ -114,7 +114,7 @@ void ToolTip::onUpdate(float dt)
 		break;
 		}
 
-		const float t = 0.0;//0.4;//0.05;
+		const float t = 0.0;
 		if (in && (required || dsq->user.control.toolTipsOn))
 		{
 			back->alpha.interpolateTo(1, t);

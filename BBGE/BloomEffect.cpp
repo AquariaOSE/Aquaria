@@ -28,7 +28,7 @@ BloomEffect::BloomEffect() : RenderObject()
 	cull = 0;
 	stretch = 0;
 	startLayer = endLayer = -1;
-	
+
 	texID = 0;
 	format = GL_LUMINANCE;
 
@@ -40,7 +40,7 @@ void BloomEffect::init(int quality, int startLayer, int endLayer)
 	this->startLayer = startLayer;
 	this->endLayer = endLayer;
 	this->quality = quality;
-	
+
 	if (useFrameBuffer)
 	{
 		if (frameBuffer.init(quality, quality))
@@ -106,7 +106,7 @@ void BloomEffect::render()
 		glPushMatrix();
 			glLoadIdentity();
 
-			//glScalef(scale.x, scale.y, 0);
+
 
 			float spost = 0.0;
 

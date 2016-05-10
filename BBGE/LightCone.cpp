@@ -30,7 +30,7 @@ void LightCone::onRender()
 {
 	RenderObject::onRender();
 	glBegin(GL_QUADS);
-		//glNormal3f( 0.0f, 0, 1.0f);
+
 		glColor4f(color.x, color.y, color.z, 1*alpha.x);
 		glVertex3f(0, 0,  0);
 		glColor4f(color.x, color.y, color.z,1*alpha.x);

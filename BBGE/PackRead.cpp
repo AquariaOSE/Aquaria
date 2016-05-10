@@ -60,10 +60,7 @@ void packGetLoc(const std::string &pack, const std::string &file, long int *loca
 		_read(fd, name, nameSize);
 		name[nameSize] = '\0';
 
-		/*
-		sprintf(dbg, "fs: %d ns: %d n: %s", fileSize, nameSize, name);
-		debugLog(dbg);
-		*/
+
 
 		if (nocasecmp(file, std::string(name))==0)
 		{
@@ -77,7 +74,7 @@ void packGetLoc(const std::string &pack, const std::string &file, long int *loca
 			*size = fileSize;
 
 			return;
-			//return buffer;
+
 		}
 
 		free(name);
@@ -92,7 +89,7 @@ void packReadInfo(const char *pack)
 {
 	debugLog("pack read info");
 
-	//char dbg[256];
+
 
 	int fd = _open(pack, O_RDONLY);
 
@@ -101,10 +98,7 @@ void packReadInfo(const char *pack)
 
 	_read(fd, &numFiles, sizeof(int));
 
-	/*
-	sprintf(dbg, "numFiles: %d", numFiles);
-	debugLog(dbg);
-	*/
+
 
 	for (int i = 0; i < numFiles; i++)
 	{
@@ -112,10 +106,7 @@ void packReadInfo(const char *pack)
 
 		_read(fd, &loc, sizeof(LOC_UNIT));
 
-		/*
-		sprintf(dbg, "loc[%d] = %d", i, loc);
-		debugLog(dbg);
-		*/
+
 
 		_lseek(fd, loc, SEEK_SET);
 
@@ -128,10 +119,6 @@ void packReadInfo(const char *pack)
 		name[nameSize] = '\0';
 
 
-		/*
-		sprintf(dbg, "fs: %d ns: %d n: %s", fileSize, nameSize, name);
-		debugLog(dbg);
-		*/
 
 		free(name);
 	}
