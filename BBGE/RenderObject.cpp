@@ -967,6 +967,10 @@ void RenderObject::enqueueChildDeletion(RenderObject *r)
 {
 	if (r->parent == this)
 	{
+		// Don't garbage a child more than once
+		for (size_t i = 0; i < childGarbage.size(); ++i)
+			if(childGarbage[i] == r)
+				return;
 		childGarbage.push_back(r);
 	}
 }

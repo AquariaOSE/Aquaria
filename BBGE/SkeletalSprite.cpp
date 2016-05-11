@@ -1105,7 +1105,6 @@ void SkeletalSprite::deleteBones()
 	{
 		(*it)->safeKill();
 	}
-	bones.clear();
 }
 
 Animation *SkeletalSprite::getAnimation(const std::string& anim)
