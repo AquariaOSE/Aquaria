@@ -6781,8 +6781,6 @@ void Game::applyState()
 	cameraInterp = avatar->position;
 	core->cameraPos = getCameraPositionFor(avatar->position);
 
-	core->sort();
-
 	if (dsq->mod.isActive())
 		dsq->runScript(dsq->mod.getPath() + "scripts/premap_" + sceneName + ".lua", "init", true);
 	else
