@@ -55,12 +55,6 @@ std::string getInputCodeToString(int key);
 std::string getInputCodeToUserString(int key);
 int getStringToInputCode(const std::string &string);
 
-enum TimeUpdateType
-{
-	TIMEUPDATE_DYNAMIC	= 0,
-	TIMEUPDATE_FIXED	= 1
-};
-
 struct ScreenMode
 {
 	ScreenMode() { idx = x = y = hz = 0; }
@@ -708,11 +702,6 @@ public:
 
 protected:
 
-	std::string fpsDebugString;
-
-	TimeUpdateType timeUpdateType;
-	int fixedFPS;
-
 	void updateCullData();
 
 	std::string userDataFolder;
@@ -760,7 +749,6 @@ protected:
 	void shutdownSoundLibrary();
 
 	int afterEffectManagerLayer;
-	bool sortEnabled;
 	Vector cameraOffset;
 	std::vector<float> avgFPS;
 	virtual void modifyDt(float &dt){}
@@ -774,9 +762,6 @@ protected:
 	bool clearedGarbageFlag;
 	int nestedMains;
 	std::string baseTextureDirectory;
-#ifdef BBGE_BUILD_WINDOWS
-	__int64 lastTime, curTime, freq;
-#endif
 
 	std::ofstream _logOut;
 

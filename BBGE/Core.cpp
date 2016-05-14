@@ -329,10 +329,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 {
 	sound = NULL;
 	screenCapScale = Vector(1,1,1);
-	timeUpdateType = TIMEUPDATE_DYNAMIC;
 	_extraDataDir = extraDataDir;
-
-	fixedFPS = 60;
 
 	if (userDataSubFolder.empty())
 		userDataSubFolder = appName;
@@ -1575,29 +1572,16 @@ void Core::main(float runTime)
 	bool wasInactive = false;
 #endif
 
-
 	nowTicks = thenTicks = SDL_GetTicks();
-
-
-
 	nestedMains++;
-
-
 
 	while((runTime == -1 && !loopDone) || (runTime >0))
 	{
 		BBGE_PROF(Core_main);
 
-
-
-		if (timeUpdateType == TIMEUPDATE_DYNAMIC)
-		{
-			nowTicks = SDL_GetTicks();
-		}
-
+		nowTicks = SDL_GetTicks();
 		dt = (nowTicks-thenTicks)/1000.0;
 		thenTicks = nowTicks;
-
 
 		if (verbose) debugLog("avgFPS");
 		if (!avgFPS.empty())
@@ -1696,12 +1680,6 @@ void Core::main(float runTime)
 		}
 #endif
 
-		if (timeUpdateType == TIMEUPDATE_FIXED)
-		{
-			real_dt = dt;
-			dt = 1.0f/float(fixedFPS);
-		}
-
 		old_dt = dt;
 
 		if (verbose) debugLog("modify dt");
@@ -1797,39 +1775,6 @@ void Core::main(float runTime)
 
 			saveScreenshotTGA(getScreenshotFilename());
 			prepScreen(0);
-		}
-
-		// wait
-		if (timeUpdateType == TIMEUPDATE_FIXED)
-		{
-			static float avg_diff=0;
-			static int avg_diff_count=0;
-
-			float diff = (1.0f/float(fixedFPS)) - real_dt;
-
-			avg_diff_count++;
-			avg_diff += diff;
-
-			char buf[256];
-			sprintf(buf, "real_dt: %5.4f \n realFPS: %5.4f \n fixedFPS: %5.4f \n diff: %5.4f \n delay: %5.4f \n avgdiff: %5.8f", float(real_dt), float(real_dt>0?(1.0f/real_dt):0.0f), float(fixedFPS), float(diff), float(diff*1000), float(avg_diff/(float)avg_diff_count));
-			fpsDebugString = buf;
-
-
-
-			nowTicks = SDL_GetTicks();
-
-			if (diff > 0)
-			{
-
-
-				while ((SDL_GetTicks() - nowTicks) < (diff*1000))
-				{
-
-				}
-			}
-
-
-
 		}
 	}
 	if (verbose) debugLog("bottom of function");
