@@ -1137,11 +1137,6 @@ bool RenderObject::setTexture(const std::string &n)
 	return tex && tex->getLoadResult() == TEX_SUCCESS;
 }
 
-float RenderObject::getSortDepth()
-{
-	return position.y;
-}
-
 void RenderObject::addChild(RenderObject *r, ParentManaged pm, RenderBeforeParent rbp, ChildOrder order)
 {
 	if (r->parent)

@@ -324,7 +324,6 @@ static bool checkWritable(const std::string& path, bool warn, bool critical)
 #endif
 
 
-const float SORT_DELAY = 10;
 Core::Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
 : ActionMapper(), StateManager(), appName(appName)
 {
@@ -449,8 +448,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	renderObjectCount = 0;
 	avgFPS.resize(1);
 	minimized = false;
-	sortFlag = true;
-	sortTimer = SORT_DELAY;
 	numSavedScreenshots = 0;
 	shuttingDown = false;
 	clearedGarbageFlag = false;
@@ -874,19 +871,6 @@ void Core::onUpdate(float dt)
 	if (afterEffectManager)
 	{
 		afterEffectManager->update(dt);
-	}
-
-	if (!sortFlag)
-	{
-		if (sortTimer>0)
-		{
-			sortTimer -= dt;
-			if (sortTimer <= 0)
-			{
-				sortTimer = SORT_DELAY;
-				sort();
-			}
-		}
 	}
 }
 
@@ -1854,31 +1838,6 @@ void Core::main(float runTime)
 		clearGarbage();
 	nestedMains--;
 	if (verbose) debugLog("exit Core::main");
-}
-
-// less than through pointer
-bool RenderObject_lt(RenderObject* x, RenderObject* y)
-{
-	return x->getSortDepth() < y->getSortDepth();
-}
-
-// greater than through pointer
-bool RenderObject_gt(RenderObject* x, RenderObject* y)
-{
-	return x->getSortDepth() > y->getSortDepth();
-}
-
-void Core::sortLayer(int layer)
-{
-	if (layer >= 0 && layer < renderObjectLayers.size())
-		renderObjectLayers[layer].sort();
-}
-
-void Core::sort()
-{
-
-
-
 }
 
 void Core::clearBuffers()

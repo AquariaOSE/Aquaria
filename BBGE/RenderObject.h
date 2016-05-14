@@ -163,8 +163,6 @@ public:
 	Vector getRealPosition();
 	Vector getRealScale();
 
-	virtual float getSortDepth();
-
 	StateData *getStateData();
 
 	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
