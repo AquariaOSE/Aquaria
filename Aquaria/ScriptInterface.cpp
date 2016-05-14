@@ -1,4 +1,4 @@
-/*
+#/*
 Copyright (C) 2007, 2010 - Bit-Blot
 
 This file is part of Aquaria.
@@ -1234,6 +1234,51 @@ luaFunc(obj_addChild)
 	luaReturnNil();
 }
 
+luaFunc(obj_getChild)
+{
+	RenderObject *r = robj(L);
+	size_t idx = lua_tointeger(L. 2);
+	luaReturnPtr(r && idx < r->children.size() ? r->children[idx] : NULL);
+}
+
+luaFunc(obj_removeChild)
+{
+	RenderObject *r = robj(L);
+	RenderObject *which = robj(L, 2);
+	if(r && which)
+		r->removeChild(which);
+	luaReturnNil();
+}
+
+luaFunc(obj_removeChildIdx)
+{
+	RenderObject *r = robj(L);
+	size_t idx = lua_tointeger(L, 2);
+	if(r && idx < r->children.size())
+		r->removeChild(r->children[idx]);
+	luaReturnNil();
+}
+
+luaFunc(obj_removeAllChildren)
+{
+	RenderObject *r = robj(L);
+	bool del = getBool(L, 2);
+	if(r)
+	{
+		if(del)
+			for(<RenderObject::Children::iterator it = r->children.begin(); it != r->children.end(); ++it)
+				(*it)->safeKill();
+		r->children.clear();
+	}
+	luaReturnNil();
+}
+
+luaFunc(obj_getNumChildren)
+{
+	RenderObject *r = robj(L);
+	luaReturnInt(r ? (int)r->children.size() : 0);
+}
+
 luaFunc(obj_setRenderBeforeParent)
 {
 	RenderObject *r = robj(L);
@@ -1882,6 +1927,11 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  setRenderBeforeParent) \
 	RO_FUNC(getter, prefix,  isRenderBeforeParent) \
 	RO_FUNC(getter, prefix,  addChild		) \
+	RO_FUNC(getter, prefix,  getChild		) \
+	RO_FUNC(getter, prefix,  removeChild	) \
+	RO_FUNC(getter, prefix,  removeChildIdx	) \
+	RO_FUNC(getter, prefix,  removeAllChildren) \
+	RO_FUNC(getter, prefix,  getNumChildren	) \
 	RO_FUNC(getter, prefix,  fh				) \
 	RO_FUNC(getter, prefix,  fv				) \
 	RO_FUNC(getter, prefix,  fhTo			) \
