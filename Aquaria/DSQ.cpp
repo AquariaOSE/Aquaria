@@ -216,8 +216,6 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 
 	entities.resize(64, 0);
 
-
-	sortEnabled = false;
 	shakeCameraTimer = shakeCameraMag = 0;
 	avgFPS.resize(dsq->user.video.fpsSmoothing);
 

@@ -504,8 +504,6 @@ public:
 
 
 	Vector screenCenter;
-	void sort();
-	void sortLayer(int layer);
 
 	void print(int x, int y, const char *str, float sz=1);
 
@@ -765,8 +763,6 @@ protected:
 	bool sortEnabled;
 	Vector cameraOffset;
 	std::vector<float> avgFPS;
-	float sortTimer;
-	bool sortFlag;
 	virtual void modifyDt(float &dt){}
 	void setPixelScale(int pixelScaleX, int pixelScaleY);
 
