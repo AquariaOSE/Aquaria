@@ -1237,7 +1237,7 @@ luaFunc(obj_addChild)
 luaFunc(obj_getChild)
 {
 	RenderObject *r = robj(L);
-	size_t idx = lua_tointeger(L. 2);
+	size_t idx = lua_tointeger(L, 2);
 	luaReturnPtr(r && idx < r->children.size() ? r->children[idx] : NULL);
 }
 
@@ -1266,7 +1266,7 @@ luaFunc(obj_removeAllChildren)
 	if(r)
 	{
 		if(del)
-			for(<RenderObject::Children::iterator it = r->children.begin(); it != r->children.end(); ++it)
+			for(RenderObject::Children::iterator it = r->children.begin(); it != r->children.end(); ++it)
 				(*it)->safeKill();
 		r->children.clear();
 	}
