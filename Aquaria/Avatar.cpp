@@ -950,11 +950,12 @@ void Avatar::updateHair(float dt)
 void Avatar::updateDamageVisualEffects()
 {
    	int damageThreshold = float(maxHealth/5.0f)*3.0f;
+	Quad *damageSprite = dsq->game->damageSprite;
 	if (health <= damageThreshold)
 	{
 		//dsq->game->damageSprite->alpha.interpolateTo(0.9, 0.5);
 		float a = ((damageThreshold - health)/float(damageThreshold))*1.0f;
-		dsq->game->damageSprite->alpha.interpolateTo(a, 0.3);
+		damageSprite->alpha.interpolateTo(a, 0.3);
 
 		/*
 		std::ostringstream os;
@@ -962,8 +963,11 @@ void Avatar::updateDamageVisualEffects()
 		debugLog(os.str());
 		*/
 
-		dsq->game->damageSprite->scale = Vector(1,1);
-		dsq->game->damageSprite->scale.interpolateTo(Vector(1.2, 1.2), 0.5, -1, 1);
+		if(!damageSprite->scale.isInterpolating())
+		{
+			damageSprite->scale = Vector(1,1);
+			damageSprite->scale.interpolateTo(Vector(1.2, 1.2), 0.5, -1, 1);
+		}
 
 		/*
 		if (health <= 0)
@@ -974,7 +978,7 @@ void Avatar::updateDamageVisualEffects()
 	}
 	else
 	{
-		dsq->game->damageSprite->alpha.interpolateTo(0, 0.3);
+		damageSprite->alpha.interpolateTo(0, 0.3);
 	}
 }
 
