@@ -9450,6 +9450,89 @@ luaFunc(node_mmicon_alpha) { return mmicon_alpha(L, path(L)); }
 luaFunc(node_mmicon_scaleWithDistance) { return mmicon_scaleWithDistance(L, path(L)); }
 luaFunc(node_mmicon_throb) { return mmicon_throb(L, path(L)); }
 
+
+class LuaXMLConverter : public tinyxml2::XMLVisitor
+{
+public:
+	LuaXMLConverter(lua_State *lua) : L(lua) {}
+	virtual ~LuaXMLConverter() {}
+
+	virtual bool VisitEnter( const tinyxml2::XMLDocument& /*doc*/ )
+	{
+		lua_newtable(L);
+		indexes.push_back(0);
+		return true;
+	}
+
+	virtual bool VisitExit( const tinyxml2::XMLDocument& /*doc*/ )
+	{
+		indexes.pop_back();
+		assert(indexes.empty());
+		// Leave the root table on the stack
+		return true;
+	}
+
+	virtual bool VisitEnter( const tinyxml2::XMLElement& element, const tinyxml2::XMLAttribute *a)
+	{
+		lua_newtable(L);
+		indexes.push_back(0);
+		if(a)
+		{
+			lua_newtable(L);
+			for( ; a; a = a->Next())
+			{
+				lua_pushstring(L, a->Value());
+				lua_setfield(L, -2, a->Name());
+			}
+			lua_setfield(L, -2, "attr");
+		}
+		if(const char *name = element.Value())
+		{
+			lua_pushstring(L, name);
+			lua_setfield(L, -2, "name");
+		}
+		if(const char *text = element.GetText())
+		{
+			lua_pushstring(L, text);
+			lua_setfield(L, -2, "text");
+		}
+		return true;
+	}
+
+	virtual bool VisitExit( const tinyxml2::XMLElement& /*element*/ )
+	{
+		indexes.pop_back();
+		lua_rawseti(L, -2, ++indexes.back());
+		return true;
+	}
+
+protected:
+	std::vector<unsigned> indexes;
+	lua_State * const L;
+};
+
+luaFunc(loadXMLTable)
+{
+	const std::string s = getString(L);
+	safePath(L, s);
+	std::string fn;
+	if(!findFile_helper(s.c_str(), fn))
+		luaReturnNil();
+
+	tinyxml2::XMLDocument xml;
+	tinyxml2::XMLError err = readXML(fn, xml);
+	if(err != tinyxml2::XML_NO_ERROR)
+	{
+		lua_pushboolean(L, false);
+		lua_pushinteger(L, err);
+		return 2;
+	}
+
+	LuaXMLConverter cvt(L);
+	xml.Accept(&cvt);
+	return 1;
+}
+
 //--------------------------------------------------------------------------------------------
 
 #define luaRegister(func)	{#func, l_##func}
@@ -10500,6 +10583,8 @@ static const struct {
 	luaRegister(node_mmicon_alpha),
 	luaRegister(node_mmicon_scaleWithDistance),
 	luaRegister(node_mmicon_throb),
+
+	luaRegister(loadXMLTable),
 
 #undef MK_FUNC
 #undef MK_ALIAS
