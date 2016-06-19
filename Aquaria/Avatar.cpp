@@ -563,7 +563,6 @@ void SongIcon::openNote()
 
 	PlaySfx play;
 	play.name = sfx;
-	play.channel = 1 + note;
 	channel = dsq->sound->playSfx(play);
 
 
