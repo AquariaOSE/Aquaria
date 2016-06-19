@@ -894,8 +894,6 @@ void SoundManager::setSfxChannelsVolume(float v)
 
 bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float vmod)
 {
-	//debugLog("playVoice, masterSoundLock: " + name);
-
 	if (!enabled) return false;
 
 	bool checkOther = true;
@@ -1219,9 +1217,6 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 	{
 		if (isPlayingMusic(name))
 		{
-			#ifdef BBGE_BUILD_OPENALOGG
-				if (masterSoundLock) SDL_mutexV(masterSoundLock);
-			#endif
 			return false;
 		}
 	}
@@ -1552,27 +1547,11 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 
 Buffer SoundManager::loadLocalSound(const std::string &filename)
 {
-	Buffer b = loadSoundIntoBank(filename, localSoundPath, fileType, SFXLOAD_LOCAL);
-
-#ifdef BBGE_BUILD_FMODEX
-	return b;
-#endif
-
-	return BBGE_AUDIO_NOCHANNEL;
+	return loadSoundIntoBank(filename, localSoundPath, fileType, SFXLOAD_LOCAL);
 }
 
 void SoundManager::setMusicSpeed(float speed)
 {
-	/*
-	FMOD_CAPS caps;
-	FMOD_SPEAKERMODE speakerMode;
-	int minf, maxf;
-	SoundCore::system->getDriverCaps(0, &caps, &minf, &maxf, &speakerMode);
-	std::ostringstream os;
-	os << "minf: " << minf << " maxf: " << maxf;
-	debugLog(os.str());
-	*/
-
 	musicChannel->setFrequency(speed);
 }
 
