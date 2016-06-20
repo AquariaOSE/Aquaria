@@ -809,8 +809,6 @@ void SoundManager::setSfxChannelsVolume(float v)
 
 bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float vmod)
 {
-
-
 	if (!enabled) return false;
 
 	bool checkOther = true;
@@ -1435,17 +1433,11 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 
 Buffer SoundManager::loadLocalSound(const std::string &filename)
 {
-	Buffer b = loadSoundIntoBank(filename, localSoundPath, fileType, SFXLOAD_LOCAL);
-
-	return b;
-
-	return BBGE_AUDIO_NOCHANNEL;
+	return loadSoundIntoBank(filename, localSoundPath, fileType, SFXLOAD_LOCAL);
 }
 
 void SoundManager::setMusicSpeed(float speed)
 {
-
-
 	musicChannel->setFrequency(speed);
 }
 
