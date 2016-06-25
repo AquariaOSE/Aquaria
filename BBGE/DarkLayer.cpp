@@ -104,30 +104,17 @@ void DarkLayer::toggle(bool on)
 
 void DarkLayer::preRender()
 {
-	bool verbose = core->coreVerboseDebug;
 	if (layer != -1)
 	{
-		if (verbose) debugLog("viewport");
-
 		glViewport(0,0,quality,quality);
-
-
-
-		if (verbose) debugLog("startCapture");
 
 		if (useFrameBuffer)
 			frameBuffer.startCapture();
 
-		if (verbose) debugLog("clearColor");
-
 		glClearColor(1,1,1,1);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		if (verbose) debugLog("render");
-
 		core->render(layer, layer, false);
-
-		if (verbose) debugLog("endCapture");
 
 		if (useFrameBuffer)
 			frameBuffer.endCapture();
@@ -138,14 +125,8 @@ void DarkLayer::preRender()
 			glCopyTexImage2D(GL_TEXTURE_2D, 0, format, 0, 0, quality, quality, 0);
 		}
 
-		if (verbose) debugLog("viewport");
-
 		glViewport(0, 0, core->width, core->height);
 		glClearColor(0,0,0,0);
-
-		if (verbose) debugLog("done");
-
-
 	}
 }
 

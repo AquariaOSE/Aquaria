@@ -272,7 +272,7 @@ public:
 						std::string fn = "scripts/entities/" + entName + ".lua";
 						#ifdef BBGE_BUILD_WINDOWS
 						debugLog("SHELL EXECUTE!");
-						ShellExecute(dsq->hWnd, "open", fn.c_str(), NULL, NULL, SW_SHOWNORMAL);
+						ShellExecute(0, "open", fn.c_str(), NULL, NULL, SW_SHOWNORMAL);
 						#endif
 					}
 				}

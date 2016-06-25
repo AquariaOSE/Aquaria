@@ -4100,7 +4100,6 @@ void DSQ::onUpdate(float dt)
 		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount << " | RC: " << Core::dbg_numRenderCalls << " | RES: " << core->resources.size();
 		os << " | p: " << core->processedRenderObjectCount << " | t: " << core->totalRenderObjectCount;
 		os << " | s: " << dsq->continuity.seconds;
-		os << " | evQ: " << core->eventQueue.getSize();
 		os << " | sndQ: " << core->dbg_numThreadDecoders;
 		os << " | dt: " << core->get_current_dt();
 

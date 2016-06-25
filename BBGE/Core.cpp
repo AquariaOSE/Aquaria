@@ -213,42 +213,6 @@ RenderObjectLayer *Core::getRenderObjectLayer(int i)
 	return &renderObjectLayers[i];
 }
 
-
-
-void Core::setColor(float r, float g, float b, float a)
-{
-	glColor4f(r, g, b, a);
-}
-
-void Core::bindTexture(int stage, unsigned int handle)
-{
-
-}
-
-void Core::translateMatrixStack(float x, float y, float z)
-{
-	glTranslatef(x, y, z);
-}
-
-void Core::scaleMatrixStack(float x, float y, float z)
-{
-	glScalef(x, y, z);
-}
-
-void Core::rotateMatrixStack(float x, float y, float z)
-{
-	glRotatef(0, 0, 1, z);
-}
-
-void Core::applyMatrixStackToWorld()
-{
-}
-
-void Core::rotateMatrixStack(float z)
-{
-	glRotatef(0, 0, 1, z);
-}
-
 bool Core::getShiftState()
 {
 	return getKeyState(KEY_LSHIFT) || getKeyState(KEY_RSHIFT);
@@ -409,8 +373,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	aspectY = 3;
 
 	virtualOffX = virtualOffY = 0;
-	vw2 = 0;
-	vh2 = 0;
 
 	viewOffX = viewOffY = 0;
 
@@ -426,14 +388,12 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	mouseCircle = 0;
 	overrideStartLayer = 0;
 	overrideEndLayer = 0;
-	coreVerboseDebug = false;
 	frameOutputMode = false;
 	updateMouse = true;
 	particlesPaused = false;
 	joystickAsMouse = false;
 	currentLayerPass = 0;
 	flipMouseButtons = 0;
-	joystickOverrideMouse = false;
 	joystickEnabled = false;
 	doScreenshot = false;
 	baseCullRadius = 1;
@@ -447,17 +407,10 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	minimized = false;
 	numSavedScreenshots = 0;
 	shuttingDown = false;
-	clearedGarbageFlag = false;
 	nestedMains = 0;
 	afterEffectManager = 0;
 	loopDone = false;
 	core = this;
-
-	#ifdef BBGE_BUILD_WINDOWS
-		hRC = 0;
-		hDC = 0;
-		hWnd = 0;
-	#endif
 
 	for (int i = 0; i < KEY_MAXARRAY; i++)
 	{
@@ -710,7 +663,6 @@ void Core::init()
 
 
 	loopDone = false;
-	clearedGarbageFlag = false;
 
 	initInputCodeMap();
 
@@ -1265,8 +1217,6 @@ bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::s
 {
 	this->width = width;
 	this->height = height;
-
-	redBits = greenBits = blueBits = alphaBits = 0;
 	return true;
 
 
@@ -1317,11 +1267,7 @@ void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 	os << "virtual(" << virtualWidth << ", " << virtualHeight << ")";
 	debugLog(os.str());
 
-	vw2 = virtualWidth/2;
-	vh2 = virtualHeight/2;
-
 	center = Vector(baseVirtualWidth/2, baseVirtualHeight/2);
-
 
 	virtualOffX = 0;
 	virtualOffY = 0;
@@ -1488,11 +1434,6 @@ void Core::updateRenderObjects(float dt)
 
 	if (loopDone)
 		return;
-
-	if (clearedGarbageFlag)
-	{
-		clearedGarbageFlag = false;
-	}
 }
 
 std::string Core::getEnqueuedJumpState()
@@ -1520,21 +1461,6 @@ unsigned Core::getTicks()
 	return 0;
 }
 
-float Core::stopWatch(int d)
-{
-	if (d)
-	{
-		stopWatchStartTime = getTicks()/1000.0f;
-		return stopWatchStartTime;
-	}
-	else
-	{
-		return (getTicks()/1000.0f) - stopWatchStartTime;
-	}
-
-	return 0;
-}
-
 bool Core::isWindowFocus()
 {
 	#ifdef BBGE_BUILD_SDL2
@@ -1552,8 +1478,6 @@ void Core::onBackgroundUpdate()
 
 void Core::main(float runTime)
 {
-	bool verbose = coreVerboseDebug;
-	if (verbose) debugLog("entered Core::main");
 	// cannot nest loops when the game is over
 	if (loopDone) return;
 
@@ -1580,7 +1504,6 @@ void Core::main(float runTime)
 		dt = (nowTicks-thenTicks)/1000.0;
 		thenTicks = nowTicks;
 
-		if (verbose) debugLog("avgFPS");
 		if (!avgFPS.empty())
 		{
 
@@ -1610,7 +1533,6 @@ void Core::main(float runTime)
 		}
 
 #if !defined(_DEBUG) && defined(BBGE_BUILD_SDL)
-		if (verbose) debugLog("checking window active");
 
 		if (lib_graphics && (wasInactive || !settings.runInBackground))
 		{
@@ -1679,12 +1601,9 @@ void Core::main(float runTime)
 
 		old_dt = dt;
 
-		if (verbose) debugLog("modify dt");
 		modifyDt(dt);
 
 		current_dt = dt;
-
-		if (verbose) debugLog("check runtime/quit");
 
 		if (quitNestedMainFlag)
 		{
@@ -1699,25 +1618,15 @@ void Core::main(float runTime)
 		}
 
 		// UPDATE
-		if (verbose) debugLog("post processing fx update");
 		postProcessingFx.update(dt);
 
-		if (verbose) debugLog("update eventQueue");
-		eventQueue.update(dt);
-
-		if (verbose) debugLog("Update render objects");
-
 		updateRenderObjects(dt);
-
-		if (verbose) debugLog("Update particle manager");
 
 		if (particleManager)
 			particleManager->update(dt);
 
-		if (verbose) debugLog("sound update");
 		sound->update(dt);
 
-		if (verbose) debugLog("onUpdate");
 		onUpdate(dt);
 
 		if (nestedMains == 1)
@@ -1732,26 +1641,20 @@ void Core::main(float runTime)
 
 		if (settings.renderOn)
 		{
-			if (verbose) debugLog("dark layer prerender");
 			if (darkLayer.isUsed())
 			{
 				darkLayer.preRender();
 			}
 
-			if (verbose) debugLog("render");
 			render();
 
-			if (verbose) debugLog("showBuffer");
 			showBuffer();
 
 			BBGE_PROF(STOP);
 
-			if (verbose) debugLog("clearGarbage");
 			if (nestedMains == 1)
 				clearGarbage();
 
-
-			if (verbose) debugLog("frame counter");
 			frames++;
 
 			counter += dt;
@@ -1766,20 +1669,16 @@ void Core::main(float runTime)
 
 		if (doScreenshot)
 		{
-			if (verbose) debugLog("screenshot");
-
 			doScreenshot = false;
 
 			saveScreenshotTGA(getScreenshotFilename());
 			prepScreen(0);
 		}
 	}
-	if (verbose) debugLog("bottom of function");
 	quitNestedMainFlag = false;
 	if (nestedMains==1)
 		clearGarbage();
 	nestedMains--;
-	if (verbose) debugLog("exit Core::main");
 }
 
 void Core::clearBuffers()
@@ -2994,14 +2893,14 @@ void Core::clearGarbage()
 	BBGE_PROF(Core_clearGarbage);
 	// HACK: optimize this (use a list instead of a queue)
 
-	for (RenderObjectList::iterator i = garbage.begin(); i != garbage.end(); i++)
+	for (RenderObjects::iterator i = garbage.begin(); i != garbage.end(); i++)
 	{
 		removeRenderObject(*i, DO_NOT_DESTROY_RENDER_OBJECT);
 
 		(*i)->destroy();
 	}
 
-	for (RenderObjectList::iterator i = garbage.begin(); i != garbage.end(); i++)
+	for (RenderObjects::iterator i = garbage.begin(); i != garbage.end(); i++)
 	{
 		deleteRenderObjectMemory(*i);
 	}
