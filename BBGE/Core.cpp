@@ -2757,13 +2757,6 @@ void Core::shutdown()
 
 //util funcs
 
-void Core::instantQuit()
-{
-    SDL_Event event;
-    event.type = SDL_QUIT;
-    SDL_PushEvent(&event);
-}
-
 bool Core::exists(const std::string &filename)
 {
 	return ::exists(filename, false); // defined in Base.cpp
@@ -2771,8 +2764,6 @@ bool Core::exists(const std::string &filename)
 
 CountedPtr<Texture> Core::findTexture(const std::string &name)
 {
-
-
 	int sz = resources.size();
 	for (int i = 0; i < sz; i++)
 	{

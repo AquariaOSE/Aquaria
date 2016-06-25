@@ -258,15 +258,8 @@ void DSQ::toggleFullscreen()
 // for handling the input, not the actual switch functionality
 void DSQ::onSwitchScreenMode()
 {
-
-	{
-
-#if defined(BBGE_BUILD_WINDOWS) || defined(BBGE_BUILD_UNIX)
-		if (getAltState()) {
-			toggleFullscreen();
-		}
-#endif
-	}
+	if (getAltState())
+		toggleFullscreen();
 }
 
 void DSQ::forceInputGrabOff()
@@ -3844,19 +3837,13 @@ void DSQ::bindInput()
 
 	user.control.actionSet.importAction(this, "Escape",		ACTION_ESC);
 
-#if defined(BBGE_BUILD_MACOSX)
-	addAction(MakeFunctionEvent(DSQ, instantQuit), KEY_Q, 1);
-#endif
-#if defined(BBGE_BUILD_WINDOWS) || defined(BBGE_BUILD_UNIX)
 	addAction(MakeFunctionEvent(DSQ, onSwitchScreenMode), KEY_RETURN, 1);
 
-#endif
 	if (isDeveloperKeys())
 	{
 #ifdef AQUARIA_BUILD_CONSOLE
 		addAction(MakeFunctionEvent(DSQ, toggleConsole), KEY_TILDE, 0);
 #endif
-		addAction(MakeFunctionEvent(DSQ, instantQuit), KEY_Q, 1);
 		addAction(MakeFunctionEvent(DSQ, toggleRenderCollisionShapes), KEY_RETURN, 0);
 	}
 	addAction(MakeFunctionEvent(DSQ, debugMenu), KEY_BACKSPACE, 0);
