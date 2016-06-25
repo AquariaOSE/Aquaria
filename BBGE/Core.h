@@ -250,14 +250,7 @@ enum FollowCameraLock
 	FCL_VERT		= 2
 };
 
-
-
-#define RLT_FIXED
-
-
 typedef std::vector <RenderObject*> RenderObjects;
-typedef std::list <RenderObject*> RenderObjectList;
-typedef std::map <intptr_t, RenderObject*> RenderObjectMap;
 
 class RenderObjectLayer
 {
@@ -439,12 +432,6 @@ public:
 
 	unsigned getTicks();
 
-	float stopWatch(int d);
-
-
-	float stopWatchStartTime;
-
-
 	void resetGraphics(int w, int h, int fullscreen=-1, int vsync=-1, int bpp=-1);
 
 
@@ -454,22 +441,9 @@ public:
 	Vector getGameCursorPosition();
 	Vector getGamePosition(const Vector &v);
 
-	Vector joystickPosition;
-
-	bool coreVerboseDebug;
-
-
 	Vector screenCenter;
 
 	void print(int x, int y, const char *str, float sz=1);
-
-	// windows variables
-	#ifdef BBGE_BUILD_WINDOWS
-		HDC			hDC;		// Private GDI Device Context
-		HGLRC		hRC;		// Permanent Rendering Context
-		HWND		hWnd;		// Holds Our Window Handle
-		HINSTANCE	hInstance;		// Holds The Instance Of The Application
-	#endif
 
 	std::vector<Texture*> resources;
 
@@ -479,7 +453,7 @@ public:
 	typedef std::vector<RenderObjectLayer> RenderObjectLayers;
 	RenderObjectLayers renderObjectLayers;
 
-	RenderObjectList garbage;
+	RenderObjects garbage;
 
 	SoundManager *sound;
 
@@ -552,17 +526,6 @@ public:
 
 	void clearRenderObjects();
 
-	void applyMatrixStackToWorld();
-	void translateMatrixStack(float x, float y, float z=0);
-
-	void rotateMatrixStack(float x, float y, float z);
-	void scaleMatrixStack(float x, float y, float z=1);
-	void rotateMatrixStack(float z);
-	void setColor(float r, float g, float b, float a);
-
-	void bindTexture(int stage, unsigned int handle);
-
-
 	bool getKeyState(int k);
 	bool getMouseButtonState(int m);
 
@@ -580,8 +543,6 @@ public:
 
 	DarkLayer darkLayer;
 
-	int redBits, greenBits, blueBits, alphaBits;
-
 	void setupRenderPositionAndScale();
 	void setupGlobalResolutionScale();
 
@@ -590,8 +551,6 @@ public:
 
 
 	bool joystickEnabled;
-	bool joystickOverrideMouse;
-
 
 	bool debugLogTextures;
 
@@ -619,8 +578,6 @@ public:
 
 	bool hasFocus();
 
-	EventQueue eventQueue;
-
 	float aspectX, aspectY;
 
 	float get_old_dt() { return old_dt; }
@@ -639,7 +596,6 @@ public:
 
 	void centerMouse();
 
-	int vw2, vh2;
 	Vector center;
 
 	void enable2DWide(int rx, int ry);
@@ -724,7 +680,6 @@ protected:
 
 	bool shuttingDown;
 	bool quitNestedMainFlag;
-	bool clearedGarbageFlag;
 	int nestedMains;
 	std::string baseTextureDirectory;
 
