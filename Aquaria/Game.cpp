@@ -6981,28 +6981,6 @@ void Game::bindInput()
 		addAction(ACTION_TOGGLEGRID, KEY_F9);
 	}
 
-	/*
-	addAction(ACTION_MENULEFT,	KEY_LEFT);
-	addAction(ACTION_MENURIGHT,	KEY_RIGHT);
-	addAction(ACTION_MENUUP,	KEY_UP);
-	addAction(ACTION_MENUDOWN,	KEY_DOWN);
-
-	dsq->user.control.actionSet.importAction(this, "SwimLeft",		ACTION_MENULEFT);
-	dsq->user.control.actionSet.importAction(this, "SwimRight",		ACTION_MENURIGHT);
-	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_MENUUP);
-	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_MENUDOWN);
-
-	addAction(ACTION_MENULEFT,	JOY1_DPAD_LEFT);
-	addAction(ACTION_MENURIGHT,	JOY1_DPAD_RIGHT);
-	addAction(ACTION_MENUUP,	JOY1_DPAD_UP);
-	addAction(ACTION_MENUDOWN,	JOY1_DPAD_DOWN);
-	*/
-
-	addAction(ACTION_MENULEFT,	JOY1_STICK_LEFT);
-	addAction(ACTION_MENURIGHT,	JOY1_STICK_RIGHT);
-	addAction(ACTION_MENUUP,	JOY1_STICK_UP);
-	addAction(ACTION_MENUDOWN,	JOY1_STICK_DOWN);
-
 	// To capture quick song keys via script
 	dsq->user.control.actionSet.importAction(this, "SongSlot1",		ACTION_SONGSLOT1);
 	dsq->user.control.actionSet.importAction(this, "SongSlot2",		ACTION_SONGSLOT2);

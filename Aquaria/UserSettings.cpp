@@ -20,14 +20,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "UserSettings.h"
 
-#ifndef AQUARIA_USERSETTINGS_DATAONLY
-	#include "DSQ.h"
-	#include "Game.h"
-	#include "Avatar.h"
-#else
-	#include "tinyxml2.h"
-	using namespace tinyxml2;
-#endif
+#include "DSQ.h"
+#include "Game.h"
+#include "Avatar.h"
 
 
 void UserSettings::save()
@@ -554,7 +549,6 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 
 void UserSettings::apply()
 {
-#ifndef AQUARIA_USERSETTINGS_DATAONLY
 	core->sound->setMusicVolume(audio.musvol);
 	core->sound->setSfxVolume(audio.sfxvol);
 	core->sound->setVoiceVolume(audio.voxvol);
@@ -563,6 +557,7 @@ void UserSettings::apply()
 
 	dsq->loops.updateVolume();
 
+	// FIXME: This should be per-joystick
 	core->joystick.s1ax = control.s1ax;
 	core->joystick.s1ay = control.s1ay;
 	core->joystick.s2ax = control.s2ax;
@@ -581,7 +576,5 @@ void UserSettings::apply()
 	dsq->bindInput();
 
 	core->settings.prebufferSounds = audio.prebuffer;
-
-#endif
 }
 

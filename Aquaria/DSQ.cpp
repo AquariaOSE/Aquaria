@@ -1603,12 +1603,6 @@ void DSQ::toggleInputGrabPlat(bool on)
 {
 }
 
-void DSQ::instantQuit()
-{
-	if (core->getCtrlState() && core->getAltState())
-		Core::instantQuit();
-}
-
 int DSQ::getEntityLayerToLayer(int lcode)
 {
 	if (lcode == -4)
@@ -3970,21 +3964,6 @@ void DSQ::onUpdate(float dt)
 
 		if (armb && ActionMapper::getKeyState(armb->joy[0]))
 			mouse.buttons.right = DOWN;
-
-
-
-		// not going to happen anymore!
-		// bye, bye xbox360 controller
-		if (!mouse.buttons.middle)
-		{
-			if (joystick.rightThumb)
-				mouse.buttons.middle = DOWN;
-			else if (joystick.leftThumb)
-				mouse.buttons.middle = DOWN;
-		}
-
-
-
 	}
 
 	if (joystickEnabled)

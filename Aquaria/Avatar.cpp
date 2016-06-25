@@ -5170,38 +5170,6 @@ bool Avatar::canQuickSong()
 	return !isSinging() && !isEntityDead() && isInputEnabled() && quickSongCastDelay <= 0;
 }
 
-void Avatar::updateJoystick(float dt)
-{
-	if (canQuickSong())
-	{
-
-		if (core->joystick.dpadUp)
-		{
-			if (dsq->continuity.hasSong(SONG_ENERGYFORM) && dsq->continuity.form != FORM_ENERGY)
-			{
-				quickSongCastDelay = QUICK_SONG_CAST_DELAY;
-				dsq->continuity.castSong(SONG_ENERGYFORM);
-			}
-		}
-		else if (core->joystick.dpadDown && dsq->continuity.hasSong(SONG_BEASTFORM) && dsq->continuity.form != FORM_BEAST)
-		{
-			quickSongCastDelay = QUICK_SONG_CAST_DELAY;
-			dsq->continuity.castSong(SONG_BEASTFORM);
-		}
-		else if (core->joystick.dpadLeft && dsq->continuity.hasSong(SONG_SUNFORM) && dsq->continuity.form != FORM_SUN)
-		{
-			quickSongCastDelay = QUICK_SONG_CAST_DELAY;
-			dsq->continuity.castSong(SONG_SUNFORM);
-		}
-		else if (core->joystick.dpadRight && dsq->continuity.hasSong(SONG_NATUREFORM) && dsq->continuity.form != FORM_NATURE)
-		{
-			quickSongCastDelay = QUICK_SONG_CAST_DELAY;
-			dsq->continuity.castSong(SONG_NATUREFORM);
-		}
-
-	}
-}
-
 void Avatar::applyRidingPosition()
 {
 	if (riding)
@@ -5725,7 +5693,6 @@ void Avatar::onUpdate(float dt)
 		if (songInterfaceTimer < 1)
 			songInterfaceTimer += dt;
 	}
-	updateJoystick(dt);
 
 	if (quickSongCastDelay>0)
 	{
