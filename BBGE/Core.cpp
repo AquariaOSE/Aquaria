@@ -807,7 +807,7 @@ void readKeyData()
 
 
 
-bool Core::initJoystickLibrary(int numSticks)
+bool Core::initJoystickLibrary()
 {
 
 #ifdef BBGE_BUILD_SDL2
@@ -816,12 +816,9 @@ bool Core::initJoystickLibrary(int numSticks)
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 #endif
 
-	if (numSticks > 0)
-		joystick.init(0);
+	joystick.init(0);
 
 	joystickEnabled = true;
-
-
 
 	return true;
 }
@@ -2124,8 +2121,6 @@ void Core::pollEvents()
 				{
 					SDL_Quit();
 					_exit(0);
-
-
 				}
 			}
 			break;
@@ -2141,6 +2136,15 @@ void Core::pollEvents()
 				}
 			}
 			break;
+
+			case SDL_JOYDEVICEADDED:
+				onJoystickAdded(event.jdevice.which);
+				break;
+
+			case SDL_JOYDEVICEREMOVED:
+				onJoystickRemoved(event.jdevice.which);
+				break;
+
 			#else
 			case SDL_MOUSEBUTTONDOWN:
 			{
@@ -3419,3 +3423,11 @@ void Core::initLocalization()
 	initCharTranslationTables(trans);
 }
 
+void Core::onJoystickAdded(int deviceID)
+{
+
+}
+
+void Core::onJoystickRemoved(int instanceID)
+{
+}

@@ -42,7 +42,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 Joystick::Joystick()
 {
-	xinited = false;
 	stickIndex = -1;
 #  ifdef BBGE_BUILD_SDL2
 	sdl_controller = NULL;
@@ -54,20 +53,11 @@ Joystick::Joystick()
 	effectid = -1;
 #endif
 	inited = false;
-	for (int i = 0; i < maxJoyBtns; i++)
-	{
-		buttons[i] = UP;
-	}
+	buttonBitmask = 0;
 	deadZone1 = 0.3;
 	deadZone2 = 0.3;
 
 	clearRumbleTime= 0;
-	leftThumb = rightThumb = false;
-	leftTrigger = rightTrigger = 0;
-	rightShoulder = leftShoulder = false;
-	dpadRight = dpadLeft = dpadUp = dpadDown = false;
-	btnStart = false;
-	btnSelect = false;
 
 	s1ax = 0;
 	s1ay = 1;
@@ -309,7 +299,11 @@ void Joystick::update(float dt)
 		if (!SDL_JoystickGetAttached(sdl_joy))
 		{
 			debugLog("Lost Joystick");
-			if (sdl_haptic) { SDL_HapticClose(sdl_haptic); sdl_haptic = NULL; }
+			if (sdl_haptic)
+			{
+				SDL_HapticClose(sdl_haptic);
+				sdl_haptic = NULL;
+			}
 			if (!sdl_controller)
 				SDL_JoystickClose(sdl_joy);
 			else
@@ -371,27 +365,20 @@ void Joystick::update(float dt)
 		callibrate(rightStick, deadZone2);
 
 
+		buttonBitmask = 0;
 
 #ifdef BBGE_BUILD_SDL2
 		if (sdl_controller)
 		{
-			for (int i = 0; i < SDL_CONTROLLER_BUTTON_MAX; i++)
-				buttons[i] = SDL_GameControllerGetButton(sdl_controller, (SDL_GameControllerButton)i)?DOWN:UP;
-			for (int i = SDL_CONTROLLER_BUTTON_MAX; i < maxJoyBtns; i++)
-				buttons[i] = UP;
+			for (unsigned i = 0; i < SDL_CONTROLLER_BUTTON_MAX; i++)
+				buttonBitmask |= !!SDL_GameControllerGetButton(sdl_controller, (SDL_GameControllerButton)i) << i;
 		}
 		else
-		{
-			for (int i = 0; i < maxJoyBtns; i++)
-				buttons[i] = SDL_JoystickGetButton(sdl_joy, i)?DOWN:UP;
-		}
-#else
-		for (int i = 0; i < maxJoyBtns; i++)
-			buttons[i] = SDL_JoystickGetButton(sdl_joy, i)?DOWN:UP;
 #endif
-
-
-
+		{
+			for (unsigned i = 0; i < MAX_JOYSTICK_BTN; i++)
+				buttonBitmask |= !!SDL_JoystickGetButton(sdl_joy, i) << i;
+		}
 	}
 
 	if (clearRumbleTime >= 0)
@@ -402,16 +389,9 @@ void Joystick::update(float dt)
 			rumble(0,0,0);
 		}
 	}
-
-
-
 }
 
 bool Joystick::anyButton()
 {
-	for (int i = 0; i < maxJoyBtns; i++)
-	{
-		if (buttons[i]) return true;
-	}
-	return false;
+	return !!buttonBitmask;;
 }

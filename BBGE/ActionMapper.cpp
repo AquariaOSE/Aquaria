@@ -211,52 +211,12 @@ bool ActionMapper::getKeyState(int k)
 	{
 		keyState = (core->mouse.buttons.middle == DOWN);
 	}
-	else if (k >= JOY1_BUTTON_0 && k <= JOY1_BUTTON_16)
+	else if (k >= JOY1_BUTTON_0 && k < JOY1_BUTTON_END)
 	{
 		int v = k - JOY1_BUTTON_0;
 
 		if (core->joystickEnabled)
-			keyState = core->joystick.buttons[v];
-	}
-	else if (k == JOY1_STICK_LEFT)
-	{
-		keyState = core->joystick.position.x < -0.6f;
-	}
-	else if (k == JOY1_STICK_RIGHT)
-	{
-		keyState = core->joystick.position.x > 0.6f;
-	}
-	else if (k == JOY1_STICK_UP)
-	{
-		keyState = core->joystick.position.y < -0.6f;
-	}
-	else if (k == JOY1_STICK_DOWN)
-	{
-		keyState = core->joystick.position.y > 0.6f;
-	}
-	else if (k == X360_BTN_START)
-	{
-		keyState = core->joystick.btnStart;
-	}
-	else if (k == X360_BTN_BACK)
-	{
-		keyState = core->joystick.btnSelect;
-	}
-	else if (k == JOY1_DPAD_LEFT)
-	{
-		keyState = core->joystick.dpadLeft;
-	}
-	else if (k == JOY1_DPAD_RIGHT)
-	{
-		keyState = core->joystick.dpadRight;
-	}
-	else if (k == JOY1_DPAD_UP)
-	{
-		keyState = core->joystick.dpadUp;
-	}
-	else if (k == JOY1_DPAD_DOWN)
-	{
-		keyState = core->joystick.dpadDown;
+			keyState = core->joystick.getButton(v);
 	}
 
 	return keyState;

@@ -40,10 +40,10 @@ BUILD_LINUX
 
 #include "DarkLayer.h"
 
-
-
 #include "FrameBuffer.h"
 #include "Shader.h"
+#include "Joystick.h"
+
 
 class ParticleEffect;
 
@@ -241,44 +241,6 @@ struct Mouse
 	bool buttonsEnabled, movementEnabled;
 
 	int scrollWheel, scrollWheelChange, lastScrollWheel;
-};
-
-const int maxJoyBtns = 64;
-
-class Joystick
-{
-public:
-	Joystick();
-	void init(int stick=0);
-	void shutdown();
-	//Ranges from 0 to 65535 (full speed).
-	void rumble(float leftMotor, float rightMotor, float time);
-	void update(float dt);
-	Vector position, lastPosition;
-	ButtonState buttons[maxJoyBtns];
-	float deadZone1, deadZone2;
-	float clearRumbleTime;
-
-	void callibrate(Vector &vec, float dead);
-
-	float leftTrigger, rightTrigger;
-	bool leftThumb, rightThumb, leftShoulder, rightShoulder, dpadLeft, dpadRight, dpadUp, dpadDown;
-	bool btnStart, btnSelect;
-	Vector rightStick;
-	bool inited, xinited;
-	bool anyButton();
-#  ifdef BBGE_BUILD_SDL2
-	SDL_GameController *sdl_controller;
-	SDL_Haptic *sdl_haptic;
-#  endif
-	SDL_Joystick *sdl_joy;
-#if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
-	int eventfd;
-	int16_t effectid;
-#endif
-	int stickIndex;
-
-	int s1ax, s1ay, s2ax, s2ay;
 };
 
 enum FollowCameraLock
@@ -741,12 +703,15 @@ protected:
 	float baseCullRadius;
 	bool initSoundLibrary(const std::string &defaultDevice);
 	bool initInputLibrary();
-	bool initJoystickLibrary(int numSticks=1);
+	bool initJoystickLibrary();
 	bool initGraphicsLibrary(int w, int h, bool fullscreen, int vsync, int bpp, bool recreate=true);
 	void shutdownInputLibrary();
 	void shutdownJoystickLibrary();
 	void shutdownGraphicsLibrary(bool kill=true);
 	void shutdownSoundLibrary();
+
+	virtual void onJoystickAdded(int deviceID);
+	virtual void onJoystickRemoved(int instanceID);
 
 	int afterEffectManagerLayer;
 	Vector cameraOffset;

@@ -27,6 +27,7 @@ class Event;
 class ActionMapper;
 
 #include "ActionSet.h"
+#include "Joystick.h"
 
 typedef std::vector<int> ButtonList;
 
@@ -81,45 +82,11 @@ public:
 		MOUSE_BUTTON_MIDDLE	= 1001,
 
 		JOY1_BUTTON_0		= 2000,
-		JOY1_BUTTON_1		= 2001,
-		JOY1_BUTTON_2		= 2002,
-		JOY1_BUTTON_3		= 2003,
-		JOY1_BUTTON_4		= 2004,
-		JOY1_BUTTON_5		= 2005,
-		JOY1_BUTTON_6		= 2006,
-		JOY1_BUTTON_7		= 2007,
-		JOY1_BUTTON_8		= 2008,
-		JOY1_BUTTON_9		= 2009,
-		JOY1_BUTTON_10		= 2010,
-		JOY1_BUTTON_11		= 2011,
-		JOY1_BUTTON_12		= 2012,
-		JOY1_BUTTON_13		= 2013,
-		JOY1_BUTTON_14		= 2014,
-		JOY1_BUTTON_15		= 2015,
-		JOY1_BUTTON_16		= 2016,
-
-
-		X360_BTN_START		= 3016,
-		X360_BTN_BACK		= 3017,
-
-		JOY1_DPAD_LEFT		= 4000,
-		JOY1_DPAD_RIGHT		= 4001,
-		JOY1_DPAD_DOWN		= 4002,
-		JOY1_DPAD_UP		= 4003,
-		JOY1_STICK_LEFT		= 4010,
-		JOY1_STICK_RIGHT	= 4011,
-		JOY1_STICK_DOWN		= 4012,
-		JOY1_STICK_UP		= 4013,
+		JOY1_BUTTON_END = JOY1_BUTTON_0 + MAX_JOYSTICK_BTN, // one past end
 	};
-
-	enum { DPAD_LEFT = 0, DPAD_RIGHT, DPAD_UP, DPAD_DOWN };
-
-
 
 	virtual void enableInput();
 	virtual void disableInput();
-
-
 
 	Event *addCreatedEvent(Event *event);
 	void clearCreatedEvents();

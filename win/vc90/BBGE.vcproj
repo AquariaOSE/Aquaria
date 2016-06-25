@@ -297,6 +297,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\Joystick.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\LensFlare.cpp"
 				>
 			</File>

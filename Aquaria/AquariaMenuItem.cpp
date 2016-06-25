@@ -350,10 +350,6 @@ bool AquariaSlider::doSliderInput(float dt)
 		inputAmount = -0.1f;
 	else if (core->joystick.position.x >= SLIDER_JOY_THRESHOLD)
 		inputAmount = +0.1f;
-	else if (core->joystick.dpadLeft)
-		inputAmount = -0.1f;
-	else if (core->joystick.dpadRight)
-		inputAmount = +0.1f;
 	else if (obj && obj->isActing(ACTION_MENULEFT))
 		inputAmount = -0.1f;
 	else if (obj && obj->isActing(ACTION_MENURIGHT))
@@ -675,7 +671,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 			}
 			else
 			{
-				for (int i = ActionMapper::JOY1_BUTTON_0; i <= ActionMapper::JOY1_BUTTON_16; i++)
+				for (int i = ActionMapper::JOY1_BUTTON_0; i <= MAX_JOYSTICK_BTN; i++)
 				{
 					if (dsq->game->getKeyState(i))
 					{

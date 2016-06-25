@@ -180,7 +180,6 @@ public:
 	Vector getKeyDir();
 
 	void startBurstCommon();
-	void updateJoystick(float dt);
 
 	void openSingingInterface();
 	void closeSingingInterface();
