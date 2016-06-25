@@ -22,24 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Core.h"
 
 
-#ifdef __LINUX__
-#include <sys/types.h>
-#include <stdint.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <linux/input.h>
-#include <errno.h>
-#include <iostream>
-
-#define BITS_TO_LONGS(x) \
-	(((x) + 8 * sizeof (unsigned long) - 1) / (8 * sizeof (unsigned long)))
-#define AQUARIA_BITS_PER_LONG (sizeof(long) * 8)
-#define AQUARIA_OFF(x)  ((x)%AQUARIA_BITS_PER_LONG)
-#define AQUARIA_BIT(x)  (1UL<<AQUARIA_OFF(x))
-#define AQUARIA_LONG(x) ((x)/AQUARIA_BITS_PER_LONG)
-#define test_bit(bit, array) ((array[AQUARIA_LONG(bit)] >> AQUARIA_OFF(bit)) & 1)
-#endif
-
 Joystick::Joystick()
 {
 	stickIndex = -1;
@@ -48,10 +30,6 @@ Joystick::Joystick()
 	sdl_haptic = NULL;
 #  endif
 	sdl_joy = NULL;
-#if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
-	eventfd = -1;
-	effectid = -1;
-#endif
 	inited = false;
 	buttonBitmask = 0;
 	deadZone1 = 0.3;
@@ -124,57 +102,10 @@ void Joystick::init(int stick)
 	{
 		debugLog("Not enough Joystick(s) found");
 	}
-
-#if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
-	os.seekp(0);
-	os << "AQUARIA_EVENT_JOYSTICK" << stick;
-
-	std::string envkey = os.str();
-	const char* evdevice = getenv(envkey.c_str());
-
-	if (evdevice != NULL) {
-		eventfd = open(evdevice, O_RDWR, 0);
-		if (eventfd < 0) {
-			debugLog(std::string("Could not open rumble device [") + evdevice + "]: " + strerror(errno));
-		}
-		else {
-			debugLog(std::string("Successfully opened rumble device [") + evdevice + "]");
-			unsigned long features[BITS_TO_LONGS(FF_CNT)];
-
-			if (ioctl(eventfd, EVIOCGBIT(EV_FF, sizeof(features)), features) == -1) {
-				debugLog(std::string("Cannot query joystick/gamepad features: ") + strerror(errno));
-				close(eventfd);
-				eventfd = -1;
-			}
-			else if (!test_bit(FF_RUMBLE, features)) {
-				debugLog("Rumble is not supported by your gamepad/joystick.");
-				close(eventfd);
-				eventfd = -1;
-			}
-		}
-	}
-	else {
-		std::cout <<
-			"Environment varialbe " << envkey << " is not set.\n"
-			"Set this environment variable to the device file that shall be used for joystick number " << stick << " in order to enable rumble support.\n"
-			"Example:\n"
-			"\texport " << envkey << "=/dev/input/event6\n\n";
-	}
-#endif
-
 }
 
 void Joystick::shutdown()
 {
-#if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
-	if (eventfd >= 0) {
-		if (effectid != -1 && ioctl(eventfd, EVIOCRMFF, effectid) == -1) {
-			debugLog(std::string("Remove rumble effect: ") + strerror(errno));
-		}
-		close(eventfd);
-		eventfd = -1;
-	}
-#endif
 #ifdef BBGE_BUILD_SDL2
 	if (sdl_haptic)
 	{
@@ -212,49 +143,6 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 			{
 				clearRumbleTime = -1;
 				SDL_HapticRumbleStop(sdl_haptic);
-			}
-		}
-
-#elif defined(__LINUX__)
-		if (eventfd >= 0) {
-			struct ff_effect effect;
-			struct input_event event;
-
-			effect.type = FF_RUMBLE;
-			effect.id = effectid;
-			effect.direction = 0;
-			effect.trigger.button = 0;
-			effect.trigger.interval = 0;
-			effect.replay.length = (uint16_t) (time * 1000);
-			effect.replay.delay = 0;
-			if (leftMotor > rightMotor) {
-				effect.u.rumble.strong_magnitude = (uint16_t) (leftMotor * 0xffff);
-				effect.u.rumble.weak_magnitude = (uint16_t) (rightMotor * 0xffff);
-			}
-			else {
-				effect.u.rumble.strong_magnitude = (uint16_t) (rightMotor * 0xffff);
-				effect.u.rumble.weak_magnitude = (uint16_t) (leftMotor * 0xffff);
-			}
-
-			if (ioctl(eventfd, EVIOCSFF, &effect) == -1) {
-				debugLog(std::string("Upload rumble effect: ") + strerror(errno));
-				return;
-			}
-
-			event.time.tv_sec = 0;
-			event.time.tv_usec = 0;
-			event.type = EV_FF;
-			event.code = effectid = effect.id;
-
-			if (leftMotor == 0 && rightMotor == 0) {
-				event.value = 0;
-			}
-			else {
-				event.value = 1;
-			}
-
-			if (write(eventfd, (const void*) &event, sizeof(event)) == -1) {
-				debugLog(std::string("Play rumble effect: ") + strerror(errno));
 			}
 		}
 #endif

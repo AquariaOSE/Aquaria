@@ -33,17 +33,12 @@ public:
 private:
 	bool inited;
 	unsigned buttonBitmask; // FIXME: this should go
+	SDL_Joystick *sdl_joy;
 
 #  ifdef BBGE_BUILD_SDL2
 	SDL_GameController *sdl_controller;
 	SDL_Haptic *sdl_haptic;
 #  endif
-	SDL_Joystick *sdl_joy;
-
-#if defined(__LINUX__) && !defined(BBGE_BUILD_SDL2)
-	int eventfd;
-	short effectid;
-#endif
 };
 
 
