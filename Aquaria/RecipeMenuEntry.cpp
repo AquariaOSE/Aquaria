@@ -18,7 +18,11 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
+#include "RecipeMenuEntry.h"
 #include "Game.h"
+#include "InGameMenu.h"
+
 
 namespace RecipeMenuNamespace
 {
@@ -165,7 +169,9 @@ void RecipeMenuEntry::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
 
-	if (!game->recipeMenu.description)
+	RecipeMenu& recipeMenu = game->getInGameMenu()->recipeMenu;
+
+	if (!recipeMenu.description)
 		return;
 
 	if (alpha.x == 1)
@@ -196,8 +202,8 @@ void RecipeMenuEntry::onUpdate(float dt)
 				}
 			}
 
-			game->recipeMenu.description->setText(ds.str());
-			game->recipeMenu.description->offset = Vector(0, -10 * (game->recipeMenu.description->getNumLines()-1));
+			recipeMenu.description->setText(ds.str());
+			recipeMenu.description->offset = Vector(0, -10 * (recipeMenu.description->getNumLines()-1));
 
 			selected = 1;
 		}
@@ -208,15 +214,15 @@ void RecipeMenuEntry::onUpdate(float dt)
 
 			int n=0;
 
-			for (int i = 0; i < game->recipeMenu.recipeMenuEntries.size(); i++)
+			for (int i = 0; i < recipeMenu.recipeMenuEntries.size(); i++)
 			{
-				if (!game->recipeMenu.recipeMenuEntries[i]->selected)
+				if (!recipeMenu.recipeMenuEntries[i]->selected)
 					n++;
 			}
 
-			if (n == game->recipeMenu.recipeMenuEntries.size())
+			if (n == recipeMenu.recipeMenuEntries.size())
 			{
-				game->recipeMenu.description->setText("");
+				recipeMenu.description->setText("");
 			}
 		}
 	}

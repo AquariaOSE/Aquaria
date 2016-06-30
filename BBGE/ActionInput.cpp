@@ -18,9 +18,65 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
 #include "ActionInput.h"
-// crap
-#include "Core.h"
+#include "ActionMapper.h"
+
+#ifndef BBGE_BUILD_SDL2
+#error Needs fixes for SDL 1.2, doesnt support scancodes
+#endif
+
+
+std::string getInputCodeToString(int k)
+{
+	if(k < SDL_NUM_SCANCODES)
+	{
+		const char *name = SDL_GetScancodeName((SDL_Scancode)k);
+		if(name)
+			return name;
+
+		std::stringstream os;
+		os << "K:" << k;
+		return os.str();
+	}
+	
+	if(k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
+	{
+		std::stringstream os;
+		os << "JB:" << (k - JOY_BUTTON_0);
+		return os.str();
+	}
+
+	switch(k)
+	{
+	case MOUSE_BUTTON_LEFT:
+		return "LMB";
+	case MOUSE_BUTTON_RIGHT:
+		return "RMB";
+	case MOUSE_BUTTON_MIDDLE:
+		return "MMB";
+	}
+
+	return std::string();
+}
+
+int getStringToInputCode(const std::string& s)
+{
+	if(s == "LMB")
+		return MOUSE_BUTTON_LEFT;
+	if(s == "RMB")
+		return MOUSE_BUTTON_RIGHT;
+	if(s == "MMB")
+		return MOUSE_BUTTON_MIDDLE;
+	if(!strncmp(s.c_str(), "K:", 2))
+		return SDL_GetScancodeFromName(s.c_str() + 2);
+	if(!strncmp(s.c_str(), "JB:", 3))
+		return JOY_BUTTON_0 + atoi(s.c_str() + 3);
+
+	return -1; // FIXME: is this correct?
+}
+
+
 
 ActionInput::ActionInput()
 {

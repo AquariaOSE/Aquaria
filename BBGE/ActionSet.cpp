@@ -104,6 +104,7 @@ ActionInput *ActionSet::addActionInput(const std::string &name)
 	return a;
 }
 
+/*
 std::string ActionSet::insertInputIntoString(const std::string &string)
 {
 	std::string str = string;
@@ -152,4 +153,5 @@ std::string ActionSet::insertInputIntoString(const std::string &string)
 	std::string part2 = getInputCodeToUserString(inputCode);
 	return part1 + part2 + part3;
 }
+*/
 

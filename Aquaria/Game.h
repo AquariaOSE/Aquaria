@@ -35,47 +35,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 using namespace tinyxml2;
 
 
-class RecipeMenuEntry : public RenderObject
-{
-public:
-	RecipeMenuEntry(Recipe *recipe);
-protected:
-	void onUpdate(float dt);
-	Quad *result, *ing[3];
-	Quad *glow;
-	BitmapText *description;
-	IngredientData *data;
-
-	Recipe *recipe;
-
-	int selected;
-};
-
-struct RecipeMenu
-{
-	RecipeMenu();
-	Quad *scroll;
-	Quad *scrollEnd;
-	BitmapText *header, *page, *description;
-	AquariaMenuItem *nextPage, *prevPage;
-
-
-	void toggle(bool on, bool watch=false);
-	void createPage(int p);
-	void slide(RenderObject *r, bool in, float t);
-	void destroyPage();
-	void goNextPage();
-	void goPrevPage();
-	int getNumPages();
-	int getNumKnown();
-
-	int currentPage;
-
-	bool on;
-
-	std::vector<RecipeMenuEntry*> recipeMenuEntries;
-};
-
 class Avatar;
 class Gradient;
 class CurrentRender;
@@ -84,8 +43,9 @@ class SongLineRender;
 class AutoMap;
 class DebugButton;
 class WorldMapRender;
+class InGameMenu;
 
-const float boxElementZ = -0.1f;
+// FIXME: this should be made dynamic, or at least a power of 2
 const int MAX_GRID = 2222;
 
 const char CHAR_DOWN		= 'd';
@@ -184,122 +144,6 @@ protected:
 
 typedef std::list<Ingredient*> Ingredients;
 
-class WarpArea
-{
-public:
-	WarpArea()
-	{
-		w = h = radius = 0;
-		generated = false;
-	}
-	Vector position;
-	Vector avatarPosition;
-	int radius;
-	bool generated;
-	int w, h;
-	Vector spawnOffset;
-	std::string sceneName, warpAreaType;
-};
-
-class SongSlot : public AquariaGuiQuad
-{
-public:
-	SongSlot(int songSlot);
-
-	int songSlot, songType;
-	bool mbDown;
-protected:
-	Quad *glow;
-	void onUpdate(float dt);
-};
-
-class FoodSlot : public AquariaGuiQuad
-{
-public:
-	FoodSlot(int slot);
-
-	void refresh(bool effects);
-	int slot;
-	void toggle(bool f);
-	static int foodSlotIndex;
-
-	IngredientData *getIngredient() { return ingredient; }
-
-	float scaleFactor;
-
-	void eatMe();
-	void moveRight();
-	void discard();
-
-	bool isCursorIn();
-
-	void setOriginalPosition(const Vector &op);
-
-protected:
-	int rmb;
-	bool right;
-	float doubleClickDelay;
-	float grabTime;
-	int lastAmount;
-	IngredientData *lastIngredient;
-	Vector originalPosition;
-	void onUpdate(float dt);
-	DebugFont *label;
-	bool inCookSlot;
-	IngredientData *ingredient;
-	Quad *lid;
-};
-
-class PetSlot : public AquariaGuiQuad
-{
-public:
-	PetSlot(int pet);
-	int petFlag;
-protected:
-	bool wasSlot;
-	int petidx;
-	bool mouseDown;
-	void onUpdate(float dt);
-};
-
-class TreasureSlot : public AquariaGuiQuad
-{
-public:
-	TreasureSlot(int treasureFlag);
-	void refresh();
-protected:
-	float doubleClickTimer;
-	bool mbd;
-	int flag;
-	std::string treasureName, treasureDesc;
-	int index;
-	void onUpdate(float dt);
-};
-
-class FoodHolder : public Quad
-{
-public:
-	FoodHolder(int slot, bool trash=false);
-
-	bool isEmpty();
-	bool isTrash();
-	void setIngredient(IngredientData *i, bool effects=true);
-	void dropFood();
-	IngredientData *getIngredient();
-	void animateLid(bool down, bool longAnim=true);
-protected:
-	bool trash;
-	Quad *wok, *ing;
-	bool buttonDown;
-	void onUpdate(float dt);
-
-	Quad *lid;
-
-	int slot;
-private:
-	IngredientData *foodHolderIngredient;
-};
-
 class ElementTemplate
 {
 public:
@@ -312,25 +156,6 @@ public:
 	bool cull;
 	float alpha;
 	int idx;
-};
-
-class MiniMapHint
-{
-public:
-	std::string scene;
-	std::string warpAreaType;
-	void clear()
-	{
-		debugLog("miniMapHint: CLEAR");
-		scene = warpAreaType = "";
-	}
-};
-
-class WarpAreaRender : public RenderObject
-{
-public:
-protected:
-	void onRender();
 };
 
 class ObsRow
@@ -415,7 +240,7 @@ public:
 	void flipElementVert();
 	void deleteSelectedElement();
 	void deleteElement(int selectedIdx);
-	void action(int id, int state);
+	virtual void action(int id, int state, int source);
 	void scaleElementUp();
 	void scaleElementDown();
 	void scaleElement1();
@@ -435,10 +260,6 @@ public:
 	void skinLevel();
 
 	void regenLevel();
-
-
-	void startDrawingWarpArea(char c);
-	void endDrawingWarpArea(char c);
 
 	void updateSaveFileEnemyPosition(Entity *ent);
 	void startMoveEntity();
@@ -467,7 +288,6 @@ public:
 	Entity *editingEntity;
 	Path *editingPath;
 
-	void toggleWarpAreaRender();
 	int selectedIdx;
 	int selectedNode;
 	Path *getSelectedPath();
@@ -536,8 +356,6 @@ protected:
 	Vector oldPosition, oldRotation, oldScale, cursorOffset, oldRepeatScale;
 
 	Entity *movingEntity;
-	void updateDrawingWarpArea(char c, int k);
-	char drawingWarpArea;
 
 	void nextEntityType();
 	void prevEntityType();
@@ -546,13 +364,8 @@ protected:
 
 	void selectEntityFromGroups();
 
-
-	WarpAreaRender *warpAreaRender;
 	Vector zoom;
 
-	Vector boxPos;
-	Quad *boxPromo;
-	bool drawingBox;
 	void rotateElement();
 	void rotateElement2();
 	void updateText();
@@ -632,19 +445,10 @@ public:
 	void applyState();
 	void removeState();
 	void update(float dt);
-	void onLeftMouseButton();
 
 
 	Avatar *avatar;
 	Entity *li;
-
-	Element *elementWithMenu;
-
-	FoodSlot *moveFoodSlotToFront;
-
-
-
-	std::string getSelectedChoice() { return selectedChoice; }
 
 	ObsType getGrid(const TileVector &tile) const;
 	ObsType getGridRaw(const TileVector &tile) const;
@@ -656,11 +460,6 @@ public:
 	void trimGrid();
 	void dilateGrid(unsigned int radius, ObsType test, ObsType set, ObsType allowOverwrite);
 
-	void clearPointers();
-
-	void sortFood();
-	void updatePreviewRecipe();
-
 	void transitionToScene(std::string scene);
 	bool loadScene(std::string scene);
 
@@ -669,9 +468,9 @@ public:
 
 	void toggleWorldMap();
 
-	void action(int id, int state);
+	void action(int id, int state, int source);
 
-	void adjustFoodSlotCursor();
+	InGameMenu *getInGameMenu() { return themenu; }
 
 	void loadElementTemplates(std::string pack);
 	Element* createElement(int etidx, Vector position, int bgLayer=0, RenderObject *copy=0, ElementTemplate *et=0);
@@ -704,16 +503,11 @@ public:
 	ElementTemplate *getElementTemplateByIdx(int idx);
 
 	bool saveScene(std::string scene);
-	typedef std::vector<WarpArea> WarpAreas;
-	WarpAreas warpAreas;
 
 	void postInitEntities();
 	EntityClass *getEntityClassForEntityType(const std::string &type);
 
-	void warpToArea(WarpArea *area);
-
 	InterpolatedVector sceneColor, sceneColor2, sceneColor3;
-	Vector backupSceneColor;
 
 	Vector getCameraPositionFor(const Vector &vec);
 
@@ -743,16 +537,9 @@ public:
 	XMLDocument *saveFile;
 
 	Vector positionToAvatar;
-	float getCoverage(Vector pos, int sampleArea = 5);
 
-	float getPercObsInArea(Vector position, int range, int obs=-1);
 	Vector getWallNormal(Vector pos, int sampleArea = 5, float *dist=0, int obs = -1);
 
-	// HACK:: clean up these vars
-	std::string warpAreaType, warpAreaSide;
-	Vector spawnOffset;
-	Vector miniMapHintPosition;
-	MiniMapHint miniMapHint;
 	void updateMiniMapHintPosition();
 	EntitySaveData *getEntitySaveDataForEntity(Entity *e, Vector pos);
 	Entity *createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, bool doPostInit=false);
@@ -760,23 +547,17 @@ public:
 	Entity *establishEntity(Entity *e, int id=0, Vector position=Vector(0,0), int rot=0, bool createSaveData=false, std::string name="", EntityType = ET_ENEMY,bool doPostInit=false);
 	void setCameraFollow(RenderObject *r);
 	void setCameraFollowEntity(Entity *e);
-	void setMenuDescriptionText(const std::string &text);
 
 	bool removeEntityAtCursor();
 	void toggleOverrideZoom(bool on);
-	bool doFlagCheck(const std::string &flagCheck, FlagCheckType type=NO_TYPE, bool lastTruth=false);
 
 	bool useWaterLevel;
 	InterpolatedVector waterLevel;
 	int saveWaterLevel;
-	void flipSceneVertical(int flipY);
 	void warpCameraTo(RenderObject *r);
-	bool isSceneFlipped();
-	void refreshItemSlotIcons();
 
 	void addObsRow(int tx, int ty, int len);
 	void clearObsRows();
-	void setWarpAreaSceneName(WarpArea &warpArea);
 	Entity *getEntityAtCursor();
 	Vector cameraMin, cameraMax;
 	bool removeEntity(Entity *e);
@@ -815,19 +596,10 @@ public:
 	void loadEntityTypeList();
 	std::vector<EntitySaveData> entitySaveData;
 	int getIdxForEntityType(std::string type);
-	void hideInGameMenu(bool effects=true, bool cancel=false);
-	void showInGameMenu(bool force=false, bool optionsOnly=false, MenuPage menuPage = MENUPAGE_NONE);
-	bool optionsOnly;
-
-	MenuPage currentMenuPage;
-	int currentFoodPage, currentTreasurePage;
 
 	Precacher tileCache;
 
-
-
 	void setCameraFollow(Vector *position);
-	Shot *fireShot(Entity *firer, const std::string &particleEffect, Vector position, bool big, Vector direction, Entity *target, int homing=0, int velLenOverride=0, int targetPt=-1);
 	Shot *fireShot(const std::string &bankShot, Entity *firer, Entity *target=0, const Vector &pos=Vector(0,0,0), const Vector &aim=Vector(0,0,0), bool playSfx=true);
 	void playBurstSound(bool wallJump=false);
 	void toggleMiniMapRender();
@@ -839,7 +611,6 @@ public:
 	void setTimerText(float time);
 
 	void generateCollisionMask(Quad *q, float overrideCollideRadius=0);
-	std::string sceneNatureForm;
 	std::string fromScene, toNode;
 	int toFlip;
 	char fromWarpType;
@@ -861,17 +632,7 @@ public:
 	void setControlHint(const std::string &hint, bool left, bool right, bool middle, float time, std::string image="", bool ignoreClear=false, int songType=0, float scale=1);
 	void clearControlHint();
 
-	void colorTest();
-
-	void playSongInMenu(int songType, bool override=false);
-
 	bool trace(Vector start, Vector target);
-
-	Quad *menuSongs;
-	std::vector<SongSlot*> songSlots;
-	std::vector<FoodSlot*> foodSlots;
-	std::vector<TreasureSlot*> treasureSlots;
-	BitmapText* songDescription;
 
 	BitmapText *timerText;
 
@@ -884,23 +645,17 @@ public:
 	void setElementLayerVisible(int bgLayer, bool v);
 	bool isElementLayerVisible(int bgLayer);
 
-	void showInGameMenuExitCheck();
-	void hideInGameMenuExitCheck(bool refocus);
 	bool isControlHint();
 
 	int getNumberOfEntitiesNamed(const std::string &name);
 	MiniMapRender *miniMapRender;
 	WorldMapRender *worldMapRender;
-	AutoMap *autoMap;
-
-	Quad *hudUnderlay;
 
 	int worldMapIndex;
 
 	bool loadingScene;
 
 	WaterSurfaceRender *waterSurfaceRender;
-	Quad *shapeDebug;
 
 #ifdef AQUARIA_BUILD_SCENEEDITOR
 	EntityGroups entityGroups;
@@ -924,14 +679,8 @@ public:
 	void hideImage();
 
 	bool bNatural;
-	void onLips();
 	std::string sceneToLoad;
 	void snapCam();
-
-	void updateOptionsMenu(float dt);
-	BitmapText *songLabel, *foodLabel, *foodDescription, *treasureLabel;
-	ToolTip *treasureDescription;
-	Quad *treasureCloseUp;
 	void updateBgSfxLoop();
 	void preLocalWarp(LocalWarpType localWarpType);
 	void postLocalWarp();
@@ -939,30 +688,6 @@ public:
 
 	bool isShuttingDownGameState() { return shuttingDownGameState; }
 	void warpToSceneNode(std::string scene, std::string node);
-
-	AquariaProgressBar *progressBar;
-	void addProgress();
-	void endProgress();
-
-	void refreshFoodSlots(bool effects);
-	void refreshTreasureSlots();
-
-	Recipe *findRecipe(const std::vector<IngredientData*> &list);
-	void onCook();
-	void onRecipes();
-	void updateCookList();
-	void onUseTreasure();
-	void onUseTreasure(int flag);
-
-	void onPrevFoodPage();
-	void onNextFoodPage();
-
-	void onPrevTreasurePage();
-	void onNextTreasurePage();
-
-	std::vector<std::string> dropIngrNames;
-
-	AquariaMenuItem *lips;
 
 	int lastCollideMaskIndex;
 
@@ -973,7 +698,6 @@ public:
 
 	float getTimer(float mod=1);
 	float getHalfTimer(float mod=1);
-	float getHalf2WayTimer(float mod=1);
 
 	std::string bgSfxLoopPlaying2;
 
@@ -1008,22 +732,18 @@ public:
 	void pickupIngredientEffects(IngredientData *data);
 
 	void bindInput();
-	RecipeMenu recipeMenu;
-
-	AquariaMenuItem *eYes, *eNo, *cook, *recipes, *nextFood, *prevFood, *nextTreasure, *prevTreasure, *use, *keyConfigButton;
-	AquariaMenuItem *opt_cancel, *opt_save, *foodSort;
 
 	bool cameraOffBounds;
 
-	void enqueuePreviewRecipe();
-
-	void toggleHelpScreen() { action(ACTION_TOGGLEHELPSCREEN, 0); }
+	void toggleHelpScreen() { action(ACTION_TOGGLEHELPSCREEN, 0, -1); }
 
 	void setWorldPaused(bool b) { worldPaused = b; }
 	bool isWorldPaused() const { return worldPaused; }
 
 	void setIgnoreAction(AquariaActions ac, bool ignore);
 	bool isIgnoreAction(AquariaActions ac) const;
+
+	void onContinuityReset();
 
 protected:
 
@@ -1038,30 +758,11 @@ protected:
 	TTFText *helpText;
 	bool inHelpScreen;
 
-	int enqueuedPreviewRecipe;
-
-	Quad *previewRecipe;
-	Quad *menuIconGlow;
-	Quad *showRecipe;
-
-	bool isCooking;
-
-	void doMenuSectionHighlight(int sect);
-
-	float cookDelay;
-
 	float ingOffY;
 	float ingOffYTimer;
 
 	std::vector<RenderObject*> controlHintNotes;
 
-	void onPrevRecipePage();
-	void onNextRecipePage();
-
-
-
-	typedef std::vector<IngredientData*> CookList;
-	CookList cookList;
 
 	bool active;
 	bool applyingState;
@@ -1071,70 +772,19 @@ protected:
 
 	void warpPrep();
 	bool shuttingDownGameState;
-	void onOptionsMenu();
-	bool optionsMenu, foodMenu, petMenu, treasureMenu, keyConfigMenu;
-	void toggleOptionsMenu(bool f, bool skipBackup=false, bool isKeyConfig=false);
-	void toggleFoodMenu(bool f);
-	void toggleMainMenu(bool f);
-	void togglePetMenu(bool f);
-	void toggleTreasureMenu(bool f);
-	void toggleRecipeList(bool on);
-	void toggleKeyConfigMenu(bool f);
-
-	void switchToSongMenu();
-	void switchToFoodMenu();
-	void switchToPetMenu();
-	void switchToTreasureMenu();
-
-	void onKeyConfig();
-
-	void addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, int l1=0, int l2=0, int l3=0);
-
-	AquariaKeyConfig *addAxesConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, int offx);
-
-	void onOptionsSave();
-	void onOptionsCancel();
-	AquariaSlider *sfxslider, *musslider, *voxslider;
-	AquariaCheckBox *autoAimCheck, *targetingCheck, *toolTipsCheck, *flipInputButtonsCheck, *micInputCheck, *blurEffectsCheck;
-	AquariaCheckBox *subtitlesCheck, *fullscreenCheck, *ripplesCheck;
-	AquariaComboBox *resBox;
-	Quad *songBubbles, *energyIdol, *liCrystal;
-
-	RenderObject *group_keyConfig;
-
-	Quad *options;
-
 	Quad *image;
 	void initEntities();
 
-
-	void onExitCheckNo();
-	void onExitCheckYes();
-
-	BitmapText *circlePageNum;
-
-	std::vector<ToolTip*> foodTips, songTips, petTips, treasureTips;
-
-
-
-	Quad *eAre;
-	int inGameMenuExitState;
 	float controlHintTimer;
 	bool cameraConstrained;
 
 	void updateCursor(float dt);
-	void updateInGameMenu(float dt);
-	float songMenuPlayDelay;
-	int currentSongMenuNote;
-	int playingSongInMenu;
+
 	Quad *controlHint_mouseLeft, *controlHint_mouseRight, *controlHint_mouseBody, *controlHint_mouseMiddle, *controlHint_bg, *controlHint_image;
 	Quad *controlHint_shine;
 	bool controlHint_ignoreClear;
 	BitmapText *controlHint_text;
 
-
-
-	void updateCurrentVisuals(float dt);
 	std::string lastTileset;
 
 
@@ -1144,19 +794,6 @@ protected:
 	void findMaxCameraValues();
 	std::vector<ObsRow> obsRows;
 
-	bool sceneFlipped;
-
-
-	void flipRenderObjectVertical(RenderObject *r, int flipY);
-	void onFlipTest();
-
-	void onDebugSave();
-
-	BitmapText *menuDescription;
-	BitmapText *menuEXP, *menuMoney;
-
-	std::vector<Quad*> spellIcons;
-	int currentInventoryPage;
 	float backgroundImageRepeat;
 
 	std::string musicToPlay;
@@ -1164,20 +801,8 @@ protected:
 	float deathTimer;
 
 
-
-	void onInGameMenuInventory();
-	void onInGameMenuSpellBook();
-	void onInGameMenuContinue();
-	void onInGameMenuOptions();
-	void onInGameMenuSave();
-	void onInGameMenuExit();
-
 	void onPressEscape();
 
-
-
-	std::vector<AquariaMenuItem*> menu;
-	Quad *menuBg, *menuBg2;
 	bool paused;
 	bool worldPaused;
 
@@ -1196,18 +821,7 @@ protected:
 	void toggleSceneEditor();
 #endif
 
-	unsigned char grid[MAX_GRID][MAX_GRID];
-
-
 	Quad *bg, *bg2;
-
-	bool inGameMenu;
-	float menuOpenTimer;
-
-	std::vector <Quad*> itemSlotIcons, itemSlotEmptyIcons;
-
-
-	std::string selectedChoice;
 
 	void warpCameraTo(Vector position);
 
@@ -1215,6 +829,8 @@ protected:
 
 private:
 	Ingredients ingredients;
+	InGameMenu *themenu;
+	static unsigned char grid[MAX_GRID][MAX_GRID];
 };
 
 extern Game *game;

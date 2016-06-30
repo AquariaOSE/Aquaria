@@ -182,12 +182,6 @@ void UserSettings::save()
 			}
 			xml_control->InsertEndChild(xml_targeting);
 
-			XMLElement *xml_joyCursorSpeed = doc.NewElement("JoyCursorSpeed");
-			{
-				xml_joyCursorSpeed->SetAttribute("v", double(control.joyCursorSpeed));
-			}
-			xml_control->InsertEndChild(xml_joyCursorSpeed);
-
 			XMLElement *xml_joyAxes = doc.NewElement("JoyAxes");
 			{
 				xml_joyAxes->SetAttribute("s1ax", control.s1ax);
@@ -454,10 +448,6 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		readInt(xml_control, "AutoAim", "on", &control.autoAim);
 
 		readInt(xml_control, "Targeting", "on", &control.targeting);
-
-		XMLElement *xml_joyCursorSpeed = xml_control->FirstChildElement("JoyCursorSpeed");
-		if (xml_joyCursorSpeed)
-			xml_joyCursorSpeed->QueryFloatAttribute("v", &control.joyCursorSpeed);
 
 		XMLElement *xml_joyAxes = xml_control->FirstChildElement("JoyAxes");
 		if (xml_joyAxes)

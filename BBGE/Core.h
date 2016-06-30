@@ -49,12 +49,6 @@ class ParticleEffect;
 
 class ParticleManager;
 
-void initInputCodeMap();
-void clearInputCodeMap();
-std::string getInputCodeToString(int key);
-std::string getInputCodeToUserString(int key);
-int getStringToInputCode(const std::string &string);
-
 struct ScreenMode
 {
 	ScreenMode() { idx = x = y = hz = 0; }
@@ -70,12 +64,6 @@ struct CoreSettings
 	bool runInBackground;
 	bool updateOn; // NOT IMPLEMENTED YET
 	bool prebufferSounds;
-};
-
-enum CoreFlags
-{
-	CF_CLEARBUFFERS	= 0x00000001,
-	CF_SORTENABLED	= 0x00000010
 };
 
 enum CoreLayers
@@ -413,7 +401,7 @@ public:
 
 	void setReentryInputGrab(int on);
 
-	void action(int id, int state){}
+	virtual void action(int id, int state, int source){}
 
 	bool exists(const std::string &file);
 
@@ -554,8 +542,6 @@ public:
 
 	bool debugLogTextures;
 
-
-	Joystick joystick;
 	void setClearColor(const Vector &c);
 	Vector getClearColor();
 	int flipMouseButtons;
@@ -694,14 +680,17 @@ protected:
 
 	CountedPtr<Texture> texError;
 
-
-
 	int tgaSaveSeries(char	*filename,  short int width, short int height, unsigned char pixelDepth, unsigned char *imageData);
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}
 
 	void setupFileAccess();
 	std::string _extraDataDir;
+
+public:
+	std::vector<Joystick*> joysticks;
+
+	Joystick joystick; // TEMP: TO GET IT TO COMPILE
 };
 
 extern Core *core;

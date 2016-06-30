@@ -54,7 +54,6 @@ class StateObject : public ActionMapper
 public:
 	StateObject();
 	virtual ~StateObject();
-	void action(int id, int state);
 
 	virtual void applyState(){}
 	virtual void removeState();
@@ -63,6 +62,8 @@ public:
 	void addRenderObject(RenderObject *renderObject, int layer=0);
 	void removeRenderObject(RenderObject *renderObject);
 	std::string name;
+
+	virtual void action(int actionID, int state, int source) {}
 
 protected:
 	void registerState(StateObject *sb, const std::string &name);

@@ -27,6 +27,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "ActionInput.h"
 
+typedef std::vector<ActionInput> ActionInputSet;
+
 class ActionMapper;
 class Event;
 
@@ -45,7 +47,7 @@ public:
 
 	ActionInputSet inputSet;
 
-	std::string insertInputIntoString(const std::string &string);
+	//std::string insertInputIntoString(const std::string &string);
 };
 
 #endif

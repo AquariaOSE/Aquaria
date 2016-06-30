@@ -174,15 +174,6 @@ typedef std::vector<Entity*> EntityContainer;
 #define FOR_ENTITIES(i) for (size_t i##_i = 0; dsq->entities[i##_i] != 0; ++i##_i) if (Entity **i = &dsq->entities[i##_i])
 
 
-enum MenuPage
-{
-	MENUPAGE_NONE		= -1,
-	MENUPAGE_SONGS		= 0,
-	MENUPAGE_FOOD		= 1,
-	MENUPAGE_TREASURES	= 2,
-	MENUPAGE_PETS		= 3
-};
-
 enum WorldMapRevealMethod
 {
 	REVEAL_UNSPECIFIED = -1,
@@ -1115,8 +1106,6 @@ public:
 
 	float poisonBitTime, poisonBitTimeAvatar;
 
-	MenuPage lastMenuPage, lastOptionsMenuPage;
-
 	enum { DUALFORM_NAIJA = 0, DUALFORM_LI = 1 };
 	int dualFormMode, dualFormCharge;
 
@@ -1249,7 +1238,7 @@ public:
 
 	void nag(NagType type);
 
-	void action(int id, int state);
+	void action(int id, int state, int source);
 
 	void title(bool fadeMusic=true);
 
@@ -1488,8 +1477,6 @@ public:
 
 	void centerText(const std::string &text);
 	void centerMessage(const std::string &text, float y=300, int type=0);
-
-	bool routeShoulder;
 
 	void toggleVersionLabel(bool on);
 

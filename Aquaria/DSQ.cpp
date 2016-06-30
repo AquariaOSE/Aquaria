@@ -651,10 +651,6 @@ void DSQ::debugMenu()
 				{
 					dsq->demo.clearRecordedFrames();
 				}
-				else if (c == 'M')
-				{
-					dsq->game->autoMap->toggle(!dsq->game->autoMap->isOn());
-				}
 				else if (c == 'H')
 				{
 					std::ostringstream os;
@@ -831,7 +827,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 	fpsText = 0;
 	cmDebug = 0;
 
-	routeShoulder = true;
 	debugLog("DSQ init");
 
 	useFrameBuffer = false;
@@ -3802,9 +3797,9 @@ void DSQ::watch(float t, int canQuit)
 	}
 }
 
-void DSQ::action(int id, int state)
+void DSQ::action(int id, int state, int source)
 {
-	Core::action(id, state);
+	Core::action(id, state, source);
 
 	if (id == ACTION_ESC && !state)
 	{

@@ -64,7 +64,7 @@ void EventPtr::call()
 	}
 	if (actionMapperCallback)
 	{
-		actionMapperCallback->action(actionValue, stateToCall);
+		actionMapperCallback->action(actionValue, stateToCall, -1);
 	}
 }
 

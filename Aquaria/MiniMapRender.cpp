@@ -412,7 +412,7 @@ void MiniMapRender::onUpdate(float dt)
 								{
 									doubleClickDelay = 0;
 									if (!core->isStateJumpPending())
-										dsq->game->action(ACTION_TOGGLEMENU, 1);
+										dsq->game->action(ACTION_TOGGLEMENU, 1, -1);
 									btn = true;
 								}
 								break;

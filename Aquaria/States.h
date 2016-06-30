@@ -225,7 +225,7 @@ public:
 
 	std::vector<KeyframeWidget*> keyframeWidgets;
 
-	void action(int id, int state);
+	void action(int id, int state, int source);
 
 	void rebuildKeyframeWidgets();
 

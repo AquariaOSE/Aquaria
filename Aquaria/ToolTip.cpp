@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ToolTip.h"
 #include "DSQ.h"
 #include "Game.h"
+#include "InGameMenu.h"
 
 bool ToolTip::toolTipsOn = true;
 
@@ -130,7 +131,7 @@ void ToolTip::onUpdate(float dt)
 
 void ToolTip::render()
 {
-	if (!dsq->game->recipeMenu.on && toolTipsOn)
+	if (!game->getInGameMenu()->recipeMenu.on && toolTipsOn)
 	{
 		RenderObject::render();
 	}

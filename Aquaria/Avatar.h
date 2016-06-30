@@ -140,7 +140,7 @@ public:
 	Avatar();
 	virtual ~Avatar();
 	void destroy();
-	void action(int actionID, int state);
+	void action(int actionID, int state, int source);
 	AvatarState state;
 	float burst, burstTimer;
 	float burstDelay;

@@ -19,6 +19,11 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#ifndef BBGE_BUILD_SDL2
+#error test this
+#endif
+
+#include "Joystick.h"
 #include "Core.h"
 
 
@@ -30,7 +35,6 @@ Joystick::Joystick()
 	sdl_haptic = NULL;
 #  endif
 	sdl_joy = NULL;
-	inited = false;
 	buttonBitmask = 0;
 	deadZone1 = 0.3;
 	deadZone2 = 0.3;
@@ -82,13 +86,16 @@ void Joystick::init(int stick)
 
 		if (sdl_joy)
 		{
-			inited = true;
 			#ifdef BBGE_BUILD_SDL2
-			debugLog(std::string("Initialized Joystick [") + std::string(SDL_JoystickName(sdl_joy)) + std::string("]"));
-			if (sdl_controller) debugLog(std::string("Joystick is a Game Controller"));
-			if (sdl_haptic) debugLog(std::string("Joystick has force feedback support"));
+			debugLog(std::string("Initialized Joystick [") + SDL_JoystickName(sdl_joy) + "]");
+			if (sdl_controller)
+				debugLog("Joystick is a Game Controller");
+			if (sdl_haptic)
+				debugLog("Joystick has force feedback support");
+			instanceID = SDL_JoystickInstanceID(sdl_joy);
 			#else
-			debugLog(std::string("Initialized Joystick [") + std::string(SDL_JoystickName(stick)) + std::string("]"));
+			debugLog(std::string("Initialized Joystick [") + SDL_JoystickName(stick)) + std::string("]"));
+			instanceID = SDL_JoystickIndex(sdl_joy);
 			#endif
 		}
 		else
@@ -128,7 +135,7 @@ void Joystick::shutdown()
 
 void Joystick::rumble(float leftMotor, float rightMotor, float time)
 {
-	if (core->joystickEnabled && inited)
+	if (core->joystickEnabled)
 	{
 #ifdef BBGE_BUILD_SDL2
 		if (sdl_haptic)
@@ -149,7 +156,7 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 	}
 }
 
-void Joystick::callibrate(Vector &calvec, float deadZone)
+void Joystick::calibrate(Vector &calvec, float deadZone)
 {
 
 	if (calvec.isLength2DIn(deadZone))
@@ -181,25 +188,13 @@ void Joystick::callibrate(Vector &calvec, float deadZone)
 
 void Joystick::update(float dt)
 {
-	if (core->joystickEnabled && inited && sdl_joy && stickIndex != -1)
+	if (core->joystickEnabled && sdl_joy && stickIndex != -1)
 	{
 #ifdef BBGE_BUILD_SDL2
 		if (!SDL_JoystickGetAttached(sdl_joy))
 		{
 			debugLog("Lost Joystick");
-			if (sdl_haptic)
-			{
-				SDL_HapticClose(sdl_haptic);
-				sdl_haptic = NULL;
-			}
-			if (!sdl_controller)
-				SDL_JoystickClose(sdl_joy);
-			else
-			{
-				SDL_GameControllerClose(sdl_controller);
-				sdl_controller = NULL;
-			}
-			sdl_joy = NULL;
+			shutdown();
 			return;
 		}
 
@@ -248,9 +243,9 @@ void Joystick::update(float dt)
 
 
 
-		callibrate(position, deadZone1);
+		calibrate(position, deadZone1);
 
-		callibrate(rightStick, deadZone2);
+		calibrate(rightStick, deadZone2);
 
 
 		buttonBitmask = 0;
@@ -279,7 +274,7 @@ void Joystick::update(float dt)
 	}
 }
 
-bool Joystick::anyButton()
+bool Joystick::anyButton() const
 {
 	return !!buttonBitmask;;
 }

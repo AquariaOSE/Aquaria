@@ -1521,10 +1521,6 @@ void Continuity::castSong(int num)
 			dsq->game->avatar->changeForm(FORM_ENERGY);
 		break;
 #ifndef AQUARIA_DEMO
-		case SONG_MAP:
-			if (dsq->game->autoMap)
-				dsq->game->autoMap->toggle(true);
-		break;
 		case SONG_HEAL:
 
 			// do heal effects
@@ -1635,6 +1631,7 @@ void Continuity::castSong(int num)
 			dsq->game->avatar->changeForm(FORM_FISH);
 		break;
 		case SONG_SONGDOOR1:
+		case SONG_MAP:
 		break;
 #endif
 		}
@@ -2083,8 +2080,6 @@ void Continuity::applyWorldEffects(WorldType type, bool transition, bool affectM
 
 		dsq->game->avatar->canWarp = false;
 
-
-		dsq->game->backupSceneColor = dsq->game->sceneColor;
 		dsq->game->sceneColor.interpolateTo(Vector(0.4, 0.8, 0.9), time);
 		dsq->game->avatar->applyWorldEffects(type);
 	}
@@ -3479,16 +3474,8 @@ void Continuity::reset()
 	dualFormMode = DUALFORM_LI;
 	dualFormCharge = 0;
 
-	lastMenuPage = MENUPAGE_NONE;
-	lastOptionsMenuPage = MENUPAGE_NONE;
-
 	if (dsq->game)
-	{
-		dsq->game->currentMenuPage = MENUPAGE_NONE;
-		dsq->game->currentFoodPage = 0;
-		dsq->game->currentTreasurePage = 0;
-		dsq->game->recipeMenu.currentPage = 0;
-	}
+		dsq->game->onContinuityReset();
 
 
 

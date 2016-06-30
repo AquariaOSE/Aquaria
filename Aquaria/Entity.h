@@ -284,8 +284,6 @@ public:
 
 	void freeze(float time);
 
-	virtual void onSceneFlipped() {}
-
 	bool isNearObstruction(int sz, int type=0, TileVector *hitTile=0);
 
 	enum
