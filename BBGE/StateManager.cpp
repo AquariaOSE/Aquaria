@@ -54,10 +54,6 @@ void StateObject::removeRenderObject(RenderObject *renderObject)
 	stateManager->getState(name)->removeRenderObject(renderObject);
 }
 
-void StateObject::action(int id, int state)
-{
-}
-
 void StateObject::update(float dt)
 {
 	ActionMapper::onUpdate(dt);

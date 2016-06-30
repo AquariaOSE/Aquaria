@@ -164,6 +164,8 @@ public:
 	AquariaMenuItem arrowUp, arrowDown;
 
 	void setSubText(const std::string& s);
+		
+	virtual void action(int actionID, int state, int source) {}
 
 protected:
 	virtual void onUpdate(float dt);

@@ -133,7 +133,6 @@ public:
 			toolTipsOn = 1;
 			autoAim = 1;
 			targeting = 1;
-			joyCursorSpeed = 4.0;
 			flipInputButtons = 0;
 			s1ax = 0;
 			s1ay = 0;
@@ -146,7 +145,6 @@ public:
 		int joystickEnabled;
 		int autoAim;
 		int targeting;
-		float joyCursorSpeed;
 		int flipInputButtons;
 		ActionSet actionSet;
 		int s1ax, s1ay, s2ax, s2ay;

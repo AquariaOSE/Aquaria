@@ -40,7 +40,19 @@ struct ActionData
 	ButtonList buttonList;
 };
 
-#define ACTION_EVENT		= -1
+enum ActionButtonType
+{
+	// must start at > 512 (SDL scancodes end there)
+	MOUSE_BUTTON_LEFT	=  999,
+	MOUSE_BUTTON_RIGHT	= 1000,
+	MOUSE_BUTTON_MIDDLE	= 1001,
+
+	JOY_BUTTON_0		= 2000,
+	JOY_BUTTON_END = JOY_BUTTON_0 + MAX_JOYSTICK_BTN, // one past end
+
+	JOY_AXIS_0			= 3000,
+	JOY_AXIS_END = JOY_AXIS_0 + MAX_JOYSTICK_AXIS,
+};
 
 class ActionMapper
 {
@@ -57,7 +69,7 @@ public:
 	void removeAllActions();
 
 	bool isActing(int actionID);
-	virtual void action(int actionID, int state){}
+	virtual void action(int actionID, int state, int source) = 0;
 
 
 	void clearActions();
@@ -73,17 +85,6 @@ public:
 	KeyDownMap keyDownMap;
 
 	bool cleared;
-
-
-
-	enum {
-		MOUSE_BUTTON_LEFT	=  999,
-		MOUSE_BUTTON_RIGHT	= 1000,
-		MOUSE_BUTTON_MIDDLE	= 1001,
-
-		JOY1_BUTTON_0		= 2000,
-		JOY1_BUTTON_END = JOY1_BUTTON_0 + MAX_JOYSTICK_BTN, // one past end
-	};
 
 	virtual void enableInput();
 	virtual void disableInput();

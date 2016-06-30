@@ -91,57 +91,6 @@ std::string getMapTemplateFilename()
 	return "";
 }
 
-void WarpAreaRender::onRender()
-{
-	for (int i = 0; i < dsq->game->warpAreas.size(); i++)
-	{
-		WarpArea *a = &dsq->game->warpAreas[i];
-		glTranslatef(a->position.x, a->position.y,0);
-
-		if (a->warpAreaType == "Brown")
-			glColor4f(0.5, 0.25, 0, alpha.getValue());
-		else
-		{
-			switch (a->warpAreaType[0])
-			{
-			case 'B':
-				glColor4f(0,0,1,alpha.getValue());
-			break;
-			case 'R':
-				glColor4f(1,0,0,alpha.getValue());
-			break;
-			case 'G':
-				glColor4f(0, 1, 0,alpha.getValue());
-			break;
-			case 'Y':
-				glColor4f(1,1,0,alpha.getValue());
-			break;
-			case 'P':
-				glColor4f(1,0,1,alpha.getValue());
-			break;
-			case 'O':
-				glColor4f(1,0.5,0,alpha.getValue());
-			break;
-			}
-		}
-
-		if (a->radius)
-			drawCircle(a->radius);
-		else
-		{
-			glBegin(GL_QUADS);
-			{
-				glVertex2f(-a->w,-a->h);
-				glVertex2f(-a->w,a->h);
-				glVertex2f(a->w,a->h);
-				glVertex2f(a->w,-a->h);
-			}
-			glEnd();
-		}
-		glTranslatef(-a->position.x, -a->position.y,0);
-	}
-}
-
 SceneEditor::SceneEditor() : ActionMapper(), on(false)
 {
 	autoSaveFile = 0;
@@ -169,8 +118,6 @@ void SceneEditor::changeDepth()
 {
 	if (editingElement)
 	{
-
-
 		editingElement->followCamera = 0.9;
 		editingElement->cull = false;
 	}
@@ -527,7 +474,6 @@ void SceneEditor::init()
 
 	editType = ET_ELEMENTS;
 	state = ES_SELECTING;
-	drawingWarpArea = 'N';
 
 	btnMenu = new DebugButton(200, &menuReceiver, 700);
 	btnMenu->position = Vector(20, 20);
@@ -539,7 +485,6 @@ void SceneEditor::init()
 
 	selectedEntityType = 0;
 	zoom = Vector(0.2,0.2);
-	drawingBox = false;
 	bgLayer = 5;
 	text = new DebugFont();
 	text->setFontSize(6);
@@ -550,25 +495,13 @@ void SceneEditor::init()
 	dsq->game->addRenderObject(text, LR_HUD);
 	text->alpha = 0;
 	selectedVariation = -1;
-
-	boxPromo = new Quad;
-	boxPromo->color = 0;
-	boxPromo->alpha =0;
-	boxPromo->cull = false;
-	dsq->game->addRenderObject(boxPromo, LR_HUD);
 	on = false;
-
-
 
 	addAction(MakeFunctionEvent(SceneEditor, loadScene), KEY_F1, 0);
 	addAction(MakeFunctionEvent(SceneEditor, saveScene), KEY_F2, 0);
 
-
-
 	addAction(MakeFunctionEvent(SceneEditor, moveToBack), KEY_Z, 0);
 	addAction(MakeFunctionEvent(SceneEditor, moveToFront), KEY_X, 0);
-
-	addAction(MakeFunctionEvent(SceneEditor, toggleWarpAreaRender), KEY_F4, 0);
 
 	addAction(MakeFunctionEvent(SceneEditor, editModeElements), KEY_F5, 0);
 	addAction(MakeFunctionEvent(SceneEditor, editModeEntities), KEY_F6, 0);
@@ -688,11 +621,6 @@ void SceneEditor::init()
 	{
 		placer->setTexture("missingimage");
 	}
-
-	warpAreaRender = new WarpAreaRender;
-	warpAreaRender->alpha = 0;
-	warpAreaRender->toggleCull(false);
-	dsq->game->addRenderObject(warpAreaRender, LR_HUD);
 
 	updateText();
 
@@ -855,16 +783,6 @@ void SceneEditor::reversePath()
 		}
 	}
 }
-
-void SceneEditor::toggleWarpAreaRender()
-{
-	if (warpAreaRender->alpha.x == 0)
-		warpAreaRender->alpha.x = 0.5;
-	else if (warpAreaRender->alpha.x >= 0.5f)
-		warpAreaRender->alpha.x = 0;
-
-}
-
 
 void SceneEditor::setGridPattern(int gi)
 {
@@ -1903,46 +1821,6 @@ void SceneEditor::generateLevel()
 
 		dsq->game->reconstructGrid(true);
 
-		// create warp areas
-		dsq->game->warpAreas.clear();
-		for (i = 0; i < MAX; i++)
-		{
-			if (firstColorX[i] != -1)
-			{
-				WarpArea warpArea;
-				int w = lastColorX[i] - firstColorX[i];
-				int h = lastColorY[i] - firstColorY[i];
-
-				warpArea.w = w*TILE_SIZE;
-				warpArea.h = h*TILE_SIZE;
-				warpArea.position = Vector(firstColorX[i]*TILE_SIZE + warpArea.w/2, firstColorY[i]*TILE_SIZE + warpArea.h/2);
-				warpArea.w += TILE_SIZE*4;
-				warpArea.h += TILE_SIZE*4;
-
-				switch (i)
-				{
-				case RED:		warpArea.warpAreaType = "Red";			break;
-				case BLUE:		warpArea.warpAreaType = "Blue";			break;
-				case GREEN:		warpArea.warpAreaType = "Green";		break;
-				case YELLOW:	warpArea.warpAreaType = "Yellow";		break;
-				case PURPLE:	warpArea.warpAreaType = "Purple";		break;
-				case ORANGE:	warpArea.warpAreaType = "Orange";		break;
-				case BROWN:		warpArea.warpAreaType = "Brown";		break;
-				}
-
-				dsq->game->setWarpAreaSceneName(warpArea);
-
-				warpArea.generated = true;
-
-				std::ostringstream os;
-				os << "WarpArea (" << warpArea.w << ", " << warpArea.h << ") - pos(" << warpArea.position.x << ", " <<
-					warpArea.position.y << ")";
-				debugLog(os.str());
-
-				dsq->game->warpAreas.push_back(warpArea);
-			}
-		}
-
 		maxX--;
 		maxY--;
 		this->skinMinX = 4;
@@ -1969,7 +1847,7 @@ void SceneEditor::removeEntity()
 void SceneEditor::placeAvatar()
 {
 	dsq->game->avatar->position = dsq->getGameCursorPosition();
-	dsq->game->action(ACTION_PLACE_AVATAR, 0);
+	dsq->game->action(ACTION_PLACE_AVATAR, 0, -1);
 }
 
 void SceneEditor::scaleElementUp()
@@ -2076,7 +1954,7 @@ void SceneEditor::updateMultiSelect()
 	}
 }
 
-void SceneEditor::action(int id, int state)
+void SceneEditor::action(int id, int state, int source)
 {
 	if (core->getCtrlState() && editingElement)
 	{
@@ -2625,7 +2503,7 @@ void SceneEditor::placeElement()
 {
 	if (editType == ET_ELEMENTS)
 	{
-		if (!core->getShiftState() && !core->getKeyState(KEY_LALT) && !drawingBox)
+		if (!core->getShiftState() && !core->getKeyState(KEY_LALT))
 		{
 			dsq->game->createElement(dsq->game->elementTemplates[curElement].idx, placer->position, bgLayer, placer);
 			updateText();
@@ -2745,7 +2623,6 @@ void SceneEditor::toggle(bool on)
 		btnMenu->alpha = 1;
 		dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = true;
 
-		warpAreaRender->alpha = 0.5;
 		dsq->game->togglePause(on);
 		if (dsq->game->avatar)
 			dsq->game->avatar->disableInput();
@@ -2786,7 +2663,6 @@ void SceneEditor::toggle(bool on)
 
 		dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = false;
 
-		warpAreaRender->alpha = 0;
 		dsq->game->togglePause(on);
 		if (dsq->game->avatar)
 			dsq->game->avatar->enableInput();
@@ -2865,70 +2741,6 @@ void SceneEditor::updateText()
 	break;
 	}
 	text->setText(os.str());
-}
-
-void SceneEditor::startDrawingWarpArea(char c)
-{
-	if (drawingWarpArea == 'N')
-	{
-		boxPos = dsq->getGameCursorPosition();
-		boxPromo->alpha = 1;
-		switch(c)
-		{
-		case 'Y': boxPromo->color = Vector(1,1,0); break;
-		case 'U': boxPromo->color = Vector(1,0,0); break;
-		case 'I': boxPromo->color = Vector(0,1,0); break;
-		case 'O': boxPromo->color = Vector(0,0,1); break;
-		case 'P': boxPromo->color = Vector(1,0,1); break;
-		}
-		drawingWarpArea = c;
-	}
-	if (drawingWarpArea == c)
-	{
-		Vector diff = dsq->getGameCursorPosition() - boxPos;
-		boxPromo->setWidthHeight(diff.x, diff.y);
-		boxPromo->position = boxPos + diff/2;
-	}
-}
-
-void SceneEditor::updateDrawingWarpArea(char c, int k)
-{
-	if (core->getKeyState(k))
-	{
-		startDrawingWarpArea(c);
-	}
-	else
-	{
-		endDrawingWarpArea(c);
-	}
-}
-
-void SceneEditor::endDrawingWarpArea(char c)
-{
-	if (drawingWarpArea == c)
-	{
-		drawingWarpArea = 'N';
-		boxPromo->alpha = 0;
-		if (boxPromo->getWidth() > TILE_SIZE && boxPromo->getHeight() > TILE_SIZE)
-		{
-			WarpArea a;
-			a.position = boxPromo->position;
-			a.w = boxPromo->getWidth()/2;
-			a.h = boxPromo->getHeight()/2;
-			switch (c)
-			{
-			case 'Y': a.warpAreaType = "Yellow"; break;
-			case 'U': a.warpAreaType = "Red"; break;
-			case 'I': a.warpAreaType = "Green"; break;
-			case 'O': a.warpAreaType = "Blue"; break;
-			case 'P': a.warpAreaType = "Purple"; break;
-			}
-
-			a.sceneName = dsq->getUserInputString("Enter map to warp to");
-			a.spawnOffset = dsq->getUserInputDirection("Enter warp direction");
-			dsq->game->warpAreas.push_back(a);
-		}
-	}
 }
 
 Vector SceneEditor::getSelectedElementsCenter()

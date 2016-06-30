@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				Optimization="0"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.3.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.3\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.4\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;BBGE_USE_GLM=1;AQUARIA_INTERNAL_FTGL=1"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;BBGE_USE_GLM=1;AQUARIA_INTERNAL_FTGL=1;BBGE_BUILD_SDL2"
 				MinimalRebuild="true"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -124,7 +124,7 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.3.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.3\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.4\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;_HAS_EXCEPTIONS=0;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;BBGE_USE_GLM=1;AQUARIA_INTERNAL_FTGL=1"
+				PreprocessorDefinitions="WIN32;NDEBUG;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;_HAS_EXCEPTIONS=0;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;BBGE_USE_GLM=1;AQUARIA_INTERNAL_FTGL=1;BBGE_BUILD_SDL2"
 				StringPooling="true"
 				ExceptionHandling="0"
 				RuntimeLibrary="0"
@@ -216,14 +216,6 @@
 			</File>
 			<File
 				RelativePath="..\..\Aquaria\AStar.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Aquaria\AutoMap.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Aquaria\AutoMap.h"
 				>
 			</File>
 			<File
@@ -335,6 +327,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\InGameMenu.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\InGameMenu.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\Ingredient.cpp"
 				>
 			</File>
@@ -404,6 +404,10 @@
 			</File>
 			<File
 				RelativePath="..\..\Aquaria\RecipeMenuEntry.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\RecipeMenuEntry.h"
 				>
 			</File>
 			<File

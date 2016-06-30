@@ -413,6 +413,7 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/GridRender.cpp
     ${SRCDIR}/Hair.cpp
     ${SRCDIR}/Ingredient.cpp
+    ${SRCDIR}/InGameMenu.cpp
     ${SRCDIR}/Intro.cpp
     ${SRCDIR}/Logo.cpp
     ${SRCDIR}/Main.cpp
@@ -505,7 +506,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/SpawnParticleData.cpp
     ${BBGEDIR}/StateMachine.cpp
     ${BBGEDIR}/StateManager.cpp
-    ${BBGEDIR}/Strings.cpp
     ${BBGEDIR}/Texture.cpp
     ${BBGEDIR}/TTFFont.cpp
     ${BBGEDIR}/Vector.cpp

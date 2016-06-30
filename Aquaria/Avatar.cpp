@@ -4291,7 +4291,7 @@ Vector Avatar::getVectorToCursor(bool trueMouse)
 	//return core->mouse.position - Vector(400,300);
 }
 
-void Avatar::action(int id, int state)
+void Avatar::action(int id, int state, int source)
 {
 	if(dsq->game->isIgnoreAction((AquariaActions)id))
 		return;
@@ -7015,50 +7015,7 @@ bool Avatar::checkWarpAreas()
 								//dsq->fade(0, t);
 								return true;
 							}
-
 						}
-					}
-				}
-			}
-		}
-
-	}
-	for (i = 0; i < dsq->game->warpAreas.size(); i++)
-	{
-		WarpArea *a = &dsq->game->warpAreas[i];
-		if (a->radius)
-		{
-			Vector diff = a->position - this->position;
-			if (diff.getSquaredLength2D() < sqr(a->radius))
-			{
-				if (canWarp)
-				{
-					dsq->game->warpToArea(a);
-					return false;
-				}
-				else
-				{
-					position = lastPosition;
-					vel = -diff;
-					return true;
-				}
-			}
-		}
-		else
-		{
-			if (position.x > a->position.x - a->w && position.x < a->position.x + a->w)
-			{
-				if (position.y > a->position.y - a->h && position.y < a->position.y + a->h)
-				{
-					if (canWarp)
-					{
-						dsq->game->warpToArea(a);
-						return false;
-					}
-					else
-					{
-						position = lastPosition;
-						vel = -vel*1.1f;
 					}
 				}
 			}

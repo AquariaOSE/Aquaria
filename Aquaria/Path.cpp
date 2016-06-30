@@ -640,12 +640,12 @@ void Path::update(float dt)
 	}
 }
 
-bool Path::action(int id, int state)
+bool Path::action(int id, int state, int source)
 {
 	if (hasScript())
 	{
 		bool dontRemove = true;
-		if (!script->call("action", this, id, state, &dontRemove))
+		if (!script->call("action", this, id, state, source, &dontRemove))
 			luaDebugMsg("action", script->getLastError());
 		return dontRemove;
 	}

@@ -22,12 +22,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ACTIONINPUT_H
 
 #include <string>
-#include <vector>
-#include <sstream>
+
 
 #define INP_MSESIZE		1
 #define INP_KEYSIZE		2
 #define INP_JOYSIZE		1
+
+std::string getInputCodeToString(int k);
+int getStringToInputCode(const std::string& s);
 
 class ActionInput
 {
@@ -43,8 +45,6 @@ public:
 	std::string toString();
 	void fromString(const std::string &read);
 };
-
-typedef std::vector<ActionInput> ActionInputSet;
 
 enum InputSetType
 {

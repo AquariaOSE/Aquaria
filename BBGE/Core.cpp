@@ -664,11 +664,7 @@ void Core::init()
 
 	loopDone = false;
 
-	initInputCodeMap();
-
 	initLocalization();
-
-
 }
 
 void Core::initRenderObjectLayers(int num)
@@ -3324,9 +3320,28 @@ void Core::initLocalization()
 
 void Core::onJoystickAdded(int deviceID)
 {
-
+	debugLog("Add new joystick");
+	Joystick *j = new Joystick;
+	j->init(deviceID);
+	for(size_t i = 0; i < joysticks.size(); ++i)
+		if(!joysticks[i])
+		{
+			joysticks[i] = j;
+			goto done;
+		}
+	joysticks.push_back(j);
+done:
+	; // TODO: fixup ActionMapper?
 }
 
 void Core::onJoystickRemoved(int instanceID)
 {
+	for(size_t i = 0; i < joysticks.size(); ++i)
+		if(joysticks[i]->getInstanceID() == instanceID)
+		{
+			joysticks[i]->shutdown();
+			delete joysticks[i];
+			joysticks[i] = NULL;
+		}
+	// TODO: fixup ActionMapper?
 }

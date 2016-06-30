@@ -90,7 +90,7 @@ public:
 	void addNode(int idx);
 	void update(float dt);
 	void setActive(bool v);
-	bool action(int id, int state);
+	bool action(int id, int state, int source);
 	void setEmitter(const std::string& name);
 
 	PathNode *getPathNode(int idx);

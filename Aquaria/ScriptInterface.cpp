@@ -39,6 +39,7 @@ extern "C"
 #include "PathFinding.h"
 #include <algorithm>
 #include "Gradient.h"
+#include "InGameMenu.h"
 
 #include "../BBGE/MathFunctions.h"
 
@@ -2019,12 +2020,13 @@ luaFunc(sendAction)
 	AquariaActions ac = (AquariaActions)lua_tointeger(L, 1);
 	int state = lua_tointeger(L, 2);
 	int mask = lua_tointeger(L, 3);
+	int source = lua_tointeger(L, 4);
 	if(!mask)
 		mask = -1;
 	if(mask & 1)
-		dsq->game->action(ac, state);
+		dsq->game->action(ac, state, source);
 	if((mask & 2) && dsq->game->avatar)
-		dsq->game->avatar->action(ac, state);
+		dsq->game->avatar->action(ac, state, source);
 	luaReturnNil();
 }
 
@@ -3713,7 +3715,7 @@ luaFunc(unlearnSong)
 
 luaFunc(showInGameMenu)
 {
-	dsq->game->showInGameMenu(getBool(L, 1), getBool(L, 2), (MenuPage)lua_tointeger(L, 3));
+	dsq->game->getInGameMenu()->show(getBool(L, 1), getBool(L, 2), (MenuPage)lua_tointeger(L, 3));
 	luaReturnNil();
 }
 
@@ -3721,7 +3723,7 @@ luaFunc(hideInGameMenu)
 {
 	bool skipEffect = getBool(L, 1);
 	bool cancel = getBool(L, 2);
-	dsq->game->hideInGameMenu(!skipEffect, cancel);
+	dsq->game->getInGameMenu()->hide(!skipEffect, cancel);
 	luaReturnNil();
 }
 
@@ -6430,15 +6432,6 @@ luaFunc(entity_setCurrentTarget)
 	luaReturnNil();
 }
 
-luaFunc(setMiniMapHint)
-{
-	std::istringstream is(getString(L, 1));
-	is >> dsq->game->miniMapHint.scene >> dsq->game->miniMapHint.warpAreaType;
-	dsq->game->updateMiniMapHintPosition();
-
-	luaReturnNil();
-}
-
 luaFunc(entityFollowEntity)
 {
 	Entity *e = dsq->getEntityByName(getString(L, 1));
@@ -9059,10 +9052,9 @@ luaFunc(inv_remove)
 	if(data && data->amount > 0)
 	{
 		data->amount--;
-		dsq->game->dropIngrNames.push_back(data->name);
 		dsq->continuity.removeEmptyIngredients();
 		if(dsq->game->isInGameMenu())
-			dsq->game->refreshFoodSlots(true);
+			dsq->game->getInGameMenu()->refreshFoodSlots(true);
 	}
 	luaReturnNil();
 }
@@ -9999,7 +9991,6 @@ static const struct {
 
 	luaRegister(entityFollowEntity),
 
-	luaRegister(setMiniMapHint),
 	luaRegister(bedEffects),
 
 	luaRegister(warpNaijaToEntity),
@@ -11816,6 +11807,20 @@ bool Script::call(const char *name, void *param1, float param2, float param3, bo
 	lua_pushnumber(L, param2);
 	lua_pushnumber(L, param3);
 	if (!doCall(3, 1))
+		return false;
+	*ret1 = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
+
+bool Script::call(const char *name, void *param1, int param2, int param3, int param4, bool *ret1)
+{
+	lookupFunc(name);
+	luaPushPointer(L, param1);
+	lua_pushinteger(L, param2);
+	lua_pushinteger(L, param3);
+	lua_pushinteger(L, param4);
+	if (!doCall(4, 1))
 		return false;
 	*ret1 = lua_toboolean(L, -1);
 	lua_pop(L, 1);

@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AquariaMenuItem.h"
 #include "DSQ.h"
 #include "Game.h"
+#include "ActionInput.h"
 
 float AquariaGuiElement::guiMoveTimer = 0;
 AquariaGuiElement::GuiElements AquariaGuiElement::guiElements;
@@ -671,7 +672,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 			}
 			else
 			{
-				for (int i = ActionMapper::JOY1_BUTTON_0; i <= MAX_JOYSTICK_BTN; i++)
+				for (int i = JOY_BUTTON_0; i <= MAX_JOYSTICK_BTN; i++)
 				{
 					if (dsq->game->getKeyState(i))
 					{
@@ -778,8 +779,8 @@ AquariaMenuItem::AquariaMenuItem() : Quad(), ActionMapper(), AquariaGuiElement()
 
 	cull = false;
 	followCamera = 1;
-	addAction(MakeFunctionEvent(AquariaMenuItem, onClick), ActionMapper::MOUSE_BUTTON_LEFT, 0);
-	addAction(MakeFunctionEvent(AquariaMenuItem, onClick), ActionMapper::MOUSE_BUTTON_RIGHT, 0);
+	addAction(MakeFunctionEvent(AquariaMenuItem, onClick), MOUSE_BUTTON_LEFT, 0);
+	addAction(MakeFunctionEvent(AquariaMenuItem, onClick), MOUSE_BUTTON_RIGHT, 0);
 
 	renderQuad = false;
 }

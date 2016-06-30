@@ -232,11 +232,11 @@ void AnimationEditor::applyState()
 	editSprite->position = Vector(400,300);
 
 
-	addAction(MakeFunctionEvent(AnimationEditor, lmbu), ActionMapper::MOUSE_BUTTON_LEFT, 0);
-	addAction(MakeFunctionEvent(AnimationEditor, lmbd), ActionMapper::MOUSE_BUTTON_LEFT, 1);
-	addAction(MakeFunctionEvent(AnimationEditor, rmbu), ActionMapper::MOUSE_BUTTON_RIGHT, 0);
-	addAction(MakeFunctionEvent(AnimationEditor, rmbd), ActionMapper::MOUSE_BUTTON_RIGHT, 1);
-	addAction(MakeFunctionEvent(AnimationEditor, mmbd), ActionMapper::MOUSE_BUTTON_MIDDLE, 1);
+	addAction(MakeFunctionEvent(AnimationEditor, lmbu), MOUSE_BUTTON_LEFT, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, lmbd), MOUSE_BUTTON_LEFT, 1);
+	addAction(MakeFunctionEvent(AnimationEditor, rmbu), MOUSE_BUTTON_RIGHT, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, rmbd), MOUSE_BUTTON_RIGHT, 1);
+	addAction(MakeFunctionEvent(AnimationEditor, mmbd), MOUSE_BUTTON_MIDDLE, 1);
 
 
 	addAction(MakeFunctionEvent(AnimationEditor, cloneBoneAhead), KEY_SPACE, 0);
@@ -531,9 +531,8 @@ void AnimationEditor::redo()
 	}
 }
 
-void AnimationEditor::action(int id, int state)
+void AnimationEditor::action(int id, int state, int source)
 {
-	StateObject::action(id, state);
 	if (editingBone && state)
 	{
 		if (dsq->isNested()) return;

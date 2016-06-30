@@ -60,11 +60,7 @@ void ActionMapper::addAction (int actionID, int k)
 {
 	ActionData *ad = getActionDataByID(actionID);
 
-	if (ad)
-	{
-
-	}
-	else
+	if (!ad)
 	{
 		ActionData data;
 		data.id = actionID;
@@ -211,12 +207,13 @@ bool ActionMapper::getKeyState(int k)
 	{
 		keyState = (core->mouse.buttons.middle == DOWN);
 	}
-	else if (k >= JOY1_BUTTON_0 && k < JOY1_BUTTON_END)
+	else if (k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
 	{
-		int v = k - JOY1_BUTTON_0;
+		int v = k - JOY_BUTTON_0;
 
-		if (core->joystickEnabled)
-			keyState = core->joystick.getButton(v);
+		for(size_t i = 0; i < core->joysticks.size(); ++i)
+			if( ((keyState = core->joysticks[i]->getButton(v))) )
+				break;
 	}
 
 	return keyState;
@@ -257,7 +254,7 @@ void ActionMapper::onUpdate (float dt)
 					}
 					else
 					{
-						action(ad->id, keyState);
+						action(ad->id, keyState, -1); // FG: FIXME
 					}
 					if (core->loopDone) goto out;
 				}
