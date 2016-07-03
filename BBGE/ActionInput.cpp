@@ -29,6 +29,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 std::string getInputCodeToString(int k)
 {
+	if(k <= 0)
+		return std::string();
 	if(k < SDL_NUM_SCANCODES)
 	{
 		const char *name = SDL_GetScancodeName((SDL_Scancode)k);
@@ -69,11 +71,11 @@ int getStringToInputCode(const std::string& s)
 	if(s == "MMB")
 		return MOUSE_BUTTON_MIDDLE;
 	if(!strncmp(s.c_str(), "K:", 2))
-		return SDL_GetScancodeFromName(s.c_str() + 2);
+		return atoi(s.c_str() + 2);
 	if(!strncmp(s.c_str(), "JB:", 3))
 		return JOY_BUTTON_0 + atoi(s.c_str() + 3);
 
-	return -1; // FIXME: is this correct?
+	return SDL_GetScancodeFromName(s.c_str());
 }
 
 
