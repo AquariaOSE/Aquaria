@@ -21,14 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __core__
 #define __core__
 
-/*
-valid BUILD_ flags
-WIN32/BUILD_WIN32
-BUILD_MACOSX
-BUILD_X360
-BUILD_LINUX
-*/
-
 #include "Base.h"
 #include "RenderObject.h"
 #include "SoundManager.h"
@@ -43,6 +35,8 @@ BUILD_LINUX
 #include "FrameBuffer.h"
 #include "Shader.h"
 #include "Joystick.h"
+
+#include "GameKeys.h"
 
 
 class ParticleEffect;
@@ -79,123 +73,6 @@ class Texture;
 
 const int baseVirtualWidth		= 800;
 const int baseVirtualHeight		= 600;
-
-enum GameKeys
-{
-
-
-
-	KEY_LSUPER,
-	KEY_RSUPER,
-	KEY_LMETA,
-	KEY_RMETA,
-	KEY_BACKSPACE,
-	KEY_PRINTSCREEN,
-
-
-
-	KEY_LALT,
-	KEY_RALT,
-	KEY_LSHIFT,
-	KEY_RSHIFT,
-	KEY_LCONTROL,
-	KEY_RCONTROL,
-	KEY_NUMPADMINUS,
-	KEY_NUMPADPERIOD,
-	KEY_NUMPADPLUS,
-	KEY_NUMPADSLASH,
-	KEY_NUMPADSTAR,
-	KEY_PGDN,
-	KEY_PGUP,
-	KEY_APOSTROPHE,
-	KEY_EQUALS,
-	KEY_SEMICOLON,
-	KEY_LBRACKET,
-	KEY_RBRACKET,
-
-	KEY_TILDE,
-    KEY_0,
-    KEY_1,
-    KEY_2,
-    KEY_3,
-    KEY_4,
-    KEY_5,
-    KEY_6,
-    KEY_7,
-    KEY_8,
-    KEY_9,
-    KEY_A,
-	KEY_B,
-	KEY_C,
-	KEY_D,
-	KEY_E,
-	KEY_F,
-	KEY_G,
-	KEY_H,
-	KEY_I,
-	KEY_J,
-	KEY_K,
-	KEY_L,
-	KEY_M,
-	KEY_N,
-	KEY_O,
-	KEY_P,
-	KEY_Q,
-	KEY_R,
-	KEY_S,
-	KEY_T,
-	KEY_U,
-	KEY_V,
-	KEY_W,
-	KEY_X,
-	KEY_Y,
-	KEY_Z,
-	KEY_LEFT,
-	KEY_RIGHT,
-	KEY_UP,
-	KEY_DOWN,
-	KEY_NUMPAD1,
-	KEY_NUMPAD2,
-	KEY_NUMPAD3,
-	KEY_NUMPAD4,
-	KEY_NUMPAD5,
-	KEY_NUMPAD6,
-	KEY_NUMPAD7,
-	KEY_NUMPAD8,
-	KEY_NUMPAD9,
-	KEY_NUMPAD0,
-	KEY_DELETE,
-	KEY_SPACE,
-	KEY_RETURN,
-	KEY_PERIOD,
-	KEY_MINUS,
-	KEY_CAPSLOCK,
-	KEY_SYSRQ,
-	KEY_TAB,
-	KEY_HOME,
-	KEY_END,
-	KEY_COMMA,
-	KEY_SLASH,
-    KEY_F1,
-    KEY_F2,
-    KEY_F3,
-    KEY_F4,
-    KEY_F5,
-    KEY_F6,
-    KEY_F7,
-    KEY_F8,
-    KEY_F9,
-    KEY_F10,
-    KEY_F11,
-    KEY_F12,
-    KEY_F13,
-    KEY_F14,
-    KEY_F15,
-	KEY_ESCAPE,
-	KEY_ANYKEY,
-	KEY_MAXARRAY
-};
-
 
 enum ButtonState { UP = 0, DOWN };
 
@@ -525,7 +402,6 @@ public:
 	bool getShiftState();
 	bool getAltState();
 	bool getCtrlState();
-	bool getMetaState();
 
 	virtual void generateCollisionMask(RenderObject *r){}
 

@@ -179,19 +179,7 @@ bool ActionMapper::pollAction(int actionID)
 bool ActionMapper::getKeyState(int k)
 {
 	bool keyState = false;
-	if (k == KEY_ANYKEY)
-	{
-		keyState = false;
-		for (int i = 0; i < KEY_MAXARRAY; i ++)
-		{
-			if (core->getKeyState(i))
-			{
-				keyState = true;
-				break;
-			}
-		}
-	}
-	else if (k >= 0 && k < KEY_MAXARRAY)
+	if (k >= 0 && k < KEY_MAXARRAY)
 	{
 		keyState = (core->getKeyState(k));
 	}

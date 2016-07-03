@@ -285,6 +285,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\GameKeys.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\Gradient.cpp"
 				>
 			</File>

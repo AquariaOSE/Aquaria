@@ -228,11 +228,6 @@ bool Core::getCtrlState()
 	return getKeyState(KEY_LCONTROL) || getKeyState(KEY_RCONTROL);
 }
 
-bool Core::getMetaState()
-{
-	return getKeyState(KEY_LMETA) || getKeyState(KEY_RMETA);
-}
-
 void Core::errorLog(const std::string &s)
 {
 	messageBox("Error!", s);
@@ -714,46 +709,8 @@ bool Core::getMouseButtonState(int m)
 
 bool Core::getKeyState(int k)
 {
-
-	if (k >= KEY_MAXARRAY || k < 0)
-	{
-		return 0;
-	}
-	return keys[k];
-
-#ifdef BBGE_BUILD_WINDOWS
-	if (k >= KEY_MAXARRAY || k < 0)
-	{
-		return 0;
-	}
-	return keys[k];
-#endif
-
-	return 0;
+	return k > 0 && k < KEY_MAXARRAY ? keys[k] : 0;
 }
-
-
-
-Vector joychange;
-Vector lastjoy;
-void readJoystickData()
-{
-
-
-
-}
-
-void readMouseData()
-{
-
-}
-
-void readKeyData()
-{
-
-}
-
-
 
 bool Core::initJoystickLibrary()
 {
@@ -795,17 +752,10 @@ void Core::onUpdate(float dt)
 	core->mouse.lastPosition = core->mouse.position;
 	core->mouse.lastScrollWheel = core->mouse.scrollWheel;
 
-	readKeyData();
-	readMouseData();
-	readJoystickData();
 	pollEvents();
 	joystick.update(dt);
 
-
-
 	onMouseInput();
-
-
 
 	globalScale.update(dt);
 	core->globalScaleChanged();
@@ -1748,172 +1698,6 @@ bool Core::doMouseConstraint()
 	return false;
 }
 
-
-#if defined(BBGE_BUILD_SDL2)
-typedef std::map<SDL_Keycode,int> sdlKeyMap;
-#else
-typedef std::map<SDLKey,int> sdlKeyMap;
-#endif
-
-static sdlKeyMap *initSDLKeymap(void)
-{
-	sdlKeyMap *_retval = new sdlKeyMap;
-	sdlKeyMap &retval = *_retval;
-
-	#define SETKEYMAP(gamekey,sdlkey) retval[sdlkey] = gamekey
-
-#ifdef BBGE_BUILD_SDL2
-	SETKEYMAP(KEY_LSUPER, SDLK_LGUI);
-	SETKEYMAP(KEY_RSUPER, SDLK_RGUI);
-	SETKEYMAP(KEY_LMETA, SDLK_LGUI);
-	SETKEYMAP(KEY_RMETA, SDLK_RGUI);
-	SETKEYMAP(KEY_PRINTSCREEN, SDLK_PRINTSCREEN);
-	SETKEYMAP(KEY_NUMPAD1, SDLK_KP_1);
-	SETKEYMAP(KEY_NUMPAD2, SDLK_KP_2);
-	SETKEYMAP(KEY_NUMPAD3, SDLK_KP_3);
-	SETKEYMAP(KEY_NUMPAD4, SDLK_KP_4);
-	SETKEYMAP(KEY_NUMPAD5, SDLK_KP_5);
-	SETKEYMAP(KEY_NUMPAD6, SDLK_KP_6);
-	SETKEYMAP(KEY_NUMPAD7, SDLK_KP_7);
-	SETKEYMAP(KEY_NUMPAD8, SDLK_KP_8);
-	SETKEYMAP(KEY_NUMPAD9, SDLK_KP_9);
-	SETKEYMAP(KEY_NUMPAD0, SDLK_KP_0);
-#else
-	SETKEYMAP(KEY_LSUPER, SDLK_LSUPER);
-	SETKEYMAP(KEY_RSUPER, SDLK_RSUPER);
-	SETKEYMAP(KEY_LMETA, SDLK_LMETA);
-	SETKEYMAP(KEY_RMETA, SDLK_RMETA);
-	SETKEYMAP(KEY_PRINTSCREEN, SDLK_PRINT);
-	SETKEYMAP(KEY_NUMPAD1, SDLK_KP1);
-	SETKEYMAP(KEY_NUMPAD2, SDLK_KP2);
-	SETKEYMAP(KEY_NUMPAD3, SDLK_KP3);
-	SETKEYMAP(KEY_NUMPAD4, SDLK_KP4);
-	SETKEYMAP(KEY_NUMPAD5, SDLK_KP5);
-	SETKEYMAP(KEY_NUMPAD6, SDLK_KP6);
-	SETKEYMAP(KEY_NUMPAD7, SDLK_KP7);
-	SETKEYMAP(KEY_NUMPAD8, SDLK_KP8);
-	SETKEYMAP(KEY_NUMPAD9, SDLK_KP9);
-	SETKEYMAP(KEY_NUMPAD0, SDLK_KP0);
-#endif
-
-	SETKEYMAP(KEY_BACKSPACE, SDLK_BACKSPACE);
-
-
-
-	SETKEYMAP(KEY_LALT, SDLK_LALT);
-	SETKEYMAP(KEY_RALT, SDLK_RALT);
-	SETKEYMAP(KEY_LSHIFT, SDLK_LSHIFT);
-	SETKEYMAP(KEY_RSHIFT, SDLK_RSHIFT);
-	SETKEYMAP(KEY_LCONTROL, SDLK_LCTRL);
-	SETKEYMAP(KEY_RCONTROL, SDLK_RCTRL);
-	SETKEYMAP(KEY_NUMPADMINUS, SDLK_KP_MINUS);
-	SETKEYMAP(KEY_NUMPADPERIOD, SDLK_KP_PERIOD);
-	SETKEYMAP(KEY_NUMPADPLUS, SDLK_KP_PLUS);
-	SETKEYMAP(KEY_NUMPADSLASH, SDLK_KP_DIVIDE);
-	SETKEYMAP(KEY_NUMPADSTAR, SDLK_KP_MULTIPLY);
-	SETKEYMAP(KEY_PGDN, SDLK_PAGEDOWN);
-	SETKEYMAP(KEY_PGUP, SDLK_PAGEUP);
-	SETKEYMAP(KEY_APOSTROPHE, SDLK_QUOTE);
-	SETKEYMAP(KEY_EQUALS, SDLK_EQUALS);
-	SETKEYMAP(KEY_SEMICOLON, SDLK_SEMICOLON);
-	SETKEYMAP(KEY_LBRACKET, SDLK_LEFTBRACKET);
-	SETKEYMAP(KEY_RBRACKET, SDLK_RIGHTBRACKET);
-
-	SETKEYMAP(KEY_TILDE, SDLK_BACKQUOTE);
-	SETKEYMAP(KEY_0, SDLK_0);
-	SETKEYMAP(KEY_1, SDLK_1);
-	SETKEYMAP(KEY_2, SDLK_2);
-	SETKEYMAP(KEY_3, SDLK_3);
-	SETKEYMAP(KEY_4, SDLK_4);
-	SETKEYMAP(KEY_5, SDLK_5);
-	SETKEYMAP(KEY_6, SDLK_6);
-	SETKEYMAP(KEY_7, SDLK_7);
-	SETKEYMAP(KEY_8, SDLK_8);
-	SETKEYMAP(KEY_9, SDLK_9);
-	SETKEYMAP(KEY_A, SDLK_a);
-	SETKEYMAP(KEY_B, SDLK_b);
-	SETKEYMAP(KEY_C, SDLK_c);
-	SETKEYMAP(KEY_D, SDLK_d);
-	SETKEYMAP(KEY_E, SDLK_e);
-	SETKEYMAP(KEY_F, SDLK_f);
-	SETKEYMAP(KEY_G, SDLK_g);
-	SETKEYMAP(KEY_H, SDLK_h);
-	SETKEYMAP(KEY_I, SDLK_i);
-	SETKEYMAP(KEY_J, SDLK_j);
-	SETKEYMAP(KEY_K, SDLK_k);
-	SETKEYMAP(KEY_L, SDLK_l);
-	SETKEYMAP(KEY_M, SDLK_m);
-	SETKEYMAP(KEY_N, SDLK_n);
-	SETKEYMAP(KEY_O, SDLK_o);
-	SETKEYMAP(KEY_P, SDLK_p);
-	SETKEYMAP(KEY_Q, SDLK_q);
-	SETKEYMAP(KEY_R, SDLK_r);
-	SETKEYMAP(KEY_S, SDLK_s);
-	SETKEYMAP(KEY_T, SDLK_t);
-	SETKEYMAP(KEY_U, SDLK_u);
-	SETKEYMAP(KEY_V, SDLK_v);
-	SETKEYMAP(KEY_W, SDLK_w);
-	SETKEYMAP(KEY_X, SDLK_x);
-	SETKEYMAP(KEY_Y, SDLK_y);
-	SETKEYMAP(KEY_Z, SDLK_z);
-
-	SETKEYMAP(KEY_LEFT, SDLK_LEFT);
-	SETKEYMAP(KEY_RIGHT, SDLK_RIGHT);
-	SETKEYMAP(KEY_UP, SDLK_UP);
-	SETKEYMAP(KEY_DOWN, SDLK_DOWN);
-
-	SETKEYMAP(KEY_DELETE, SDLK_DELETE);
-	SETKEYMAP(KEY_SPACE, SDLK_SPACE);
-	SETKEYMAP(KEY_RETURN, SDLK_RETURN);
-	SETKEYMAP(KEY_PERIOD, SDLK_PERIOD);
-	SETKEYMAP(KEY_MINUS, SDLK_MINUS);
-	SETKEYMAP(KEY_CAPSLOCK, SDLK_CAPSLOCK);
-	SETKEYMAP(KEY_SYSRQ, SDLK_SYSREQ);
-	SETKEYMAP(KEY_TAB, SDLK_TAB);
-	SETKEYMAP(KEY_HOME, SDLK_HOME);
-	SETKEYMAP(KEY_END, SDLK_END);
-	SETKEYMAP(KEY_COMMA, SDLK_COMMA);
-	SETKEYMAP(KEY_SLASH, SDLK_SLASH);
-
-	SETKEYMAP(KEY_F1, SDLK_F1);
-	SETKEYMAP(KEY_F2, SDLK_F2);
-	SETKEYMAP(KEY_F3, SDLK_F3);
-	SETKEYMAP(KEY_F4, SDLK_F4);
-	SETKEYMAP(KEY_F5, SDLK_F5);
-	SETKEYMAP(KEY_F6, SDLK_F6);
-	SETKEYMAP(KEY_F7, SDLK_F7);
-	SETKEYMAP(KEY_F8, SDLK_F8);
-	SETKEYMAP(KEY_F9, SDLK_F9);
-	SETKEYMAP(KEY_F10, SDLK_F10);
-	SETKEYMAP(KEY_F11, SDLK_F11);
-	SETKEYMAP(KEY_F12, SDLK_F12);
-	SETKEYMAP(KEY_F13, SDLK_F13);
-	SETKEYMAP(KEY_F14, SDLK_F14);
-	SETKEYMAP(KEY_F15, SDLK_F15);
-
-	SETKEYMAP(KEY_ESCAPE, SDLK_ESCAPE);
-
-
-
-	#undef SETKEYMAP
-
-	return _retval;
-}
-
-#if defined(BBGE_BUILD_SDL2)
-static int mapSDLKeyToGameKey(const SDL_Keycode val)
-#else
-static int mapSDLKeyToGameKey(const SDLKey val)
-#endif
-{
-	static sdlKeyMap *keymap = NULL;
-	if (keymap == NULL)
-		keymap = initSDLKeymap();
-
-	return (*keymap)[val];
-}
-
-
 void Core::pollEvents()
 {
 	bool warpMouse=false;
@@ -1979,7 +1763,13 @@ void Core::pollEvents()
 				}
 				else if (_hasFocus)
 				{
-					keys[mapSDLKeyToGameKey(event.key.keysym.sym)] = 1;
+#ifdef BBGE_BUILD_SDL2
+					unsigned kidx = event.key.keysym.scancode;
+#else
+					unsigned kidx = event.key.keysym.sym;
+#endif
+					if(kidx < KEY_MAXARRAY)
+						keys[kidx] = 1;
 				}
 			}
 			break;
@@ -1988,7 +1778,13 @@ void Core::pollEvents()
 			{
 				if (_hasFocus)
 				{
-					keys[mapSDLKeyToGameKey(event.key.keysym.sym)] = 0;
+#ifdef BBGE_BUILD_SDL2
+					unsigned kidx = event.key.keysym.scancode;
+#else
+					unsigned kidx = event.key.keysym.sym;
+#endif
+					if(kidx < KEY_MAXARRAY)
+						keys[kidx] = 0;
 				}
 			}
 			break;
@@ -3336,6 +3132,7 @@ done:
 
 void Core::onJoystickRemoved(int instanceID)
 {
+	debugLog("Joystick removed");
 	for(size_t i = 0; i < joysticks.size(); ++i)
 		if(joysticks[i]->getInstanceID() == instanceID)
 		{
