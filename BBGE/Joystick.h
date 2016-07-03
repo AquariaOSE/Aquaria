@@ -16,8 +16,10 @@
 class Joystick
 {
 public:
+	static unsigned GetNumJoysticks();
+
 	Joystick();
-	void init(int stick=0);
+	bool init(int stick=0);
 	void shutdown();
 	//Ranges from 0 to 1 (full speed).
 	void rumble(float leftMotor, float rightMotor, float time);
@@ -32,12 +34,14 @@ public:
 	bool getButton(unsigned id) const { return !!(buttonBitmask & (1u << id)); }
 	int getIndex() const { return stickIndex; }
 	int getInstanceID() const { return instanceID; }
+	inline bool isEnabled() const { return enabled; }
 
 	Vector rightStick;
 
 	int s1ax, s1ay, s2ax, s2ay;
 
 private:
+	bool enabled;
 	int stickIndex;
 	int instanceID;
 	unsigned buttonBitmask; // FIXME: this should go

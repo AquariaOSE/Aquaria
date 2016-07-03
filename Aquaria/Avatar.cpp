@@ -187,16 +187,23 @@ Vector Avatar::getAim()
 	Vector d;
 	if (dsq->inputMode == INPUT_JOYSTICK)
 	{
-		if (!core->joystick.rightStick.isZero())
-		{
-			d = core->joystick.rightStick * 300;
-			d.z = 1;
-		}
-		else
-		{
-			d = core->joystick.position * 300;
-			d.z = 0;
-		}
+		for(size_t i = 0; i < core->joysticks.size(); ++i)
+			if(Joystick *j = core->joysticks[i])
+				if(j->isEnabled() && !j->rightStick.isZero())
+				{
+					d = j->rightStick * 300;
+					d.z = 1;
+					break;
+				}
+
+		if(d.isZero())
+			for(size_t i = 0; i < core->joysticks.size(); ++i)
+				if(Joystick *j = core->joysticks[i])
+					if(j->isEnabled() && !j->position.isZero())
+					{
+						d = j->position * 300;
+						break;
+					}
 	}
 	else if (dsq->inputMode == INPUT_KEYBOARD)
 	{
@@ -1761,7 +1768,15 @@ void Avatar::updateSingingInterface(float dt)
 		{
 			if (dsq->inputMode == INPUT_JOYSTICK)
 			{
-				Vector d = dsq->joystick.position;
+				Vector d;
+				for(size_t i = 0; i < core->joysticks.size(); ++i)
+					if(Joystick *j = core->joysticks[i])
+						if(j->isEnabled())
+						{
+							d = j->position;
+							if(!d.isZero())
+								break;
+						}
 
 				if (d.isLength2DIn(JOYSTICK_NOTE_THRESHOLD))
 				{

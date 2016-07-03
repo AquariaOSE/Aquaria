@@ -116,8 +116,16 @@ void AquariaGuiElement::updateMovement(float dt)
 		if (guiMoveTimer==0)
 		{
 			Direction dir = DIR_NONE;
-			Vector p = core->joystick.position;
-			if (!p.isLength2DIn(0.4))
+			Vector p;
+			for(size_t i = 0; i < core->joysticks.size(); ++i)
+				if(Joystick *j = core->joysticks[i])
+					if(j->isEnabled())
+					{
+						p = core->joysticks[i]->position;
+						if(!p.isLength2DIn(0.4f))
+							break;
+					}
+			if (!p.isLength2DIn(0.4f))
 			{
 				if (fabsf(p.x) > fabsf(p.y))
 				{
@@ -346,10 +354,20 @@ bool AquariaSlider::doSliderInput(float dt)
 
 	float inputAmount;  // How much to adjust by?
 
+	Vector jpos;
+	for(size_t i = 0; i < core->joysticks.size(); ++i)
+		if(Joystick *j = core->joysticks[i])
+			if(j->isEnabled())
+			{
+				jpos = core->joysticks[i]->position;
+				if(fabsf(jpos.x) > SLIDER_JOY_THRESHOLD)
+					break;
+			}
+
 	StateObject *obj = dsq->getTopStateObject();
-	if (core->joystick.position.x <= -SLIDER_JOY_THRESHOLD)
+	if (jpos.x <= -SLIDER_JOY_THRESHOLD)
 		inputAmount = -0.1f;
-	else if (core->joystick.position.x >= SLIDER_JOY_THRESHOLD)
+	else if (jpos.x >= SLIDER_JOY_THRESHOLD)
 		inputAmount = +0.1f;
 	else if (obj && obj->isActing(ACTION_MENULEFT))
 		inputAmount = -0.1f;

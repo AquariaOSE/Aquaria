@@ -200,8 +200,10 @@ bool ActionMapper::getKeyState(int k)
 		int v = k - JOY_BUTTON_0;
 
 		for(size_t i = 0; i < core->joysticks.size(); ++i)
-			if( ((keyState = core->joysticks[i]->getButton(v))) )
-				break;
+			if(Joystick *j = core->joysticks[i])
+				if(j->isEnabled())
+					if( ((keyState = j->getButton(v))) )
+						break;
 	}
 
 	return keyState;

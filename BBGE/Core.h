@@ -293,8 +293,6 @@ public:
 	int getWindowWidth() { return width; }
 	int getWindowHeight() { return height; }
 
-	void updateCursorFromJoystick(float dt, int spd);
-
 	unsigned getTicks();
 
 	void resetGraphics(int w, int h, int fullscreen=-1, int vsync=-1, int bpp=-1);
@@ -521,13 +519,15 @@ protected:
 	float baseCullRadius;
 	bool initSoundLibrary(const std::string &defaultDevice);
 	bool initInputLibrary();
-	bool initJoystickLibrary();
+	void initJoystickLibrary();
 	bool initGraphicsLibrary(int w, int h, bool fullscreen, int vsync, int bpp, bool recreate=true);
 	void shutdownInputLibrary();
 	void shutdownJoystickLibrary();
 	void shutdownGraphicsLibrary(bool kill=true);
 	void shutdownSoundLibrary();
 
+	void detectJoysticks();
+	void clearJoysticks();
 	virtual void onJoystickAdded(int deviceID);
 	virtual void onJoystickRemoved(int instanceID);
 
@@ -565,8 +565,6 @@ protected:
 
 public:
 	std::vector<Joystick*> joysticks;
-
-	Joystick joystick; // TEMP: TO GET IT TO COMPILE
 };
 
 extern Core *core;
