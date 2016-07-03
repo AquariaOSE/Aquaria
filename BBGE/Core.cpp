@@ -188,17 +188,6 @@ void Core::toggleScreenMode(int t)
 	sound->resume();
 }
 
-void Core::updateCursorFromJoystick(float dt, int spd)
-{
-
-
-	core->mouse.position += joystick.position*dt*spd;
-
-
-
-	doMouseConstraint();
-}
-
 void Core::setWindowCaption(const std::string &caption, const std::string &icon)
 {
 #ifndef BBGE_BUILD_SDL2
@@ -712,7 +701,7 @@ bool Core::getKeyState(int k)
 	return k > 0 && k < KEY_MAXARRAY ? keys[k] : 0;
 }
 
-bool Core::initJoystickLibrary()
+void Core::initJoystickLibrary()
 {
 
 #ifdef BBGE_BUILD_SDL2
@@ -721,11 +710,35 @@ bool Core::initJoystickLibrary()
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
 #endif
 
-	joystick.init(0);
+	detectJoysticks();
+}
 
-	joystickEnabled = true;
+void Core::clearJoysticks()
+{
+	for(size_t i = 0; i < joysticks.size(); ++i)
+		delete joysticks[i];
+	joysticks.clear();
+}
 
-	return true;
+void Core::detectJoysticks()
+{
+	clearJoysticks();
+
+	std::ostringstream os;
+	const unsigned n = SDL_NumJoysticks();
+	os << "Found [" << n << "] joysticks";
+	debugLog(os.str());
+
+	for(unsigned i = 0; i < n; ++i)
+	{
+		Joystick *j = new Joystick;
+		if(j->init(i))
+			joysticks.push_back(j);
+		else
+			delete j;
+	}
+
+	joystickEnabled = !joysticks.empty();
 }
 
 bool Core::initInputLibrary()
@@ -736,8 +749,6 @@ bool Core::initInputLibrary()
 	{
 		keys[i] = 0;
 	}
-
-
 
 	return true;
 }
@@ -753,7 +764,9 @@ void Core::onUpdate(float dt)
 	core->mouse.lastScrollWheel = core->mouse.scrollWheel;
 
 	pollEvents();
-	joystick.update(dt);
+
+	for(size_t i = 0; i < joysticks.size(); ++i)
+		joysticks[i]->update(dt);
 
 	onMouseInput();
 
@@ -2350,7 +2363,7 @@ void Core::shutdownInputLibrary()
 void Core::shutdownJoystickLibrary()
 {
 	if (joystickEnabled) {
-		joystick.shutdown();
+		clearJoysticks();
 		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
 		joystickEnabled = false;
 	}

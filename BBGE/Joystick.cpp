@@ -26,6 +26,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Joystick.h"
 #include "Core.h"
 
+unsigned Joystick::GetNumJoysticks()
+{
+	return SDL_NumJoysticks();
+}
 
 Joystick::Joystick()
 {
@@ -45,70 +49,61 @@ Joystick::Joystick()
 	s1ay = 1;
 	s2ax = 4;
 	s2ay = 3;
+
+	enabled = true;
 }
 
-void Joystick::init(int stick)
+bool Joystick::init(int stick)
 {
-	std::ostringstream os;
-
 	stickIndex = stick;
-	const int numJoy = SDL_NumJoysticks();
-	os << "Found [" << numJoy << "] joysticks";
-	debugLog(os.str());
 
-	if (numJoy > stick)
+	#ifdef BBGE_BUILD_SDL2
+	if (SDL_IsGameController(stick))
+	{
+		sdl_controller = SDL_GameControllerOpen(stick);
+		if (sdl_controller)
+			sdl_joy = SDL_GameControllerGetJoystick(sdl_controller);
+	}
+	if (!sdl_joy)
+		sdl_joy = SDL_JoystickOpen(stick);
+	if (sdl_joy && SDL_JoystickIsHaptic(sdl_joy))
+	{
+		sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joy);
+		bool rumbleok = false;
+		if (sdl_haptic && SDL_HapticRumbleSupported(sdl_haptic))
+			rumbleok = (SDL_HapticRumbleInit(sdl_haptic) == 0);
+		if (!rumbleok)
+		{
+			SDL_HapticClose(sdl_haptic);
+			sdl_haptic = NULL;
+		}
+	}
+	#endif
+
+	if (!sdl_joy)
+		sdl_joy = SDL_JoystickOpen(stick);
+
+	if (sdl_joy)
 	{
 		#ifdef BBGE_BUILD_SDL2
-		if (SDL_IsGameController(stick))
-		{
-			sdl_controller = SDL_GameControllerOpen(stick);
-			if (sdl_controller)
-				sdl_joy = SDL_GameControllerGetJoystick(sdl_controller);
-		}
-		if (!sdl_joy)
-			sdl_joy = SDL_JoystickOpen(stick);
-		if (sdl_joy && SDL_JoystickIsHaptic(sdl_joy))
-		{
-			sdl_haptic = SDL_HapticOpenFromJoystick(sdl_joy);
-			bool rumbleok = false;
-			if (sdl_haptic && SDL_HapticRumbleSupported(sdl_haptic))
-				rumbleok = (SDL_HapticRumbleInit(sdl_haptic) == 0);
-			if (!rumbleok)
-			{
-				SDL_HapticClose(sdl_haptic);
-				sdl_haptic = NULL;
-			}
-		}
+		debugLog(std::string("Initialized Joystick [") + SDL_JoystickName(sdl_joy) + "]");
+		if (sdl_controller)
+			debugLog("Joystick is a Game Controller");
+		if (sdl_haptic)
+			debugLog("Joystick has force feedback support");
+		instanceID = SDL_JoystickInstanceID(sdl_joy);
+		#else
+		debugLog(std::string("Initialized Joystick [") + SDL_JoystickName(stick)) + std::string("]"));
+		instanceID = SDL_JoystickIndex(sdl_joy);
 		#endif
 
-		if (!sdl_joy)
-			sdl_joy = SDL_JoystickOpen(stick);
-
-		if (sdl_joy)
-		{
-			#ifdef BBGE_BUILD_SDL2
-			debugLog(std::string("Initialized Joystick [") + SDL_JoystickName(sdl_joy) + "]");
-			if (sdl_controller)
-				debugLog("Joystick is a Game Controller");
-			if (sdl_haptic)
-				debugLog("Joystick has force feedback support");
-			instanceID = SDL_JoystickInstanceID(sdl_joy);
-			#else
-			debugLog(std::string("Initialized Joystick [") + SDL_JoystickName(stick)) + std::string("]"));
-			instanceID = SDL_JoystickIndex(sdl_joy);
-			#endif
-		}
-		else
-		{
-			std::ostringstream os;
-			os << "Failed to init Joystick [" << stick << "]";
-			debugLog(os.str());
-		}
+		return true;
 	}
-	else
-	{
-		debugLog("Not enough Joystick(s) found");
-	}
+	
+	std::ostringstream os;
+	os << "Failed to init Joystick [" << stick << "]";
+	debugLog(os.str());
+	return false;
 }
 
 void Joystick::shutdown()
@@ -241,12 +236,8 @@ void Joystick::update(float dt)
 		rightStick.y = yaxis2/32768.0f;
 #endif
 
-
-
 		calibrate(position, deadZone1);
-
 		calibrate(rightStick, deadZone2);
-
 
 		buttonBitmask = 0;
 
