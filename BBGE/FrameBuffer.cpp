@@ -20,6 +20,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "FrameBuffer.h"
 #include "Core.h"
+#include "RenderBase.h"
+#include "glext.h"
 
 //WARNING: FrameBuffer objects have to have reloadDevice/unloadDevice called manually!
 
@@ -76,7 +78,7 @@ float FrameBuffer::getHeightP()
 	return py;
 }
 
-bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
+bool FrameBuffer::init(int width, int height, bool fitToScreen)
 {
 // !!! FIXME: check for common GMA GL_RENDERER strings on Linux, too.
 #ifdef BBGE_BUILD_MACOSX
@@ -201,8 +203,8 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 
 		glBindTexture( GL_TEXTURE_2D, g_dynamicTextureID );
 		// GL_LINEAR
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, filter );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, filter );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 
 		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB,
 					width, height,

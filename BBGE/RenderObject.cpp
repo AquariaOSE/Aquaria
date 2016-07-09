@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderObject.h"
 #include "Core.h"
 #include "MathFunctions.h"
+#include "RenderBase.h"
 
 #include <assert.h>
 #include <algorithm>

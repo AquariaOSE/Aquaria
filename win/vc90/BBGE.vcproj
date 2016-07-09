@@ -289,6 +289,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\GLLoad.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\GLLoad.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\Gradient.cpp"
 				>
 			</File>
@@ -321,10 +329,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\Math.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\BBGE\MathFunctions.h"
 				>
 			</File>
@@ -346,6 +350,14 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\OpenGLStubs.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\OSFunctions.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\OSFunctions.h"
 				>
 			</File>
 			<File
@@ -385,11 +397,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\ReadXML.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\ReadXML.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\Rect.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\BBGE\Refcounted.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\RenderBase.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\RenderBase.h"
 				>
 			</File>
 			<File

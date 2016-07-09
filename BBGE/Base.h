@@ -22,13 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define BBGE_BASE_H
 
 #ifdef BBGE_BUILD_WINDOWS
-
-	#define WIN32_LEAN_AND_MEAN
-	#define WIN32_NOMINMAX
-	#include <windows.h>
-	#undef min
-	#undef max
-
+    #define WIN32_NOMINMAX
     #ifdef _MSC_VER
         #define strtof (float)strtod
         #define snprintf _snprintf
@@ -37,27 +31,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "BBGECompileConfig.h"
 
-#ifdef BBGE_BUILD_WINDOWS
+#define BBGE_PROF(x)
 
-
-
-	#define BBGE_PROF(x)
-
-
-
-#else
-	#define BBGE_PROF(x)
-
-#endif
-
-
-
-	#include "SDL.h"
-
-
-	#define GL_GLEXT_LEGACY 1
-	#include "gl.h"
-	#include "glext.h"
 
 #define compile_assert(pred) switch(0){case 0:case (pred):;}
 
@@ -82,36 +57,20 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma warning(disable:4189) // UqqqqSEFUL: local variable is initialized but not referenced
 #endif
 
-#undef GetCharWidth
-
+#include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
-#include <string>
-#include <sstream>
-#include <fstream>
-#include <vector>
-#include <list>
-#include <queue>
-#include <map>
-#include <stack>
-
-
-#include "Rect.h"
-
 #include "math.h"
-#include "ttvfs_stdio.h"
 
-#include "tinyxml2.h"
-#include "Refcounted.h"
+#include "Vector.h"
+#include "OSFunctions.h"
 
-#ifdef BBGE_BUILD_LINUX
-#  include <sys/types.h>
-#  include <stdint.h>
-#endif
-
-// dumb win32 includes/defines cleanup
-#undef GetCharWidth
-
+// --- Defined in RenderBase.cpp -- Declared here to avoid pulling in gl.h via RenderBase.h --
+void drawCircle(float radius, int stepSize);
+unsigned generateEmptyTexture(int res);
+void sizePowerOf2Texture(int &v);
+// ----------------------
 
 enum Align { ALIGN_CENTER=0, ALIGN_LEFT };
 
@@ -129,11 +88,6 @@ enum Direction
 	DIR_MAX			= 8
 };
 
-#include "Event.h"
-
-#include "Vector.h"
-
-
 const float SQRT2		= 1.41421356;
 
 const float PI			= 3.14159265;
@@ -143,34 +97,26 @@ const float PI_HALF		= 1.57079633;
 	#define HUGE_VALF	((float)1e38)
 #endif
 
-struct IntPair
-{
-	IntPair(unsigned short int x, unsigned short int y) : x(x), y(y) {}
-	unsigned short int x, y;
-};
+typedef int CharTranslationTable[256]; // -1 entries are skipped
+
 
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
 std::string numToZeroString(int num, int zeroes);
 bool chance(int perc);
-bool chancef(float p);
-void initCharTranslationTables(const std::map<unsigned char, unsigned char>& tab);
+void initCharTranslationTables(const CharTranslationTable *ptab);
 void stringToUpper(std::string &s);
 void stringToLower(std::string &s);
 void stringToLowerUserData(std::string &s);
-void glColor3_256(int r, int g, int b);
 float sqr(float x);
 bool exists(const std::string &f, bool makeFatal = false, bool skipVFS = false);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
 char *readFile(const std::string& path, unsigned long *size_ret = 0);
-tinyxml2::XMLDocument *readXML(const std::string& fn, tinyxml2::XMLError *perr = 0, bool keepEmpty = false);
-tinyxml2::XMLError readXML(const std::string& fn, tinyxml2::XMLDocument& doc);
+
 char *readCompressedFile(std::string path, unsigned long *size_ret = 0);
-void forEachFile(std::string path, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param);
 std::string stripEndlineForUnix(const std::string &in);
-std::vector<std::string> getFileList(std::string path, std::string type, int param);
 #ifdef HAVE_STRCASECMP
 static inline int nocasecmp(const std::string &s1, const std::string &s2)
 	{ return strcasecmp(s1.c_str(), s2.c_str()); }
@@ -183,24 +129,11 @@ static inline int nocasecmp(const char *s1, const char *s2)
 #else
 int nocasecmp(const std::string &s1, const std::string &s2);
 #endif
-Vector getNearestPointOnLine(Vector start, Vector end, Vector point);
 bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius=1, Vector* closest=0);
-void sizePowerOf2Texture(int &v);
-Vector getDirVector(Direction dir);
-Direction getOppositeDir(Direction dir);
-Direction getNextDirClockwise(Direction dir);
-Vector colorRGB(int r, int g, int b);
-
-GLuint generateEmptyTexture(int res);
-
 
 
 void drawCircle(float radius, int steps=1);
-bool isVectorInRect(const Vector &vec, const Vector &coord1, const Vector &coord2);
 
-std::string parseCommand(const std::string &line, const std::string &command);
-
-void messageBox(const std::string &title, const std::string& msg);
 
 void exit_error(const std::string &message);
 

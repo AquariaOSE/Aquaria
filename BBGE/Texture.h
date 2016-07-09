@@ -21,7 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __texture__
 #define __texture__
 
-#include "Base.h"
+#include <string>
+#include "Refcounted.h"
 
 
 enum TextureLoadResult
@@ -60,12 +61,9 @@ public:
 	static ImageTGA *TGAload(const char* filename);
 	static ImageTGA *TGAloadMem(void *mem, int size);
 
-	static bool useMipMaps;
 	bool repeat, repeating;
 
-	static GLint filter;
-	static GLint format;
-	GLuint textures[1];
+	unsigned textures[1];
 
 	void reload();
 

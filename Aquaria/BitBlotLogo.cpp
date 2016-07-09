@@ -30,7 +30,7 @@ BitBlotLogo::BitBlotLogo() : StateObject()
 
 bool BitBlotLogo::watchQuit(float time)
 {
-	core->main(time);
+	core->run(time);
 	return false;
 
 }
@@ -55,10 +55,10 @@ void BitBlotLogo::doShortBitBlot()
 	logo->scale = Vector(0.6,0.6);
 	addRenderObject(logo, LR_HUD);
 
-	core->main(1.5);
+	core->run(1.5);
 
 	dsq->overlay2->alpha.interpolateTo(1, 0.5);
-	core->main(0.5);
+	core->run(0.5);
 }
 
 void BitBlotLogo::skipLogo()

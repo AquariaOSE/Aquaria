@@ -18,8 +18,22 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
 #include "TTFFont.h"
 
+#ifdef AQUARIA_INTERNAL_FTGL
+#include <ft2build.h>
+#include FT_FREETYPE_H
+
+#include "FTGL.h"
+#include "FTGLTextureFont.h"
+#else
+#include <FTGL/ftgl.h>
+#endif
+
+#undef min
+#undef max
+#undef GetCharWidth
 
 TTFFont::TTFFont()
 {

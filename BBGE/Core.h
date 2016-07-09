@@ -192,7 +192,7 @@ protected:
 		bool isList;  // True if this is a GL display list
 		union {
 			RenderObject *robj;
-			GLuint listID;
+			unsigned listID;
 		} u;
 	};
 	std::vector<DisplayListElement> displayList;
@@ -239,14 +239,11 @@ public:
 	std::string getPreferencesFolder();
 	std::string getUserDataFolder();
 
-	std::string adjustFilenameCase(const char *buf);
-	std::string adjustFilenameCase(const std::string &str) { return adjustFilenameCase(str.c_str()); };
-
 	void resetCamera();
 
 	virtual void shutdown();
 
-	void main(float runTime = -1); // can use main
+	void run(float runTime = -1); // can use main
 
 
 
@@ -472,7 +469,6 @@ public:
 	int zgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
 
 	volatile int dbg_numThreadDecoders;
-	static unsigned int dbg_numRenderCalls;
 
 	virtual void onBackgroundUpdate();
 
@@ -544,8 +540,6 @@ protected:
 	bool quitNestedMainFlag;
 	int nestedMains;
 	std::string baseTextureDirectory;
-
-	std::ofstream _logOut;
 
 	int nowTicks, thenTicks;
 

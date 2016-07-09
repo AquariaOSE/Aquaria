@@ -22,9 +22,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Game.h"
 #include "Avatar.h"
 #include "ScriptedEntity.h"
-#include "AutoMap.h"
 #include "GridRender.h"
 #include "DeflateCompressor.h"
+#include "ttvfs_stdio.h"
+#include "ReadXML.h"
+#include "Web.h"
 
 #include "tinyxml2.h"
 using namespace tinyxml2;
@@ -201,56 +203,6 @@ int Continuity::getIngredientDataSize() const
 int Continuity::getIngredientHeldSize() const
 {
 	return (int)ingredients.size();
-}
-
-Recipe::Recipe()
-{
-	known = false;
-	index = -1;
-}
-
-void Recipe::clear()
-{
-	types.clear();
-	names.clear();
-	result = "";
-	resultDisplayName = "";
-	known = false;
-}
-
-void Recipe::learn()
-{
-	known = true;
-}
-
-void Recipe::addName(const std::string &name)
-{
-	int i = 0;
-	for (; i < names.size(); i++)
-	{
-		if (names[i].name == name)
-		{
-			names[i].amount++;
-			break;
-		}
-	}
-	if (i == names.size())
-		names.push_back(RecipeName(name));
-}
-
-void Recipe::addType(IngredientType type, const std::string &typeName)
-{
-	int i = 0;
-	for (; i < types.size(); i++)
-	{
-		if (types[i].type == type)
-		{
-			types[i].amount++;
-			break;
-		}
-	}
-	if (i == types.size())
-		types.push_back(RecipeType(type, typeName));
 }
 
 void Continuity::initFoodSort()
@@ -937,7 +889,6 @@ void Continuity::loadIngredientData()
 	}
 
 	clearIngredientData();
-	ingredientDescriptions.clear();
 	ingredientDisplayNames.clear();
 	recipes.clear();
 
@@ -1564,10 +1515,10 @@ void Continuity::castSong(int num)
 
 					dsq->overlay->color = Vector(1,1,1);
 					dsq->fade(1, 0.3);
-					dsq->main(0.3);
+					dsq->run(0.3);
 					warpLiToAvatar();
 					dsq->fade(0, 0.3);
-					dsq->main(0.3);
+					dsq->run(0.3);
 					dsq->overlay->color = 0;
 
 				}
@@ -2637,7 +2588,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	doc.InsertEndChild(startData);
 
 
-	std::string fn = core->adjustFilenameCase(getSaveFileName(slot, "aqs"));
+	std::string fn = adjustFilenameCase(getSaveFileName(slot, "aqs"));
 	FILE *fh = fopen(fn.c_str(), "wb");
 	if(!fh)
 	{

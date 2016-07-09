@@ -31,18 +31,15 @@ extern "C" {
 ** the United States.
 */
 
-#ifndef APIENTRY
-#define APIENTRY
-#endif
 
 // BBGE HACK:
 // Because Win32 uses __declspec(dllimport) for OpenGL function imports,
-// although Core.cpp defines its own functions using the same names, which are just accessing
+// although GLLoad.cpp defines its own functions using the same names, which are just accessing
 // OpenGL function pointers acquired elsewhere, this leads to inconsistent linkage between
-// declaration in gl.h and the actual function definition in Core.cpp.
+// declaration in gl.h and the actual function definition in GLLoad.cpp.
 // So, we use this little hack to disable external linkage globally.
 #undef WINGDIAPI
-#define WINGDIAPI extern
+#define WINGDIAPI
 
 /*#ifndef WIN32
 #define WINGDIAPI
@@ -55,6 +52,10 @@ extern "C" {
 #  define GLAPI
 # endif
 # define __DEFINED_GLAPI
+#endif
+
+#ifndef APIENTRY
+#define APIENTRY GLAPI
 #endif
 
 /*************************************************************/

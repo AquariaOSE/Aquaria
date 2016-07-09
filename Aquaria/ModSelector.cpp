@@ -435,7 +435,7 @@ void BasicIcon::onUpdate(float dt)
 				dsq->modSelectorScr->move(5, true);
 			else
 				dsq->modSelectorScr->move(-5, true);
-			core->main(FRAME_TIME); // HACK: this is necessary to correctly position the mouse on the object after moving the panel
+			core->run(FRAME_TIME); // HACK: this is necessary to correctly position the mouse on the object after moving the panel
 			setFocus(true); // re-position mouse
 		}
 	}
@@ -519,16 +519,23 @@ void ModIcon::onClick()
 				break;
 			#endif
 
-			std::set<std::string>::iterator it = dsq->activePatches.find(fname);
-			if(it != dsq->activePatches.end())
+			bool on = false;
+			for(size_t i = 0; i < dsq->activePatches.size(); ++i)
+				if(dsq->activePatches[i] == fname)
+				{
+					on = true;
+					break;
+				}
+
+			if(on)
 			{
 				dsq->sound->playSfx("pet-off");
-				dsq->unapplyPatch(fname);
+				dsq->disablePatch(fname);
 			}
 			else
 			{
 				dsq->sound->playSfx("pet-on");
-				dsq->applyPatch(fname);
+				dsq->activatePatch(fname);
 			}
 			updateStatus();
 			break;

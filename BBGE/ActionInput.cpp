@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "ActionInput.h"
 #include "ActionMapper.h"
+#include "SDL.h"
 
 #ifndef BBGE_BUILD_SDL2
 #error Needs fixes for SDL 1.2, doesnt support scancodes

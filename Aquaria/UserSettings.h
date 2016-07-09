@@ -25,50 +25,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 const std::string userSettingsFilename = "usersettings.xml";
 
-#ifndef AQUARIA_USERSETTINGS_DATAONLY
+#include "Base.h"
+#include "ActionMapper.h"
 
-	#include "Base.h"
-	#include "ActionMapper.h"
-
-#else
-
-	#include <string>
-	#include <vector>
-	#include <sstream>
-
-	class ActionInput
-	{
-	public:
-		std::string toString()
-		{
-			return input;
-		}
-		void fromString(const std::string &str)
-		{
-			input = str;
-		}
-
-		std::string name, input;
-	};
-
-	class ActionSet
-	{
-	public:
-		void clearActions()
-		{
-			inputSet.clear();
-		}
-		ActionInput* addActionInput(const std::string &name)
-		{
-			ActionInput newActionInput;
-			newActionInput.name = name;
-			inputSet.push_back(newActionInput);
-			return &inputSet[inputSet.size()-1];
-		}
-		std::vector<ActionInput> inputSet;
-	};
-
-#endif
 
 // MAKE SURE to update this when changing the user settings
 const int VERSION_USERSETTINGS	= 1;

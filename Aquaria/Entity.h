@@ -24,18 +24,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/StateMachine.h"
 #include "../BBGE/SkeletalSprite.h"
 #include "../BBGE/ScriptObject.h"
+#include "SoundManager.h"
 
-#include "DSQ.h"
-#include "Path.h"
-#include "Hair.h"
 #include "TileVector.h"
-
-#include "tinyxml2.h"
-using namespace tinyxml2;
+#include "Damage.h"
+#include "GameStructs.h"
 
 class ManaBall;
 class Path;
 struct MinimapIcon;
+class Hair;
+class Entity;
+struct lua_State;
 
 struct BoneLock
 {
@@ -47,156 +47,6 @@ struct BoneLock
 	float origRot;
 	Vector wallNormal, circleOffset;
 	int collisionMaskIndex;
-};
-
-enum EV
-{
-	EV_WALLOUT				= 0,
-	EV_WALLTRANS			= 1,
-	EV_CLAMPING				= 2,
-	EV_SWITCHCLAMP			= 3,
-	EV_CLAMPTRANSF			= 4,
-	EV_MOVEMENT				= 5,
-	EV_COLLIDE				= 6,
-	EV_TOUCHDMG				= 7,
-	EV_FRICTION				= 8,
-	EV_LOOKAT				= 9,
-	EV_CRAWLING				= 10,
-	EV_ENTITYDIED			= 11,
-	EV_TYPEID				= 12,
-	EV_COLLIDELEVEL			= 13,
-	EV_BONELOCKED			= 14,
-	EV_FLIPTOPATH			= 15,
-	EV_NOINPUTNOVEL			= 16,
-	EV_VINEPUSH				= 17,
-	EV_BEASTBURST			= 18,			// if 1: will not collide with beast on touchAvatarDamage, if 0: will
-	EV_MINIMAP				= 19,			// should the entity show up on the minimap?
-	EV_SOULSCREAMRADIUS		= 20,			// 0-n: size of radius for naija's dual form scream attack, -1: always hit
-	EV_WEBSLOW				= 21,			// 100 by default, multiplied by dt and then divided into vel
-	EV_NOAVOID				= 22,			// if 1: doEntityAvoidance() will ignore this entity
-	EV_MAX					= 23
-};
-
-enum DamageType
-{
-	DT_NONE					= -1,
-	DT_ENEMY				= 0,
-	DT_ENEMY_ENERGYBLAST	= 1,
-	DT_ENEMY_SHOCK			= 2,
-	DT_ENEMY_BITE			= 3,
-	DT_ENEMY_TRAP			= 4,
-	DT_ENEMY_WEB			= 5,
-	DT_ENEMY_BEAM			= 6,
-	DT_ENEMY_GAS			= 7,
-	DT_ENEMY_INK			= 8,
-	DT_ENEMY_POISON			= 9,
-	DT_ENEMY_ACTIVEPOISON	= 10,
-	DT_ENEMY_CREATOR		= 11,
-	DT_ENEMY_MANTISBOMB		= 12,
-	DT_ENEMY_REALMAX		,
-	DT_ENEMY_MAX			= 13,
-
-	DT_AVATAR				= 1000,
-	DT_AVATAR_ENERGYBLAST	= 1001,
-	DT_AVATAR_SHOCK			= 1002,
-	DT_AVATAR_BITE			= 1003,
-	DT_AVATAR_VOMIT			= 1004,
-	DT_AVATAR_ACID			= 1005,
-	DT_AVATAR_SPORECHILD	= 1006,
-	DT_AVATAR_LIZAP			= 1007,
-	DT_AVATAR_NATURE		= 1008,
-	DT_AVATAR_ENERGYROLL	= 1009,
-	DT_AVATAR_VINE			= 1010,
-	DT_AVATAR_EAT			= 1011,
-	DT_AVATAR_EAT_BASICSHOT	= 1011,
-	DT_AVATAR_EAT_MAX		= 1012,
-	DT_AVATAR_LANCEATTACH	= 1013,
-	DT_AVATAR_LANCE			= 1014,
-	DT_AVATAR_CREATORSHOT	= 1015,
-	DT_AVATAR_DUALFORMLI	= 1016,
-	DT_AVATAR_DUALFORMNAIJA = 1017,
-	DT_AVATAR_BUBBLE		= 1018,
-	DT_AVATAR_SEED			= 1019,
-	DT_AVATAR_PET			= 1020,
-	DT_AVATAR_PETNAUTILUS	= 1021,
-	DT_AVATAR_PETBITE		= 1022,
-	DT_AVATAR_REALMAX		,
-	DT_AVATAR_MAX			= 1030,
-	DT_TOUCH				= 1031,
-	DT_CRUSH				= 1032,
-	DT_SPIKES				= 1033,
-	DT_STEAM				= 1034,
-	DT_WALLHURT				= 1035,
-	DT_REALMAX
-};
-
-enum EatType
-{
-	EAT_NONE				= -1,
-	EAT_DEFAULT				= 0,
-	EAT_FILE				= 1,
-	EAT_MAX
-};
-
-enum ObsCheck
-{
-	OBSCHECK_RANGE	= 0,
-	OBSCHECK_4DIR	= 1,
-	OBSCHECK_DOWN	= 2,
-	OBSCHECK_8DIR	= 3
-};
-
-class Shot;
-
-struct DamageData
-{
-	DamageData()
-	{
-		damage = 0;
-		attacker = 0;
-		bone = 0;
-		damageType = DT_TOUCH;
-		form = (FormType)0;
-		shot = 0;
-		effectTime = 0;
-		useTimer = true;
-	}
-	FormType form;
-	DamageType damageType;
-	Entity *attacker;
-	Bone *bone;
-	float damage;
-	Vector hitPos;
-	Shot *shot;
-	float effectTime;
-	bool useTimer;
-};
-
-enum EntityType
-{
-	ET_NOTYPE		=-1,
-	ET_AVATAR		=0,
-	ET_ENEMY		=1,
-	ET_PET			=2,
-	ET_FLOCK		=3,
-	ET_NEUTRAL		=4,
-	ET_INGREDIENT	=5
-};
-
-enum EntityProperty
-{
-	EP_SOLID			=0,
-	EP_MOVABLE			=1,
-	EP_BATTERY			=2,
-	EP_BLOCKER			=3,
-	EP_MAX				=4
-};
-
-enum BounceType
-{
-	BOUNCE_NONE		= -1,
-	BOUNCE_SIMPLE	= 0,
-	BOUNCE_REAL		= 1
 };
 
 class Entity : public Quad, public StateMachine, public SoundHolder
@@ -271,8 +121,6 @@ public:
 	Entity *followEntity;
 	Entity *ridingOnEntity;
 	bool canBeTargetedByAvatar;
-	virtual void saveExtraData(XMLElement *xml){}
-	virtual void loadExtraData(XMLElement *xml){}
 	Vector startPos;
 	void getEXP(unsigned int exp);
 	void rotateToVec(Vector addVec, float time, float offsetAngle=0);
@@ -361,10 +209,7 @@ public:
 	void doFriction(float dt);
 	void doFriction(float dt, float len);
 
-	bool isNormalLayer() const
-	{
-		return layer == LR_ENTITIES || layer == LR_ENTITIES0 || layer == LR_ENTITIES2 || layer == LR_ENTITIES_MINUS2 || layer == LR_ENTITIES_MINUS3;
-	}
+	bool isNormalLayer() const;
 	void watchEntity(Entity *e);
 	void idle();
 	int followPos;
@@ -400,12 +245,11 @@ public:
 	std::string deathSound;
 	virtual std::string getIdleAnimName();
 
-	void clearDamageTargets();
 	void setAllDamageTargets(bool v);
 	void setDamageTarget(DamageType dt, bool v);
 	bool isDamageTarget(DamageType dt);
 
-	typedef std::set<DamageType> DisabledDamageTypes;
+	typedef std::vector<DamageType> DisabledDamageTypes;
 
 	int targetRange;
 	int getTargetRange() { return targetRange; }

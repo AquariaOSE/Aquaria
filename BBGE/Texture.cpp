@@ -22,21 +22,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Core.h"
 #include "../ExternalLibs/glpng.h"
 #include "ByteBuffer.h"
-
+#include "RenderBase.h"
 #include <assert.h>
 
 #if defined(BBGE_BUILD_UNIX)
 #include <stdint.h>
 #endif
-
-
-
-
-	GLint Texture::filter = GL_LINEAR;
-
-	GLint Texture::format = 0;
-bool Texture::useMipMaps = true;
-
 
 
 Texture::Texture()
@@ -223,7 +214,7 @@ bool Texture::load(std::string file)
 	}
 
 	stringToLowerUserData(file);
-	file = core->adjustFilenameCase(file);
+	file = adjustFilenameCase(file);
 
 	loadName = file;
 	repeating = false;
@@ -255,7 +246,7 @@ bool Texture::load(std::string file)
 	if (found)
 	{
 		file = localisePathInternalModpath(file);
-		file = core->adjustFilenameCase(file);
+		file = adjustFilenameCase(file);
 
 
 		std::string post = file.substr(file.size()-3, 3);
@@ -320,31 +311,14 @@ bool Texture::loadPNG(const std::string &file)
 	if (file.empty()) return false;
 	bool good = false;
 
-
-
 	pngInfo info;
-
-	int pngType = PNG_ALPHA;
-
-	if (format != 0)
-	{
-		if (format == GL_LUMINANCE_ALPHA)
-			pngType = PNG_LUMINANCEALPHA;
-	}
 
 	unsigned long memsize = 0;
 	const char *memptr = readFile(file, &memsize);
 	if(!memptr || !memsize)
 		goto fail;
 
-	if (filter == GL_NEAREST)
-	{
-		textures[0] = pngBindMem(memptr, memsize, PNG_NOMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, filter, filter);
-	}
-	else
-	{
-		textures[0] = pngBindMem(memptr, memsize, PNG_BUILDMIPMAPS, pngType, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, filter);
-	}
+	textures[0] = pngBindMem(memptr, memsize, PNG_BUILDMIPMAPS, PNG_ALPHA, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
 
 	if (textures[0] != 0)
 	{
@@ -392,8 +366,8 @@ bool Texture::loadTGA(ImageTGA *imageTGA)
 
 	glGenTextures(1, &textures[0]);
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,filter);	// Linear Filtering
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,filter);	// Linear Filtering
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);	// Linear Filtering
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);	// Linear Filtering
 
 	if (imageTGA->channels==3)
 		glTexImage2D(GL_TEXTURE_2D, 0, 3, imageTGA->sizeX, imageTGA->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, imageTGA->data);
@@ -449,7 +423,7 @@ ImageTGA *Texture::TGAloadMem(void *mem, int size)
 	ByteBuffer bb(mem, size, ByteBuffer::REUSE);
 
 	ImageTGA *pImageData = NULL;		// This stores our important image data
-	WORD width = 0, height = 0;			// The dimensions of the image
+	unsigned short width = 0, height = 0;// The dimensions of the image
 	byte length = 0;					// The length in bytes to the pixels
 	byte imageType = 0;					// The image type (RLE, RGB, Alpha...)
 	byte bits = 0;						// The bits per pixel for the image (16, 24, 32)

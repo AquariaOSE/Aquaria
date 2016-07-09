@@ -98,7 +98,7 @@ public:
 	void reloadDevice();
 
 	std::vector<Effect*> effects;
-	std::queue<int> openSpots;
+	std::vector<int> openSpots;
 
 	bool active;
 

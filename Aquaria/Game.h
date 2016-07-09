@@ -28,7 +28,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AquariaMenuItem.h"
 #include "ScriptedEntity.h"
 #include "TileVector.h"
-#include "Shot.h"
 #include "AquariaProgressBar.h"
 
 #include "tinyxml2.h"
@@ -43,6 +42,7 @@ class SongLineRender;
 class AutoMap;
 class DebugButton;
 class WorldMapRender;
+class Shot;
 class InGameMenu;
 
 // FIXME: this should be made dynamic, or at least a power of 2
@@ -65,6 +65,9 @@ class GridRender;
 class MiniMapRender;
 class WaterSurfaceRender;
 class ToolTip;
+class Ingredient;
+class ManaBall;
+class Beam;
 
 #include "Path.h"
 
@@ -107,39 +110,6 @@ struct MinimapIcon
 	bool scaleWithDistance;
 
 	static const Vector defaultSize;
-};
-
-class ManaBall : public Quad
-{
-public:
-	ManaBall(Vector pos, float a);
-	void destroy();
-	bool isUsed();
-	void use(Entity *entity);
-	ParticleEffect healEmitter;
-protected:
-	float lifeSpan;
-	bool used;
-	float amount;
-	void onUpdate(float dt);
-};
-
-class Ingredient : public Entity
-{
-public:
-	Ingredient(const Vector &pos, IngredientData *data, int amount=1);
-	void destroy();
-	IngredientData *getIngredientData();
-
-	void eat(Entity *e);
-	bool hasIET(IngredientEffectType iet);
-protected:
-	bool isRotKind();
-	IngredientData *data;
-	bool used, gone;
-	float lifeSpan;
-	int amount;
-	void onUpdate(float dt);
 };
 
 typedef std::list<Ingredient*> Ingredients;
@@ -825,7 +795,7 @@ protected:
 
 	void warpCameraTo(Vector position);
 
-	std::set<int> ignoredActions;
+	std::vector<int> ignoredActions;
 
 private:
 	Ingredients ingredients;

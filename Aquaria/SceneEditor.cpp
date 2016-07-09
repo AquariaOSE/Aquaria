@@ -27,12 +27,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include "Avatar.h"
 #include "GridRender.h"
+#include "Shot.h"
 
 
 #ifdef AQUARIA_BUILD_SCENEEDITOR  // Through end of file
 
 
 #ifdef BBGE_BUILD_WINDOWS
+	#define WIN32_LEAN_AND_MEAN
+	#include <windows.h>
 	#include <shellapi.h>
 #endif
 
@@ -404,7 +407,7 @@ void SceneEditor::openMainMenu()
 
 	while (core->mouse.buttons.left)
 	{
-		core->main(FRAME_TIME);
+		core->run(FRAME_TIME);
 	}
 
 	addMainMenuItem("LOAD LEVEL...                    (SHIFT-F1)",			100);
@@ -432,7 +435,7 @@ void SceneEditor::openMainMenu()
 
 	while (1 && !core->getKeyState(KEY_TAB))
 	{
-		core->main(FRAME_TIME);
+		core->run(FRAME_TIME);
 		if (execID != -1)
 			break;
 	}
@@ -2244,7 +2247,7 @@ void SceneEditor::selectEntityFromGroups()
 			prevEntityPage();
 		}
 
-		core->main(FRAME_TIME);
+		core->run(FRAME_TIME);
 	}
 
 	destroyEntityPage();

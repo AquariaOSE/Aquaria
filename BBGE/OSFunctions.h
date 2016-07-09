@@ -1,0 +1,15 @@
+#ifndef BBGE_OSFUNCTIONS_H
+#define BBGE_OSFUNCTIONS_H
+
+#include <string>
+
+void messageBox(const std::string &title, const std::string& msg);
+void forEachFile(const std::string& inpath, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param);
+std::string adjustFilenameCase(const char *_buf);
+std::string adjustFilenameCase(const std::string&);
+bool createDir(const std::string& d);
+void triggerBreakpoint();
+void openURL(const std::string &url);
+std::string getSystemLocale();
+
+#endif

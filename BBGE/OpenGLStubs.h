@@ -19,11 +19,6 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-// !!! FIXME: whoa, we should fix this warning, not mask it!
-//#ifdef _MSC_VER
-//#pragma warning( disable : 4003 ) // "not enough actual parameters for macro 'GL_FUNC'"
-//#endif
-
 GL_FUNC(void,glBindTexture,(GLenum target,GLuint name),(target,name),)
 GL_FUNC(void,glBitmap,(GLsizei width, GLsizei height, GLfloat xorig, GLfloat yorig, GLfloat xmove, GLfloat ymove, const GLubyte *bitmap),(width,height,xorig,yorig,xmove,ymove,bitmap),)
 GL_FUNC(void,glBlendFunc,(GLenum f,GLenum x),(f,x),)
@@ -31,15 +26,14 @@ GL_FUNC(void,glClear,(GLbitfield a),(a),)
 GL_FUNC(void,glClearColor,(GLclampf r,GLclampf g,GLclampf b,GLclampf a),(r,g,b,a),)
 GL_FUNC(void,glColor4f,(GLfloat r,GLfloat g,GLfloat b,GLfloat a),(r,g,b,a),)
 GL_FUNC(void,glColor4ub,(GLubyte r,GLubyte g,GLubyte b,GLubyte a),(r,g,b,a),)
-GL_FUNC(void,glColorPointer,(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer),(size,type,stride,pointer),)
 GL_FUNC(void,glCopyPixels,(GLint x, GLint y, GLsizei width, GLsizei height, GLenum type),(x,y,width,height,type),)
 GL_FUNC(void,glCopyTexImage2D,(GLenum target, GLint level, GLenum internalFormat, GLint x, GLint y, GLsizei width, GLsizei height, GLint border),(target, level, internalFormat, x, y, width, height, border),)
 GL_FUNC(void,glCopyTexSubImage2D,(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLint x, GLint y, GLsizei width, GLsizei height),(target, level, xoffset, yoffset, x, y, width, height),)
 GL_FUNC(void,glDeleteTextures,(GLsizei n, const GLuint *textures),(n,textures),)
 GL_FUNC(void,glDisable,(GLenum cap),(cap),)
 GL_FUNC(void,glDisableClientState,(GLenum array),(array),)
-GL_FUNC(void,glDrawArrays,(GLenum mode, GLint first, GLsizei count),(mode,first,count),)
-GL_FUNC(void,glDrawElements,(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices),(mode,count,type,indices),)
+//GL_FUNC(void,glDrawArrays,(GLenum mode, GLint first, GLsizei count),(mode,first,count),)
+//GL_FUNC(void,glDrawElements,(GLenum mode, GLsizei count, GLenum type, const GLvoid *indices),(mode,count,type,indices),)
 GL_FUNC(void,glEnable,(GLenum cap),(cap),)
 GL_FUNC(void,glEnableClientState,(GLenum array),(array),)
 GL_FUNC(void,glFinish,(void),(),)
@@ -47,9 +41,7 @@ GL_FUNC(void,glFlush,(void),(),)
 GL_FUNC(void,glGenTextures,(GLsizei n, GLuint *textures),(n,textures),)
 GL_FUNC(GLenum,glGetError,(void),(),return)
 GL_FUNC(void,glGetFloatv,(GLenum pname, GLfloat *params),(pname,params),)
-GL_FUNC(void,glGetTexParameterfv,(GLenum target, GLenum pname, GLfloat *params),(target,pname,params),)
 GL_FUNC(void,glHint,(GLenum target, GLenum mode),(target,mode),)
-GL_FUNC(void,glLightfv,(GLenum light, GLenum pname, const GLfloat *params),(light,pname,params),)
 GL_FUNC(void,glLineWidth,(GLfloat width),(width),)
 GL_FUNC(void,glLoadIdentity,(void),(),)
 GL_FUNC(void,glMatrixMode,(GLenum mode),(mode),)
@@ -64,7 +56,6 @@ GL_FUNC(void,glReadPixels,(GLint x, GLint y, GLsizei width, GLsizei height, GLen
 GL_FUNC(void,glRotatef,(GLfloat angle, GLfloat x, GLfloat y, GLfloat z),(angle,x,y,z),)
 GL_FUNC(void,glScalef,(GLfloat x, GLfloat y, GLfloat z),(x,y,z),)
 GL_FUNC(void,glTexCoordPointer,(GLint size, GLenum type, GLsizei stride, const GLvoid *pointer),(size,type,stride,pointer),)
-GL_FUNC(void,glGetTexLevelParameterfv,(GLenum target, GLint level, GLenum pname, GLfloat *params),(target,level,pname,params),)
 GL_FUNC(void,glTexParameterf,(GLenum target, GLenum pname, GLfloat param),(target,pname,param),)
 GL_FUNC(void,glTexParameteri,(GLenum target, GLenum pname, GLint param),(target,pname,param),)
 GL_FUNC(void,glTexSubImage2D,(GLenum target, GLint level, GLint xoffset, GLint yoffset, GLsizei width, GLsizei height, GLenum format, GLenum type, const GLvoid *pixels),(target,level,xoffset,yoffset,width,height,format,type,pixels),)

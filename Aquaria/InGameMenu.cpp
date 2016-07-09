@@ -14,7 +14,6 @@ static InGameMenu *themenu = 0;
 std::vector<FoodHolder*>	foodHolders;
 std::vector<PetSlot*>		petSlots;
 
-
 // ---------------- Constants ----------------------------
 
 static const float MENUPAGETRANSTIME		= 0.2;
@@ -260,7 +259,7 @@ void FoodHolder::animateLid(bool down, bool longAnim)
 	{
 		dsq->sound->playSfx("bubble-lid");
 		lid->alpha.interpolateTo(1, t);
-		dsq->main(t);
+		dsq->run(t);
 	}
 	else
 	{
@@ -558,7 +557,7 @@ void FoodSlot::onUpdate(float dt)
 					Vector wp = getWorldPosition();
 					if ((themenu->lips->getWorldPosition() - wp).isLength2DIn(32))
 					{
-						dsq->menuSelectDelay = 0.5;
+						themenu->menuSelectDelay = 0.5;
 
 						eatMe();
 					}
@@ -599,7 +598,7 @@ void FoodSlot::onUpdate(float dt)
 						{
 							if (doubleClickDelay > 0)
 							{
-								dsq->menuSelectDelay = 0.5;
+								themenu->menuSelectDelay = 0.5;
 								doubleClickDelay = 0;
 								eatMe();
 
@@ -895,6 +894,7 @@ InGameMenu::InGameMenu()
 	blurEffectsCheck = 0;
 	ripplesCheck = 0;
 	menu_blackout = 0;
+	menuSelectDelay = 0;
 }
 
 InGameMenu::~InGameMenu()
@@ -926,6 +926,7 @@ void InGameMenu::reset()
 	inGameMenuExitState = 0;
 	optsfxdly = 0;
 	playingSongInMenu = -1;
+	menuSelectDelay = 0;
 	
 	dropIngrNames.clear();
 
@@ -988,17 +989,17 @@ void InGameMenu::action(int id, int state, int source)
 		{
 			if (!state && !dsq->isNested())
 			{
-				if (dsq->menuSelectDelay == 0)
+				if (themenu->menuSelectDelay == 0)
 				{
 					if (id == ACTION_PREVPAGE)
 					{
-						dsq->menuSelectDelay = MENUSELECTDELAY;
+						themenu->menuSelectDelay = MENUSELECTDELAY;
 						onPrevTreasurePage();
 						//menu[5]->setFocus(true);
 					}
 					if (id == ACTION_NEXTPAGE)
 					{
-						dsq->menuSelectDelay = MENUSELECTDELAY;
+						themenu->menuSelectDelay = MENUSELECTDELAY;
 						onNextTreasurePage();
 						//menu[5]->setFocus(true);
 					}
@@ -1009,11 +1010,11 @@ void InGameMenu::action(int id, int state, int source)
 		{
 			if (!state && !dsq->isNested())
 			{
-				if (dsq->menuSelectDelay == 0)
+				if (themenu->menuSelectDelay == 0)
 				{
 					if (id == ACTION_PREVPAGE)
 					{
-						dsq->menuSelectDelay = MENUSELECTDELAY;
+						themenu->menuSelectDelay = MENUSELECTDELAY;
 						if (recipeMenu.on)
 							recipeMenu.goPrevPage();
 						else
@@ -1021,7 +1022,7 @@ void InGameMenu::action(int id, int state, int source)
 					}
 					if (id == ACTION_NEXTPAGE)
 					{
-						dsq->menuSelectDelay = MENUSELECTDELAY;
+						themenu->menuSelectDelay = MENUSELECTDELAY;
 						if (recipeMenu.on)
 							recipeMenu.goNextPage();
 						else
@@ -1280,7 +1281,7 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 
 		toggleMainMenu(false);
 
-		dsq->main(t);
+		dsq->run(t);
 
 		dsq->screenTransition->capture();
 
@@ -1353,7 +1354,7 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		dsq->screenTransition->transition(MENUPAGETRANSTIME);
 
 		if (optionsOnly)
-			dsq->main(-1);
+			dsq->run(-1);
 	}
 }
 
@@ -1430,7 +1431,7 @@ void InGameMenu::hide(bool effects, bool cancel)
 		}
 
 		if (effects)
-			core->main(t);
+			core->run(t);
 
 		if (menu_blackout)
 		{
@@ -2882,19 +2883,19 @@ void InGameMenu::onCook()
 			note3.name = game->getNoteName(3);
 
 			handle = dsq->sound->playSfx(note1);
-			dsq->main(nt2);
+			dsq->run(nt2);
 			dsq->sound->fadeSfx(handle, SFT_OUT, ft);
-			dsq->main(nt);
+			dsq->run(nt);
 
 			handle = dsq->sound->playSfx(note2);
-			dsq->main(nt2);
+			dsq->run(nt2);
 			dsq->sound->fadeSfx(handle, SFT_OUT, ft);
-			dsq->main(nt);
+			dsq->run(nt);
 
 			handle = dsq->sound->playSfx(note3);
-			dsq->main(nt2);
+			dsq->run(nt2);
 			dsq->sound->fadeSfx(handle, SFT_OUT, ft);
-			dsq->main(nt);
+			dsq->run(nt);
 		}
 
 		dsq->sound->playSfx("boil");
@@ -2906,9 +2907,9 @@ void InGameMenu::onCook()
 		}
 
 		if (longAnim)
-			dsq->main(0.5);
+			dsq->run(0.5);
 		else
-			dsq->main(0.2);
+			dsq->run(0.2);
 
 		bool haveLeftovers = true;
 		for (int i = 0; i < foodHolders.size(); i++)
@@ -2945,9 +2946,9 @@ void InGameMenu::onCook()
 		dsq->spawnParticleEffect("cook-food", Vector(575,250), 0, 0, LR_HUD3, 1);
 
 		if (longAnim)
-			dsq->main(0.5);
+			dsq->run(0.5);
 		else
-			dsq->main(0.2);
+			dsq->run(0.2);
 
 		if (data)
 		{
@@ -2971,7 +2972,7 @@ void InGameMenu::onCook()
 
 		dsq->continuity.removeEmptyIngredients();
 
-		dsq->main(0.5);
+		dsq->run(0.5);
 
 		dsq->continuity.setFlag(FLAG_COOKS, dsq->continuity.getFlag(FLAG_COOKS)+1);
 
@@ -3869,6 +3870,15 @@ void InGameMenu::updateOptionsMenu(float dt)
 
 void InGameMenu::update(float dt)
 {
+	if (menuSelectDelay > 0)
+	{
+		menuSelectDelay -= dt;
+		if (menuSelectDelay <= 0)
+		{
+			menuSelectDelay = 0;
+		}
+	}
+
 	if (enqueuedPreviewRecipe)
 	{
 		updatePreviewRecipe();
@@ -3979,7 +3989,7 @@ void InGameMenu::onDebugSave()
 {
 	themenu->hide();
 	game->clearControlHint();
-	core->main(0.5);
+	core->run(0.5);
 	dsq->game->togglePause(true);
 	dsq->doSaveSlotMenu(SSM_SAVE);
 	dsq->game->togglePause(false);

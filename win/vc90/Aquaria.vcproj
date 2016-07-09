@@ -191,6 +191,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\AnimationEditor.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\AquariaComboBox.cpp"
 				>
 			</File>
@@ -231,6 +235,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\Beam.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\BitBlotLogo.cpp"
 				>
 			</File>
@@ -247,11 +255,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\Continuity.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\Credits.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\Aquaria\CurrentRender.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\Damage.h"
 				>
 			</File>
 			<File
@@ -303,11 +319,27 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\GameEnums.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\GameplayVariables.cpp"
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\GameStructs.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\GameStructs.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\GasCloud.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\GasCloud.h"
 				>
 			</File>
 			<File
@@ -339,7 +371,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\Ingredient.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\Intro.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\Intro.h"
 				>
 			</File>
 			<File
@@ -351,11 +391,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\ManaBall.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\MiniMapRender.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\Aquaria\Mod.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\Mod.h"
 				>
 			</File>
 			<File
@@ -467,6 +515,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\Spore.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\States.cpp"
 				>
 			</File>
@@ -495,7 +547,15 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\StringBank.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\SubtitlePlayer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\SubtitlePlayer.h"
 				>
 			</File>
 			<File
@@ -532,6 +592,10 @@
 			</File>
 			<File
 				RelativePath="..\..\Aquaria\Web.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\WorldMap.h"
 				>
 			</File>
 			<File

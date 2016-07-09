@@ -26,11 +26,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/RoundedRect.h"
 #include "../BBGE/SimpleIStringStream.h"
 
+#include "ttvfs_stdio.h"
+#include "ReadXML.h"
+#include "RenderBase.h"
+
 #include "Game.h"
 #include "GridRender.h"
 #include "WaterSurfaceRender.h"
 #include "ScriptedEntity.h"
-#include "AutoMap.h"
 #include "FlockEntity.h"
 #include "SchoolFish.h"
 #include "Avatar.h"
@@ -38,6 +41,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Web.h"
 #include "StatsAndAchievements.h"
 #include "InGameMenu.h"
+#include "ManaBall.h"
+#include "Spore.h"
+#include "Ingredient.h"
+#include "Beam.h"
+#include "Hair.h"
+
 
 static const float MENUPAGETRANSTIME		= 0.2;
 
@@ -3167,7 +3176,7 @@ void Game::applyState()
 
 		core->resetTimer();
 		avatar->disableInput();
-		core->main(0.5);
+		core->run(0.5);
 		avatar->enableInput();
 		core->resetTimer();
 	}
@@ -3181,10 +3190,10 @@ void Game::applyState()
 
 		dsq->transitionSaveSlots();
 		dsq->overlay->alpha = 0;
-		dsq->main(0.5);
+		dsq->run(0.5);
 		dsq->toggleCursor(true);
 		dsq->tfader->alpha.interpolateTo(0, 0.2);
-		dsq->main(0.21);
+		dsq->run(0.21);
 		dsq->clearSaveSlots(false);
 	}
 
@@ -5010,7 +5019,7 @@ void Game::removeState()
 	dsq->overlay->color = 0;
 
 	dsq->overlay->alpha.interpolateTo(1, fadeTime);
-	dsq->main(fadeTime);
+	dsq->run(fadeTime);
 
 	dsq->rumble(0,0,0);
 
@@ -5248,14 +5257,30 @@ void Game::learnedRecipe(Recipe *r, bool effects)
 void Game::setIgnoreAction(AquariaActions ac, bool ignore)
 {
 	if (ignore)
-		ignoredActions.insert(ac);
+	{
+		if(!isIgnoreAction(ac))
+			ignoredActions.push_back(ac);
+	}
 	else
-		ignoredActions.erase(ac);
+	{
+		for(size_t i = 0; i < ignoredActions.size(); ++i)
+		{
+			if(ignoredActions[i] == ac)
+			{
+				ignoredActions[i] = ignoredActions.back();
+				ignoredActions.pop_back();
+				break;
+			}
+		}
+	}
 }
 
 bool Game::isIgnoreAction(AquariaActions ac) const
 {
-	return ignoredActions.find(ac) != ignoredActions.end();
+	for(size_t i = 0; i < ignoredActions.size(); ++i)
+		if(ignoredActions[i] == ac)
+			return true;
+	return false;
 }
 
 void Game::onContinuityReset()

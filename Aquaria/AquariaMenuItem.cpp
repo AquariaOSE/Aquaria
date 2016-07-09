@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include "Game.h"
 #include "ActionInput.h"
+#include "InGameMenu.h"
 
 float AquariaGuiElement::guiMoveTimer = 0;
 AquariaGuiElement::GuiElements AquariaGuiElement::guiElements;
@@ -638,7 +639,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 						while (dsq->game->getKeyState(i))
 						{
-							dsq->main(0.1);
+							dsq->run(0.1);
 						}
 
 						toggleEnterKey(0);
@@ -666,7 +667,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 					while (dsq->game->getKeyState(i))
 					{
-						dsq->main(0.1);
+						dsq->run(0.1);
 					}
 
 					toggleEnterKey(0);
@@ -698,7 +699,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 						while (dsq->game->getKeyState(i))
 						{
-							dsq->main(0.1);
+							dsq->run(0.1);
 						}
 
 						toggleEnterKey(0);
@@ -855,9 +856,9 @@ void AquariaMenuItem::useGlow(const std::string &tex, int w, int h)
 
 void AquariaMenuItem::onClick()
 {
-	if (hasInput() && highlighted && dsq->menuSelectDelay == 0)
+	if (hasInput() && highlighted && game->getInGameMenu()->menuSelectDelay == 0)
 	{
-		dsq->menuSelectDelay = MENUSELECTDELAY;
+		game->getInGameMenu()->menuSelectDelay = MENUSELECTDELAY;
 
 		if (!useSfx.empty())
 			dsq->sound->playSfx(useSfx);
@@ -865,9 +866,6 @@ void AquariaMenuItem::onClick()
 			dsq->playMenuSelectSfx();
 
 		event.call();
-
-
-
 	}
 }
 

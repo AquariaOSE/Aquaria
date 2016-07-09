@@ -408,6 +408,7 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/Entity.cpp
     ${SRCDIR}/FlockEntity.cpp
     ${SRCDIR}/Game.cpp
+    ${SRCDIR}/GameStructs.cpp
     ${SRCDIR}/GameplayVariables.cpp
     ${SRCDIR}/GasCloud.cpp
     ${SRCDIR}/GridRender.cpp
@@ -483,16 +484,17 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Joystick.cpp
     ${BBGEDIR}/LensFlare.cpp
     ${BBGEDIR}/Localization.cpp
-    ${BBGEDIR}/Math.cpp
     ${BBGEDIR}/MemoryAllocatorSmallBlock.cpp
     ${BBGEDIR}/MT.cpp
+    ${BBGEDIR}/OSFunctions.cpp
     ${BBGEDIR}/ParticleEffect.cpp
     ${BBGEDIR}/ParticleManager.cpp
     ${BBGEDIR}/Particles.cpp
     ${BBGEDIR}/Precacher.cpp
-    ${BBGEDIR}/ProfRender.cpp
     ${BBGEDIR}/Quad.cpp
     ${BBGEDIR}/QuadTrail.cpp
+    ${BBGEDIR}/ReadXML.cpp
+    ${BBGEDIR}/RenderBase.cpp
     ${BBGEDIR}/RenderObject.cpp
     ${BBGEDIR}/RenderObjectLayer.cpp
     ${BBGEDIR}/RenderRect.cpp

@@ -23,14 +23,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../BBGE/Particles.h"
 
-#include "DSQ.h"
-#include "Hair.h"
 #include "Entity.h"
-
-#include "Web.h"
 
 class TileVector;
 class SongIcon;
+class Web;
+class Hair;
 
 struct Target
 {
@@ -267,7 +265,7 @@ public:
 
 	typedef std::list<Entity*> BittenEntities;
 	BittenEntities bittenEntities;
-	Target getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override=false, std::vector<Target> *ignore=0, EntityList *entityList=0);
+	Target getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override=false, std::vector<Target> *ignore=0);
 
 	void toggleCape(bool on);
 	void updateLookAt(float dt);

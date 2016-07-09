@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Game.h"
 #include "Avatar.h"
+#include "ManaBall.h"
 
 const float MULT_MANABALL_EASY = 1.5;
 

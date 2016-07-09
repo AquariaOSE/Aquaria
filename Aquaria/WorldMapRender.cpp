@@ -1028,17 +1028,36 @@ void WorldMapRender::onUpdate(float dt)
 			{
 				if (isActing(ACTION_SECONDARY))
 				{
-					if (core->joystick.position.y >= 0.6f)
+					Vector jpos;
+					for(size_t i = 0; i < core->joysticks.size(); ++i)
+						if(Joystick *j = core->joysticks[i])
+							if(j && j->isEnabled())
+								if(fabsf(j->position.y) > 0.6f)
+								{
+									jpos = j->position;
+									break;
+								}
+
+					if (jpos.y >= 0.6f)
 						scale.interpolateTo(scale / 1.2f, 0.1f);
-					else if (core->joystick.position.y <= -0.6f)
+					else if (jpos.y <= -0.6f)
 						scale.interpolateTo(scale * 1.2f, 0.1f);
 				}
 				else
 				{
+					Vector jpos;
+					for(size_t i = 0; i < core->joysticks.size(); ++i)
+						if(Joystick *j = core->joysticks[i])
+							if(j && j->isEnabled())
+								if(!j->position.isZero())
+								{
+									jpos = j->position;
+									break;
+								}
 					// The negative multiplier is deliberate -- it makes the
 					// map scroll as though the joystick was controlling the
 					// cursor (which is fixed in the center of the screen).
-					internalOffset += core->joystick.position * (-400*dt / scale.x);
+					internalOffset += jpos * (-400*dt / scale.x);
 				}
 			}
 		}

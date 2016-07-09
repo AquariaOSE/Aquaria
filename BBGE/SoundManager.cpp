@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Core.h"
 #include "SoundManager.h"
 #include "Base.h"
+#include "ttvfs_stdio.h"
 
 #ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
     #include "FmodOpenALBridge.h"
@@ -510,35 +511,22 @@ void SoundManager::stopAll()
 
 void SoundManager::onVoiceEnded()
 {
-
 	event_stopVoice.call();
-
 
 	if (dspReverb)
 		dspReverb->remove();
 
 	if (!voxQueue.empty())
 	{
-
-
 		std::string vox = voxQueue.front();
-
-
-		if (!voxQueue.empty())
-			voxQueue.pop();
-
-
+		voxQueue.pop_front();
 		playVoice(vox, SVT_INTERRUPT);
 	}
 	else
 	{
-
 		setMusicFader(1, 1);
 		sfxFader = 1;
 	}
-
-
-
 }
 
 
@@ -821,7 +809,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 	{
 		fn = voicePath2 + name + fileType;
 		fn = localisePathInternalModpath(fn);
-		fn = core->adjustFilenameCase(fn);
+		fn = adjustFilenameCase(fn);
 		if (exists(fn))	checkOther = false;
 	}
 
@@ -829,7 +817,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 	{
 		fn = voicePath + name + fileType;
 		fn = localisePath(fn);
-		fn = core->adjustFilenameCase(fn);
+		fn = adjustFilenameCase(fn);
 		if (!exists(fn))
 		{
 			debugLog("Could not find voice file [" + fn + "]");
@@ -847,7 +835,7 @@ bool SoundManager::playVoice(const std::string &name, SoundVoiceType svt, float 
 		if (isPlayingVoice())
 		{
 			if (voxQueue.empty() || voxQueue.front() != n)
-				voxQueue.push(n);
+				voxQueue.push_back(n);
 		}
 		else
 		{
@@ -1142,7 +1130,7 @@ bool SoundManager::playMusic(const std::string &name, SoundLoopType slt, SoundFa
 		}
 	}
 
-	fn = core->adjustFilenameCase(fn);
+	fn = adjustFilenameCase(fn);
 
 	lastMusic = name;
 	stringToLower(lastMusic);
@@ -1322,7 +1310,7 @@ void SoundManager::stopVoice()
 
 void SoundManager::stopAllVoice()
 {
-	while (!voxQueue.empty()) voxQueue.pop();
+	voxQueue.clear();
 	stopVoice();
 }
 
@@ -1370,19 +1358,19 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 	{
 		f = audioPath2 + filename + format;
 		f = localisePathInternalModpath(f);
-		f = core->adjustFilenameCase(f);
+		f = adjustFilenameCase(f);
 		if (!exists(f))
 		{
 			f = path + filename + format;
 			f = localisePath(f);
-			f = core->adjustFilenameCase(f);
+			f = adjustFilenameCase(f);
 		}
 	}
 	else
 	{
 		f = path + filename + format;
 		f = localisePath(f);
-		f = core->adjustFilenameCase(f);
+		f = adjustFilenameCase(f);
 	}
 
 	int loc = f.find_last_of('/');
@@ -1589,7 +1577,7 @@ SoundHolder::~SoundHolder()
 void SoundHolder::updateSoundPosition(float x, float y)
 {
 	if (activeSounds.size())
-		for(std::set<void*>::iterator it = activeSounds.begin(); it != activeSounds.end(); ++it)
+		for(std::vector<void*>::iterator it = activeSounds.begin(); it != activeSounds.end(); ++it)
 			sound->setSoundPos(*it, x, y);
 }
 
@@ -1605,7 +1593,8 @@ void SoundHolder::unlinkSound(void *channel)
 	FMOD::Channel *pChannel = (FMOD::Channel*)channel;
 	pChannel->setUserData(NULL);
 	pChannel->setCallback(NULL);
-	activeSounds.erase(channel);
+	std::vector<void*>::iterator where = std::remove(activeSounds.begin(), activeSounds.end(), channel);
+	activeSounds.erase(where, activeSounds.end());
 }
 
 void SoundHolder::linkSound(void *channel)
@@ -1615,7 +1604,7 @@ void SoundHolder::linkSound(void *channel)
 	FMOD::Channel *pChannel = (FMOD::Channel*)channel;
 	pChannel->setUserData(this);
 	pChannel->setCallback(s_soundHolderCallback);
-	activeSounds.insert(channel);
+	activeSounds.push_back(channel);
 }
 
 void SoundHolder::unlinkAllSounds()

@@ -25,9 +25,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../BBGE/MathFunctions.h"
 
+typedef std::map<std::string, ShotData> ShotBank;
+static ShotBank shotBank;
+
 Shot::Shots Shot::shots;
 Shot::Shots Shot::deleteShots;
-Shot::ShotBank Shot::shotBank;
 unsigned int Shot::shotsIter = 0;
 
 std::string Shot::shotBankPath = "";
@@ -99,7 +101,7 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 	stringToLower(this->name);
 
 	debugLog(usef);
-	char *data = readFile(core->adjustFilenameCase(usef).c_str());
+	char *data = readFile(adjustFilenameCase(usef).c_str());
 	if (!data)
 		return;
 	SimpleIStringStream inf(data, SimpleIStringStream::TAKE_OVER);
@@ -304,7 +306,7 @@ void loadShotCallback(const std::string &filename, intptr_t param)
 	stringToLower(ident);
 	debugLog(ident);
 	shotData.bankLoad(ident, Shot::shotBankPath);
-	Shot::shotBank[ident] = shotData;
+	shotBank[ident] = shotData;
 }
 
 void Shot::loadShotBank(const std::string &bank1, const std::string &bank2)

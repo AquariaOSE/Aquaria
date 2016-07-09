@@ -1,6 +1,8 @@
 #ifndef BBGE_GAME_KEYS_H
 #define BBGE_GAME_KEYS_H
 
+#include "BBGECompileConfig.h"
+
 #ifdef BBGE_BUILD_SDL2
 
 #include <SDL_scancode.h>

@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Quad.h"
 #include "Core.h"
-
+#include "RenderBase.h"
 #include <assert.h>
 
 Vector Quad::renderBorderColor = Vector(1,1,1);

@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Particles.h"
 #include "MathFunctions.h"
 #include "SimpleIStringStream.h"
+#include "ReadXML.h"
 
 #include "tinyxml2.h"
 using namespace tinyxml2;
@@ -82,6 +83,10 @@ Bone::Bone() : Quad()
 	originalRenderPass = 0;
 }
 
+ParticleEffect *Bone::getEmitter(unsigned slot) const
+{
+	return slot < emitters.size() ? emitters[slot] : NULL;
+}
 
 void Bone::destroy()
 {
@@ -345,7 +350,7 @@ void BoneCommand::run()
 	break;
 	case AC_PRT_LOAD:
 	{
-		ParticleEffect *e = b->emitters[slot];
+		ParticleEffect *e = b->getEmitter(slot);
 		if (e)
 		{
 			e->load(file);
@@ -354,14 +359,14 @@ void BoneCommand::run()
 	break;
 	case AC_PRT_START:
 	{
-		ParticleEffect *e = b->emitters[slot];
+		ParticleEffect *e = b->getEmitter(slot);
 		if (e)
 			e->start();
 	}
 	break;
 	case AC_PRT_STOP:
 	{
-		ParticleEffect *e = b->emitters[slot];
+		ParticleEffect *e = b->getEmitter(slot);
 		if (e)
 			e->stop();
 	}
@@ -1131,7 +1136,7 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 		file = animationPath + skinPath + fn + ".xml";
 	}
 
-	file = core->adjustFilenameCase(file);
+	file = adjustFilenameCase(file);
 
 	if (!exists(file))
 	{
@@ -1254,7 +1259,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 		return;
 	}
 
-	file = core->adjustFilenameCase(file);
+	file = adjustFilenameCase(file);
 
 	XMLDocument *xml = _retrieveSkeletalXML(file, false);
 	if(!xml)
@@ -1308,17 +1313,20 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				newb->prt = bone->Attribute("prt");
 				SimpleIStringStream is(newb->prt);
 				int slot;
+				std::string pfile;
 				while (is >> slot)
 				{
-					std::string pfile;
-					is >> pfile;
-					// add particle system + load
-					newb->emitters[slot] = new ParticleEffect;
-					ParticleEffect *e = newb->emitters[slot];
-					newb->addChild(e, PM_POINTER);
-					e->load(pfile);
-					// hack for now:
-					//e->start();
+					if(slot > 0)
+					{
+						is >> pfile;
+						// add particle system + load
+						ParticleEffect *e = new ParticleEffect;
+						if(newb->emitters.size() < (size_t)slot)
+							newb->emitters.resize(slot+4);
+						newb->emitters[slot] = e;
+						newb->addChild(e, PM_POINTER);
+						e->load(pfile);
+					}
 				}
 			}
 			XMLElement *fr=0;

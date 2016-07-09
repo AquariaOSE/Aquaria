@@ -24,9 +24,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <stdlib.h>
 #include <string>
 #include <list>
-#include <queue>
-#include <set>
 #include "Vector.h"
+#include "Event.h"
 
 
 #define BBGE_AUDIO_NOCHANNEL NULL
@@ -199,7 +198,7 @@ public:
 
 	std::string lastVoice, lastMusic;
 
-	typedef std::list<std::string> LocalSounds;
+	typedef std::vector<std::string> LocalSounds;
 	LocalSounds localSounds;
 	void setOverrideVoiceFader(float v);
 
@@ -219,7 +218,7 @@ private:
 	float sfxVol;
 	float voiceFader, sfxFader;
 
-	std::queue<std::string> voxQueue;
+	std::list<std::string> voxQueue;
 
 	void (*loadProgressCallback)();
 };
@@ -238,7 +237,7 @@ protected:
 	virtual ~SoundHolder();
 
 private:
-	std::set<void*> activeSounds;
+	std::vector<void*> activeSounds;
 };
 
 

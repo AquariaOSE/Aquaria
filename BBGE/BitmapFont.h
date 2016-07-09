@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderObject.h"
 #include "BaseText.h"
 
-#include "../ExternalLibs/glfont2/glfont2.h"
+namespace glfont { class GLFont; }
 
 enum BitmapFontEffect
 {
@@ -41,7 +41,7 @@ struct BmpFont
 	void load(const std::string &file, float scale=1, bool loadTexture=true);
 	void destroy();
 
-	glfont::GLFont font;
+	glfont::GLFont * const font;
 	float scale;
 	bool loaded;
 
@@ -66,7 +66,6 @@ public:
 	virtual void setAlign(Align align);
 	std::string getText();
 	int getWidthOnScreen();
-	void loadSpacingMap(const std::string &file);
 	Vector getColorIndex(int i, int j);
 	void updateWordColoring();
 	void autoKern();
@@ -92,8 +91,6 @@ protected:
 	int currentScrollChar;
 	Align align;
 	float alignWidth;
-	typedef std::map<char, float> SpacingMap;
-	SpacingMap spacingMap;
 	void formatText();
 	float fontDrawSize;
 	void onRender();

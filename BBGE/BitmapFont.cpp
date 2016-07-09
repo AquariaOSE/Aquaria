@@ -19,12 +19,15 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "BitmapFont.h"
+#include "RenderBase.h"
 #include "Core.h"
 
+#include "../ExternalLibs/glfont2/glfont2.h"
 
 using namespace glfont;
 
 BmpFont::BmpFont()
+: font(new GLFont)
 {
 	scale = 1;
 	loaded = false;
@@ -35,6 +38,7 @@ BmpFont::BmpFont()
 
 BmpFont::~BmpFont()
 {
+	delete font;
 	destroy();
 }
 
@@ -42,7 +46,7 @@ void BmpFont::destroy()
 {
 	if (loaded)
 	{
-		font.Destroy();
+		font->Destroy();
 		loaded = false;
 	}
 
@@ -52,14 +56,14 @@ void BmpFont::destroy()
 void BmpFont::load(const std::string &file, float scale, bool loadTexture)
 {
 	if (loaded)
-		font.Destroy();
+		font->Destroy();
 
 	this->scale = scale;
 
 	GLuint id=0;
 	glGenTextures(1, &id);
 
-	if (!font.Create(file.c_str(), id, loadTexture))
+	if (!font->Create(file.c_str(), id, loadTexture))
 		return;
 
 
@@ -90,23 +94,6 @@ BitmapText::BitmapText(BmpFont *bmpFont)
 
 void BitmapText::autoKern()
 {
-}
-
-void BitmapText::loadSpacingMap(const std::string &file)
-{
-	spacingMap.clear();
-	InStream inFile(file.c_str());
-	std::string line;
-	while (std::getline(inFile, line))
-	{
-		if (!line.empty())
-		{
-			char c = line[0];
-			line = line.substr(2, line.length());
-			std::istringstream is(line);
-			is >> spacingMap[c];
-		}
-	}
 }
 
 int BitmapText::getWidthOnScreen()
@@ -142,13 +129,13 @@ float BitmapText::getSetWidth()
 
 float BitmapText::getHeight()
 {
-	float sz = bmpFont->font.GetCharHeight('A') * bmpFont->scale;
+	float sz = bmpFont->font->GetCharHeight('A') * bmpFont->scale;
 	return lines.size()*sz;
 }
 
 float BitmapText::getLineHeight()
 {
-	return bmpFont->font.GetCharHeight('A') * bmpFont->scale;
+	return bmpFont->font->GetCharHeight('A') * bmpFont->scale;
 }
 
 void BitmapText::formatText()
@@ -164,7 +151,7 @@ void BitmapText::formatText()
 	for (int i = 0; i < text.size(); i++)
 	{
 
-		float sz = bmpFont->font.GetCharWidth(text[i])*bmpFont->scale;
+		float sz = bmpFont->font->GetCharWidth(text[i])*bmpFont->scale;
 		currentWidth += sz;
 
 		if (currentWidth+sz >= textWidth || text[i] == '\n')
@@ -301,7 +288,7 @@ void BitmapText::onRender()
 
 
 
-	bmpFont->font.Begin();
+	bmpFont->font->Begin();
 
 	if (fontTextureTest) fontTextureTest->apply();
 
@@ -310,7 +297,7 @@ void BitmapText::onRender()
 	float y=0;
 	float x=0;
 
-	float adj = bmpFont->font.GetCharHeight('A') * bmpFont->scale;
+	float adj = bmpFont->font->GetCharHeight('A') * bmpFont->scale;
 
 	if (scrolling)
 	{
@@ -324,13 +311,13 @@ void BitmapText::onRender()
 			if (align == ALIGN_CENTER)
 			{
 				std::pair<int, int> sz;
-				bmpFont->font.GetStringSize(lines[i], &sz);
+				bmpFont->font->GetStringSize(lines[i], &sz);
 				x = -sz.first*0.5f*bmpFont->scale;
 			}
 			float la = 1.0f-(scrollDelay/scrollSpeed);
 
 
-			bmpFont->font.DrawString(theLine, bmpFont->scale, x, y, top_color, bottom_color, alpha.x, la);
+			bmpFont->font->DrawString(theLine, bmpFont->scale, x, y, top_color, bottom_color, alpha.x, la);
 			y += adj;
 		}
 	}
@@ -342,10 +329,10 @@ void BitmapText::onRender()
 			if (align == ALIGN_CENTER)
 			{
 				std::pair<int, int> sz;
-				bmpFont->font.GetStringSize(lines[i], &sz);
+				bmpFont->font->GetStringSize(lines[i], &sz);
 				x = -sz.first*0.5f*bmpFont->scale;
 			}
-			bmpFont->font.DrawString(lines[i], bmpFont->scale, x, y, top_color, bottom_color, alpha.x, 1);
+			bmpFont->font->DrawString(lines[i], bmpFont->scale, x, y, top_color, bottom_color, alpha.x, 1);
 			y += adj;
 		}
 	}
@@ -410,7 +397,7 @@ float BitmapText::getStringWidth(const std::string& text)
 		if(text[i] == '\n')
 		{
 			std::pair<int, int> dim;
-			bmpFont->font.GetStringSize(tmp, &dim);
+			bmpFont->font->GetStringSize(tmp, &dim);
 			maxsize = std::max(maxsize, dim.first);
 			tmp.resize(0);
 		}
@@ -418,7 +405,7 @@ float BitmapText::getStringWidth(const std::string& text)
 			tmp += text[i];
 	}
 	std::pair<int, int> dim;
-	bmpFont->font.GetStringSize(tmp, &dim);
+	bmpFont->font->GetStringSize(tmp, &dim);
 	maxsize = std::max(maxsize, dim.first);
 
 	return maxsize * bmpFont->scale;

@@ -29,7 +29,7 @@ class FrameBuffer
 public:
 	FrameBuffer();
 	~FrameBuffer();
-	bool init(int width, int height, bool fitToScreen=false, GLint filter=GL_LINEAR);
+	bool init(int width, int height, bool fitToScreen=false);
 	bool isInited() { return inited; }
 	bool isEnabled() { return enabled; }
 	void setEnabled(bool e);
@@ -49,9 +49,9 @@ public:
 protected:
 	int _w, _h;
 	bool _fitToScreen;
-	GLuint g_frameBuffer;
-	GLuint g_depthRenderBuffer;
-	GLuint g_dynamicTextureID;
+	unsigned g_frameBuffer;
+	unsigned g_depthRenderBuffer;
+	unsigned g_dynamicTextureID;
 	int w,h;
 	bool enabled, inited;
 };

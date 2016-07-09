@@ -42,7 +42,7 @@ protected:
 	float width, height;
 
 
-	GLuint screen_texture;
+	unsigned screen_texture;
 };
 
 #endif
