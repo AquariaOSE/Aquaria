@@ -481,9 +481,6 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 
 	keyDown = false;
 
-	locked = 0;
-
-
 	toggleEnterKey(false);
 }
 
@@ -524,11 +521,6 @@ void AquariaKeyConfig::toggleEnterKey(int on)
 		bg->color = Vector(0.5, 0.5, 0.5);
 	}
 
-}
-
-void AquariaKeyConfig::setLock(int lock)
-{
-	locked = lock;
 }
 
 void AquariaKeyConfig::onUpdate(float dt)
@@ -735,24 +727,17 @@ void AquariaKeyConfig::onUpdate(float dt)
 		{
 			keyDown = false;
 
-			if (!locked)
+			if (waitingForInput == this)
 			{
-				if (waitingForInput == this)
-				{
-					waitingForInput = 0;
-					toggleEnterKey(0);
-					AquariaGuiElement::canDirMoveGlobal = true;
-				}
-				else
-				{
-					waitingForInput = this;
-					toggleEnterKey(1);
-					AquariaGuiElement::canDirMoveGlobal = false;
-				}
+				waitingForInput = 0;
+				toggleEnterKey(0);
+				AquariaGuiElement::canDirMoveGlobal = true;
 			}
 			else
 			{
-				dsq->sound->playSfx("denied");
+				waitingForInput = this;
+				toggleEnterKey(1);
+				AquariaGuiElement::canDirMoveGlobal = false;
 			}
 		}
 	}

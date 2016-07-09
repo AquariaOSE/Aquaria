@@ -188,7 +188,7 @@ private:
 
 	void onKeyConfig();
 
-	void addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, int l1=0, int l2=0, int l3=0);
+	void addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y);
 
 	AquariaKeyConfig *addAxesConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, int offx);
 
