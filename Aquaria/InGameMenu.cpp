@@ -1490,7 +1490,7 @@ void InGameMenu::hide(bool effects, bool cancel)
 }
 
 
-void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, int l1, int l2, int l3)
+void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y)
 {
 	TTFText *lb = new TTFText(&dsq->fontArialSmallest);
 	lb->setText(label);
@@ -1499,17 +1499,14 @@ void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label,
 
 	AquariaKeyConfig *k1 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 0);
 	k1->position = Vector(350,y);
-	k1->setLock(l1);
 	group->addChild(k1, PM_POINTER);
 
 	AquariaKeyConfig *k2 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 1);
 	k2->position = Vector(475,y);
-	k2->setLock(l2);
 	group->addChild(k2, PM_POINTER);
 
 	AquariaKeyConfig *j1 = new AquariaKeyConfig(actionInputName, INPUTSET_JOY, 0);
 	j1->position = Vector(600,y);
-	j1->setLock(l3);
 	group->addChild(j1, PM_POINTER);
 
 	k1->setDirMove(DIR_RIGHT, k2);
@@ -1957,8 +1954,8 @@ void InGameMenu::create()
 	header_joy->setAlign(ALIGN_CENTER);
 	group_keyConfig->addChild(header_joy, PM_POINTER);
 
-	addKeyConfigLine(group_keyConfig, SB(2105), "lmb",					100+offy, 0, 0, 0);
-	addKeyConfigLine(group_keyConfig, SB(2106), "rmb",					120+offy, 0, 0, 0);
+	addKeyConfigLine(group_keyConfig, SB(2105), "lmb",					100+offy);
+	addKeyConfigLine(group_keyConfig, SB(2106), "rmb",					120+offy);
 	addKeyConfigLine(group_keyConfig, SB(2107), "PrimaryAction",		140+offy);
 	addKeyConfigLine(group_keyConfig, SB(2108), "SecondaryAction",		160+offy);
 	addKeyConfigLine(group_keyConfig, SB(2109), "SwimUp",				180+offy);
@@ -1968,7 +1965,7 @@ void InGameMenu::create()
 	addKeyConfigLine(group_keyConfig, SB(2113), "Roll",					260+offy);
 	addKeyConfigLine(group_keyConfig, SB(2114), "Revert",				280+offy);
 	addKeyConfigLine(group_keyConfig, SB(2115), "WorldMap",				300+offy);
-	addKeyConfigLine(group_keyConfig, SB(2116), "Escape",				320+offy, 1, 0, 0);
+	addKeyConfigLine(group_keyConfig, SB(2116), "Escape",				320+offy);
 
 	AquariaKeyConfig* s1x = addAxesConfigLine(group_keyConfig, SB(2117), "s1ax", 340+offy, 0);
 	AquariaKeyConfig* s1y = addAxesConfigLine(group_keyConfig, SB(2118), "s1ay", 340+offy, 130);

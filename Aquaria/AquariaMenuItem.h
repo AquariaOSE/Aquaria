@@ -170,10 +170,7 @@ public:
 
 	static AquariaKeyConfig *waitingForInput;
 
-	void setLock(int lock);
-
 protected:
-	int locked;
 	void toggleEnterKey(int on);
 
 	void onUpdate(float dt);
