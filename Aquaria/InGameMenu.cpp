@@ -966,7 +966,7 @@ void InGameMenu::action(int id, int state, int source)
 		}
 	}
 
-	if(id == ACTION_ESC)
+	if(id == ACTION_ESC && !state)
 	{
 		if (isInGameMenu())
 		{
@@ -3864,6 +3864,8 @@ void InGameMenu::updateOptionsMenu(float dt)
 
 void InGameMenu::update(float dt)
 {
+	ActionMapper::onUpdate(dt);
+
 	if (menuSelectDelay > 0)
 	{
 		menuSelectDelay -= dt;

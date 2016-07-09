@@ -274,7 +274,7 @@ void DSQ::rumble(float leftMotor, float rightMotor, float time)
 {
 	//if (this->inputMode == INPUT_JOYSTICK)
 	//	core->joystick.rumble(leftMotor, rightMotor, time);
-	assert(false); // FIXME
+	//assert(false); // FIXME
 }
 
 void DSQ::newGame()
