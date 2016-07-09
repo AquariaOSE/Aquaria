@@ -1168,7 +1168,7 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		game->clearControlHint();
 
 		selectedTreasureFlag = -1;
-		optionsOnly = optionsOnly;
+		this->optionsOnly = optionsOnly;
 
 		core->sound->playSfx("Menu-Open");
 		dropIngrNames.clear();
@@ -1216,10 +1216,7 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		else
 			liCrystal->alphaMod = 0;
 
-		int i = 0;
-
-
-		for (i = 0; i < songSlots.size(); i++)
+		for (int i = 0; i < songSlots.size(); i++)
 		{
 			if (dsq->continuity.hasSong(dsq->continuity.getSongTypeBySlot(i)))
 				songSlots[i]->alpha.interpolateTo(1, t);
@@ -1325,7 +1322,7 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 					toggleMainMenu(true);
 
 					songBubbles->alpha.interpolateTo(1, t);
-					for (i = 0; i < menu.size(); i++)
+					for (int i = 0; i < menu.size(); i++)
 					{
 						menu[i]->scale = Vector(0,0);
 						menu[i]->alpha = 0;
@@ -1338,7 +1335,7 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 
 		if (!optionsOnly)
 		{
-			for (i = 0; i < menu.size(); i++)
+			for (int i = 0; i < menu.size(); i++)
 			{
 				menu[i]->scale.interpolateTo(Vector(1, 1), 0.15);
 
