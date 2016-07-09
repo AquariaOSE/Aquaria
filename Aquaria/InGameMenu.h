@@ -188,14 +188,14 @@ private:
 
 	void onKeyConfig();
 
-	void addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y);
+	void addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, bool acceptEsc = false);
 
 	AquariaKeyConfig *addAxesConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, int offx);
 
 	void onOptionsSave();
 	void onOptionsCancel();
 	AquariaSlider *sfxslider, *musslider, *voxslider;
-	AquariaCheckBox *autoAimCheck, *targetingCheck, *toolTipsCheck, *flipInputButtonsCheck, *micInputCheck, *blurEffectsCheck;
+	AquariaCheckBox *autoAimCheck, *targetingCheck, *toolTipsCheck, *flipInputButtonsCheck, *blurEffectsCheck;
 	AquariaCheckBox *subtitlesCheck, *fullscreenCheck, *ripplesCheck;
 	AquariaComboBox *resBox;
 	Quad *songBubbles, *energyIdol, *liCrystal;

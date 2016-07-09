@@ -1490,7 +1490,7 @@ void InGameMenu::hide(bool effects, bool cancel)
 }
 
 
-void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y)
+void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, bool acceptEsc)
 {
 	TTFText *lb = new TTFText(&dsq->fontArialSmallest);
 	lb->setText(label);
@@ -1500,10 +1500,12 @@ void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label,
 	AquariaKeyConfig *k1 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 0);
 	k1->position = Vector(350,y);
 	group->addChild(k1, PM_POINTER);
+	k1->setAcceptEsc(acceptEsc);
 
 	AquariaKeyConfig *k2 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 1);
 	k2->position = Vector(475,y);
 	group->addChild(k2, PM_POINTER);
+	k2->setAcceptEsc(acceptEsc);
 
 	AquariaKeyConfig *j1 = new AquariaKeyConfig(actionInputName, INPUTSET_JOY, 0);
 	j1->position = Vector(600,y);
@@ -1763,8 +1765,6 @@ void InGameMenu::create()
 	flipInputButtonsCheck->position = Vector(checkx,checky);
 	options->addChild(flipInputButtonsCheck, PM_POINTER);
 
-	micInputCheck = 0;
-
 	toolTipsCheck = new AquariaCheckBox();
 	toolTipsCheck->setValue(dsq->user.control.toolTipsOn);
 	toolTipsCheck->position = Vector(checkx,checky+1*checkd);
@@ -1965,7 +1965,7 @@ void InGameMenu::create()
 	addKeyConfigLine(group_keyConfig, SB(2113), "Roll",					260+offy);
 	addKeyConfigLine(group_keyConfig, SB(2114), "Revert",				280+offy);
 	addKeyConfigLine(group_keyConfig, SB(2115), "WorldMap",				300+offy);
-	addKeyConfigLine(group_keyConfig, SB(2116), "Escape",				320+offy);
+	addKeyConfigLine(group_keyConfig, SB(2116), "Escape",				320+offy, true);
 
 	AquariaKeyConfig* s1x = addAxesConfigLine(group_keyConfig, SB(2117), "s1ax", 340+offy, 0);
 	AquariaKeyConfig* s1y = addAxesConfigLine(group_keyConfig, SB(2118), "s1ay", 340+offy, 130);
@@ -3686,9 +3686,6 @@ void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 		if (ripplesCheck)
 			ripplesCheck->setValue(core->afterEffectManager!=0);
 
-		if (micInputCheck)
-			micInputCheck->setValue(dsq->user.audio.micOn);
-
 		if (resBox)
 		{
 			std::ostringstream os;
@@ -3802,9 +3799,6 @@ void InGameMenu::updateOptionsMenu(float dt)
 	dsq->user.audio.sfxvol				= sfxslider->getValue();
 	dsq->user.audio.musvol				= musslider->getValue();
 
-	if (micInputCheck)
-		dsq->user.audio.micOn			= micInputCheck->getValue();
-
 	dsq->user.control.flipInputButtons	= flipInputButtonsCheck->getValue();
 	dsq->user.control.toolTipsOn		= toolTipsCheck->getValue();
 	dsq->user.control.autoAim			= autoAimCheck->getValue();
@@ -3832,15 +3826,18 @@ void InGameMenu::updateOptionsMenu(float dt)
 		}
 	}
 
+	bool apply = false;
 	optsfxdly += dt;
 	if (sfxslider->hadInput())
 	{
 		dsq->sound->playSfx("denied");
+		apply = true;
 	}
 	else if (voxslider->hadInput())
 	{
 		if (!dsq->sound->isPlayingVoice())
 			dsq->voice("naija_somethingfamiliar");
+		apply = true;
 	}
 	else if (optsfxdly > 0.6f)
 	{
@@ -3849,6 +3846,7 @@ void InGameMenu::updateOptionsMenu(float dt)
 		{
 			dsq->sound->playSfx("denied");
 			dsq->loops.updateVolume();
+			apply = true;
 		}
 		if (voxslider->isGrabbed())
 		{
@@ -3856,10 +3854,12 @@ void InGameMenu::updateOptionsMenu(float dt)
 			{
 				dsq->voice("naija_somethingfamiliar");
 			}
+			apply = true;
 		}
 	}
 
-	dsq->user.apply();
+	if(apply)
+		dsq->user.apply();
 }
 
 void InGameMenu::update(float dt)

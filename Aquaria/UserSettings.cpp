@@ -68,13 +68,6 @@ void UserSettings::save()
 
 		XMLElement *xml_audio = doc.NewElement("Audio");
 		{
-			XMLElement *xml_microphone = doc.NewElement("Mic");
-			{
-				xml_microphone->SetAttribute("on", audio.micOn);
-				xml_microphone->SetAttribute("octave", audio.octave);
-			}
-			xml_audio->InsertEndChild(xml_microphone);
-
 			XMLElement *xml_volume = doc.NewElement("Volume");
 			{
 				xml_volume->SetAttribute("sfx", double(audio.sfxvol));
@@ -372,13 +365,6 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	XMLElement *xml_audio = doc.FirstChildElement("Audio");
 	if (xml_audio)
 	{
-		XMLElement *xml_microphone = xml_audio->FirstChildElement("Mic");
-		if (xml_microphone)
-		{
-			audio.micOn = xml_microphone->IntAttribute("on");
-			audio.octave = xml_microphone->IntAttribute("octave");
-		}
-
 		XMLElement *xml_volume = xml_audio->FirstChildElement("Volume");
 		if (xml_volume)
 		{

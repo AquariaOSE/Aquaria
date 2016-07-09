@@ -46,9 +46,7 @@ public:
 
 	struct Audio
 	{
-		Audio() { micOn = 0; octave=0; musvol=voxvol=sfxvol=1.0; subtitles=false; prebuffer=false;}
-		int micOn;
-		int octave;
+		Audio() { musvol=voxvol=sfxvol=1.0; subtitles=false; prebuffer=false;}
 		float voxvol, sfxvol, musvol;
 		int subtitles;
 		std::string deviceName;
