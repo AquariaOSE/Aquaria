@@ -23,8 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "CollideEntity.h"
 #include "Segmented.h"
-#include "Hair.h"
+#include "Particles.h"
+
 struct lua_State;
+class Script;
 
 class ScriptedEntity : public CollideEntity, public Segmented
 {

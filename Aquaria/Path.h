@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/Particles.h"
 #include "../BBGE/ScriptObject.h"
 #include "ScriptInterface.h"
+#include "Rect.h"
 
 #undef PATH_MAX  // May be set by a system header.
 

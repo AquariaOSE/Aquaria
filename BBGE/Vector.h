@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <cmath>
 #include <float.h>
 #include <vector>
-#include "Event.h"
 
 typedef float scalar_t;
 
@@ -392,8 +391,9 @@ protected:
 	std::vector <VectorPathNode> pathNodes;
 };
 
-
-class InterpolatedVector;
+// This struct is used to keep all of the interpolation-specific data out
+// of the global InterpolatedVector class, so that we don't waste memory on
+// non-interpolated vectors.
 struct InterpolatedVectorData
 {
 	InterpolatedVectorData()
@@ -430,10 +430,6 @@ struct InterpolatedVectorData
 	bool followingPath;
 };
 
-
-// This struct is used to keep all of the interpolation-specific data out
-// of the global InterpolatedVector class, so that we don't waste memory on
-// non-interpolated vectors.
 class InterpolatedVector : public Vector
 {
 public:
@@ -509,13 +505,6 @@ public:
 	{
 		return data && data->followingPath;
 	}
-
-	// for faking a single value
-	inline float getValue() const
-	{
-		return x;
-	}
-
 
 	// We never allocate this if the vector isn't used for
 	// interpolation, which saves a _lot_ of memory.

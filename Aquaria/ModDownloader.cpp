@@ -8,7 +8,7 @@
 #include "Network.h"
 #include "ttvfs.h"
 
-#include "tinyxml2.h"
+#include "ReadXML.h"
 using namespace tinyxml2;
 
 using Network::NetEvent;

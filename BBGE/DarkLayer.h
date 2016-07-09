@@ -47,10 +47,8 @@ protected:
 	int quality;
 	bool active;
 	int layer, renderLayer;
-
-
-	GLuint texture;
-	GLuint format;
+	unsigned texture;
+	unsigned format;
 };
 
 #endif

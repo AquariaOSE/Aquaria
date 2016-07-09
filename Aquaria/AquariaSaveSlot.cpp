@@ -227,7 +227,7 @@ void AquariaSaveSlot::onUpdate(float dt)
 							screen->position.interpolateTo(Vector(400-position.x, 300-position.y), 1.0, 0, 0, 1);
 							dsq->tfader->alpha.interpolateTo(1, 1);
 							dsq->toggleCursor(false);
-							core->main(1);
+							core->run(1);
 
 
 						}

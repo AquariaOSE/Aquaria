@@ -18,10 +18,13 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#include "States.h"
+
+#include "AnimationEditor.h"
+#include "DSQ.h"
 #include "AquariaMenuItem.h"
 #include "../BBGE/Gradient.h"
 #include "../BBGE/DebugFont.h"
+#include "RenderBase.h"
 #include "Game.h"
 
 
@@ -505,7 +508,9 @@ void AnimationEditor::undo()
 	{
 		if (undoEntry >= 0 && undoEntry < undoHistory.size())
 		{
-			editSprite->animations = undoHistory[undoEntry].animations;
+			std::list<SkeletalSprite>::iterator it = undoHistory.begin();
+			std::advance(it, undoEntry);
+			editSprite->animations = it->animations;
 			undoEntry--;
 			if (undoEntry<0) undoEntry = 0;
 		}
@@ -521,8 +526,9 @@ void AnimationEditor::redo()
 		undoEntry++;
 		if (undoEntry >= 0 && undoEntry < undoHistory.size())
 		{
-
-			editSprite->animations = undoHistory[undoEntry].animations;
+			std::list<SkeletalSprite>::iterator it = undoHistory.begin();
+			std::advance(it, undoEntry);
+			editSprite->animations = it->animations;
 		}
 		else
 		{

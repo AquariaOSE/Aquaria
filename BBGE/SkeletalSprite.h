@@ -43,6 +43,7 @@ class SkeletalSprite;
 
 class Bone : public Quad
 {
+	friend class SkeletalSprite;
 public:
 	Bone();
 	void setAnimated(int a);
@@ -60,7 +61,7 @@ public:
 	std::string gfx;
 	std::string name;
 	int boneIdx, pidx, rbp;
-	std::map<int, ParticleEffect*> emitters;
+
 	std::string prt;
 	std::vector<Vector> changeStrip;
 
@@ -69,6 +70,7 @@ public:
 	Vector originalScale;
 
 	void addSegment(Bone *b);
+	ParticleEffect *getEmitter(unsigned slot) const;
 
 	int segmentChain;
 
@@ -86,6 +88,7 @@ public:
 	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
 
 protected:
+	std::vector<ParticleEffect*> emitters;
 	int minDist, maxDist, reverse;
 	std::vector<Bone*> segments;
 };

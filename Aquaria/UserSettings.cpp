@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include "Game.h"
 #include "Avatar.h"
+#include "ReadXML.h"
 
 
 void UserSettings::save()
@@ -237,7 +238,7 @@ void UserSettings::save()
 			xml_data->SetAttribute("saveSlot",			data.saveSlot);
 
 			std::ostringstream ss;
-			for (std::set<std::string>::iterator it = dsq->activePatches.begin(); it != dsq->activePatches.end(); ++it)
+			for (std::vector<std::string>::iterator it = dsq->activePatches.begin(); it != dsq->activePatches.end(); ++it)
 				ss << *it << " ";
 			xml_data->SetAttribute("activePatches",	ss.str().c_str());
 		}
@@ -503,8 +504,8 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			while(ss)
 			{
 				ss >> tmp;
-				if(tmp.length())
-					dsq->activePatches.insert(tmp);
+				if(tmp.length() && !dsq->isPatchActive(tmp))
+					dsq->activePatches.push_back(tmp);
 			}
 		}
 	}
@@ -548,13 +549,13 @@ void UserSettings::apply()
 	dsq->loops.updateVolume();
 
 	// FIXME: This should be per-joystick
-	core->joystick.s1ax = control.s1ax;
+	/*core->joystick.s1ax = control.s1ax;
 	core->joystick.s1ay = control.s1ay;
 	core->joystick.s2ax = control.s2ax;
 	core->joystick.s2ay = control.s2ay;
 
 	core->joystick.deadZone1 = control.s1dead;
-	core->joystick.deadZone2 = control.s2dead;
+	core->joystick.deadZone2 = control.s2dead;*/
 
 	core->debugLogActive = system.debugLogOn;
 

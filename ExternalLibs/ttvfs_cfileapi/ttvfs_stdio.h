@@ -64,9 +64,7 @@ private:
 #elif VFS_ENABLE_C_API-0 == 0
 
 #include <stdio.h>
-#include <iostream>
-#include <fstream>
-#include <sstream>
+#include <iosfwd>
 typedef std::ifstream InStream;
 typedef FILE VFILE;
 

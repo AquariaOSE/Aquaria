@@ -21,7 +21,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef PRECACHER_H
 #define PRECACHER_H
 
-#include "Quad.h"
+#include <vector>
+#include <string>
+
+class RenderObject;
 
 class Precacher
 {

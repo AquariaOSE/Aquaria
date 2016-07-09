@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ScriptedEntity.h"
 #include "Shot.h"
 #include "PathFinding.h"
-
+#include "Hair.h"
 
 
 void Entity::stopPull()
@@ -1411,17 +1411,25 @@ void Entity::moveOutOfWall()
 	}
 }
 
-void Entity::clearDamageTargets()
-{
-	disabledDamageTypes.clear();
-}
-
 void Entity::setDamageTarget(DamageType dt, bool v)
 {
 	if (v)
-		disabledDamageTypes.erase(dt);
+	{
+		for(size_t i = 0; i < disabledDamageTypes.size(); ++i)
+		{
+			if(disabledDamageTypes[i] == dt)
+			{
+				disabledDamageTypes[i] = disabledDamageTypes.back();
+				disabledDamageTypes.pop_back();
+				break;
+			}
+		}
+	}
 	else
-		disabledDamageTypes.insert(dt);
+	{
+		if(isDamageTarget(dt))
+			disabledDamageTypes.push_back(dt);
+	}
 }
 
 void Entity::setEatType(EatType et, const std::string &file)
@@ -1437,22 +1445,25 @@ void Entity::setEatType(EatType et, const std::string &file)
 
 void Entity::setAllDamageTargets(bool v)
 {
-	if (v)
-		clearDamageTargets(); // clear all disabled -> all allowed now
-	else
+	disabledDamageTypes.clear();
+	if(!v)
 	{
 		for (int i = DT_ENEMY; i < DT_ENEMY_REALMAX; i++)
-			disabledDamageTypes.insert(DamageType(i));
+			disabledDamageTypes.push_back(DamageType(i));
 		for (int i = DT_AVATAR; i < DT_AVATAR_REALMAX; i++)
-			disabledDamageTypes.insert(DamageType(i));
+			disabledDamageTypes.push_back(DamageType(i));
 		for (int i = DT_AVATAR_MAX; i < DT_REALMAX; i++)
-			disabledDamageTypes.insert(DamageType(i));
+			disabledDamageTypes.push_back(DamageType(i));
 	}
 }
 
 bool Entity::isDamageTarget(DamageType dt)
 {
-	return disabledDamageTypes.find(dt) == disabledDamageTypes.end();
+	const size_t sz = disabledDamageTypes.size();
+	for(size_t i = 0; i < sz; ++i)
+		if(disabledDamageTypes[i] == dt)
+			return false;
+	return true;
 }
 
 float Entity::getHealthPerc()
@@ -2789,4 +2800,9 @@ MinimapIcon *Entity::ensureMinimapIcon()
 	if(!minimapIcon)
 		minimapIcon = new MinimapIcon;
 	return minimapIcon;
+}
+
+bool Entity::isNormalLayer() const
+{
+	return layer == LR_ENTITIES || layer == LR_ENTITIES0 || layer == LR_ENTITIES2 || layer == LR_ENTITIES_MINUS2 || layer == LR_ENTITIES_MINUS3;
 }

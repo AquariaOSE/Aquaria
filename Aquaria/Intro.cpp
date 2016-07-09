@@ -18,9 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#include "States.h"
+
+#include "Intro.h"
 #include "../BBGE/AfterEffect.h"
 #include "Gradient.h"
+#include "DSQ.h"
+#include "SkeletalSprite.h"
 
 
 //class Mappy;
@@ -111,7 +114,7 @@ void Intro::endIntro()
 	dsq->overlay2->color = Vector(1,1,1);
 	dsq->overlay2->alpha.interpolateTo(1, 1);
 
-	dsq->main(1);
+	dsq->run(1);
 
 	dsq->overlay->color = Vector(0,0,0);
 	dsq->overlay->alpha = 0;
@@ -131,7 +134,7 @@ void Intro::endIntro()
 
 bool Intro::waitQuit(float t)
 {
-	dsq->main(t);
+	dsq->run(t);
 	return false;
 
 	/*
@@ -314,7 +317,7 @@ void Intro::update(float dt)
 		play2.vol = 0.9;
 		void *windLoop = dsq->sound->playSfx(play2);
 
-		dsq->main(3);
+		dsq->run(3);
 
 		dsq->setClearColor(Vector(0.2,0.2,0.21));
 

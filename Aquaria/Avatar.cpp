@@ -25,6 +25,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Game.h"
 #include "Shot.h"
 #include "GridRender.h"
+#include "Web.h"
+#include "Hair.h"
 
 
 const float MULT_DMG_CRABCOSTUME = 0.75;
@@ -1837,7 +1839,7 @@ void Avatar::setSongIconPositions()
 
 const int chkDist = 2500*2500;
 
-Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override, std::vector<Target> *ignore, /*FIXME:unused*/ EntityList *entityList)
+Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override, std::vector<Target> *ignore)
 {
 	BBGE_PROF(Avatar_getNearestTarget);
 	Target t;
@@ -2875,24 +2877,12 @@ int Avatar::getNumShots()
 
 void Avatar::doShock(const std::string &shotName)
 {
-
-
-
 	int c = 0;
-	//int maxHit = 2 + dsq->continuity.getSpellLevel(SPELL_SHOCK)*2;
-	//int maxHit = 4;
 	std::vector <Entity*> entitiesToHit;
 	std::vector <Target> localTargets;
 	bool clearTargets = true;
 
 	int thits = getNumShots();
-
-	/*
-	if (skeletalSprite.getAnimationLayer(ANIMLAYER_FLOURISH)->getCurrentAnimation())
-	{
-		thits = maxTendrilHits;
-	}
-	*/
 
 	if (!targets.empty() && targets[0].e != 0)
 	{
@@ -2904,24 +2894,11 @@ void Avatar::doShock(const std::string &shotName)
 	}
 	else
 	{
-		//std::vector <Target> localTargets;
-
 		localTargets.clear();
-
-		int range = 800;
-		EntityList entityList;
-		FOR_ENTITIES(i)
-		{
-			Entity *e = *i;
-			if (e != this && e->isPresent() && e->isDamageTarget(DT_AVATAR_SHOCK) && (e->position - position).isLength2DIn(range))
-			{
-				entityList.push_back(e);
-			}
-		}
 
 		while (c < thits)
 		{
-			Target t = getNearestTarget(position, position, this, DT_AVATAR_SHOCK, true, &localTargets, &entityList);
+			Target t = getNearestTarget(position, position, this, DT_AVATAR_SHOCK, true, &localTargets);
 			if (t.e)
 			{
 				localTargets.push_back(t);
@@ -2956,7 +2933,6 @@ void Avatar::doShock(const std::string &shotName)
 	int sz = entitiesToHit.size();
 
 
-
 	if (sz == 0)
 	{
 		for (int i = 0; i < thits; i++)
@@ -2984,33 +2960,9 @@ void Avatar::doShock(const std::string &shotName)
 							s->targetPt = targets[j].targetPt;
 					}
 				}
-				/*
-				else if (!localTargets.empty())
-				{
-					for (int j = 0; j < localTargets.size(); j++)
-					{
-						if (localTargets[j].e == e)
-							s->targetPt = localTargets[j].targetPt;
-					}
-				}
-				*/
 				Vector d = e->position - position;
-				/*
-				float a = float(float(i)/float(sz))*PI*2;
-				Vector aim(sinf(a), cosf(a));
-
-				swizzleTendrilAimVector(aim);
-				*/
 				s->setAimVector(getTendrilAimVector(i, thits));
 				checkUpgradeForShot(s);
-				/*
-				float ang = 0;
-				MathFunctions::calculateAngleBetweenVectorsInRadians(Vector(0,-1), d, ang);
-				float a = i-(sz/2);
-				Vector adjust = a*spread + ang;
-				d.normalize2D();
-				s->setAimVector((d + adjust)/2);
-				*/
 			}
 		}
 	}
@@ -4266,17 +4218,20 @@ Vector Avatar::getFakeCursorPosition()
 	}
 	if (dsq->inputMode == INPUT_JOYSTICK)
 	{
-		const float axisInput = core->joystick.position.getLength2D();
-		if (axisInput < JOYSTICK_LOW_THRESHOLD)
-		{
-			return Vector(0,0,0);
-		}
-		else
-		{
+		float axisInput = 0;
+		Joystick *j = 0;
+		for(size_t i = 0; i < core->joysticks.size(); ++i)
+			if( ((j = core->joysticks[i])) )
+				if(j->isEnabled())
+				{
+					axisInput = j->position.getLength2D();
+					if(axisInput >= JOYSTICK_LOW_THRESHOLD)
+						break;
+				}
+
 			const float axisMult = (maxMouse - minMouse) / (JOYSTICK_HIGH_THRESHOLD - JOYSTICK_LOW_THRESHOLD);
 			const float distance = minMouse + ((axisInput - JOYSTICK_LOW_THRESHOLD) * axisMult);
-			return (core->joystick.position * (distance / axisInput));
-		}
+			return (j->position * (distance / axisInput));
 	}
 	return Vector(0,0,0);
 }
@@ -5586,12 +5541,12 @@ void Avatar::onUpdate(float dt)
 
 				//dsq->sound->setMusicFader(0.5, 0.5);
 				core->sound->playSfx("NaijaGasp");
-				core->main(0.75);
+				core->run(0.75);
 
 
 
 				dsq->voiceOnce("Naija_VeilCrossing");
-				core->main(10*0.1f);
+				core->run(10*0.1f);
 
 				dsq->gameSpeed.interpolateTo(1, 0.2);
 

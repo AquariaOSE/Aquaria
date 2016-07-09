@@ -23,8 +23,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "CollideEntity.h"
 #include "Segmented.h"
-#include "../BBGE/Particles.h"
-#include "../BBGE/ScriptObject.h"
+
+class ParticleEffect;
 
 struct ShotData
 {
@@ -101,10 +101,6 @@ public:
 	void rotateToVec(Vector addVec, float time, int offsetAngle);
 	void doHitEffects();
 
-	typedef std::map<std::string, ShotData> ShotBank;
-	static ShotBank shotBank;
-
-
 	static void loadShotBank(const std::string &bank1, const std::string &bank2);
 	static void clearShotBank();
 	static ShotData* getShotData(const std::string &ident);
@@ -148,61 +144,6 @@ protected:
 
 private:
 	unsigned int shotIdx;
-};
-
-class Beam : public Quad
-{
-public:
-	Beam(Vector pos, float angle);
-	typedef std::list<Beam*> Beams;
-	static Beams beams;
-
-	static void killAllBeams();
-
-	float angle;
-	void trace();
-	Vector endPos;
-	void render();
-	DamageData damageData;
-
-	void setDamage(float dmg);
-	void setFirer(Entity *e);
-	void setBeamWidth(float w);
-protected:
-	float beamWidth;
-	void onRender();
-	void onEndOfLife();
-	void onUpdate(float dt);
-};
-
-class GasCloud : public Entity
-{
-public:
-	GasCloud(Entity *source, const Vector &position, const std::string &particles, const Vector &color, int radius, float life, float damage=0, bool isMoney=false, float poisonTime=0);
-protected:
-	ParticleEffect *emitter;
-	std::string gfx, particles;
-	int radius;
-	float damage;
-	float pTimer;
-	void onUpdate(float dt);
-	float poisonTime;
-	Entity *sourceEntity;
-};
-
-class Spore : public CollideEntity
-{
-public:
-	Spore(const Vector &position);
-	typedef std::list<Spore*> Spores;
-	static Spores spores;
-	static void killAllSpores();
-	static bool isPositionClear(const Vector &position);
-	void destroy();
-protected:
-	void onEnterState(int state);
-	void onUpdate(float dt);
-	void onEndOfLife();
 };
 
 #endif

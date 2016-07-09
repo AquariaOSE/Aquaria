@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Precacher.h"
 #include "Quad.h"
 #include "Core.h"
+#include "ttvfs_stdio.h"
 
 Precacher::Precacher()
 {

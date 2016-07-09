@@ -22,9 +22,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Texture.h"
 #include "AfterEffect.h"
 #include "Particles.h"
+#include "GLLoad.h"
+#include "RenderBase.h"
 
 #include <time.h>
 #include <iostream>
+#include <fstream>
 
 #ifdef BBGE_BUILD_UNIX
 #include <limits.h>
@@ -40,7 +43,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 #if BBGE_BUILD_WINDOWS
-#include <shlobj.h>
 #include <direct.h>
 #endif
 
@@ -60,6 +62,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 Core *core = 0;
+
+static 	std::ofstream _logOut;
 
 #ifdef BBGE_BUILD_WINDOWS
 	HICON icon_windows = 0;
@@ -489,91 +493,6 @@ std::string Core::getUserDataFolder()
 	return userDataFolder;
 }
 
-#if BBGE_BUILD_UNIX
-#include <sys/types.h>
-#include <pwd.h>
-#include <fcntl.h>
-#include <unistd.h>
-#include <dirent.h>
-
-// based on code I wrote for PhysicsFS: http://icculus.org/physfs/
-//  the zlib license on physfs allows this cut-and-pasting.
-static int locateOneElement(char *buf)
-{
-	char *ptr;
-	DIR *dirp;
-
-	if (access(buf, F_OK) == 0)
-		return(1);  // quick rejection: exists in current case.
-
-	ptr = strrchr(buf, '/');  // find entry at end of path.
-	if (ptr == NULL)
-	{
-		dirp = opendir(".");
-		ptr = buf;
-	}
-	else
-	{
-		*ptr = '\0';
-		dirp = opendir(buf);
-		*ptr = '/';
-		ptr++;  // point past dirsep to entry itself.
-	}
-
-	struct dirent *dent;
-	while ((dent = readdir(dirp)) != NULL)
-	{
-		if (strcasecmp(dent->d_name, ptr) == 0)
-		{
-			strcpy(ptr, dent->d_name); // found a match. Overwrite with this case.
-			closedir(dirp);
-			return(1);
-		}
-	}
-
-	// no match at all...
-	closedir(dirp);
-	return(0);
-}
-#endif
-
-
-std::string Core::adjustFilenameCase(const char *_buf)
-{
-#ifdef BBGE_BUILD_UNIX  // any case is fine if not Linux.
-	int rc = 1;
-	char *buf = (char *) alloca(strlen(_buf) + 1);
-	strcpy(buf, _buf);
-
-	char *ptr = buf;
-	while ((ptr = strchr(ptr + 1, '/')) != 0)
-	{
-		*ptr = '\0';  // block this path section off
-		rc = locateOneElement(buf);
-		*ptr = '/'; // restore path separator
-		if (!rc)
-			break;  // missing element in path.
-	}
-
-	// check final element...
-	if (rc)
-		rc = locateOneElement(buf);
-
-	#if 0
-	if (strcmp(_buf, buf) != 0)
-	{
-		fprintf(stderr, "Corrected filename case: '%s' => '%s (%s)'\n",
-		        _buf, buf, rc ? "found" : "not found");
-	}
-	#endif
-
-	return std::string(buf);
-#else
-	return std::string(_buf);
-#endif
-}
-
-
 Core::~Core()
 {
 	if (particleManager)
@@ -810,52 +729,6 @@ void Core::setSDLGLAttributes()
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 }
-
-
-#ifdef GLAPIENTRY
-#undef GLAPIENTRY
-#endif
-
-#ifdef BBGE_BUILD_WINDOWS
-#define GLAPIENTRY APIENTRY
-#else
-#define GLAPIENTRY
-#endif
-
-unsigned int Core::dbg_numRenderCalls = 0;
-
-#ifdef BBGE_BUILD_OPENGL_DYNAMIC
-#define GL_FUNC(ret,fn,params,call,rt) \
-    extern "C" { \
-        static ret (GLAPIENTRY *p##fn) params = NULL; \
-        ret GLAPIENTRY fn params { ++Core::dbg_numRenderCalls; rt p##fn call; } \
-    }
-#include "OpenGLStubs.h"
-#undef GL_FUNC
-
-static bool lookup_glsym(const char *funcname, void **func)
-{
-	*func = SDL_GL_GetProcAddress(funcname);
-	if (*func == NULL)
-	{
-		std::ostringstream os;
-		os << "Failed to find OpenGL symbol \"" << funcname << "\"\n";
-		errorLog(os.str());
-		return false;
-	}
-	return true;
-}
-
-static bool lookup_all_glsyms(void)
-{
-	bool retval = true;
-	#define GL_FUNC(ret,fn,params,call,rt) \
-		if (!lookup_glsym(#fn, (void **) &p##fn)) retval = false;
-	#include "OpenGLStubs.h"
-	#undef GL_FUNC
-	return retval;
-}
-#endif
 
 
 bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync, int bpp, bool recreate)
@@ -1104,14 +977,8 @@ void Core::shutdownGraphicsLibrary(bool killVideo)
 		FrameBuffer::resetOpenGL();
 
 		gScreen = 0;
-
 #if BBGE_BUILD_OPENGL_DYNAMIC
-		// reset all the entry points to NULL, so we know exactly what happened
-		//  if we call a GL function after shutdown.
-		#define GL_FUNC(ret,fn,params,call,rt) \
-			p##fn = NULL;
-		#include "OpenGLStubs.h"
-		#undef GL_FUNC
+		unload_all_glsyms();
 #endif
 	}
 
@@ -1435,7 +1302,7 @@ void Core::onBackgroundUpdate()
 	SDL_Delay(200);
 }
 
-void Core::main(float runTime)
+void Core::run(float runTime)
 {
 	// cannot nest loops when the game is over
 	if (loopDone) return;
@@ -1596,7 +1463,7 @@ void Core::main(float runTime)
 
 		updateCullData();
 
-		dbg_numRenderCalls = 0;
+		g_dbg_numRenderCalls = 0;
 
 		if (settings.renderOn)
 		{
@@ -3077,8 +2944,11 @@ int Core::zgaSave(	const char	*filename,
 }
 
 
-
+#ifdef BBGE_BUILD_VFS
 #include "ttvfs_zip/VFSZipArchiveLoader.h"
+#include "ttvfs.h"
+#include "ttvfs_stdio.h"
+#endif
 
 void Core::setupFileAccess()
 {
@@ -3118,13 +2988,15 @@ void Core::initLocalization()
 	}
 
 	std::string low, up;
-	std::map<unsigned char, unsigned char> trans;
+	CharTranslationTable trans;
+	memset(&trans[0], -1, sizeof(trans));
 	while(in)
 	{
 		in >> low >> up;
+		
 		trans[low[0]] = up[0];
 	}
-	initCharTranslationTables(trans);
+	initCharTranslationTables(&trans);
 }
 
 void Core::onJoystickAdded(int deviceID)

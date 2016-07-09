@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "QuadTrail.h"
 #include <assert.h>
+#include "RenderBase.h"
 
 QuadTrail::QuadTrail(int maxPoints, float pointDist)
 : RenderObject(), maxPoints(maxPoints), pointDist(pointDist), numPoints(0)

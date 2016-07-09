@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/DebugFont.h"
 #include "../ExternalLibs/glpng.h"
 #include "../BBGE/AfterEffect.h"
-#include "../BBGE/ProfRender.h"
 
 #include "DSQ.h"
 #include "States.h"
@@ -32,15 +31,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 #include "Shot.h"
 #include "GridRender.h"
-#include "AutoMap.h"
+#include "AnimationEditor.h"
+#include "Intro.h"
 
 #include "RoundedRect.h"
 #include "TTFFont.h"
 #include "ModSelector.h"
 #include "Network.h"
+#include "ttvfs_stdio.h"
+#include "GLLoad.h"
+#include "RenderBase.h"
 
-
-	#include <sys/stat.h>
+#include <sys/stat.h>
 
 #ifdef BBGE_BUILD_VFS
 #include "ttvfs.h"
@@ -192,7 +194,6 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	inModSelector = false;
 	subtext = 0;
 	subbox = 0;
-	menuSelectDelay = 0;
 	modSelectorScr = 0;
 	blackout = 0;
 	inputMode = INPUT_MOUSE;
@@ -271,8 +272,9 @@ void DSQ::forceInputGrabOff()
 
 void DSQ::rumble(float leftMotor, float rightMotor, float time)
 {
-	if (this->inputMode == INPUT_JOYSTICK)
-		core->joystick.rumble(leftMotor, rightMotor, time);
+	//if (this->inputMode == INPUT_JOYSTICK)
+	//	core->joystick.rumble(leftMotor, rightMotor, time);
+	assert(false); // FIXME
 }
 
 void DSQ::newGame()
@@ -572,7 +574,7 @@ void DSQ::debugMenu()
 				else if (c == '6')
 				{
 					while (core->getKeyState(KEY_RETURN))
-						core->main(0.1);
+						core->run(0.1);
 					dsq->setStory();
 				}
 				else if (c == '8')
@@ -848,11 +850,11 @@ This build is not yet final, and as such there are a couple things lacking. They
 	std::string fn;
 	fn = getPreferencesFolder() + "/" + userSettingsFilename;
 	if (!exists(fn))
-		Linux_CopyTree(core->adjustFilenameCase(userSettingsFilename).c_str(), core->adjustFilenameCase(fn).c_str());
+		Linux_CopyTree(adjustFilenameCase(userSettingsFilename).c_str(), adjustFilenameCase(fn).c_str());
 
 	fn = getUserDataFolder() + "/_mods";
 	if (!exists(fn))
-		Linux_CopyTree(core->adjustFilenameCase("_mods").c_str(), core->adjustFilenameCase(fn).c_str());
+		Linux_CopyTree(adjustFilenameCase("_mods").c_str(), adjustFilenameCase(fn).c_str());
 #endif
 
 	createDir(getUserDataFolder());
@@ -878,12 +880,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	this->setBaseTextureDirectory("gfx/");
 
-
-
-	bool mipmapsEnabled=true;
 	bool fullscreen = true;
-	int joystickMode = 0;
-	int dsq_filter = 0;
 	voiceOversEnabled = true;
 
 
@@ -903,21 +900,12 @@ This build is not yet final, and as such there are a couple things lacking. They
 		exit_error(os.str());
 	}
 
-	setFilter(dsq_filter);
-
 	useFrameBuffer = user.video.fbuffer;
 
 	if (isDeveloperKeys())
 	{
 		maxPages = 600/saveSlotPageSize;
 	}
-
-	if (mipmapsEnabled)
-		debugLog("Mipmaps Enabled");
-	else
-		debugLog("Mipmaps Disabled");
-
-	Texture::useMipMaps = mipmapsEnabled;
 
 	if (isDeveloperKeys())
 		debugLog("DeveloperKeys Enabled");
@@ -974,9 +962,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 		initInputLibrary();
 	debugLog("OK");
 
-
-	joystickMode = user.control.joystickEnabled;
-	if (joystickMode)
+	if (user.control.joystickEnabled)
 	{
 		debugLog("Init Joystick Library...");
 			initJoystickLibrary();
@@ -1320,15 +1306,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	debugLog("9");
 
-
-	profRender = 0;
-#ifdef Prof_ENABLED
-	profRender = new ProfRender();
-	profRender->alpha = 0;
-	addRenderObject(profRender, LR_DEBUG_TEXT);
-#endif
-
-
 	fpsText = new DebugFont;
 	{
 		fpsText->color = Vector(1,1,1);
@@ -1409,7 +1386,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	{
 		float trans = 0.5;
 		overlay->alpha.interpolateTo(1, trans);
-		core->main(trans);
+		core->run(trans);
 	}
 
 	removeRenderObject(loading);
@@ -1622,19 +1599,6 @@ int DSQ::getEntityLayerToLayer(int lcode)
 	return 0;
 }
 
-void DSQ::setFilter(int ds)
-{
-	dsq_filter = ds;
-	if (dsq_filter == 0)
-	{
-		Texture::filter = GL_LINEAR;
-	}
-	else if (dsq_filter == 2)
-	{
-		Texture::filter = GL_NEAREST;
-	}
-}
-
 void DSQ::setStory()
 {
 	std::string flagString = getUserInputString(dsq->continuity.stringBank.get(2014), "0");
@@ -1642,7 +1606,7 @@ void DSQ::setStory()
 	std::istringstream is(flagString);
 	is >> flag;
 
-	core->main(0.2);
+	core->run(0.2);
 	std::ostringstream os;
 	os << dsq->continuity.getFlag(flag);
 	flagString = getUserInputString(dsq->continuity.stringBank.get(2015), os.str());
@@ -1825,8 +1789,6 @@ void DSQ::toggleConsole()
 			console->alpha.interpolateTo(1, 0.1);
 			cmDebug->alpha.interpolateTo(1, 0.1);
 			fpsText->alpha.interpolateTo(1, 0.1);
-			if (profRender)
-				profRender->alpha.interpolateTo(1, 0.1);
 			RenderObject::renderPaths = true;
 		}
 		else if (console->alpha == 1)
@@ -1834,8 +1796,6 @@ void DSQ::toggleConsole()
 			console->alpha.interpolateTo(0, 0.1);
 			cmDebug->alpha.interpolateTo(0, 0.1);
 			fpsText->alpha.interpolateTo(0, 0.1);
-			if (profRender)
-				profRender->alpha.interpolateTo(0, 0.1);
 			RenderObject::renderPaths = false;
 		}
 	}
@@ -1972,11 +1932,11 @@ void DSQ::applyPatches()
 
 	loadMods();
 
-	for (std::set<std::string>::iterator it = activePatches.begin(); it != activePatches.end(); ++it)
+	for (std::vector<std::string>::iterator it = activePatches.begin(); it != activePatches.end(); ++it)
 		for(int i = 0; i < modEntries.size(); ++i)
 			if(modEntries[i].type == MODTYPE_PATCH)
 				if(!nocasecmp(modEntries[i].path.c_str(), it->c_str()))
-					applyPatch(modEntries[i].path);
+					_applyPatch(modEntries[i].path);
 #endif
 #endif
 }
@@ -1993,14 +1953,14 @@ static void refr_pushback(ttvfs::DirBase *vd, void *user)
 static void refr_insert(VFILE *vf, void *user)
 {
 	// texture names are like: "naija/naija2-frontleg3" - no .png extension, and no gfx/ path
-	std::set<std::string>*files = (std::set<std::string>*)user;
+	std::vector<std::string>*files = (std::vector<std::string>*)user;
 	std::string t = vf->fullname();
 	size_t dotpos = t.rfind('.');
 	size_t pathstart = t.find("gfx/");
 	if(dotpos == std::string::npos || pathstart == std::string::npos || dotpos < pathstart)
 		return; // whoops
 
-	files->insert(t.substr(pathstart + 4, dotpos - (pathstart + 4)));
+	files->push_back(t.substr(pathstart + 4, dotpos - (pathstart + 4)));
 }
 
 
@@ -2010,7 +1970,7 @@ static void refr_insert(VFILE *vf, void *user)
 void DSQ::refreshResourcesForPatch(const std::string& name)
 {
 	std::list<std::string> left;
-	std::set<std::string> files;
+	std::vector<std::string> files;
 	left.push_back(mod.getBaseModPath() + name + "/gfx");
 	ttvfs::DirView view;
 	do
@@ -2025,6 +1985,10 @@ void DSQ::refreshResourcesForPatch(const std::string& name)
 	}
 	while(left.size());
 
+	std::sort(files.begin(), files.end());
+	std::vector<std::string>::iterator newend = unique(files.begin(), files.end());
+	files.erase(newend, files.end());
+
 	std::ostringstream os;
 	os << "refreshResourcesForPatch - " << files.size() << " to refresh";
 	debugLog(os.str());
@@ -2035,8 +1999,14 @@ void DSQ::refreshResourcesForPatch(const std::string& name)
 		for(int i = 0; i < dsq->resources.size(); ++i)
 		{
 			Texture *r = dsq->resources[i];
-			if(files.find(r->name) != files.end())
-				r->reload();
+			bool found = false;
+			for(size_t i = 0; i < files.size(); ++i)
+				if(files[i] == r->name)
+				{
+					++reloaded;
+					r->reload();
+					break;
+				}
 		}
 	}
 	os.str("");
@@ -2047,7 +2017,13 @@ void DSQ::refreshResourcesForPatch(const std::string& name)
 void DSQ::refreshResourcesForPatch(const std::string& name) {}
 #endif
 
-void DSQ::applyPatch(const std::string& name)
+void DSQ::activatePatch(const std::string& name)
+{
+	_applyPatch(name);
+	activePatches.push_back(name);
+}
+
+void DSQ::_applyPatch(const std::string& name)
 {
 #ifdef BBGE_BUILD_VFS
 #ifdef AQUARIA_DEMO
@@ -2058,13 +2034,11 @@ void DSQ::applyPatch(const std::string& name)
 	src += name;
 	debugLog("Apply patch: " + src);
 	vfs.Mount(src.c_str(), "");
-
-	activePatches.insert(name);
 	refreshResourcesForPatch(name);
 #endif
 }
 
-void DSQ::unapplyPatch(const std::string& name)
+void DSQ::disablePatch(const std::string& name)
 {
 #ifdef BBGE_BUILD_VFS
 	std::string src = mod.getBaseModPath();
@@ -2072,9 +2046,20 @@ void DSQ::unapplyPatch(const std::string& name)
 	debugLog("Unapply patch: " + src);
 	vfs.Unmount(src.c_str(), "");
 
-	activePatches.erase(name);
+	// preserve order
+	std::vector<std::string>::iterator it = std::remove(activePatches.begin(), activePatches.end(), name);
+	activePatches.erase(it, activePatches.end());
+
 	refreshResourcesForPatch(name);
 #endif
+}
+
+bool DSQ::isPatchActive(const std::string& name)
+{
+	for(size_t i = 0; i < activePatches.size(); ++i)
+		if(activePatches[i] == name)
+			return true;
+	return false;
 }
 
 void DSQ::playMenuSelectSfx()
@@ -2177,9 +2162,6 @@ void DSQ::shutdown()
 	removeRenderObject(versionLabel);
 	versionLabel = 0;
 
-	if (profRender)
-		removeRenderObject(profRender);
-
 	if (screenTransition)
 	{
 		screenTransition->destroy();
@@ -2191,7 +2173,7 @@ void DSQ::shutdown()
 
 	screenTransition = 0;
 
-	core->main(0.1);
+	core->run(0.1);
 	overlay = 0;
 	overlay2 = 0;
 	overlay3 = 0;
@@ -2395,7 +2377,7 @@ void DSQ::doSavePoint(const Vector &position)
 
 	dsq->game->avatar->skeletalSprite.animate("save", 0, 3);
 	dsq->game->clearControlHint();
-	dsq->main(2);
+	dsq->run(2);
 	dsq->game->avatar->enableInput();
 	dsq->game->avatar->revive();
 	dsq->game->togglePause(1);
@@ -2512,7 +2494,7 @@ void DSQ::doModSelect()
 
 	inModSelector = true;
 
-	main(-1);
+	run(-1);
 
 	clearModSelector();
 
@@ -2767,7 +2749,7 @@ void DSQ::title(bool fade)
 		dsq->sound->fadeMusic(SFT_OUT, 1);
 	}
 
-	main(1);
+	run(1);
 
 	resetTimer();
 
@@ -2996,7 +2978,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 
 
 	resetTimer();
-	core->main(-1);
+	core->run(-1);
 
 
 
@@ -3126,7 +3108,7 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 
 	AquariaGuiElement::currentGuiInputLevel = GUILEVEL_CONFIRM;
 
-	dsq->main(t);
+	dsq->run(t);
 
 	float t2 = 0.05;
 
@@ -3197,11 +3179,11 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 	txt->alpha.interpolateTo(1, t2);
 	addRenderObject(txt, LR_CONFIRM);
 
-	dsq->main(t2);
+	dsq->run(t2);
 
 	while (!confirmDone)
 	{
-		dsq->main(FRAME_TIME);
+		dsq->run(FRAME_TIME);
 		if (countdown > 0) {
 			countdown -= FRAME_TIME;
 			if (countdown < 0)
@@ -3214,11 +3196,11 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 	txt->alpha.interpolateTo(0, t2);
 	if (yes)	yes->alpha.interpolateTo(0, t2);
 	if (no)		no->alpha.interpolateTo(0, t2);
-	dsq->main(t2);
+	dsq->run(t2);
 
 	bgLabel->alpha.interpolateTo(0, t);
 	bgLabel->scale.interpolateTo(Vector(0.5, 0.5), t);
-	dsq->main(t);
+	dsq->run(t);
 
 	bgLabel->safeKill();
 	txt->safeKill();
@@ -3274,7 +3256,7 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 
 
 	bg->show();
-	main(trans);
+	run(trans);
 
 
 	std::string text = t;
@@ -3383,7 +3365,7 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 			break;
 		}
 		inputText->setText(text);
-		core->main(dt);
+		core->run(dt);
 	}
 
 	if (blink && !text.empty() && (text[text.size()-1] == '|'))
@@ -3394,7 +3376,7 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 
 	bg->hide();
 
-	main(0.2);
+	run(0.2);
 
 	inputText->alpha = 0;
 	label->alpha = 0;
@@ -3497,65 +3479,6 @@ Entity *DSQ::getNextEntity()
 	if (*iter == 0)
 		return 0;
 	return *(iter++);
-}
-
-Vector DSQ::getUserInputDirection(std::string labelText)
-{
-	BitmapText *label = new BitmapText(&dsq->font);
-	label->setFontSize(16);
-	label->position = Vector(400,200);
-	label->followCamera = 1;
-	label->setText(labelText);
-	addRenderObject(label, LR_HUD);
-
-	while (core->getKeyState(KEY_RETURN))
-	{
-		core->main(1.0f/30.0f);
-	}
-	Vector v;
-	while (1)
-	{
-		v.x = v.y = 0;
-		if (core->getKeyState(KEY_LEFT))		v.x = -1;
-		if (core->getKeyState(KEY_RIGHT))		v.x = 1;
-		if (core->getKeyState(KEY_UP))			v.y = -1;
-		if (core->getKeyState(KEY_DOWN))		v.y = 1;
-		if (core->getKeyState(KEY_RETURN))
-			break;
-		core->main(1.0f/30.0f);
-	}
-	label->alpha = 0;
-	label->safeKill();
-	return v;
-}
-
-std::string DSQ::getDialogueFilename(const std::string &f)
-{
-	return "dialogue/" + languagePack + "/" + f + ".txt";
-}
-
-void DSQ::jumpToSection(InStream &inFile, const std::string &section)
-{
-	if (section.empty()) return;
-	std::string file = dsq->getDialogueFilename(dialogueFile);
-	if (!exists(file))
-	{
-		debugLog("Could not find dialogue [" + file + "]");
-		return;
-	}
-	inFile.open(core->adjustFilenameCase(file).c_str());
-	std::string s;
-	while (std::getline(inFile, s))
-	{
-		if (!s.empty())
-		{
-			if (s.find("[")!=std::string::npos && s.find(section) != std::string::npos)
-			{
-				return;
-			}
-		}
-	}
-	debugLog("could not find section [" + section + "]");
 }
 
 bool DSQ::runScript(const std::string &name, const std::string &function, bool ignoremissing /* = false */)
@@ -3668,7 +3591,7 @@ void DSQ::vision(std::string folder, int num, bool ignoreMusic)
 	dsq->game->miniMapRender->toggle(0);
 
 	fade(1, t);
-	main(t);
+	run(t);
 
 	// load images
 	typedef std::list<Quad*> QuadList;
@@ -3697,12 +3620,12 @@ void DSQ::vision(std::string folder, int num, bool ignoreMusic)
 
 		(*i)->scale.interpolateTo(Vector(1.1,1.1), 0.4);
 		fade(0, t);
-		main(t);
+		run(t);
 
-		main(0.1);
+		run(0.1);
 
 		fade(1, t);
-		main(t);
+		run(t);
 
 		(*i)->alpha = 0;
 	}
@@ -3713,7 +3636,7 @@ void DSQ::vision(std::string folder, int num, bool ignoreMusic)
 
 	sound->playSfx("memory-flash");
 	fade(0, t);
-	main(t);
+	run(t);
 
 	for (QuadList::iterator i = images.begin(); i != images.end(); i++)
 	{
@@ -3779,7 +3702,7 @@ void DSQ::watch(float t, int canQuit)
 	}
 
 	if (t != 0.0f)
-		core->main(t);
+		core->run(t);
 	else
 		errorLog("Called Watch with time == 0");
 
@@ -3917,15 +3840,6 @@ void DSQ::onUpdate(float dt)
 		versionLabel->position = Vector(10 - core->getVirtualOffX(), 575);
 	}
 
-	if (menuSelectDelay > 0)
-	{
-		menuSelectDelay -= dt;
-		if (menuSelectDelay <= 0)
-		{
-			menuSelectDelay = 0;
-		}
-	}
-
 	if (noEffectTimer > 0)
 	{
 		noEffectTimer -=dt;
@@ -3969,17 +3883,20 @@ void DSQ::onUpdate(float dt)
 			{
 
 				const float thresh = 0.6;
-				if (core->joystick.anyButton() || !core->joystick.position.isLength2DIn(thresh) || !core->joystick.rightStick.isLength2DIn(thresh))
-				{
-					//debugLog("setting joystick input mode");
-					dsq->setInputMode(INPUT_JOYSTICK);
-				}
+				for(size_t i = 0; i < joysticks.size(); ++i)
+					if(Joystick *j = joysticks[i])
+						if(j && j->isEnabled())
+							if (j->anyButton() || !j->position.isLength2DIn(thresh) || !j->rightStick.isLength2DIn(thresh))
+							{
+								//debugLog("setting joystick input mode");
+								dsq->setInputMode(INPUT_JOYSTICK);
+							}
 			}
 			else if (dsq->inputMode != INPUT_MOUSE)
 			{
 
 
-				if ((!core->mouse.change.isLength2DIn(5) || (core->getMouseButtonState(0) || core->getMouseButtonState(1))) && !core->joystick.anyButton())
+				if ((!core->mouse.change.isLength2DIn(5) || (core->getMouseButtonState(0) || core->getMouseButtonState(1))) /*&& !core->joystick.anyButton()*/)
 				{
 					//debugLog("setting mouse input mode");
 					dsq->setInputMode(INPUT_MOUSE);
@@ -4071,7 +3988,7 @@ void DSQ::onUpdate(float dt)
 		os << std::endl;
 		os << "globalScale: " << core->globalScale.x << std::endl;
 		os << "mousePos:(" << core->mouse.position.x << ", " << core->mouse.position.y << ") mouseChange:(" << core->mouse.change.x << ", " << core->mouse.change.y << ")\n";
-		os << "joyStick:(" << core->joystick.position.x << ", " << core->joystick.position.y << ")\n";
+		//os << "joyStick:(" << core->joystick.position.x << ", " << core->joystick.position.y << ")\n";
 		os << "altState: " << core->getKeyState(KEY_LALT) << " | " << core->getKeyState(KEY_RALT) << std::endl;
 		os << "PMFree: " << particleManager->getFree() << " Active: " << particleManager->getNumActive() << std::endl;
 		os << "cameraPos: (" << dsq->cameraPos.x << ", " << dsq->cameraPos.y << ")" << std::endl;
@@ -4092,7 +4009,7 @@ void DSQ::onUpdate(float dt)
 	if (isDeveloperKeys() && fpsText && cmDebug && cmDebug->alpha == 1)
 	{
 		std::ostringstream os;
-		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount << " | RC: " << Core::dbg_numRenderCalls << " | RES: " << core->resources.size();
+		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount << " | RC: " << g_dbg_numRenderCalls << " | RES: " << core->resources.size();
 		os << " | p: " << core->processedRenderObjectCount << " | t: " << core->totalRenderObjectCount;
 		os << " | s: " << dsq->continuity.seconds;
 		os << " | sndQ: " << core->dbg_numThreadDecoders;
@@ -4195,7 +4112,7 @@ bool DSQ::isScriptRunning()
 
 void DSQ::delay(float dt)
 {
-	core->main(dt);
+	core->run(dt);
 }
 
 void DSQ::fade(float alpha, float time)

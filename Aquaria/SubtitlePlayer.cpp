@@ -18,11 +18,12 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#include "DSQ.h"
 
+#include "SubtitlePlayer.h"
 #include "../BBGE/DebugFont.h"
 #include "../BBGE/BitmapFont.h"
-
+#include "DSQ.h"
+#include "ttvfs_stdio.h"
 
 
 SubtitlePlayer::SubtitlePlayer()
@@ -47,7 +48,7 @@ void SubtitlePlayer::go(const std::string &subs)
 	{
 		f = dsq->mod.getPath() + "audio/" + subs + ".txt";
 		f = localisePath(f, dsq->mod.getPath());
-		f = core->adjustFilenameCase(f);
+		f = adjustFilenameCase(f);
 		if (exists(f))
 			checkAfter = false;
 	}
@@ -56,7 +57,7 @@ void SubtitlePlayer::go(const std::string &subs)
 	{
 		f = "scripts/vox/" + subs + ".txt";
 		f = localisePath(f);
-		f = core->adjustFilenameCase(f);
+		f = adjustFilenameCase(f);
 		if (!exists(f))
 		{
 			debugLog("Could not find subs file [" + subs + "]");

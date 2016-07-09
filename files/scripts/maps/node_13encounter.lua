@@ -85,10 +85,6 @@ function update(me, dt)
 			watch(2)
 			watch(4)
 			
-			if isFlag(FLAG_13PROGRESSION, 0) then
-			end
-			incrFlag(FLAG_13PROGRESSION, 1)
-			
 			playSfx("mia-appear")
 			spawnParticleEffect("MiaWarp", node_x(me), node_y(me))
 			watch(1)

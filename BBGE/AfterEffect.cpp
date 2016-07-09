@@ -19,6 +19,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "AfterEffect.h"
+#include "RenderBase.h"
 
 
 #include <assert.h>
@@ -94,8 +95,7 @@ void AfterEffectManager::deleteEffects()
 	}
 	effects.clear();
 	numEffects=0;
-	while (!openSpots.empty())
-		openSpots.pop();
+	openSpots.clear();
 }
 
 void AfterEffectManager::deleteShaders()
@@ -170,7 +170,7 @@ void AfterEffectManager::destroyEffect(int id)
 {
 	delete effects[id];
 	effects[id] = 0;
-	openSpots.push(id);
+	openSpots.push_back(id);
 }
 
 void AfterEffectManager::render()
@@ -420,11 +420,10 @@ void AfterEffectManager::reloadDevice()
 
 void AfterEffectManager::addEffect(Effect *e)
 {
-
 	if (!openSpots.empty())
 	{
-		int i = openSpots.front();
-		openSpots.pop();
+		int i = openSpots.back();
+		openSpots.pop_back();
 		effects[i] = e;
 	}
 	else
@@ -435,13 +434,8 @@ void AfterEffectManager::addEffect(Effect *e)
 
 	Vector base(0,0,0);
 
-
 	e->position.x /= screenWidth;
-
 	e->position.y /= screenHeight;
-
-
-
 }
 
 
@@ -450,22 +444,12 @@ void ShockEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 	dt *= timeMultiplier;
 	Effect::update(dt, drawGrid, xDivs, yDivs);
 
-
-
 	centerPoint = position;
 	centerPoint -= ((core->screenCenter-originalCenter)*core->globalScale.x)/core->width;
-
-
-	float xDist,yDist,tDist;
-
-
 	amplitude-=dt*rate;
 	currentDistance+=dt*frequency;
 
-
-
 	float	distFromCamp = 4;
-
 	float adjWaveLength = waveLength/distFromCamp;
 	float adjAmplitude = amplitude/distFromCamp;
 
@@ -476,21 +460,13 @@ void ShockEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 	{
 		for (int j = 1; j < (yDivs-1); j++)
 		{
+			float xDist = (centerPoint.x - drawGrid[i][j].x)/.75;
+			float yDist = centerPoint.y - drawGrid[i][j].y;
 
-
-			xDist = (centerPoint.x - drawGrid[i][j].x)/.75;
-			yDist = centerPoint.y - drawGrid[i][j].y;
-
-
-
-			tDist = sqrtf(xDist*xDist+yDist*yDist);
-
-
+			float tDist = sqrtf(xDist*xDist+yDist*yDist);
 
 			if (tDist < currentDistance*adjWaveLength)
 			{
-
-
 				drawGrid[i][j].x += adjAmplitude*sinf(-tDist/adjWaveLength+currentDistance)*.75f;
 				drawGrid[i][j].y += adjAmplitude*cosf(-tDist/adjWaveLength+currentDistance);
 			}

@@ -20,6 +20,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "DSQ.h"
 #include "Game.h"
+#include "ReadXML.h"
+#include "Shot.h"
 
 static std::string baseModPath = "./_mods/";
 
@@ -170,7 +172,7 @@ void Mod::recache()
 		if(fname[fname.length() - 1] != '/')
 			fname += '/';
 		fname += "precache.txt";
-		fname = core->adjustFilenameCase(fname);
+		fname = adjustFilenameCase(fname);
 		if (exists(fname))
 		{
 			modcache.precacheList(fname);
@@ -201,7 +203,7 @@ void Mod::start()
 	dsq->overlay->alpha.interpolateTo(1, t);
 	core->sound->fadeMusic(SFT_OUT, t*0.9f);
 
-	core->main(t);
+	core->run(t);
 
 	core->sound->stopMusic();
 
@@ -271,8 +273,6 @@ void Mod::setActive(bool a)
 
 			Shot::loadShotBank(dsq->shotBank1, dsq->shotBank2);
 			particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
-
-			dsq->setFilter(dsq->dsq_filter);
 
 			recache();
 		}

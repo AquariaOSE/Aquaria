@@ -20,9 +20,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "DSQ.h"
+#include <fstream>
 
 
 #ifdef BBGE_BUILD_WINDOWS
+	#define WIN32_LEAN_AND_MEAN
+	#include <windows.h>
 	#include <shellapi.h>
 #endif
 
@@ -94,7 +97,7 @@ static void CheckConfig(void)
         {
             DSQ dsql(dsqParam, extraDataDir);
             dsql.init();
-            dsql.main();
+            dsql.run();
             dsql.shutdown();
         }
 

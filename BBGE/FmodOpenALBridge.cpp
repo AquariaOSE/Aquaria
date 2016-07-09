@@ -31,8 +31,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <signal.h>
 #endif
 
+#include "SDL.h"
+
 #include "Base.h"
 #include "Core.h"
+#include "ttvfs_stdio.h"
 
 #include "FmodOpenALBridge.h"
 
@@ -43,10 +46,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "vorbis/vorbisfile.h"
 
 #include "MT.h"
-
-#ifndef _DEBUG
-//#define _DEBUG 1
-#endif
 
 #undef min
 #undef max
@@ -1416,7 +1415,7 @@ FMOD_RESULT OpenALSystem::createSound(const char *name_or_data, const FMOD_MODE 
     strcat(fname, ".ogg");
 
     // just in case...
-    VFILE *io = vfopen(core->adjustFilenameCase(fname).c_str(), "rb");
+    VFILE *io = vfopen(adjustFilenameCase(fname).c_str(), "rb");
     if (io == NULL)
         return FMOD_ERR_INTERNAL;
     size_t filesize = 0;

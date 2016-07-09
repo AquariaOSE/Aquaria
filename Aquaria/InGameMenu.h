@@ -86,8 +86,10 @@ public:
 	virtual void action(int actionID, int state, int source);
 
 	void refreshFoodSlots(bool effects);
-
+	
 	RecipeMenu recipeMenu;
+
+	float menuSelectDelay;
 
 private:
 	void updateOptionsMenu(float dt);

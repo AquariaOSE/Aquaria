@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Hair.h"
 #include "DSQ.h"
-
+#include "RenderBase.h"
 
 
 Hair::Hair(int nodes, float segmentLength, float hairWidth) : RenderObject()

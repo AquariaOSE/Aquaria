@@ -3,7 +3,7 @@
 #include "DSQ.h"
 #include "Game.h"
 #include "Avatar.h"
-
+#include "RenderBase.h"
 
 
 namespace WaterSurfaceRenderStuff

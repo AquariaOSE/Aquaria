@@ -21,6 +21,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Shader.h"
 #include "algorithmx.h"
+#include "RenderBase.h"
+#include "glext.h"
+#include <sstream>
 
 #ifdef BBGE_BUILD_SHADERS
 	// GL_ARB_shader_objects

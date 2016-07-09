@@ -123,7 +123,8 @@ void SmallBlockAllocator::_FreeBlock(Block *blk)
     free(blk);
 
     // keeps the vector sorted
-    _allblocks.erase(std::remove(_allblocks.begin(), _allblocks.end(), blk), _allblocks.end());
+    std::vector<Block*>::iterator where = std::remove(_allblocks.begin(), _allblocks.end(), blk);
+    _allblocks.erase(where, _allblocks.end());
 }
 
 

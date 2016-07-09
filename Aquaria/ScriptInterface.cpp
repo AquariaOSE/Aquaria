@@ -19,6 +19,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#include "SDL.h"
 #include "ScriptInterface.h"
 #include "../BBGE/ScriptObject.h"
 extern "C"
@@ -27,6 +28,9 @@ extern "C"
 	#include "lauxlib.h"
 	#include "lualib.h"
 }
+
+#include "ReadXML.h"
+
 #include "DSQ.h"
 #include "Game.h"
 #include "Avatar.h"
@@ -40,6 +44,12 @@ extern "C"
 #include <algorithm>
 #include "Gradient.h"
 #include "InGameMenu.h"
+#include "GasCloud.h"
+#include "Ingredient.h"
+#include "Beam.h"
+#include "Hair.h"
+#include "Spore.h"
+
 
 #include "../BBGE/MathFunctions.h"
 
@@ -812,12 +822,12 @@ static bool findFile_helper(const char *rawname, std::string &fname)
 			fname += '/';
 		fname += rawname;
 		fname = localisePath(fname, dsq->mod.getPath());
-		fname = core->adjustFilenameCase(fname);
+		fname = adjustFilenameCase(fname);
 		if (exists(fname))
 			return true;
 	}
 	fname = localisePath(rawname);
-	fname = core->adjustFilenameCase(fname);
+	fname = adjustFilenameCase(fname);
 	return exists(fname);
 }
 
@@ -4118,7 +4128,7 @@ luaFunc(entity_waitForPath)
 	Entity *e = entity(L);
 	while (e && e->isFollowingPath())
 	{
-		core->main(FRAME_TIME);
+		core->run(FRAME_TIME);
 	}
 	luaReturnNil();
 }
@@ -4141,7 +4151,7 @@ luaFunc(entity_watchForPath)
 	Entity *e = entity(L);
 	while (e && e->isFollowingPath())
 	{
-		core->main(FRAME_TIME);
+		core->run(FRAME_TIME);
 	}
 
 	dsq->game->avatar->enableInput();
@@ -4995,26 +5005,6 @@ luaFunc(getWallNormal)
 	Vector n = dsq->game->getWallNormal(Vector(x, y), range, NULL, obs);
 
 	luaReturnVec2(n.x, n.y);
-}
-
-luaFunc(incrFlag)
-{
-	std::string f = getString(L, 1);
-	int v = 1;
-	if (lua_isnumber(L, 2))
-		v = lua_tointeger(L, 2);
-	dsq->continuity.setFlag(f, dsq->continuity.getFlag(f)+v);
-	luaReturnNil();
-}
-
-luaFunc(decrFlag)
-{
-	std::string f = getString(L, 1);
-	int v = 1;
-	if (lua_isnumber(L, 2))
-		v = lua_tointeger(L, 2);
-	dsq->continuity.setFlag(f, dsq->continuity.getFlag(f)-v);
-	luaReturnNil();
 }
 
 luaFunc(setFlag)
@@ -6392,11 +6382,11 @@ luaFunc(bedEffects)
 {
 	dsq->overlay->alpha.interpolateTo(1, 2);
 	dsq->sound->fadeMusic(SFT_OUT, 1);
-	core->main(1);
+	core->run(1);
 	// music goes here
 	dsq->sound->fadeMusic(SFT_CROSS, 1);
 	dsq->sound->playMusic("Sleep");
-	core->main(6);
+	core->run(6);
 	Vector bedPosition(lua_tointeger(L, 1), lua_tointeger(L, 2));
 	if (bedPosition.x == 0 && bedPosition.y == 0)
 	{
@@ -7063,7 +7053,7 @@ luaFunc(watch)
 
 luaFunc(wait)
 {
-	core->main(lua_tonumber(L, 1));
+	core->run(lua_tonumber(L, 1));
 	luaReturnNil();
 }
 
@@ -7073,13 +7063,13 @@ luaFunc(warpNaijaToEntity)
 	if (e)
 	{
 		dsq->overlay->alpha.interpolateTo(1, 1);
-		core->main(1);
+		core->run(1);
 
 		Vector offset(lua_tointeger(L, 2), lua_tointeger(L, 3));
 		dsq->game->avatar->position = e->position + offset;
 
 		dsq->overlay->alpha.interpolateTo(0, 1);
-		core->main(1);
+		core->run(1);
 	}
 	luaReturnNil();
 }
@@ -8235,13 +8225,15 @@ luaFunc(getInputMode)
 
 luaFunc(getJoystickAxisLeft)
 {
-	Vector v = core->joystick.position;
+	Vector v;// = core->joystick.position;
+	assert(false); // FIXME
 	luaReturnVec2(v.x, v.y);
 }
 
 luaFunc(getJoystickAxisRight)
 {
-	Vector v = core->joystick.rightStick;
+	Vector v;// = core->joystick.rightStick;
+	assert(false); // FIXME
 	luaReturnVec2(v.x, v.y);
 }
 
@@ -9997,8 +9989,6 @@ static const struct {
 
 	luaRegister(setNaijaHeadTexture),
 
-	luaRegister(incrFlag),
-	luaRegister(decrFlag),
 	luaRegister(setFlag),
 	luaRegister(getFlag),
 	luaRegister(setStringFlag),
@@ -11525,7 +11515,7 @@ void ScriptInterface::shutdown()
 Script *ScriptInterface::openScript(const std::string &file, bool ignoremissing /* = false */)
 {
 	std::string realFile = localisePathInternalModpath(file);
-	realFile = core->adjustFilenameCase(realFile);
+	realFile = adjustFilenameCase(realFile);
 	bool loadedScript = false;
 
 	lua_getglobal(baseState, "_scriptvars");

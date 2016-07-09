@@ -260,7 +260,7 @@ void AquariaComboBox::close(float t)
 	}
 
 	if (t>0)
-		dsq->main(t);
+		dsq->run(t);
 
 	for(int i = 0; i < shownItems.size(); i++)
 	{

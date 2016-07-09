@@ -39,6 +39,7 @@ void Vector::rotate2DRad(float rad)
 
 Vector getRotatedVector(const Vector &vec, float rot)
 {
+/*
 	glPushMatrix();
 	glLoadIdentity();
 
@@ -58,6 +59,10 @@ Vector getRotatedVector(const Vector &vec, float rot)
 
 	glPopMatrix();
 	return Vector(x,y,z);
+*/
+	float s = sinf(rot);
+	float c = cosf(rot);
+	return c*vec.x - s*vec.y, s*vec.x + c*vec.y;
 }
 
 // note update this from float lerp

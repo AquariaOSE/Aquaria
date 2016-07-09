@@ -338,7 +338,7 @@ void RecipeMenu::toggle(bool on, bool watch)
 		dsq->sound->playSfx("recipemenu-open");
 
 		if (watch)
-			dsq->main(t);
+			dsq->run(t);
 
 		if (!dsq->game->isInGameMenu())
 		{
@@ -371,7 +371,7 @@ void RecipeMenu::toggle(bool on, bool watch)
 		prevPage->alpha = 0;
 
 		if (watch)
-			dsq->main(t);
+			dsq->run(t);
 	}
 
 	this->on = on;

@@ -25,24 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/DebugFont.h"
 #include "../BBGE/AfterEffect.h"
 
-Bubble::Bubble() : Quad()
-{
-	setTexture("particles/bubble");
-
-	this->alpha = 0.5f;
-	this->speed = rand()%10+20;
-	this->width = 32;
-	this->height = 32;
-
-}
-
-void Bubble::onUpdate(float dt)
-{
-	Quad::onUpdate(dt);
-	this->position -= Vector(0, speed)*dt;
-	if (position.y < -32)
-		position.y = position.y + 600+64;
-}
 
 Intro2::Intro2() : StateObject()
 {
@@ -71,7 +53,7 @@ void Intro2::applyState()
 
 	dsq->setCutscene(1,1);
 
-	core->main(1);
+	core->run(1);
 	dsq->overlay->alpha.interpolateTo(0, 40);
 	dsq->toggleCursor(0);
 
@@ -108,22 +90,22 @@ void Intro2::applyState()
 
 
 	while (dsq->sound->isPlayingVoice())
-		dsq->main(FRAME_TIME);
+		dsq->run(FRAME_TIME);
 
 
 
 	emitter->stop();
 	emitter2->start();
-	core->main(0.5);
+	core->run(0.5);
 	core->sound->playSfx("NormalForm");
 	dsq->overlay->color = Vector(1,1,1);
 	dsq->overlay->alpha = 0;
 	dsq->fade(1, 1);
-	core->main(1);
+	core->run(1);
 
 	frame4->alpha = 0;
 	dsq->overlay->color.interpolateTo(0, 1);
-	core->main(1);
+	core->run(1);
 
 	dsq->overlay->color = 0;
 	dsq->overlay->alpha = 1;
@@ -223,7 +205,7 @@ void GameOver::applyState()
 	}
 	addRenderObject(shockLines, LR_BACKGROUND);
 
-	core->main(0.033);
+	core->run(0.033);
 	if (core->afterEffectManager)
 	{
 		core->afterEffectManager->clear();
@@ -235,20 +217,20 @@ void GameOver::applyState()
 
 
 
-	core->main(GO_ANIM_TIME);
+	core->run(GO_ANIM_TIME);
 	frame4->alpha.interpolateTo(0, GO_ANIM_TIME);
-	core->main(GO_ANIM_TIME);
+	core->run(GO_ANIM_TIME);
 
 	frame3->alpha.interpolateTo(0, GO_ANIM_TIME);
-	core->main(GO_ANIM_TIME);
+	core->run(GO_ANIM_TIME);
 
 	frame2->alpha.interpolateTo(0, GO_ANIM_TIME);
-	core->main(GO_ANIM_TIME);
+	core->run(GO_ANIM_TIME);
 
 	frame1->alpha.interpolateTo(0, GO_ANIM_TIME);
-	core->main(GO_ANIM_TIME);
+	core->run(GO_ANIM_TIME);
 
-	core->main(1.5);
+	core->run(1.5);
 
 
 
@@ -409,7 +391,7 @@ void Nag::applyState()
 	dsq->toggleCursor(1, 0.5);
 
 	dsq->fade(0, 1);
-	dsq->main(1);
+	dsq->run(1);
 
 	dsq->sound->playMusic("openwaters3", SLT_NORMAL, SFT_IN, 2);
 }
@@ -419,7 +401,7 @@ void Nag::removeState()
 	dsq->toggleCursor(0);
 
 	dsq->fade(1, 1);
-	dsq->main(1);
+	dsq->run(1);
 
 	dsq->cursor->color = Vector(1,1,1);
 
@@ -481,14 +463,14 @@ void Nag::onBuy()
 	if (core->isFullscreen())
 	{
 		core->toggleScreenMode(0);
-		dsq->main(0.6);
+		dsq->run(0.6);
 	}
 
 	std::ostringstream os;
 	os << "naijagiggle" << randRange(1, 5);
 	dsq->sound->playSfx(os.str());
 
-	dsq->main(0.5);
+	dsq->run(0.5);
 
 	click = 1;
 

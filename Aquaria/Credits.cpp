@@ -49,7 +49,7 @@ namespace AQCredits
 		q->scale.data->path.addPathNode(Vector(1.4, 1.4), 1);
 		q->scale.startPath(t);
 
-		core->main(t);
+		core->run(t);
 	}
 
 	void cred(Quad *cred, bool show)
@@ -137,16 +137,16 @@ void Credits::applyState()
 	}
 
 	// start:
-	core->main(1);
+	core->run(1);
 
 	dsq->sound->playMusic("losttothewaves", SLT_NONE, SFT_CROSS, 1);
 
 	dsq->overlay->alpha.interpolateTo(0, 12);
 	dsq->overlay2->alpha.interpolateTo(0, 12);
 
-	core->main(12);
+	core->run(12);
 
-	core->main(6);
+	core->run(6);
 
 	cred(derek, true);
 
@@ -179,11 +179,11 @@ void Credits::applyState()
 	watchSlide(15);
 
 	dsq->overlay->alpha.interpolateTo(1, 6);
-	core->main(6);
+	core->run(6);
 
 	while (dsq->sound->isPlayingMusic() && !dsq->isSkippingCutscene())
 	{
-		core->main(1);
+		core->run(1);
 	}
 
 	dsq->setCutscene(0);
