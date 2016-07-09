@@ -170,6 +170,8 @@ public:
 
 	static AquariaKeyConfig *waitingForInput;
 
+	void setAcceptEsc(bool a);
+
 protected:
 	void toggleEnterKey(int on);
 
@@ -181,11 +183,9 @@ protected:
 	std::string actionInputName;
 	InputSetType inputSetType;
 	int inputIdx;
-
-
-
 	TTFText *keyConfigFont;
 	Quad *bg;
+	bool acceptEsc;
 };
 
 class AquariaComboBox;

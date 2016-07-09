@@ -480,6 +480,7 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 
 
 	keyDown = false;
+	acceptEsc = false;
 
 	toggleEnterKey(false);
 }
@@ -621,8 +622,6 @@ void AquariaKeyConfig::onUpdate(float dt)
 					{
 						if (i != KEY_ESCAPE)
 						{
-
-
 							if (i >= KEY_0 && i <= KEY_9)
 							{
 								*value = i-KEY_0;
@@ -649,7 +648,9 @@ void AquariaKeyConfig::onUpdate(float dt)
 			{
 				if (core->getKeyState(i))
 				{
-					if (i != KEY_ESCAPE)
+					if(*k == i) // clear key if pressed again
+						*k = 0;
+					else if(acceptEsc || i != KEY_ESCAPE)
 					{
 						if (i == KEY_DELETE || i == KEY_BACKSPACE)
 							*k = 0;
@@ -748,6 +749,11 @@ void AquariaKeyConfig::onUpdate(float dt)
 	}
 
 	inLoop = false;
+}
+
+void AquariaKeyConfig::setAcceptEsc(bool a)
+{
+	acceptEsc = a;
 }
 
 AquariaMenuItem::AquariaMenuItem() : Quad(), ActionMapper(), AquariaGuiElement()
