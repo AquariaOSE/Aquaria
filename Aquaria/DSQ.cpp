@@ -3744,8 +3744,8 @@ void DSQ::bindInput()
 {
 	clearActions();
 
-	almb = user.control.actionSet.getActionInputByName("lmb");
-	armb = user.control.actionSet.getActionInputByName("rmb");
+	almb = user.control.actionSet.getActionInputByName("PrimaryAction");
+	armb = user.control.actionSet.getActionInputByName("SecondaryAction");
 
 	user.control.actionSet.importAction(this, "Escape",		ACTION_ESC);
 
@@ -3988,7 +3988,17 @@ void DSQ::onUpdate(float dt)
 		os << std::endl;
 		os << "globalScale: " << core->globalScale.x << std::endl;
 		os << "mousePos:(" << core->mouse.position.x << ", " << core->mouse.position.y << ") mouseChange:(" << core->mouse.change.x << ", " << core->mouse.change.y << ")\n";
-		//os << "joyStick:(" << core->joystick.position.x << ", " << core->joystick.position.y << ")\n";
+		for(size_t i = 0; i < joysticks.size(); ++i)
+			if(Joystick *j = joysticks[i])
+			{
+				os << "J[" << i << "]:[";
+				for(unsigned ii = 0; ii < MAX_JOYSTICK_BTN; ++ii)
+					if(j->getButton(ii))
+						os << (ii % 10);
+					else
+						os << '-';
+				os << "], (" << j->position.x << ", " << j->position.y << "), ("<< j->rightStick.x << ", " << j->rightStick.y << ")\n";
+			}
 		os << "altState: " << core->getKeyState(KEY_LALT) << " | " << core->getKeyState(KEY_RALT) << std::endl;
 		os << "PMFree: " << particleManager->getFree() << " Active: " << particleManager->getNumActive() << std::endl;
 		os << "cameraPos: (" << dsq->cameraPos.x << ", " << dsq->cameraPos.y << ")" << std::endl;

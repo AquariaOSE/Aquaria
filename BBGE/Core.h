@@ -76,6 +76,8 @@ const int baseVirtualHeight		= 600;
 
 enum ButtonState { UP = 0, DOWN };
 
+const unsigned mouseExtraButtons = 8;
+
 struct MouseButtons
 {
 	MouseButtons ()
@@ -86,6 +88,7 @@ struct MouseButtons
 	}
 
 	ButtonState left, right, middle;
+	ButtonState extra[mouseExtraButtons];
 };
 
 struct Mouse
@@ -94,16 +97,13 @@ struct Mouse
 	{
 		scrollWheel = scrollWheelChange = lastScrollWheel = 0;
 		buttonsEnabled = true;
-		movementEnabled = true;
 	}
 	Vector position, lastPosition;
 	MouseButtons buttons;
 	MouseButtons pure_buttons;
+	unsigned rawButtonMask;
 	Vector change;
-
-
-	// movementEnabled is not implemented yet
-	bool buttonsEnabled, movementEnabled;
+	bool buttonsEnabled;
 
 	int scrollWheel, scrollWheelChange, lastScrollWheel;
 };

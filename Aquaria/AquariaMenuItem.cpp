@@ -464,7 +464,7 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 	if (inputSetType == INPUTSET_OTHER)
 		bg->setWidthHeight(40, 20);
 	else
-		bg->setWidthHeight(100, 20);
+		bg->setWidthHeight(90, 20);
 
 	bg->color = Vector(0.5, 0.5, 0.5);
 	bg->alphaMod = 0;
@@ -481,6 +481,7 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 
 	keyDown = false;
 	acceptEsc = false;
+	joystickID = 0;
 
 	toggleEnterKey(false);
 }
@@ -598,7 +599,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 	{
 		if (k)
 		{
-			keyConfigFont->setText(getInputCodeToString(*k));
+			keyConfigFont->setText(getInputCodeToUserString(*k, joystickID));
 		}
 		else if (value)
 		{
@@ -660,7 +661,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 					while (dsq->game->getKeyState(i))
 					{
-						dsq->run(0.1);
+						dsq->run(0.1f);
 					}
 
 					toggleEnterKey(0);
@@ -672,35 +673,107 @@ void AquariaKeyConfig::onUpdate(float dt)
 		}
 		break;
 		case INPUTSET_MOUSE:
-		break;
-		case INPUTSET_JOY:
 		{
+			bool clear = false;
+			int ac = 0;
 			if (core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
 			{
-				*k = 0;
+				clear = true;
+			}
+			else if(core->getKeyState(KEY_ESCAPE))
+			{
+				// do nothing
+			}
+			else if(dsq->mouse.rawButtonMask)
+			{
+				MouseButtons btns = dsq->mouse.buttons;
+
+				while(dsq->mouse.rawButtonMask)
+					dsq->run(0.1f);
+
+				if(btns.left)
+					ac = MOUSE_BUTTON_LEFT;
+				else if(btns.right)
+					ac = MOUSE_BUTTON_RIGHT;
+				else if(btns.middle)
+					ac = MOUSE_BUTTON_MIDDLE;
+				else
+				{
+					for(unsigned i = 0; i < mouseExtraButtons; ++i)
+						if(btns.extra[i])
+						{
+							ac = MOUSE_BUTTON_EXTRA_START+i;
+							break;
+						}
+				}
+			}
+
+			if(ac || clear)
+			{
 				toggleEnterKey(0);
 				waitingForInput = 0;
 				AquariaGuiElement::canDirMoveGlobal = true;
+
+				if(clear || *k == ac) // clear key if pressed again
+					*k = 0;
+				else
+					*k = ac;
+			}
+		}
+		break;
+		case INPUTSET_JOY:
+		{
+			int ac = 0;
+			bool clear = false;
+			if (core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
+			{
+				clear = true;
+			}
+			else if(core->getKeyState(KEY_ESCAPE))
+			{
+				// do nothing
 			}
 			else
 			{
-				for (int i = JOY_BUTTON_0; i <= MAX_JOYSTICK_BTN; i++)
+				Joystick *j = core->joysticks[joystickID];
+				if(j)
 				{
-					if (dsq->game->getKeyState(i))
-					{
-						*k = i;
-
-						while (dsq->game->getKeyState(i))
+					for (int i = 0; i < MAX_JOYSTICK_BTN; i++)
+						if (j->getButton(i))
 						{
-							dsq->run(0.1);
+							ac = JOY_BUTTON_0 + i;
+							while (j->getButton(i))
+								dsq->run(0.1f);
+							break;
 						}
 
-						toggleEnterKey(0);
-						waitingForInput = 0;
-						AquariaGuiElement::canDirMoveGlobal = true;
-						break;
-					}
+					if(!ac)
+						for(int i = 0; i < MAX_JOYSTICK_AXIS; ++i)
+						{
+							float ax = j->getAxisUncalibrated(i);
+							if(fabsf(ax) > JOY_AXIS_THRESHOLD)
+							{
+								ac = (ax < 0.0f ? JOY_AXIS_0_NEG : JOY_AXIS_0_POS) + i;
+								while (fabsf(j->getAxisUncalibrated(i)) > JOY_AXIS_THRESHOLD)
+									dsq->run(0.1f);
+								break;
+							}
+						}
 				}
+				else
+					clear = true;
+			}
+
+			if(ac || clear)
+			{
+				toggleEnterKey(0);
+				waitingForInput = 0;
+				AquariaGuiElement::canDirMoveGlobal = true;
+
+				if(clear || *k == ac) // clear key if pressed again
+					*k = 0;
+				else
+					*k = ac;
 			}
 		}
 		break;

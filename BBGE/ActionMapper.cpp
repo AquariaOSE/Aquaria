@@ -195,6 +195,10 @@ bool ActionMapper::getKeyState(int k)
 	{
 		keyState = (core->mouse.buttons.middle == DOWN);
 	}
+	else if (k >= MOUSE_BUTTON_EXTRA_START && k < MOUSE_BUTTON_EXTRA_START+mouseExtraButtons)
+	{
+		keyState  = core->mouse.buttons.extra[k - MOUSE_BUTTON_EXTRA_START];
+	}
 	else if (k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
 	{
 		int v = k - JOY_BUTTON_0;
@@ -204,6 +208,34 @@ bool ActionMapper::getKeyState(int k)
 				if(j->isEnabled())
 					if( ((keyState = j->getButton(v))) )
 						break;
+	}
+	else if (k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
+	{
+		int v = k - JOY_AXIS_0_POS;
+
+		for(size_t i = 0; i < core->joysticks.size(); ++i)
+			if(Joystick *j = core->joysticks[i])
+				if(j->isEnabled())
+				{
+					float ax = j->getAxisUncalibrated(v);
+					keyState = ax > JOY_AXIS_THRESHOLD;
+					if(keyState)
+						break;
+				}
+	}
+	else if (k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
+	{
+		int v = k - JOY_AXIS_END_NEG;
+
+		for(size_t i = 0; i < core->joysticks.size(); ++i)
+			if(Joystick *j = core->joysticks[i])
+				if(j->isEnabled())
+				{
+					float ax = j->getAxisUncalibrated(v);
+					keyState = ax < -JOY_AXIS_THRESHOLD;
+					if(keyState)
+						break;
+				}
 	}
 
 	return keyState;

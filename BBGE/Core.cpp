@@ -627,9 +627,10 @@ void Core::initJoystickLibrary()
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER);
 #else
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+	detectJoysticks();
 #endif
 
-	detectJoysticks();
+	joystickEnabled = true;
 }
 
 void Core::clearJoysticks()
@@ -639,6 +640,9 @@ void Core::clearJoysticks()
 	joysticks.clear();
 }
 
+
+// Only used for SDL 1.2 code path.
+// SDL2 automatically fires joystick added events upon startup
 void Core::detectJoysticks()
 {
 	clearJoysticks();
@@ -648,6 +652,7 @@ void Core::detectJoysticks()
 	os << "Found [" << n << "] joysticks";
 	debugLog(os.str());
 
+	joysticks.reserve(n);
 	for(unsigned i = 0; i < n; ++i)
 	{
 		Joystick *j = new Joystick;
@@ -656,8 +661,6 @@ void Core::detectJoysticks()
 		else
 			delete j;
 	}
-
-	joystickEnabled = !joysticks.empty();
 }
 
 bool Core::initInputLibrary()
@@ -685,7 +688,8 @@ void Core::onUpdate(float dt)
 	pollEvents();
 
 	for(size_t i = 0; i < joysticks.size(); ++i)
-		joysticks[i]->update(dt);
+		if(joysticks[i])
+			joysticks[i]->update(dt);
 
 	onMouseInput();
 
@@ -1587,7 +1591,7 @@ void Core::pollEvents()
 	if (updateMouse)
 	{
 		int x, y;
-		Uint8 mousestate = SDL_GetMouseState(&x,&y);
+		unsigned mousestate = SDL_GetMouseState(&x,&y);
 
 		if (mouse.buttonsEnabled)
 		{
@@ -1595,7 +1599,11 @@ void Core::pollEvents()
 			mouse.buttons.right		= mousestate & SDL_BUTTON(3)?DOWN:UP;
 			mouse.buttons.middle	= mousestate & SDL_BUTTON(2)?DOWN:UP;
 
+			for(unsigned i = 0; i < mouseExtraButtons; ++i)
+				mouse.buttons.extra[i] = mousestate & SDL_BUTTON(3+i)?DOWN:UP;
+
 			mouse.pure_buttons = mouse.buttons;
+			mouse.rawButtonMask = mousestate;
 
 			if (flipMouseButtons)
 			{

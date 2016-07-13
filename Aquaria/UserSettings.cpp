@@ -312,9 +312,6 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 
 	control.actionSet.clearActions();
 
-
-	control.actionSet.addActionInput("lmb");
-	control.actionSet.addActionInput("rmb");
 	control.actionSet.addActionInput("PrimaryAction");
 	control.actionSet.addActionInput("SecondaryAction");
 	control.actionSet.addActionInput("SwimUp");
@@ -535,13 +532,16 @@ void UserSettings::apply()
 	dsq->loops.updateVolume();
 
 	// FIXME: This should be per-joystick
-	/*core->joystick.s1ax = control.s1ax;
-	core->joystick.s1ay = control.s1ay;
-	core->joystick.s2ax = control.s2ax;
-	core->joystick.s2ay = control.s2ay;
-
-	core->joystick.deadZone1 = control.s1dead;
-	core->joystick.deadZone2 = control.s2dead;*/
+	for(size_t i = 0; i < core->joysticks.size(); ++i)
+	{
+		Joystick *j = core->joysticks[i];
+		j->s1ax = control.s1ax;
+		j->s1ay = control.s1ay;
+		j->s2ax = control.s2ax;
+		j->s2ay = control.s2ay;
+		j->deadZone1 = control.s1dead;
+		j->deadZone2 = control.s2dead;
+	}
 
 	core->debugLogActive = system.debugLogOn;
 

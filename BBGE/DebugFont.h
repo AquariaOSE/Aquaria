@@ -58,6 +58,10 @@ public:
 	EventPtr event;
 	bool quitMain;
 	int buttonID;
+	float activeAlpha;
+	Vector activeColor;
+	float inactiveAlpha;
+	Vector inactiveColor;
 
 protected:
 	void onUpdate(float dt);

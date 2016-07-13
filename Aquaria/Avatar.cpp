@@ -128,23 +128,13 @@ void Avatar::bindInput()
 	ActionMapper::clearActions();
 	ActionMapper::clearCreatedEvents();
 
-
 	dsq->user.control.actionSet.importAction(this, "PrimaryAction", ACTION_PRIMARY);
 	dsq->user.control.actionSet.importAction(this, "SecondaryAction", ACTION_SECONDARY);
-
-	dsq->user.control.actionSet.importAction(this, "Revert",		ACTION_REVERT);
 
 	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_SWIMUP);
 	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_SWIMDOWN);
 	dsq->user.control.actionSet.importAction(this, "SwimLeft",		ACTION_SWIMLEFT);
 	dsq->user.control.actionSet.importAction(this, "SwimRight",		ACTION_SWIMRIGHT);
-
-	/*
-	dsq->user.control.actionSet.importAction(this, "SingUp",		ACTION_SINGUP);
-	dsq->user.control.actionSet.importAction(this, "SingDown",		ACTION_SINGDOWN);
-	dsq->user.control.actionSet.importAction(this, "SingLeft",		ACTION_SINGLEFT);
-	dsq->user.control.actionSet.importAction(this, "SingRight",		ACTION_SINGRIGHT);
-	*/
 
 	dsq->user.control.actionSet.importAction(this, "SongSlot1",		ACTION_SONGSLOT1);
 	dsq->user.control.actionSet.importAction(this, "SongSlot2",		ACTION_SONGSLOT2);
@@ -157,29 +147,9 @@ void Avatar::bindInput()
 	dsq->user.control.actionSet.importAction(this, "SongSlot9",		ACTION_SONGSLOT9);
 	dsq->user.control.actionSet.importAction(this, "SongSlot10",	ACTION_SONGSLOT10);
 
+	dsq->user.control.actionSet.importAction(this, "Revert",		ACTION_REVERT);
 	dsq->user.control.actionSet.importAction(this, "Look",			ACTION_LOOK);
-
-	/*
-	dsq->user.control.actionSet.importAction(this, "SongSlot5", "f5");
-	dsq->user.control.actionSet.importAction(this, "SongSlot6", "f6");
-	dsq->user.control.actionSet.importAction(this, "SongSlot7", "f7");
-	dsq->user.control.actionSet.importAction(this, "SongSlot8", "f8");
-	*/
-
 	dsq->user.control.actionSet.importAction(this, "Roll",			ACTION_ROLL);
-
-	/*
-	// song note keys
-	addAction("s1", KEY_1);
-	addAction("s2", KEY_2);
-	addAction("s3", KEY_3);
-	addAction("s4", KEY_4);
-	addAction("s5", KEY_5);
-	addAction("s6", KEY_6);
-	addAction("s7", KEY_7);
-	addAction("s8", KEY_8);
-	*/
-
 }
 
 // note: z is set to 1.0 when we want the aim to be used as the shot direction
@@ -4226,12 +4196,12 @@ Vector Avatar::getFakeCursorPosition()
 				{
 					axisInput = j->position.getLength2D();
 					if(axisInput >= JOYSTICK_LOW_THRESHOLD)
-						break;
+					{
+						const float axisMult = (maxMouse - minMouse) / (JOYSTICK_HIGH_THRESHOLD - JOYSTICK_LOW_THRESHOLD);
+						const float distance = minMouse + ((axisInput - JOYSTICK_LOW_THRESHOLD) * axisMult);
+						return (j->position * (distance / axisInput));
+					}
 				}
-
-			const float axisMult = (maxMouse - minMouse) / (JOYSTICK_HIGH_THRESHOLD - JOYSTICK_LOW_THRESHOLD);
-			const float distance = minMouse + ((axisInput - JOYSTICK_LOW_THRESHOLD) * axisMult);
-			return (j->position * (distance / axisInput));
 	}
 	return Vector(0,0,0);
 }
