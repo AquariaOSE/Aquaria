@@ -165,6 +165,7 @@ void DebugFont::setAlign(Align align)
 
 DebugButton::DebugButton(int buttonID, DebugButtonReceiver *receiver, int bgWidth, int fsize, bool quitMain)
  : RenderObject(), label(0), highlight(0), quitMain(quitMain), receiver(receiver), buttonID(buttonID)
+ , activeAlpha(0.5f), activeColor(1,1,1), inactiveAlpha(0.5f), inactiveColor(0,0,0)
 {
 	if (bgWidth == 0)
 		bgWidth = 150;
@@ -175,7 +176,8 @@ DebugButton::DebugButton(int buttonID, DebugButtonReceiver *receiver, int bgWidt
 	highlight = new Quad();
 	highlight->setWidthHeight(szw, fsize);
 	highlight->position = Vector(szw*0.5f, 0);
-	highlight->alpha = 0.5;
+	highlight->alpha = inactiveAlpha;
+	highlight->color = inactiveColor;
 	addChild(highlight, PM_POINTER);
 
 	label = new DebugFont(float(fsize)/3.0f, "DebugButton");
@@ -199,7 +201,8 @@ void DebugButton::onUpdate(float dt)
 
 	if (highlight->isCoordinateInsideWorld(core->mouse.position) && ((!md) || (md && !core->mouse.buttons.left)))
 	{
-		highlight->color.interpolateTo(Vector(1, 1, 1), 0.1);
+		highlight->color.interpolateTo(activeColor, 0.1);
+		highlight->alpha.interpolateTo(activeAlpha, 0.1);
 
 		if (core->mouse.buttons.left && !md)
 			md = true;
@@ -224,7 +227,8 @@ void DebugButton::onUpdate(float dt)
 		{
 			md = false;
 		}
-		highlight->color.interpolateTo(Vector(0,0,0), 0.1);
+		highlight->color.interpolateTo(inactiveColor, 0.1);
+		highlight->alpha.interpolateTo(inactiveAlpha, 0.1);
 	}
 
 

@@ -8,6 +8,7 @@
 #include "DSQ.h"
 #include "Avatar.h"
 #include "GridRender.h"
+#include "DebugFont.h"
 
 static InGameMenu *themenu = 0;
 
@@ -25,6 +26,21 @@ const int numTreasures = 16*2;
 
 const Vector worldLeftCenter(217,250), worldRightCenter(575, 250);
 const Vector opt_save_original = Vector(350, 350), opt_cancel_original = Vector(450, 350);
+
+const int KEYCONFIG_FIRST_COL_DISTANCE = 170;
+const int KEYCONFIG_COL_DISTANCE = 105;
+
+class KeyConfigMenuReceiver : public DebugButtonReceiver
+{
+public:
+	void buttonPress(DebugButton *db)
+	{
+		themenu->switchToKeyConfigPage(db->buttonID);
+	}
+};
+
+static KeyConfigMenuReceiver keyConfigRecv;
+
 
 
 // --------- Private class defs, not used outside ---------------
@@ -1240,6 +1256,7 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		opt_cancel->setHidden(false);
 		options->setHidden(false);
 		keyConfigButton->setHidden(false);
+		keyConfigBg->setHidden(false);
 		cook->setHidden(false);
 		foodSort->setHidden(false);
 		recipes->setHidden(false);
@@ -1458,6 +1475,7 @@ void InGameMenu::hide(bool effects, bool cancel)
 	opt_cancel->setHidden(true);
 	options->setHidden(true);
 	keyConfigButton->setHidden(true);
+	keyConfigBg->setHidden(true);
 	cook->setHidden(true);
 	foodSort->setHidden(true);
 	recipes->setHidden(true);
@@ -1490,26 +1508,35 @@ void InGameMenu::hide(bool effects, bool cancel)
 }
 
 
-void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, bool acceptEsc)
+void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int x, int y, bool acceptEsc)
 {
 	TTFText *lb = new TTFText(&dsq->fontArialSmallest);
 	lb->setText(label);
-	lb->position = Vector(140,y);
+	lb->position = Vector(x,y);
 	group->addChild(lb, PM_POINTER);
+	x += KEYCONFIG_FIRST_COL_DISTANCE;
+
+	AquariaKeyConfig *m = new AquariaKeyConfig(actionInputName, INPUTSET_MOUSE, 0);
+	m->position = Vector(x,y);
+	group->addChild(m, PM_POINTER);
+	x += KEYCONFIG_COL_DISTANCE;
 
 	AquariaKeyConfig *k1 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 0);
-	k1->position = Vector(350,y);
+	k1->position = Vector(x,y);
 	group->addChild(k1, PM_POINTER);
 	k1->setAcceptEsc(acceptEsc);
+	x += KEYCONFIG_COL_DISTANCE;
 
 	AquariaKeyConfig *k2 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 1);
-	k2->position = Vector(475,y);
+	k2->position = Vector(x,y);
 	group->addChild(k2, PM_POINTER);
 	k2->setAcceptEsc(acceptEsc);
+	x += KEYCONFIG_COL_DISTANCE;
 
 	AquariaKeyConfig *j1 = new AquariaKeyConfig(actionInputName, INPUTSET_JOY, 0);
-	j1->position = Vector(600,y);
+	j1->position = Vector(x,y);
 	group->addChild(j1, PM_POINTER);
+	x += KEYCONFIG_COL_DISTANCE;
 
 	k1->setDirMove(DIR_RIGHT, k2);
 	k2->setDirMove(DIR_RIGHT, j1);
@@ -1518,15 +1545,15 @@ void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label,
 	k2->setDirMove(DIR_LEFT, k1);
 }
 
-AquariaKeyConfig *InGameMenu::addAxesConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, int offx)
+AquariaKeyConfig *InGameMenu::addAxesConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int offx, int y)
 {
 	TTFText *lb = new TTFText(&dsq->fontArialSmallest);
 	lb->setText(label);
-	lb->position = Vector(140+offx, y);
+	lb->position = Vector(offx, y);
 	group->addChild(lb, PM_POINTER);
 
 	AquariaKeyConfig *i1 = new AquariaKeyConfig(actionInputName, INPUTSET_OTHER, 0);
-	i1->position = Vector(140+80+offx,y);
+	i1->position = Vector(80+offx,y);
 	//i1->setLock(l1);
 	group->addChild(i1, PM_POINTER);
 
@@ -1622,6 +1649,19 @@ void InGameMenu::sortFood()
 			foodHolders[i]->setIngredient(ing, false);
 		}
 	}
+}
+
+RenderObject *InGameMenu::createBasicKeyConfig()
+{
+	RenderObject *keyConfig = new RenderObject;
+
+	keyConfigBg->addChild(keyConfig, PM_POINTER);
+
+	keyConfig->shareAlphaWithChildren = 1;
+	keyConfig->followCamera = 1;
+	keyConfig->position = Vector(0, -40);
+
+	return keyConfig;
 }
 
 void InGameMenu::create()
@@ -1910,104 +1950,143 @@ void InGameMenu::create()
 	game->addRenderObject(keyConfigButton, LR_MENU);
 
 
-
-	group_keyConfig = new RenderObject;
-
-	/*
-	Quad *kbg = new Quad("gui/keyconfig-menu", Vector(400,300));
-	kbg->setWidthHeight(800, 800);
-	group_keyConfig->addChild(kbg);
-	*/
-
-	//Quad *kcb = new Quad;
-	RoundedRect *kcb = new RoundedRect();
-	//kcb->color = 0;
-	//kcb->alphaMod = 0.75;
-	kcb->position = Vector(400,276 - 10);
-	kcb->setWidthHeight(580, 455, 10);
-	group_keyConfig->addChild(kcb, PM_POINTER);
-
-	int offy = -20;
-
 #define SB(x) dsq->continuity.stringBank.get(x)
+
+	keyConfigBg = new RoundedRect();
+	keyConfigBg->position = Vector(400,276 - 10 - 40);
+	keyConfigBg->setWidthHeight(580, 455, 10);
+	keyConfigBg->followCamera = 1;
+	keyConfigBg->shareAlphaWithChildren = 1;
+	keyConfigBg->setHidden(true);
+	game->addRenderObject(keyConfigBg, LR_OVERLAY);
+
+	int offy = 20 - keyConfigBg->position.y;
+	const int offx = 140 - keyConfigBg->position.x;
+	const int yi = 20;
+
+	TTFText *header_tabs = new TTFText(&dsq->fontArialSmall);
+	header_tabs->setText(SB(2130));
+	header_tabs->position = Vector(offx, offy);
+	keyConfigBg->addChild(header_tabs, PM_POINTER);
+
+	keyCategoryButtons.clear();
+	for(int i = 0; i < NUM_KEY_CONFIG_PAGES; ++i)
+	{
+		const float w = 100;
+		const std::string& label = SB(2150+i);
+		DebugButton *b = new DebugButton(i, &keyConfigRecv, w);
+		b->position = Vector(150 + offx + i * (w+10), offy);
+		b->label->setText(label);
+		keyConfigBg->addChild(b, PM_POINTER);
+		keyCategoryButtons.push_back(b);
+	}
+	offy += 2*yi;
 
 	TTFText *header_action = new TTFText(&dsq->fontArialSmall);
 	header_action->setText(SB(2101));
-	header_action->position = Vector(140, 80+offy);
-	group_keyConfig->addChild(header_action, PM_POINTER);
+	header_action->position = Vector(offx, offy);
+	keyConfigBg->addChild(header_action, PM_POINTER);
+
+	TTFText *header_mouse = new TTFText(&dsq->fontArialSmall);
+	header_mouse->setText(SB(2131));
+	header_mouse->position = Vector(offx+KEYCONFIG_FIRST_COL_DISTANCE, offy);
+	header_mouse->setAlign(ALIGN_CENTER);
+	keyConfigBg->addChild(header_mouse, PM_POINTER);
 
 	TTFText *header_key1 = new TTFText(&dsq->fontArialSmall);
 	header_key1->setText(SB(2102));
-	header_key1->position = Vector(350, 80+offy);
+	header_key1->position = Vector(offx+KEYCONFIG_FIRST_COL_DISTANCE+KEYCONFIG_COL_DISTANCE, offy);
 	header_key1->setAlign(ALIGN_CENTER);
-	group_keyConfig->addChild(header_key1, PM_POINTER);
+	keyConfigBg->addChild(header_key1, PM_POINTER);
 
 	TTFText *header_key2 = new TTFText(&dsq->fontArialSmall);
 	header_key2->setText(SB(2103));
-	header_key2->position = Vector(475, 80+offy);
+	header_key2->position = Vector(offx+KEYCONFIG_FIRST_COL_DISTANCE+2*KEYCONFIG_COL_DISTANCE, offy);
 	header_key2->setAlign(ALIGN_CENTER);
-	group_keyConfig->addChild(header_key2, PM_POINTER);
+	keyConfigBg->addChild(header_key2, PM_POINTER);
 
 	TTFText *header_joy = new TTFText(&dsq->fontArialSmall);
 	header_joy->setText(SB(2104));
-	header_joy->position = Vector(600, 80+offy);
+	header_joy->position = Vector(offx+KEYCONFIG_FIRST_COL_DISTANCE+3*KEYCONFIG_COL_DISTANCE, offy);
 	header_joy->setAlign(ALIGN_CENTER);
-	group_keyConfig->addChild(header_joy, PM_POINTER);
+	keyConfigBg->addChild(header_joy, PM_POINTER);
 
-	addKeyConfigLine(group_keyConfig, SB(2105), "lmb",					100+offy);
-	addKeyConfigLine(group_keyConfig, SB(2106), "rmb",					120+offy);
-	addKeyConfigLine(group_keyConfig, SB(2107), "PrimaryAction",		140+offy);
-	addKeyConfigLine(group_keyConfig, SB(2108), "SecondaryAction",		160+offy);
-	addKeyConfigLine(group_keyConfig, SB(2109), "SwimUp",				180+offy);
-	addKeyConfigLine(group_keyConfig, SB(2110), "SwimDown",				200+offy);
-	addKeyConfigLine(group_keyConfig, SB(2111), "SwimLeft",				220+offy);
-	addKeyConfigLine(group_keyConfig, SB(2112), "SwimRight",			240+offy);
-	addKeyConfigLine(group_keyConfig, SB(2113), "Roll",					260+offy);
-	addKeyConfigLine(group_keyConfig, SB(2114), "Revert",				280+offy);
-	addKeyConfigLine(group_keyConfig, SB(2115), "WorldMap",				300+offy);
-	addKeyConfigLine(group_keyConfig, SB(2116), "Escape",				320+offy, true);
+	offy += 2*yi;
 
-	AquariaKeyConfig* s1x = addAxesConfigLine(group_keyConfig, SB(2117), "s1ax", 340+offy, 0);
-	AquariaKeyConfig* s1y = addAxesConfigLine(group_keyConfig, SB(2118), "s1ay", 340+offy, 130);
-	AquariaKeyConfig* s2x = addAxesConfigLine(group_keyConfig, SB(2119), "s2ax", 340+offy, 260);
-	AquariaKeyConfig* s2y = addAxesConfigLine(group_keyConfig, SB(2120), "s2ay", 340+offy, 380);
+	// PART 1
+	{
+		RenderObject *kk = createBasicKeyConfig();
+		group_keyConfig[0] = kk;
 
-	s1x->setDirMove(DIR_LEFT, s1x);
-	s1x->setDirMove(DIR_RIGHT, s1y);
+		int y = 0;
 
-	s1y->setDirMove(DIR_LEFT, s1x);
-	s1y->setDirMove(DIR_RIGHT, s2x);
+		addKeyConfigLine(kk, SB(2107), "PrimaryAction",		offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2108), "SecondaryAction",		offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2109), "SwimUp",				offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2110), "SwimDown",				offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2111), "SwimLeft",				offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2112), "SwimRight",			offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2113), "Roll",					offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2114), "Revert",				offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2115), "WorldMap",				offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2127), "Look",				offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2116), "Escape",				offx, offy+(y+=yi), true);
 
-	s2x->setDirMove(DIR_LEFT, s1y);
-	s2x->setDirMove(DIR_RIGHT, s2y);
+		y+=yi;
+		AquariaKeyConfig* s1x = addAxesConfigLine(kk, SB(2117), "s1ax", offx, y+offy);
+		AquariaKeyConfig* s1y = addAxesConfigLine(kk, SB(2118), "s1ay", offx+130, y+offy);
+		AquariaKeyConfig* s2x = addAxesConfigLine(kk, SB(2119), "s2ax", offx+260, y+offy);
+		AquariaKeyConfig* s2y = addAxesConfigLine(kk, SB(2120), "s2ay", offx+380, y+offy);
+		y+=yi;
 
-	s2y->setDirMove(DIR_LEFT, s2x);
-	s2y->setDirMove(DIR_RIGHT, s2y);
+		s1x->setDirMove(DIR_LEFT, s1x);
+		s1x->setDirMove(DIR_RIGHT, s1y);
 
-	offy += 20;
+		s1y->setDirMove(DIR_LEFT, s1x);
+		s1y->setDirMove(DIR_RIGHT, s2x);
 
-	addKeyConfigLine(group_keyConfig, SB(2121), "PrevPage",		340+offy);
-	addKeyConfigLine(group_keyConfig, SB(2122), "NextPage",		360+offy);
-	addKeyConfigLine(group_keyConfig, SB(2123), "CookFood",		380+offy);
-	addKeyConfigLine(group_keyConfig, SB(2124), "FoodLeft",		400+offy);
-	addKeyConfigLine(group_keyConfig, SB(2125), "FoodRight",	420+offy);
-	addKeyConfigLine(group_keyConfig, SB(2126), "FoodDrop",		440+offy);
+		s2x->setDirMove(DIR_LEFT, s1y);
+		s2x->setDirMove(DIR_RIGHT, s2y);
 
-	addKeyConfigLine(group_keyConfig, SB(2127), "Look",			460+offy);
+		s2y->setDirMove(DIR_LEFT, s2x);
+		s2y->setDirMove(DIR_RIGHT, s2y);
+	}
 
-	addKeyConfigLine(group_keyConfig, SB(2128), "ToggleHelp",	480+offy);
+	// PART 2
+	{
+		RenderObject *kk = createBasicKeyConfig();
+		group_keyConfig[1] = kk;
+
+		int y = 0;
+
+		addKeyConfigLine(kk, SB(2121), "PrevPage",		offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2122), "NextPage",		offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2123), "CookFood",		offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2124), "FoodLeft",		offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2125), "FoodRight",	offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2126), "FoodDrop",		offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2128), "ToggleHelp",	offx, offy+(y+=yi));
+	}
+
+	// PART 2
+	{
+		RenderObject *kk = createBasicKeyConfig();
+		group_keyConfig[2] = kk;
+
+		int y = 0;
+		std::string slotstr = SB(2129);
+		for(unsigned i = 1; i <= 10; ++i) // SongSlot starts at 1
+		{
+			std::ostringstream osname;
+			osname << slotstr << ' ' << i;
+			std::ostringstream osac;
+			osac << "SongSlot" << i;
+			addKeyConfigLine(kk, osname.str(), osac.str(), offx, offy+(y+=yi));
+		}
+	}
+
 
 #undef SB
-
-	group_keyConfig->shareAlphaWithChildren = 1;
-	group_keyConfig->followCamera = 1;
-	group_keyConfig->alpha = 0;
-	group_keyConfig->setHidden(true);
-
-	group_keyConfig->position = Vector(0, -40);
-
-	game->addRenderObject(group_keyConfig, LR_OVERLAY);
-
 
 	cook = new AquariaMenuItem;
 	cook->useQuad("Gui/cook-button");
@@ -3604,27 +3683,28 @@ void InGameMenu::toggleKeyConfigMenu(bool f)
 
 		keyConfigMenu = true;
 
-		group_keyConfig->setHidden(false);
-		group_keyConfig->alpha = 1;
+		keyConfigBg->setHidden(false);
+		keyConfigBg->alpha = 1;
+
+		for(unsigned i = 0; i < NUM_KEY_CONFIG_PAGES; ++i)
+		{
+			// FG: FIXME: changed layout: m, k1, k2, j
+			RenderObject::Children::reverse_iterator it = group_keyConfig[i]->children.rbegin();
+			AquariaKeyConfig *upright0 = (AquariaKeyConfig*)(*it++);
+			AquariaKeyConfig *upright = (AquariaKeyConfig*)(*it++);
+			AquariaKeyConfig *upleft = (AquariaKeyConfig*)(*it++);
+
+			//opt_cancel->setDirMove(DIR_UP, upright);
+			upright->setDirMove(DIR_DOWN, opt_cancel);
+			upright0->setDirMove(DIR_DOWN, opt_cancel);
+
+			//opt_save->setDirMove(DIR_UP, upleft);
+			upleft->setDirMove(DIR_DOWN, opt_save);
+		}
+
+		switchToKeyConfigPage(0);
 
 		dsq->user_bcontrol = dsq->user;
-
-		//group_keyConfig->children[group_keyConfig->children.size()-3]
-
-		RenderObject::Children::reverse_iterator i = group_keyConfig->children.rbegin();
-		AquariaKeyConfig *upright0 = (AquariaKeyConfig*)(*i);
-		i++;
-		AquariaKeyConfig *upright = (AquariaKeyConfig*)(*i);
-		i++;
-		AquariaKeyConfig *upleft = (AquariaKeyConfig*)(*i);
-
-		opt_cancel->setDirMove(DIR_UP, upright);
-		upright->setDirMove(DIR_DOWN, opt_cancel);
-		upright0->setDirMove(DIR_DOWN, opt_cancel);
-
-		opt_save->setDirMove(DIR_UP, upleft);
-		upleft->setDirMove(DIR_DOWN, opt_save);
-
 
 		opt_cancel->alpha = 1;
 		opt_save->alpha = 1;
@@ -3641,8 +3721,8 @@ void InGameMenu::toggleKeyConfigMenu(bool f)
 	{
 		keyConfigMenu = false;
 
-		group_keyConfig->alpha = 0;
-		group_keyConfig->setHidden(true);
+		keyConfigBg->setHidden(true);
+		keyConfigBg->alpha = 0;
 
 		opt_cancel->alpha = 0;
 		opt_save->alpha = 0;
@@ -3652,6 +3732,22 @@ void InGameMenu::toggleKeyConfigMenu(bool f)
 
 		menuIconGlow->alpha = 1;
 	}
+}
+
+void InGameMenu::switchToKeyConfigPage(int page)
+{
+	assert(page < NUM_KEY_CONFIG_PAGES);
+	for(unsigned i = 0; i < NUM_KEY_CONFIG_PAGES; ++i)
+	{
+		group_keyConfig[i]->setHidden(true);
+		group_keyConfig[i]->alpha = 0;
+		keyCategoryButtons[i]->inactiveColor = Vector(0, 0, 0.5f);
+		keyCategoryButtons[i]->inactiveAlpha = 0.5f;
+	}
+	keyCategoryButtons[page]->inactiveColor = Vector(0.3f, 0.3f, 0.7f);
+	keyCategoryButtons[page]->inactiveAlpha = 0.7f;
+	group_keyConfig[page]->setHidden(false);
+	group_keyConfig[page]->alpha = 1;
 }
 
 void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)

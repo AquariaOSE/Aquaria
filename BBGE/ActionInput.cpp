@@ -21,14 +21,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "ActionInput.h"
 #include "ActionMapper.h"
+#include "Core.h"
 #include "SDL.h"
 
 #ifndef BBGE_BUILD_SDL2
 #error Needs fixes for SDL 1.2, doesnt support scancodes
 #endif
 
-
-std::string getInputCodeToString(int k)
+static std::string inputcode2string(int k)
 {
 	if(k <= 0)
 		return std::string();
@@ -42,11 +42,25 @@ std::string getInputCodeToString(int k)
 		os << "K:" << k;
 		return os.str();
 	}
-	
+
 	if(k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
 	{
 		std::stringstream os;
 		os << "JB:" << (k - JOY_BUTTON_0);
+		return os.str();
+	}
+
+	if(k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
+	{
+		std::stringstream os;
+		os << "AX:+" << (k - JOY_AXIS_0_POS);
+		return os.str();
+	}
+
+	if(k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
+	{
+		std::stringstream os;
+		os << "AX:-" << (k - JOY_AXIS_0_NEG);
 		return os.str();
 	}
 
@@ -58,9 +72,64 @@ std::string getInputCodeToString(int k)
 		return "RMB";
 	case MOUSE_BUTTON_MIDDLE:
 		return "MMB";
+	default:
+		if(k >= MOUSE_BUTTON_EXTRA_START && k < MOUSE_BUTTON_EXTRA_START+mouseExtraButtons)
+		{
+			std::ostringstream os;
+			os << "MB:" << (k - MOUSE_BUTTON_LEFT);
+			return os.str();
+		}
 	}
 
 	return std::string();
+}
+
+static const char *jaxisname(int joysickID, int axis)
+{
+	Joystick *j = joysickID < core->joysticks.size() ? core->joysticks[joysickID] : NULL;
+	return j ? j->getAxisName(axis) : NULL;
+}
+
+static const char *jbtnname(int joysickID, int btn)
+{
+	Joystick *j = joysickID < core->joysticks.size() ? core->joysticks[joysickID] : NULL;
+	return j ? j->getButtonName(btn) : NULL;
+}
+
+
+
+std::string getInputCodeToString(int k)
+{
+	std::string s = inputcode2string(k);
+	if(s.empty())
+		return "NONE";
+	return spacesToUnderscores(s);
+}
+
+std::string getInputCodeToUserString(int k, int joystickID)
+{
+	const char *pretty = NULL;
+
+	// Special case keyboard input:
+	// Return key name for current keyboard layout!
+	// It's just confusing to see Y instead of Z with a german keyboard layout...
+	if(k < SDL_NUM_SCANCODES)
+	{
+		const SDL_Keycode kcode = SDL_GetKeyFromScancode((SDL_Scancode)k);
+		if(kcode != SDLK_UNKNOWN)
+			pretty = SDL_GetKeyName(kcode);
+	}
+	if(k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
+		pretty = jaxisname(joystickID, k - JOY_AXIS_0_POS);
+	else if(k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
+		pretty = jaxisname(joystickID, k - JOY_AXIS_0_NEG);
+	else if(k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
+		pretty = jbtnname(joystickID, k - JOY_BUTTON_0);
+
+	if(pretty && *pretty)
+		return pretty;
+
+	return inputcode2string(k);
 }
 
 int getStringToInputCode(const std::string& s)
@@ -75,8 +144,22 @@ int getStringToInputCode(const std::string& s)
 		return atoi(s.c_str() + 2);
 	if(!strncmp(s.c_str(), "JB:", 3))
 		return JOY_BUTTON_0 + atoi(s.c_str() + 3);
+	if(!strncmp(s.c_str(), "MB:", 3))
+		return MOUSE_BUTTON_LEFT + atoi(s.c_str() + 3);
+	if(s.length() > 4 && !strncmp(s.c_str(), "AX:", 3))
+	{
+		int n = atoi(s.c_str() + 4);
+		switch(s[3])
+		{
+			case '+': return JOY_AXIS_0_POS + n;
+			case '-': return JOY_AXIS_0_NEG + n;
+			default: return 0;
+		}
+	}
+	if(s == "NONE")
+		return 0;
 
-	return SDL_GetScancodeFromName(s.c_str());
+	return SDL_GetScancodeFromName(underscoresToSpaces(s).c_str());
 }
 
 

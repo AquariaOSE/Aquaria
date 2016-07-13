@@ -2540,6 +2540,12 @@ void Game::action(int id, int state, int source)
 	if(isIgnoreAction((AquariaActions)id))
 		return;
 
+	// forward
+	if(id == ACTION_TOGGLEMENU)
+	{
+		themenu->action(id, state, source);
+	}
+
 	if (id == ACTION_TOGGLEHELPSCREEN && !state)
 	{
 		onToggleHelpScreen();
@@ -3787,7 +3793,9 @@ void Game::onPressEscape()
 		if (!paused)
 		{
 			if (core->getNestedMains() == 1 && !core->isStateJumpPending())
+			{
 				action(ACTION_TOGGLEMENU, 1, -1); // show menu
+			}
 		}
 
 		if ((dsq->saveSlotMode != SSM_NONE || dsq->inModSelector) && core->isNested())

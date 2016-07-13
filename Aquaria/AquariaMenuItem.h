@@ -171,6 +171,7 @@ public:
 	static AquariaKeyConfig *waitingForInput;
 
 	void setAcceptEsc(bool a);
+	void setJoystickID(int id);
 
 protected:
 	void toggleEnterKey(int on);
@@ -185,6 +186,7 @@ protected:
 	int inputIdx;
 	TTFText *keyConfigFont;
 	Quad *bg;
+	int joystickID;
 	bool acceptEsc;
 };
 

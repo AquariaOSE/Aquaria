@@ -21,6 +21,8 @@ class AquariaSlider;
 class AquariaComboBox;
 class RecipeMenuEntry;
 class Recipe;
+class RoundedRect;
+class DebugButton;
 
 
 enum MenuPage
@@ -66,6 +68,8 @@ class InGameMenu : public ActionMapper
 	friend class TreasureSlot;
 	friend class SongSlot;
 	friend class FoodHolder;
+	friend class KeyConfigMenuReceiver;
+	enum { NUM_KEY_CONFIG_PAGES = 3 };
 
 public:
 	InGameMenu();
@@ -188,9 +192,9 @@ private:
 
 	void onKeyConfig();
 
-	void addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, bool acceptEsc = false);
+	void addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int x, int y, bool acceptEsc = false);
 
-	AquariaKeyConfig *addAxesConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int y, int offx);
+	AquariaKeyConfig *addAxesConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int offx, int y);
 
 	void onOptionsSave();
 	void onOptionsCancel();
@@ -200,8 +204,11 @@ private:
 	AquariaComboBox *resBox;
 	Quad *songBubbles, *energyIdol, *liCrystal;
 
-	RenderObject *group_keyConfig;
-
+	RenderObject *group_keyConfig[NUM_KEY_CONFIG_PAGES];
+	RoundedRect *keyConfigBg;
+	std::vector<DebugButton*> keyCategoryButtons;
+	RenderObject *createBasicKeyConfig();
+	void switchToKeyConfigPage(int page);
 	Quad *options;
 
 	void onExitCheckNo();

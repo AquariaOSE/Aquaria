@@ -29,6 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define INP_JOYSIZE		1
 
 std::string getInputCodeToString(int k);
+std::string getInputCodeToUserString(int k, int joystickID);
 int getStringToInputCode(const std::string& s);
 
 class ActionInput
