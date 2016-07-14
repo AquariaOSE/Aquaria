@@ -158,7 +158,7 @@ PetSlot::PetSlot(int pet) : AquariaGuiQuad()
 		std::string fn = "collectibles/egg-" + p->namePart;
 		setTexture(fn);
 	}
-	scale = Vector(0.9, 0.9);
+	scale = Vector(0.9f, 0.9f);
 	petidx = pet;
 	mouseDown = false;
 	petFlag = FLAG_PET_NAMESTART + petidx;
@@ -201,13 +201,13 @@ void PetSlot::onUpdate(float dt)
 		color = Vector(1,1,1);
 	}
 	else
-		color = Vector(0.5, 0.5, 0.5);
+		color = Vector(0.5f, 0.5f, 0.5f);
 
 	if (alpha.x < 1) return;
 
 	if ((core->mouse.position - getWorldPosition()).isLength2DIn(32))
 	{
-		scale.interpolateTo(Vector(1.2, 1.2), 0.1);
+		scale.interpolateTo(Vector(1.2f, 1.2f), 0.1f);
 
 		if (core->mouse.buttons.left && !mouseDown)
 		{
@@ -233,7 +233,7 @@ void PetSlot::onUpdate(float dt)
 	else
 	{
 		mouseDown = false;
-		scale.interpolateTo(Vector(0.9, 0.9), 0.1);
+		scale.interpolateTo(Vector(0.9f, 0.9f), 0.1);
 	}
 }
 
@@ -258,17 +258,17 @@ FoodHolder::FoodHolder(int slot, bool trash) : Quad(), slot(slot), trash(trash)
 
 	lid = new Quad("gui/wok-lid", Vector(0,0));
 	lid->alpha = 0;
-	lid->alphaMod = 0.5;
+	lid->alphaMod = 0.5f;
 	addChild(lid, PM_POINTER);
 }
 
 void FoodHolder::animateLid(bool down, bool longAnim)
 {
-	float t = 0.2;
+	float t = 0.2f;
 
 	if (!longAnim)
 	{
-		t = 0.1;
+		t = 0.1f;
 	}
 
 	if (down)
@@ -464,7 +464,7 @@ void FoodSlot::refresh(bool effects)
 		setWidthHeight(64);
 	}
 
-	scale.interpolateTo(Vector(1,1)*scaleFactor,0.001);
+	scale.interpolateTo(Vector(1,1)*scaleFactor,0.001f);
 
 	if (ingredient != 0 && (i != lastIngredient || (i && i->amount != lastAmount)))
 	{
@@ -573,7 +573,7 @@ void FoodSlot::onUpdate(float dt)
 					Vector wp = getWorldPosition();
 					if ((themenu->lips->getWorldPosition() - wp).isLength2DIn(32))
 					{
-						themenu->menuSelectDelay = 0.5;
+						themenu->menuSelectDelay = 0.5f;
 
 						eatMe();
 					}
@@ -614,7 +614,7 @@ void FoodSlot::onUpdate(float dt)
 						{
 							if (doubleClickDelay > 0)
 							{
-								themenu->menuSelectDelay = 0.5;
+								themenu->menuSelectDelay = 0.5f;
 								doubleClickDelay = 0;
 								eatMe();
 
@@ -655,10 +655,10 @@ void FoodSlot::onUpdate(float dt)
 		if ((core->mouse.position - getWorldPosition()).isLength2DIn(16))
 		{
 			themenu->foodLabel->setText(ingredient->displayName);
-			themenu->foodLabel->alpha.interpolateTo(1, 0.2);
+			themenu->foodLabel->alpha.interpolateTo(1, 0.2f);
 
 			themenu->foodDescription->setText(dsq->continuity.getIngredientAffectsString(ingredient));
-			themenu->foodDescription->alpha.interpolateTo(1, 0.2);
+			themenu->foodDescription->alpha.interpolateTo(1, 0.2f);
 
 			if (core->mouse.buttons.left && foodSlotIndex == -1)
 			{
@@ -715,9 +715,9 @@ SongSlot::SongSlot(int songSlot) : AquariaGuiQuad(), songSlot(songSlot)
 	mbDown = false;
 
 	if (dsq->continuity.isSongTypeForm((SongType)dsq->continuity.getSongTypeBySlot(songSlot)))
-		scale = Vector(0.9, 0.9);
+		scale = Vector(0.9f, 0.9f);
 	else
-		scale = Vector(0.6, 0.6);
+		scale = Vector(0.6f, 0.6f);
 }
 
 void SongSlot::onUpdate(float dt)
@@ -816,7 +816,7 @@ void TreasureSlot::onUpdate(float dt)
 
 					themenu->selectedTreasureFlag = flag;
 
-					doubleClickTimer = 0.2;
+					doubleClickTimer = 0.2f;
 
 
 					std::ostringstream os;
@@ -2011,7 +2011,7 @@ void InGameMenu::create()
 	header_joy->setAlign(ALIGN_CENTER);
 	keyConfigBg->addChild(header_joy, PM_POINTER);
 
-	offy += 2*yi;
+	offy += 2*yi+yi/2;
 
 	// PART 1
 	{
@@ -2030,9 +2030,9 @@ void InGameMenu::create()
 		addKeyConfigLine(kk, SB(2114), "Revert",				offx, offy+(y+=yi));
 		addKeyConfigLine(kk, SB(2115), "WorldMap",				offx, offy+(y+=yi));
 		addKeyConfigLine(kk, SB(2127), "Look",				offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2116), "Escape",				offx, offy+(y+=yi), true);
+		addKeyConfigLine(kk, SB(2132), "Screenshot",		offx, offy+(y+=yi));
 
-		y+=yi;
+		y+=yi+yi/2;
 		AquariaKeyConfig* s1x = addAxesConfigLine(kk, SB(2117), "s1ax", offx, y+offy);
 		AquariaKeyConfig* s1y = addAxesConfigLine(kk, SB(2118), "s1ay", offx+130, y+offy);
 		AquariaKeyConfig* s2x = addAxesConfigLine(kk, SB(2119), "s2ax", offx+260, y+offy);
