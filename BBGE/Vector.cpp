@@ -456,8 +456,6 @@ void InterpolatedVector::doInterpolate(float dt)
 {
 	InterpolatedVectorData *data = ensureData();
 
-
-
 	data->timePassed += dt;
 	if (data->timePassed >= data->timePeriod)
 	{
@@ -487,15 +485,9 @@ void InterpolatedVector::doInterpolate(float dt)
 	}
 	else
 	{
-		Vector v;
-
-
-
-		v = lerp(data->from, data->target, (data->timePassed / data->timePeriod), data->ease ? LERP_EASE : LERP_LINEAR);
-
+		Vector v = lerp(data->from, data->target, (data->timePassed / data->timePeriod), data->ease ? LERP_EASE : LERP_LINEAR);
 		this->x = v.x;
 		this->y = v.y;
 		this->z = v.z;
-
 	}
 }

@@ -2861,7 +2861,7 @@ int Core::tgaSaveSeries(char		*filename,
 
 // compute the new filename by adding the
 // series number and the extension
-	newFilename = (char *)malloc(sizeof(char) * strlen(filename)+8);
+	newFilename = (char *)malloc(sizeof(char) * strlen(filename)+16);
 
 	sprintf(newFilename,"%s%d",filename,numSavedScreenshots);
 
@@ -2875,11 +2875,10 @@ int Core::tgaSaveSeries(char		*filename,
 	return(status);
 }
 
- void Core::screenshot()
- {
-	 doScreenshot = true;
-
- }
+void Core::screenshot()
+{
+	doScreenshot = true;
+}
 
 
  #include "DeflateCompressor.h"

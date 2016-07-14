@@ -97,8 +97,6 @@ ActionInput *ActionSet::addActionInput(const std::string &name)
 		newa.name = name;
 		inputSet.push_back(newa);
 		a = getActionInputByName(name);
-
-		if (!a) return 0;
 	}
 
 	return a;
