@@ -176,6 +176,12 @@ void UserSettings::save()
 			}
 			xml_control->InsertEndChild(xml_targeting);
 
+			XMLElement *xml_flip = doc.NewElement("FlipInputButtons");
+			{
+				xml_flip->SetAttribute("on", control.flipInputButtons);
+			}
+			xml_control->InsertEndChild(xml_flip);
+
 			XMLElement *xml_joyAxes = doc.NewElement("JoyAxes");
 			{
 				xml_joyAxes->SetAttribute("s1ax", control.s1ax);
@@ -429,10 +435,9 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	if (xml_control)
 	{
 		readInt(xml_control, "JoystickEnabled", "on", &control.joystickEnabled);
-
 		readInt(xml_control, "AutoAim", "on", &control.autoAim);
-
 		readInt(xml_control, "Targeting", "on", &control.targeting);
+		readInt(xml_control, "FlipInputButtons", "on", &control.flipInputButtons);
 
 		XMLElement *xml_joyAxes = xml_control->FirstChildElement("JoyAxes");
 		if (xml_joyAxes)
