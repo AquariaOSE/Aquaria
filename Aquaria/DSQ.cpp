@@ -673,8 +673,8 @@ void DSQ::debugMenu()
 
 void DSQ::takeScreenshotKey()
 {
-	if (core->getCtrlState() && core->getAltState())
-		takeScreenshot();
+	if (getCtrlState() && getAltState())
+		screenshot();
 }
 
 Quad *loading=0;
@@ -1752,13 +1752,6 @@ void DSQ::toggleRenderCollisionShapes()
 {
 	if (core->getCtrlState() && core->getShiftState())
 		RenderObject::renderCollisionShape = !RenderObject::renderCollisionShape;
-}
-
-void DSQ::takeScreenshot()
-{
-
-	doScreenshot = true;
-
 }
 
 void DSQ::unloadDevice()
@@ -3738,6 +3731,11 @@ void DSQ::action(int id, int state, int source)
 			}
 		}
 	}
+
+	if(id == ACTION_SCREENSHOT && state)
+	{
+		screenshot();
+	}
 }
 
 void DSQ::bindInput()
@@ -3759,8 +3757,8 @@ void DSQ::bindInput()
 		addAction(MakeFunctionEvent(DSQ, toggleRenderCollisionShapes), KEY_RETURN, 0);
 	}
 	addAction(MakeFunctionEvent(DSQ, debugMenu), KEY_BACKSPACE, 0);
-	addAction(MakeFunctionEvent(DSQ, takeScreenshot		),		KEY_PRINTSCREEN,	0);
-	addAction(MakeFunctionEvent(DSQ, takeScreenshotKey	),		KEY_P,				0);
+	//addAction(MakeFunctionEvent(DSQ, takeScreenshotKey	),		KEY_P,				0);
+	user.control.actionSet.importAction(this, "Screenshot",		ACTION_SCREENSHOT);
 }
 
 void DSQ::jiggleCursor()
