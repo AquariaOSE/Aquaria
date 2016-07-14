@@ -323,7 +323,6 @@ public:
 
 	std::string dialogueFile;
 
-	void takeScreenshot();
 	void takeScreenshotKey();
 
 	void generateCollisionMask(RenderObject *r);

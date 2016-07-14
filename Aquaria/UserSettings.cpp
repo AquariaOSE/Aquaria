@@ -330,6 +330,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	control.actionSet.addActionInput("FoodDrop");
 	control.actionSet.addActionInput("Look");
 	control.actionSet.addActionInput("ToggleHelp");
+	control.actionSet.addActionInput("Screenshot");
 
 	XMLElement *xml_system = doc.FirstChildElement("System");
 	if (xml_system)

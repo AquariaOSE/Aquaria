@@ -241,6 +241,7 @@
 2129 Song Slot #
 2130 Category
 2131 Mouse
+2132 Take Screenshot
 2150 Movement
 2151 Menu
 2152 Quick Keys
