@@ -477,11 +477,12 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 
 			for(XMLElement *xml_action = xml_actionSet->FirstChildElement(); xml_action; xml_action = xml_action->NextSiblingElement())
 			{
-				std::string name = xml_action->Attribute("name");
-				if (!name.empty())
+				const char *name = xml_action->Attribute("name");
+				const char *input = xml_action->Attribute("input");
+				if (name && *name && input && *input)
 				{
 					ActionInput *ai = as.addActionInput(name);
-					ai->fromString(xml_action->Attribute("input"));
+					ai->fromString(input);
 				}
 			}
 		}
@@ -490,7 +491,12 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		if(nas < control.minActionSets)
 			control.actionSets.resize(control.minActionSets);
 		while(nas < control.actionSets.size())
-			ensureDefaultActions(control.actionSets[nas++]);
+		{
+			ActionSet& as = control.actionSets[nas];
+			ensureDefaultActions(as);
+			as.enabled = false;
+			++nas;
+		}
 	}
 
 	XMLElement *xml_demo = doc.FirstChildElement("Demo");
