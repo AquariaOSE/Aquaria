@@ -84,15 +84,15 @@ static std::string inputcode2string(int k)
 	return std::string();
 }
 
-static const char *jaxisname(int joysickID, int axis)
+static const char *jaxisname(int joystickID, int axis)
 {
-	Joystick *j = joysickID < core->joysticks.size() ? core->joysticks[joysickID] : NULL;
+	Joystick *j = core->getJoystick(joystickID);
 	return j ? j->getAxisName(axis) : NULL;
 }
 
-static const char *jbtnname(int joysickID, int btn)
+static const char *jbtnname(int joystickID, int btn)
 {
-	Joystick *j = joysickID < core->joysticks.size() ? core->joysticks[joysickID] : NULL;
+	Joystick *j = core->getJoystick(joystickID);
 	return j ? j->getButtonName(btn) : NULL;
 }
 
@@ -171,7 +171,7 @@ ActionInput::ActionInput()
 	for (int i = 0; i < INP_JOYSIZE; i++)	joy[i] = 0;
 }
 
-std::string ActionInput::toString()
+std::string ActionInput::toString() const
 {
 	std::ostringstream os;
 

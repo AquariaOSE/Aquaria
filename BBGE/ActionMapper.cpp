@@ -56,7 +56,7 @@ bool ActionMapper::isActing(int actionID)
 	return false;
 }
 
-void ActionMapper::addAction (int actionID, int k)
+void ActionMapper::addAction(int actionID, int k, int source)
 {
 	ActionData *ad = getActionDataByID(actionID);
 
@@ -203,8 +203,8 @@ bool ActionMapper::getKeyState(int k)
 	{
 		int v = k - JOY_BUTTON_0;
 
-		for(size_t i = 0; i < core->joysticks.size(); ++i)
-			if(Joystick *j = core->joysticks[i])
+		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+			if(Joystick *j = core->getJoystick(i))
 				if(j->isEnabled())
 					if( ((keyState = j->getButton(v))) )
 						break;
@@ -213,8 +213,8 @@ bool ActionMapper::getKeyState(int k)
 	{
 		int v = k - JOY_AXIS_0_POS;
 
-		for(size_t i = 0; i < core->joysticks.size(); ++i)
-			if(Joystick *j = core->joysticks[i])
+		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+			if(Joystick *j = core->getJoystick(i))
 				if(j->isEnabled())
 				{
 					float ax = j->getAxisUncalibrated(v);
@@ -227,8 +227,8 @@ bool ActionMapper::getKeyState(int k)
 	{
 		int v = k - JOY_AXIS_END_NEG;
 
-		for(size_t i = 0; i < core->joysticks.size(); ++i)
-			if(Joystick *j = core->joysticks[i])
+		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+			if(Joystick *j = core->getJoystick(i))
 				if(j->isEnabled())
 				{
 					float ax = j->getAxisUncalibrated(v);

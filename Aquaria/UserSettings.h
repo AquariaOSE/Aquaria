@@ -91,22 +91,16 @@ public:
 			autoAim = 1;
 			targeting = 1;
 			flipInputButtons = 0;
-			s1ax = 0;
-			s1ay = 0;
-			s2ax = 0;
-			s2ay = 0;
-			s1dead = 0.3;
-			s2dead = 0.3;
 			joystickEnabled = 0;
+			minActionSets = 4;
 		}
 		int joystickEnabled;
 		int autoAim;
 		int targeting;
 		int flipInputButtons;
-		ActionSet actionSet;
-		int s1ax, s1ay, s2ax, s2ay;
-		float s1dead, s2dead;
+		std::vector<ActionSet> actionSets;
 		int toolTipsOn;
+		int minActionSets;
 	} control;
 
 	struct Demo

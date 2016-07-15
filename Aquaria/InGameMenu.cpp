@@ -920,16 +920,22 @@ InGameMenu::~InGameMenu()
 
 void InGameMenu::bindInput()
 {
-	dsq->user.control.actionSet.importAction(this, "Escape",		ACTION_ESC);
+	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	{
+		const ActionSet& as = dsq->user.control.actionSets[i];
+		int sourceID = (int)i;
 
-	dsq->user.control.actionSet.importAction(this, "WorldMap",		ACTION_TOGGLEWORLDMAP);
+		as.importAction(this, "Escape",		ACTION_ESC, sourceID);
 
-	dsq->user.control.actionSet.importAction(this, "PrevPage",		ACTION_PREVPAGE);
-	dsq->user.control.actionSet.importAction(this, "NextPage",		ACTION_NEXTPAGE);
-	dsq->user.control.actionSet.importAction(this, "CookFood",		ACTION_COOKFOOD);
-	dsq->user.control.actionSet.importAction(this, "FoodLeft",		ACTION_FOODLEFT);
-	dsq->user.control.actionSet.importAction(this, "FoodRight",		ACTION_FOODRIGHT);
-	dsq->user.control.actionSet.importAction(this, "FoodDrop",		ACTION_FOODDROP);
+		as.importAction(this, "WorldMap",		ACTION_TOGGLEWORLDMAP, sourceID);
+
+		as.importAction(this, "PrevPage",		ACTION_PREVPAGE, sourceID);
+		as.importAction(this, "NextPage",		ACTION_NEXTPAGE, sourceID);
+		as.importAction(this, "CookFood",		ACTION_COOKFOOD, sourceID);
+		as.importAction(this, "FoodLeft",		ACTION_FOODLEFT, sourceID);
+		as.importAction(this, "FoodRight",		ACTION_FOODRIGHT, sourceID);
+		as.importAction(this, "FoodDrop",		ACTION_FOODDROP, sourceID);
+	}
 }
 
 void InGameMenu::reset()
@@ -3215,7 +3221,7 @@ void InGameMenu::onOptionsCancel()
 	}
 	else
 	{
-		dsq->user.control.actionSet = dsq->user_bcontrol.control.actionSet;
+		dsq->user.control.actionSets = dsq->user_bcontrol.control.actionSets;
 	}
 
 	dsq->user.apply();

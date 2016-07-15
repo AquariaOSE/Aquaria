@@ -3034,3 +3034,9 @@ void Core::onJoystickRemoved(int instanceID)
 		}
 	// TODO: fixup ActionMapper?
 }
+
+Joystick *Core::getJoystick(int idx)
+{
+	size_t i = idx;
+	return i < joysticks.size() ? joysticks[i] : NULL;
+}

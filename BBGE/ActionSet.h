@@ -32,22 +32,42 @@ typedef std::vector<ActionInput> ActionInputSet;
 class ActionMapper;
 class Event;
 
+struct JoystickConfig
+{
+	JoystickConfig();
+	int s1ax, s1ay, s2ax, s2ay;
+	float s1dead, s2dead;
+};
+
 class ActionSet
 {
 public:
-	void importAction(ActionMapper *mapper, const std::string &name, Event *event, int state);
-	void importAction(ActionMapper *mapper, const std::string &name, int actionID);
+	ActionSet();
+
+	// import this ActionSet into ActionMapper
+	void importAction(ActionMapper *mapper, const std::string &name, Event *event, int state) const;
+	void importAction(ActionMapper *mapper, const std::string &name, int actionID, int sourceID) const;
 	void clearActions();
+	int assignJoystickByName(); // -1 if no such joystick found
+	void assignJoystickIdx(int idx);
 
 	ActionInput *addActionInput(const std::string &name);
-
-
-
 	ActionInput *getActionInputByName(const std::string &name);
 
+	int joystickID;
+
+	// --- Saved in config ---
 	ActionInputSet inputSet;
+	JoystickConfig joycfg;
+	std::string joystickName;
+	std::string joystickGUID;
+	std::string name;
+	bool enabled;
+	// -----------------------
 
 	//std::string insertInputIntoString(const std::string &string);
+private:
+	int _whichJoystickForName(); // -1 if no souch joystick found
 };
 
 #endif

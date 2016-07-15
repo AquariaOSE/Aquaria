@@ -29,8 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/TTFFont.h"
 #include "../BBGE/RoundedRect.h"
 
-#include "tinyxml2.h"
-using namespace tinyxml2;
+namespace tinyxml2 { class XMLDocument; }
 
 class AquariaGuiElement
 {
@@ -78,7 +77,6 @@ public:
 	void setLabel(const std::string &label);
 	EventPtr event;
 	BitmapText *font, *glowFont;
-	XMLElement *ability, *xmlItem;
 	int choice;
 	Quad *glow, *quad;
 	bool useQuad(const std::string &tex);
@@ -114,7 +112,7 @@ public:
 
 	bool mbDown;
 
-	static std::string getSaveDescription(const XMLDocument &doc);
+	static std::string getSaveDescription(const tinyxml2::XMLDocument &doc);
 
 protected:
 	void onUpdate(float dt);
@@ -171,7 +169,7 @@ public:
 	static AquariaKeyConfig *waitingForInput;
 
 	void setAcceptEsc(bool a);
-	void setJoystickID(int id);
+	void setActionSetIndex(int idx);
 
 protected:
 	void toggleEnterKey(int on);
@@ -186,7 +184,7 @@ protected:
 	int inputIdx;
 	TTFText *keyConfigFont;
 	Quad *bg;
-	int joystickID;
+	int actionSetIndex;
 	bool acceptEsc;
 };
 

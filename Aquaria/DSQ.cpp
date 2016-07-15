@@ -172,7 +172,6 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	_canSkipCutscene = false;
 	skippingCutscene = false;
 
-	almb = armb = 0;
 	bar_left = bar_right = bar_up = bar_down = barFade_left = barFade_right = 0;
 
 	difficulty = DIFF_NORMAL;
@@ -3741,11 +3740,8 @@ void DSQ::action(int id, int state, int source)
 void DSQ::bindInput()
 {
 	clearActions();
-
-	almb = user.control.actionSet.getActionInputByName("PrimaryAction");
-	armb = user.control.actionSet.getActionInputByName("SecondaryAction");
-
-	user.control.actionSet.importAction(this, "Escape",		ACTION_ESC);
+	almb.clear();
+	armb.clear();
 
 	addAction(MakeFunctionEvent(DSQ, onSwitchScreenMode), KEY_RETURN, 1);
 
@@ -3758,7 +3754,20 @@ void DSQ::bindInput()
 	}
 	addAction(MakeFunctionEvent(DSQ, debugMenu), KEY_BACKSPACE, 0);
 	//addAction(MakeFunctionEvent(DSQ, takeScreenshotKey	),		KEY_P,				0);
-	user.control.actionSet.importAction(this, "Screenshot",		ACTION_SCREENSHOT);
+	
+	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	{
+		ActionSet& as = dsq->user.control.actionSets[i];
+		int sourceID = (int)i;
+
+		as.importAction(this, "Escape",		ACTION_ESC, sourceID);
+		as.importAction(this, "Screenshot",		ACTION_SCREENSHOT, sourceID);
+	
+		if(ActionInput *a = as.getActionInputByName("PrimaryAction"))
+			almb.push_back(a);
+		if(ActionInput *a = as.getActionInputByName("SecondaryAction"))
+			armb.push_back(a);
+	}
 }
 
 void DSQ::jiggleCursor()
@@ -3857,48 +3866,56 @@ void DSQ::onUpdate(float dt)
 
 	if (inputMode != INPUT_KEYBOARD && game->isActive())
 	{
-		if (almb && (ActionMapper::getKeyState(almb->key[0]) || ActionMapper::getKeyState(almb->key[1])))
-			mouse.buttons.left = DOWN;
-
-		if (armb && (ActionMapper::getKeyState(armb->key[0]) || ActionMapper::getKeyState(armb->key[1])))
-			mouse.buttons.right = DOWN;
+		for(size_t i = 0; i < almb.size(); ++i)
+			if (ActionMapper::getKeyState(almb[i]->key[0]) || ActionMapper::getKeyState(almb[i]->key[1]))
+			{
+				mouse.buttons.left = DOWN;
+				break;
+			}
+		for(size_t i = 0; i < armb.size(); ++i)
+			if (ActionMapper::getKeyState(armb[i]->key[0]) || ActionMapper::getKeyState(armb[i]->key[1]))
+			{
+				mouse.buttons.right = DOWN;
+				break;
+			}
 	}
 
 	if (joystickAsMouse)
 	{
-		if (almb && ActionMapper::getKeyState(almb->joy[0]))
-			mouse.buttons.left = DOWN;
-
-		if (armb && ActionMapper::getKeyState(armb->joy[0]))
-			mouse.buttons.right = DOWN;
+		for(size_t i = 0; i < almb.size(); ++i)
+			if (ActionMapper::getKeyState(almb[i]->joy[0]))
+			{
+				mouse.buttons.left = DOWN;
+				break;
+			}
+		for(size_t i = 0; i < armb.size(); ++i)
+			if (ActionMapper::getKeyState(armb[i]->joy[0]))
+			{
+				mouse.buttons.right = DOWN;
+				break;
+			}
 	}
 
 	if (joystickEnabled)
 	{
-
+		if (dsq->inputMode != INPUT_JOYSTICK)
 		{
-			if (dsq->inputMode != INPUT_JOYSTICK)
+			const float thresh = JOY_AXIS_THRESHOLD;
+			for(size_t i = 0; i < getNumJoysticks(); ++i)
+				if(Joystick *j = getJoystick(i))
+					if(j && j->isEnabled())
+						if (j->anyButton() || !j->position.isLength2DIn(thresh) || !j->rightStick.isLength2DIn(thresh))
+						{
+							//debugLog("setting joystick input mode");
+							dsq->setInputMode(INPUT_JOYSTICK);
+						}
+		}
+		else if (dsq->inputMode != INPUT_MOUSE)
+		{
+			if ((!core->mouse.change.isLength2DIn(5) || (core->getMouseButtonState(0) || core->getMouseButtonState(1))) /*&& !core->joystick.anyButton()*/)
 			{
-
-				const float thresh = 0.6;
-				for(size_t i = 0; i < joysticks.size(); ++i)
-					if(Joystick *j = joysticks[i])
-						if(j && j->isEnabled())
-							if (j->anyButton() || !j->position.isLength2DIn(thresh) || !j->rightStick.isLength2DIn(thresh))
-							{
-								//debugLog("setting joystick input mode");
-								dsq->setInputMode(INPUT_JOYSTICK);
-							}
-			}
-			else if (dsq->inputMode != INPUT_MOUSE)
-			{
-
-
-				if ((!core->mouse.change.isLength2DIn(5) || (core->getMouseButtonState(0) || core->getMouseButtonState(1))) /*&& !core->joystick.anyButton()*/)
-				{
-					//debugLog("setting mouse input mode");
-					dsq->setInputMode(INPUT_MOUSE);
-				}
+				//debugLog("setting mouse input mode");
+				dsq->setInputMode(INPUT_MOUSE);
 			}
 		}
 	}
@@ -3986,10 +4003,10 @@ void DSQ::onUpdate(float dt)
 		os << std::endl;
 		os << "globalScale: " << core->globalScale.x << std::endl;
 		os << "mousePos:(" << core->mouse.position.x << ", " << core->mouse.position.y << ") mouseChange:(" << core->mouse.change.x << ", " << core->mouse.change.y << ")\n";
-		for(size_t i = 0; i < joysticks.size(); ++i)
-			if(Joystick *j = joysticks[i])
+		for(size_t i = 0; i < getNumJoysticks(); ++i)
+			if(Joystick *j = getJoystick(i))
 			{
-				os << "J[" << i << "]:[";
+				os << "J[" << i << "," << (j->isEnabled() ? " on" : "off") << "]:[";
 				for(unsigned ii = 0; ii < MAX_JOYSTICK_BTN; ++ii)
 					if(j->getButton(ii))
 						os << (ii % 10);

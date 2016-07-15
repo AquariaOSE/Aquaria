@@ -3228,55 +3228,58 @@ void Game::bindInput()
 #ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->canOpenEditor())
 	{
-		addAction(ACTION_TOGGLESCENEEDITOR, KEY_TAB);
+		addAction(ACTION_TOGGLESCENEEDITOR, KEY_TAB, -1);
 	}
 #endif
-
-	dsq->user.control.actionSet.importAction(this, "PrimaryAction", ACTION_PRIMARY);
-	dsq->user.control.actionSet.importAction(this, "SecondaryAction", ACTION_SECONDARY);
-
-	dsq->user.control.actionSet.importAction(this, "Escape",		ACTION_ESC);
-
-	dsq->user.control.actionSet.importAction(this, "WorldMap",		ACTION_TOGGLEWORLDMAP);
-
-	dsq->user.control.actionSet.importAction(this, "ToggleHelp",	ACTION_TOGGLEHELPSCREEN);
-
-	// used for scrolling help text
-	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_SWIMUP);
-	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_SWIMDOWN);
-	dsq->user.control.actionSet.importAction(this, "SwimLeft",		ACTION_SWIMLEFT);
-	dsq->user.control.actionSet.importAction(this, "SwimRight",		ACTION_SWIMRIGHT);
-
-
-	dsq->user.control.actionSet.importAction(this, "PrevPage",		ACTION_PREVPAGE);
-	dsq->user.control.actionSet.importAction(this, "NextPage",		ACTION_NEXTPAGE);
-	dsq->user.control.actionSet.importAction(this, "CookFood",		ACTION_COOKFOOD);
-	dsq->user.control.actionSet.importAction(this, "FoodLeft",		ACTION_FOODLEFT);
-	dsq->user.control.actionSet.importAction(this, "FoodRight",		ACTION_FOODRIGHT);
-	dsq->user.control.actionSet.importAction(this, "FoodDrop",		ACTION_FOODDROP);
 
 	if (dsq->canOpenEditor())
 	{
 		//addAction(MakeFunctionEvent(Game, toggleMiniMapRender), KEY_M, 0);
-		addAction(ACTION_TOGGLEGRID, KEY_F9);
+		addAction(ACTION_TOGGLEGRID, KEY_F9, -1);
 	}
 
-	// To capture quick song keys via script
-	dsq->user.control.actionSet.importAction(this, "SongSlot1",		ACTION_SONGSLOT1);
-	dsq->user.control.actionSet.importAction(this, "SongSlot2",		ACTION_SONGSLOT2);
-	dsq->user.control.actionSet.importAction(this, "SongSlot3",		ACTION_SONGSLOT3);
-	dsq->user.control.actionSet.importAction(this, "SongSlot4",		ACTION_SONGSLOT4);
-	dsq->user.control.actionSet.importAction(this, "SongSlot5",		ACTION_SONGSLOT5);
-	dsq->user.control.actionSet.importAction(this, "SongSlot6",		ACTION_SONGSLOT6);
-	dsq->user.control.actionSet.importAction(this, "SongSlot7",		ACTION_SONGSLOT7);
-	dsq->user.control.actionSet.importAction(this, "SongSlot8",		ACTION_SONGSLOT8);
-	dsq->user.control.actionSet.importAction(this, "SongSlot9",		ACTION_SONGSLOT9);
-	dsq->user.control.actionSet.importAction(this, "SongSlot10",	ACTION_SONGSLOT10);
+	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	{
+		const ActionSet& as = dsq->user.control.actionSets[i];
+		int sourceID = (int)i;
 
-	dsq->user.control.actionSet.importAction(this, "Revert",		ACTION_REVERT);
+		as.importAction(this, "PrimaryAction", ACTION_PRIMARY, sourceID);
+		as.importAction(this, "SecondaryAction", ACTION_SECONDARY, sourceID);
 
-	dsq->user.control.actionSet.importAction(this, "Look",			ACTION_LOOK);
-	dsq->user.control.actionSet.importAction(this, "Roll",			ACTION_ROLL);
+		as.importAction(this, "Escape",		ACTION_ESC, sourceID);
+		as.importAction(this, "WorldMap",		ACTION_TOGGLEWORLDMAP, sourceID);
+		as.importAction(this, "ToggleHelp",	ACTION_TOGGLEHELPSCREEN, sourceID);
+
+		// used for scrolling help text
+		as.importAction(this, "SwimUp",		ACTION_SWIMUP, sourceID);
+		as.importAction(this, "SwimDown",		ACTION_SWIMDOWN, sourceID);
+		as.importAction(this, "SwimLeft",		ACTION_SWIMLEFT, sourceID);
+		as.importAction(this, "SwimRight",		ACTION_SWIMRIGHT, sourceID);
+
+		as.importAction(this, "PrevPage",		ACTION_PREVPAGE, sourceID);
+		as.importAction(this, "NextPage",		ACTION_NEXTPAGE, sourceID);
+		as.importAction(this, "CookFood",		ACTION_COOKFOOD, sourceID);
+		as.importAction(this, "FoodLeft",		ACTION_FOODLEFT, sourceID);
+		as.importAction(this, "FoodRight",		ACTION_FOODRIGHT, sourceID);
+		as.importAction(this, "FoodDrop",		ACTION_FOODDROP, sourceID);
+
+		// To capture quick song keys via script
+		as.importAction(this, "SongSlot1",		ACTION_SONGSLOT1, sourceID);
+		as.importAction(this, "SongSlot2",		ACTION_SONGSLOT2, sourceID);
+		as.importAction(this, "SongSlot3",		ACTION_SONGSLOT3, sourceID);
+		as.importAction(this, "SongSlot4",		ACTION_SONGSLOT4, sourceID);
+		as.importAction(this, "SongSlot5",		ACTION_SONGSLOT5, sourceID);
+		as.importAction(this, "SongSlot6",		ACTION_SONGSLOT6, sourceID);
+		as.importAction(this, "SongSlot7",		ACTION_SONGSLOT7, sourceID);
+		as.importAction(this, "SongSlot8",		ACTION_SONGSLOT8, sourceID);
+		as.importAction(this, "SongSlot9",		ACTION_SONGSLOT9, sourceID);
+		as.importAction(this, "SongSlot10",	ACTION_SONGSLOT10, sourceID);
+
+		as.importAction(this, "Revert",		ACTION_REVERT, sourceID);
+
+		as.importAction(this, "Look",			ACTION_LOOK, sourceID);
+		as.importAction(this, "Roll",			ACTION_ROLL, sourceID);
+	}
 
 	if (avatar)
 		avatar->bindInput();

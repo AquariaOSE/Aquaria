@@ -42,6 +42,8 @@ public:
 
 	const char *getAxisName(int axis) const;
 	const char *getButtonName(int btn) const;
+	const char *getName() const;
+	const char *getGUID() const;
 
 	Vector rightStick;
 
@@ -56,6 +58,8 @@ private:
 	int numJoyAxes;
 	SDL_Joystick *sdl_joy;
 	float axisRaw[MAX_JOYSTICK_AXIS];
+	std::string name;
+	std::string guid;
 
 #  ifdef BBGE_BUILD_SDL2
 	SDL_GameController *sdl_controller;

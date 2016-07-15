@@ -128,28 +128,34 @@ void Avatar::bindInput()
 	ActionMapper::clearActions();
 	ActionMapper::clearCreatedEvents();
 
-	dsq->user.control.actionSet.importAction(this, "PrimaryAction", ACTION_PRIMARY);
-	dsq->user.control.actionSet.importAction(this, "SecondaryAction", ACTION_SECONDARY);
+	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	{
+		const ActionSet& as = dsq->user.control.actionSets[i];
+		int sourceID = (int)i;
 
-	dsq->user.control.actionSet.importAction(this, "SwimUp",		ACTION_SWIMUP);
-	dsq->user.control.actionSet.importAction(this, "SwimDown",		ACTION_SWIMDOWN);
-	dsq->user.control.actionSet.importAction(this, "SwimLeft",		ACTION_SWIMLEFT);
-	dsq->user.control.actionSet.importAction(this, "SwimRight",		ACTION_SWIMRIGHT);
+		as.importAction(this, "PrimaryAction", ACTION_PRIMARY, sourceID);
+		as.importAction(this, "SecondaryAction", ACTION_SECONDARY, sourceID);
 
-	dsq->user.control.actionSet.importAction(this, "SongSlot1",		ACTION_SONGSLOT1);
-	dsq->user.control.actionSet.importAction(this, "SongSlot2",		ACTION_SONGSLOT2);
-	dsq->user.control.actionSet.importAction(this, "SongSlot3",		ACTION_SONGSLOT3);
-	dsq->user.control.actionSet.importAction(this, "SongSlot4",		ACTION_SONGSLOT4);
-	dsq->user.control.actionSet.importAction(this, "SongSlot5",		ACTION_SONGSLOT5);
-	dsq->user.control.actionSet.importAction(this, "SongSlot6",		ACTION_SONGSLOT6);
-	dsq->user.control.actionSet.importAction(this, "SongSlot7",		ACTION_SONGSLOT7);
-	dsq->user.control.actionSet.importAction(this, "SongSlot8",		ACTION_SONGSLOT8);
-	dsq->user.control.actionSet.importAction(this, "SongSlot9",		ACTION_SONGSLOT9);
-	dsq->user.control.actionSet.importAction(this, "SongSlot10",	ACTION_SONGSLOT10);
+		as.importAction(this, "SwimUp",		ACTION_SWIMUP, sourceID);
+		as.importAction(this, "SwimDown",		ACTION_SWIMDOWN, sourceID);
+		as.importAction(this, "SwimLeft",		ACTION_SWIMLEFT, sourceID);
+		as.importAction(this, "SwimRight",		ACTION_SWIMRIGHT, sourceID);
 
-	dsq->user.control.actionSet.importAction(this, "Revert",		ACTION_REVERT);
-	dsq->user.control.actionSet.importAction(this, "Look",			ACTION_LOOK);
-	dsq->user.control.actionSet.importAction(this, "Roll",			ACTION_ROLL);
+		as.importAction(this, "SongSlot1",		ACTION_SONGSLOT1, sourceID);
+		as.importAction(this, "SongSlot2",		ACTION_SONGSLOT2, sourceID);
+		as.importAction(this, "SongSlot3",		ACTION_SONGSLOT3, sourceID);
+		as.importAction(this, "SongSlot4",		ACTION_SONGSLOT4, sourceID);
+		as.importAction(this, "SongSlot5",		ACTION_SONGSLOT5, sourceID);
+		as.importAction(this, "SongSlot6",		ACTION_SONGSLOT6, sourceID);
+		as.importAction(this, "SongSlot7",		ACTION_SONGSLOT7, sourceID);
+		as.importAction(this, "SongSlot8",		ACTION_SONGSLOT8, sourceID);
+		as.importAction(this, "SongSlot9",		ACTION_SONGSLOT9, sourceID);
+		as.importAction(this, "SongSlot10",	ACTION_SONGSLOT10, sourceID);
+
+		as.importAction(this, "Revert",		ACTION_REVERT, sourceID);
+		as.importAction(this, "Look",			ACTION_LOOK, sourceID);
+		as.importAction(this, "Roll",			ACTION_ROLL, sourceID);
+	}
 }
 
 // note: z is set to 1.0 when we want the aim to be used as the shot direction
@@ -159,8 +165,8 @@ Vector Avatar::getAim()
 	Vector d;
 	if (dsq->inputMode == INPUT_JOYSTICK)
 	{
-		for(size_t i = 0; i < core->joysticks.size(); ++i)
-			if(Joystick *j = core->joysticks[i])
+		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+			if(Joystick *j = core->getJoystick(i))
 				if(j->isEnabled() && !j->rightStick.isZero())
 				{
 					d = j->rightStick * 300;
@@ -169,8 +175,8 @@ Vector Avatar::getAim()
 				}
 
 		if(d.isZero())
-			for(size_t i = 0; i < core->joysticks.size(); ++i)
-				if(Joystick *j = core->joysticks[i])
+			for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+				if(Joystick *j = core->getJoystick(i))
 					if(j->isEnabled() && !j->position.isZero())
 					{
 						d = j->position * 300;
@@ -1741,8 +1747,8 @@ void Avatar::updateSingingInterface(float dt)
 			if (dsq->inputMode == INPUT_JOYSTICK)
 			{
 				Vector d;
-				for(size_t i = 0; i < core->joysticks.size(); ++i)
-					if(Joystick *j = core->joysticks[i])
+				for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+					if(Joystick *j = core->getJoystick(i))
 						if(j->isEnabled())
 						{
 							d = j->position;
@@ -4190,8 +4196,8 @@ Vector Avatar::getFakeCursorPosition()
 	{
 		float axisInput = 0;
 		Joystick *j = 0;
-		for(size_t i = 0; i < core->joysticks.size(); ++i)
-			if( ((j = core->joysticks[i])) )
+		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+			if( ((j = core->getJoystick(i))) )
 				if(j->isEnabled())
 				{
 					axisInput = j->position.getLength2D();

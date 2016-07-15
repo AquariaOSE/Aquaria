@@ -43,7 +43,7 @@ public:
 	int key[INP_KEYSIZE];
 	int joy[INP_JOYSIZE];
 
-	std::string toString();
+	std::string toString() const;
 	void fromString(const std::string &read);
 };
 
