@@ -574,38 +574,38 @@ void SceneEditor::init()
 
 
 
-	addAction(ACTION_ZOOMIN,		KEY_PGUP);
-	addAction(ACTION_ZOOMOUT,		KEY_PGDN);
+	addAction(ACTION_ZOOMIN,		KEY_PGUP, -1);
+	addAction(ACTION_ZOOMOUT,		KEY_PGDN, -1);
 
-	addAction(ACTION_CAMLEFT,		KEY_A);
-	addAction(ACTION_CAMRIGHT,		KEY_D);
-	addAction(ACTION_CAMUP,			KEY_W);
-	addAction(ACTION_CAMDOWN,		KEY_S);
+	addAction(ACTION_CAMLEFT,		KEY_A, -1);
+	addAction(ACTION_CAMRIGHT,		KEY_D, -1);
+	addAction(ACTION_CAMUP,			KEY_W, -1);
+	addAction(ACTION_CAMDOWN,		KEY_S, -1);
 
-	addAction(ACTION_BGLAYEREND,	KEY_0);
+	addAction(ACTION_BGLAYEREND,	KEY_0, -1);
 
-	addAction(ACTION_BGLAYER1,		KEY_1);
-	addAction(ACTION_BGLAYER2,		KEY_2);
-	addAction(ACTION_BGLAYER3,		KEY_3);
-	addAction(ACTION_BGLAYER4,		KEY_4);
-	addAction(ACTION_BGLAYER5,		KEY_5);
-	addAction(ACTION_BGLAYER6,		KEY_6);
-	addAction(ACTION_BGLAYER7,		KEY_7);
-	addAction(ACTION_BGLAYER8,		KEY_8);
-	addAction(ACTION_BGLAYER9,		KEY_9);
+	addAction(ACTION_BGLAYER1,		KEY_1, -1);
+	addAction(ACTION_BGLAYER2,		KEY_2, -1);
+	addAction(ACTION_BGLAYER3,		KEY_3, -1);
+	addAction(ACTION_BGLAYER4,		KEY_4, -1);
+	addAction(ACTION_BGLAYER5,		KEY_5, -1);
+	addAction(ACTION_BGLAYER6,		KEY_6, -1);
+	addAction(ACTION_BGLAYER7,		KEY_7, -1);
+	addAction(ACTION_BGLAYER8,		KEY_8, -1);
+	addAction(ACTION_BGLAYER9,		KEY_9, -1);
 
-	addAction(ACTION_BGLAYER10,		KEY_B);
-	addAction(ACTION_BGLAYER11,		KEY_N);
-	addAction(ACTION_BGLAYER12,		KEY_M);
+	addAction(ACTION_BGLAYER10,		KEY_B, -1);
+	addAction(ACTION_BGLAYER11,		KEY_N, -1);
+	addAction(ACTION_BGLAYER12,		KEY_M, -1);
 
-	addAction(ACTION_BGLAYER13,		KEY_J);
+	addAction(ACTION_BGLAYER13,		KEY_J, -1);
 
-	addAction(ACTION_BGLAYER14,		KEY_COMMA);
-	addAction(ACTION_BGLAYER15,		KEY_PERIOD);
-	addAction(ACTION_BGLAYER16,		KEY_SLASH);
-	addAction(ACTION_BGLAYER16,		KEY_MINUS); // HACK: for german keyboard layout -- FG
+	addAction(ACTION_BGLAYER14,		KEY_COMMA, -1);
+	addAction(ACTION_BGLAYER15,		KEY_PERIOD, -1);
+	addAction(ACTION_BGLAYER16,		KEY_SLASH, -1);
+	addAction(ACTION_BGLAYER16,		KEY_MINUS, -1); // HACK: for german keyboard layout -- FG
 
-	addAction(ACTION_MULTISELECT,	KEY_LALT);
+	addAction(ACTION_MULTISELECT,	KEY_LALT, -1);
 
 	placer = new Quad;
 	dsq->game->addRenderObject(placer, LR_HUD);

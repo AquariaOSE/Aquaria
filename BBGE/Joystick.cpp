@@ -55,6 +55,16 @@ Joystick::Joystick()
 	enabled = true;
 }
 
+const char *Joystick::getName() const
+{
+	return name.c_str();
+}
+
+const char *Joystick::getGUID() const
+{
+	return guid.c_str();
+}
+
 bool Joystick::init(int stick)
 {
 	stickIndex = stick;
@@ -89,7 +99,13 @@ bool Joystick::init(int stick)
 	if (sdl_joy)
 	{
 		#ifdef BBGE_BUILD_SDL2
-		debugLog(std::string("Initialized Joystick [") + SDL_JoystickName(sdl_joy) + "]");
+		const char *n = SDL_JoystickName(sdl_joy);
+		name = n ? n : "<?>";
+		SDL_JoystickGUID jg = SDL_JoystickGetGUID(sdl_joy);
+		char guidbuf[40];
+		guid = &guidbuf[0];
+		SDL_JoystickGetGUIDString(jg, &guidbuf[0], sizeof(guidbuf));
+		debugLog(std::string("Initialized Joystick [") + name + "], GUID [" + guid + "]");
 		if (sdl_controller)
 		{
 			debugLog("Joystick is a Game Controller");
@@ -99,7 +115,9 @@ bool Joystick::init(int stick)
 			debugLog("Joystick has force feedback support");
 		instanceID = SDL_JoystickInstanceID(sdl_joy);
 		#else
-		debugLog(std::string("Initialized Joystick [") + SDL_JoystickName(stick)) + std::string("]"));
+		const char *n = SDL_JoystickName(stick);
+		name = n ? n : "<?>";
+		debugLog(std::string("Initialized Joystick [") + name + "]");
 		instanceID = SDL_JoystickIndex(sdl_joy);
 		#endif
 
@@ -107,6 +125,9 @@ bool Joystick::init(int stick)
 			numJoyAxes = SDL_JoystickNumAxes(sdl_joy);
 		if(numJoyAxes > MAX_JOYSTICK_AXIS)
 			numJoyAxes = MAX_JOYSTICK_AXIS;
+
+		
+		
 
 		return true;
 	}

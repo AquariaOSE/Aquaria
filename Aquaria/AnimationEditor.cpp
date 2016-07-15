@@ -291,10 +291,10 @@ void AnimationEditor::applyState()
 
 
 
-	addAction(ACTION_SWIMLEFT,	KEY_J);
-	addAction(ACTION_SWIMRIGHT, KEY_K);
-	addAction(ACTION_SWIMUP,	KEY_UP);
-	addAction(ACTION_SWIMDOWN,	KEY_DOWN);
+	addAction(ACTION_SWIMLEFT,	KEY_J, -1);
+	addAction(ACTION_SWIMRIGHT, KEY_K, -1);
+	addAction(ACTION_SWIMUP,	KEY_UP, -1);
+	addAction(ACTION_SWIMDOWN,	KEY_DOWN, -1);
 
 
 

@@ -703,12 +703,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	}
 	shareAlphaWithChildren = 1;
 
-	dsq->user.control.actionSet.importAction(this, "SwimLeft",	ACTION_SWIMLEFT);
-	dsq->user.control.actionSet.importAction(this, "SwimRight", ACTION_SWIMRIGHT);
-	dsq->user.control.actionSet.importAction(this, "SwimUp",	ACTION_SWIMUP);
-	dsq->user.control.actionSet.importAction(this, "SwimDown",	ACTION_SWIMDOWN);
-
-	// where old scale + position set were
+	bindInput();
 
 	tophud = new Quad("gui/worldmap-ui", Vector(400,64));
 	tophud->followCamera = 1;
@@ -799,15 +794,21 @@ void WorldMapRender::bindInput()
 	clearActions();
 	clearCreatedEvents();
 
-	addAction(ACTION_TOGGLEWORLDMAPEDITOR, KEY_TAB);
+	addAction(ACTION_TOGGLEWORLDMAPEDITOR, KEY_TAB, -1);
 
-	dsq->user.control.actionSet.importAction(this, "PrimaryAction",		ACTION_PRIMARY);
-	dsq->user.control.actionSet.importAction(this, "SecondaryAction",	ACTION_SECONDARY);
+	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	{
+		const ActionSet& as = dsq->user.control.actionSets[i];
+		int sourceID = (int)i;
 
-	dsq->user.control.actionSet.importAction(this, "SwimLeft",			ACTION_SWIMLEFT);
-	dsq->user.control.actionSet.importAction(this, "SwimRight",			ACTION_SWIMRIGHT);
-	dsq->user.control.actionSet.importAction(this, "SwimUp",			ACTION_SWIMUP);
-	dsq->user.control.actionSet.importAction(this, "SwimDown",			ACTION_SWIMDOWN);
+		as.importAction(this, "PrimaryAction",		ACTION_PRIMARY, sourceID);
+		as.importAction(this, "SecondaryAction",	ACTION_SECONDARY, sourceID);
+
+		as.importAction(this, "SwimLeft",			ACTION_SWIMLEFT, sourceID);
+		as.importAction(this, "SwimRight",			ACTION_SWIMRIGHT, sourceID);
+		as.importAction(this, "SwimUp",			ACTION_SWIMUP, sourceID);
+		as.importAction(this, "SwimDown",			ACTION_SWIMDOWN, sourceID);
+	}
 }
 
 void WorldMapRender::destroy()
@@ -1029,8 +1030,8 @@ void WorldMapRender::onUpdate(float dt)
 				if (isActing(ACTION_SECONDARY))
 				{
 					Vector jpos;
-					for(size_t i = 0; i < core->joysticks.size(); ++i)
-						if(Joystick *j = core->joysticks[i])
+					for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+						if(Joystick *j = core->getJoystick(i))
 							if(j && j->isEnabled())
 								if(fabsf(j->position.y) > 0.6f)
 								{
@@ -1046,8 +1047,8 @@ void WorldMapRender::onUpdate(float dt)
 				else
 				{
 					Vector jpos;
-					for(size_t i = 0; i < core->joysticks.size(); ++i)
-						if(Joystick *j = core->joysticks[i])
+					for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+						if(Joystick *j = core->getJoystick(i))
 							if(j && j->isEnabled())
 								if(!j->position.isZero())
 								{

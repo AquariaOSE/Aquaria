@@ -182,30 +182,37 @@ void UserSettings::save()
 			}
 			xml_control->InsertEndChild(xml_flip);
 
-			XMLElement *xml_joyAxes = doc.NewElement("JoyAxes");
+			for(size_t i = 0; i < control.actionSets.size(); ++i)
 			{
-				xml_joyAxes->SetAttribute("s1ax", control.s1ax);
-				xml_joyAxes->SetAttribute("s1ay", control.s1ay);
-				xml_joyAxes->SetAttribute("s2ax", control.s2ax);
-				xml_joyAxes->SetAttribute("s2ay", control.s2ay);
-				xml_joyAxes->SetAttribute("s1dead", double(control.s1dead));
-				xml_joyAxes->SetAttribute("s2dead", double(control.s2dead));
-			}
-			xml_control->InsertEndChild(xml_joyAxes);
-
-			XMLElement *xml_actionSet = doc.NewElement("ActionSet");
-			{
-				for (int i = 0; i < control.actionSet.inputSet.size(); i++)
+				const ActionSet& as = control.actionSets[i];
+				XMLElement *xml_actionSet = doc.NewElement("ActionSet");
 				{
-					XMLElement *xml_action = doc.NewElement("Action");
-					ActionInput *actionInput = &control.actionSet.inputSet[i];
-					xml_action->SetAttribute("name", actionInput->name.c_str());
-					xml_action->SetAttribute("input", actionInput->toString().c_str());
+					xml_actionSet->SetAttribute("enabled", as.enabled);
+					xml_actionSet->SetAttribute("name", as.name.c_str());
+					xml_actionSet->SetAttribute("joystickName", as.joystickName.c_str());
+					xml_actionSet->SetAttribute("joystickGUID", as.joystickGUID.c_str());
+					XMLElement *xml_joyAxes = doc.NewElement("JoyAxes");
+					{
+						xml_joyAxes->SetAttribute("s1ax", as.joycfg.s1ax);
+						xml_joyAxes->SetAttribute("s1ay", as.joycfg.s1ay);
+						xml_joyAxes->SetAttribute("s2ax", as.joycfg.s2ax);
+						xml_joyAxes->SetAttribute("s2ay", as.joycfg.s2ay);
+						xml_joyAxes->SetAttribute("s1dead", as.joycfg.s1dead);
+						xml_joyAxes->SetAttribute("s2dead", as.joycfg.s2dead);
+					}
+					xml_actionSet->InsertEndChild(xml_joyAxes);
+					for (int i = 0; i < as.inputSet.size(); i++)
+					{
+						XMLElement *xml_action = doc.NewElement("Action");
+						const ActionInput& ai = as.inputSet[i];
+						xml_action->SetAttribute("name", ai.name.c_str());
+						xml_action->SetAttribute("input", ai.toString().c_str());
 
-					xml_actionSet->InsertEndChild(xml_action);
+						xml_actionSet->InsertEndChild(xml_action);
+					}
 				}
+				xml_control->InsertEndChild(xml_actionSet);
 			}
-			xml_control->InsertEndChild(xml_actionSet);
 		}
 		doc.InsertEndChild(xml_control);
 
@@ -256,8 +263,30 @@ void UserSettings::save()
 #elif defined(BBGE_BUILD_WINDOWS)
 	doc.SaveFile(userSettingsFilename.c_str());
 #endif
+}
 
-
+static void ensureDefaultActions(ActionSet& as)
+{
+	as.clearActions();
+	as.addActionInput("PrimaryAction");
+	as.addActionInput("SecondaryAction");
+	as.addActionInput("SwimUp");
+	as.addActionInput("SwimDown");
+	as.addActionInput("SwimLeft");
+	as.addActionInput("SwimRight");
+	as.addActionInput("Roll");
+	as.addActionInput("Revert");
+	as.addActionInput("WorldMap");
+	as.addActionInput("Escape");
+	as.addActionInput("PrevPage");
+	as.addActionInput("NextPage");
+	as.addActionInput("CookFood");
+	as.addActionInput("FoodLeft");
+	as.addActionInput("FoodRight");
+	as.addActionInput("FoodDrop");
+	as.addActionInput("Look");
+	as.addActionInput("ToggleHelp");
+	as.addActionInput("Screenshot");
 }
 
 static void readInt(XMLElement *xml, const char *elem, const char *att, int *toChange)
@@ -316,28 +345,6 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		version.settingsVersion = xml_version->IntAttribute("settingsVersion");
 	}
 
-	control.actionSet.clearActions();
-
-	control.actionSet.addActionInput("PrimaryAction");
-	control.actionSet.addActionInput("SecondaryAction");
-	control.actionSet.addActionInput("SwimUp");
-	control.actionSet.addActionInput("SwimDown");
-	control.actionSet.addActionInput("SwimLeft");
-	control.actionSet.addActionInput("SwimRight");
-	control.actionSet.addActionInput("Roll");
-	control.actionSet.addActionInput("Revert");
-	control.actionSet.addActionInput("WorldMap");
-	control.actionSet.addActionInput("Escape");
-	control.actionSet.addActionInput("PrevPage");
-	control.actionSet.addActionInput("NextPage");
-	control.actionSet.addActionInput("CookFood");
-	control.actionSet.addActionInput("FoodLeft");
-	control.actionSet.addActionInput("FoodRight");
-	control.actionSet.addActionInput("FoodDrop");
-	control.actionSet.addActionInput("Look");
-	control.actionSet.addActionInput("ToggleHelp");
-	control.actionSet.addActionInput("Screenshot");
-
 	XMLElement *xml_system = doc.FirstChildElement("System");
 	if (xml_system)
 	{
@@ -372,9 +379,9 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		XMLElement *xml_volume = xml_audio->FirstChildElement("Volume");
 		if (xml_volume)
 		{
-			audio.sfxvol = xml_volume->DoubleAttribute("sfx");
-			audio.voxvol = xml_volume->DoubleAttribute("vox");
-			audio.musvol = xml_volume->DoubleAttribute("mus");
+			audio.sfxvol = xml_volume->FloatAttribute("sfx");
+			audio.voxvol = xml_volume->FloatAttribute("vox");
+			audio.musvol = xml_volume->FloatAttribute("mus");
 			audio.subtitles = xml_volume->IntAttribute("subs");
 		}
 
@@ -438,38 +445,52 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		readInt(xml_control, "AutoAim", "on", &control.autoAim);
 		readInt(xml_control, "Targeting", "on", &control.targeting);
 		readInt(xml_control, "FlipInputButtons", "on", &control.flipInputButtons);
+		readInt(xml_control, "MinActionSets", "num", &control.minActionSets);
+		readInt(xml_control, "ToolTipsOn", "on", &control.toolTipsOn);
 
-		XMLElement *xml_joyAxes = xml_control->FirstChildElement("JoyAxes");
-		if (xml_joyAxes)
-		{
-			control.s1ax = xml_joyAxes->IntAttribute("s1ax");
-			control.s1ay = xml_joyAxes->IntAttribute("s1ay");
-			control.s2ax = xml_joyAxes->IntAttribute("s2ax");
-			control.s2ay = xml_joyAxes->IntAttribute("s2ay");
-			control.s1dead = xml_joyAxes->DoubleAttribute("s1dead");
-			control.s2dead = xml_joyAxes->DoubleAttribute("s2dead");
-		}
+		control.actionSets.clear();
+		control.actionSets.reserve(control.minActionSets);
 
-		XMLElement *xml_actionSet = xml_control->FirstChildElement("ActionSet");
-		if (xml_actionSet)
+		for(XMLElement *xml_actionSet = xml_control->FirstChildElement("ActionSet"); xml_actionSet; xml_actionSet = xml_actionSet->NextSiblingElement("ActionSet"))
 		{
-			XMLElement *xml_action = 0;
-			xml_action = xml_actionSet->FirstChildElement();
-			while (xml_action)
+			control.actionSets.push_back(ActionSet());
+			ActionSet& as = control.actionSets.back();
+			ensureDefaultActions(as);
+
+			if(const char *s = xml_actionSet->Attribute("name"))
+				as.name = s;
+			if(const char *s = xml_actionSet->Attribute("joystickName"))
+				as.joystickName = s;
+			if(const char *s = xml_actionSet->Attribute("joystickGUID"))
+				as.joystickGUID = s;
+			as.enabled = xml_actionSet->BoolAttribute("enabled");
+
+			if(XMLElement *xml_joyAxes = xml_actionSet->FirstChildElement("JoyAxes"))
+			{
+				as.joycfg.s1ax = xml_joyAxes->IntAttribute("s1ax");
+				as.joycfg.s1ay = xml_joyAxes->IntAttribute("s1ay");
+				as.joycfg.s2ax = xml_joyAxes->IntAttribute("s2ax");
+				as.joycfg.s2ay = xml_joyAxes->IntAttribute("s2ay");
+				as.joycfg.s1dead = xml_joyAxes->FloatAttribute("s1dead");
+				as.joycfg.s2dead = xml_joyAxes->FloatAttribute("s2dead");
+			}
+
+			for(XMLElement *xml_action = xml_actionSet->FirstChildElement(); xml_action; xml_action = xml_action->NextSiblingElement())
 			{
 				std::string name = xml_action->Attribute("name");
-
 				if (!name.empty())
 				{
-					ActionInput *ai = control.actionSet.addActionInput(name);
-
+					ActionInput *ai = as.addActionInput(name);
 					ai->fromString(xml_action->Attribute("input"));
 				}
-				xml_action = xml_action->NextSiblingElement();
 			}
 		}
 
-		readInt(xml_control, "ToolTipsOn", "on", &control.toolTipsOn);
+		int nas = (int)control.actionSets.size();
+		if(nas < control.minActionSets)
+			control.actionSets.resize(control.minActionSets);
+		while(nas < control.actionSets.size())
+			ensureDefaultActions(control.actionSets[nas++]);
 	}
 
 	XMLElement *xml_demo = doc.FirstChildElement("Demo");
@@ -538,15 +559,19 @@ void UserSettings::apply()
 	dsq->loops.updateVolume();
 
 	// FIXME: This should be per-joystick
-	for(size_t i = 0; i < core->joysticks.size(); ++i)
+	for(size_t i = 0; i < control.actionSets.size(); ++i)
 	{
-		Joystick *j = core->joysticks[i];
-		j->s1ax = control.s1ax;
-		j->s1ay = control.s1ay;
-		j->s2ax = control.s2ax;
-		j->s2ay = control.s2ay;
-		j->deadZone1 = control.s1dead;
-		j->deadZone2 = control.s2dead;
+		ActionSet& as = control.actionSets[i];
+		Joystick *j = core->getJoystick(as.joystickID);
+		if(j)
+		{
+			j->s1ax = as.joycfg.s1ax;
+			j->s1ay = as.joycfg.s1ay;
+			j->s2ax = as.joycfg.s2ax;
+			j->s2ay = as.joycfg.s2ay;
+			j->deadZone1 = as.joycfg.s1dead;
+			j->deadZone2 = as.joycfg.s2dead;
+		}
 	}
 
 	core->debugLogActive = system.debugLogOn;

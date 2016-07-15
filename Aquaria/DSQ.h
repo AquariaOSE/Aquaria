@@ -499,7 +499,7 @@ protected:
 	bool _canSkipCutscene;
 	bool skippingCutscene;
 
-	ActionInput *almb, *armb;
+	std::vector<ActionInput*> almb, armb;
 
 	void recreateBlackBars();
 

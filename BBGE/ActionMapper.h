@@ -68,7 +68,7 @@ public:
 	virtual ~ActionMapper();
 
 	void addAction(Event *event, int k, int state=-1);
-	void addAction(int actionID, int k);
+	void addAction(int actionID, int k, int source);
 
 	void removeAction(int actionID);
 	void removeAllActions();

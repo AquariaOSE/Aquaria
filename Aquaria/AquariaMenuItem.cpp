@@ -24,6 +24,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ActionInput.h"
 #include "InGameMenu.h"
 
+#include "tinyxml2.h"
+using namespace tinyxml2;
+
 float AquariaGuiElement::guiMoveTimer = 0;
 AquariaGuiElement::GuiElements AquariaGuiElement::guiElements;
 bool AquariaGuiElement::canDirMoveGlobal = true;
@@ -118,11 +121,11 @@ void AquariaGuiElement::updateMovement(float dt)
 		{
 			Direction dir = DIR_NONE;
 			Vector p;
-			for(size_t i = 0; i < core->joysticks.size(); ++i)
-				if(Joystick *j = core->joysticks[i])
+			for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+				if(Joystick *j = core->getJoystick(i))
 					if(j->isEnabled())
 					{
-						p = core->joysticks[i]->position;
+						p = core->getJoystick(i)->position;
 						if(!p.isLength2DIn(0.4f))
 							break;
 					}
@@ -356,11 +359,11 @@ bool AquariaSlider::doSliderInput(float dt)
 	float inputAmount;  // How much to adjust by?
 
 	Vector jpos;
-	for(size_t i = 0; i < core->joysticks.size(); ++i)
-		if(Joystick *j = core->joysticks[i])
+	for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+		if(Joystick *j = core->getJoystick(i))
 			if(j->isEnabled())
 			{
-				jpos = core->joysticks[i]->position;
+				jpos = core->getJoystick(i)->position;
 				if(fabsf(jpos.x) > SLIDER_JOY_THRESHOLD)
 					break;
 			}
@@ -481,7 +484,7 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 
 	keyDown = false;
 	acceptEsc = false;
-	joystickID = 0;
+	actionSetIndex = 0;
 
 	toggleEnterKey(false);
 }
@@ -540,6 +543,11 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 	if (!hasInput() || alpha.x <= 0) return;
 
+	if(actionSetIndex >= dsq->user.control.actionSets.size())
+		return;
+
+	ActionSet& as = dsq->user.control.actionSets[actionSetIndex];
+
 	inLoop = true;
 
 	int *k = 0;
@@ -548,7 +556,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 	if (inputSetType != INPUTSET_OTHER)
 	{
-		ai = dsq->user.control.actionSet.getActionInputByName(actionInputName);
+		ai = as.getActionInputByName(actionInputName);
 
 		if (!ai)
 		{
@@ -576,18 +584,19 @@ void AquariaKeyConfig::onUpdate(float dt)
 	if (inputSetType == INPUTSET_OTHER)
 	{
 		if (actionInputName == "s1ax")
-			value = &dsq->user.control.s1ax;
+			value = &as.joycfg.s1ax;
 		else if (actionInputName == "s1ay")
-			value = &dsq->user.control.s1ay;
+			value = &as.joycfg.s1ay;
 		else if (actionInputName == "s2ax")
-			value = &dsq->user.control.s2ax;
+			value = &as.joycfg.s2ax;
 		else if (actionInputName == "s2ay")
-			value = &dsq->user.control.s2ay;
+			value = &as.joycfg.s2ay;
 	}
 
 	if (waitingForInput == this)
 	{
 		std::string s;
+		s.reserve(6);
 		s = "_";
 		for (int i = 0; i < int(dsq->game->getTimer(5)); i++)
 		{
@@ -599,7 +608,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 	{
 		if (k)
 		{
-			keyConfigFont->setText(getInputCodeToUserString(*k, joystickID));
+			keyConfigFont->setText(getInputCodeToUserString(*k, as.joystickID));
 		}
 		else if (value)
 		{
@@ -735,7 +744,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 			}
 			else
 			{
-				Joystick *j = core->joysticks[joystickID];
+				Joystick *j = core->getJoystick(as.joystickID);
 				if(j)
 				{
 					for (int i = 0; i < MAX_JOYSTICK_BTN; i++)
@@ -824,6 +833,11 @@ void AquariaKeyConfig::onUpdate(float dt)
 	inLoop = false;
 }
 
+void AquariaKeyConfig::setActionSetIndex(int idx)
+{
+	actionSetIndex = idx;
+}
+
 void AquariaKeyConfig::setAcceptEsc(bool a)
 {
 	acceptEsc = a;
@@ -833,8 +847,6 @@ AquariaMenuItem::AquariaMenuItem() : Quad(), ActionMapper(), AquariaGuiElement()
 {
 	quad = glow = 0;
 	choice = -1;
-	ability = 0;
-	xmlItem = 0;
 	int sz = 20;
 
 	shareAlpha = 0;
