@@ -71,6 +71,12 @@ void ActionSet::assignJoystickIdx(int idx)
 
 int ActionSet::_whichJoystickForName()
 {
+	if(joystickGUID.length() && joystickName.length())
+		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+			if(Joystick *j = core->getJoystick(i))
+				if(j->getGUID()[0] && joystickGUID == j->getGUID() && joystickName == j->getName())
+					return int(i);
+
 	if(joystickGUID.length())
 		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 			if(Joystick *j = core->getJoystick(i))

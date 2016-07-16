@@ -4520,7 +4520,7 @@ void Game::update(float dt)
 	if (inHelpScreen)
 	{
 		const float helpTextScrollSpeed = 400.0f;
-		if (isActing(ACTION_SWIMDOWN))
+		if (isActing(ACTION_SWIMDOWN, -1))
 		{
 			helpText->offset.stop();
 			helpText->offset.y -= helpTextScrollSpeed * dt;
@@ -4529,7 +4529,7 @@ void Game::update(float dt)
 				helpText->offset.y = -helpText->getHeight() + core->getVirtualHeight();
 			}
 		}
-		if (isActing(ACTION_SWIMUP))
+		if (isActing(ACTION_SWIMUP, -1))
 		{
 			helpText->offset.stop();
 			helpText->offset.y += helpTextScrollSpeed * dt;

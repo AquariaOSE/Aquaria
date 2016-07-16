@@ -992,15 +992,15 @@ void WorldMapRender::onUpdate(float dt)
 		{
 			float scrollSpeed = 2.0f;
 			float amt = (400*dt)/scale.x;
-			if (isActing(ACTION_SWIMLEFT))
+			if (isActing(ACTION_SWIMLEFT, -1))
 			{
 				internalOffset += Vector(amt, 0);
 			}
-			if (isActing(ACTION_SWIMRIGHT))
+			if (isActing(ACTION_SWIMRIGHT, -1))
 			{
 				internalOffset += Vector(-amt, 0);
 			}
-			if (isActing(ACTION_SWIMDOWN))
+			if (isActing(ACTION_SWIMDOWN, -1))
 			{
 				if (core->getShiftState())
 				{
@@ -1012,7 +1012,7 @@ void WorldMapRender::onUpdate(float dt)
 					internalOffset += Vector(0, -amt);
 				}
 			}
-			if (isActing(ACTION_SWIMUP))
+			if (isActing(ACTION_SWIMUP, -1))
 			{
 				if (core->getShiftState())
 				{
@@ -1027,7 +1027,7 @@ void WorldMapRender::onUpdate(float dt)
 
 			if (core->joystickEnabled)
 			{
-				if (isActing(ACTION_SECONDARY))
+				if (isActing(ACTION_SECONDARY, -1))
 				{
 					Vector jpos;
 					for(size_t i = 0; i < core->getNumJoysticks(); ++i)

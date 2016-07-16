@@ -4962,19 +4962,24 @@ luaFunc(screenFadeGo)
 
 luaFunc(isEscapeKey)
 {
-	bool isDown = dsq->game->isActing(ACTION_ESC);
+	int source = lua_tointeger(L, 1) - 1;
+	bool isDown = dsq->game->isActing(ACTION_ESC, source);
 	luaReturnBool(isDown);
 }
 
 luaFunc(isLeftMouse)
 {
-	bool isDown = core->mouse.buttons.left || (dsq->game->avatar && dsq->game->avatar->pollAction(ACTION_PRIMARY));
+	int source = lua_tointeger(L, 1) - 1;
+	bool isDown = (source < 0 && core->mouse.buttons.left)
+		|| (dsq->game->avatar && dsq->game->avatar->pollAction(ACTION_PRIMARY, source));
 	luaReturnBool(isDown);
 }
 
 luaFunc(isRightMouse)
 {
-	bool isDown = core->mouse.buttons.right || (dsq->game->avatar && dsq->game->avatar->pollAction(ACTION_SECONDARY));
+	int source = lua_tointeger(L, 1) - 1;
+	bool isDown = (source < 0 && core->mouse.buttons.right)
+		|| (dsq->game->avatar && dsq->game->avatar->pollAction(ACTION_SECONDARY, source));
 	luaReturnBool(isDown);
 }
 

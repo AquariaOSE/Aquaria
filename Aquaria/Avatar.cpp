@@ -4055,7 +4055,7 @@ void Avatar::startBurst()
 {
 	if (!riding && canBurst() && (joystickMove || getVectorToCursor().getSquaredLength2D() > sqr(BURST_DISTANCE))
 		&& getState() != STATE_PUSH && (!skeletalSprite.getCurrentAnimation() || (skeletalSprite.getCurrentAnimation()->name != "spin"))
-		&& _isUnderWater && !isActing(ACTION_ROLL))
+		&& _isUnderWater && !isActing(ACTION_ROLL, -1))
 	{
 		if (!bursting && burst == 1)
 		{
@@ -4171,13 +4171,13 @@ void Avatar::startWallBurst(bool useCursor)
 Vector Avatar::getKeyDir()
 {
 	Vector dir;
-	if (isActing(ACTION_SWIMLEFT))
+	if (isActing(ACTION_SWIMLEFT, -1))
 		dir += Vector(-1,0);
-	if (isActing(ACTION_SWIMRIGHT))
+	if (isActing(ACTION_SWIMRIGHT, -1))
 		dir += Vector(1,0);
-	if (isActing(ACTION_SWIMUP))
+	if (isActing(ACTION_SWIMUP, -1))
 		dir += Vector(0,-1);
-	if (isActing(ACTION_SWIMDOWN))
+	if (isActing(ACTION_SWIMDOWN, -1))
 		dir += Vector(0,1);
 
 	if (dir.x != 0 && dir.y != 0)
@@ -4975,13 +4975,13 @@ void Avatar::updateRoll(float dt)
 			stopRoll();
 		}
 	}
-
-	if (!_isUnderWater && isActing(ACTION_ROLL))
+	const bool rollact = isActing(ACTION_ROLL, -1);
+	if (!_isUnderWater && rollact)
 	{
 		stopRoll();
 	}
 
-	if (!core->mouse.buttons.left && dsq->inputMode == INPUT_MOUSE && !isActing(ACTION_ROLL))
+	if (!core->mouse.buttons.left && dsq->inputMode == INPUT_MOUSE && !rollact)
 	{
 		if (rolling)
 			stopRoll();
@@ -5022,7 +5022,7 @@ void Avatar::updateRoll(float dt)
 			stopRoll();
 	}
 
-	if (isActing(ACTION_ROLL))
+	if (rollact)
 	{
 		if (_isUnderWater)
 		{
@@ -5373,7 +5373,7 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 
-		if (!dsq->game->isPaused() && isActing(ACTION_LOOK) && !dsq->game->avatar->isSinging() && dsq->game->avatar->isInputEnabled() && !dsq->game->isInGameMenu())
+		if (!dsq->game->isPaused() && isActing(ACTION_LOOK, -1) && !dsq->game->avatar->isSinging() && dsq->game->avatar->isInputEnabled() && !dsq->game->isInGameMenu())
 		{
 			looking = 1;
 		}
@@ -6109,7 +6109,7 @@ void Avatar::onUpdate(float dt)
 
 			float len = 0;
 
-			if (dsq->isMiniMapCursorOkay() && !isActing(ACTION_ROLL) &&
+			if (dsq->isMiniMapCursorOkay() && !isActing(ACTION_ROLL, -1) &&
 				_isUnderWater && !riding && !boneLock.on &&
 				(movingOn || ((dsq->inputMode == INPUT_JOYSTICK || dsq->inputMode== INPUT_KEYBOARD) || (core->mouse.buttons.left || bursting))))
 			{
@@ -6120,7 +6120,7 @@ void Avatar::onUpdate(float dt)
 					if (dsq->inputMode == INPUT_MOUSE)
 					{
 						static Vector lastAddVec;
-						if (!isActing(ACTION_PRIMARY) && bursting)
+						if (!isActing(ACTION_PRIMARY, -1) && bursting)
 						{
 							addVec = lastAddVec;
 						}
@@ -6162,7 +6162,7 @@ void Avatar::onUpdate(float dt)
 						// For joystick/keyboard control, don't stop unless
 						// the Swim (primary action) button is pressed with
 						// no movement input.  --achurch
-						if ((dsq->inputMode == INPUT_MOUSE || isActing(ACTION_PRIMARY))
+						if ((dsq->inputMode == INPUT_MOUSE || isActing(ACTION_PRIMARY, -1))
 							&& addVec.isLength2DIn(STOP_DISTANCE))
 						{
 							vel *= 0.9f;
@@ -6221,7 +6221,7 @@ void Avatar::onUpdate(float dt)
 						currentMaxSpeed = vars->maxWallJumpSpeed;
 					else
 					{
-						if (isActing(ACTION_SLOW) || isMovingSlow)
+						if (isMovingSlow)
 						{
 							currentMaxSpeed = vars->maxSlowSwimSpeed;
 						}
@@ -6250,7 +6250,7 @@ void Avatar::onUpdate(float dt)
 						// here for roll key?
 						// seems like this isn't reached
 						//if (isActing("roll"))
-						if (isActing(ACTION_ROLL))
+						if (isActing(ACTION_ROLL, -1))
 						{
 							//debugLog("here");
 						}
