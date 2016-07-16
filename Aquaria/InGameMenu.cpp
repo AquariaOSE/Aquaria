@@ -9,6 +9,7 @@
 #include "Avatar.h"
 #include "GridRender.h"
 #include "DebugFont.h"
+#include "ActionSet.h"
 
 static InGameMenu *themenu = 0;
 
@@ -911,6 +912,7 @@ InGameMenu::InGameMenu()
 	ripplesCheck = 0;
 	menu_blackout = 0;
 	menuSelectDelay = 0;
+	selectedActionSetIdx = 0;
 }
 
 InGameMenu::~InGameMenu()
@@ -1525,24 +1527,31 @@ void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label,
 	AquariaKeyConfig *m = new AquariaKeyConfig(actionInputName, INPUTSET_MOUSE, 0);
 	m->position = Vector(x,y);
 	group->addChild(m, PM_POINTER);
+	keyConfigs.push_back(m);
 	x += KEYCONFIG_COL_DISTANCE;
 
 	AquariaKeyConfig *k1 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 0);
 	k1->position = Vector(x,y);
 	group->addChild(k1, PM_POINTER);
+	keyConfigs.push_back(k1);
 	k1->setAcceptEsc(acceptEsc);
 	x += KEYCONFIG_COL_DISTANCE;
 
 	AquariaKeyConfig *k2 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 1);
 	k2->position = Vector(x,y);
 	group->addChild(k2, PM_POINTER);
+	keyConfigs.push_back(k2);
 	k2->setAcceptEsc(acceptEsc);
 	x += KEYCONFIG_COL_DISTANCE;
 
 	AquariaKeyConfig *j1 = new AquariaKeyConfig(actionInputName, INPUTSET_JOY, 0);
 	j1->position = Vector(x,y);
 	group->addChild(j1, PM_POINTER);
+	keyConfigs.push_back(j1);
 	x += KEYCONFIG_COL_DISTANCE;
+
+	m->setDirMove(DIR_RIGHT, k1);
+	k1->setDirMove(DIR_LEFT, m);
 
 	k1->setDirMove(DIR_RIGHT, k2);
 	k2->setDirMove(DIR_RIGHT, j1);
@@ -1560,7 +1569,7 @@ AquariaKeyConfig *InGameMenu::addAxesConfigLine(RenderObject *group, const std::
 
 	AquariaKeyConfig *i1 = new AquariaKeyConfig(actionInputName, INPUTSET_OTHER, 0);
 	i1->position = Vector(80+offx,y);
-	//i1->setLock(l1);
+	keyConfigs.push_back(i1);
 	group->addChild(i1, PM_POINTER);
 
 	i1->setDirMove(DIR_RIGHT, 0);
@@ -1966,9 +1975,36 @@ void InGameMenu::create()
 	keyConfigBg->setHidden(true);
 	game->addRenderObject(keyConfigBg, LR_OVERLAY);
 
-	int offy = 20 - keyConfigBg->position.y;
-	const int offx = 140 - keyConfigBg->position.x;
-	const int yi = 20;
+	float offy = 30 - keyConfigBg->position.y;
+	const float offx = 140 - keyConfigBg->position.x;
+	const float yi = 20;
+
+	{
+		float x = offx;
+		TTFText *header_actionset = new TTFText(&dsq->fontArialSmall);
+		header_actionset->setText(SB(2133));
+		header_actionset->position = Vector(x, offy);
+		keyConfigBg->addChild(header_actionset, PM_POINTER);
+		x += header_actionset->getActualWidth() + 20 + 100;
+
+		actionSetBox = new AquariaComboBox;
+		actionSetBox->position = Vector(x, offy);
+		keyConfigBg->addChild(actionSetBox, PM_POINTER);
+		updateActionSetComboBox();
+		x += 200;
+
+		TTFText *header_enabled = new TTFText(&dsq->fontArialSmall);
+		header_enabled->setText(SB(2134));
+		header_enabled->position = Vector(x, offy+5);
+		keyConfigBg->addChild(header_enabled, PM_POINTER);
+		x += header_enabled->getActualWidth() + 20;
+
+		actionSetCheck = new AquariaCheckBox;
+		actionSetCheck->position = Vector(x, offy);
+		keyConfigBg->addChild(actionSetCheck, PM_POINTER);
+	}
+	offy += 40;
+
 
 	TTFText *header_tabs = new TTFText(&dsq->fontArialSmall);
 	header_tabs->setText(SB(2130));
@@ -1976,6 +2012,8 @@ void InGameMenu::create()
 	keyConfigBg->addChild(header_tabs, PM_POINTER);
 
 	keyCategoryButtons.clear();
+	keyConfigs.clear();
+
 	for(int i = 0; i < NUM_KEY_CONFIG_PAGES; ++i)
 	{
 		const float w = 100;
@@ -2090,6 +2128,8 @@ void InGameMenu::create()
 			addKeyConfigLine(kk, osname.str(), osac.str(), offx, offy+(y+=yi));
 		}
 	}
+
+	actionSetBox->moveToFront();
 
 
 #undef SB
@@ -2681,7 +2721,7 @@ void InGameMenu::onUseTreasure(int flag)
 }
 
 
-bool ingType(const std::vector<IngredientData*> &list, IngredientType type, int amount=1)
+static bool ingType(const std::vector<IngredientData*> &list, IngredientType type, int amount=1)
 {
 	int c = 0;
 	for (int i = 0; i < list.size(); i++)
@@ -2699,7 +2739,7 @@ bool ingType(const std::vector<IngredientData*> &list, IngredientType type, int 
 	return false;
 }
 
-bool ingName(const std::vector<IngredientData*> &list, const std::string &name, int amount=1)
+static bool ingName(const std::vector<IngredientData*> &list, const std::string &name, int amount=1)
 {
 	int c = 0;
 	for (int i = 0; i < list.size(); i++)
@@ -3692,22 +3732,6 @@ void InGameMenu::toggleKeyConfigMenu(bool f)
 		keyConfigBg->setHidden(false);
 		keyConfigBg->alpha = 1;
 
-		for(unsigned i = 0; i < NUM_KEY_CONFIG_PAGES; ++i)
-		{
-			// FG: FIXME: changed layout: m, k1, k2, j
-			RenderObject::Children::reverse_iterator it = group_keyConfig[i]->children.rbegin();
-			AquariaKeyConfig *upright0 = (AquariaKeyConfig*)(*it++);
-			AquariaKeyConfig *upright = (AquariaKeyConfig*)(*it++);
-			AquariaKeyConfig *upleft = (AquariaKeyConfig*)(*it++);
-
-			//opt_cancel->setDirMove(DIR_UP, upright);
-			upright->setDirMove(DIR_DOWN, opt_cancel);
-			upright0->setDirMove(DIR_DOWN, opt_cancel);
-
-			//opt_save->setDirMove(DIR_UP, upleft);
-			upleft->setDirMove(DIR_DOWN, opt_save);
-		}
-
 		switchToKeyConfigPage(0);
 
 		dsq->user_bcontrol = dsq->user;
@@ -3754,6 +3778,19 @@ void InGameMenu::switchToKeyConfigPage(int page)
 	keyCategoryButtons[page]->inactiveAlpha = 0.7f;
 	group_keyConfig[page]->setHidden(false);
 	group_keyConfig[page]->alpha = 1;
+
+	// FG: FIXME: changed layout: m, k1, k2, j
+	/*RenderObject::Children::reverse_iterator it = group_keyConfig[page]->children.rbegin();
+	AquariaKeyConfig *upright0 = (AquariaKeyConfig*)(*it++);
+	AquariaKeyConfig *upright = (AquariaKeyConfig*)(*it++);
+	AquariaKeyConfig *upleft = (AquariaKeyConfig*)(*it++);
+
+	opt_cancel->setDirMove(DIR_UP, upright);
+	upright->setDirMove(DIR_DOWN, opt_cancel);
+	upright0->setDirMove(DIR_DOWN, opt_cancel);
+
+	opt_save->setDirMove(DIR_UP, upleft);
+	upleft->setDirMove(DIR_DOWN, opt_save);*/
 }
 
 void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
@@ -3787,6 +3824,8 @@ void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 
 		if (ripplesCheck)
 			ripplesCheck->setValue(core->afterEffectManager!=0);
+
+		switchToActionSet(selectedActionSetIdx);
 
 		if (resBox)
 		{
@@ -3839,6 +3878,8 @@ void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 	}
 	else if (!f && optionsMenu)
 	{
+		AquariaMenuItem::currentGuiInputLevel = 0;
+
 		lips->alpha = 0;
 
 		keyConfigButton->alpha = 0;
@@ -3890,6 +3931,26 @@ void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 
 		menuIconGlow->alpha = 1;
 	}
+}
+
+void InGameMenu::updateKeyConfigMenu(float dt)
+{
+	if(!keyConfigMenu)
+		return;
+
+	bool isopen = actionSetBox->isOpen();
+	AquariaMenuItem::currentGuiInputLevel = isopen ? 50 : 0;
+	float a = isopen ? 0.0f : 1.0f;
+	// HACK: debug buttons ignore input at < 1 alpha
+	for(size_t i = 0; i < keyCategoryButtons.size(); ++i)
+		keyCategoryButtons[i]->alpha = a;
+
+	dsq->user.control.actionSets[selectedActionSetIdx].enabled
+		= actionSetCheck->getValue();
+
+	const int curAS = actionSetBox->getSelectedItem();
+	if(selectedActionSetIdx != curAS)
+		switchToActionSet(curAS);
 }
 
 void InGameMenu::updateOptionsMenu(float dt)
@@ -4080,6 +4141,8 @@ void InGameMenu::update(float dt)
 				}
 			}
 		}
+
+		updateKeyConfigMenu(dt);
 	}
 }
 
@@ -4091,4 +4154,26 @@ void InGameMenu::onDebugSave()
 	dsq->game->togglePause(true);
 	dsq->doSaveSlotMenu(SSM_SAVE);
 	dsq->game->togglePause(false);
+}
+
+void InGameMenu::switchToActionSet(int idx)
+{
+	selectedActionSetIdx = idx;
+	actionSetBox->setSelectedItem(idx);
+	actionSetCheck->setValue(dsq->user.control.actionSets[idx].enabled);
+	for(size_t i = 0; i < keyConfigs.size(); ++i)
+		keyConfigs[i]->setActionSetIndex(idx);
+}
+
+void InGameMenu::updateActionSetComboBox()
+{
+	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	{
+		std::ostringstream os;
+		os << '#' << (i+1);
+		const std::string& name = dsq->user.control.actionSets[i].name;
+		if(name.length())
+			os << ": " << name;
+		actionSetBox->addItem(os.str());
+	}
 }

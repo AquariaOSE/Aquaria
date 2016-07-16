@@ -67,11 +67,6 @@ AquariaComboBox::AquariaComboBox(Vector textscale) : RenderObject()
 	this->textscale = textscale;
 }
 
-void AquariaComboBox::destroy()
-{
-	RenderObject::destroy();
-}
-
 void AquariaComboBox::enqueueSelectItem(int index)
 {
 	enqueuedSelectItem = index;
@@ -131,6 +126,8 @@ void AquariaComboBox::onUpdate(float dt)
 	scrollDelay -= dt;
 	if (scrollDelay < 0) scrollDelay = 0;
 
+	bool clickedInside = false;
+
 	if (isopen)
 	{
 		if (!core->mouse.buttons.left)
@@ -141,6 +138,7 @@ void AquariaComboBox::onUpdate(float dt)
 
 		if (core->mouse.buttons.left && scrollBtnDown->isCoordinateInsideWorldRect(core->mouse.position, 20, 32))
 		{
+			clickedInside = true;
 			if (scrollDelay == 0)
 			{
 				doScroll(1);
@@ -164,6 +162,7 @@ void AquariaComboBox::onUpdate(float dt)
 
 		if (core->mouse.buttons.left && scrollBtnUp->isCoordinateInsideWorldRect(core->mouse.position, 20, 32))
 		{
+			clickedInside = true;
 			if (scrollDelay == 0)
 			{
 				doScroll(0);
@@ -190,6 +189,7 @@ void AquariaComboBox::onUpdate(float dt)
 
 	if (bar->isCoordinateInsideWorld(core->mouse.position))
 	{
+		clickedInside = true;
 		if (!mb && core->mouse.buttons.left)
 		{
 			mb = true;
@@ -220,6 +220,18 @@ void AquariaComboBox::onUpdate(float dt)
 		else if (core->mouse.scrollWheelChange < 0)
 		{
 			doScroll(1);
+		}
+
+		if(!clickedInside && core->mouse.buttons.left)
+		{
+			for(size_t i = 0; i < shownItems.size(); ++i)
+				if(shownItems[i]->mb)
+				{
+					clickedInside = true;
+					break;
+				}
+			if(!clickedInside)
+				close();
 		}
 	}
 

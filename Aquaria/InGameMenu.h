@@ -77,7 +77,6 @@ public:
 
 	void create();
 	void update(float dt);
-	void updateOptions(float dt);
 	void hide(bool effects=true, bool cancel=false);
 	void show(bool force=false, bool optionsOnly=false, MenuPage menuPage = MENUPAGE_NONE);
 	bool isInGameMenu() const { return inGameMenu; }
@@ -97,6 +96,7 @@ public:
 
 private:
 	void updateOptionsMenu(float dt);
+	void updateKeyConfigMenu(float dt);
 
 	void sortFood();
 	void updatePreviewRecipe();
@@ -207,9 +207,15 @@ private:
 	RenderObject *group_keyConfig[NUM_KEY_CONFIG_PAGES];
 	RoundedRect *keyConfigBg;
 	std::vector<DebugButton*> keyCategoryButtons;
+	std::vector<AquariaKeyConfig*> keyConfigs;
 	RenderObject *createBasicKeyConfig();
 	void switchToKeyConfigPage(int page);
 	Quad *options;
+	AquariaComboBox *actionSetBox;
+	AquariaCheckBox *actionSetCheck;
+	int selectedActionSetIdx;
+	void updateActionSetComboBox();
+	void switchToActionSet(int idx);
 
 	void onExitCheckNo();
 	void onExitCheckYes();

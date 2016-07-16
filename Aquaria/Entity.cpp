@@ -1311,9 +1311,9 @@ bool Entity::updateCurrents(float dt)
 			if (getEntityType() == ET_AVATAR)
 			{
 				if (v < 0)
-					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2);
+					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2, dsq->game->avatar->getLastActionSourceID());
 				else
-					dsq->rumble((1.0f-v)*scale, (v)*scale, 0.1);
+					dsq->rumble((1.0f-v)*scale, (v)*scale, 0.1, dsq->game->avatar->getLastActionSourceID());
 			}
 		}
 	}

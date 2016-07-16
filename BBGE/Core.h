@@ -34,12 +34,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "FrameBuffer.h"
 #include "Shader.h"
-#include "Joystick.h"
 
 #include "GameKeys.h"
 
 
 class ParticleEffect;
+class Joystick;
 
 class ParticleManager;
 

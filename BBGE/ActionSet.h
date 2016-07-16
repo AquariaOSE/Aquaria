@@ -50,6 +50,7 @@ public:
 	void clearActions();
 	int assignJoystickByName(); // -1 if no such joystick found
 	void assignJoystickIdx(int idx);
+	void updateJoystick();
 
 	ActionInput *addActionInput(const std::string &name);
 	ActionInput *getActionInputByName(const std::string &name);
@@ -67,7 +68,7 @@ public:
 
 	//std::string insertInputIntoString(const std::string &string);
 private:
-	int _whichJoystickForName(); // -1 if no souch joystick found
+	int _whichJoystickForName(); // -1 if no such joystick found
 };
 
 #endif

@@ -53,10 +53,9 @@ class DebugButtonReceiver;
 class DebugButton : public RenderObject
 {
 public:
-	DebugButton(int buttonID=-1, DebugButtonReceiver *receiver=0, int bgWidth=0, int fsize=0, bool quitMain=false);
+	DebugButton(int buttonID=-1, DebugButtonReceiver *receiver=0, int bgWidth=0, int fsize=0);
 	DebugFont *label;
 	EventPtr event;
-	bool quitMain;
 	int buttonID;
 	float activeAlpha;
 	Vector activeColor;

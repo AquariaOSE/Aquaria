@@ -331,6 +331,8 @@ public:
 
 	bool blockBackFlip;
 
+	int getLastActionSourceID() { return _lastActionSourceID; }
+
 protected:
 	void setSongIconPositions();
 
@@ -464,6 +466,8 @@ protected:
 
 	int _collisionAvoidRange;
 	float _collisionAvoidMod;
+
+	int _lastActionSourceID;
 
 };
 
