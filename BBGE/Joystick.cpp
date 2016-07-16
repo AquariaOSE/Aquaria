@@ -193,7 +193,6 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 
 void Joystick::calibrate(Vector &calvec, float deadZone)
 {
-
 	if (calvec.isLength2DIn(deadZone))
 	{
 		calvec = Vector(0,0,0);
@@ -232,7 +231,6 @@ void Joystick::update(float dt)
 			shutdown();
 			return;
 		}
-
 		if (sdl_controller)
 		{
 			for(int i = 0; i < numJoyAxes; ++i)
@@ -262,10 +260,10 @@ void Joystick::update(float dt)
 				Sint16 ax = SDL_JoystickGetAxis(sdl_joy, i);
 				axisRaw[i] = float(ax)/32768.0f;
 			}
-			position.x = axisRaw[s1ax];
-			position.y = axisRaw[s1ay];
-			rightStick.x = axisRaw[s2ax];
-			rightStick.y = axisRaw[s2ay];
+			position.x = s1ax >= 0 ? axisRaw[s1ax] : 0.0f;
+			position.y = s1ay >= 0 ? axisRaw[s1ay] : 0.0f;
+			rightStick.x = s2ax >= 0 ? axisRaw[s2ax] : 0.0f;
+			rightStick.y = s2ay >= 0 ? axisRaw[s2ay] : 0.0f;
 		}
 
 		calibrate(position, deadZone1);

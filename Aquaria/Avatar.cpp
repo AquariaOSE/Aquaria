@@ -1093,7 +1093,7 @@ void Avatar::onDamage(DamageData &d)
 			if (healthWillBe<=0)
 				t = 2;
 
-			dsq->rumble(d.damage, d.damage, 0.4);
+			dsq->rumble(d.damage, d.damage, 0.4, _lastActionSourceID);
 			if (d.damage > 0)
 			{
 				//dsq->shakeCamera(5, t);
@@ -3887,6 +3887,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	blockBackFlip = false;
 	elementEffectMult = 1;
+	_lastActionSourceID = 9999;
 }
 
 void Avatar::revert()
@@ -4059,7 +4060,7 @@ void Avatar::startBurst()
 	{
 		if (!bursting && burst == 1)
 		{
-			dsq->rumble(0.2, 0.2, 0.2);
+			dsq->rumble(0.2, 0.2, 0.2, _lastActionSourceID);
 			if (dsq->continuity.form != FORM_BEAST)
 				wakeEmitter.start();
 			dsq->game->playBurstSound(pushingOffWallEffect>0);
@@ -4132,7 +4133,7 @@ void Avatar::startWallBurst(bool useCursor)
 		{
 			lastBurstType = BURST_WALL;
 
-			dsq->rumble(0.22, 0.22, 0.2);
+			dsq->rumble(0.22, 0.22, 0.2, _lastActionSourceID);
 			bittenEntities.clear();
 			if (useCursor)
 			{
@@ -4241,6 +4242,8 @@ void Avatar::action(int id, int state, int source)
 {
 	if(dsq->game->isIgnoreAction((AquariaActions)id))
 		return;
+
+	_lastActionSourceID = source;
 
 	if (id == ACTION_PRIMARY)	{ if (state) lmbd(); else lmbu(); }
 	if (id == ACTION_SECONDARY) { if (state) rmbd(); else rmbu(); }
@@ -4510,7 +4513,7 @@ void Avatar::splash(bool down)
 		//dsq->postProcessingFx.disable(FXT_RADIALBLUR);
 		if (_isUnderWater && core->afterEffectManager)
 			core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.08,0.05,22,0.2f, 1.2));
-		dsq->rumble(0.7, 0.7, 0.2);
+		dsq->rumble(0.7, 0.7, 0.2, _lastActionSourceID);
 		plungeEmitter.start();
 
 		core->sound->playSfx("GoUnder");

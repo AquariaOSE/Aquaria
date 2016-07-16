@@ -2066,7 +2066,8 @@ luaFunc(shakeCamera)
 
 luaFunc(rumble)
 {
-	dsq->rumble(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
+	int source = lua_tonumber(L, 4) - 1;
+	dsq->rumble(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), source);
 	luaReturnNil();
 }
 

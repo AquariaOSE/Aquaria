@@ -24,9 +24,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 JoystickConfig::JoystickConfig()
 {
 	s1ax = 0;
-	s1ay = 0;
-	s2ax = 0;
-	s2ay = 0;
+	s1ay = 1;
+	s2ax = 2;
+	s2ay = 3;
 	s1dead = 0.3f;
 	s2dead = 0.3f;
 }
@@ -90,6 +90,13 @@ int ActionSet::_whichJoystickForName()
 					return int(i);
 
 	return -1;
+}
+
+void ActionSet::updateJoystick()
+{
+	Joystick *j = core->getJoystick(joystickID);
+	if(j)
+		j->setEnabled(enabled);
 }
 
 ActionInput *ActionSet::getActionInputByName(const std::string &name)

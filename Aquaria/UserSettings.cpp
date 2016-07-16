@@ -182,6 +182,12 @@ void UserSettings::save()
 			}
 			xml_control->InsertEndChild(xml_flip);
 
+			XMLElement *xml_minas = doc.NewElement("MinActionSets");
+			{
+				xml_minas->SetAttribute("num", control.flipInputButtons);
+			}
+			xml_control->InsertEndChild(xml_minas);
+
 			for(size_t i = 0; i < control.actionSets.size(); ++i)
 			{
 				const ActionSet& as = control.actionSets[i];
@@ -448,6 +454,8 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		readInt(xml_control, "MinActionSets", "num", &control.minActionSets);
 		readInt(xml_control, "ToolTipsOn", "on", &control.toolTipsOn);
 
+		if(control.minActionSets < 1)
+			control.minActionSets = 1;
 		control.actionSets.clear();
 		control.actionSets.reserve(control.minActionSets);
 
@@ -578,6 +586,7 @@ void UserSettings::apply()
 			j->deadZone1 = as.joycfg.s1dead;
 			j->deadZone2 = as.joycfg.s2dead;
 		}
+		as.updateJoystick();
 	}
 
 	core->debugLogActive = system.debugLogOn;

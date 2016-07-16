@@ -359,7 +359,7 @@ public:
 	InputMode inputMode;
 	void setInputMode(InputMode mode);
 
-	void rumble(float leftMotor, float rightMotor, float time);
+	void rumble(float leftMotor, float rightMotor, float time, int source);
 	void vision(std::string folder, int num, bool ignoreMusic = false);
 
 	void watch(float t, int canQuit = 0);

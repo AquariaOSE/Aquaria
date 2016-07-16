@@ -426,7 +426,7 @@ void BasicIcon::onUpdate(float dt)
 	AquariaMenuItem::onUpdate(dt);
 
 	// Autoscroll if selecting icon outside of screen
-	if(hasFocus && dsq->modSelectorScr)
+	if(hasFocus() && dsq->modSelectorScr)
 	{
 		Vector pos = getRealPosition();
 		if(pos.y < 20 || pos.y > 580)

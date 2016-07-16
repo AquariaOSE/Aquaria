@@ -163,8 +163,8 @@ void DebugFont::setAlign(Align align)
 
 #include "../BBGE/Quad.h"
 
-DebugButton::DebugButton(int buttonID, DebugButtonReceiver *receiver, int bgWidth, int fsize, bool quitMain)
- : RenderObject(), label(0), highlight(0), quitMain(quitMain), receiver(receiver), buttonID(buttonID)
+DebugButton::DebugButton(int buttonID, DebugButtonReceiver *receiver, int bgWidth, int fsize)
+ : RenderObject(), label(0), highlight(0), receiver(receiver), buttonID(buttonID)
  , activeAlpha(0.5f), activeColor(1,1,1), inactiveAlpha(0.5f), inactiveColor(0,0,0)
 {
 	if (bgWidth == 0)
@@ -214,8 +214,6 @@ void DebugButton::onUpdate(float dt)
 
 		if (doit)
 		{
-			if (quitMain)
-				core->quitNestedMain();
 			event.call();
 			if (receiver)
 				receiver->buttonPress(this);

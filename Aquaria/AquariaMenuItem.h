@@ -52,8 +52,14 @@ protected:
 	static GuiElements guiElements;
 	static float guiMoveTimer;
 	void updateMovement(float dt);
-	bool hasFocus, canDirMove;
+	bool hasFocus() const;
+	bool canDirMove;
 	AquariaGuiElement *dirMove[DIR_MAX];
+	static AquariaGuiElement *FindClosestTo(AquariaGuiElement *cur, Vector pos, Direction dir);
+	static Direction GetDirection();
+	static AquariaGuiElement *FocusClosestToMouse(Direction dir);
+public:
+	static void UpdateGlobalFocus(float dt);
 };
 
 class AquariaGuiQuad : public Quad, public AquariaGuiElement
@@ -77,7 +83,6 @@ public:
 	void setLabel(const std::string &label);
 	EventPtr event;
 	BitmapText *font, *glowFont;
-	int choice;
 	Quad *glow, *quad;
 	bool useQuad(const std::string &tex);
 	void useGlow(const std::string &tex, int w, int h);
@@ -192,6 +197,7 @@ class AquariaComboBox;
 
 class AquariaComboBoxItem : public Quad
 {
+	friend class AquariaComboBox;
 public:
 	AquariaComboBoxItem(const std::string &str, int idx, AquariaComboBox *combo, Vector textscale);
 
@@ -209,12 +215,9 @@ class AquariaComboBox : public RenderObject
 {
 public:
 	AquariaComboBox(Vector textscale = Vector(1, 1));
-
-	void destroy();
-
 	int addItem(const std::string &n);
-	void open(float t=0.1);
-	void close(float t=0.1);
+	void open(float t=0.1f);
+	void close(float t=0.1f);
 	void setSelectedItem(int index);
 	bool setSelectedItem(const std::string &item);
 	int getSelectedItem();
@@ -222,6 +225,7 @@ public:
 	void setScroll(int sc);
 	std::string getSelectedItemString();
 	void doScroll(int dir);
+	bool isOpen() const { return isopen; }
 protected:
 	void onUpdate(float dt);
 
@@ -232,9 +236,8 @@ protected:
 	int enqueuedSelectItem;
 
 	std::vector<std::string> items;
-	std::vector<BitmapText*> itemTexts;
 
-	Quad *bar, *window, *scrollBtnUp, *scrollBtnDown, *scrollBar;
+	Quad *bar, *scrollBtnUp, *scrollBtnDown;
 
 	BitmapText *selectedItemLabel;
 	int selectedItem;

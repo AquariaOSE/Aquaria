@@ -39,6 +39,7 @@ public:
 	int getIndex() const { return stickIndex; }
 	int getInstanceID() const { return instanceID; }
 	inline bool isEnabled() const { return enabled; }
+	inline void setEnabled(bool on) { enabled = on; }
 
 	const char *getAxisName(int axis) const;
 	const char *getButtonName(int btn) const;

@@ -269,11 +269,24 @@ void DSQ::forceInputGrabOff()
 	SDL_ShowCursor(SDL_DISABLE);
 }
 
-void DSQ::rumble(float leftMotor, float rightMotor, float time)
+void DSQ::rumble(float leftMotor, float rightMotor, float time, int source)
 {
-	//if (this->inputMode == INPUT_JOYSTICK)
-	//	core->joystick.rumble(leftMotor, rightMotor, time);
-	//assert(false); // FIXME
+	if (this->inputMode == INPUT_JOYSTICK)
+	{
+		if(source < 0)
+			for(size_t i = 0; i < user.control.actionSets.size(); ++i)
+			{
+				const ActionSet& as = user.control.actionSets[i];
+				if(Joystick *j = core->getJoystick(as.joystickID))
+					j->rumble(leftMotor, rightMotor, time);
+			}
+		else if(source < (int)user.control.actionSets.size())
+		{
+			const ActionSet& as = user.control.actionSets[source];
+			if(Joystick *j = core->getJoystick(as.joystickID))
+				j->rumble(leftMotor, rightMotor, time);
+		}
+	}
 }
 
 void DSQ::newGame()
@@ -4104,6 +4117,8 @@ void DSQ::onUpdate(float dt)
 	Network::update();
 
 	Shot::clearShotGarbage();
+
+	AquariaGuiElement::UpdateGlobalFocus(dt);
 }
 
 void DSQ::lockMouse()
