@@ -3834,7 +3834,7 @@ void DSQ::onUpdate(float dt)
 
 	if (dsq->game && watchForQuit && isNested())
 	{
-		if (dsq->game->isActing(ACTION_ESC))
+		if (dsq->game->isActing(ACTION_ESC, -1))
 		{
 			watchQuitFlag = true;
 			quitNestedMain();
@@ -3921,10 +3921,10 @@ void DSQ::onUpdate(float dt)
 	}
 	if (dsq->game->avatar)
 	{
-		if (dsq->game->avatar->isActing(ACTION_SWIMUP) ||
-			dsq->game->avatar->isActing(ACTION_SWIMDOWN) ||
-			dsq->game->avatar->isActing(ACTION_SWIMLEFT) ||
-			dsq->game->avatar->isActing(ACTION_SWIMRIGHT))
+		if (dsq->game->avatar->isActing(ACTION_SWIMUP, -1) ||
+			dsq->game->avatar->isActing(ACTION_SWIMDOWN, -1) ||
+			dsq->game->avatar->isActing(ACTION_SWIMLEFT, -1) ||
+			dsq->game->avatar->isActing(ACTION_SWIMRIGHT, -1))
 		{
 			dsq->setInputMode(INPUT_KEYBOARD);
 		}

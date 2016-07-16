@@ -35,9 +35,9 @@ typedef std::vector<int> ButtonList;
 
 struct ActionData
 {
-	ActionData() { id=-1; state=-1; event=0; }
+	ActionData() { id=-1; state=-1; source = -1; event=0; }
 
-	int id, state;
+	int id, state, source;
 	Event *event;
 	ButtonList buttonList;
 };
@@ -70,10 +70,7 @@ public:
 	void addAction(Event *event, int k, int state=-1);
 	void addAction(int actionID, int k, int source);
 
-	void removeAction(int actionID);
-	void removeAllActions();
-
-	bool isActing(int actionID);
+	bool isActing(int actionID, int source);
 	virtual void action(int actionID, int state, int source) = 0;
 
 
@@ -83,7 +80,7 @@ public:
 
 	// vars
 
-	typedef std::list<ActionData> ActionDataSet;
+	typedef std::vector<ActionData> ActionDataSet;
 	ActionDataSet actionData;
 
 	typedef std::map <int, int> KeyDownMap;
@@ -97,10 +94,10 @@ public:
 	Event *addCreatedEvent(Event *event);
 	void clearCreatedEvents();
 
-	bool pollAction(int actionID);
+	bool pollAction(int actionID, int source);
 	bool getKeyState(int k);
 
-	ActionData *getActionDataByID(int actionID);
+	ActionData *getActionDataByIDAndSource(int actionID, int source);
 protected:
 
 	std::vector<Event*>createdEvents;
@@ -108,6 +105,8 @@ protected:
 	bool inUpdate;
 	bool inputEnabled;
 	void onUpdate (float dt);
+private:
+	bool _pollActionData(const ActionData& ad);
 };
 
 #endif

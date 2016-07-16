@@ -103,8 +103,8 @@ bool Joystick::init(int stick)
 		name = n ? n : "<?>";
 		SDL_JoystickGUID jg = SDL_JoystickGetGUID(sdl_joy);
 		char guidbuf[40];
-		guid = &guidbuf[0];
 		SDL_JoystickGetGUIDString(jg, &guidbuf[0], sizeof(guidbuf));
+		guid = &guidbuf[0];
 		debugLog(std::string("Initialized Joystick [") + name + "], GUID [" + guid + "]");
 		if (sdl_controller)
 		{

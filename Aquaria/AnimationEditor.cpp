@@ -720,20 +720,18 @@ void AnimationEditor::update(float dt)
 	if (core->mouse.buttons.middle)
 	{
 		editSprite->position += core->mouse.change;
-
 	}
 
 	if (editingStrip)
 	{
-
-		if (isActing(ACTION_SWIMLEFT))
+		if (isActing(ACTION_SWIMLEFT, -1))
 			moveBoneStripPoint(Vector(-dt, 0));
-		if (isActing(ACTION_SWIMRIGHT))
+		if (isActing(ACTION_SWIMRIGHT, -1))
 			moveBoneStripPoint(Vector(dt, 0));
 
-		if (isActing(ACTION_SWIMUP))
+		if (isActing(ACTION_SWIMUP, -1))
 			moveBoneStripPoint(Vector(0, -dt));
-		if (isActing(ACTION_SWIMDOWN))
+		if (isActing(ACTION_SWIMDOWN, -1))
 			moveBoneStripPoint(Vector(0, dt));
 	}
 	int spd = 1;

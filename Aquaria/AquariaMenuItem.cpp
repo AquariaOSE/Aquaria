@@ -151,10 +151,10 @@ void AquariaGuiElement::updateMovement(float dt)
 				StateObject *obj = dsq->getTopStateObject();
 				if (obj)
 				{
-					if (obj->isActing(ACTION_MENULEFT))			dir = DIR_LEFT;
-					else if (obj->isActing(ACTION_MENURIGHT))	dir = DIR_RIGHT;
-					else if (obj->isActing(ACTION_MENUUP))		dir = DIR_UP;
-					else if (obj->isActing(ACTION_MENUDOWN))	dir = DIR_DOWN;
+					if (obj->isActing(ACTION_MENULEFT, -1))			dir = DIR_LEFT;
+					else if (obj->isActing(ACTION_MENURIGHT, -1))	dir = DIR_RIGHT;
+					else if (obj->isActing(ACTION_MENUUP, -1))		dir = DIR_UP;
+					else if (obj->isActing(ACTION_MENUDOWN, -1))	dir = DIR_DOWN;
 				}
 			}
 
@@ -373,9 +373,9 @@ bool AquariaSlider::doSliderInput(float dt)
 		inputAmount = -0.1f;
 	else if (jpos.x >= SLIDER_JOY_THRESHOLD)
 		inputAmount = +0.1f;
-	else if (obj && obj->isActing(ACTION_MENULEFT))
+	else if (obj && obj->isActing(ACTION_MENULEFT, -1))
 		inputAmount = -0.1f;
-	else if (obj && obj->isActing(ACTION_MENURIGHT))
+	else if (obj && obj->isActing(ACTION_MENURIGHT, -1))
 		inputAmount = +0.1f;
 	else
 		inputAmount = 0;

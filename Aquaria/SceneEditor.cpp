@@ -2786,11 +2786,11 @@ void SceneEditor::update(float dt)
 		{
 		case ET_ELEMENTS:
 			editingEntity = 0;
-			if (isActing(ACTION_MULTISELECT) || !selectedElements.empty())
+			if (isActing(ACTION_MULTISELECT, -1) || !selectedElements.empty())
 			{
 				editingElement = 0;
 			}
-			if (state == ES_SELECTING && !isActing(ACTION_MULTISELECT))
+			if (state == ES_SELECTING && !isActing(ACTION_MULTISELECT, -1))
 				editingElement = this->getElementAtCursor();
 
 			if (editingElement)
@@ -2819,13 +2819,13 @@ void SceneEditor::update(float dt)
 		int camSpeed = 500/zoom.x;
 		if (core->getShiftState())
 			camSpeed = 5000/zoom.x;
-		if (isActing(ACTION_CAMLEFT))
+		if (isActing(ACTION_CAMLEFT, -1))
 			dsq->cameraPos.x -= dt*camSpeed;
-		if (isActing(ACTION_CAMRIGHT))
+		if (isActing(ACTION_CAMRIGHT, -1))
 			dsq->cameraPos.x += dt*camSpeed;
-		if (isActing(ACTION_CAMUP))
+		if (isActing(ACTION_CAMUP, -1))
 			dsq->cameraPos.y -= dt*camSpeed;
-		if (isActing(ACTION_CAMDOWN))
+		if (isActing(ACTION_CAMDOWN, -1))
 			dsq->cameraPos.y += dt*camSpeed;
 		if (core->mouse.buttons.middle && !core->mouse.change.isZero())
 		{
@@ -2835,9 +2835,9 @@ void SceneEditor::update(float dt)
 
 		float spd = 0.5;
 		const Vector oldZoom = zoom;
-		if (isActing(ACTION_ZOOMOUT))
+		if (isActing(ACTION_ZOOMOUT, -1))
 			zoom /= (1 + spd*dt);
-		else if (isActing(ACTION_ZOOMIN))
+		else if (isActing(ACTION_ZOOMIN, -1))
 			zoom *= (1 + spd*dt);
 		else if (core->mouse.scrollWheelChange < 0)
 		{
