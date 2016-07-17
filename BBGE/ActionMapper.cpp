@@ -156,6 +156,9 @@ bool ActionMapper::_pollActionData(const ActionData& ad)
 
 bool ActionMapper::getKeyState(int k)
 {
+	if(!k)
+		return false;
+
 	bool keyState = false;
 	if (k >= 0 && k < KEY_MAXARRAY)
 	{
@@ -203,7 +206,7 @@ bool ActionMapper::getKeyState(int k)
 	}
 	else if (k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
 	{
-		int v = k - JOY_AXIS_END_NEG;
+		int v = k - JOY_AXIS_0_NEG;
 
 		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 			if(Joystick *j = core->getJoystick(i))
@@ -254,7 +257,7 @@ void ActionMapper::onUpdate (float dt)
 					}
 					else
 					{
-						action(ad->id, keyState, -1); // FG: FIXME
+						action(ad->id, keyState, ad->source);
 					}
 					if (core->loopDone) goto out;
 				}

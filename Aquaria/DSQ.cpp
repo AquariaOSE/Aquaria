@@ -3877,7 +3877,7 @@ void DSQ::onUpdate(float dt)
 
 	// HACK: not optimal
 
-	if (inputMode != INPUT_KEYBOARD && game->isActive())
+	if (/*inputMode != INPUT_KEYBOARD &&*/ game->isActive())
 	{
 		for(size_t i = 0; i < almb.size(); ++i)
 			if (ActionMapper::getKeyState(almb[i]->key[0]) || ActionMapper::getKeyState(almb[i]->key[1]))

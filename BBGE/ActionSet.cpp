@@ -135,7 +135,6 @@ void ActionSet::importAction(ActionMapper *mapper, const std::string &name, int 
 			return;
 		}
 	}
-
 }
 
 void ActionSet::importAction(ActionMapper *mapper, const std::string &name, Event *event, int state) const

@@ -280,6 +280,10 @@ static void ensureDefaultActions(ActionSet& as)
 	as.addActionInput("SwimDown");
 	as.addActionInput("SwimLeft");
 	as.addActionInput("SwimRight");
+	as.addActionInput("MenuUp");
+	as.addActionInput("MenuDown");
+	as.addActionInput("MenuLeft");
+	as.addActionInput("MenuRight");
 	as.addActionInput("Roll");
 	as.addActionInput("Revert");
 	as.addActionInput("WorldMap");
