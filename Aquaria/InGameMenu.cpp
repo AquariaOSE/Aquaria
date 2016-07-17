@@ -1971,6 +1971,7 @@ void InGameMenu::create()
 	keyConfigBg->position = Vector(400,276 - 10 - 40);
 	keyConfigBg->setWidthHeight(580, 455, 10);
 	keyConfigBg->followCamera = 1;
+	keyConfigBg->alpha = 0;
 	keyConfigBg->shareAlphaWithChildren = 1;
 	keyConfigBg->setHidden(true);
 	game->addRenderObject(keyConfigBg, LR_OVERLAY);
