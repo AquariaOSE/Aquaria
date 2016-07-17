@@ -814,13 +814,16 @@ void AquariaKeyConfig::onUpdate(float dt)
 		{
 			int ac = 0;
 			bool clear = false;
+			bool abort = false;
 			if (core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
 			{
 				clear = true;
 			}
 			else if(core->getKeyState(KEY_ESCAPE))
 			{
-				// do nothing
+				abort = true;
+				while(core->getKeyState(KEY_ESCAPE))
+					dsq->run(0.1f);
 			}
 			else
 			{
@@ -853,16 +856,19 @@ void AquariaKeyConfig::onUpdate(float dt)
 					clear = true;
 			}
 
-			if(ac || clear)
+			if(abort || ac || clear)
 			{
 				toggleEnterKey(0);
 				waitingForInput = 0;
 				AquariaGuiElement::canDirMoveGlobal = true;
 
-				if(clear || *k == ac) // clear key if pressed again
-					*k = 0;
-				else
-					*k = ac;
+				if(!abort)
+				{
+					if(clear || *k == ac) // clear key if pressed again
+						*k = 0;
+					else
+						*k = ac;
+				}
 			}
 		}
 		break;
