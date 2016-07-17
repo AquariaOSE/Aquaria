@@ -206,14 +206,15 @@ bool ActionMapper::getKeyState(int k, int sourceID)
 {
 	if(sourceID < 0)
 		return getKeyState(k);
-	return core->getActionStatus()[sourceID]->getKeyState(k);
+	return core->getActionStatus(sourceID)->getKeyState(k);
 }
 
 bool ActionMapper::getKeyState(int k)
 {
-	const std::vector<ActionButtonStatus*>& absv = core->getActionStatus();
-	for(size_t i = 0; i < absv.size(); ++i)
-		if(absv[i]->getKeyState(k))
+	// all including sentinel
+	const int m = core->getMaxActionStatusIndex();
+	for(int i = -1; i <= m; ++i)
+		if(core->getActionStatus(i)->getKeyState(k))
 			return true;
 	return false;
 }
@@ -228,14 +229,15 @@ bool ActionMapper::isKeyChanged(int k, int sourceID)
 {
 	if(sourceID < 0)
 		return isKeyChanged(k);
-	return core->getActionStatus()[sourceID]->isKeyChanged(k);
+	return core->getActionStatus(sourceID)->isKeyChanged(k);
 }
 
 bool ActionMapper::isKeyChanged(int k)
 {
-	const std::vector<ActionButtonStatus*>& absv = core->getActionStatus();
-	for(size_t i = 0; i < absv.size(); ++i)
-		if(absv[i]->isKeyChanged(k))
+	// all including sentinel
+	const int m = core->getMaxActionStatusIndex();
+	for(int i = -1; i <= m; ++i)
+		if(core->getActionStatus(i)->isKeyChanged(k))
 			return true;
 	return false;
 }

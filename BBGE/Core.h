@@ -556,7 +556,10 @@ protected:
 	void clearActionButtons();
 
 public:
-	inline const std::vector<ActionButtonStatus*>& getActionStatus() { return actionStatus; }
+	// inclusive!
+	inline int getMaxActionStatusIndex() const { return int(actionStatus.size()) - 2; }
+	// pass -1 for is a sentinel that captures all input
+	inline ActionButtonStatus *getActionStatus(int idx) { return actionStatus[idx + 1]; }
 
 	Joystick *getJoystick(int idx); // warning: may return NULL/contain holes
 	// not the actual number of joysticks!
