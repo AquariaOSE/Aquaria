@@ -598,6 +598,8 @@ void UserSettings::apply()
 		as.updateJoystick();
 	}
 
+	dsq->initActionButtons();
+
 	core->debugLogActive = system.debugLogOn;
 
 	if (dsq->game)

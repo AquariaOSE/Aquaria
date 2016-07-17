@@ -557,6 +557,10 @@ protected:
 	void fixupJoysticks();
 	virtual void onJoystickAdded(int deviceID);
 	virtual void onJoystickRemoved(int instanceID);
+
+public:
+	void initActionButtons();
+	void importActionButtons();
 };
 
 extern DSQ *dsq;

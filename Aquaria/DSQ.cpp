@@ -223,8 +223,6 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 
 	for (int i = 0; i < 16; i++)
 		firstElementOnLayer[i] = 0;
-
-	pActionSets = &user.control.actionSets;
 }
 
 DSQ::~DSQ()
@@ -4596,5 +4594,30 @@ void DSQ::fixupJoysticks()
 	{
 		ActionSet& as = user.control.actionSets[i];
 		as.updateJoystick();
+	}
+
+	// HACK: why here? kinda dirty, but the joystick ID needs to be propagated
+	importActionButtons();
+}
+
+void DSQ::initActionButtons()
+{
+	clearActionButtons();
+
+	for(size_t i = 0; i < user.control.actionSets.size(); ++i)
+		actionStatus.push_back(new ActionButtonStatus);
+
+	importActionButtons();
+}
+
+void DSQ::importActionButtons()
+{
+	assert(user.control.actionSets.size() == actionStatus.size());
+
+	for(size_t i = 0; i < actionStatus.size(); ++i)
+	{
+		const ActionSet& as = user.control.actionSets[i];
+		ActionButtonStatus *abs = actionStatus[i];
+		abs->import(as);
 	}
 }

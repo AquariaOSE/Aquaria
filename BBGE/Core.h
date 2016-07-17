@@ -24,16 +24,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Base.h"
 #include "RenderObject.h"
 #include "SoundManager.h"
-#include "ActionMapper.h"
 #include "Event.h"
 #include "StateManager.h"
 #include "Effects.h"
 #include "Localization.h"
 
 #include "DarkLayer.h"
-
-#include "FrameBuffer.h"
-#include "Shader.h"
 
 #include "GameKeys.h"
 
@@ -75,8 +71,6 @@ const int baseVirtualWidth		= 800;
 const int baseVirtualHeight		= 600;
 
 enum ButtonState { UP = 0, DOWN };
-
-const unsigned mouseExtraButtons = 8;
 
 struct MouseButtons
 {
@@ -557,13 +551,17 @@ protected:
 	void setupFileAccess();
 	std::string _extraDataDir;
 
-public:
+	std::vector<ActionButtonStatus*> actionStatus;
+	void updateActionButtons();
+	void clearActionButtons();
 
-	std::vector<ActionSet> *pActionSets;
+public:
+	inline const std::vector<ActionButtonStatus*>& getActionStatus() { return actionStatus; }
 
 	Joystick *getJoystick(int idx); // warning: may return NULL/contain holes
 	// not the actual number of joysticks!
 	size_t getNumJoysticks() const { return joysticks.size(); }
+	Joystick *getJoystickForSourceID(unsigned sourceID);
 private:
 	std::vector<Joystick*> joysticks;
 };

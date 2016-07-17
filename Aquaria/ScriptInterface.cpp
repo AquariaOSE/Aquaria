@@ -49,6 +49,7 @@ extern "C"
 #include "Beam.h"
 #include "Hair.h"
 #include "Spore.h"
+#include "Shader.h"
 
 
 #include "../BBGE/MathFunctions.h"
@@ -4972,7 +4973,7 @@ luaFunc(isLeftMouse)
 {
 	int source = lua_tointeger(L, 1) - 1;
 	bool isDown = (source < 0 && core->mouse.buttons.left)
-		|| (dsq->game->avatar && dsq->game->avatar->pollAction(ACTION_PRIMARY, source));
+		|| (dsq->game->avatar && dsq->game->avatar->isActing(ACTION_PRIMARY, source));
 	luaReturnBool(isDown);
 }
 
@@ -4980,7 +4981,7 @@ luaFunc(isRightMouse)
 {
 	int source = lua_tointeger(L, 1) - 1;
 	bool isDown = (source < 0 && core->mouse.buttons.right)
-		|| (dsq->game->avatar && dsq->game->avatar->pollAction(ACTION_SECONDARY, source));
+		|| (dsq->game->avatar && dsq->game->avatar->isActing(ACTION_SECONDARY, source));
 	luaReturnBool(isDown);
 }
 

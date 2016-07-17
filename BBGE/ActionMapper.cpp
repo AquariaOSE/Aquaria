@@ -24,6 +24,7 @@ ActionMapper::ActionMapper()
 	cleared = false;
 	inputEnabled = true;
 	inUpdate = false;
+	//memset(keyStatus, 0, sizeof(keyStatus));
 }
 
 ActionMapper::~ActionMapper()
@@ -50,7 +51,7 @@ bool ActionMapper::isActing(int actionID, int source)
 			ActionData& ad = *i;
 			if(ad.id == actionID)
 				for (ButtonList::iterator ii = ad.buttonList.begin(); ii != ad.buttonList.end(); ++ii)
-					if (keyDownMap[*ii])
+					if (getKeyState(*ii, source))
 						return true;
 		}
 		return false;
@@ -62,7 +63,7 @@ bool ActionMapper::isActing(int actionID, int source)
 		ButtonList::iterator i = ad->buttonList.begin();
 		for (; i != ad->buttonList.end(); i++)
 		{
-			if (keyDownMap[(*i)])
+			if (getKeyState(*i, source))
 				return true;
 		}
 	}
@@ -86,7 +87,7 @@ void ActionMapper::addAction(int actionID, int k, int source)
 	{
 		if(std::find(ad->buttonList.begin(), ad->buttonList.end(), k) == ad->buttonList.end())
 			ad->buttonList.push_back(k);
-		keyDownMap[k] = core->getKeyState(k);
+		//keyStatus[k] = core->getKeyState(k);
 	}
 }
 
@@ -98,7 +99,7 @@ void ActionMapper::addAction(Event *event, int k, int state)
 	data.buttonList.push_back(k);
 	actionData.push_back(data);
 
-	keyDownMap[k] = core->getKeyState(k);
+	//keyStatus[k] = core->getKeyState(k);
 }
 
 Event* ActionMapper::addCreatedEvent(Event *event)
@@ -131,6 +132,7 @@ void ActionMapper::disableInput()
 	inputEnabled = false;
 }
 
+/*
 bool ActionMapper::pollAction(int actionID, int source)
 {
 	if(source < 0)
@@ -153,160 +155,34 @@ bool ActionMapper::_pollActionData(const ActionData& ad)
 			return true;
 	return false;
 }
-
-
-bool ActionMapper::getKeyState(int k)
-{
-	if(!k)
-		return false;
-
-	bool keyState = false;
-	if (k >= 0 && k < KEY_MAXARRAY)
-	{
-		keyState = (core->getKeyState(k));
-	}
-	else if (k == MOUSE_BUTTON_LEFT)
-	{
-		keyState = (core->mouse.buttons.left == DOWN);
-	}
-	else if (k == MOUSE_BUTTON_RIGHT)
-	{
-		keyState = (core->mouse.buttons.right == DOWN);
-	}
-	else if (k == MOUSE_BUTTON_MIDDLE)
-	{
-		keyState = (core->mouse.buttons.middle == DOWN);
-	}
-	else if (k >= MOUSE_BUTTON_EXTRA_START && k < MOUSE_BUTTON_EXTRA_START+mouseExtraButtons)
-	{
-		keyState  = core->mouse.buttons.extra[k - MOUSE_BUTTON_EXTRA_START];
-	}
-	else if (k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
-	{
-		int v = k - JOY_BUTTON_0;
-
-		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
-			if(Joystick *j = core->getJoystick(i))
-				if(j->isEnabled())
-					if( ((keyState = j->getButton(v))) )
-						break;
-	}
-	else if (k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
-	{
-		int v = k - JOY_AXIS_0_POS;
-
-		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
-			if(Joystick *j = core->getJoystick(i))
-				if(j->isEnabled())
-				{
-					float ax = j->getAxisUncalibrated(v);
-					keyState = ax > JOY_AXIS_THRESHOLD;
-					if(keyState)
-						break;
-				}
-	}
-	else if (k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
-	{
-		int v = k - JOY_AXIS_0_NEG;
-
-		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
-			if(Joystick *j = core->getJoystick(i))
-				if(j->isEnabled())
-				{
-					float ax = j->getAxisUncalibrated(v);
-					keyState = ax < -JOY_AXIS_THRESHOLD;
-					if(keyState)
-						break;
-				}
-	}
-
-	return keyState;
-}
-
-bool ActionMapper::getKeyState(int k, int source)
-{
-	if(!k)
-		return false;
-
-	ActionSet& as = (*core->pActionSets)[source];
-
-	bool keyState = false;
-	if (k >= 0 && k < KEY_MAXARRAY)
-	{
-		keyState = core->getKeyState(k) && as.hasKey(k);
-	}
-	else if (k == MOUSE_BUTTON_LEFT)
-	{
-		keyState = core->mouse.buttons.left == DOWN && as.hasMouse(k);
-	}
-	else if (k == MOUSE_BUTTON_RIGHT)
-	{
-		keyState = core->mouse.buttons.right == DOWN && as.hasMouse(k);
-	}
-	else if (k == MOUSE_BUTTON_MIDDLE)
-	{
-		keyState = core->mouse.buttons.middle == DOWN && as.hasMouse(k);
-	}
-	else if (k >= MOUSE_BUTTON_EXTRA_START && k < MOUSE_BUTTON_EXTRA_START+mouseExtraButtons)
-	{
-		keyState  = core->mouse.buttons.extra[k - MOUSE_BUTTON_EXTRA_START] && as.hasMouse(k);
-	}
-	else if (k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
-	{
-		Joystick *j = core->getJoystick(as.joystickID);
-		if(j && j->isEnabled())
-			keyState = j->getButton( - JOY_BUTTON_0);
-	}
-	else if (k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
-	{
-		Joystick *j = core->getJoystick(as.joystickID);
-		if(j && j->isEnabled())
-		{
-			float ax = j->getAxisUncalibrated(k - JOY_AXIS_0_POS);
-			keyState = ax > JOY_AXIS_THRESHOLD;
-		}
-	}
-	else if (k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
-	{
-		Joystick *j = core->getJoystick(as.joystickID);
-		if(j && j->isEnabled())
-		{
-			float ax = j->getAxisUncalibrated(k - JOY_AXIS_0_NEG);
-			keyState = ax < -JOY_AXIS_THRESHOLD;
-		}
-	}
-
-	return keyState;
-}
+*/
 
 void ActionMapper::onUpdate (float dt)
 {
-	if (inUpdate) return;
-	inUpdate = true;
+	if (inUpdate)
+		return;
 
-	if (cleared) cleared = false;
-	ActionDataSet::iterator i;
-	KeyDownMap oldKeyDownMap = keyDownMap;
-	for (i = actionData.begin(); i != actionData.end(); ++i)
+	inUpdate = true;
+	cleared = false;
+
+	for (ActionDataSet::iterator i = actionData.begin(); i != actionData.end(); ++i)
 	{
 		ButtonList::iterator j;
 		j = i->buttonList.begin();
 		for (; j != i->buttonList.end(); j++)
 		{
-			int k = (*j);
-			ActionData *ad = &(*i);
-			int keyState = ad->source < 0
-				? getKeyState(k) // any source goes
-				: getKeyState(k, ad->source); // specific source
+			const int k = (*j);
+			const ActionData *ad = &(*i);
+			const bool keyChanged = isKeyChanged(k, ad->source);
 
-			if (keyState != oldKeyDownMap[k])
+			if (keyChanged)
 			{
-				keyDownMap[k] = keyState;
+				bool keyState = getKeyState(k, ad->source);
 				if (inputEnabled)
 				{
 					if (ad->event)
 					{
-						if (ad->state==-1 || keyState == ad->state)
+						if (ad->state==-1 || keyState == !!ad->state)
 						{
 							ad->event->act();
 						}
@@ -324,12 +200,42 @@ void ActionMapper::onUpdate (float dt)
 
 out:
 	inUpdate = false;
+}
 
+bool ActionMapper::getKeyState(int k, int sourceID)
+{
+	if(sourceID < 0)
+		return getKeyState(k);
+	return core->getActionStatus()[sourceID]->getKeyState(k);
+}
+
+bool ActionMapper::getKeyState(int k)
+{
+	const std::vector<ActionButtonStatus*>& absv = core->getActionStatus();
+	for(size_t i = 0; i < absv.size(); ++i)
+		if(absv[i]->getKeyState(k))
+			return true;
+	return false;
 }
 
 void ActionMapper::clearActions()
 {
 	cleared = true;
-	keyDownMap.clear();
 	actionData.clear();
+}
+
+bool ActionMapper::isKeyChanged(int k, int sourceID)
+{
+	if(sourceID < 0)
+		return isKeyChanged(k);
+	return core->getActionStatus()[sourceID]->isKeyChanged(k);
+}
+
+bool ActionMapper::isKeyChanged(int k)
+{
+	const std::vector<ActionButtonStatus*>& absv = core->getActionStatus();
+	for(size_t i = 0; i < absv.size(); ++i)
+		if(absv[i]->isKeyChanged(k))
+			return true;
+	return false;
 }

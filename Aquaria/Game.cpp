@@ -2528,6 +2528,11 @@ float Game::getHalfTimer(float mod)
 
 void Game::action(int id, int state, int source)
 {
+	{
+		std::ostringstream os;
+		os << "Game:action " << id << ", " << state << ", " << source;
+		debugLog(os.str());
+	}
 	for (int i = 0; i < paths.size(); i++)
 	{
 		if (paths[i]->catchActions)
