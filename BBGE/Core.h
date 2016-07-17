@@ -558,6 +558,9 @@ protected:
 	std::string _extraDataDir;
 
 public:
+
+	std::vector<ActionSet> *pActionSets;
+
 	Joystick *getJoystick(int idx); // warning: may return NULL/contain holes
 	// not the actual number of joysticks!
 	size_t getNumJoysticks() const { return joysticks.size(); }
