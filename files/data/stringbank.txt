@@ -242,6 +242,15 @@
 2130 Category
 2131 Mouse
 2132 Take Screenshot
+2133 Action Set:
+2134 Enabled
+2135 Menu Up
+2136 Menu Down
+2137 Menu Left
+2138 Menu Right
+2139 No Joystick
+2140 Joystick:
+2141 Not available:
 2150 Movement
 2151 Menu
 2152 Quick Keys
