@@ -19,13 +19,36 @@ void ActionButtonStatus::import(const ActionSet& as)
 	{
 		const ActionInput& inp = as.inputSet[i];
 		for(int j = 0; j < INP_COMBINED_SIZE; ++j)
-			found[inp.all[j]] = 1;
+			if(unsigned(inp.all[j]) < ACTION_BUTTON_ENUM_SIZE)
+				found[inp.all[j]] = 1;
 	}
 	
 	toQuery.clear();
 	for(int k = 1; k < sizeof(found); ++k) // ignore [0]
 		if(found[k])
 			toQuery.push_back(k);
+
+	memset(status, 0, sizeof(status));
+	memset(changed, 0, sizeof(changed));
+
+	update();
+}
+
+void ActionButtonStatus::importQuery(const int *pKeys, size_t num)
+{
+	unsigned char found[ACTION_BUTTON_ENUM_SIZE];
+	memset(found, 0, sizeof(found));
+	for(size_t i = 0; i < num; ++i)
+		if(unsigned(pKeys[i]) < ACTION_BUTTON_ENUM_SIZE)
+			found[pKeys[i]] = 1;
+
+	toQuery.clear();
+	for(int k = 1; k < sizeof(found); ++k) // ignore [0]
+		if(found[k])
+			toQuery.push_back(k);
+
+	memset(status, 0, sizeof(status));
+	memset(changed, 0, sizeof(changed));
 
 	update();
 }
@@ -37,14 +60,10 @@ void ActionButtonStatus::update()
 
 void ActionButtonStatus::_queryAllStatus()
 {
-	//memset(status, 0, sizeof(status));
-	//memset(changed, 0, sizeof(changed));
-
 	// k==0 is always 0
-	//for(size_t i = 0; i < toQuery.size(); ++i)
-	for(int k = 1; k < ACTION_BUTTON_ENUM_SIZE; ++k)
+	for(size_t i = 0; i < toQuery.size(); ++i)
 	{
-		//const int k = toQuery[i];
+		const int k = toQuery[i];
 		bool state = _queryStatus(k);
 		changed[k] = !!status[k] != state;
 		status[k] = state;

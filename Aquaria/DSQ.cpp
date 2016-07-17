@@ -4604,6 +4604,17 @@ void DSQ::initActionButtons()
 {
 	clearActionButtons();
 
+	std::vector<int> allkeys;
+	// Don't need joysticks keys for this
+	for(int i = 0; i < MOUSE_BUTTON_EXTRA_END; ++i)
+		allkeys.push_back(i);
+
+	// create sentinel
+	ActionButtonStatus *allbtn = new ActionButtonStatus;
+	allbtn->importQuery(&allkeys[0], allkeys.size());
+	actionStatus.push_back(allbtn);
+
+	// create the rest
 	for(size_t i = 0; i < user.control.actionSets.size(); ++i)
 		actionStatus.push_back(new ActionButtonStatus);
 
@@ -4612,11 +4623,12 @@ void DSQ::initActionButtons()
 
 void DSQ::importActionButtons()
 {
-	assert(user.control.actionSets.size() == actionStatus.size());
+	assert(user.control.actionSets.size()+1 == actionStatus.size());
 
-	for(size_t i = 0; i < actionStatus.size(); ++i)
+	// ignore sentinel
+	for(size_t i = 1; i < actionStatus.size(); ++i)
 	{
-		const ActionSet& as = user.control.actionSets[i];
+		const ActionSet& as = user.control.actionSets[i-1];
 		ActionButtonStatus *abs = actionStatus[i];
 		abs->import(as);
 	}

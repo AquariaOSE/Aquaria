@@ -37,6 +37,7 @@ public:
 	inline bool getKeyState(int k) const { return !!status[k]; }
 	inline bool isKeyChanged(int k) { return !!changed[k]; }
 	void import(const ActionSet& as);
+	void importQuery(const int *pKeys, size_t num);
 	inline const std::vector<int>& getToQuery() const {return toQuery; }
 	inline int getJoystickID() const { return joystickID; }
 private:
