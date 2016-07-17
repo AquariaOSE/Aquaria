@@ -28,6 +28,7 @@ class ActionMapper;
 
 #include <map>
 #include <list>
+#include "ActionStatus.h"
 #include "ActionSet.h"
 #include "Joystick.h"
 
@@ -44,23 +45,6 @@ struct ActionData
 	int id, state, source;
 	Event *event;
 	ButtonList buttonList;
-};
-
-enum ActionButtonType
-{
-	// must start at > 512 (SDL scancodes end there)
-	MOUSE_BUTTON_LEFT	=  1000,
-	MOUSE_BUTTON_RIGHT	= 1001,
-	MOUSE_BUTTON_MIDDLE	= 1002,
-	MOUSE_BUTTON_EXTRA_START = 1003,
-
-	JOY_BUTTON_0		= 2000,
-	JOY_BUTTON_END = JOY_BUTTON_0 + MAX_JOYSTICK_BTN, // one past end
-
-	JOY_AXIS_0_POS			= 3000,
-	JOY_AXIS_0_NEG			= 3100,
-	JOY_AXIS_END_POS = JOY_AXIS_0_POS + MAX_JOYSTICK_AXIS,
-	JOY_AXIS_END_NEG = JOY_AXIS_0_NEG + MAX_JOYSTICK_AXIS,
 };
 
 class ActionMapper
@@ -87,9 +71,6 @@ public:
 	typedef std::vector<ActionData> ActionDataSet;
 	ActionDataSet actionData;
 
-	typedef std::map <int, int> KeyDownMap;
-	KeyDownMap keyDownMap;
-
 	bool cleared;
 
 	virtual void enableInput();
@@ -98,7 +79,7 @@ public:
 	Event *addCreatedEvent(Event *event);
 	void clearCreatedEvents();
 
-	bool pollAction(int actionID, int source);
+	//bool pollAction(int actionID, int source);
 	bool getKeyState(int k);
 	bool getKeyState(int k, int sourceID);
 
@@ -111,7 +92,9 @@ protected:
 	bool inputEnabled;
 	void onUpdate (float dt);
 private:
-	bool _pollActionData(const ActionData& ad);
+	bool isKeyChanged(int k);
+	bool isKeyChanged(int k, int sourceID);
+	//bool _pollActionData(const ActionData& ad);
 };
 
 #endif

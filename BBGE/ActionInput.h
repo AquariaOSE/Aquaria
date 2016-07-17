@@ -23,10 +23,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <string>
 
-
-#define INP_MSESIZE		1
-#define INP_KEYSIZE		2
-#define INP_JOYSIZE		1
+enum ActionInputSize
+{
+	INP_MSESIZE = 1,
+	INP_KEYSIZE = 2,
+	INP_JOYSIZE = 1,
+	INP_COMBINED_SIZE = INP_MSESIZE + INP_KEYSIZE + INP_JOYSIZE
+};
 
 std::string getInputCodeToString(int k);
 std::string getInputCodeToUserString(int k, int joystickID);
@@ -39,9 +42,16 @@ public:
 
 	std::string name;
 
-	int mse[INP_MSESIZE];
-	int key[INP_KEYSIZE];
-	int joy[INP_JOYSIZE];
+	union
+	{
+		struct
+		{
+			int mse[INP_MSESIZE];
+			int key[INP_KEYSIZE];
+			int joy[INP_JOYSIZE];
+		};
+		int all[INP_COMBINED_SIZE];
+	};
 
 	inline bool hasMouse(int actionID) const { return _has(mse, actionID); }
 	inline bool hasKey(int actionID) const { return _has(key, actionID); }

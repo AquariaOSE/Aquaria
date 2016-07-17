@@ -399,7 +399,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	afterEffectManager = 0;
 	loopDone = false;
 	core = this;
-	pActionSets = NULL;
 
 	for (int i = 0; i < KEY_MAXARRAY; i++)
 	{
@@ -496,6 +495,8 @@ std::string Core::getUserDataFolder()
 
 Core::~Core()
 {
+	clearActionButtons();
+
 	if (particleManager)
 	{
 		delete particleManager;
@@ -693,6 +694,9 @@ void Core::onUpdate(float dt)
 			joysticks[i]->update(dt);
 
 	onMouseInput();
+
+	// all input done; update button states
+	updateActionButtons();
 
 	globalScale.update(dt);
 	core->globalScaleChanged();
@@ -3040,4 +3044,24 @@ Joystick *Core::getJoystick(int idx)
 {
 	size_t i = idx;
 	return i < joysticks.size() ? joysticks[i] : NULL;
+}
+
+void Core::updateActionButtons()
+{
+	for(size_t i = 0; i < actionStatus.size(); ++i)
+		actionStatus[i]->update();
+}
+
+void Core::clearActionButtons()
+{
+	for(size_t i = 0; i < actionStatus.size(); ++i)
+		delete actionStatus[i];
+	actionStatus.clear();
+}
+
+Joystick *Core::getJoystickForSourceID(unsigned sourceID)
+{
+	if(sourceID < (unsigned)actionStatus.size())
+		return getJoystick(actionStatus[sourceID]->getJoystickID());
+	return NULL;
 }

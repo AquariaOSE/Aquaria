@@ -193,6 +193,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\ActionStatus.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\ActionStatus.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\AfterEffect.cpp"
 				>
 			</File>

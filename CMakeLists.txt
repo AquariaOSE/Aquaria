@@ -470,6 +470,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/ActionInput.cpp
     ${BBGEDIR}/ActionMapper.cpp
     ${BBGEDIR}/ActionSet.cpp
+    ${BBGEDIR}/ActionStatus.cpp
     ${BBGEDIR}/AfterEffect.cpp
     ${BBGEDIR}/Base.cpp
     ${BBGEDIR}/BitmapFont.cpp
