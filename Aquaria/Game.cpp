@@ -3256,6 +3256,11 @@ void Game::bindInput()
 		as.importAction(this, "SwimLeft",		ACTION_SWIMLEFT, sourceID);
 		as.importAction(this, "SwimRight",		ACTION_SWIMRIGHT, sourceID);
 
+		as.importAction(this, "MenuUp",		ACTION_MENUUP, sourceID);
+		as.importAction(this, "MenuDown",		ACTION_MENUDOWN, sourceID);
+		as.importAction(this, "MenuLeft",		ACTION_MENULEFT, sourceID);
+		as.importAction(this, "MenuRight",		ACTION_MENURIGHT, sourceID);
+
 		as.importAction(this, "PrevPage",		ACTION_PREVPAGE, sourceID);
 		as.importAction(this, "NextPage",		ACTION_NEXTPAGE, sourceID);
 		as.importAction(this, "CookFood",		ACTION_COOKFOOD, sourceID);

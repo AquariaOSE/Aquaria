@@ -2062,26 +2062,25 @@ void InGameMenu::create()
 		RenderObject *kk = createBasicKeyConfig();
 		group_keyConfig[0] = kk;
 
-		int y = 0;
+		int y = offy;
 
-		addKeyConfigLine(kk, SB(2107), "PrimaryAction",		offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2108), "SecondaryAction",		offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2109), "SwimUp",				offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2110), "SwimDown",				offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2111), "SwimLeft",				offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2112), "SwimRight",			offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2113), "Roll",					offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2114), "Revert",				offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2115), "WorldMap",				offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2127), "Look",				offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2132), "Screenshot",		offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2107), "PrimaryAction",		offx, y+=yi);
+		addKeyConfigLine(kk, SB(2108), "SecondaryAction",		offx, y+=yi);
+		addKeyConfigLine(kk, SB(2109), "SwimUp",				offx, y+=yi);
+		addKeyConfigLine(kk, SB(2110), "SwimDown",				offx, y+=yi);
+		addKeyConfigLine(kk, SB(2111), "SwimLeft",				offx, y+=yi);
+		addKeyConfigLine(kk, SB(2112), "SwimRight",			offx, y+=yi);
+		addKeyConfigLine(kk, SB(2113), "Roll",					offx, y+=yi);
+		addKeyConfigLine(kk, SB(2114), "Revert",				offx, y+=yi);
+		addKeyConfigLine(kk, SB(2115), "WorldMap",				offx, y+=yi);
+		addKeyConfigLine(kk, SB(2127), "Look",				offx, y+=yi);
+		addKeyConfigLine(kk, SB(2132), "Screenshot",		offx, y+=yi);
 
 		y+=yi+yi/2;
-		AquariaKeyConfig* s1x = addAxesConfigLine(kk, SB(2117), "s1ax", offx, y+offy);
-		AquariaKeyConfig* s1y = addAxesConfigLine(kk, SB(2118), "s1ay", offx+130, y+offy);
-		AquariaKeyConfig* s2x = addAxesConfigLine(kk, SB(2119), "s2ax", offx+260, y+offy);
-		AquariaKeyConfig* s2y = addAxesConfigLine(kk, SB(2120), "s2ay", offx+380, y+offy);
-		y+=yi;
+		AquariaKeyConfig* s1x = addAxesConfigLine(kk, SB(2117), "s1ax", offx, y);
+		AquariaKeyConfig* s1y = addAxesConfigLine(kk, SB(2118), "s1ay", offx+130, y);
+		AquariaKeyConfig* s2x = addAxesConfigLine(kk, SB(2119), "s2ax", offx+260, y);
+		AquariaKeyConfig* s2y = addAxesConfigLine(kk, SB(2120), "s2ay", offx+380, y);
 
 		s1x->setDirMove(DIR_LEFT, s1x);
 		s1x->setDirMove(DIR_RIGHT, s1y);
@@ -2101,15 +2100,19 @@ void InGameMenu::create()
 		RenderObject *kk = createBasicKeyConfig();
 		group_keyConfig[1] = kk;
 
-		int y = 0;
+		int y = offy;
 
-		addKeyConfigLine(kk, SB(2121), "PrevPage",		offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2122), "NextPage",		offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2123), "CookFood",		offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2124), "FoodLeft",		offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2125), "FoodRight",	offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2126), "FoodDrop",		offx, offy+(y+=yi));
-		addKeyConfigLine(kk, SB(2128), "ToggleHelp",	offx, offy+(y+=yi));
+		addKeyConfigLine(kk, SB(2135), "MenuUp",				offx, y+=yi);
+		addKeyConfigLine(kk, SB(2136), "MenuDown",				offx, y+=yi);
+		addKeyConfigLine(kk, SB(2137), "MenuLeft",				offx, y+=yi);
+		addKeyConfigLine(kk, SB(2138), "MenuRight",			offx, y+=yi);
+		addKeyConfigLine(kk, SB(2121), "PrevPage",		offx, y+=yi);
+		addKeyConfigLine(kk, SB(2122), "NextPage",		offx, y+=yi);
+		addKeyConfigLine(kk, SB(2123), "CookFood",		offx, y+=yi);
+		addKeyConfigLine(kk, SB(2124), "FoodLeft",		offx, y+=yi);
+		addKeyConfigLine(kk, SB(2125), "FoodRight",	offx, y+=yi);
+		addKeyConfigLine(kk, SB(2126), "FoodDrop",		offx, y+=yi);
+		addKeyConfigLine(kk, SB(2128), "ToggleHelp",	offx, y+=yi);
 	}
 
 	// PART 2
@@ -2117,7 +2120,7 @@ void InGameMenu::create()
 		RenderObject *kk = createBasicKeyConfig();
 		group_keyConfig[2] = kk;
 
-		int y = 0;
+		int y = offy;
 		std::string slotstr = SB(2129);
 		for(unsigned i = 1; i <= 10; ++i) // SongSlot starts at 1
 		{
@@ -2125,7 +2128,7 @@ void InGameMenu::create()
 			osname << slotstr << ' ' << i;
 			std::ostringstream osac;
 			osac << "SongSlot" << i;
-			addKeyConfigLine(kk, osname.str(), osac.str(), offx, offy+(y+=yi));
+			addKeyConfigLine(kk, osname.str(), osac.str(), offx, y+=yi);
 		}
 	}
 
@@ -3743,6 +3746,8 @@ void InGameMenu::toggleKeyConfigMenu(bool f)
 		opt_save->position = opt_save_original + Vector(0, 120);
 		opt_cancel->position = opt_cancel_original + Vector(0, 120);
 
+		opt_cancel->setDirMove(DIR_UP, NULL);
+		opt_save->setDirMove(DIR_UP, NULL);
 		opt_cancel->setFocus(true);
 
 		menuIconGlow->alpha = 0;

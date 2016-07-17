@@ -89,7 +89,7 @@ void AquariaGuiElement::setFocus(bool v)
 	if (v)
 	{
 		currentFocus = this;
-		if (dsq->inputMode == INPUT_JOYSTICK)
+		if (dsq->inputMode == INPUT_JOYSTICK || dsq->inputMode == INPUT_KEYBOARD)
 			core->setMousePosition(getGuiPosition());
 
 		AquariaGuiElement *gui=0, *guiThis = (AquariaGuiElement*)this;
@@ -162,7 +162,13 @@ void AquariaGuiElement::UpdateGlobalFocus(float dt)
 Direction AquariaGuiElement::GetDirection()
 {
 	Direction dir = DIR_NONE;
-	Vector p;
+	
+	// This joystick code is already supposed to send ACTION_MENU*.
+	// Actually some places depend on the actions to be sent,
+	// So checking this here might work for a few cases,
+	// but others will break.
+	// I'll leave this in here for now -- fg
+	/*Vector p;
 	for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 		if(Joystick *j = core->getJoystick(i))
 			if(j->isEnabled())
@@ -189,9 +195,9 @@ Direction AquariaGuiElement::GetDirection()
 				dir = DIR_UP;
 		}
 	}
-	else
+	else*/
 	{
-		StateObject *obj = dsq->getTopStateObject();
+		StateObject *obj = dsq->getTopStateObject(); // usually Game...
 		if (obj)
 		{
 			if (obj->isActing(ACTION_MENULEFT, -1))			dir = DIR_LEFT;
@@ -205,8 +211,6 @@ Direction AquariaGuiElement::GetDirection()
 
 AquariaGuiElement *AquariaGuiElement::FindClosestTo(AquariaGuiElement *cur, Vector pos, Direction dir)
 {
-
-	debugLog("updating closest");
 	int smallDist = -1, dist = 0;
 
 	AquariaGuiElement *gui = 0, *closest = 0;
@@ -214,7 +218,7 @@ AquariaGuiElement *AquariaGuiElement::FindClosestTo(AquariaGuiElement *cur, Vect
 	for (GuiElements::iterator i = guiElements.begin(); i != guiElements.end(); i++)
 	{
 		gui = (*i);
-		if (gui != cur && gui->isGuiVisible() && gui->canDirMove)
+		if (gui != cur && gui->isGuiVisible() && gui->canDirMove && gui->hasInput())
 		{
 			int go = 0;
 			Vector p1 = pos;

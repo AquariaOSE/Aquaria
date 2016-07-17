@@ -108,7 +108,7 @@ std::string getInputCodeToString(int k)
 
 std::string getInputCodeToUserString(int k, int joystickID)
 {
-	const char *pretty = NULL;
+	const char *pretty = NULL, *tail = NULL;
 
 	// Special case keyboard input:
 	// Return key name for current keyboard layout!
@@ -120,14 +120,25 @@ std::string getInputCodeToUserString(int k, int joystickID)
 			pretty = SDL_GetKeyName(kcode);
 	}
 	if(k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
+	{
 		pretty = jaxisname(joystickID, k - JOY_AXIS_0_POS);
+		tail = "(+)";
+	}
 	else if(k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
+	{
 		pretty = jaxisname(joystickID, k - JOY_AXIS_0_NEG);
+		tail = "(-)";
+	}
 	else if(k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
 		pretty = jbtnname(joystickID, k - JOY_BUTTON_0);
 
 	if(pretty && *pretty)
-		return pretty;
+	{
+		std::string s = pretty;
+		if(tail)
+			s += tail;
+		return s;
+	}
 
 	return inputcode2string(k);
 }
