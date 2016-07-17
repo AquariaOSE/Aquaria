@@ -3809,19 +3809,6 @@ void InGameMenu::switchToKeyConfigPage(int page)
 	keyCategoryButtons[page]->inactiveAlpha = 0.7f;
 	group_keyConfig[page]->setHidden(false);
 	group_keyConfig[page]->alpha = 1;
-
-	// FG: FIXME: changed layout: m, k1, k2, j
-	/*RenderObject::Children::reverse_iterator it = group_keyConfig[page]->children.rbegin();
-	AquariaKeyConfig *upright0 = (AquariaKeyConfig*)(*it++);
-	AquariaKeyConfig *upright = (AquariaKeyConfig*)(*it++);
-	AquariaKeyConfig *upleft = (AquariaKeyConfig*)(*it++);
-
-	opt_cancel->setDirMove(DIR_UP, upright);
-	upright->setDirMove(DIR_DOWN, opt_cancel);
-	upright0->setDirMove(DIR_DOWN, opt_cancel);
-
-	opt_save->setDirMove(DIR_UP, upleft);
-	upleft->setDirMove(DIR_DOWN, opt_save);*/
 }
 
 void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)

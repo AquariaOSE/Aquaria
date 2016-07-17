@@ -53,22 +53,8 @@ public:
 		int all[INP_COMBINED_SIZE];
 	};
 
-	inline bool hasMouse(int actionID) const { return _has(mse, actionID); }
-	inline bool hasKey(int actionID) const { return _has(key, actionID); }
-	inline bool hasJoy(int actionID) const { return _has(joy, actionID); }
-
 	std::string toString() const;
 	void fromString(const std::string &read);
-
-private:
-	template<size_t N>
-	static inline bool _has(const int (&a)[N], int actionID)
-	{
-		for(size_t i = 0; i < N; ++i)
-			if(a[i] == actionID)
-				return true;
-		return false;
-	}
 };
 
 enum InputSetType

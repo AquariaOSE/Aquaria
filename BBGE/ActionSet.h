@@ -54,10 +54,6 @@ public:
 	void assignJoystickIdx(int idx, bool updateValues);
 	void updateJoystick();
 
-	bool hasMouse(int actionID) const;
-	bool hasKey(int actionID) const;
-	bool hasJoy(int actionID) const;
-
 	ActionInput *addActionInput(const std::string &name);
 	ActionInput *getActionInputByName(const std::string &name);
 

@@ -250,27 +250,3 @@ std::string ActionSet::insertInputIntoString(const std::string &string)
 	return part1 + part2 + part3;
 }
 */
-
-bool ActionSet::hasMouse(int actionID) const
-{
-	for(size_t i = 0; i < inputSet.size(); ++i)
-		if(inputSet[i].hasMouse(actionID))
-			return true;
-	return false;
-}
-
-bool ActionSet::hasKey(int actionID) const
-{
-	for(size_t i = 0; i < inputSet.size(); ++i)
-		if(inputSet[i].hasKey(actionID))
-			return true;
-	return false;
-}
-
-bool ActionSet::hasJoy(int actionID) const
-{
-	for(size_t i = 0; i < inputSet.size(); ++i)
-		if(inputSet[i].hasJoy(actionID))
-			return true;
-	return false;
-}
