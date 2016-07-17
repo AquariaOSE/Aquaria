@@ -35,7 +35,11 @@ typedef std::vector<int> ButtonList;
 
 struct ActionData
 {
-	ActionData() { id=-1; state=-1; source = -1; event=0; }
+	ActionData()
+		: id(-1), state(-1), source(-1)
+		, event(0)
+	{
+	}
 
 	int id, state, source;
 	Event *event;
@@ -96,6 +100,7 @@ public:
 
 	bool pollAction(int actionID, int source);
 	bool getKeyState(int k);
+	bool getKeyState(int k, int sourceID);
 
 	ActionData *getActionDataByIDAndSource(int actionID, int source);
 protected:

@@ -399,6 +399,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	afterEffectManager = 0;
 	loopDone = false;
 	core = this;
+	pActionSets = NULL;
 
 	for (int i = 0; i < KEY_MAXARRAY; i++)
 	{

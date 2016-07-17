@@ -154,6 +154,7 @@ bool ActionMapper::_pollActionData(const ActionData& ad)
 	return false;
 }
 
+
 bool ActionMapper::getKeyState(int k)
 {
 	if(!k)
@@ -222,6 +223,62 @@ bool ActionMapper::getKeyState(int k)
 	return keyState;
 }
 
+bool ActionMapper::getKeyState(int k, int source)
+{
+	if(!k)
+		return false;
+
+	ActionSet& as = (*core->pActionSets)[source];
+
+	bool keyState = false;
+	if (k >= 0 && k < KEY_MAXARRAY)
+	{
+		keyState = core->getKeyState(k) && as.hasKey(k);
+	}
+	else if (k == MOUSE_BUTTON_LEFT)
+	{
+		keyState = core->mouse.buttons.left == DOWN && as.hasMouse(k);
+	}
+	else if (k == MOUSE_BUTTON_RIGHT)
+	{
+		keyState = core->mouse.buttons.right == DOWN && as.hasMouse(k);
+	}
+	else if (k == MOUSE_BUTTON_MIDDLE)
+	{
+		keyState = core->mouse.buttons.middle == DOWN && as.hasMouse(k);
+	}
+	else if (k >= MOUSE_BUTTON_EXTRA_START && k < MOUSE_BUTTON_EXTRA_START+mouseExtraButtons)
+	{
+		keyState  = core->mouse.buttons.extra[k - MOUSE_BUTTON_EXTRA_START] && as.hasMouse(k);
+	}
+	else if (k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
+	{
+		Joystick *j = core->getJoystick(as.joystickID);
+		if(j && j->isEnabled())
+			keyState = j->getButton( - JOY_BUTTON_0);
+	}
+	else if (k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
+	{
+		Joystick *j = core->getJoystick(as.joystickID);
+		if(j && j->isEnabled())
+		{
+			float ax = j->getAxisUncalibrated(k - JOY_AXIS_0_POS);
+			keyState = ax > JOY_AXIS_THRESHOLD;
+		}
+	}
+	else if (k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
+	{
+		Joystick *j = core->getJoystick(as.joystickID);
+		if(j && j->isEnabled())
+		{
+			float ax = j->getAxisUncalibrated(k - JOY_AXIS_0_NEG);
+			keyState = ax < -JOY_AXIS_THRESHOLD;
+		}
+	}
+
+	return keyState;
+}
+
 void ActionMapper::onUpdate (float dt)
 {
 	if (inUpdate) return;
@@ -237,17 +294,16 @@ void ActionMapper::onUpdate (float dt)
 		for (; j != i->buttonList.end(); j++)
 		{
 			int k = (*j);
-			int keyState=false;
-			//joystick
-
-			keyState = getKeyState(k);
+			ActionData *ad = &(*i);
+			int keyState = ad->source < 0
+				? getKeyState(k) // any source goes
+				: getKeyState(k, ad->source); // specific source
 
 			if (keyState != oldKeyDownMap[k])
 			{
 				keyDownMap[k] = keyState;
 				if (inputEnabled)
 				{
-					ActionData *ad = &(*i);
 					if (ad->event)
 					{
 						if (ad->state==-1 || keyState == ad->state)

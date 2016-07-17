@@ -224,7 +224,7 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	for (int i = 0; i < 16; i++)
 		firstElementOnLayer[i] = 0;
 
-
+	pActionSets = &user.control.actionSets;
 }
 
 DSQ::~DSQ()
