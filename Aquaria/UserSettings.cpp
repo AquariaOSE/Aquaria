@@ -297,6 +297,12 @@ static void ensureDefaultActions(ActionSet& as)
 	as.addActionInput("Look");
 	as.addActionInput("ToggleHelp");
 	as.addActionInput("Screenshot");
+	for(int i = 1; i <= 10; ++i)
+	{
+		std::ostringstream os;
+		os << "SongSlot" << i;
+		as.addActionInput(os.str());
+	}
 }
 
 static void readInt(XMLElement *xml, const char *elem, const char *att, int *toChange)
