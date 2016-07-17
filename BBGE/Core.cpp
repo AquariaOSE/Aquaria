@@ -3019,20 +3019,20 @@ void Core::onJoystickAdded(int deviceID)
 		}
 	joysticks.push_back(j);
 done:
-	; // TODO: fixup ActionMapper?
+	;
 }
 
 void Core::onJoystickRemoved(int instanceID)
 {
 	debugLog("Joystick removed");
 	for(size_t i = 0; i < joysticks.size(); ++i)
-		if(joysticks[i]->getInstanceID() == instanceID)
-		{
-			joysticks[i]->shutdown();
-			delete joysticks[i];
-			joysticks[i] = NULL;
-		}
-	// TODO: fixup ActionMapper?
+		if(Joystick *j = joysticks[i])
+			if(j->getInstanceID() == instanceID)
+			{
+				j->shutdown();
+				delete j;
+				joysticks[i] = NULL;
+			}
 }
 
 Joystick *Core::getJoystick(int idx)

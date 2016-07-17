@@ -582,7 +582,6 @@ void UserSettings::apply()
 
 	dsq->loops.updateVolume();
 
-	// FIXME: This should be per-joystick
 	for(size_t i = 0; i < control.actionSets.size(); ++i)
 	{
 		ActionSet& as = control.actionSets[i];

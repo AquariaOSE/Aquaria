@@ -52,7 +52,7 @@ Joystick::Joystick()
 	s2ax = 4;
 	s2ay = 3;
 
-	enabled = true;
+	enabled = false;
 }
 
 const char *Joystick::getName() const
