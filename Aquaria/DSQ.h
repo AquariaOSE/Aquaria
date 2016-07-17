@@ -553,6 +553,10 @@ protected:
 	void onRender();
 
 	void modifyDt(float &dt);
+
+	void fixupJoysticks();
+	virtual void onJoystickAdded(int deviceID);
+	virtual void onJoystickRemoved(int instanceID);
 };
 
 extern DSQ *dsq;

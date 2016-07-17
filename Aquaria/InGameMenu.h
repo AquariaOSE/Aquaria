@@ -23,6 +23,7 @@ class RecipeMenuEntry;
 class Recipe;
 class RoundedRect;
 class DebugButton;
+class TTFText;
 
 
 enum MenuPage
@@ -214,8 +215,11 @@ private:
 	AquariaComboBox *actionSetBox;
 	AquariaCheckBox *actionSetCheck;
 	int selectedActionSetIdx;
+	TTFText *joystickNameText, *joystickGUIDText;
 	void updateActionSetComboBox();
 	void switchToActionSet(int idx);
+	void nextJoystick();
+	void updateJoystickText();
 
 	void onExitCheckNo();
 	void onExitCheckYes();

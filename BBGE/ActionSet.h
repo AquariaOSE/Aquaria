@@ -32,6 +32,8 @@ typedef std::vector<ActionInput> ActionInputSet;
 class ActionMapper;
 class Event;
 
+const int ACTIONSET_REASSIGN_JOYSTICK = -2;
+
 struct JoystickConfig
 {
 	JoystickConfig();
@@ -48,14 +50,14 @@ public:
 	void importAction(ActionMapper *mapper, const std::string &name, Event *event, int state) const;
 	void importAction(ActionMapper *mapper, const std::string &name, int actionID, int sourceID) const;
 	void clearActions();
-	int assignJoystickByName(); // -1 if no such joystick found
-	void assignJoystickIdx(int idx);
+	int assignJoystickByName(bool force); // -1 if no such joystick found
+	void assignJoystickIdx(int idx, bool updateValues);
 	void updateJoystick();
 
 	ActionInput *addActionInput(const std::string &name);
 	ActionInput *getActionInputByName(const std::string &name);
 
-	int joystickID;
+	int joystickID; // >= 0: use that, -1 = no joystick, or ACTIONSET_REASSIGN_JOYSTICK
 
 	// --- Saved in config ---
 	ActionInputSet inputSet;

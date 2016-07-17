@@ -1980,6 +1980,30 @@ void InGameMenu::create()
 	const float offx = 140 - keyConfigBg->position.x;
 	const float yi = 20;
 
+	TTFText *joystickLabel = new TTFText(&dsq->fontArialSmall);
+	joystickLabel->position = Vector(offx, offy + 390);
+	joystickLabel->setText(SB(2140));
+	keyConfigBg->addChild(joystickLabel, PM_POINTER);
+
+	AquariaMenuItem *nextJoystickBtn = new AquariaMenuItem;
+	nextJoystickBtn->event.set(MakeFunctionEvent(InGameMenu, nextJoystick));
+	nextJoystickBtn->useQuad("gui/sort");
+	nextJoystickBtn->useGlow("particles/glow", 40, 40);
+	nextJoystickBtn->position = Vector(offx + 100, offy + 390);
+	keyConfigBg->addChild(nextJoystickBtn, PM_POINTER);
+
+	joystickNameText = new TTFText(&dsq->fontArialSmallest);
+	joystickNameText->position = Vector(offx + 100 + 32, offy + 390);
+	keyConfigBg->addChild(joystickNameText, PM_POINTER);
+
+	joystickGUIDText = new TTFText(&dsq->fontArialSmallest);
+	joystickGUIDText->position = Vector(offx + 100 + 32, offy + 390 + 15);
+	joystickGUIDText->color = Vector(0.5f, 0.5f, 0.5f);
+	keyConfigBg->addChild(joystickGUIDText, PM_POINTER);
+
+
+	updateJoystickText();
+
 	{
 		float x = offx;
 		TTFText *header_actionset = new TTFText(&dsq->fontArialSmall);
@@ -2075,7 +2099,6 @@ void InGameMenu::create()
 		addKeyConfigLine(kk, SB(2114), "Revert",				offx, y+=yi);
 		addKeyConfigLine(kk, SB(2115), "WorldMap",				offx, y+=yi);
 		addKeyConfigLine(kk, SB(2127), "Look",				offx, y+=yi);
-		addKeyConfigLine(kk, SB(2132), "Screenshot",		offx, y+=yi);
 
 		y+=yi+yi/2;
 		AquariaKeyConfig* s1x = addAxesConfigLine(kk, SB(2117), "s1ax", offx, y);
@@ -2103,6 +2126,8 @@ void InGameMenu::create()
 
 		int y = offy;
 
+		addKeyConfigLine(kk, SB(2116), "Escape",		offx, y+=yi, true);
+		addKeyConfigLine(kk, SB(2128), "ToggleHelp",	offx, y+=yi);
 		addKeyConfigLine(kk, SB(2135), "MenuUp",				offx, y+=yi);
 		addKeyConfigLine(kk, SB(2136), "MenuDown",				offx, y+=yi);
 		addKeyConfigLine(kk, SB(2137), "MenuLeft",				offx, y+=yi);
@@ -2113,7 +2138,6 @@ void InGameMenu::create()
 		addKeyConfigLine(kk, SB(2124), "FoodLeft",		offx, y+=yi);
 		addKeyConfigLine(kk, SB(2125), "FoodRight",	offx, y+=yi);
 		addKeyConfigLine(kk, SB(2126), "FoodDrop",		offx, y+=yi);
-		addKeyConfigLine(kk, SB(2128), "ToggleHelp",	offx, y+=yi);
 	}
 
 	// PART 2
@@ -2131,6 +2155,7 @@ void InGameMenu::create()
 			osac << "SongSlot" << i;
 			addKeyConfigLine(kk, osname.str(), osac.str(), offx, y+=yi);
 		}
+		addKeyConfigLine(kk, SB(2132), "Screenshot",		offx, y+=yi);
 	}
 
 	actionSetBox->moveToFront();
@@ -3951,12 +3976,14 @@ void InGameMenu::updateKeyConfigMenu(float dt)
 	for(size_t i = 0; i < keyCategoryButtons.size(); ++i)
 		keyCategoryButtons[i]->alpha = a;
 
-	dsq->user.control.actionSets[selectedActionSetIdx].enabled
-		= actionSetCheck->getValue();
-
 	const int curAS = actionSetBox->getSelectedItem();
 	if(selectedActionSetIdx != curAS)
 		switchToActionSet(curAS);
+
+	dsq->user.control.actionSets[selectedActionSetIdx].enabled
+		= actionSetCheck->getValue();
+
+	updateJoystickText();
 }
 
 void InGameMenu::updateOptionsMenu(float dt)
@@ -4182,4 +4209,53 @@ void InGameMenu::updateActionSetComboBox()
 			os << ": " << name;
 		actionSetBox->addItem(os.str());
 	}
+}
+
+void InGameMenu::nextJoystick()
+{
+	ActionSet& as = dsq->user.control.actionSets[selectedActionSetIdx];
+	int i = as.joystickID;
+	Joystick *j = NULL;
+	const int N = core->getNumJoysticks();
+	bool looped = false;
+	do
+	{
+		++i;
+		if(i >= N)
+		{
+			i = -1;
+			break;
+		}
+		j = core->getJoystick(i);
+	}
+	while (!j);
+
+	as.assignJoystickIdx(i, true);
+	if(as.joystickID < 0)
+		as.joystickName = "NONE";
+	updateJoystickText();
+}
+
+void InGameMenu::updateJoystickText()
+{
+	ActionSet& as = dsq->user.control.actionSets[selectedActionSetIdx];
+	Joystick *j = core->getJoystick(as.joystickID);
+	if(j)
+		joystickNameText->setText(j->getName());
+	else if(as.joystickID == ACTIONSET_REASSIGN_JOYSTICK)
+	{
+		std::string s = "(";
+		s += dsq->continuity.stringBank.get(2141);
+		s += " ";
+		s += as.joystickName;
+		s += ")";
+		joystickNameText->setText(s);
+	}
+	else
+		joystickNameText->setText(dsq->continuity.stringBank.get(2139));
+
+	if(j && as.joystickID >= 0)
+		joystickGUIDText->setText(as.joystickGUID);
+	else
+		joystickGUIDText->setText("");
 }

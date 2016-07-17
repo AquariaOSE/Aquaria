@@ -4574,3 +4574,27 @@ bool DSQ::isMiniMapCursorOkay()
 	return ((inputMode != INPUT_MOUSE) ||  (!game->miniMapRender || !game->miniMapRender->isCursorIn()));
 }
 
+void DSQ::onJoystickAdded(int deviceID)
+{
+	Core::onJoystickAdded(deviceID);
+	fixupJoysticks();
+}
+
+void DSQ::onJoystickRemoved(int instanceID)
+{
+	Core::onJoystickRemoved(instanceID);
+	fixupJoysticks();
+}
+
+void DSQ::fixupJoysticks()
+{
+	for(int i = 0; i < getNumJoysticks(); ++i)
+		if(Joystick *j = getJoystick(i))
+			j->setEnabled(false);
+
+	for(size_t i = 0; i < user.control.actionSets.size(); ++i)
+	{
+		ActionSet& as = user.control.actionSets[i];
+		as.updateJoystick();
+	}
+}

@@ -34,7 +34,7 @@ JoystickConfig::JoystickConfig()
 ActionSet::ActionSet()
 {
 	enabled = true;
-	joystickID = 0;
+	joystickID = ACTIONSET_REASSIGN_JOYSTICK;
 }
 
 void ActionSet::clearActions()
@@ -42,35 +42,45 @@ void ActionSet::clearActions()
 	inputSet.clear();
 }
 
-int ActionSet::assignJoystickByName()
+int ActionSet::assignJoystickByName(bool force)
 {
 	int idx = _whichJoystickForName();
-	if(idx >= 0)
-		assignJoystickIdx(idx);
+	if(idx >= 0 || force)
+		assignJoystickIdx(idx, false);
 	return idx;
 }
 
-void ActionSet::assignJoystickIdx(int idx)
+void ActionSet::assignJoystickIdx(int idx, bool updateValues)
 {
 	if(idx < 0)
 	{
-		joystickID = -1;
-		joystickName.clear();
-		joystickGUID.clear();
+		if(updateValues && idx != ACTIONSET_REASSIGN_JOYSTICK)
+		{
+			joystickName.clear();
+			joystickGUID.clear();
+		}
 	}
 	else if(idx < (int)core->getNumJoysticks())
 	{
 		if(Joystick *j = core->getJoystick(idx))
 		{
-			joystickGUID = j->getGUID();
-			joystickName = j->getName();
-			joystickID = idx;
+			if(updateValues)
+			{
+				joystickGUID = j->getGUID();
+				joystickName = j->getName();
+			}
 		}
+		else
+			idx = -1;
 	}
+	joystickID = idx;
 }
 
 int ActionSet::_whichJoystickForName()
 {
+	if(joystickName == "NONE")
+		return -1;
+
 	if(joystickGUID.length() && joystickName.length())
 		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 			if(Joystick *j = core->getJoystick(i))
@@ -89,11 +99,29 @@ int ActionSet::_whichJoystickForName()
 				if(joystickName == j->getName())
 					return int(i);
 
-	return -1;
+	// first attached
+	if(!joystickGUID.length() && !joystickName.length())
+		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+			if(Joystick *j = core->getJoystick(i))
+				return i;
+
+	return ACTIONSET_REASSIGN_JOYSTICK;
 }
 
 void ActionSet::updateJoystick()
 {
+	bool reassign = joystickID == ACTIONSET_REASSIGN_JOYSTICK;
+
+	if(joystickID >= 0)
+	{
+		Joystick *j = core->getJoystick(joystickID);
+		if(!j)
+			reassign = true;
+	}
+
+	if(reassign)
+		assignJoystickByName(true);
+
 	Joystick *j = core->getJoystick(joystickID);
 	if(j)
 		j->setEnabled(enabled);
@@ -110,8 +138,6 @@ ActionInput *ActionSet::getActionInputByName(const std::string &name)
 	}
 	return 0;
 }
-
-
 
 void ActionSet::importAction(ActionMapper *mapper, const std::string &name, int actionID, int sourceID) const
 {
