@@ -680,14 +680,14 @@ bool Core::initInputLibrary()
 void Core::onUpdate(float dt)
 {
 	if (minimized) return;
-	ActionMapper::onUpdate(dt);
-	StateManager::onUpdate(dt);
-
 
 	core->mouse.lastPosition = core->mouse.position;
 	core->mouse.lastScrollWheel = core->mouse.scrollWheel;
 
 	pollEvents(dt);
+
+	ActionMapper::onUpdate(dt);
+	StateManager::onUpdate(dt);
 
 	onMouseInput();
 
