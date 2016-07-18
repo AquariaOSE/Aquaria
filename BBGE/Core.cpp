@@ -1397,8 +1397,6 @@ void Core::run(float runTime)
 
 					sound->pause();
 
-					core->joystick.rumble(0,0,0);
-
 					while (!isWindowFocus())
 					{
 						pollEvents();
@@ -3006,7 +3004,7 @@ void Core::initLocalization()
 	{
 		in >> low >> up;
 		
-		trans[low[0]] = up[0];
+		trans[(unsigned char)(low[0])] = (unsigned char)up[0];
 	}
 	initCharTranslationTables(&trans);
 }
