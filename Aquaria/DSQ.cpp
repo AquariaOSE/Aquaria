@@ -3815,7 +3815,7 @@ void DSQ::onUpdate(float dt)
 			float sec = 1.0f/60.0f;
 			while (isCutscenePaused())
 			{
-				pollEvents();
+				pollEvents(sec);
 				ActionMapper::onUpdate(sec);
 				SDL_Delay(int(sec*1000));
 				render();
@@ -3835,6 +3835,7 @@ void DSQ::onUpdate(float dt)
 			}
 			dsq->resetTimer();
 			dsq->sound->resume();
+			pollEvents(sec); // poll events again to reset internal state; else the ActionMapper::onUpdate() below triggers another ACTION_ESCAPE to re-pause the cutscene
 		}
 	}
 

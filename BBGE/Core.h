@@ -455,7 +455,7 @@ public:
 
 	std::vector<ScreenMode> screenModes;
 
-	void pollEvents();
+	void pollEvents(float dt);
 
 	CoreSettings settings;
 

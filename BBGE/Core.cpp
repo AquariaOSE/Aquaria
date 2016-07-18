@@ -687,16 +687,9 @@ void Core::onUpdate(float dt)
 	core->mouse.lastPosition = core->mouse.position;
 	core->mouse.lastScrollWheel = core->mouse.scrollWheel;
 
-	pollEvents();
-
-	for(size_t i = 0; i < joysticks.size(); ++i)
-		if(joysticks[i])
-			joysticks[i]->update(dt);
+	pollEvents(dt);
 
 	onMouseInput();
-
-	// all input done; update button states
-	updateActionButtons();
 
 	globalScale.update(dt);
 	core->globalScaleChanged();
@@ -1399,7 +1392,7 @@ void Core::run(float runTime)
 
 					while (!isWindowFocus())
 					{
-						pollEvents();
+						pollEvents(dt);
 
 						onBackgroundUpdate();
 
@@ -1585,7 +1578,7 @@ bool Core::doMouseConstraint()
 	return false;
 }
 
-void Core::pollEvents()
+void Core::pollEvents(float dt)
 {
 	bool warpMouse=false;
 
@@ -1790,6 +1783,13 @@ void Core::pollEvents()
 			setMousePosition(mouse.position);
 		}
 	}
+
+	for(size_t i = 0; i < joysticks.size(); ++i)
+		if(joysticks[i])
+			joysticks[i]->update(dt);
+
+	// all input done; update button states
+	updateActionButtons();
 
 }
 
