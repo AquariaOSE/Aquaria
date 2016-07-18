@@ -3835,9 +3835,10 @@ void DSQ::onUpdate(float dt)
 			}
 			dsq->resetTimer();
 			dsq->sound->resume();
-			pollEvents(sec); // poll events again to reset internal state; else the ActionMapper::onUpdate() below triggers another ACTION_ESCAPE to re-pause the cutscene
 		}
 	}
+
+	Core::onUpdate(dt);
 
 
 	mod.update(dt);
@@ -3868,9 +3869,6 @@ void DSQ::onUpdate(float dt)
 
 
 	subtitlePlayer.update(dt);
-
-
-	Core::onUpdate(dt);
 
 	demo.update(dt);
 
