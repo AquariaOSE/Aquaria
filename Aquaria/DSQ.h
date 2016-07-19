@@ -554,11 +554,11 @@ protected:
 
 	void modifyDt(float &dt);
 
-	void fixupJoysticks();
 	virtual void onJoystickAdded(int deviceID);
 	virtual void onJoystickRemoved(int instanceID);
 
 public:
+	void fixupJoysticks();
 	void initActionButtons();
 	void importActionButtons();
 };
