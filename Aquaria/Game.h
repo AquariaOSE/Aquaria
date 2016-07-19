@@ -368,36 +368,6 @@ typedef std::vector<QuadList> QuadArray;
 
 typedef std::vector<Element*> ElementUpdateList;
 
-// Note: although this is a bitmask, only one of these values may be set at a time!
-// This is because GridRender and most Lua scripts check via ==, not for bits set (Lua 5.1 doesn't have bit ops)
-enum ObsType
-{
-	OT_EMPTY		= 0x00,
-
-	// immutable
-	OT_BLACK		= 0x01,
-	OT_BLACKINVIS	= 0x02,  // same as OT_BLACK, but not drawn
-	OT_MASK_BLACK	= OT_BLACK | OT_BLACKINVIS,
-
-	// set by tiles
-	OT_INVISIBLE	= 0x04,
-	OT_INVISIBLEIN	= 0x08,
-	OT_HURT			= 0x10,
-
-	// set by entities
-	OT_INVISIBLEENT = 0x20,
-
-	// mask for all bits that block
-	OT_BLOCKING = OT_MASK_BLACK | OT_INVISIBLE | OT_INVISIBLEIN | OT_HURT | OT_INVISIBLEENT,
-
-	// free for use, not colliding by default
-	OT_USER1 = 0x40,
-	OT_USER2 = 0x80,
-	OT_USER_MASK = OT_USER1 | OT_USER2,
-
-	OT_OUTOFBOUNDS = 0xff
-};
-
 struct EntitySaveData
 {
 public:
