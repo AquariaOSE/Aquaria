@@ -21,11 +21,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef GRIDRENDER_H
 #define GRIDRENDER_H
 
+#include "GameEnums.h"
 #include "../BBGE/Quad.h"
-
-#include "Game.h"
+#include "ActionMapper.h"
 
 class GemMover;
+struct MinimapIcon;
+struct WorldMapTile;
+struct GemData;
+class AquariaMenuItem;
+class BitmapText;
 
 class GridRender : public RenderObject
 {
