@@ -122,9 +122,13 @@ void ActionSet::updateJoystick()
 	if(reassign)
 		assignJoystickByName(true);
 
+	// Enable joystick if used by this ActionSet.
+	// There might be other ActionSets that are also set to this
+	// joystick but disabled, so we can't just do
+	// j->setEnabled(enabled) here.
 	Joystick *j = core->getJoystick(joystickID);
-	if(j)
-		j->setEnabled(enabled);
+	if(j && enabled)
+		j->setEnabled(true);
 }
 
 ActionInput *ActionSet::getActionInputByName(const std::string &name)

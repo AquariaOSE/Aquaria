@@ -52,6 +52,8 @@ public:
 	void clearActions();
 	int assignJoystickByName(bool force); // -1 if no such joystick found
 	void assignJoystickIdx(int idx, bool updateValues);
+
+	// note: this only ENABLES joysticks if they are needed, but never disables any
 	void updateJoystick();
 
 	ActionInput *addActionInput(const std::string &name);

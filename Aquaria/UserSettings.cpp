@@ -595,10 +595,9 @@ void UserSettings::apply()
 			j->deadZone1 = as.joycfg.s1dead;
 			j->deadZone2 = as.joycfg.s2dead;
 		}
-		as.updateJoystick();
 	}
-
 	dsq->initActionButtons();
+	dsq->fixupJoysticks();
 
 	core->debugLogActive = system.debugLogOn;
 
