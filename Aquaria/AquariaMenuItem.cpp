@@ -1059,6 +1059,7 @@ void AquariaMenuItem::toggleHighlight(bool state)
 			glowFont->alpha.interpolateTo(0, 0.2);
 	}
 
+	onToggleHighlight(highlighted);
 }
 
 void AquariaMenuItem::onUpdate(float dt)
@@ -1139,4 +1140,80 @@ bool AquariaMenuItem::isCursorInMenuItem()
 		}
 	}
 	return false;
+}
+
+
+AquariaButton::AquariaButton(const std::string texbase, TTFFont *font)
+: activeColor(1,1,1), activeAlpha(0.5f)
+, inactiveColor(0,0,0), inactiveAlpha(0.5f)
+, buttonlabel(new TTFText(font))
+, _texbase(texbase), pressed(0), lastpressed(0)
+{
+	useQuad(texbase + "-button-up");
+	addChild(buttonlabel, PM_POINTER);
+	buttonlabel->setAlign(ALIGN_CENTER);
+	buttonlabel->position = Vector(0, 3);
+}
+
+void AquariaButton::goUp()
+{
+	quad->setTexture(_texbase + "-button-up");
+	buttonlabel->position = Vector(0, 3);
+}
+
+void AquariaButton::goDown()
+{
+	quad->setTexture(_texbase + "-button-down");
+	buttonlabel->position = Vector(0, 7);
+}
+
+void AquariaButton::action(int actionID, int state, int source)
+{
+	if(actionID == ACTION_PRIMARY)
+	{
+		if(state)
+			pressed |= 1;
+		else
+			pressed &= ~1;
+	}
+	else if(actionID == ACTION_SECONDARY)
+	{
+		if(state)
+			pressed |= 2;
+		else
+			pressed &= ~2;
+	}
+}
+
+void AquariaButton::onUpdate(float dt)
+{
+	AquariaMenuItem::onUpdate(dt);
+
+	/*if(pressed != lastpressed)
+	{
+		if(pressed)
+			goDown();
+		else
+			goUp();
+		lastpressed = pressed;
+	}*/
+}
+
+void AquariaButton::onToggleHighlight(bool on)
+{
+	if(on)
+	{
+		quad->color.interpolateTo(activeColor, 0.1);
+		quad->alpha.interpolateTo(activeAlpha, 0.1);
+	}
+	else
+	{
+		quad->color.interpolateTo(inactiveColor, 0.1);
+		quad->alpha.interpolateTo(inactiveAlpha, 0.1);
+	}
+}
+
+void AquariaButton::setButtonLabel(const std::string& s)
+{
+	buttonlabel->setText(s);
 }
