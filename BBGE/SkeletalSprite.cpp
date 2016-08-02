@@ -1316,17 +1316,19 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				std::string pfile;
 				while (is >> slot)
 				{
-					if(slot > 0)
+					if(slot < 0)
 					{
-						is >> pfile;
-						// add particle system + load
-						ParticleEffect *e = new ParticleEffect;
-						if(newb->emitters.size() < (size_t)slot)
-							newb->emitters.resize(slot+4);
-						newb->emitters[slot] = e;
-						newb->addChild(e, PM_POINTER);
-						e->load(pfile);
+						errorLog("particle slot < 0");
+						break;
 					}
+					is >> pfile;
+					// add particle system + load
+					ParticleEffect *e = new ParticleEffect;
+					if(newb->emitters.size() <= (size_t)slot)
+						newb->emitters.resize(slot+4, NULL);
+					newb->emitters[slot] = e;
+					newb->addChild(e, PM_POINTER);
+					e->load(pfile);
 				}
 			}
 			XMLElement *fr=0;
