@@ -62,7 +62,7 @@ Vector getRotatedVector(const Vector &vec, float rot)
 */
 	float s = sinf(rot);
 	float c = cosf(rot);
-	return c*vec.x - s*vec.y, s*vec.x + c*vec.y;
+	return Vector(c*vec.x - s*vec.y, s*vec.x + c*vec.y);
 }
 
 // note update this from float lerp
