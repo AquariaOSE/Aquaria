@@ -100,7 +100,8 @@ protected:
 	bool highlighted;
 	void toggleHighlight(bool v);
 	void onClick();
-	void onUpdate(float dt);
+	virtual void onUpdate(float dt);
+	virtual void onToggleHighlight(bool on) {}
 };
 
 class AquariaSaveSlot : public AquariaGuiQuad
@@ -248,6 +249,32 @@ protected:
 	std::vector<AquariaComboBoxItem*> shownItems;
 };
 
+class AquariaButton : public AquariaMenuItem
+{
+public:
+	AquariaButton(const std::string texbase, TTFFont *font);
+
+	void setButtonLabel(const std::string& s);
+	void goDown();
+	void goUp();
+
+	Vector activeColor;
+	float activeAlpha;
+	Vector inactiveColor;
+	float inactiveAlpha;
+
+	TTFText * const buttonlabel;
+
+protected:
+
+	virtual void action(int actionID, int state, int source);
+	virtual void onUpdate(float dt);
+	virtual void onToggleHighlight(bool on);
+
+	std::string _texbase;
+	int pressed;
+	int lastpressed;
+};
 
 
 #endif

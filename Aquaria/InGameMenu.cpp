@@ -31,18 +31,6 @@ const Vector opt_save_original = Vector(350, 350), opt_cancel_original = Vector(
 const int KEYCONFIG_FIRST_COL_DISTANCE = 170;
 const int KEYCONFIG_COL_DISTANCE = 105;
 
-class KeyConfigMenuReceiver : public DebugButtonReceiver
-{
-public:
-	void buttonPress(DebugButton *db)
-	{
-		themenu->switchToKeyConfigPage(db->buttonID);
-	}
-};
-
-static KeyConfigMenuReceiver keyConfigRecv;
-
-
 
 // --------- Private class defs, not used outside ---------------
 
@@ -2043,12 +2031,21 @@ void InGameMenu::create()
 	{
 		const float w = 100;
 		const std::string& label = SB(2150+i);
-		DebugButton *b = new DebugButton(i, &keyConfigRecv, w);
+		AquariaButton *b = new AquariaButton("gui/simpleblue", &dsq->fontArialSmall);
+		b->scale = Vector(0.8f, 0.8f);
 		b->position = Vector(150 + offx + i * (w+10), offy);
-		b->label->setText(label);
+		b->setButtonLabel(label);
+		const Vector color(0.45f, 0.45f, 0.7f);
+		b->inactiveColor = color;
+		b->inactiveAlpha = 0.5f;
+		b->quad->color = color;
 		keyConfigBg->addChild(b, PM_POINTER);
 		keyCategoryButtons.push_back(b);
 	}
+	keyCategoryButtons[0]->event.set(MakeFunctionEvent(InGameMenu, switchToKeyConfigPage1));
+	keyCategoryButtons[1]->event.set(MakeFunctionEvent(InGameMenu, switchToKeyConfigPage2));
+	keyCategoryButtons[2]->event.set(MakeFunctionEvent(InGameMenu, switchToKeyConfigPage3));
+
 	offy += 2*yi;
 
 	TTFText *header_action = new TTFText(&dsq->fontArialSmall);
@@ -3802,13 +3799,24 @@ void InGameMenu::switchToKeyConfigPage(int page)
 	{
 		group_keyConfig[i]->setHidden(true);
 		group_keyConfig[i]->alpha = 0;
-		keyCategoryButtons[i]->inactiveColor = Vector(0, 0, 0.5f);
-		keyCategoryButtons[i]->inactiveAlpha = 0.5f;
+		keyCategoryButtons[i]->goUp();
 	}
-	keyCategoryButtons[page]->inactiveColor = Vector(0.3f, 0.3f, 0.7f);
-	keyCategoryButtons[page]->inactiveAlpha = 0.7f;
+	keyCategoryButtons[page]->goDown();
 	group_keyConfig[page]->setHidden(false);
 	group_keyConfig[page]->alpha = 1;
+}
+
+void InGameMenu::switchToKeyConfigPage1()
+{
+	switchToKeyConfigPage(0);
+}
+void InGameMenu::switchToKeyConfigPage2()
+{
+	switchToKeyConfigPage(1);
+}
+void InGameMenu::switchToKeyConfigPage3()
+{
+	switchToKeyConfigPage(2);
 }
 
 void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)

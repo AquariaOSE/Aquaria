@@ -24,6 +24,7 @@ class Recipe;
 class RoundedRect;
 class DebugButton;
 class TTFText;
+class AquariaButton;
 
 
 enum MenuPage
@@ -207,10 +208,13 @@ private:
 
 	RenderObject *group_keyConfig[NUM_KEY_CONFIG_PAGES];
 	RoundedRect *keyConfigBg;
-	std::vector<DebugButton*> keyCategoryButtons;
+	std::vector<AquariaButton*> keyCategoryButtons;
 	std::vector<AquariaKeyConfig*> keyConfigs;
 	RenderObject *createBasicKeyConfig();
 	void switchToKeyConfigPage(int page);
+	void switchToKeyConfigPage1();
+	void switchToKeyConfigPage2();
+	void switchToKeyConfigPage3();
 	Quad *options;
 	AquariaComboBox *actionSetBox;
 	AquariaCheckBox *actionSetCheck;
