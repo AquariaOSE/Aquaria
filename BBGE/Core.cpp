@@ -686,6 +686,8 @@ void Core::onUpdate(float dt)
 
 	pollEvents(dt);
 
+
+
 	ActionMapper::onUpdate(dt);
 	StateManager::onUpdate(dt);
 

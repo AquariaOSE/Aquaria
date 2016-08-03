@@ -210,8 +210,6 @@ public:
 
 	void applyParallaxUserSettings();
 
-	void lockMouse();
-
 	void nag(NagType type);
 
 	void action(int id, int state, int source);
@@ -556,6 +554,8 @@ protected:
 
 	virtual void onJoystickAdded(int deviceID);
 	virtual void onJoystickRemoved(int instanceID);
+
+	virtual void updateActionButtons();
 
 public:
 	void fixupJoysticks();

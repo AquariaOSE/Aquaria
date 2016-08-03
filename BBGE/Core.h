@@ -552,7 +552,7 @@ protected:
 	std::string _extraDataDir;
 
 	std::vector<ActionButtonStatus*> actionStatus;
-	void updateActionButtons();
+	virtual void updateActionButtons();
 	void clearActionButtons();
 
 public:

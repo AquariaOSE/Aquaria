@@ -3788,11 +3788,50 @@ void DSQ::jiggleCursor()
 	SDL_ShowCursor(SDL_DISABLE);
 }
 
-float skipSfxVol = 1.0;
+void DSQ::updateActionButtons()
+{
+	// HACK: not optimal
+
+	// This must be done *before* Core::updateActionButtons()
+	// for LMB/RMB emulation to work properly -- fg
+	if (/*inputMode != INPUT_KEYBOARD &&*/ game->isActive())
+	{
+		for(size_t i = 0; i < almb.size(); ++i)
+			if (ActionMapper::getKeyState(almb[i]->key[0]) || ActionMapper::getKeyState(almb[i]->key[1]))
+			{
+				mouse.buttons.left = DOWN;
+				break;
+			}
+			for(size_t i = 0; i < armb.size(); ++i)
+				if (ActionMapper::getKeyState(armb[i]->key[0]) || ActionMapper::getKeyState(armb[i]->key[1]))
+				{
+					mouse.buttons.right = DOWN;
+					break;
+				}
+	}
+
+	if (joystickAsMouse)
+	{
+		for(size_t i = 0; i < almb.size(); ++i)
+			if (ActionMapper::getKeyState(almb[i]->joy[0]))
+			{
+				mouse.buttons.left = DOWN;
+				break;
+			}
+			for(size_t i = 0; i < armb.size(); ++i)
+				if (ActionMapper::getKeyState(armb[i]->joy[0]))
+				{
+					mouse.buttons.right = DOWN;
+					break;
+				}
+	}
+
+	Core::updateActionButtons();
+}
+
+static float skipSfxVol = 1.0;
 void DSQ::onUpdate(float dt)
 {
-
-
 	if (isSkippingCutscene())
 	{
 		if (!isInCutscene())
@@ -3838,12 +3877,11 @@ void DSQ::onUpdate(float dt)
 		}
 	}
 
+	// This queries pressed keys and updates ActionMapper
 	Core::onUpdate(dt);
 
 
 	mod.update(dt);
-
-	lockMouse();
 
 	if (dsq->game && watchForQuit && isNested())
 	{
@@ -3871,40 +3909,6 @@ void DSQ::onUpdate(float dt)
 	subtitlePlayer.update(dt);
 
 	demo.update(dt);
-
-	// HACK: not optimal
-
-	if (/*inputMode != INPUT_KEYBOARD &&*/ game->isActive())
-	{
-		for(size_t i = 0; i < almb.size(); ++i)
-			if (ActionMapper::getKeyState(almb[i]->key[0]) || ActionMapper::getKeyState(almb[i]->key[1]))
-			{
-				mouse.buttons.left = DOWN;
-				break;
-			}
-		for(size_t i = 0; i < armb.size(); ++i)
-			if (ActionMapper::getKeyState(armb[i]->key[0]) || ActionMapper::getKeyState(armb[i]->key[1]))
-			{
-				mouse.buttons.right = DOWN;
-				break;
-			}
-	}
-
-	if (joystickAsMouse)
-	{
-		for(size_t i = 0; i < almb.size(); ++i)
-			if (ActionMapper::getKeyState(almb[i]->joy[0]))
-			{
-				mouse.buttons.left = DOWN;
-				break;
-			}
-		for(size_t i = 0; i < armb.size(); ++i)
-			if (ActionMapper::getKeyState(armb[i]->joy[0]))
-			{
-				mouse.buttons.right = DOWN;
-				break;
-			}
-	}
 
 	if (joystickEnabled)
 	{
@@ -4024,7 +4028,7 @@ void DSQ::onUpdate(float dt)
 						os << '-';
 				os << "], (" << j->position.x << ", " << j->position.y << "), ("<< j->rightStick.x << ", " << j->rightStick.y << ")\n";
 			}
-		os << "altState: " << core->getKeyState(KEY_LALT) << " | " << core->getKeyState(KEY_RALT) << std::endl;
+		os << "altState: " << core->getKeyState(KEY_LALT) << " | " << core->getKeyState(KEY_RALT) << " mb: " << mouse.buttons.left << mouse.buttons.middle << mouse.buttons.right << std::endl;
 		os << "PMFree: " << particleManager->getFree() << " Active: " << particleManager->getNumActive() << std::endl;
 		os << "cameraPos: (" << dsq->cameraPos.x << ", " << dsq->cameraPos.y << ")" << std::endl;
 		os << "worldType: " << continuity.getWorldType() << " worldPaused: " << game->isWorldPaused() << std::endl;
@@ -4108,9 +4112,6 @@ void DSQ::onUpdate(float dt)
 
 	updatepecue(dt);
 
-
-	lockMouse();
-
 	Network::update();
 
 	Shot::clearShotGarbage();
@@ -4118,10 +4119,6 @@ void DSQ::onUpdate(float dt)
 	AquariaGuiElement::UpdateGlobalFocus(dt);
 }
 
-void DSQ::lockMouse()
-{
-
-}
 
 void DSQ::shakeCamera(float mag, float time)
 {
