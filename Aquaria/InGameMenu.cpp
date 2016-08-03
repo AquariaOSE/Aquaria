@@ -915,9 +915,12 @@ void InGameMenu::bindInput()
 		const ActionSet& as = dsq->user.control.actionSets[i];
 		int sourceID = (int)i;
 
-		as.importAction(this, "Escape",		ACTION_ESC, sourceID);
+		as.importAction(this, "PrimaryAction", ACTION_PRIMARY, sourceID);
+		as.importAction(this, "SecondaryAction", ACTION_SECONDARY, sourceID);
 
+		as.importAction(this, "Escape",		ACTION_ESC, sourceID);
 		as.importAction(this, "WorldMap",		ACTION_TOGGLEWORLDMAP, sourceID);
+		as.importAction(this, "ToggleHelp",	ACTION_TOGGLEHELPSCREEN, sourceID);
 
 		as.importAction(this, "PrevPage",		ACTION_PREVPAGE, sourceID);
 		as.importAction(this, "NextPage",		ACTION_NEXTPAGE, sourceID);
@@ -925,6 +928,12 @@ void InGameMenu::bindInput()
 		as.importAction(this, "FoodLeft",		ACTION_FOODLEFT, sourceID);
 		as.importAction(this, "FoodRight",		ACTION_FOODRIGHT, sourceID);
 		as.importAction(this, "FoodDrop",		ACTION_FOODDROP, sourceID);
+
+		as.importAction(this, "MenuUp",		ACTION_MENUUP, sourceID);
+		as.importAction(this, "MenuDown",		ACTION_MENUDOWN, sourceID);
+		as.importAction(this, "MenuLeft",		ACTION_MENULEFT, sourceID);
+		as.importAction(this, "MenuRight",		ACTION_MENURIGHT, sourceID);
+
 	}
 }
 
