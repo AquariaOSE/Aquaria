@@ -484,7 +484,13 @@ AquariaKeyConfig *AquariaKeyConfig::waitingForInput = 0;
 
 
 AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetType inputSetType, int inputIdx)
-: AquariaGuiElement(), RenderObject(), actionInputName(actionInputName), inputSetType(inputSetType), inputIdx(inputIdx)
+: AquariaGuiElement(), RenderObject()
+, actionInputName(actionInputName)
+, inputSetType(inputSetType)
+, inputIdx(inputIdx)
+, actionSetIndex(0)
+, acceptEsc(false)
+, rejectJoyAxis(false)
 {
 	bg = new Quad();
 	if (inputSetType == INPUTSET_OTHER)
@@ -504,10 +510,7 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 
 	addChild(keyConfigFont, PM_POINTER);
 
-
 	keyDown = false;
-	acceptEsc = false;
-	actionSetIndex = 0;
 
 	toggleEnterKey(false);
 }
@@ -862,6 +865,15 @@ void AquariaKeyConfig::onUpdate(float dt)
 				waitingForInput = 0;
 				AquariaGuiElement::canDirMoveGlobal = true;
 
+				if(rejectJoyAxis && (
+					(ac >= JOY_AXIS_0_POS && ac < JOY_AXIS_END_POS)
+				 || (ac >= JOY_AXIS_0_NEG && ac < JOY_AXIS_END_NEG)
+				))
+				{
+					dsq->sound->playSfx("denied");
+					abort = true;
+				}
+
 				if(!abort)
 				{
 					if(clear || *k == ac) // clear key if pressed again
@@ -927,6 +939,11 @@ void AquariaKeyConfig::setActionSetIndex(int idx)
 void AquariaKeyConfig::setAcceptEsc(bool a)
 {
 	acceptEsc = a;
+}
+
+void AquariaKeyConfig::setRejectJoyAxis(bool b)
+{
+	rejectJoyAxis = b;
 }
 
 AquariaMenuItem::AquariaMenuItem() : Quad(), ActionMapper(), AquariaGuiElement()

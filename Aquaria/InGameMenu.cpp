@@ -1513,7 +1513,7 @@ void InGameMenu::hide(bool effects, bool cancel)
 }
 
 
-void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int x, int y, bool acceptEsc)
+void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int x, int y, bool acceptEsc, bool rejectJoyAxis)
 {
 	TTFText *lb = new TTFText(&dsq->fontArialSmallest);
 	lb->setText(label);
@@ -1545,6 +1545,7 @@ void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label,
 	j1->position = Vector(x,y);
 	group->addChild(j1, PM_POINTER);
 	keyConfigs.push_back(j1);
+	j1->setRejectJoyAxis(rejectJoyAxis);
 	x += KEYCONFIG_COL_DISTANCE;
 
 	m->setDirMove(DIR_RIGHT, k1);
@@ -2097,10 +2098,10 @@ void InGameMenu::create()
 
 		addKeyConfigLine(kk, SB(2107), "PrimaryAction",		offx, y+=yi);
 		addKeyConfigLine(kk, SB(2108), "SecondaryAction",		offx, y+=yi);
-		addKeyConfigLine(kk, SB(2109), "SwimUp",				offx, y+=yi);
-		addKeyConfigLine(kk, SB(2110), "SwimDown",				offx, y+=yi);
-		addKeyConfigLine(kk, SB(2111), "SwimLeft",				offx, y+=yi);
-		addKeyConfigLine(kk, SB(2112), "SwimRight",			offx, y+=yi);
+		addKeyConfigLine(kk, SB(2109), "SwimUp",				offx, y+=yi, false, true);
+		addKeyConfigLine(kk, SB(2110), "SwimDown",				offx, y+=yi, false, true);
+		addKeyConfigLine(kk, SB(2111), "SwimLeft",				offx, y+=yi, false, true);
+		addKeyConfigLine(kk, SB(2112), "SwimRight",			offx, y+=yi, false, true);
 		addKeyConfigLine(kk, SB(2113), "Roll",					offx, y+=yi);
 		addKeyConfigLine(kk, SB(2114), "Revert",				offx, y+=yi);
 		addKeyConfigLine(kk, SB(2115), "WorldMap",				offx, y+=yi);
