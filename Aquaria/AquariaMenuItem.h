@@ -176,6 +176,7 @@ public:
 
 	void setAcceptEsc(bool a);
 	void setActionSetIndex(int idx);
+	void setRejectJoyAxis(bool b);
 
 protected:
 	void toggleEnterKey(int on);
@@ -192,6 +193,7 @@ protected:
 	Quad *bg;
 	int actionSetIndex;
 	bool acceptEsc;
+	bool rejectJoyAxis;
 };
 
 class AquariaComboBox;
