@@ -393,7 +393,6 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/AquariaMenuItem.cpp
     ${SRCDIR}/AquariaProgressBar.cpp
     ${SRCDIR}/AquariaSaveSlot.cpp
-    ${SRCDIR}/AutoMap.cpp
     ${SRCDIR}/Avatar.cpp
     ${SRCDIR}/Beam.cpp
     ${SRCDIR}/BitBlotLogo.cpp
@@ -482,6 +481,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Event.cpp
     ${BBGEDIR}/FrameBuffer.cpp
     ${BBGEDIR}/Gradient.cpp
+    ${BBGEDIR}/GLLoad.cpp
     ${BBGEDIR}/Joystick.cpp
     ${BBGEDIR}/LensFlare.cpp
     ${BBGEDIR}/Localization.cpp
