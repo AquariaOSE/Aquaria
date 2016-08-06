@@ -30,7 +30,7 @@ ENDIF(NOT CMAKE_BUILD_TYPE)
 OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
 OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional features." TRUE)
 
-OPTION(AQUARIA_USE_SDL2 "Use SDL2" FALSE)
+OPTION(AQUARIA_USE_SDL2 "Use SDL2" TRUE)
 OPTION(AQUARIA_USE_GLM "Use GLM for matrix math" TRUE)
 
 # No Steamworks SDK for Linux at the moment. Roll our own achievements.
