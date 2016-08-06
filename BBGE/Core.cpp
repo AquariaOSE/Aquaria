@@ -65,36 +65,9 @@ Core *core = 0;
 
 static 	std::ofstream _logOut;
 
-#ifdef BBGE_BUILD_WINDOWS
-	HICON icon_windows = 0;
-#endif
-
 #ifndef KMOD_GUI
 	#define KMOD_GUI KMOD_META
 #endif
-
-void Core::initIcon()
-{
-#ifdef BBGE_BUILD_WINDOWS
-	HINSTANCE handle = ::GetModuleHandle(NULL);
-
-
-
-	icon_windows = ::LoadIcon(handle, "icon");
-
-	SDL_SysWMinfo wminfo;
-	SDL_VERSION(&wminfo.version)
-	if (SDL_GetWindowWMInfo(gScreen, &wminfo) != 1)
-	{
-
-
-	}
-
-	HWND hwnd = wminfo.info.win.window;
-
-	::SetClassLong(hwnd, GCL_HICON, (LONG) icon_windows);
-#endif
-}
 
 void Core::resetCamera()
 {
@@ -783,7 +756,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 
 	setWindowCaption(appName, appName);
 
-	initIcon();
+	initIcon(gScreen);
     // Create window
 
 	setSDLGLAttributes();
@@ -988,14 +961,7 @@ void Core::shutdownGraphicsLibrary(bool killVideo)
 
 	lib_graphics = false;
 
-#ifdef BBGE_BUILD_WINDOWS
-	if (icon_windows)
-	{
-		::DestroyIcon(icon_windows);
-		icon_windows = 0;
-	}
-#endif
-
+	destroyIcon();
 }
 
 void Core::quit()

@@ -478,8 +478,6 @@ protected:
 
 	int virtualOffX, virtualOffY;
 
-	void initIcon();
-
 	float old_dt;
 	float current_dt;
 

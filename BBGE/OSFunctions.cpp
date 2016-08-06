@@ -5,7 +5,7 @@
 #include "ttvfs_stdio.h"
 
 #ifdef BBGE_BUILD_WINDOWS
-#  define WIN32_LEAN_AND_MEAN
+//#  define WIN32_LEAN_AND_MEAN
 #  define WIN32_NOMINMAX
 #  include <windows.h>
 #  undef min
@@ -49,6 +49,43 @@ static std::string _CFToStdString(CFStringRef cs)
 #endif
 
 #include "SDL.h"
+#include "SDL_syswm.h"
+
+#ifdef BBGE_BUILD_WINDOWS
+static HICON icon_windows = 0;
+#endif
+
+void initIcon(void *screen)
+{
+#ifdef BBGE_BUILD_WINDOWS
+	HINSTANCE handle = ::GetModuleHandle(NULL);
+	if(!icon_windows)
+		icon_windows = ::LoadIcon(handle, "icon");
+	SDL_SysWMinfo wminfo;
+	SDL_VERSION(&wminfo.version)
+
+#ifdef BBGE_BUILD_SDL2
+	SDL_GetWindowWMInfo((SDL_Window*)screen, &wminfo);
+#else
+	SDL_GetWindowWMInfo((SDL_Surface*)screen, &wminfo);
+#endif
+
+	HWND hwnd = wminfo.info.win.window;
+	::SetClassLongPtr(hwnd, -14, (LONG) icon_windows); // -14 is GCL_HICON (32bit) or GCLP_HICON (64bit)
+#endif
+}
+
+void destroyIcon()
+{
+#ifdef BBGE_BUILD_WINDOWS
+	if (icon_windows)
+	{
+		::DestroyIcon(icon_windows);
+		icon_windows = 0;
+	}
+#endif
+}
+
 
 
 void openURL(const std::string &url)
