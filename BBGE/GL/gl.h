@@ -31,7 +31,10 @@ extern "C" {
 ** the United States.
 */
 
-#ifndef APIENTRY
+#undef APIENTRY
+#ifdef _WIN32
+#define APIENTRY __stdcall
+#else
 #define APIENTRY
 #endif
 
@@ -43,17 +46,6 @@ extern "C" {
 // So, we use this little hack to disable external linkage globally.
 #undef WINGDIAPI
 #define WINGDIAPI extern
-
-
-
-#ifndef GLAPI
-# ifdef _WIN32
-#  define GLAPI __stdcall
-# else
-#  define GLAPI
-# endif
-# define __DEFINED_GLAPI
-#endif
 
 /*************************************************************/
 
@@ -1627,11 +1619,6 @@ WINGDIAPI void APIENTRY glVertex4s (GLshort x, GLshort y, GLshort z, GLshort w);
 WINGDIAPI void APIENTRY glVertex4sv (const GLshort *v);
 WINGDIAPI void APIENTRY glVertexPointer (GLint size, GLenum type, GLsizei stride, const GLvoid *pointer);
 WINGDIAPI void APIENTRY glViewport (GLint x, GLint y, GLsizei width, GLsizei height);
-
-#ifdef __DEFINED_GLAPI
-# undef GLAPI
-# undef __DEFINED_GLAPI
-#endif
 
 
 #ifdef __cplusplus
