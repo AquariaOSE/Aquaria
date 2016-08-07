@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #ifdef BBGE_BUILD_WINDOWS
     #define WIN32_NOMINMAX
-    #ifdef _MSC_VER
+    #if defined(_MSC_VER) && _MSC_VER <= 1600
         #define strtof (float)strtod
         #define snprintf _snprintf
     #endif
@@ -38,7 +38,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #ifdef _MSC_VER
 #pragma warning(disable:4786)
-#pragma warning(disable:4005)
+//#pragma warning(disable:4005)
 #pragma warning(disable:4305)
 
 #pragma warning(disable:4018) // signed/unsigned mismatch
