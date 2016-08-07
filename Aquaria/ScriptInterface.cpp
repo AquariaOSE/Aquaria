@@ -8230,17 +8230,28 @@ luaFunc(getInputMode)
 	luaReturnInt(dsq->inputMode);
 }
 
+static Joystick *_getJoystick(lua_State *L, int idx = 1)
+{
+	int source = lua_tointeger(L, idx) - 1;
+	if(source < 0)
+		return core->getJoystick(0); // HACK: FIXME: do something sensible instead
+	
+	return core->getJoystickForSourceID(source);
+}
+
 luaFunc(getJoystickAxisLeft)
 {
-	Vector v;// = core->joystick.position;
-	assert(false); // FIXME
+	Vector v;
+	if(Joystick *j = _getJoystick(L))
+		v = j->position;
 	luaReturnVec2(v.x, v.y);
 }
 
 luaFunc(getJoystickAxisRight)
 {
-	Vector v;// = core->joystick.rightStick;
-	assert(false); // FIXME
+	Vector v;
+	if(Joystick *j = _getJoystick(L))
+		v = j->rightStick;
 	luaReturnVec2(v.x, v.y);
 }
 

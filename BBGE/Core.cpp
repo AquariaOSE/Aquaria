@@ -3059,9 +3059,9 @@ void Core::clearActionButtons()
 	actionStatus.clear();
 }
 
-Joystick *Core::getJoystickForSourceID(unsigned sourceID)
+Joystick *Core::getJoystickForSourceID(int sourceID)
 {
-	if(sourceID < (unsigned)actionStatus.size())
-		return getJoystick(actionStatus[sourceID]->getJoystickID());
+	if(unsigned(sourceID+1) < (unsigned)actionStatus.size())
+		return getJoystick(actionStatus[sourceID+1]->getJoystickID());
 	return NULL;
 }

@@ -283,8 +283,6 @@ public:
 
 	bool modIsSelected;
 
-	void toggleMuffleSound(bool toggle);
-	void toggleInputMode();
 	void shakeCamera(float mag, float time);
 	Vector avStart;
 	Entity *getEntityByName(const std::string &name);

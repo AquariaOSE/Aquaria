@@ -1728,19 +1728,6 @@ void DSQ::toggleVersionLabel(bool on)
 	versionLabel->alpha.interpolateTo(a, 1);
 }
 
-void DSQ::toggleInputMode()
-{
-	switch(inputMode)
-	{
-	case INPUT_MOUSE:
-		setInputMode(INPUT_JOYSTICK);
-	break;
-	case INPUT_JOYSTICK:
-		setInputMode(INPUT_MOUSE);
-	break;
-	}
-}
-
 void DSQ::setInputMode(InputMode mode)
 {
 	inputMode = mode;
@@ -1838,11 +1825,6 @@ int DSQ::getEntityTypeIndexByName(std::string s)
 			return t->idx;
 	}
 	return -1;
-}
-
-void DSQ::toggleMuffleSound(bool toggle)
-{
-
 }
 
 void DSQ::loadModsCallback(const std::string &filename, intptr_t param)
@@ -2797,17 +2779,13 @@ void DSQ::createSaveSlotPage()
 		addRenderObject(saveSlots[i], LR_FILEMENU);
 	}
 
-
-	if (inputMode == INPUT_JOYSTICK)
-	{
-		saveSlots[0]->setDirMove(DIR_RIGHT, arrowUp);
-		saveSlots[1]->setDirMove(DIR_RIGHT, arrowUp);
-		saveSlots[2]->setDirMove(DIR_RIGHT, arrowDown);
-		saveSlots[3]->setDirMove(DIR_RIGHT, cancel);
-		arrowDown->setDirMove(DIR_DOWN, cancel);
-		cancel->setDirMove(DIR_UP, arrowDown);
-		cancel->setDirMove(DIR_LEFT, saveSlots[3]);
-	}
+	saveSlots[0]->setDirMove(DIR_RIGHT, arrowUp);
+	saveSlots[1]->setDirMove(DIR_RIGHT, arrowUp);
+	saveSlots[2]->setDirMove(DIR_RIGHT, arrowDown);
+	saveSlots[3]->setDirMove(DIR_RIGHT, cancel);
+	arrowDown->setDirMove(DIR_DOWN, cancel);
+	cancel->setDirMove(DIR_UP, arrowDown);
+	cancel->setDirMove(DIR_LEFT, saveSlots[3]);
 }
 
 void DSQ::nextSaveSlotPage()
