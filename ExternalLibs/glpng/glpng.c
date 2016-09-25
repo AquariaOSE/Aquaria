@@ -277,7 +277,7 @@ genmip:
 	free(d);
 }
 
-int APIENTRY pngLoadRaw(const char *filename, pngRawInfo *pinfo) {
+int pngLoadRaw(const char *filename, pngRawInfo *pinfo) {
 	int result;
 	FILE *fp = fopen(filename, "rb");
 	if (fp == NULL) return 0;
@@ -295,7 +295,7 @@ int APIENTRY pngLoadRaw(const char *filename, pngRawInfo *pinfo) {
 	return result;
 }
 
-int APIENTRY pngLoadRawF(FILE *fp, pngRawInfo *pinfo) {
+int pngLoadRawF(FILE *fp, pngRawInfo *pinfo) {
 	unsigned char header[8];
 	png_structp png;
 	png_infop   info;
@@ -694,7 +694,7 @@ finish:
 	return ret;
 }
 
-int APIENTRY pngLoad(const char *filename, int mipmap, int trans, pngInfo *pinfo) {
+int pngLoad(const char *filename, int mipmap, int trans, pngInfo *pinfo) {
 	int result;
 	FILE *fp = fopen(filename, "rb");
 	if (fp == NULL) return 0;
@@ -706,7 +706,7 @@ int APIENTRY pngLoad(const char *filename, int mipmap, int trans, pngInfo *pinfo
 	return result;
 }
 
-int APIENTRY pngLoadF(FILE *fp, int mipmap, int trans, pngInfo *pinfo) {
+int pngLoadF(FILE *fp, int mipmap, int trans, pngInfo *pinfo) {
 	unsigned char header[8];
 	png_structp png;
 	png_infop info;
@@ -744,7 +744,7 @@ static void glpng_read_mem(png_structp png, png_bytep dst, png_size_t size) {
 	mr->rpos += size;
 }
 
-int APIENTRY pngLoadMem(const char *mem, int size, int mipmap, int trans, pngInfo *pinfo) {
+int pngLoadMem(const char *mem, int size, int mipmap, int trans, pngInfo *pinfo) {
 	unsigned char header[8];
 	png_structp png;
 	png_infop info;
@@ -792,7 +792,7 @@ static unsigned int SetParams(int wrapst, int magfilter, int minfilter) {
 	return id;
 }
 
-unsigned int APIENTRY pngBind(const char *filename, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter) {
+unsigned int pngBind(const char *filename, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter) {
 	unsigned int id = SetParams(wrapst, magfilter, minfilter);
 
 	if (id != 0 && pngLoad(filename, mipmap, trans, info))
@@ -800,7 +800,7 @@ unsigned int APIENTRY pngBind(const char *filename, int mipmap, int trans, pngIn
 	return 0;
 }
 
-unsigned int APIENTRY pngBindF(FILE *file, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter) {
+unsigned int pngBindF(FILE *file, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter) {
 	unsigned int id = SetParams(wrapst, magfilter, minfilter);
 
 	if (id != 0 && pngLoadF(file, mipmap, trans, info))
@@ -808,7 +808,7 @@ unsigned int APIENTRY pngBindF(FILE *file, int mipmap, int trans, pngInfo *info,
 	return 0;
 }
 
-unsigned int APIENTRY pngBindMem(const char *mem, int size, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter) {
+unsigned int pngBindMem(const char *mem, int size, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter) {
 	unsigned int id = SetParams(wrapst, magfilter, minfilter);
 
 	if (id != 0 && pngLoadMem(mem, size, mipmap, trans, info))
@@ -816,18 +816,18 @@ unsigned int APIENTRY pngBindMem(const char *mem, int size, int mipmap, int tran
 	return 0;
 }
 
-void APIENTRY pngSetStencil(unsigned char red, unsigned char green, unsigned char blue) {
+void pngSetStencil(unsigned char red, unsigned char green, unsigned char blue) {
 	StencilRed = red, StencilGreen = green, StencilBlue = blue;
 }
 
-void APIENTRY pngSetAlphaCallback(unsigned char (*callback)(unsigned char red, unsigned char green, unsigned char blue)) {
+void pngSetAlphaCallback(unsigned char (*callback)(unsigned char red, unsigned char green, unsigned char blue)) {
 	if (callback == NULL)
 		AlphaCallback = DefaultAlphaCallback;
 	else
 		AlphaCallback = callback;
 }
 
-void APIENTRY pngSetViewingGamma(double viewingGamma) {
+void pngSetViewingGamma(double viewingGamma) {
 	if(viewingGamma > 0) {
 		gammaExplicit = 1;
 		screenGamma = 2.2/viewingGamma;
@@ -838,6 +838,6 @@ void APIENTRY pngSetViewingGamma(double viewingGamma) {
 	}
 }
 
-void APIENTRY pngSetStandardOrientation(int standardorientation) {
+void pngSetStandardOrientation(int standardorientation) {
 	StandardOrientation = standardorientation;
 }
