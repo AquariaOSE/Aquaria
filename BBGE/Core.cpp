@@ -1465,7 +1465,7 @@ void Core::run(float runTime)
 		{
 			doScreenshot = false;
 
-			saveScreenshotTGA(getScreenshotFilename());
+			saveScreenshot(getScreenshotFilename());
 			prepScreen(0);
 		}
 	}
@@ -2612,145 +2612,13 @@ unsigned char *Core::grabCenteredScreenshot(int w, int h)
 	return grabScreenshot(core->width/2 - w/2, core->height/2 - h/2, w, h);
 }
 
-// takes a screen shot and saves it to a TGA image
-int Core::saveScreenshotTGA(const std::string &filename)
+// takes a screen shot and saves it to a TGA or PNG image
+int Core::saveScreenshot(const std::string &filename)
 {
 	int w = getWindowWidth(), h = getWindowHeight();
 	unsigned char *imageData = grabCenteredScreenshot(w, h);
 	return tgaSave(filename.c_str(),w,h,32,imageData);
 }
-
-void Core::saveCenteredScreenshotTGA(const std::string &filename, int sz)
-{
-	int w=sz, h=sz;
-	int hsm = (w * 3.0f) / 4.0f;
-	unsigned char *imageData = grabCenteredScreenshot(w, hsm);
-
-	int imageDataSize = sizeof(unsigned char) * w * hsm * 4;
-	int tgaImageSize = sizeof(unsigned char) * w * h * 4;
-	unsigned char *tgaImage = new unsigned char[tgaImageSize];
-	memcpy(tgaImage, imageData, imageDataSize);
-	memset(tgaImage + imageDataSize, 0, tgaImageSize - imageDataSize);
-	delete[] imageData;
-
-	int savebits = 32;
-	tgaSave(filename.c_str(),w,h,savebits,tgaImage);
-}
-
-void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop34)
-{
-	debugLog("saveSizedScreenshot");
-
-	int w, h;
-	unsigned char *imageData;
-	w = sz;
-	h = sz;
-	float fsz = (float)sz;
-
-	unsigned int size = sizeof(unsigned char) * w * h * 3;
-	imageData = (unsigned char *)malloc(size);
-
-	float wbit = fsz;
-	float hbit = ((fsz)*(3.0f/4.0f));
-
-	int width = core->width-1;
-	int height = core->height-1;
-	int diff = 0;
-
-	if (crop34)
-	{
-		width = int((core->height*4.0f)/3.0f);
-		diff = (core->width - width)/2;
-		width--;
-	}
-
-	float zx = wbit/(float)width;
-	float zy = hbit/(float)height;
-
-	float copyw = w*(1/zx);
-	float copyh = h*(1/zy);
-
-
-
-	std::ostringstream os;
-	os << "wbit: " << wbit << " hbit: " << hbit << std::endl;
-	os << "zx: " << zx << " zy: " << zy << std::endl;
-	os << "w: " << w << " h: " << h << std::endl;
-	os << "width: " << width << " height: " << height << std::endl;
-	os << "copyw: " << copyw << " copyh: " << copyh << std::endl;
-	debugLog(os.str());
-
-	glRasterPos2i(0, 0);
-
-
-
-	debugLog("pixel zoom");
-	glPixelZoom(zx,zy);
-	glFlush();
-
-	glPixelZoom(1,1);
-	debugLog("copy pixels");
-	glCopyPixels(diff, 0, width, height, GL_COLOR);
-	glFlush();
-
-	debugLog("read pixels");
-	glReadPixels(0, 0, w, h, GL_RGB, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
-	glFlush();
-
-	int savebits = 24;
-	debugLog("saving bpp");
-	tgaSave(filename.c_str(),w,h,savebits,imageData);
-
-	debugLog("pop");
-
-
-	debugLog("done");
-}
-
-void Core::save64x64ScreenshotTGA(const std::string &filename)
-{
-	int w, h;
-	unsigned char *imageData;
-
-// compute width and heidth of the image
-	//w = xmax - xmin;
-	//h = ymax - ymin;
-	w = 64;
-	h = 64;
-
-// allocate memory for the pixels
-	imageData = (unsigned char *)malloc(sizeof(unsigned char) * w * h * 4);
-
-// read the pixels from the frame buffer
-
-	//glReadPixels(xmin,ymin,xmax,ymax,GL_RGBA,GL_UNSIGNED_BYTE, (GLvoid *)imageData);
-	glPixelZoom(64.0f/(float)getVirtualWidth(), 48.0f/(float)getVirtualHeight());
-	glCopyPixels(0, 0, getVirtualWidth(), getVirtualHeight(), GL_COLOR);
-
-	glReadPixels(0,0,64,64,GL_RGBA,GL_UNSIGNED_BYTE, (GLvoid *)imageData);
-
-
-	unsigned char *c = imageData;
-	for (int x=0; x < w; x++)
-	{
-		for (int y=0; y< h; y++)
-		{
-			c += 3;
-			(*c) = 255;
-			c ++;
-		}
-	}
-
-
-// save the image
-	tgaSave(filename.c_str(),64,64,32,imageData);
-	glPixelZoom(1,1);
-
-
-
-}
-
-
 
 // saves an array of pixels as a TGA image (frees the image data passed in)
 int Core::tgaSave(	const char	*filename,

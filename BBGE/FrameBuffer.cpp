@@ -42,7 +42,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	PFNGLFRAMEBUFFERTEXTURE3DEXTPROC glFramebufferTexture3DEXT = NULL;
 	PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT = NULL;
 	PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT = NULL;
-	PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
 #endif
 
 FrameBuffer::FrameBuffer()
@@ -151,7 +150,6 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 			glFramebufferTexture3DEXT = (PFNGLFRAMEBUFFERTEXTURE3DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture3DEXT");
 			glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glFramebufferRenderbufferEXT");
 			glGetFramebufferAttachmentParameterivEXT = (PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC)SDL_GL_GetProcAddress("glGetFramebufferAttachmentParameterivEXT");
-			glGenerateMipmapEXT = (PFNGLGENERATEMIPMAPEXTPROC)SDL_GL_GetProcAddress("glGenerateMipmapEXT");
 		}
 
 		if( !glIsRenderbufferEXT || !glBindRenderbufferEXT || !glDeleteRenderbuffersEXT ||
@@ -159,7 +157,7 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 			!glIsFramebufferEXT || !glBindFramebufferEXT || !glDeleteFramebuffersEXT ||
 			!glGenFramebuffersEXT || !glCheckFramebufferStatusEXT || !glFramebufferTexture1DEXT ||
 			!glFramebufferTexture2DEXT || !glFramebufferTexture3DEXT || !glFramebufferRenderbufferEXT||
-			!glGetFramebufferAttachmentParameterivEXT || !glGenerateMipmapEXT )
+			!glGetFramebufferAttachmentParameterivEXT)
 		{
 			debugLog("One or more EXT_framebuffer_object functions were not found");
 			return false;
@@ -292,7 +290,6 @@ void FrameBuffer::resetOpenGL()
 	glFramebufferTexture3DEXT = NULL;
 	glFramebufferRenderbufferEXT = NULL;
 	glGetFramebufferAttachmentParameterivEXT = NULL;
-	glGenerateMipmapEXT = NULL;
 #endif
 }
 
