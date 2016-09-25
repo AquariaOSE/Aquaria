@@ -28,13 +28,14 @@
 	#include <windows.h>
 #endif
 
-#define GL_GLEXT_PROTOTYPES
+//#define GL_GLEXT_PROTOTYPES
 
 //#include <GL/glpng.h>
 //#include <GL/gl.h>
 //#include <GL/glext.h>
 #include "../glpng.h"
 #include "gl.h"
+#include "glext.h"
 #include <stdlib.h>
 #include <string.h>
 #include <math.h>
@@ -47,10 +48,15 @@ typedef uint64_t uint64;
 
 #include <png.h>
 
+#include "SDL.h"
+
+static PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
+static int s_got_glGenerateMipmapEXT = 0;
+
 /* Used to decide if GL/gl.h supports the paletted extension */
-#ifdef GL_COLOR_INDEX1_EXT
+/*#ifdef GL_COLOR_INDEX1_EXT
 #define SUPPORTS_PALETTE_EXT
-#endif
+#endif*/
 
 static unsigned char DefaultAlphaCallback(unsigned char red, unsigned char green, unsigned char blue) {
 	return 255;
@@ -235,12 +241,29 @@ static int HalfSize(GLint components, GLint width, GLint height, const unsigned 
 
 /* Replacement for gluBuild2DMipmaps so GLU isn't needed */
 static void Build2DMipmaps(GLint components, GLint width, GLint height, GLenum format, const unsigned char *data, int filter) {
+	
 	int level = 0;
-	unsigned char *d = (unsigned char *) malloc((width/2)*(height/2)*components+4);
+	unsigned char *d;
 	const unsigned char *last = data;
 
 	glTexImage2D(GL_TEXTURE_2D, level, components, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+
+genmip:
+	if(glGenerateMipmapEXT)
+	{
+		glHint(GL_GENERATE_MIPMAP_HINT, filter ? GL_NICEST : GL_FASTEST);
+		glGenerateMipmapEXT(GL_TEXTURE_2D);
+		return;
+	}
+	else if(!s_got_glGenerateMipmapEXT)
+	{
+		s_got_glGenerateMipmapEXT = 1;
+		glGenerateMipmapEXT = (PFNGLGENERATEMIPMAPEXTPROC)SDL_GL_GetProcAddress("glGenerateMipmapEXT");
+		goto genmip;
+	}
+	
 	level++;
+	d = (unsigned char *) malloc((width/2)*(height/2)*components+4);
 
 	while (HalfSize(components, width, height, last, d, filter)) {
 		if (width  > 1) width  /= 2;
