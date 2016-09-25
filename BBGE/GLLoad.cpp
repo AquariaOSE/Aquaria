@@ -16,7 +16,10 @@
 #define GLAPIENTRY
 #endif
 
+#include "glext.h"
 
+
+PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
 
 unsigned g_dbg_numRenderCalls = 0; // extern
 
@@ -50,6 +53,10 @@ bool lookup_all_glsyms()
 	if (!lookup_glsym(#fn, (void **) &p##fn)) retval = false;
 #include "OpenGLStubs.h"
 #undef GL_FUNC
+
+	// optional functions
+	glGenerateMipmapEXT = (PFNGLGENERATEMIPMAPEXTPROC)SDL_GL_GetProcAddress("glGenerateMipmapEXT");
+
 	return retval;
 }
 #endif
@@ -64,6 +71,8 @@ void unload_all_glsyms()
 #include "OpenGLStubs.h"
 #undef GL_FUNC
 #endif
+
+	glGenerateMipmapEXT = NULL;
 }
 
 #endif
