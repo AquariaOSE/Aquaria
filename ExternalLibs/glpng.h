@@ -31,24 +31,6 @@
 extern "C" {
 #endif
 
-/*
-#ifdef _MSC_VER
-	#ifdef _DEBUG
-		#pragma comment (lib, "glpngd.lib")
-	#else
-		#pragma comment (lib, "glpng.lib")
-	#endif
-#endif
-*/
-
-/* XXX This is from Win32's <windef.h> */
-#ifndef APIENTRY
-	#if (_MSC_VER >= 800) || defined(_STDCALL_SUPPORTED)
-		#define APIENTRY    __stdcall
-	#else
-		#define APIENTRY
-	#endif
-#endif
 
 /* Mipmapping parameters */
 #define PNG_NOMIPMAPS      0 /* No mipmapping                        */
@@ -93,21 +75,21 @@ typedef struct {
 	unsigned char *Palette;
 } pngRawInfo;
 
-extern int APIENTRY pngLoadRaw(const char *filename, pngRawInfo *rawinfo);
-extern int APIENTRY pngLoadRawF(FILE *file, pngRawInfo *rawinfo);
+int pngLoadRaw(const char *filename, pngRawInfo *rawinfo);
+int pngLoadRawF(FILE *file, pngRawInfo *rawinfo);
 
-extern int APIENTRY pngLoad(const char *filename, int mipmap, int trans, pngInfo *info);
-extern int APIENTRY pngLoadF(FILE *file, int mipmap, int trans, pngInfo *info);
-extern int APIENTRY pngLoadMem(const char *mem, int size, int mipmap, int trans, pngInfo *info);
+int pngLoad(const char *filename, int mipmap, int trans, pngInfo *info);
+int pngLoadF(FILE *file, int mipmap, int trans, pngInfo *info);
+int pngLoadMem(const char *mem, int size, int mipmap, int trans, pngInfo *info);
 
-extern unsigned int APIENTRY pngBind(const char *filename, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter);
-extern unsigned int APIENTRY pngBindF(FILE *file, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter);
-extern unsigned int APIENTRY pngBindMem(const char *mem, int size, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter);
+unsigned int pngBind(const char *filename, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter);
+unsigned int pngBindF(FILE *file, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter);
+unsigned int pngBindMem(const char *mem, int size, int mipmap, int trans, pngInfo *info, int wrapst, int minfilter, int magfilter);
 
-extern void APIENTRY pngSetStencil(unsigned char red, unsigned char green, unsigned char blue);
-extern void APIENTRY pngSetAlphaCallback(unsigned char (*callback)(unsigned char red, unsigned char green, unsigned char blue));
-extern void APIENTRY pngSetViewingGamma(double viewingGamma);
-extern void APIENTRY pngSetStandardOrientation(int standardorientation);
+void pngSetStencil(unsigned char red, unsigned char green, unsigned char blue);
+void pngSetAlphaCallback(unsigned char (*callback)(unsigned char red, unsigned char green, unsigned char blue));
+void pngSetViewingGamma(double viewingGamma);
+void pngSetStandardOrientation(int standardorientation);
 
 #ifdef __cplusplus
 }
