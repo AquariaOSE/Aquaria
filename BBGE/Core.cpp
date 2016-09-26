@@ -366,7 +366,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	renderObjectCount = 0;
 	avgFPS.resize(1);
 	minimized = false;
-	numSavedScreenshots = 0;
 	shuttingDown = false;
 	nestedMains = 0;
 	afterEffectManager = 0;
@@ -1238,12 +1237,14 @@ std::string Core::getEnqueuedJumpState()
 }
 
 int screenshotNum = 0;
-std::string getScreenshotFilename()
+std::string getScreenshotFilename(bool png)
 {
+	std::string prefix = core->getUserDataFolder() + "/screenshots/screen";
+	std::string ext = png ? ".png" : ".tga";
 	while (true)
 	{
 		std::ostringstream os;
-		os << core->getUserDataFolder() << "/screenshots/screen" << screenshotNum << ".tga";
+		os << prefix << screenshotNum << ext;
 		screenshotNum ++;
         std::string str(os.str());
 		if (!core->exists(str))  // keep going until we hit an unused filename.
@@ -1464,9 +1465,10 @@ void Core::run(float runTime)
 		if (doScreenshot)
 		{
 			doScreenshot = false;
-
-			saveScreenshot(getScreenshotFilename());
+			const bool png = true;
+			saveScreenshot(getScreenshotFilename(png), png);
 			prepScreen(0);
+			resetTimer();
 		}
 	}
 	quitNestedMainFlag = false;
@@ -2571,11 +2573,8 @@ bool Core::canChangeState()
 // longer needed.
 unsigned char *Core::grabScreenshot(int x, int y, int w, int h)
 {
-
-	unsigned char *imageData;
-
 	unsigned int size = sizeof(unsigned char) * w * h * 4;
-	imageData = new unsigned char[size];
+	unsigned char *imageData = new unsigned char[size];
 
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glDisable(GL_BLEND);
@@ -2613,15 +2612,19 @@ unsigned char *Core::grabCenteredScreenshot(int w, int h)
 }
 
 // takes a screen shot and saves it to a TGA or PNG image
-int Core::saveScreenshot(const std::string &filename)
+bool Core::saveScreenshot(const std::string &filename, bool png)
 {
 	int w = getWindowWidth(), h = getWindowHeight();
 	unsigned char *imageData = grabCenteredScreenshot(w, h);
-	return tgaSave(filename.c_str(),w,h,32,imageData);
+	bool ok = png
+		? pngSave(filename.c_str(), w, h, imageData)
+		: tgaSave(filename.c_str(),w,h,32,imageData);
+	delete [] imageData;
+	return ok;
 }
 
-// saves an array of pixels as a TGA image (frees the image data passed in)
-int Core::tgaSave(	const char	*filename,
+// saves an array of pixels as a TGA image
+bool Core::tgaSave(	const char	*filename,
 		short int	width,
 		short int	height,
 		unsigned char	pixelDepth,
@@ -2634,10 +2637,8 @@ int Core::tgaSave(	const char	*filename,
 
 // open file and check for errors
 	file = fopen(adjustFilenameCase(filename).c_str(), "wb");
-	if (file == NULL) {
-		delete [] imageData;
-		return (int)false;
-	}
+	if (!file)
+		return false;
 
 // compute image type: 2 for RGB(A), 3 for greyscale
 	mode = pixelDepth / 8;
@@ -2661,8 +2662,7 @@ int Core::tgaSave(	const char	*filename,
 		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1)
 	{
 		fclose(file);
-		delete [] imageData;
-		return (int)false;
+		return false;
 	}
 
 // convert the image data from RGB(A) to BGR(A)
@@ -2674,44 +2674,12 @@ int Core::tgaSave(	const char	*filename,
 	}
 
 // save the image data
-	if (fwrite(imageData, sizeof(unsigned char),
-			width * height * mode, file) != width * height * mode)
-	{
-		fclose(file);
-		delete [] imageData;
-		return (int)false;
-	}
+	size_t bytes = width * height * mode;
+	bool ok =  fwrite(imageData, 1, bytes, file) == bytes;
 
 	fclose(file);
-	delete [] imageData;
 
-	return (int)true;
-}
-
-// saves a series of files with names "filenameX"
-int Core::tgaSaveSeries(char		*filename,
-			 short int		width,
-			 short int		height,
-			 unsigned char	pixelDepth,
-			 unsigned char	*imageData) {
-
-	char *newFilename;
-	int status;
-
-// compute the new filename by adding the
-// series number and the extension
-	newFilename = (char *)malloc(sizeof(char) * strlen(filename)+16);
-
-	sprintf(newFilename,"%s%d",filename,numSavedScreenshots);
-
-// save the image
-	status = tgaSave(newFilename,width,height,pixelDepth,imageData);
-
-//increase the counter
-	if (status == (int)true)
-		numSavedScreenshots++;
-	free(newFilename);
-	return(status);
+	return ok;
 }
 
 void Core::screenshot()
@@ -2723,7 +2691,7 @@ void Core::screenshot()
  #include "DeflateCompressor.h"
 
  // saves an array of pixels as a TGA image (frees the image data passed in)
-int Core::zgaSave(	const char	*filename,
+bool Core::zgaSave(	const char	*filename,
 		short int	w,
 		short int	h,
 		unsigned char	depth,
@@ -2737,8 +2705,7 @@ int Core::zgaSave(	const char	*filename,
 // open file and check for errors
 	FILE *file = fopen(adjustFilenameCase(filename).c_str(), "wb");
 	if (file == NULL) {
-		delete [] imageData;
-		return (int)false;
+		return false;
 	}
 
 // compute image type: 2 for RGB(A), 3 for greyscale
@@ -2775,18 +2742,11 @@ int Core::zgaSave(	const char	*filename,
 	z.append(imageData, width * height * mode);
 	z.Compress(3);
 
-// save the image data
-	if (fwrite(z.contents(), 1, z.size(), file) != z.size())
-	{
-		fclose(file);
-		delete [] imageData;
-		return (int)false;
-	}
+	bool ok  = fwrite(z.contents(), 1, z.size(), file) == z.size();
 
 	fclose(file);
-	delete [] imageData;
 
-	return (int)true;
+	return ok;
 }
 
 
@@ -2898,4 +2858,64 @@ Joystick *Core::getJoystickForSourceID(int sourceID)
 	if(unsigned(sourceID+1) < (unsigned)actionStatus.size())
 		return getJoystick(actionStatus[sourceID+1]->getJoystickID());
 	return NULL;
+}
+
+#include <png.h>
+
+bool Core::pngSave(const char *filename, unsigned width, unsigned height, unsigned char *data)
+{
+	bool ok = true;
+	std::vector<png_byte*> rowData(height);
+	// passed in buffer is upside down; flip it
+	for(unsigned i = 0; i < height; i++)
+		rowData[height - i - 1] = i * width * 4 + data;
+
+	FILE *fp = fopen(filename, "wb");
+	if (!fp)
+		return false;
+
+	png_structp png;
+	png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
+
+	if (!png)
+		goto fail;
+
+	png_infop info_ptr;
+	info_ptr = png_create_info_struct(png);
+	if (!info_ptr)
+		goto fail;
+
+	if (setjmp(png_jmpbuf(png)))
+		goto fail;
+
+	png_init_io(png, fp);
+
+	if (setjmp(png_jmpbuf(png)))
+		goto fail;
+
+	png_set_IHDR(png, info_ptr, width, height,
+		8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
+		PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
+
+	png_write_info(png, info_ptr);
+
+	if (setjmp(png_jmpbuf(png)))
+		goto fail;
+
+	png_write_image(png, (png_byte**)&rowData[0]);
+
+	if (setjmp(png_jmpbuf(png)))
+		goto fail;
+
+	png_write_end(png, NULL);
+
+end:
+	if(fp)
+		fclose(fp);
+	return ok;
+
+fail:
+	debugLog("Failed to save PNG");
+	ok = false;
+	goto end;
 }

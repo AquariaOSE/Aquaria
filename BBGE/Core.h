@@ -361,7 +361,7 @@ public:
 
 	unsigned char *grabScreenshot(int x, int y, int w, int h);
 	unsigned char *grabCenteredScreenshot(int w, int h);
-	int saveScreenshot(const std::string &filename);
+	bool saveScreenshot(const std::string &filename, bool png);
 
 	bool minimized;
 	std::string getEnqueuedJumpState();
@@ -456,9 +456,9 @@ public:
 
 	CoreSettings settings;
 
-	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
-	int zgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
-	int pngSave(const char *filename, unsigned width, unsigned height, unsigned char *data);
+	bool tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
+	bool zgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
+	bool pngSave(const char *filename, unsigned width, unsigned height, unsigned char *data);
 	volatile int dbg_numThreadDecoders;
 
 	virtual void onBackgroundUpdate();
@@ -535,11 +535,8 @@ protected:
 	int _vsync, _bpp;
 	bool _fullscreen;
 
-	int numSavedScreenshots;
-
 	CountedPtr<Texture> texError;
 
-	int tgaSaveSeries(char	*filename,  short int width, short int height, unsigned char pixelDepth, unsigned char *imageData);
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}
 

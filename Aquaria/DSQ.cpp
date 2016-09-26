@@ -2993,7 +2993,6 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 				memmove(scrShotData, scrShotData + adjOffset, adjImageSize);
 				memset(scrShotData + adjImageSize, 0, imageDataSize - adjImageSize);
 				zgaSave(os.str().c_str(), scrShotWidth, scrShotHeight, 32, scrShotData);
-				scrShotData = 0;  // deleted by tgaSave()
 			}
 
 			PlaySfx sfx;
