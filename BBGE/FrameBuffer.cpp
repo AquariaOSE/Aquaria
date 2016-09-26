@@ -21,28 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "FrameBuffer.h"
 #include "Core.h"
 #include "RenderBase.h"
-#include "glext.h"
 
 //WARNING: FrameBuffer objects have to have reloadDevice/unloadDevice called manually!
-
-#ifdef BBGE_BUILD_FRAMEBUFFER
-	PFNGLISRENDERBUFFEREXTPROC glIsRenderbufferEXT = NULL;
-	PFNGLBINDRENDERBUFFEREXTPROC glBindRenderbufferEXT = NULL;
-	PFNGLDELETERENDERBUFFERSEXTPROC glDeleteRenderbuffersEXT = NULL;
-	PFNGLGENRENDERBUFFERSEXTPROC glGenRenderbuffersEXT = NULL;
-	PFNGLRENDERBUFFERSTORAGEEXTPROC glRenderbufferStorageEXT = NULL;
-	PFNGLGETRENDERBUFFERPARAMETERIVEXTPROC glGetRenderbufferParameterivEXT = NULL;
-	PFNGLISFRAMEBUFFEREXTPROC glIsFramebufferEXT = NULL;
-	PFNGLBINDFRAMEBUFFEREXTPROC glBindFramebufferEXT = NULL;
-	PFNGLDELETEFRAMEBUFFERSEXTPROC glDeleteFramebuffersEXT = NULL;
-	PFNGLGENFRAMEBUFFERSEXTPROC glGenFramebuffersEXT = NULL;
-	PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC glCheckFramebufferStatusEXT = NULL;
-	PFNGLFRAMEBUFFERTEXTURE1DEXTPROC glFramebufferTexture1DEXT = NULL;
-	PFNGLFRAMEBUFFERTEXTURE2DEXTPROC glFramebufferTexture2DEXT = NULL;
-	PFNGLFRAMEBUFFERTEXTURE3DEXTPROC glFramebufferTexture3DEXT = NULL;
-	PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT = NULL;
-	PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT = NULL;
-#endif
 
 FrameBuffer::FrameBuffer()
 {
@@ -132,26 +112,6 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 	}
 	else
 	{
-		if (!glIsRenderbufferEXT)
-		{
-			glIsRenderbufferEXT = (PFNGLISRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glIsRenderbufferEXT");
-			glBindRenderbufferEXT = (PFNGLBINDRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glBindRenderbufferEXT");
-			glDeleteRenderbuffersEXT = (PFNGLDELETERENDERBUFFERSEXTPROC)SDL_GL_GetProcAddress("glDeleteRenderbuffersEXT");
-			glGenRenderbuffersEXT = (PFNGLGENRENDERBUFFERSEXTPROC)SDL_GL_GetProcAddress("glGenRenderbuffersEXT");
-			glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC)SDL_GL_GetProcAddress("glRenderbufferStorageEXT");
-			glGetRenderbufferParameterivEXT = (PFNGLGETRENDERBUFFERPARAMETERIVEXTPROC)SDL_GL_GetProcAddress("glGetRenderbufferParameterivEXT");
-			glIsFramebufferEXT = (PFNGLISFRAMEBUFFEREXTPROC)SDL_GL_GetProcAddress("glIsFramebufferEXT");
-			glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)SDL_GL_GetProcAddress("glBindFramebufferEXT");
-			glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSEXTPROC)SDL_GL_GetProcAddress("glDeleteFramebuffersEXT");
-			glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)SDL_GL_GetProcAddress("glGenFramebuffersEXT");
-			glCheckFramebufferStatusEXT = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)SDL_GL_GetProcAddress("glCheckFramebufferStatusEXT");
-			glFramebufferTexture1DEXT = (PFNGLFRAMEBUFFERTEXTURE1DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture1DEXT");
-			glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture2DEXT");
-			glFramebufferTexture3DEXT = (PFNGLFRAMEBUFFERTEXTURE3DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture3DEXT");
-			glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glFramebufferRenderbufferEXT");
-			glGetFramebufferAttachmentParameterivEXT = (PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC)SDL_GL_GetProcAddress("glGetFramebufferAttachmentParameterivEXT");
-		}
-
 		if( !glIsRenderbufferEXT || !glBindRenderbufferEXT || !glDeleteRenderbuffersEXT ||
 			!glGenRenderbuffersEXT || !glRenderbufferStorageEXT || !glGetRenderbufferParameterivEXT ||
 			!glIsFramebufferEXT || !glBindFramebufferEXT || !glDeleteFramebuffersEXT ||
@@ -267,30 +227,6 @@ void FrameBuffer::unloadDevice()
 
 #endif
 	debugLog("done");
-}
-
-void FrameBuffer::resetOpenGL()
-{
-#if defined(BBGE_BUILD_FRAMEBUFFER)
-	// set these back to NULL and reload them upon reinit, otherwise they
-	//  might point to a bogus address when the shared library is reloaded.
-	glIsRenderbufferEXT = NULL;
-	glBindRenderbufferEXT = NULL;
-	glDeleteRenderbuffersEXT = NULL;
-	glGenRenderbuffersEXT = NULL;
-	glRenderbufferStorageEXT = NULL;
-	glGetRenderbufferParameterivEXT = NULL;
-	glIsFramebufferEXT = NULL;
-	glBindFramebufferEXT = NULL;
-	glDeleteFramebuffersEXT = NULL;
-	glGenFramebuffersEXT = NULL;
-	glCheckFramebufferStatusEXT = NULL;
-	glFramebufferTexture1DEXT = NULL;
-	glFramebufferTexture2DEXT = NULL;
-	glFramebufferTexture3DEXT = NULL;
-	glFramebufferRenderbufferEXT = NULL;
-	glGetFramebufferAttachmentParameterivEXT = NULL;
-#endif
 }
 
 void FrameBuffer::reloadDevice()

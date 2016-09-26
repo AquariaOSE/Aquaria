@@ -22,33 +22,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Shader.h"
 #include "algorithmx.h"
 #include "RenderBase.h"
-#include "glext.h"
 #include <sstream>
 
-#ifdef BBGE_BUILD_SHADERS
-	// GL_ARB_shader_objects
-	PFNGLCREATEPROGRAMOBJECTARBPROC  glCreateProgramObjectARB  = NULL;
-	PFNGLDELETEOBJECTARBPROC         glDeleteObjectARB         = NULL;
-	PFNGLUSEPROGRAMOBJECTARBPROC     glUseProgramObjectARB     = NULL;
-	PFNGLCREATESHADEROBJECTARBPROC   glCreateShaderObjectARB   = NULL;
-	PFNGLSHADERSOURCEARBPROC         glShaderSourceARB         = NULL;
-	PFNGLCOMPILESHADERARBPROC        glCompileShaderARB        = NULL;
-	PFNGLGETOBJECTPARAMETERIVARBPROC glGetObjectParameterivARB = NULL;
-	PFNGLATTACHOBJECTARBPROC         glAttachObjectARB         = NULL;
-	PFNGLGETINFOLOGARBPROC           glGetInfoLogARB           = NULL;
-	PFNGLLINKPROGRAMARBPROC          glLinkProgramARB          = NULL;
-	PFNGLGETUNIFORMLOCATIONARBPROC   glGetUniformLocationARB   = NULL;
-	PFNGLGETACTIVEUNIFORMARBPROC     glGetActiveUniformARB     = NULL;
-	PFNGLUNIFORM1FVARBPROC           glUniform1fvARB            = NULL;
-	PFNGLUNIFORM2FVARBPROC           glUniform2fvARB            = NULL;
-	PFNGLUNIFORM3FVARBPROC           glUniform3fvARB            = NULL;
-	PFNGLUNIFORM4FVARBPROC           glUniform4fvARB            = NULL;
-	PFNGLUNIFORM1IVARBPROC           glUniform1ivARB            = NULL;
-	PFNGLUNIFORM2IVARBPROC           glUniform2ivARB            = NULL;
-	PFNGLUNIFORM3IVARBPROC           glUniform3ivARB            = NULL;
-	PFNGLUNIFORM4IVARBPROC           glUniform4ivARB            = NULL;
-
-#endif
 
 bool Shader::_wasInited = false;
 bool Shader::_useShaders = false;
@@ -62,7 +37,7 @@ void Shader::staticInit()
 	debugLog("Initializing shaders...");
 
 #if defined(BBGE_BUILD_SHADERS) && defined(BBGE_BUILD_OPENGL)
-	char *ext = (char*)glGetString( GL_EXTENSIONS );
+	/*char *ext = (char*)glGetString( GL_EXTENSIONS );
 
 	if( strstr( ext, "GL_ARB_shading_language_100" ) == NULL )
 	{
@@ -78,29 +53,10 @@ void Shader::staticInit()
 		debugLog("GL_ARB_shader_objects extension was not found");
 		goto end;
 	}
-	else
+	else*/
+	// Better to just check if the function pointers are there;
+	// the driver might truncate the extension string or something. -- fg
 	{
-		glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
-		glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)SDL_GL_GetProcAddress("glDeleteObjectARB");
-		glUseProgramObjectARB     = (PFNGLUSEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glUseProgramObjectARB");
-		glCreateShaderObjectARB   = (PFNGLCREATESHADEROBJECTARBPROC)SDL_GL_GetProcAddress("glCreateShaderObjectARB");
-		glShaderSourceARB         = (PFNGLSHADERSOURCEARBPROC)SDL_GL_GetProcAddress("glShaderSourceARB");
-		glCompileShaderARB        = (PFNGLCOMPILESHADERARBPROC)SDL_GL_GetProcAddress("glCompileShaderARB");
-		glGetObjectParameterivARB = (PFNGLGETOBJECTPARAMETERIVARBPROC)SDL_GL_GetProcAddress("glGetObjectParameterivARB");
-		glAttachObjectARB         = (PFNGLATTACHOBJECTARBPROC)SDL_GL_GetProcAddress("glAttachObjectARB");
-		glGetInfoLogARB           = (PFNGLGETINFOLOGARBPROC)SDL_GL_GetProcAddress("glGetInfoLogARB");
-		glLinkProgramARB          = (PFNGLLINKPROGRAMARBPROC)SDL_GL_GetProcAddress("glLinkProgramARB");
-		glGetUniformLocationARB   = (PFNGLGETUNIFORMLOCATIONARBPROC)SDL_GL_GetProcAddress("glGetUniformLocationARB");
-		glGetActiveUniformARB     = (PFNGLGETACTIVEUNIFORMARBPROC)SDL_GL_GetProcAddress("glGetActiveUniformARB");
-		glUniform1fvARB           = (PFNGLUNIFORM1FVARBPROC)SDL_GL_GetProcAddress("glUniform1fvARB");
-		glUniform2fvARB           = (PFNGLUNIFORM2FVARBPROC)SDL_GL_GetProcAddress("glUniform2fvARB");
-		glUniform3fvARB           = (PFNGLUNIFORM3FVARBPROC)SDL_GL_GetProcAddress("glUniform3fvARB");
-		glUniform4fvARB           = (PFNGLUNIFORM4FVARBPROC)SDL_GL_GetProcAddress("glUniform4fvARB");
-		glUniform1ivARB           = (PFNGLUNIFORM1IVARBPROC)SDL_GL_GetProcAddress("glUniform1ivARB");
-		glUniform2ivARB           = (PFNGLUNIFORM2IVARBPROC)SDL_GL_GetProcAddress("glUniform2ivARB");
-		glUniform3ivARB           = (PFNGLUNIFORM3IVARBPROC)SDL_GL_GetProcAddress("glUniform3ivARB");
-		glUniform4ivARB           = (PFNGLUNIFORM4IVARBPROC)SDL_GL_GetProcAddress("glUniform4ivARB");
-
 		if( !glCreateProgramObjectARB || !glDeleteObjectARB || !glUseProgramObjectARB ||
 			!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB ||
 			!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB ||
