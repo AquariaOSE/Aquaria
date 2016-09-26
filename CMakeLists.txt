@@ -48,8 +48,8 @@ SET(LUADIR ${EXTLIBDIR}/lua-5.1.4)
 SET(LUASRCDIR ${LUADIR}/src)
 SET(LIBOGGDIR ${EXTLIBDIR}/libogg-1.3.0)
 SET(LIBVORBISDIR ${EXTLIBDIR}/libvorbis-1.3.3)
-SET(ZLIBDIR ${EXTLIBDIR}/glpng/zlib)
-SET(PNGDIR ${EXTLIBDIR}/glpng/png)
+SET(ZLIBDIR ${EXTLIBDIR}/zlib)
+SET(PNGDIR ${EXTLIBDIR}/png)
 
 ################ Look for external libraries
 
