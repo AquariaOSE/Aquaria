@@ -44,8 +44,6 @@ public:
 	void unloadDevice();
 	void reloadDevice();
 
-	static void resetOpenGL();
-
 protected:
 	int _w, _h;
 	bool _fitToScreen;

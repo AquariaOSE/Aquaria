@@ -950,8 +950,6 @@ void Core::shutdownGraphicsLibrary(bool killVideo)
 		SDL_WM_GrabInput(SDL_GRAB_OFF);
 		#endif
 
-		FrameBuffer::resetOpenGL();
-
 		gScreen = 0;
 #if BBGE_BUILD_OPENGL_DYNAMIC
 		unload_all_glsyms();
