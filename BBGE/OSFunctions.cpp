@@ -182,8 +182,8 @@ struct vfscallback_s
 {
 	const std::string *path;
 	const char *ext;
-	intptr_t param;
-	void (*callback)(const std::string &filename, intptr_t param);
+	void *param;
+	void (*callback)(const std::string &filename, void *param);
 };
 
 void forEachFile_vfscallback(VFILE *vf, void *user)
@@ -200,7 +200,7 @@ void forEachFile_vfscallback(VFILE *vf, void *user)
 
 #endif
 
-void forEachFile(const std::string& inpath, std::string type, void callback(const std::string &filename, intptr_t param), intptr_t param)
+void forEachFile(const std::string& inpath, std::string type, void callback(const std::string &filename, void *param), void *param)
 {
 	if (inpath.empty()) return;
 

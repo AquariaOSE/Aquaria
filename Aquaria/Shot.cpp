@@ -296,7 +296,7 @@ Shot::Shot() : Quad(), Segmented(0,0)
 	shots.push_back(this);
 }
 
-void loadShotCallback(const std::string &filename, intptr_t param)
+void loadShotCallback(const std::string &filename, void *param)
 {
 	ShotData shotData;
 
@@ -314,12 +314,12 @@ void Shot::loadShotBank(const std::string &bank1, const std::string &bank2)
 	clearShotBank();
 
 	shotBankPath = bank1;
-	forEachFile(bank1, ".txt", loadShotCallback, 0);
+	forEachFile(bank1, ".txt", loadShotCallback);
 
 	if (!bank2.empty())
 	{
 		shotBankPath = bank2;
-		forEachFile(bank2, ".txt", loadShotCallback, 0);
+		forEachFile(bank2, ".txt", loadShotCallback);
 	}
 
 	shotBankPath = "";

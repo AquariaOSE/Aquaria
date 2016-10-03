@@ -294,7 +294,7 @@ Particle *ParticleManager::getFreeParticle(Emitter *emitter)
 	return p;
 }
 
-void loadParticleCallback(const std::string &filename, intptr_t param)
+void loadParticleCallback(const std::string &filename, void *param)
 {
 	ParticleEffect *e = new ParticleEffect();
 
@@ -313,12 +313,12 @@ void ParticleManager::loadParticleBank(const std::string &bank1, const std::stri
 	clearParticleBank();
 
 	particleBankPath = bank1;
-	forEachFile(bank1, ".txt", loadParticleCallback, 0);
+	forEachFile(bank1, ".txt", loadParticleCallback);
 
 	if (!bank2.empty())
 	{
 		particleBankPath = bank2;
-		forEachFile(bank2, ".txt", loadParticleCallback, 0);
+		forEachFile(bank2, ".txt", loadParticleCallback);
 	}
 
 	particleBankPath = "";

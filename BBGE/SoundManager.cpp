@@ -1314,7 +1314,7 @@ void SoundManager::stopAllVoice()
 	stopVoice();
 }
 
-void loadCacheSoundsCallback (const std::string &filename, intptr_t param)
+void loadCacheSoundsCallback (const std::string &filename, void *param)
 {
 	SoundManager *sm;
 	sm = (SoundManager*)param;
@@ -1334,7 +1334,7 @@ void loadCacheSoundsCallback (const std::string &filename, intptr_t param)
 void SoundManager::loadSoundCache(const std::string &path, const std::string &ftype, void progressCallback())
 {
 	loadProgressCallback = progressCallback;
-	forEachFile(path, ftype, loadCacheSoundsCallback, (intptr_t)this);
+	forEachFile(path, ftype, loadCacheSoundsCallback, this);
 	loadProgressCallback = NULL;
 }
 
