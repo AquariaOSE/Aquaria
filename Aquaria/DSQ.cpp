@@ -1827,7 +1827,7 @@ int DSQ::getEntityTypeIndexByName(std::string s)
 	return -1;
 }
 
-void DSQ::loadModsCallback(const std::string &filename, intptr_t param)
+void DSQ::loadModsCallback(const std::string &filename, void *param)
 {
 
 	int pos = filename.find_last_of('/')+1;
@@ -1856,7 +1856,7 @@ void DSQ::loadModsCallback(const std::string &filename, intptr_t param)
 	dsq->debugLog(ss.str());
 }
 
-void DSQ::loadModPackagesCallback(const std::string &filename, intptr_t param)
+void DSQ::loadModPackagesCallback(const std::string &filename, void *param)
 {
 	bool ok = dsq->mountModPackage(filename);
 
@@ -1896,10 +1896,10 @@ void DSQ::loadMods()
 
 #ifdef BBGE_BUILD_VFS
 	// first load the packages, then enumerate XMLs
-	forEachFile(modpath, ".aqmod", loadModPackagesCallback, 0);
+	forEachFile(modpath, ".aqmod", loadModPackagesCallback);
 #endif
 
-	forEachFile(modpath, ".xml", loadModsCallback, 0);
+	forEachFile(modpath, ".xml", loadModsCallback);
 	selectedMod = 0;
 
 	std::ostringstream os;
