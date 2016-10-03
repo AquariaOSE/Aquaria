@@ -546,6 +546,10 @@ SET(PNG_SRCS
     ${PNGDIR}/pngrutil.c
     ${PNGDIR}/pngset.c
     ${PNGDIR}/pngtrans.c
+    ${PNGDIR}/pngwio.c
+    ${PNGDIR}/pngwrite.c
+    ${PNGDIR}/pngwtran.c
+    ${PNGDIR}/pngwutil.c
 )
 
 IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
