@@ -433,8 +433,8 @@ struct InterpolatedVectorData
 class InterpolatedVector : public Vector
 {
 public:
-	InterpolatedVector(scalar_t a = 0, scalar_t b = 0, scalar_t c = 0) : Vector(a,b,c), data(NULL) {}
-	InterpolatedVector(const Vector &vec) : Vector(vec), data(NULL) {}
+	InterpolatedVector(scalar_t a = 0, scalar_t b = 0, scalar_t c = 0) : Vector(a,b,c), data(0) {}
+	InterpolatedVector(const Vector &vec) : Vector(vec), data(0) {}
 	~InterpolatedVector() {delete data;}
 
 	InterpolatedVector(const InterpolatedVector &vec)
