@@ -2,6 +2,7 @@
 #define AQUARIA_DAMAGE_H
 
 #include "Vector.h"
+#include "GameEnums.h"
 
 class Shot;
 class Bone;
