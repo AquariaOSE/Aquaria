@@ -237,6 +237,6 @@
 
 #define KEY_MAXARRAY SDLK_LAST
 
-#endif BBGE_BUILD_SDL2
+#endif // BBGE_BUILD_SDL2
 
 #endif // BBGE_GAME_KEYS_H
