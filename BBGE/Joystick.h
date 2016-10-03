@@ -1,6 +1,7 @@
 #ifndef BBGE_JOYSTICK_H
 #define BBGE_JOYSTICK_H
 
+#include <string>
 #include <SDL_joystick.h>
 
 #ifdef BBGE_BUILD_SDL2
