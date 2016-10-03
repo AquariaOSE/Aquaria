@@ -83,12 +83,11 @@ enum SoundLoadType
 
 struct PlaySfx
 {
-	PlaySfx() : priority(0.5), handle(0), vol(1), fade(SFT_NONE),
+	PlaySfx() : priority(0.5), vol(1), fade(SFT_NONE),
 		time(0), freq(1), loops(0),
 		maxdist(0), x(0), y(0), relative(true), positional(false) {}
 
 	std::string name;
-	intptr_t handle;
 	float vol;
 	float time;
 	float freq;

@@ -992,10 +992,7 @@ void *SoundManager::playSfx(const PlaySfx &play)
 	FMOD::Channel *channel = 0;
 	FMOD::Sound *sound = 0;
 
-
-	if (play.handle)
-		sound = (FMOD::Sound*)play.handle;
-	else if (!play.name.empty())
+	if (!play.name.empty())
 		sound = (FMOD::Sound*)getBuffer(play.name);
 
 	if (!sound) return 0;
