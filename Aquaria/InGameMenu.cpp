@@ -13,6 +13,10 @@
 
 static InGameMenu *themenu = 0;
 
+// defined below
+class FoodHolder;
+class PetSlot;
+
 std::vector<FoodHolder*>	foodHolders;
 std::vector<PetSlot*>		petSlots;
 
