@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef BBGE_VECTOR_H
 #define BBGE_VECTOR_H
 
+#include <stddef.h>
 #include <cmath>
 #include <float.h>
 #include <vector>
@@ -433,8 +434,8 @@ struct InterpolatedVectorData
 class InterpolatedVector : public Vector
 {
 public:
-	InterpolatedVector(scalar_t a = 0, scalar_t b = 0, scalar_t c = 0) : Vector(a,b,c), data(0) {}
-	InterpolatedVector(const Vector &vec) : Vector(vec), data(0) {}
+	InterpolatedVector(scalar_t a = 0, scalar_t b = 0, scalar_t c = 0) : Vector(a,b,c), data(NULL) {}
+	InterpolatedVector(const Vector &vec) : Vector(vec), data(NULL) {}
 	~InterpolatedVector() {delete data;}
 
 	InterpolatedVector(const InterpolatedVector &vec)
