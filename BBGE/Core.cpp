@@ -1283,8 +1283,7 @@ void Core::run(float runTime)
 	int frames = 0;
 	float real_dt = 0;
 
-
-#if (!defined(_DEBUG) || defined(BBGE_BUILD_UNIX)) && defined(BBGE_BUILD_SDL)
+#if !defined(_DEBUG)
 	bool wasInactive = false;
 #endif
 
@@ -1327,7 +1326,7 @@ void Core::run(float runTime)
 
 		}
 
-#if !defined(_DEBUG) && defined(BBGE_BUILD_SDL)
+#if !defined(_DEBUG)
 
 		if (lib_graphics && (wasInactive || !settings.runInBackground))
 		{

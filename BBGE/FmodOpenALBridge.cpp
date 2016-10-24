@@ -445,7 +445,7 @@ double OggDecoder::position()
     return (double)samples_played / (double)freq;
 }
 
-#if (defined(BBGE_BUILD_SDL) && (SDL_BYTEORDER == SDL_BIG_ENDIAN))
+#if SDL_BYTEORDER == SDL_BIG_ENDIAN
 #define BBGE_BIGENDIAN 1
 #else
 #define BBGE_BIGENDIAN 0
