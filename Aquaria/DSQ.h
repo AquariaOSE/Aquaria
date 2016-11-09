@@ -514,7 +514,6 @@ protected:
 	void reloadDevice();
 
 	void onSwitchScreenMode();
-	void onAltTab();
 
 	void onPlayVoice();
 	void onStopVoice();

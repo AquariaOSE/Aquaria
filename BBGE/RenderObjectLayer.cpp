@@ -34,8 +34,6 @@ RenderObjectLayer::RenderObjectLayer()
 	update = true;
 	optimizeStatic = false;
 
-	mode = Core::MODE_2D;
-
 	color = Vector(1,1,1);
 
 	displayListValid = false;
