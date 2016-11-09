@@ -62,9 +62,6 @@ extern "C" {
 #ifndef APIENTRYP
 #define APIENTRYP APIENTRY *
 #endif
-#ifndef extern
-#define extern extern
-#endif
 
 /*************************************************************/
 
