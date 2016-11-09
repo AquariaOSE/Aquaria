@@ -3252,7 +3252,7 @@ void InGameMenu::onOptionsSave()
 		|| dsq->user.video.full != dsq->user_backup.video.full
 		|| dsq->user.video.vsync != dsq->user_backup.video.vsync)
 	{
-		dsq->resetGraphics(dsq->user.video.resx, dsq->user.video.resy, dsq->user.video.full);
+		dsq->initGraphics(dsq->user.video.resx, dsq->user.video.resy, dsq->user.video.full);
 		if (dsq->confirm("", "graphics", false, 10)) {
 		} else {
 			dsq->user.video.resx = dsq->user_backup.video.resx;
@@ -3263,7 +3263,7 @@ void InGameMenu::onOptionsSave()
 
 			dsq->user.apply();
 
-			dsq->resetGraphics(dsq->user.video.resx, dsq->user.video.resy, dsq->user.video.full);
+			dsq->initGraphics(dsq->user.video.resx, dsq->user.video.resy, dsq->user.video.full);
 		}
 	}
 

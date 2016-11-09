@@ -230,27 +230,11 @@ DSQ::~DSQ()
 	dsq = 0;
 }
 
-void DSQ::onAltTab()
-{
-	if (getAltState())
-	{
-		if (!core->isNested())
-		{
-			if (_fullscreen)
-			{
-				core->toggleScreenMode(false);
-			}
-		}
-	}
-}
-
 // actually toggle
 void DSQ::toggleFullscreen()
 {
-
-	core->toggleScreenMode(!_fullscreen);
+	setFullscreen(!_fullscreen);
 	user.video.full = _fullscreen;
-
 }
 
 // for handling the input, not the actual switch functionality

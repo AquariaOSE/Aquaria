@@ -168,8 +168,6 @@ public:
 	bool cull;
 	bool update;
 
-	int mode;
-
 	Vector color;
 
 protected:
@@ -225,8 +223,6 @@ public:
 
 	void cacheRender();
 
-	void setSDLGLAttributes();
-
 	void reloadResources();
 	void unloadResources();
 
@@ -247,7 +243,7 @@ public:
 
 	void setMousePosition(const Vector &p);
 
-	void toggleScreenMode(int t=0);
+	void setFullscreen(bool full);
 
 	void enable2D(int pixelScaleX=0, int pixelScaleY=0, bool forcePixelScale=false);
 	void addRenderObject(RenderObject *o, int layer=0);
@@ -286,11 +282,7 @@ public:
 
 	unsigned getTicks();
 
-	void resetGraphics(int w, int h, int fullscreen=-1, int vsync=-1, int bpp=-1);
-
-
-
-	void setDockIcon(const std::string &ident);
+	void initGraphics(int w, int h, int fullscreen=-1, int vsync=-1, int bpp=-1);
 
 	Vector getGameCursorPosition();
 	Vector getGamePosition(const Vector &v);
@@ -311,15 +303,10 @@ public:
 
 	SoundManager *sound;
 
-	float aspect;
-
 	int width, height;
-
-	enum Modes { MODE_NONE=-1, MODE_3D=0, MODE_2D };
 
 	InterpolatedVector globalScale;
 	Vector globalResolutionScale;
-	Vector screenCapScale;
 
 	virtual void onResetScene(){}
 
@@ -404,6 +391,7 @@ public:
 
 	bool debugLogTextures;
 
+	void setup_opengl();
 	void setClearColor(const Vector &c);
 	Vector getClearColor();
 	int flipMouseButtons;
@@ -418,15 +406,11 @@ public:
 
 	int overrideStartLayer, overrideEndLayer;
 
-	void setWindowCaption(const std::string &caption, const std::string &icon);
-
 	ParticleEffect* createParticleEffect(const std::string &name, const Vector &position, int layer, float rotz=0);
 
 	std::string secondaryTexturePath;
 
 	bool hasFocus();
-
-	float aspectX, aspectY;
 
 	float get_old_dt() { return old_dt; }
 	float get_current_dt() { return current_dt; }
@@ -505,7 +489,7 @@ protected:
 	bool initSoundLibrary(const std::string &defaultDevice);
 	bool initInputLibrary();
 	void initJoystickLibrary();
-	bool initGraphicsLibrary(int w, int h, bool fullscreen, int vsync, int bpp, bool recreate=true);
+	bool initGraphicsLibrary(int w, int h, bool fullscreen, bool vsync, int bpp);
 	void shutdownInputLibrary();
 	void shutdownJoystickLibrary();
 	void shutdownGraphicsLibrary(bool kill=true);

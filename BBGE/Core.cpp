@@ -123,7 +123,66 @@ void Core::reloadDevice()
 		afterEffectManager->reloadDevice();
 }
 
-void Core::resetGraphics(int w, int h, int fullscreen, int vsync, int bpp)
+void Core::setup_opengl()
+{
+#ifdef BBGE_BUILD_SDL2
+	assert(gGLctx);
+	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	SDL_GL_SwapWindow(gScreen);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	SDL_GL_SwapWindow(gScreen);
+	const char *name = SDL_GetCurrentVideoDriver();
+	SDL_SetWindowGrab(gScreen, SDL_TRUE);
+#else
+	SDL_WM_GrabInput(grabInputOnReentry == 0 ? SDL_GRAB_OFF : SDL_GRAB_ON);
+	char name[256];
+	SDL_VideoDriverName((char*)name, 256);
+#endif
+
+	glViewport(0, 0, width, height);
+
+	std::ostringstream os2;
+	os2 << "Video Driver Name [" << name << "]";
+	debugLog(os2.str());
+
+	SDL_ShowCursor(SDL_DISABLE);
+	SDL_PumpEvents();
+
+	for(int i = 0; i < KEY_MAXARRAY; i++)
+	{
+		keys[i] = 0;
+	}
+
+
+
+	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
+	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);				// Black Background
+	glClearDepth(1.0);								// Depth Buffer Setup
+	glDisable(GL_CULL_FACE);
+
+
+
+	glLoadIdentity();
+
+	glFinish();
+
+
+
+	setClearColor(clearColor);
+
+	clearBuffers();
+	showBuffer();
+
+	lib_graphics = true;
+
+	_hasFocus = true;
+
+	enumerateScreenModes();
+}
+
+
+void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 {
 	if (fullscreen == -1)
 		fullscreen = _fullscreen;
@@ -140,36 +199,83 @@ void Core::resetGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 	if (bpp == -1)
 		bpp = _bpp;
 
-	unloadDevice();
-	unloadResources();
+	width = w;
+	height = h;
+	_vsync = vsync;
+	_fullscreen = fullscreen;
+	_bpp = bpp;
 
-	shutdownGraphicsLibrary();
+#ifdef BBGE_BUILD_SDL2
+	if(vsync)
+	{
+		if(SDL_GL_SetSwapInterval(-1) != 0)
+			SDL_GL_SetSwapInterval(1);
+	}
+	else
+		SDL_GL_SetSwapInterval(0);
 
-	initGraphicsLibrary(w, h, fullscreen, vsync, bpp);
+	SDL_SetWindowSize(gScreen, w, h);
+	int disp = SDL_GetWindowDisplayIndex(gScreen);
+
+	int screenflags = 0;
+	if(fullscreen)
+	{
+		// Use desktop fullscreen if possible, but only if the resolution
+		// matches the actual desktop resolution.
+		// Else we'll get unused areas on the screen.
+		if(disp >= 0)
+		{
+			SDL_Rect bounds;
+			SDL_DisplayMode desktop;
+			if(SDL_GetDisplayBounds(disp, &bounds) == 0
+			&& SDL_GetDesktopDisplayMode(disp, &desktop) == 0)
+			{
+				//SDL_SetWindowPosition(gScreen, bounds.x, bounds.y);
+				if(w == desktop.w && h == desktop.h)
+				{
+					screenflags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+					debugLog("Switching to desktop fullscreen");
+				}
+			}
+		}
+		if(!screenflags)
+		{
+			screenflags = SDL_WINDOW_FULLSCREEN;
+			debugLog("Switching to fullscreen");
+		}
+	}
+
+	SDL_SetWindowFullscreen(gScreen, screenflags);
+	if(!fullscreen)
+	{
+		SDL_SetWindowSize(gScreen, w, h);
+		SDL_SetWindowPosition(gScreen, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+	}
+
+
+#else
+
+#	error FIXME: backport to support SDL 1.2
+
+#endif
+
+	setup_opengl();
 
 	enable2DWide(w, h);
 
-	reloadResources();
-	reloadDevice();
-
-
 	resetTimer();
 }
 
-void Core::toggleScreenMode(int t)
+void Core::setFullscreen(bool full)
 {
+	if(full == !!_fullscreen)
+		return;
+
 	sound->pause();
-	resetGraphics(-1, -1, t);
+	initGraphics(-1, -1, full);
 	cacheRender();
 	resetTimer();
 	sound->resume();
-}
-
-void Core::setWindowCaption(const std::string &caption, const std::string &icon)
-{
-#ifndef BBGE_BUILD_SDL2
-	SDL_WM_SetCaption(caption.c_str(), icon.c_str());
-#endif
 }
 
 RenderObjectLayer *Core::getRenderObjectLayer(int i)
@@ -253,7 +359,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 : ActionMapper(), StateManager(), appName(appName)
 {
 	sound = NULL;
-	screenCapScale = Vector(1,1,1);
 	_extraDataDir = extraDataDir;
 
 	if (userDataSubFolder.empty())
@@ -330,9 +435,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	old_dt = 0;
 	current_dt = 0;
 
-	aspectX = 4;
-	aspectY = 3;
-
 	virtualOffX = virtualOffY = 0;
 
 	viewOffX = viewOffY = 0;
@@ -376,9 +478,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	{
 		keys[i] = 0;
 	}
-
-	aspect = (aspectX/aspectY);
-
 
 	globalResolutionScale = globalScale = Vector(1,1,1);
 
@@ -533,11 +632,27 @@ void Core::init()
 	SDL_putenv((char *) "SDL_MOUSE_RELATIVE=0");
 #endif
 
-	if((SDL_Init(0))==-1)
+	if((SDL_Init(SDL_INIT_EVERYTHING))==-1)
 	{
 		exit_error("Failed to init SDL");
 	}
 
+#if BBGE_BUILD_OPENGL_DYNAMIC
+	if (SDL_GL_LoadLibrary(NULL) == -1)
+	{
+		std::string err = std::string("SDL_GL_LoadLibrary Error: ") + std::string(SDL_GetError());
+		SDL_Quit();
+		exit_error(err);
+	}
+
+	if (!lookup_all_glsyms())
+	{
+		std::ostringstream os;
+		os << "Couldn't load OpenGL symbols we need\n";
+		SDL_Quit();
+		exit_error(os.str());
+	}
+#endif
 
 	loopDone = false;
 
@@ -596,11 +711,7 @@ bool Core::getKeyState(int k)
 
 void Core::initJoystickLibrary()
 {
-
-#ifdef BBGE_BUILD_SDL2
-	SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER);
-#else
-	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
+#ifndef BBGE_BUILD_SDL2
 	detectJoysticks();
 #endif
 
@@ -693,40 +804,9 @@ void Core::setClearColor(const Vector &c)
 
 }
 
-void Core::setSDLGLAttributes()
+bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsync, int bpp)
 {
-	std::ostringstream os;
-	os << "setting vsync: " << _vsync;
-	debugLog(os.str());
-
-#ifndef BBGE_BUILD_SDL2
-	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, _vsync);
-#endif
-
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-}
-
-
-bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync, int bpp, bool recreate)
-{
-	static bool didOnce = false;
-
-	aspectX = width;
-	aspectY = height;
-
-	aspect = (aspectX/aspectY);
-
-
-
-	this->width = width;
-	this->height = height;
-	_vsync = vsync;
-	_fullscreen = fullscreen;
-	_bpp = bpp;
-
 	_hasFocus = false;
-
-
 
 #ifndef BBGE_BUILD_SDL2
 #if !defined(BBGE_BUILD_MACOSX)
@@ -735,33 +815,24 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 	//  when you try to pass a (const!) string literal here...  --ryan.
 	SDL_putenv((char *) "SDL_VIDEO_CENTERED=1");
 #endif
+	SDL_WM_SetCaption(appName.c_str(), appName.c_str());
 #endif
-
-
-	if (recreate)
-	{
-		if (SDL_InitSubSystem(SDL_INIT_VIDEO) < 0)
-		{
-			exit_error(std::string("SDL Error: ") + std::string(SDL_GetError()));
-		}
-
-#if BBGE_BUILD_OPENGL_DYNAMIC
-		if (SDL_GL_LoadLibrary(NULL) == -1)
-		{
-			std::string err = std::string("SDL_GL_LoadLibrary Error: ") + std::string(SDL_GetError());
-			SDL_Quit();
-			exit_error(err);
-		}
-#endif
-	}
-
-	setWindowCaption(appName, appName);
 
 	initIcon(gScreen);
     // Create window
 
-	setSDLGLAttributes();
+	std::ostringstream os;
+	os << "setting vsync: " << vsync;
+	debugLog(os.str());
+#ifndef BBGE_BUILD_SDL2
+	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, vsync);
+	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
+	#ifdef _DEBUG
+		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS SDL_GL_CONTEXT_DEBUG_FLAG);
+	#endif
+#endif
+	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
 	{
 #ifdef BBGE_BUILD_SDL2
@@ -787,6 +858,11 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 			SDL_Quit();
 			exit(0);
 		}
+
+		debugLog("GL vendor, renderer & version:");
+		debugLog((const char*)glGetString(GL_VENDOR));
+		debugLog((const char*)glGetString(GL_RENDERER));
+		debugLog((const char*)glGetString(GL_VERSION));
 #else
 		Uint32 flags = 0;
 		flags = SDL_OPENGL;
@@ -802,79 +878,9 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 			exit_error(os.str());
 		}
 #endif
-
-#if BBGE_BUILD_OPENGL_DYNAMIC
-		if (!lookup_all_glsyms())
-		{
-			std::ostringstream os;
-			os << "Couldn't load OpenGL symbols we need\n";
-			SDL_Quit();
-			exit_error(os.str());
-		}
-#endif
 	}
 
-	setWindowCaption(appName, appName);
-
-#ifdef BBGE_BUILD_SDL2
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	SDL_GL_SwapWindow(gScreen);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	SDL_GL_SwapWindow(gScreen);
-	if ((_vsync != 1) || (SDL_GL_SetSwapInterval(-1) == -1))
-		SDL_GL_SetSwapInterval(_vsync);
-	const char *name = SDL_GetCurrentVideoDriver();
-	SDL_SetWindowGrab(gScreen, SDL_TRUE);
-#else
-	SDL_WM_GrabInput(grabInputOnReentry==0 ? SDL_GRAB_OFF : SDL_GRAB_ON);
-	char name[256];
-	SDL_VideoDriverName((char*)name, 256);
-#endif
-
-	glViewport(0, 0, width, height);
-	glScissor(0, 0, width, height);
-
-	std::ostringstream os2;
-	os2 << "Video Driver Name [" << name << "]";
-	debugLog(os2.str());
-
-	SDL_ShowCursor(SDL_DISABLE);
-	SDL_PumpEvents();
-
-	for (int i = 0; i < KEY_MAXARRAY; i++)
-	{
-		keys[i] = 0;
-	}
-
-
-
-	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);				// Black Background
-	glClearDepth(1.0);								// Depth Buffer Setup
-	glDisable(GL_CULL_FACE);
-
-
-
-	glLoadIdentity();
-
-	glFinish();
-
-
-
-	setClearColor(clearColor);
-
-	clearBuffers();
-	showBuffer();
-
-	lib_graphics = true;
-
-	_hasFocus = true;
-
-	enumerateScreenModes();
-
-	if (!didOnce)
-		didOnce = true;
+	initGraphics(width, height, fullscreen, vsync, bpp);
 
 	// init success
 	return true;
@@ -1020,35 +1026,6 @@ bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::s
 #define M_PI           3.14159265358979323846
 #endif
 
-static void
-bbgePerspective(float fovy, float aspect, float zNear, float zFar)
-{
-    float sine, cotangent, deltaZ;
-    float radians = fovy / 2.0f * M_PI / 180.0f;
-
-    deltaZ = zFar - zNear;
-    sine = sinf(radians);
-    if ((deltaZ == 0.0f) || (sine == 0.0f) || (aspect == 0.0f)) {
-        return;
-    }
-    cotangent = cosf(radians) / sine;
-
-    GLfloat m[4][4] = {
-        { 1.0f, 0.0f, 0.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f, 0.0f },
-        { 0.0f, 0.0f, 1.0f, 0.0f },
-        { 0.0f, 0.0f, 0.0f, 1.0f }
-    };
-    m[0][0] = (GLfloat) (cotangent / aspect);
-    m[1][1] = (GLfloat) cotangent;
-    m[2][2] = (GLfloat) (-(zFar + zNear) / deltaZ);
-    m[2][3] = -1.0f;
-    m[3][2] = (GLfloat) (-2.0f * zNear * zFar / deltaZ);
-    m[3][3] = 0.0f;
-
-    glMultMatrixf(&m[0][0]);
-}
-
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 {
 
@@ -1090,32 +1067,27 @@ void Core::enable2DWide(int rx, int ry)
 	{
 		int vw = int(float(baseVirtualHeight) * (float(rx)/float(ry)));
 
-		core->enable2D(vw, baseVirtualHeight, 1);
+		enable2D(vw, baseVirtualHeight, 1);
 	}
 	else
 	{
 		int vh = int(float(baseVirtualWidth) * (float(ry)/float(rx)));
 
-		core->enable2D(baseVirtualWidth, vh, 1);
+		enable2D(baseVirtualWidth, vh, 1);
 	}
 }
 
 static void bbgeOrtho2D(float left, float right, float bottom, float top)
 {
-    glOrtho(left, right, bottom, top, -1.0, 1.0);
+	glOrtho(left, right, bottom, top, -1.0, 1.0);
 }
 
 void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 {
-
-
-
-    GLint viewPort[4];
-    glGetIntegerv(GL_VIEWPORT, viewPort);
-
-    glMatrixMode(GL_PROJECTION);
-
-    glLoadIdentity();
+	GLint viewPort[4];
+	glGetIntegerv(GL_VIEWPORT, viewPort);
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
 
 	float vw=0,vh=0;
 
@@ -1126,46 +1098,28 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 	if (aspect >= 1.4f)
 	{
 		vw = float(baseVirtualWidth * viewPort[3]) / float(baseVirtualHeight);
-
 		viewOffX = (viewPort[2] - vw) * 0.5f;
 	}
 	else if (aspect < 1.3f)
 	{
 		vh = float(baseVirtualHeight * viewPort[2]) / float(baseVirtualWidth);
-
 		viewOffY = (viewPort[3] - vh) * 0.5f;
 	}
 
-
-
 	bbgeOrtho2D(0.0f-viewOffX,viewPort[2]-viewOffX,viewPort[3]-viewOffY,0.0f-viewOffY);
 
-
-
-    glMatrixMode(GL_MODELVIEW);
-
-    glLoadIdentity();
-
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
 	setupRenderPositionAndScale();
-
 
 	if (forcePixelScale || (pixelScaleX!=0 && core->width!=pixelScaleX) || (pixelScaleY!=0 && core->height!=pixelScaleY))
 	{
-
-
 		float widthFactor = core->width/float(pixelScaleX);
 		float heightFactor = core->height/float(pixelScaleY);
-
 		core->globalResolutionScale = Vector(widthFactor,heightFactor,1.0f);
 		setPixelScale(pixelScaleX, pixelScaleY);
-
-
-
 	}
 	setPixelScale(pixelScaleX, pixelScaleY);
-
-
-
 }
 
 void Core::quitNestedMain()
@@ -1186,10 +1140,6 @@ void Core::resetTimer()
 	}
 }
 
-void Core::setDockIcon(const std::string &ident)
-{
-}
-
 void Core::setMousePosition(const Vector &p)
 {
 	Vector lp = core->mouse.position;
@@ -1203,9 +1153,6 @@ void Core::setMousePosition(const Vector &p)
 	#else
 	SDL_WarpMouse( px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
 	#endif
-
-
-
 }
 
 // used to update all render objects either uniformly or as part of a time sliced update process
@@ -1365,17 +1312,7 @@ void Core::run(float runTime)
 						resetTimer();
 					}
 
-					debugLog("app back in focus, reset");
-
-					// Don't do this on Linux, it's not necessary and causes big stalls.
-					//  We don't actually _lose_ the device like Direct3D anyhow.
-					#ifndef BBGE_BUILD_UNIX
-					if (_fullscreen)
-					{
-						// calls reload device - reloadDevice()
-						resetGraphics(width, height);
-					}
-					#endif
+					debugLog("app back in focus");
 
 					resetTimer();
 
@@ -1481,7 +1418,7 @@ void Core::clearBuffers()
 
 void Core::setupRenderPositionAndScale()
 {
-	glScalef(globalScale.x*globalResolutionScale.x*screenCapScale.x, globalScale.y*globalResolutionScale.y*screenCapScale.y, globalScale.z*globalResolutionScale.z);
+	glScalef(globalScale.x*globalResolutionScale.x, globalScale.y*globalResolutionScale.y, globalScale.z*globalResolutionScale.z);
 	glTranslatef(-(cameraPos.x+cameraOffset.x), -(cameraPos.y+cameraOffset.y), -(cameraPos.z+cameraOffset.z));
 }
 

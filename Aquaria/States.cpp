@@ -462,7 +462,7 @@ void Nag::onBuy()
 
 	if (core->isFullscreen())
 	{
-		core->toggleScreenMode(0);
+		core->setFullscreen(false);
 		dsq->run(0.6);
 	}
 
