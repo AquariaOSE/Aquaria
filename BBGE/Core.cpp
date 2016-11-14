@@ -803,7 +803,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 	{
 #ifdef BBGE_BUILD_SDL2
 		Uint32 flags = 0;
-		flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+		flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
 		if (fullscreen)
 			flags |= SDL_WINDOW_FULLSCREEN;
 		gScreen = SDL_CreateWindow(appName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
@@ -1562,6 +1562,9 @@ void Core::pollEvents(float dt)
 						SDL_Quit();
 						_exit(0);
 						break;
+					case SDL_WINDOWEVENT_RESIZED:
+						onWindowResize(event.window.data1, event.window.data2);
+						break;
 					/*case SDL_WINDOWEVENT_FOCUS_GAINED:
 						_hasFocus = true;
 						break;
@@ -1590,9 +1593,6 @@ void Core::pollEvents(float dt)
 			case SDL_JOYDEVICEREMOVED:
 				onJoystickRemoved(event.jdevice.which);
 				break;
-
-			case SDL_WINDOWEVENT_RESIZED: // User resized window
-				onWindowResize(event.window.data1, event.window.data2);
 
 #else
 			case SDL_MOUSEBUTTONDOWN:
