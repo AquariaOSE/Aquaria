@@ -63,6 +63,12 @@ void UserSettings::save()
 				xml_unsafe->SetAttribute("on", system.allowDangerousScriptFunctions);
 			}
 			xml_system->InsertEndChild(xml_unsafe);
+
+			XMLElement *xml_grabInp = doc.NewElement("GrabInput");
+			{
+				xml_grabInp->SetAttribute("on", system.grabInput);
+			}
+			xml_system->InsertEndChild(xml_grabInp);
 		}
 		doc.InsertEndChild(xml_system);
 
@@ -386,6 +392,12 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		if (xml_unsafe)
 		{
 			system.allowDangerousScriptFunctions = xml_unsafe->IntAttribute("on");
+		}
+
+		XMLElement *xml_grabInp = xml_system->FirstChildElement("GrabInput");
+		if (xml_grabInp)
+		{
+			system.allowDangerousScriptFunctions = xml_grabInp->IntAttribute("on");
 		}
 	}
 
