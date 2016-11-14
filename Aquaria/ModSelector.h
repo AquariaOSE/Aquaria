@@ -39,6 +39,7 @@ protected:
 	bool mouseDown;
 	Vector scaleNormal;
 	Vector scaleBig;
+	bool _isRecCall;
 	virtual void onUpdate(float dt);
 	virtual void onClick();
 };
