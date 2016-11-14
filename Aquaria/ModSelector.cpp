@@ -399,7 +399,7 @@ void JuicyProgressBar::progress(float p)
 }
 
 BasicIcon::BasicIcon()
-: mouseDown(false), scaleNormal(1,1), scaleBig(scaleNormal * 1.1f)
+: mouseDown(false), scaleNormal(1,1), scaleBig(scaleNormal * 1.1f), _isRecCall(false)
 {
 	// HACK: Because AquariaMenuItem assigns onClick() in it's ctor,
 	// but we handle this ourselves.
@@ -426,7 +426,7 @@ void BasicIcon::onUpdate(float dt)
 	AquariaMenuItem::onUpdate(dt);
 
 	// Autoscroll if selecting icon outside of screen
-	if(hasFocus() && dsq->modSelectorScr)
+	if(hasFocus() && dsq->modSelectorScr && !_isRecCall)
 	{
 		Vector pos = getRealPosition();
 		if(pos.y < 20 || pos.y > 580)
@@ -435,7 +435,9 @@ void BasicIcon::onUpdate(float dt)
 				dsq->modSelectorScr->move(5, true);
 			else
 				dsq->modSelectorScr->move(-5, true);
+			_isRecCall = true;
 			core->run(FRAME_TIME); // HACK: this is necessary to correctly position the mouse on the object after moving the panel
+			_isRecCall = false;
 			setFocus(true); // re-position mouse
 		}
 	}
