@@ -92,8 +92,6 @@ void BitBlotLogo::applyState()
 
 	dsq->jiggleCursor();
 
-	dsq->forceInputGrabOff();
-
 	if (dsq->user.demo.shortLogos)
 	{
 		skipLogo();

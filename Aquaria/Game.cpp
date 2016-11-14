@@ -3212,8 +3212,6 @@ void Game::applyState()
 		dsq->toggleCursor(true, 0.5);
 	}
 
-	dsq->forceInputGrabOff();
-
 	debugLog("Game::applyState Done");
 }
 
