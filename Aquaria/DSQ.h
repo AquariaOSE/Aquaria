@@ -466,8 +466,6 @@ public:
 
 	void bindInput();
 
-	int weird;
-
 	void setCutscene(bool on, bool canSkip=false);
 	bool isInCutscene();
 	bool isCutscenePaused();

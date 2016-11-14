@@ -210,8 +210,6 @@ public:
 
 	void applyState(const std::string &state);
 
-	bool createWindow(int width, int height, int bits, bool fullscreen, std::string windowTitle="");
-
 	void clearBuffers();
 	void render(int startLayer=-1, int endLayer=-1, bool useFrameBufferIfAvail=true);
 	void showBuffer();
@@ -262,8 +260,6 @@ public:
 
 	void setMouseConstraint(bool on);
 	void setMouseConstraintCircle(const Vector& pos, float mouseCircle);
-
-	void setReentryInputGrab(int on);
 
 	virtual void action(int id, int state, int source){}
 
@@ -415,6 +411,7 @@ public:
 	bool debugLogActive;
 
 	void setInputGrab(bool on);
+	void updateInputGrab();
 
 	bool isFullscreen();
 
@@ -450,7 +447,7 @@ protected:
 
 	std::string userDataFolder;
 
-	int grabInputOnReentry;
+	bool grabInput;
 
 	int virtualOffX, virtualOffY;
 
@@ -487,7 +484,7 @@ protected:
 	bool initGraphicsLibrary(int w, int h, bool fullscreen, bool vsync, int bpp);
 	void shutdownInputLibrary();
 	void shutdownJoystickLibrary();
-	void shutdownGraphicsLibrary(bool kill=true);
+	void shutdownGraphicsLibrary();
 	void shutdownSoundLibrary();
 
 	void detectJoysticks();

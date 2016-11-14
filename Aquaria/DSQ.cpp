@@ -790,8 +790,6 @@ void DSQ::init()
 {
 	core->settings.runInBackground = true;
 
-	weird = 0;
-
 #ifdef BBGE_BUILD_WINDOWS
 	/*
 	const std::string welcomeMessage = \
@@ -901,19 +899,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 		debugLog("VoiceOvers Enabled");
 	else
 		debugLog("VoiceOvers Disabled");
-
-
-#ifdef _DEBUG
-	if (!createWindow(800, 600, user.video.bits, false, "Aquaria"))
-#else
-	if (!createWindow(user.video.resx, user.video.resy, user.video.bits, user.video.full, "Aquaria"))
-#endif
-	{
-		exit_error("Failed to create window");
-		return;
-	}
-
-
 
 	SDL_Init(SDL_INIT_VIDEO);
 	if (fullscreen && !sdlVideoModeOK(user.video.resx, user.video.resy, user.video.bits))
@@ -1386,7 +1371,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 		core->afterEffectManager = 0;
 
 	bindInput();
-	setInputGrab(1);
+	setInputGrab(user.system.grabInput);
 
 	// Go directly to the title in dev mode
 	if(isDeveloperKeys())

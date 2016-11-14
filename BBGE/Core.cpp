@@ -127,8 +127,6 @@ void Core::setup_opengl()
 {
 	assert(gGLctx);
 
-	SDL_SetWindowGrab(gScreen, SDL_TRUE);
-
 	glViewport(0, 0, width, height);
 
 	SDL_ShowCursor(SDL_DISABLE);
@@ -413,7 +411,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 
 	debugLogTextures = true;
 
-	grabInputOnReentry = -1;
+	grabInput = false;
 
 	srand(time(NULL));
 	old_dt = 0;
@@ -564,28 +562,22 @@ Core::~Core()
 	core = 0;
 }
 
-void Core::setInputGrab(bool on)
+void Core::updateInputGrab()
 {
-	if (isWindowFocus())
-	{
-		#ifdef BBGE_BUILD_SDL2
-		SDL_SetWindowGrab(gScreen, on ? SDL_TRUE : SDL_FALSE);
-		#else
-		SDL_WM_GrabInput(on?SDL_GRAB_ON:SDL_GRAB_OFF);
-		#endif
-	}
+	// Can and MUST always ungrab if window is not in focus
+	const bool on = grabInput && isWindowFocus();
+
+	#ifdef BBGE_BUILD_SDL2
+	SDL_SetWindowGrab(gScreen, on ? SDL_TRUE : SDL_FALSE);
+	#else
+	SDL_WM_GrabInput(on?SDL_GRAB_ON:SDL_GRAB_OFF);
+	#endif
 }
 
-void Core::setReentryInputGrab(int on)
+void Core::setInputGrab(bool on)
 {
-	if (grabInputOnReentry == -1)
-	{
-		setInputGrab(on);
-	}
-	else
-	{
-		setInputGrab(grabInputOnReentry);
-	}
+	grabInput = on;
+	updateInputGrab();
 }
 
 bool Core::isFullscreen()
@@ -940,27 +932,23 @@ void Core::shutdownSoundLibrary()
 {
 }
 
-void Core::shutdownGraphicsLibrary(bool killVideo)
+void Core::shutdownGraphicsLibrary()
 {
-	glFinish();
-	if (killVideo) {
-		#ifdef BBGE_BUILD_SDL2
-		SDL_SetWindowGrab(gScreen, SDL_FALSE);
-		SDL_GL_MakeCurrent(gScreen, NULL);
-		SDL_GL_DeleteContext(gGLctx);
-		SDL_DestroyWindow(gScreen);
-		gGLctx = 0;
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-		#else
-		SDL_QuitSubSystem(SDL_INIT_VIDEO);
-		SDL_WM_GrabInput(SDL_GRAB_OFF);
-		#endif
+	setInputGrab(false);
 
-		gScreen = 0;
-#if BBGE_BUILD_OPENGL_DYNAMIC
-		unload_all_glsyms();
+	glFinish();
+
+#ifdef BBGE_BUILD_SDL2
+	SDL_GL_MakeCurrent(gScreen, NULL);
+	SDL_GL_DeleteContext(gGLctx);
+	SDL_DestroyWindow(gScreen);
+	gGLctx = 0;
 #endif
-	}
+	SDL_QuitSubSystem(SDL_INIT_VIDEO);
+	gScreen = 0;
+#if BBGE_BUILD_OPENGL_DYNAMIC
+	unload_all_glsyms();
+#endif
 
 	_hasFocus = false;
 
@@ -1010,16 +998,6 @@ void centerWindow(HWND hwnd)
 }
 #endif
 
-
-
-bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::string windowTitle)
-{
-	this->width = width;
-	this->height = height;
-	return true;
-
-
-}
 
 // No longer part of C/C++ standard
 #ifndef M_PI
@@ -1271,9 +1249,7 @@ void Core::run(float runTime)
 				if (wasInactive)
 				{
 					debugLog("WINDOW ACTIVE");
-
-					setReentryInputGrab(1);
-
+					updateInputGrab();
 					wasInactive = false;
 				}
 			}
@@ -1286,9 +1262,7 @@ void Core::run(float runTime)
 
 					wasInactive = true;
 					_hasFocus = false;
-
-					setReentryInputGrab(0);
-
+					updateInputGrab();
 					sound->pause();
 
 					while (!isWindowFocus())
@@ -1533,8 +1507,7 @@ void Core::pollEvents(float dt)
 
 				if ((event.key.keysym.sym == SDLK_g) && (event.key.keysym.mod & KMOD_CTRL))
 				{
-					grabInputOnReentry = (grabInputOnReentry)?0:-1;
-					setReentryInputGrab(1);
+					setInputGrab(!grabInput);
 				}
 				else if (_hasFocus)
 				{
