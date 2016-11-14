@@ -143,8 +143,6 @@ const bool isReleaseCandidate	= false;
 const bool isFinalCandidate		= false;
 const bool isGoldMaster			= true;
 
-int setInpGrab = -1;
-
 Vector savesz;
 
 /// WARNING: this is just to init, the actual value is set from user settings!
@@ -242,13 +240,6 @@ void DSQ::onSwitchScreenMode()
 {
 	if (getAltState())
 		toggleFullscreen();
-}
-
-void DSQ::forceInputGrabOff()
-{
-	toggleInputGrabPlat(false);
-	setInpGrab = 0;
-	SDL_ShowCursor(SDL_DISABLE);
 }
 
 void DSQ::rumble(float leftMotor, float rightMotor, float time, int source)
@@ -941,7 +932,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 	debugLog("OK");
 
 	setInputGrab(0);
-	dsq->forceInputGrabOff();
 
 	debugLog("Init Sound Library...");
 		initSoundLibrary(user.audio.deviceName);
@@ -1395,11 +1385,8 @@ This build is not yet final, and as such there are a couple things lacking. They
 	else
 		core->afterEffectManager = 0;
 
-	setInputGrab(1);
-
-
-
 	bindInput();
+	setInputGrab(1);
 
 	// Go directly to the title in dev mode
 	if(isDeveloperKeys())
@@ -1563,10 +1550,6 @@ void DSQ::toggleBlackBars(bool on, float t)
 			}
 		}
 	}
-}
-
-void DSQ::toggleInputGrabPlat(bool on)
-{
 }
 
 int DSQ::getEntityLayerToLayer(int lcode)
@@ -4034,42 +4017,9 @@ void DSQ::onUpdate(float dt)
 		}
 	}
 
-	static int lastWidth = 0;
-	static int lastHeight = 0;
-	if (lastWidth != width || lastHeight != height) {
-		setInpGrab = -1;
-	}
-	lastWidth = width;
-	lastHeight = height;
-
 	static bool lastfullscreen = false;
 
-	if (lastfullscreen != _fullscreen)
-	{
-		setInpGrab = -1;
-	}
 	lastfullscreen = _fullscreen;
-
-	if (game && game->avatar && game->avatar->isInputEnabled() && !game->isPaused() && !game->isInGameMenu())
-	{
-
-		if (setInpGrab != 1)
-		{
-			toggleInputGrabPlat(true);
-			setInpGrab = 1;
-		}
-	}
-	else
-	{
-
-		if (setInpGrab != 0)
-		{
-			toggleInputGrabPlat(false);
-			setInpGrab = 0;
-		}
-	}
-
-
 
 	updatepecue(dt);
 

@@ -186,8 +186,6 @@ public:
 	void init();
 	void shutdown();
 
-	void toggleInputGrabPlat(bool on);
-
 	void toggleBlackBars(bool on, float t=0);
 
 	void setCursor(CursorType type);
@@ -467,8 +465,6 @@ public:
 	void clickRingEffect(Vector position, int type=0, Vector color=Vector(1,1,1), float ut=0);
 
 	void bindInput();
-
-	void forceInputGrabOff();
 
 	int weird;
 

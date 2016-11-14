@@ -393,7 +393,6 @@ public:
 
 	void setup_opengl();
 	void setClearColor(const Vector &c);
-	Vector getClearColor();
 	int flipMouseButtons;
 	void initFrameBuffer();
 	FrameBuffer frameBuffer;
@@ -409,8 +408,6 @@ public:
 	ParticleEffect* createParticleEffect(const std::string &name, const Vector &position, int layer, float rotz=0);
 
 	std::string secondaryTexturePath;
-
-	bool hasFocus();
 
 	float get_old_dt() { return old_dt; }
 	float get_current_dt() { return current_dt; }
@@ -503,6 +500,8 @@ protected:
 	std::vector<float> avgFPS;
 	virtual void modifyDt(float &dt){}
 	void setPixelScale(int pixelScaleX, int pixelScaleY);
+
+	virtual void onWindowResize(int w, int h);
 
 
 	int virtualHeight, virtualWidth;

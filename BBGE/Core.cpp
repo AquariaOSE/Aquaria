@@ -125,65 +125,31 @@ void Core::reloadDevice()
 
 void Core::setup_opengl()
 {
-#ifdef BBGE_BUILD_SDL2
 	assert(gGLctx);
-	glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	SDL_GL_SwapWindow(gScreen);
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-	SDL_GL_SwapWindow(gScreen);
-	const char *name = SDL_GetCurrentVideoDriver();
+
 	SDL_SetWindowGrab(gScreen, SDL_TRUE);
-#else
-	SDL_WM_GrabInput(grabInputOnReentry == 0 ? SDL_GRAB_OFF : SDL_GRAB_ON);
-	char name[256];
-	SDL_VideoDriverName((char*)name, 256);
-#endif
 
 	glViewport(0, 0, width, height);
 
-	std::ostringstream os2;
-	os2 << "Video Driver Name [" << name << "]";
-	debugLog(os2.str());
-
 	SDL_ShowCursor(SDL_DISABLE);
-	SDL_PumpEvents();
-
-	for(int i = 0; i < KEY_MAXARRAY; i++)
-	{
-		keys[i] = 0;
-	}
-
-
 
 	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
-	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);				// Black Background
 	glClearDepth(1.0);								// Depth Buffer Setup
 	glDisable(GL_CULL_FACE);
 
-
-
 	glLoadIdentity();
-
-	glFinish();
-
-
 
 	setClearColor(clearColor);
 
 	clearBuffers();
 	showBuffer();
-
-	lib_graphics = true;
-
-	_hasFocus = true;
-
-	enumerateScreenModes();
 }
 
 
 void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 {
+	assert(lib_graphics);
+
 	bool wasFullscreen = _fullscreen;
 
 	if (fullscreen == -1)
@@ -201,6 +167,8 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 	if (bpp == -1)
 		bpp = _bpp;
 
+	int oldw = width;
+	int oldh = height;
 	width = w;
 	height = h;
 	_vsync = vsync;
@@ -216,52 +184,53 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 	else
 		SDL_GL_SetSwapInterval(0);
 
-	SDL_SetWindowSize(gScreen, w, h);
-	int disp = SDL_GetWindowDisplayIndex(gScreen);
+	if(w != oldw|| h != oldh)
+		SDL_SetWindowSize(gScreen, w, h);
 
-	int screenflags = 0;
-	if(fullscreen)
+	if(!!fullscreen != wasFullscreen)
 	{
-		// Record window position so we can properly restore it when leaving fullscreen
-		if(!wasFullscreen)
-			SDL_GetWindowPosition(gScreen, &winPosX, &winPosY);
-
-		// Use desktop fullscreen if possible, but only if the resolution
-		// matches the actual desktop resolution.
-		// Else we'll get unused areas on the screen.
-		if(disp >= 0)
+		int screenflags = 0;
+		if(fullscreen)
 		{
-			SDL_Rect bounds;
-			SDL_DisplayMode desktop;
-			if(SDL_GetDisplayBounds(disp, &bounds) == 0
-			&& SDL_GetDesktopDisplayMode(disp, &desktop) == 0)
+			// Record window position so we can properly restore it when leaving fullscreen
+			if(!wasFullscreen)
+				SDL_GetWindowPosition(gScreen, &winPosX, &winPosY);
+
+			// Use desktop fullscreen if possible, but only if the resolution
+			// matches the actual desktop resolution.
+			// Else we'll get unused areas on the screen.
+			int disp = SDL_GetWindowDisplayIndex(gScreen);
+			if(disp >= 0)
 			{
-				//SDL_SetWindowPosition(gScreen, bounds.x, bounds.y);
-				if(w == desktop.w && h == desktop.h)
+				SDL_DisplayMode desktop;
+				if(SDL_GetDesktopDisplayMode(disp, &desktop) == 0)
 				{
-					screenflags = SDL_WINDOW_FULLSCREEN_DESKTOP;
-					debugLog("Switching to desktop fullscreen");
+					if(w == desktop.w && h == desktop.h)
+					{
+						screenflags = SDL_WINDOW_FULLSCREEN_DESKTOP;
+						debugLog("Switching to desktop fullscreen");
+					}
 				}
 			}
+			if(!screenflags)
+			{
+				screenflags = SDL_WINDOW_FULLSCREEN;
+				debugLog("Switching to fullscreen");
+			}
 		}
-		if(!screenflags)
+
+		SDL_SetWindowFullscreen(gScreen, screenflags);
+
+		if(!fullscreen)
 		{
-			screenflags = SDL_WINDOW_FULLSCREEN;
-			debugLog("Switching to fullscreen");
+			SDL_SetWindowSize(gScreen, w, h);
+			if(wasFullscreen)
+			{
+				// Need to do this; else the window ends up at (0, 0) with the title bar outside the screen area
+				SDL_SetWindowPosition(gScreen, winPosX, winPosY);
+			}
 		}
 	}
-
-	SDL_SetWindowFullscreen(gScreen, screenflags);
-	if(!fullscreen)
-	{
-		SDL_SetWindowSize(gScreen, w, h);
-		if(wasFullscreen)
-		{
-			// Need to do this; else the window ends up at (0, 0) with the title bar outside the screen area
-			SDL_SetWindowPosition(gScreen, winPosX, winPosY);
-		}
-	}
-
 
 #else
 
@@ -274,6 +243,11 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 	enable2DWide(w, h);
 
 	resetTimer();
+}
+
+void Core::onWindowResize(int w, int h)
+{
+	initGraphics(w, h);
 }
 
 void Core::setFullscreen(bool full)
@@ -590,11 +564,6 @@ Core::~Core()
 	core = 0;
 }
 
-bool Core::hasFocus()
-{
-	return _hasFocus;
-}
-
 void Core::setInputGrab(bool on)
 {
 	if (isWindowFocus())
@@ -799,11 +768,6 @@ void Core::globalScaleChanged()
 	invGlobalScaleSqr = invGlobalScale * invGlobalScale;
 }
 
-Vector Core::getClearColor()
-{
-	return clearColor;
-}
-
 void Core::setClearColor(const Vector &c)
 {
 	clearColor = c;
@@ -814,6 +778,8 @@ void Core::setClearColor(const Vector &c)
 
 bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsync, int bpp)
 {
+	assert(!gScreen);
+
 	_hasFocus = false;
 
 #ifndef BBGE_BUILD_SDL2
@@ -867,10 +833,13 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 			exit(0);
 		}
 
-		debugLog("GL vendor, renderer & version:");
-		debugLog((const char*)glGetString(GL_VENDOR));
-		debugLog((const char*)glGetString(GL_RENDERER));
-		debugLog((const char*)glGetString(GL_VERSION));
+		{
+			const char *name = SDL_GetCurrentVideoDriver();
+			std::ostringstream os2;
+			os2 << "Video Driver Name [" << name << "]";
+			debugLog(os2.str());
+		}
+
 #else
 		Uint32 flags = 0;
 		flags = SDL_OPENGL;
@@ -885,10 +854,29 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 			SDL_Quit();
 			exit_error(os.str());
 		}
+
+		{
+			char name[256];
+			SDL_VideoDriverName((char*)name, 256);
+			std::ostringstream os2;
+			os2 << "Video Driver Name [" << name << "]";
+			debugLog(os2.str());
+		}
 #endif
 	}
 
+	debugLog("GL vendor, renderer & version:");
+	debugLog((const char*)glGetString(GL_VENDOR));
+	debugLog((const char*)glGetString(GL_RENDERER));
+	debugLog((const char*)glGetString(GL_VERSION));
+
+	lib_graphics = true;
+
+	enumerateScreenModes();
+
 	initGraphics(width, height, fullscreen, vsync, bpp);
+
+	_hasFocus = true;
 
 	// init success
 	return true;
@@ -942,6 +930,10 @@ void Core::enumerateScreenModes()
 		}
 	}
 #endif
+
+	std::ostringstream os;
+	os << "Screen modes available: " << screenModes.size();
+	debugLog(os.str());
 }
 
 void Core::shutdownSoundLibrary()
@@ -1541,7 +1533,6 @@ void Core::pollEvents(float dt)
 
 				if ((event.key.keysym.sym == SDLK_g) && (event.key.keysym.mod & KMOD_CTRL))
 				{
-
 					grabInputOnReentry = (grabInputOnReentry)?0:-1;
 					setReentryInputGrab(1);
 				}
@@ -1589,13 +1580,20 @@ void Core::pollEvents(float dt)
 			}
 			break;
 
-			#ifdef BBGE_BUILD_SDL2
+#ifdef BBGE_BUILD_SDL2
 			case SDL_WINDOWEVENT:
 			{
-				if (event.window.event == SDL_WINDOWEVENT_CLOSE)
+				switch(event.window.event)
 				{
-					SDL_Quit();
-					_exit(0);
+					case SDL_WINDOWEVENT_CLOSE:
+						SDL_Quit();
+						_exit(0);
+						break;
+					/*case SDL_WINDOWEVENT_FOCUS_GAINED:
+						_hasFocus = true;
+						break;
+					case SDL_WINDOWEVENT_FOCUS_LOST:
+						_hasFocus = false;*/
 				}
 			}
 			break;
@@ -1620,7 +1618,10 @@ void Core::pollEvents(float dt)
 				onJoystickRemoved(event.jdevice.which);
 				break;
 
-			#else
+			case SDL_WINDOWEVENT_RESIZED: // User resized window
+				onWindowResize(event.window.data1, event.window.data2);
+
+#else
 			case SDL_MOUSEBUTTONDOWN:
 			{
 				if (_hasFocus && updateMouse)
@@ -1654,7 +1655,7 @@ void Core::pollEvents(float dt)
 				}
 			}
 			break;
-			#endif
+#endif
 
 			case SDL_QUIT:
 				SDL_Quit();
