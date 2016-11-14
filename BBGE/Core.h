@@ -245,7 +245,7 @@ public:
 
 	void setFullscreen(bool full);
 
-	void enable2D(int pixelScaleX=0, int pixelScaleY=0, bool forcePixelScale=false);
+	void enable2D(int pixelScaleX, int pixelScaleY);
 	void addRenderObject(RenderObject *o, int layer=0);
 	void switchRenderObjectLayer(RenderObject *o, int toLayer);
 	void addTexture(Texture *r);
@@ -421,8 +421,6 @@ public:
 
 	bool isFullscreen();
 
-	int viewOffX, viewOffY;
-
 	int getVirtualOffX();
 	int getVirtualOffY();
 
@@ -518,6 +516,7 @@ protected:
 
 	int _vsync, _bpp;
 	bool _fullscreen;
+	int winPosX, winPosY; // pre-fullscreen
 
 	CountedPtr<Texture> texError;
 
