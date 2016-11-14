@@ -184,6 +184,8 @@ void Core::setup_opengl()
 
 void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 {
+	bool wasFullscreen = _fullscreen;
+
 	if (fullscreen == -1)
 		fullscreen = _fullscreen;
 
@@ -220,6 +222,10 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 	int screenflags = 0;
 	if(fullscreen)
 	{
+		// Record window position so we can properly restore it when leaving fullscreen
+		if(!wasFullscreen)
+			SDL_GetWindowPosition(gScreen, &winPosX, &winPosY);
+
 		// Use desktop fullscreen if possible, but only if the resolution
 		// matches the actual desktop resolution.
 		// Else we'll get unused areas on the screen.
@@ -249,7 +255,11 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 	if(!fullscreen)
 	{
 		SDL_SetWindowSize(gScreen, w, h);
-		SDL_SetWindowPosition(gScreen, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+		if(wasFullscreen)
+		{
+			// Need to do this; else the window ends up at (0, 0) with the title bar outside the screen area
+			SDL_SetWindowPosition(gScreen, winPosX, winPosY);
+		}
 	}
 
 
@@ -437,10 +447,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 
 	virtualOffX = virtualOffY = 0;
 
-	viewOffX = viewOffY = 0;
-
-
-
 	particleManager = new ParticleManager(particleSize);
 	nowTicks = thenTicks = 0;
 	_hasFocus = false;
@@ -472,6 +478,8 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	nestedMains = 0;
 	afterEffectManager = 0;
 	loopDone = false;
+	winPosX = SDL_WINDOWPOS_CENTERED;
+	winPosY = SDL_WINDOWPOS_CENTERED;
 	core = this;
 
 	for (int i = 0; i < KEY_MAXARRAY; i++)
@@ -1028,7 +1036,6 @@ bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::s
 
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 {
-
 	virtualWidth = pixelScaleX;
 	virtualHeight = pixelScaleY;	//assumes 4:3 aspect ratio
 	this->baseCullRadius = 1.1f * sqrtf(sqr(getVirtualWidth()/2) + sqr(getVirtualHeight()/2));
@@ -1039,26 +1046,18 @@ void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 
 	center = Vector(baseVirtualWidth/2, baseVirtualHeight/2);
 
-	virtualOffX = 0;
-	virtualOffY = 0;
-
-	int diff = 0;
-
-	diff = virtualWidth-baseVirtualWidth;
-	if (diff > 0)
+	int diffw = virtualWidth-baseVirtualWidth;
+	if (diffw > 0)
 		virtualOffX = ((virtualWidth-baseVirtualWidth)/2);
 	else
 		virtualOffX = 0;
 
-
-	diff = virtualHeight-baseVirtualHeight;
-	if (diff > 0)
+	int diffh = virtualHeight-baseVirtualHeight;
+	if (diffh > 0)
 		virtualOffY = ((virtualHeight-baseVirtualHeight)/2);
 	else
 		virtualOffY = 0;
 }
-
-// forcePixelScale used by Celu
 
 void Core::enable2DWide(int rx, int ry)
 {
@@ -1066,14 +1065,12 @@ void Core::enable2DWide(int rx, int ry)
 	if (aspect >= 1.3f)
 	{
 		int vw = int(float(baseVirtualHeight) * (float(rx)/float(ry)));
-
-		enable2D(vw, baseVirtualHeight, 1);
+		enable2D(vw, baseVirtualHeight);
 	}
 	else
 	{
 		int vh = int(float(baseVirtualWidth) * (float(ry)/float(rx)));
-
-		enable2D(baseVirtualWidth, vh, 1);
+		enable2D(baseVirtualWidth, vh);
 	}
 }
 
@@ -1082,8 +1079,10 @@ static void bbgeOrtho2D(float left, float right, float bottom, float top)
 	glOrtho(left, right, bottom, top, -1.0, 1.0);
 }
 
-void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
+void Core::enable2D(int pixelScaleX, int pixelScaleY)
 {
+	assert(pixelScaleX && pixelScaleY);
+
 	GLint viewPort[4];
 	glGetIntegerv(GL_VIEWPORT, viewPort);
 	glMatrixMode(GL_PROJECTION);
@@ -1091,7 +1090,8 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 
 	float vw=0,vh=0;
 
-	viewOffX = viewOffY = 0;
+	int viewOffX = 0;
+	int viewOffY = 0;
 
 	float aspect = float(width)/float(height);
 
@@ -1112,13 +1112,9 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 	glLoadIdentity();
 	setupRenderPositionAndScale();
 
-	if (forcePixelScale || (pixelScaleX!=0 && core->width!=pixelScaleX) || (pixelScaleY!=0 && core->height!=pixelScaleY))
-	{
-		float widthFactor = core->width/float(pixelScaleX);
-		float heightFactor = core->height/float(pixelScaleY);
-		core->globalResolutionScale = Vector(widthFactor,heightFactor,1.0f);
-		setPixelScale(pixelScaleX, pixelScaleY);
-	}
+	float widthFactor = core->width/float(pixelScaleX);
+	float heightFactor = core->height/float(pixelScaleY);
+	core->globalResolutionScale = Vector(widthFactor,heightFactor,1.0f);
 	setPixelScale(pixelScaleX, pixelScaleY);
 }
 
