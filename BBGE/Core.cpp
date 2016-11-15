@@ -606,23 +606,6 @@ void Core::init()
 		exit_error("Failed to init SDL");
 	}
 
-#if BBGE_BUILD_OPENGL_DYNAMIC
-	if (SDL_GL_LoadLibrary(NULL) == -1)
-	{
-		std::string err = std::string("SDL_GL_LoadLibrary Error: ") + std::string(SDL_GetError());
-		SDL_Quit();
-		exit_error(err);
-	}
-
-	if (!lookup_all_glsyms())
-	{
-		std::ostringstream os;
-		os << "Couldn't load OpenGL symbols we need\n";
-		SDL_Quit();
-		exit_error(os.str());
-	}
-#endif
-
 	loopDone = false;
 
 	initLocalization();
@@ -856,6 +839,23 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 		}
 #endif
 	}
+
+#if BBGE_BUILD_OPENGL_DYNAMIC
+	if (SDL_GL_LoadLibrary(NULL) == -1)
+	{
+		std::string err = std::string("SDL_GL_LoadLibrary Error: ") + std::string(SDL_GetError());
+		SDL_Quit();
+		exit_error(err);
+	}
+
+	if (!lookup_all_glsyms())
+	{
+		std::ostringstream os;
+		os << "Couldn't load OpenGL symbols we need\n";
+		SDL_Quit();
+		exit_error(os.str());
+	}
+#endif
 
 	debugLog("GL vendor, renderer & version:");
 	debugLog((const char*)glGetString(GL_VENDOR));
