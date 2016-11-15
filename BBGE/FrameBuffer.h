@@ -31,8 +31,6 @@ public:
 	~FrameBuffer();
 	bool init(int width, int height, bool fitToScreen=false);
 	bool isInited() { return inited; }
-	bool isEnabled() { return enabled; }
-	void setEnabled(bool e);
 	void startCapture();
 	void endCapture();
 	void bindTexture();
@@ -51,7 +49,7 @@ protected:
 	unsigned g_depthRenderBuffer;
 	unsigned g_dynamicTextureID;
 	int w,h;
-	bool enabled, inited;
+	bool inited;
 };
 
 #endif

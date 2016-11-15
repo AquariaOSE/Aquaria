@@ -71,7 +71,7 @@ void PostProcessingFX::disable(FXTypes type)
 
 void PostProcessingFX::render()
 {
-	if(!core->frameBuffer.isEnabled())
+	if(!core->frameBuffer.isInited())
 		return;
 
 	for (int i = 0; i < FXT_MAX; i++)
