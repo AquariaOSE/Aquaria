@@ -59,21 +59,6 @@ float FrameBuffer::getHeightP()
 
 bool FrameBuffer::init(int width, int height, bool fitToScreen)
 {
-// !!! FIXME: check for common GMA GL_RENDERER strings on Linux, too.
-#ifdef BBGE_BUILD_MACOSX
-	std::ostringstream oss;
-	oss << "Vendor: [" << glGetString(GL_VENDOR) << "] Renderer: [" << glGetString(GL_RENDERER) << "]";
-	debugLog(oss.str());
-
-	std::string renderer = (const char*)glGetString(GL_RENDERER);
-	if (renderer.find("Intel GMA 950") != std::string::npos)
-	{
-		debugLog("Video Card is Intel GMA 950. Disabling FrameBuffer Effects.");
-		return false;
-	}
-
-#endif
-
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
 	_w = width;
