@@ -83,78 +83,73 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 
 	w=width;
 	h=height;
-
-	char *ext = (char*)glGetString( GL_EXTENSIONS );
-
 	std::ostringstream os;
 	os << "Loading EXT_framebuffer_object (" << w << ", " << h << ")";
 	debugLog(os.str());
 
-	if( strstr( ext, "EXT_framebuffer_object" ) == NULL )
+	if( !glIsRenderbufferEXT || !glBindRenderbufferEXT || !glDeleteRenderbuffersEXT ||
+		!glGenRenderbuffersEXT || !glRenderbufferStorageEXT || !glGetRenderbufferParameterivEXT ||
+		!glIsFramebufferEXT || !glBindFramebufferEXT || !glDeleteFramebuffersEXT ||
+		!glGenFramebuffersEXT || !glCheckFramebufferStatusEXT || !glFramebufferTexture1DEXT ||
+		!glFramebufferTexture2DEXT || !glFramebufferTexture3DEXT || !glFramebufferRenderbufferEXT||
+		!glGetFramebufferAttachmentParameterivEXT)
 	{
-		debugLog("EXT_framebuffer_object extension was not found");
+		debugLog("One or more EXT_framebuffer_object functions were not found");
 		return false;
 	}
-	else
-	{
-		if( !glIsRenderbufferEXT || !glBindRenderbufferEXT || !glDeleteRenderbuffersEXT ||
-			!glGenRenderbuffersEXT || !glRenderbufferStorageEXT || !glGetRenderbufferParameterivEXT ||
-			!glIsFramebufferEXT || !glBindFramebufferEXT || !glDeleteFramebuffersEXT ||
-			!glGenFramebuffersEXT || !glCheckFramebufferStatusEXT || !glFramebufferTexture1DEXT ||
-			!glFramebufferTexture2DEXT || !glFramebufferTexture3DEXT || !glFramebufferRenderbufferEXT||
-			!glGetFramebufferAttachmentParameterivEXT)
-		{
-			debugLog("One or more EXT_framebuffer_object functions were not found");
-			return false;
-		}
 
-		//
-		// Create a frame-buffer object and a render-buffer object...
-		//
+	//
+	// Create a frame-buffer object and a render-buffer object...
+	//
 
-		glGenFramebuffersEXT( 1, &g_frameBuffer );
-		glGenRenderbuffersEXT( 1, &g_depthRenderBuffer );
+	glGenFramebuffersEXT( 1, &g_frameBuffer );
+	glGenRenderbuffersEXT( 1, &g_depthRenderBuffer );
 
-		// Initialize the render-buffer for usage as a depth buffer.
-		// We don't really need this to render things into the frame-buffer object,
-		// but without it the geometry will not be sorted properly.
-		glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, g_depthRenderBuffer );
-		glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, width, height );
-
-		//
-		// Check for errors...
-		//
-
-		GLenum status = glCheckFramebufferStatusEXT( GL_FRAMEBUFFER_EXT );
-
-		switch( status )
-		{
-			case GL_FRAMEBUFFER_COMPLETE_EXT:
-				break;
-
-			case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
-				debugLog("GL_FRAMEBUFFER_UNSUPPORTED_EXT!");
-				return false;
-				break;
-
-			default:
-				return false;
-		}
+	// Initialize the render-buffer for usage as a depth buffer.
+	// We don't really need this to render things into the frame-buffer object,
+	// but without it the geometry will not be sorted properly.
+	glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, g_depthRenderBuffer );
+	glRenderbufferStorageEXT( GL_RENDERBUFFER_EXT, GL_DEPTH_COMPONENT24, width, height );
 
 
-		glGenTextures( 1, &g_dynamicTextureID );
+	glGenTextures( 1, &g_dynamicTextureID );
 
-		glBindTexture( GL_TEXTURE_2D, g_dynamicTextureID );
-		// GL_LINEAR
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
-		glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
+	glBindTexture( GL_TEXTURE_2D, g_dynamicTextureID );
+	// GL_LINEAR
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
+	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB,
-					width, height,
-					0, GL_BGR, GL_UNSIGNED_BYTE, 0 );
-	}
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB,
+				width, height,
+				0, GL_BGR, GL_UNSIGNED_BYTE, 0 );
+
+
+	// Put together
+
+	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, g_frameBuffer );
+	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, g_dynamicTextureID, 0 );
+	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, g_depthRenderBuffer );
+
+	//
+	// Check for errors...
+	//
+
+	GLenum status = glCheckFramebufferStatusEXT( GL_FRAMEBUFFER_EXT );
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+
+	switch( status )
+	{
+	case GL_FRAMEBUFFER_COMPLETE_EXT:
+		break;
+
+	case GL_FRAMEBUFFER_UNSUPPORTED_EXT:
+		debugLog("GL_FRAMEBUFFER_UNSUPPORTED_EXT!");
+	default:
+		unloadDevice();
+		return false;
+	}
 
 	debugLog("Done");
 	inited = true;
@@ -168,7 +163,8 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 void FrameBuffer::unloadDevice()
 {
 	debugLog("frameBuffer::unloadDevice");
-
+	inited = false;
+	enabled = false;
 
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
@@ -226,11 +222,7 @@ void FrameBuffer::startCapture()
 
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, g_frameBuffer );
 
-	glFramebufferTexture2DEXT( GL_FRAMEBUFFER_EXT, GL_COLOR_ATTACHMENT0_EXT, GL_TEXTURE_2D, g_dynamicTextureID, 0 );
-	glFramebufferRenderbufferEXT( GL_FRAMEBUFFER_EXT, GL_DEPTH_ATTACHMENT_EXT, GL_RENDERBUFFER_EXT, g_depthRenderBuffer );
-
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
 
 #endif
 }
