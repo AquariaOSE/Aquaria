@@ -97,6 +97,7 @@ public:
 
 	void unloadDevice();
 	void reloadDevice();
+	void updateDevice();
 
 	std::vector<Effect*> effects;
 	std::vector<int> openSpots;
@@ -121,6 +122,7 @@ public:
 	void deleteShader(int handle);
 
 protected:
+	void _updateScreenSize();
 	int _insertShader(Shader *sh);
 
 	std::vector<Shader*> shaderPipeline; // Shaders are applied in this order. Can contain the same pointer more than once.

@@ -508,6 +508,7 @@ protected:
 	void reloadDevice();
 
 	void onSwitchScreenMode();
+	virtual void onWindowResize(int w, int h);
 
 	void onPlayVoice();
 	void onStopVoice();

@@ -25,15 +25,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 ScreenTransition::ScreenTransition() : RenderObject()
 {
-	createTexture();
-
+	screen_texture = 0;
 	cull = false;
 	followCamera = 1;
 	alpha = 0;
+	createTexture();
 }
 
 void ScreenTransition::createTexture()
 {
+	destroyTexture();
+
 	width = core->getVirtualWidth();
 	height = core->getVirtualHeight();
 
@@ -46,20 +48,13 @@ void ScreenTransition::createTexture()
 	sizePowerOf2Texture(textureWidth);
 	sizePowerOf2Texture(textureHeight);
 
-
-
 	//create our texture
 	glGenTextures(1,&screen_texture);
 	glBindTexture(GL_TEXTURE_2D, screen_texture);
-	//GL_NEAREST
-	// vs
-	//GL_LINEAR
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, GL_LINEAR);		//GL_NEAREST);		//GL_NEAREST);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);		//GL_NEAREST);		//GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D,0,3, textureWidth, textureHeight, 0 , GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glBindTexture(GL_TEXTURE_2D,0);
-
-
 }
 
 void ScreenTransition::destroyTexture()
@@ -85,9 +80,8 @@ void ScreenTransition::reloadDevice()
 
 void ScreenTransition::capture()
 {
+	assert(screen_texture);
 	core->render();
-
-
 
 	if (screen_texture)
 	{
@@ -127,24 +121,9 @@ void ScreenTransition::onRender()
 	const float pw = float(windowWidth)/float(textureWidth);
 	const float ph = float(windowHeight)/float(textureHeight);
 
-
-
 	glBindTexture(GL_TEXTURE_2D, screen_texture);
 
-
-
-#if 0 //def BBGE_BUILD_MACOSX
-	float aspect = float(core->width) / float(core->height);
-	float checkAspect = 16.0f/10.0f;
-	if (fabsf(aspect - checkAspect) < 0.01f)
-	{
-		glTranslatef(0.5f,0.0f,0.0f);
-	}
-#endif
-
 	glBegin(GL_QUADS);
-
-
 		glTexCoord2d(0, 0);
 		glVertex3f(-width2, height2,  0.0);
 		glTexCoord2d(pw, 0);

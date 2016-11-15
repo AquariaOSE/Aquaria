@@ -139,8 +139,9 @@ void Core::setup_opengl()
 
 	setClearColor(clearColor);
 
-	clearBuffers();
-	showBuffer();
+	frameBuffer.init(-1, -1, true);
+	if(afterEffectManager)
+		afterEffectManager->updateDevice();
 }
 
 
@@ -1387,11 +1388,6 @@ void Core::setupRenderPositionAndScale()
 void Core::setupGlobalResolutionScale()
 {
 	glScalef(globalResolutionScale.x, globalResolutionScale.y, globalResolutionScale.z);
-}
-
-void Core::initFrameBuffer()
-{
-	frameBuffer.init(-1, -1, true);
 }
 
 void Core::setMouseConstraint(bool on)
