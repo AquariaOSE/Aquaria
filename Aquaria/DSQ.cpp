@@ -242,6 +242,12 @@ void DSQ::onSwitchScreenMode()
 		toggleFullscreen();
 }
 
+void DSQ::onWindowResize(int w, int h)
+{
+	Core::onWindowResize(w, h);
+	screenTransition->reloadDevice();
+}
+
 void DSQ::rumble(float leftMotor, float rightMotor, float time, int source)
 {
 	if (this->inputMode == INPUT_JOYSTICK)
@@ -873,16 +879,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 	particleManager->setSize(user.video.numParticles);
 
 	fullscreen = user.video.full;
-
-	float asp = float(user.video.resx)/float(user.video.resy);
-
-	if(asp < 1.0f)
-	{
-		std::ostringstream os;
-		os << "Aspect ratio for resolution [" << user.video.resx << ", " << user.video.resy << "] not supported.";
-		exit_error(os.str());
-	}
-
 	useFrameBuffer = user.video.fbuffer;
 
 	if (isDeveloperKeys())
@@ -912,8 +908,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	debugLog("Init Graphics Library...");
 		initGraphicsLibrary(user.video.resx, user.video.resy, fullscreen, user.video.vsync, user.video.bits);
-		core->enable2DWide(user.video.resx, user.video.resy);
-		core->initFrameBuffer();
 	debugLog("OK");
 
 	setInputGrab(0);
@@ -924,7 +918,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 		sound->setVoiceFader(0.5);
 		sound->event_playVoice.set(MakeFunctionEvent(DSQ, onPlayVoice));
 		sound->event_stopVoice.set(MakeFunctionEvent(DSQ, onStopVoice));
-
 	debugLog("OK");
 
 	debugLog("Init Input Library...");
@@ -1260,8 +1253,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 		tfader->followCamera = 1;
 	}
 	addRenderObject(tfader, LR_TRANSITION);
-
-	screenTransition = 0;
 
 	screenTransition = new AquariaScreenTransition();
 	{
@@ -4368,6 +4359,7 @@ void DSQ::updatepecue(float dt)
 
 void AquariaScreenTransition::capture()
 {
+	assert(screen_texture);
 	this->alpha = 0;
 	InterpolatedVector oldAlpha = dsq->cursor->alpha;
 	dsq->cursor->alpha.x = 0;

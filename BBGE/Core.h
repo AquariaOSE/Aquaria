@@ -390,7 +390,6 @@ public:
 	void setup_opengl();
 	void setClearColor(const Vector &c);
 	int flipMouseButtons;
-	void initFrameBuffer();
 	FrameBuffer frameBuffer;
 	void updateRenderObjects(float dt);
 	bool joystickAsMouse;

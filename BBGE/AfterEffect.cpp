@@ -38,18 +38,10 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 	bRenderGridPoints = true;
 	shaderPipeline.resize(10, 0);
 
-	screenWidth = core->getWindowWidth();
-	screenHeight = core->getWindowHeight();
-
-	this->xDivs = 0;
-	this->yDivs = 0;
-
 	drawGrid = 0;
 
 	this->xDivs = xDivs;
 	this->yDivs = yDivs;
-
-	reloadDevice();
 
 	if (xDivs != 0 && yDivs != 0)
 	{
@@ -59,6 +51,8 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 			drawGrid[i] = new Vector [yDivs];
 		}
 	}
+
+	updateDevice();
 
 	loadShaders();
 }
@@ -378,7 +372,7 @@ void AfterEffectManager::unloadDevice()
 	unloadShaders();
 }
 
-void AfterEffectManager::reloadDevice()
+void AfterEffectManager::_updateScreenSize()
 {
 	screenWidth = core->getWindowWidth();
 	screenHeight = core->getWindowHeight();
@@ -395,11 +389,19 @@ void AfterEffectManager::reloadDevice()
 		textureHeight = screenHeight;
 		sizePowerOf2Texture(textureHeight);
 	}
+}
 
-	if(backupBuffer.isInited())
-		backupBuffer.reloadDevice();
-	else
-		backupBuffer.init(-1, -1, true);
+void AfterEffectManager::updateDevice()
+{
+	_updateScreenSize();
+	backupBuffer.init(-1, -1, true);
+}
+
+void AfterEffectManager::reloadDevice()
+{
+	_updateScreenSize();
+
+	backupBuffer.reloadDevice();
 
 	for (size_t i = 0; i < loadedShaders.size(); ++i)
 	{
@@ -409,11 +411,11 @@ void AfterEffectManager::reloadDevice()
 			if (!sh->isLoaded())
 			{
 				debugLog("AfterEffect::reloadDevice(): Failed to reload shader");
-				delete sh;
 				loadedShaders[i] = 0;
 				for(size_t j = 0; j < shaderPipeline.size(); ++j)
 					if(sh == shaderPipeline[j])
 						shaderPipeline[j] = 0;
+				delete sh;
 			}
 		}
 	}
