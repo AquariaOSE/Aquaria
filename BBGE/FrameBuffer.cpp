@@ -27,7 +27,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 FrameBuffer::FrameBuffer()
 {
 	inited = false;
-	enabled = false;
 	w = 0;
 	h = 0;
 	g_frameBuffer = 0;
@@ -119,9 +118,10 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGB,
+	// FIXME: check for GL_ARB_texture_float; otherwise stick with old format
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA16F_ARB,
 				width, height,
-				0, GL_BGR, GL_UNSIGNED_BYTE, 0 );
+				0, GL_RGBA, GL_FLOAT, 0 );
 
 
 	// Put together
@@ -138,6 +138,7 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	glBindRenderbufferEXT(GL_RENDERBUFFER_EXT, 0);
 
 	switch( status )
 	{
@@ -153,7 +154,6 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 
 	debugLog("Done");
 	inited = true;
-	enabled = true;
 	return true;
 #endif
 
@@ -164,7 +164,6 @@ void FrameBuffer::unloadDevice()
 {
 	debugLog("frameBuffer::unloadDevice");
 	inited = false;
-	enabled = false;
 
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
@@ -218,6 +217,7 @@ void FrameBuffer::reloadDevice()
 
 void FrameBuffer::startCapture()
 {
+	assert(inited);
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, g_frameBuffer );
@@ -229,6 +229,7 @@ void FrameBuffer::startCapture()
 
 void FrameBuffer::endCapture()
 {
+	assert(inited);
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
@@ -238,15 +239,11 @@ void FrameBuffer::endCapture()
 
 void FrameBuffer::bindTexture()
 {
+	assert(inited);
 #ifdef BBGE_BUILD_FRAMEBUFFER
 
 	glBindTexture( GL_TEXTURE_2D, g_dynamicTextureID );
 
 #endif
-}
-
-void FrameBuffer::setEnabled(bool e)
-{
-	enabled = e;
 }
 
