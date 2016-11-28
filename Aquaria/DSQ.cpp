@@ -910,8 +910,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 		initGraphicsLibrary(user.video.resx, user.video.resy, fullscreen, user.video.vsync, user.video.bits);
 	debugLog("OK");
 
-	setInputGrab(0);
-
 	debugLog("Init Sound Library...");
 		initSoundLibrary(user.audio.deviceName);
 		debugLog("Set Voice Fader");
