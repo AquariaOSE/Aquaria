@@ -397,7 +397,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		XMLElement *xml_grabInp = xml_system->FirstChildElement("GrabInput");
 		if (xml_grabInp)
 		{
-			system.allowDangerousScriptFunctions = xml_grabInp->IntAttribute("on");
+			system.grabInput = xml_grabInp->IntAttribute("on");
 		}
 	}
 
