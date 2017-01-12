@@ -482,12 +482,10 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			xml_action = xml_actionSet->FirstChildElement();
 			while (xml_action)
 			{
-				std::string name = xml_action->Attribute("name");
-
-				if (!name.empty())
+				const char *name = xml_action->Attribute("name");
+				if (name && *name)
 				{
 					ActionInput *ai = control.actionSet.addActionInput(name);
-
 					ai->fromString(xml_action->Attribute("input"));
 				}
 				xml_action = xml_action->NextSiblingElement();
