@@ -586,16 +586,6 @@ BaseText *getText(lua_State *L, int slot = 1)
 	return q;
 }
 
-static inline
-Shader *getShader(lua_State *L, int slot = 1)
-{
-	Shader *q = (Shader*)lua_touserdata(L, slot);
-	ENSURE_TYPE(q, SCO_SHADER);
-	if (!q)
-		scriptDebug(L, "Invalid Shader");
-	return q;
-}
-
 static SkeletalSprite *getSkeletalSprite(Entity *e)
 {
 	return e ? &e->skeletalSprite : NULL;
@@ -4542,7 +4532,7 @@ luaFunc(entity_getAnimationLoop)
 luaFunc(entity_move)
 {
 	Entity *e = entity(L);
-	bool ease = lua_tointeger(L, 5);
+    //bool ease = lua_tointeger(L, 5);
 	Vector p(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	if (getBool(L, 6))
 		p = e->position + p;
@@ -7703,7 +7693,7 @@ luaFunc(getNearestEntity)
 	Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	int radius = lua_tointeger(L, 3);
 	Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
-	EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
+    //EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
 	DamageType dt = lua_isnumber(L, 6) ? (DamageType)lua_tointeger(L, 6) : DT_NONE;
 	int lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
 	int lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
@@ -9706,6 +9696,7 @@ static const struct {
 
 	luaRegister(entity_setDeathParticleEffect),
 	luaRegister(entity_setDeathSound),
+    luaRegister(entity_setStopSoundsOnDeath),
 
 	luaRegister(entity_setDamageTarget),
 	luaRegister(entity_setAllDamageTargets),
@@ -9958,7 +9949,7 @@ static const struct {
 	luaRegister(resetTimer),
 
 	luaRegister(addInfluence),
-	luaRegister(setSuckPosition),
+    luaRegister(getSuckPosition),
 	luaRegister(setSuckPosition),
 	luaRegister(setNumSuckPositions),
 	luaRegister(setupBasicEntity),
@@ -10567,8 +10558,9 @@ static const struct {
 	luaRegister(minimap_setWaterBitTex),
 	luaRegister(minimap_setTopTex),
 	luaRegister(minimap_setBottomTex),
-	luaRegister(minimap_setAvatarIconTex),
-	luaRegister(minimap_setHealthBarTex),
+    luaRegister(minimap_setAvatarIconTex),
+    luaRegister(minimap_setHealthBarTex),
+    luaRegister(minimap_setMaxHealthMarkerTex),
 	luaRegister(entity_mmicon_delete),
 	luaRegister(entity_mmicon_tex),
 	luaRegister(entity_mmicon_size),
@@ -10590,7 +10582,7 @@ static const struct {
 #undef MK_ALIAS
 #define MK_FUNC(base, getter, prefix, suffix) luaRegister(prefix##_##suffix),
 #define MK_STR(s) #s
-#define MK_ALIAS(prefix, suffix, alias) {MK_STR(prefix)"_"MK_STR(alias), l_##prefix##_##suffix},
+#define MK_ALIAS(prefix, suffix, alias) {MK_STR(prefix) "_" MK_STR(alias), l_##prefix##_##suffix},
 
 	EXPAND_FUNC_PROTOTYPES
 

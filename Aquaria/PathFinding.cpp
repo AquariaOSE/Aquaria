@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class SearchGridRaw
 {
 public:
-	SearchGridRaw(ObsType blocking) : game(dsq->game), blockingObsBits(blocking) {}
+    SearchGridRaw(ObsType blocking) : blockingObsBits(blocking), game(dsq->game) {}
 	inline bool operator()(unsigned x, unsigned y) const
 	{
 		return (game->getGridRaw(TileVector(x, y)) & blockingObsBits) == OT_EMPTY;
@@ -80,7 +80,7 @@ void PathFinding::molestPath(VectorPath &path)
 		Vector node = path.getPathNode(i)->value;
 		float dist;
 		int sample = 20;
-		float maxDist = sample * TILE_SIZE;
+        //float maxDist = sample * TILE_SIZE;
 		{
 			Vector n = dsq->game->getWallNormal(node, sample, &dist);
 			if (dist != -1 && (n.x != 0 || n.y != 0))

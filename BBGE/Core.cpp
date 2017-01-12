@@ -1280,35 +1280,6 @@ bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::s
 #define M_PI           3.14159265358979323846
 #endif
 
-static void
-bbgePerspective(float fovy, float aspect, float zNear, float zFar)
-{
-    float sine, cotangent, deltaZ;
-    float radians = fovy / 2.0f * M_PI / 180.0f;
-
-    deltaZ = zFar - zNear;
-    sine = sinf(radians);
-    if ((deltaZ == 0.0f) || (sine == 0.0f) || (aspect == 0.0f)) {
-        return;
-    }
-    cotangent = cosf(radians) / sine;
-
-    GLfloat m[4][4] = {
-        { 1.0f, 0.0f, 0.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f, 0.0f },
-        { 0.0f, 0.0f, 1.0f, 0.0f },
-        { 0.0f, 0.0f, 0.0f, 1.0f }
-    };
-    m[0][0] = (GLfloat) (cotangent / aspect);
-    m[1][1] = (GLfloat) cotangent;
-    m[2][2] = (GLfloat) (-(zFar + zNear) / deltaZ);
-    m[2][3] = -1.0f;
-    m[3][2] = (GLfloat) (-2.0f * zNear * zFar / deltaZ);
-    m[3][3] = 0.0f;
-
-    glMultMatrixf(&m[0][0]);
-}
-
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 {
 
@@ -1564,8 +1535,7 @@ void Core::main(float runTime)
 
 	float dt;
 	float counter = 0;
-	int frames = 0;
-	float real_dt = 0;
+    int frames = 0;
 
 
 #if (!defined(_DEBUG) || defined(BBGE_BUILD_UNIX)) && defined(BBGE_BUILD_SDL)

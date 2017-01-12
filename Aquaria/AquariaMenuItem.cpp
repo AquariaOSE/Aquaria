@@ -695,6 +695,8 @@ void AquariaKeyConfig::onUpdate(float dt)
 			}
 		}
 		break;
+        case INPUTSET_NONE:
+        break;
 		}
 	}
 

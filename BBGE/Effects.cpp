@@ -80,6 +80,10 @@ void PostProcessingFX::render()
 			FXTypes type = (FXTypes)i;
 			switch(type)
 			{
+            case FTX_NONE:
+                break;
+            case FXT_MAX:
+                break;
 			case FXT_RADIALBLUR:
 
 				float windowW = core->getWindowWidth();
@@ -148,7 +152,7 @@ void PostProcessingFX::render()
 				RenderObject::lastTextureApplied = 0;
 
 
-			break;
+            break;
 			}
 			glPopMatrix();
 

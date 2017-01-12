@@ -611,8 +611,8 @@ void MiniMapRender::onRender()
 				}
 
 				if (render)
-				{
-					renderIcon(p->minimapIcon, p->nodes[0].position);
+                {
+                    renderIcon(p->minimapIcon, p->nodes[0].position);
 				}
 			}
 		}

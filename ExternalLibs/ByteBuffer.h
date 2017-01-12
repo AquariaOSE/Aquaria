@@ -148,26 +148,26 @@ public:
 
 
 	ByteBuffer()
-		: _rpos(0), _wpos(0), _buf(NULL), _size(0), _growable(true), _res(0), _mybuf(false), _delfunc(NULL),
-		_allocfunc(NULL)
+                : _buf(NULL), _rpos(0), _wpos(0), _res(0), _size(0), _delfunc(NULL),
+                _allocfunc(NULL), _mybuf(false), _growable(true)
 	{
 	}
 	ByteBuffer(uint32 res)
-		: _rpos(0), _wpos(0), _buf(NULL), _size(0), _growable(true), _res(0), _mybuf(false), _delfunc(NULL),
-		_allocfunc(NULL)
+                : _buf(NULL), _rpos(0), _wpos(0), _res(0), _size(0), _delfunc(NULL),
+                  _allocfunc(NULL), _mybuf(false), _growable(true)
 	{
 		_allocate(res);
 	}
 	ByteBuffer(ByteBuffer &buf, Mode mode = COPY, uint32 extra = 0)
-		: _rpos(0), _wpos(0), _buf(NULL), _size(0), _growable(true), _res(0), _mybuf(false), _delfunc(NULL),
-		_allocfunc(NULL)
-	{
+                : _buf(NULL), _rpos(0), _wpos(0), _res(0), _size(0), _delfunc(NULL),
+                  _allocfunc(NULL), _mybuf(false), _growable(true)
+        {
 		init(buf, mode, extra);
 	}
 	// del param only used with TAKE_OVER, extra only used with COPY
 	ByteBuffer(void *buf, uint32 size, Mode mode = COPY, delete_func del = NULL, uint32 extra = 0)
-		: _rpos(0), _wpos(0), _size(size), _buf(NULL), _growable(true), _delfunc(del),
-		_mybuf(false), _allocfunc(NULL) // for mode == REUSE
+                : _buf(NULL), _rpos(0), _wpos(0), _res(0), _size(0), _delfunc(NULL),
+                  _allocfunc(NULL), _mybuf(false), _growable(true)  // for mode == REUSE
 	{
 		init(buf, size, mode, del, extra);
 	}

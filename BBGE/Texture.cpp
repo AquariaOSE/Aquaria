@@ -230,7 +230,7 @@ bool Texture::load(std::string file)
 
 	size_t pos = file.find_last_of('.');
 
-	if ((pos != std::string::npos) && (pos >= 0))
+    if (pos != std::string::npos)
 	{
 		// make sure this didn't catch the '.' in /home/username/.Aquaria/*  --ryan.
 		const std::string userdata = core->getUserDataFolder();

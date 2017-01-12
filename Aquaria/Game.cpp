@@ -156,7 +156,7 @@ void PetSlot::onUpdate(float dt)
 	}
 }
 
-FoodHolder::FoodHolder(int slot, bool trash) : Quad(), slot(slot), trash(trash)
+FoodHolder::FoodHolder(int slot, bool trash) : Quad(), trash(trash), slot(slot)
 {
 	foodHolderIngredient = 0;
 	buttonDown = false;
@@ -1020,7 +1020,7 @@ public:
 
 Vector menuBgScale;
 
-const int ITEMS_PER_PAGE = 12;
+//const int ITEMS_PER_PAGE = 12;
 
 ObsRow::ObsRow(int tx, int ty, int len) : tx(tx), ty(ty), len(len)
 {
@@ -2244,7 +2244,7 @@ float Game::getCoverage(Vector pos, int sampleArea)
 		{
 			if (x == t.x && y == t.y) continue;
 			TileVector ct(x,y);
-			Vector vt = ct.worldVector();
+            //Vector vt = ct.worldVector();
 			if (isObstructed(ct))
 			{
 				covered++;
@@ -8250,11 +8250,9 @@ void Game::playBurstSound(bool wallJump)
 	sound->playSfx("Burst", 1);
 	if (chance(50))
 	{
-		switch (dsq->continuity.form)
-		{
-		case FORM_BEAST:
-			sound->playSfx("BeastBurst", (128+rand()%64)/256.0f);
-		break;
+        if (dsq->continuity.form == FORM_BEAST)
+        {
+            sound->playSfx("BeastBurst", (128+rand()%64)/256.0f);
 		}
 	}
 }
@@ -10404,7 +10402,7 @@ void Game::update(float dt)
 			dsq->cameraPos = getCameraPositionFor(cameraInterp);
 			constrainCamera();
 
-			float dd = (dsq->cameraPos - oldCamPos).getLength2D();
+            //float dd = (dsq->cameraPos - oldCamPos).getLength2D();
 		}
 
 		cameraInterp.update(dt);
