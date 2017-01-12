@@ -185,7 +185,7 @@ protected:
 struct ParticleInfluence
 {
 	ParticleInfluence(Vector pos, float spd, float size, bool pull)
-		: pos(pos), spd(spd), size(size), pull(pull)
+        : pos(pos), size(size), spd(spd), pull(pull)
 	{}
 	ParticleInfluence() : size(0), spd(0), pull(false) {}
 	Vector pos;

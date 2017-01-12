@@ -1111,8 +1111,8 @@ void AnimationEditor::flipRot()
 		{
 			BoneKeyframe *bcur = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 			if (bcur)
-			{
-				int rotdiff = editingBone->rotation.z - bcur->rot;
+            {
+                // int rotdiff = editingBone->rotation.z - bcur->rot;
 				if (!core->getCtrlState())
 				{
 					for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)

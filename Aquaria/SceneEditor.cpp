@@ -2863,6 +2863,9 @@ void SceneEditor::updateText()
 		if (getSelectedPath())
 			os << " name: " << getSelectedPath()->name;
 	break;
+    case ET_SELECTENTITY:
+    case ET_MAX:
+        break;
 	}
 	text->setText(os.str());
 }
@@ -2992,6 +2995,10 @@ void SceneEditor::update(float dt)
 			else
 				placer->alpha = 0.5;
 		break;
+        case ET_PATHS:
+        case ET_SELECTENTITY:
+        case ET_MAX:
+            break;
 		}
 
 		updateText();
@@ -3099,6 +3106,9 @@ void SceneEditor::update(float dt)
 				if (selectedIdx >= 0)
 					dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
 			break;
+            case ES_ROTATING:
+            case ES_MAX:
+                break;
 			}
 		}
 		else if (editType == ET_ENTITIES)
@@ -3126,6 +3136,11 @@ void SceneEditor::update(float dt)
 					}
 				}
 			}
+                break;
+            case ES_SELECTING:
+            case ES_SCALING:
+            case ES_MAX:
+                break;
 			}
 		}
 		else if (editType == ET_ELEMENTS)
@@ -3193,7 +3208,7 @@ void SceneEditor::update(float dt)
 				else if (cursorOffset.x < oldPosition.x-10)
 					right = false;
 				else
-					noSide++;
+                    noSide = true;
 				if (cursorOffset.y > oldPosition.y+10)
 					down = true;
 				else if (cursorOffset.y < oldPosition.y-10)
@@ -3291,6 +3306,8 @@ void SceneEditor::update(float dt)
 				}
 			}
 			break;
+            case ES_MAX:
+                break;
 			}
 		}
 	}

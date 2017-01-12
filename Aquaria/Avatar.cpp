@@ -54,7 +54,7 @@ int SongIcon::notesOpen = 0;
 Avatar *avatar = 0;
 const Vector BLIND_COLOR = Vector(0.1, 0.1, 0.1);
 const float ANIM_TRANSITION	= 0.2;
-const float MANA_RECHARGE_RATE = 1.0;
+//const float MANA_RECHARGE_RATE = 1.0;
 const int AURA_SHIELD_RADIUS = 64;
 //const int TARGET_RANGE = 1024;
 const int TARGET_RANGE = 1024; // 650
@@ -69,7 +69,7 @@ const int BURST_DISTANCE = 200;
 const int STOP_DISTANCE = 48;
 const int maxMouse = BURST_DISTANCE;
 //const int SHOCK_RANGE	= 700;
-const int SHOCK_RANGE	= 1000;
+//const int SHOCK_RANGE	= 1000;
 const int SPIRIT_RANGE	= 2000;
 
 const float QUICK_SONG_CAST_DELAY = 0.4;
@@ -81,9 +81,9 @@ const float BURST_ACCEL = 4000; //2000 // 1000
 // Minimum time between two splash effects (seconds).
 const float SPLASH_INTERVAL = 0.2;
 
-const float TUMMY_TIME = 6.0;
+//const float TUMMY_TIME = 6.0;
 
-const float chargeMax = 2.0;
+//const float chargeMax = 2.0;
 
 // Axis input distance (0.0-1.0) at which we start moving.
 const float JOYSTICK_LOW_THRESHOLD = 0.2;
@@ -861,7 +861,17 @@ std::string Avatar::getIdleAnimName()
 	{
 	case FORM_ENERGY:
 		ret="energyidle";
-	break;
+    break;
+    case FORM_NORMAL:
+    case FORM_BEAST:
+    case FORM_NATURE:
+    case FORM_SPIRIT:
+    case FORM_DUAL:
+    case FORM_FISH:
+    case FORM_SUN:
+    case FORM_MAX:
+    case FORM_NONE:
+        break;
 	}
 	return ret;
 }
@@ -1231,7 +1241,11 @@ void Avatar::entityDied(Entity *e)
 			{
 				dsq->continuity.eatBeast(e->eatData);
 			}
-			break;
+            break;
+        case EAT_DEFAULT:
+        case EAT_MAX:
+        case EAT_NONE:
+            break;
 		}
 	}
 
@@ -1582,6 +1596,9 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		case FORM_DUAL:
 			core->sound->playSfx("DualForm");
 		break;
+        case FORM_NONE:
+        case FORM_MAX:
+        break;
 		}
 
 		/*
@@ -2819,6 +2836,10 @@ void Avatar::formAbility(int ability)
 
 	}
 	break;
+    case FORM_NORMAL:
+    case FORM_NONE:
+    case FORM_MAX:
+    break;
 	}
 }
 
@@ -2979,7 +3000,7 @@ void Avatar::doShock(const std::string &shotName)
 					}
 				}
 				*/
-				Vector d = e->position - position;
+                // Vector d = e->position - position;
 				/*
 				float a = float(float(i)/float(sz))*PI*2;
 				Vector aim(sinf(a), cosf(a));
@@ -3034,11 +3055,17 @@ void Avatar::formAbilityUpdate(float dt)
 		}
 	}
 	break;
-	case FORM_ENERGY:
-	{
-	}
-	break;
-	}
+    case FORM_ENERGY:
+    case FORM_NORMAL:
+    case FORM_BEAST:
+    case FORM_NATURE:
+    case FORM_SPIRIT:
+    case FORM_DUAL:
+    case FORM_SUN:
+    case FORM_MAX:
+    case FORM_NONE:
+        break;
+    }
 }
 
 bool Avatar::isMouseInputEnabled()
@@ -3128,7 +3155,13 @@ bool Avatar::canCharge(int ability)
 	break;
 	case FORM_SUN:
 		return true;
-	break;
+    break;
+    case FORM_NORMAL:
+    case FORM_SPIRIT:
+    case FORM_FISH:
+    case FORM_MAX:
+    case FORM_NONE:
+        break;
 	}
 	return false;
 }
@@ -4720,7 +4753,11 @@ void Avatar::updateAura(float dt)
 				}
 			}
 		}
-		break;
+        break;
+        case AURA_THING:
+        case AURA_HEAL:
+        case AURA_NONE:
+            break;
 		}
 
 		auraTimer -= dt;
@@ -4864,7 +4901,15 @@ void Avatar::updateFormVisualEffects(float dt)
 	case FORM_SPIRIT:
 		skeletalSprite.update(dt);
 		skeletalSprite.position = bodyPosition;
-	break;
+    break;
+    case FORM_NORMAL:
+    case FORM_BEAST:
+    case FORM_NATURE:
+    case FORM_DUAL:
+    case FORM_FISH:
+    case FORM_MAX:
+    case FORM_NONE:
+        break;
 	}
 }
 
@@ -5975,7 +6020,7 @@ void Avatar::onUpdate(float dt)
 			{
 				if (state.spellCharge > 1.5f && chargeLevelAttained <1)
 				{
-					chargeLevelAttained = 1.5;
+                    chargeLevelAttained = 1;
 					core->sound->playSfx("PowerUp");
 					chargingEmitter->load("ChargingEnergy2");
 				}
@@ -6026,7 +6071,14 @@ void Avatar::onUpdate(float dt)
 					chargingEmitter->start();
 				}
 			}
-			break;
+            break;
+            case FORM_NORMAL:
+            case FORM_BEAST:
+            case FORM_SPIRIT:
+            case FORM_FISH:
+            case FORM_MAX:
+            case FORM_NONE:
+                break;
 			}
 		}
 		/*
