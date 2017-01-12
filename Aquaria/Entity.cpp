@@ -998,9 +998,6 @@ bool Entity::touchAvatarDamage(int radius, float dmg, const Vector &override, fl
 
 const float sct = 0.15;
 
-const float blurMax = 0.01;
-const float blurMin = 0.0;
-
 void Entity::onFHScale()
 {
 	flipScale.interpolateTo(Vector(1, 1), sct);

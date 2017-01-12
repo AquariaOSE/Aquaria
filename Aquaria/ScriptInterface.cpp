@@ -586,16 +586,6 @@ BaseText *getText(lua_State *L, int slot = 1)
 	return q;
 }
 
-static inline
-Shader *getShader(lua_State *L, int slot = 1)
-{
-	Shader *q = (Shader*)lua_touserdata(L, slot);
-	ENSURE_TYPE(q, SCO_SHADER);
-	if (!q)
-		scriptDebug(L, "Invalid Shader");
-	return q;
-}
-
 static SkeletalSprite *getSkeletalSprite(Entity *e)
 {
 	return e ? &e->skeletalSprite : NULL;
@@ -9706,6 +9696,7 @@ static const struct {
 
 	luaRegister(entity_setDeathParticleEffect),
 	luaRegister(entity_setDeathSound),
+    luaRegister(entity_setStopSoundsOnDeath),
 
 	luaRegister(entity_setDamageTarget),
 	luaRegister(entity_setAllDamageTargets),
@@ -9958,7 +9949,7 @@ static const struct {
 	luaRegister(resetTimer),
 
 	luaRegister(addInfluence),
-	luaRegister(setSuckPosition),
+    luaRegister(getSuckPosition),
 	luaRegister(setSuckPosition),
 	luaRegister(setNumSuckPositions),
 	luaRegister(setupBasicEntity),
@@ -10567,8 +10558,9 @@ static const struct {
 	luaRegister(minimap_setWaterBitTex),
 	luaRegister(minimap_setTopTex),
 	luaRegister(minimap_setBottomTex),
-	luaRegister(minimap_setAvatarIconTex),
-	luaRegister(minimap_setHealthBarTex),
+    luaRegister(minimap_setAvatarIconTex),
+    luaRegister(minimap_setHealthBarTex),
+    luaRegister(minimap_setMaxHealthMarkerTex),
 	luaRegister(entity_mmicon_delete),
 	luaRegister(entity_mmicon_tex),
 	luaRegister(entity_mmicon_size),

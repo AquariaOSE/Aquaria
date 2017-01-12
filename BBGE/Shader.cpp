@@ -114,9 +114,9 @@ void Shader::staticInit()
 	// everything fine when we are here
 	_useShaders = true;
 
-#endif
 
-end:
+    end:
+#endif
 
 	if (_useShaders)
 		debugLog("Shader support enabled.");
