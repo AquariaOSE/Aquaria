@@ -363,7 +363,7 @@ class EntityClass
 {
 public:
 	EntityClass(std::string name, bool script=false, int idx=-1, std::string prevGfx="", float prevScale=1)
-        : name(name), prevScale(prevScale), prevGfx(prevGfx), script(script), idx(idx) {}
+		: name(name), prevScale(prevScale), prevGfx(prevGfx), script(script), idx(idx) {}
 	std::string name;
 	float prevScale;
 	std::string prevGfx;

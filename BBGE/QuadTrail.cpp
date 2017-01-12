@@ -22,10 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h>
 
 QuadTrail::QuadTrail(int maxPoints, float pointDist)
-    : RenderObject()
-    , numPoints(0)
-    , maxPoints(maxPoints)
-    , pointDist(pointDist)
+	: RenderObject()
+	, numPoints(0)
+	, maxPoints(maxPoints)
+	, pointDist(pointDist)
 {
 	quadTrailAlphaEffect = QTAE_NORMAL;
 	cull = false;

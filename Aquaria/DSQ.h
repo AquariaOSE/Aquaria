@@ -683,7 +683,7 @@ enum FoodSortType
 
 struct IngredientEffect
 {
-    IngredientEffect() : magnitude(0), type(IET_NONE) {}
+	IngredientEffect() : magnitude(0), type(IET_NONE) {}
 	float magnitude;
 	IngredientEffectType type;
 	std::string string;

@@ -22,15 +22,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 
 IngredientData::IngredientData(const std::string &name, const std::string &gfx, IngredientType type)
-    : name(name)
-    , gfx(gfx)
-    , displayName(dsq->continuity.getIngredientDisplayName(name))
-    , type(type)
-    , amount(0)
-    , maxAmount(MAX_INGREDIENT_AMOUNT)
-    , held(0)
-    , marked(0)
-    , rotKind(!(type == IT_OIL || type == IT_EGG))
+	: name(name)
+	, gfx(gfx)
+	, displayName(dsq->continuity.getIngredientDisplayName(name))
+	, type(type)
+	, amount(0)
+	, maxAmount(MAX_INGREDIENT_AMOUNT)
+	, held(0)
+	, marked(0)
+	, rotKind(!(type == IT_OIL || type == IT_EGG))
 {
 }
 
@@ -50,11 +50,11 @@ bool IngredientData::hasIET(IngredientEffectType iet)
 }
 
 Ingredient::Ingredient(const Vector &pos, IngredientData *data, int amount)
-    : Entity()
-    , data(data)
-    , used(false)
-    , gone(false)
-    , amount(amount)
+	: Entity()
+	, data(data)
+	, used(false)
+	, gone(false)
+	, amount(amount)
 {
 	addType(SCO_INGREDIENT);
 	entityType = ET_INGREDIENT;

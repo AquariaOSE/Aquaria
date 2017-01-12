@@ -42,12 +42,12 @@ static bool _modname_cmp(const ModIcon *a, const ModIcon *b)
 }
 
 ModSelectorScreen::ModSelectorScreen()
-    : Quad()
-    , ActionMapper()
-    , dlText(&dsq->smallFont)
-    , gotServerList(false)
-    , currentPanel(-1)
-    , subtext(&dsq->subsFont)
+	: Quad()
+	, ActionMapper()
+	, dlText(&dsq->smallFont)
+	, gotServerList(false)
+	, currentPanel(-1)
+	, subtext(&dsq->subsFont)
 {
 	followCamera = 1;
 	shareAlphaWithChildren = false;
@@ -136,7 +136,7 @@ void ModSelectorScreen::showPanel(int id)
 	if(id == currentPanel)
 		return;
 
-    //const float t = 0.2f;
+	//const float t = 0.2f;
 	IconGridPanel *newgrid = panels[id];
 
 	// fade in selected panel
@@ -484,10 +484,10 @@ void BasicIcon::onClick()
 }
 
 MenuIcon::MenuIcon(int id)
-    : SubtitleIcon()
-    , cb(0)
-    , cb_data(0)
-    , iconId(id)
+	: SubtitleIcon()
+	, cb(0)
+	, cb_data(0)
+	, iconId(id)
 {
 }
 
@@ -623,13 +623,13 @@ void ModIcon::updateStatus()
 
 
 ModIconOnline::ModIconOnline()
-    : SubtitleIcon()
-    , pb(0)
-    , extraIcon(0)
-    , statusIcon(0)
-    , pkgtype(MPT_MOD)
-    , clickable(true)
-    , hasUpdate(false)
+	: SubtitleIcon()
+	, pb(0)
+	, extraIcon(0)
+	, statusIcon(0)
+	, pkgtype(MPT_MOD)
+	, clickable(true)
+	, hasUpdate(false)
 {
 	label = desc;
 }

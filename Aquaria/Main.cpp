@@ -30,38 +30,38 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 static void MakeRan(void)
 {
 #ifdef BBGE_BUILD_WINDOWS
-    std::ofstream out("ran");
-    if(out)
-    {
-        for (int i = 0; i < 32; i++)
-            out << rand()%1000;
-        out.close();
-    }
+	std::ofstream out("ran");
+	if(out)
+	{
+		for (int i = 0; i < 32; i++)
+			out << rand()%1000;
+		out.close();
+	}
 #endif
 }
 
 static void StartAQConfig()
 {
 #if defined(BBGE_BUILD_WINDOWS)
-    if (!exists("ran", false, true))
-    {
-        MakeRan();
-        if(exists("AQConfig.exe", false, true))
-        {
-            ShellExecute(NULL, "open", "AQConfig.exe", NULL, NULL, SW_SHOWNORMAL);
-            exit(0);
-        }
-    }
-    remove("ran");
+	if (!exists("ran", false, true))
+	{
+		MakeRan();
+		if(exists("AQConfig.exe", false, true))
+		{
+			ShellExecute(NULL, "open", "AQConfig.exe", NULL, NULL, SW_SHOWNORMAL);
+			exit(0);
+		}
+	}
+	remove("ran");
 #endif
 }
 
 static void CheckConfig(void)
 {
 #ifdef BBGE_BUILD_WINDOWS
-    bool hasCfg = exists("usersettings.xml", false, true);
-    if(!hasCfg)
-        StartAQConfig();
+	bool hasCfg = exists("usersettings.xml", false, true);
+	if(!hasCfg)
+		StartAQConfig();
 #endif
 }
 
@@ -89,16 +89,16 @@ static void CheckConfig(void)
 #endif
 
 
-        CheckConfig();
+		CheckConfig();
 
-        {
-            DSQ dsql(dsqParam, extraDataDir);
-            dsql.init();
-            dsql.main();
-            dsql.shutdown();
-        }
+		{
+			DSQ dsql(dsqParam, extraDataDir);
+			dsql.init();
+			dsql.main();
+			dsql.shutdown();
+		}
 
-        MakeRan();
+		MakeRan();
 
 		return (0);
 	}

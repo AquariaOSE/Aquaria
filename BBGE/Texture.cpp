@@ -230,7 +230,7 @@ bool Texture::load(std::string file)
 
 	size_t pos = file.find_last_of('.');
 
-    if (pos != std::string::npos)
+	if (pos != std::string::npos)
 	{
 		// make sure this didn't catch the '.' in /home/username/.Aquaria/*  --ryan.
 		const std::string userdata = core->getUserDataFolder();
@@ -526,8 +526,8 @@ ImageTGA *Texture::TGAloadMem(void *mem, int size)
 				// files are stored as BGR instead of RGB (or use GL_BGR_EXT verses GL_RGB)
 				for(i = 0; i < stride; i += channels)
 				{
-					int temp     = pLine[i];
-					pLine[i]     = pLine[i + 2];
+					int temp = pLine[i];
+					pLine[i] = pLine[i + 2];
 					pLine[i + 2] = temp;
 				}
 			}
@@ -679,8 +679,8 @@ ImageTGA *Texture::TGAloadMem(void *mem, int size)
 
 	// Fill in our tImageTGA structure to pass back
 	pImageData->channels = channels;
-	pImageData->sizeX    = width;
-	pImageData->sizeY    = height;
+	pImageData->sizeX = width;
+	pImageData->sizeY = height;
 
 	// Return the TGA data (remember, you must free this data after you are done)
 	return pImageData;

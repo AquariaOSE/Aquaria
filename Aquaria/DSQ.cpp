@@ -57,74 +57,74 @@ static void Linux_CopyTree(const char *src, const char *dst)
 {
 
 
-    struct stat statbuf;
-    if (stat(src, &statbuf) == -1)
-        return;
+	struct stat statbuf;
+	if (stat(src, &statbuf) == -1)
+		return;
 
-    if (S_ISDIR(statbuf.st_mode))
-    {
-        createDir(dst);  // don't care if this fails.
-        DIR *dirp = opendir(src);
-        if (dirp == NULL)
-            return;
+	if (S_ISDIR(statbuf.st_mode))
+	{
+		createDir(dst);  // don't care if this fails.
+		DIR *dirp = opendir(src);
+		if (dirp == NULL)
+			return;
 
-        struct dirent *dent;
-        while ((dent = readdir(dirp)) != NULL)
-        {
-            if ((strcmp(dent->d_name, ".") == 0) || (strcmp(dent->d_name, "..") == 0))
-                continue;
-            const size_t srclen = strlen(src) + strlen(dent->d_name) + 2;
-            char *subsrc = new char[srclen];
-            snprintf(subsrc, srclen, "%s/%s", src, dent->d_name);
-            const size_t dstlen = strlen(dst) + strlen(dent->d_name) + 2;
-            char *subdst = new char[dstlen];
-            snprintf(subdst, dstlen, "%s/%s", dst, dent->d_name);
-            Linux_CopyTree(subsrc, subdst);
-            delete[] subdst;
-            delete[] subsrc;
-        }
-        closedir(dirp);
-    }
+		struct dirent *dent;
+		while ((dent = readdir(dirp)) != NULL)
+		{
+			if ((strcmp(dent->d_name, ".") == 0) || (strcmp(dent->d_name, "..") == 0))
+				continue;
+			const size_t srclen = strlen(src) + strlen(dent->d_name) + 2;
+			char *subsrc = new char[srclen];
+			snprintf(subsrc, srclen, "%s/%s", src, dent->d_name);
+			const size_t dstlen = strlen(dst) + strlen(dent->d_name) + 2;
+			char *subdst = new char[dstlen];
+			snprintf(subdst, dstlen, "%s/%s", dst, dent->d_name);
+			Linux_CopyTree(subsrc, subdst);
+			delete[] subdst;
+			delete[] subsrc;
+		}
+		closedir(dirp);
+	}
 
-    else if (S_ISREG(statbuf.st_mode))
-    {
-        const int in = open(src, O_RDONLY);
-        if (in == -1)
-            return;
+	else if (S_ISREG(statbuf.st_mode))
+	{
+		const int in = open(src, O_RDONLY);
+		if (in == -1)
+			return;
 
-        // fail if it already exists. That's okay in this case.
-        const int out = open(dst, O_WRONLY | O_CREAT | O_EXCL, 0600);
-        if (out == -1)
-        {
-            close(in);
-            return;
-        }
+		// fail if it already exists. That's okay in this case.
+		const int out = open(dst, O_WRONLY | O_CREAT | O_EXCL, 0600);
+		if (out == -1)
+		{
+			close(in);
+			return;
+		}
 
-        const size_t buflen = 256 * 1024;
-        char *buf = new char[buflen];
-        bool failed = false;
-        ssize_t br = 0;
-        while ( (!failed) && ((br = read(in, buf, buflen)) > 0) )
-            failed = (write(out, buf, br) != br);
+		const size_t buflen = 256 * 1024;
+		char *buf = new char[buflen];
+		bool failed = false;
+		ssize_t br = 0;
+		while ( (!failed) && ((br = read(in, buf, buflen)) > 0) )
+			failed = (write(out, buf, br) != br);
 
-        if (br < 0)
-            failed = true;
+		if (br < 0)
+			failed = true;
 
-        delete[] buf;
+		delete[] buf;
 
-        if (close(out) < 0)
-            failed = true;
+		if (close(out) < 0)
+			failed = true;
 
-        close(in);
+		close(in);
 
-        if (failed)
-            unlink(dst);
-    }
+		if (failed)
+			unlink(dst);
+	}
 
-    else
-    {
-        fprintf(stderr, "WARNING: we should have copied %s to %s, but it's not a dir or file! Skipped it.\n", src, dst);
-    }
+	else
+	{
+		fprintf(stderr, "WARNING: we should have copied %s to %s, but it's not a dir or file! Skipped it.\n", src, dst);
+	}
 }
 #endif
 
@@ -800,11 +800,11 @@ static bool sdlVideoModeOK(const int w, const int h, const int bpp)
 	const int modecount = SDL_GetNumDisplayModes(0);
 	for (int i = 0; i < modecount; i++) {
 		SDL_GetDisplayMode(0, i, &mode);
-        if (!mode.w || !mode.h || (w >= mode.w && h >= mode.h)) {
+		if (!mode.w || !mode.h || (w >= mode.w && h >= mode.h)) {
 			return true;
-        }
-    }
-    return false;
+		}
+	}
+	return false;
 #else
 	return SDL_VideoModeOK(w, h, bpp, SDL_OPENGL | SDL_FULLSCREEN);
 #endif
@@ -1782,8 +1782,8 @@ void DSQ::toggleInputMode()
 	case INPUT_JOYSTICK:
 		setInputMode(INPUT_MOUSE);
 	break;
-    case INPUT_KEYBOARD:
-    break;
+	case INPUT_KEYBOARD:
+	break;
 	}
 }
 
@@ -1801,8 +1801,8 @@ void DSQ::setInputMode(InputMode mode)
 		core->joystickAsMouse = false;
 		updateCursorFromMouse = true;
 	break;
-    case INPUT_KEYBOARD:
-    break;
+	case INPUT_KEYBOARD:
+	break;
 	}
 }
 
@@ -4095,8 +4095,8 @@ void DSQ::onUpdate(float dt)
 			case INPUT_JOYSTICK:
 				os << "joystick";
 			break;
-            case INPUT_KEYBOARD:
-            break;
+			case INPUT_KEYBOARD:
+			break;
 			}
 			os << std::endl;
 			Bone *b = dsq->game->avatar->skeletalSprite.getBoneByIdx(1);
