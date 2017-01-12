@@ -95,7 +95,7 @@ vfspos DiskFile::size()
 // ------------- MemFile -----------------------
 
 MemFile::MemFile(const char *name, void *buf, unsigned int size, delete_func delfunc /* = NULL */, DeleteMode delmode /* = ON_CLOSE */)
-: File(name), _pos(0), _size(size), _buf(buf), _delfunc(delfunc), _delmode(delmode)
+: File(name), _buf(buf), _pos(0), _size(size), _delfunc(delfunc), _delmode(delmode)
 {
 }
 
