@@ -1782,6 +1782,8 @@ void DSQ::toggleInputMode()
 	case INPUT_JOYSTICK:
 		setInputMode(INPUT_MOUSE);
 	break;
+    case INPUT_KEYBOARD:
+    break;
 	}
 }
 
@@ -1799,6 +1801,8 @@ void DSQ::setInputMode(InputMode mode)
 		core->joystickAsMouse = false;
 		updateCursorFromMouse = true;
 	break;
+    case INPUT_KEYBOARD:
+    break;
 	}
 }
 
@@ -4091,6 +4095,8 @@ void DSQ::onUpdate(float dt)
 			case INPUT_JOYSTICK:
 				os << "joystick";
 			break;
+            case INPUT_KEYBOARD:
+            break;
 			}
 			os << std::endl;
 			Bone *b = dsq->game->avatar->skeletalSprite.getBoneByIdx(1);

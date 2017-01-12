@@ -9,9 +9,9 @@
 
 DeflateCompressor::DeflateCompressor()
 :   _windowBits(-MAX_WBITS), // negative, because we want a raw deflate stream, and not zlib-wrapped
+    _real_size(0),
     _forceCompress(false),
-    _iscompressed(false),
-    _real_size(0)
+    _iscompressed(false)
 {
 }
 

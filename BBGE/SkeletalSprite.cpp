@@ -365,13 +365,16 @@ void BoneCommand::run()
 		if (e)
 			e->stop();
 	}
-	break;
+    break;
 	case AC_SET_PASS:
 		b->setRenderPass(slot);
 	break;
 	case AC_RESET_PASS:
 		b->setRenderPass(b->originalRenderPass);
-	break;
+    break;
+    case AC_SEGS_START:
+    case AC_SEGS_STOP:
+        break;
 	}
 }
 

@@ -93,6 +93,8 @@ void CollideEntity::bounce(float ba)
 		}
 	}
 	break;
+    case BOUNCE_NONE:
+    break;
 	}
 
 

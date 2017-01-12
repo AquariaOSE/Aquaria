@@ -72,7 +72,7 @@ namespace SoundCore
 	struct FadeCh
 	{
 	public:
-		FadeCh() : v(1), s(1), c(0), d(-1), to(0) {}
+        FadeCh() : c(0), v(1), s(1), to(0), d(-1) {}
 		FMOD::Channel *c;
 		float v,s,to;
 		int d;
@@ -410,6 +410,9 @@ void SoundManager::toggleEffectMusic(SoundEffectType effect, bool on)
 				dspFlange->remove();
 		}
 	break;
+    case SFX_NONE:
+    case SFX_MAX:
+        break;
 	}
 
 }

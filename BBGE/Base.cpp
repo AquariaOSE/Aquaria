@@ -67,6 +67,13 @@ Vector getDirVector(Direction dir)
 	case DIR_RIGHT:
 		return Vector(1, 0);
 	break;
+    case DIR_UPLEFT:
+    case DIR_UPRIGHT:
+    case DIR_DOWNLEFT:
+    case DIR_DOWNRIGHT:
+    case DIR_MAX:
+    case DIR_NONE:
+        break;
 	}
 	return Vector(0,0);
 }
@@ -87,6 +94,13 @@ Direction getOppositeDir(Direction dir)
 	case DIR_RIGHT:
 		return DIR_LEFT;
 	break;
+    case DIR_UPLEFT:
+    case DIR_UPRIGHT:
+    case DIR_DOWNLEFT:
+    case DIR_DOWNRIGHT:
+    case DIR_MAX:
+    case DIR_NONE:
+        break;
 	}
 
 	return DIR_NONE;
@@ -108,6 +122,13 @@ Direction getNextDirClockwise(Direction dir)
 	case DIR_RIGHT:
 		return DIR_DOWN;
 		break;
+    case DIR_UPLEFT:
+    case DIR_UPRIGHT:
+    case DIR_DOWNLEFT:
+    case DIR_DOWNRIGHT:
+    case DIR_MAX:
+    case DIR_NONE:
+        break;
 	}
 	return DIR_NONE;
 }
@@ -198,11 +219,6 @@ static TransatableStaticInit _transtable_static_init;
 static unsigned char charIsUpper(unsigned char c)
 {
 	return c == upperToLowerTable[c];
-}
-
-static unsigned char charIsLower(unsigned char c)
-{
-	return c == lowerToUpperTable[c];
 }
 
 static unsigned char charToLower(unsigned char c)
@@ -591,7 +607,7 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 	    dirent *file=0;
 		while ( (file=readdir(dir)) != NULL )
 		{
-		    if (file->d_name && strlen(file->d_name) > 4)
+            if (strlen(file->d_name) > 4)
 		    {
                 debugLog(file->d_name);
                 char *extension=strrchr(file->d_name,'.');

@@ -28,6 +28,7 @@ class Effect
 {
 public:
 	Effect();
+    virtual ~Effect(){};
 	virtual void go(){}
 	virtual void update(float dt, Vector ** drawGrid, int xDivs, int yDivs){}
 	bool done;
