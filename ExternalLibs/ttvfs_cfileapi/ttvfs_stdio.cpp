@@ -16,12 +16,6 @@ void ttvfs_setroot(ttvfs::Root *root)
 
 VFILE *vfopen(const char *fn, const char *mode)
 {
-    if (strchr(mode, 'w'))
-    {
-        assert(0 && "ttvfs_stdio: File writing via VFS not yet supported!");
-        return NULL;
-    }
-
     VFILE *vf = vfs->GetFile(fn);
     if (!vf || !vf->open(mode))
         return NULL;

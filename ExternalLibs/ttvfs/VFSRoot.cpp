@@ -1,8 +1,6 @@
 // VFSRoot.cpp - glues it all together and makes use simple
 // For conditions of distribution and use, see copyright notice in VFS.h
 
-#include <set>
-
 #include "VFSInternal.h"
 #include "VFSRoot.h"
 #include "VFSTools.h"
@@ -12,9 +10,6 @@
 #include "VFSLoader.h"
 #include "VFSArchiveLoader.h"
 #include "VFSDirView.h"
-
-//#include <stdio.h>
-#include <iostream>
 
 #ifdef _DEBUG
 #  include <cassert>
@@ -64,11 +59,12 @@ void Root::Clear()
 
     loaders.clear();
     archLdrs.clear();
+    loadersInfo.clear();
 }
 
 void Root::Mount(const char *src, const char *dest)
 {
-    AddVFSDir(GetDir(src, true), dest);
+    return AddVFSDir(GetDir(src, true), dest);
 }
 
 void Root::AddVFSDir(DirBase *dir, const char *subdir /* = NULL */)
@@ -79,26 +75,54 @@ void Root::AddVFSDir(DirBase *dir, const char *subdir /* = NULL */)
     into->_addMountDir(dir);
 }
 
-bool Root::Unmount(const char *src, const char *dest)
+bool Root::RemoveVFSDir(DirBase *dir, const char *subdir /* = NULL */)
 {
-    DirBase *vdsrc = GetDir(src, false);
-    InternalDir *vddest = safecast<InternalDir*>(GetDir(dest, false));
-    if(!vdsrc || !vddest)
+    if(!subdir)
+        subdir = dir->fullname();
+    InternalDir *vddest = safecast<InternalDir*>(GetDir(subdir, false));
+    if(!vddest)
         return false;
 
-    vddest->_removeMountDir(vdsrc);
+    vddest->_removeMountDir(dir);
     return true;
 }
 
-void Root::AddLoader(VFSLoader *ldr, const char *path /* = NULL */)
+bool Root::Unmount(const char *src, const char *dest)
 {
-    loaders.push_back(ldr);
-    AddVFSDir(ldr->getRoot(), path);
+    DirBase *vdsrc = GetDir(src, false);
+    if(!vdsrc)
+        return false;
+
+    return RemoveVFSDir(vdsrc, dest);
 }
 
-void Root::AddArchiveLoader(VFSArchiveLoader *ldr)
+int Root::AddLoader(VFSLoader *ldr, const char *path /* = NULL */)
 {
+    DEBUG_ASSERT(ldr != NULL);
+    loaders.push_back(ldr);
+    loadersInfo.push_back(path);
+    AddVFSDir(ldr->getRoot(), path);
+    return (int)(loaders.size() - 1);
+}
+
+void Root::RemoveLoader(int index, const char *path /* = NULL */)
+{
+    VFSLoader *ldr = loaders[index];
+    RemoveVFSDir(ldr->getRoot(), loadersInfo[index].getPath());
+    loaders.erase(loaders.begin() + index);
+    loadersInfo.erase(loadersInfo.begin() + index);
+}
+
+int Root::AddArchiveLoader(VFSArchiveLoader *ldr)
+{
+    DEBUG_ASSERT(ldr != NULL);
     archLdrs.push_back(ldr);
+    return (int)(archLdrs.size() - 1);
+}
+
+void Root::RemoveArchiveLoader(int index)
+{
+    archLdrs.erase(archLdrs.begin() + index);
 }
 
 Dir *Root::AddArchive(const char *arch, void *opaque /* = NULL */)
@@ -133,7 +157,7 @@ inline static File *VFSHelper_GetFileByLoader(VFSLoader *ldr, const char *fn, co
         return NULL;
     File *vf = ldr->Load(fn, unmangled);
     if(vf)
-        ldr->getRoot()->addRecursive(vf);
+        ldr->getRoot()->add(vf);
     return vf;
 }
 
@@ -217,62 +241,21 @@ void Root::ClearGarbage()
     merged->clearGarbage();
 }
 
-
-
-// DEBUG STUFF
-
-struct _DbgParams
+bool Root::ForEach(const char *path, FileEnumCallback fileCallback /* = NULL */, DirEnumCallback dirCallback /* = NULL */,
+                   void *user /* = NULL */, bool safe /* = false */)
 {
-    _DbgParams(std::ostream& os_, const std::string& path, const std::string& sp_)
-        : os(os_), mypath(path), sp(sp_) {}
-
-    std::ostream& os;
-    std::string mypath;
-    const std::string& sp;
-    std::set<std::string> dirnames;
-};
-
-static void _DumpFile(File *vf, void *user)
-{
-    _DbgParams& p = *((_DbgParams*)user);
-    p.os << p.sp << " F:" << vf->fullname() << " [" << vf->getType() << ", ref " << vf->getRefCount() << ", 0x" << vf << "]" << std::endl;
-}
-
-
-static void _DumpDir(DirBase *vd, void *user)
-{
-    _DbgParams& p = *((_DbgParams*)user);
-    if(!(vd->fullname()[0] == '/' && vd->fullnameLen() == 1)) // don't recurse down the root dir.
-        p.dirnames.insert(vd->name());
-    p.os << p.sp << "D : " << vd->fullname() << " [" << vd->getType() << ", ref " << vd->getRefCount() << ", 0x" << vd << "]" << std::endl;
-}
-
-static void _DumpTree(_DbgParams& p, Root& vfs, int level)
-{
-    p.os << ">> [" << p.mypath << "]" << std::endl;
     DirView view;
-    vfs.FillDirView(p.mypath.c_str(), view);
+    if(!FillDirView(path, view))
+        return false;
 
-    view.forEachDir(_DumpDir, &p);
-    view.forEachFile(_DumpFile, &p);
+    if(dirCallback)
+        view.forEachDir(dirCallback, user, safe);
+    if(fileCallback)
+        view.forEachFile(fileCallback, user, safe);
 
-    if(!level)
-        return;
-
-    std::string sub = p.sp + "  ";
-    for(std::set<std::string>::iterator it = p.dirnames.begin(); it != p.dirnames.end(); ++it)
-    {
-        _DbgParams recP(p.os, joinPath(p.mypath, it->c_str()), sub);
-        _DumpTree(recP, vfs, level - 1);
-    }
+    return true;
 }
 
-void Root::debugDumpTree(std::ostream& os, const char *path, int level)
-{
-    os << ">>> FILE TREE DUMP <<<" << std::endl;
-    _DbgParams recP(os, path, "");
-    _DumpTree(recP, *this, level);
-}
 
 
 VFS_NAMESPACE_END

@@ -30,6 +30,8 @@ bool ZipFile::open(const char *mode /* = NULL */)
     _pos = 0;
     if(!mode)
         mode = "rb";
+    else if(strchr(mode, 'w') || strchr(mode, 'a'))
+        return false; // writing not yet supported
     if(_mode != mode)
     {
         delete [] _buf;
@@ -53,7 +55,7 @@ void ZipFile::close()
 {
     //flush(); // TODO: write to zip file on close
 
-    delete []_buf;
+    delete [] _buf;
     _buf = NULL;
     _bufSize = 0;
 }
@@ -143,16 +145,15 @@ bool ZipFile::unpack()
     close(); // delete the buffer
 
     const vfspos sz = size(); // will reopen the file
-    if(sz < 0)
+    if(sz == npos)
         return false;
 
-    _buf = new char[sz + 1];
+    _buf = new char[size_t(sz) + 1];
     if(!_buf)
         return false;
 
-    if(!mz_zip_reader_extract_to_mem(MZ, _fileIdx, _buf, sz, 0))
+    if(!mz_zip_reader_extract_to_mem(MZ, _fileIdx, _buf, (size_t)sz, 0))
     {
-        //assert(0 && "ZipFile unpack: Failed mz_zip_reader_extract_to_mem");
         delete [] _buf;
         _buf = NULL;
         return false; // this should not happen
