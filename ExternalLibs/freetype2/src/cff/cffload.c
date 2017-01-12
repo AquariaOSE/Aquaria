@@ -1255,7 +1255,7 @@
     /* set defaults */
     FT_MEM_ZERO( top, sizeof ( *top ) );
 
-    top->underline_position  = -100L & ~((1L<<16)-1);
+    top->underline_position  = -100L * (1<<16);
     top->underline_thickness = 50L << 16;
     top->charstring_type     = 2;
     top->font_matrix.xx      = 0x10000L;
