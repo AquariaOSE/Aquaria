@@ -1055,6 +1055,10 @@ void Core::initPlatform(const std::string &filesystem)
 	CFBundleRef mainBundle = CFBundleGetMainBundle();
 	//CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
 	CFURLRef resourcesURL = CFBundleCopyBundleURL(mainBundle);
+	if(!filesystem.empty()){
+		CFStringRef filesystemString = CFStringCreateWithCString(NULL, filesystem.c_str(), kCFStringEncodingUTF8);
+		resourcesURL = CFURLCreateWithString(kCFAllocatorDefault, filesystemString, 0);
+	}
 	char path[PATH_MAX];
 	if (!CFURLGetFileSystemRepresentation(resourcesURL, TRUE, (UInt8 *)path, PATH_MAX))
 	{
