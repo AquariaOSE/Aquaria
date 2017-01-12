@@ -221,11 +221,6 @@ static unsigned char charIsUpper(unsigned char c)
 	return c == upperToLowerTable[c];
 }
 
-static unsigned char charIsLower(unsigned char c)
-{
-	return c == lowerToUpperTable[c];
-}
-
 static unsigned char charToLower(unsigned char c)
 {
 	return upperToLowerTable[c];
