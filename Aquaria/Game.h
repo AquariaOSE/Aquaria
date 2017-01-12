@@ -283,7 +283,9 @@ public:
 
 	bool isEmpty();
 	bool isTrash();
+	bool isValid();
 	void setIngredient(IngredientData *i, bool effects=true);
+	void toggleValid(bool v);
 	void dropFood();
 	IngredientData *getIngredient();
 	void animateLid(bool down, bool longAnim=true);
