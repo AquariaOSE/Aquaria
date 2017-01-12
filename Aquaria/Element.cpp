@@ -22,18 +22,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Game.h"
 
 ElementEffectData::ElementEffectData()
-    : elementEffectType(EFX_NONE)
-    , wavyAngleOffset(0)
-    , wavyMagnitude(0)
-    , wavyLerpIn(0)
-    , wavyMin(0)
-    , wavyMax(0)
-    , hitPerc(0)
-    , effectMult(0)
-    , wavyWaving(false)
-    , wavyFlip(false)
-    , touching(false)
-    , elementEffectIndex(-1)
+	: elementEffectType(EFX_NONE)
+	, wavyAngleOffset(0)
+	, wavyMagnitude(0)
+	, wavyLerpIn(0)
+	, wavyMin(0)
+	, wavyMax(0)
+	, hitPerc(0)
+	, effectMult(0)
+	, wavyWaving(false)
+	, wavyFlip(false)
+	, touching(false)
+	, elementEffectIndex(-1)
 {
 }
 

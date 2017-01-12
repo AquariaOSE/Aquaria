@@ -2244,7 +2244,6 @@ float Game::getCoverage(Vector pos, int sampleArea)
 		{
 			if (x == t.x && y == t.y) continue;
 			TileVector ct(x,y);
-            //Vector vt = ct.worldVector();
 			if (isObstructed(ct))
 			{
 				covered++;
@@ -2531,7 +2530,7 @@ void Game::loadEntityTypeList()
 			//
 			entityGroups.push_back(newGroup);
 			curGroup = entityGroups.size()-1;
-        }
+		}
 		else if (!line.empty())
 		{
 			EntityGroupEntity ent;
@@ -5461,7 +5460,7 @@ bool Game::saveScene(std::string scene)
 		{
 			std::ostringstream& SE_rs = simpleElements_repeatScale[e->bgLayer];
 			SE_rs << e->repeatToFillScale.x << " "
-			      << e->repeatToFillScale.y << " ";
+				  << e->repeatToFillScale.y << " ";
 		}
 	}
 
@@ -5757,10 +5756,10 @@ void Game::switchBgLoop(int v)
 		case 0:
 			if (!bgSfxLoop.empty())
 			{
-			    PlaySfx sfx;
-			    sfx.name = bgSfxLoop;
-			    sfx.vol = bgSfxVol;
-			    sfx.loops = -1;
+				PlaySfx sfx;
+				sfx.name = bgSfxLoop;
+				sfx.vol = bgSfxVol;
+				sfx.loops = -1;
 				sfx.priority = 0.8;
 				dsq->loops.bg = core->sound->playSfx(sfx);
 			}
@@ -5768,10 +5767,10 @@ void Game::switchBgLoop(int v)
 		case 1:
 			if (!airSfxLoop.empty())
 			{
-			    PlaySfx sfx;
-			    sfx.name = airSfxLoop;
-			    sfx.vol = bgSfxVol;
-			    sfx.loops = -1;
+				PlaySfx sfx;
+				sfx.name = airSfxLoop;
+				sfx.vol = bgSfxVol;
+				sfx.loops = -1;
 				sfx.priority = 0.8;
 				dsq->loops.bg = core->sound->playSfx(sfx);
 			}
@@ -8250,9 +8249,9 @@ void Game::playBurstSound(bool wallJump)
 	sound->playSfx("Burst", 1);
 	if (chance(50))
 	{
-        if (dsq->continuity.form == FORM_BEAST)
-        {
-            sound->playSfx("BeastBurst", (128+rand()%64)/256.0f);
+		if (dsq->continuity.form == FORM_BEAST)
+		{
+			sound->playSfx("BeastBurst", (128+rand()%64)/256.0f);
 		}
 	}
 }
@@ -8691,7 +8690,7 @@ void Game::updateCurrentVisuals(float dt)
 	*/
 
 	/*
-    if (dsq->game->getPath(i)->name == "CURRENT" && dsq->game->getPath(i)->nodes.size() >= 2)
+	if (dsq->game->getPath(i)->name == "CURRENT" && dsq->game->getPath(i)->nodes.size() >= 2)
 	{
 		Vector dir = dsq->game->getPath(i)->nodes[1].position - dsq->game->getPath(i)->nodes[0].position;
 		dir.setLength2D(800);
@@ -10401,8 +10400,6 @@ void Game::update(float dt)
 			cameraInterp.interpolateTo(dest, cameraLerpDelay);
 			dsq->cameraPos = getCameraPositionFor(cameraInterp);
 			constrainCamera();
-
-            //float dd = (dsq->cameraPos - oldCamPos).getLength2D();
 		}
 
 		cameraInterp.update(dt);
@@ -10582,7 +10579,7 @@ ElementTemplate Game::getElementTemplateForLetter(int i)
 void Game::loadElementTemplates(std::string pack)
 {
 
-    stringToLower(pack);
+	stringToLower(pack);
 	/*
 	std::string fn = ("data/"+pack+".xml");
 	if (!exists(fn))

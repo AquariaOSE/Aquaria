@@ -587,9 +587,6 @@ void Path::update(float dt)
 				Vector start = nodes[0].position;
 				Vector end = nodes[1].position;
 				Vector v = end - start;
-                //Vector left = v.getPerpendicularLeft();
-                //Vector right = v.getPerpendicularRight();
-                //Vector mid = (end-start) + start;
 				FOR_ENTITIES(i)
 				{
 					Entity *e = *i;

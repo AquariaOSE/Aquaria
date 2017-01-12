@@ -317,12 +317,12 @@ void SchoolFish::applySeparation(Vector &accumulator)
 			if (!change.isZero())
 			{
 				change.setLength2D(-ratio);
-		        	accumulator += change;
+					accumulator += change;
 			}
 		}
-	        // Are we too far from nearest flockmate?  Then Move Closer
+			// Are we too far from nearest flockmate?  Then Move Closer
 		/*
-        	else if (dist > separationDistance)
+			else if (dist > separationDistance)
 			change |= ratio;
 		*/
 	}

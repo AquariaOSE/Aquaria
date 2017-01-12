@@ -777,7 +777,7 @@ void StatsAndAchievements::UnlockAchievement( Achievement &achievement )
 	achievement.iconImage = 0;
 
 #ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
-    unlockedToBeDisplayed.push( std::string(achievement.name) );
+	unlockedToBeDisplayed.push( std::string(achievement.name) );
 #endif
 
 	// Store stats end of frame

@@ -861,17 +861,17 @@ std::string Avatar::getIdleAnimName()
 	{
 	case FORM_ENERGY:
 		ret="energyidle";
-    break;
-    case FORM_NORMAL:
-    case FORM_BEAST:
-    case FORM_NATURE:
-    case FORM_SPIRIT:
-    case FORM_DUAL:
-    case FORM_FISH:
-    case FORM_SUN:
-    case FORM_MAX:
-    case FORM_NONE:
-        break;
+	break;
+	case FORM_NORMAL:
+	case FORM_BEAST:
+	case FORM_NATURE:
+	case FORM_SPIRIT:
+	case FORM_DUAL:
+	case FORM_FISH:
+	case FORM_SUN:
+	case FORM_MAX:
+	case FORM_NONE:
+		break;
 	}
 	return ret;
 }
@@ -1241,11 +1241,11 @@ void Avatar::entityDied(Entity *e)
 			{
 				dsq->continuity.eatBeast(e->eatData);
 			}
-            break;
-        case EAT_DEFAULT:
-        case EAT_MAX:
-        case EAT_NONE:
-            break;
+			break;
+		case EAT_DEFAULT:
+		case EAT_MAX:
+		case EAT_NONE:
+			break;
 		}
 	}
 
@@ -1596,9 +1596,9 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		case FORM_DUAL:
 			core->sound->playSfx("DualForm");
 		break;
-        case FORM_NONE:
-        case FORM_MAX:
-        break;
+		case FORM_NONE:
+		case FORM_MAX:
+		break;
 		}
 
 		/*
@@ -2836,10 +2836,10 @@ void Avatar::formAbility(int ability)
 
 	}
 	break;
-    case FORM_NORMAL:
-    case FORM_NONE:
-    case FORM_MAX:
-    break;
+	case FORM_NORMAL:
+	case FORM_NONE:
+	case FORM_MAX:
+	break;
 	}
 }
 
@@ -3000,7 +3000,7 @@ void Avatar::doShock(const std::string &shotName)
 					}
 				}
 				*/
-                // Vector d = e->position - position;
+				// Vector d = e->position - position;
 				/*
 				float a = float(float(i)/float(sz))*PI*2;
 				Vector aim(sinf(a), cosf(a));
@@ -3055,17 +3055,17 @@ void Avatar::formAbilityUpdate(float dt)
 		}
 	}
 	break;
-    case FORM_ENERGY:
-    case FORM_NORMAL:
-    case FORM_BEAST:
-    case FORM_NATURE:
-    case FORM_SPIRIT:
-    case FORM_DUAL:
-    case FORM_SUN:
-    case FORM_MAX:
-    case FORM_NONE:
-        break;
-    }
+	case FORM_ENERGY:
+	case FORM_NORMAL:
+	case FORM_BEAST:
+	case FORM_NATURE:
+	case FORM_SPIRIT:
+	case FORM_DUAL:
+	case FORM_SUN:
+	case FORM_MAX:
+	case FORM_NONE:
+		break;
+	}
 }
 
 bool Avatar::isMouseInputEnabled()
@@ -3155,13 +3155,13 @@ bool Avatar::canCharge(int ability)
 	break;
 	case FORM_SUN:
 		return true;
-    break;
-    case FORM_NORMAL:
-    case FORM_SPIRIT:
-    case FORM_FISH:
-    case FORM_MAX:
-    case FORM_NONE:
-        break;
+	break;
+	case FORM_NORMAL:
+	case FORM_SPIRIT:
+	case FORM_FISH:
+	case FORM_MAX:
+	case FORM_NONE:
+		break;
 	}
 	return false;
 }
@@ -4753,11 +4753,11 @@ void Avatar::updateAura(float dt)
 				}
 			}
 		}
-        break;
-        case AURA_THING:
-        case AURA_HEAL:
-        case AURA_NONE:
-            break;
+		break;
+		case AURA_THING:
+		case AURA_HEAL:
+		case AURA_NONE:
+			break;
 		}
 
 		auraTimer -= dt;
@@ -4901,15 +4901,15 @@ void Avatar::updateFormVisualEffects(float dt)
 	case FORM_SPIRIT:
 		skeletalSprite.update(dt);
 		skeletalSprite.position = bodyPosition;
-    break;
-    case FORM_NORMAL:
-    case FORM_BEAST:
-    case FORM_NATURE:
-    case FORM_DUAL:
-    case FORM_FISH:
-    case FORM_MAX:
-    case FORM_NONE:
-        break;
+	break;
+	case FORM_NORMAL:
+	case FORM_BEAST:
+	case FORM_NATURE:
+	case FORM_DUAL:
+	case FORM_FISH:
+	case FORM_MAX:
+	case FORM_NONE:
+		break;
 	}
 }
 
@@ -6020,7 +6020,7 @@ void Avatar::onUpdate(float dt)
 			{
 				if (state.spellCharge > 1.5f && chargeLevelAttained <1)
 				{
-                    chargeLevelAttained = 1;
+					chargeLevelAttained = 1;
 					core->sound->playSfx("PowerUp");
 					chargingEmitter->load("ChargingEnergy2");
 				}
@@ -6071,14 +6071,14 @@ void Avatar::onUpdate(float dt)
 					chargingEmitter->start();
 				}
 			}
-            break;
-            case FORM_NORMAL:
-            case FORM_BEAST:
-            case FORM_SPIRIT:
-            case FORM_FISH:
-            case FORM_MAX:
-            case FORM_NONE:
-                break;
+			break;
+			case FORM_NORMAL:
+			case FORM_BEAST:
+			case FORM_SPIRIT:
+			case FORM_FISH:
+			case FORM_MAX:
+			case FORM_NONE:
+				break;
 			}
 		}
 		/*

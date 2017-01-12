@@ -25,25 +25,25 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef BBGE_BUILD_SHADERS
 	// GL_ARB_shader_objects
 	PFNGLCREATEPROGRAMOBJECTARBPROC  glCreateProgramObjectARB  = NULL;
-	PFNGLDELETEOBJECTARBPROC         glDeleteObjectARB         = NULL;
-	PFNGLUSEPROGRAMOBJECTARBPROC     glUseProgramObjectARB     = NULL;
+	PFNGLDELETEOBJECTARBPROC         glDeleteObjectARB		 = NULL;
+	PFNGLUSEPROGRAMOBJECTARBPROC     glUseProgramObjectARB	 = NULL;
 	PFNGLCREATESHADEROBJECTARBPROC   glCreateShaderObjectARB   = NULL;
-	PFNGLSHADERSOURCEARBPROC         glShaderSourceARB         = NULL;
-	PFNGLCOMPILESHADERARBPROC        glCompileShaderARB        = NULL;
+	PFNGLSHADERSOURCEARBPROC         glShaderSourceARB		 = NULL;
+	PFNGLCOMPILESHADERARBPROC        glCompileShaderARB		= NULL;
 	PFNGLGETOBJECTPARAMETERIVARBPROC glGetObjectParameterivARB = NULL;
-	PFNGLATTACHOBJECTARBPROC         glAttachObjectARB         = NULL;
-	PFNGLGETINFOLOGARBPROC           glGetInfoLogARB           = NULL;
-	PFNGLLINKPROGRAMARBPROC          glLinkProgramARB          = NULL;
+	PFNGLATTACHOBJECTARBPROC         glAttachObjectARB		 = NULL;
+	PFNGLGETINFOLOGARBPROC           glGetInfoLogARB		   = NULL;
+	PFNGLLINKPROGRAMARBPROC          glLinkProgramARB		  = NULL;
 	PFNGLGETUNIFORMLOCATIONARBPROC   glGetUniformLocationARB   = NULL;
-	PFNGLGETACTIVEUNIFORMARBPROC     glGetActiveUniformARB     = NULL;
-	PFNGLUNIFORM1FVARBPROC           glUniform1fvARB            = NULL;
-	PFNGLUNIFORM2FVARBPROC           glUniform2fvARB            = NULL;
-	PFNGLUNIFORM3FVARBPROC           glUniform3fvARB            = NULL;
-	PFNGLUNIFORM4FVARBPROC           glUniform4fvARB            = NULL;
-	PFNGLUNIFORM1IVARBPROC           glUniform1ivARB            = NULL;
-	PFNGLUNIFORM2IVARBPROC           glUniform2ivARB            = NULL;
-	PFNGLUNIFORM3IVARBPROC           glUniform3ivARB            = NULL;
-	PFNGLUNIFORM4IVARBPROC           glUniform4ivARB            = NULL;
+	PFNGLGETACTIVEUNIFORMARBPROC     glGetActiveUniformARB	 = NULL;
+	PFNGLUNIFORM1FVARBPROC           glUniform1fvARB			= NULL;
+	PFNGLUNIFORM2FVARBPROC           glUniform2fvARB			= NULL;
+	PFNGLUNIFORM3FVARBPROC           glUniform3fvARB			= NULL;
+	PFNGLUNIFORM4FVARBPROC           glUniform4fvARB			= NULL;
+	PFNGLUNIFORM1IVARBPROC           glUniform1ivARB			= NULL;
+	PFNGLUNIFORM2IVARBPROC           glUniform2ivARB			= NULL;
+	PFNGLUNIFORM3IVARBPROC           glUniform3ivARB			= NULL;
+	PFNGLUNIFORM4IVARBPROC           glUniform4ivARB			= NULL;
 
 #endif
 
@@ -115,7 +115,7 @@ void Shader::staticInit()
 	_useShaders = true;
 
 
-    end:
+	end:
 #endif
 
 	if (_useShaders)
@@ -228,7 +228,7 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 	this->vertFile = file;
 	this->fragFile = fragFile;
 
-	char *vertCode = file.length()     ? readFile(file)     : NULL;
+	char *vertCode = file.length()	 ? readFile(file)	 : NULL;
 	char *fragCode = fragFile.length() ? readFile(fragFile) : NULL;
 
 	loadSrc(vertCode, fragCode);
@@ -329,14 +329,14 @@ void Shader::_setUniform(Uniform *u)
 {
 	switch(u->type)
 	{
-        case GL_FLOAT:          glUniform1fvARB(u->location, 1, u->data.f.f); break;
-        case GL_FLOAT_VEC2_ARB: glUniform2fvARB(u->location, 1, u->data.f.f); break;
-        case GL_FLOAT_VEC3_ARB: glUniform3fvARB(u->location, 1, u->data.f.f); break;
-        case GL_FLOAT_VEC4_ARB: glUniform4fvARB(u->location, 1, u->data.f.f); break;
-        case GL_INT:            glUniform1ivARB(u->location, 1, u->data.i.i); break;
-        case GL_INT_VEC2_ARB:   glUniform2ivARB(u->location, 1, u->data.i.i); break;
-        case GL_INT_VEC3_ARB:   glUniform3ivARB(u->location, 1, u->data.i.i); break;
-        case GL_INT_VEC4_ARB:   glUniform4ivARB(u->location, 1, u->data.i.i); break;
+		case GL_FLOAT:          glUniform1fvARB(u->location, 1, u->data.f.f); break;
+		case GL_FLOAT_VEC2_ARB: glUniform2fvARB(u->location, 1, u->data.f.f); break;
+		case GL_FLOAT_VEC3_ARB: glUniform3fvARB(u->location, 1, u->data.f.f); break;
+		case GL_FLOAT_VEC4_ARB: glUniform4fvARB(u->location, 1, u->data.f.f); break;
+		case GL_INT:            glUniform1ivARB(u->location, 1, u->data.i.i); break;
+		case GL_INT_VEC2_ARB:   glUniform2ivARB(u->location, 1, u->data.i.i); break;
+		case GL_INT_VEC3_ARB:   glUniform3ivARB(u->location, 1, u->data.i.i); break;
+		case GL_INT_VEC4_ARB:   glUniform4ivARB(u->location, 1, u->data.i.i); break;
 	}
 	u->dirty = false;
 }
@@ -432,10 +432,10 @@ void Shader::setInt(const char *name, int x, int y /* = 0 */, int z /* = 0 */, i
 	if(unsigned(idx) >= uniforms.size())
 		return;
 	Uniform& u = uniforms[idx];
-    u.data.i.i[0] = x;
-    u.data.i.i[1] = y;
-    u.data.i.i[2] = z;
-    u.data.i.i[3] = w;
+	u.data.i.i[0] = x;
+	u.data.i.i[1] = y;
+	u.data.i.i[2] = z;
+	u.data.i.i[3] = w;
 	u.dirty = true;
 	uniformsDirty = true;
 #endif
@@ -450,10 +450,10 @@ void Shader::setFloat(const char *name, float x, float y /* = 0 */, float z /* =
 	if(unsigned(idx) >= uniforms.size())
 		return;
 	Uniform& u = uniforms[idx];
-    u.data.f.f[0] = x;
-    u.data.f.f[1] = y;
-    u.data.f.f[2] = z;
-    u.data.f.f[3] = w;
+	u.data.f.f[0] = x;
+	u.data.f.f[1] = y;
+	u.data.f.f[2] = z;
+	u.data.f.f[3] = w;
 	u.dirty = true;
 	uniformsDirty = true;
 #endif

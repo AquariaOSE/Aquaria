@@ -264,10 +264,6 @@ void AfterEffectManager::renderGrid()
 	if (activeShader)
 		activeShader->unbind();
 
-    //float width2 = float(vw)/2;
-    //float height2 = float(vh)/2;
-
-
 	if(firstShader != lastShader)
 	{
 		// From here on: secondary shader passes.

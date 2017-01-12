@@ -337,7 +337,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 #if defined(BBGE_BUILD_UNIX)
 	const char *envr = getenv("HOME");
 	if (envr == NULL)
-        envr = ".";  // oh well.
+		envr = ".";  // oh well.
 	const std::string home(envr);
 
 	createDir(home);  // just in case.
@@ -626,7 +626,7 @@ std::string Core::adjustFilenameCase(const char *_buf)
 	if (strcmp(_buf, buf) != 0)
 	{
 		fprintf(stderr, "Corrected filename case: '%s' => '%s (%s)'\n",
-		        _buf, buf, rc ? "found" : "not found");
+				_buf, buf, rc ? "found" : "not found");
 	}
 	#endif
 
@@ -918,10 +918,10 @@ unsigned int Core::dbg_numRenderCalls = 0;
 
 #ifdef BBGE_BUILD_OPENGL_DYNAMIC
 #define GL_FUNC(ret,fn,params,call,rt) \
-    extern "C" { \
-        static ret (GLAPIENTRY *p##fn) params = NULL; \
-        ret GLAPIENTRY fn params { ++Core::dbg_numRenderCalls; rt p##fn call; } \
-    }
+	extern "C" { \
+		static ret (GLAPIENTRY *p##fn) params = NULL; \
+		ret GLAPIENTRY fn params { ++Core::dbg_numRenderCalls; rt p##fn call; } \
+	}
 #include "OpenGLStubs.h"
 #undef GL_FUNC
 
@@ -1001,7 +1001,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 	setWindowCaption(appName, appName);
 
 	initIcon();
-    // Create window
+	// Create window
 
 	setSDLGLAttributes();
 
@@ -1242,22 +1242,22 @@ void Core::applyState(const std::string &state)
 #ifdef BBGE_BUILD_WINDOWS
 void centerWindow(HWND hwnd)
 {
-    int x, y;
-    HWND hwndDeskTop;
-    RECT rcWnd, rcDeskTop;
-    // Get a handle to the desktop window
-    hwndDeskTop = ::GetDesktopWindow();
-    // Get dimension of desktop in a rect
-    ::GetWindowRect(hwndDeskTop, &rcDeskTop);
-    // Get dimension of main window in a rect
-    ::GetWindowRect(hwnd, &rcWnd);
-    // Find center of desktop
+	int x, y;
+	HWND hwndDeskTop;
+	RECT rcWnd, rcDeskTop;
+	// Get a handle to the desktop window
+	hwndDeskTop = ::GetDesktopWindow();
+	// Get dimension of desktop in a rect
+	::GetWindowRect(hwndDeskTop, &rcDeskTop);
+	// Get dimension of main window in a rect
+	::GetWindowRect(hwnd, &rcWnd);
+	// Find center of desktop
 	x = (rcDeskTop.right - rcDeskTop.left)/2;
 	y = (rcDeskTop.bottom - rcDeskTop.top)/2;
-    x -= (rcWnd.right - rcWnd.left)/2;
+	x -= (rcWnd.right - rcWnd.left)/2;
 	y -= (rcWnd.bottom - rcWnd.top)/2;
-    // Set top and left to center main window on desktop
-    ::SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
+	// Set top and left to center main window on desktop
+	::SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
 
 }
 #endif
@@ -1277,7 +1277,7 @@ bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::s
 
 // No longer part of C/C++ standard
 #ifndef M_PI
-#define M_PI           3.14159265358979323846
+#define M_PI		   3.14159265358979323846
 #endif
 
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
@@ -1337,7 +1337,7 @@ void Core::enable2DWide(int rx, int ry)
 
 static void bbgeOrtho2D(float left, float right, float bottom, float top)
 {
-    glOrtho(left, right, bottom, top, -1.0, 1.0);
+	glOrtho(left, right, bottom, top, -1.0, 1.0);
 }
 
 void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
@@ -1345,12 +1345,12 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 
 
 
-    GLint viewPort[4];
-    glGetIntegerv(GL_VIEWPORT, viewPort);
+	GLint viewPort[4];
+	glGetIntegerv(GL_VIEWPORT, viewPort);
 
-    glMatrixMode(GL_PROJECTION);
+	glMatrixMode(GL_PROJECTION);
 
-    glLoadIdentity();
+	glLoadIdentity();
 
 	float vw=0,vh=0;
 
@@ -1377,9 +1377,9 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 
 
 
-    glMatrixMode(GL_MODELVIEW);
+	glMatrixMode(GL_MODELVIEW);
 
-    glLoadIdentity();
+	glLoadIdentity();
 
 	setupRenderPositionAndScale();
 
@@ -1482,7 +1482,7 @@ std::string getScreenshotFilename()
 		std::ostringstream os;
 		os << core->getUserDataFolder() << "/screenshots/screen" << screenshotNum << ".tga";
 		screenshotNum ++;
-        std::string str(os.str());
+		std::string str(os.str());
 		if (!core->exists(str))  // keep going until we hit an unused filename.
 			return str;
 	}
@@ -1535,7 +1535,7 @@ void Core::main(float runTime)
 
 	float dt;
 	float counter = 0;
-    int frames = 0;
+	int frames = 0;
 
 
 #if (!defined(_DEBUG) || defined(BBGE_BUILD_UNIX)) && defined(BBGE_BUILD_SDL)
@@ -2729,9 +2729,9 @@ void Core::shutdown()
 
 void Core::instantQuit()
 {
-    SDL_Event event;
-    event.type = SDL_QUIT;
-    SDL_PushEvent(&event);
+	SDL_Event event;
+	event.type = SDL_QUIT;
+	SDL_PushEvent(&event);
 }
 
 bool Core::exists(const std::string &filename)
