@@ -59,7 +59,7 @@ std::pair<DirBase*, DirBase*> DirBase::_getDirEx(const char *subdir, const char 
         return std::make_pair(this, this);
 
     DirBase *ret = NULL;
-    DirBase *last = NULL;
+    //DirBase *last = NULL;
     char *slashpos = (char *)strchr(subdir, '/');
 
     // if there is a '/' in the string, descend into subdir and continue there

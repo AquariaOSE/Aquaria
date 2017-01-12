@@ -37,6 +37,7 @@ public:
     {
         int val = s_getRef(_refcount);
         assert(val == 0 && "Object was deleted with refcount != 0");
+        val = 0; // prevents unused warning
     }
 
     inline void incref()

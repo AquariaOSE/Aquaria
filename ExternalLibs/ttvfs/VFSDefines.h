@@ -50,7 +50,7 @@ VFS_NAMESPACE_START
      static const vfspos npos = vfspos(-1i64);
 #else
 #    define VFS_STRICMP strcasecmp
-     static const vfspos npos = vfspos(-1LL);
+     static const vfspos npos = vfspos(~0L);
 #endif
 
 typedef void (*delete_func)(void *);
