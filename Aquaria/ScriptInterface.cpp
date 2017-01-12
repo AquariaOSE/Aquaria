@@ -882,6 +882,25 @@ luaFunc(loadfile_caseinsensitive)
 	}
 }
 
+#ifdef BBGE_BUILD_SDL2
+#define LUAAPI_HAS_CLIPBOARD
+luaFunc(os_setclipboard)
+{
+	const char *s = getCString(L);
+	SDL_SetClipboardText(s ? s : "");
+	luaReturnNil();
+}
+
+luaFunc(os_getclipboard)
+{
+	const char *s = SDL_GetClipboardText();
+	lua_pushstring(L, s ? s : "");
+	if(s)
+		SDL_free(s);
+	return 1;
+}
+#endif
+
 luaFunc(fileExists)
 {
 	const std::string s = getString(L);
@@ -11347,6 +11366,15 @@ lua_State *ScriptInterface::createLuaVM()
 {
 	lua_State *state = lua_newstate(the_alloc, this);	/* opens Lua */
 	luaL_openlibs(state);
+
+#ifdef LUAAPI_HAS_CLIPBOARD
+	lua_getglobal(L, "os");
+		lua_pushcfunction(L, l_os_getclipboard);
+		lua_setfield(L, -2, "getclipboard");
+		lua_pushcfunction(L, l_os_setclipboard);
+		lua_setfield(L, -2, "setclipboard");
+	lua_pop(L, 1);
+#endif
 
 	if(!allowUnsafeFunctions)
 	{
