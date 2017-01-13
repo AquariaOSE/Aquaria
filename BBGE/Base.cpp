@@ -218,7 +218,7 @@ static TransatableStaticInit _transtable_static_init;
 
 static unsigned char charIsUpper(unsigned char c)
 {
-	return c == upperToLowerTable[c];
+	return c == lowerToUpperTable[c];
 }
 
 static unsigned char charToLower(unsigned char c)
