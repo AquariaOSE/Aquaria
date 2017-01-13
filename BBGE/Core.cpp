@@ -146,37 +146,32 @@ void Core::setup_opengl()
 }
 
 
-void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int display)
+void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int display, int hz)
 {
 	assert(lib_graphics);
 
 	const int oldDisplay = getDisplayIndex();
+	assert(oldDisplay >= 0);
 	if(display == -1)
 		display = oldDisplay;
 
-	int screenw = 0, screenh = 0;
-	if(display >= 0)
+	SDL_DisplayMode displaymode;
+	if(SDL_GetDesktopDisplayMode(display, &displaymode) != 0)
 	{
-		SDL_DisplayMode desktop;
-		if(SDL_GetDesktopDisplayMode(display, &desktop) == 0)
-		{
-			screenw = desktop.w;
-			screenh = desktop.h;
-		}
-		else // fail-safe
-		{
-			screenw = 800;
-			screenh = 600;
-			display = oldDisplay;
-		}
+		// fail-safe
+		displaymode.w = 800;
+		displaymode.h = 600;
+		displaymode.driverdata = 0;
+		displaymode.refresh_rate = 0;
+		displaymode.format = 0;
+		display = oldDisplay;
+	}
 
-		// Move window to specified display if necessary
-		if(display != oldDisplay)
-		{
-			SDL_Rect bounds;
-			SDL_GetDisplayBounds(display,&bounds);
-			SDL_SetWindowPosition(gScreen, bounds.x, bounds.y);
-		}
+	// Move window to specified display if necessary
+	if(display != oldDisplay)
+	{
+		int center = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
+		SDL_SetWindowPosition(gScreen, center, center);
 	}
 
 	const int oldw = width;
@@ -186,6 +181,9 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 	const bool useDesktop = w == 0 || h == 0 || (oldw && w == -1 && oldh && h == -1 && _useDesktopResolution);
 	const bool wasFullscreen = _fullscreen;
 
+	if(hz == -1)
+		hz = _refreshRate;
+
 	if (fullscreen == -1)
 		fullscreen = _fullscreen;
 
@@ -194,8 +192,8 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 
 	if(useDesktop)
 	{
-		w = screenw;
-		h = screenh;
+		w = displaymode.w;
+		h = displaymode.h;
 	}
 
 	if (w == -1)
@@ -210,6 +208,8 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 	_vsync = vsync;
 	_fullscreen = fullscreen;
 	_bpp = bpp;
+	_refreshRate = hz;
+	displaymode.refresh_rate = hz;
 
 #ifdef BBGE_BUILD_SDL2
 	if(vsync)
@@ -221,44 +221,54 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 		SDL_GL_SetSwapInterval(0);
 
 	// Record window position so we can properly restore it when leaving fullscreen
-	if(fullscreen && !wasFullscreen)
-		SDL_GetWindowPosition(gScreen, &winPosX, &winPosY);
+	//if(fullscreen && !wasFullscreen)
+	//	SDL_GetWindowPosition(gScreen, &winPosX, &winPosY);
 
-	if(!!fullscreen != wasFullscreen)
-	{
-		int screenflags = 0;
-		if(fullscreen)
-		{
-			screenflags |= useDesktop ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN;
-		}
-
-		SDL_SetWindowFullscreen(gScreen, screenflags);
-
-		if(!fullscreen && wasFullscreen)
-		{
-			// Need to do this; else the window ends up at (0, 0) with the title bar outside the screen area
-			SDL_SetWindowPosition(gScreen, winPosX, winPosY);
-		}
-	}
+	SDL_SetWindowFullscreen(gScreen, 0);
 
 	bool resize = true;
 	bool reloadRes = false;
+	bool maximize = true;
 	if(useDesktop != _useDesktopResolution)
 	{
-		if(useDesktop)
-			createWindow(oldw, oldh, true, fullscreen);
-		else
-			createWindow(w, h, false, fullscreen);
+		int usew = 0, useh = 0;
+		bool maximize = !fullscreen;
+		if(!useDesktop)
+		{
+			usew = w;
+			useh = h;
+			maximize = false;
+		}
+		if(useDesktop && !fullscreen && wasFullscreen)
+		{
+			usew = oldw;
+			useh = oldh;
+			maximize = false;
+		}
+		createWindow(usew, useh, useDesktop, false);
 
 		reloadRes = true;
-		if(useDesktop)
-		{
-			SDL_MaximizeWindow(gScreen);
-			resize = false;
-		}
 	}
-	// First time called + windowed mode --> maximize window
-	else if(!oldw && !oldh && useDesktop && !fullscreen)
+
+	if(fullscreen)
+	{
+		int screenflags = useDesktop ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN;
+		displaymode.w = w;
+		displaymode.h = h;
+		// must not be already in fullscreen here, otherwise new display mode doesn't apply properly
+		SDL_SetWindowSize(gScreen, w, h);
+		SDL_SetWindowDisplayMode(gScreen, &displaymode);
+		SDL_SetWindowFullscreen(gScreen, screenflags);
+		maximize = false;
+	}
+
+	if(!fullscreen && wasFullscreen)
+	{
+		// Need to do this; else the window ends up at (0, 0) with the title bar outside the screen area
+		int c = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
+		SDL_SetWindowPosition(gScreen, c, c);
+	}
+	if(maximize)
 	{
 		SDL_MaximizeWindow(gScreen);
 		resize = false;
@@ -282,7 +292,8 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 
 	_useDesktopResolution = useDesktop;
 
-	SDL_GetWindowSize(gScreen, &w, &h);
+	if(!resize)
+		SDL_GetWindowSize(gScreen, &w, &h);
 
 	updateWindowDrawSize(w, h);
 
@@ -501,6 +512,8 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	baseCullRadius = 1;
 	width = height = 0;
 	_fullscreen = false;
+	_refreshRate = 0;
+	_useDesktopResolution = false;
 	afterEffectManagerLayer = 0;
 	renderObjectLayers.resize(1);
 	invGlobalScale = 1.0;
@@ -655,10 +668,16 @@ bool Core::isDesktopResolution()
 int Core::getDisplayIndex()
 {
 #ifdef BBGE_BUILD_SDL2
-	return SDL_GetWindowDisplayIndex(gScreen);
+	int display = SDL_GetWindowDisplayIndex(gScreen);
+	return display < 0 ? 0 : display; // if there's an error, assume primary display
 #else
 	return 0;
 #endif
+}
+
+int Core::getRefreshRate()
+{
+	return _refreshRate;
 }
 
 bool Core::isShuttingDown()
@@ -827,7 +846,7 @@ void Core::setClearColor(const Vector &c)
 
 }
 
-bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsync, int bpp, int display)
+bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsync, int bpp, int display, int hz)
 {
 	assert(!gScreen);
 
@@ -886,7 +905,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 
 	enumerateScreenModes();
 
-	initGraphics(width, height, fullscreen, vsync, bpp, display);
+	initGraphics(width, height, fullscreen, vsync, bpp, display, hz);
 
 	_hasFocus = true;
 
@@ -896,11 +915,6 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 
 void Core::createWindow(int w, int h, bool resizable, bool fullscreen)
 {
-	if(w <= 0)
-		w = 640;
-	if(h <= 0)
-		h = 480;
-
 #ifdef BBGE_BUILD_SDL2
 	if(gScreen)
 	{
@@ -916,8 +930,17 @@ void Core::createWindow(int w, int h, bool resizable, bool fullscreen)
 	Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
 	if(resizable)
 		flags |= SDL_WINDOW_RESIZABLE;
-	//if(fullscreen) // Ignore fullscreen setting here, it's applied later
-	//	flags |= SDL_WINDOW_FULLSCREEN;
+	if(fullscreen)
+	{
+		if(!w && !h)
+			flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+		else
+			flags |= SDL_WINDOW_FULLSCREEN;
+	}
+	if(w <= 0)
+		w = 640;
+	if(h <= 0)
+		h = 480;
 	gScreen = SDL_CreateWindow(appName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
 	if (gScreen == NULL)
 	{

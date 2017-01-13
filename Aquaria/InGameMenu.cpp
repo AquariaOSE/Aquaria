@@ -3292,24 +3292,30 @@ void InGameMenu::onOptionsSave()
 
 	dsq->user.apply();
 
-	if (dsq->user.video.resx != dsq->user_backup.video.resx
-		|| dsq->user.video.resy != dsq->user_backup.video.resy
-		|| dsq->user.video.bits != dsq->user_backup.video.bits
-		|| dsq->user.video.full != dsq->user_backup.video.full
-		|| dsq->user.video.vsync != dsq->user_backup.video.vsync)
+	const UserSettings::Video& bv = dsq->user_backup.video;
+	UserSettings::Video& v = dsq->user.video;
+
+	if (v.resx != bv.resx
+		|| v.resy != bv.resy
+		|| v.bits != bv.bits
+		|| v.full != bv.full
+		|| v.vsync != bv.vsync
+		|| v.hz != bv.hz
+	)
 	{
-		dsq->initGraphics(dsq->user.video.resx, dsq->user.video.resy, dsq->user.video.full);
+		dsq->initGraphics(v.resx, v.resy, v.full,  v.vsync, v.bits, -1, v.hz);
 		if (dsq->confirm("", "graphics", false, 10)) {
 		} else {
-			dsq->user.video.resx = dsq->user_backup.video.resx;
-			dsq->user.video.resy = dsq->user_backup.video.resy;
-			dsq->user.video.bits = dsq->user_backup.video.bits;
-			dsq->user.video.full = dsq->user_backup.video.full;
-			dsq->user.video.vsync = dsq->user_backup.video.vsync;
+			v.resx = bv.resx;
+			v.resy = bv.resy;
+			v.bits = bv.bits;
+			v.full = bv.full;
+			v.vsync = bv.vsync;
+			v.hz = bv.hz;
 
 			dsq->user.apply();
 
-			dsq->initGraphics(dsq->user.video.resx, dsq->user.video.resy, dsq->user.video.full);
+			dsq->initGraphics(v.resx, v.resy, v.full);
 		}
 	}
 
@@ -3909,7 +3915,7 @@ void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 		if (resBox)
 		{
 			// Note: This adds one past the original list (core->screenModes)
-			ScreenMode m = core->isDesktopResolution() ? ScreenMode(0,0,0) : ScreenMode(core->width, core->height, 0);
+			ScreenMode m = core->isDesktopResolution() ? ScreenMode(0,0,0) : ScreenMode(core->width, core->height, core->getRefreshRate());
 			std::string mstr = screenModeStr(m);
 			if (!resBox->setSelectedItem(mstr))
 			{

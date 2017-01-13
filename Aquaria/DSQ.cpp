@@ -777,6 +777,8 @@ void DSQ::setVersionLabelText()
 
 static bool sdlVideoModeOK(int disp, const int w, const int h, const int bpp)
 {
+	if(!w && !h)
+		return true;
 #ifdef BBGE_BUILD_SDL2
 	SDL_DisplayMode mode;
 	const int modecount = SDL_GetNumDisplayModes(disp);
@@ -869,7 +871,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	this->setBaseTextureDirectory("gfx/");
 
-	bool fullscreen = true;
 	voiceOversEnabled = true;
 
 
@@ -878,7 +879,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	particleManager->setSize(user.video.numParticles);
 
-	fullscreen = user.video.full;
+	bool fullscreen = user.video.full;
 	useFrameBuffer = user.video.fbuffer;
 
 	if (isDeveloperKeys())
@@ -899,17 +900,32 @@ This build is not yet final, and as such there are a couple things lacking. They
 	SDL_Init(SDL_INIT_VIDEO);
 	if (fullscreen && !sdlVideoModeOK(user.video.displayindex, user.video.resx, user.video.resy, user.video.bits))
 	{
-		// maybe we can force a sane resolution if SetVideoMode is going to fail...
-		user.video.resx = 800;
-		user.video.resy = 600;
-		user.video.hz = 60;
-		user.video.displayindex = 0;
-		if (!sdlVideoModeOK(0, user.video.resx, user.video.resy, user.video.bits))
-			fullscreen = false;  // last chance.
+		SDL_DisplayMode mode, closest;
+		mode.format = 0;
+		mode.driverdata = 0;
+		mode.w = user.video.resx;
+		mode.h = user.video.resy;
+		mode.refresh_rate = user.video.hz;
+		if(SDL_GetClosestDisplayMode(user.video.displayindex, &mode, &closest))
+		{
+			user.video.resx = closest.w;
+			user.video.resy = closest.h;
+			user.video.hz = closest.refresh_rate;
+		}
+		else
+		{
+			// maybe we can force a sane resolution if SetVideoMode is going to fail...
+			user.video.resx = 800;
+			user.video.resy = 600;
+			user.video.hz = 60;
+			user.video.displayindex = 0;
+			if (!sdlVideoModeOK(0, user.video.resx, user.video.resy, user.video.bits))
+				fullscreen = false;  // last chance.
+		}
 	}
 
 	debugLog("Init Graphics Library...");
-		initGraphicsLibrary(user.video.resx, user.video.resy, fullscreen, user.video.vsync, user.video.bits, user.video.displayindex);
+		initGraphicsLibrary(user.video.resx, user.video.resy, fullscreen, user.video.vsync, user.video.bits, user.video.displayindex, user.video.hz);
 	debugLog("OK");
 
 	debugLog("Init Sound Library...");
