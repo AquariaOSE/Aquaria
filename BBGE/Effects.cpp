@@ -82,6 +82,8 @@ void PostProcessingFX::render()
 			FXTypes type = (FXTypes)i;
 			switch(type)
 			{
+			case FXT_MAX:
+				break;
 			case FXT_RADIALBLUR:
 
 				float windowW = core->getWindowWidth();

@@ -25,10 +25,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 const float strengthSeparation = 1;
 const float strengthAlignment = 0.8f;
-const float strengthAvoidance = 1;
+//const float strengthAvoidance = 1;
 const float strengthCohesion = 0.5f;
 
-const float avoidanceDistance = 128;
+//const float avoidanceDistance = 128;
 const float separationDistance = 128;
 const float minUrgency = 5;//0.05;
 const float maxUrgency = 10;//0.1;
@@ -317,12 +317,12 @@ void SchoolFish::applySeparation(Vector &accumulator)
 			if (!change.isZero())
 			{
 				change.setLength2D(-ratio);
-		        	accumulator += change;
+					accumulator += change;
 			}
 		}
-	        // Are we too far from nearest flockmate?  Then Move Closer
+			// Are we too far from nearest flockmate?  Then Move Closer
 		/*
-        	else if (dist > separationDistance)
+			else if (dist > separationDistance)
 			change |= ratio;
 		*/
 	}

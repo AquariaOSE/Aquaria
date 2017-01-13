@@ -350,7 +350,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 #if defined(BBGE_BUILD_UNIX)
 	const char *envr = getenv("HOME");
 	if (envr == NULL)
-        envr = ".";  // oh well.
+		envr = ".";  // oh well.
 	const std::string home(envr);
 
 	createDir(home);  // just in case.
@@ -769,7 +769,6 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 #endif
 
 	initIcon(gScreen);
-    // Create window
 
 	std::ostringstream os;
 	os << "setting vsync: " << vsync;
@@ -979,22 +978,22 @@ void Core::applyState(const std::string &state)
 #ifdef BBGE_BUILD_WINDOWS
 void centerWindow(HWND hwnd)
 {
-    int x, y;
-    HWND hwndDeskTop;
-    RECT rcWnd, rcDeskTop;
-    // Get a handle to the desktop window
-    hwndDeskTop = ::GetDesktopWindow();
-    // Get dimension of desktop in a rect
-    ::GetWindowRect(hwndDeskTop, &rcDeskTop);
-    // Get dimension of main window in a rect
-    ::GetWindowRect(hwnd, &rcWnd);
-    // Find center of desktop
+	int x, y;
+	HWND hwndDeskTop;
+	RECT rcWnd, rcDeskTop;
+	// Get a handle to the desktop window
+	hwndDeskTop = ::GetDesktopWindow();
+	// Get dimension of desktop in a rect
+	::GetWindowRect(hwndDeskTop, &rcDeskTop);
+	// Get dimension of main window in a rect
+	::GetWindowRect(hwnd, &rcWnd);
+	// Find center of desktop
 	x = (rcDeskTop.right - rcDeskTop.left)/2;
 	y = (rcDeskTop.bottom - rcDeskTop.top)/2;
-    x -= (rcWnd.right - rcWnd.left)/2;
+	x -= (rcWnd.right - rcWnd.left)/2;
 	y -= (rcWnd.bottom - rcWnd.top)/2;
-    // Set top and left to center main window on desktop
-    ::SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
+	// Set top and left to center main window on desktop
+	::SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
 
 }
 #endif
@@ -1002,7 +1001,7 @@ void centerWindow(HWND hwnd)
 
 // No longer part of C/C++ standard
 #ifndef M_PI
-#define M_PI           3.14159265358979323846
+#define M_PI		   3.14159265358979323846
 #endif
 
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
@@ -1158,7 +1157,7 @@ std::string getScreenshotFilename(bool png)
 		std::ostringstream os;
 		os << prefix << screenshotNum << ext;
 		screenshotNum ++;
-        std::string str(os.str());
+		std::string str(os.str());
 		if (!core->exists(str))  // keep going until we hit an unused filename.
 			return str;
 	}
@@ -1195,7 +1194,6 @@ void Core::run(float runTime)
 	float dt;
 	float counter = 0;
 	int frames = 0;
-	float real_dt = 0;
 
 #if !defined(_DEBUG)
 	bool wasInactive = false;

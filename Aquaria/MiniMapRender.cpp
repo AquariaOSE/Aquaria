@@ -286,12 +286,12 @@ void MiniMapRender::toggle(int t)
 
 float MiniMapRender::getMiniMapWidth() const
 {
-    return scale.x * miniMapSize;
+	return scale.x * miniMapSize;
 }
 
 float MiniMapRender::getMiniMapHeight() const
 {
-    return scale.y * miniMapSize;
+	return scale.y * miniMapSize;
 }
 
 void MiniMapRender::onUpdate(float dt)

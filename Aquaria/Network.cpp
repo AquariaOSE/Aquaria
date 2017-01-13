@@ -60,7 +60,7 @@ protected:
 
 		minihttp::HttpSocket::_OnOpen();
 
-		const Request& r = GetCurrentRequest();
+		//const Request& r = GetCurrentRequest();
 		// TODO ??
 	}
 

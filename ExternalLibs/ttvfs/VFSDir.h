@@ -59,9 +59,6 @@ class DirView;
 class File;
 class VFSLoader;
 
-typedef void (*FileEnumCallback)(File *vf, void *user);
-typedef void (*DirEnumCallback)(DirBase *vd, void *user);
-
 
 // Avoid using std::string as key.
 // The file names are known to remain constant during each object's lifetime,
@@ -125,13 +122,11 @@ public:
     virtual ~Dir();
 
     /** Adds a file directly to this directory, allows any name.
-    If another file with this name already exists, drop the old one out.
-    Returns whether the file was actually added (false if the same file already existed) */
+        If the file name contains a path, descend the tree to the target dir.
+        Not-existing subdirs are created on the way.
+        If another file with this name already exists, drop the old one out.
+        Returns whether the file was actually added (false if the same file already existed) */
     bool add(File *f);
-
-    /** Like add(), but if the file name contains a path, descend the tree to the target dir.
-        Not-existing subdirs are created on the way. */
-    bool addRecursive(File *f, size_t skip = 0);
 
     /** Enumerate directory with given path. Clears previously loaded entries. */
     virtual void load() = 0;
@@ -146,8 +141,11 @@ public:
     File *getFileByName(const char *fn, bool lazyLoad = true);
     File *getFileFromSubdir(const char *subdir, const char *file);
 
+    bool _addRecursiveSkip(File *f, size_t skip = 0);
 
 protected:
+
+    bool _addSingle(File *f);
 
     inline VFSLoader *getLoader() const { return _loader; }
 
@@ -162,9 +160,23 @@ class DiskDir : public Dir
 public:
     DiskDir(const char *path, VFSLoader *ldr);
     virtual ~DiskDir() {};
-    virtual void load();
-    virtual DiskDir *createNew(const char *dir) const;
-    virtual const char *getType() const { return "DiskDir"; }
+
+    // virtual overloads
+    void load();
+    DiskDir *createNew(const char *dir) const;
+    const char *getType() const { return "DiskDir"; }
+};
+
+class MemDir : public Dir
+{
+public:
+    MemDir(const char *fullpath) : Dir(fullpath, NULL) {}
+    virtual ~MemDir() {}
+
+    // virtual overloads
+    void load() {}
+    MemDir *createNew(const char *dir) const;
+    const char *getType() const { return "MemDir"; }
 };
 
 VFS_NAMESPACE_END

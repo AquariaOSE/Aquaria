@@ -108,7 +108,7 @@ public:
 class BoneKeyframe
 {
 public:
-	BoneKeyframe() : idx(0), x(0), y(0), rot(0), doScale(0), sx(1), sy(1) {}
+	BoneKeyframe() : idx(0), x(0), y(0), rot(0), sx(1), sy(1), doScale(0) {}
 	int idx, x, y, rot;
 	float sx, sy;
 	bool doScale;

@@ -164,8 +164,15 @@ void DebugFont::setAlign(Align align)
 #include "../BBGE/Quad.h"
 
 DebugButton::DebugButton(int buttonID, DebugButtonReceiver *receiver, int bgWidth, int fsize)
- : RenderObject(), label(0), highlight(0), receiver(receiver), buttonID(buttonID)
- , activeAlpha(0.5f), activeColor(1,1,1), inactiveAlpha(0.5f), inactiveColor(0,0,0)
+	: RenderObject()
+	, label(0)
+	, buttonID(buttonID)
+	, highlight(0)
+	, receiver(receiver)
+	, activeAlpha(0.5f)
+	, activeColor(1,1,1)
+	, inactiveAlpha(0.5f)
+	, inactiveColor(0,0,0)
 {
 	if (bgWidth == 0)
 		bgWidth = 150;

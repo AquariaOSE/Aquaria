@@ -377,6 +377,9 @@ void BoneCommand::run()
 	case AC_RESET_PASS:
 		b->setRenderPass(b->originalRenderPass);
 	break;
+	case AC_SEGS_START:
+	case AC_SEGS_STOP:
+		break;
 	}
 }
 
@@ -409,8 +412,8 @@ void AnimationLayer::playCurrentAnimation(int loop)
 
 void AnimationLayer::animate(const std::string &a, int loop)
 {
-    std::string animation = a;
-    stringToLower(animation);
+	std::string animation = a;
+	stringToLower(animation);
 
 	bool played = false;
 	for (int i = 0; i < s->animations.size(); i++)
@@ -458,7 +461,7 @@ void AnimationLayer::enqueueAnimation(const std::string& anim, int loop)
 
 float AnimationLayer::transitionAnimate(std::string anim, float time, int loop)
 {
-    stringToLower(anim);
+	stringToLower(anim);
 	float totalTime =0;
 	if (createTransitionAnimation(anim, time))
 	{

@@ -410,28 +410,28 @@ void SceneEditor::openMainMenu()
 		core->run(FRAME_TIME);
 	}
 
-	addMainMenuItem("LOAD LEVEL...                    (SHIFT-F1)",			100);
-	addMainMenuItem("RELOAD LEVEL                           (F1)",			101);
-	addMainMenuItem("SAVE LEVEL                             (F2)",			102);
-	addMainMenuItem("EDIT TILES                             (F5)",			106);
-	addMainMenuItem("EDIT ENTITIES                          (F6)",			107);
-	addMainMenuItem("EDIT NODES                             (F7)",			108);
-	addMainMenuItem("REGEN COLLISIONS                    (ALT-R)",			103);
-	addMainMenuItem("RECACHE TEXTURES					(CTRL-R)",			130);
+	addMainMenuItem("LOAD LEVEL...                    (SHIFT-F1)",            100);
+	addMainMenuItem("RELOAD LEVEL                           (F1)",            101);
+	addMainMenuItem("SAVE LEVEL                             (F2)",            102);
+	addMainMenuItem("EDIT TILES                             (F5)",            106);
+	addMainMenuItem("EDIT ENTITIES                          (F6)",            107);
+	addMainMenuItem("EDIT NODES                             (F7)",            108);
+	addMainMenuItem("REGEN COLLISIONS                    (ALT-R)",            103);
+	addMainMenuItem("RECACHE TEXTURES                    (CTRL-R)",            130);
 
-	addMainMenuItem("REGEN ROCK FROM MAPTEMPLATE       (F11+F12)",			116);
+	addMainMenuItem("REGEN ROCK FROM MAPTEMPLATE       (F11+F12)",            116);
 
-	addMainMenuItem("SET BG GRADIENT",										110);
-	addMainMenuItem("SET MUSIC",											111);
-	addMainMenuItem("ENTITY GROUPS                      (CTRL-E)",			112);
+	addMainMenuItem("SET BG GRADIENT",                                        110);
+	addMainMenuItem("SET MUSIC",                                            111);
+	addMainMenuItem("ENTITY GROUPS                      (CTRL-E)",            112);
 	if (dsq->game->gridRender)
-		addMainMenuItem(std::string("TOGGLE TILE COLLISION RENDER ") + ((dsq->game->gridRender->alpha!=0) ? "OFF" : "ON ") + std::string("       (F9)"),			113);
-	addMainMenuItem("SCREENSHOT                                 ",	        114);
+		addMainMenuItem(std::string("TOGGLE TILE COLLISION RENDER ") + ((dsq->game->gridRender->alpha!=0) ? "OFF" : "ON ") + std::string("       (F9)"),            113);
+	addMainMenuItem("SCREENSHOT                                 ",            114);
 
 
 
-	addMainMenuItem("PARTICLE VIEWER                            ",	        120);
-	addMainMenuItem("ANIMATION EDITOR                           ",	        115);
+	addMainMenuItem("PARTICLE VIEWER                            ",            120);
+	addMainMenuItem("ANIMATION EDITOR                           ",            115);
 
 	while (1 && !core->getKeyState(KEY_TAB))
 	{
@@ -788,11 +788,11 @@ void SceneEditor::reversePath()
 
 void SceneEditor::setGridPattern(int gi)
 {
-    if (selectedElements.size())
-        for (int i = 0; i < selectedElements.size(); ++i)
-            selectedElements[i]->setElementEffectByIndex(gi);
-    else if (editingElement)
-        editingElement->setElementEffectByIndex(gi);
+	if (selectedElements.size())
+		for (int i = 0; i < selectedElements.size(); ++i)
+			selectedElements[i]->setElementEffectByIndex(gi);
+	else if (editingElement)
+		editingElement->setElementEffectByIndex(gi);
 }
 
 void SceneEditor::setGridPattern0()
@@ -2741,6 +2741,9 @@ void SceneEditor::updateText()
 		if (getSelectedPath())
 			os << " name: " << getSelectedPath()->name;
 	break;
+	case ET_SELECTENTITY:
+	case ET_MAX:
+		break;
 	}
 	text->setText(os.str());
 }
@@ -2806,6 +2809,10 @@ void SceneEditor::update(float dt)
 			else
 				placer->alpha = 0.5;
 		break;
+		case ET_PATHS:
+		case ET_SELECTENTITY:
+		case ET_MAX:
+			break;
 		}
 
 		updateText();
@@ -2913,6 +2920,9 @@ void SceneEditor::update(float dt)
 				if (selectedIdx >= 0)
 					dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
 			break;
+			case ES_ROTATING:
+			case ES_MAX:
+				break;
 			}
 		}
 		else if (editType == ET_ENTITIES)
@@ -2940,6 +2950,11 @@ void SceneEditor::update(float dt)
 					}
 				}
 			}
+				break;
+			case ES_SELECTING:
+			case ES_SCALING:
+			case ES_MAX:
+				break;
 			}
 		}
 		else if (editType == ET_ELEMENTS)
@@ -3007,7 +3022,7 @@ void SceneEditor::update(float dt)
 				else if (cursorOffset.x < oldPosition.x-10)
 					right = false;
 				else
-					noSide++;
+					noSide = true;
 				if (cursorOffset.y > oldPosition.y+10)
 					down = true;
 				else if (cursorOffset.y < oldPosition.y-10)
@@ -3105,6 +3120,8 @@ void SceneEditor::update(float dt)
 				}
 			}
 			break;
+			case ES_MAX:
+				break;
 			}
 		}
 	}
