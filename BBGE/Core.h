@@ -278,7 +278,7 @@ public:
 
 	unsigned getTicks();
 
-	void initGraphics(int w, int h, int fullscreen=-1, int vsync=-1, int bpp=-1, int display=-1); // pass 0x0 for desktop resolution
+	void initGraphics(int w, int h, int fullscreen=-1, int vsync=-1, int bpp=-1, int display=-1, int hz=-1); // pass 0x0 for desktop resolution
 	void updateWindowDrawSize(int w, int h);
 
 	Vector getGameCursorPosition();
@@ -416,6 +416,7 @@ public:
 	bool isFullscreen();
 	bool isDesktopResolution();
 	int getDisplayIndex();
+	int getRefreshRate();
 
 	int getVirtualOffX();
 	int getVirtualOffY();
@@ -483,7 +484,7 @@ protected:
 	bool initSoundLibrary(const std::string &defaultDevice);
 	bool initInputLibrary();
 	void initJoystickLibrary();
-	bool initGraphicsLibrary(int w, int h, bool fullscreen, bool vsync, int bpp, int display);
+	bool initGraphicsLibrary(int w, int h, bool fullscreen, bool vsync, int bpp, int display, int hz);
 	void createWindow(int w, int h, bool resizable, bool fullscreen);
 	void shutdownInputLibrary();
 	void shutdownJoystickLibrary();
@@ -513,7 +514,7 @@ protected:
 
 	int nowTicks, thenTicks;
 
-	int _vsync, _bpp;
+	int _vsync, _bpp, _refreshRate;
 	bool _fullscreen, _useDesktopResolution;
 	int winPosX, winPosY; // pre-fullscreen
 
