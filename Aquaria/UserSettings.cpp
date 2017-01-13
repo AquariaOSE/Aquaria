@@ -131,6 +131,7 @@ void UserSettings::save()
 			{
 				xml_screenMode->SetAttribute("resx",				video.resx);
 				xml_screenMode->SetAttribute("resy",				video.resy);
+				xml_screenMode->SetAttribute("hz",				video.hz);
 				xml_screenMode->SetAttribute("bits",				video.bits);
 				xml_screenMode->SetAttribute("fbuffer",			video.fbuffer);
 				xml_screenMode->SetAttribute("full",				video.full);
@@ -138,6 +139,7 @@ void UserSettings::save()
 				xml_screenMode->SetAttribute("darkfbuffer",		video.darkfbuffer);
 				xml_screenMode->SetAttribute("darkbuffersize",	video.darkbuffersize);
 				xml_screenMode->SetAttribute("displaylists",		video.displaylists);
+				xml_screenMode->SetAttribute("displayindex",		video.displayindex);
 			}
 			xml_video->InsertEndChild(xml_screenMode);
 
@@ -452,6 +454,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		{
 			xml_screenMode->QueryIntAttribute("resx",			&video.resx);
 			xml_screenMode->QueryIntAttribute("resy",			&video.resy);
+			xml_screenMode->QueryIntAttribute("hz",				&video.hz);
 			xml_screenMode->QueryIntAttribute("bits",			&video.bits);
 			xml_screenMode->QueryIntAttribute("fbuffer",		&video.fbuffer);
 			xml_screenMode->QueryIntAttribute("full",			&video.full);
@@ -459,6 +462,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			xml_screenMode->QueryIntAttribute("darkfbuffer",	&video.darkfbuffer);
 			xml_screenMode->QueryIntAttribute("darkbuffersize",	&video.darkbuffersize);
 			xml_screenMode->QueryIntAttribute("displaylists",	&video.displaylists);
+			xml_screenMode->QueryIntAttribute("displayindex",	&video.displayindex);
 		}
 
 		readInt(xml_video, "SaveSlotScreens", "on", &video.saveSlotScreens);

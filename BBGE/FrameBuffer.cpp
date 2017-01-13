@@ -97,6 +97,8 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 		return false;
 	}
 
+	unloadDevice();
+
 	//
 	// Create a frame-buffer object and a render-buffer object...
 	//
@@ -177,7 +179,6 @@ void FrameBuffer::unloadDevice()
 
 	if (g_frameBuffer)
 	{
-		debugLog("bind 0");
 		glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, 0 );
 
 		debugLog("frameBuffer handle present, deleting");
@@ -187,7 +188,6 @@ void FrameBuffer::unloadDevice()
 
 	if (g_dynamicTextureID)
 	{
-		debugLog("bind 0");
 		glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, 0 );
 
 		debugLog("dynamic texture ID handle present, deleting");
@@ -197,7 +197,6 @@ void FrameBuffer::unloadDevice()
 
 	if (g_depthRenderBuffer)
 	{
-		debugLog("bind 0");
 		glBindRenderbufferEXT( GL_RENDERBUFFER_EXT, 0 );
 
 		debugLog("depth render buffer handle present, deleting");

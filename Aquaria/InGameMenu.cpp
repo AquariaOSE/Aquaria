@@ -1693,6 +1693,31 @@ RenderObject *InGameMenu::createBasicKeyConfig()
 	return keyConfig;
 }
 
+static std::string screenModeStr(const ScreenMode& m)
+{
+	std::ostringstream os;
+	if(!m.x && !m.y)
+	{
+		os << dsq->continuity.stringBank.get(2142);
+	}
+	else
+	{
+		os << m.x << "x" << m.y;
+		if(m.hz)
+			os << " (" << m.hz << "hz)";
+	}
+	return os.str();
+}
+
+static bool isCurrentScreenMode(const ScreenMode& m)
+{
+	if(!m.x && !m.y && core->isDesktopResolution())
+		return true;
+
+	return m.x == dsq->user.video.resx && m.y == dsq->user.video.resy && (!m.hz || dsq->user.video.hz == m.hz);
+}
+
+
 void InGameMenu::create()
 {
 	float menuz = 4;
@@ -1795,12 +1820,9 @@ void InGameMenu::create()
 	resBox->position = Vector(196, 285);
 	for (i = 0; i < core->screenModes.size(); i++)
 	{
-		std::ostringstream os;
-		os << core->screenModes[i].x << "x" << core->screenModes[i].y;
-		if(core->screenModes[i].hz)
-			os << " (" << core->screenModes[i].hz << "hz)";
-		resBox->addItem(os.str());
-		if (core->screenModes[i].x == dsq->user.video.resx && core->screenModes[i].y == dsq->user.video.resy)
+		const ScreenMode& m = core->screenModes[i];
+		resBox->addItem(screenModeStr(m));
+		if (isCurrentScreenMode(m))
 		{
 			resBox->enqueueSelectItem(i);
 		}
@@ -3256,6 +3278,18 @@ void InGameMenu::onOptionsMenu()
 
 void InGameMenu::onOptionsSave()
 {
+	if (resBox)
+	{
+		int itm = resBox->getSelectedItem();
+		if(itm < core->screenModes.size()) // Required because the menu appends another element if it can't select one in the list
+		{
+			const ScreenMode& m = core->screenModes[itm];
+			dsq->user.video.resx = m.x;
+			dsq->user.video.resy = m.y;
+			dsq->user.video.hz = m.hz;
+		}
+	}
+
 	dsq->user.apply();
 
 	if (dsq->user.video.resx != dsq->user_backup.video.resx
@@ -3872,18 +3906,19 @@ void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 		if (ripplesCheck)
 			ripplesCheck->setValue(core->afterEffectManager!=0);
 
-		switchToActionSet(selectedActionSetIdx);
-
 		if (resBox)
 		{
-			std::ostringstream os;
-			os << core->width << "x" << core->height;
-			if (!resBox->setSelectedItem(os.str()))
+			// Note: This adds one past the original list (core->screenModes)
+			ScreenMode m = core->isDesktopResolution() ? ScreenMode(0,0,0) : ScreenMode(core->width, core->height, 0);
+			std::string mstr = screenModeStr(m);
+			if (!resBox->setSelectedItem(mstr))
 			{
-				resBox->addItem(os.str());
-				resBox->setSelectedItem(os.str());
+				resBox->addItem(mstr);
+				resBox->setSelectedItem(mstr);
 			}
 		}
+
+		switchToActionSet(selectedActionSetIdx);
 
 		opt_cancel->setDirMove(DIR_UP, targetingCheck);
 		targetingCheck->setDirMove(DIR_DOWN, opt_cancel);
@@ -4025,19 +4060,6 @@ void InGameMenu::updateOptionsMenu(float dt)
 	if (blurEffectsCheck)
 		dsq->user.video.blur			= blurEffectsCheck->getValue();
 
-	if (resBox)
-	{
-		std::string s = resBox->getSelectedItemString();
-		if (!s.empty())
-		{
-			int pos = s.find('x');
-			std::istringstream is1(s.substr(0, pos));
-			is1 >> dsq->user.video.resx;
-			std::istringstream is2(s.substr(pos+1, s.size()-(pos+1)));
-			is2 >> dsq->user.video.resy;
-		}
-	}
-
 	bool apply = false;
 	optsfxdly += dt;
 	if (sfxslider->hadInput())
@@ -4049,6 +4071,10 @@ void InGameMenu::updateOptionsMenu(float dt)
 	{
 		if (!dsq->sound->isPlayingVoice())
 			dsq->voice("naija_somethingfamiliar");
+		apply = true;
+	}
+	else if(musslider->hadInput() || musslider->isGrabbed())
+	{
 		apply = true;
 	}
 	else if (optsfxdly > 0.6f)
