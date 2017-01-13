@@ -87,7 +87,7 @@ protected:
 		notifyRequests.push(RequestDataHolder(data));
 	}
 
-	virtual void _OnRecv(char *buf, unsigned int size)
+	virtual void _OnRecv(void *buf, unsigned int size)
 	{
 		if(!size)
 			return;
@@ -196,7 +196,7 @@ static HttpDumpSocket *th_CreateSocket()
 static bool th_DoSendRequest(RequestData *rq)
 {
 	Request get;
-	SplitURI(rq->url, get.host, get.resource, get.port);
+	SplitURI(rq->url, get.protocol, get.host, get.resource, get.port, get.useSSL);
 	if(get.port < 0)
 		get.port = 80;
 
@@ -206,7 +206,7 @@ static bool th_DoSendRequest(RequestData *rq)
 	HttpDumpSocket *sock = th_CreateSocket();
 
 	get.user = rq;
-	return sock->SendGet(get, false);
+	return sock->SendRequest(get, false);
 }
 
 static int _NetworkWorkerThread(void *)

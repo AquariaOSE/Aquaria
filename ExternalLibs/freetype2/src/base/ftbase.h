@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    The FreeType private functions used in base module (specification).  */
 /*                                                                         */
-/*  Copyright 2008 by                                                      */
+/*  Copyright 2008-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, Werner Lemberg, and suzuki toshiya.      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __FTBASE_H__
-#define __FTBASE_H__
+#ifndef FTBASE_H_
+#define FTBASE_H_
 
 
 #include <ft2build.h>
@@ -27,9 +27,14 @@
 FT_BEGIN_HEADER
 
 
+  /* MacOS resource fork cannot exceed 16MB at least for Carbon code; */
+  /* see https://support.microsoft.com/en-us/kb/130437                */
+#define FT_MAC_RFORK_MAX_LEN  0x00FFFFFFUL
+
+
   /* Assume the stream is sfnt-wrapped PS Type1 or sfnt-wrapped CID-keyed */
   /* font, and try to load a face specified by the face_index.            */
-  FT_LOCAL_DEF( FT_Error )
+  FT_LOCAL( FT_Error )
   open_face_PS_from_sfnt_stream( FT_Library     library,
                                  FT_Stream      stream,
                                  FT_Long        face_index,
@@ -40,7 +45,7 @@ FT_BEGIN_HEADER
 
   /* Create a new FT_Face given a buffer and a driver name. */
   /* From ftmac.c.                                          */
-  FT_LOCAL_DEF( FT_Error )
+  FT_LOCAL( FT_Error )
   open_face_from_buffer( FT_Library   library,
                          FT_Byte*     base,
                          FT_ULong     size,
@@ -49,9 +54,21 @@ FT_BEGIN_HEADER
                          FT_Face     *aface );
 
 
+#if  defined( FT_CONFIG_OPTION_GUESSING_EMBEDDED_RFORK ) && \
+    !defined( FT_MACINTOSH )
+  /* Mac OS X/Darwin kernel often changes recommended method to access */
+  /* the resource fork and older methods makes the kernel issue the    */
+  /* warning of deprecated method.  To calm it down, the methods based */
+  /* on Darwin VFS should be grouped and skip the rest methods after   */
+  /* the case the resource is opened but found to lack a font in it.   */
+  FT_LOCAL( FT_Bool )
+  ft_raccess_rule_by_darwin_vfs( FT_Library library, FT_UInt  rule_index );
+#endif
+
+
 FT_END_HEADER
 
-#endif /* __FTBASE_H__ */
+#endif /* FTBASE_H_ */
 
 
 /* END */

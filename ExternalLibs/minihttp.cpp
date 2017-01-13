@@ -10,14 +10,6 @@
 #  endif
 #endif
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sstream>
-#include <cctype>
-#include <cerrno>
-#include <algorithm>
-
 #ifdef _WIN32
 #  ifndef _WIN32_WINNT
 #    define _WIN32_WINNT 0x0501
@@ -28,6 +20,7 @@
 #  define ETIMEDOUT WSAETIMEDOUT
 #  define ECONNRESET WSAECONNRESET
 #  define ENOTCONN WSAENOTCONN
+#  include <io.h>
 #else
 #  include <sys/types.h>
 #  include <unistd.h>
@@ -40,9 +33,26 @@
    typedef intptr_t SOCKET;
 #endif
 
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <sstream>
+#include <cctype>
+#include <cerrno>
+#include <algorithm>
+#include <assert.h>
+
+#ifdef MINIHTTP_USE_MBEDTLS
+#  include <mbedtls/net.h>
+#  include <mbedtls/ssl.h>
+#  include <mbedtls/entropy.h>
+#  include <mbedtls/ctr_drbg.h>
+#endif
+
 #include "minihttp.h"
 
 #define SOCKETVALID(s) ((s) != INVALID_SOCKET)
+
 
 #ifdef _MSC_VER
 #  define STRNICMP _strnicmp
@@ -58,6 +68,97 @@
 
 namespace minihttp {
 
+#ifdef MINIHTTP_USE_MBEDTLS
+// ------------------------ SSL STUFF -------------------------
+bool HasSSL()
+{
+    // compile time assertion that mbedtls_net_context really is just an int
+    switch(0) { case 0:; case (sizeof(mbedtls_net_context) == sizeof(int)):; }
+
+    return true;
+}
+
+void traceprint_ssl(void *ctx, int level, const char *file, int line, const char *str )
+{
+    (void)ctx;
+    printf("ssl(%s:%04d) [%d] %s\n", file, line, level, str);
+}
+
+struct SSLCtx
+{
+    SSLCtx()
+    {
+        mbedtls_entropy_init(&entropy);
+        mbedtls_x509_crt_init(&cacert);
+        mbedtls_ssl_init(&ssl);
+        mbedtls_ctr_drbg_init(&ctr_drbg);
+        mbedtls_ssl_config_init(&conf);
+    }
+    ~SSLCtx()
+    {
+        mbedtls_entropy_free(&entropy);
+        mbedtls_x509_crt_free(&cacert);
+        mbedtls_ssl_free(&ssl);
+        mbedtls_ctr_drbg_free(&ctr_drbg);
+        mbedtls_ssl_config_free(&conf);
+    }
+    bool init()
+    {
+        const char *pers = "minihttp";
+        const size_t perslen = strlen(pers);
+        int err = mbedtls_ctr_drbg_seed(&ctr_drbg, mbedtls_entropy_func, &entropy, (const unsigned char *)pers, perslen);
+        if(err)
+        {
+            traceprint("SSLCtx::init(): mbedtls_ctr_drbg_seed() returned %d\n", err);
+            return false;
+        }
+
+        err = mbedtls_ssl_config_defaults(&conf,
+            MBEDTLS_SSL_IS_CLIENT,
+            MBEDTLS_SSL_TRANSPORT_STREAM,
+            MBEDTLS_SSL_PRESET_DEFAULT);
+        if(err)
+        {
+            traceprint("SSLCtx::init(): mbedtls_ssl_config_defaults() returned %d\n", err);
+            return false;
+        }
+
+        mbedtls_ssl_conf_authmode(&conf, MBEDTLS_SSL_VERIFY_OPTIONAL);
+        mbedtls_ssl_conf_ca_chain(&conf, &cacert, NULL);
+
+        /* SSLv3 is deprecated, set minimum to TLS 1.0 */
+        mbedtls_ssl_conf_min_version(&conf, MBEDTLS_SSL_MAJOR_VERSION_3, MBEDTLS_SSL_MINOR_VERSION_1);
+
+        mbedtls_ssl_conf_rng(&conf, mbedtls_ctr_drbg_random, &ctr_drbg);
+        mbedtls_ssl_conf_dbg(&conf, traceprint_ssl, NULL);
+
+        err = mbedtls_ssl_setup(&ssl, &conf);
+        if(err)
+        {
+            traceprint("SSLCtx::init(): mbedtls_ssl_init() returned %d\n", err);
+            return false;
+        }
+
+        return true;
+    }
+    void reset()
+    {
+        mbedtls_ssl_session_reset(&ssl);
+    }
+
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context ctr_drbg;
+    mbedtls_ssl_context ssl;
+    mbedtls_x509_crt cacert;
+    mbedtls_ssl_config conf;
+};
+
+
+// ------------------------------------------------------------
+#else// MINIHTTP_USE_MBEDTLS
+bool HasSSL() { return false; }
+#endif
+
 #define DEFAULT_BUFSIZE 4096
 
 inline int _GetError()
@@ -71,15 +172,22 @@ inline int _GetError()
 
 inline std::string _GetErrorStr(int e)
 {
+    std::string ret;
 #ifdef _WIN32
     LPTSTR s;
     ::FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, e, 0, (LPTSTR)&s, 0, NULL);
-    std::string ret = s;
+    if(s)
+        ret = s;
     ::LocalFree(s);
-    return ret;
+#else
+     const char *s = strerror(e);
+     if(s)
+         ret = s;
 #endif
-    return strerror(e);
+    return ret;
 }
+
+static bool _networkInitDone = false;
 
 bool InitNetwork()
 {
@@ -91,6 +199,7 @@ bool InitNetwork()
         return false;
     }
 #endif
+    _networkInitDone = true;
     return true;
 }
 
@@ -99,11 +208,12 @@ void StopNetwork()
 #ifdef _WIN32
     WSACleanup();
 #endif
+    _networkInitDone = false;
 }
 
 static bool _Resolve(const char *host, unsigned int port, struct sockaddr_in *addr)
 {
-    char port_str[15];
+    char port_str[16];
     sprintf(port_str, "%u", port);
 
     struct addrinfo hnt, *res = 0;
@@ -133,18 +243,37 @@ static bool _Resolve(const char *host, unsigned int port, struct sockaddr_in *ad
 // FIXME: this does currently not handle links like:
 // http://example.com/index.html#pos
 
-bool SplitURI(const std::string& uri, std::string& host, std::string& file, int& port)
+
+bool SplitURI(const std::string& uri, std::string& protocol, std::string& host, std::string& file, int& port, bool& useSSL)
 {
     const char *p = uri.c_str();
     const char *sl = strstr(p, "//");
     unsigned int offs = 0;
+    port = -1;
+    bool ssl = false;
     if(sl)
     {
-        offs = 7;
-        if(strncmp(p, "http://", offs))
+        size_t colon = uri.find(':');
+        size_t firstslash = uri.find('/');
+        if(colon < firstslash)
+            protocol = uri.substr(0, colon);
+        if(strncmp(p, "http://", 7) == 0)
+        {
+            offs = 7;
+            port = 80;
+        }
+        else if(strncmp(p, "https://", 8) == 0)
+        {
+            offs = 8;
+            port = 443;
+            ssl = true;
+        }
+        else
             return false;
+
         p = sl + 2;
     }
+
     sl = strchr(p, '/');
     if(!sl)
     {
@@ -157,22 +286,52 @@ bool SplitURI(const std::string& uri, std::string& host, std::string& file, int&
         file = sl;
     }
 
-    port = -1;
     size_t colon = host.find(':');
     if(colon != std::string::npos)
     {
         port = atoi(host.c_str() + colon);
-        host.erase(port);
+        host.erase(colon);
     }
+    useSSL = ssl;
 
     return true;
+}
+
+void URLEncode(const std::string& s, std::string& enc)
+{
+    const size_t len = s.length();
+    char buf[3];
+    buf[0] = '%';
+    for(size_t i = 0; i < len; i++)
+    {
+        const unsigned char c = s[i];
+        // from  https://www.ietf.org/rfc/rfc1738.txt, page 3
+        // with some changes for compatibility
+        if(isalnum(c) || c == '-' || c == '_' || c == '.' || c == ',')
+            enc += (char)c;
+        else if(c == ' ')
+            enc += '+';
+        else
+        {
+            unsigned nib = (c >> 4) & 0xf;
+            buf[1] = nib < 10 ? '0' + nib : 'a' + (nib-10);
+            nib = c & 0xf;
+            buf[2] = nib < 10 ? '0' + nib : 'a' + (nib-10);
+            enc.append(&buf[0], 3);
+        }
+    }
 }
 
 static bool _SetNonBlocking(SOCKET s, bool nonblock)
 {
     if(!SOCKETVALID(s))
         return false;
-#ifdef _WIN32
+#ifdef MINIHTTP_USE_MBEDTLS
+    if(nonblock)
+        return mbedtls_net_set_nonblock((mbedtls_net_context*)&s) == 0; // this horrible hackery is okay as long as the compile assert in HasSSL() holds
+    else
+        return mbedtls_net_set_block((mbedtls_net_context*)&s) == 0;
+#elif defined(_WIN32)
     ULONG tmp = !!nonblock;
     if(::ioctlsocket(s, FIONBIO, &tmp) == SOCKET_ERROR)
         return false;
@@ -187,9 +346,17 @@ static bool _SetNonBlocking(SOCKET s, bool nonblock)
 }
 
 TcpSocket::TcpSocket()
-: _s(INVALID_SOCKET), _inbuf(NULL), _inbufSize(0), _recvSize(0),
-  _readptr(NULL), _lastport(0)
+	: _inbuf(NULL)
+	, _readptr(NULL)
+	, _inbufSize(0)
+	, _recvSize(0)
+	, _lastport(0)
+	, _s(INVALID_SOCKET)
+	, _sslctx(NULL)
 {
+#ifdef MINIHTTP_USE_MBEDTLS
+    mbedtls_net_init((mbedtls_net_context*)&_s);
+#endif
 }
 
 TcpSocket::~TcpSocket()
@@ -209,14 +376,25 @@ void TcpSocket::close(void)
     if(!SOCKETVALID(_s))
         return;
 
+    traceprint("TcpSocket::close\n");
+
     _OnCloseInternal();
 
-#ifdef _WIN32
-    ::closesocket((SOCKET)_s);
+#ifdef MINIHTTP_USE_MBEDTLS
+    if(_sslctx)
+        ((SSLCtx*)_sslctx)->reset();
+    mbedtls_net_free((mbedtls_net_context*)&_s);
+    shutdownSSL();
 #else
+#  ifdef _WIN32
+    ::closesocket((SOCKET)_s);
+#  else
     ::close(_s);
+#  endif
 #endif
+
     _s = INVALID_SOCKET;
+    _recvSize = 0;
 }
 
 void TcpSocket::_OnCloseInternal()
@@ -241,33 +419,20 @@ void TcpSocket::SetBufsizeIn(unsigned int s)
     _readptr = _writeptr = _inbuf;
 }
 
-bool TcpSocket::open(const char *host /* = NULL */, unsigned int port /* = 0 */)
+static bool _openSocket(SOCKET *ps, const char *host, unsigned port)
 {
-    if(isOpen())
+#ifdef MINIHTTP_USE_MBEDTLS
+    int s;
+    char portstr[16];
+    sprintf(portstr, "%d", port);
+    int err = mbedtls_net_connect((mbedtls_net_context*)&s, host, portstr, MBEDTLS_NET_PROTO_TCP);
+    if(err)
     {
-        if( (host && host != _host) || (port && port != _lastport) )
-            close();
-            // ... and continue connecting to new host/port
-        else
-            return true; // still connected, to same host and port.
+        traceprint("open_ssl: net_connect(%s, %u) returned %d\n", host, port, err);
+        return false;
     }
-
+#else
     sockaddr_in addr;
-
-    if(host)
-        _host = host;
-    else
-        host = _host.c_str();
-
-    if(port)
-        _lastport = port;
-    else
-    {
-        port = _lastport;
-        if(!port)
-            return false;
-    }
-
     if(!_Resolve(host, port, &addr))
     {
         traceprint("RESOLV ERROR: %s\n", _GetErrorStr(_GetError()).c_str());
@@ -287,22 +452,246 @@ bool TcpSocket::open(const char *host /* = NULL */, unsigned int port /* = 0 */)
         traceprint("CONNECT ERROR: %s\n", _GetErrorStr(_GetError()).c_str());
         return false;
     }
+#endif
 
-    _SetNonBlocking(s, _nonblocking); // restore setting if it was set in invalid state. static call because _s is intentionally still invalid here.
-    _s = s; // set the socket handle when we are really sure we are connected, and things are set up
+    *ps = s;
+    return true;
+}
+
+#ifdef MINIHTTP_USE_MBEDTLS
+static bool _openSSL(void *ps, SSLCtx *ctx)
+{
+    mbedtls_ssl_set_bio(&ctx->ssl, (mbedtls_net_context*)ps, mbedtls_net_send, mbedtls_net_recv, NULL);
+
+    traceprint("SSL handshake now...\n");
+    int err;
+    while( (err = mbedtls_ssl_handshake(&ctx->ssl)) )
+    {
+        if(err != MBEDTLS_ERR_SSL_WANT_READ && err != MBEDTLS_ERR_SSL_WANT_WRITE)
+        {
+            traceprint("open_ssl: ssl_handshake returned -0x%x\n\n", -err);
+            return false;
+        }
+    }
+    traceprint("SSL handshake done\n");
+    return true;
+}
+#endif
+
+bool TcpSocket::open(const char *host /* = NULL */, unsigned int port /* = 0 */)
+{
+    if(isOpen())
+    {
+        if( (host && host != _host) || (port && port != _lastport) )
+            close();
+            // ... and continue connecting to new host/port
+        else
+            return true; // still connected, to same host and port.
+    }
+
+    if(host)
+        _host = host;
+    else
+        host = _host.c_str();
+
+    if(port)
+        _lastport = port;
+    else
+    {
+        port = _lastport;
+        if(!port)
+            return false;
+    }
+
+    traceprint("TcpSocket::open(): host = [%s], port = %d\n", host, port);
+
+    assert(!SOCKETVALID(_s));
+    
+    _recvSize = 0;
+
+    {
+        SOCKET s;
+        if(!_openSocket(&s, host, port))
+            return false;
+        _s = s;
+
+#ifdef SO_NOSIGPIPE
+        // Don't fire SIGPIPE when trying to write to a closed socket
+        {
+            int set = 1;
+            setsockopt(s, SOL_SOCKET, SO_NOSIGPIPE, (void *)&set, sizeof(int));
+        }
+#endif
+
+    }
+
+    _SetNonBlocking(_s, _nonblocking); // restore setting if it was set in invalid state. static call because _s is intentionally still invalid here.
+
+#ifdef MINIHTTP_USE_MBEDTLS
+    if(_sslctx)
+    {
+        traceprint("TcpSocket::open(): SSL requested...\n");
+        if(!_openSSL(&_s, (SSLCtx*)_sslctx))
+        {
+            close();
+            return false;
+        }
+    }
+#endif
 
     _OnOpen();
 
     return true;
 }
 
-bool TcpSocket::SendBytes(const char *str, unsigned int len)
+#ifdef MINIHTTP_USE_MBEDTLS
+void TcpSocket::shutdownSSL()
 {
+    delete ((SSLCtx*)_sslctx);
+    _sslctx = NULL;
+}
+
+bool TcpSocket::initSSL(const char *certs)
+{
+    SSLCtx *ctx = (SSLCtx*)_sslctx;
+    if(ctx)
+        ctx->reset();
+    else
+    {
+        ctx = new SSLCtx();
+        _sslctx = ctx;
+        if(!ctx->init())
+        {
+            shutdownSSL();
+            return false;
+        }
+    }
+
+    if(certs)
+    {
+        int err = mbedtls_x509_crt_parse(&ctx->cacert, (const unsigned char*)certs, strlen(certs));
+        if(err)
+        {
+            shutdownSSL();
+            traceprint("x509_crt_parse() returned %d\n", err);
+            return false;
+        }
+    }
+
+    return true;
+}
+
+SSLResult TcpSocket::verifySSL(char *buf, unsigned bufsize)
+{
+    if(!_sslctx)
+        return SSLR_NO_SSL;
+
+    SSLCtx *ctx = (SSLCtx*)_sslctx;
+    unsigned r = SSLR_OK;
+    int res = mbedtls_ssl_get_verify_result(&ctx->ssl);
+    if(res)
+    {
+        if(res & MBEDTLS_X509_BADCERT_EXPIRED)
+            r |= SSLR_CERT_EXPIRED;
+
+        if(res & MBEDTLS_X509_BADCERT_REVOKED)
+            r |= SSLR_CERT_REVOKED;
+
+        if(res & MBEDTLS_X509_BADCERT_CN_MISMATCH)
+            r |= SSLR_CERT_CN_MISMATCH;
+
+        if(res & MBEDTLS_X509_BADCERT_NOT_TRUSTED)
+            r |= SSLR_CERT_NOT_TRUSTED;
+
+        if(res & MBEDTLS_X509_BADCERT_MISSING)
+            r |= SSLR_CERT_MISSING;
+
+        if(res & MBEDTLS_X509_BADCERT_SKIP_VERIFY)
+            r |= SSLR_CERT_SKIP_VERIFY;
+
+        if(res & MBEDTLS_X509_BADCERT_FUTURE)
+            r |= SSLR_CERT_FUTURE;
+
+        // More than just this?
+        if(res & (MBEDTLS_X509_BADCERT_SKIP_VERIFY | MBEDTLS_X509_BADCERT_NOT_TRUSTED))
+            r |= SSLR_FAIL;
+    }
+
+    if(buf && bufsize)
+        mbedtls_x509_crt_verify_info(buf, bufsize, "", res);
+
+    return (SSLResult)r;
+}
+#else // MINIHTTP_USE_MBEDTLS
+void TcpSocket::shutdownSSL() {}
+bool TcpSocket::initSSL(const char *certs)
+{
+    traceprint("initSSL: Compiled without SSL support!\n");
+    return false;
+}
+SSLResult TcpSocket::verifySSL(char *buf, unsigned buflen) { return SSLR_NO_SSL; }
+#endif
+
+bool TcpSocket::SendBytes(const void *str, unsigned int len)
+{
+    if(!len)
+        return true;
     if(!SOCKETVALID(_s))
         return false;
     //traceprint("SEND: '%s'\n", str);
-    return ::send(_s, str, len, 0) >= 0;
-    // TODO: check _GetError()
+
+    unsigned written = 0;
+    while(true) // FIXME: buffer bytes to an internal queue instead?
+    {
+        int ret = _writeBytes((const unsigned char*)str + written, len - written);
+        if(ret > 0)
+        {
+            assert((unsigned)ret <= len);
+            written += (unsigned)ret;
+            if(written >= len)
+                break;
+        }
+        else if(ret < 0)
+        {
+            int err = ret == -1 ? _GetError() : ret;
+            traceprint("SendBytes: error %d: %s\n", err, _GetErrorStr(err).c_str());
+            close();
+            return false;
+        }
+        // and if ret == 0, keep trying.
+    }
+
+    assert(written == len);
+    return true;
+}
+
+int TcpSocket::_writeBytes(const unsigned char *buf, size_t len)
+{
+    int ret = 0;
+
+#ifdef MINIHTTP_USE_MBEDTLS
+    int err;
+    if(_sslctx)
+        err = mbedtls_ssl_write(&((SSLCtx*)_sslctx)->ssl, buf, len);
+    else
+        err = mbedtls_net_send(&_s, buf, len);
+
+    switch(err)
+    {
+        case MBEDTLS_ERR_SSL_WANT_WRITE:
+            ret = 0; // FIXME: Nothing written, try later?
+        default:
+            ret = err;
+    }
+#else
+    int flags = 0;
+    #ifdef MSG_NOSIGNAL
+       flags |= MSG_NOSIGNAL;
+    #endif
+    return ::send(_s, (const char*)buf, len, flags);
+#endif
+
+    return ret;
 }
 
 void TcpSocket::_ShiftBuffer(void)
@@ -319,6 +708,18 @@ void TcpSocket::_OnData()
     _OnRecv(_readptr, _recvSize);
 }
 
+int TcpSocket::_readBytes(unsigned char *buf, size_t maxlen)
+{
+#ifdef MINIHTTP_USE_MBEDTLS
+    if(_sslctx)
+        return mbedtls_ssl_read(&((SSLCtx*)_sslctx)->ssl, buf, maxlen);
+    else
+        return mbedtls_net_recv(&_s, buf, maxlen);
+#else
+    return recv(_s, (char*)buf, maxlen, 0); // last char is used as string terminator
+#endif
+}
+
 bool TcpSocket::update(void)
 {
    if(!_OnUpdate())
@@ -330,8 +731,8 @@ bool TcpSocket::update(void)
     if(!_inbuf)
         SetBufsizeIn(DEFAULT_BUFSIZE);
 
-    int bytes = recv(_s, _writeptr, _writeSize, 0); // last char is used as string terminator
-
+    int bytes = _readBytes((unsigned char*)_writeptr, _writeSize);
+    //traceprint("TcpSocket::update: _readBytes() result %d\n", bytes);
     if(bytes > 0) // we received something
     {
         _inbuf[bytes] = 0;
@@ -342,19 +743,31 @@ bool TcpSocket::update(void)
         _readptr = _writeptr = _inbuf;
 
         _OnData();
-        return true;
     }
     else if(bytes == 0) // remote has closed the connection
     {
-        _recvSize = 0;
         close();
-        return true;
     }
     else // whoops, error?
     {
-        int e = _GetError();
-        switch(e)
+        // Possible that the error is returned directly (in that case, < -1, or -1 is returned and the error has to be retrieved seperately.
+        // But in the latter case, error numbers may be positive (at least on windows...)
+        int err = bytes == -1 ? _GetError() : bytes;
+        switch(err)
         {
+        case EWOULDBLOCK:
+#if defined(EAGAIN) && (EWOULDBLOCK != EAGAIN)
+        case EAGAIN: // linux man pages say this can also happen instead of EWOULDBLOCK
+#endif
+            return false;
+
+#ifdef MINIHTTP_USE_MBEDTLS
+        case MBEDTLS_ERR_SSL_WANT_READ:
+            break; // Try again later
+#endif
+
+        default:
+            traceprint("SOCKET UPDATE ERROR: (%d): %s\n", err, _GetErrorStr(err).c_str());
         case ECONNRESET:
         case ENOTCONN:
         case ETIMEDOUT:
@@ -364,14 +777,7 @@ bool TcpSocket::update(void)
 #endif
             close();
             break;
-
-        case EWOULDBLOCK:
-#if defined(EAGAIN) && (EWOULDBLOCK != EAGAIN)
-        case EAGAIN: // linux man pages say this can also happen instead of EWOULDBLOCK
-#endif
-            return false;
         }
-        traceprint("SOCKET UPDATE ERROR: (%d): %s\n", e, _GetErrorStr(e).c_str());
     }
     return true;
 }
@@ -387,10 +793,27 @@ static void strToLower(std::string& s)
     std::transform(s.begin(), s.end(), s.begin(), tolower);
 }
 
+POST& POST::add(const char *key, const char *value)
+{
+    if(!empty())
+        data += '&';
+    URLEncode(key, data);
+    data += '=';
+    URLEncode(value, data);
+    return *this;
+}
+
+
 HttpSocket::HttpSocket()
-: TcpSocket(),
-_keep_alive(0), _remaining(0), _chunkedTransfer(false), _mustClose(true), _inProgress(false),
-_followRedir(true), _alwaysHandle(false), _status(0)
+	: TcpSocket()
+	, _keep_alive(0)
+	, _remaining(0)
+	, _status(0)
+	, _inProgress(false)
+	, _chunkedTransfer(false)
+	, _mustClose(true)
+	, _followRedir(true)
+	, _alwaysHandle(false)
 {
 }
 
@@ -402,6 +825,7 @@ void HttpSocket::_OnOpen()
 {
     TcpSocket::_OnOpen();
     _chunkedTransfer = false;
+    _mustClose = true;
 }
 
 void HttpSocket::_OnCloseInternal()
@@ -418,6 +842,8 @@ bool HttpSocket::_OnUpdate()
     if(_inProgress && !_chunkedTransfer && !_remaining && _status)
         _FinishRequest();
 
+    //traceprint("HttpSocket::_OnUpdate, Q = %d\n", (unsigned)_requestQ.size());
+
     // initiate transfer if queue is not empty, but the socket somehow forgot to proceed
     if(_requestQ.size() && !_remaining && !_chunkedTransfer && !_inProgress)
         _DequeueMore();
@@ -425,36 +851,74 @@ bool HttpSocket::_OnUpdate()
     return true;
 }
 
-bool HttpSocket::Download(const std::string& url, void *user /* = NULL */)
+bool HttpSocket::Download(const std::string& url, const char *extraRequest /*= NULL*/, void *user /* = NULL */, const POST *post /*= NULL*/)
 {
     Request req;
     req.user = user;
-    SplitURI(url, req.host, req.resource, req.port);
+    if(post)
+        req.post = *post;
+    SplitURI(url, req.protocol, req.host, req.resource, req.port, req.useSSL);
+    if(IsRedirecting() && req.host.empty()) // if we're following a redirection to the same host, the server is likely to omit its hostname
+        req.host = _curRequest.host;
     if(req.port < 0)
         req.port = 80;
-    return SendGet(req, false);
+    if(extraRequest)
+        req.extraGetHeaders = extraRequest;
+    return SendRequest(req, false);
 }
 
-bool HttpSocket::SendGet(const std::string what, void *user /* = NULL */)
+
+bool HttpSocket::_Redirect(std::string loc, bool forceGET)
+{
+    traceprint("Following HTTP redirect to: %s\n", loc.c_str());
+    if(loc.empty())
+        return false;
+
+    Request req;
+    req.user = _curRequest.user;
+    req.useSSL = _curRequest.useSSL;
+    if(!forceGET)
+        req.post = _curRequest.post;
+    SplitURI(loc, req.protocol, req.host, req.resource, req.port, req.useSSL);
+    if(req.protocol.empty()) // assume local resource
+    {
+        req.host = _curRequest.host;
+        req.resource = loc;
+    }
+    if(req.host.empty())
+        req.host = _curRequest.host;
+    if(req.port < 0)
+        req.port = _curRequest.port;
+    req.extraGetHeaders = _curRequest.extraGetHeaders;
+    return SendRequest(req, false);
+}
+
+bool HttpSocket::SendRequest(const std::string what, const char *extraRequest /*= NULL*/, void *user /* = NULL */)
 {
     Request req(what, _host, _lastport, user);
-    return SendGet(req, false);
+    if(extraRequest)
+        req.extraGetHeaders = extraRequest;
+    return SendRequest(req, false);
 }
 
-bool HttpSocket::QueueGet(const std::string what, void *user /* = NULL */)
+bool HttpSocket::QueueRequest(const std::string what, const char *extraRequest /*= NULL*/, void *user /* = NULL */)
 {
     Request req(what, _host, _lastport, user);
-    return SendGet(req, true);
+    if(extraRequest)
+        req.extraGetHeaders = extraRequest;
+    return SendRequest(req, true);
 }
 
-bool HttpSocket::SendGet(Request& req, bool enqueue)
+bool HttpSocket::SendRequest(Request& req, bool enqueue)
 {
     if(req.host.empty() || !req.port)
         return false;
 
+    const bool post = !req.post.empty();
+
     std::stringstream r;
     const char *crlf = "\r\n";
-    r << "GET " << req.resource << " HTTP/1.1" << crlf;
+    r << (post ? "POST " : "GET ") << req.resource << " HTTP/1.1" << crlf;
     r << "Host: " << req.host << crlf;
     if(_keep_alive)
     {
@@ -470,7 +934,24 @@ bool HttpSocket::SendGet(Request& req, bool enqueue)
     if(_accept_encoding.length())
         r << "Accept-Encoding: " << _accept_encoding << crlf;
 
+    if(post)
+    {
+        r << "Content-Length: " << req.post.length() << crlf;
+        r << "Content-Type: application/x-www-form-urlencoded" << crlf;
+    }
+
+    if(req.extraGetHeaders.length())
+    {
+        r << req.extraGetHeaders;
+        if(req.extraGetHeaders.compare(req.extraGetHeaders.length() - 2, std::string::npos, crlf))
+            r << crlf;
+    }
+
     r << crlf; // header terminator
+
+    // FIXME: appending this to the 'header' field is probably not a good idea
+    if(post)
+        r << req.post.str();
 
     req.header = r.str();
 
@@ -479,22 +960,26 @@ bool HttpSocket::SendGet(Request& req, bool enqueue)
 
 bool HttpSocket::_EnqueueOrSend(const Request& req, bool forceQueue /* = false */)
 {
+    traceprint("HttpSocket::_EnqueueOrSend, forceQueue = %d\n", forceQueue);
     if(_inProgress || forceQueue) // do not send while receiving other data
     {
-        traceprint("HTTP: Transfer pending; putting into queue. Now %u waiting.\n", (unsigned int)_requestQ.size()); // DEBUG
+        traceprint("HTTP: Transfer pending; putting into queue. Now %u waiting.\n", (unsigned int)_requestQ.size());
         _requestQ.push(req);
         return true;
     }
     // ok, we can send directly
+    traceprint("HTTP: Open request for immediate send.\n");
     if(!_OpenRequest(req))
         return false;
-    _inProgress = SendBytes(req.header.c_str(), req.header.length());
-    return _inProgress;
+    bool sent = SendBytes(req.header.c_str(), req.header.length());
+    _inProgress = sent;
+    return sent;
 }
 
 // called whenever a request is finished completely and the socket checks for more things to send
 void HttpSocket::_DequeueMore(void)
 {
+    traceprint("HttpSocket::_DequeueMore, Q = %u\n", (unsigned)_requestQ.size());
     _FinishRequest(); // In case this was not done yet.
 
     // _inProgress is known to be false here
@@ -512,6 +997,15 @@ bool HttpSocket::_OpenRequest(const Request& req)
         traceprint("HttpSocket::_OpenRequest(): _inProgress == true, should not be called.");
         return false;
     }
+    if(req.useSSL && !hasSSL())
+    {
+        traceprint("HttpSocket::_OpenRequest(): Is an SSL connection, but SSL was not inited, doing that now\n");
+        if(!initSSL(NULL)) // FIXME: supply cert list?
+        {
+            traceprint("FAILED to init SSL\n");
+            return false;
+        }
+    }
     if(!open(req.host.c_str(), req.port))
         return false;
     _inProgress = true;
@@ -522,12 +1016,16 @@ bool HttpSocket::_OpenRequest(const Request& req)
 
 void HttpSocket::_FinishRequest(void)
 {
+    traceprint("HttpSocket::_FinishRequest\n");
     if(_inProgress)
     {
+        traceprint("... in progress. redirecting = %d\n", IsRedirecting());
         if(!IsRedirecting() || _alwaysHandle)
             _OnRequestDone(); // notify about finished request
         _inProgress = false;
         _hdrs.clear();
+        if(_mustClose)
+            close();
     }
 }
 
@@ -594,11 +1092,9 @@ void HttpSocket::_ProcessChunk(void)
 
 void HttpSocket::_ParseHeaderFields(const char *s, size_t size)
 {
-    // Field: Entry data\r\n
+    // Key: Value data\r\n
 
-    const char *maxs = s + size;
-    const char *colon, *entry;
-    const char *entryEnd = s; // last char of entry data
+    const char * const maxs = s + size;
     while(s < maxs)
     {
         while(isspace(*s))
@@ -607,28 +1103,23 @@ void HttpSocket::_ParseHeaderFields(const char *s, size_t size)
             if(s >= maxs)
                 return;
         }
-        colon = strchr(s, ':');
+        const char * const colon = strchr(s, ':');
         if(!colon)
             return;
-        entryEnd = strchr(colon, '\n');
-        if(!entryEnd)
+        const char *valEnd = strchr(colon, '\n'); // last char of val data
+        if(!valEnd)
             return;
-        while(entryEnd[-1] == '\n' || entryEnd[-1] == '\r')
-            --entryEnd;
-        entry = colon + 1;
-        while(isspace(*entry))
-        {
-            ++entry;
-            if(entry > entryEnd) // Field, but no entry? (Field:   \n\r)
-            {
-                s = entryEnd;
-                continue;
-            }
-        }
-        std::string field(s, colon - s);
-        strToLower(field);
-        _hdrs[field] = std::string(entry, entryEnd - entry);
-        s = entryEnd;
+        while(valEnd[-1] == '\n' || valEnd[-1] == '\r') // skip backwards if necessary
+            --valEnd;
+        const char *val = colon + 1; // value starts after ':' ...
+        while(isspace(*val) && val < valEnd) // skip spaces after the colon
+            ++val;
+        std::string key(s, colon - s);
+        strToLower(key);
+        std::string valstr(val, valEnd - val);
+        _hdrs[key] = valstr;
+        traceprint("HDR: %s: %s\n", key.c_str(), valstr.c_str());
+        s = valEnd;
     }
 }
 
@@ -653,25 +1144,29 @@ bool HttpSocket::_HandleStatus()
     const char *conn = Hdr("connection"); // if its not keep-alive, server will close it, so we can too
     _mustClose = !conn || STRNICMP(conn, "keep-alive", 10);
 
-    if(!(_chunkedTransfer || _contentLen) && _status == 200)
-        traceprint("_ParseHeader: Not chunked transfer and content-length==0, this will go fail");
+    // As per the spec, we also need to handle 1xx codes, but are free to ignore them
+    const bool success = IsSuccess() || (_status >= 100 && _status <= 199);
 
+    if(!(_chunkedTransfer || _contentLen) && success)
+        traceprint("_ParseHeader: Not chunked transfer and content-length==0, this will go fail\n");
+
+    traceprint("Got HTTP Status %d\n", _status);
+
+    if(success)
+        return true;
+
+    bool forceGET = false;
     switch(_status)
     {
-        case 200:
-            return true;
-
+        case 303:
+            forceGET = true; // As per spec, continue with a GET request
         case 301:
         case 302:
-        case 303:
         case 307:
         case 308:
             if(_followRedir)
                 if(const char *loc = Hdr("location"))
-                {
-                    traceprint("Following HTTP redirect to: %s\n", loc);
-                    Download(loc, _curRequest.user);
-                }
+                    _Redirect(loc, forceGET);
             return false;
 
         default:
@@ -681,17 +1176,24 @@ bool HttpSocket::_HandleStatus()
 
 bool HttpSocket::IsRedirecting() const
 {
-	switch(_status)
-	{
-		case 301:
-		case 302:
-		case 303:
-		case 307:
-		case 308:
-			return true;
-	}
-	return false;
+    switch(_status)
+    {
+        case 301:
+        case 302:
+        case 303:
+        case 307:
+        case 308:
+            return true;
+    }
+    return false;
 }
+
+bool HttpSocket::IsSuccess() const
+{
+    const unsigned s = _status;
+    return s >= 200 && s <= 205;
+}
+
 
 
 void HttpSocket::_ParseHeader(void)
@@ -778,9 +1280,9 @@ void HttpSocket::_OnClose()
         _FinishRequest();
 }
 
-void HttpSocket::_OnRecvInternal(char *buf, unsigned int size)
+void HttpSocket::_OnRecvInternal(void *buf, unsigned int size)
 {
-    if(_status == 200 || _alwaysHandle)
+    if(IsSuccess() || _alwaysHandle)
         _OnRecv(buf, size);
 }
 
@@ -814,6 +1316,7 @@ bool SocketSet::update(void)
         interesting = sock->update() || interesting;
         if(sdata.deleteWhenDone && !sock->isOpen() && !sock->HasPendingTask())
         {
+            traceprint("Delete socket\n");
             delete sock;
             _store.erase(it++);
         }
@@ -837,6 +1340,85 @@ void SocketSet::add(TcpSocket *s, bool deleteWhenDone /* = true */)
 }
 
 #endif
+
+
+// ---------------------------------------------------
+// Simple one-shot API
+
+class DLSocket : public HttpSocket
+{
+public:
+    DLSocket() : buf(NULL), bufsz(0), bufcap(0), finished(false), fail(false)
+    {
+    }
+
+    virtual ~DLSocket() {}
+
+    char *buf;
+    size_t bufsz;
+    size_t bufcap;
+    bool finished;
+    bool fail;
+
+protected:
+
+    void _OnRequestDone()
+    {
+        finished = true;
+        if(buf)
+            buf[bufsz] = 0; // zero-terminate
+    }
+
+    void _OnRecv(void *incoming, unsigned size)
+    {
+        if(!size || !IsSuccess())
+            return;
+        if(bufcap + size + 1 >= bufsz) // always make sure there's 1 more byte free for the zero-terminator
+        {
+            bufcap += (bufcap / 2) + size + 1;
+            buf = (char*)realloc(buf, bufcap);
+            if(!buf)
+            {
+                fail = true;
+                close();
+            }
+        }
+        memcpy(buf + bufsz, incoming, size);
+        bufsz += size;
+    }
+};
+
+char *Download(const char *url, size_t *sz, const POST *post /* = NULL */)
+{
+    if(!_networkInitDone)
+        if(!InitNetwork())
+            return NULL;
+
+    DLSocket dl;
+    dl.SetBufsizeIn(64 * 1024);
+    dl.SetNonBlocking(false);
+    dl.SetFollowRedirect(true);
+    dl.SetAlwaysHandle(false);
+    dl.SetUserAgent("minihttp");
+    dl.Download(url, NULL, NULL, post);
+
+    while(dl.isOpen() || dl.HasPendingTask())
+        dl.update();
+
+    if(!dl.finished || dl.fail)
+    {
+        free(dl.buf);
+        return NULL;
+    }
+
+    if(sz)
+        *sz = dl.bufsz;
+
+    // FIXME: if the body is empty (aka the HTTP reply contained entirely of headers only), buf was not allocated and is still NULL.
+    // Might want to return 1 malloc'd zero byte in that case?
+    return dl.buf;
+}
+
 
 
 } // namespace minihttp
