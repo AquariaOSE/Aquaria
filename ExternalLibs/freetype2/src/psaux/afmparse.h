@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    AFM parser (specification).                                          */
 /*                                                                         */
-/*  Copyright 2006 by                                                      */
+/*  Copyright 2006-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __AFMPARSE_H__
-#define __AFMPARSE_H__
+#ifndef AFMPARSE_H_
+#define AFMPARSE_H_
 
 
 #include <ft2build.h>
@@ -56,10 +56,12 @@ FT_BEGIN_HEADER
   typedef struct  AFM_ValueRec_
   {
     enum AFM_ValueType_  type;
-    union {
+    union
+    {
       char*     s;
       FT_Fixed  f;
       FT_Int    i;
+      FT_UInt   u;
       FT_Bool   b;
 
     } u;
@@ -77,11 +79,11 @@ FT_BEGIN_HEADER
   FT_LOCAL( char* )
   afm_parser_next_key( AFM_Parser  parser,
                        FT_Bool     line,
-                       FT_UInt*    len );
+                       FT_Offset*  len );
 
 FT_END_HEADER
 
-#endif /* __AFMPARSE_H__ */
+#endif /* AFMPARSE_H_ */
 
 
 /* END */

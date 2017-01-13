@@ -248,4 +248,3 @@ z_streamp z )
   ZFREE(z, c);
   Tracev((stderr, "inflate:       codes free\n"));
 }
-

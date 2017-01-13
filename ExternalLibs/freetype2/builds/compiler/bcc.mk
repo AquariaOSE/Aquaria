@@ -3,7 +3,7 @@
 #
 
 
-# Copyright 1996-2000, 2003, 2006 by
+# Copyright 1996-2016 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -52,7 +52,8 @@ L :=
 
 # Target flag -- no trailing space.
 #
-T := -o
+T  := -o
+TE := -e
 
 
 # C flags
@@ -72,7 +73,14 @@ ANSIFLAGS := -A
 # Library linking
 #
 CLEAN_LIBRARY ?= $(DELETE) $(subst /,$(SEP),$(PROJECT_LIBRARY))
-LINK_LIBRARY   = tlib /u $(subst /,$(COMPILER_SEP),$@ $(OBJECTS_LIST:%=+%))
+LINK_LIBRARY   = tlib /u /P128 $(subst /,$(COMPILER_SEP),$@ $(OBJECTS_LIST:%=+%))
+
+
+# Borland C++ specific temporary files
+#
+CLEAN += \
+         $(subst /,$(SEP),$(TOP_DIR)/apinames.$(O)) \
+         $(subst /,$(SEP),$(OBJ_DIR)/apinames.tds)
 
 
 # EOF
