@@ -41,10 +41,10 @@ class ParticleManager;
 
 struct ScreenMode
 {
-	ScreenMode() { idx = x = y = hz = 0; }
-	ScreenMode(int i, int x, int y, int hz) : idx(i), x(x), y(y), hz(hz) {}
+	ScreenMode() { x = y = hz = 0; }
+	ScreenMode(int x, int y, int hz) : x(x), y(y), hz(hz) {}
 
-	int idx, x, y, hz;
+	int x, y, hz;
 };
 
 struct CoreSettings
@@ -278,7 +278,8 @@ public:
 
 	unsigned getTicks();
 
-	void initGraphics(int w, int h, int fullscreen=-1, int vsync=-1, int bpp=-1);
+	void initGraphics(int w, int h, int fullscreen=-1, int vsync=-1, int bpp=-1, int display=-1); // pass 0x0 for desktop resolution
+	void updateWindowDrawSize(int w, int h);
 
 	Vector getGameCursorPosition();
 	Vector getGamePosition(const Vector &v);
@@ -413,6 +414,8 @@ public:
 	void updateInputGrab();
 
 	bool isFullscreen();
+	bool isDesktopResolution();
+	int getDisplayIndex();
 
 	int getVirtualOffX();
 	int getVirtualOffY();
@@ -480,7 +483,8 @@ protected:
 	bool initSoundLibrary(const std::string &defaultDevice);
 	bool initInputLibrary();
 	void initJoystickLibrary();
-	bool initGraphicsLibrary(int w, int h, bool fullscreen, bool vsync, int bpp);
+	bool initGraphicsLibrary(int w, int h, bool fullscreen, bool vsync, int bpp, int display);
+	void createWindow(int w, int h, bool resizable, bool fullscreen);
 	void shutdownInputLibrary();
 	void shutdownJoystickLibrary();
 	void shutdownGraphicsLibrary();
@@ -510,7 +514,7 @@ protected:
 	int nowTicks, thenTicks;
 
 	int _vsync, _bpp;
-	bool _fullscreen;
+	bool _fullscreen, _useDesktopResolution;
 	int winPosX, winPosY; // pre-fullscreen
 
 	CountedPtr<Texture> texError;

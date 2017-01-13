@@ -65,6 +65,8 @@ public:
 			fpsSmoothing = 30;
 			resx = 800;
 			resy = 600;
+			hz = 60;
+			displayindex = 0;
 			full = 1;
 			fbuffer = 1;
 			darkfbuffer = 1;
@@ -77,7 +79,7 @@ public:
 		int blur;
 		int noteEffects;
 		int fpsSmoothing;
-		int resx, resy, full, fbuffer, bits, vsync, darkfbuffer, darkbuffersize;
+		int resx, resy, full, fbuffer, bits, vsync, darkfbuffer, darkbuffersize, hz, displayindex;
 		int saveSlotScreens;
 		int parallaxOn0, parallaxOn1, parallaxOn2;
 		int numParticles;

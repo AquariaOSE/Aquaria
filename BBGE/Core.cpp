@@ -69,6 +69,7 @@ static 	std::ofstream _logOut;
 	#define KMOD_GUI KMOD_META
 #endif
 
+
 void Core::resetCamera()
 {
 	cameraPos = Vector(0,0);
@@ -145,17 +146,57 @@ void Core::setup_opengl()
 }
 
 
-void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
+void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int display)
 {
 	assert(lib_graphics);
 
-	bool wasFullscreen = _fullscreen;
+	const int oldDisplay = getDisplayIndex();
+	if(display == -1)
+		display = oldDisplay;
+
+	int screenw = 0, screenh = 0;
+	if(display >= 0)
+	{
+		SDL_DisplayMode desktop;
+		if(SDL_GetDesktopDisplayMode(display, &desktop) == 0)
+		{
+			screenw = desktop.w;
+			screenh = desktop.h;
+		}
+		else // fail-safe
+		{
+			screenw = 800;
+			screenh = 600;
+			display = oldDisplay;
+		}
+
+		// Move window to specified display if necessary
+		if(display != oldDisplay)
+		{
+			SDL_Rect bounds;
+			SDL_GetDisplayBounds(display,&bounds);
+			SDL_SetWindowPosition(gScreen, bounds.x, bounds.y);
+		}
+	}
+
+	const int oldw = width;
+	const int oldh = height;
+
+
+	const bool useDesktop = w == 0 || h == 0 || (oldw && w == -1 && oldh && h == -1 && _useDesktopResolution);
+	const bool wasFullscreen = _fullscreen;
 
 	if (fullscreen == -1)
 		fullscreen = _fullscreen;
 
 	if (vsync == -1)
 		vsync = _vsync;
+
+	if(useDesktop)
+	{
+		w = screenw;
+		h = screenh;
+	}
 
 	if (w == -1)
 		w = width;
@@ -166,10 +207,6 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 	if (bpp == -1)
 		bpp = _bpp;
 
-	int oldw = width;
-	int oldh = height;
-	width = w;
-	height = h;
 	_vsync = vsync;
 	_fullscreen = fullscreen;
 	_bpp = bpp;
@@ -183,51 +220,57 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 	else
 		SDL_GL_SetSwapInterval(0);
 
-	if(w != oldw|| h != oldh)
-		SDL_SetWindowSize(gScreen, w, h);
+	// Record window position so we can properly restore it when leaving fullscreen
+	if(fullscreen && !wasFullscreen)
+		SDL_GetWindowPosition(gScreen, &winPosX, &winPosY);
 
 	if(!!fullscreen != wasFullscreen)
 	{
 		int screenflags = 0;
 		if(fullscreen)
 		{
-			// Record window position so we can properly restore it when leaving fullscreen
-			if(!wasFullscreen)
-				SDL_GetWindowPosition(gScreen, &winPosX, &winPosY);
-
-			// Use desktop fullscreen if possible, but only if the resolution
-			// matches the actual desktop resolution.
-			// Else we'll get unused areas on the screen.
-			int disp = SDL_GetWindowDisplayIndex(gScreen);
-			if(disp >= 0)
-			{
-				SDL_DisplayMode desktop;
-				if(SDL_GetDesktopDisplayMode(disp, &desktop) == 0)
-				{
-					if(w == desktop.w && h == desktop.h)
-					{
-						screenflags = SDL_WINDOW_FULLSCREEN_DESKTOP;
-						debugLog("Switching to desktop fullscreen");
-					}
-				}
-			}
-			if(!screenflags)
-			{
-				screenflags = SDL_WINDOW_FULLSCREEN;
-				debugLog("Switching to fullscreen");
-			}
+			screenflags |= useDesktop ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN;
 		}
 
 		SDL_SetWindowFullscreen(gScreen, screenflags);
 
-		if(!fullscreen)
+		if(!fullscreen && wasFullscreen)
+		{
+			// Need to do this; else the window ends up at (0, 0) with the title bar outside the screen area
+			SDL_SetWindowPosition(gScreen, winPosX, winPosY);
+		}
+	}
+
+	bool resize = true;
+	bool reloadRes = false;
+	if(useDesktop != _useDesktopResolution)
+	{
+		if(useDesktop)
+			createWindow(oldw, oldh, true, fullscreen);
+		else
+			createWindow(w, h, false, fullscreen);
+
+		reloadRes = true;
+		if(useDesktop)
+		{
+			SDL_MaximizeWindow(gScreen);
+			resize = false;
+		}
+	}
+	// First time called + windowed mode --> maximize window
+	else if(!oldw && !oldh && useDesktop && !fullscreen)
+	{
+		SDL_MaximizeWindow(gScreen);
+		resize = false;
+	}
+
+	if(resize && !fullscreen && !useDesktop)
+	{
+		if(w != oldw|| h != oldh)
 		{
 			SDL_SetWindowSize(gScreen, w, h);
-			if(wasFullscreen)
-			{
-				// Need to do this; else the window ends up at (0, 0) with the title bar outside the screen area
-				SDL_SetWindowPosition(gScreen, winPosX, winPosY);
-			}
+			int c = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
+			SDL_SetWindowPosition(gScreen, c, c);
 		}
 	}
 
@@ -237,16 +280,33 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 
 #endif
 
+	_useDesktopResolution = useDesktop;
+
+	SDL_GetWindowSize(gScreen, &w, &h);
+
+	updateWindowDrawSize(w, h);
+
+	if(reloadRes)
+	{
+		unloadResources();
+		reloadResources();
+		resetTimer();
+	}
+}
+
+void Core::updateWindowDrawSize(int w, int h)
+{
+	width = w;
+	height = h;
 	setup_opengl();
-
 	enable2DWide(w, h);
-
+	reloadDevice();
 	resetTimer();
 }
 
 void Core::onWindowResize(int w, int h)
 {
-	initGraphics(w, h);
+	updateWindowDrawSize(w, h);
 }
 
 void Core::setFullscreen(bool full)
@@ -440,6 +500,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	doScreenshot = false;
 	baseCullRadius = 1;
 	width = height = 0;
+	_fullscreen = false;
 	afterEffectManagerLayer = 0;
 	renderObjectLayers.resize(1);
 	invGlobalScale = 1.0;
@@ -584,6 +645,20 @@ void Core::setInputGrab(bool on)
 bool Core::isFullscreen()
 {
 	return _fullscreen;
+}
+
+bool Core::isDesktopResolution()
+{
+	return _useDesktopResolution;
+}
+
+int Core::getDisplayIndex()
+{
+#ifdef BBGE_BUILD_SDL2
+	return SDL_GetWindowDisplayIndex(gScreen);
+#else
+	return 0;
+#endif
 }
 
 bool Core::isShuttingDown()
@@ -752,7 +827,7 @@ void Core::setClearColor(const Vector &c)
 
 }
 
-bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsync, int bpp)
+bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsync, int bpp, int display)
 {
 	assert(!gScreen);
 
@@ -783,62 +858,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 #endif
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	{
-#ifdef BBGE_BUILD_SDL2
-		Uint32 flags = 0;
-		flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
-		if (fullscreen)
-			flags |= SDL_WINDOW_FULLSCREEN;
-		gScreen = SDL_CreateWindow(appName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, width, height, flags);
-		if (gScreen == NULL)
-		{
-			std::ostringstream os;
-			os << "Couldn't set resolution [" << width << "x" << height << "]\n" << SDL_GetError();
-			errorLog(os.str());
-			SDL_Quit();
-			exit(0);
-		}
-		gGLctx = SDL_GL_CreateContext(gScreen);
-		if (gGLctx == NULL)
-		{
-			std::ostringstream os;
-			os << "Couldn't create OpenGL context!\n" << SDL_GetError();
-			errorLog(os.str());
-			SDL_Quit();
-			exit(0);
-		}
-
-		{
-			const char *name = SDL_GetCurrentVideoDriver();
-			std::ostringstream os2;
-			os2 << "Video Driver Name [" << name << "]";
-			debugLog(os2.str());
-		}
-
-#else
-		Uint32 flags = 0;
-		flags = SDL_OPENGL;
-		if (fullscreen)
-			flags |= SDL_FULLSCREEN;
-
-		gScreen = SDL_SetVideoMode(width, height, bpp, flags);
-		if (gScreen == NULL)
-		{
-			std::ostringstream os;
-			os << "Couldn't set resolution [" << width << "x" << height << "]\n" << SDL_GetError();
-			SDL_Quit();
-			exit_error(os.str());
-		}
-
-		{
-			char name[256];
-			SDL_VideoDriverName((char*)name, 256);
-			std::ostringstream os2;
-			os2 << "Video Driver Name [" << name << "]";
-			debugLog(os2.str());
-		}
-#endif
-	}
+	createWindow(width, height, !width && !height, fullscreen);
 
 #if BBGE_BUILD_OPENGL_DYNAMIC
 	if (SDL_GL_LoadLibrary(NULL) == -1)
@@ -866,7 +886,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 
 	enumerateScreenModes();
 
-	initGraphics(width, height, fullscreen, vsync, bpp);
+	initGraphics(width, height, fullscreen, vsync, bpp, display);
 
 	_hasFocus = true;
 
@@ -874,11 +894,90 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 	return true;
 }
 
+void Core::createWindow(int w, int h, bool resizable, bool fullscreen)
+{
+	if(w <= 0)
+		w = 640;
+	if(h <= 0)
+		h = 480;
+
+#ifdef BBGE_BUILD_SDL2
+	if(gScreen)
+	{
+		SDL_DestroyWindow(gScreen);
+		gScreen = NULL;
+	}
+	if(gGLctx)
+	{
+		SDL_GL_MakeCurrent(gScreen, NULL);
+		SDL_GL_DeleteContext(gGLctx);
+		gGLctx = NULL;
+	}
+	Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
+	if(resizable)
+		flags |= SDL_WINDOW_RESIZABLE;
+	//if(fullscreen) // Ignore fullscreen setting here, it's applied later
+	//	flags |= SDL_WINDOW_FULLSCREEN;
+	gScreen = SDL_CreateWindow(appName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
+	if (gScreen == NULL)
+	{
+		std::ostringstream os;
+		os << "Couldn't set resolution [" << w << "x" << h << "]\n" << SDL_GetError();
+		errorLog(os.str());
+		SDL_Quit();
+		exit(0);
+	}
+	gGLctx = SDL_GL_CreateContext(gScreen);
+	if (gGLctx == NULL)
+	{
+		std::ostringstream os;
+		os << "Couldn't create OpenGL context!\n" << SDL_GetError();
+		errorLog(os.str());
+		SDL_Quit();
+		exit(0);
+	}
+
+	{
+		const char *name = SDL_GetCurrentVideoDriver();
+		std::ostringstream os2;
+		os2 << "Video Driver Name [" << name << "]";
+		debugLog(os2.str());
+	}
+
+#else
+	Uint32 flags = 0;
+	flags = SDL_OPENGL;
+	if(fullscreen)
+		flags |= SDL_FULLSCREEN;
+	if (resizable)
+		flags |= SDL_RESIZABLE;
+
+	gScreen = SDL_SetVideoMode(width, height, bpp, flags);
+	if (gScreen == NULL)
+	{
+		std::ostringstream os;
+		os << "Couldn't set resolution [" << width << "x" << height << "]\n" << SDL_GetError();
+		SDL_Quit();
+		exit_error(os.str());
+	}
+
+	{
+		char name[256];
+		SDL_VideoDriverName((char*)name, 256);
+		std::ostringstream os2;
+		os2 << "Video Driver Name [" << name << "]";
+		debugLog(os2.str());
+	}
+#endif
+}
+
 void Core::enumerateScreenModes()
 {
 	screenModes.clear();
 
 #ifdef BBGE_BUILD_SDL2
+	screenModes.push_back(ScreenMode(0, 0, 0)); // "Desktop" screen mode
+
 	SDL_DisplayMode mode;
 	const int modecount = SDL_GetNumDisplayModes(0);
 	if(modecount == 0){
@@ -890,7 +989,7 @@ void Core::enumerateScreenModes()
 		SDL_GetDisplayMode(0, i, &mode);
 		if (mode.w && mode.h && (mode.w > mode.h))
 		{
-			screenModes.push_back(ScreenMode(i, mode.w, mode.h, mode.refresh_rate));
+			screenModes.push_back(ScreenMode(mode.w, mode.h, mode.refresh_rate));
 		}
 	}
 

@@ -775,13 +775,13 @@ void DSQ::setVersionLabelText()
 	versionLabel->setText(os.str());
 }
 
-static bool sdlVideoModeOK(const int w, const int h, const int bpp)
+static bool sdlVideoModeOK(int disp, const int w, const int h, const int bpp)
 {
 #ifdef BBGE_BUILD_SDL2
 	SDL_DisplayMode mode;
-	const int modecount = SDL_GetNumDisplayModes(0);
+	const int modecount = SDL_GetNumDisplayModes(disp);
 	for (int i = 0; i < modecount; i++) {
-		SDL_GetDisplayMode(0, i, &mode);
+		SDL_GetDisplayMode(disp, i, &mode);
 		if (!mode.w || !mode.h || (w >= mode.w && h >= mode.h)) {
 			return true;
 		}
@@ -897,17 +897,19 @@ This build is not yet final, and as such there are a couple things lacking. They
 		debugLog("VoiceOvers Disabled");
 
 	SDL_Init(SDL_INIT_VIDEO);
-	if (fullscreen && !sdlVideoModeOK(user.video.resx, user.video.resy, user.video.bits))
+	if (fullscreen && !sdlVideoModeOK(user.video.displayindex, user.video.resx, user.video.resy, user.video.bits))
 	{
 		// maybe we can force a sane resolution if SetVideoMode is going to fail...
 		user.video.resx = 800;
 		user.video.resy = 600;
-		if (!sdlVideoModeOK(user.video.resx, user.video.resy, user.video.bits))
+		user.video.hz = 60;
+		user.video.displayindex = 0;
+		if (!sdlVideoModeOK(0, user.video.resx, user.video.resy, user.video.bits))
 			fullscreen = false;  // last chance.
 	}
 
 	debugLog("Init Graphics Library...");
-		initGraphicsLibrary(user.video.resx, user.video.resy, fullscreen, user.video.vsync, user.video.bits);
+		initGraphicsLibrary(user.video.resx, user.video.resy, fullscreen, user.video.vsync, user.video.bits, user.video.displayindex);
 	debugLog("OK");
 
 	debugLog("Init Sound Library...");
@@ -1704,8 +1706,6 @@ void DSQ::unloadDevice()
 
 void DSQ::reloadDevice()
 {
-	loadFonts();
-
 	Core::reloadDevice();
 	darkLayer.reloadDevice();
 

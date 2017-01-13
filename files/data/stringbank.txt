@@ -251,6 +251,7 @@
 2139 No Joystick
 2140 Joystick:
 2141 Not available:
+2142 Desktop
 2150 Movement
 2151 Menu
 2152 Quick Keys
