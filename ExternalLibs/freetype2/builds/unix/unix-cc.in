@@ -2,7 +2,7 @@
 # FreeType 2 template for Unix-specific compiler definitions
 #
 
-# Copyright 1996-2000, 2002, 2003, 2005, 2006 by
+# Copyright 1996-2016 by
 # David Turner, Robert Wilhelm, and Werner Lemberg.
 #
 # This file is part of the FreeType project, and may only be used, modified,
@@ -14,8 +14,9 @@
 
 CC           := @CC@
 COMPILER_SEP := $(SEP)
+FT_LIBTOOL_DIR ?= $(BUILD_DIR)
 
-LIBTOOL ?= $(BUILD_DIR)/libtool
+LIBTOOL := $(FT_LIBTOOL_DIR)/libtool
 
 
 # The object file extension (for standard and static libraries).  This can be
@@ -108,6 +109,6 @@ CCexe        := $(CCraw_build)	# used to compile `apinames' only
 LINK_LIBRARY = $(LIBTOOL) --mode=link $(CCraw) -o $@ $(OBJECTS_LIST) \
                           -rpath $(libdir) -version-info $(version_info) \
                           $(LDFLAGS) -no-undefined \
-                          # -export-symbols $(EXPORTS_LIST)
+                          -export-symbols $(EXPORTS_LIST)
 
 # EOF

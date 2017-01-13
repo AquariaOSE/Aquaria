@@ -1,20 +1,42 @@
-# - Try to find TinyXML2
-# Once done this will define
-#  TINYXML2_FOUND - System has TinyXML2
-#  TINYXML2_INCLUDE_DIRS - The TinyXML2 include directories
-#  TINYXML2_LIBRARIES - The libraries needed to use TinyXML2
-#  TINYXML2_DEFINITIONS - Compiler switches required for using TinyXML2
+# Copyright (c) 2015-2016, Graphics Lab, Georgia Tech Research Corporation
+# Copyright (c) 2015-2016, Humanoid Lab, Georgia Tech Research Corporation
+# Copyright (c) 2016, Personal Robotics Lab, Carnegie Mellon University
+# This file is provided under the "BSD-style" License
 
-find_package(PkgConfig)
-pkg_check_modules(PC_TINYXML2 QUIET tinyxml2)
-set(TINYXML2_INCLUDE_DIRS ${PC_TINYXML2_INCLUDE_DIRS})
-set(TINYXML2_DEFINITIONS ${PC_TINYXML2_CFLAGS_OTHER})
+# Find TINYXML2
+#
+# This sets the following variables:
+# TINYXML2_FOUND
+# TINYXML2_INCLUDE_DIRS
+# TINYXML2_LIBRARIES
+# TINYXML2_VERSION
 
-find_library(TINYXML2_LIBRARY NAMES tinyxml2
-             HINTS ${PC_TINYXML2_LIBDIR} ${PC_TINYXML2_LIBRARY_DIRS})
-set(TINYXML2_LIBRARIES ${TINYXML2_LIBRARY})
+find_package(PkgConfig QUIET)
 
+# Check if the pkgconfig file is installed
+pkg_check_modules(PC_TINYXML2 tinyxml2 QUIET)
+
+# Include directories
+find_path(TINYXML2_INCLUDE_DIRS
+    NAMES tinyxml2.h
+    HINTS ${PC_TINYXML2_INCLUDEDIR}
+    PATHS "${CMAKE_INSTALL_PREFIX}/include")
+
+# Libraries
+if(MSVC)
+  set(TINYXML2_LIBRARIES optimized tinyxml2 debug tinyxml2d)
+else()
+  find_library(TINYXML2_LIBRARIES
+      NAMES tinyxml2
+      HINTS ${PC_TINYXML2_LIBDIR})
+endif()
+
+# Version
+set(TINYXML2_VERSION ${PC_TINYXML2_VERSION})
+
+# Set (NAME)_FOUND if all the variables and the version are satisfied.
 include(FindPackageHandleStandardArgs)
-find_package_handle_standard_args(TinyXML2 DEFAULT_MSG TINYXML2_LIBRARY TINYXML2_INCLUDE_DIRS)
-
-mark_as_advanced(TINYXML2_INCLUDE_DIRS TINYXML2_LIBRARY)
+find_package_handle_standard_args(TINYXML2
+    FAIL_MESSAGE  DEFAULT_MSG
+    REQUIRED_VARS TINYXML2_INCLUDE_DIRS TINYXML2_LIBRARIES
+    VERSION_VAR   TINYXML2_VERSION)

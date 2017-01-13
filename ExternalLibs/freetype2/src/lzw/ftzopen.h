@@ -8,7 +8,8 @@
 /*  be used to parse compressed PCF fonts, as found with many X11 server   */
 /*  distributions.                                                         */
 /*                                                                         */
-/*  Copyright 2005, 2006, 2007, 2008 by David Turner.                      */
+/*  Copyright 2005-2016 by                                                 */
+/*  David Turner.                                                          */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
 /*  modified, and distributed under the terms of the FreeType project      */
@@ -18,8 +19,8 @@
 /*                                                                         */
 /***************************************************************************/
 
-#ifndef __FT_ZOPEN_H__
-#define __FT_ZOPEN_H__
+#ifndef FTZOPEN_H_
+#define FTZOPEN_H_
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
@@ -41,7 +42,7 @@
 #define LZW_CLEAR         256
 #define LZW_FIRST         257
 
-#define LZW_BIT_MASK      0x1f
+#define LZW_BIT_MASK      0x1F
 #define LZW_BLOCK_MASK    0x80
 #define LZW_MASK( n )     ( ( 1U << (n) ) - 1U )
 
@@ -115,10 +116,10 @@
     FT_Int       in_eof;
 
     FT_Byte      buf_tab[16];
-    FT_Int       buf_offset;
-    FT_Int       buf_size;
+    FT_UInt      buf_offset;
+    FT_UInt      buf_size;
     FT_Bool      buf_clear;
-    FT_Int       buf_total;
+    FT_Offset    buf_total;
 
     FT_UInt      max_bits;    /* max code bits, from file header   */
     FT_Int       block_mode;  /* block mode flag, from file header */
@@ -137,7 +138,7 @@
 
     FT_Byte*     stack;       /* character stack */
     FT_UInt      stack_top;
-    FT_UInt      stack_size;
+    FT_Offset    stack_size;
     FT_Byte      stack_0[FT_LZW_DEFAULT_STACK_SIZE]; /* minimize heap alloc */
 
     FT_Stream    source;      /* source stream */
@@ -165,7 +166,7 @@
 
 /* */
 
-#endif /* __FT_ZOPEN_H__ */
+#endif /* FTZOPEN_H_ */
 
 
 /* END */

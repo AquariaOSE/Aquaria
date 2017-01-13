@@ -154,9 +154,10 @@ void ModDL::GetModlist(const std::string& url, bool allowChaining, bool first)
 	}
 	else
 	{
-		std::string host, dummy_file;
+		std::string host, dummy_file, dummy_protocol;
 		int dummy_port;
-		minihttp::SplitURI(url, host, dummy_file, dummy_port);
+		bool dummy_useSSL;
+		minihttp::SplitURI(url, dummy_protocol, host, dummy_file, dummy_port, dummy_useSSL);
 		stringToLower(host);
 		if(knownServers.find(host) != knownServers.end())
 		{

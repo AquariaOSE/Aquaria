@@ -7,27 +7,55 @@
 #ifndef MINIHTTPSOCKET_H
 #define MINIHTTPSOCKET_H
 
-
 // ---- Compile config -----
 #define MINIHTTP_SUPPORT_HTTP
 #define MINIHTTP_SUPPORT_SOCKET_SET
 // -------------------------
 
-
+#include <stdlib.h>
 #include <string>
-
-#ifndef _WIN32
-#  include <stdint.h>
-#endif
+// Intentionally avoid pulling in any other headers
 
 namespace minihttp
 {
 
+class POST;
+
 bool InitNetwork();
 void StopNetwork();
+bool HasSSL();
 
-bool SplitURI(const std::string& uri, std::string& host, std::string& file, int& port);
+// Simple one-shot API to download stuff via HTTP(S).
+// Blocks while waiting until all data have arrived.
+// Optionally, pass a size_t pointer to get the received memory block size (excluding the added zero-terminator).
+// Optionally, pass a pointer to POST data to send a POST request instead of a GET request.
+// Returns a pointer to a zero-terminated memory block on success, NULL on failure.
+// The returned pointer must be free()'d after use.
+// Note: Avoid using this function if possible. It has no safeguards against a malicious web server!
+//       E.g. A server that sends one byte every few seconds but keeping the connection intact
+//       is perfectly capable of stalling the caller for a VERY LONG TIME.
+char *Download(const char *url, size_t *sz = NULL, const POST *post = NULL);
 
+// append to enc
+void URLEncode(const std::string& s, std::string& enc);
+
+bool SplitURI(const std::string& uri, std::string& protocol, std::string& host, std::string& file, int& port, bool& useSSL);
+
+enum SSLResult
+{
+    SSLR_OK = 0x0,
+    SSLR_NO_SSL = 0x1,
+    SSLR_FAIL = 0x2,
+    SSLR_CERT_EXPIRED = 0x4,
+    SSLR_CERT_REVOKED = 0x8,
+    SSLR_CERT_CN_MISMATCH = 0x10,
+    SSLR_CERT_NOT_TRUSTED = 0x20,
+    SSLR_CERT_MISSING = 0x40,
+    SSLR_CERT_SKIP_VERIFY = 0x80,
+    SSLR_CERT_FUTURE = 0x100,
+
+    _SSLR_FORCE32BIT = 0x7fffffff
+};
 
 class TcpSocket
 {
@@ -47,13 +75,19 @@ public:
     bool SetNonBlocking(bool nonblock);
     unsigned int GetBufSize() { return _inbufSize; }
     const char *GetHost(void) { return _host.c_str(); }
-    bool SendBytes(const char *str, unsigned int len);
+    bool SendBytes(const void *buf, unsigned int len);
+
+    // SSL related
+    bool initSSL(const char *certs);
+    bool hasSSL() const { return !!_sslctx; }
+    void shutdownSSL();
+    SSLResult verifySSL(char *buf = 0, unsigned buflen = 0); // optionally put info string into buf
 
 protected:
     virtual void _OnCloseInternal();
     virtual void _OnData(); // data received callback. Internal, should only be overloaded to call _OnRecv()
 
-    virtual void _OnRecv(char *buf, unsigned int size) = 0;
+    virtual void _OnRecv(void *buf, unsigned int size) = 0;
     virtual void _OnClose() {}; // close callback
     virtual void _OnOpen() {} // called when opened
     virtual bool _OnUpdate() { return true; } // called before reading from the socket
@@ -72,9 +106,18 @@ protected:
 
     bool _nonblocking; // Default true. If false, the current thread is blocked while waiting for input.
 
+#ifdef _WIN32
     intptr_t _s; // socket handle. really an int, but to be sure its 64 bit compatible as it seems required on windows, we use this.
+#else
+    long _s;
+#endif
 
     std::string _host;
+
+private:
+    int _writeBytes(const unsigned char *buf, size_t len);
+    int _readBytes(unsigned char *buf, size_t maxlen);
+    void *_sslctx;
 };
 
 } // end namespace minihttp
@@ -96,17 +139,34 @@ enum HttpCode
     HTTP_NOTFOUND = 404,
 };
 
+class POST
+{
+public:
+    void reserve(size_t res) { data.reserve(res); }
+    POST& add(const char *key, const char *value);
+    const char *c_str() const { return data.c_str(); }
+    const std::string& str() const { return data; }
+    bool empty() const { return data.empty(); }
+    size_t length() const { return data.length(); }
+private:
+    std::string data;
+};
+
 struct Request
 {
     Request() : port(80), user(NULL) {}
     Request(const std::string& h, const std::string& res, int p = 80, void *u = NULL)
-        : host(h), resource(res), port(80), user(u) {}
+        : host(h), resource(res), port(80), user(u), useSSL(false) {}
 
+    std::string protocol;
     std::string host;
     std::string header; // set by socket
     std::string resource;
+    std::string extraGetHeaders;
     int port;
     void *user;
+    bool useSSL;
+    POST post; // if this is empty, it's a GET request, otherwise a POST request
 };
 
 class HttpSocket : public TcpSocket
@@ -127,10 +187,10 @@ public:
     void SetFollowRedirect(bool follow) { _followRedir = follow; }
     void SetAlwaysHandle(bool h) { _alwaysHandle = h; }
 
-    bool Download(const std::string& url, void *user = NULL);
-    bool SendGet(Request& what, bool enqueue);
-    bool SendGet(const std::string what, void *user = NULL);
-    bool QueueGet(const std::string what, void *user = NULL);
+    bool Download(const std::string& url, const char *extraRequest = NULL, void *user = NULL, const POST *post = NULL);
+    bool SendRequest(Request& what, bool enqueue);
+    bool SendRequest(const std::string what, const char *extraRequest = NULL, void *user = NULL);
+    bool QueueRequest(const std::string what, const char *extraRequest = NULL, void *user = NULL);
 
     unsigned int GetRemaining() const { return _remaining; }
 
@@ -143,17 +203,20 @@ public:
     const char *Hdr(const char *h) const;
 
     bool IsRedirecting() const;
+    bool IsSuccess() const;
 
 protected:
     virtual void _OnCloseInternal();
     virtual void _OnClose();
     virtual void _OnData(); // data received callback. Internal, should only be overloaded to call _OnRecv()
-    virtual void _OnRecv(char *buf, unsigned int size) = 0;
+    virtual void _OnRecv(void *buf, unsigned int size) = 0;
     virtual void _OnOpen(); // called when opene
     virtual bool _OnUpdate(); // called before reading from the socket
 
     // new ones:
     virtual void _OnRequestDone() {}
+
+    bool _Redirect(std::string loc, bool forceGET);
 
     void _ProcessChunk();
     bool _EnqueueOrSend(const Request& req, bool forceQueue = false);
@@ -163,7 +226,7 @@ protected:
     void _ParseHeaderFields(const char *s, size_t size);
     bool _HandleStatus(); // Returns whether the processed request was successful, or not
     void _FinishRequest();
-    void _OnRecvInternal(char *buf, unsigned int size);
+    void _OnRecvInternal(void *buf, unsigned int size);
 
     std::string _user_agent;
     std::string _accept_encoding; // Default empty.
