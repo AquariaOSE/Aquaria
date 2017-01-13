@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    High-level OpenType driver interface (specification).                */
 /*                                                                         */
-/*  Copyright 1996-2001, 2002 by                                           */
+/*  Copyright 1996-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,8 +16,8 @@
 /***************************************************************************/
 
 
-#ifndef __CFFDRIVER_H__
-#define __CFFDRIVER_H__
+#ifndef CFFDRIVER_H_
+#define CFFDRIVER_H_
 
 
 #include <ft2build.h>
@@ -27,13 +27,12 @@
 FT_BEGIN_HEADER
 
 
-  FT_CALLBACK_TABLE
-  const FT_Driver_ClassRec  cff_driver_class;
+  FT_DECLARE_DRIVER( cff_driver_class )
 
 
 FT_END_HEADER
 
-#endif /* __CFFDRIVER_H__ */
+#endif /* CFFDRIVER_H_ */
 
 
 /* END */

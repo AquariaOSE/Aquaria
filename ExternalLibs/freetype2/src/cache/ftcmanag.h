@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    FreeType Cache Manager (specification).                              */
 /*                                                                         */
-/*  Copyright 2000-2001, 2003, 2004, 2006 by                               */
+/*  Copyright 2000-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -59,8 +59,8 @@
   /*************************************************************************/
 
 
-#ifndef __FTCMANAG_H__
-#define __FTCMANAG_H__
+#ifndef FTCMANAG_H_
+#define FTCMANAG_H_
 
 
 #include <ft2build.h>
@@ -94,8 +94,8 @@ FT_BEGIN_HEADER
     FT_Memory           memory;
 
     FTC_Node            nodes_list;
-    FT_ULong            max_weight;
-    FT_ULong            cur_weight;
+    FT_Offset           max_weight;
+    FT_Offset           cur_weight;
     FT_UInt             num_nodes;
 
     FTC_Cache           caches[FTC_MAX_CACHES];
@@ -169,7 +169,7 @@ FT_BEGIN_HEADER
 
 FT_END_HEADER
 
-#endif /* __FTCMANAG_H__ */
+#endif /* FTCMANAG_H_ */
 
 
 /* END */

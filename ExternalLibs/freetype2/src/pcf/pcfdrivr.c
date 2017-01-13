@@ -2,7 +2,7 @@
 
     FreeType font driver for pcf files
 
-    Copyright (C) 2000, 2001, 2002, 2003, 2004, 2006, 2007, 2008, 2009 by
+    Copyright (C) 2000-2004, 2006-2011, 2013, 2014 by
     Francesco Zappa Nardelli
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -32,8 +32,10 @@ THE SOFTWARE.
 #include FT_INTERNAL_OBJECTS_H
 #include FT_GZIP_H
 #include FT_LZW_H
+#include FT_BZIP2_H
 #include FT_ERRORS_H
 #include FT_BDF_H
+#include FT_TRUETYPE_IDS_H
 
 #include "pcf.h"
 #include "pcfdrivr.h"
@@ -46,7 +48,7 @@ THE SOFTWARE.
 #define FT_COMPONENT  trace_pcfread
 
 #include FT_SERVICE_BDF_H
-#include FT_SERVICE_XFREE86_NAME_H
+#include FT_SERVICE_FONT_FORMAT_H
 
 
   /*************************************************************************/
@@ -62,7 +64,7 @@ THE SOFTWARE.
   typedef struct  PCF_CMapRec_
   {
     FT_CMapRec    root;
-    FT_UInt       num_encodings;
+    FT_ULong      num_encodings;
     PCF_Encoding  encodings;
 
   } PCF_CMapRec, *PCF_CMap;
@@ -78,10 +80,10 @@ THE SOFTWARE.
     FT_UNUSED( init_data );
 
 
-    cmap->num_encodings = (FT_UInt)face->nencodings;
+    cmap->num_encodings = face->nencodings;
     cmap->encodings     = face->encodings;
 
-    return PCF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -102,7 +104,7 @@ THE SOFTWARE.
   {
     PCF_CMap      cmap      = (PCF_CMap)pcfcmap;
     PCF_Encoding  encodings = cmap->encodings;
-    FT_UInt       min, max, mid;
+    FT_ULong      min, max, mid;
     FT_UInt       result    = 0;
 
 
@@ -111,11 +113,11 @@ THE SOFTWARE.
 
     while ( min < max )
     {
-      FT_UInt32  code;
+      FT_ULong  code;
 
 
       mid  = ( min + max ) >> 1;
-      code = encodings[mid].enc;
+      code = (FT_ULong)encodings[mid].enc;
 
       if ( charcode == code )
       {
@@ -139,8 +141,8 @@ THE SOFTWARE.
   {
     PCF_CMap      cmap      = (PCF_CMap)pcfcmap;
     PCF_Encoding  encodings = cmap->encodings;
-    FT_UInt       min, max, mid;
-    FT_UInt32     charcode  = *acharcode + 1;
+    FT_ULong      min, max, mid;
+    FT_ULong      charcode  = *acharcode + 1;
     FT_UInt       result    = 0;
 
 
@@ -149,11 +151,11 @@ THE SOFTWARE.
 
     while ( min < max )
     {
-      FT_UInt32  code;
+      FT_ULong  code;
 
 
       mid  = ( min + max ) >> 1;
-      code = encodings[mid].enc;
+      code = (FT_ULong)encodings[mid].enc;
 
       if ( charcode == code )
       {
@@ -170,17 +172,24 @@ THE SOFTWARE.
     charcode = 0;
     if ( min < cmap->num_encodings )
     {
-      charcode = encodings[min].enc;
+      charcode = (FT_ULong)encodings[min].enc;
       result   = encodings[min].glyph + 1;
     }
 
   Exit:
-    *acharcode = charcode;
+    if ( charcode > 0xFFFFFFFFUL )
+    {
+      FT_TRACE1(( "pcf_cmap_char_next: charcode 0x%x > 32bit API" ));
+      *acharcode = 0;
+      /* XXX: result should be changed to indicate an overflow error */
+    }
+    else
+      *acharcode = (FT_UInt32)charcode;
     return result;
   }
 
 
-  FT_CALLBACK_TABLE_DEF
+  static
   const FT_CMap_ClassRec  pcf_cmap_class =
   {
     sizeof ( PCF_CMapRec ),
@@ -209,24 +218,24 @@ THE SOFTWARE.
     FT_FREE( face->metrics );
 
     /* free properties */
+    if ( face->properties )
     {
-      PCF_Property  prop;
-      FT_Int        i;
+      FT_Int  i;
 
 
-      if ( face->properties )
+      for ( i = 0; i < face->nprops; i++ )
       {
-        for ( i = 0; i < face->nprops; i++ )
-        {
-          prop = &face->properties[i];
+        PCF_Property  prop = &face->properties[i];
 
-          if ( prop ) {
-            FT_FREE( prop->name );
-            if ( prop->isString )
-              FT_FREE( prop->value.atom );
-          }
+
+        if ( prop )
+        {
+          FT_FREE( prop->name );
+          if ( prop->isString )
+            FT_FREE( prop->value.atom );
         }
       }
+
       FT_FREE( face->properties );
     }
 
@@ -237,13 +246,11 @@ THE SOFTWARE.
     FT_FREE( face->charset_encoding );
     FT_FREE( face->charset_registry );
 
-    FT_TRACE4(( "PCF_Face_Done: done face\n" ));
-
-    /* close gzip/LZW stream if any */
-    if ( pcfface->stream == &face->gzip_stream )
+    /* close compressed stream if any */
+    if ( pcfface->stream == &face->comp_stream )
     {
-      FT_Stream_Close( &face->gzip_stream );
-      pcfface->stream = face->gzip_source;
+      FT_Stream_Close( &face->comp_stream );
+      pcfface->stream = face->comp_source;
     }
   }
 
@@ -256,65 +263,101 @@ THE SOFTWARE.
                  FT_Parameter*  params )
   {
     PCF_Face  face  = (PCF_Face)pcfface;
-    FT_Error  error = PCF_Err_Ok;
+    FT_Error  error;
 
     FT_UNUSED( num_params );
     FT_UNUSED( params );
-    FT_UNUSED( face_index );
 
 
-    error = pcf_load_font( stream, face );
+    FT_TRACE2(( "PCF driver\n" ));
+
+    error = pcf_load_font( stream, face, face_index );
     if ( error )
     {
-      FT_Error  error2;
-
-
       PCF_Face_Done( pcfface );
 
-      /* this didn't work, try gzip support! */
-      error2 = FT_Stream_OpenGzip( &face->gzip_stream, stream );
-      if ( FT_ERROR_BASE( error2 ) == FT_Err_Unimplemented_Feature )
-        goto Fail;
+#if defined( FT_CONFIG_OPTION_USE_ZLIB )  || \
+    defined( FT_CONFIG_OPTION_USE_LZW )   || \
+    defined( FT_CONFIG_OPTION_USE_BZIP2 )
 
-      error = error2;
-      if ( error )
+#ifdef FT_CONFIG_OPTION_USE_ZLIB
+      {
+        FT_Error  error2;
+
+
+        /* this didn't work, try gzip support! */
+        error2 = FT_Stream_OpenGzip( &face->comp_stream, stream );
+        if ( FT_ERR_EQ( error2, Unimplemented_Feature ) )
+          goto Fail;
+
+        error = error2;
+      }
+#endif /* FT_CONFIG_OPTION_USE_ZLIB */
+
 #ifdef FT_CONFIG_OPTION_USE_LZW
+      if ( error )
       {
         FT_Error  error3;
 
 
         /* this didn't work, try LZW support! */
-        error3 = FT_Stream_OpenLZW( &face->gzip_stream, stream );
-        if ( FT_ERROR_BASE( error3 ) == FT_Err_Unimplemented_Feature )
+        error3 = FT_Stream_OpenLZW( &face->comp_stream, stream );
+        if ( FT_ERR_EQ( error3, Unimplemented_Feature ) )
           goto Fail;
 
         error = error3;
-        if ( error )
-          goto Fail;
-
-        face->gzip_source = stream;
-        pcfface->stream   = &face->gzip_stream;
-
-        stream = pcfface->stream;
-
-        error = pcf_load_font( stream, face );
-        if ( error )
-          goto Fail;
       }
-#else
-        goto Fail;
-#endif
-      else
+#endif /* FT_CONFIG_OPTION_USE_LZW */
+
+#ifdef FT_CONFIG_OPTION_USE_BZIP2
+      if ( error )
       {
-        face->gzip_source = stream;
-        pcfface->stream   = &face->gzip_stream;
+        FT_Error  error4;
 
-        stream = pcfface->stream;
 
-        error = pcf_load_font( stream, face );
-        if ( error )
+        /* this didn't work, try Bzip2 support! */
+        error4 = FT_Stream_OpenBzip2( &face->comp_stream, stream );
+        if ( FT_ERR_EQ( error4, Unimplemented_Feature ) )
           goto Fail;
+
+        error = error4;
       }
+#endif /* FT_CONFIG_OPTION_USE_BZIP2 */
+
+      if ( error )
+        goto Fail;
+
+      face->comp_source = stream;
+      pcfface->stream   = &face->comp_stream;
+
+      stream = pcfface->stream;
+
+      error = pcf_load_font( stream, face, face_index );
+      if ( error )
+        goto Fail;
+
+#else /* !(FT_CONFIG_OPTION_USE_ZLIB ||
+           FT_CONFIG_OPTION_USE_LZW ||
+           FT_CONFIG_OPTION_USE_BZIP2) */
+
+      goto Fail;
+
+#endif
+    }
+
+    /* PCF cannot have multiple faces in a single font file.
+     * XXX: A non-zero face_index is already an invalid argument, but
+     *      Type1, Type42 drivers have a convention to return
+     *      an invalid argument error when the font could be
+     *      opened by the specified driver.
+     */
+    if ( face_index < 0 )
+      goto Exit;
+    else if ( face_index > 0 && ( face_index & 0xFFFF ) > 0 )
+    {
+      FT_ERROR(( "PCF_Face_Init: invalid face index\n" ));
+      PCF_Face_Done( pcfface );
+      return FT_THROW( Invalid_Argument );
     }
 
     /* set up charmap */
@@ -349,14 +392,15 @@ THE SOFTWARE.
 
         charmap.face        = FT_FACE( face );
         charmap.encoding    = FT_ENCODING_NONE;
-        charmap.platform_id = 0;
-        charmap.encoding_id = 0;
+        /* initial platform/encoding should indicate unset status? */
+        charmap.platform_id = TT_PLATFORM_APPLE_UNICODE;
+        charmap.encoding_id = TT_APPLE_ID_DEFAULT;
 
         if ( unicode_charmap )
         {
           charmap.encoding    = FT_ENCODING_UNICODE;
-          charmap.platform_id = 3;
-          charmap.encoding_id = 1;
+          charmap.platform_id = TT_PLATFORM_MICROSOFT;
+          charmap.encoding_id = TT_MS_ID_UNICODE_CS;
         }
 
         error = FT_CMap_New( &pcf_cmap_class, NULL, &charmap, NULL );
@@ -373,9 +417,9 @@ THE SOFTWARE.
     return error;
 
   Fail:
-    FT_TRACE2(( "[not a valid PCF file]\n" ));
+    FT_TRACE2(( "  not a PCF file\n" ));
     PCF_Face_Done( pcfface );
-    error = PCF_Err_Unknown_File_Format;  /* error */
+    error = FT_THROW( Unknown_File_Format );  /* error */
     goto Exit;
   }
 
@@ -389,11 +433,11 @@ THE SOFTWARE.
 
     FT_Select_Metrics( size->face, strike_index );
 
-    size->metrics.ascender    =  accel->fontAscent << 6;
-    size->metrics.descender   = -accel->fontDescent << 6;
-    size->metrics.max_advance =  accel->maxbounds.characterWidth << 6;
+    size->metrics.ascender    =  accel->fontAscent * 64;
+    size->metrics.descender   = -accel->fontDescent * 64;
+    size->metrics.max_advance =  accel->maxbounds.characterWidth * 64;
 
-    return PCF_Err_Ok;
+    return FT_Err_Ok;
   }
 
 
@@ -403,7 +447,7 @@ THE SOFTWARE.
   {
     PCF_Face         face  = (PCF_Face)size->face;
     FT_Bitmap_Size*  bsize = size->face->available_sizes;
-    FT_Error         error = PCF_Err_Invalid_Pixel_Size;
+    FT_Error         error = FT_ERR( Invalid_Pixel_Size );
     FT_Long          height;
 
 
@@ -414,17 +458,17 @@ THE SOFTWARE.
     {
     case FT_SIZE_REQUEST_TYPE_NOMINAL:
       if ( height == ( ( bsize->y_ppem + 32 ) >> 6 ) )
-        error = PCF_Err_Ok;
+        error = FT_Err_Ok;
       break;
 
     case FT_SIZE_REQUEST_TYPE_REAL_DIM:
       if ( height == ( face->accel.fontAscent +
                        face->accel.fontDescent ) )
-        error = PCF_Err_Ok;
+        error = FT_Err_Ok;
       break;
 
     default:
-      error = PCF_Err_Unimplemented_Feature;
+      error = FT_THROW( Unimplemented_Feature );
       break;
     }
 
@@ -443,19 +487,25 @@ THE SOFTWARE.
   {
     PCF_Face    face   = (PCF_Face)FT_SIZE_FACE( size );
     FT_Stream   stream;
-    FT_Error    error  = PCF_Err_Ok;
+    FT_Error    error  = FT_Err_Ok;
     FT_Bitmap*  bitmap = &slot->bitmap;
     PCF_Metric  metric;
-    int         bytes;
+    FT_ULong    bytes;
 
     FT_UNUSED( load_flags );
 
 
-    FT_TRACE4(( "load_glyph %d ---", glyph_index ));
+    FT_TRACE1(( "PCF_Glyph_Load: glyph index %d\n", glyph_index ));
 
-    if ( !face || glyph_index >= (FT_UInt)face->root.num_glyphs )
+    if ( !face )
     {
-      error = PCF_Err_Invalid_Argument;
+      error = FT_THROW( Invalid_Face_Handle );
+      goto Exit;
+    }
+
+    if ( glyph_index >= (FT_UInt)face->root.num_glyphs )
+    {
+      error = FT_THROW( Invalid_Argument );
       goto Exit;
     }
 
@@ -466,8 +516,10 @@ THE SOFTWARE.
 
     metric = face->metrics + glyph_index;
 
-    bitmap->rows       = metric->ascent + metric->descent;
-    bitmap->width      = metric->rightSideBearing - metric->leftSideBearing;
+    bitmap->rows       = (unsigned int)( metric->ascent +
+                                         metric->descent );
+    bitmap->width      = (unsigned int)( metric->rightSideBearing -
+                                         metric->leftSideBearing );
     bitmap->num_grays  = 1;
     bitmap->pixel_mode = FT_PIXEL_MODE_MONO;
 
@@ -479,29 +531,29 @@ THE SOFTWARE.
     switch ( PCF_GLYPH_PAD( face->bitmapsFormat ) )
     {
     case 1:
-      bitmap->pitch = ( bitmap->width + 7 ) >> 3;
+      bitmap->pitch = (int)( ( bitmap->width + 7 ) >> 3 );
       break;
 
     case 2:
-      bitmap->pitch = ( ( bitmap->width + 15 ) >> 4 ) << 1;
+      bitmap->pitch = (int)( ( ( bitmap->width + 15 ) >> 4 ) << 1 );
       break;
 
     case 4:
-      bitmap->pitch = ( ( bitmap->width + 31 ) >> 5 ) << 2;
+      bitmap->pitch = (int)( ( ( bitmap->width + 31 ) >> 5 ) << 2 );
       break;
 
     case 8:
-      bitmap->pitch = ( ( bitmap->width + 63 ) >> 6 ) << 3;
+      bitmap->pitch = (int)( ( ( bitmap->width + 63 ) >> 6 ) << 3 );
       break;
 
     default:
-      return PCF_Err_Invalid_File_Format;
+      return FT_THROW( Invalid_File_Format );
     }
 
     /* XXX: to do: are there cases that need repadding the bitmap? */
-    bytes = bitmap->pitch * bitmap->rows;
+    bytes = (FT_ULong)bitmap->pitch * bitmap->rows;
 
-    error = ft_glyphslot_alloc_bitmap( slot, bytes );
+    error = ft_glyphslot_alloc_bitmap( slot, (FT_ULong)bytes );
     if ( error )
       goto Exit;
 
@@ -534,18 +586,16 @@ THE SOFTWARE.
     slot->bitmap_left = metric->leftSideBearing;
     slot->bitmap_top  = metric->ascent;
 
-    slot->metrics.horiAdvance  = metric->characterWidth << 6;
-    slot->metrics.horiBearingX = metric->leftSideBearing << 6;
-    slot->metrics.horiBearingY = metric->ascent << 6;
-    slot->metrics.width        = ( metric->rightSideBearing -
-                                   metric->leftSideBearing ) << 6;
-    slot->metrics.height       = bitmap->rows << 6;
+    slot->metrics.horiAdvance  = (FT_Pos)( metric->characterWidth * 64 );
+    slot->metrics.horiBearingX = (FT_Pos)( metric->leftSideBearing * 64 );
+    slot->metrics.horiBearingY = (FT_Pos)( metric->ascent * 64 );
+    slot->metrics.width        = (FT_Pos)( ( metric->rightSideBearing -
+                                             metric->leftSideBearing ) * 64 );
+    slot->metrics.height       = (FT_Pos)( bitmap->rows * 64 );
 
     ft_synthesize_vertical_metrics( &slot->metrics,
                                     ( face->accel.fontAscent +
-                                      face->accel.fontDescent ) << 6 );
-
-    FT_TRACE4(( " --- ok\n" ));
+                                      face->accel.fontDescent ) * 64 );
 
   Exit:
     return error;
@@ -576,17 +626,22 @@ THE SOFTWARE.
       }
       else
       {
+        if ( prop->value.l > 0x7FFFFFFFL || prop->value.l < ( -1 - 0x7FFFFFFFL ) )
+        {
+          FT_TRACE1(( "pcf_get_bdf_property: " ));
+          FT_TRACE1(( "too large integer 0x%x is truncated\n" ));
+        }
         /* Apparently, the PCF driver loads all properties as signed integers!
          * This really doesn't seem to be a problem, because this is
          * sufficient for any meaningful values.
          */
         aproperty->type      = BDF_PROPERTY_TYPE_INTEGER;
-        aproperty->u.integer = prop->value.integer;
+        aproperty->u.integer = (FT_Int32)prop->value.l;
       }
       return 0;
     }
 
-    return PCF_Err_Invalid_Argument;
+    return FT_THROW( Invalid_Argument );
   }
 
 
@@ -604,8 +659,8 @@ THE SOFTWARE.
 
   static const FT_Service_BDFRec  pcf_service_bdf =
   {
-    (FT_BDF_GetCharsetIdFunc)pcf_get_charset_id,
-    (FT_BDF_GetPropertyFunc) pcf_get_bdf_property
+    (FT_BDF_GetCharsetIdFunc)pcf_get_charset_id,     /* get_charset_id */
+    (FT_BDF_GetPropertyFunc) pcf_get_bdf_property    /* get_property   */
   };
 
 
@@ -617,8 +672,8 @@ THE SOFTWARE.
 
   static const FT_ServiceDescRec  pcf_services[] =
   {
-    { FT_SERVICE_ID_BDF,       &pcf_service_bdf },
-    { FT_SERVICE_ID_XF86_NAME, FT_XF86_FORMAT_PCF },
+    { FT_SERVICE_ID_BDF,         &pcf_service_bdf },
+    { FT_SERVICE_ID_FONT_FORMAT, FT_FONT_FORMAT_PCF },
     { NULL, NULL }
   };
 
@@ -645,38 +700,33 @@ THE SOFTWARE.
       0x10000L,
       0x20000L,
 
-      0,
+      0,    /* module-specific interface */
 
-      0,
-      0,
-      pcf_driver_requester
+      0,                        /* FT_Module_Constructor  module_init   */
+      0,                        /* FT_Module_Destructor   module_done   */
+      pcf_driver_requester      /* FT_Module_Requester    get_interface */
     },
 
     sizeof ( PCF_FaceRec ),
     sizeof ( FT_SizeRec ),
     sizeof ( FT_GlyphSlotRec ),
 
-    PCF_Face_Init,
-    PCF_Face_Done,
-    0,                      /* FT_Size_InitFunc */
-    0,                      /* FT_Size_DoneFunc */
-    0,                      /* FT_Slot_InitFunc */
-    0,                      /* FT_Slot_DoneFunc */
+    PCF_Face_Init,              /* FT_Face_InitFunc  init_face */
+    PCF_Face_Done,              /* FT_Face_DoneFunc  done_face */
+    0,                          /* FT_Size_InitFunc  init_size */
+    0,                          /* FT_Size_DoneFunc  done_size */
+    0,                          /* FT_Slot_InitFunc  init_slot */
+    0,                          /* FT_Slot_DoneFunc  done_slot */
 
-#ifdef FT_CONFIG_OPTION_OLD_INTERNALS
-    ft_stub_set_char_sizes,
-    ft_stub_set_pixel_sizes,
-#endif
-    PCF_Glyph_Load,
+    PCF_Glyph_Load,             /* FT_Slot_LoadFunc  load_glyph */
 
-    0,                      /* FT_Face_GetKerningFunc  */
-    0,                      /* FT_Face_AttachFunc      */
-    0,                      /* FT_Face_GetAdvancesFunc */
+    0,                          /* FT_Face_GetKerningFunc   get_kerning  */
+    0,                          /* FT_Face_AttachFunc       attach_file  */
+    0,                          /* FT_Face_GetAdvancesFunc  get_advances */
 
-    PCF_Size_Request,
-    PCF_Size_Select
+    PCF_Size_Request,           /* FT_Size_RequestFunc  request_size */
+    PCF_Size_Select             /* FT_Size_SelectFunc   select_size  */
   };
 
 
 /* END */
-

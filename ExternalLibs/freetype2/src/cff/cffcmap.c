@@ -4,7 +4,7 @@
 /*                                                                         */
 /*    CFF character mapping table (cmap) support (body).                   */
 /*                                                                         */
-/*  Copyright 2002, 2003, 2004, 2005, 2006, 2007 by                        */
+/*  Copyright 2002-2016 by                                                 */
 /*  David Turner, Robert Wilhelm, and Werner Lemberg.                      */
 /*                                                                         */
 /*  This file is part of the FreeType project, and may only be used,       */
@@ -16,6 +16,8 @@
 /***************************************************************************/
 
 
+#include <ft2build.h>
+#include FT_INTERNAL_DEBUG_H
 #include "cffcmap.h"
 #include "cffload.h"
 
@@ -31,11 +33,14 @@
   /*************************************************************************/
 
   FT_CALLBACK_DEF( FT_Error )
-  cff_cmap_encoding_init( CFF_CMapStd  cmap )
+  cff_cmap_encoding_init( CFF_CMapStd  cmap,
+                          FT_Pointer   pointer )
   {
     TT_Face       face     = (TT_Face)FT_CMAP_FACE( cmap );
     CFF_Font      cff      = (CFF_Font)face->extra.data;
     CFF_Encoding  encoding = &cff->encoding;
+
+    FT_UNUSED( pointer );
 
 
     cmap->gids  = encoding->codes;
@@ -65,7 +70,7 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   cff_cmap_encoding_char_next( CFF_CMapStd   cmap,
                                FT_UInt32    *pchar_code )
   {
@@ -99,9 +104,7 @@
   }
 
 
-  FT_CALLBACK_TABLE_DEF const FT_CMap_ClassRec
-  cff_cmap_encoding_class_rec =
-  {
+  FT_DEFINE_CMAP_CLASS(cff_cmap_encoding_class_rec,
     sizeof ( CFF_CMapStdRec ),
 
     (FT_CMap_InitFunc)     cff_cmap_encoding_init,
@@ -110,7 +113,7 @@
     (FT_CMap_CharNextFunc) cff_cmap_encoding_char_next,
 
     NULL, NULL, NULL, NULL, NULL
-  };
+  )
 
 
   /*************************************************************************/
@@ -122,32 +125,21 @@
   /*************************************************************************/
 
   FT_CALLBACK_DEF( const char* )
-  cff_sid_to_glyph_name( TT_Face   face,
-                         FT_UInt   idx )
+  cff_sid_to_glyph_name( TT_Face  face,
+                         FT_UInt  idx )
   {
-    CFF_Font            cff     = (CFF_Font)face->extra.data;
-    CFF_Charset         charset = &cff->charset;
-    FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)cff->psnames;
-    FT_UInt             sid     = charset->sids[idx];
+    CFF_Font     cff     = (CFF_Font)face->extra.data;
+    CFF_Charset  charset = &cff->charset;
+    FT_UInt      sid     = charset->sids[idx];
 
 
-    return cff_index_get_sid_string( &cff->string_index, sid, psnames );
-  }
-
-
-  FT_CALLBACK_DEF( void )
-  cff_sid_free_glyph_name( TT_Face      face,
-                           const char*  gname )
-  {
-    FT_Memory  memory = FT_FACE_MEMORY( face );
-
-
-    FT_FREE( gname );
+    return cff_index_get_sid_string( cff, sid );
   }
 
 
   FT_CALLBACK_DEF( FT_Error )
-  cff_cmap_unicode_init( PS_Unicodes  unicodes )
+  cff_cmap_unicode_init( PS_Unicodes  unicodes,
+                         FT_Pointer   pointer )
   {
     TT_Face             face    = (TT_Face)FT_CMAP_FACE( unicodes );
     FT_Memory           memory  = FT_FACE_MEMORY( face );
@@ -155,16 +147,19 @@
     CFF_Charset         charset = &cff->charset;
     FT_Service_PsCMaps  psnames = (FT_Service_PsCMaps)cff->psnames;
 
+    FT_UNUSED( pointer );
+
 
     /* can't build Unicode map for CID-keyed font */
+    /* because we don't know glyph names.         */
     if ( !charset->sids )
-      return CFF_Err_Invalid_Argument;
+      return FT_THROW( No_Unicode_Glyph_Name );
 
     return psnames->unicodes_init( memory,
                                    unicodes,
                                    cff->num_glyphs,
                                    (PS_GetGlyphNameFunc)&cff_sid_to_glyph_name,
-                                   (PS_FreeGlyphNameFunc)&cff_sid_free_glyph_name,
+                                   (PS_FreeGlyphNameFunc)NULL,
                                    (FT_Pointer)face );
   }
 
@@ -194,7 +189,7 @@
   }
 
 
-  FT_CALLBACK_DEF( FT_UInt )
+  FT_CALLBACK_DEF( FT_UInt32 )
   cff_cmap_unicode_char_next( PS_Unicodes  unicodes,
                               FT_UInt32   *pchar_code )
   {
@@ -207,9 +202,7 @@
   }
 
 
-  FT_CALLBACK_TABLE_DEF const FT_CMap_ClassRec
-  cff_cmap_unicode_class_rec =
-  {
+  FT_DEFINE_CMAP_CLASS(cff_cmap_unicode_class_rec,
     sizeof ( PS_UnicodesRec ),
 
     (FT_CMap_InitFunc)     cff_cmap_unicode_init,
@@ -218,8 +211,6 @@
     (FT_CMap_CharNextFunc) cff_cmap_unicode_char_next,
 
     NULL, NULL, NULL, NULL, NULL
-  };
-
+  )
 
 /* END */
-
