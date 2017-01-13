@@ -278,7 +278,6 @@ void Game::warpToSceneNode(std::string scene, std::string node)
 	if (avatar->isfh())
 		toFlip = 1;
 
-
 	core->enqueueJumpState("Game");
 }
 
@@ -3856,6 +3855,7 @@ void Game::playBurstSound(bool wallJump)
 		case FORM_BEAST:
 			sound->playSfx("BeastBurst", (128+rand()%64)/256.0f);
 		break;
+		default: ;
 		}
 	}
 }
@@ -4766,8 +4766,6 @@ void Game::update(float dt)
 			cameraInterp.interpolateTo(dest, cameraLerpDelay);
 			dsq->cameraPos = getCameraPositionFor(cameraInterp);
 			constrainCamera();
-
-			float dd = (dsq->cameraPos - oldCamPos).getLength2D();
 		}
 
 		cameraInterp.update(dt);
@@ -4874,8 +4872,7 @@ ElementTemplate Game::getElementTemplateForLetter(int i)
 
 void Game::loadElementTemplates(std::string pack)
 {
-
-    stringToLower(pack);
+	stringToLower(pack);
 
 	elementTemplates.clear();
 

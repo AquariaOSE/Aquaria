@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef BBGE_BUILD_VFS
 #  include "ttvfs.h"
 #  ifndef VFS_IGNORE_CASE
-#    error Must define VFS_IGNORE_CASE, see VFSDefines.h
+#	error Must define VFS_IGNORE_CASE, see VFSDefines.h
 #  endif
    ttvfs::Root vfs; // extern
 #endif
@@ -62,12 +62,12 @@ std::string removeSpaces(const std::string &input)
 
 unsigned hash(const std::string &string)
 {
-    unsigned hash = 5381;
+	unsigned hash = 5381;
 
-    for (int i = 0; i < string.size(); i++)
-        hash = ((hash << 5) + hash) + (unsigned char)string[i];
+	for (int i = 0; i < string.size(); i++)
+		hash = ((hash << 5) + hash) + (unsigned char)string[i];
 
-    return hash;
+	return hash;
 }
 
 
@@ -111,11 +111,6 @@ static TransatableStaticInit _transtable_static_init;
 static unsigned char charIsUpper(unsigned char c)
 {
 	return c == upperToLowerTable[c];
-}
-
-static unsigned char charIsLower(unsigned char c)
-{
-	return c == lowerToUpperTable[c];
 }
 
 static unsigned char charToLower(unsigned char c)
@@ -190,8 +185,8 @@ void stringToLowerUserData(std::string &s)
 	const std::string userdata = core->getUserDataFolder();
 	const size_t len = userdata.length();
 	const bool match = (s.length() > len) &&
-	                   ((s[len] == '/') || (s[len] == '\\')) &&
-	                   !strncmp(userdata.c_str(), s.c_str(), len);
+					   ((s[len] == '/') || (s[len] == '\\')) &&
+					   !strncmp(userdata.c_str(), s.c_str(), len);
 	if (!match)
 		stringToLower(s);
 	else
@@ -211,18 +206,18 @@ int nocasecmp(const std::string &s1, const std::string &s2)
   //stop when either string's end has been reached
   while ( *it1 && *it2 )
   {
-    if(charToUpper(*it1) != charToUpper(*it2)) //letters differ?
-     // return -1 to indicate smaller than, 1 otherwise
-      return (charToUpper(*it1)  < charToUpper(*it2)) ? -1 : 1;
-    //proceed to the next character in each string
-    ++it1;
-    ++it2;
+	if(charToUpper(*it1) != charToUpper(*it2)) //letters differ?
+	 // return -1 to indicate smaller than, 1 otherwise
+	  return (charToUpper(*it1)  < charToUpper(*it2)) ? -1 : 1;
+	//proceed to the next character in each string
+	++it1;
+	++it2;
   }
   size_t size1=s1.size(), size2=s2.size();// cache lengths
    //return -1,0 or 1 according to strings' lengths
-    if (size1==size2)
-      return 0;
-    return (size1<size2) ? -1 : 1;
+	if (size1==size2)
+	  return 0;
+	return (size1<size2) ? -1 : 1;
 }
 #endif  // #if !HAVE_STRCASECMP
 
@@ -355,27 +350,26 @@ std::string stripEndlineForUnix(const std::string &in)
 	return out;
 }
 
-
 bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius, Vector *closestP)
 {
-    Vector dir = lineEnd - lineStart;
-    Vector diff = point - lineStart;
-    Vector closest;
-    if (!dir.isZero()) {
+	Vector dir = lineEnd - lineStart;
+	Vector diff = point - lineStart;
+	Vector closest;
+	if (!dir.isZero()) {
 	float t = diff.dot2D(dir) / dir.dot2D(dir);
 	if (t < 0.0f)
-	    t = 0.0f;
+		t = 0.0f;
 	if (t > 1.0f)
-	    t = 1.0f;
+		t = 1.0f;
 	closest = lineStart + t * dir;
-    } else {
+	} else {
 	closest = lineStart;
-    }
-    Vector d = point - closest;
-    float distsqr = d.dot2D(d);
+	}
+	Vector d = point - closest;
+	float distsqr = d.dot2D(d);
 	if (closestP)
 		(*closestP) = closest;
-    return distsqr <= radius*radius;
+	return distsqr <= radius*radius;
 }
 
 Vector randVector(float mag)

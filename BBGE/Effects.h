@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 enum FXTypes
 {
-	FTX_NONE		=-1,
 	FXT_RADIALBLUR	=0,
 	FXT_MAX
 };

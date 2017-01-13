@@ -106,12 +106,6 @@ void InternalDir::forEachFile(FileEnumCallback f, void *user /* = NULL */, bool 
         f(it->second, user);
 }
 
-static void _iterDirs(Dirs &m, DirEnumCallback f, void *user)
-{
-    for(Dirs::iterator it = m.begin(); it != m.end(); ++it)
-        f(it->second.content(), user);
-}
-
 void InternalDir::forEachDir(DirEnumCallback f, void *user /* = NULL */, bool safe /* = false */)
 {
     for(MountedDirs::reverse_iterator it = _mountedDirs.rbegin(); it != _mountedDirs.rend(); ++it)

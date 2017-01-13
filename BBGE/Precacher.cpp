@@ -142,7 +142,7 @@ void Precacher::precacheList(const std::string &list, void progressCallback())
 			t = t.substr(0,t.size()-1);
 			debugLog("precache["+t+"]");
 #endif
-            stringToLower(t);
+			stringToLower(t);
 			precacheTex(t);
 		}
 	}

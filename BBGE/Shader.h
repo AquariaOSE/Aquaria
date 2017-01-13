@@ -62,14 +62,14 @@ private:
 		bool dirty; // need to flush if true
 		union
 		{
-			struct
+			struct si
 			{
 				int i[4];
-			};
-			struct
+			} i;
+			struct sf
 			{
 				float f[4];
-			};
+			} f;
 		} data;
 		char name[64];
 

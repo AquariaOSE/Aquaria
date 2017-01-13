@@ -65,7 +65,7 @@ void ZipDir::load()
             continue;
 
         ZipFile *vf = new ZipFile(fs.m_filename, _archiveHandle, fs.m_file_index);
-        addRecursive(vf, len);
+        _addRecursiveSkip(vf, len);
     }
 
     _canLoad = false;

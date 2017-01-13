@@ -109,6 +109,8 @@ class FoodHolder : public Quad
 public:
 	FoodHolder(int slot, bool trash=false);
 
+	bool isValid() const;
+	void toggleValid(bool b);
 	bool isEmpty();
 	bool isTrash();
 	void setIngredient(IngredientData *i, bool effects=true);
@@ -253,6 +255,16 @@ FoodHolder::FoodHolder(int slot, bool trash) : Quad(), slot(slot), trash(trash)
 	lid->alpha = 0;
 	lid->alphaMod = 0.5f;
 	addChild(lid, PM_POINTER);
+}
+
+bool FoodHolder::isValid() const
+{
+	return alpha.x > 0 && alphaMod > 0;
+}
+
+void FoodHolder::toggleValid(bool v)
+{
+	alpha = alphaMod = (float) v;
 }
 
 void FoodHolder::animateLid(bool down, bool longAnim)
@@ -518,7 +530,7 @@ void FoodSlot::moveRight()
 
 	for (int i = foodHolders.size()-1; i >= 0; i--)
 	{
-		if (foodHolders[i]->alpha.x > 0 && foodHolders[i]->alphaMod > 0 && foodHolders[i]->isEmpty() && !foodHolders[i]->isTrash())
+		if (foodHolders[i]->isValid() && foodHolders[i]->isEmpty() && !foodHolders[i]->isTrash())
 		{
 			foodHolders[i]->setIngredient(ingredient);
 			inCookSlot = true;
@@ -593,7 +605,7 @@ void FoodSlot::onUpdate(float dt)
 
 									break;
 								}
-								else if (foodHolders[i]->isEmpty())
+								else if (foodHolders[i]->isEmpty() && foodHolders[i]->isValid())
 								{
 									foodHolders[i]->setIngredient(ingredient);
 									inCookSlot = true;
@@ -1107,7 +1119,7 @@ void InGameMenu::action(int id, int state, int source)
 						int trashIndex = -1;
 						for (int i = 0; i < foodHolders.size(); i++)
 						{
-							if (foodHolders[i]->alpha.x > 0 && foodHolders[i]->alphaMod > 0 && foodHolders[i]->isTrash())
+							if (foodHolders[i]->isValid() && foodHolders[i]->isTrash())
 							{
 								trashIndex = i;
 								break;
@@ -2268,7 +2280,7 @@ void InGameMenu::create()
 	for (i = 0; i < foodHolders.size(); i++)
 	{
 		foodHolders[i] = new FoodHolder(i);
-		foodHolders[i]->alpha = 0;
+		foodHolders[i]->toggleValid(false);
 
 		float angle = (float(holders)/float(foodHolders.size()))*PI*2;
 		foodHolders[i]->position = rightCenter + Vector(sinf(angle), cosf(angle))*radius;
@@ -2355,7 +2367,7 @@ void InGameMenu::create()
 
 	foodHolders.resize(4);
 	foodHolders[3] = new FoodHolder(-1, true);
-	foodHolders[3]->alpha = 0;
+	foodHolders[3]->toggleValid(false);
 	foodHolders[3]->position = rightCenter + Vector(96, 150);
 	menuBg->addChild(foodHolders[3], PM_POINTER);
 
@@ -3011,7 +3023,7 @@ void InGameMenu::onCook()
 			longAnim = false;
 
 		for (int i = foodHolders.size()-1; i >= 0; i--)
-			if (foodHolders[i]->alpha.x > 0 && !foodHolders[i]->isEmpty() && !foodHolders[i]->isTrash())
+			if (foodHolders[i]->isValid() && !foodHolders[i]->isEmpty() && !foodHolders[i]->isTrash())
 				foodHolders[i]->animateLid(true, longAnim);
 
 		//dsq->main(0.2);
@@ -3099,7 +3111,7 @@ void InGameMenu::onCook()
 		dsq->sound->playSfx("Cook");
 
 		for (int i = 0; i < foodHolders.size(); i++)
-			if (foodHolders[i]->alpha.x > 0 && !foodHolders[i]->isTrash())
+			if (foodHolders[i]->isValid() && !foodHolders[i]->isTrash())
 				foodHolders[i]->animateLid(false);
 
 		dsq->spawnParticleEffect("cook-food", Vector(575,250), 0, 0, LR_HUD3, 1);
@@ -3568,12 +3580,7 @@ void InGameMenu::toggleFoodMenu(bool f)
 
 
 	for (int i = 0; i < foodHolders.size(); i++)
-	{
-		if (f)
-			foodHolders[i]->alpha = 1;
-		else
-			foodHolders[i]->alpha = 0;
-	}
+		foodHolders[i]->toggleValid(f);
 
 	if (f)
 	{
@@ -3584,11 +3591,11 @@ void InGameMenu::toggleFoodMenu(bool f)
 				|| ((p=game->getNearestPath(game->avatar->position, PATH_COOK))
 				&& p->isCoordinateInside(game->avatar->position)))
 			{
-				foodHolders[0]->alpha = 1;
+				foodHolders[0]->toggleValid(true);
 			}
 			else
 			{
-				foodHolders[0]->alpha = 0;
+				foodHolders[0]->toggleValid(false);
 			}
 		}
 	}

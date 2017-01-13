@@ -93,7 +93,7 @@ const int FLAG_SPIRIT_DRASK					= 126;
 const int FLAG_SPIRIT_DRUNIAD				= 127;
 
 const int FLAG_TRANSTURTLE_VEIL01			= 130;
-const int FLAG_TRANSTURTLE_OPENWATER06		= 131;
+//const int FLAG_TRANSTURTLE_OPENWATER06		= 131;
 const int FLAG_TRANSTURTLE_FOREST04			= 132;
 const int FLAG_TRANSTURTLE_OPENWATER03		= 133;
 const int FLAG_TRANSTURTLE_FOREST05			= 134;
@@ -105,15 +105,15 @@ const int FLAG_TRANSTURTLE_FINALBOSS		= 139;
 
 const int FLAG_SEAHORSEBESTTIME				= 247;
 
-const int FLAG_MINIBOSS_START				= 700;
-const int FLAG_MINIBOSS_NAUTILUSPRIME		= 700;
+//const int FLAG_MINIBOSS_START				= 700;
+//const int FLAG_MINIBOSS_NAUTILUSPRIME		= 700;
 const int FLAG_MINIBOSS_KINGJELLY			= 701;
 const int FLAG_MINIBOSS_MERGOG				= 702;
 const int FLAG_MINIBOSS_CRAB				= 703;
 const int FLAG_MINIBOSS_OCTOMUN				= 704;
 const int FLAG_MINIBOSS_MANTISSHRIMP		= 705;
-const int FLAG_MINIBOSS_PRIESTS				= 706;
-const int FLAG_MINIBOSS_END					= 720;
+//const int FLAG_MINIBOSS_PRIESTS				= 706;
+//const int FLAG_MINIBOSS_END					= 720;
 
 
 //-----------------------------------------------------------------------------
@@ -778,7 +778,7 @@ void StatsAndAchievements::UnlockAchievement( Achievement &achievement )
 	achievement.iconImage = 0;
 
 #ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
-    unlockedToBeDisplayed.push( std::string(achievement.name) );
+	unlockedToBeDisplayed.push( std::string(achievement.name) );
 #endif
 
 	// Store stats end of frame

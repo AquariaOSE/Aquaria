@@ -25,13 +25,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ttvfs_stdio.h"
 
 #ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
-    #include "FmodOpenALBridge.h"
+	#include "FmodOpenALBridge.h"
 #else
-    #include <fmod.h>
-    #include <fmod.hpp>
-    #ifdef BBGE_BUILD_WINDOWS
+	#include <fmod.h>
+	#include <fmod.hpp>
+	#ifdef BBGE_BUILD_WINDOWS
 	#pragma comment(lib, "fmodex_vc.lib")
-    #endif
+	#endif
 #endif
 
 
@@ -73,7 +73,7 @@ namespace SoundCore
 	struct FadeCh
 	{
 	public:
-		FadeCh() : v(1), s(1), c(0), d(-1), to(0) {}
+		FadeCh() : c(0), v(1), s(1), to(0), d(-1) {}
 		FMOD::Channel *c;
 		float v,s,to;
 		int d;
@@ -112,17 +112,17 @@ using namespace SoundCore;
 
 
 /*
-    TIPS:
+	TIPS:
 
-    1. use F_CALLBACK.  Do NOT force cast your own function to fmod's callback type.
-    2. return FMOD_ERR_FILE_NOTFOUND in open as required.
-    3. return number of bytes read in read callback.  Do not get the size and count
-       around the wrong way in fread for example, this would return 1 instead of the number of bytes read.
+	1. use F_CALLBACK.  Do NOT force cast your own function to fmod's callback type.
+	2. return FMOD_ERR_FILE_NOTFOUND in open as required.
+	3. return number of bytes read in read callback.  Do not get the size and count
+	   around the wrong way in fread for example, this would return 1 instead of the number of bytes read.
 
-    QUESTIONS:
+	QUESTIONS:
 
-    1. Why does fmod seek to the end and read?  Because it is looking for ID3V1 tags.
-       Use FMOD_IGNORETAGS in System::createSound / System::createStream if you don't like this behaviour.
+	1. Why does fmod seek to the end and read?  Because it is looking for ID3V1 tags.
+	   Use FMOD_IGNORETAGS in System::createSound / System::createStream if you don't like this behaviour.
 
 */
 
@@ -279,54 +279,54 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 
 	int channels	= 128;
 
-    unsigned int     version;
-    FMOD_SPEAKERMODE speakermode;
-    FMOD_CAPS        caps;
+	unsigned int	 version;
+	FMOD_SPEAKERMODE speakermode;
+	FMOD_CAPS		caps;
 
 	debugLog("system::create");
 	result = FMOD::System_Create(&SoundCore::system);
-    if (checkError()) goto get_out;
+	if (checkError()) goto get_out;
 
 	debugLog("getVersion");
-    result = SoundCore::system->getVersion(&version);
-    if (checkError()) goto get_out;
+	result = SoundCore::system->getVersion(&version);
+	if (checkError()) goto get_out;
 
-    if (version < FMOD_VERSION)
-    {
+	if (version < FMOD_VERSION)
+	{
 		char str[256];
-        sprintf(str, "Error!  You are using an old version of FMOD %08x.  This program requires %08x\n", version, FMOD_VERSION);
+		sprintf(str, "Error!  You are using an old version of FMOD %08x.  This program requires %08x\n", version, FMOD_VERSION);
 		debugLog(str);
 		goto get_out;
-    }
+	}
 
 	debugLog("driver caps");
-    result = SoundCore::system->getDriverCaps(0, &caps, 0, 0, &speakermode);
-    if (checkError()) goto get_out;
+	result = SoundCore::system->getDriverCaps(0, &caps, 0, 0, &speakermode);
+	if (checkError()) goto get_out;
 
 	debugLog("set speaker mode");
-    result = SoundCore::system->setSpeakerMode(speakermode);       /* Set the user selected speaker mode. */
+	result = SoundCore::system->setSpeakerMode(speakermode);	   /* Set the user selected speaker mode. */
 	if (checkError()) goto get_out;
 
 	debugLog("check caps");
-    if (caps & FMOD_CAPS_HARDWARE_EMULATED)             /* The user has the 'Acceleration' slider set to off!  This is really bad for latency!. */
-    {                                                   /* You might want to warn the user about this. */
+	if (caps & FMOD_CAPS_HARDWARE_EMULATED)			 /* The user has the 'Acceleration' slider set to off!  This is really bad for latency!. */
+	{												   /* You might want to warn the user about this. */
 		debugLog("acceleration slider is off");
-        result = SoundCore::system->setDSPBufferSize(1024, 10);    /* At 48khz, the latency between issuing an fmod command and hearing it will now be about 213ms. */
-        if (checkError()) goto get_out;
-    }
+		result = SoundCore::system->setDSPBufferSize(1024, 10);	/* At 48khz, the latency between issuing an fmod command and hearing it will now be about 213ms. */
+		if (checkError()) goto get_out;
+	}
 
 	debugLog("init");
-    result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0);    /* Replace with whatever channel count and flags you use! */
-    if (result == FMOD_ERR_OUTPUT_CREATEBUFFER)         /* Ok, the speaker mode selected isn't supported by this soundcard.  Switch it back to stereo... */
-    {
+	result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0);	/* Replace with whatever channel count and flags you use! */
+	if (result == FMOD_ERR_OUTPUT_CREATEBUFFER)		 /* Ok, the speaker mode selected isn't supported by this soundcard.  Switch it back to stereo... */
+	{
 		debugLog("err_output_createbuffer, speaker mode");
 		result = SoundCore::system->setSpeakerMode(FMOD_SPEAKERMODE_STEREO);
-        if (checkError()) goto get_out;
+		if (checkError()) goto get_out;
 
 		debugLog("init 2");
-        result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0); /* Replace with whatever channel count and flags you use! */
+		result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0); /* Replace with whatever channel count and flags you use! */
 		if (checkError()) goto get_out;
-    }
+	}
 
 #ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
 	SoundCore::system->getNumChannels(&channels);
@@ -336,7 +336,7 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 
 	debugLog("set file system");
 	result = SoundCore::system->setFileSystem(myopen, myclose, myread, myseek, 2048);
-    if (checkError()) goto get_out;
+	if (checkError()) goto get_out;
 
 	debugLog("create channel group vox");
 	result = SoundCore::system->createChannelGroup("vox", &group_vox);
@@ -411,6 +411,9 @@ void SoundManager::toggleEffectMusic(SoundEffectType effect, bool on)
 				dspFlange->remove();
 		}
 	break;
+	case SFX_NONE:
+	case SFX_MAX:
+		break;
 	}
 
 }

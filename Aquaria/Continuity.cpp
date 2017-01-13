@@ -559,6 +559,10 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 			return ret;
 		}
 	break;
+	case IET_NONE:
+	case IET_RANDOM:
+	case IET_MAX:
+		break;
 	}
 
 	return "";
@@ -1192,6 +1196,9 @@ std::string Continuity::getInternalFormName()
 		return "sun";
 	case FORM_DUAL:
 		return "dual";
+	case FORM_NONE:
+	case FORM_MAX:
+		break;
 	}
 	return "";
 }
@@ -1581,8 +1588,12 @@ void Continuity::castSong(int num)
 		case SONG_FISHFORM:
 			dsq->game->avatar->changeForm(FORM_FISH);
 		break;
-		case SONG_SONGDOOR1:
 		case SONG_MAP:
+		case SONG_SONGDOOR1:
+		case SONG_SONGDOOR2:
+		case SONG_ANIMA:
+		case SONG_NONE:
+		case SONG_MAX:
 		break;
 #endif
 		}

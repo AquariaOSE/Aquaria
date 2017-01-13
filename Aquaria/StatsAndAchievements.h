@@ -155,7 +155,7 @@ private:
 	// Should we store stats this frame?
 	bool storeStats;
 
-	PlayStats playStats;
+	// PlayStats playStats;
 
 	// Current Stat details
 	//float m_flGameFeetTraveled;
