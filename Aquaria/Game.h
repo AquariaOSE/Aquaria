@@ -67,7 +67,7 @@ struct RecipeMenu
 	void goNextPage();
 	void goPrevPage();
 	int getNumPages();
-	int getNumKnown();
+	size_t getNumKnown();
 
 	int currentPage;
 
@@ -253,11 +253,11 @@ protected:
 class PetSlot : public AquariaGuiQuad
 {
 public:
-	PetSlot(int pet);
+	PetSlot(size_t pet);
 	int petFlag;
 protected:
 	bool wasSlot;
-	int petidx;
+	size_t petidx;
 	bool mouseDown;
 	void onUpdate(float dt);
 };
@@ -313,7 +313,7 @@ public:
 	void setGrid(Vector position);
 	bool cull;
 	float alpha;
-	int idx;
+	size_t idx;
 };
 
 class MiniMapHint
@@ -470,8 +470,8 @@ public:
 	Path *editingPath;
 
 	void toggleWarpAreaRender();
-	int selectedIdx;
-	int selectedNode;
+	size_t selectedIdx;
+	size_t selectedNode;
 	Path *getSelectedPath();
 	void changeDepth();
 	void updateEntitySaveData(Entity *editingEntity);
@@ -492,7 +492,7 @@ public:
 
 	SelectedEntity selectedEntity;
 
-	int entityPageNum;
+	size_t entityPageNum;
 
 	void checkForRebuild();
 	void createAquarian();
@@ -572,7 +572,7 @@ protected:
 	void mouseButtonLeft();
 	void mouseButtonRight();
 
-	int curElement, selectedVariation, possibleSelectedIdx;
+	size_t curElement, selectedVariation, possibleSelectedIdx;
 
 	Quad *placer;
 	DebugFont *text;
@@ -703,7 +703,7 @@ public:
 	std::vector<ElementTemplate> elementTemplates;
 	std::string sceneName, sceneDisplayName;
 
-	ElementTemplate *getElementTemplateByIdx(int idx);
+	ElementTemplate *getElementTemplateByIdx(size_t idx);
 
 	bool saveScene(std::string scene);
 	typedef std::vector<WarpArea> WarpAreas;
@@ -790,10 +790,10 @@ protected:
 	Path *firstPathOfType[PATH_MAX];
 public:
 	void addPath(Path *p);
-	void removePath(int idx);
+	void removePath(size_t idx);
 	void clearPaths();
-	int getNumPaths() const {return paths.size();}
-	Path *getPath(int idx) const {return paths[idx];}
+	size_t getNumPaths() const {return paths.size();}
+	Path *getPath(size_t idx) const {return paths[idx];}
 	Path *getFirstPathOfType(PathType type) const {return firstPathOfType[type];}
 	Path *getPathByName(std::string name);
 	int getIndexOfPath(Path *p);
@@ -822,7 +822,7 @@ public:
 	bool optionsOnly;
 
 	MenuPage currentMenuPage;
-	int currentFoodPage, currentTreasurePage;
+	size_t currentFoodPage, currentTreasurePage;
 
 	Precacher tileCache;
 
@@ -865,7 +865,7 @@ public:
 
 	void colorTest();
 
-	void playSongInMenu(int songType, bool override=false);
+	void playSongInMenu(size_t songType, bool override=false);
 
 	bool trace(Vector start, Vector target);
 
@@ -1127,8 +1127,8 @@ protected:
 	void updateCursor(float dt);
 	void updateInGameMenu(float dt);
 	float songMenuPlayDelay;
-	int currentSongMenuNote;
-	int playingSongInMenu;
+	size_t currentSongMenuNote;
+	size_t playingSongInMenu;
 	Quad *controlHint_mouseLeft, *controlHint_mouseRight, *controlHint_mouseBody, *controlHint_mouseMiddle, *controlHint_bg, *controlHint_image;
 	Quad *controlHint_shine;
 	bool controlHint_ignoreClear;

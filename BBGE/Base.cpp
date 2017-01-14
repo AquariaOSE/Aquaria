@@ -161,7 +161,7 @@ int randRange(int n1, int n2)
 std::string removeSpaces(const std::string &input)
 {
 	std::string result;
-	for (int i = 0; i < input.size(); i++)
+	for (size_t i = 0; i < input.size(); i++)
 	{
 		if (input[i] != ' ')
 		{
@@ -175,7 +175,7 @@ unsigned hash(const std::string &string)
 {
 	unsigned hash = 5381;
 
-	for (int i = 0; i < string.size(); i++)
+	for (size_t i = 0; i < string.size(); i++)
 		hash = ((hash << 5) + hash) + (unsigned char)string[i];
 
 	return hash;
@@ -235,7 +235,7 @@ std::string splitCamelCase(const std::string &input)
 {
 	std::string result;
 	int last = 0;
-	for (int i = 0; i < input.size(); i++)
+	for (size_t i = 0; i < input.size(); i++)
 	{
 		if (last == 1)
 		{
@@ -257,7 +257,7 @@ std::string splitCamelCase(const std::string &input)
 	return result;
 }
 
-std::string numToZeroString(int num, int zeroes)
+std::string numToZeroString(int num, size_t zeroes)
 {
 	std::ostringstream num_os;
 	num_os << num;
@@ -266,7 +266,7 @@ std::string numToZeroString(int num, int zeroes)
 
 	if (num_os.str().size() <= zeroes)
 	{
-		for (int j = 0; j < zeroes - num_os.str().size(); j++)
+		for (size_t j = 0; j < zeroes - num_os.str().size(); j++)
 		{
 			os << "0";
 		}
@@ -282,13 +282,13 @@ bool isVectorInRect(const Vector &vec, const Vector &coord1, const Vector &coord
 
 void stringToUpper(std::string &s)
 {
-	for (int i = 0; i < s.size(); i++)
+	for (size_t i = 0; i < s.size(); i++)
 		s[i] = charToUpper(s[i]);
 }
 
 void stringToLower(std::string &s)
 {
-	for (int i = 0; i < s.size(); i++)
+	for (size_t i = 0; i < s.size(); i++)
 		s[i] = charToLower(s[i]);
 }
 
@@ -388,7 +388,7 @@ void exit_error(const std::string &message)
 
 std::string parseCommand(const std::string &line, const std::string &command)
 {
-	int stringPos = line.find(command);
+	size_t stringPos = line.find(command);
 	if (stringPos != std::string::npos)
 	{
 		return line.substr((command.length()), line.length());
@@ -470,7 +470,7 @@ char *readFile(const std::string& path, unsigned long *size_ret)
 		return NULL;
 	}
 
-	long bytesRead = vfread(buffer, 1, fileSize, f);
+	size_t bytesRead = vfread(buffer, 1, fileSize, f);
 	if (bytesRead != fileSize)
 	{
 		std::ostringstream os;
@@ -539,7 +539,7 @@ void doSingleFile(const std::string &path, const std::string &type, std::string 
 std::string stripEndlineForUnix(const std::string &in)
 {
 	std::string out;
-	for (int i = 0; i < in.size(); i++)
+	for (size_t i = 0; i < in.size(); i++)
 	{
 		if (int(in[i]) != 13)
 		{
@@ -1071,7 +1071,7 @@ Vector colorRGB(int r, int g, int b)
 std::string underscoresToSpaces(const std::string &str)
 {
 	std::string s = str;
-	for (int i = 0; i < s.size(); i++)
+	for (size_t i = 0; i < s.size(); i++)
 		if (s[i] == '_') s[i] = ' ';
 	return s;
 }
@@ -1079,7 +1079,7 @@ std::string underscoresToSpaces(const std::string &str)
 std::string spacesToUnderscores(const std::string &str)
 {
 	std::string s = str;
-	for (int i = 0; i < s.size(); i++)
+	for (size_t i = 0; i < s.size(); i++)
 		if (s[i] == ' ') s[i] = '_';
 	return s;
 }

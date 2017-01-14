@@ -29,7 +29,7 @@ namespace IntroStuff
 {
 	//Mappy *m;
 	bool quitFlag;
-};
+}
 
 using namespace IntroStuff;
 
@@ -198,7 +198,7 @@ void Intro::createMeteor(int layer, Vector pos, Vector off, Vector sz)
 
 void Intro::clearMeteors()
 {
-	for (int i = 0; i < meteors.size(); i++)
+	for (size_t i = 0; i < meteors.size(); i++)
 	{
 		meteors[i]->setLife(1);
 		meteors[i]->setDecayRate(100);
@@ -255,7 +255,7 @@ void Intro::update(float dt)
 		citybg->offset = Vector(-100, 0);
 		citybg->scale = Vector(0.6, 0.6);
 		citybg->alpha = 0;
-		for (int i = 0; i < citybg->bones.size(); i++)
+		for (size_t i = 0; i < citybg->bones.size(); i++)
 		{
 			if (citybg->bones[i]->name != "meteor")
 			{
@@ -272,7 +272,7 @@ void Intro::update(float dt)
 		eric->position = Vector(50, 400);
 		eric->alpha = 0;
 		eric->scale = Vector(0.4, 0.4);
-		for (int i = 0; i < eric->bones.size(); i++)
+		for (size_t i = 0; i < eric->bones.size(); i++)
 		{
 			eric->bones[i]->color = eric->color;
 		}

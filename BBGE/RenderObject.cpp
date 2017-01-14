@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 
 bool	RenderObject::renderCollisionShape			= false;
-int		RenderObject::lastTextureApplied			= 0;
+size_t	RenderObject::lastTextureApplied			= 0;
 bool	RenderObject::lastTextureRepeat				= false;
 bool	RenderObject::renderPaths					= false;
 
@@ -473,7 +473,7 @@ void RenderObject::enableMotionBlur(int sz, int off)
 	motionBlurPositions.resize(sz);
 	motionBlurFrameOffsetCounter = 0;
 	motionBlurFrameOffset = off;
-	for (int i = 0; i < motionBlurPositions.size(); i++)
+	for (size_t i = 0; i < motionBlurPositions.size(); i++)
 	{
 		motionBlurPositions[i].position = position;
 		motionBlurPositions[i].rotz = rotation.z;
@@ -560,7 +560,7 @@ void RenderObject::render()
 		Vector oldPos = position;
 		float oldAlpha = alpha.x;
 		float oldRotZ = rotation.z;
-		for (int i = 0; i < motionBlurPositions.size(); i++)
+		for (size_t i = 0; i < motionBlurPositions.size(); i++)
 		{
 			position = motionBlurPositions[i].position;
 			rotation.z = motionBlurPositions[i].rotz;
@@ -649,7 +649,7 @@ void RenderObject::renderCall()
 				glLineWidth(4);
 				glEnable(GL_BLEND);
 
-				int i = 0;
+				size_t i = 0;
 				glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
 				glBindTexture(GL_TEXTURE_2D, 0);
 
@@ -786,7 +786,7 @@ void RenderObject::renderCollision()
 
 		glColor4f(1,1,0,0.5);
 
-		for (int i = 0; i < transformedCollisionMask.size(); i++)
+		for (size_t i = 0; i < transformedCollisionMask.size(); i++)
 			{
 			Vector collide = this->transformedCollisionMask[i];
 
@@ -839,11 +839,11 @@ void RenderObject::deathNotify(RenderObject *r)
 	deathNotifications.remove(r);
 }
 
-Vector RenderObject::getCollisionMaskNormal(int index)
+Vector RenderObject::getCollisionMaskNormal(size_t index)
 {
 	Vector sum;
-	int num=0;
-	for (int i = 0; i < this->transformedCollisionMask.size(); i++)
+	size_t num=0;
+	for (size_t i = 0; i < this->transformedCollisionMask.size(); i++)
 	{
 		if (i != index)
 		{

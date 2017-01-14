@@ -111,7 +111,7 @@ ParticleEffect* Core::createParticleEffect(const std::string &name, const Vector
 
 void Core::unloadDevice()
 {
-	for (int i = 0; i < renderObjectLayers.size(); i++)
+	for (size_t i = 0; i < renderObjectLayers.size(); i++)
 	{
 		RenderObjectLayer *r = &renderObjectLayers[i];
 		RenderObject *robj = r->getFirst();
@@ -129,7 +129,7 @@ void Core::unloadDevice()
 
 void Core::reloadDevice()
 {
-	for (int i = 0; i < renderObjectLayers.size(); i++)
+	for (size_t i = 0; i < renderObjectLayers.size(); i++)
 	{
 		RenderObjectLayer *r = &renderObjectLayers[i];
 		r->reloadDevice();
@@ -507,7 +507,7 @@ void Core::initPlatform(const std::string &filesystem)
 	char path[PATH_MAX];
 	// always a symlink to this process's binary, on modern Linux systems.
 	const ssize_t rc = readlink("/proc/self/exe", path, sizeof (path));
-	if ( (rc == -1) || (rc >= sizeof (path)) )
+	if ( (rc == -1) || (rc >= (ssize_t) sizeof (path)) )
 	{
 		// error!
 		debugLog("readlink");
@@ -1415,7 +1415,7 @@ void Core::resetTimer()
 {
 	nowTicks = thenTicks = SDL_GetTicks();
 
-	for (int i = 0; i < avgFPS.size(); i++)
+	for (size_t i = 0; i < avgFPS.size(); i++)
 	{
 		avgFPS[i] = 0;
 	}
@@ -1427,8 +1427,6 @@ void Core::setDockIcon(const std::string &ident)
 
 void Core::setMousePosition(const Vector &p)
 {
-	Vector lp = core->mouse.position;
-
 	core->mouse.position = p;
 	float px = p.x + virtualOffX;
 	float py = p.y;
@@ -1438,15 +1436,12 @@ void Core::setMousePosition(const Vector &p)
 	#else
 	SDL_WarpMouse( px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
 	#endif
-
-
-
 }
 
 // used to update all render objects either uniformly or as part of a time sliced update process
 void Core::updateRenderObjects(float dt)
 {
-	for (int c = 0; c < renderObjectLayers.size(); c++)
+	for (size_t c = 0; c < renderObjectLayers.size(); c++)
 	{
 
 		RenderObjectLayer *rl = &renderObjectLayers[c];
@@ -1557,7 +1552,7 @@ void Core::main(float runTime)
 		if (!avgFPS.empty())
 		{
 
-			int i = 0;
+			size_t i = 0;
 			for (i = avgFPS.size()-1; i > 0; i--)
 			{
 				avgFPS[i] = avgFPS[i-1];
@@ -2190,11 +2185,9 @@ void Core::print(int x, int y, const char *str, float sz)
 
 
 	float xx = x;
-	float yy = y;
 	glTranslatef(x, y-0.5f*sz, 0);
 	x = y = 0;
-	xx = 0; yy = 0;
-	bool isLower = false, wasLower = false;
+	xx = 0;
 	int c=0;
 
 
@@ -2205,13 +2198,6 @@ void Core::print(int x, int y, const char *str, float sz)
 
 	while (str[c] != '\0')
 	{
-		if (str[c] <= 'z' && str[c] >= 'a')
-			isLower = true;
-		else
-			isLower = false;
-
-
-
 		switch(toupper(str[c]))
 		{
 		case '_':
@@ -2462,11 +2448,6 @@ void Core::print(int x, int y, const char *str, float sz)
 
 		break;
 		}
-		if (isLower)
-		{
-			wasLower = true;
-
-		}
 		c++;
 		xx += 1.4f;
 	}
@@ -2536,7 +2517,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 	RenderObject::rlayer = 0;
 
-	for (int c = 0; c < renderObjectLayerOrder.size(); c++)
+	for (size_t c = 0; c < renderObjectLayerOrder.size(); c++)
 
 	{
 		int i = renderObjectLayerOrder[c];
@@ -2633,7 +2614,7 @@ void Core::shutdownJoystickLibrary()
 
 void Core::clearRenderObjects()
 {
-	for (int i = 0; i < renderObjectLayers.size(); i++)
+	for (size_t i = 0; i < renderObjectLayers.size(); i++)
 	{
 
 		RenderObject *r = renderObjectLayers[i].getFirst();
@@ -2857,11 +2838,11 @@ CountedPtr<Texture> Core::addTexture(const std::string &textureName)
 	return ptex;
 }
 
-void Core::addRenderObject(RenderObject *o, int layer)
+void Core::addRenderObject(RenderObject *o, size_t layer)
 {
 	if (!o) return;
 	o->layer = layer;
-	if (layer < 0 || layer >= renderObjectLayers.size())
+	if (layer >= renderObjectLayers.size())
 	{
 		std::ostringstream os;
 		os << "attempted to add render object to invalid layer [" << layer << "]";
@@ -2880,7 +2861,7 @@ void Core::switchRenderObjectLayer(RenderObject *o, int toLayer)
 
 void Core::unloadResources()
 {
-	for (int i = 0; i < resources.size(); i++)
+	for (size_t i = 0; i < resources.size(); i++)
 	{
 		resources[i]->unload();
 	}
@@ -2892,7 +2873,7 @@ void Core::onReloadResources()
 
 void Core::reloadResources()
 {
-	for (int i = 0; i < resources.size(); i++)
+	for (size_t i = 0; i < resources.size(); i++)
 	{
 		resources[i]->reload();
 	}
@@ -3179,8 +3160,8 @@ void Core::save64x64ScreenshotTGA(const std::string &filename)
 
 // saves an array of pixels as a TGA image (frees the image data passed in)
 int Core::tgaSave(	const char	*filename,
-		short int	width,
-		short int	height,
+		short unsigned int	width,
+		short unsigned int	height,
 		unsigned char	pixelDepth,
 		unsigned char	*imageData) {
 
@@ -3282,8 +3263,8 @@ int Core::tgaSaveSeries(char		*filename,
 
  // saves an array of pixels as a TGA image (frees the image data passed in)
 int Core::zgaSave(	const char	*filename,
-		short int	w,
-		short int	h,
+		short unsigned int	w,
+		short unsigned int	h,
 		unsigned char	depth,
 		unsigned char	*imageData) {
 

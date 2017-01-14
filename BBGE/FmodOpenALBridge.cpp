@@ -1379,7 +1379,7 @@ static void *decode_to_pcm(VFILE *io, ALenum &format, ALsizei &size, ALuint &fre
             if (rc > 0)
             {
                 size += rc;
-                if (size >= allocated)
+				if ((size_t) size >= allocated)
                 {
                     allocated *= 2;
                     ALubyte *tmp = (ALubyte *) realloc(retval, allocated);
@@ -1739,7 +1739,7 @@ FMOD_RESULT OpenALSystem::update()
 }
 
 ALBRIDGE(System, set3DListenerAttributes, (int listener, const FMOD_VECTOR *pos, const FMOD_VECTOR *vel, const FMOD_VECTOR *forward, const FMOD_VECTOR *up),
-    (listener, pos, vel, forward, up));
+	(listener, pos, vel, forward, up))
 FMOD_RESULT OpenALSystem::set3DListenerAttributes(int listener, const FMOD_VECTOR *pos, const FMOD_VECTOR *vel, const FMOD_VECTOR *forward, const FMOD_VECTOR *up)
 {
     // ignore listener parameter; there is only one listener in OpenAL.

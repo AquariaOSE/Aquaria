@@ -171,9 +171,6 @@ void AutoMap::onUpdate(float dt)
 		const float maxScale=1.25, minScale=0.5;
 		blip.update(dt);
 
-
-
-		Vector sTarget=scale;
 		float spd = 0.5;
 		if (core->mouse.scrollWheelChange < 0)
 		{
