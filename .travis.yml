@@ -20,7 +20,7 @@ addons:
   apt:
     packages:
       - libopenal-dev
-      - libsdl2-dev
+      - libsdl-dev
 
 script:
 # ALL THE BUILD COMMANDS HERE
