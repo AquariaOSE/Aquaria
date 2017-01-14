@@ -495,7 +495,7 @@ void Continuity::setFishPoison(float m, float t)
 
 std::string Continuity::getIEString(IngredientData *data, size_t i)
 {
-	if (i < 0 || i >= data->effects.size()) return "";
+	if (i >= data->effects.size()) return "";
 
 	IngredientEffect fx = data->effects[i];
 	IngredientEffectType useType = fx.type;
@@ -2284,7 +2284,7 @@ void Continuity::loadPetData()
 
 PetData *Continuity::getPetData(size_t idx)
 {
-	if (idx < 0 || idx >= petData.size())
+	if (idx >= petData.size())
 	{
 		std::ostringstream os;
 		os << "getPetData(" << idx << ") index out of range";

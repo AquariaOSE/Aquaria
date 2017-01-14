@@ -281,12 +281,9 @@ void BitmapText::onUpdate(float dt)
 Vector BitmapText::getColorIndex(size_t i, size_t j)
 {
 	Vector c(1,1,1);
-	if (!(i < 0 || j < 0))
+	if ( i < colorIndices.size() && j < colorIndices[i].size())
 	{
-		if ( i < colorIndices.size() && j < colorIndices[i].size())
-		{
-			c = colorIndices[i][j];
-		}
+		c = colorIndices[i][j];
 	}
 	return c;
 }

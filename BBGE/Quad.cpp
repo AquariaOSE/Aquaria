@@ -106,7 +106,7 @@ void Quad::createGrid(int xd, int yd)
 
 void Quad::setDrawGridAlpha(size_t x, size_t y, float alpha)
 {
-	if (x < xDivs && x >= 0 && y < yDivs && y >= 0)
+	if (x < xDivs && y < yDivs)
 	{
 		drawGrid[x][y].z = alpha;
 	}

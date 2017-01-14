@@ -84,7 +84,7 @@ void AquariaComboBox::setScroll(size_t sc)
 
 std::string AquariaComboBox::getSelectedItemString()
 {
-	if (selectedItem >= 0 && selectedItem < items.size())
+	if (selectedItem < items.size())
 		return items[selectedItem];
 	return "";
 }

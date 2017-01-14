@@ -8484,7 +8484,7 @@ luaFunc(setGemBlink)
 	size_t gemId = lua_tointeger(L, 1);
 	bool result = false;
 
-	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	if(gemId < dsq->continuity.gems.size())
 	{
 		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
 		std::advance(it, gemId);
@@ -8501,7 +8501,7 @@ luaFunc(setGemBlink)
 luaFunc(removeGem)
 {
 	size_t gemId = lua_tointeger(L, 1);
-	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	if(gemId < dsq->continuity.gems.size())
 	{
 		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
 		std::advance(it, gemId);
