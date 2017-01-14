@@ -506,8 +506,12 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	XMLElement *xml_data = doc.FirstChildElement("Data");
 	if (xml_data)
 	{
-		xml_data->QueryUnsignedAttribute("savePage", (unsigned int *)&data.savePage);
-		xml_data->QueryUnsignedAttribute("saveSlot", (unsigned int *)&data.saveSlot);
+		// use a temporary variable so we don't get into trouble on big-endian architectures
+		unsigned int tmp;
+		xml_data->QueryUnsignedAttribute("savePage", &tmp);
+		data.savePage = tmp;
+		xml_data->QueryUnsignedAttribute("saveSlot", &tmp);
+		data.saveSlot = tmp;
 
 		if(const char *patchlist = xml_data->Attribute("activePatches"))
 		{

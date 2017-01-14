@@ -46,7 +46,7 @@ protected:
 	std::string vertFile, fragFile;
 	std::string vertSrc, fragSrc;
 	GLuint g_programObj;
-	size_t numUniforms;
+	unsigned int numUniforms;
 
 private:
 	static void staticInit();
