@@ -487,7 +487,7 @@ void AnimationLayer::setSkeletalSprite(SkeletalSprite *s)
 
 Animation* AnimationLayer::getCurrentAnimation()
 {
-	if (currentAnimation == ~0UL)
+	if (currentAnimation == -1)
 		return &blendAnimation;
 	if (currentAnimation >= s->animations.size())
 	{
@@ -652,7 +652,7 @@ size_t Animation::getSkeletalKeyframeIndex(SkeletalKeyframe *skey)
 		if (&keyframes[i] == skey)
 			return i;
 	}
-	return ~0UL;
+	return -1;
 }
 
 BoneKeyframe *SkeletalKeyframe::getBoneKeyframe(size_t idx)
@@ -669,7 +669,7 @@ BoneKeyframe *SkeletalKeyframe::getBoneKeyframe(size_t idx)
 
 SkeletalKeyframe *Animation::getPrevKeyframe(float t)
 {
-	size_t kf = ~0UL;
+	size_t kf = -1;
 	for (size_t i = keyframes.size(); i-- > 0; )
 	{
 		if (t >= keyframes[i].t)
@@ -678,7 +678,7 @@ SkeletalKeyframe *Animation::getPrevKeyframe(float t)
 			break;
 		}
 	}
-	if (kf == ~0UL)
+	if (kf == -1)
 		return 0;
 	if (kf >= keyframes.size())
 		kf = keyframes.size()-1;
@@ -687,7 +687,7 @@ SkeletalKeyframe *Animation::getPrevKeyframe(float t)
 
 SkeletalKeyframe *Animation::getNextKeyframe(float t)
 {
-	size_t kf = ~0UL;
+	size_t kf = -1;
 	for (size_t i = 0; i < keyframes.size(); i++)
 	{
 		if (t <= keyframes[i].t)
@@ -697,7 +697,7 @@ SkeletalKeyframe *Animation::getNextKeyframe(float t)
 		}
 	}
 
-	if (kf == ~0UL)
+	if (kf == -1)
 		return 0;
 	if (kf >= keyframes.size())
 		kf = keyframes.size()-1;
@@ -1011,7 +1011,7 @@ size_t SkeletalSprite::getBoneIdx(Bone *b)
 		if (bones[i] == b)
 			return i;
 	}
-	return ~0UL;
+	return -1;
 }
 
 void SkeletalSprite::toggleBone(size_t idx, int v)

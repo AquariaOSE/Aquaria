@@ -46,7 +46,7 @@ ModSelectorScreen::ModSelectorScreen()
 	, ActionMapper()
 	, dlText(&dsq->smallFont)
 	, gotServerList(false)
-	, currentPanel(~0)
+	, currentPanel(-1)
 	, subtext(&dsq->subsFont)
 {
 	followCamera = 1;
@@ -140,7 +140,7 @@ void ModSelectorScreen::showPanel(size_t id)
 	IconGridPanel *newgrid = panels[id];
 
 	// fade in selected panel
-	if(currentPanel == ~0U) // just bringing up?
+	if(currentPanel == -1) // just bringing up?
 	{
 		newgrid->scale = Vector(0.8f,0.8f);
 		newgrid->alpha = 0;

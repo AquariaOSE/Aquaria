@@ -42,7 +42,7 @@ Element::Element() : Quad()
 	elementFlag = EF_NONE;
 	elementActive = true;
 	bgLayer = 0;
-	templateIdx = ~0UL;
+	templateIdx = -1;
 	eff = NULL;
 
 	setStatic(true);

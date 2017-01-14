@@ -145,7 +145,7 @@ void WarpAreaRender::onRender()
 SceneEditor::SceneEditor() : ActionMapper(), on(false)
 {
 	autoSaveFile = 0;
-	selectedIdx = ~0UL;
+	selectedIdx = -1;
 }
 
 void SceneEditor::setBackgroundGradient()
@@ -945,7 +945,7 @@ void SceneEditor::moveToBack()
 
 void SceneEditor::editModeElements()
 {
-	selectedIdx = ~0UL;
+	selectedIdx = -1;
 	editType = ET_ELEMENTS;
 	if (curElement < dsq->game->elementTemplates.size())
 	{
@@ -960,7 +960,7 @@ void SceneEditor::editModeElements()
 
 void SceneEditor::editModeEntities()
 {
-	selectedIdx = ~0UL;
+	selectedIdx = -1;
 	//HACK: methinks target is useless now
 	//target->alpha.interpolateTo(0, 0.5);
 	editType = ET_ENTITIES;
@@ -976,7 +976,7 @@ void SceneEditor::editModeEntities()
 
 void SceneEditor::editModePaths()
 {
-	selectedIdx = ~0UL;
+	selectedIdx = -1;
 	editType = ET_PATHS;
 	placer->alpha = 0;
 	pathRender->alpha = 0.5;
@@ -1074,13 +1074,13 @@ void SceneEditor::deleteSelected()
 		}
 		else
 		{
-			if (selectedIdx != ~0UL)
+			if (selectedIdx != -1)
 			{
 				Path *p = dsq->game->getPath(selectedIdx);
 				if (p->nodes.size() == 1)
 				{
 					dsq->game->removePath(selectedIdx);
-					selectedIdx = ~0UL;
+					selectedIdx = -1;
 				}
 				else
 					p->removeNode(selectedNode);
@@ -1464,7 +1464,7 @@ void SceneEditor::mouseButtonLeft()
 	}
 	else if (editType == ET_PATHS)
 	{
-		if (selectedIdx != ~0UL)
+		if (selectedIdx != -1)
 		{
 			Path *p = getSelectedPath();
 			editingPath = p;
@@ -1498,7 +1498,7 @@ void SceneEditor::mouseButtonRight()
 	}
 	if (editType == ET_PATHS)
 	{
-		if (selectedIdx != ~0UL)
+		if (selectedIdx != -1)
 		{
 			debugLog("path scaling HERE!");
 			Path *p = dsq->game->getPath(selectedIdx);
@@ -2189,7 +2189,7 @@ void SceneEditor::saveScene()
 void SceneEditor::deleteSelectedElement()
 {
 	deleteElement(selectedIdx);
-	selectedIdx = ~0UL;
+	selectedIdx = -1;
 }
 
 void SceneEditor::deleteElement(int selectedIdx)
@@ -2421,7 +2421,7 @@ Element* SceneEditor::cycleElementPrev(Element *e1)
 	}
 	ce = idx;
 	ce--;
-	if (ce == ~0UL)
+	if (ce == -1)
 		ce = dsq->game->elementTemplates.size()-1;
 	idx = dsq->game->elementTemplates[ce].idx;
 	if (idx < 1024)
@@ -3060,8 +3060,8 @@ void SceneEditor::update(float dt)
 			{
 			case ES_SELECTING:
 			{
-				selectedIdx = ~0UL;
-				selectedNode = ~0UL;
+				selectedIdx = -1;
+				selectedNode = -1;
 				float smallestDist = sqr(64);
 				for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
 				{
