@@ -1,6 +1,8 @@
 # http://docs.travis-ci.com/user/build-configuration/
 language: cpp
 
+sudo: false
+
 compiler:
   - gcc
   - clang
@@ -14,9 +16,11 @@ matrix:
 #  only:
 #    - master
 
-before_install:
-  - sudo apt-get update -qq # UPDATE REPOS
-  - sudo apt-get install -y -qq libopenal-dev libsdl2-dev
+addons:
+  apt:
+    packages:
+      - libopenal-dev
+      - libsdl2-dev
 
 script:
 # ALL THE BUILD COMMANDS HERE
