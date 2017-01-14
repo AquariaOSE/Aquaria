@@ -63,7 +63,7 @@ void StringBank::_load(const std::string &file)
 
 		if (!line.empty() && line[0] == ' ')
 			line = line.substr(1, line.size());
-		for (int i = 0; i < line.size(); i++)
+		for (size_t i = 0; i < line.size(); i++)
 		{
 			if (line[i] == '|')
 				line[i] = '\n';

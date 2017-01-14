@@ -36,13 +36,13 @@ FlockEntity::FlockEntity() : CollideEntity()
 	collideRadius = 8;
 }
 
-void FlockEntity::addToFlock(int id)
+void FlockEntity::addToFlock(size_t id)
 {
 	if (id >= flocks.size())
 	{
 		int curSize = flocks.size();
 		flocks.resize(id+1);
-		for (int i = curSize; i < id+1; i++)
+		for (size_t i = curSize; i < id+1; i++)
 			flocks[i] = 0;
 	}
 	if (!flocks[id])
@@ -113,7 +113,7 @@ void FlockEntity::destroy()
 
 void FlockEntity::updateFlockData(void)
 {
-	for (int flockID = 0; flockID < flocks.size(); flockID++)
+	for (size_t flockID = 0; flockID < flocks.size(); flockID++)
 	{
 		Flock *flock = flocks[flockID];
 		if (flock)

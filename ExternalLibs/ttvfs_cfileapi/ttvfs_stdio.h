@@ -30,7 +30,7 @@ namespace ttvfs
 {
     class File;
     class Root;
-};
+}
 typedef ttvfs::File VFILE;
 
 

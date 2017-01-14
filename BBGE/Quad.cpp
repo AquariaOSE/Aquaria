@@ -74,7 +74,7 @@ void Quad::createStrip(bool vert, int num)
 void Quad::setStrip(const std::vector<Vector> &st)
 {
 	resetStrip();
-	for (int i = 0; i < st.size(); i++)
+	for (size_t i = 0; i < st.size(); i++)
 	{
 		if (i < strip.size())
 		{
@@ -92,10 +92,10 @@ void Quad::createGrid(int xd, int yd)
 	yDivs = yd;
 
 	drawGrid = new Vector * [xDivs];
-	for (int i = 0; i < xDivs; i++)
+	for (size_t i = 0; i < xDivs; i++)
 	{
 		drawGrid[i] = new Vector [yDivs];
-		for (int j = 0; j < yDivs; j++)
+		for (size_t j = 0; j < yDivs; j++)
 		{
 			drawGrid[i][j].z = 1;
 		}
@@ -104,7 +104,7 @@ void Quad::createGrid(int xd, int yd)
 	resetGrid();
 }
 
-void Quad::setDrawGridAlpha(int x, int y, float alpha)
+void Quad::setDrawGridAlpha(size_t x, size_t y, float alpha)
 {
 	if (x < xDivs && x >= 0 && y < yDivs && y >= 0)
 	{
@@ -116,13 +116,13 @@ void Quad::setGridPoints(bool vert, const std::vector<Vector> &points)
 {
 	if (!drawGrid) return;
 	resetGrid();
-	for (int i = 0; i < points.size(); i++)
+	for (size_t i = 0; i < points.size(); i++)
 	{
 		if (!vert) // horz
 		{
-			for (int y = 0; y < yDivs; y++)
+			for (size_t y = 0; y < yDivs; y++)
 			{
-				for (int x = 0; x < xDivs; x++)
+				for (size_t x = 0; x < xDivs; x++)
 				{
 					if (x < points.size())
 					{
@@ -133,9 +133,9 @@ void Quad::setGridPoints(bool vert, const std::vector<Vector> &points)
 		}
 		else
 		{
-			for (int x = 0; x < xDivs; x++)
+			for (size_t x = 0; x < xDivs; x++)
 			{
-				for (int y = 0; y < yDivs; y++)
+				for (size_t y = 0; y < yDivs; y++)
 				{
 					if (y < points.size())
 					{
@@ -156,7 +156,7 @@ void Quad::resetStrip()
 {
 	if (!stripVert)
 	{
-		for (int i = 0; i < strip.size(); i++)
+		for (size_t i = 0; i < strip.size(); i++)
 		{
 
 			float v = (i/(float(strip.size())));
@@ -172,9 +172,9 @@ void Quad::resetStrip()
 
 void Quad::resetGrid()
 {
-	for (int i = 0; i < xDivs; i++)
+	for (size_t i = 0; i < xDivs; i++)
 	{
-		for (int j = 0; j < yDivs; j++)
+		for (size_t j = 0; j < yDivs; j++)
 		{
 			drawGrid[i][j].x = i/(float)(xDivs-1)-0.5f;
 			drawGrid[i][j].y = j/(float)(yDivs-1)-0.5f;
@@ -226,7 +226,7 @@ void Quad::deleteGrid()
 {
 	if (drawGrid)
 	{
-		for (int i = 0; i < xDivs; i++)
+		for (size_t i = 0; i < xDivs; i++)
 		{
 			delete[] drawGrid[i];
 		}
@@ -308,14 +308,14 @@ void Quad::updateGrid(float dt)
 	{
 		gridTimer += dt * drawGridTimeMultiplier;
 		resetGrid();
-		int hx = xDivs/2;
-		for (int x = 0; x < xDivs; x++)
+		size_t hx = xDivs/2;
+		for (size_t x = 0; x < xDivs; x++)
 		{
 			float yoffset = x * drawGridOffsetY;
 			float addY = 0;
 			if (drawGridModY != 0)
 				addY = cosf(gridTimer+yoffset)*drawGridModY;
-			for (int y = 0; y < yDivs; y++)
+			for (size_t y = 0; y < yDivs; y++)
 			{
 				float xoffset = y * drawGridOffsetX;
 				if (drawGridModX != 0)
@@ -366,11 +366,11 @@ void Quad::renderGrid()
 	glBegin(GL_QUADS);
 	float u0 = baseX;
 	float u1 = u0 + incX;
-	for (int i = 0; i < (xDivs-1); i++, u0 = u1, u1 += incX)
+	for (size_t i = 0; i < (xDivs-1); i++, u0 = u1, u1 += incX)
 	{
 		float v0 = 1 - percentY + baseY;
 		float v1 = v0 + incY;
-		for (int j = 0; j < (yDivs-1); j++, v0 = v1, v1 += incY)
+		for (size_t j = 0; j < (yDivs-1); j++, v0 = v1, v1 += incY)
 		{
 			if (drawGrid[i][j].z != 0 || drawGrid[i][j+1].z != 0 || drawGrid[i+1][j].z != 0 || drawGrid[i+1][j+1].z != 0)
 			{
@@ -410,9 +410,10 @@ void Quad::renderGrid()
 		glPointSize(2);
 		glColor3f(1,0,0);
 		glBegin(GL_POINTS);
-			for (int i = 0; i < (xDivs-1); i++)
+			if(xDivs > 0 && yDivs > 0)
+			for (size_t i = 0; i < (xDivs-1); i++)
 			{
-				for (int j = 0; j < (yDivs-1); j++)
+				for (size_t j = 0; j < (yDivs-1); j++)
 				{
 					glVertex2f(w*drawGrid[i][j].x,		h*drawGrid[i][j].y);
 					glVertex2f(w*drawGrid[i][j+1].x,		h*drawGrid[i][j+1].y);
@@ -453,7 +454,7 @@ void Quad::onRender()
 
 		if (!stripVert)
 		{
-			for (int i = 0; i < strip.size(); i++)
+			for (size_t i = 0; i < strip.size(); i++)
 			{
 				glTexCoord2f(texBits*i, 0);
 				glVertex2f(strip[i].x*width-_w2,  strip[i].y*_h2*10 - _h2);
@@ -469,7 +470,7 @@ void Quad::onRender()
 		glPointSize(64);
 
 		glBegin(GL_POINTS);
-		for (int i = 0; i < strip.size(); i++)
+		for (size_t i = 0; i < strip.size(); i++)
 		{
 			glVertex2f((strip[i].x*width)-_w2, strip[i].y*height);
 		}
