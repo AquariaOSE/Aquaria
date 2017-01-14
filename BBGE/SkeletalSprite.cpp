@@ -1093,7 +1093,7 @@ void SkeletalSprite::prevAnimation()
 {
 	stopAnimation();
 	animLayers[0].currentAnimation--;
-	if (animLayers[0].currentAnimation < 0)
+	if (animLayers[0].currentAnimation >= animations.size())
 		animLayers[0].currentAnimation = animations.size()-1;
 }
 
@@ -1878,7 +1878,7 @@ void SkeletalSprite::selectNextBone()
 		selectedBone--;
 		if(selectedBone == oldsel)
 			break;
-		if (selectedBone < 0)
+		if (selectedBone >= bones.size())
 			selectedBone = bones.size()-1;
 	}
 	while (!bones[selectedBone]->selectable);

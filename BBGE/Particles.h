@@ -217,7 +217,7 @@ public:
 
 	void endParticle(Particle *p);
 
-	void setFree(int free);
+	void setFree(size_t free);
 
 	int getFree() { return free; }
 	int getNumActive() { return numActive; }

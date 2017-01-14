@@ -199,7 +199,7 @@ void ScriptedEntity::initSegments(int numSegments, int minDist, int maxDist, std
 	this->minDist = minDist;
 	this->maxDist = maxDist;
 	segments.resize(numSegments);
-	for (size_t i = segments.size()-1; i >= 0 ; i--)
+	for (size_t i = segments.size(); i-- >= 0 ; )
 	{
 		Quad *q = new Quad;
 		if (i == segments.size()-1)

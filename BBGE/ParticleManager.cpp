@@ -207,14 +207,16 @@ void ParticleManager::nextFree(int jump)
 
 void ParticleManager::prevFree(int jump)
 {
-	free -= jump;
-	if (free < 0)
-		free += size;
+	if(free < jump) {
+		free = free + size - jump;
+	} else {
+		free -= jump;
+	}
 }
 
-void ParticleManager::setFree(int free)
+void ParticleManager::setFree(size_t free)
 {
-	if (free != -1)
+	if (free != ~0UL)
 	{
 		this->free = free;
 	}
