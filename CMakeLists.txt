@@ -2,6 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(Aquaria)
 
 INCLUDE(CheckCCompilerFlag)
+INCLUDE(CheckCXXCompilerFlag)
 INCLUDE(CheckFunctionExists)
 
 IF(NOT CMAKE_BUILD_TYPE)
