@@ -44,10 +44,10 @@ ParticleManager::ParticleManager(int size)
 	setSize(size);
 }
 
-void ParticleManager::setSize(int size)
+void ParticleManager::setSize(size_t size)
 {
 	// dangerous!
-	for (int i = 0; i < particles.size(); i++)
+	for (size_t i = 0; i < particles.size(); i++)
 	{
 		Particle *p = &particles[i];
 		if (p->emitter)
@@ -71,15 +71,15 @@ void ParticleManager::setNumSuckPositions(int num)
 	suckPositions.resize(num);
 }
 
-void ParticleManager::setSuckPosition(int idx, const Vector &pos)
+void ParticleManager::setSuckPosition(size_t idx, const Vector &pos)
 {
-	if (idx < 0 || idx >= suckPositions.size()) return;
+	if (idx >= suckPositions.size()) return;
 	suckPositions[idx] = pos;
 }
 
-Vector *ParticleManager::getSuckPosition(int idx)
+Vector *ParticleManager::getSuckPosition(size_t idx)
 {
-	if (idx < 0 || idx >= suckPositions.size()) return 0;
+	if (idx >= suckPositions.size()) return 0;
 	return &suckPositions[idx];
 }
 
@@ -363,7 +363,7 @@ void ParticleManager::update(float dt)
 {
 	BBGE_PROF(ParticleManager_update);
 	numActive = 0;
-	for (int i = 0; i < particles.size(); i++)
+	for (size_t i = 0; i < particles.size(); i++)
 	{
 		if (particles[i].active)
 		{

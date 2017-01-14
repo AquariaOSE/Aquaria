@@ -152,7 +152,7 @@ struct IntPair
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
-std::string numToZeroString(int num, int zeroes);
+std::string numToZeroString(int num, size_t zeroes);
 bool chance(int perc);
 bool chancef(float p);
 void initCharTranslationTables(const std::map<unsigned char, unsigned char>& tab);

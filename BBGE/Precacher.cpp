@@ -62,9 +62,10 @@ void Precacher::loadTextureRange(const std::string &file, const std::string &typ
 		std::ostringstream os;
 		os << file;
 
-		for (int j = 0; j < 4 - num_os.str().size(); j++)
-		{
-			os << "0";
+		if(num_os.str().size() <= 4) {
+			for (size_t j = 0; j < 4 - num_os.str().size(); j++) {
+				os << "0";
+			}
 		}
 
 		os << t;

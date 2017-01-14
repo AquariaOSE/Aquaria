@@ -368,7 +368,7 @@ bool Shader::Uniform::operator< (const Uniform& b) const
 
 void Shader::_queryUniforms()
 {
-	glGetObjectParameterivARB(g_programObj, GL_OBJECT_ACTIVE_UNIFORMS_ARB , &numUniforms);
+	glGetObjectParameterivARB(g_programObj, GL_OBJECT_ACTIVE_UNIFORMS_ARB , (GLint*)&numUniforms);
 
 	if (numUniforms <= 0)
 	{

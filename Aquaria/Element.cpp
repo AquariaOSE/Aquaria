@@ -42,7 +42,7 @@ Element::Element() : Quad()
 	elementFlag = EF_NONE;
 	elementActive = true;
 	bgLayer = 0;
-	templateIdx = -1;
+	templateIdx = ~0UL;
 	eff = NULL;
 
 	setStatic(true);
@@ -127,7 +127,7 @@ void Element::updateEffects(float dt)
 				float magRedSpd = 48;
 				float lerpSpd = 5.0;
 				float wavySz = float(eff->wavy.size());
-				for (int i = 0; i < eff->wavy.size(); i++)
+				for (size_t i = 0; i < eff->wavy.size(); i++)
 				{
 					float weight = float(i)/wavySz;
 					if (eff->wavyFlip)
@@ -211,13 +211,13 @@ void Element::setGridFromWavy()
 	{
 
 		const float w = float(getWidth());
-		for (int x = 0; x < xDivs-1; x++)
+		for (size_t x = 0; x < xDivs-1; x++)
 		{
-			for (int y = 0; y < yDivs; y++)
+			for (size_t y = 0; y < yDivs; y++)
 			{
 				const int wavy_y = (yDivs - y)-1;
 				const float tmp = eff->wavy[wavy_y].x / w;
-				if (wavy_y < eff->wavy.size())
+				if (wavy_y < 0 || (size_t) wavy_y < eff->wavy.size())
 				{
 
 					drawGrid[x][y].x = tmp - 0.5f;
@@ -264,7 +264,7 @@ void Element::setElementEffectByIndex(int eidx)
 
 		eff->wavy.resize(e.segsy);
 		float bity = float(getHeight())/float(e.segsy);
-		for (int i = 0; i < eff->wavy.size(); i++)
+		for (size_t i = 0; i < eff->wavy.size(); i++)
 		{
 			eff->wavy[i] = Vector(0, -(i*bity));
 		}
@@ -300,7 +300,7 @@ void Element::render()
 		renderBorderColor = Vector(0.5,0.5,0.5);
 		if (!dsq->game->sceneEditor.selectedElements.empty())
 		{
-			for (int i = 0; i < dsq->game->sceneEditor.selectedElements.size(); i++)
+			for (size_t i = 0; i < dsq->game->sceneEditor.selectedElements.size(); i++)
 			{
 				if (this == dsq->game->sceneEditor.selectedElements[i])
 					renderBorderColor = Vector(1,1,1);

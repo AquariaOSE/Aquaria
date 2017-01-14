@@ -131,7 +131,6 @@ void Demo::update(float dt)
 	}
 	else if (mode == DEMOMODE_PLAYBACK)
 	{
-
 		while (frame < frames.size())
 		{
 			DemoFrame *f = &frames[frame];

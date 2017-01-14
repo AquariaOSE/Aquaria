@@ -378,9 +378,9 @@ protected:
 	std::vector<DisplayListElement> displayList;
 
 	RenderObjects renderObjects;
-	int objectCount;
-	int firstFreeIdx;
-	int iter;
+	size_t objectCount;
+	size_t firstFreeIdx;
+	size_t iter;
 };
 
 class Core : public ActionMapper, public StateManager
@@ -439,7 +439,7 @@ public:
 	void toggleScreenMode(int t=0);
 
 	void enable2D(int pixelScaleX=0, int pixelScaleY=0, bool forcePixelScale=false);
-	void addRenderObject(RenderObject *o, int layer=0);
+	void addRenderObject(RenderObject *o, size_t layer=0);
 	void switchRenderObjectLayer(RenderObject *o, int toLayer);
 	void addTexture(Texture *r);
 	CountedPtr<Texture> findTexture(const std::string &name);
@@ -690,8 +690,8 @@ public:
 
 	CoreSettings settings;
 
-	int tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
-	int zgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
+	int tgaSave(const char *filename, short unsigned int width, short unsigned int height, unsigned char	pixelDepth, unsigned char	*imageData);
+	int zgaSave(const char *filename, short unsigned int width, short unsigned int height, unsigned char	pixelDepth, unsigned char	*imageData);
 
 	volatile int dbg_numThreadDecoders;
 	static unsigned int dbg_numRenderCalls;

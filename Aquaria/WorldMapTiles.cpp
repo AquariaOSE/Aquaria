@@ -280,7 +280,7 @@ void WorldMap::save()
 
 	if (out)
 	{
-		for (int i = 0; i < worldMapTiles.size(); i++)
+		for (size_t i = 0; i < worldMapTiles.size(); i++)
 		{
 			WorldMapTile *t = &worldMapTiles[i];
 			out << t->index << " " << t->stringIndex << " " << t->name << " " << t->layer << " " << t->scale << " " << t->gridPos.x << " " << t->gridPos.y << " " << t->prerevealed << " " << t->scale2 << std::endl;
@@ -315,7 +315,7 @@ WorldMapTile *WorldMap::getWorldMapTile(const std::string &name)
 {
 	std::string n = name;
 	stringToUpper(n);
-	for (int i = 0; i < worldMapTiles.size(); i++)
+	for (size_t i = 0; i < worldMapTiles.size(); i++)
 	{
 		if (worldMapTiles[i].name == n)
 		{
@@ -327,7 +327,7 @@ WorldMapTile *WorldMap::getWorldMapTile(const std::string &name)
 
 WorldMapTile *WorldMap::getWorldMapTileByIndex(int index)
 {
-	for (int i = 0; i < worldMapTiles.size(); i++)
+	for (size_t i = 0; i < worldMapTiles.size(); i++)
 	{
 		if (worldMapTiles[i].index == index)
 		{
@@ -341,7 +341,7 @@ WorldMapTile *WorldMap::getWorldMapTileByIndex(int index)
 
 void WorldMap::hideMap()
 {
-	for (int i = 0; i < worldMapTiles.size(); i++)
+	for (size_t i = 0; i < worldMapTiles.size(); i++)
 	{
 		worldMapTiles[i].revealed = false;
 	}
@@ -352,9 +352,9 @@ int WorldMap::getNumWorldMapTiles()
 	return worldMapTiles.size();
 }
 
-WorldMapTile *WorldMap::getWorldMapTile(int index)
+WorldMapTile *WorldMap::getWorldMapTile(size_t index)
 {
-	if (index < 0 || index >= worldMapTiles.size()) return 0;
+	if (index >= worldMapTiles.size()) return 0;
 
 	return &worldMapTiles[index];
 }
