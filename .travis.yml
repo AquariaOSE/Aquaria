@@ -23,6 +23,10 @@ addons:
       - libopenal-dev
       - libsdl-dev
 
+before_install:
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install sdl openal-soft; fi
+
 script:
 # ALL THE BUILD COMMANDS HERE
   - export CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;/usr/lib/x86_64-linux-gnu/"
