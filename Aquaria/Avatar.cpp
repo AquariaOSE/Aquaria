@@ -1100,7 +1100,7 @@ void Avatar::onDamage(DamageData &d)
 			if (healthWillBe<=0)
 				t = 2;
 
-			dsq->rumble(d.damage, d.damage, 0.4, _lastActionSourceID);
+			dsq->rumble(d.damage, d.damage, 0.4, _lastActionSourceID, _lastActionInputDevice);
 			if (d.damage > 0)
 			{
 				//dsq->shakeCamera(5, t);
@@ -1312,12 +1312,12 @@ void Avatar::clearTargets()
 	}
 }
 
-void Avatar::openSingingInterface()
+void Avatar::openSingingInterface(InputDevice device)
 {
 	if (!singing && health > 0 && !isEntityDead() && !blockSinging)
 	{
 		//core->mouse.position = Vector(400,300);
-		if (dsq->inputMode != INPUT_MOUSE)
+		if (device != INPUT_MOUSE)
 		{
 			core->centerMouse();
 			//core->setMousePosition(Vector(400,300));
@@ -1340,7 +1340,7 @@ void Avatar::openSingingInterface()
 		dsq->game->songLineRender->clear();
 
 
-		if (dsq->inputMode == INPUT_JOYSTICK)
+		if (device == INPUT_JOYSTICK)
 		{
 			core->setMousePosition(core->center);
 		}
@@ -2334,7 +2334,7 @@ bool Avatar::hasThingToActivate()
 	return ((pathToActivate != 0) || (entityToActivate != 0));
 }
 
-void Avatar::formAbility(int ability)
+void Avatar::formAbility()
 {
 	if (hasThingToActivate()) return;
 	//debugLog("form ability function");
@@ -2469,137 +2469,121 @@ void Avatar::formAbility(int ability)
 					}
 				}
 			}
-			/*
-			else if (ability == 1)
-			{
-
-			}
-			*/
 		}
 	break;
 	case FORM_ENERGY:
 		{
-			if (ability == 0)
+			if (chargeLevelAttained == 2)
 			{
-				if (chargeLevelAttained == 2)
-				{
-					if (dsq->continuity.hasFormUpgrade(FORMUPGRADE_ENERGY2))
-						doShock("EnergyTendril2");
-					else
-						doShock("EnergyTendril");
-					if (!state.lockedToWall)
-						skeletalSprite.animate("energyChargeAttack", 0, ANIMLAYER_UPPERBODYIDLE);
-
-					/*
-					if (core->afterEffectManager)
-						core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter, 0.1,0.03,30,0.2f, 1.5));
-					*/
-					dsq->playVisualEffect(VFX_SHOCK, position, this);
-				}
+				if (dsq->continuity.hasFormUpgrade(FORMUPGRADE_ENERGY2))
+					doShock("EnergyTendril2");
 				else
-				{
-					if (!fireDelay)
-					{
-						std::string shotName;
-						if (dsq->continuity.hasFormUpgrade(FORMUPGRADE_ENERGY2))
-							shotName = "EnergyBlast2";
-						else
-							shotName = "EnergyBlast";
+					doShock("EnergyTendril");
+				if (!state.lockedToWall)
+					skeletalSprite.animate("energyChargeAttack", 0, ANIMLAYER_UPPERBODYIDLE);
 
-						if (fireAtNearestValidEntity(shotName))
-						{
-							fireDelay = fireDelayTime;
-						}
+				/*
+				if (core->afterEffectManager)
+					core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter, 0.1,0.03,30,0.2f, 1.5));
+				*/
+				dsq->playVisualEffect(VFX_SHOCK, position, this);
+			}
+			else
+			{
+				if (!fireDelay)
+				{
+					std::string shotName;
+					if (dsq->continuity.hasFormUpgrade(FORMUPGRADE_ENERGY2))
+						shotName = "EnergyBlast2";
+					else
+						shotName = "EnergyBlast";
+
+					if (fireAtNearestValidEntity(shotName))
+					{
+						fireDelay = fireDelayTime;
 					}
 				}
 			}
 		}
 		break;
 	case FORM_NATURE:
-		// no abilities
+		if (formAbilityDelay == 0)
 		{
-			//debugLog("rock ability");
-			if (ability == 0)
+			formAbilityDelay = 0.2;
+			//Vector pos = dsq->getGameCursorPosition() - position;
+
+			Vector pos = getAim();
+			if (!pos.isZero())
+				pos.setLength2D(16);
+			pos += position;
+
+			std::string seedName;
+			if (chargeLevelAttained == 0)
+				seedName = "SeedFlower";
+			else if (chargeLevelAttained == 2)
+				seedName = "SeedUberVine";
+
+			dsq->game->fireShot(seedName, this, 0, pos, getAim());
+
+
+			/*
+			Vector pos = getAim();
+			if (!pos.isZero())
+				pos.setLength2D(64);
+			pos += position;
+
+
+			//dsq->spawnParticleEffect("Fertilizer", pos);
+
+			Entity *e = 0;
+			std::string seedName;
+			if (chargeLevelAttained == 0)
+				seedName = "SeedFlower";
+			else if (chargeLevelAttained == 2)
+				seedName = "SeedUberVine";
+
+			e = dsq->game->createEntity(seedName, 0, pos, 0, false, "");
+
+			Vector add = pos - position;
+			add.setLength2D(800);
+			e->vel += add;
+			*/
+
+			/*
+			if (chargeLevelAttained == 0)
 			{
-				if (formAbilityDelay == 0)
+			}
+			else if (chargeLevelAttained == 1)
+			{
+				e->setState(STATE_CHARGE1);
+			}
+			else if (chargeLevelAttained == 2)
+			{
+				e->setState(STATE_CHARGE2);
+			}
+
+			e->update(0);
+			*/
+			// idle = charge 0
+			// attack = charge1
+			// something = charge2
+			/*
+			FOR_ENTITIES (i)
+			{
+				Entity *e = *i;
+				if (e && e->getEntityType() == ET_ENEMY && e->isDamageTarget(DT_AVATAR_NATURE))
 				{
-					formAbilityDelay = 0.2;
-					//Vector pos = dsq->getGameCursorPosition() - position;
-
-					Vector pos = getAim();
-					if (!pos.isZero())
-						pos.setLength2D(16);
-					pos += position;
-
-					std::string seedName;
-					if (chargeLevelAttained == 0)
-						seedName = "SeedFlower";
-					else if (chargeLevelAttained == 2)
-						seedName = "SeedUberVine";
-
-					dsq->game->fireShot(seedName, this, 0, pos, getAim());
-
-
-					/*
-					Vector pos = getAim();
-					if (!pos.isZero())
-						pos.setLength2D(64);
-					pos += position;
-
-
-					//dsq->spawnParticleEffect("Fertilizer", pos);
-
-					Entity *e = 0;
-					std::string seedName;
-					if (chargeLevelAttained == 0)
-						seedName = "SeedFlower";
-					else if (chargeLevelAttained == 2)
-						seedName = "SeedUberVine";
-
-					e = dsq->game->createEntity(seedName, 0, pos, 0, false, "");
-
-					Vector add = pos - position;
-					add.setLength2D(800);
-					e->vel += add;
-					*/
-
-					/*
-					if (chargeLevelAttained == 0)
+					if ((e->position - pos).isLength2DIn(128))
 					{
+						DamageData d;
+						d.damageType = DT_AVATAR_NATURE;
+						d.damage = 1;
+						d.attacker = this;
+						e->damage(d);
 					}
-					else if (chargeLevelAttained == 1)
-					{
-						e->setState(STATE_CHARGE1);
-					}
-					else if (chargeLevelAttained == 2)
-					{
-						e->setState(STATE_CHARGE2);
-					}
-
-					e->update(0);
-					*/
-					// idle = charge 0
-					// attack = charge1
-					// something = charge2
-					/*
-					FOR_ENTITIES (i)
-					{
-						Entity *e = *i;
-						if (e && e->getEntityType() == ET_ENEMY && e->isDamageTarget(DT_AVATAR_NATURE))
-						{
-							if ((e->position - pos).isLength2DIn(128))
-							{
-								DamageData d;
-								d.damageType = DT_AVATAR_NATURE;
-								d.damage = 1;
-								d.attacker = this;
-								e->damage(d);
-							}
-						}
-					}
-					*/
 				}
 			}
+			*/
 		}
 	break;
 	case FORM_BEAST:
@@ -3021,20 +3005,20 @@ void Avatar::rmbd(int source, InputDevice device)
 	if (!isMouseInputEnabled() || isEntityDead()) return;
 	if (dsq->continuity.form == FORM_NORMAL )
 	{
-		if (dsq->inputMode == INPUT_MOUSE)
+		if (device == INPUT_MOUSE)
 		{
 			Vector diff = getVectorToCursorFromScreenCentre();
 			if (diff.getSquaredLength2D() < sqr(openSingingInterfaceRadius))
-				openSingingInterface();
+				openSingingInterface(device);
 		}
 		else
 		{
-			openSingingInterface();
+			openSingingInterface(device);
 		}
 	}
 	else
 	{
-		startCharge(0);
+		startCharge();
 	}
 }
 
@@ -3045,7 +3029,7 @@ void Avatar::rmbu(int source, InputDevice device)
 	if (charging)
 	{
 		if (!entityToActivate && !pathToActivate)
-			formAbility(0);
+			formAbility();
 
 		endCharge();
 	}
@@ -3072,26 +3056,17 @@ void Avatar::rmbu(int source, InputDevice device)
 	}
 }
 
-bool Avatar::canCharge(int ability)
+bool Avatar::canCharge()
 {
 	switch(dsq->continuity.form)
 	{
 	case FORM_ENERGY:
-		if (ability == 0) return true;
-	break;
-	case FORM_BEAST:
-		return false;
-	break;
 	case FORM_DUAL:
-		return true;
-	break;
 	case FORM_NATURE:
-		if (ability == 0)
-			return true;
-	break;
 	case FORM_SUN:
 		return true;
 	break;
+	case FORM_BEAST:
 	case FORM_NORMAL:
 	case FORM_SPIRIT:
 	case FORM_FISH:
@@ -3102,9 +3077,9 @@ bool Avatar::canCharge(int ability)
 	return false;
 }
 
-void Avatar::startCharge(int ability)
+void Avatar::startCharge()
 {
-	if (!isCharging() && canCharge(ability))
+	if (!isCharging() && canCharge())
 	{
 		if (dsq->loops.charge != BBGE_AUDIO_NOCHANNEL)
 		{
@@ -3144,9 +3119,9 @@ void Avatar::startCharge(int ability)
 		charging = true;
 
 	}
-	if (!canCharge(ability))
+	if (!canCharge())
 	{
-		formAbility(ability);
+		formAbility();
 	}
 }
 
@@ -3914,6 +3889,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	blockBackFlip = false;
 	elementEffectMult = 1;
 	_lastActionSourceID = 9999;
+	_lastActionInputDevice = INPUT_NODEVICE;
 }
 
 void Avatar::revert()
@@ -4086,7 +4062,7 @@ void Avatar::startBurst()
 	{
 		if (!bursting && burst == 1)
 		{
-			dsq->rumble(0.2, 0.2, 0.2, _lastActionSourceID);
+			dsq->rumble(0.2, 0.2, 0.2, _lastActionSourceID, _lastActionInputDevice);
 			if (dsq->continuity.form != FORM_BEAST)
 				wakeEmitter.start();
 			dsq->game->playBurstSound(pushingOffWallEffect>0);
@@ -4159,7 +4135,7 @@ void Avatar::startWallBurst(bool useCursor)
 		{
 			lastBurstType = BURST_WALL;
 
-			dsq->rumble(0.22, 0.22, 0.2, _lastActionSourceID);
+			dsq->rumble(0.22, 0.22, 0.2, _lastActionSourceID, _lastActionInputDevice);
 			bittenEntities.clear();
 			if (useCursor)
 			{
@@ -4270,6 +4246,7 @@ void Avatar::action(int id, int state, int source, InputDevice device)
 		return;
 
 	_lastActionSourceID = source;
+	_lastActionInputDevice = device;
 
 	if (id == ACTION_PRIMARY)	{ if (state) lmbd(source, device); else lmbu(source, device); }
 	if (id == ACTION_SECONDARY) { if (state) rmbd(source, device); else rmbu(source, device); }
@@ -4337,7 +4314,7 @@ void Avatar::action(int id, int state, int source, InputDevice device)
 				// done for wall bursts, but the movement there is fast
 				// enough that people probably won't notice, so I skipped
 				// that.  Sorry about the ugliness.  --achurch
-				if (dsq->inputMode != INPUT_MOUSE)
+				if (device != INPUT_MOUSE)
 					skeletalSprite.transitionAnimate("swim", ANIM_TRANSITION, -1);
 			}
 		}
@@ -4539,7 +4516,7 @@ void Avatar::splash(bool down)
 		//dsq->postProcessingFx.disable(FXT_RADIALBLUR);
 		if (_isUnderWater && core->afterEffectManager)
 			core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.08,0.05,22,0.2f, 1.2));
-		dsq->rumble(0.7, 0.7, 0.2, _lastActionSourceID);
+		dsq->rumble(0.7, 0.7, 0.2, _lastActionSourceID, _lastActionInputDevice);
 		plungeEmitter.start();
 
 		core->sound->playSfx("GoUnder");

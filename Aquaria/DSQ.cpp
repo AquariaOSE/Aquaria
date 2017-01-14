@@ -248,9 +248,9 @@ void DSQ::onWindowResize(int w, int h)
 	screenTransition->reloadDevice();
 }
 
-void DSQ::rumble(float leftMotor, float rightMotor, float time, int source)
+void DSQ::rumble(float leftMotor, float rightMotor, float time, int source, InputDevice device)
 {
-	if (this->inputMode == INPUT_JOYSTICK)
+	if (device == INPUT_JOYSTICK)
 	{
 		if(source < 0)
 			for(size_t i = 0; i < user.control.actionSets.size(); ++i)

@@ -179,7 +179,7 @@ public:
 
 	void startBurstCommon();
 
-	void openSingingInterface();
+	void openSingingInterface(InputDevice device);
 	void closeSingingInterface();
 	void updateSingingInterface(float dt);
 
@@ -195,10 +195,10 @@ public:
 
 	void setNearestPullTarget();
 
-	void formAbility(int ability);
+	void formAbility();
 	bool isMouseInputEnabled();
 
-	void startCharge(int ability);
+	void startCharge();
 	int currentMaxSpeed;
 	Vector getFakeCursorPosition();
 	Vector getVectorToCursor(bool trueMouse=false);
@@ -331,7 +331,8 @@ public:
 
 	bool blockBackFlip;
 
-	int getLastActionSourceID() { return _lastActionSourceID; }
+	int getLastActionSourceID() const { return _lastActionSourceID; }
+	InputDevice getLastActionInputDevice() const { return _lastActionInputDevice; }
 
 protected:
 	void setSongIconPositions();
@@ -410,7 +411,7 @@ protected:
 
 	void clampVelocity();
 
-	bool canCharge(int ability);
+	bool canCharge();
 	void formAbilityUpdate(float dt);
 	float revertTimer;
 
@@ -468,6 +469,7 @@ protected:
 	float _collisionAvoidMod;
 
 	int _lastActionSourceID;
+	InputDevice _lastActionInputDevice;
 
 };
 
