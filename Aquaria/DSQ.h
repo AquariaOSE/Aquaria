@@ -229,7 +229,7 @@ public:
 	typedef std::vector<SubLine> SubLines;
 	SubLines subLines;
 
-	int curLine;
+	size_t curLine;
 protected:
 	bool vis, hidden;
 };
@@ -432,7 +432,7 @@ class Emote
 public:
 	Emote();
 	void load(const std::string &file);
-	void playSfx(int index);
+	void playSfx(size_t index);
 	void update(float dt);
 
 	float emoteTimer;
@@ -578,7 +578,7 @@ struct WorldMap
 	void revealMap(const std::string &name);
 	WorldMapTile *getWorldMapTile(const std::string &name);
 	int getNumWorldMapTiles();
-	WorldMapTile *getWorldMapTile(int index);
+	WorldMapTile *getWorldMapTile(size_t index);
 
 	WorldMapTile *getWorldMapTileByIndex(int index);
 	void revealMapIndex(int index);
@@ -887,7 +887,7 @@ public:
 
 	void setCostume(const std::string &c);
 
-	void shortenSong(Song &song, int size);
+	void shortenSong(Song &song, size_t size);
 	void warpLiToAvatar();
 
 	void flingMonkey(Entity *e);
@@ -920,7 +920,7 @@ public:
 	std::string getDescriptionForSongSlot(int songSlot);
 	std::string getVoxForSongSlot(int songSlot);
 
-	std::string getIEString(IngredientData *data, int i);
+	std::string getIEString(IngredientData *data, size_t i);
 	std::string getAllIEString(IngredientData *data);
 
 	std::string getInternalFormName();
@@ -963,7 +963,7 @@ public:
 	float getStory();
 	void setStory(float v);
 
-	float getSpeedType(int speedType);
+	float getSpeedType(size_t speedType);
 	void setNaijaModel(std::string model);
 
 
@@ -1036,8 +1036,8 @@ public:
 	IngredientData *getIngredientHeldByName(const std::string &name) const; // an ingredient that the player actually has; in the ingredients list
 	IngredientData *getIngredientDataByName(const std::string &name); // an ingredient in the general data list; ingredientData
 
-	IngredientData *getIngredientHeldByIndex(int idx) const;
-	IngredientData *getIngredientDataByIndex(int idx);
+	IngredientData *getIngredientHeldByIndex(size_t idx) const;
+	IngredientData *getIngredientDataByIndex(size_t idx);
 
 	int getIngredientDataSize() const;
 	int getIngredientHeldSize() const;
@@ -1086,13 +1086,13 @@ public:
 	float speedMult2;
 
 	void eatBeast(const EatData &eatData);
-	void removeNaijaEat(int idx);
+	void removeNaijaEat(size_t idx);
 	void removeLastNaijaEat();
 	EatData *getLastNaijaEat();
 	bool isNaijaEatsEmpty();
 
 	void loadPetData();
-	PetData *getPetData(int idx);
+	PetData *getPetData(size_t idx);
 
 	std::vector<EatData> naijaEats;
 
@@ -1199,7 +1199,7 @@ public:
 	void save(const std::string &name);
 	void load(const std::string &name);
 
-	int frame;
+	unsigned int frame;
 	float time;
 	float timeDiff;
 	std::vector <DemoFrame> frames;
@@ -1276,12 +1276,12 @@ public:
 	int getEntityLayerToLayer(int layer);
 
 	void addElement(Element *e);
-	int getNumElements() const {return elements.size();}
+	size_t getNumElements() const {return elements.size();}
 	Element *getElement(int idx) const {return elements[idx];}
 	Element *getFirstElementOnLayer(int layer) const {return layer<0 || layer>15 ? 0 : firstElementOnLayer[layer];}
 	void clearElements();
 	// Used only by scene editor:
-	void removeElement(int idx);
+	void removeElement(size_t idx);
 	void removeElement(Element *e);
 	ElementContainer getElementsCopy() const {return elements;}
 
@@ -1382,7 +1382,7 @@ public:
 	bool canOpenEditor() const;
 
 	void loadElementEffects();
-	ElementEffect getElementEffectByIndex(int e);
+	ElementEffect getElementEffectByIndex(size_t e);
 	typedef std::vector<ElementEffect> ElementEffects;
 	ElementEffects elementEffects;
 
@@ -1464,7 +1464,7 @@ public:
 
 	std::vector<ModEntry> modEntries;
 	std::set<std::string> activePatches;
-	int selectedMod;
+	size_t selectedMod;
 	ModSelectorScreen *modSelectorScr;
 
 	void startSelectedMod();

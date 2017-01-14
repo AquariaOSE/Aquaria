@@ -37,8 +37,7 @@ namespace Network
 	void download(RequestData *rq);
 	void update();
 	void shutdown();
-};
-
+}
 
 
 #endif

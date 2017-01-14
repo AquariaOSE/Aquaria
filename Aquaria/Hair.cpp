@@ -35,7 +35,7 @@ Hair::Hair(int nodes, float segmentLength, float hairWidth) : RenderObject()
 	hairNodes.resize(nodes);
 
 
-	for (int i = 0; i < hairNodes.size(); i++)
+	for (size_t i = 0; i < hairNodes.size(); i++)
 	{
 		float perc = (float(i)/(float(hairNodes.size())));
 		if (perc < 0)
@@ -81,7 +81,7 @@ void Hair::onRender()
 	float texBits = 1.0f / (hairNodes.size()-1);
 
 	Vector pl, pr;
-	for (int i = 0; i < hairNodes.size(); i++)
+	for (size_t i = 0; i < hairNodes.size(); i++)
 	{
 
 
@@ -122,7 +122,7 @@ void Hair::updatePositions()
 	BBGE_PROF(Hair_updatePositions);
 
 
-	for (int i = 1; i < hairNodes.size(); i++)
+	for (size_t i = 1; i < hairNodes.size(); i++)
 	{
 		Vector diff = hairNodes[i].position - hairNodes[i-1].position;
 
@@ -149,7 +149,7 @@ void Hair::updatePositions()
 
 void Hair::returnToDefaultPositions(float dt)
 {
-	for (int i = 0; i < hairNodes.size(); i++)
+	for (size_t i = 0; i < hairNodes.size(); i++)
 	{
 		Vector mov = hairNodes[i].defaultPosition - hairNodes[i].position;
 		if (!mov.isLength2DIn(2))

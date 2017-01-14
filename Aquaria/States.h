@@ -206,7 +206,7 @@ public:
 
 	std::deque<SkeletalSprite> undoHistory;
 
-	int undoEntry;
+	size_t undoEntry;
 
 	int currentKey;
 
@@ -243,7 +243,7 @@ public:
 	SkeletalKeyframe buffer;
 
 	bool editingStrip;
-	int selectedStripPoint;
+	size_t selectedStripPoint;
 
 	void reverseAnim();
 

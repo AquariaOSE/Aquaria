@@ -44,9 +44,9 @@ void Emote::load(const std::string &file)
 	emoteTimer = 0;
 }
 
-void Emote::playSfx(int index)
+void Emote::playSfx(size_t index)
 {
-	if (index < 0 || index >= emotes.size())	return;
+	if (index >= emotes.size())	return;
 	if (emoteTimer > 0)							return;
 
 	int r = 0;

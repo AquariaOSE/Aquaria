@@ -20,11 +20,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Segmented.h"
 
-Strand::Strand(const Vector &position, int segs, int dist) : RenderObject(), Segmented(dist, dist)
+Strand::Strand(const Vector &position, size_t segs, size_t dist) : RenderObject(), Segmented(dist, dist)
 {
 	cull = false;
 	segments.resize(segs);
-	for (int i = 0; i < segments.size(); i++)
+	for (size_t i = 0; i < segments.size(); i++)
 	{
 		segments[i] = new RenderObject;
 	}
@@ -34,7 +34,7 @@ Strand::Strand(const Vector &position, int segs, int dist) : RenderObject(), Seg
 void Strand::destroy()
 {
 	RenderObject::destroy();
-	for (int i = 0; i < segments.size(); i++)
+	for (size_t i = 0; i < segments.size(); i++)
 	{
 		segments[i]->destroy();
 		delete segments[i];

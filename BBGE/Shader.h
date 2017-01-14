@@ -46,7 +46,7 @@ protected:
 	std::string vertFile, fragFile;
 	std::string vertSrc, fragSrc;
 	GLuint g_programObj;
-	int numUniforms;
+	size_t numUniforms;
 
 private:
 	static void staticInit();
@@ -58,7 +58,7 @@ private:
 	struct Uniform
 	{
 		int location; // GL location variable
-		int type;
+		size_t type;
 		bool dirty; // need to flush if true
 		union
 		{
