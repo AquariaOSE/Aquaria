@@ -13,6 +13,13 @@ set(ttvfs_zip_SRC
     ttvfs_zip.h
 )
 
+if(NOT MSVC)
+    set_source_files_properties(
+        miniz.c
+        PROPERTIES COMPILE_FLAGS "-Wno-attributes -fno-strict-aliasing -Wno-strict-aliasing"
+    )
+endif(NOT MSVC)
+
 include_directories(${TTVFS_INCLUDE_DIRS})
 
 add_library(ttvfs_zip ${ttvfs_zip_SRC})
