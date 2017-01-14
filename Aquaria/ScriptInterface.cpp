@@ -2078,8 +2078,12 @@ luaFunc(shakeCamera)
 
 luaFunc(rumble)
 {
-	int source = lua_tonumber(L, 4) - 1;
-	dsq->rumble(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), source);
+	int source = lua_tointeger(L, 4) - 1;
+	Avatar *a = dsq->game->avatar;
+	InputDevice device = (InputDevice)lua_tointeger(L, 5);
+	if(device == INPUT_NODEVICE) // default: use avatar status
+		device = a ? a->getLastActionInputDevice() : INPUT_NODEVICE;
+	dsq->rumble(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), source, device);
 	luaReturnNil();
 }
 

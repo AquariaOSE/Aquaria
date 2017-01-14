@@ -5032,7 +5032,7 @@ void Game::removeState()
 	dsq->overlay->alpha.interpolateTo(1, fadeTime);
 	dsq->run(fadeTime);
 
-	dsq->rumble(0,0,0,-1);
+	dsq->rumble(0,0,0,-1, INPUT_JOYSTICK);
 
 	dsq->sound->clearFadingSfx();
 

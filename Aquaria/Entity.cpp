@@ -1305,10 +1305,11 @@ bool Entity::updateCurrents(float dt)
 			float scale = 0.2;
 			if (getEntityType() == ET_AVATAR)
 			{
+				Avatar *a = dsq->game->avatar;
 				if (v < 0)
-					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2, dsq->game->avatar->getLastActionSourceID());
+					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2, a->getLastActionSourceID(), a->getLastActionInputDevice());
 				else
-					dsq->rumble((1.0f-v)*scale, (v)*scale, 0.1, dsq->game->avatar->getLastActionSourceID());
+					dsq->rumble((1.0f-v)*scale, (v)*scale, 0.1, a->getLastActionSourceID(), a->getLastActionInputDevice());
 			}
 		}
 	}
