@@ -6,10 +6,8 @@ compiler:
   - clang
 
 matrix:
-  #include:
-  #  - compiler: gcc
-  #  - compiler: clang
-  allow_failures:
+  include:
+    - compiler: gcc
     - compiler: clang
 
 #branches:
@@ -18,7 +16,7 @@ matrix:
 
 before_install:
   - sudo apt-get update -qq # UPDATE REPOS
-  - sudo apt-get install -y -qq libopenal-dev
+  - sudo apt-get install -y -qq libopenal-dev libsdl2-dev
 
 script:
 # ALL THE BUILD COMMANDS HERE
