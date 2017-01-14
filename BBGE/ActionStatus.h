@@ -28,7 +28,6 @@ enum ActionButtonType
 	ACTION_BUTTON_ENUM_SIZE = JOY_AXIS_END_NEG
 };
 
-
 class ActionButtonStatus
 {
 public:

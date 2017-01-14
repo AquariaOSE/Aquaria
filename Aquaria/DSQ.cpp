@@ -1687,7 +1687,7 @@ void DSQ::toggleVersionLabel(bool on)
 	versionLabel->alpha.interpolateTo(a, 1);
 }
 
-void DSQ::setInputMode(InputMode mode)
+void DSQ::setInputMode(InputDevice mode)
 {
 	inputMode = mode;
 	switch(inputMode)
@@ -3659,9 +3659,9 @@ void DSQ::watch(float t, int canQuit)
 	}
 }
 
-void DSQ::action(int id, int state, int source)
+void DSQ::action(int id, int state, int source, InputDevice device)
 {
-	Core::action(id, state, source);
+	Core::action(id, state, source, device);
 
 	if (id == ACTION_ESC && !state)
 	{

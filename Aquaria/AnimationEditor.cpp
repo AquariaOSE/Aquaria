@@ -537,7 +537,7 @@ void AnimationEditor::redo()
 	}
 }
 
-void AnimationEditor::action(int id, int state, int source)
+void AnimationEditor::action(int id, int state, int source, InputDevice device)
 {
 	if (editingBone && state)
 	{

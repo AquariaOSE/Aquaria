@@ -65,7 +65,7 @@ public:
 	void removeRenderObject(RenderObject *renderObject);
 	std::string name;
 
-	virtual void action(int actionID, int state, int source) {}
+	virtual void action(int actionID, int state, int source, InputDevice device) {}
 
 protected:
 	void registerState(StateObject *sb, const std::string &name);

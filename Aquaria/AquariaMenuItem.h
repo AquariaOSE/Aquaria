@@ -87,7 +87,7 @@ public:
 	bool useQuad(const std::string &tex);
 	void useGlow(const std::string &tex, int w, int h);
 	void useSound(const std::string &tex);
-	virtual void action(int actionID, int state, int source) {}
+	virtual void action(int actionID, int state, int source, InputDevice device) {}
 
 	virtual bool isCursorInMenuItem();
 	Vector getGuiPosition();

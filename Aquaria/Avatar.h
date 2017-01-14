@@ -138,7 +138,7 @@ public:
 	Avatar();
 	virtual ~Avatar();
 	void destroy();
-	void action(int actionID, int state, int source);
+	void action(int actionID, int state, int source, InputDevice device);
 	AvatarState state;
 	float burst, burstTimer;
 	float burstDelay;
@@ -439,11 +439,11 @@ protected:
 	Quad *glow;
 	bool swimming;
 
-	void lmbd();
-	void lmbu();
+	void lmbd(int source, InputDevice device);
+	void lmbu(int source, InputDevice device);
 
-	void rmbd();
-	void rmbu();
+	void rmbd(int source, InputDevice device);
+	void rmbu(int source, InputDevice device);
 
 	bool charging;
 

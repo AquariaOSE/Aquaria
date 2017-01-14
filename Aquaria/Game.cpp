@@ -2525,13 +2525,13 @@ float Game::getHalfTimer(float mod)
 	return halfTimer*mod;
 }
 
-void Game::action(int id, int state, int source)
+void Game::action(int id, int state, int source, InputDevice device)
 {
 	for (int i = 0; i < paths.size(); i++)
 	{
 		if (paths[i]->catchActions)
 		{
-			if (!paths[i]->action(id, state, source))
+			if (!paths[i]->action(id, state, source, device))
 				break;
 		}
 	}
@@ -2542,7 +2542,7 @@ void Game::action(int id, int state, int source)
 	// forward
 	if(id == ACTION_TOGGLEMENU)
 	{
-		themenu->action(id, state, source);
+		themenu->action(id, state, source, device);
 	}
 
 	if (id == ACTION_TOGGLEHELPSCREEN && !state)
@@ -2550,7 +2550,7 @@ void Game::action(int id, int state, int source)
 		onToggleHelpScreen();
 	}
 	if (id == ACTION_ESC && !state)
-		onPressEscape();
+		onPressEscape(source, device);
 
 	if (id == ACTION_TOGGLEWORLDMAP && !state)
 	{
@@ -3776,7 +3776,7 @@ bool Game::updateMusic()
 	return false;
 }
 
-void Game::onPressEscape()
+void Game::onPressEscape(int source, InputDevice device)
 {
 	if (dsq->isInCutscene())
 	{
@@ -3799,7 +3799,7 @@ void Game::onPressEscape()
 		{
 			if (core->getNestedMains() == 1 && !core->isStateJumpPending())
 			{
-				action(ACTION_TOGGLEMENU, 1, -1); // show menu
+				action(ACTION_TOGGLEMENU, 1, source, device); // show menu
 			}
 		}
 

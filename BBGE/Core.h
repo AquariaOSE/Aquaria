@@ -261,7 +261,7 @@ public:
 	void setMouseConstraint(bool on);
 	void setMouseConstraintCircle(const Vector& pos, float mouseCircle);
 
-	virtual void action(int id, int state, int source){}
+	virtual void action(int id, int state, int source, InputDevice device){}
 
 	bool exists(const std::string &file);
 

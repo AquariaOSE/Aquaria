@@ -88,7 +88,7 @@ public:
 	void onContinuityReset();
 
 	void bindInput();
-	virtual void action(int actionID, int state, int source);
+	virtual void action(int actionID, int state, int source, InputDevice device);
 
 	void refreshFoodSlots(bool effects);
 	

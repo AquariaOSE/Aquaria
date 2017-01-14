@@ -1501,7 +1501,7 @@ void WorldMapRender::updateEditor()
 	areaLabel->setText(os.str());
 }
 
-void WorldMapRender::action (int id, int state, int source)
+void WorldMapRender::action (int id, int state, int source, InputDevice device)
 {
 	if (isOn())
 	{

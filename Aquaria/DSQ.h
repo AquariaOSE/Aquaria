@@ -210,7 +210,7 @@ public:
 
 	void nag(NagType type);
 
-	void action(int id, int state, int source);
+	void action(int id, int state, int source, InputDevice device);
 
 	void title(bool fadeMusic=true);
 
@@ -350,8 +350,8 @@ public:
 
 	InterpolatedVector gameSpeed;
 
-	InputMode inputMode;
-	void setInputMode(InputMode mode);
+	InputDevice inputMode;
+	void setInputMode(InputDevice mode);
 
 	void rumble(float leftMotor, float rightMotor, float time, int source);
 	void vision(std::string folder, int num, bool ignoreMusic = false);

@@ -23,6 +23,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Base.h"
 
+enum InputDevice
+{
+	INPUT_NODEVICE = 0,
+	INPUT_MOUSE,
+	INPUT_JOYSTICK,
+	INPUT_KEYBOARD
+};
+
+InputDevice getDeviceForActionbutton(int k);
+
 class Event;
 class ActionMapper;
 
@@ -57,7 +67,7 @@ public:
 	void addAction(int actionID, int k, int source);
 
 	bool isActing(int actionID, int source);
-	virtual void action(int actionID, int state, int source) = 0;
+	virtual void action(int actionID, int state, int source, InputDevice device) = 0;
 
 
 	void clearActions();
