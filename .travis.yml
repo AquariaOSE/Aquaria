@@ -1,0 +1,44 @@
+# http://docs.travis-ci.com/user/build-configuration/
+language: cpp
+
+compiler:
+  - gcc
+  - clang
+
+matrix:
+  #include:
+  #  - compiler: gcc
+  #  - compiler: clang
+  allow_failures:
+    - compiler: clang
+
+#branches:
+#  only:
+#    - master
+
+before_install:
+  - sudo apt-get update -qq # UPDATE REPOS
+  - sudo apt-get install -y -qq
+
+script:
+# ALL THE BUILD COMMANDS HERE
+  - export CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;/usr/lib/x86_64-linux-gnu/"
+  - CMAKE_OPTIONS='-DCMAKE_PREFIX_PATH='"$CMAKE_PREFIX_PATH"' -DCMAKE_BUILD_TYPE=RelWithDebInfo -DAQUARIA_INTERNAL_FREETYPE=OFF -DAQUARIA_INTERNAL_LUA=OFF -DAQUARIA_INTERNAL_OGGVORBIS=OFF -DAQUARIA_INTERNAL_OPENAL=OFF -DAQUARIA_INTERNAL_PNG=OFF -DAQUARIA_INTERNAL_SDL=OFF -DAQUARIA_INTERNAL_TINYXML2=OFF -DAQUARIA_INTERNAL_ZLIB=OFF'
+  - rm -rf cmake-build
+  - mkdir cmake-build
+  - cd cmake-build
+  - cmake $CMAKE_OPTIONS ..
+  - make -j 2
+
+#notifications:
+#  irc:
+#    channels:
+#      - "irc.esper.net#bitblot"
+#    skip_join: true
+#    use_notice: true
+#    template:
+#      #- "[%{commit}: %{author}] %{message}"
+#      #- "%{build_url}"
+#      - "[%{repository}#%{branch} @%{commit}] %{author}): %{message}"
+#      - "Diff: %{compare_url}"
+#      - "Build: %{build_url}"
