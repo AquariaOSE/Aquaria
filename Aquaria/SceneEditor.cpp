@@ -1468,7 +1468,7 @@ void SceneEditor::mouseButtonLeft()
 		{
 			Path *p = getSelectedPath();
 			editingPath = p;
-			if (p && selectedNode >= 0 && selectedNode < p->nodes.size())
+			if (p && selectedNode < p->nodes.size())
 			{
 				if (core->getShiftState())
 				{
@@ -2317,7 +2317,7 @@ void nextEntityPage()
 void prevEntityPage()
 {
 	game->sceneEditor.entityPageNum--;
-	if (game->sceneEditor.entityPageNum < 0)
+	if (game->sceneEditor.entityPageNum >= game->entityGroups.size())
 		game->sceneEditor.entityPageNum = game->entityGroups.size()-1;
 
 	createEntityPage();
@@ -2540,11 +2540,8 @@ void SceneEditor::doPrevElement()
 {
 	int oldCur = curElement;
 	curElement--;
-	if (curElement < 0)
+	if (curElement >= game->elementTemplates.size())
 		curElement = dsq->game->elementTemplates.size()-1;
-
-	if (curElement < 0)
-		return;
 
 	if (dsq->game->elementTemplates[curElement].idx < 1024)
 	{
@@ -3106,8 +3103,7 @@ void SceneEditor::update(float dt)
 			}
 			break;
 			case ES_MOVING:
-				if (selectedIdx >= 0)
-					dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
+				dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
 			break;
 			case ES_ROTATING:
 			case ES_MAX:
