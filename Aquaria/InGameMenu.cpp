@@ -981,7 +981,7 @@ void InGameMenu::onContinuityReset()
 	lastOptionsMenuPage = MENUPAGE_NONE;
 }
 
-void InGameMenu::action(int id, int state, int source)
+void InGameMenu::action(int id, int state, int source, InputDevice device)
 {
 	if(game->isIgnoreAction((AquariaActions)id))
 		return;
@@ -1014,7 +1014,7 @@ void InGameMenu::action(int id, int state, int source)
 					if (optionsMenu || keyConfigMenu)
 						onOptionsCancel();
 					else
-						action(ACTION_TOGGLEMENU, 0, -1); // hide menu
+						action(ACTION_TOGGLEMENU, 0, source, device); // hide menu
 				}
 			}
 		}

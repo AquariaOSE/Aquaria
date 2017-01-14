@@ -210,7 +210,7 @@ public:
 	void flipElementVert();
 	void deleteSelectedElement();
 	void deleteElement(int selectedIdx);
-	virtual void action(int id, int state, int source);
+	virtual void action(int id, int state, int source, InputDevice device);
 	void scaleElementUp();
 	void scaleElementDown();
 	void scaleElement1();
@@ -408,7 +408,7 @@ public:
 
 	void toggleWorldMap();
 
-	void action(int id, int state, int source);
+	void action(int id, int state, int source, InputDevice device);
 
 	InGameMenu *getInGameMenu() { return themenu; }
 
@@ -675,7 +675,7 @@ public:
 
 	bool cameraOffBounds;
 
-	void toggleHelpScreen() { action(ACTION_TOGGLEHELPSCREEN, 0, -1); }
+	void toggleHelpScreen() { action(ACTION_TOGGLEHELPSCREEN, 0, -1, INPUT_NODEVICE); }
 
 	void setWorldPaused(bool b) { worldPaused = b; }
 	bool isWorldPaused() const { return worldPaused; }
@@ -741,7 +741,7 @@ protected:
 	float deathTimer;
 
 
-	void onPressEscape();
+	void onPressEscape(int source, InputDevice device);
 
 	bool paused;
 	bool worldPaused;

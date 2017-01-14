@@ -19,6 +19,15 @@ See the GNU General Public License for more details.
 #include "Core.h"
 
 
+InputDevice getDeviceForActionbutton(int k)
+{
+	if(k <= KEY_MAXARRAY)
+		return INPUT_KEYBOARD;
+	if(k < MOUSE_BUTTON_EXTRA_END)
+		return INPUT_MOUSE;
+	return INPUT_JOYSTICK;
+}
+
 ActionMapper::ActionMapper()
 {
 	cleared = false;
@@ -167,9 +176,7 @@ void ActionMapper::onUpdate (float dt)
 
 	for (ActionDataSet::iterator i = actionData.begin(); i != actionData.end(); ++i)
 	{
-		ButtonList::iterator j;
-		j = i->buttonList.begin();
-		for (; j != i->buttonList.end(); j++)
+		for (ButtonList::iterator j = i->buttonList.begin(); j != i->buttonList.end(); j++)
 		{
 			const int k = (*j);
 			const ActionData *ad = &(*i);
@@ -189,7 +196,7 @@ void ActionMapper::onUpdate (float dt)
 					}
 					else
 					{
-						action(ad->id, keyState, ad->source);
+						action(ad->id, keyState, ad->source, getDeviceForActionbutton(k));
 					}
 					if (core->loopDone) goto out;
 				}

@@ -1849,7 +1849,7 @@ void SceneEditor::removeEntity()
 void SceneEditor::placeAvatar()
 {
 	dsq->game->avatar->position = dsq->getGameCursorPosition();
-	dsq->game->action(ACTION_PLACE_AVATAR, 0, -1);
+	dsq->game->action(ACTION_PLACE_AVATAR, 0, -1, INPUT_NODEVICE);
 }
 
 void SceneEditor::scaleElementUp()
@@ -1956,7 +1956,7 @@ void SceneEditor::updateMultiSelect()
 	}
 }
 
-void SceneEditor::action(int id, int state, int source)
+void SceneEditor::action(int id, int state, int source, InputDevice device)
 {
 	if (core->getCtrlState() && editingElement)
 	{

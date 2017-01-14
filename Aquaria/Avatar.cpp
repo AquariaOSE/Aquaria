@@ -183,18 +183,15 @@ Vector Avatar::getAim()
 						break;
 					}
 	}
-	else if (dsq->inputMode == INPUT_KEYBOARD)
-	{
-		d = dsq->getGameCursorPosition() - position;
-		d.z = 1;
-	}
 	else
 	{
 		d = dsq->getGameCursorPosition() - position;
 		d.z = 1;
 	}
+
 	if (d.isZero())
 		d = getForwardAim();
+
 	return d;
 }
 
@@ -3019,14 +3016,11 @@ bool Avatar::isMouseInputEnabled()
 	return true;
 }
 
-void Avatar::rmbd()
+void Avatar::rmbd(int source, InputDevice device)
 {
-	//core->setDockIcon("BitBlot");
 	if (!isMouseInputEnabled() || isEntityDead()) return;
 	if (dsq->continuity.form == FORM_NORMAL )
 	{
-		//if (isCoordinateInRadius(dsq->getGameCursorPosition(), 96))
-		///Vector diff = core->mouse.position - c;
 		if (dsq->inputMode == INPUT_MOUSE)
 		{
 			Vector diff = getVectorToCursorFromScreenCentre();
@@ -3044,7 +3038,7 @@ void Avatar::rmbd()
 	}
 }
 
-void Avatar::rmbu()
+void Avatar::rmbu(int source, InputDevice device)
 {
 	if (!isMouseInputEnabled() || isEntityDead()) return;
 
@@ -3201,7 +3195,7 @@ void Avatar::onUpdateBoneLock()
 	rotateToVec(wallNormal, 0.01);
 }
 
-void Avatar::lmbd()
+void Avatar::lmbd(int source, InputDevice device)
 {
 	if (!isMouseInputEnabled()) return;
 
@@ -3243,7 +3237,7 @@ void Avatar::fallOffWall()
 	}
 }
 
-void Avatar::lmbu()
+void Avatar::lmbu(int source, InputDevice device)
 {
 	if (!isMouseInputEnabled()) return;
 
@@ -4270,15 +4264,15 @@ Vector Avatar::getVectorToCursor(bool trueMouse)
 	//return core->mouse.position - Vector(400,300);
 }
 
-void Avatar::action(int id, int state, int source)
+void Avatar::action(int id, int state, int source, InputDevice device)
 {
 	if(dsq->game->isIgnoreAction((AquariaActions)id))
 		return;
 
 	_lastActionSourceID = source;
 
-	if (id == ACTION_PRIMARY)	{ if (state) lmbd(); else lmbu(); }
-	if (id == ACTION_SECONDARY) { if (state) rmbd(); else rmbu(); }
+	if (id == ACTION_PRIMARY)	{ if (state) lmbd(source, device); else lmbu(source, device); }
+	if (id == ACTION_SECONDARY) { if (state) rmbd(source, device); else rmbu(source, device); }
 
 	if (id == ACTION_REVERT && !state)
 		revert();

@@ -153,15 +153,9 @@ void ActionSet::importAction(ActionMapper *mapper, const std::string &name, int 
 		const ActionInput *actionInput = &inputSet[i];
 		if (actionInput->name == name)
 		{
-			for (int i = 0; i < INP_MSESIZE; i++)
-				if (actionInput->mse[i])
-					mapper->addAction(actionID, actionInput->mse[i], sourceID);
-			for (int i = 0; i < INP_KEYSIZE; i++)
-				if (actionInput->key[i])
-					mapper->addAction(actionID, actionInput->key[i], sourceID);
-			for (int i = 0; i < INP_JOYSIZE; i++)
-				if (actionInput->joy[i])
-					mapper->addAction(actionID, actionInput->joy[i], sourceID);
+			for (int i = 0; i < INP_COMBINED_SIZE; i++)
+				if (actionInput->all[i])
+					mapper->addAction(actionID, actionInput->all[i], sourceID);
 			return;
 		}
 	}
@@ -177,16 +171,9 @@ void ActionSet::importAction(ActionMapper *mapper, const std::string &name, Even
 		const ActionInput *actionInput = &inputSet[i];
 		if (actionInput->name == name)
 		{
-			for (int i = 0; i < INP_MSESIZE; i++)
-				if (actionInput->mse[i])
-					mapper->addAction(event, actionInput->mse[i], state);
-			for (int i = 0; i < INP_KEYSIZE; i++)
-				if (actionInput->key[i])
-					mapper->addAction(event, actionInput->key[i], state);
-			for (int i = 0; i < INP_JOYSIZE; i++)
-				if (actionInput->joy[i])
-					mapper->addAction(event, actionInput->joy[i], state);
-
+			for (int i = 0; i < INP_COMBINED_SIZE; i++)
+				if (actionInput->all[i])
+					mapper->addAction(event, actionInput->all[i], state);
 			return;
 		}
 	}

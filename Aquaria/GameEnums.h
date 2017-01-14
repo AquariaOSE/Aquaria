@@ -199,17 +199,6 @@ enum FormUpgradeType
 	FORMUPGRADE_MAX
 };
 
-// defined by windows includes
-#undef INPUT_MOUSE
-#undef INPUT_KEYBOARD
-
-enum InputMode
-{
-	INPUT_MOUSE		= 0,
-	INPUT_JOYSTICK	= 1,
-	INPUT_KEYBOARD	= 2
-};
-
 enum EFXType
 {
 	EFX_NONE	=-1,

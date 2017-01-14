@@ -2,6 +2,7 @@
 #include "Core.h"
 #include "ActionSet.h"
 
+
 ActionButtonStatus::ActionButtonStatus()
 : joystickID(-1)
 {

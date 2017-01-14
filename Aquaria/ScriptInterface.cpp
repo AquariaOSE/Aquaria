@@ -50,6 +50,7 @@ extern "C"
 #include "Hair.h"
 #include "Spore.h"
 #include "Shader.h"
+#include "ActionMapper.h"
 
 
 #include "../BBGE/MathFunctions.h"
@@ -2041,12 +2042,13 @@ luaFunc(sendAction)
 	int state = lua_tointeger(L, 2);
 	int mask = lua_tointeger(L, 3);
 	int source = lua_tointeger(L, 4);
+	InputDevice device = (InputDevice)lua_tointeger(L, 5);
 	if(!mask)
 		mask = -1;
 	if(mask & 1)
-		dsq->game->action(ac, state, source);
+		dsq->game->action(ac, state, source, device);
 	if((mask & 2) && dsq->game->avatar)
-		dsq->game->avatar->action(ac, state, source);
+		dsq->game->avatar->action(ac, state, source, device);
 	luaReturnNil();
 }
 
