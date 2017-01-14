@@ -10,6 +10,18 @@ In case of problems, you can get support via IRC:
 #bitblot @ irc.esper.net.
 
 
+TL;DR for contributions:
+-------------------------
+- Branches:
+  * master - stable branch
+  * experimental - merged into master when a new release is due
+  Other branches are feature/testing branches.
+
+- Pull requests / new developments should go into experimental.
+- Major bug fixes, security relevant things, or easy platform compile fixes can be made against master.
+
+
+
 [1] BUILDING
 ------------
 
