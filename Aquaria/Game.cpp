@@ -1049,7 +1049,7 @@ int Game::getNumberOfEntitiesNamed(const std::string &name)
 
 void Game::playSongInMenu(size_t songType, bool override)
 {
-	if (playingSongInMenu == ~0UL || override)
+	if (playingSongInMenu == -1 || override)
 	{
 		playingSongInMenu = songType;
 		currentSongMenuNote = 0;
@@ -6091,7 +6091,7 @@ void Game::action(int id, int state)
 						}
 						if (trashIndex >= 0)
 						{
-							size_t ingrIndex = ~0UL;
+							size_t ingrIndex = -1;
 							for (size_t i = 0; i < foodSlots.size(); i++)
 							{
 								if (foodSlots[i]->isCursorIn() && foodSlots[i]->getIngredient())
@@ -6100,7 +6100,7 @@ void Game::action(int id, int state)
 									break;
 								}
 							}
-							if (ingrIndex != ~0UL)
+							if (ingrIndex != -1)
 							{
 								foodSlots[ingrIndex]->discard();
 							}
@@ -9621,7 +9621,7 @@ void Game::updateInGameMenu(float dt)
 		}
 		// HACK: move this later
 		updateOptionsMenu(dt);
-		if (playingSongInMenu != ~0UL)
+		if (playingSongInMenu != -1)
 		{
 			songMenuPlayDelay += dt;
 

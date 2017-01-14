@@ -156,7 +156,7 @@ int Texture::getPixelWidth()
 	if (!data)
 		return 0;
 
-	size_t smallestx = ~0UL, largestx = 0;
+	size_t smallestx = -1, largestx = 0;
 	for (unsigned int x = 0; x < unsigned(w); x++)
 	{
 		for (unsigned int y = 0; y < unsigned(h); y++)
@@ -183,7 +183,7 @@ int Texture::getPixelHeight()
 	if (!data)
 		return 0;
 
-	size_t smallesty = ~0UL, largesty = 0;
+	size_t smallesty = -1, largesty = 0;
 	for (unsigned int x = 0; x < unsigned(w); x++)
 	{
 		for (unsigned int y = 0; y < unsigned(h); y++)

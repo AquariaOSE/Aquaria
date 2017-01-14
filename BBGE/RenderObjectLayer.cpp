@@ -101,7 +101,7 @@ void RenderObjectLayer::remove(RenderObject* r)
 	objectCount--;
 	if (idx < firstFreeIdx)
 		firstFreeIdx = idx;
-	r->setIdx(~0UL);
+	r->setIdx(-1);
 
 	clearDisplayList();
 }
