@@ -37,15 +37,15 @@ script:
   - cmake $CMAKE_OPTIONS ..
   - make -j 2
 
-#notifications:
-#  irc:
-#    channels:
-#      - "irc.esper.net#bitblot"
-#    skip_join: true
-#    use_notice: true
-#    template:
-#      #- "[%{commit}: %{author}] %{message}"
-#      #- "%{build_url}"
-#      - "[%{repository}#%{branch} @%{commit}] %{author}): %{message}"
-#      - "Diff: %{compare_url}"
-#      - "Build: %{build_url}"
+notifications:
+  irc:
+    channels:
+      - "irc.esper.net#bitblot"
+    skip_join: true
+    use_notice: true
+    template:
+      #- "[%{commit}: %{author}] %{message}"
+      #- "%{build_url}"
+      - "[%{repository_slug}#%{branch} @%{commit}] (%{author}): %{message}"
+      - "Diff: %{compare_url}"
+      - "Build: %{build_url}"
