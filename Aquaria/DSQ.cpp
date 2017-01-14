@@ -2875,7 +2875,7 @@ void DSQ::prevSaveSlotPage()
 	if (saveSlots.empty()) return;
 
 	user.data.savePage--;
-	if (user.data.savePage < 0)
+	if (user.data.savePage > maxPages)
 		user.data.savePage = maxPages;
 	createSaveSlotPage();
 
