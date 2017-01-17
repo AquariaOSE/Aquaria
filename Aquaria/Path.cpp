@@ -85,9 +85,9 @@ void Path::clampPosition(Vector *pos, float radius)
 	}
 }
 
-PathNode *Path::getPathNode(int idx)
+PathNode *Path::getPathNode(size_t idx)
 {
-	if (idx < 0 || idx >= nodes.size()) return 0;
+	if (idx >= nodes.size()) return 0;
 	return &nodes[idx];
 }
 
@@ -661,30 +661,30 @@ void Path::activate(Entity *e)
 	}
 }
 
-void Path::removeNode(int idx)
+void Path::removeNode(size_t idx)
 {
 	std::vector<PathNode> copy = nodes;
 	nodes.clear();
-	for (int i = 0; i < copy.size(); i++)
+	for (size_t i = 0; i < copy.size(); i++)
 	{
 		if (idx != i)
 			nodes.push_back(copy[i]);
 	}
 }
 
-void Path::addNode(int idx)
+void Path::addNode(size_t idx)
 {
 	std::vector<PathNode> copy = nodes;
 	nodes.clear();
 	bool added = false;
-	for (int i = 0; i < copy.size(); i++)
+	for (size_t i = 0; i < copy.size(); i++)
 	{
 		nodes.push_back(copy[i]);
 		if (idx == i)
 		{
 			added = true;
 			PathNode p;
-			int j = i + 1;
+			size_t j = i + 1;
 			if (j < copy.size())
 			{
 				Vector add = copy[j].position - copy[i].position;

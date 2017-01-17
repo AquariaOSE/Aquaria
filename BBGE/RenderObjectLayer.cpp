@@ -63,7 +63,7 @@ void RenderObjectLayer::setOptimizeStatic(bool opt)
 
 void RenderObjectLayer::add(RenderObject* r)
 {
-	int size = renderObjects.size();
+	size_t size = renderObjects.size();
 	if (firstFreeIdx >= size)
 	{
 		size += size/2;  // Increase size by 50% each time we fill up.
@@ -85,8 +85,8 @@ void RenderObjectLayer::add(RenderObject* r)
 
 void RenderObjectLayer::remove(RenderObject* r)
 {
-	const int idx = r->getIdx();
-	if (idx < 0 || idx >= renderObjects.size())
+	const size_t idx = r->getIdx();
+	if (idx >= renderObjects.size())
 	{
 		errorLog("Trying to remove RenderObject with invalid index");
 		return;
@@ -107,9 +107,9 @@ void RenderObjectLayer::remove(RenderObject* r)
 
 void RenderObjectLayer::moveToFront(RenderObject *r)
 {
-	const int size = renderObjects.size();
-	const int curIdx = r->getIdx();
-	int lastUsed;
+	const size_t size = renderObjects.size();
+	const size_t curIdx = r->getIdx();
+	size_t lastUsed;
 	for (lastUsed = size-1; lastUsed > curIdx; lastUsed--)
 	{
 		if (renderObjects[lastUsed])
@@ -122,7 +122,7 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 	}
 	else if (lastUsed < size-1)
 	{
-		const int newIdx = lastUsed + 1;
+		const size_t newIdx = lastUsed + 1;
 		renderObjects[curIdx] = 0;
 		renderObjects[newIdx] = r;
 		r->setIdx(newIdx);
@@ -132,12 +132,12 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 	else if (objectCount == size)
 	{
 		// Expand the array so future calls have a bit of breathing room.
-		const int newSize = size + 10;
+		const size_t newSize = size + 10;
 		renderObjects.resize(newSize);
 		renderObjects[curIdx] = 0;
 		renderObjects[size] = r;
 		r->setIdx(size);
-		for (int i = size+1; i < newSize; i++)
+		for (size_t i = size+1; i < newSize; i++)
 			renderObjects[i] = 0;
 		if (firstFreeIdx > curIdx)
 			firstFreeIdx = curIdx;
@@ -146,13 +146,13 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 	{
 		// Need to shift elements downward to make room for the new one.
 		renderObjects[curIdx] = 0;
-		int lastFree;
+		size_t lastFree;
 		for (lastFree = lastUsed-1; lastFree > curIdx; lastFree--)
 		{
 			if (!renderObjects[lastFree])
 				break;
 		}
-		for (int i = lastFree + 1; i <= lastUsed; i++)
+		for (size_t i = lastFree + 1; i <= lastUsed; i++)
 		{
 			renderObjects[i-1] = renderObjects[i];
 			renderObjects[i-1]->setIdx(i-1);  // Known to be non-NULL.
@@ -170,9 +170,9 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 
 void RenderObjectLayer::moveToBack(RenderObject *r)
 {
-	const int size = renderObjects.size();
-	const int curIdx = r->getIdx();
-	int firstUsed;
+	const size_t size = renderObjects.size();
+	const size_t curIdx = r->getIdx();
+	size_t firstUsed;
 	for (firstUsed = 0; firstUsed < curIdx; firstUsed++)
 	{
 		if (renderObjects[firstUsed])
@@ -196,19 +196,19 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 	}
 	else if (objectCount == size)
 	{
-		const int newSize = size + 10;
-		const int sizeDiff = newSize - size;
-		const int newIdx = sizeDiff - 1;
+		const size_t newSize = size + 10;
+		const size_t sizeDiff = newSize - size;
+		const size_t newIdx = sizeDiff - 1;
 
 		renderObjects.resize(newSize);
 		renderObjects[curIdx] = 0;
-		for (int i = newSize - 1; i >= sizeDiff; i--)
+		for (size_t i = newSize - 1; i >= sizeDiff; i--)
 		{
 			renderObjects[i] = renderObjects[i - sizeDiff];
 			if(renderObjects[i])
 				renderObjects[i]->setIdx(i);
 		}
-		for (int i = 0; i < newIdx; i++)
+		for (size_t i = 0; i < newIdx; i++)
 			renderObjects[i] = 0;
 		renderObjects[newIdx] = r;
 		r->setIdx(newIdx);

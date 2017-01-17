@@ -60,7 +60,7 @@ Continuity::Continuity()
 
 bool Continuity::isIngredientFull(IngredientData *data)
 {
-	for (int i = 0; i < ingredients.size(); i++)
+	for (size_t i = 0; i < ingredients.size(); i++)
 	{
 		if (nocasecmp(ingredients[i]->name, data->name)==0)
 		{
@@ -95,7 +95,7 @@ void Continuity::pickupIngredient(IngredientData *d, int amount, bool effects, b
 
 int Continuity::indexOfIngredientData(const IngredientData* data) const
 {
-	for (int i = 0; i < ingredientData.size(); i++)
+	for (size_t i = 0; i < ingredientData.size(); i++)
 	{
 		if (ingredientData[i]->name == data->name)
 		{
@@ -105,7 +105,7 @@ int Continuity::indexOfIngredientData(const IngredientData* data) const
 	return -1;
 }
 
-#define FOR_INGREDIENTDATA(x) for (int x = 0; x < ingredientData.size(); x++)
+#define FOR_INGREDIENTDATA(x) for (size_t x = 0; x < ingredientData.size(); x++)
 
 IngredientData *Continuity::getIngredientDataByName(const std::string &name)
 {
@@ -119,7 +119,7 @@ IngredientData *Continuity::getIngredientDataByName(const std::string &name)
 
 IngredientData *Continuity::getIngredientHeldByName(const std::string &name) const
 {
-	for (int i = 0; i < ingredients.size(); i++) {
+	for (size_t i = 0; i < ingredients.size(); i++) {
 		if (nocasecmp(ingredients[i]->name, name)==0)
 			return ingredients[i];
 	}
@@ -183,15 +183,15 @@ std::string Continuity::getIngredientDisplayName(const std::string& name) const
 	return splitCamelCase(name);
 }
 
-IngredientData *Continuity::getIngredientHeldByIndex(int idx) const
+IngredientData *Continuity::getIngredientHeldByIndex(size_t idx) const
 {
-	if (idx < 0 || idx >= ingredients.size()) return 0;
+	if (idx >= ingredients.size()) return 0;
 	return ingredients[idx];
 }
 
-IngredientData *Continuity::getIngredientDataByIndex(int idx)
+IngredientData *Continuity::getIngredientDataByIndex(size_t idx)
 {
-	if (idx < 0 || idx >= ingredientData.size()) return 0;
+	if (idx >= ingredientData.size()) return 0;
 	return ingredientData[idx];
 }
 
@@ -277,14 +277,14 @@ void Continuity::sortFood()
 
 		std::vector<IngredientData*> sort;
 
-		for (int i = 0; i < dsq->continuity.ingredients.size(); i++)
+		for (size_t i = 0; i < dsq->continuity.ingredients.size(); i++)
 		{
 			dsq->continuity.ingredients[i]->sorted = false;
 		}
 
-		for (int j = 0; j < sortOrder.size(); j++)
+		for (size_t j = 0; j < sortOrder.size(); j++)
 		{
-			for (int i = 0; i < dsq->continuity.ingredients.size(); i++)
+			for (size_t i = 0; i < dsq->continuity.ingredients.size(); i++)
 			{
 				IngredientData *data = dsq->continuity.ingredients[i];
 				if (!data->sorted)
@@ -301,7 +301,7 @@ void Continuity::sortFood()
 						}
 						else if (sortOrder[j].effectType != IET_NONE)
 						{
-							for (int c = 0; c < data->effects.size(); c++)
+							for (size_t c = 0; c < data->effects.size(); c++)
 							{
 								if (data->effects[c].type == sortOrder[j].effectType)
 								{
@@ -323,7 +323,7 @@ void Continuity::sortFood()
 			}
 		}
 
-		for (int i = 0; i < dsq->continuity.ingredients.size(); i++)
+		for (size_t i = 0; i < dsq->continuity.ingredients.size(); i++)
 		{
 			IngredientData *data = dsq->continuity.ingredients[i];
 			if (!data->sorted)
@@ -334,7 +334,7 @@ void Continuity::sortFood()
 		}
 
 		ingredients.clear();
-		for (int i = 0; i < sort.size(); i++) {
+		for (size_t i = 0; i < sort.size(); i++) {
 			ingredients.push_back(sort[i]);
 		}
 		sort.clear();
@@ -445,9 +445,9 @@ void Continuity::setFishPoison(float m, float t)
 	fishPoison = m;
 }
 
-std::string Continuity::getIEString(IngredientData *data, int i)
+std::string Continuity::getIEString(IngredientData *data, size_t i)
 {
-	if (i < 0 || i >= data->effects.size()) return "";
+	if (i >= data->effects.size()) return "";
 
 	IngredientEffect fx = data->effects[i];
 	IngredientEffectType useType = fx.type;
@@ -572,7 +572,7 @@ std::string Continuity::getAllIEString(IngredientData *data)
 {
 	std::ostringstream os;
 
-	for (int i = 0; i < data->effects.size(); i++)
+	for (size_t i = 0; i < data->effects.size(); i++)
 	{
 		os << getIEString(data, i) << "\n";
 	}
@@ -585,7 +585,7 @@ bool Continuity::applyIngredientEffects(IngredientData *data)
 {
 	bool eaten = true;
 	float y =0;
-	for (int i = 0; i < data->effects.size(); i++)
+	for (size_t i = 0; i < data->effects.size(); i++)
 	{
 		y = 300 + i * 40;
 		IngredientEffect fx = data->effects[i];
@@ -955,8 +955,8 @@ void Continuity::loadIngredientData(const std::string &file)
 
 		if (!effects.empty())
 		{
-			int p1 = effects.find("(");
-			int p2 = effects.find(")");
+			size_t p1 = effects.find("(");
+			size_t p2 = effects.find(")");
 			if (p1 != std::string::npos && p2 != std::string::npos)
 			{
 				effects = effects.substr(p1+1, p2-(p1+1));
@@ -1053,7 +1053,7 @@ void Continuity::loadIngredientData(const std::string &file)
 						fx.type = IET_SCRIPT;
 					}
 
-					int c = 0;
+					size_t c = 0;
 					while (c < bit.size())
 					{
 						if (bit[c] == '+')
@@ -1309,7 +1309,7 @@ std::string Continuity::getVoxForSongSlot(int songSlot)
 
 EatData *Continuity::getEatData(const std::string &name)
 {
-	for (int i = 0; i < eats.size(); i++)
+	for (size_t i = 0; i < eats.size(); i++)
 	{
 		if (eats[i].name == name)
 			return &eats[i];
@@ -1607,7 +1607,7 @@ void Continuity::castSong(int num)
 			e->song((SongType)num);
 		}
 	}
-	for (int i = 0; i < dsq->game->getNumPaths(); i++)
+	for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		Path *p = dsq->game->getPath(i);
 		if (p && !p->nodes.empty())
@@ -1642,13 +1642,13 @@ bool Continuity::isSongTypeForm(SongType s)
 	return (s == SONG_ENERGYFORM || s == SONG_BEASTFORM || s == SONG_NATUREFORM || s == SONG_SUNFORM || s == SONG_SPIRITFORM || s == SONG_FISHFORM || s== SONG_DUALFORM);
 }
 
-void Continuity::shortenSong(Song &song, int size)
+void Continuity::shortenSong(Song &song, size_t size)
 {
 	if (song.notes.size() > size)
 	{
 		Song copy = song;
 		song.notes.clear();
-		for (int i = copy.notes.size()-size; i < copy.notes.size(); i++)
+		for (size_t i = copy.notes.size()-size; i < copy.notes.size(); i++)
 		{
 			song.notes.push_back(copy.notes[i]);
 		}
@@ -1674,7 +1674,7 @@ int Continuity::checkSongAssisted(const Song &s)
 	shortenSong(song, 64);
 
 	std::vector<SongCheck> songChecks;
-	for (int c = 0; c < songBank.size(); c++)
+	for (size_t c = 0; c < songBank.size(); c++)
 	{
 		int i = songSlotsToType[c];
 		if (knowsSong[i])
@@ -1683,9 +1683,10 @@ int Continuity::checkSongAssisted(const Song &s)
 			songChecks.push_back(SongCheck(i, s));
 		}
 	}
-	for (int i = 0; i < songChecks.size(); i++)
+	for (size_t i = 0; i < songChecks.size(); i++)
 	{
-		int j=0,c=0,m=0,last=0,rank=0;
+		size_t j = 0;
+		int c=0,m=0,last=0,rank=0;
 		int ms=songChecks[i].song->notes.size();
 		j = 0;
 
@@ -1739,7 +1740,7 @@ loop:
 			goto loop;
 	}
 	int songIdx = SONG_NONE, lowestRank = -1;
-	for (int i = 0; i < songChecks.size(); i++)
+	for (size_t i = 0; i < songChecks.size(); i++)
 	{
 		if (songChecks[i].pass)
 		{
@@ -1762,21 +1763,21 @@ int Continuity::checkSong(const Song &song)
 	bool knowAllSongs = false;
 	// way too long song
 	if (song.notes.size() > 64) return SONG_NONE;
-	for (int c = 0; c < songBank.size(); c++)
+	for (size_t c = 0; c < songBank.size(); c++)
 	{
 		int i = songSlotsToType[c];
 		if ((knowAllSongs || knowsSong[i]))
 		{
 			Song *s = &songBank[i];
 			if (s->notes.empty()) continue;
-			int j = 0;
+			size_t j = 0;
 
 			{
 				bool foundSong = false;
-				int currentNote = 0;
+				size_t currentNote = 0;
 				for (j = 0; j < song.notes.size(); j++)
 				{
-					if (currentNote >= 0 && currentNote < (*s).notes.size())
+					if (currentNote < (*s).notes.size())
 					{
 						int bankNote = (*s).notes[currentNote];
 						int songNote = song.notes[j];
@@ -2083,11 +2084,11 @@ void Continuity::eatBeast(const EatData &eatData)
 	}
 }
 
-void Continuity::removeNaijaEat(int idx)
+void Continuity::removeNaijaEat(size_t idx)
 {
 	std::vector<EatData> copy = naijaEats;
 	naijaEats.clear();
-	for (int i = 0; i < copy.size(); i++)
+	for (size_t i = 0; i < copy.size(); i++)
 	{
 		if (i != idx)
 			naijaEats.push_back(copy[i]);
@@ -2167,7 +2168,7 @@ void Continuity::initAvatar(Avatar *a)
 
 void Continuity::spawnAllIngredients(const Vector &position)
 {
-	for (int i = 0; i < ingredientData.size(); i++)
+	for (size_t i = 0; i < ingredientData.size(); i++)
 	{
 		dsq->game->spawnIngredient(ingredientData[i]->name, position, 4, 0);
 	}
@@ -2227,9 +2228,9 @@ void Continuity::loadPetData()
 	in.close();
 }
 
-PetData *Continuity::getPetData(int idx)
+PetData *Continuity::getPetData(size_t idx)
 {
-	if (idx < 0 || idx >= petData.size())
+	if (idx >= petData.size())
 	{
 		std::ostringstream os;
 		os << "getPetData(" << idx << ") index out of range";
@@ -2405,7 +2406,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	XMLElement *vox = doc.NewElement("VO");
 	{
 		std::ostringstream os;
-		for (int i = 0; i < dsq->continuity.voiceOversPlayed.size(); i++)
+		for (size_t i = 0; i < dsq->continuity.voiceOversPlayed.size(); i++)
 		{
 
 			os << dsq->continuity.voiceOversPlayed[i] << " ";
@@ -2487,7 +2488,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 	// new format as used by android version
 	std::ostringstream ingrNames;
-	for (int i = 0; i < ingredients.size(); i++)
+	for (size_t i = 0; i < ingredients.size(); i++)
 	{
 		IngredientData *data = ingredients[i];
 		ingrNames << data->name << " " << data->amount << " ";
@@ -2496,7 +2497,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 	// for compatibility with older versions
 	std::ostringstream ingrOs;
-	for (int i = 0; i < ingredients.size(); i++)
+	for (size_t i = 0; i < ingredients.size(); i++)
 	{
 		IngredientData *data = ingredients[i];
 		ingrOs << data->getIndex() << " " << data->amount << " ";
@@ -2504,7 +2505,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	startData->SetAttribute("ingr", ingrOs.str().c_str());
 
 	std::ostringstream recOs;
-	for (int i = 0; i < recipes.size(); i++)
+	for (size_t i = 0; i < recipes.size(); i++)
 	{
 		recOs << recipes[i].isKnown() << " ";
 	}
@@ -2684,23 +2685,12 @@ void Continuity::loadFile(int slot)
 
 	this->reset();
 
-	int versionMajor=-1, versionMinor=-1, versionRevision=-1;
-	XMLElement *xmlVersion = doc.FirstChildElement("Version");
-	if (xmlVersion)
-	{
-		versionMajor = atoi(xmlVersion->Attribute("major"));
-		versionMinor = atoi(xmlVersion->Attribute("minor"));
-		versionRevision = atoi(xmlVersion->Attribute("revision"));
-	}
-
 	XMLElement *e = doc.FirstChildElement("Flag");
 	while (e)
 	{
 		dsq->continuity.setFlag(e->Attribute("name"), atoi(e->Attribute("value")));
 		e = e->NextSiblingElement("Flag");
 	}
-
-
 
 	XMLElement *efx = doc.FirstChildElement("EFX");
 	if (efx)
@@ -3013,7 +3003,7 @@ void Continuity::loadFile(int slot)
 		{
 			std::istringstream is(startData->Attribute("rec"));
 
-			for (int i = 0; i < recipes.size(); i++)
+			for (size_t i = 0; i < recipes.size(); i++)
 			{
 				bool known = false;
 				is >> known;
@@ -3421,7 +3411,7 @@ void Continuity::learnRecipe(Recipe *r, bool effects)
 
 void Continuity::learnRecipe(const std::string &result, bool effects)
 {
-	for (int i = 0; i < recipes.size(); i++)
+	for (size_t i = 0; i < recipes.size(); i++)
 	{
 		if (nocasecmp(recipes[i].result, result)==0)
 		{
@@ -3540,9 +3530,9 @@ void Continuity::reset()
 	core->resetTimer();
 }
 
-float Continuity::getSpeedType(int speedType)
+float Continuity::getSpeedType(size_t speedType)
 {
-	if (speedType >= speedTypes.size() || speedType < 0)
+	if (speedType >= speedTypes.size())
 	{
 		std::ostringstream os;
 		os << "speedType: " << speedType << " out of range";

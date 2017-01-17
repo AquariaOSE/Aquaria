@@ -79,7 +79,6 @@ public:
 	void capture();
 };
 
-
 struct SFXLoops
 {
 	SFXLoops();
@@ -115,7 +114,6 @@ public:
 	float entityDamageTime, pushTime, avatarDamageTime;
 	void load();
 };
-
 
 class Profile
 {
@@ -164,7 +162,7 @@ public:
 	void save(const std::string &name);
 	void load(const std::string &name);
 
-	int frame;
+	unsigned int frame;
 	float time;
 	float timeDiff;
 	std::vector <DemoFrame> frames;
@@ -237,12 +235,12 @@ public:
 	int getEntityLayerToLayer(int layer);
 
 	void addElement(Element *e);
-	int getNumElements() const {return elements.size();}
+	size_t getNumElements() const {return elements.size();}
 	Element *getElement(int idx) const {return elements[idx];}
 	Element *getFirstElementOnLayer(int layer) const {return layer<0 || layer>15 ? 0 : firstElementOnLayer[layer];}
 	void clearElements();
 	// Used only by scene editor:
-	void removeElement(int idx);
+	void removeElement(size_t idx);
 	void removeElement(Element *e);
 	ElementContainer getElementsCopy() const {return elements;}
 
@@ -335,7 +333,7 @@ public:
 	bool canOpenEditor() const;
 
 	void loadElementEffects();
-	ElementEffect getElementEffectByIndex(int e);
+	ElementEffect getElementEffectByIndex(size_t e);
 	typedef std::vector<ElementEffect> ElementEffects;
 	ElementEffects elementEffects;
 
@@ -414,7 +412,7 @@ public:
 
 	std::vector<ModEntry> modEntries;
 	std::vector<std::string> activePatches;
-	int selectedMod;
+	size_t selectedMod;
 	ModSelectorScreen *modSelectorScr;
 
 	void startSelectedMod();

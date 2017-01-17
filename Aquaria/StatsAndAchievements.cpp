@@ -229,7 +229,7 @@ void StatsAndAchievements::RunFrame()
 	// but only if we're not in a mod
 	if (!dsq->mod.isActive())
 	{
-		for ( int iAch = 0; iAch < ARRAYSIZE( g_rgAchievements ); ++iAch )
+		for (size_t iAch = 0; iAch < ARRAYSIZE( g_rgAchievements ); ++iAch )
 		{
 			EvaluateAchievement( g_rgAchievements[iAch] );
 		}
@@ -252,7 +252,7 @@ void StatsAndAchievements::appendStringData(std::string &data)
 
 	count = 0;
 	data += "Unlocked:\n\n";
-	for ( int iAch = 0; iAch < ARRAYSIZE( g_rgAchievements ); ++iAch )
+	for (size_t iAch = 0; iAch < ARRAYSIZE( g_rgAchievements ); ++iAch )
 	{
 		const Achievement &ach = g_rgAchievements[iAch];
 		if (!ach.achieved)
@@ -271,7 +271,7 @@ void StatsAndAchievements::appendStringData(std::string &data)
 
 	count = 0;
 	data += "Locked:\n\n";
-	for ( int iAch = 0; iAch < ARRAYSIZE( g_rgAchievements ); ++iAch )
+	for (size_t iAch = 0; iAch < ARRAYSIZE( g_rgAchievements ); ++iAch )
 	{
 		const Achievement &ach = g_rgAchievements[iAch];
 		if (ach.achieved)
@@ -384,7 +384,7 @@ void StatsAndAchievements::EvaluateAchievement( Achievement &achievement )
 			bool didPoisonLoaf = false;
 			bool didVeggieSoup = false;
 
-			for (int i = 0; i < dsq->continuity.recipes.size(); i++ )
+			for (size_t i = 0; i < dsq->continuity.recipes.size(); i++ )
 			{
 				if (dsq->continuity.recipes[i].isKnown())
 				{
@@ -397,7 +397,7 @@ void StatsAndAchievements::EvaluateAchievement( Achievement &achievement )
 					}
 				}
 			}
-			for (int i = 0; i < dsq->continuity.recipes.size(); i++ )
+			for (size_t i = 0; i < dsq->continuity.recipes.size(); i++ )
 			{
 				if (!dsq->continuity.recipes[i].isKnown())
 				{

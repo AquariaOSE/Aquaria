@@ -76,6 +76,6 @@ inline unsigned int clz(uint32 x)
 
 
 
-}; // end namespace bithacks
+} // end namespace bithacks
 
 #endif

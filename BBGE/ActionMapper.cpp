@@ -113,7 +113,7 @@ void ActionMapper::addAction(Event *event, int k, int state)
 
 Event* ActionMapper::addCreatedEvent(Event *event)
 {
-	for (int i = 0; i < createdEvents.size(); i++)
+	for (size_t i = 0; i < createdEvents.size(); i++)
 	{
 		if (createdEvents[i] == event)
 			return event;
@@ -124,7 +124,7 @@ Event* ActionMapper::addCreatedEvent(Event *event)
 
 void ActionMapper::clearCreatedEvents()
 {
-	for (int i = 0; i < createdEvents.size(); i++)
+	for (size_t i = 0; i < createdEvents.size(); i++)
 	{
 		delete createdEvents[i];
 	}

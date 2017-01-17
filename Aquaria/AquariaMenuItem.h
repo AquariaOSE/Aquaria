@@ -225,14 +225,14 @@ public:
 	bool setSelectedItem(const std::string &item);
 	int getSelectedItem();
 	void enqueueSelectItem(int index);
-	void setScroll(int sc);
+	void setScroll(size_t sc);
 	std::string getSelectedItemString();
 	void doScroll(int dir);
 	bool isOpen() const { return isopen; }
 protected:
 	void onUpdate(float dt);
 
-	int numDrops;
+	size_t numDrops;
 	bool mb, isopen;
 
 	int scroll;
@@ -243,7 +243,7 @@ protected:
 	Quad *bar, *scrollBtnUp, *scrollBtnDown;
 
 	BitmapText *selectedItemLabel;
-	int selectedItem;
+	size_t selectedItem;
 	float scrollDelay;
 	bool firstScroll;
 	Vector textscale;
@@ -269,7 +269,7 @@ public:
 
 protected:
 
-	virtual void action(int actionID, int state, int source);
+	virtual void action(int actionID, int state, int source, InputDevice device);
 	virtual void onUpdate(float dt);
 	virtual void onToggleHighlight(bool on);
 

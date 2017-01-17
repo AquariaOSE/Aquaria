@@ -48,7 +48,7 @@ namespace PathFinding
 	bool finishFindPath(State *state, VectorPath& path, unsigned step = 0);
 	void getStats(State *state, unsigned& stepsDone, unsigned& nodesExpanded);
 	void purgeFindPath(PathFinding::State *state);
-};
+}
 
 #endif
 

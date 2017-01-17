@@ -125,7 +125,7 @@ public:
 	void setGrid(Vector position);
 	bool cull;
 	float alpha;
-	int idx;
+	size_t idx;
 };
 
 class ObsRow
@@ -258,8 +258,9 @@ public:
 	Entity *editingEntity;
 	Path *editingPath;
 
-	int selectedIdx;
-	int selectedNode;
+	size_t selectedIdx;
+	size_t selectedNode;
+
 	Path *getSelectedPath();
 	void changeDepth();
 	void updateEntitySaveData(Entity *editingEntity);
@@ -280,7 +281,7 @@ public:
 
 	SelectedEntity selectedEntity;
 
-	int entityPageNum;
+	size_t entityPageNum;
 
 	void checkForRebuild();
 	void createAquarian();
@@ -353,7 +354,7 @@ protected:
 	void mouseButtonLeft();
 	void mouseButtonRight();
 
-	int curElement, selectedVariation, possibleSelectedIdx;
+	size_t curElement, selectedVariation, possibleSelectedIdx;
 
 	Quad *placer;
 	DebugFont *text;
@@ -413,7 +414,7 @@ public:
 	InGameMenu *getInGameMenu() { return themenu; }
 
 	void loadElementTemplates(std::string pack);
-	Element* createElement(int etidx, Vector position, int bgLayer=0, RenderObject *copy=0, ElementTemplate *et=0);
+	Element* createElement(size_t etidx, Vector position, size_t bgLayer=0, RenderObject *copy=0, ElementTemplate *et=0);
 	void setGrid(ElementTemplate *et, Vector position, float rot360=0);
 
 	void updateParticlePause();
@@ -440,7 +441,7 @@ public:
 	std::vector<ElementTemplate> elementTemplates;
 	std::string sceneName, sceneDisplayName;
 
-	ElementTemplate *getElementTemplateByIdx(int idx);
+	ElementTemplate *getElementTemplateByIdx(size_t idx);
 
 	bool saveScene(std::string scene);
 
@@ -509,10 +510,10 @@ protected:
 	Path *firstPathOfType[PATH_MAX];
 public:
 	void addPath(Path *p);
-	void removePath(int idx);
+	void removePath(size_t idx);
 	void clearPaths();
-	int getNumPaths() const {return paths.size();}
-	Path *getPath(int idx) const {return paths[idx];}
+	size_t getNumPaths() const {return paths.size();}
+	Path *getPath(size_t idx) const {return paths[idx];}
 	Path *getFirstPathOfType(PathType type) const {return firstPathOfType[type];}
 	Path *getPathByName(std::string name);
 	int getIndexOfPath(Path *p);

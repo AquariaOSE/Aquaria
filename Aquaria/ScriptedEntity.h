@@ -80,11 +80,11 @@ public:
 	ParticleEffect pullEmitter;
 	float manaBallAmount;
 
-	void initEmitter(int emit, const std::string &file);
-	void startEmitter(int emit);
-	void stopEmitter(int emit);
-	ParticleEffect *getEmitter(int emit);
-	int getNumEmitters() const;
+	void initEmitter(size_t emit, const std::string &file);
+	void startEmitter(size_t emit);
+	void stopEmitter(size_t emit);
+	ParticleEffect *getEmitter(size_t emit);
+	size_t getNumEmitters() const;
 
 	void shiftWorlds(WorldType lastWorld, WorldType worldType);
 	void setAutoSkeletalUpdate(bool v);
