@@ -46,7 +46,7 @@ public:
 		FLOCK_FISH = 0,
 		MAX_FLOCKTYPES
 	};
-	void addToFlock(int id);
+	void addToFlock(size_t id);
 	void removeFromFlock();
 	void destroy();
 

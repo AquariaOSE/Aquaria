@@ -103,7 +103,7 @@ typedef int CharTranslationTable[256]; // -1 entries are skipped
 #define MIN(X,Y) ((X) < (Y) ? (X) : (Y))
 #define MAX(X,Y) ((X) > (Y) ? (X) : (Y))
 
-std::string numToZeroString(int num, int zeroes);
+std::string numToZeroString(int num, size_t zeroes);
 bool chance(int perc);
 void initCharTranslationTables(const CharTranslationTable *ptab);
 void stringToUpper(std::string &s);

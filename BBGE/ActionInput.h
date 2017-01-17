@@ -49,9 +49,9 @@ public:
 			int mse[INP_MSESIZE];
 			int key[INP_KEYSIZE];
 			int joy[INP_JOYSIZE];
-		};
+		} single;
 		int all[INP_COMBINED_SIZE];
-	};
+	} data;
 
 	std::string toString() const;
 	void fromString(const std::string &read);

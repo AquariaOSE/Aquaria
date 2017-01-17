@@ -74,7 +74,7 @@ enum SeeMapMode
 class SongIconParticle : public Quad
 {
 public:
-	SongIconParticle(Vector color, Vector pos, int note);
+	SongIconParticle(Vector color, Vector pos, size_t note);
 	int note;
 	SongIcon *toIcon;
 protected:
@@ -84,9 +84,9 @@ protected:
 class SongIcon : public Quad
 {
 public:
-	SongIcon(int note);
+	SongIcon(size_t note);
 	void destroy();
-	int note;
+	size_t note;
 	void openNote();
 	void closeNote();
 	void openInterface();
@@ -340,7 +340,7 @@ protected:
 	Timer webBitTimer;
 	int curWebPoint;
 	void checkUpgradeForShot(Shot *s);
-	int getNumShots();
+	size_t getNumShots();
 	void lockToWallCommon();
 	void onSetBoneLock();
 	void onUpdateBoneLock();

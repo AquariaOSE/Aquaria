@@ -940,8 +940,8 @@ luaFunc(getInterfaceFunctionNames)
 #define MakeTypeCheckFunc(fname, ty) luaFunc(fname) \
 	{ ScriptObject *r = (ScriptObject*)lua_touserdata(L, 1); luaReturnBool(r ? r->isType(ty) : false); }
 
-MakeTypeCheckFunc(isNode, SCO_PATH);
-MakeTypeCheckFunc(isObject, SCO_RENDEROBJECT);
+MakeTypeCheckFunc(isNode, SCO_PATH)
+MakeTypeCheckFunc(isObject, SCO_RENDEROBJECT)
 MakeTypeCheckFunc(isEntity, SCO_ENTITY)
 MakeTypeCheckFunc(isScriptedEntity, SCO_SCRIPTED_ENTITY)
 MakeTypeCheckFunc(isBone, SCO_BONE)
@@ -2576,7 +2576,8 @@ static size_t _shotFilter(lua_State *L)
 		{
 			if (dt == DT_NONE || s->getDamageType() == dt)
 			{
-				if (skipRadiusCheck || (distsq = (s->position - p).getSquaredLength2D()) <= sqrRadius)
+				distsq = (s->position - p).getSquaredLength2D();
+				if (skipRadiusCheck || distsq <= sqrRadius)
 				{
 					filteredShots.push_back(std::make_pair(s, distsq));
 					++added;
@@ -6083,7 +6084,7 @@ luaFunc(entity_setVel2Len)
 	if(e)
 		e->vel2.setLength2D(lua_tonumber(L, 2));
 	luaReturnNil();
-};
+}
 
 luaFunc(entity_getVel2)
 {
@@ -7600,7 +7601,7 @@ luaFunc(entity_getNearestBoneToPosition)
 	Bone *closest = 0;
 	if (me)
 	{
-		for (int i = 0; i < me->skeletalSprite.bones.size(); i++)
+		for (size_t i = 0; i < me->skeletalSprite.bones.size(); i++)
 		{
 			Bone *b = me->skeletalSprite.bones[i];
 			float dist = (b->getWorldPosition() - p).getSquaredLength2D();
@@ -8455,7 +8456,7 @@ luaFunc(pickupGem)
 
 luaFunc(setGemPosition)
 {
-	int gemId = lua_tointeger(L, 1);
+	size_t gemId = lua_tointeger(L, 1);
 	std::string mapname = getString(L, 4);
 	if(mapname.empty())
 		mapname = dsq->game->sceneName;
@@ -8466,7 +8467,7 @@ luaFunc(setGemPosition)
 	if(tile)
 	{
 		pos = dsq->game->worldMapRender->getWorldToTile(tile, pos, true, true);
-		if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+		if(gemId < dsq->continuity.gems.size())
 		{
 			Continuity::Gems::iterator it = dsq->continuity.gems.begin();
 			std::advance(it, gemId);
@@ -8489,10 +8490,10 @@ luaFunc(setGemPosition)
 
 luaFunc(setGemName)
 {
-	int gemId = lua_tointeger(L, 1);
+	size_t gemId = lua_tointeger(L, 1);
 	bool result = false;
 
-	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	if(gemId < dsq->continuity.gems.size())
 	{
 		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
 		std::advance(it, gemId);
@@ -8508,10 +8509,10 @@ luaFunc(setGemName)
 
 luaFunc(setGemBlink)
 {
-	int gemId = lua_tointeger(L, 1);
+	size_t gemId = lua_tointeger(L, 1);
 	bool result = false;
 
-	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	if(gemId < dsq->continuity.gems.size())
 	{
 		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
 		std::advance(it, gemId);
@@ -8527,8 +8528,8 @@ luaFunc(setGemBlink)
 
 luaFunc(removeGem)
 {
-	int gemId = lua_tointeger(L, 1);
-	if(gemId >= 0 && gemId < dsq->continuity.gems.size())
+	size_t gemId = lua_tointeger(L, 1);
+	if(gemId < dsq->continuity.gems.size())
 	{
 		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
 		std::advance(it, gemId);
@@ -8602,10 +8603,10 @@ luaFunc(setCostume)
 
 luaFunc(setLayerRenderPass)
 {
-	int layer = lua_tointeger(L, 1);
+	size_t layer = lua_tointeger(L, 1);
 	int startPass = lua_tointeger(L, 2);
 	int endPass = lua_tointeger(L, 3);
-	if(layer >= 0 && layer < core->renderObjectLayers.size())
+	if(layer < core->renderObjectLayers.size())
 	{
 		core->renderObjectLayers[layer].startPass = startPass;
 		core->renderObjectLayers[layer].endPass = endPass;

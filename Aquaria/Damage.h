@@ -7,7 +7,6 @@
 class Shot;
 class Bone;
 class Entity;
-enum FormType;
 
 enum DamageType
 {

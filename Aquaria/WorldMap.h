@@ -40,8 +40,8 @@ struct WorldMap
 	void hideMap();
 	void revealMap(const std::string &name);
 	WorldMapTile *getWorldMapTile(const std::string &name);
-	int getNumWorldMapTiles();
-	WorldMapTile *getWorldMapTile(int index);
+	size_t getNumWorldMapTiles();
+	WorldMapTile *getWorldMapTile(size_t index);
 
 	WorldMapTile *getWorldMapTileByIndex(int index);
 	void revealMapIndex(int index);

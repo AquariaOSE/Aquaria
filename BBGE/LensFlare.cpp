@@ -56,7 +56,7 @@ void LensFlare::onUpdate(float dt)
 
 		Vector vbit = v;
 		vbit *= inc;
-		for (int i = 0; i < flares.size(); i++)
+		for (size_t i = 0; i < flares.size(); i++)
 		{
 			flares[i]->position = vbit*i;
 			flares[i]->alpha = a;

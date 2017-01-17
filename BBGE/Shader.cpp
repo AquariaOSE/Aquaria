@@ -327,9 +327,9 @@ bool Shader::Uniform::operator< (const Uniform& b) const
 
 void Shader::_queryUniforms()
 {
-	glGetObjectParameterivARB(g_programObj, GL_OBJECT_ACTIVE_UNIFORMS_ARB , &numUniforms);
+	glGetObjectParameterivARB(g_programObj, GL_OBJECT_ACTIVE_UNIFORMS_ARB , (GLint*)&numUniforms);
 
-	if (numUniforms <= 0)
+	if (numUniforms == 0 || numUniforms == -1)
 	{
 		uniforms.clear();
 		return;
@@ -385,7 +385,7 @@ int Shader::_getUniformIndex(const char *name)
 void Shader::setInt(const char *name, int x, int y /* = 0 */, int z /* = 0 */, int w /* = 0 */)
 {
 #if BBGE_BUILD_SHADERS
-	if(!g_programObj || numUniforms <= 0)
+	if(!g_programObj || numUniforms == 0 || numUniforms == -1)
 		return;
 	int idx = _getUniformIndex(name);
 	if(unsigned(idx) >= uniforms.size())
@@ -403,7 +403,7 @@ void Shader::setInt(const char *name, int x, int y /* = 0 */, int z /* = 0 */, i
 void Shader::setFloat(const char *name, float x, float y /* = 0 */, float z /* = 0 */, float w /* = 0 */)
 {
 #if BBGE_BUILD_SHADERS
-	if(!g_programObj || numUniforms <= 0)
+	if(!g_programObj || numUniforms == 0 || numUniforms == -1)
 		return;
 	int idx = _getUniformIndex(name);
 	if(unsigned(idx) >= uniforms.size())

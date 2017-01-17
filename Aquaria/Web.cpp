@@ -77,16 +77,16 @@ int Web::addPoint(const Vector &point)
 	return points.size()-1;
 }
 
-void Web::setPoint(int pt, const Vector &v)
+void Web::setPoint(size_t pt, const Vector &v)
 {
-	if (pt < 0 || pt >= points.size()) return;
+	if (pt >= points.size()) return;
 	points[pt] = v;
 }
 
-Vector Web::getPoint(int pt) const
+Vector Web::getPoint(size_t pt) const
 {
 	Vector v;
-	if (pt >= 0 || pt < points.size())
+	if ( pt < points.size())
 		v = points[pt];
 	return v;
 }
@@ -123,9 +123,9 @@ void Web::onUpdate(float dt)
 				Entity *e = (*i);
 				if ((e->getEntityType() == ET_ENEMY || e->getEntityType() == ET_AVATAR) && e->isDamageTarget(DT_ENEMY_WEB))
 				{
-					if (parentEntity != e)
+					if (parentEntity != e && points.size() > 0)
 					{
-						for (int j = 0; j < points.size()-1; j++)
+						for (size_t j = 0; j < points.size()-1; j++)
 						{
 							if (game->collideCircleVsLine(e, points[j], points[j+1], 4))
 							{
@@ -155,14 +155,13 @@ void Web::onRender()
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBegin(GL_LINES);
-	for (int i = 0; i < points.size()-1; i++)
-	{
-
-		glColor4f(1, 1, 1, 0.5f*alpha.x);
-		glVertex3f(points[i].x, points[i].y, 0);
-		glColor4f(1, 1, 1, 0.5f*alpha.x);
-		glVertex3f(points[i+1].x, points[i+1].y, 0);
-
+	if(points.size() > 0) {
+		for (size_t i = 0; i < points.size()-1; i++) {
+			glColor4f(1, 1, 1, 0.5f*alpha.x);
+			glVertex3f(points[i].x, points[i].y, 0);
+			glColor4f(1, 1, 1, 0.5f*alpha.x);
+			glVertex3f(points[i+1].x, points[i+1].y, 0);
+		}
 	}
 	glEnd();
 }

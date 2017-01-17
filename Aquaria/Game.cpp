@@ -318,7 +318,7 @@ void Game::transitionToScene(std::string scene)
 	core->enqueueJumpState("Game", false);
 }
 
-ElementTemplate *Game::getElementTemplateByIdx(int idx)
+ElementTemplate *Game::getElementTemplateByIdx(size_t idx)
 {
 	for (int i = 0; i < elementTemplates.size(); i++)
 	{
@@ -330,7 +330,7 @@ ElementTemplate *Game::getElementTemplateByIdx(int idx)
 	return 0;
 }
 
-Element* Game::createElement(int idx, Vector position, int bgLayer, RenderObject *copy, ElementTemplate *et)
+Element* Game::createElement(size_t idx, Vector position, size_t bgLayer, RenderObject *copy, ElementTemplate *et)
 {
 	if (idx == -1) return 0;
 
@@ -1169,12 +1169,12 @@ void Game::addPath(Path *p)
 	}
 }
 
-void Game::removePath(int idx)
+void Game::removePath(size_t idx)
 {
-	if (idx >= 0 && idx < paths.size()) paths[idx]->destroy();
+	if (idx < paths.size()) paths[idx]->destroy();
 	std::vector<Path*> copy = this->paths;
 	clearPaths();
-	for (int i = 0; i < copy.size(); i++)
+	for (size_t i = 0; i < copy.size(); i++)
 	{
 		if (i != idx)
 			addPath(copy[i]);
@@ -1377,6 +1377,7 @@ bool Game::loadSceneXML(std::string scene)
 			levelSF->SetAttribute("airSfxLoop", airSfxLoop.c_str());
 		}
 		if (level->Attribute("bnat"))
+
 		{
 			bNatural = atoi(level->Attribute("bnat"));
 			levelSF->SetAttribute("bnat", 1);
@@ -2169,7 +2170,6 @@ bool Game::saveScene(std::string scene)
 
 	std::ostringstream simpleElements[LR_MAX];
 	std::ostringstream simpleElements_repeatScale[LR_MAX];
-
 
 	for (i = 0; i < dsq->getNumElements(); i++)
 	{
@@ -3122,7 +3122,6 @@ void Game::applyState()
 
 	createPets();
 
-
 	postInitEntities();
 
 	bool musicchanged = updateMusic();
@@ -3813,12 +3812,7 @@ void Game::onPressEscape(int source, InputDevice device)
 
 void Game::toggleDamageSprite(bool on)
 {
-	if (on)
-	{
-		damageSprite->alphaMod = 1;
-	}
-	else
-		damageSprite->alphaMod = 0;
+	damageSprite->alphaMod = (float) on;
 }
 
 void Game::togglePause(bool v)
@@ -3899,14 +3893,14 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, RenderObject *circle)
 Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius)
 {
 	Bone *closest = 0;
-	for (int i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
+	for (size_t i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
 	{
 		Bone *b = skeletal->skeletalSprite.bones[i];
 
 		// MULTIPLE CIRCLES METHOD
 		if (!b->collisionMask.empty() && b->alpha.x == 1 && b->renderQuad)
 		{
-			for (int i = 0; i < b->transformedCollisionMask.size(); i++)
+			for (size_t i = 0; i < b->transformedCollisionMask.size(); i++)
 			{
 				if (isTouchingLine(start, end, b->transformedCollisionMask[i], radius+b->collideRadius))
 				{
@@ -4589,7 +4583,7 @@ void Game::update(float dt)
 	}
 
 
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		dsq->game->getPath(i)->update(dt);
@@ -4761,7 +4755,6 @@ void Game::update(float dt)
 				//cameraLerpDelay = 0.15;
 				cameraLerpDelay = vars->defaultCameraLerpDelay;
 			}
-			Vector oldCamPos = dsq->cameraPos;
 			cameraInterp.stop();
 			cameraInterp.interpolateTo(dest, cameraLerpDelay);
 			dsq->cameraPos = getCameraPositionFor(cameraInterp);
@@ -4924,9 +4917,9 @@ void Game::loadElementTemplates(std::string pack)
 	}
 	in.close();
 
-	for (int i = 0; i < elementTemplates.size(); i++)
+	for (size_t i = 0; i < elementTemplates.size(); i++)
 	{
-		for (int j = i; j < elementTemplates.size(); j++)
+		for (size_t j = i; j < elementTemplates.size(); j++)
 		{
 			if (elementTemplates[i].idx > elementTemplates[j].idx)
 			{
@@ -4955,7 +4948,7 @@ void Game::resetFromTitle()
 
 void Game::setGrid(ElementTemplate *et, Vector position, float rot360)
 {
-	for (int i = 0; i < et->grid.size(); i++)
+	for (size_t i = 0; i < et->grid.size(); i++)
 	{
 		TileVector t(position);
 		int x = et->grid[i].x;
@@ -5067,7 +5060,7 @@ void Game::removeState()
 	dsq->globalScale = Vector(1,1);
 	core->globalScaleChanged();
 
-	for (int i = 0; i < getNumPaths(); i++)
+	for (size_t i = 0; i < getNumPaths(); i++)
 	{
 		Path *p = getPath(i);
 		p->destroy();

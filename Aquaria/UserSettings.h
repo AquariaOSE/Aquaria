@@ -117,8 +117,8 @@ public:
 	struct Data
 	{
 		Data() { savePage=0; saveSlot=0; }
-		int savePage;
-		int saveSlot;
+		size_t savePage;
+		size_t saveSlot;
 	} data;
 
 	struct Version

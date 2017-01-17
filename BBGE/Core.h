@@ -190,9 +190,9 @@ protected:
 	std::vector<DisplayListElement> displayList;
 
 	RenderObjects renderObjects;
-	int objectCount;
-	int firstFreeIdx;
-	int iter;
+	size_t objectCount;
+	size_t firstFreeIdx;
+	size_t iter;
 };
 
 class Core : public ActionMapper, public StateManager
@@ -244,7 +244,7 @@ public:
 	void setFullscreen(bool full);
 
 	void enable2D(int pixelScaleX, int pixelScaleY);
-	void addRenderObject(RenderObject *o, int layer=0);
+	void addRenderObject(RenderObject *o, size_t layer=0);
 	void switchRenderObjectLayer(RenderObject *o, int toLayer);
 	void addTexture(Texture *r);
 	CountedPtr<Texture> findTexture(const std::string &name);
@@ -435,9 +435,10 @@ public:
 
 	CoreSettings settings;
 
-	bool tgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
-	bool zgaSave(const char *filename, short int width, short int height, unsigned char	pixelDepth, unsigned char	*imageData);
+	bool tgaSave(const char *filename, short unsigned int width, short unsigned int height, unsigned char	pixelDepth, unsigned char	*imageData);
+	bool zgaSave(const char *filename, short unsigned int width, short unsigned int height, unsigned char	pixelDepth, unsigned char	*imageData);
 	bool pngSave(const char *filename, unsigned width, unsigned height, unsigned char *data);
+
 	volatile int dbg_numThreadDecoders;
 
 	virtual void onBackgroundUpdate();
