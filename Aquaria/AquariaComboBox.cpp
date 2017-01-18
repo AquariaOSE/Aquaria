@@ -310,7 +310,7 @@ void AquariaComboBox::setSelectedItem(int index)
 	{
 		doScroll(0);
 	}
-	else if(index > 0)
+	else if(index < items.size())
 	{
 		if ((size_t) index < items.size())
 		{
