@@ -135,8 +135,8 @@ public:
 	bool isfhr();
 	bool isfvr();
 
-	int getIdx() const { return idx; }
-	void setIdx(int idx) { this->idx = idx; }
+	size_t getIdx() const { return idx; }
+	void setIdx(size_t idx) { this->idx = idx; }
 	void moveToFront();
 	void moveToBack();
 
@@ -217,13 +217,13 @@ public:
 	virtual void unloadDevice();
 	virtual void reloadDevice();
 
-	Vector getCollisionMaskNormal(int index);
+	Vector getCollisionMaskNormal(size_t index);
 
 	//-------------------------------- Methods above, fields below
 
 	static bool renderCollisionShape;
 	static bool renderPaths;
-	static int lastTextureApplied;
+	static size_t lastTextureApplied;
 	static bool lastTextureRepeat;
 
 	float width, height;  // Only used by Quads, but stored here for getCullRadius()
@@ -331,7 +331,7 @@ protected:
 	bool _static;
 	bool _fv, _fh;
 
-	int idx;
+	size_t idx;
 	RenderObject *parent;
 	StateData *stateData;
 	float decayRate;

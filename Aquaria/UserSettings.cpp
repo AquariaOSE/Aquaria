@@ -200,30 +200,28 @@ void UserSettings::save()
 			{
 				const ActionSet& as = control.actionSets[i];
 				XMLElement *xml_actionSet = doc.NewElement("ActionSet");
+				xml_actionSet->SetAttribute("enabled", as.enabled);
+				xml_actionSet->SetAttribute("name", as.name.c_str());
+				xml_actionSet->SetAttribute("joystickName", as.joystickName.c_str());
+				xml_actionSet->SetAttribute("joystickGUID", as.joystickGUID.c_str());
+				XMLElement *xml_joyAxes = doc.NewElement("JoyAxes");
 				{
-					xml_actionSet->SetAttribute("enabled", as.enabled);
-					xml_actionSet->SetAttribute("name", as.name.c_str());
-					xml_actionSet->SetAttribute("joystickName", as.joystickName.c_str());
-					xml_actionSet->SetAttribute("joystickGUID", as.joystickGUID.c_str());
-					XMLElement *xml_joyAxes = doc.NewElement("JoyAxes");
-					{
-						xml_joyAxes->SetAttribute("s1ax", as.joycfg.s1ax);
-						xml_joyAxes->SetAttribute("s1ay", as.joycfg.s1ay);
-						xml_joyAxes->SetAttribute("s2ax", as.joycfg.s2ax);
-						xml_joyAxes->SetAttribute("s2ay", as.joycfg.s2ay);
-						xml_joyAxes->SetAttribute("s1dead", as.joycfg.s1dead);
-						xml_joyAxes->SetAttribute("s2dead", as.joycfg.s2dead);
-					}
-					xml_actionSet->InsertEndChild(xml_joyAxes);
-					for (int i = 0; i < as.inputSet.size(); i++)
-					{
-						XMLElement *xml_action = doc.NewElement("Action");
-						const ActionInput& ai = as.inputSet[i];
-						xml_action->SetAttribute("name", ai.name.c_str());
-						xml_action->SetAttribute("input", ai.toString().c_str());
+					xml_joyAxes->SetAttribute("s1ax", as.joycfg.s1ax);
+					xml_joyAxes->SetAttribute("s1ay", as.joycfg.s1ay);
+					xml_joyAxes->SetAttribute("s2ax", as.joycfg.s2ax);
+					xml_joyAxes->SetAttribute("s2ay", as.joycfg.s2ay);
+					xml_joyAxes->SetAttribute("s1dead", as.joycfg.s1dead);
+					xml_joyAxes->SetAttribute("s2dead", as.joycfg.s2dead);
+				}
+				xml_actionSet->InsertEndChild(xml_joyAxes);
+				for (int i = 0; i < as.inputSet.size(); i++)
+				{
+					XMLElement *xml_action = doc.NewElement("Action");
+					const ActionInput& ai = as.inputSet[i];
+					xml_action->SetAttribute("name", ai.name.c_str());
+					xml_action->SetAttribute("input", ai.toString().c_str());
 
-						xml_actionSet->InsertEndChild(xml_action);
-					}
+					xml_actionSet->InsertEndChild(xml_action);
 				}
 				xml_control->InsertEndChild(xml_actionSet);
 			}
@@ -254,8 +252,8 @@ void UserSettings::save()
 
 		XMLElement *xml_data = doc.NewElement("Data");
 		{
-			xml_data->SetAttribute("savePage",			data.savePage);
-			xml_data->SetAttribute("saveSlot",			data.saveSlot);
+			xml_data->SetAttribute("savePage", (unsigned int) data.savePage);
+			xml_data->SetAttribute("saveSlot", (unsigned int) data.saveSlot);
 
 			std::ostringstream ss;
 			for (std::vector<std::string>::iterator it = dsq->activePatches.begin(); it != dsq->activePatches.end(); ++it)
@@ -544,8 +542,12 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	XMLElement *xml_data = doc.FirstChildElement("Data");
 	if (xml_data)
 	{
-		xml_data->QueryIntAttribute("savePage", &data.savePage);
-		xml_data->QueryIntAttribute("saveSlot", &data.saveSlot);
+		// use a temporary variable so we don't get into trouble on big-endian architectures
+		unsigned int tmp;
+		xml_data->QueryUnsignedAttribute("savePage", &tmp);
+		data.savePage = tmp;
+		xml_data->QueryUnsignedAttribute("saveSlot", &tmp);
+		data.saveSlot = tmp;
 
 		if(const char *patchlist = xml_data->Attribute("activePatches"))
 		{

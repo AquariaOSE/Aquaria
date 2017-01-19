@@ -73,20 +73,22 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 	equals->scale = Vector(0.7, 0.7);
 	addChild(equals, PM_POINTER);
 
-	int c = 0;
+	size_t c = 0;
 
-	int size=0;
+	size_t size=0;
 
-	for (int i = 0; i < recipe->names.size(); i++)
+	for (size_t i = 0; i < recipe->names.size(); i++)
 		size += recipe->names[i].amount;
 
-	for (int j = 0; j < recipe->types.size(); j++)
+	for (size_t j = 0; j < recipe->types.size(); j++)
 		size += recipe->types[j].amount;
 
-	size --;
+	if(size > 0) {
+		size --;
+	}
 
 
-	for (int i = 0; i < recipe->names.size(); i++)
+	for (size_t i = 0; i < recipe->names.size(); i++)
 	{
 		debugLog("recipe name: " + recipe->names[i].name);
 		IngredientData *data = dsq->continuity.getIngredientDataByName(recipe->names[i].name);
@@ -122,7 +124,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 		}
 	}
 
-	for (int i = 0; i < recipe->types.size(); i++)
+	for (size_t i = 0; i < recipe->types.size(); i++)
 	{
 
 		for (int j = 0; j < recipe->types[i].amount; j++)
@@ -188,7 +190,7 @@ void RecipeMenuEntry::onUpdate(float dt)
 			std::ostringstream ds;
 
 
-			for (int i = 0; i < data->effects.size(); i++)
+			for (size_t i = 0; i < data->effects.size(); i++)
 			{
 				ds << dsq->continuity.getIEString(data, i);
 				if (i == data->effects.size()-1)
@@ -212,9 +214,9 @@ void RecipeMenuEntry::onUpdate(float dt)
 			glow->alphaMod = 0;
 			selected = 0;
 
-			int n=0;
+			size_t n=0;
 
-			for (int i = 0; i < recipeMenu.recipeMenuEntries.size(); i++)
+			for (size_t i = 0; i < recipeMenu.recipeMenuEntries.size(); i++)
 			{
 				if (!recipeMenu.recipeMenuEntries[i]->selected)
 					n++;
@@ -252,10 +254,10 @@ void RecipeMenu::slide(RenderObject *r, bool in, float t)
 	}
 }
 
-int RecipeMenu::getNumKnown()
+size_t RecipeMenu::getNumKnown()
 {
-	int num = 0;
-	for (int i = 0; i < dsq->continuity.recipes.size(); i++)
+	size_t num = 0;
+	for (size_t i = 0; i < dsq->continuity.recipes.size(); i++)
 	{
 		if (dsq->continuity.recipes[i].isKnown())
 		{
@@ -265,10 +267,10 @@ int RecipeMenu::getNumKnown()
 	return num;
 }
 
-int RecipeMenu::getNumPages()
+size_t RecipeMenu::getNumPages()
 {
-	int numKnown = dsq->continuity.recipes.size();
-	int numPages = (numKnown/pageSize);
+	size_t numKnown = dsq->continuity.recipes.size();
+	size_t numPages = (numKnown/pageSize);
 
 
 
@@ -436,7 +438,7 @@ void RecipeMenu::createPage(int p)
 
 void RecipeMenu::destroyPage()
 {
-	for (int i = 0; i < recipeMenuEntries.size(); i++)
+	for (size_t i = 0; i < recipeMenuEntries.size(); i++)
 	{
 		recipeMenuEntries[i]->setLife(1);
 		recipeMenuEntries[i]->setDecayRate(20);

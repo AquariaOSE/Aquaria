@@ -51,8 +51,8 @@ struct RecipeMenu
 	void destroyPage();
 	void goNextPage();
 	void goPrevPage();
-	int getNumPages();
-	int getNumKnown();
+	size_t getNumPages();
+	size_t getNumKnown();
 
 	int currentPage;
 

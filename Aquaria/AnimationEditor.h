@@ -131,7 +131,7 @@ public:
 	SkeletalKeyframe buffer;
 
 	bool editingStrip;
-	int selectedStripPoint;
+	size_t selectedStripPoint;
 
 	void reverseAnim();
 

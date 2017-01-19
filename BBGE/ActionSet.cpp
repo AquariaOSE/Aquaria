@@ -148,14 +148,14 @@ void ActionSet::importAction(ActionMapper *mapper, const std::string &name, int 
 	if (!enabled) return;
 	if (!mapper) return;
 
-	for (int i = 0; i < inputSet.size(); i++)
+	for (size_t i = 0; i < inputSet.size(); i++)
 	{
 		const ActionInput *actionInput = &inputSet[i];
 		if (actionInput->name == name)
 		{
 			for (int i = 0; i < INP_COMBINED_SIZE; i++)
-				if (actionInput->all[i])
-					mapper->addAction(actionID, actionInput->all[i], sourceID);
+				if (actionInput->data.all[i])
+					mapper->addAction(actionID, actionInput->data.all[i], sourceID);
 			return;
 		}
 	}
@@ -166,14 +166,14 @@ void ActionSet::importAction(ActionMapper *mapper, const std::string &name, Even
 	if (!enabled) return;
 	if (!mapper) return;
 
-	for (int i = 0; i < inputSet.size(); i++)
+	for (size_t i = 0; i < inputSet.size(); i++)
 	{
 		const ActionInput *actionInput = &inputSet[i];
 		if (actionInput->name == name)
 		{
 			for (int i = 0; i < INP_COMBINED_SIZE; i++)
-				if (actionInput->all[i])
-					mapper->addAction(event, actionInput->all[i], state);
+				if (actionInput->data.all[i])
+					mapper->addAction(event, actionInput->data.all[i], state);
 			return;
 		}
 	}
@@ -196,8 +196,8 @@ std::string ActionSet::insertInputIntoString(const std::string &string)
 {
 	std::string str = string;
 
-	int start = str.find('{');
-	int end = str.find('}');
+	size_t start = str.find('{');
+	size_t end = str.find('}');
 	if (start == std::string::npos || end == std::string::npos)
 		return string;
 	std::string code = str.substr(start+1, end - start);

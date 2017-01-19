@@ -177,9 +177,9 @@ int getStringToInputCode(const std::string& s)
 
 ActionInput::ActionInput()
 {
-	for (int i = 0; i < INP_MSESIZE; i++)	mse[i] = 0;
-	for (int i = 0; i < INP_KEYSIZE; i++)	key[i] = 0;
-	for (int i = 0; i < INP_JOYSIZE; i++)	joy[i] = 0;
+	for (int i = 0; i < INP_MSESIZE; i++)	data.single.mse[i] = 0;
+	for (int i = 0; i < INP_KEYSIZE; i++)	data.single.key[i] = 0;
+	for (int i = 0; i < INP_JOYSIZE; i++)	data.single.joy[i] = 0;
 }
 
 std::string ActionInput::toString() const
@@ -188,15 +188,15 @@ std::string ActionInput::toString() const
 
 	for (int i = 0; i < INP_MSESIZE; i++)
 	{
-		os << getInputCodeToString(mse[i]) << " ";
+		os << getInputCodeToString(data.single.mse[i]) << " ";
 	}
 	for (int i = 0; i < INP_KEYSIZE; i++)
 	{
-		os << getInputCodeToString(key[i]) << " ";
+		os << getInputCodeToString(data.single.key[i]) << " ";
 	}
 	for (int i = 0; i < INP_JOYSIZE; i++)
 	{
-		os << getInputCodeToString(joy[i]) << " ";
+		os << getInputCodeToString(data.single.joy[i]) << " ";
 	}
 
 	return os.str();
@@ -209,17 +209,17 @@ void ActionInput::fromString(const std::string &read)
 	for (int i = 0; i < INP_MSESIZE; i++)
 	{
 		is >> str;
-		mse[i] = getStringToInputCode(str);
+		data.single.mse[i] = getStringToInputCode(str);
 	}
 	for (int i = 0; i < INP_KEYSIZE; i++)
 	{
 		is >> str;
-		key[i] = getStringToInputCode(str);
+		data.single.key[i] = getStringToInputCode(str);
 	}
 	for (int i = 0; i < INP_JOYSIZE; i++)
 	{
 		is >> str;
-		joy[i] = getStringToInputCode(str);
+		data.single.joy[i] = getStringToInputCode(str);
 	}
 }
 

@@ -181,7 +181,7 @@ public:
 	Entity *findTarget(int dist, int type, int t=0);
 
 	bool hasTarget(int t=0);
-	bool isTargetInRange(int range, int t=0);
+	bool isTargetInRange(int range, size_t t=0);
 	void doGlint(const Vector &position, const Vector &scale=Vector(2,2), const std::string &tex="Glint", RenderObject::BlendTypes bt=BLEND_DEFAULT);
 	Entity *getTargetEntity(int t=0);
 	void setTargetEntity(Entity *e, int t=0);
@@ -266,7 +266,7 @@ public:
 	void clearTargetPoints();
 	void addTargetPoint(const Vector &point);
 	int getNumTargetPoints();
-	Vector getTargetPoint(int i);
+	Vector getTargetPoint(size_t i);
 	int targetPriority;
 	virtual void shiftWorlds(WorldType lastWorld, WorldType worldType){}
 	void setCanLeaveWater(bool v);

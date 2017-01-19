@@ -24,10 +24,9 @@ std::vector<PetSlot*>		petSlots;
 
 static const float MENUPAGETRANSTIME		= 0.2;
 const Vector menuBgScale(800.0f/1024.0f, 800.0f/1024.0f);
-const int foodPageSize = 16;
-const int treasurePageSize = 16;
-const int ITEMS_PER_PAGE = 12;
-const int numTreasures = 16*2;
+const size_t foodPageSize = 16;
+const size_t treasurePageSize = 16;
+const size_t numTreasures = 16*2;
 
 const Vector worldLeftCenter(217,250), worldRightCenter(575, 250);
 const Vector opt_save_original = Vector(350, 350), opt_cancel_original = Vector(450, 350);
@@ -107,7 +106,7 @@ protected:
 class FoodHolder : public Quad
 {
 public:
-	FoodHolder(int slot, bool trash=false);
+	FoodHolder(size_t slot, bool trash=false);
 
 	bool isValid() const;
 	void toggleValid(bool b);
@@ -125,7 +124,7 @@ protected:
 
 	Quad *lid;
 
-	int slot;
+	size_t slot;
 private:
 	IngredientData *foodHolderIngredient;
 };
@@ -232,7 +231,7 @@ void PetSlot::onUpdate(float dt)
 	}
 }
 
-FoodHolder::FoodHolder(int slot, bool trash) : Quad(), slot(slot), trash(trash)
+FoodHolder::FoodHolder(size_t slot, bool trash) : Quad(), trash(trash), slot(slot)
 {
 	foodHolderIngredient = 0;
 	buttonDown = false;
@@ -4265,7 +4264,6 @@ void InGameMenu::nextJoystick()
 	int i = as.joystickID;
 	Joystick *j = NULL;
 	const int N = core->getNumJoysticks();
-	bool looped = false;
 	do
 	{
 		++i;

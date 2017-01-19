@@ -198,7 +198,7 @@ class ParticleManager
 {
 public:
 	ParticleManager(int size);
-	void setSize(int size);
+	void setSize(size_t size);
 	void loadParticleBank(const std::string &bank1, const std::string &bank2);
 	void clearParticleBank();
 
@@ -217,15 +217,15 @@ public:
 
 	void endParticle(Particle *p);
 
-	void setFree(int free);
+	void setFree(size_t free);
 
 	int getFree() { return free; }
 	int getNumActive() { return numActive; }
 
 	void setNumSuckPositions(int num);
-	void setSuckPosition(int idx, const Vector &pos);
+	void setSuckPosition(size_t idx, const Vector &pos);
 
-	Vector *getSuckPosition(int idx);
+	Vector *getSuckPosition(size_t idx);
 
 	static std::string particleBankPath;
 
@@ -234,18 +234,18 @@ protected:
 
 
 	std::vector<Vector> suckPositions;
-	int numActive;
+	size_t numActive;
 	Particle* stomp();
 
 	void nextFree(int f=1);
 	void prevFree(int f=1);
 
-	int oldFree;
+	size_t oldFree;
 
 	typedef std::vector<ParticleInfluence> Influences;
 	Influences influences;
 
-	int size, used, free, halfSize;
+	size_t size, used, free, halfSize;
 	Particles particles;
 
 

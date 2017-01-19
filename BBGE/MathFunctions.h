@@ -58,5 +58,5 @@ namespace MathFunctions
 		return angle;
 	}
 
-};
+}
 

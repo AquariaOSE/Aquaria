@@ -43,7 +43,7 @@ public:
 
 	void setCostume(const std::string &c);
 
-	void shortenSong(Song &song, int size);
+	void shortenSong(Song &song, size_t size);
 	void warpLiToAvatar();
 
 	void flingMonkey(Entity *e);
@@ -76,7 +76,7 @@ public:
 	std::string getDescriptionForSongSlot(int songSlot);
 	std::string getVoxForSongSlot(int songSlot);
 
-	std::string getIEString(IngredientData *data, int i);
+	std::string getIEString(IngredientData *data, size_t i);
 	std::string getAllIEString(IngredientData *data);
 
 	std::string getInternalFormName();
@@ -119,7 +119,7 @@ public:
 	float getStory();
 	void setStory(float v);
 
-	float getSpeedType(int speedType);
+	float getSpeedType(size_t speedType);
 	void setNaijaModel(std::string model);
 
 
@@ -192,8 +192,8 @@ public:
 	IngredientData *getIngredientHeldByName(const std::string &name) const; // an ingredient that the player actually has; in the ingredients list
 	IngredientData *getIngredientDataByName(const std::string &name); // an ingredient in the general data list; ingredientData
 
-	IngredientData *getIngredientHeldByIndex(int idx) const;
-	IngredientData *getIngredientDataByIndex(int idx);
+	IngredientData *getIngredientHeldByIndex(size_t idx) const;
+	IngredientData *getIngredientDataByIndex(size_t idx);
 
 	int getIngredientDataSize() const;
 	int getIngredientHeldSize() const;
@@ -242,13 +242,13 @@ public:
 	float speedMult2;
 
 	void eatBeast(const EatData &eatData);
-	void removeNaijaEat(int idx);
+	void removeNaijaEat(size_t idx);
 	void removeLastNaijaEat();
 	EatData *getLastNaijaEat();
 	bool isNaijaEatsEmpty();
 
 	void loadPetData();
-	PetData *getPetData(int idx);
+	PetData *getPetData(size_t idx);
 
 	std::vector<EatData> naijaEats;
 

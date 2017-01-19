@@ -92,7 +92,7 @@ void DebugFont::formatText()
 	int lastSpace = -1;
 	float currentWidth = 0;
 	maxW = 0;
-	for (int i = 0; i < text.size(); i++)
+	for (size_t i = 0; i < text.size(); i++)
 	{
 		currentWidth += fontDrawSize;
 
@@ -134,7 +134,7 @@ void DebugFont::onRender()
 {
 	const float vspc = 1.5;
 
-	for (int i = 0; i < lines.size(); i++)
+	for (size_t i = 0; i < lines.size(); i++)
 	{
 
 		float width = (lines[i].size()) * fontDrawSize * 1.4f * 0.75f;
@@ -167,12 +167,12 @@ DebugButton::DebugButton(int buttonID, DebugButtonReceiver *receiver, int bgWidt
 	: RenderObject()
 	, label(0)
 	, buttonID(buttonID)
-	, highlight(0)
-	, receiver(receiver)
 	, activeAlpha(0.5f)
 	, activeColor(1,1,1)
 	, inactiveAlpha(0.5f)
 	, inactiveColor(0,0,0)
+	, highlight(0)
+	, receiver(receiver)
 {
 	if (bgWidth == 0)
 		bgWidth = 150;

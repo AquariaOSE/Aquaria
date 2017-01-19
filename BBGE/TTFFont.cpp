@@ -235,7 +235,7 @@ float TTFText::getLineHeight()
 
 int TTFText::findLine(const std::string &label)
 {
-	for (int i = 0; i < text.size(); i++)
+	for (size_t i = 0; i < text.size(); i++)
 	{
 		if (text[i].find(label) != std::string::npos)
 		{
@@ -249,7 +249,7 @@ void TTFText::onRender()
 {
 
 
-	for (int i = 0; i < text.size(); i++)
+	for (size_t i = 0; i < text.size(); i++)
 	{
 		if (shadow)
 		{

@@ -131,8 +131,8 @@ static void Linux_CopyTree(const char *src, const char *dst)
 #endif
 
 
-const int saveSlotPageSize = 4;
-int maxPages = 15;
+const size_t saveSlotPageSize = 4;
+size_t maxPages = 15;
 #ifdef AQUARIA_BUILD_CONSOLE
 const int MAX_CONSOLELINES	= 18;
 #endif
@@ -325,15 +325,26 @@ void DSQ::loadElementEffects()
 	inFile.close();
 }
 
-ElementEffect DSQ::getElementEffectByIndex(int e)
+ElementEffect DSQ::getElementEffectByIndex(size_t e)
 {
-	if (e < elementEffects.size() && e >= 0)
+	if (e < elementEffects.size())
 	{
 		return elementEffects[e];
 	}
 
 	ElementEffect empty;
 	empty.type = EFX_NONE;
+	empty.alpha = 0;
+	empty.blendType = 0;
+	empty.color = 0;
+	empty.segsx = empty.segsy = 0;
+	empty.segs_dgmx = empty.segs_dgmy = 0;
+	empty.segs_dgo = 0;
+	empty.segs_dgox = empty.segs_dgoy = 0;
+	empty.segs_dgtm = 0;
+	empty.wavy_flip = false;
+	empty.wavy_max = empty.wavy_min = 0;
+	empty.wavy_radius = 0;
 
 	return empty;
 }
@@ -1703,6 +1714,8 @@ void DSQ::setInputMode(InputDevice mode)
 	break;
 	case INPUT_KEYBOARD:
 	break;
+	case INPUT_NODEVICE:
+		break;
 	}
 }
 
@@ -1756,7 +1769,7 @@ void DSQ::debugLog(const std::string &s)
 	if (consoleLines.size() > MAX_CONSOLELINES)
 	{
 
-		for (int i = 0; i < consoleLines.size()-1; i++)
+		for (size_t i = 0; i < consoleLines.size()-1; i++)
 		{
 			consoleLines[i] = consoleLines[i+1];
 		}
@@ -1765,7 +1778,7 @@ void DSQ::debugLog(const std::string &s)
 	if (console)
 	{
 		std::string text;
-		for (int i = 0; i < consoleLines.size(); i++)
+		for (size_t i = 0; i < consoleLines.size(); i++)
 		{
 			text += consoleLines[i] + '\n';
 		}
@@ -1777,7 +1790,7 @@ void DSQ::debugLog(const std::string &s)
 
 int DSQ::getEntityTypeIndexByName(std::string s)
 {
-	for (int i = 0; i < game->entityTypeList.size(); i++)
+	for (size_t i = 0; i < game->entityTypeList.size(); i++)
 	{
 		EntityClass *t = &game->entityTypeList[i];
 		if (t->name == s)
@@ -1841,7 +1854,7 @@ void DSQ::startSelectedMod()
 
 ModEntry* DSQ::getSelectedModEntry()
 {
-	if (!modEntries.empty() && selectedMod >= 0 && selectedMod < modEntries.size())
+	if (!modEntries.empty() && selectedMod < modEntries.size())
 		return &modEntries[selectedMod];
 	return 0;
 }
@@ -1877,7 +1890,7 @@ void DSQ::applyPatches()
 	loadMods();
 
 	for (std::vector<std::string>::iterator it = activePatches.begin(); it != activePatches.end(); ++it)
-		for(int i = 0; i < modEntries.size(); ++i)
+		for(size_t i = 0; i < modEntries.size(); ++i)
 			if(modEntries[i].type == MODTYPE_PATCH)
 				if(!nocasecmp(modEntries[i].path.c_str(), it->c_str()))
 					_applyPatch(modEntries[i].path);
@@ -1940,10 +1953,9 @@ void DSQ::refreshResourcesForPatch(const std::string& name)
 	int reloaded = 0;
 	if(files.size())
 	{
-		for(int i = 0; i < dsq->resources.size(); ++i)
+		for(size_t i = 0; i < dsq->resources.size(); ++i)
 		{
 			Texture *r = dsq->resources[i];
-			bool found = false;
 			for(size_t i = 0; i < files.size(); ++i)
 				if(files[i] == r->name)
 				{
@@ -2344,7 +2356,7 @@ void DSQ::playNoEffect()
 
 void DSQ::clearMenu(float t)
 {
-	for (int i = 0; i < menu.size(); i++)
+	for (size_t i = 0; i < menu.size(); i++)
 	{
 		menu[i]->setLife(1);
 		menu[i]->setDecayRate(1/t);
@@ -2412,7 +2424,7 @@ bool DSQ::onPickedSaveSlot(AquariaSaveSlot *slot)
 		}
 	}
 
-	for (int i = 0; i < saveSlots.size(); i++)
+	for (size_t i = 0; i < saveSlots.size(); i++)
 	{
 		saveSlots[i]->mbDown = false;
 	}
@@ -2486,7 +2498,7 @@ bool DSQ::modIsKnown(const std::string& name)
 	std::string nlower = name;
 	stringToLower(nlower);
 
-	for(int i = 0; i < modEntries.size(); ++i)
+	for(size_t i = 0; i < modEntries.size(); ++i)
 	{
 		std::string elower = modEntries[i].path;
 		stringToLower(elower);
@@ -2718,13 +2730,13 @@ void DSQ::title(bool fade)
 
 void DSQ::createSaveSlotPage()
 {
-	for (int i = 0; i < saveSlots.size(); i++)
+	for (size_t i = 0; i < saveSlots.size(); i++)
 	{
 		saveSlots[i]->safeKill();
 	}
 
 	saveSlots.resize(saveSlotPageSize);
-	for (int i = 0; i < saveSlots.size(); i++)
+	for (size_t i = 0; i < saveSlots.size(); i++)
 	{
 		saveSlots[i] = new AquariaSaveSlot(i + user.data.savePage *  saveSlotPageSize);
 		saveSlots[i]->followCamera = 1;
@@ -2764,7 +2776,7 @@ void DSQ::prevSaveSlotPage()
 	if (saveSlots.empty()) return;
 
 	user.data.savePage--;
-	if (user.data.savePage < 0)
+	if (user.data.savePage > maxPages)
 		user.data.savePage = maxPages;
 	createSaveSlotPage();
 
@@ -2814,7 +2826,7 @@ void DSQ::clearSaveSlots(bool trans)
 			saveSlotPageCount->fadeAlphaWithLife = 1;
 	}
 
-	for (int i = 0; i < saveSlots.size(); i++)
+	for (size_t i = 0; i < saveSlots.size(); i++)
 	{
 		saveSlots[i]->close(trans);
 	}
@@ -2827,7 +2839,7 @@ void DSQ::clearSaveSlots(bool trans)
 	{
 		disableMiniMapOnNoInput = false;
 
-		for (int i = 0; i < menu.size(); i++)
+		for (size_t i = 0; i < menu.size(); i++)
 		{
 			if (i != 1)
 			{
@@ -2853,7 +2865,7 @@ void DSQ::clearSaveSlots(bool trans)
 
 void DSQ::hideSaveSlots()
 {
-	for (int i = 0; i < saveSlots.size(); i++)
+	for (size_t i = 0; i < saveSlots.size(); i++)
 	{
 		saveSlots[i]->hide();
 	}
@@ -2863,7 +2875,7 @@ void DSQ::transitionSaveSlots()
 {
 	hideSaveSlotCrap();
 
-	for (int i = 0; i < saveSlots.size(); i++)
+	for (size_t i = 0; i < saveSlots.size(); i++)
 	{
 		saveSlots[i]->transition();
 	}
@@ -2902,7 +2914,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 	saveSlotMode = SSM_NONE;
 
 	createSaveSlots(ssm);
-	const int firstSaveSlot = user.data.savePage * saveSlotPageSize;
+	const size_t firstSaveSlot = user.data.savePage * saveSlotPageSize;
 	if (user.data.saveSlot >= firstSaveSlot && user.data.saveSlot < firstSaveSlot + saveSlots.size())
 	{
 		selectedSaveSlot = saveSlots[user.data.saveSlot - firstSaveSlot];
@@ -3344,7 +3356,7 @@ bool DSQ::playedVoice(const std::string &file)
 {
 	std::string f = file;
 	stringToUpper(f);
-	for (int i = 0; i < dsq->continuity.voiceOversPlayed.size(); i++)
+	for (size_t i = 0; i < dsq->continuity.voiceOversPlayed.size(); i++)
 	{
 		if (f == dsq->continuity.voiceOversPlayed[i])
 		{
@@ -3733,13 +3745,13 @@ void DSQ::updateActionButtons()
 	if (/*inputMode != INPUT_KEYBOARD &&*/ game->isActive())
 	{
 		for(size_t i = 0; i < almb.size(); ++i)
-			if (ActionMapper::getKeyState(almb[i]->key[0]) || ActionMapper::getKeyState(almb[i]->key[1]))
+			if (ActionMapper::getKeyState(almb[i]->data.single.key[0]) || ActionMapper::getKeyState(almb[i]->data.single.key[1]))
 			{
 				mouse.buttons.left = DOWN;
 				break;
 			}
 			for(size_t i = 0; i < armb.size(); ++i)
-				if (ActionMapper::getKeyState(armb[i]->key[0]) || ActionMapper::getKeyState(armb[i]->key[1]))
+				if (ActionMapper::getKeyState(armb[i]->data.single.key[0]) || ActionMapper::getKeyState(armb[i]->data.single.key[1]))
 				{
 					mouse.buttons.right = DOWN;
 					break;
@@ -3749,13 +3761,13 @@ void DSQ::updateActionButtons()
 	if (joystickAsMouse)
 	{
 		for(size_t i = 0; i < almb.size(); ++i)
-			if (ActionMapper::getKeyState(almb[i]->joy[0]))
+			if (ActionMapper::getKeyState(almb[i]->data.single.joy[0]))
 			{
 				mouse.buttons.left = DOWN;
 				break;
 			}
 			for(size_t i = 0; i < armb.size(); ++i)
-				if (ActionMapper::getKeyState(armb[i]->joy[0]))
+				if (ActionMapper::getKeyState(armb[i]->data.single.joy[0]))
 				{
 					mouse.buttons.right = DOWN;
 					break;
@@ -3936,6 +3948,8 @@ void DSQ::onUpdate(float dt)
 			break;
 			case INPUT_KEYBOARD:
 			break;
+			case INPUT_NODEVICE:
+				break;
 			}
 			os << std::endl;
 			Bone *b = dsq->game->avatar->skeletalSprite.getBoneByIdx(1);
@@ -4248,7 +4262,7 @@ void DSQ::modifyDt(float &dt)
 
 void DSQ::removeElement(Element *element)
 {
-	for (int i = 0; i < dsq->elements.size(); i++)
+	for (size_t i = 0; i < dsq->elements.size(); i++)
 	{
 		if (dsq->elements[i] == element)
 		{
@@ -4259,11 +4273,11 @@ void DSQ::removeElement(Element *element)
 
 }
 // only happens in editor, no need to optimize
-void DSQ::removeElement(int idx)
+void DSQ::removeElement(size_t idx)
 {
 	ElementContainer copy = elements;
 	clearElements();
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < idx; i++)
 	{
 		addElement(copy[i]);
@@ -4288,7 +4302,7 @@ void DSQ::clearElements()
 
 void DSQ::addEntity(Entity *entity)
 {
-	int i;
+	size_t i;
 	for (i = 0; entities[i] != 0; i++) {}
 	if (i+1 >= entities.size())
 		entities.resize(entities.size()*2, 0);
@@ -4353,7 +4367,7 @@ void DSQ::updatepecue(float dt)
 	{
 
 		int nz = 0;
-		for (int i = 0; i < pecue.size(); i++)
+		for (size_t i = 0; i < pecue.size(); i++)
 		{
 			PECue *p = &pecue[i];
 			if (p->t > 0)

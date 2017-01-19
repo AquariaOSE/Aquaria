@@ -591,13 +591,13 @@ void AquariaKeyConfig::onUpdate(float dt)
 		switch(inputSetType)
 		{
 		case INPUTSET_KEY:
-			k = &ai->key[inputIdx];
+			k = &ai->data.single.key[inputIdx];
 		break;
 		case INPUTSET_MOUSE:
-			k = &ai->mse[inputIdx];
+			k = &ai->data.single.mse[inputIdx];
 		break;
 		case INPUTSET_JOY:
-			k = &ai->joy[inputIdx];
+			k = &ai->data.single.joy[inputIdx];
 		break;
 		default:
 			k = 0;
@@ -1186,7 +1186,7 @@ void AquariaButton::goDown()
 	buttonlabel->position = Vector(0, 7);
 }
 
-void AquariaButton::action(int actionID, int state, int source)
+void AquariaButton::action(int actionID, int state, int source, InputDevice device)
 {
 	if(actionID == ACTION_PRIMARY)
 	{
