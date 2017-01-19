@@ -5030,6 +5030,26 @@ luaFunc(getWallNormal)
 	luaReturnVec2(n.x, n.y);
 }
 
+luaFunc(incrFlag)
+{
+	std::string f = getString(L, 1);
+	int v = 1;
+	if (lua_isnumber(L, 2))
+		v = lua_tointeger(L, 2);
+	dsq->continuity.setFlag(f, dsq->continuity.getFlag(f)+v);
+	luaReturnNil();
+}
+
+luaFunc(decrFlag)
+{
+	std::string f = getString(L, 1);
+	int v = 1;
+	if (lua_isnumber(L, 2))
+		v = lua_tointeger(L, 2);
+	dsq->continuity.setFlag(f, dsq->continuity.getFlag(f)-v);
+	luaReturnNil();
+}
+
 luaFunc(setFlag)
 {
 
@@ -10024,6 +10044,8 @@ static const struct {
 
 	luaRegister(setNaijaHeadTexture),
 
+	luaRegister(incrFlag),
+	luaRegister(decrFlag),
 	luaRegister(setFlag),
 	luaRegister(getFlag),
 	luaRegister(setStringFlag),
