@@ -64,7 +64,7 @@ void PathRender::onRender()
 			{
 				if (p->pathShape == PATHSHAPE_RECT)
 				{
-					glColor4f(0.5, 0.5, 1, 0.2);
+					glColor4f(0.5f, 0.5f, 1, 0.2f);
 					glBegin(GL_QUADS);
 						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y2);
 						glVertex2f(nd->position.x+p->rect.x2, nd->position.y+p->rect.y2);
@@ -72,7 +72,7 @@ void PathRender::onRender()
 						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y1);
 					glEnd();
 
-					glColor4f(1, 1, 1, 0.3);
+					glColor4f(1, 1, 1, 0.3f);
 					glBegin(GL_LINES);
 						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y1);
 						glVertex2f(nd->position.x+p->rect.x2, nd->position.y+p->rect.y1);
@@ -86,16 +86,16 @@ void PathRender::onRender()
 				}
 				else
 				{
-					glColor4f(0.5, 0.5, 1, 0.5);
+					glColor4f(0.5f, 0.5f, 1, 0.5f);
 					glTranslatef(nd->position.x, nd->position.y, 0);
 					drawCircle(p->rect.getWidth()*0.5f, 16);
 					glTranslatef(-nd->position.x, -nd->position.y, 0);
 				}
 			}
 
-			float a = 0.75;
+			float a = 0.75f;
 			if (!p->active)
-				a = 0.3;
+				a = 0.3f;
 
 #ifdef AQUARIA_BUILD_SCENEEDITOR
 			if (dsq->game->sceneEditor.selectedIdx == i)

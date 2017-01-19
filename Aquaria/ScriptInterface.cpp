@@ -1605,11 +1605,11 @@ luaFunc(obj_damageFlash)
 	int type = lua_tointeger(L, 2);
 	if (r)
 	{
-		Vector toColor = Vector(1, 0.1, 0.1);
+		Vector toColor = Vector(1, 0.1f, 0.1f);
 		if (type == 1)
-			toColor = Vector(1, 1, 0.1);
+			toColor = Vector(1, 1, 0.1f);
 		r->color = Vector(1,1,1);
-		r->color.interpolateTo(toColor, 0.1, 5, 1);
+		r->color.interpolateTo(toColor, 0.1f, 5, 1);
 	}
 	luaReturnNil();
 }
@@ -3442,7 +3442,7 @@ luaFunc(entity_warpToNode)
 	{
 		e->position.stopPath();
 		e->position = p->nodes[0].position;
-		e->rotateToVec(Vector(0,-1), 0.1);
+		e->rotateToVec(Vector(0,-1), 0.1f);
 	}
 	luaReturnNil();
 }
@@ -4537,7 +4537,7 @@ luaFunc(entity_animate)
 		if (transition == -1)
 			transition = 0;
 		else if (transition == 0)
-			transition = 0.2;
+			transition = 0.2f;
 		ret = skel->transitionAnimate(getString(L, 2), transition, lua_tointeger(L, 3), lua_tointeger(L, 4));
 	}
 	luaReturnNum(ret);
@@ -6704,7 +6704,7 @@ luaFunc(stopMusic)
 
 luaFunc(playMusic)
 {
-	float crossfadeTime = 0.8;
+	float crossfadeTime = 0.8f;
 	dsq->sound->playMusic(getString(L, 1), SLT_LOOP, SFT_CROSS, crossfadeTime);
 	luaReturnNil();
 }
@@ -6718,7 +6718,7 @@ luaFunc(playMusicStraight)
 
 luaFunc(playMusicOnce)
 {
-	float crossfadeTime = 0.8;
+	float crossfadeTime = 0.8f;
 	dsq->sound->playMusic(getString(L, 1), SLT_NONE, SFT_CROSS, crossfadeTime);
 	luaReturnNil();
 }
@@ -6872,7 +6872,7 @@ luaFunc(entity_moveAlongSurface)
 
 			if (invisibleIn)
 				outFromWall -= TILE_SIZE;
-			float t = 0.1;
+			float t = 0.1f;
 			e->offset.interpolateTo(v*outFromWall, t);
 
 
@@ -8798,7 +8798,7 @@ luaFunc(clearShots)
 
 luaFunc(clearHelp)
 {
-	float t = 0.4;
+	float t = 0.4f;
 
 	RenderObjectLayer *rl = &core->renderObjectLayers[LR_HELP];
 	RenderObject *ro = rl->getFirst();

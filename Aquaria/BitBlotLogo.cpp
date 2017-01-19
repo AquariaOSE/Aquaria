@@ -52,12 +52,12 @@ void BitBlotLogo::doShortBitBlot()
 
 	Quad *logo = new Quad("BitBlot/Logo.png", Vector(400,300));
 	logo->followCamera = 1;
-	logo->scale = Vector(0.6,0.6);
+	logo->scale = Vector(0.6f,0.6f);
 	addRenderObject(logo, LR_HUD);
 
 	core->run(1.5);
 
-	dsq->overlay2->alpha.interpolateTo(1, 0.5);
+	dsq->overlay2->alpha.interpolateTo(1, 0.5f);
 	core->run(0.5);
 }
 
@@ -127,8 +127,8 @@ void BitBlotLogo::applyState()
 		bird->position = Vector(-300 + rand()%150, -200 + rand()%200);
 		bird->offset.interpolateTo(Vector(200, -20 + rand()%100), 20);
 		bird->shareAlphaWithChildren = 1;
-		bird->getBoneByIdx(0)->alphaMod = 0.3;
-		bird->getBoneByIdx(1)->alphaMod = 0.3;
+		bird->getBoneByIdx(0)->alphaMod = 0.3f;
+		bird->getBoneByIdx(1)->alphaMod = 0.3f;
 		landscape->addChild(bird, PM_POINTER, RBP_OFF);
 		bird->update((rand()%100)*0.1f);
 	}
@@ -161,10 +161,10 @@ void BitBlotLogo::applyState()
 		windmill->shareAlphaWithChildren = 1;
 		landscape->addChild(windmill, PM_POINTER, RBP_OFF);
 		windmill->update((rand()%100)*0.1f);
-		windmill->scale = Vector(0.7, 0.7);
+		windmill->scale = Vector(0.7f, 0.7f);
 		for (size_t i = 0; i < windmill->bones.size(); i++)
 		{
-			windmill->getBoneByIdx(i)->alpha = 0.7;
+			windmill->getBoneByIdx(i)->alpha = 0.7f;
 		}
 		windmills.push_back(windmill);
 	}
@@ -197,14 +197,14 @@ void BitBlotLogo::applyState()
 
 	Quad *logo = new Quad("BitBlot/Logo.png", Vector(400,300));
 	logo->followCamera = 1;
-	logo->scale = Vector(0.6, 0.6);
+	logo->scale = Vector(0.6f, 0.6f);
 	addRenderObject(logo, LR_ENTITIES);
 
 	Quad *logob = new Quad("BitBlot/Logo-blur.png", Vector(400,300));
 	logob->followCamera = 1;
-	logob->scale = Vector(0.6, 0.6);
+	logob->scale = Vector(0.6f, 0.6f);
 	logob->offset = Vector(-4, 0);
-	logob->offset.interpolateTo(Vector(4,0), 0.05, -1, 1);
+	logob->offset.interpolateTo(Vector(4,0), 0.05f, -1, 1);
 
 	addRenderObject(logob, LR_ENTITIES);
 
@@ -219,7 +219,7 @@ void BitBlotLogo::applyState()
 		Quad *lin = new Quad("", Vector(0,y-300));
 		lin->followCamera = 1;
 		lin->color = 0;
-		lin->alphaMod = 0.2;
+		lin->alphaMod = 0.2f;
 		lin->setWidthHeight(800, 3);
 		lines->addChild(lin, PM_POINTER);
 	}
@@ -229,7 +229,7 @@ void BitBlotLogo::applyState()
 	scanline->followCamera = 1;
 	scanline->setWidthHeight(800, 200);
 	scanline->alpha = 0.5;
-	scanline->position.interpolateTo(Vector(400,700), 0.4, -1);
+	scanline->position.interpolateTo(Vector(400,700), 0.4f, -1);
 	addRenderObject(scanline, LR_ENTITIES2);
 
 	dsq->overlay->alpha = 1;
@@ -269,7 +269,7 @@ void BitBlotLogo::applyState()
 
 
 
-	landscape->scale.interpolateTo(Vector(1.1, 1.1), 5);
+	landscape->scale.interpolateTo(Vector(1.1f, 1.1f), 5);
 
 	scanline->alpha.interpolateTo(0, 1);
 

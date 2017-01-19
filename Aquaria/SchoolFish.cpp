@@ -54,9 +54,9 @@ SchoolFish::SchoolFish(const std::string &texname) : FlockEntity()
 
 	color.ensureData();
 	color.data->path.addPathNode(Vector(1,1,1), 0);
-	color.data->path.addPathNode(Vector(1,1,1), 0.5);
-	color.data->path.addPathNode(Vector(0.8, 0.8, 0.8), 0.7);
-	color.data->path.addPathNode(Vector(1,1,1), 1.0);
+	color.data->path.addPathNode(Vector(1,1,1), 0.5f);
+	color.data->path.addPathNode(Vector(0.8f, 0.8f, 0.8f), 0.7f);
+	color.data->path.addPathNode(Vector(1,1,1), 1.0f);
 	color.startPath(2);
 	color.data->loopType = -1;
 	color.update((rand()%1000)/1000.0f);
@@ -78,7 +78,7 @@ SchoolFish::SchoolFish(const std::string &texname) : FlockEntity()
 	collideRadius = 20;
 
 
-	setSegs(8, 2, 0.1, 0.9, 0, -0.03, 8, 0);
+	setSegs(8, 2, 0.1f, 0.9f, 0, -0.03f, 8, 0);
 
 
 

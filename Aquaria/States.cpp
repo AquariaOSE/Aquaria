@@ -64,7 +64,7 @@ void Intro2::applyState()
 		frame4->setTexture("gameover-0004");
 		frame4->position = Vector(400,310);
 		frame4->setWidthHeight(600, 600);
-		frame4->setSegs(2, 32, 0.1, 0.1, 0.002, 0.003, 2.0, 1);
+		frame4->setSegs(2, 32, 0.1f, 0.1f, 0.002f, 0.003f, 2.0f, 1);
 	}
 	addRenderObject(frame4, LR_BACKGROUND);
 
@@ -157,7 +157,7 @@ void GameOver::applyState()
 	{
 		q->color = 0;
 		q->setWidthHeight(800, 600);
-		q->position = Vector(400,300,-0.1);
+		q->position = Vector(400,300,-0.1f);
 	}
 	addRenderObject(q);
 
@@ -205,11 +205,11 @@ void GameOver::applyState()
 	}
 	addRenderObject(shockLines, LR_BACKGROUND);
 
-	core->run(0.033);
+	core->run(0.033f);
 	if (core->afterEffectManager)
 	{
 		core->afterEffectManager->clear();
-		core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter, 0.07,0.03,30,0.2f, 1.1));
+		core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter, 0.07f,0.03f,30,0.2f, 1.1f));
 	}
 
 
@@ -364,7 +364,7 @@ void Nag::applyState()
 
 
 	Vector framePos(240, 400);
-	Vector frameScale(0.98, 0.98);
+	Vector frameScale(0.98f, 0.98f);
 
 	for (int i = 0; i < numScreens; i++)
 	{
@@ -463,14 +463,14 @@ void Nag::onBuy()
 	if (core->isFullscreen())
 	{
 		core->setFullscreen(false);
-		dsq->run(0.6);
+		dsq->run(0.6f);
 	}
 
 	std::ostringstream os;
 	os << "naijagiggle" << randRange(1, 5);
 	dsq->sound->playSfx(os.str());
 
-	dsq->run(0.5);
+	dsq->run(0.5f);
 
 	click = 1;
 

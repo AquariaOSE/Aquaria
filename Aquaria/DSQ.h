@@ -55,11 +55,11 @@ class Path;
 class AquariaSaveSlot;
 class AquariaMenuItem;
 
-const float FRAME_TIME = 0.04;
+const float FRAME_TIME = 0.04f;
 
 const int MAX_INGREDIENT_AMOUNT = 8;
 
-const float MENUSELECTDELAY		= 0.2;
+const float MENUSELECTDELAY		= 0.2f;
 
 const int VERSION_MAJOR			= 1;
 const int VERSION_MINOR			= 1;

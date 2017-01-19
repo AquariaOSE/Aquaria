@@ -30,11 +30,11 @@ Spore::Spores Spore::spores;
 Spore::Spore (const Vector &position) : CollideEntity()
 {
 	spores.push_back(this);
-	scale = Vector(0.1, 0.1);
+	scale = Vector(0.1f, 0.1f);
 	alpha = 0;
 
 	this->position = position;
-	alpha.interpolateTo(1, 0.5);
+	alpha.interpolateTo(1, 0.5f);
 	scale.interpolateTo(Vector(1, 1), 4);
 
 	setTexture("Spore");

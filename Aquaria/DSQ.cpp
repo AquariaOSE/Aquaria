@@ -362,7 +362,7 @@ void DSQ::centerMessage(const std::string &text, float y, int type)
 	t->position = pos;
 	t->alpha.ensureData();
 	t->alpha.data->path.addPathNode(1, 0);
-	t->alpha.data->path.addPathNode(1, 0.8);
+	t->alpha.data->path.addPathNode(1, 0.8f);
 	t->alpha.data->path.addPathNode(0, 1);
 	t->alpha.startPath(time);
 	t->followCamera = 1;
@@ -388,8 +388,8 @@ void DSQ::centerText(const std::string &text)
 	s->followCamera = 1;
 	s->alpha.ensureData();
 	s->alpha.data->path.addPathNode(0, 0);
-	s->alpha.data->path.addPathNode(1, 0.1);
-	s->alpha.data->path.addPathNode(1, 0.8);
+	s->alpha.data->path.addPathNode(1, 0.1f);
+	s->alpha.data->path.addPathNode(1, 0.8f);
 	s->alpha.data->path.addPathNode(0, 1);
 	s->alpha.startPath(time);
 	getTopStateData()->addRenderObject(s, LR_HUD);
@@ -401,8 +401,8 @@ void DSQ::centerText(const std::string &text)
 	t->position =pos;
 	t->alpha.ensureData();
 	t->alpha.data->path.addPathNode(0, 0);
-	t->alpha.data->path.addPathNode(1, 0.1);
-	t->alpha.data->path.addPathNode(1, 0.8);
+	t->alpha.data->path.addPathNode(1, 0.1f);
+	t->alpha.data->path.addPathNode(1, 0.8f);
 	t->alpha.data->path.addPathNode(0, 1);
 	t->alpha.startPath(time);
 
@@ -443,28 +443,28 @@ void DSQ::loadFonts()
 	std::string file = localisePath("data/font-small.glf");
 
 	font.load(file, 1, false);
-	font.fontTopColor = Vector(0.9,0.9,1);
-	font.fontBtmColor = Vector(0.5,0.8,1);
+	font.fontTopColor = Vector(0.9f,0.9f,1);
+	font.fontBtmColor = Vector(0.5f,0.8f,1);
 	font.overrideTexture = core->addTexture("font");
 
-	smallFont.load(file, 0.6, false);
-	smallFont.fontTopColor = Vector(0.9,0.9,1);
-	smallFont.fontBtmColor = Vector(0.5,0.8,1);
+	smallFont.load(file, 0.6f, false);
+	smallFont.fontTopColor = Vector(0.9f,0.9f,1);
+	smallFont.fontBtmColor = Vector(0.5f,0.8f,1);
 	smallFont.overrideTexture = core->addTexture("font");
 
-	smallFontRed.load(file, 0.6, false);
-	smallFontRed.fontTopColor = Vector(1,0.9,0.9);
-	smallFontRed.fontBtmColor = Vector(1,0.8,0.5);
+	smallFontRed.load(file, 0.6f, false);
+	smallFontRed.fontTopColor = Vector(1,0.9f,0.9f);
+	smallFontRed.fontBtmColor = Vector(1,0.8f,0.5f);
 	smallFontRed.overrideTexture = core->addTexture("font");
 
-	subsFont.load(file, 0.5, false);
+	subsFont.load(file, 0.5f, false);
 	subsFont.fontTopColor = Vector(1,1,1);
-	subsFont.fontBtmColor = Vector(0.5,0.8,1);
+	subsFont.fontBtmColor = Vector(0.5f,0.8f,1);
 	subsFont.overrideTexture = core->addTexture("font");
 
 	goldFont.load(file, 1, false);
-	goldFont.fontTopColor = Vector(1,0.9,0.5);
-	goldFont.fontBtmColor = Vector(0.6,0.5,0.25);
+	goldFont.fontTopColor = Vector(1,0.9f,0.5f);
+	goldFont.fontBtmColor = Vector(0.6f,0.5f,0.25f);
 	goldFont.overrideTexture = core->addTexture("font");
 
 
@@ -576,7 +576,7 @@ void DSQ::debugMenu()
 				else if (c == '6')
 				{
 					while (core->getKeyState(KEY_RETURN))
-						core->run(0.1);
+						core->run(0.1f);
 					dsq->setStory();
 				}
 				else if (c == '8')
@@ -691,7 +691,7 @@ static const float loadingProgressTable[] = {
 	#define LOAD_GRAPHICS2	5  // After creating more graphics resources
 	#define LOAD_TEXTURES	6  // After loading textures to be precached
 	#define LOAD_FINISHED	7  // All done!
-	0.01, 0.07, 0.20, 0.23, 0.24, 0.25, 0.89, 1.00,
+	0.01f, 0.07f, 0.20f, 0.23f, 0.24f, 0.25f, 0.89f, 1.00f,
 };
 
 void loadBit(int index, float perc = 1)
@@ -1108,8 +1108,8 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	versionLabel->followCamera = 1;
 	versionLabel->setAlign(ALIGN_LEFT);
-	versionLabel->scale = Vector(0.7, 0.7);
-	versionLabel->alphaMod = 0.75;
+	versionLabel->scale = Vector(0.7f, 0.7f);
+	versionLabel->alphaMod = 0.75f;
 	versionLabel->alpha = 0;
 	}
 	addRenderObject(versionLabel, LR_REGISTER_TEXT);
@@ -1118,7 +1118,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	subbox = new Quad();
 	subbox->position = Vector(400,580);
 	subbox->alpha = 0;
-	subbox->alphaMod = 0.7;
+	subbox->alphaMod = 0.7f;
 	subbox->followCamera = 1;
 	subbox->autoWidth = AUTO_VIRTUALWIDTH;
 	subbox->setHeight(40);
@@ -1140,7 +1140,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	achievement_box = new Quad();
 	achievement_box->position = Vector(800,0);
 	achievement_box->alpha = 0;
-	achievement_box->alphaMod = 0.7;
+	achievement_box->alphaMod = 0.7f;
 	achievement_box->followCamera = 1;
 	achievement_box->setWidthHeight(400, 87);
 	achievement_box->color = 0;
@@ -1199,10 +1199,10 @@ This build is not yet final, and as such there are a couple things lacking. They
 	cursorBlinker = new Quad;
 	{
 		cursorBlinker->setTexture("cursor");
-		cursorBlinker->scale = Vector(1.5, 1.5);
-		cursorBlinker->scale.interpolateTo(Vector(2,2), 0.2, -1, 1, 1);
+		cursorBlinker->scale = Vector(1.5f, 1.5f);
+		cursorBlinker->scale.interpolateTo(Vector(2,2), 0.2f, -1, 1, 1);
 		cursorBlinker->alpha = 0;
-		cursorBlinker->alphaMod = 0.5;
+		cursorBlinker->alphaMod = 0.5f;
 	}
 	cursor->addChild(cursorBlinker, PM_NONE, RBP_OFF);
 	addRenderObject(cursorBlinker, LR_CURSOR);
@@ -1586,7 +1586,7 @@ void DSQ::setStory()
 	std::istringstream is(flagString);
 	is >> flag;
 
-	core->run(0.2);
+	core->run(0.2f);
 	std::ostringstream os;
 	os << dsq->continuity.getFlag(flag);
 	flagString = getUserInputString(dsq->continuity.stringBank.get(2015), os.str());
@@ -1655,35 +1655,35 @@ Vector DSQ::getNoteColor(int note)
 	{
 	case 0:
 		// light green
-		noteColor = Vector(0.5, 1, 0.5);
+		noteColor = Vector(0.5f, 1, 0.5f);
 	break;
 	case 1:
 		// blue/green
-		noteColor = Vector(0.5, 1, 0.75);
+		noteColor = Vector(0.5f, 1, 0.75f);
 	break;
 	case 2:
 		// blue
-		noteColor = Vector(0.5, 0.5, 1);
+		noteColor = Vector(0.5f, 0.5f, 1);
 	break;
 	case 3:
 		// purple
-		noteColor = Vector(1, 0.5, 1);
+		noteColor = Vector(1, 0.5f, 1);
 	break;
 	case 4:
 		// red
-		noteColor = Vector(1, 0.5, 0.5);
+		noteColor = Vector(1, 0.5f, 0.5f);
 	break;
 	case 5:
 		// red/orange
-		noteColor = Vector(1, 0.6, 0.5);
+		noteColor = Vector(1, 0.6f, 0.5f);
 	break;
 	case 6:
 		// orange
-		noteColor = Vector(1, 0.75, 0.5);
+		noteColor = Vector(1, 0.75f, 0.5f);
 	break;
 	case 7:
 		// orange
-		noteColor = Vector(1, 1, 0.5);
+		noteColor = Vector(1, 1, 0.5f);
 	break;
 	}
 	return noteColor;
@@ -1748,16 +1748,16 @@ void DSQ::toggleConsole()
 	{
 		if (console->alpha == 0)
 		{
-			console->alpha.interpolateTo(1, 0.1);
-			cmDebug->alpha.interpolateTo(1, 0.1);
-			fpsText->alpha.interpolateTo(1, 0.1);
+			console->alpha.interpolateTo(1, 0.1f);
+			cmDebug->alpha.interpolateTo(1, 0.1f);
+			fpsText->alpha.interpolateTo(1, 0.1f);
 			RenderObject::renderPaths = true;
 		}
 		else if (console->alpha == 1)
 		{
-			console->alpha.interpolateTo(0, 0.1);
-			cmDebug->alpha.interpolateTo(0, 0.1);
-			fpsText->alpha.interpolateTo(0, 0.1);
+			console->alpha.interpolateTo(0, 0.1f);
+			cmDebug->alpha.interpolateTo(0, 0.1f);
+			fpsText->alpha.interpolateTo(0, 0.1f);
 			RenderObject::renderPaths = false;
 		}
 	}
@@ -2129,7 +2129,7 @@ void DSQ::shutdown()
 
 	screenTransition = 0;
 
-	core->run(0.1);
+	core->run(0.1f);
 	overlay = 0;
 	overlay2 = 0;
 	overlay3 = 0;
@@ -2205,8 +2205,8 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->alpha.ensureData();
 			q->alpha.data->path.addPathNode(0, 0);
-			q->alpha.data->path.addPathNode(0.5, 0.1);
-			q->alpha.data->path.addPathNode(0.5, 0.5);
+			q->alpha.data->path.addPathNode(0.5f, 0.1f);
+			q->alpha.data->path.addPathNode(0.5f, 0.5f);
 			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 
@@ -2221,7 +2221,7 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 		break;
 	case 1:
 		{
-			float t = 0.2;
+			float t = 0.2f;
 			if (ut != 0) t = ut;
 			Quad *q = new Quad;
 			q->setTexture("Particles/SoftRing");
@@ -2235,8 +2235,8 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->alpha.ensureData();
 			q->alpha.data->path.addPathNode(0, 0);
-			q->alpha.data->path.addPathNode(0.5, 0.1);
-			q->alpha.data->path.addPathNode(0.5, 0.5);
+			q->alpha.data->path.addPathNode(0.5f, 0.1f);
+			q->alpha.data->path.addPathNode(0.5f, 0.5f);
 			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 
@@ -2315,7 +2315,7 @@ void DSQ::doSavePoint(const Vector &position)
 	{
 		glow->setTexture("save-point-glow");
 		glow->alpha = 0;
-		glow->alpha.interpolateTo(0.5, 1, 1, -1, 1);
+		glow->alpha.interpolateTo(0.5f, 1, 1, true, true);
 		glow->setBlendType(RenderObject::BLEND_ADD);
 		glow->position = position;
 		glow->scale = Vector(1,1)*1.25f;
@@ -2329,7 +2329,7 @@ void DSQ::doSavePoint(const Vector &position)
 	dsq->game->avatar->disableInput();
 	dsq->game->avatar->fhTo(false);
 	dsq->game->avatar->position.interpolateTo(position, 1, 0, 0, 1);
-	dsq->game->avatar->myZoom.interpolateTo(Vector(1,1),0.5);
+	dsq->game->avatar->myZoom.interpolateTo(Vector(1,1),0.5f);
 
 	dsq->game->avatar->skeletalSprite.animate("save", 0, 3);
 	dsq->game->clearControlHint();
@@ -2349,8 +2349,8 @@ void DSQ::playNoEffect()
 {
 	if (noEffectTimer <= 0)
 	{
-		sound->playSfx("noeffect", 0.9);
-		noEffectTimer = 0.2;
+		sound->playSfx("noeffect", 0.9f);
+		noEffectTimer = 0.2f;
 	}
 }
 
@@ -2478,9 +2478,9 @@ void DSQ::createModSelector()
 	blackout->autoHeight = AUTO_VIRTUALHEIGHT;
 	blackout->followCamera = 1;
 	blackout->position = Vector(400,300);
-	blackout->alphaMod = 0.75;
+	blackout->alphaMod = 0.75f;
 	blackout->alpha = 0;
-	blackout->alpha.interpolateTo(1, 0.2);
+	blackout->alpha.interpolateTo(1, 0.2f);
 	addRenderObject(blackout, LR_MENU);
 
 	modSelectorScr = new ModSelectorScreen();
@@ -2602,7 +2602,7 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 	}
 	menu.resize(5);
 
-	float t = 0.3;
+	float t = 0.3f;
 
 
 	blackout = new Quad;
@@ -2611,9 +2611,9 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 	blackout->autoHeight = AUTO_VIRTUALHEIGHT;
 	blackout->followCamera = 1;
 	blackout->position = Vector(400,300);
-	blackout->alphaMod = 0.75;
+	blackout->alphaMod = 0.75f;
 	blackout->alpha = 0;
-	blackout->alpha.interpolateTo(1, 0.5);
+	blackout->alpha.interpolateTo(1, 0.5f);
 	addRenderObject(blackout, LR_MENU);
 
 
@@ -2800,7 +2800,7 @@ void DSQ::clearSaveSlots(bool trans)
 	{
 		core->sound->playSfx("menu-close");
 	}
-	float t = 0.3;
+	float t = 0.3f;
 	if (blackout)
 	{
 		if (!trans)
@@ -2968,7 +2968,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 
 			PlaySfx sfx;
 			sfx.name = "saved";
-			sfx.vol = 0.55;
+			sfx.vol = 0.55f;
 			dsq->sound->playSfx(sfx);
 			confirm("", "saved", 1);
 
@@ -3034,7 +3034,7 @@ void DSQ::onConfirmNo()
 
 bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, float countdown)
 {
-	const float t = 0.3;
+	const float t = 0.3f;
 
 	sound->playSfx("menu-open");
 
@@ -3061,7 +3061,7 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 
 	dsq->run(t);
 
-	float t2 = 0.05;
+	float t2 = 0.05f;
 
 
 
@@ -3126,7 +3126,7 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 	txt->position = Vector(400,250);
 	txt->setText(text);
 	txt->alpha = 0;
-	txt->scale = Vector(0.9, 0.9);
+	txt->scale = Vector(0.9f, 0.9f);
 	txt->alpha.interpolateTo(1, t2);
 	addRenderObject(txt, LR_CONFIRM);
 
@@ -3178,7 +3178,7 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 
 std::string DSQ::getUserInputString(std::string labelText, std::string t, bool allowNonLowerCase)
 {
-	float trans = 0.1;
+	float trans = 0.1f;
 
 	bool pauseState = dsq->game->isPaused();
 
@@ -3327,7 +3327,7 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 
 	bg->hide();
 
-	run(0.2);
+	run(0.2f);
 
 	inputText->alpha = 0;
 	label->alpha = 0;
@@ -3537,7 +3537,7 @@ void DSQ::vision(std::string folder, int num, bool ignoreMusic)
 
 	dsq->overlay->color = Vector(1,1,1);
 
-	float t = 0.1;
+	float t = 0.1f;
 
 	dsq->game->miniMapRender->toggle(0);
 
@@ -3569,11 +3569,11 @@ void DSQ::vision(std::string folder, int num, bool ignoreMusic)
 	{
 		sound->playSfx("memory-flash");
 
-		(*i)->scale.interpolateTo(Vector(1.1,1.1), 0.4);
+		(*i)->scale.interpolateTo(Vector(1.1f,1.1f), 0.4f);
 		fade(0, t);
 		run(t);
 
-		run(0.1);
+		run(0.1f);
 
 		fade(1, t);
 		run(t);
@@ -4079,7 +4079,7 @@ void DSQ::toggleCursor(bool v, float time)
 	if (!cursor) return;
 	float t = time;
 	if (time == -1)
-		t = 0.1;
+		t = 0.1f;
 	if (!v)
 		cursor->alpha.interpolateTo(0, t);
 	else
@@ -4106,8 +4106,8 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 
 		q->alpha.ensureData();
 		q->alpha.data->path.addPathNode(0, 0);
-		q->alpha.data->path.addPathNode(0.75, 0.25);
-		q->alpha.data->path.addPathNode(0.75, 0.75);
+		q->alpha.data->path.addPathNode(0.75f, 0.25f);
+		q->alpha.data->path.addPathNode(0.75f, 0.75f);
 		q->alpha.data->path.addPathNode(0, 1);
 		q->alpha.startPath(t);
 		q->setBlendType(RenderObject::BLEND_ADD);
@@ -4119,9 +4119,9 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 
 		if (target && target->getEntityType() == ET_AVATAR)
 			if (core->afterEffectManager)
-				core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.08,0.05,22,0.2f, 1.2));
+				core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.08f,0.05f,22,0.2f, 1.2f));
 
-		t = 0.75;
+		t = 0.75f;
 		{
 			Quad *q = new Quad;
 			q->position = position;
@@ -4129,8 +4129,8 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 			q->scale.interpolateTo(Vector(2,2),t);
 			q->alpha.ensureData();
 			q->alpha.data->path.addPathNode(0, 0);
-			q->alpha.data->path.addPathNode(0.75, 0.25);
-			q->alpha.data->path.addPathNode(0.75, 0.75);
+			q->alpha.data->path.addPathNode(0.75f, 0.25f);
+			q->alpha.data->path.addPathNode(0.75f, 0.75f);
 			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
 			q->setBlendType(RenderObject::BLEND_ADD);
@@ -4152,7 +4152,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 		q->scale.interpolateTo(Vector(3,3),t);
 		q->alpha.ensureData();
 		q->alpha.data->path.addPathNode(0, 0);
-		q->alpha.data->path.addPathNode(1, 0.3);
+		q->alpha.data->path.addPathNode(1, 0.3f);
 
 		q->alpha.data->path.addPathNode(0, 1);
 		q->alpha.startPath(t);
@@ -4172,7 +4172,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 			q->scale.interpolateTo(Vector(3,3),t);
 			q->alpha.ensureData();
 			q->alpha.data->path.addPathNode(0, 0);
-			q->alpha.data->path.addPathNode(0.8, 0.25);
+			q->alpha.data->path.addPathNode(0.8f, 0.25f);
 
 			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
@@ -4187,7 +4187,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 	break;
 	case VFX_RIPPLE:
 		if (core->afterEffectManager)
-			core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.04,0.06,15,0.2f));
+			core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.04f,0.06f,15,0.2f));
 	break;
 
 	}
@@ -4223,7 +4223,7 @@ void DSQ::modifyDt(float &dt)
 			if (core->getShiftState())
 				dt *= 0.1f;
 			else
-				dt *= 0.6;
+				dt *= 0.6f;
 		}
 		else if (core->getKeyState(KEY_H))
 			dt = FRAME_TIME;

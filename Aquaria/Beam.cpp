@@ -41,10 +41,10 @@ Beam::Beam(Vector pos, float angle) : Quad()
 
 	setBlendType(BLEND_ADD);
 	alpha = 0;
-	alpha.interpolateTo(1, 0.1);
+	alpha.interpolateTo(1, 0.1f);
 	trace();
 	damageData.damageType = DT_ENEMY_BEAM;
-	damageData.damage = 0.5;
+	damageData.damage = 0.5f;
 
 	beamWidth = 16;
 }

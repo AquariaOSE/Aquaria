@@ -94,7 +94,7 @@ bool Entity::setBoneLock(const BoneLock &boneLock)
 
 	if (this->boneLock.on && !boneLock.on)
 	{
-		boneLockDelay = 0.1;
+		boneLockDelay = 0.1f;
 		this->boneLock = boneLock;
 	}
 	else
@@ -154,7 +154,7 @@ Entity::Entity()
 	setv(EV_COLLIDELEVEL, 1);
 	setv(EV_LOOKAT, 1);
 	setv(EV_SWITCHCLAMP, 1);
-	setvf(EV_CLAMPTRANSF, 0.2);
+	setvf(EV_CLAMPTRANSF, 0.2f);
 	setv(EV_FLIPTOPATH, 1);
 	setv(EV_NOINPUTNOVEL, 1);
 	setv(EV_VINEPUSH, 1);
@@ -796,7 +796,7 @@ void Entity::doDeathEffects(float manaBallEnergy, bool die)
 		}
 		else
 		{
-			alpha.interpolateTo(0.01,1);
+			alpha.interpolateTo(0.01f,1);
 		}
 	}
 	else
@@ -809,7 +809,7 @@ void Entity::doDeathEffects(float manaBallEnergy, bool die)
 		}
 		else
 		{
-			alpha.interpolateTo(0.01,1);
+			alpha.interpolateTo(0.01f,1);
 		}
 		scale.interpolateTo(Vector(0,0), 1);
 		stickToNaijasHead = true;
@@ -996,7 +996,7 @@ bool Entity::touchAvatarDamage(int radius, float dmg, const Vector &override, fl
 	return false;
 }
 
-const float sct = 0.15;
+const float sct = 0.15f;
 
 void Entity::onFHScale()
 {
@@ -1018,7 +1018,7 @@ void Entity::onFH()
 
 
 
-		flipScale.interpolateTo(Vector(0.6, 1), sct);
+		flipScale.interpolateTo(Vector(0.6f, 1), sct);
 
 
 
@@ -1166,8 +1166,8 @@ void Entity::onPathEnd()
 	{
 		if (swimPath)
 		{
-			offset.interpolateTo(Vector(0, 0), 0.4);
-			rotateToVec(Vector(0,-1), 0.1, 0);
+			offset.interpolateTo(Vector(0, 0), 0.4f);
+			rotateToVec(Vector(0,-1), 0.1f, 0);
 			if (skeletalSprite.isLoaded())
 			{
 				skeletalSprite.animate("idle", -1);
@@ -1219,14 +1219,14 @@ void Entity::movementDetails(Vector v)
 	if (skeletalSprite.isLoaded())
 	{
 		if (burstTimer.isActive())
-			rotateToVec(v, 0.05);
+			rotateToVec(v, 0.05f);
 		else
-			rotateToVec(v, 0.2);
+			rotateToVec(v, 0.2f);
 		Animation *anim = skeletalSprite.getCurrentAnimation();
 		if (!burstTimer.isActive())
 		{
 			if (!anim || anim->name != "swim")
-				skeletalSprite.transitionAnimate("swim", 0.1, -1);
+				skeletalSprite.transitionAnimate("swim", 0.1f, -1);
 		}
 	}
 }
@@ -1302,14 +1302,14 @@ bool Entity::updateCurrents(float dt)
 			Vector dist = -vel2;
 			dist.normalize2D();
 			float v = dist.x;
-			float scale = 0.2;
+			float scale = 0.2f;
 			if (getEntityType() == ET_AVATAR)
 			{
 				Avatar *a = dsq->game->avatar;
 				if (v < 0)
-					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2, a->getLastActionSourceID(), a->getLastActionInputDevice());
+					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2f, a->getLastActionSourceID(), a->getLastActionInputDevice());
 				else
-					dsq->rumble((1.0f-v)*scale, (v)*scale, 0.1, a->getLastActionSourceID(), a->getLastActionInputDevice());
+					dsq->rumble((1.0f-v)*scale, (v)*scale, 0.1f, a->getLastActionSourceID(), a->getLastActionInputDevice());
 			}
 		}
 	}
@@ -1714,7 +1714,7 @@ void Entity::updateBoneLock()
 		{
 			position = boneLock.bone->transformedCollisionMask[boneLock.collisionMaskIndex];
 			boneLock.wallNormal = boneLock.bone->getCollisionMaskNormal(boneLock.collisionMaskIndex);
-			rotateToVec(boneLock.wallNormal, 0.01);
+			rotateToVec(boneLock.wallNormal, 0.01f);
 		}
 		else
 		{
@@ -1722,7 +1722,7 @@ void Entity::updateBoneLock()
 			position = boneLock.entity->getWorldPosition() + currentOffset;
 			boneLock.wallNormal = currentOffset;
 			boneLock.wallNormal.normalize2D();
-			rotateToVec(boneLock.wallNormal, 0.01);
+			rotateToVec(boneLock.wallNormal, 0.01f);
 		}
 
 		if (dsq->game->collideCircleWithGrid(position, collideRadius))
@@ -1756,8 +1756,8 @@ void Entity::idle()
 
 	onIdle();
 
-	skeletalSprite.transitionAnimate(getIdleAnimName(), 0.3, -1);
-	rotateToVec(Vector(0,-1),0.1);
+	skeletalSprite.transitionAnimate(getIdleAnimName(), 0.3f, -1);
+	rotateToVec(Vector(0,-1),0.1f);
 	vel.capLength2D(50);
 
 	setRiding(0);
@@ -2191,11 +2191,11 @@ void Entity::freeze(float time)
 		bubble = new Quad;
 		bubble->setTexture("spell-bubble");
 		bubble->position = this->position;
-		bubble->scale = Vector(0.2,0.2);
-		bubble->scale.interpolateTo(Vector(2,2), 0.5, 0, 0, 1);
+		bubble->scale = Vector(0.2f,0.2f);
+		bubble->scale.interpolateTo(Vector(2,2), 0.5f, 0, 0, 1);
 		bubble->alpha.ensureData();
-		bubble->alpha.data->path.addPathNode(0.5, 0);
-		bubble->alpha.data->path.addPathNode(0.5, 0.75);
+		bubble->alpha.data->path.addPathNode(0.5f, 0);
+		bubble->alpha.data->path.addPathNode(0.5f, 0.75f);
 		bubble->alpha.data->path.addPathNode(0, 1);
 		bubble->alpha.startPath(time+time*0.25f);
 		core->getTopStateData()->addRenderObject(bubble, LR_PARTICLES);
@@ -2427,9 +2427,9 @@ bool Entity::damage(const DamageData &dmgData)
 		if (d.damage>0)
 		{
 			if (entityType == ET_AVATAR)
-				this->multColor.interpolateTo(Vector(1, 0.1, 0.1), 0.1, 14, 1);
+				this->multColor.interpolateTo(Vector(1, 0.1f, 0.1f), 0.1f, 14, 1);
 			else
-				this->multColor.interpolateTo(Vector(1, 0.1, 0.1), 0.1, 4, 1);
+				this->multColor.interpolateTo(Vector(1, 0.1f, 0.1f), 0.1f, 4, 1);
 		}
 
 		health -= d.damage;
@@ -2527,17 +2527,17 @@ void Entity::render()
 
 void Entity::doGlint(const Vector &position, const Vector &scale, const std::string &tex, RenderObject::BlendTypes bt)
 {
-	float glintTime = 0.4;
+	float glintTime = 0.4f;
 	Quad *glint = new Quad;
 
 	glint->setBlendType(bt);
 	glint->setTexture(tex);
-	glint->scale = Vector(0.5,0.5);
+	glint->scale = Vector(0.5f,0.5f);
 	glint->position = position;
 	glint->scale.interpolateTo(scale, glintTime);
 	glint->alpha.ensureData();
 	glint->alpha.data->path.addPathNode(1, 0);
-	glint->alpha.data->path.addPathNode(1, 0.7);
+	glint->alpha.data->path.addPathNode(1, 0.7f);
 	glint->alpha.data->path.addPathNode(0, 1);
 	glint->alpha.startPath(glintTime);
 

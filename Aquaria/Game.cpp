@@ -48,9 +48,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Hair.h"
 
 
-static const float MENUPAGETRANSTIME		= 0.2;
+static const float MENUPAGETRANSTIME		= 0.2f;
 
-const float bgSfxVol	= 1.0;
+const float bgSfxVol	= 1.0f;
 
 unsigned char Game::grid[MAX_GRID][MAX_GRID];
 
@@ -239,12 +239,12 @@ Game::~Game()
 void Game::pickupIngredientEffects(IngredientData *data)
 {
 	Quad *q = new Quad("gfx/ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), (570-2*(100*miniMapRender->scale.y))+ingOffY));
-	q->scale = Vector(0.8, 0.8);
+	q->scale = Vector(0.8f, 0.8f);
 	q->followCamera = 1;
 	q->alpha.ensureData();
 	q->alpha.data->path.addPathNode(0, 0);
-	q->alpha.data->path.addPathNode(1.0, 0.1);
-	q->alpha.data->path.addPathNode(0, 1.0);
+	q->alpha.data->path.addPathNode(1.0f, 0.1f);
+	q->alpha.data->path.addPathNode(0, 1.0f);
 	q->alpha.startPath(2);
 	q->setLife(1);
 	q->setDecayRate(0.5);
@@ -345,7 +345,7 @@ Element* Game::createElement(size_t idx, Vector position, size_t bgLayer, Render
 	}
 
 	element->position = position;
-	element->position.z = -0.05;
+	element->position.z = -0.05f;
 	element->templateIdx = idx;
 
 	element->bgLayer = bgLayer;
@@ -2353,10 +2353,10 @@ void Game::showImage(const std::string &gfx)
 		core->addRenderObject(image, LR_HUD);
 
 		image->scale = Vector(1,1);
-		image->scale.interpolateTo(Vector(1.1, 1.1), 12);
+		image->scale.interpolateTo(Vector(1.1f, 1.1f), 12);
 
 		image->alpha = 1;
-		dsq->fade(0, 0.5);
+		dsq->fade(0, 0.5f);
 	}
 }
 
@@ -2392,7 +2392,7 @@ void Game::switchBgLoop(int v)
 			    sfx.name = bgSfxLoop;
 			    sfx.vol = bgSfxVol;
 			    sfx.loops = -1;
-				sfx.priority = 0.8;
+				sfx.priority = 0.8f;
 				dsq->loops.bg = core->sound->playSfx(sfx);
 			}
 		break;
@@ -2403,7 +2403,7 @@ void Game::switchBgLoop(int v)
 			    sfx.name = airSfxLoop;
 			    sfx.vol = bgSfxVol;
 			    sfx.loops = -1;
-				sfx.priority = 0.8;
+				sfx.priority = 0.8f;
 				dsq->loops.bg = core->sound->playSfx(sfx);
 			}
 		break;
@@ -2701,7 +2701,7 @@ void Game::applyState()
 	maxZoom = -1;
 	maxLookDistance = 600;
 	saveFile = 0;
-	deathTimer = 0.9;
+	deathTimer = 0.9f;
 	runGameOverScript = false;
 	paused = false;
 	//sceneColor = Vector(0.75, 0.75, 0.8);
@@ -2726,7 +2726,7 @@ void Game::applyState()
 		damageSprite->autoHeight = AUTO_VIRTUALHEIGHT;
 		damageSprite->position = Vector(400,300);
 		damageSprite->followCamera = true;
-		damageSprite->scale.interpolateTo(Vector(1.1, 1.1), 0.75, -1, 1, 1);
+		damageSprite->scale.interpolateTo(Vector(1.1f, 1.1f), 0.75f, -1, 1, 1);
 	}
 	addRenderObject(damageSprite, LR_DAMAGESPRITE);
 
@@ -2738,7 +2738,7 @@ void Game::applyState()
 		bg2->setWidthHeight(900,600);
 		//bg2->blendEnabled = false;
 		bg2->followCamera =1;
-		bg2->alpha = 0.8;
+		bg2->alpha = 0.8f;
 	}
 	addRenderObject(bg2, LR_BACKGROUND);
 
@@ -2763,7 +2763,7 @@ void Game::applyState()
 		controlHint_bg->followCamera = 1;
 		controlHint_bg->position = Vector(400,500);
 		controlHint_bg->color = 0;
-		controlHint_bg->alphaMod = 0.7;
+		controlHint_bg->alphaMod = 0.7f;
 		//controlHint_bg->setTexture("HintBox");
 		controlHint_bg->setWidthHeight(core->getVirtualWidth(), 100);
 		controlHint_bg->autoWidth = AUTO_VIRTUALWIDTH;
@@ -2778,7 +2778,7 @@ void Game::applyState()
 
 		controlHint_text->setAlign(ALIGN_LEFT);
 		controlHint_text->followCamera = 1;
-		controlHint_text->scale = Vector(0.9, 0.9);
+		controlHint_text->scale = Vector(0.9f, 0.9f);
 		//controlHint_text->setFontSize(14);
 	}
 	addRenderObject(controlHint_text, LR_HELP);
@@ -2835,7 +2835,7 @@ void Game::applyState()
 		controlHint_shine->color = Vector(1,1,1);
 		controlHint_shine->followCamera = 1;
 		controlHint_shine->position = Vector(400,500);
-		controlHint_shine->alphaMod = 0.3;
+		controlHint_shine->alphaMod = 0.3f;
 		controlHint_shine->setWidthHeight(core->getVirtualWidth(), 100);
 		controlHint_shine->alpha = 0;
 		controlHint_shine->setBlendType(RenderObject::BLEND_ADD);
@@ -2947,7 +2947,7 @@ void Game::applyState()
 
 	miniMapRender = new MiniMapRender;
 	// position is set in minimaprender::onupdate
-	miniMapRender->scale = Vector(0.55, 0.55);
+	miniMapRender->scale = Vector(0.55f, 0.55f);
 	addRenderObject(miniMapRender, LR_MINIMAP);
 
 	timerText = new BitmapText(&dsq->smallFont);
@@ -3191,10 +3191,10 @@ void Game::applyState()
 
 		dsq->transitionSaveSlots();
 		dsq->overlay->alpha = 0;
-		dsq->run(0.5);
+		dsq->run(0.5f);
 		dsq->toggleCursor(true);
-		dsq->tfader->alpha.interpolateTo(0, 0.2);
-		dsq->run(0.21);
+		dsq->tfader->alpha.interpolateTo(0, 0.2f);
+		dsq->run(0.21f);
 		dsq->clearSaveSlots(false);
 	}
 
@@ -3382,7 +3382,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 		sprintf(sbuf, "song/songslot-%d", dsq->continuity.getSongSlotByType(songType));
 		Quad *q = new Quad(sbuf, p);
 		q->followCamera = 1;
-		q->scale = Vector(0.7, 0.7);
+		q->scale = Vector(0.7f, 0.7f);
 		q->alpha = 0;
 		addRenderObject(q, controlHint_bg->layer);
 		controlHintNotes.push_back(q);
@@ -3397,7 +3397,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 			Quad *q = new Quad(sbuf, p);
 			q->color = dsq->getNoteColor(note)*0.5f + Vector(1, 1, 1)*0.5f;
 			q->followCamera = 1;
-			q->scale = Vector(1.0, 1.0);
+			q->scale = Vector(1.0f, 1.0f);
 			q->alpha = 0;
 
 			if (i % 2)
@@ -3413,7 +3413,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 		}
 	}
 
-	float alphaOn = 0.8, alphaOff = 0.5;
+	float alphaOn = 0.8f, alphaOff = 0.5f;
 	controlHint_bg->alpha.interpolateTo(1, hintTransTime);
 	controlHint_bg->scale = Vector(1,1);
 	//controlHint_bg->scale = Vector(0,1);
@@ -3486,10 +3486,10 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 
 	controlHint_shine->alpha.ensureData();
 	controlHint_shine->alpha.data->path.clear();
-	controlHint_shine->alpha.data->path.addPathNode(0.001, 0.0);
-	controlHint_shine->alpha.data->path.addPathNode(1.000, 0.3);
-	controlHint_shine->alpha.data->path.addPathNode(0.001, 1.0);
-	controlHint_shine->alpha.startPath(0.4);
+	controlHint_shine->alpha.data->path.addPathNode(0.001f, 0.0f);
+	controlHint_shine->alpha.data->path.addPathNode(1.000f, 0.3f);
+	controlHint_shine->alpha.data->path.addPathNode(0.001f, 1.0f);
+	controlHint_shine->alpha.startPath(0.4f);
 }
 
 void appendFileToString(std::string &string, const std::string &file)
@@ -3650,7 +3650,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		helpUp->followCamera = 1;
 		helpUp->rotation.z = 90;
 		helpUp->event.set(MakeFunctionEvent(Game, onHelpUp));
-		helpUp->scale = Vector(0.6, 0.6);
+		helpUp->scale = Vector(0.6f, 0.6f);
 		helpUp->guiInputLevel = 100;
 		addRenderObject(helpUp, LR_HELP);
 
@@ -3662,7 +3662,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		helpDown->followCamera = 1;
 		helpDown->rotation.z = 90;
 		helpDown->event.set(MakeFunctionEvent(Game, onHelpDown));
-		helpDown->scale = Vector(0.6, 0.6);
+		helpDown->scale = Vector(0.6f, 0.6f);
 		helpDown->guiInputLevel = 100;
 		addRenderObject(helpDown, LR_HELP);
 
@@ -3674,7 +3674,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		helpCancel->followCamera = 1;
 		//helpCancel->rotation.z = 90;
 		helpCancel->event.set(MakeFunctionEvent(Game, toggleHelpScreen));
-		helpCancel->scale = Vector(0.9, 0.9);
+		helpCancel->scale = Vector(0.9f, 0.9f);
 		helpCancel->guiInputLevel = 100;
 		addRenderObject(helpCancel, LR_HELP);
 
@@ -4013,7 +4013,7 @@ void Game::postLocalWarp()
 	if (dsq->game->avatar->pullTarget)
 		dsq->game->avatar->pullTarget->position = dsq->game->avatar->position;
 	dsq->game->snapCam();
-	dsq->screenTransition->transition(0.6);
+	dsq->screenTransition->transition(0.6f);
 
 }
 
@@ -4256,7 +4256,7 @@ void Game::updateCursor(float dt)
 			{
 				//debugLog("offset lerp!");
 				dsq->cursor->offset = Vector(0, offy);
-				dsq->cursor->offset.interpolateTo(Vector(0, offy-20), 0.4, -1, 1, 1);
+				dsq->cursor->offset.interpolateTo(Vector(0, offy-20), 0.4f, -1, 1, 1);
 			}
 		}
 		else
@@ -4461,7 +4461,7 @@ void Game::updateBgSfxLoop()
 			play.fade = SFT_IN;
 			play.vol = 1;
 			play.loops = -1;
-			play.priority = 0.7;
+			play.priority = 0.7f;
 			dsq->loops.bg2 = core->sound->playSfx(play);
 			bgSfxLoopPlaying2 = p->content;
 		}
@@ -4603,11 +4603,11 @@ void Game::update(float dt)
 	dsq->sceneColorOverlay->color = sceneColor * sceneColor2 * sceneColor3;
 	if (bg)
 	{
-		setParallaxTextureCoordinates(bg, 0.3);
+		setParallaxTextureCoordinates(bg, 0.3f);
 	}
 	if (bg2)
 	{
-		setParallaxTextureCoordinates(bg2, 0.1);
+		setParallaxTextureCoordinates(bg2, 0.1f);
 	}
 	themenu->update(dt);
 
@@ -4654,7 +4654,7 @@ void Game::update(float dt)
 		dsq->continuity.refreshAvatarData(avatar);
 
 		Vector bigGlow(3,3);
-		float bigGlowTime = 0.4;
+		float bigGlowTime = 0.4f;
 		bool hadThingToActivate = (avatar->entityToActivate!=0 || avatar->pathToActivate!=0);
 		avatar->entityToActivate = 0;
 
@@ -4673,12 +4673,12 @@ void Game::update(float dt)
 					//if (trace(avatar->position, e->position))
 					{
 						avatar->entityToActivate = e;
-						dsq->cursorGlow->alpha.interpolateTo(1, 0.2);
-						dsq->cursorBlinker->alpha.interpolateTo(1.0,0.1);
+						dsq->cursorGlow->alpha.interpolateTo(1, 0.2f);
+						dsq->cursorBlinker->alpha.interpolateTo(1.0f,0.1f);
 						if (!hadThingToActivate)
 						{
 							dsq->cursorGlow->scale = Vector(1,1);
-							dsq->cursorGlow->scale.interpolateTo(bigGlow,bigGlowTime,1, -1, 1);
+							dsq->cursorGlow->scale.interpolateTo(bigGlow,bigGlowTime,1, true, true);
 						}
 					}
 					break;
@@ -4701,12 +4701,12 @@ void Game::update(float dt)
 					//if (trace(avatar->position, p->nodes[0].position))
 					{
 						avatar->pathToActivate = p;
-						dsq->cursorGlow->alpha.interpolateTo(1,0.2);
-						dsq->cursorBlinker->alpha.interpolateTo(1,0.2);
+						dsq->cursorGlow->alpha.interpolateTo(1,0.2f);
+						dsq->cursorBlinker->alpha.interpolateTo(1,0.2f);
 						if (!hadThingToActivate)
 						{
 							dsq->cursorGlow->scale = Vector(1,1);
-							dsq->cursorGlow->scale.interpolateTo(bigGlow,bigGlowTime,1, -1, 1);
+							dsq->cursorGlow->scale.interpolateTo(bigGlow,bigGlowTime,1, true, true);
 						}
 					}
 				}
@@ -4722,8 +4722,8 @@ void Game::update(float dt)
 
 	if (!avatar->entityToActivate && !avatar->pathToActivate)
 	{
-		dsq->cursorGlow->alpha.interpolateTo(0, 0.2);
-		dsq->cursorBlinker->alpha.interpolateTo(0, 0.1);
+		dsq->cursorGlow->alpha.interpolateTo(0, 0.2f);
+		dsq->cursorBlinker->alpha.interpolateTo(0, 0.1f);
 	}
 
 	if (!isSceneEditorActive())

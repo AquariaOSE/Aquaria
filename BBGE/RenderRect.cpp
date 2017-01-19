@@ -60,7 +60,7 @@ void OutlineRect::onRender()
 
 	if (renderCenter)
 	{
-		glColor3f(0.9, 0.9, 1);
+		glColor3f(0.9f, 0.9f, 1);
 		glBegin(GL_LINES);
 			// lr
 			glVertex2f(-w2,0);

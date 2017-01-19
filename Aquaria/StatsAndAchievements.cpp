@@ -744,7 +744,7 @@ void StatsAndAchievements::update(float dt)
 			{
 				unlockedDisplayTimestamp = -1.0f;
 				dsq->achievement_text->alpha.interpolateTo(0, 1);
-				dsq->achievement_box->alpha.interpolateTo(0, 1.2);
+				dsq->achievement_box->alpha.interpolateTo(0, 1.2f);
 			}
 		}
 
@@ -758,7 +758,7 @@ void StatsAndAchievements::update(float dt)
 			unlockedToBeDisplayed.pop();
 			dsq->achievement_text->setText(text);
 			dsq->achievement_text->alpha.interpolateTo(1, 1);
-			dsq->achievement_box->alpha.interpolateTo(1, 0.1);
+			dsq->achievement_box->alpha.interpolateTo(1, 0.1f);
 		}
 	}
 #endif

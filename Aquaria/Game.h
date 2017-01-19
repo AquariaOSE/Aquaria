@@ -54,7 +54,7 @@ const char CHAR_LEFT		= 'l';
 const char CHAR_RIGHT		= 'r';
 
 
-const float MIN_SIZE = 0.1;
+const float MIN_SIZE = 0.1f;
 
 #ifdef AQUARIA_DEMO
 	#undef AQUARIA_BUILD_SCENEEDITOR

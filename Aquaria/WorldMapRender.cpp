@@ -30,17 +30,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 namespace WorldMapRenderNamespace
 {
-	const float WORLDMAP_UNDERLAY_ALPHA = 0.8;
+	const float WORLDMAP_UNDERLAY_ALPHA = 0.8f;
 
-	float baseMapSegAlpha		= 0.4;
-	float visibleMapSegAlpha	= 0.8;
+	float baseMapSegAlpha		= 0.4f;
+	float visibleMapSegAlpha	= 0.8f;
 
-	const float blinkPeriod		= 0.2;
+	const float blinkPeriod		= 0.2f;
 
 	// Fraction of the screen width and height we consider "visited".
 	// (We don't mark the entire screen "visited" because the player may
 	// overlook things on the edge of the screen while moving.)
-	const float visitedFraction	= 0.8;
+	const float visitedFraction	= 0.8f;
 
 	enum VisMethod
 	{
@@ -59,10 +59,10 @@ namespace WorldMapRenderNamespace
 
 	float xMin, yMin, xMax, yMax;
 
-	float zoomMin = 0.2;
-	float zoomMax = 3.0;
-	const float exteriorZoomMax = 3.0;
-	const float interiorZoomMax = 3.0;
+	float zoomMin = 0.2f;
+	float zoomMax = 3.0f;
+	const float exteriorZoomMax = 3.0f;
+	const float interiorZoomMax = 3.0f;
 
 	bool editorActive=false;
 
@@ -81,7 +81,7 @@ GemMover *mover=0;
 
 WorldMapTile *activeTile=0;
 
-const float beaconSpawnBitTime = 0.05;
+const float beaconSpawnBitTime = 0.05f;
 
 
 void WorldMapRender::setRevealMethod(WorldMapRevealMethod m)
@@ -95,7 +95,7 @@ void WorldMapRender::setRevealMethod(WorldMapRevealMethod m)
 
 		default:
 			revMethod = REVEAL_DEFAULT;
-			baseMapSegAlpha = 0.4;
+			baseMapSegAlpha = 0.4f;
 	}
 }
 
@@ -217,7 +217,7 @@ protected:
 		if (!dsq->game->worldMapRender->isOn()) return;
 
 		const int lenRange = 125;
-		const float pscale = 0.7;
+		const float pscale = 0.7f;
 
 		float leftOver = dt;
 
@@ -280,7 +280,7 @@ public:
 		followCamera = 1;
 		blink = false;
 		blinkTimer = 0;
-		alphaMod = 0.66;
+		alphaMod = 0.66f;
 		canMove = gemData->canMove;
 
 
@@ -438,12 +438,12 @@ void WorldMapRender::setProperTileColor(WorldMapTile *tile)
 				tile->q->alphaMod = 0;
 
 			if (tile->revealed)
-				tile->q->alphaMod = 0.5;
+				tile->q->alphaMod = 0.5f;
 
 			if (activeTile && (tile->layer != activeTile->layer || (tile->layer > 0 && activeTile != tile)))
-				tile->q->alphaMod *= 0.5;
+				tile->q->alphaMod *= 0.5f;
 
-			tile->q->color = Vector(0.7, 0.8, 1);
+			tile->q->color = Vector(0.7f, 0.8f, 1);
 		}
 		else
 		{
@@ -712,7 +712,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 
 
 	float aly = 26, aly2 = 18;
-	float sz = 0.6;
+	float sz = 0.6f;
 
 	//hover
 	areaLabel = new BitmapText(&dsq->smallFont);
@@ -1072,7 +1072,7 @@ void WorldMapRender::onUpdate(float dt)
 			zoomMax = exteriorZoomMax;
 		}
 
-		float scrollAmount = 0.2;
+		float scrollAmount = 0.2f;
 
 		if (core->mouse.scrollWheelChange)
 		{
@@ -1082,7 +1082,7 @@ void WorldMapRender::onUpdate(float dt)
 				target *= 1 + scrollAmount;
 			for (; changeLeft < 0; changeLeft++)
 				target /= 1 + scrollAmount;
-			scale.interpolateTo(target, 0.1);
+			scale.interpolateTo(target, 0.1f);
 		}
 
 		if (scale.x < zoomMin)
@@ -1375,17 +1375,17 @@ void WorldMapRender::toggle(bool turnON)
 		}
 
 		if (bg)
-			bg->alpha.interpolateTo(1, 0.2);
+			bg->alpha.interpolateTo(1, 0.2f);
 
-		alpha.interpolateTo(1, 0.2);
+		alpha.interpolateTo(1, 0.2f);
 
 
 
-		underlay->alpha.interpolateTo(WORLDMAP_UNDERLAY_ALPHA, 0.2);
+		underlay->alpha.interpolateTo(WORLDMAP_UNDERLAY_ALPHA, 0.2f);
 
-		addHintQuad1->alpha.interpolateTo(1.0, 0.2);
-		addHintQuad2->alpha.interpolateTo(1.0, 0.2);
-		helpButton->alpha.interpolateTo(1.0, 0.2);
+		addHintQuad1->alpha.interpolateTo(1.0f, 0.2f);
+		addHintQuad2->alpha.interpolateTo(1.0f, 0.2f);
+		helpButton->alpha.interpolateTo(1.0f, 0.2f);
 
 		addAllGems();
 
@@ -1444,16 +1444,16 @@ void WorldMapRender::toggle(bool turnON)
 		core->sound->playSfx("Menu-Close");
 
 		if (bg)
-			bg->alpha.interpolateTo(0, 0.2);
+			bg->alpha.interpolateTo(0, 0.2f);
 
-		alpha.interpolateTo(0, 0.2);
+		alpha.interpolateTo(0, 0.2f);
 
 		dsq->game->togglePause(false);
 
-		underlay->alpha.interpolateTo(0, 0.2);
-		addHintQuad1->alpha.interpolateTo(0, 0.2);
-		addHintQuad2->alpha.interpolateTo(0, 0.2);
-		helpButton->alpha.interpolateTo(0, 0.2);
+		underlay->alpha.interpolateTo(0, 0.2f);
+		addHintQuad1->alpha.interpolateTo(0, 0.2f);
+		addHintQuad2->alpha.interpolateTo(0, 0.2f);
+		helpButton->alpha.interpolateTo(0, 0.2f);
 
 
 		for (GemMovers::iterator i = gemMovers.begin(); i != gemMovers.end(); i++)

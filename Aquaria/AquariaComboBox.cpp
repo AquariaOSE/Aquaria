@@ -343,7 +343,7 @@ int AquariaComboBox::addItem(const std::string &n)
 	return items.size()-1;
 }
 
-Vector unselectedColor(0.7, 0.7, 0.7);
+Vector unselectedColor(0.7f, 0.7f, 0.7f);
 Vector selectedColor(1,1,1);
 
 AquariaComboBoxItem::AquariaComboBoxItem(const std::string &str, int idx, AquariaComboBox *combo, Vector textscale) : Quad()

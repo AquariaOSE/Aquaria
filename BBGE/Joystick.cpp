@@ -40,8 +40,8 @@ Joystick::Joystick()
 #  endif
 	sdl_joy = NULL;
 	buttonBitmask = 0;
-	deadZone1 = 0.3;
-	deadZone2 = 0.3;
+	deadZone1 = 0.3f;
+	deadZone2 = 0.3f;
 
 	clearRumbleTime= 0;
 	numJoyAxes = 0;

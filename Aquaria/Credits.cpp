@@ -45,8 +45,8 @@ namespace AQCredits
 		q->alpha.startPath(t);
 
 		q->scale.ensureData();
-		q->scale.data->path.addPathNode(Vector(0.8, 0.8), 0);
-		q->scale.data->path.addPathNode(Vector(1.4, 1.4), 1);
+		q->scale.data->path.addPathNode(Vector(0.8f, 0.8f), 0);
+		q->scale.data->path.addPathNode(Vector(1.4f, 1.4f), 1);
 		q->scale.startPath(t);
 
 		core->run(t);
@@ -55,10 +55,10 @@ namespace AQCredits
 	void cred(Quad *cred, bool show)
 	{
 		float t= 3;
-		cred->scale = Vector(0.7, 0.7);
+		cred->scale = Vector(0.7f, 0.7f);
 		if (show)
 		{
-			cred->alpha.interpolateTo(0.7, t, 0, 0, 1);
+			cred->alpha.interpolateTo(0.7f, t, 0, 0, 1);
 			cred->offset.interpolateTo(Vector(100, 0), 60);
 		}
 		else
@@ -92,7 +92,7 @@ void Credits::applyState()
 	bg1->followCamera = 1;
 	bg1->rotation.interpolateTo(Vector(0, 0, 360), 20, -1);
 	bg1->alpha = 0.5;
-	bg1->setSegs(32, 32, 0.5, 0.5, 0.008, 0.008, 2.0, 1);
+	bg1->setSegs(32, 32, 0.5f, 0.5f, 0.008f, 0.008f, 2.0f, 1);
 	addRenderObject(bg1, LR_BACKGROUND);
 
 	bg2 = new Quad("particles/gas", Vector(400,300));
@@ -101,7 +101,7 @@ void Credits::applyState()
 	bg2->followCamera = 1;
 	bg2->rotation.interpolateTo(Vector(0, 0, -360), 20, -1);
 	bg2->alpha = 0.5;
-	bg2->setSegs(32, 32, 0.5, 0.5, 0.008, 0.008, 2.0, 1);
+	bg2->setSegs(32, 32, 0.5f, 0.5f, 0.008f, 0.008f, 2.0f, 1);
 	addRenderObject(bg2, LR_BACKGROUND);
 
 	alec = new Quad("credits/alec", Vector(200, 500));

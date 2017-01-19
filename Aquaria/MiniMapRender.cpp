@@ -53,7 +53,7 @@ namespace MiniMapRenderSpace
 	// Distance at which the icon decreases to minimum size
 	const float iconMaxDistance = iconMaxOffset * 3;
 	// Scale of the icon at minimum size
-	const float iconMinScale = 0.6;
+	const float iconMinScale = 0.6f;
 	// Radius of the health bar circle
 	const int healthBarRadius = miniMapRadius + 4;
 	// Number of steps around health bar at which to draw bits
@@ -251,10 +251,10 @@ void MiniMapRender::slide(int slide)
 	switch(slide)
 	{
 	case 0:
-		offset.interpolateTo(Vector(0, 0), 0.28, 0, 0, 1);
+		offset.interpolateTo(Vector(0, 0), 0.28f, 0, 0, 1);
 	break;
 	case 1:
-		offset.interpolateTo(Vector(0, getMiniMapHeight()+5-600), 0.28, 0, 0, 1);
+		offset.interpolateTo(Vector(0, getMiniMapHeight()+5-600), 0.28f, 0, 0, 1);
 	break;
 	}
 }
@@ -298,9 +298,9 @@ void MiniMapRender::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
 
-	position.x = core->getVirtualWidth() - core->getVirtualOffX() - getMiniMapWidth()/2;
-	position.y = 600 - getMiniMapHeight()/2;
-	position.z = 2.9;
+	position.x = core->getVirtualWidth() - core->getVirtualOffX() - getMiniMapWidth()*0.5f;
+	position.y = 600 - getMiniMapHeight()*0.5f;
+	position.z = 2.9f;
 
 	waterSin += dt * (bitSizeLookupPeriod / (2*PI));
 	waterSin = fmodf(waterSin, bitSizeLookupPeriod);
@@ -363,14 +363,14 @@ void MiniMapRender::onUpdate(float dt)
 		if (v < 0)
 			v = 0;
 		if (!lerp.isInterpolating() && lerp.x != v)
-			lerp.interpolateTo(v, 0.1);
+			lerp.interpolateTo(v, 0.1f);
 		lerp.update(dt);
 
 
 		jumpTimer += dt*0.5f;
 		if (jumpTimer > jumpTime)
 		{
-			jumpTimer = 0.5;
+			jumpTimer = 0.5f;
 		}
 		incr += dt*2;
 		if (incr > PI)
@@ -507,7 +507,7 @@ void MiniMapRender::onRender()
 			texWaterBit->apply();
 
 			glBlendFunc(GL_SRC_ALPHA,GL_ONE);
-			glColor4f(0.1, 0.2, 0.9, 0.4f*lightLevel);
+			glColor4f(0.1f, 0.2f, 0.9f, 0.4f*lightLevel);
 			bool curColorIsWater = true;
 
 			const int xmin = int(ceilf(dsq->game->cameraMin.x / TILE_SIZE));
@@ -548,7 +548,7 @@ void MiniMapRender::onRender()
 						{
 							if (curColorIsWater)
 							{
-								glColor4f(0.1, 0.2, 0.5, 0.2f*lightLevel);
+								glColor4f(0.1f, 0.2f, 0.5f, 0.2f*lightLevel);
 								curColorIsWater = false;
 							}
 						}
@@ -556,7 +556,7 @@ void MiniMapRender::onRender()
 						{
 							if (!curColorIsWater)
 							{
-								glColor4f(0.1, 0.2, 0.9, 0.4f*lightLevel);
+								glColor4f(0.1f, 0.2f, 0.9f, 0.4f*lightLevel);
 								curColorIsWater = true;
 							}
 						}
@@ -680,7 +680,7 @@ void MiniMapRender::onRender()
 	texHealthBar->apply();
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, 0.6);
+	glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, 0.6f);
 
 	glBegin(GL_QUADS);
 	for (int step = 0; step <= curHealthSteps; step++)

@@ -27,7 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "tinyxml2.h"
 using namespace tinyxml2;
 
-const float moveDelay = 0.2;
+const float moveDelay = 0.2f;
 
 float AquariaGuiElement::guiMoveTimer = 0;
 AquariaGuiElement::GuiElements AquariaGuiElement::guiElements;
@@ -345,11 +345,11 @@ void AquariaGuiQuad::onUpdate(float dt)
 
 // Joystick input threshold at which we start sliding (0.0-1.0); must be
 // less than updateMovement() threshold.
-const float SLIDER_JOY_THRESHOLD = 0.39;
+const float SLIDER_JOY_THRESHOLD = 0.39f;
 // Initial delay before repeating for slider input (seconds).
-const float SLIDER_REPEAT_DELAY = 0.4;
+const float SLIDER_REPEAT_DELAY = 0.4f;
 // Scale factor for delay as repeats continue.
-const float SLIDER_REPEAT_ACCEL = 0.8;
+const float SLIDER_REPEAT_ACCEL = 0.8f;
 
 AquariaSlider::AquariaSlider()
 : Slider(90, 12, "gui/slider-bg", "gui/slider-fg"), AquariaGuiElement()
@@ -538,18 +538,18 @@ void AquariaKeyConfig::toggleEnterKey(int on)
 {
 	if (on==1)
 	{
-		bg->color = Vector(0.75, 0.75, 0.75);
-		bg->alphaMod = 0.25;
+		bg->color = Vector(0.75f, 0.75f, 0.75f);
+		bg->alphaMod = 0.25f;
 	}
 	else if (on == 0)
 	{
 		bg->alphaMod = 0;
-		bg->color = Vector(0.1, 0.1, 0.1);
+		bg->color = Vector(0.1f, 0.1f, 0.1f);
 	}
 	else
 	{
-		bg->alphaMod = 0.5;
-		bg->color = Vector(0.5, 0.5, 0.5);
+		bg->alphaMod = 0.5f;
+		bg->color = Vector(0.5f, 0.5f, 0.5f);
 	}
 
 }
@@ -1062,20 +1062,20 @@ void AquariaMenuItem::toggleHighlight(bool state)
 	{
 		if (glow)
 		{
-			glow->alpha.interpolateTo(0.3, 0.2);
+			glow->alpha.interpolateTo(0.3f, 0.2f);
 		}
 		else
 		{
-			glowFont->alpha.interpolateTo(0.3, 0.2);
+			glowFont->alpha.interpolateTo(0.3f, 0.2f);
 		}
 
 	}
 	else
 	{
 		if (glow)
-			glow->alpha.interpolateTo(0, 0.2);
+			glow->alpha.interpolateTo(0, 0.2f);
 		else
-			glowFont->alpha.interpolateTo(0, 0.2);
+			glowFont->alpha.interpolateTo(0, 0.2f);
 	}
 
 	onToggleHighlight(highlighted);
@@ -1222,13 +1222,13 @@ void AquariaButton::onToggleHighlight(bool on)
 {
 	if(on)
 	{
-		quad->color.interpolateTo(activeColor, 0.1);
-		quad->alpha.interpolateTo(activeAlpha, 0.1);
+		quad->color.interpolateTo(activeColor, 0.1f);
+		quad->alpha.interpolateTo(activeAlpha, 0.1f);
 	}
 	else
 	{
-		quad->color.interpolateTo(inactiveColor, 0.1);
-		quad->alpha.interpolateTo(inactiveAlpha, 0.1);
+		quad->color.interpolateTo(inactiveColor, 0.1f);
+		quad->alpha.interpolateTo(inactiveAlpha, 0.1f);
 	}
 }
 

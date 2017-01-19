@@ -263,7 +263,7 @@ void ModSelectorScreen::init()
 
 	subbox.position = Vector(0,260);
 	subbox.alpha = 0;
-	subbox.alphaMod = 0.7;
+	subbox.alphaMod = 0.7f;
 	subbox.followCamera = 1;
 	subbox.autoWidth = AUTO_VIRTUALWIDTH;
 	subbox.setHeight(80);
@@ -385,11 +385,11 @@ JuicyProgressBar::JuicyProgressBar() : Quad(), txt(&dsq->smallFont)
 	alpha = 1;
 
 	juice.setTexture("loading/juice");
-	juice.alpha = 0.8;
+	juice.alpha = 0.8f;
 	juice.followCamera = 1;
 	addChild(&juice, PM_STATIC);
 
-	txt.alpha = 0.7;
+	txt.alpha = 0.7f;
 	txt.followCamera = 1;
 	addChild(&txt, PM_STATIC);
 
@@ -675,7 +675,7 @@ bool ModIconOnline::fixIcon()
 		useQuad(ss.str());
 	}
 
-	quad->alpha = 0.001;
+	quad->alpha = 0.001f;
 	quad->setWidthHeight(MOD_ICON_SIZE, MOD_ICON_SIZE);
 	quad->alpha.interpolateTo(1, 0.5f);
 
