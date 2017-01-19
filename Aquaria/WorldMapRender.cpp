@@ -814,7 +814,7 @@ void WorldMapRender::bindInput()
 void WorldMapRender::destroy()
 {
 
-	for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+	for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
 	{
 		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
 		clearVis(tile);
@@ -891,7 +891,7 @@ void WorldMapRender::onUpdate(float dt)
 		{
 			WorldMapTile *selectedTile = 0;
 			int sd=-1,d=0;
-			for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+			for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
 			{
 				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
 				if (tile && tile != activeTile)
@@ -1355,7 +1355,7 @@ void WorldMapRender::toggle(bool turnON)
 
 		xMin = xMax = -internalOffset.x;
 		yMin = yMax = -internalOffset.y;
-		for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+		for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
 		{
 			WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
 			if (tile && (tile->revealed || tile->prerevealed) && tile->q)

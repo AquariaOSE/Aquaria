@@ -443,7 +443,7 @@ void StatsAndAchievements::EvaluateAchievement( Achievement &achievement )
 		{
 			// check world map data somehow
 			bool hasAllMap = true;
-			for (int i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+			for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
 			{
 				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
 				if (!tile->revealed && (nocasecmp(tile->name, "thirteenlair") != 0)) {

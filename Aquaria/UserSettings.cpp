@@ -214,7 +214,7 @@ void UserSettings::save()
 					xml_joyAxes->SetAttribute("s2dead", as.joycfg.s2dead);
 				}
 				xml_actionSet->InsertEndChild(xml_joyAxes);
-				for (int i = 0; i < as.inputSet.size(); i++)
+				for (size_t i = 0; i < as.inputSet.size(); i++)
 				{
 					XMLElement *xml_action = doc.NewElement("Action");
 					const ActionInput& ai = as.inputSet[i];
@@ -522,7 +522,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		int nas = (int)control.actionSets.size();
 		if(nas < control.minActionSets)
 			control.actionSets.resize(control.minActionSets);
-		while(nas < control.actionSets.size())
+		while(nas < control.minActionSets)
 		{
 			ActionSet& as = control.actionSets[nas];
 			ensureDefaultActions(as);

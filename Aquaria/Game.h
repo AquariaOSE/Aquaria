@@ -516,7 +516,7 @@ public:
 	Path *getPath(size_t idx) const {return paths[idx];}
 	Path *getFirstPathOfType(PathType type) const {return firstPathOfType[type];}
 	Path *getPathByName(std::string name);
-	int getIndexOfPath(Path *p);
+	size_t getIndexOfPath(Path *p);
 	Path *getPathAtCursor();
 	Path *getScriptedPathAtCursor(bool withAct=false);
 	Path *getNearestPath(const Vector &pos, const std::string &name="", const Path *ignore=0);

@@ -24,7 +24,7 @@ void Recipe::learn()
 
 void Recipe::addName(const std::string &name)
 {
-	int i = 0;
+	size_t i = 0;
 	for (; i < names.size(); i++)
 	{
 		if (names[i].name == name)
@@ -39,7 +39,7 @@ void Recipe::addName(const std::string &name)
 
 void Recipe::addType(IngredientType type, const std::string &typeName)
 {
-	int i = 0;
+	size_t i = 0;
 	for (; i < types.size(); i++)
 	{
 		if (types[i].type == type)
