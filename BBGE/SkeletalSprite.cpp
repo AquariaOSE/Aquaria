@@ -74,7 +74,7 @@ Bone::Bone() : Quad()
 	animated = ANIM_ALL;
 	originalScale = Vector(1,1);
 	boneIdx = pidx = -1;
-	rbp = 0;
+	rbp = false;
 	segmentChain = 0;
 
 	minDist = maxDist = 128;
@@ -904,7 +904,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			bone->SetAttribute("sel", this->bones[i]->selectable);
 		}
 		if (this->bones[i]->rbp)
-			bone->SetAttribute("rbp", this->bones[i]->rbp);
+			bone->SetAttribute("rbp", (int)this->bones[i]->rbp);
 		if (this->bones[i]->originalRenderPass)
 			bone->SetAttribute("pass", this->bones[i]->originalRenderPass);
 		if (this->bones[i]->offset.x)
@@ -1053,7 +1053,7 @@ Bone *SkeletalSprite::getBoneByIdx(size_t idx)
 	return 0;
 }
 
-Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std::string name, float cr, bool fh, bool fv)
+Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, bool rbp, std::string name, float cr, bool fh, bool fv)
 {
 	Bone *b = new Bone;
 	b->boneIdx = idx;
@@ -1162,7 +1162,7 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 				if (boneXml->Attribute("rq"))
 				{
 					int rq = atoi(boneXml->Attribute("rq"));
-					b->renderQuad = rq;
+					b->renderQuad = !!rq;
 				}
 
 				std::string gfx;
