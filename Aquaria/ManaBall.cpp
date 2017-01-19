@@ -65,10 +65,10 @@ void ManaBall::use(Entity *entity)
 	entity->heal(amount, 1);
 	scale.ensureData();
 	scale.data->path.addPathNode(scale, 0);
-	scale.data->path.addPathNode(Vector(1.25, 1.25), 0.5);
+	scale.data->path.addPathNode(Vector(1.25f, 1.25f), 0.5f);
 	scale.data->path.addPathNode(Vector(0,0), 1);
 	scale.startPath(1);
-	setLife(1.1);
+	setLife(1.1f);
 	used = true;
 }
 
@@ -122,10 +122,10 @@ void ManaBall::onUpdate(float dt)
 		}
 		else
 		{
-			position.interpolateTo(dsq->game->avatar->position, 0.2);
+			position.interpolateTo(dsq->game->avatar->position, 0.2f);
 
 		}
 	}
-	position.z = 0.5;
+	position.z = 0.5f;
 }
 

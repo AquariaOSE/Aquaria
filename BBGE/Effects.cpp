@@ -29,7 +29,7 @@ PostProcessingFX::PostProcessingFX()
 {
 	blendType = 0;
 	layer = renderLayer = 0;
-	intensity = 0.1;
+	intensity = 0.1f;
 	blurTimes = 12;
 	radialBlurColor = Vector(1,1,1);
 	for (int i = 0; i < FXT_MAX; i++)
@@ -120,7 +120,7 @@ void PostProcessingFX::render()
 
 				float percentX = pw, percentY = ph;
 
-				float inc = 0.01;
+				float inc = 0.01f;
 				float spost = 0.0f;											// Starting Texture Coordinate Offset
 				float alphadec = alpha / blurTimes;
 

@@ -427,7 +427,7 @@ void Shot::setParticleEffect(const std::string &particleEffect)
 
 void Shot::onEndOfLife()
 {
-	destroySegments(0.2);
+	destroySegments(0.2f);
 	dead = true;
 
 	if (emitter)
@@ -460,7 +460,7 @@ void Shot::onHitWall()
 	BBGE_PROF(Shot_onHitWall);
 	doHitEffects();
 	updateSegments(position);
-	destroySegments(0.2);
+	destroySegments(0.2f);
 	if (emitter)
 	{
 		emitter->killParticleEffect();
@@ -628,7 +628,7 @@ void Shot::hitEntity(Entity *e, Bone *b)
 			velocity = 0;
 			setLife(1);
 			setDecayRate(10);
-			destroySegments(0.1);
+			destroySegments(0.1f);
 			dead = true;
 			if (emitter)
 			{
@@ -790,7 +790,7 @@ void Shot::onUpdate(float dt)
 				velocity = Vector(0,0);
 
 				setDecayRate(10);
-				destroySegments(0.1);
+				destroySegments(0.1f);
 				lifeTime = 0;
 				fadeAlphaWithLife = true;
 				setLife(1);

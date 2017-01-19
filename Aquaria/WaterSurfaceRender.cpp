@@ -8,7 +8,7 @@
 
 namespace WaterSurfaceRenderStuff
 {
-	Vector baseColor = Vector(0.4,0.9,1.0);
+	Vector baseColor = Vector(0.4f,0.9f,1.0f);
 }
 
 using namespace WaterSurfaceRenderStuff;
@@ -22,7 +22,7 @@ WaterSurfaceRender::WaterSurfaceRender() : Quad()
 
 	if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
 	{
-		setSegs(4, 32, 0.5, 0.5, -0.005, 0, 5, 1);
+		setSegs(4, 32, 0.5f, 0.5f, -0.005f, 0, 5, 1);
 	}
 
 
@@ -164,7 +164,7 @@ void WaterSurfaceRender::onRender()
 	else
 	{
 
-		glColor4f(0.4, 0.7, 0.8, 0.2);
+		glColor4f(0.4f, 0.7f, 0.8f, 0.2f);
 		Quad::onRender();
 
 		glBindTexture(GL_TEXTURE_2D, 0);

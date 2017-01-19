@@ -72,8 +72,8 @@ Ingredient::Ingredient(const Vector &pos, IngredientData *data, int amount)
 	else
 		velocity = Vector(0,-mag*0.5f);
 	gravity = Vector(0, 250);
-	scale = Vector(0.2,0.2);
-	scale.interpolateTo(Vector(1, 1), 0.75);
+	scale = Vector(0.2f,0.2f);
+	scale.interpolateTo(Vector(1, 1), 0.75f);
 
 	if (isRotKind())
 		rotation.z = randAngle360();

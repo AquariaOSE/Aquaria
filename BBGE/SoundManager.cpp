@@ -366,11 +366,11 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 
 	if (dspReverb)
 	{
-		dspReverb->setParameter(FMOD_DSP_REVERB_ROOMSIZE, 0.8);
-		dspReverb->setParameter(FMOD_DSP_REVERB_DAMP, 0.7);
-		dspReverb->setParameter(FMOD_DSP_REVERB_WETMIX, 0.11);
-		dspReverb->setParameter(FMOD_DSP_REVERB_DRYMIX, 0.88);
-		dspReverb->setParameter(FMOD_DSP_REVERB_WIDTH, 1.0);
+		dspReverb->setParameter(FMOD_DSP_REVERB_ROOMSIZE, 0.8f);
+		dspReverb->setParameter(FMOD_DSP_REVERB_DAMP, 0.7f);
+		dspReverb->setParameter(FMOD_DSP_REVERB_WETMIX, 0.11f);
+		dspReverb->setParameter(FMOD_DSP_REVERB_DRYMIX, 0.88f);
+		dspReverb->setParameter(FMOD_DSP_REVERB_WIDTH, 1.0f);
 		dspReverb->setParameter(FMOD_DSP_REVERB_MODE, 0); // 0 or 1
 	}
 

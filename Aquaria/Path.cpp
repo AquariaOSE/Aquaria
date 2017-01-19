@@ -604,7 +604,7 @@ void Path::update(float dt)
 								a->vel2.capLength2D(200);
 
 								DamageData d;
-								d.damage = 0.1;
+								d.damage = 0.1f;
 								d.damageType = DT_STEAM;
 								e->damage(d);
 

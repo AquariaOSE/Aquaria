@@ -175,21 +175,21 @@ void RoundedRect::show()
 {
 	if (alpha.x == 0)
 	{
-		const float t = 0.1;
+		const float t = 0.1f;
 		alpha = 0;
 		alpha.interpolateTo(1, t);
-		scale = Vector(0.5, 0.5);
+		scale = Vector(0.5f, 0.5f);
 		scale.interpolateTo(Vector(1,1), t);
 	}
 }
 
 void RoundedRect::hide()
 {
-	const float t = 0.1;
+	const float t = 0.1f;
 	alpha = 1.0;
 	alpha.interpolateTo(0, t);
 	scale = Vector(1, 1);
-	scale.interpolateTo(Vector(0.5,0.5), t);
+	scale.interpolateTo(Vector(0.5f,0.5f), t);
 }
 
 

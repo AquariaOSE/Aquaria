@@ -117,14 +117,14 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 
 	core->resetTimer();
 	screen->upperLeftTextureCoordinates = Vector(0, 1);
-	screen->lowerRightTextureCoordinates = Vector(1, 0.25);
+	screen->lowerRightTextureCoordinates = Vector(1, 0.25f);
 
 
 	if (screen->getWidth() == 0)
 		screen->color = 0;
 	screen->setWidthHeight(0.4f*256, 0.3f*256);
-	screen->scale = Vector(0.93,0.93);
-	screen->position = Vector(-250, 0) + Vector(-1.5, -1.6);
+	screen->scale = Vector(0.93f,0.93f);
+	screen->position = Vector(-250, 0) + Vector(-1.5f, -1.6f);
 	addChild(screen, PM_POINTER);
 
 	closed = false;
@@ -154,8 +154,8 @@ void AquariaSaveSlot::close(bool trans)
 
 	if (trans)
 	{
-		screen->alpha.interpolateTo(0, 0.1);
-		text1->alpha.interpolateTo(0, 0.1);
+		screen->alpha.interpolateTo(0, 0.1f);
+		text1->alpha.interpolateTo(0, 0.1f);
 
 		setLife(1);
 		setDecayRate(10);
@@ -201,8 +201,8 @@ void AquariaSaveSlot::onUpdate(float dt)
 				&& core->mouse.position.y < position.y+32 && core->mouse.position.y > position.y-32)
 			{
 
-				glowText->alpha.interpolateTo(0.5, 0.2);
-				screen->color.interpolateTo(Vector(1,1,1), 0.1);
+				glowText->alpha.interpolateTo(0.5f, 0.2f);
+				screen->color.interpolateTo(Vector(1,1,1), 0.1f);
 
 				if ((core->mouse.buttons.left || core->mouse.buttons.right) && !mbDown)
 				{
@@ -252,9 +252,9 @@ void AquariaSaveSlot::onUpdate(float dt)
 			}
 			else
 			{
-				glowText->alpha.interpolateTo(0, 0.2);
+				glowText->alpha.interpolateTo(0, 0.2f);
 
-				screen->color.interpolateTo(Vector(0.7, 0.7, 1), 0.3);
+				screen->color.interpolateTo(Vector(0.7f, 0.7f, 1), 0.3f);
 			}
 			if ((core->mouse.buttons.left || core->mouse.buttons.right) && !mbDown)
 			{
@@ -268,7 +268,7 @@ void AquariaSaveSlot::onUpdate(float dt)
 	}
 	else
 	{
-		glowText->alpha.interpolateTo(0, 0.2);
+		glowText->alpha.interpolateTo(0, 0.2f);
 	}
 }
 

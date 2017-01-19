@@ -485,7 +485,7 @@ void RippleEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
 
 
 	time += dt*0.5f;
-	float amp = 0.002;
+	float amp = 0.002f;
 	for (int i = 0; i < (xDivs-1); i++)
 	{
 		for (int j = 0; j < (yDivs-1); j++)

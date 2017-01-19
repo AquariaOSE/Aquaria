@@ -27,7 +27,7 @@ SteamRender::SteamRender() : RenderObject()
 {
 	cull = false;
 
-	alpha = 0.7;
+	alpha = 0.7f;
 	setTexture("Particles/Steam");
 	texture->repeat = true;
 	rippleDelay = 2;

@@ -232,7 +232,7 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 		}
 
 
-		b->rotation.interpolateTo(Vector(0,0,angle),0.2);
+		b->rotation.interpolateTo(Vector(0,0,angle),0.2f);
 	}
 
 }

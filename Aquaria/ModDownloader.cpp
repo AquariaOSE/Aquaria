@@ -214,8 +214,8 @@ void ModDL::NotifyModlist(ModlistRequest *rq, NetEvent ev, size_t recvd, size_t 
 			scr->dlText.alpha = 0;
 			scr->dlText.alpha.ensureData();
 			scr->dlText.alpha.data->path.addPathNode(0, 0);
-			scr->dlText.alpha.data->path.addPathNode(1, 0.1);
-			scr->dlText.alpha.data->path.addPathNode(1, 0.7);
+			scr->dlText.alpha.data->path.addPathNode(1, 0.1f);
+			scr->dlText.alpha.data->path.addPathNode(1, 0.7f);
 			scr->dlText.alpha.data->path.addPathNode(0, 1);
 			scr->dlText.alpha.startPath(5);
 

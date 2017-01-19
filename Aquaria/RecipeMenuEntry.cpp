@@ -57,11 +57,11 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 		addChild(glow, PM_POINTER);
 
 		result = new Quad("ingredients/" + data->gfx, Vector(-100,0));
-		result->scale = Vector(0.7, 0.7);
+		result->scale = Vector(0.7f, 0.7f);
 		addChild(result, PM_POINTER);
 
 		BitmapText *text = new BitmapText(&dsq->smallFont);
-		text->scale = Vector(0.7, 0.7);
+		text->scale = Vector(0.7f, 0.7f);
 		text->color = 0;
 		text->position = result->position + Vector(0, 18);
 
@@ -70,7 +70,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 	}
 
 	Quad *equals = new Quad("gui/recipe-equals", Vector(-50, 0));
-	equals->scale = Vector(0.7, 0.7);
+	equals->scale = Vector(0.7f, 0.7f);
 	addChild(equals, PM_POINTER);
 
 	size_t c = 0;
@@ -97,11 +97,11 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 			for (int j = 0; j < recipe->names[i].amount; j++)
 			{
 				ing[c] = new Quad("ingredients/" + data->gfx, Vector(100*c,0));
-				ing[c]->scale = Vector(0.7, 0.7);
+				ing[c]->scale = Vector(0.7f, 0.7f);
 				addChild(ing[c], PM_POINTER);
 
 				BitmapText *text = new BitmapText(&dsq->smallFont);
-				text->scale = Vector(0.7, 0.7);
+				text->scale = Vector(0.7f, 0.7f);
 				text->color = 0;
 				text->position = ing[c]->position + Vector(0, 18);
 				text->setText(processFoodName(data->displayName));
@@ -110,7 +110,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 				if (c < size)
 				{
 					Quad *plus = new Quad("gui/recipe-plus", Vector(100*c+50, 0));
-					plus->scale = Vector(0.7, 0.7);
+					plus->scale = Vector(0.7f, 0.7f);
 					addChild(plus, PM_POINTER);
 				}
 
@@ -132,7 +132,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 			// any type of whatever...
 			BitmapText *text = new BitmapText(&dsq->smallFont);
 			text->color = 0;
-			text->scale = Vector(0.8, 0.8);
+			text->scale = Vector(0.8f, 0.8f);
 			text->position = Vector(100*c, 0);
 
 			std::string typeName = dsq->continuity.getIngredientDisplayName(recipe->types[i].typeName);
@@ -149,7 +149,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 			if (c < size)
 			{
 				Quad *plus = new Quad("gui/recipe-plus", Vector(100*c+50, 0));
-				plus->scale = Vector(0.7, 0.7);
+				plus->scale = Vector(0.7f, 0.7f);
 				addChild(plus, PM_POINTER);
 			}
 
@@ -160,7 +160,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 	description = 0;
 
 	alpha = 0;
-	alpha.interpolateTo(1, 0.2);
+	alpha.interpolateTo(1, 0.2f);
 
 	shareAlphaWithChildren = 1;
 
@@ -185,7 +185,7 @@ void RecipeMenuEntry::onUpdate(float dt)
 			&& core->mouse.position.y > p.y - h2
 			&& core->mouse.position.y < p.y + h2)
 		{
-			glow->alphaMod = 0.2;
+			glow->alphaMod = 0.2f;
 
 			std::ostringstream ds;
 
@@ -328,7 +328,7 @@ void RecipeMenu::toggle(bool on, bool watch)
 
 	toggling = true;
 
-	float t = 0.6;
+	float t = 0.6f;
 
 	if (on)
 	{
@@ -354,8 +354,8 @@ void RecipeMenu::toggle(bool on, bool watch)
 
 		createPage(currentPage);
 
-		nextPage->alpha.interpolateTo(1, 0.2);
-		prevPage->alpha.interpolateTo(1, 0.2);
+		nextPage->alpha.interpolateTo(1, 0.2f);
+		prevPage->alpha.interpolateTo(1, 0.2f);
 	}
 	else
 	{
@@ -420,7 +420,7 @@ void RecipeMenu::createPage(int p)
 
 	description = new BitmapText(&dsq->smallFont);
 	description->followCamera = 1;
-	description->scale = Vector(0.7, 0.7);
+	description->scale = Vector(0.7f, 0.7f);
 	description->setAlign(ALIGN_LEFT);
 	description->position = Vector(364, 334); //most recent: (364, 334) //348, 328
 	description->color = Vector(0,0,0);//Vector(0.7,0,0);

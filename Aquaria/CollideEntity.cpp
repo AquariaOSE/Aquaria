@@ -55,7 +55,7 @@ void CollideEntity::bounce(float ba)
 		sound("RockHit");
 		// HACK: replace damage function
 		//damage(pushDamage);
-		setState(STATE_PUSHDELAY, 0.3);
+		setState(STATE_PUSHDELAY, 0.3f);
 	}
 
 	switch (bounceType)

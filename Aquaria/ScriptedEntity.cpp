@@ -301,7 +301,7 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 			crushDelay -= dt;
 			if (crushDelay < 0)
 			{
-				crushDelay = 0.2;
+				crushDelay = 0.2f;
 				doCrush = true;
 			}
 			FOR_ENTITIES(i)
@@ -674,7 +674,7 @@ void ScriptedEntity::becomeSolid()
 	if (doRot)
 	{
 		rotation.z = oldRot;
-		rotateToVec(n, 0.01);
+		rotateToVec(n, 0.01f);
 	}
 }
 
@@ -690,7 +690,7 @@ void ScriptedEntity::onHitWall()
 		Vector n = dsq->game->getWallNormal(position);
 		if (!n.isZero())
 		{
-			rotateToVec(n, 0.2);
+			rotateToVec(n, 0.2f);
 		}
 	}
 

@@ -32,8 +32,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 
 int TIMELINE_GRIDSIZE		= 10;
-float TIMELINE_UNIT			= 0.1;
-float TIMELINE_UNIT_STEP	= 0.01;
+float TIMELINE_UNIT			= 0.1f;
+float TIMELINE_UNIT_STEP	= 0.01f;
 const int KEYFRAME_POS_Y	= 570;
 
 class TimelineRender : public RenderObject
@@ -90,13 +90,13 @@ KeyframeWidget::KeyframeWidget(int key) : Quad()
 void KeyframeWidget::shiftLeft()
 {
 	if (!offset.isInterpolating())
-		offset.interpolateTo(Vector(offset.x-80, 0), 0.1, 0, 0, 0);
+		offset.interpolateTo(Vector(offset.x-80, 0), 0.1f, 0, 0, 0);
 }
 
 void KeyframeWidget::shiftRight()
 {
 	if (!offset.isInterpolating())
-		offset.interpolateTo(Vector(offset.x+80, 0), 0.1, 0, 0, 0);
+		offset.interpolateTo(Vector(offset.x+80, 0), 0.1f, 0, 0, 0);
 }
 
 void KeyframeWidget::onUpdate(float dt)
@@ -215,7 +215,7 @@ void AnimationEditor::resetScaleOrSave()
 
 void AnimationEditor::applyState()
 {
-	dsq->toggleCursor(true, 0.1);
+	dsq->toggleCursor(true, 0.1f);
 	core->cameraPos = Vector(0,0);
 	editingStrip = false;
 	selectedStripPoint = 0;
@@ -304,14 +304,14 @@ void AnimationEditor::applyState()
 	{
 		back->color = 0;
 		back->setWidthHeight(800, 600);
-		back->position = Vector(400,300, -0.2);
+		back->position = Vector(400,300, -0.2f);
 	}
 	addRenderObject(back, LR_BACKDROP);
 
 	bgGrad = new Gradient;
 	bgGrad->scale = Vector(800, 600);
 	bgGrad->position = Vector(400,300);
-	bgGrad->makeVertical(Vector(0.4, 0.4, 0.4), Vector(0.8, 0.8, 0.8));
+	bgGrad->makeVertical(Vector(0.4f, 0.4f, 0.4f), Vector(0.8f, 0.8f, 0.8f));
 	addRenderObject(bgGrad, LR_BACKDROP);
 
 	DebugButton *a = new DebugButton(0, 0, 150);
@@ -471,13 +471,13 @@ void AnimationEditor::applyState()
 
 	editSprite->setSelectedBone(0);
 
-	dsq->overlay->alpha.interpolateTo(0, 0.5);
+	dsq->overlay->alpha.interpolateTo(0, 0.5f);
 
 	rebuildKeyframeWidgets();
 
 	dsq->resetTimer();
 
-	dsq->toggleCursor(true, 0.1);
+	dsq->toggleCursor(true, 0.1f);
 
 	updateTimelineGrid();
 	updateTimelineUnit();
@@ -594,7 +594,7 @@ void AnimationEditor::rebuildKeyframeWidgets()
 	int offx=0;
 	for (size_t i = 0; i < keyframeWidgets.size(); i++)
 	{
-		keyframeWidgets[i]->setLife(0.03);
+		keyframeWidgets[i]->setLife(0.03f);
 		keyframeWidgets[i]->setDecayRate(1);
 		offx = keyframeWidgets[i]->offset.x;
 	}
@@ -934,12 +934,12 @@ void AnimationEditor::editStripKey()
 	{
 		selectedStripPoint = 0;
 		editingStrip = false;
-		bgGrad->makeVertical(Vector(0.4, 0.4, 0.4), Vector(0.8, 0.8, 0.8));
+		bgGrad->makeVertical(Vector(0.4f, 0.4f, 0.4f), Vector(0.8f, 0.8f, 0.8f));
 	}
 	else
 	{
 		editingStrip = true;
-		bgGrad->makeVertical(Vector(0.4, 0.4, 0.6), Vector(0.8, 0.8, 1));
+		bgGrad->makeVertical(Vector(0.4f, 0.4f, 0.6f), Vector(0.8f, 0.8f, 1));
 	}
 }
 

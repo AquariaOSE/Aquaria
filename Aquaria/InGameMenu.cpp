@@ -22,7 +22,7 @@ std::vector<PetSlot*>		petSlots;
 
 // ---------------- Constants ----------------------------
 
-static const float MENUPAGETRANSTIME		= 0.2;
+static const float MENUPAGETRANSTIME		= 0.2f;
 const Vector menuBgScale(800.0f/1024.0f, 800.0f/1024.0f);
 const size_t foodPageSize = 16;
 const size_t treasurePageSize = 16;
@@ -227,7 +227,7 @@ void PetSlot::onUpdate(float dt)
 	else
 	{
 		mouseDown = false;
-		scale.interpolateTo(Vector(0.9f, 0.9f), 0.1);
+		scale.interpolateTo(Vector(0.9f, 0.9f), 0.1f);
 	}
 }
 
@@ -340,7 +340,7 @@ void FoodHolder::setIngredient(IngredientData *i, bool effects)
 			ing->scale.ensureData();
 			ing->scale.data->path.clear();
 			ing->scale.data->path.addPathNode(Vector(1,1),0);
-			ing->scale.data->path.addPathNode(Vector(1.25,1.25), 0.2);
+			ing->scale.data->path.addPathNode(Vector(1.25f,1.25f), 0.2f);
 			ing->scale.data->path.addPathNode(Vector(1,1),1);
 			ing->scale.startPath(0.5);
 		}
@@ -477,7 +477,7 @@ void FoodSlot::refresh(bool effects)
 			scale.ensureData();
 			scale.data->path.clear();
 			scale.data->path.addPathNode(Vector(1,1)*scaleFactor,0);
-			scale.data->path.addPathNode(Vector(1.5,1.5)*scaleFactor, 0.2);
+			scale.data->path.addPathNode(Vector(1.5f,1.5f)*scaleFactor, 0.2f);
 			scale.data->path.addPathNode(Vector(1,1)*scaleFactor,1);
 			scale.startPath(0.5);
 		}
@@ -734,7 +734,7 @@ void SongSlot::onUpdate(float dt)
 		{
 			themenu->playSongInMenu(songType);
 			themenu->songLabel->setText(dsq->continuity.getSongNameBySlot(songSlot));
-			themenu->songLabel->alpha.interpolateTo(1, 0.2);
+			themenu->songLabel->alpha.interpolateTo(1, 0.2f);
 			const bool anyButton = core->mouse.buttons.left || core->mouse.buttons.right;
 			if (!mbDown && anyButton)
 			{
@@ -748,12 +748,12 @@ void SongSlot::onUpdate(float dt)
 				if (!dsq->sound->isPlayingVoice())
 					dsq->voice(dsq->continuity.getVoxForSongSlot(songSlot));
 			}
-			glow->alpha.interpolateTo(0.2, 0.15);
+			glow->alpha.interpolateTo(0.2f, 0.15f);
 		}
 		else
 		{
 			mbDown = false;
-			glow->alpha.interpolateTo(0, 0.2);
+			glow->alpha.interpolateTo(0, 0.2f);
 			if (!themenu->songLabel->alpha.isInterpolating())
 			{
 				themenu->songLabel->alpha.interpolateTo(0, 2);
@@ -785,7 +785,7 @@ void TreasureSlot::onUpdate(float dt)
 	{
 		if ((core->mouse.position - getWorldPosition()).isLength2DIn(18))
 		{
-			scale.interpolateTo(Vector(1.2, 1.2), 0.1);
+			scale.interpolateTo(Vector(1.2f, 1.2f), 0.1f);
 			if (core->mouse.buttons.left && !mbd)
 			{
 				mbd = true;
@@ -832,13 +832,13 @@ void TreasureSlot::onUpdate(float dt)
 		else
 		{
 			mbd = false;
-			scale.interpolateTo(Vector(1, 1), 0.1);
+			scale.interpolateTo(Vector(1, 1), 0.1f);
 		}
 	}
 	else
 	{
 		mbd = false;
-		scale.interpolateTo(Vector(1, 1), 0.001);
+		scale.interpolateTo(Vector(1, 1), 0.001f);
 	}
 }
 
@@ -1164,7 +1164,7 @@ void InGameMenu::playSongInMenu(int songType, bool override)
 
 void InGameMenu::updatePreviewRecipe()
 {
-	const float t = 0.2;
+	const float t = 0.2f;
 
 	updateCookList();
 
@@ -1207,8 +1207,8 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		if (game->avatar->isEntityDead()) return;
 
 		toggleOptionsMenu(false);
-		dsq->overlay->alpha.interpolateTo(0, 0.1);
-		float t = 0.3;
+		dsq->overlay->alpha.interpolateTo(0, 0.1f);
+		float t = 0.3f;
 
 
 		if (!optionsOnly)
@@ -1349,7 +1349,7 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 				}
 				else
 				{
-					float t = 0.1;
+					float t = 0.1f;
 
 					toggleMainMenu(true);
 
@@ -1369,12 +1369,12 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		{
 			for (size_t i = 0; i < menu.size(); i++)
 			{
-				menu[i]->scale.interpolateTo(Vector(1, 1), 0.15);
+				menu[i]->scale.interpolateTo(Vector(1, 1), 0.15f);
 
-				menu[i]->alpha.interpolateTo(1, 0.15);
+				menu[i]->alpha.interpolateTo(1, 0.15f);
 			}
 
-			menuIconGlow->alpha.interpolateTo(1, 0.5);
+			menuIconGlow->alpha.interpolateTo(1, 0.5f);
 		}
 
 		menuOpenTimer = 0;
@@ -1406,7 +1406,7 @@ void InGameMenu::hide(bool effects, bool cancel)
 		playingSongInMenu = -1;
 
 
-		float t = 0.3;
+		float t = 0.3f;
 
 		if (!effects)
 			t = 0;
@@ -1915,7 +1915,7 @@ void InGameMenu::create()
 		songLabel->followCamera = 1;
 		songLabel->setFontSize(20);
 		songLabel->position = Vector(-center.x, center.y) + Vector(0, -15); //+ Vector(10, -10);
-		songLabel->scale = Vector(1.2, 1.2);
+		songLabel->scale = Vector(1.2f, 1.2f);
 	}
 	menuBg->addChild(songLabel, PM_POINTER);
 
@@ -1987,7 +1987,7 @@ void InGameMenu::create()
 	keyConfigButton->useGlow("particles/glow", 128, 40);
 	keyConfigButton->position = worldRightCenter + Vector(0, 80);
 	keyConfigButton->alpha = 0;
-	keyConfigButton->scale = Vector(0.8, 0.8);
+	keyConfigButton->scale = Vector(0.8f, 0.8f);
 	keyConfigButton->event.set(MakeFunctionEvent(InGameMenu, onKeyConfig));
 	//keyConfigButton->setCanDirMove(false);
 	game->addRenderObject(keyConfigButton, LR_MENU);
@@ -2205,7 +2205,7 @@ void InGameMenu::create()
 	cook->useGlow("particles/glow", 128, 40);
 	cook->position = worldRightCenter + Vector(0, -120);
 	cook->alpha = 0;
-	cook->scale = Vector(0.8, 0.8);
+	cook->scale = Vector(0.8f, 0.8f);
 	cook->event.set(MakeFunctionEvent(InGameMenu, onCook));
 	cook->setCanDirMove(false);
 	game->addRenderObject(cook, LR_MENU);
@@ -2224,7 +2224,7 @@ void InGameMenu::create()
 	recipes->useGlow("particles/glow", 128, 32);
 	recipes->position = worldLeftCenter + Vector(-40, 140);
 	recipes->alpha = 0;
-	recipes->scale = Vector(0.8, 0.8);
+	recipes->scale = Vector(0.8f, 0.8f);
 	recipes->event.set(MakeFunctionEvent(InGameMenu, onRecipes));
 	game->addRenderObject(recipes, LR_MENU);
 
@@ -2233,7 +2233,7 @@ void InGameMenu::create()
 	use->useGlow("particles/glow", 128, 64);
 	use->position = worldRightCenter + Vector(0, -120);
 	use->alpha = 0;
-	use->scale = Vector(0.8, 0.8);
+	use->scale = Vector(0.8f, 0.8f);
 	use->event.set(MakeFunctionEvent(InGameMenu, onUseTreasure));
 	game->addRenderObject(use, LR_MENU);
 
@@ -2244,7 +2244,7 @@ void InGameMenu::create()
 	prevFood->position = worldLeftCenter + Vector(-50, -130);
 	prevFood->alpha = 0;
 	prevFood->event.set(MakeFunctionEvent(InGameMenu, onPrevFoodPage));
-	prevFood->scale = Vector(0.6, 0.6);
+	prevFood->scale = Vector(0.6f, 0.6f);
 	prevFood->setCanDirMove(false);
 	game->addRenderObject(prevFood, LR_MENU);
 
@@ -2256,7 +2256,7 @@ void InGameMenu::create()
 	nextFood->alpha = 0;
 	nextFood->setCanDirMove(false);
 	nextFood->event.set(MakeFunctionEvent(InGameMenu, onNextFoodPage));
-	nextFood->scale = Vector(0.6, 0.6);
+	nextFood->scale = Vector(0.6f, 0.6f);
 	game->addRenderObject(nextFood, LR_MENU);
 
 	prevTreasure = new AquariaMenuItem;
@@ -2266,7 +2266,7 @@ void InGameMenu::create()
 	prevTreasure->position = worldLeftCenter + Vector(-50, -130);
 	prevTreasure->alpha = 0;
 	prevTreasure->setCanDirMove(false);
-	prevTreasure->scale = Vector(0.6, 0.6);
+	prevTreasure->scale = Vector(0.6f, 0.6f);
 	prevTreasure->event.set(MakeFunctionEvent(InGameMenu, onPrevTreasurePage));
 	prevTreasure->setCanDirMove(false);
 	game->addRenderObject(prevTreasure, LR_MENU);
@@ -2277,7 +2277,7 @@ void InGameMenu::create()
 	nextTreasure->useGlow("particles/glow", 64, 32);
 	nextTreasure->position = worldLeftCenter + Vector(50, -130);
 	nextTreasure->alpha = 0;
-	nextTreasure->scale = Vector(0.6, 0.6);
+	nextTreasure->scale = Vector(0.6f, 0.6f);
 	nextTreasure->event.set(MakeFunctionEvent(InGameMenu, onNextTreasurePage));
 	nextTreasure->setCanDirMove(false);
 	game->addRenderObject(nextTreasure, LR_MENU);
@@ -2307,8 +2307,8 @@ void InGameMenu::create()
 	previewRecipe->alphaMod = 0.75;
 	previewRecipe->followCamera = 1;
 	previewRecipe->alpha = 0;
-	previewRecipe->scale = Vector(0.7, 0.7);
-	previewRecipe->scale.interpolateTo(Vector(0.9, 0.9), 0.5, -1, 1, 1);
+	previewRecipe->scale = Vector(0.7f, 0.7f);
+	previewRecipe->scale.interpolateTo(Vector(0.9f, 0.9f), 0.5f, -1, 1, 1);
 	previewRecipe->position = worldRightCenter;
 	game->addRenderObject(previewRecipe, LR_MENU);
 
@@ -2351,7 +2351,7 @@ void InGameMenu::create()
 	recipeMenu.prevPage->position = Vector(scrollx - 150, 410);
 	recipeMenu.prevPage->alpha = 0;
 	recipeMenu.prevPage->event.set(MakeFunctionEvent(InGameMenu, onPrevRecipePage));
-	recipeMenu.prevPage->scale = Vector(0.8, 0.8);
+	recipeMenu.prevPage->scale = Vector(0.8f, 0.8f);
 	game->addRenderObject(recipeMenu.prevPage, LR_RECIPES);
 
 	recipeMenu.nextPage = new AquariaMenuItem;
@@ -2361,7 +2361,7 @@ void InGameMenu::create()
 	recipeMenu.nextPage->position = Vector(scrollx + 150, 410);
 	recipeMenu.nextPage->alpha = 0;
 	recipeMenu.nextPage->event.set(MakeFunctionEvent(InGameMenu, onNextRecipePage));
-	recipeMenu.nextPage->scale = Vector(0.8, 0.8);
+	recipeMenu.nextPage->scale = Vector(0.8f, 0.8f);
 	game->addRenderObject(recipeMenu.nextPage, LR_RECIPES);
 
 
@@ -2496,7 +2496,7 @@ void InGameMenu::create()
 	menu[5]->position = Vector(400-60, 350);
 
 	menuIconGlow = new Quad("particles/glow", menu[5]->position);
-	menuIconGlow->alphaMod = 0.4;
+	menuIconGlow->alphaMod = 0.4f;
 	menuIconGlow->alpha = 0;
 	menuIconGlow->setWidthHeight(80, 80);
 	menuIconGlow->setBlendType(RenderObject::BLEND_ADD);
@@ -2599,7 +2599,7 @@ void InGameMenu::create()
 		foodDescription->setAlign(ALIGN_CENTER);
 		foodDescription->followCamera = 1;
 		foodDescription->position = center + Vector(0, 8) + Vector(0,-32);
-		foodDescription->scale = Vector(0.8, 0.8);
+		foodDescription->scale = Vector(0.8f, 0.8f);
 
 		foodDescription->setWidth(240);
 	}
@@ -2960,7 +2960,7 @@ void InGameMenu::onCook()
 
 	AquariaGuiElement::canDirMoveGlobal = false;
 
-	cookDelay = 0.4;
+	cookDelay = 0.4f;
 
 	bool cooked = false;
 
@@ -3034,9 +3034,9 @@ void InGameMenu::onCook()
 
 		if (longAnim)
 		{
-			float ft = 0.8;
-			float nt = 0.1;
-			float nt2 = 0.2;
+			float ft = 0.8f;
+			float nt = 0.1f;
+			float nt2 = 0.2f;
 			void *handle = NULL;
 
 			/*
@@ -3081,9 +3081,9 @@ void InGameMenu::onCook()
 		}
 
 		if (longAnim)
-			dsq->run(0.5);
+			dsq->run(0.5f);
 		else
-			dsq->run(0.2);
+			dsq->run(0.2f);
 
 		bool haveLeftovers = true;
 		for (size_t i = 0; i < foodHolders.size(); i++)
@@ -3120,9 +3120,9 @@ void InGameMenu::onCook()
 		dsq->spawnParticleEffect("cook-food", Vector(575,250), 0, 0, LR_HUD3, 1);
 
 		if (longAnim)
-			dsq->run(0.5);
+			dsq->run(0.5f);
 		else
-			dsq->run(0.2);
+			dsq->run(0.2f);
 
 		if (data)
 		{
@@ -3131,13 +3131,13 @@ void InGameMenu::onCook()
 			//Quad *e = new Quad();
 
 			showRecipe->setTexture(n);
-			showRecipe->scale = Vector(0.5, 0.5);
-			showRecipe->scale.interpolateTo(Vector(1.2, 1.2), t);
+			showRecipe->scale = Vector(0.5f, 0.5f);
+			showRecipe->scale.interpolateTo(Vector(1.2f, 1.2f), t);
 			showRecipe->alpha.ensureData();
 			showRecipe->alpha.data->path.clear();
 			showRecipe->alpha.data->path.addPathNode(0, 0);
-			showRecipe->alpha.data->path.addPathNode(1, 0.1);
-			showRecipe->alpha.data->path.addPathNode(1, 0.6);
+			showRecipe->alpha.data->path.addPathNode(1, 0.1f);
+			showRecipe->alpha.data->path.addPathNode(1, 0.6f);
 			showRecipe->alpha.data->path.addPathNode(0, 1);
 			showRecipe->alpha.startPath(t);
 		}
@@ -3214,9 +3214,9 @@ void InGameMenu::showInGameMenuExitCheck()
 {
 	recipeMenu.toggle(false);
 	inGameMenuExitState = 1;
-	eYes->alpha.interpolateTo(1, 0.2);
-	eNo->alpha.interpolateTo(1, 0.2);
-	eAre->alpha.interpolateTo(1, 0.2);
+	eYes->alpha.interpolateTo(1, 0.2f);
+	eNo->alpha.interpolateTo(1, 0.2f);
+	eAre->alpha.interpolateTo(1, 0.2f);
 
 	eNo->setFocus(true);
 }
@@ -3224,9 +3224,9 @@ void InGameMenu::showInGameMenuExitCheck()
 void InGameMenu::hideInGameMenuExitCheck(bool refocus)
 {
 	inGameMenuExitState = 0;
-	eYes->alpha.interpolateTo(0, 0.2);
-	eNo->alpha.interpolateTo(0, 0.2);
-	eAre->alpha.interpolateTo(0, 0.2);
+	eYes->alpha.interpolateTo(0, 0.2f);
+	eNo->alpha.interpolateTo(0, 0.2f);
+	eAre->alpha.interpolateTo(0, 0.2f);
 
 	if (refocus)
 		((AquariaMenuItem*)menu[1])->setFocus(true);
@@ -3680,8 +3680,8 @@ void InGameMenu::toggleFoodMenu(bool f)
 void InGameMenu::doMenuSectionHighlight(int section)
 {
 	for (int i = 0; i < 4; i++)
-		((AquariaMenuItem*)menu[(5+i)])->quad->alphaMod = 0.8;
-	((AquariaMenuItem*)menu[(5+section)])->quad->alphaMod = 1.0;
+		((AquariaMenuItem*)menu[(5+i)])->quad->alphaMod = 0.8f;
+	((AquariaMenuItem*)menu[(5+section)])->quad->alphaMod = 1.0f;
 	menuIconGlow->position = menu[5+section]->position;
 }
 

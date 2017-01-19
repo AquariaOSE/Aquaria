@@ -30,16 +30,16 @@ ToolTip::ToolTip() : RenderObject()
 	followCamera = 1;
 
 	back = new Quad();
-	back->alphaMod = 0.8;
+	back->alphaMod = 0.8f;
 	back->setWidthHeight(50,50);
 	back->color = 0;
 	back->renderBorder = true;
-	back->borderAlpha = 0.2;
+	back->borderAlpha = 0.2f;
 	back->renderCenter = false;
 	addChild(back, PM_POINTER);
 
 	text = new BitmapText(&dsq->smallFont);
-	text->alpha = 0.9;
+	text->alpha = 0.9f;
 	text->setAlign(ALIGN_LEFT);
 	addChild(text, PM_POINTER);
 

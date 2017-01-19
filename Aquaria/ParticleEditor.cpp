@@ -58,7 +58,7 @@ void ParticleEditor::applyState()
 	Gradient *grad = new Gradient;
 	grad->scale = Vector(800, 600);
 	grad->position = Vector(400,300);
-	grad->makeVertical(Vector(0.4, 0.4, 0.4), Vector(0.8, 0.8, 0.8));
+	grad->makeVertical(Vector(0.4f, 0.4f, 0.4f), Vector(0.8f, 0.8f, 0.8f));
 	addRenderObject(grad, LR_BACKDROP);
 
 	core->cameraPos = Vector(0,0);

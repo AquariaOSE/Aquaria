@@ -208,8 +208,8 @@ void DebugButton::onUpdate(float dt)
 
 	if (highlight->isCoordinateInsideWorld(core->mouse.position) && ((!md) || (md && !core->mouse.buttons.left)))
 	{
-		highlight->color.interpolateTo(activeColor, 0.1);
-		highlight->alpha.interpolateTo(activeAlpha, 0.1);
+		highlight->color.interpolateTo(activeColor, 0.1f);
+		highlight->alpha.interpolateTo(activeAlpha, 0.1f);
 
 		if (core->mouse.buttons.left && !md)
 			md = true;
@@ -232,8 +232,8 @@ void DebugButton::onUpdate(float dt)
 		{
 			md = false;
 		}
-		highlight->color.interpolateTo(inactiveColor, 0.1);
-		highlight->alpha.interpolateTo(inactiveAlpha, 0.1);
+		highlight->color.interpolateTo(inactiveColor, 0.1f);
+		highlight->alpha.interpolateTo(inactiveAlpha, 0.1f);
 	}
 
 

@@ -37,9 +37,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define compile_assert(pred) switch(0){case 0:case (pred):;}
 
 #ifdef _MSC_VER
-#pragma warning(disable:4786)
+//#pragma warning(disable:4786)
 //#pragma warning(disable:4005)
-#pragma warning(disable:4305)
+//#pragma warning(disable:4305)
 
 //#pragma warning(disable:4018) // signed/unsigned mismatch
 #pragma warning(disable:4244) // conversion from types with possible loss of data
@@ -88,10 +88,8 @@ enum Direction
 	DIR_MAX			= 8
 };
 
-const float SQRT2		= 1.41421356;
-
-const float PI			= 3.14159265;
-const float PI_HALF		= 1.57079633;
+const float PI			= 3.14159265f;
+const float PI_HALF		= 1.57079633f;
 
 #ifndef HUGE_VALF
 	#define HUGE_VALF	((float)1e38)

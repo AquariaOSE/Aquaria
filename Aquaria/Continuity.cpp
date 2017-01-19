@@ -644,11 +644,11 @@ bool Continuity::applyIngredientEffects(IngredientData *data)
 			debugLog("ingredient effect: defense");
 
 			if (fx.magnitude <= 1)
-				dsq->continuity.setDefenseMultiplier(0.75, defenseTime);
+				dsq->continuity.setDefenseMultiplier(0.75f, defenseTime);
 			else if (fx.magnitude == 2)
-				dsq->continuity.setDefenseMultiplier(0.5, defenseTime);
+				dsq->continuity.setDefenseMultiplier(0.5f, defenseTime);
 			else if (fx.magnitude == 3)
-				dsq->continuity.setDefenseMultiplier(0.3, defenseTime);
+				dsq->continuity.setDefenseMultiplier(0.3f, defenseTime);
 			else
 				debugLog("unsupported magnitude for defense");
 
@@ -1443,9 +1443,9 @@ void Continuity::castSong(int num)
 
 	effect->alpha.ensureData();
 	effect->alpha.data->path.addPathNode(0, 0);
-	effect->alpha.data->path.addPathNode(0.5, 0.1);
+	effect->alpha.data->path.addPathNode(0.5f, 0.1f);
 	effect->alpha.data->path.addPathNode(1, 0.5);
-	effect->alpha.data->path.addPathNode(0, 0.9);
+	effect->alpha.data->path.addPathNode(0, 0.9f);
 	effect->alpha.data->path.addPathNode(0, 1);
 	effect->alpha.startPath(et);
 	effect->setLife(et+0.1f);
@@ -1490,13 +1490,13 @@ void Continuity::castSong(int num)
 		break;
 		case SONG_TIME:
 		{
-			float v = 0.3;
+			float v = 0.3f;
 			dsq->gameSpeed.ensureData();
 			dsq->gameSpeed.data->path.clear();
 			dsq->gameSpeed.data->path.addPathNode(0,0);
-			dsq->gameSpeed.data->path.addPathNode(v,0.05);
-			dsq->gameSpeed.data->path.addPathNode(v,0.95);
-			dsq->gameSpeed.data->path.addPathNode(1,1.0);
+			dsq->gameSpeed.data->path.addPathNode(v,0.05f);
+			dsq->gameSpeed.data->path.addPathNode(v,0.95f);
+			dsq->gameSpeed.data->path.addPathNode(1,1.0f);
 			dsq->gameSpeed.startPath(10);
 		}
 		break;
@@ -1521,11 +1521,11 @@ void Continuity::castSong(int num)
 				{
 
 					dsq->overlay->color = Vector(1,1,1);
-					dsq->fade(1, 0.3);
-					dsq->run(0.3);
+					dsq->fade(1, 0.3f);
+					dsq->run(0.3f);
 					warpLiToAvatar();
-					dsq->fade(0, 0.3);
-					dsq->run(0.3);
+					dsq->fade(0, 0.3f);
+					dsq->run(0.3f);
 					dsq->overlay->color = 0;
 
 				}
@@ -2043,7 +2043,7 @@ void Continuity::applyWorldEffects(WorldType type, bool transition, bool affectM
 
 		dsq->game->avatar->canWarp = false;
 
-		dsq->game->sceneColor.interpolateTo(Vector(0.4, 0.8, 0.9), time);
+		dsq->game->sceneColor.interpolateTo(Vector(0.4f, 0.8f, 0.9f), time);
 		dsq->game->avatar->applyWorldEffects(type);
 	}
 	else
@@ -3293,10 +3293,10 @@ public:
 		scale = Vector(0, 0);
 		scale.ensureData();
 		scale.data->path.addPathNode(Vector(0,0), 0);
-		scale.data->path.addPathNode(Vector(1,1), 0.3);
-		scale.data->path.addPathNode(Vector(1,1), 0.6);
-		scale.data->path.addPathNode(Vector(0.5,0.5), 0.9);
-		scale.data->path.addPathNode(Vector(0.1,0.1), 1);
+		scale.data->path.addPathNode(Vector(1,1), 0.3f);
+		scale.data->path.addPathNode(Vector(1,1), 0.6f);
+		scale.data->path.addPathNode(Vector(0.5f,0.5f), 0.9f);
+		scale.data->path.addPathNode(Vector(0.1f,0.1f), 1);
 		scale.startPath(timeScale);
 
 		position = Vector(400,400);

@@ -26,7 +26,7 @@ AquariaProgressBar::AquariaProgressBar() : RenderObject()
 {
 	perc = 0;
 	spinner.setTexture("Progress");
-	spinner.alphaMod = 0.1;
+	spinner.alphaMod = 0.1f;
 	addChild(&spinner, PM_STATIC);
 	followCamera = 1;
 }

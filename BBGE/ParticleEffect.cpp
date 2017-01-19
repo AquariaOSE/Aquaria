@@ -435,7 +435,7 @@ void ParticleEffect::onUpdate(float dt)
 // stop the particle effect, let the particles all die off before we delete ourselves
 void ParticleEffect::killParticleEffect()
 {
-	effectLifeCounter = 0.0001;
+	effectLifeCounter = 0.0001f;
 	die = true;
 	//stop();
 }

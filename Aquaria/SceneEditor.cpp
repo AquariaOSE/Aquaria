@@ -122,7 +122,7 @@ void SceneEditor::changeDepth()
 {
 	if (editingElement)
 	{
-		editingElement->followCamera = 0.9;
+		editingElement->followCamera = 0.9f;
 		editingElement->cull = false;
 	}
 }
@@ -188,17 +188,17 @@ public:
 		if (dsq->game->sceneEditor.selectedEntity.name == selectedEntity.name
 			|| (entType != -1 && dsq->game->sceneEditor.selectedEntity.typeListIndex == entType))
 		{
-			glow->alpha.interpolateTo(0.2, 0.2);
+			glow->alpha.interpolateTo(0.2f, 0.2f);
 		}
 		else
 		{
-			glow->alpha.interpolateTo(0, 0.1);
+			glow->alpha.interpolateTo(0, 0.1f);
 		}
 		if ((core->mouse.position - position).isLength2DIn(32))
 		{
-			label->alpha.interpolateTo(1, 0.1);
-			alpha.interpolateTo(1, 0.2);
-			scale.interpolateTo(Vector(1.5, 1.5), 0.3);
+			label->alpha.interpolateTo(1, 0.1f);
+			alpha.interpolateTo(1, 0.2f);
+			scale.interpolateTo(Vector(1.5f, 1.5f), 0.3f);
 
 			if (!core->mouse.buttons.left && mbld)
 			{
@@ -229,15 +229,15 @@ public:
 				}
 				else
 				{
-					doubleClickTimer = 0.4;
+					doubleClickTimer = 0.4f;
 				}
 			}
 		}
 		else
 		{
-			label->alpha.interpolateTo(0, 0.1);
-			alpha.interpolateTo(0.7, 0.2);
-			scale.interpolateTo(Vector(1.0, 1.0), 0.3);
+			label->alpha.interpolateTo(0, 0.1f);
+			alpha.interpolateTo(0.7f, 0.2f);
+			scale.interpolateTo(Vector(1.0f, 1.0f), 0.3f);
 			doubleClickTimer = 0;
 		}
 	}
@@ -488,7 +488,7 @@ void SceneEditor::init()
 	dsq->game->addRenderObject(btnMenu, LR_HUD);
 
 	selectedEntityType = 0;
-	zoom = Vector(0.2,0.2);
+	zoom = Vector(0.2f,0.2f);
 	bgLayer = 5;
 	text = new DebugFont();
 	text->setFontSize(6);
@@ -2125,7 +2125,7 @@ void createEntityPage()
 	se_grad->followCamera = 1;
 	se_grad->alpha = 0;
 	se_grad->color = Vector(0,0,0);
-	se_grad->alpha.interpolateTo(0.8, 0.2);
+	se_grad->alpha.interpolateTo(0.8f, 0.2f);
 	dsq->game->addRenderObject(se_grad, LR_HUD);
 
 	EntityGroup &group = game->entityGroups[game->sceneEditor.entityPageNum];
@@ -2673,8 +2673,8 @@ void SceneEditor::toggle(bool on)
 		dsq->game->togglePause(on);
 		if (dsq->game->avatar)
 			dsq->game->avatar->enableInput();
-		text->alpha.interpolateTo(0, 0.2);
-		placer->alpha.interpolateTo(0, 0.2);
+		text->alpha.interpolateTo(0, 0.2f);
+		placer->alpha.interpolateTo(0, 0.2f);
 
 		dsq->darkLayer.toggle(true);
 

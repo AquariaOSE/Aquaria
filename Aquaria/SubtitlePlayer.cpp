@@ -130,7 +130,7 @@ void SubtitlePlayer::update(float dt)
 			// present line
 			// set text
 			debugLog(subLines[curLine].line);
-			dsq->subtext->scrollText(subLines[curLine].line, 0.02);
+			dsq->subtext->scrollText(subLines[curLine].line, 0.02f);
 
 			// advance
 			curLine++;
@@ -141,7 +141,7 @@ void SubtitlePlayer::update(float dt)
 			if (!hidden)
 			{
 				dsq->subtext->alpha.interpolateTo(1, 1);
-				dsq->subbox->alpha.interpolateTo(1, 0.1);
+				dsq->subbox->alpha.interpolateTo(1, 0.1f);
 			}
 			vis = true;
 		}
