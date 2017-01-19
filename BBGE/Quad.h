@@ -59,7 +59,7 @@ public:
 	int getHeight() const {return int(height);}
 
 	void setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
-	void setDrawGridAlpha(int x, int y, float alpha);
+	void setDrawGridAlpha(size_t x, size_t y, float alpha);
 	void repeatTextureToFill(bool on);
 	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatingTextureToFill; }
@@ -99,7 +99,7 @@ public:
 protected:
 	bool repeatingTextureToFill;
 	float gridTimer;
-	int xDivs, yDivs;
+	size_t xDivs, yDivs;
 	Vector ** drawGrid;
 
 	void resetGrid();

@@ -1282,7 +1282,7 @@ void WorldMapRender::fixGems()
 
 void WorldMapRender::addAllGems()
 {
-	int c = 0;
+	size_t c = 0;
 	for (Continuity::Gems::reverse_iterator i = dsq->continuity.gems.rbegin(); i != dsq->continuity.gems.rend(); i++)
 	{
 		GemMover *g = addGem(&(*i));

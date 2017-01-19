@@ -403,7 +403,7 @@ void MiniMapRender::onUpdate(float dt)
 
 					if (!dsq->game->worldMapRender->isOn())
 					{
-						for (int i = 0; i < buttons.size(); i++)
+						for (size_t i = 0; i < buttons.size(); i++)
 						{
 							if ((buttons[i]->getWorldPosition() - core->mouse.position).isLength2DIn(BUTTON_RADIUS))
 							{
@@ -596,7 +596,7 @@ void MiniMapRender::onRender()
 
 	if (!radarHide)
 	{
-		for (int i = 0; i < dsq->game->getNumPaths(); i++)
+		for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
 		{
 			Path *p = dsq->game->getPath(i);
 			if (!p->nodes.empty() && p->minimapIcon)

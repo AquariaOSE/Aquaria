@@ -234,7 +234,7 @@ void forEachFile(const std::string& inpath, std::string type, void callback(cons
 		dirent *file=0;
 		while ( (file=readdir(dir)) != NULL )
 		{
-			if (file->d_name && strlen(file->d_name) > 4)
+			if (strlen(file->d_name) > 4)
 			{
 				debugLog(file->d_name);
 				char *extension=strrchr(file->d_name,'.');

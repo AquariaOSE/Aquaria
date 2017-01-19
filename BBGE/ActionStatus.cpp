@@ -20,8 +20,8 @@ void ActionButtonStatus::import(const ActionSet& as)
 	{
 		const ActionInput& inp = as.inputSet[i];
 		for(int j = 0; j < INP_COMBINED_SIZE; ++j)
-			if(unsigned(inp.all[j]) < ACTION_BUTTON_ENUM_SIZE)
-				found[inp.all[j]] = 1;
+			if(unsigned(inp.data.all[j]) < ACTION_BUTTON_ENUM_SIZE)
+				found[inp.data.all[j]] = 1;
 	}
 	
 	toQuery.clear();

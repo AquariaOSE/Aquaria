@@ -506,13 +506,14 @@ void AnimationEditor::undo()
 
 	if (core->getCtrlState())
 	{
-		if (undoEntry >= 0 && undoEntry < undoHistory.size())
+		if (undoEntry < undoHistory.size())
 		{
 			std::list<SkeletalSprite>::iterator it = undoHistory.begin();
 			std::advance(it, undoEntry);
 			editSprite->animations = it->animations;
-			undoEntry--;
-			if (undoEntry<0) undoEntry = 0;
+			if(undoEntry > 0) {
+				undoEntry--;
+			}
 		}
 	}
 }
@@ -524,7 +525,7 @@ void AnimationEditor::redo()
 	if (core->getCtrlState())
 	{
 		undoEntry++;
-		if (undoEntry >= 0 && undoEntry < undoHistory.size())
+		if (undoEntry < undoHistory.size())
 		{
 			std::list<SkeletalSprite>::iterator it = undoHistory.begin();
 			std::advance(it, undoEntry);
@@ -592,7 +593,7 @@ void AnimationEditor::reorderKeys()
 void AnimationEditor::rebuildKeyframeWidgets()
 {
 	int offx=0;
-	for (int i = 0; i < keyframeWidgets.size(); i++)
+	for (size_t i = 0; i < keyframeWidgets.size(); i++)
 	{
 		keyframeWidgets[i]->setLife(0.03);
 		keyframeWidgets[i]->setDecayRate(1);
@@ -714,7 +715,7 @@ void AnimationEditor::update(float dt)
 	text->setText(os.str());
 
 	char t2buf[128];
-	sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f  strip: %d pass: %d (%d)", ebdata.x, ebdata.y, ebdata.z, selectedStripPoint, pass, origpass);
+	sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f  strip: %lu pass: %d (%d)", ebdata.x, ebdata.y, ebdata.z, selectedStripPoint, pass, origpass);
 	text2->setText(t2buf);
 
 	if (core->mouse.buttons.middle)
@@ -831,14 +832,15 @@ void AnimationEditor::nextKey()
 	if (editingStrip)
 	{
 		selectedStripPoint++;
-		if (selectedStripPoint >= editSprite->getSelectedBone(false)->changeStrip.size())
+		if (selectedStripPoint >= editSprite->getSelectedBone(false)->changeStrip.size()
+				&& selectedStripPoint > 0)
 			selectedStripPoint --;
 	}
 	else
 	{
 		if (core->getCtrlState())
 		{
-			for (int i = 0; i < keyframeWidgets.size(); i++)
+			for (size_t i = 0; i < keyframeWidgets.size(); i++)
 			{
 				keyframeWidgets[i]->shiftLeft();
 			}
@@ -861,15 +863,15 @@ void AnimationEditor::prevKey()
 
 	if (editingStrip)
 	{
-		selectedStripPoint--;
-		if (selectedStripPoint < 0)
-			selectedStripPoint = 0;
+		if(selectedStripPoint > 0) {
+			selectedStripPoint--;
+		}
 	}
 	else
 	{
 		if (core->getCtrlState())
 		{
-			for (int i = 0; i < keyframeWidgets.size(); i++)
+			for (size_t i = 0; i < keyframeWidgets.size(); i++)
 			{
 				keyframeWidgets[i]->shiftRight();
 			}
@@ -1017,7 +1019,7 @@ void AnimationEditor::applyTranslation()
 				if(!core->getCtrlState())
 				{
 					// all bones in one anim mode
-					for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+					for (size_t i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
 					{
 						BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 						if (b)
@@ -1030,9 +1032,9 @@ void AnimationEditor::applyTranslation()
 				else
 				{
 					// all bones in all anims mode
-					for (int a = 0; a < editSprite->animations.size(); ++a)
+					for (size_t a = 0; a < editSprite->animations.size(); ++a)
 					{
-						for (int i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+						for (size_t i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
 						{
 							BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 							if (b)
@@ -1117,7 +1119,7 @@ void AnimationEditor::flipRot()
 			{
 				if (!core->getCtrlState())
 				{
-					for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+					for (size_t i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
 					{
 						BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 						if (b)
@@ -1129,9 +1131,9 @@ void AnimationEditor::flipRot()
 				else
 				{
 					// all bones in all anims mode
-					for (int a = 0; a < editSprite->animations.size(); ++a)
+					for (size_t a = 0; a < editSprite->animations.size(); ++a)
 					{
-						for (int i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+						for (size_t i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
 						{
 							BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 							if (b)
@@ -1199,7 +1201,7 @@ void AnimationEditor::rmbu()
 					int rotdiff = editingBone->rotation.z - bcur->rot;
 					if (!core->getCtrlState())
 					{
-						for (int i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+						for (size_t i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
 						{
 							BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 							if (b)
@@ -1211,9 +1213,9 @@ void AnimationEditor::rmbu()
 					else
 					{
 						// all bones in all anims mode
-						for (int a = 0; a < editSprite->animations.size(); ++a)
+						for (size_t a = 0; a < editSprite->animations.size(); ++a)
 						{
-							for (int i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+							for (size_t i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
 							{
 								BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 								if (b)
@@ -1369,7 +1371,7 @@ void AnimationEditor::moveNextWidgets(float dt)
 
 	int s = 0;
 	KeyframeWidget *w=0;
-	for (int i = 0; i < keyframeWidgets.size(); i++)
+	for (size_t i = 0; i < keyframeWidgets.size(); i++)
 	{
 		w = keyframeWidgets[i];
 		if (s)

@@ -148,7 +148,7 @@ public:
 	void init();
 	void close();
 
-	void showPanel(int id);
+	void showPanel(size_t id);
 	void updateFade();
 
 	void initModAndPatchPanel();
@@ -172,7 +172,7 @@ protected:
 	virtual void onUpdate(float dt);
 	MenuIconBar leftbar;
 	MenuBasicBar rightbar;
-	int currentPanel;
+	size_t currentPanel;
 	BitmapText subtext;
 	Quad subbox;
 	float subFadeT;

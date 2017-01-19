@@ -65,7 +65,7 @@ namespace ByteBufferTools
 	template<typename T> void ToLittleEndian(T*);   // will generate link error
 	template<typename T> void ToBigEndian(T*);      // will generate link error
 
-};
+}
 
 #ifdef BB_OLD_GNUC
 #  define BB_MAKE_WRITE_OP(T) inline ByteBuffer& operator<<(T val) { appendT(&val, sizeof(T)); return *this; }

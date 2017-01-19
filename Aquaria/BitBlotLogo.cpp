@@ -141,7 +141,7 @@ void BitBlotLogo::applyState()
 		dragon->loadSkeletal("bb-dragon");
 		dragon->animate("idle", -1);
 		dragon->position = Vector(300 , -100);
-		for (int i = 0; i < dragon->bones.size(); i++)
+		for (size_t i = 0; i < dragon->bones.size(); i++)
 		{
 			dragon->getBoneByIdx(i)->shareAlphaWithChildren = 1;
 		}
@@ -162,7 +162,7 @@ void BitBlotLogo::applyState()
 		landscape->addChild(windmill, PM_POINTER, RBP_OFF);
 		windmill->update((rand()%100)*0.1f);
 		windmill->scale = Vector(0.7, 0.7);
-		for (int i = 0; i < windmill->bones.size(); i++)
+		for (size_t i = 0; i < windmill->bones.size(); i++)
 		{
 			windmill->getBoneByIdx(i)->alpha = 0.7;
 		}
@@ -172,11 +172,11 @@ void BitBlotLogo::applyState()
 
 	if (windmills.size() >= 2)
 	{
-		for (int i = 0; i < windmills.size()-1; i++)
+		for (size_t i = 0; i < windmills.size()-1; i++)
 		{
 			if (windmills[i]->position.y < 4000)
 			{
-				for (int j = i+1; j < windmills.size(); j++)
+				for (size_t j = i+1; j < windmills.size(); j++)
 				{
 					if (windmills[j]->position.y < 4000)
 					{

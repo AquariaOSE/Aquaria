@@ -45,9 +45,9 @@ const float	JELLYCOSTUME_HEALAMOUNT		= 0.5;
 const float biteTimerBiteRange = 0.6;
 const float biteTimerMax = 3;
 const float biteDelayPeriod = 0.08;
-const int normalTendrilHits = 3;
-const int rollTendrilHits = 4;
-const int maxTendrilHits = 6;
+const size_t normalTendrilHits = 3;
+const size_t rollTendrilHits = 4;
+const size_t maxTendrilHits = 6;
 
 const float fireDelayTime = 0.2;
 const int maxShieldPoints = 8;
@@ -215,7 +215,7 @@ Vector randCirclePos(Vector position, int radius)
 	return position + Vector(sinf(a), cosf(a))*radius;
 }
 
-SongIconParticle::SongIconParticle(Vector color, Vector pos, int note)
+SongIconParticle::SongIconParticle(Vector color, Vector pos, size_t note)
 								:  note(note)
 {
 	cull = false;
@@ -251,7 +251,7 @@ SongIconParticle::SongIconParticle(Vector color, Vector pos, int note)
 
 	float smallestDist = HUGE_VALF;
 	SongIcon *closest = 0;
-	for (int i = 0; i < avatar->songIcons.size(); i++)
+	for (size_t i = 0; i < avatar->songIcons.size(); i++)
 	{
 		if (i != note)
 		{
@@ -284,7 +284,7 @@ void SongIconParticle::onUpdate(float dt)
 	}
 }
 
-SongIcon::SongIcon(int note) : Quad(), note(note)
+SongIcon::SongIcon(size_t note) : Quad(), note(note)
 {
 	open = false;
 	alphaMod = 0.9;
@@ -553,7 +553,7 @@ void SongIcon::openNote()
 				e->songNote(note);
 			}
 		}
-		for (int i = 0; i < dsq->game->getNumPaths(); i++)
+		for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
 		{
 			Path *p = dsq->game->getPath(i);
 			if (!p->nodes.empty())
@@ -604,7 +604,7 @@ void SongIcon::closeNote()
 				e->songNoteDone(note, len);
 			}
 		}
-		for (int i = 0; i < dsq->game->getNumPaths(); i++)
+		for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
 		{
 			Path *p = dsq->game->getPath(i);
 			if (!p->nodes.empty())
@@ -1198,7 +1198,7 @@ void Avatar::lostTarget(int i, Entity *e)
 void Avatar::entityDied(Entity *e)
 {
 	Entity::entityDied(e);
-	for (int i = 0; i < targets.size(); i++)
+	for (size_t i = 0; i < targets.size(); i++)
 	{
 		if (targets[i].e == e)
 		{
@@ -1266,7 +1266,7 @@ void Avatar::enableInput()
 
 	if (dsq->continuity.form == FORM_ENERGY)
 	{
-		for (int i = 0; i < targetQuads.size(); i++)
+		for (size_t i = 0; i < targetQuads.size(); i++)
 			targetQuads[i]->start();
 	}
 
@@ -1292,7 +1292,7 @@ void Avatar::disableInput()
 		dsq->setMousePosition(Vector(400,300));
 	}
 
-	for (int i = 0; i < targetQuads.size(); i++)
+	for (size_t i = 0; i < targetQuads.size(); i++)
 	{
 		targetQuads[i]->stop();
 	}
@@ -1302,7 +1302,7 @@ void Avatar::disableInput()
 
 void Avatar::clearTargets()
 {
-	for (int i = 0; i < targets.size(); i++)
+	for (size_t i = 0; i < targets.size(); i++)
 	{
 		if (targets[i].e)
 		{
@@ -1329,7 +1329,7 @@ void Avatar::openSingingInterface(InputDevice device)
 		currentSongIdx = SONG_NONE;
 
 		// make the singing icons appear
-		for (int i = 0; i < songIcons.size(); i++)
+		for (size_t i = 0; i < songIcons.size(); i++)
 		{
 			songIcons[i]->openInterface();
 		}
@@ -1362,7 +1362,7 @@ void Avatar::closeSingingInterface()
 		applyRidingPosition();
 		singing = false;
 
-		for (int i = 0; i < songIcons.size(); i++)
+		for (size_t i = 0; i < songIcons.size(); i++)
 		{
 			songIcons[i]->closeInterface();
 		}
@@ -1452,7 +1452,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 	os2 << "lastForm: " << lastForm;
 	debugLog(os2.str());
 
-	for (int i = 0; i < targetQuads.size(); i++)
+	for (size_t i = 0; i < targetQuads.size(); i++)
 	{
 		if (targetQuads[i])
 			targetQuads[i]->stop();
@@ -1604,17 +1604,15 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		dsq->game->sceneColor3.interpolateTo(Vector(1,1,1), 0.2);
 	}
 	*/
-	float lastHairAlphaMod = 0;
 	if (hair)
 	{
 		hair->alphaMod = 0;
-		lastHairAlphaMod = hair->alphaMod;
 	}
 	switch (form)
 	{
 	case FORM_ENERGY:
 		refreshModel("Naija", "EnergyForm");
-		for (int i = 0; i < targetQuads.size(); i++)
+		for (size_t i = 0; i < targetQuads.size(); i++)
 			targetQuads[i]->start();
 		leftHandEmitter->load("EnergyFormHandGlow");
 		leftHandEmitter->start();
@@ -1738,7 +1736,7 @@ void Avatar::updateSingingInterface(float dt)
 			{
 				float smallestDist = HUGE_VALF;
 				int closest = -1;
-				for (int i = 0; i < songIcons.size(); i++)
+				for (size_t i = 0; i < songIcons.size(); i++)
 				{
 					float dist = (songIcons[i]->position - core->mouse.position).getSquaredLength2D();
 					if (dist < smallestDist)
@@ -1793,7 +1791,7 @@ void Avatar::updateSingingInterface(float dt)
 					if (!setNote)
 					{
 						bool alreadyAtNote = false;
-						for (int i = 0; i < songIcons.size(); i++)
+						for (size_t i = 0; i < songIcons.size(); i++)
 						{
 							const float dist = (songIcons[i]->position - core->mouse.position).getSquaredLength2D();
 							if (dist <= sqr(NOTE_ACCEPT_DISTANCE))
@@ -1820,7 +1818,7 @@ void Avatar::setSongIconPositions()
 {
 	float radIncr = (2*PI)/float(songIcons.size());
 	float rad = 0;
-	for (int i = 0; i < songIcons.size(); i++)
+	for (size_t i = 0; i < songIcons.size(); i++)
 	{
 		songIcons[i]->position = Vector(400,300)+/*this->position + */Vector(sinf(rad)*singingInterfaceRadius, cosf(rad)*singingInterfaceRadius);
 		rad += radIncr;
@@ -1877,7 +1875,7 @@ Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, E
 					{
 						if (ignore)
 						{
-							int j = 0;
+							size_t j = 0;
 							for (; j < ignore->size(); j++)
 							{
 								if ((*ignore)[j].e == e)
@@ -1895,7 +1893,7 @@ Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, E
 						{
 							if (ignore)
 							{
-								int j = 0;
+								size_t j = 0;
 								for (; j < ignore->size(); j++)
 								{
 									if ((*ignore)[j].e == e && (*ignore)[j].targetPt == i)
@@ -1939,7 +1937,7 @@ bool wasDown = false;
 void Avatar::updateTargets(float dt, bool override)
 {
 	DamageType damageType = DT_AVATAR_ENERGYBLAST;
-	for (int i = 0; i < targets.size(); i++)
+	for (size_t i = 0; i < targets.size(); i++)
 	{
 		if (!targets[i].e
 		|| !targets[i].e->isPresent()
@@ -1999,7 +1997,7 @@ void Avatar::updateTargets(float dt, bool override)
 			}
 			if (targets.empty())
 			{
-				for (int i = 0; i < oldTargets.size(); i++)
+				for (size_t i = 0; i < oldTargets.size(); i++)
 				{
 					Entity *e = oldTargets[i].e;
 					if (e)
@@ -2021,7 +2019,7 @@ void Avatar::updateTargets(float dt, bool override)
 	}
 	else
 	{
-		for (int i = 0; i < targets.size(); i++)
+		for (size_t i = 0; i < targets.size(); i++)
 		{
 			Entity *e = targets[i].e;
 			if (e)
@@ -2053,7 +2051,7 @@ void Avatar::updateTargetQuads(float dt)
 
 	static Entity *lastTargetE = 0;
 	const float tt = 0.02;
-	for (int i = 0; i < targets.size(); i++)
+	for (size_t i = 0; i < targets.size(); i++)
 	{
 		if (targets[i].e)
 		{
@@ -2094,7 +2092,7 @@ void Avatar::updateTargetQuads(float dt)
 
 	if (targets.empty())
 	{
-		for (int i = 0; i < targetQuads.size(); i++)
+		for (size_t i = 0; i < targetQuads.size(); i++)
 		{
 			if (lastTargetE != 0)
 			{
@@ -2205,7 +2203,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	if (!targets.empty())
 	{
 		//homing = home;
-		for (int i = 0; i < targets.size(); i++)
+		for (size_t i = 0; i < targets.size(); i++)
 		{
 			/*
 			if (!aimAt)
@@ -2832,9 +2830,9 @@ Vector Avatar::getTendrilAimVector(int i, int max)
 	return aim;
 }
 
-int Avatar::getNumShots()
+size_t Avatar::getNumShots()
 {
-	int thits = normalTendrilHits;
+	size_t thits = normalTendrilHits;
 	if (flourishPowerTimer.isActive())
 	{
 		if (lastBurstType == BURST_WALL)
@@ -2855,17 +2853,17 @@ int Avatar::getNumShots()
 
 void Avatar::doShock(const std::string &shotName)
 {
-	int c = 0;
+	size_t c = 0;
 	std::vector <Entity*> entitiesToHit;
 	std::vector <Target> localTargets;
 	bool clearTargets = true;
 
-	int thits = getNumShots();
+	size_t thits = getNumShots();
 
 	if (!targets.empty() && targets[0].e != 0)
 	{
 		clearTargets = false;
-		for (int i = 0; i < thits; i++)
+		for (size_t i = 0; i < thits; i++)
 		{
 			entitiesToHit.push_back(targets[0].e);
 		}
@@ -2894,7 +2892,7 @@ void Avatar::doShock(const std::string &shotName)
 		{
 			while (entitiesToHit.size()<thits)
 			{
-				for (int i = 0; i < localTargets.size(); i++)
+				for (size_t i = 0; i < localTargets.size(); i++)
 				{
 					if (!(entitiesToHit.size()<thits))
 						break;
@@ -2913,7 +2911,7 @@ void Avatar::doShock(const std::string &shotName)
 
 	if (sz == 0)
 	{
-		for (int i = 0; i < thits; i++)
+		for (size_t i = 0; i < thits; i++)
 		{
 			Shot *s = dsq->game->fireShot(shotName, this, 0);
 
@@ -2932,7 +2930,7 @@ void Avatar::doShock(const std::string &shotName)
 				Shot *s = dsq->game->fireShot(shotName, this, e);
 				if (!targets.empty())
 				{
-					for (int j = 0; j < targets.size(); j++)
+					for (size_t j = 0; j < targets.size(); j++)
 					{
 						if (targets[j].e == e)
 							s->targetPt = targets[j].targetPt;
@@ -3744,7 +3742,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	dsq->game->addRenderObject(tripper, LR_AFTER_EFFECTS);
 
 	songIcons.resize(8);
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < songIcons.size(); i++)
 	{
 		songIcons[i] = new SongIcon(i);
@@ -6908,7 +6906,7 @@ void Avatar::onWarp()
 
 bool Avatar::checkWarpAreas()
 {
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		bool warp = false;
