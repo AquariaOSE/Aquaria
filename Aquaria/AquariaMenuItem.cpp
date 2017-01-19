@@ -933,7 +933,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 	inLoop = false;
 }
 
-void AquariaKeyConfig::setActionSetIndex(int idx)
+void AquariaKeyConfig::setActionSetIndex(size_t idx)
 {
 	actionSetIndex = idx;
 }

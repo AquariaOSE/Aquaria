@@ -511,9 +511,8 @@ void AnimationEditor::undo()
 			std::list<SkeletalSprite>::iterator it = undoHistory.begin();
 			std::advance(it, undoEntry);
 			editSprite->animations = it->animations;
-			if(undoEntry > 0) {
+			if(undoEntry)
 				undoEntry--;
-			}
 		}
 	}
 }

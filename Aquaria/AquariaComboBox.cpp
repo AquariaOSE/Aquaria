@@ -300,7 +300,8 @@ bool AquariaComboBox::setSelectedItem(const std::string &item)
 
 void AquariaComboBox::setSelectedItem(int index)
 {
-	if (isopen) close();
+	if (isopen)
+		close();
 
 	if (index == AQUARIACOMBOBOXITEM_UP)
 	{
@@ -310,22 +311,19 @@ void AquariaComboBox::setSelectedItem(int index)
 	{
 		doScroll(0);
 	}
-	else if(index < items.size())
+	else if((size_t)index < items.size())
 	{
-		if ((size_t) index < items.size())
+		selectedItem = index;
+		selectedItemLabel->setText(items[index]);
+		scroll = index;
+		if (scroll + numDrops > items.size())
 		{
-			selectedItem = index;
-			selectedItemLabel->setText(items[index]);
-			scroll = index;
-			if (scroll + numDrops > items.size())
-			{
-				if (items.size() < numDrops)
-					scroll = 0;
-				else
-					scroll = items.size() - numDrops;
-			}
+			if (items.size() < numDrops)
+				scroll = 0;
+			else
+				scroll = items.size() - numDrops;
 		}
-	}
+}
 }
 
 int AquariaComboBox::getSelectedItem()

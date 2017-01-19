@@ -175,7 +175,7 @@ public:
 	static AquariaKeyConfig *waitingForInput;
 
 	void setAcceptEsc(bool a);
-	void setActionSetIndex(int idx);
+	void setActionSetIndex(size_t idx);
 	void setRejectJoyAxis(bool b);
 
 protected:
@@ -191,7 +191,7 @@ protected:
 	int inputIdx;
 	TTFText *keyConfigFont;
 	Quad *bg;
-	int actionSetIndex;
+	size_t actionSetIndex;
 	bool acceptEsc;
 	bool rejectJoyAxis;
 };
