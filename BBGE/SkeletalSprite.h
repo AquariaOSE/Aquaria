@@ -61,7 +61,8 @@ public:
 	std::string gfx;
 	std::string name;
 	size_t boneIdx;
-	int pidx, rbp;
+	int pidx;
+	bool rbp;
 
 	std::string prt;
 	std::vector<Vector> changeStrip;
@@ -282,7 +283,7 @@ protected:
 	size_t selectedBone;
 	friend class AnimationLayer;
 	std::vector<AnimationLayer> animLayers;
-	Bone* initBone(int idx, std::string gfx, int pidx, int rbp=0, std::string name="", float cr=0, bool fh=false, bool fv=false);
+	Bone* initBone(int idx, std::string gfx, int pidx, bool rbp=false, std::string name="", float cr=0, bool fh=false, bool fv=false);
 	void deleteBones();
 	void onUpdate(float dt);
 };

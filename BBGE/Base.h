@@ -50,11 +50,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma warning(disable:4505) // unreferenced local function has been removed
 #pragma warning(disable:4702) // unreachable code
 #pragma warning(disable:4127) // conditional expression is constant
-#pragma warning(disable:4706) // assignment within conditional expression
+//#pragma warning(disable:4706) // assignment within conditional expression
 
-#pragma warning(disable:4389) // signed/unsigned mismatch
+//#pragma warning(disable:4389) // signed/unsigned mismatch
 
-#pragma warning(disable:4189) // UqqqqSEFUL: local variable is initialized but not referenced
+//#pragma warning(disable:4189) // UqqqqSEFUL: local variable is initialized but not referenced
 #endif
 
 #include <stddef.h>
