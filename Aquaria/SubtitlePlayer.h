@@ -27,7 +27,7 @@ public:
 	typedef std::vector<SubLine> SubLines;
 	SubLines subLines;
 
-	int curLine;
+	size_t curLine;
 protected:
 	bool vis, hidden;
 };

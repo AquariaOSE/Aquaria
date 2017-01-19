@@ -429,7 +429,6 @@ ImageTGA *Texture::TGAloadMem(void *mem, int size)
 	byte bits = 0;						// The bits per pixel for the image (16, 24, 32)
 	uint32_t channels = 0;				// The channels of the image (3 = RGA : 4 = RGBA)
 	uint32_t stride = 0;				// The stride (channels * width)
-	size_t i = 0;						// A counter
 
 	// This function loads in a TARGA (.TGA) file and returns its data to be
 	// used as a texture or what have you.  This currently loads in a 16, 24
@@ -498,7 +497,7 @@ ImageTGA *Texture::TGAloadMem(void *mem, int size)
 
 				// Go through all of the pixels and swap the B and R values since TGA
 				// files are stored as BGR instead of RGB (or use GL_BGR_EXT verses GL_RGB)
-				for(i = 0; i < stride; i += channels)
+				for(unsigned i = 0; i < stride; i += channels)
 				{
 					int temp = pLine[i];
 					pLine[i] = pLine[i + 2];
@@ -578,7 +577,8 @@ ImageTGA *Texture::TGAloadMem(void *mem, int size)
 		byte *pColors = new byte [channels];
 
 		// Load in all the pixel data
-		while(i < width*height)
+		const size_t datalen = size_t(width) * size_t(height);
+		for(size_t i = 0; i < datalen; )
 		{
 			// Read in the current color count + 1
 			bb >> rleID;

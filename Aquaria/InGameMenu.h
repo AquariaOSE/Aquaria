@@ -172,7 +172,7 @@ private:
 	std::vector<std::string> dropIngrNames;
 
 	float songMenuPlayDelay;
-	int currentSongMenuNote;
+	size_t currentSongMenuNote;
 	int playingSongInMenu;
 
 	void onOptionsMenu();

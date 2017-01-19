@@ -144,7 +144,7 @@ public:
 
 
 	bool hasSong(int song);
-	int getSongTypeBySlot(int slot);
+	int getSongTypeBySlot(size_t slot);
 	int getSongSlotByType(int type);
 	void learnSong(int song);
 	void unlearnSong(int song);

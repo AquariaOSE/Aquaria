@@ -320,7 +320,7 @@ void Game::transitionToScene(std::string scene)
 
 ElementTemplate *Game::getElementTemplateByIdx(size_t idx)
 {
-	for (int i = 0; i < elementTemplates.size(); i++)
+	for (size_t i = 0; i < elementTemplates.size(); i++)
 	{
 		if (elementTemplates[i].idx == idx)
 		{
@@ -471,10 +471,10 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			// obs now empty
 
 			int sides = 0;
-			for (int i = 0; i < obsCopy.size(); i++)
+			for (size_t i = 0; i < obsCopy.size(); i++)
 			{
 				sides = 0;
-				for (int j = 0; j < obsCopy.size(); j++)
+				for (size_t j = 0; j < obsCopy.size(); j++)
 				{
 					if (i != j)
 					{
@@ -500,7 +500,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 
 		glPushMatrix();
 
-		for (int i = 0; i < obs.size(); i++)
+		for (size_t i = 0; i < obs.size(); i++)
 		{
 			glLoadIdentity();
 
@@ -577,15 +577,14 @@ void Game::reconstructGrid(bool force)
 	if (!force && isSceneEditorActive()) return;
 
 	clearGrid();
-	int i = 0;
-	for (i = 0; i < dsq->getNumElements(); i++)
+	for (size_t i = 0; i < dsq->getNumElements(); i++)
 	{
 		Element *e = dsq->getElement(i);
 		e->fillGrid();
 	}
 
 	ObsRow *o;
-	for (i = 0; i < obsRows.size(); i++)
+	for (size_t i = 0; i < obsRows.size(); i++)
 	{
 		o = &obsRows[i];
 		for (int tx = 0; tx < o->len; tx++)
@@ -718,8 +717,8 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 			}
 		}
 	}
-	int sz = (TILE_SIZE*(sampleArea-1));
-	for (int i = 0; i < vs.size(); i++)
+	const int sz = (TILE_SIZE*(sampleArea-1));
+	for (size_t i = 0; i < vs.size(); i++)
 	{
 		float len = vs[i].getLength2D();
 		if (len < sz)
@@ -792,13 +791,13 @@ bool Game::removeEntity(Entity *selected)
 		e = e->NextSiblingElement("Enemy");
 	}
 
-	for (int i = 0; i < entitySaveData.size(); i++)
+	for (size_t i = 0; i < entitySaveData.size(); i++)
 	{
 		if (entitySaveData[i].x == int(selected->startPos.x) && entitySaveData[i].y == int(selected->startPos.y))
 		{
 			std::vector<EntitySaveData> copy = entitySaveData;
 			entitySaveData.clear();
-			for (int j = 0; j < copy.size(); j++)
+			for (size_t j = 0; j < copy.size(); j++)
 			{
 				if (j != i)
 					entitySaveData.push_back(copy[j]);
@@ -893,7 +892,7 @@ void Game::loadEntityTypeList()
 
 EntityClass *Game::getEntityClassForEntityType(const std::string &type)
 {
-	for (int i = 0; i < entityTypeList.size(); i++)
+	for (size_t i = 0; i < entityTypeList.size(); i++)
 	{
 		if (nocasecmp(entityTypeList[i].name, type)==0)
 			return &entityTypeList[i];
@@ -903,7 +902,7 @@ EntityClass *Game::getEntityClassForEntityType(const std::string &type)
 
 int Game::getIdxForEntityType(std::string type)
 {
-	for (int i = 0; i < entityTypeList.size(); i++)
+	for (size_t i = 0; i < entityTypeList.size(); i++)
 	{
 		if (nocasecmp(entityTypeList[i].name, type)==0)
 			return entityTypeList[i].idx;
@@ -914,7 +913,7 @@ int Game::getIdxForEntityType(std::string type)
 Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
 {
 	std::string type;
-	for (int i = 0; i < dsq->game->entityTypeList.size(); i++)
+	for (size_t i = 0; i < dsq->game->entityTypeList.size(); i++)
 	{
 		EntityClass *ec = &dsq->game->entityTypeList[i];
 		if (ec->idx == idx)
@@ -1052,7 +1051,7 @@ void Game::initEntities()
 EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e, Vector pos)
 {
 
-	for (int i = 0; i < entitySaveData.size(); i++)
+	for (size_t i = 0; i < entitySaveData.size(); i++)
 	{
 		if (entitySaveData[i].e == e)
 		{
@@ -1188,9 +1187,9 @@ void Game::clearPaths()
 		firstPathOfType[i] = 0;
 }
 
-int Game::getIndexOfPath(Path *p)
+size_t Game::getIndexOfPath(Path *p)
 {
-	for (int i = 0; i < paths.size(); i++)
+	for (size_t i = 0; i < paths.size(); i++)
 	{
 		if (paths[i] == p)
 			return i;
@@ -1205,8 +1204,8 @@ Path *Game::getPathAtCursor()
 
 Path *Game::getScriptedPathAtCursor(bool withAct)
 {
-	int sz = paths.size();
-	for (int i = 0; i < sz; i++)
+	const size_t sz = paths.size();
+	for (size_t i = 0; i < sz; i++)
 	{
 		Path *p = (paths[i]);
 		if (!p->nodes.empty() && p->hasScript())
@@ -1229,7 +1228,7 @@ Path *Game::getNearestPath(const Vector &pos, const std::string &s, const Path *
 	float smallestDist = HUGE_VALF;
 	std::string st = s;
 	stringToLower(st);
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (size_t i = 0; i < dsq->game->paths.size(); i++)
 	{
 		Path *cp = dsq->game->paths[i];
 		if (cp != ignore && !cp->nodes.empty() && (st.empty() || st == cp->label))
@@ -1276,7 +1275,7 @@ Path *Game::getNearestPath(Path *p, std::string s)
 Path *Game::getPathByName(std::string name)
 {
 	stringToLowerUserData(name);
-	for (int i = 0; i < paths.size(); i++)
+	for (size_t i = 0; i < paths.size(); i++)
 	{
 		if (paths[i]->label == name)
 			return paths[i];
@@ -2034,8 +2033,7 @@ void Game::findMaxCameraValues()
 	cameraMin.y = 20;
 	cameraMax.x = -1;
 	cameraMax.y = -1;
-	int i = 0;
-	for (i = 0; i < obsRows.size(); i++)
+	for (size_t i = 0; i < obsRows.size(); i++)
 	{
 		ObsRow *r = &obsRows[i];
 		TileVector t(r->tx + r->len, r->ty);
@@ -2134,8 +2132,7 @@ bool Game::saveScene(std::string scene)
 	}
 
 	std::ostringstream obs;
-	int i = 0;
-	for (i = 0; i < obsRows.size(); i++)
+	for (size_t i = 0; i < obsRows.size(); i++)
 	{
 		obs << obsRows[i].tx << " " << obsRows[i].ty << " " << obsRows[i].len << " ";
 	}
@@ -2144,12 +2141,12 @@ bool Game::saveScene(std::string scene)
 	saveFile.InsertEndChild(obsXml);
 
 
-	for (i = 0; i < dsq->game->getNumPaths(); i++)
+	for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		XMLElement *pathXml = saveFile.NewElement("Path");
 		Path *p = dsq->game->getPath(i);
 		pathXml->SetAttribute("name", p->name.c_str());
-		for (int n = 0; n < p->nodes.size(); n++)
+		for (size_t n = 0; n < p->nodes.size(); n++)
 		{
 			XMLElement *nodeXml = saveFile.NewElement("Node");
 			std::ostringstream os;
@@ -2171,7 +2168,7 @@ bool Game::saveScene(std::string scene)
 	std::ostringstream simpleElements[LR_MAX];
 	std::ostringstream simpleElements_repeatScale[LR_MAX];
 
-	for (i = 0; i < dsq->getNumElements(); i++)
+	for (size_t i = 0; i < dsq->getNumElements(); i++)
 	{
 		Element *e = dsq->getElement(i);
 		std::ostringstream& SE = simpleElements[e->bgLayer];
@@ -2200,7 +2197,7 @@ bool Game::saveScene(std::string scene)
 		XMLElement *entitiesNode = saveFile.NewElement("Entities");
 
 		std::ostringstream os;
-		for (int i = 0; i < dsq->game->entitySaveData.size(); i++)
+		for (size_t i = 0; i < dsq->game->entitySaveData.size(); i++)
 		{
 			EntitySaveData *e = &dsq->game->entitySaveData[i];
 			os << e->idx << " ";
@@ -2490,7 +2487,7 @@ void Game::rebuildElementUpdateList()
 
 	elementUpdateList.clear();
 	elementInteractionList.clear();
-	for (int i = 0; i < dsq->getNumElements(); i++)
+	for (size_t i = 0; i < dsq->getNumElements(); i++)
 	{
 		Element *e = dsq->getElement(i);
 		const int eeidx = e->getElementEffectIndex();
@@ -2527,7 +2524,7 @@ float Game::getHalfTimer(float mod)
 
 void Game::action(int id, int state, int source, InputDevice device)
 {
-	for (int i = 0; i < paths.size(); i++)
+	for (size_t i = 0; i < paths.size(); i++)
 	{
 		if (paths[i]->catchActions)
 		{
@@ -2979,7 +2976,7 @@ void Game::applyState()
 		Path *closest = 0;
 		Vector closestPushOut;
 		bool doFlip = false;
-		for (int i = 0; i < dsq->game->getNumPaths(); i++)
+		for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
 		{
 			Path *p = dsq->game->getPath(i);
 			Vector pos = p->nodes[0].position;
@@ -3328,7 +3325,7 @@ void Game::clearControlHint()
 			controlHint_image->alpha.interpolateTo(0, hintTransTime);
 		}
 
-		for (int i = 0; i < controlHintNotes.size(); i++)
+		for (size_t i = 0; i < controlHintNotes.size(); i++)
 		{
 			controlHintNotes[i]->alpha.interpolateTo(0, hintTransTime);
 		}
@@ -3392,7 +3389,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 
 		p += Vector(100, 0);
 
-		for (int i = 0; i < song->notes.size(); i++)
+		for (size_t i = 0; i < song->notes.size(); i++)
 		{
 			int note = song->notes[i];
 
@@ -3479,7 +3476,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 		controlHint_mouseBody->alpha.interpolateTo(0.5, hintTransTime);
 	}
 
-	for (int i = 0; i < controlHintNotes.size(); i++)
+	for (size_t i = 0; i < controlHintNotes.size(); i++)
 	{
 		controlHintNotes[i]->alpha.interpolateTo(alphaOn, hintTransTime);
 	}
@@ -3948,7 +3945,7 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius)
 	float smallestDist = HUGE_VALF;
 	Bone *closest = 0;
 	if (!(pos - skeletal->position).isLength2DIn(2000)) return 0;
-	for (int i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
+	for (size_t i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
 	{
 		Bone *b = skeletal->skeletalSprite.bones[i];
 
@@ -3964,7 +3961,7 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius)
 			{
 				if (dist < checkRadius)
 				{
-					for (int i = 0; i < b->transformedCollisionMask.size(); i++)
+					for (size_t i = 0; i < b->transformedCollisionMask.size(); i++)
 					{
 						if ((b->transformedCollisionMask[i] - pos).isLength2DIn(radius+b->collideRadius*skeletal->scale.x))
 						{

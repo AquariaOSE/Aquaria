@@ -1287,7 +1287,7 @@ void Continuity::loadSongBank()
 	}
 }
 
-int Continuity::getSongTypeBySlot(int slot)
+int Continuity::getSongTypeBySlot(size_t slot)
 {
 	return songSlotsToType[slot];
 }

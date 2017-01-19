@@ -198,14 +198,14 @@ void ParticleManager::endParticle(Particle *p)
 	p->reset();
 }
 
-void ParticleManager::nextFree(int jump)
+void ParticleManager::nextFree(size_t jump)
 {
 	free+=jump;
 	if (free >= size)
 		free -= size;
 }
 
-void ParticleManager::prevFree(int jump)
+void ParticleManager::prevFree(size_t jump)
 {
 	if(free < jump) {
 		free = free + size - jump;

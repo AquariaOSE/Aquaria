@@ -237,8 +237,8 @@ protected:
 	size_t numActive;
 	Particle* stomp();
 
-	void nextFree(int f=1);
-	void prevFree(int f=1);
+	void nextFree(size_t f=1);
+	void prevFree(size_t f=1);
 
 	size_t oldFree;
 
