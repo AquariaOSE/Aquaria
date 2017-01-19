@@ -4502,7 +4502,7 @@ void DSQ::onJoystickRemoved(int instanceID)
 
 void DSQ::fixupJoysticks()
 {
-	for(int i = 0; i < getNumJoysticks(); ++i)
+	for(size_t i = 0; i < getNumJoysticks(); ++i)
 		if(Joystick *j = getJoystick(i))
 			j->setEnabled(false);
 

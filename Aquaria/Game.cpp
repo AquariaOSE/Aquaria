@@ -2216,7 +2216,7 @@ bool Game::saveScene(std::string scene)
 		saveFile.InsertEndChild(entitiesNode);
 	}
 
-	for (i = 0; i < LR_MAX; i++)
+	for (int i = 0; i < LR_MAX; i++)
 	{
 		std::string s = simpleElements[i].str();
 		if (!s.empty())

@@ -94,7 +94,7 @@ public:
 
 	std::list<SkeletalSprite> undoHistory;
 
-	int undoEntry;
+	size_t undoEntry;
 
 	int currentKey;
 
