@@ -460,7 +460,7 @@ public:
 	Ingredient* spawnIngredient(const std::string &ing, const Vector &pos, int times=1, int out=0);
 	void spawnIngredientFromEntity(Entity *ent, IngredientData *data);
 
-	Ingredient *getNearestIngredient(const Vector &pos, int radius);
+	Ingredient *getNearestIngredient(const Vector &pos, float radius);
 	Entity *getNearestEntity(const Vector &pos, int radius, Entity *ignore = 0, EntityType et=ET_NOTYPE, DamageType dt=DT_NONE, int lrStart=-1, int lrEnd=-1);
 
 	Script *cookingScript;

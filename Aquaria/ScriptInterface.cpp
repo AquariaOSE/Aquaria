@@ -1176,10 +1176,10 @@ luaFunc(obj_setTexture)
 
 luaFunc(obj_getTexture)
 {
-    RenderObject *r = robj(L);
-    if (r && r->texture)
-        luaReturnStr(r->texture->name.c_str());
-    luaReturnStr("");
+	RenderObject *r = robj(L);
+	if (r && r->texture)
+		luaReturnStr(r->texture->name.c_str());
+	luaReturnStr("");
 }
 
 luaFunc(obj_delete)
@@ -2187,8 +2187,6 @@ luaFunc(getNoteColor)
 
 luaFunc(getRandNote)
 {
-
-
 	luaReturnNum(dsq->getRandNote());
 }
 
@@ -4572,7 +4570,7 @@ luaFunc(entity_getAnimationLoop)
 luaFunc(entity_move)
 {
 	Entity *e = entity(L);
-    //bool ease = lua_tointeger(L, 5);
+	//bool ease = lua_tointeger(L, 5);
 	Vector p(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	if (getBool(L, 6))
 		p = e->position + p;
@@ -5386,7 +5384,8 @@ luaFunc(centerText)
 	luaReturnNil();
 }
 
-luaFunc(msg)
+// this used to be msg(), but this is already an interface function name
+luaFunc(screenMessage)
 {
 	dsq->screenMessage(getString(L, 1));
 	luaReturnNil();
@@ -7467,14 +7466,14 @@ luaFunc(entity_getID)
 
 luaFunc(getEntityByID)
 {
-	debugLog("Calling getEntityByID");
+	//debugLog("Calling getEntityByID");
 	int v = lua_tointeger(L, 1);
 	Entity *found = 0;
 	if (v)
 	{
-		std::ostringstream os;
-		os << "searching for entity with id: " << v;
-		debugLog(os.str());
+		//std::ostringstream os;
+		//os << "searching for entity with id: " << v;
+		//debugLog(os.str());
 		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
@@ -7484,7 +7483,7 @@ luaFunc(getEntityByID)
 				break;
 			}
 		}
-		if (!found)
+		/*if (!found)
 		{
 			std::ostringstream os;
 			os << "entity with id: " << v << " not found!";
@@ -7495,12 +7494,12 @@ luaFunc(getEntityByID)
 			std::ostringstream os;
 			os << "Found: " << found->name;
 			debugLog(os.str());
-		}
+		}*/
 	}
-	else
+	/*else
 	{
 		debugLog("entity ID was 0");
-	}
+	}*/
 	luaReturnPtr(found);
 }
 
@@ -7729,7 +7728,7 @@ luaFunc(getNearestEntity)
 	Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	int radius = lua_tointeger(L, 3);
 	Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
-    //EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
+	//EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
 	DamageType dt = lua_isnumber(L, 6) ? (DamageType)lua_tointeger(L, 6) : DT_NONE;
 	int lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
 	int lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
@@ -8156,13 +8155,15 @@ luaFunc(entity_getTarget)
 luaFunc(entity_getTargetPositionX)
 {
 	Entity *e = entity(L);
-	luaReturnInt(e ? e->getTargetEntity()->position.x : 0);
+	Entity *t = e ? e->getTargetEntity() : NULL;
+	luaReturnNum(t ? t->position.x : 0.0f);
 }
 
 luaFunc(entity_getTargetPositionY)
 {
 	Entity *e = entity(L);
-	luaReturnNum(e ? e->getTargetEntity()->position.y : 0);
+	Entity *t = e ? e->getTargetEntity() : NULL;
+	luaReturnNum(t ? t->position.y : 0.0f);
 }
 
 luaFunc(entity_isNearObstruction)
@@ -8995,9 +8996,9 @@ luaFunc(findPathGetStats)
 
 luaFunc(findPathFreeMemory)
 {
-    PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
-    PathFinding::purgeFindPath(state);
-    luaReturnNil();
+	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+	PathFinding::purgeFindPath(state);
+	luaReturnNil();
 }
 
 luaFunc(castLine)
@@ -10078,7 +10079,7 @@ static const struct {
 	luaRegister(isNestedMain),
 
 
-	luaRegister(msg),
+	luaRegister(screenMessage),
 	luaRegister(centerText),
 	luaRegister(watchForVoice),
 
