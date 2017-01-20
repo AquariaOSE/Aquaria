@@ -1,5 +1,5 @@
-#ifndef __AQUARIA_COMPILE_CONFIG_H__
-#define __AQUARIA_COMPILE_CONFIG_H__
+#ifndef AQUARIA_COMPILE_CONFIG_H
+#define AQUARIA_COMPILE_CONFIG_H
 
 // The settings below are also configurable with CMake.
 // Define BBGE_SKIP_CONFIG_HEADERS to use CMake-only configuration.

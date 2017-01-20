@@ -67,7 +67,7 @@ AquariaComboBox::AquariaComboBox(Vector textscale) : RenderObject()
 	this->textscale = textscale;
 }
 
-void AquariaComboBox::enqueueSelectItem(int index)
+void AquariaComboBox::enqueueSelectItem(size_t index)
 {
 	enqueuedSelectItem = index;
 }
@@ -97,7 +97,9 @@ void AquariaComboBox::doScroll(int t)
 	else
 	{
 		scroll++;
-		if (scroll+numDrops > items.size()) scroll = (items.size()) - numDrops;
+		if (scroll+numDrops > items.size()) {
+			scroll = items.size() - numDrops;
+		}
 		else
 		{
 			close(0);
@@ -298,7 +300,7 @@ bool AquariaComboBox::setSelectedItem(const std::string &item)
 	return false;
 }
 
-void AquariaComboBox::setSelectedItem(int index)
+void AquariaComboBox::setSelectedItem(size_t index)
 {
 	if (isopen)
 		close();
@@ -311,7 +313,7 @@ void AquariaComboBox::setSelectedItem(int index)
 	{
 		doScroll(0);
 	}
-	else if((size_t)index < items.size())
+	else if(index < items.size())
 	{
 		selectedItem = index;
 		selectedItemLabel->setText(items[index]);
@@ -326,12 +328,12 @@ void AquariaComboBox::setSelectedItem(int index)
 }
 }
 
-int AquariaComboBox::getSelectedItem()
+size_t AquariaComboBox::getSelectedItem()
 {
 	return selectedItem;
 }
 
-int AquariaComboBox::addItem(const std::string &n)
+size_t AquariaComboBox::addItem(const std::string &n)
 {
 	items.push_back(n);
 
@@ -346,7 +348,7 @@ int AquariaComboBox::addItem(const std::string &n)
 Vector unselectedColor(0.7f, 0.7f, 0.7f);
 Vector selectedColor(1,1,1);
 
-AquariaComboBoxItem::AquariaComboBoxItem(const std::string &str, int idx, AquariaComboBox *combo, Vector textscale) : Quad()
+AquariaComboBoxItem::AquariaComboBoxItem(const std::string &str, size_t idx, AquariaComboBox *combo, Vector textscale) : Quad()
 {
 	this->combo = combo;
 	index = idx;

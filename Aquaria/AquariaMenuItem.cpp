@@ -263,7 +263,7 @@ AquariaGuiElement *AquariaGuiElement::FindClosestTo(AquariaGuiElement *cur, Vect
 
 			if (go)
 			{
-				dist = (p1 - p2).getSquaredLength2D();
+				dist = static_cast<int>((p1 - p2).getSquaredLength2D());
 
 				if (smallDist == -1 || dist < smallDist)
 				{
@@ -576,7 +576,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 	inLoop = true;
 
-	int *k = 0;
+	unsigned int *k = 0;
 
 	ActionInput *ai = 0;
 
@@ -599,7 +599,8 @@ void AquariaKeyConfig::onUpdate(float dt)
 		case INPUTSET_JOY:
 			k = &ai->data.single.joy[inputIdx];
 		break;
-		default:
+		case INPUTSET_NONE:
+		case INPUTSET_OTHER:
 			k = 0;
 		break;
 		}
@@ -760,7 +761,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 		{
 			bool clear = false;
 			bool abort = false;
-			int ac = 0;
+			unsigned int ac = 0;
 			if (core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
 			{
 				while(core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
@@ -815,7 +816,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 		break;
 		case INPUTSET_JOY:
 		{
-			int ac = 0;
+			size_t ac = 0;
 			bool clear = false;
 			bool abort = false;
 			if (core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
@@ -833,7 +834,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 				Joystick *j = core->getJoystick(as.joystickID);
 				if(j)
 				{
-					for (int i = 0; i < MAX_JOYSTICK_BTN; i++)
+					for (size_t i = 0; i < MAX_JOYSTICK_BTN; i++)
 						if (j->getButton(i))
 						{
 							ac = JOY_BUTTON_0 + i;

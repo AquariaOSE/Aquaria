@@ -34,7 +34,7 @@ public:
 
 	void calibrate(Vector &vec, float dead);
 	bool anyButton() const;
-	bool getButton(unsigned id) const { return !!(buttonBitmask & (1u << id)); }
+	bool getButton(size_t id) const { return !!(buttonBitmask & (1u << id)); }
 	float getAxisUncalibrated(int id) const;
 	int getNumAxes() const;
 	int getIndex() const { return stickIndex; }

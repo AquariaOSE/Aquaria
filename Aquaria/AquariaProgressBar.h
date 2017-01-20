@@ -28,7 +28,7 @@ class AquariaProgressBar : public RenderObject
 public:
 	AquariaProgressBar();
 
-	void progress(float perc=0);
+	void progress(float addPerc=0);
 
 protected:
 	Quad spinner;

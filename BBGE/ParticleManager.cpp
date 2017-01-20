@@ -66,7 +66,7 @@ void ParticleManager::setSize(size_t size)
 	free = oldFree = 0;
 }
 
-void ParticleManager::setNumSuckPositions(int num)
+void ParticleManager::setNumSuckPositions(size_t num)
 {
 	suckPositions.resize(num);
 }

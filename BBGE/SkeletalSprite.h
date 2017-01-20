@@ -35,7 +35,7 @@ enum AnimationCommand
 	AC_SND_PLAY			,
 	AC_SEGS_STOP,
 	AC_SET_PASS,
-	AC_RESET_PASS,
+	AC_RESET_PASS
 };
 
 class ParticleEffect;
@@ -257,13 +257,13 @@ public:
 	std::vector<Animation> animations;
 	std::vector<Bone*> bones;
 
-	inline int getSelectedBoneIdx(void) { return selectedBone; }
+	inline size_t getSelectedBoneIdx(void) { return selectedBone; }
 	void setSelectedBone(int b);
 	void selectPrevBone();
 	void selectNextBone();
 
 	bool isLoaded();
-	int getNumAnimLayers() const { return animLayers.size(); }
+	size_t getNumAnimLayers() const { return animLayers.size(); }
 
 	AnimationLayer* getAnimationLayer(size_t l);
 	size_t getBoneIdx(Bone *b);

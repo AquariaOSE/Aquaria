@@ -37,7 +37,7 @@ const int ACTIONSET_REASSIGN_JOYSTICK = -2;
 struct JoystickConfig
 {
 	JoystickConfig();
-	int s1ax, s1ay, s2ax, s2ay;
+	unsigned int s1ax, s1ay, s2ax, s2ay;
 	float s1dead, s2dead;
 };
 
@@ -59,7 +59,7 @@ public:
 	ActionInput *addActionInput(const std::string &name);
 	ActionInput *getActionInputByName(const std::string &name);
 
-	int joystickID; // >= 0: use that, -1 = no joystick, or ACTIONSET_REASSIGN_JOYSTICK
+	size_t joystickID; // >= 0: use that, -1 = no joystick, or ACTIONSET_REASSIGN_JOYSTICK
 
 	// --- Saved in config ---
 	ActionInputSet inputSet;

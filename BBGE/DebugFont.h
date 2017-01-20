@@ -31,7 +31,7 @@ public:
 	void setText(const std::string &text);
 	void setWidth(float width);
 	void setFontSize(float sz);
-	int getNumLines() { return lines.size(); }
+	size_t getNumLines() { return lines.size(); }
 	virtual void setAlign(Align align);
 	virtual float getHeight();
 	virtual float getLineHeight();

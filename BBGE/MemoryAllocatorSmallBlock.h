@@ -50,11 +50,11 @@ private:
 
         inline unsigned char *getPtr()
         {
-            return (unsigned char*)&bitmap[bitmapInts];
+            return reinterpret_cast<unsigned char *>(&bitmap[bitmapInts]);
         }
         inline const unsigned char *getPtr() const
         {
-            return (unsigned char*)&bitmap[bitmapInts];
+            return reinterpret_cast<const unsigned char *>(&bitmap[bitmapInts]);
         }
         inline unsigned char *getEndPtr()
         {

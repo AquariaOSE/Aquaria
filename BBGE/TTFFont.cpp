@@ -110,7 +110,7 @@ void TTFText::updateAlign()
 	}
 }
 
-int TTFText::getNumLines()
+size_t TTFText::getNumLines()
 {
 	return (int)text.size();
 }

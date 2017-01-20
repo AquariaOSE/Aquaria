@@ -473,84 +473,83 @@ std::string Continuity::getIEString(IngredientData *data, size_t i)
 			os << fabsf(fx.magnitude);
 			return os.str();
 		}
-	break;
+	// break;
 	case IET_MAXHP:
 		return dsq->continuity.stringBank.get(201);
-	break;
+	// break;
 	case IET_DEFENSE:
 		os << dsq->continuity.stringBank.get(202);
 		os << " " << fx.magnitude << " " << dsq->continuity.stringBank.get(205) << " " << defenseTime << " " << dsq->continuity.stringBank.get(203);
 		return os.str();
-	break;
+	// break;
 	case IET_SPEED:
 		os << dsq->continuity.stringBank.get(204) << " " << fx.magnitude;
 		os << " " << dsq->continuity.stringBank.get(205) << " " << speedTime << " " << dsq->continuity.stringBank.get(203);
 		return os.str();
-	break;
+	// break;
 	case IET_REGEN:
 		os << dsq->continuity.stringBank.get(206) << " " << fx.magnitude;
 		return os.str();
-	break;
+	// break;
 	case IET_TRIP:
 		return dsq->continuity.stringBank.get(207);
-	break;
+	// break;
 	case IET_EAT:
 		return dsq->continuity.stringBank.get(208);
-	break;
+	// break;
 	case IET_BITE:
 		os << dsq->continuity.stringBank.get(209);
 		os << " " << dsq->continuity.stringBank.get(205) << " " << biteTime << " " << dsq->continuity.stringBank.get(203);
 		return os.str();
-	break;
+	// break;
 	case IET_FISHPOISON:
 		os << dsq->continuity.stringBank.get(217);
 		os << " " << dsq->continuity.stringBank.get(205) << " " << fishPoisonTime << " " << dsq->continuity.stringBank.get(203);
 		return os.str();
-	break;
+	// break;
 	case IET_INVINCIBLE:
 		os << dsq->continuity.stringBank.get(210);
 		os << " " << dsq->continuity.stringBank.get(205) << " " << (fx.magnitude*5) << " " << dsq->continuity.stringBank.get(203);
 		return os.str();
-
-	break;
+	// break;
 	case IET_ENERGY:
 		os << dsq->continuity.stringBank.get(211) << " " << fx.magnitude;
 		os << " " << dsq->continuity.stringBank.get(205) << " " << energyTime << " " << dsq->continuity.stringBank.get(203);
 		return os.str();
-	break;
+	// break;
 	case IET_BLIND:
 		return dsq->continuity.stringBank.get(212);
-	break;
+	// break;
 	case IET_POISON:
 		if (fx.magnitude < 0)
 			return dsq->continuity.stringBank.get(213);
 		else
 			return dsq->continuity.stringBank.get(214);
-	break;
+	// break;
 	case IET_YUM:
 		return dsq->continuity.stringBank.get(215);
-	break;
+	// break;
 	case IET_WEB:
 		os << dsq->continuity.stringBank.get(219);
 		os << " " << dsq->continuity.stringBank.get(205) << " " << webTime << " " << dsq->continuity.stringBank.get(203);
 		return os.str();
-	break;
+	// break;
 	case IET_ALLSTATUS:
 		return dsq->continuity.stringBank.get(218);
-	break;
+	// break;
 	case IET_PETPOWER:
 		os << dsq->continuity.stringBank.get(216);
 		os << " " << dsq->continuity.stringBank.get(205) << " " << petPowerTime << " " << dsq->continuity.stringBank.get(203);
 		return os.str();
-	break;
+	// break;
 	case IET_LIGHT:
 		os << dsq->continuity.stringBank.get(220);
 		os << " " << dsq->continuity.stringBank.get(205) << " " << lightTime << " " << dsq->continuity.stringBank.get(203);
 		return os.str();
-	break;
+	// break;
 	case IET_LI:
 		return dsq->continuity.stringBank.get(227);
-	break;
+	// break;
 	case IET_SCRIPT:
 		if(dsq->game->cookingScript)
 		{

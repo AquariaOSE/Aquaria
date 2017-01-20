@@ -52,7 +52,7 @@ public:
 	bool shadow;
 	int findLine(const std::string &label);
 	float getLineHeight();
-	int getNumLines();
+	size_t getNumLines();
 protected:
 	float width;
 	float lineHeight;

@@ -32,7 +32,7 @@ enum ActionInputSize
 };
 
 std::string getInputCodeToString(int k);
-std::string getInputCodeToUserString(int k, int joystickID);
+std::string getInputCodeToUserString(unsigned int k, size_t joystickID);
 int getStringToInputCode(const std::string& s);
 
 class ActionInput
@@ -46,9 +46,9 @@ public:
 	{
 		struct
 		{
-			int mse[INP_MSESIZE];
-			int key[INP_KEYSIZE];
-			int joy[INP_JOYSIZE];
+			unsigned int mse[INP_MSESIZE];
+			unsigned int key[INP_KEYSIZE];
+			unsigned int joy[INP_JOYSIZE];
 		} single;
 		int all[INP_COMBINED_SIZE];
 	} data;
