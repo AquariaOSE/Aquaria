@@ -117,7 +117,7 @@ public:
 
 	void clearLocalSounds();
 
-	void setVoicePath2(const std::string &voicePath2) { this->voicePath2 = voicePath2; }
+	void setVoicePath2(const std::string &newVoicePath2) { this->voicePath2 = newVoicePath2; }
 
 	SoundCore::Buffer loadLocalSound(const std::string &sound);
 	SoundCore::Buffer loadSoundIntoBank(const std::string &filename, const std::string &path, const std::string &format, SoundLoadType = SFXLOAD_CACHE);
@@ -156,7 +156,7 @@ public:
 	void stopMusic();
 	void stopSfx(void *channel);
 
-	void fadeSfx(void *channel, SoundFadeType sft=SFT_OUT, float t=0.8);
+	void fadeSfx(void *channel, SoundFadeType sft=SFT_OUT, float t=0.8f);
 
 	void fadeMusic(SoundFadeType sft=SFT_OUT, float t=1);
 

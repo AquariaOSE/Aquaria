@@ -2840,7 +2840,7 @@ void Core::onJoystickRemoved(int instanceID)
 			}
 }
 
-Joystick *Core::getJoystick(int idx)
+Joystick *Core::getJoystick(size_t idx)
 {
 	size_t i = idx;
 	return i < joysticks.size() ? joysticks[i] : NULL;

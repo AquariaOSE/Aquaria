@@ -77,7 +77,7 @@ public:
 	float getStringWidth(const std::string& text);
 	float getActualWidth() { return maxW; }
 	float getLineHeight();
-	int getNumLines();
+	size_t getNumLines();
 
 protected:
 	float scrollSpeed;

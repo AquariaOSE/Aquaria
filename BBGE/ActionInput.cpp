@@ -106,7 +106,7 @@ std::string getInputCodeToString(int k)
 	return spacesToUnderscores(s);
 }
 
-std::string getInputCodeToUserString(int k, int joystickID)
+std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 {
 	const char *pretty = NULL, *tail = NULL;
 

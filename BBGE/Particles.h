@@ -219,10 +219,10 @@ public:
 
 	void setFree(size_t free);
 
-	int getFree() { return free; }
-	int getNumActive() { return numActive; }
+	size_t getFree() { return free; }
+	size_t getNumActive() { return numActive; }
 
-	void setNumSuckPositions(int num);
+	void setNumSuckPositions(size_t num);
 	void setSuckPosition(size_t idx, const Vector &pos);
 
 	Vector *getSuckPosition(size_t idx);

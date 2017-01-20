@@ -18,8 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#ifndef __render_object__
-#define __render_object__
+#ifndef RENDER_OBJECT_H
+#define RENDER_OBJECT_H
 
 #include "Base.h"
 #include "Texture.h"
@@ -91,7 +91,7 @@ public:
 	void setStateDataObject(StateData *state);
 	bool setTexture(const std::string &name);
 
-	void toggleAlpha(float t = 0.2);
+	void toggleAlpha(float t = 0.2f);
 
 	virtual void update(float dt);
 	bool isDead() const {return _dead;}
@@ -109,15 +109,15 @@ public:
 	// optimized rendering.
 	void setStatic(bool staticFlag) {_static = staticFlag;}
 
-	void setLife(float life)
+	void setLife(float newlife)
 	{
-		maxLife = this->life = life;
+		maxLife = this->life = newlife;
 	}
-	void setDecayRate(float decayRate)
+	void setDecayRate(float newdecayRate)
 	{
-		this->decayRate = decayRate;
+		this->decayRate = newdecayRate;
 	}
-	void setBlendType (int bt)
+	void setBlendType (unsigned char bt)
 	{
 		blendType = bt;
 	}
@@ -136,13 +136,13 @@ public:
 	bool isfvr();
 
 	size_t getIdx() const { return idx; }
-	void setIdx(size_t idx) { this->idx = idx; }
+	void setIdx(size_t newidx) { this->idx = newidx; }
 	void moveToFront();
 	void moveToBack();
 
 	inline float getCullRadiusSqr() const
 	{
-		if (overrideCullRadiusSqr)
+		if (overrideCullRadiusSqr != 0)
 			return overrideCullRadiusSqr;
 		if (width == 0 || height == 0)
 			return 0;
@@ -260,7 +260,7 @@ public:
 
 	bool cull;
 	float updateCull;
-	int layer;
+	size_t layer;
 
 	InterpolatedVector *positionSnapTo;
 

@@ -14,7 +14,7 @@ namespace tinyxml2
 enum ModType
 {
 	MODTYPE_MOD,
-	MODTYPE_PATCH,
+	MODTYPE_PATCH
 };
 
 

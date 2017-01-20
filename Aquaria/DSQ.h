@@ -18,8 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#ifndef __dsq__
-#define __dsq__
+#ifndef DSQ_H
+#define DSQ_H
 
 #include "AquariaCompileConfig.h"
 #include "../BBGE/Core.h"
@@ -236,8 +236,8 @@ public:
 
 	void addElement(Element *e);
 	size_t getNumElements() const {return elements.size();}
-	Element *getElement(int idx) const {return elements[idx];}
-	Element *getFirstElementOnLayer(int layer) const {return layer<0 || layer>15 ? 0 : firstElementOnLayer[layer];}
+	Element *getElement(size_t idx) const {return elements[idx];}
+	Element *getFirstElementOnLayer(size_t layer) const {return layer>15 ? 0 : firstElementOnLayer[layer];}
 	void clearElements();
 	// Used only by scene editor:
 	void removeElement(size_t idx);
@@ -527,7 +527,7 @@ protected:
 
 	BitmapText *expText, *moneyText;
 
-	void clearMenu(float t = 0.01);
+	void clearMenu(float t = 0.01f);
 	std::vector <RenderObject*> menu;
 	BitmapText *saveSlotPageCount;
 

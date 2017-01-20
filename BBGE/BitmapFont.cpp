@@ -379,7 +379,7 @@ bool BitmapText::isScrollingText()
 	return scrolling;
 }
 
-int BitmapText::getNumLines()
+size_t BitmapText::getNumLines()
 {
 	return lines.size();
 }

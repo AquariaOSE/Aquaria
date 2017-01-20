@@ -18,8 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#ifndef __quad__
-#define __quad__
+#ifndef QUAD_H
+#define QUAD_H
 
 #include "RenderObject.h"
 
@@ -55,8 +55,8 @@ public:
 	void setWidthHeight(float w, float h=-1);
 	void setWidth(float w);
 	void setHeight(float h);
-	int getWidth() const {return int(width);}
-	int getHeight() const {return int(height);}
+	unsigned int getWidth() const {return static_cast<unsigned int>(width);}
+	unsigned int getHeight() const {return static_cast<unsigned int>(height);}
 
 	void setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
 	void setDrawGridAlpha(size_t x, size_t y, float alpha);

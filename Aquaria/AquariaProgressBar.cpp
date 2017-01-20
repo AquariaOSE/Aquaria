@@ -31,11 +31,11 @@ AquariaProgressBar::AquariaProgressBar() : RenderObject()
 	followCamera = 1;
 }
 
-void AquariaProgressBar::progress(float perc)
+void AquariaProgressBar::progress(float addPerc)
 {
-	if (perc==0)
-		perc = 0.01f;
-	this->perc += perc;
+	if (addPerc==0)
+		addPerc = 0.01f;
+	this->perc += addPerc;
 	spinner.rotation = Vector(0,0,this->perc*360);
 	core->render();
 	core->showBuffer();

@@ -227,11 +227,11 @@ public:
      // length of vector
      inline scalar_t getLength3D() const
      {
-          return (scalar_t)sqrtf(x*x + y*y + z*z);
+          return static_cast<scalar_t>(sqrtf(x*x + y*y + z*z));
      }
      inline scalar_t getLength2D() const
      {
-          return (scalar_t)sqrtf(x*x + y*y);
+          return static_cast<scalar_t>(sqrtf(x*x + y*y));
      }
 
      // return the unit vector
@@ -376,7 +376,7 @@ public:
 	void addPathNode(Vector v, float p);
 	Vector getValue(float percent);
 	size_t getNumPathNodes() { return pathNodes.size(); }
-	void resizePathNodes(int sz) { pathNodes.resize(sz); }
+	void resizePathNodes(size_t sz) { pathNodes.resize(sz); }
 	VectorPathNode *getPathNode(size_t i) { if (i<getNumPathNodes()) return &pathNodes[i]; return 0; }
 	void cut(int n);
 	void splice(const VectorPath &path, int sz);

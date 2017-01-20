@@ -18,8 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#ifndef __core__
-#define __core__
+#ifndef CORE_H
+#define CORE_H
 
 #include "Base.h"
 #include "RenderObject.h"
@@ -139,8 +139,8 @@ public:
 
 	RenderObject *getNext()
 	{
-		const int size = renderObjects.size();
-		int i;
+		const size_t size = renderObjects.size();
+		size_t i;
 		for (i = iter; i < size; i++)
 		{
 			if (renderObjects[i] != 0)
@@ -322,8 +322,8 @@ public:
 
 
 
-	void setBaseTextureDirectory(const std::string &baseTextureDirectory)
-	{ this->baseTextureDirectory = baseTextureDirectory; }
+	void setBaseTextureDirectory(const std::string &newBaseTextureDirectory)
+	{ this->baseTextureDirectory = newBaseTextureDirectory; }
 	std::string getBaseTextureDirectory()
 	{
 		return baseTextureDirectory;
@@ -535,9 +535,9 @@ public:
 	// inclusive!
 	inline int getMaxActionStatusIndex() const { return int(actionStatus.size()) - 2; }
 	// pass -1 for is a sentinel that captures all input
-	inline ActionButtonStatus *getActionStatus(int idx) { return actionStatus[idx + 1]; }
+	inline ActionButtonStatus *getActionStatus(size_t idx) { return actionStatus[idx + 1]; }
 
-	Joystick *getJoystick(int idx); // warning: may return NULL/contain holes
+	Joystick *getJoystick(size_t idx); // warning: may return NULL/contain holes
 	// not the actual number of joysticks!
 	size_t getNumJoysticks() const { return joysticks.size(); }
 	Joystick *getJoystickForSourceID(int sourceID);

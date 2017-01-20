@@ -38,7 +38,7 @@ protected:
 	void initSegments(const Vector &position);
 	void updateSegments(const Vector &position, bool reverse=false);
 	void updateSegment(int i, const Vector &diff);
-	void destroySegments(float life = 0.01);
+	void destroySegments(float life = 0.01f);
 	std::vector<Vector> lastPositions;
 	int numSegments;
 	std::vector<RenderObject *> segments;

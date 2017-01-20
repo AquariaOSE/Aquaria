@@ -202,12 +202,12 @@ class AquariaComboBoxItem : public Quad
 {
 	friend class AquariaComboBox;
 public:
-	AquariaComboBoxItem(const std::string &str, int idx, AquariaComboBox *combo, Vector textscale);
+	AquariaComboBoxItem(const std::string &str, size_t idx, AquariaComboBox *combo, Vector textscale);
 
 protected:
 	void onUpdate(float dt);
 
-	int index;
+	size_t index;
 	AquariaComboBox *combo;
 
 	BitmapText *label;
@@ -218,13 +218,13 @@ class AquariaComboBox : public RenderObject
 {
 public:
 	AquariaComboBox(Vector textscale = Vector(1, 1));
-	int addItem(const std::string &n);
+	size_t addItem(const std::string &n);
 	void open(float t=0.1f);
 	void close(float t=0.1f);
-	void setSelectedItem(int index);
+	void setSelectedItem(size_t index);
 	bool setSelectedItem(const std::string &item);
-	int getSelectedItem();
-	void enqueueSelectItem(int index);
+	size_t getSelectedItem();
+	void enqueueSelectItem(size_t index);
 	void setScroll(size_t sc);
 	std::string getSelectedItemString();
 	void doScroll(int dir);
@@ -235,8 +235,8 @@ protected:
 	size_t numDrops;
 	bool mb, isopen;
 
-	int scroll;
-	int enqueuedSelectItem;
+	size_t scroll;
+	size_t enqueuedSelectItem;
 
 	std::vector<std::string> items;
 
