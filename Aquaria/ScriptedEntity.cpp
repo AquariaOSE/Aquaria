@@ -43,7 +43,6 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 
 
 	setEntityType(et);
-	myTimer = 0;
 	layer = LR_ENTITIES;
 	surfaceMoveDir = 1;
 	this->position = position;
@@ -505,17 +504,6 @@ void ScriptedEntity::onUpdate(float dt)
 
 	if (life != 1 || isEntityDead()) return;
 
-
-	if (myTimer > 0)
-	{
-		myTimer -= dt;
-		if (myTimer <= 0)
-		{
-			myTimer = 0;
-			onExitTimer();
-		}
-	}
-
 	if (this->isEntityDead() || this->getState() == STATE_DEATHSCENE || this->getState() == STATE_DEAD)
 	{
 		return;
@@ -530,25 +518,6 @@ void ScriptedEntity::onUpdate(float dt)
 	{
 		updateSegments(position, reverseSegments);
 		updateAlpha(alpha.x);
-	}
-}
-
-void ScriptedEntity::resetTimer(float t)
-{
-	myTimer = t;
-}
-
-void ScriptedEntity::stopTimer()
-{
-	myTimer = 0;
-}
-
-void ScriptedEntity::onExitTimer()
-{
-	if (script)
-	{
-		if (!script->call("exitTimer", this))
-			debugLog(this->name + " : " + script->getLastError() + " exitTimer");
 	}
 }
 

@@ -3970,14 +3970,6 @@ luaFunc(bone_lookAtPosition)
 	luaReturnNil();
 }
 
-luaFunc(entity_resetTimer)
-{
-	ScriptedEntity *se = scriptedEntity(L);
-	if (se)
-		se->resetTimer(lua_tonumber(L, 2));
-	luaReturnNil();
-}
-
 luaFunc(entity_stopFollowingPath)
 {
 	Entity *e = entity(L);
@@ -4006,14 +3998,6 @@ luaFunc(entity_slowToStopPath)
 			debugLog("wasn't following path");
 		}
 	}
-	luaReturnNil();
-}
-
-luaFunc(entity_stopTimer)
-{
-	ScriptedEntity *se = scriptedEntity(L);
-	if (se)
-		se->stopTimer();
 	luaReturnNil();
 }
 
@@ -7726,7 +7710,7 @@ luaFunc(entity_getNearestEntity)
 luaFunc(getNearestEntity)
 {
 	Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	int radius = lua_tointeger(L, 3);
+	float radius = lua_tonumber(L, 3);
 	Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
 	//EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
 	DamageType dt = lua_isnumber(L, 6) ? (DamageType)lua_tointeger(L, 6) : DT_NONE;
@@ -7824,8 +7808,8 @@ static size_t _entityFilter(lua_State *L)
 	const Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
 	const EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
 	const DamageType dt = lua_isnumber(L, 6) ? (DamageType)lua_tointeger(L, 6) : DT_NONE;
-	const int lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
-	const int lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
+	const unsigned lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
+	const unsigned lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
 
 	const float sqrRadius = radius * radius;
 	float distsq;
@@ -9899,8 +9883,6 @@ static const struct {
 	luaRegister(entity_offsetUpdate),
 
 	luaRegister(entity_createEntity),
-	luaRegister(entity_resetTimer),
-	luaRegister(entity_stopTimer),
 	luaRegister(entity_stopPull),
 	luaRegister(entity_setTargetPriority),
 	luaRegister(entity_getTargetPriority),

@@ -461,7 +461,7 @@ public:
 	void spawnIngredientFromEntity(Entity *ent, IngredientData *data);
 
 	Ingredient *getNearestIngredient(const Vector &pos, float radius);
-	Entity *getNearestEntity(const Vector &pos, int radius, Entity *ignore = 0, EntityType et=ET_NOTYPE, DamageType dt=DT_NONE, int lrStart=-1, int lrEnd=-1);
+	Entity *getNearestEntity(const Vector &pos, float radius, Entity *ignore = 0, EntityType et=ET_NOTYPE, DamageType dt=DT_NONE, unsigned lrStart=-1, unsigned lrEnd=-1);
 
 	Script *cookingScript;
 
