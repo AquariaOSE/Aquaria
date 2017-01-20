@@ -64,15 +64,15 @@ static std::string getSceneFilename(const std::string &scene)
 	return "";
 }
 
-Ingredient *Game::getNearestIngredient(const Vector &pos, int radius)
+Ingredient *Game::getNearestIngredient(const Vector &pos, float radius)
 {
 	int closest = -1;
-	int r2 = sqr(radius);
+	float r2 = sqr(radius);
 	Ingredient *returnIngredient = 0;
 
 	for (Ingredients::iterator i = ingredients.begin(); i != ingredients.end(); i++)
 	{
-		int len = (pos - (*i)->position).getSquaredLength2D();
+		float len = (pos - (*i)->position).getSquaredLength2D();
 		if (len <= r2 && (closest == - 1 || len < closest))
 		{
 			closest = len;
