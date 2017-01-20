@@ -260,7 +260,7 @@ public:
 
 	bool cull;
 	float updateCull;
-	size_t layer;
+	unsigned layer;
 
 	InterpolatedVector *positionSnapTo;
 

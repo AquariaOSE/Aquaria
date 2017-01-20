@@ -82,16 +82,15 @@ Ingredient *Game::getNearestIngredient(const Vector &pos, float radius)
 	return returnIngredient;
 }
 
-Entity *Game::getNearestEntity(const Vector &pos, int radius, Entity *ignore, EntityType et, DamageType dt, int lrStart, int lrEnd)
+Entity *Game::getNearestEntity(const Vector &pos, float radius, Entity *ignore, EntityType et, DamageType dt, unsigned lrStart, unsigned lrEnd)
 {
 	int sqrRadius = radius*radius;
 	Entity *closest = 0;
-	int sml=-1;
-	int dist = 0;
+	float sml=-1;
 	FOR_ENTITIES(i)
 	{
 		Entity *e = *i;
-		dist = (e->position - pos).getSquaredLength2D();
+		const float dist = (e->position - pos).getSquaredLength2D();
 		if (dist <= sqrRadius)
 		{
 			if (e != ignore && e->isPresent())
