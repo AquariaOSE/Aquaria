@@ -211,10 +211,10 @@ Direction AquariaGuiElement::GetDirection()
 
 AquariaGuiElement *AquariaGuiElement::FindClosestTo(AquariaGuiElement *cur, Vector pos, Direction dir)
 {
-	int smallDist = -1, dist = 0;
+	float dist = 0, smallDist = -1;
 
 	AquariaGuiElement *gui = 0, *closest = 0;
-	int ch = 64;
+	const float ch = 64;
 	for (GuiElements::iterator i = guiElements.begin(); i != guiElements.end(); i++)
 	{
 		gui = (*i);
@@ -263,7 +263,7 @@ AquariaGuiElement *AquariaGuiElement::FindClosestTo(AquariaGuiElement *cur, Vect
 
 			if (go)
 			{
-				dist = static_cast<int>((p1 - p2).getSquaredLength2D());
+				dist = (p1 - p2).getSquaredLength2D();
 
 				if (smallDist == -1 || dist < smallDist)
 				{
