@@ -218,11 +218,8 @@ void StateManager::pushState(const std::string &s)
 
 void StateManager::popAllStates()
 {
-	if (!states_empty())
-	{
+	while (!states_empty())
 		popState();
-		popAllStates();
-	}
 }
 
 void StateManager::popState()
