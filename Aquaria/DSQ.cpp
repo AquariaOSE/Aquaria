@@ -2976,8 +2976,8 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 		}
 		else if (saveSlotMode == SSM_LOAD)
 		{
-			continuity.loadFile(selectedSaveSlot->getSlotIndex());
-			dsq->game->transitionToScene(dsq->game->sceneToLoad);
+			if(continuity.loadFile(selectedSaveSlot->getSlotIndex()))
+				dsq->game->transitionToScene(dsq->game->sceneToLoad);
 		}
 		// when gameover hits, load up this instead of that.
 	}

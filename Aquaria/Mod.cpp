@@ -68,6 +68,7 @@ void Mod::clear()
 	hasMap = false;
 	blockEditor = false;
 	mapRevealMethod = REVEAL_UNSPECIFIED;
+	compatScript = "";
 }
 
 bool Mod::isDebugMenu()
@@ -96,6 +97,18 @@ const std::string& Mod::getBaseModPath() const
 	refreshBaseModPath();
 
 	return baseModPath;
+}
+
+bool Mod::loadSavedGame(const std::string& path)
+{
+	load(path);
+	if(loadCompatScript())
+		return true;
+
+	debugLog("MOD: loadSavedGame/compatScript failed");
+	setActive(false);
+	dsq->title();
+	return false;
 }
 
 void Mod::load(const std::string &p)
@@ -130,6 +143,12 @@ void Mod::load(const std::string &p)
 
 			if (props->Attribute("worldMapRevealMethod"))
 				mapRevealMethod = (WorldMapRevealMethod) props->IntAttribute("worldMapRevealMethod");
+		}
+		XMLElement *compat = mod->FirstChildElement("Compatibility");
+		if(compat)
+		{
+			if(const char *script = compat->Attribute("script"))
+				compatScript = script;
 		}
 	}
 
@@ -221,6 +240,15 @@ void Mod::applyStart()
 	dsq->continuity.reset();
 	dsq->scriptInterface.reset();
 
+	// Before loading init.lua, load a compatibility layer, if necessary
+	if(!loadCompatScript())
+	{
+		debugLog("MOD: compatScript failed");
+		setActive(false);
+		dsq->title();
+		return;
+	}
+
 	// load the mod-init.lua file
 	// which is in the root of the mod's folder
 	// e.g. _mods/recachetest/
@@ -259,6 +287,7 @@ void Mod::setActive(bool a)
 		if (!active)
 		{
 			dsq->unloadMods();
+			compatScript = "";
 
 			mapRevealMethod = REVEAL_UNSPECIFIED;
 			setLocalisationModPath("");
@@ -325,4 +354,13 @@ ModType Mod::getTypeFromXML(XMLElement *xml) // should be <AquariaMod>...</Aquar
 		}
 	}
 	return MODTYPE_MOD; // the default
+}
+
+bool Mod::loadCompatScript()
+{
+	if(!compatScript.length() || dsq->runScript("scripts/compat/" + compatScript + ".lua"))
+		return true;
+
+	dsq->scriptInterface.reset();
+	return false;
 }
