@@ -37,6 +37,7 @@ public:
 	void start();
 	void stop();
 	void load(const std::string &path);
+	bool loadSavedGame(const std::string& path);
 
 	void update(float dt);
 
@@ -61,6 +62,7 @@ public:
 	WorldMapRevealMethod mapRevealMethod;
 
 protected:
+	bool loadCompatScript();
 	bool shuttingDown;
 	bool active;
 	bool hasMap;
@@ -73,6 +75,7 @@ protected:
 	std::string name;
 	std::string path;
 	Precacher modcache;
+	std::string compatScript;
 };
 
 

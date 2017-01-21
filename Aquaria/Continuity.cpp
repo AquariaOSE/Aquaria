@@ -2632,11 +2632,13 @@ std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
 	return os.str();
 }
 
-void Continuity::loadFileData(int slot, XMLDocument &doc)
+bool Continuity::loadFileData(int slot, XMLDocument &doc)
 {
 	std::string teh_file = dsq->continuity.getSaveFileName(slot, "aqs");
 	if(!exists(teh_file))
 		teh_file = dsq->continuity.getSaveFileName(slot, "bin");
+
+	std::string err = "file not exist";
 
 	if (exists(teh_file))
 	{
@@ -2645,29 +2647,36 @@ void Continuity::loadFileData(int slot, XMLDocument &doc)
 		if (!buf)
 		{
 			errorLog("Failed to decompress save file: " + teh_file);
-			return;
+			return false;
 		}
-		if (doc.Parse(buf, size) != XML_SUCCESS)
+		bool good = doc.Parse(buf, size) == XML_SUCCESS;
+		delete [] buf;
+		if (good)
+			return true;
+		err =  doc.GetErrorStr1();
+	}
+	else
+	{
+		teh_file = dsq->continuity.getSaveFileName(slot, "xml");
+		if (exists(teh_file))
 		{
-			errorLog("Failed to load save data: " + teh_file + " -- Error: " + doc.GetErrorStr1());
-			return;
+			if (readXML(teh_file, doc) == XML_SUCCESS)
+				return true;
+			err =  doc.GetErrorStr1();
 		}
 	}
 
-	teh_file = dsq->continuity.getSaveFileName(slot, "xml");
-	if (exists(teh_file))
-	{
-		if (readXML(teh_file, doc) != XML_SUCCESS)
-			errorLog("Failed to load save data: " + teh_file);
-	}
+	errorLog("Failed to load save data: " + teh_file + " -- Error: " + err);
+	return false;
 }
 
-void Continuity::loadFile(int slot)
+bool Continuity::loadFile(int slot)
 {
 	dsq->user.save();
 
 	XMLDocument doc;
-	loadFileData(slot, doc);
+	if(!loadFileData(slot, doc))
+		return false;
 
 	XMLElement *startData = doc.FirstChildElement("StartData");
 	if (startData)
@@ -2677,7 +2686,8 @@ void Continuity::loadFile(int slot)
 #ifdef AQUARIA_DEMO
 			exit_error("The demo version does not support loading savegames from mods, sorry.");
 #else
-			dsq->mod.load(startData->Attribute("mod"));
+			if(!dsq->mod.loadSavedGame(startData->Attribute("mod")))
+				return false;
 #endif
 		}
 	}
@@ -3201,8 +3211,8 @@ void Continuity::loadFile(int slot)
 			float timer = strtof(startData->Attribute("webTimer"), NULL);
 			webTimer.start(timer);
 		}
-
 	}
+	return true;
 }
 
 void Continuity::setNaijaModel(std::string model)
