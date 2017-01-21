@@ -5569,6 +5569,22 @@ luaFunc(avatar_decrLeaches)
 	luaReturnNil();
 }
 
+luaFunc(entity_incrTargetLeaches) // DEPRECATED
+{
+	Entity *e = entity(L);
+	if (e && e->getTargetEntity() == dsq->game->avatar)
+		dsq->game->avatar->leaches++;
+	luaReturnNil();
+}
+
+luaFunc(entity_decrTargetLeaches) // DEPRECATED
+{
+	Entity *e = entity(L);
+	if (e && e->getTargetEntity() == dsq->game->avatar)
+		dsq->game->avatar->leaches--;
+	luaReturnNil();
+}
+
 luaFunc(entity_rotateToVel)
 {
 	Entity *e = entity(L);
@@ -10630,8 +10646,8 @@ static const struct {
 
 	// -- deprecated/compatibility related functions below here --
 
-	{"entity_incrTargetLeaches", l_avatar_incrLeaches},
-	{"entity_decrTargetLeaches", l_avatar_decrLeaches},
+	luaRegister(entity_incrTargetLeaches),
+	luaRegister(entity_decrTargetLeaches),
 	{"entity_soundFreq", l_entity_sound},
 	{"entity_interpolateTo", l_entity_setPosition},
 	{"entity_isFlippedHorizontal", l_entity_isfh},
