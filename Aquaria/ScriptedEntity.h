@@ -50,6 +50,7 @@ public:
 	void entityDied(Entity *e);
 	void message(const std::string &msg, int v);
 	int messageVariadic(lua_State *L, int nparams);
+	int pushLuaVars(lua_State *L);
 
 	static bool runningActivation;
 

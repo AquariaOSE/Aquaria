@@ -112,6 +112,11 @@ int ScriptedEntity::messageVariadic(lua_State *L, int nparams)
 	return Entity::messageVariadic(L, nparams);
 }
 
+int ScriptedEntity::pushLuaVars(lua_State *L)
+{
+	return script ? script->pushLocalVars(L) : 0;
+}
+
 void ScriptedEntity::warpSegments()
 {
 	Segmented::warpSegments(position);

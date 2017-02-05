@@ -157,6 +157,7 @@ public:
 
 	int messageVariadic(lua_State *L, int nparams);
 	void luaDebugMsg(const std::string &func, const std::string &msg);
+	int pushLuaVars(lua_State *L);
 };
 
 #endif

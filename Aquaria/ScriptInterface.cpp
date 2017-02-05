@@ -414,10 +414,22 @@ static void ensureType(lua_State *L, T *& ptr, ScriptObjectType ty)
 		}
 	}
 }
+template <typename T>
+static void ensureTypeNoError(lua_State *L, T *& ptr, ScriptObjectType ty)
+{
+	if (ptr)
+	{
+		ScriptObject *so = (ScriptObject*)(ptr);
+		if (!so->isType(ty))
+			ptr = NULL;
+	}
+}
 #  define ENSURE_TYPE(ptr, ty) ensureType(L, (ptr), (ty))
+#  define ENSURE_TYPE_NO_ERROR(ptr, ty) ensureTypeNoError(L, (ptr), (ty))
 #  define typecheckOnly(func) func
 #else
 #  define ENSURE_TYPE(ptr, ty)
+#  define ENSURE_TYPE_NO_ERROR(ptr, ty)
 #  define typecheckOnly(func)
 #endif
 
@@ -439,6 +451,18 @@ ScriptedEntity *scriptedEntity(lua_State *L, int slot = 1)
 	if (!se)
 		scriptDebug(L, "ScriptedEntity invalid pointer.");
 	return se;
+}
+
+static inline
+ScriptedEntity *scriptedEntityOpt(lua_State *L, int slot = 1)
+{
+	ScriptedEntity *se = (ScriptedEntity*)lua_touserdata(L, slot);
+	ENSURE_TYPE_NO_ERROR(se, SCO_SCRIPTED_ENTITY); // Dont't error if not ScriptedEntity...
+	if (se)
+		return se;
+
+	ENSURE_TYPE(se, SCO_ENTITY); // ... but error if not even Entity
+	return NULL; // still return NULL
 }
 
 static inline
@@ -708,14 +732,23 @@ static void safePath(lua_State *L, const std::string& path)
 #define luaReturnVec4(x,y,z,w)	do {lua_pushnumber(L, (x)); lua_pushnumber(L, (y)); lua_pushnumber(L, (z)); lua_pushnumber(L, (w)); return 4;} while(0)
 #define luaReturnNil()		return 0;
 
+static void pushLocalVarTab(lua_State *L, lua_State *Lv)
+{
+	lua_getglobal(L, "_threadvars");
+	// [_thv]
+	lua_pushlightuserdata(L, Lv);
+	// [_thv][L]
+	lua_gettable(L, -2);
+	// [_thv][v]
+	lua_remove(L, -2);
+	// [v]
+}
+
 // Set the global "v" to the instance's local variable table.  Must be
 // called when starting a script.
 static void fixupLocalVars(lua_State *L)
 {
-	lua_getglobal(L, "_threadvars");
-	lua_pushlightuserdata(L, L);
-	lua_gettable(L, -2);
-	lua_remove(L, -2);
+	pushLocalVarTab(L, L);
 	lua_setglobal(L, "v");
 }
 
@@ -3001,6 +3034,19 @@ luaFunc(entity_getTargetPriority)
 {
 	Entity *e = entity(L);
 	luaReturnInt(e ? e->targetPriority : 0);
+}
+
+// returns nil for non-scripted entities
+luaFunc(entity_v)
+{
+	ScriptedEntity *se = scriptedEntityOpt(L);
+	return se ? se->pushLuaVars(L) : 0;
+}
+
+luaFunc(node_v)
+{
+	Path *n = path(L);
+	return n ? n->pushLuaVars(L) : 0;
 }
 
 luaFunc(isQuitFlag)
@@ -7894,6 +7940,11 @@ luaFunc(getNextFilteredEntity)
 	return 2;
 }
 
+// MISSING FOR ANDROID COMPAT
+//luaFunc(getEntityList)
+//luaFunc(entity_getEntityListInRange) // (me, range)
+//luaFunc(vector_getEntityListInRange) // (x, y, range)
+
 luaFunc(getEntity)
 {
 	Entity *ent = 0;
@@ -9801,6 +9852,9 @@ static const struct {
 	luaRegister(entity_getWeight),
 
 	luaRegister(entity_setActivationType),
+
+	luaRegister(entity_v),
+	luaRegister(node_v),
 
 	luaRegister(isQuitFlag),
 	luaRegister(isDeveloperKeys),
@@ -12006,4 +12060,10 @@ int Script::callVariadic(const char *name, lua_State *fromL, int nparams, void *
 	lua_xmove(L, fromL, nparams);
 
 	return nparams;
+}
+
+int Script::pushLocalVars(lua_State *Ltarget)
+{
+	pushLocalVarTab(Ltarget, L);
+	return 1;
 }
