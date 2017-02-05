@@ -24,17 +24,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Core.h"
 #include "SDL.h"
 
-#ifndef BBGE_BUILD_SDL2
-#error Needs fixes for SDL 1.2, doesnt support scancodes
-#endif
 
 static std::string inputcode2string(int k)
 {
 	if(k <= 0)
 		return std::string();
-	if(k < SDL_NUM_SCANCODES)
+	if(k < KEY_MAXARRAY)
 	{
-		const char *name = SDL_GetScancodeName((SDL_Scancode)k);
+		const char *name;
+#ifdef BBGE_BUILD_SDL2
+		name = SDL_GetScancodeName((SDL_Scancode)k);
+#else
+		name = SDL_GetKeyName((SDLKey)k);
+#endif
 		if(name)
 			return name;
 
@@ -113,11 +115,15 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 	// Special case keyboard input:
 	// Return key name for current keyboard layout!
 	// It's just confusing to see Y instead of Z with a german keyboard layout...
-	if(k < SDL_NUM_SCANCODES)
+	if(k < KEY_MAXARRAY)
 	{
+#ifdef BBGE_BUILD_SDL2
 		const SDL_Keycode kcode = SDL_GetKeyFromScancode((SDL_Scancode)k);
 		if(kcode != SDLK_UNKNOWN)
 			pretty = SDL_GetKeyName(kcode);
+#else
+		pretty = SDL_GetKeyName((SDLKey)k);
+#endif
 	}
 	if(k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
 	{
@@ -142,6 +148,11 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 
 	return inputcode2string(k);
 }
+
+#ifndef BBGE_BUILD_SDL2
+static bool s_needKeyTabInit = false;
+std::map<std::string, SDLKey> s_keyNameMap;
+#endif
 
 int getStringToInputCode(const std::string& s)
 {
@@ -170,7 +181,11 @@ int getStringToInputCode(const std::string& s)
 	if(s == "NONE")
 		return 0;
 
+#ifdef BBGE_BUILD_SDL2
 	return SDL_GetScancodeFromName(underscoresToSpaces(s).c_str());
+#else
+	return SDL_GetKeyFromName(underscoresToSpaces(s).c_str());
+#endif
 }
 
 
