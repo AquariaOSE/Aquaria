@@ -1812,8 +1812,11 @@ void DSQ::loadModsCallback(const std::string &filename, void *param)
 	XMLDocument d;
 	if(!Mod::loadModXML(&d, name))
 	{
+		const char *err = d.GetErrorStr1();
+		if(!err)
+			err = "<unknown error>";
 		std::ostringstream os;
-		os << "Failed to load mod xml: " << filename << " -- Error: " << d.GetErrorStr1();
+		os << "Failed to load mod xml: " << filename << " -- Error: " << err;
 		dsq->debugLog(os.str());
 		return;
 	}
