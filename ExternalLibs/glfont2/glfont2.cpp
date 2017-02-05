@@ -105,7 +105,6 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 
 	if (loadTexture)
 	{
-#ifdef BBGE_BUILD_OPENGL
 		glBindTexture(GL_TEXTURE_2D, tex);  
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -128,7 +127,6 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 		//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
 
 		*/
-#endif
 	}
 
 	//Free texture pixels memory
@@ -253,10 +251,8 @@ int GLFont::GetCharHeight (unsigned char c)
 //*******************************************************************
 void GLFont::Begin (void)
 {
-#ifdef BBGE_BUILD_OPENGL
 	//Bind to font texture
 	glBindTexture(GL_TEXTURE_2D, header.tex);
-#endif
 }
 //*******************************************************************
 void GLFont::GetStringSize (const std::string &text, std::pair<int, int> *size)

@@ -58,8 +58,6 @@ float FrameBuffer::getHeightP()
 
 bool FrameBuffer::init(int width, int height, bool fitToScreen)
 {
-#ifdef BBGE_BUILD_FRAMEBUFFER
-
 	_w = width;
 	_h = height;
 
@@ -157,19 +155,12 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 	debugLog("Done");
 	inited = true;
 	return true;
-#endif
-
-	return false;
 }
 
 void FrameBuffer::unloadDevice()
 {
 	debugLog("frameBuffer::unloadDevice");
 	inited = false;
-
-#ifdef BBGE_BUILD_FRAMEBUFFER
-
-
 
 	if (glDeleteFramebuffersEXT == NULL)
 	{
@@ -204,7 +195,6 @@ void FrameBuffer::unloadDevice()
 		g_depthRenderBuffer = 0;
 	}
 
-#endif
 	debugLog("done");
 }
 
@@ -217,32 +207,19 @@ void FrameBuffer::reloadDevice()
 void FrameBuffer::startCapture()
 {
 	assert(inited);
-#ifdef BBGE_BUILD_FRAMEBUFFER
-
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, g_frameBuffer );
-
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
-
-#endif
 }
 
 void FrameBuffer::endCapture()
 {
 	assert(inited);
-#ifdef BBGE_BUILD_FRAMEBUFFER
-
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
-
-#endif
 }
 
 void FrameBuffer::bindTexture()
 {
 	assert(inited);
-#ifdef BBGE_BUILD_FRAMEBUFFER
-
 	glBindTexture( GL_TEXTURE_2D, g_dynamicTextureID );
-
-#endif
 }
 
