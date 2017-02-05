@@ -881,7 +881,6 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 
 	createWindow(width, height, !width && !height, fullscreen);
 
-#if BBGE_BUILD_OPENGL_DYNAMIC
 	if (SDL_GL_LoadLibrary(NULL) == -1)
 	{
 		std::string err = std::string("SDL_GL_LoadLibrary Error: ") + std::string(SDL_GetError());
@@ -896,7 +895,6 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 		SDL_Quit();
 		exit_error(os.str());
 	}
-#endif
 
 	debugLog("GL vendor, renderer & version:");
 	debugLog((const char*)glGetString(GL_VENDOR));
@@ -1070,9 +1068,7 @@ void Core::shutdownGraphicsLibrary()
 #endif
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	gScreen = 0;
-#if BBGE_BUILD_OPENGL_DYNAMIC
 	unload_all_glsyms();
-#endif
 
 	_hasFocus = false;
 

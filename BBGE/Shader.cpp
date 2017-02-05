@@ -36,7 +36,6 @@ void Shader::staticInit()
 	_wasInited = true;
 	debugLog("Initializing shaders...");
 
-#if defined(BBGE_BUILD_SHADERS) && defined(BBGE_BUILD_OPENGL)
 	/*char *ext = (char*)glGetString( GL_EXTENSIONS );
 
 	if( strstr( ext, "GL_ARB_shading_language_100" ) == NULL )
@@ -75,7 +74,6 @@ void Shader::staticInit()
 
 
 	end:
-#endif
 
 	if (_useShaders)
 		debugLog("Shader support enabled.");
@@ -98,7 +96,6 @@ Shader::~Shader()
 
 void Shader::unload()
 {
-#ifdef BBGE_BUILD_SHADERS
 	if (!_useShaders)
 		return;
 	if (g_programObj)
@@ -106,7 +103,6 @@ void Shader::unload()
 		glDeleteObjectARB( g_programObj );
 		g_programObj = 0;
 	}
-#endif
 }
 
 bool Shader::isLoaded() const
@@ -124,26 +120,21 @@ void Shader::reload()
 
 void Shader::bind()
 {
-#ifdef BBGE_BUILD_SHADERS
 	if (!_useShaders)
 		return;
 	glUseProgramObjectARB(g_programObj);
 	_flushUniforms();
-#endif
 }
 
 void Shader::unbind()
 {
-#ifdef BBGE_BUILD_SHADERS
 	if (!_useShaders)
 		return;
 	glUseProgramObjectARB(0);
-#endif
 }
 
 unsigned int Shader::_compileShader(int type, const char *src, char *errbuf, size_t errbufsize)
 {
-#ifdef BBGE_BUILD_SHADERS
 	GLint compiled = 0;
 	GLhandleARB handle = glCreateShaderObjectARB(type);
 	if(!handle)
@@ -172,8 +163,6 @@ unsigned int Shader::_compileShader(int type, const char *src, char *errbuf, siz
 		errorLog(os.str());
 	}
 	return handle;
-#endif
-	return 0;
 }
 
 void Shader::load(const std::string &file, const std::string &fragFile)
@@ -203,8 +192,6 @@ void Shader::loadSrc(const char *vertCode, const char *fragCode)
 
 	if(!_useShaders)
 		return;
-
-#ifdef BBGE_BUILD_SHADERS
 
 	char str[4096];
 
@@ -280,8 +267,6 @@ void Shader::loadSrc(const char *vertCode, const char *fragCode)
 	fragSrc = fragCode ? fragCode : "";
 
 	_queryUniforms();
-
-#endif
 }
 
 void Shader::_setUniform(Uniform *u)
@@ -384,7 +369,6 @@ int Shader::_getUniformIndex(const char *name)
 
 void Shader::setInt(const char *name, int x, int y /* = 0 */, int z /* = 0 */, int w /* = 0 */)
 {
-#if BBGE_BUILD_SHADERS
 	if(!g_programObj || numUniforms == 0 || numUniforms == -1)
 		return;
 	int idx = _getUniformIndex(name);
@@ -397,12 +381,10 @@ void Shader::setInt(const char *name, int x, int y /* = 0 */, int z /* = 0 */, i
 	u.data.i.i[3] = w;
 	u.dirty = true;
 	uniformsDirty = true;
-#endif
 }
 
 void Shader::setFloat(const char *name, float x, float y /* = 0 */, float z /* = 0 */, float w /* = 0 */)
 {
-#if BBGE_BUILD_SHADERS
 	if(!g_programObj || numUniforms == 0 || numUniforms == -1)
 		return;
 	int idx = _getUniformIndex(name);
@@ -415,5 +397,4 @@ void Shader::setFloat(const char *name, float x, float y /* = 0 */, float z /* =
 	u.data.f.f[3] = w;
 	u.dirty = true;
 	uniformsDirty = true;
-#endif
 }

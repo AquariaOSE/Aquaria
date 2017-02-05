@@ -1,7 +1,5 @@
 #include "Base.h"
 
-#if BBGE_BUILD_OPENGL_DYNAMIC
-
 #include "RenderBase.h"
 #include "GLLoad.h"
 #include <sstream>
@@ -21,7 +19,6 @@
 
 PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
 
-#ifdef BBGE_BUILD_SHADERS
 // GL_ARB_shader_objects
 PFNGLCREATEPROGRAMOBJECTARBPROC  glCreateProgramObjectARB  = NULL;
 PFNGLDELETEOBJECTARBPROC         glDeleteObjectARB         = NULL;
@@ -43,9 +40,7 @@ PFNGLUNIFORM1IVARBPROC           glUniform1ivARB            = NULL;
 PFNGLUNIFORM2IVARBPROC           glUniform2ivARB            = NULL;
 PFNGLUNIFORM3IVARBPROC           glUniform3ivARB            = NULL;
 PFNGLUNIFORM4IVARBPROC           glUniform4ivARB            = NULL;
-#endif
 
-#ifdef BBGE_BUILD_FRAMEBUFFER
 PFNGLISRENDERBUFFEREXTPROC glIsRenderbufferEXT = NULL;
 PFNGLBINDRENDERBUFFEREXTPROC glBindRenderbufferEXT = NULL;
 PFNGLDELETERENDERBUFFERSEXTPROC glDeleteRenderbuffersEXT = NULL;
@@ -62,13 +57,10 @@ PFNGLFRAMEBUFFERTEXTURE2DEXTPROC glFramebufferTexture2DEXT = NULL;
 PFNGLFRAMEBUFFERTEXTURE3DEXTPROC glFramebufferTexture3DEXT = NULL;
 PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT = NULL;
 PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT = NULL;
-#endif
-
 
 unsigned g_dbg_numRenderCalls = 0; // extern
 
 
-#ifdef BBGE_BUILD_OPENGL_DYNAMIC
 #define GL_FUNC(ret,fn,params,call,rt) \
 	extern "C" { \
 	static ret (GLAPIENTRY *p##fn) params = NULL; \
@@ -99,9 +91,11 @@ bool lookup_all_glsyms()
 #undef GL_FUNC
 
 	// optional functions
+
+	// mipmaps
 	glGenerateMipmapEXT = (PFNGLGENERATEMIPMAPEXTPROC)SDL_GL_GetProcAddress("glGenerateMipmapEXT");
 
-#if defined(BBGE_BUILD_FRAMEBUFFER)
+	// framebuffer
 	glIsRenderbufferEXT = (PFNGLISRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glIsRenderbufferEXT");
 	glBindRenderbufferEXT = (PFNGLBINDRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glBindRenderbufferEXT");
 	glDeleteRenderbuffersEXT = (PFNGLDELETERENDERBUFFERSEXTPROC)SDL_GL_GetProcAddress("glDeleteRenderbuffersEXT");
@@ -118,9 +112,8 @@ bool lookup_all_glsyms()
 	glFramebufferTexture3DEXT = (PFNGLFRAMEBUFFERTEXTURE3DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture3DEXT");
 	glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glFramebufferRenderbufferEXT");
 	glGetFramebufferAttachmentParameterivEXT = (PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC)SDL_GL_GetProcAddress("glGetFramebufferAttachmentParameterivEXT");
-#endif
 
-#if defined(BBGE_BUILD_SHADERS)
+	// shaders
 	glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
 	glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)SDL_GL_GetProcAddress("glDeleteObjectARB");
 	glUseProgramObjectARB     = (PFNGLUSEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glUseProgramObjectARB");
@@ -141,22 +134,18 @@ bool lookup_all_glsyms()
 	glUniform2ivARB           = (PFNGLUNIFORM2IVARBPROC)SDL_GL_GetProcAddress("glUniform2ivARB");
 	glUniform3ivARB           = (PFNGLUNIFORM3IVARBPROC)SDL_GL_GetProcAddress("glUniform3ivARB");
 	glUniform4ivARB           = (PFNGLUNIFORM4IVARBPROC)SDL_GL_GetProcAddress("glUniform4ivARB");
-#endif
 
 	return retval;
 }
-#endif
 
 void unload_all_glsyms()
 {
-#if BBGE_BUILD_OPENGL_DYNAMIC
 // reset all the entry points to NULL, so we know exactly what happened
 //  if we call a GL function after shutdown.
 #define GL_FUNC(ret,fn,params,call,rt) \
 	p##fn = NULL;
 #include "OpenGLStubs.h"
 #undef GL_FUNC
-#endif
 
 	glGenerateMipmapEXT = NULL;
 
@@ -181,7 +170,6 @@ void unload_all_glsyms()
 	glGetFramebufferAttachmentParameterivEXT = NULL;
 #endif
 
-#if defined(BBGE_BUILD_SHADERS)
 	glCreateProgramObjectARB  = NULL;
 	glDeleteObjectARB         = NULL;
 	glUseProgramObjectARB     = NULL;
@@ -202,8 +190,4 @@ void unload_all_glsyms()
 	glUniform2ivARB           = NULL;
 	glUniform3ivARB           = NULL;
 	glUniform4ivARB           = NULL;
-#endif
-
 }
-
-#endif
