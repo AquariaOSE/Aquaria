@@ -724,6 +724,11 @@ void Path::luaDebugMsg(const std::string &func, const std::string &msg)
 	debugLog("luaScriptError: Path [" + name + "]: " + func + " : " + msg);
 }
 
+int Path::pushLuaVars(lua_State *L)
+{
+	return script ?  script->pushLocalVars(L) : 0;
+}
+
 MinimapIcon *Path::ensureMinimapIcon()
 {
 	if(!minimapIcon)

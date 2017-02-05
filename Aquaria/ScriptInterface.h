@@ -72,6 +72,8 @@ public:
 	// function(pointer, ...) - anything that is already on the stack is forwarded. Results are left on the stack.
 	// Returns how many values the called function returned, or -1 in case of error.
 	int callVariadic(const char *name, lua_State *L, int nparams, void *param);
+	// Pushes the entity's "v" table on top of the passed Lua stack. Returns number of things pushed (0 or 1)
+	int pushLocalVars(lua_State *Ltarget);
 
 	lua_State *getLuaState() {return L;}
 	const std::string &getFile() {return file;}
