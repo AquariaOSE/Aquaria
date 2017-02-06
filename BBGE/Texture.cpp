@@ -25,10 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderBase.h"
 #include <assert.h>
 
-#if defined(BBGE_BUILD_UNIX)
-#include <stdint.h>
-#endif
-
 
 Texture::Texture()
 {
