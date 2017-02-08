@@ -21,6 +21,8 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
+// MODIFICATION: Disabled LoadFile() functions to catch misuse - Aquaria uses its own VFS, not FILE* -- fg
+
 #include "tinyxml2.h"
 
 #include <new>		// yes, this one new style header, is in the Android SDK.
@@ -1961,7 +1963,7 @@ void XMLDocument::DeleteNode( XMLNode* node )	{
     }
 }
 
-
+/*
 XMLError XMLDocument::LoadFile( const char* filename )
 {
     Clear();
@@ -1974,7 +1976,7 @@ XMLError XMLDocument::LoadFile( const char* filename )
     fclose( fp );
     return _errorID;
 }
-
+*/
 // This is likely overengineered template art to have a check that unsigned long value incremented
 // by one still fits into size_t. If size_t type is larger than unsigned long type
 // (x86_64-w64-mingw32 target) then the check is redundant and gcc and clang emit
@@ -1997,7 +1999,7 @@ struct LongFitsIntoSizeTMinusOne<false> {
         return true;
     }
 };
-
+/*
 XMLError XMLDocument::LoadFile( FILE* fp )
 {
     Clear();
@@ -2042,7 +2044,7 @@ XMLError XMLDocument::LoadFile( FILE* fp )
     Parse();
     return _errorID;
 }
-
+*/
 
 XMLError XMLDocument::SaveFile( const char* filename, bool compact )
 {
