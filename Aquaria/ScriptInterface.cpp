@@ -9511,7 +9511,7 @@ luaFunc(loadXMLTable)
 
 	tinyxml2::XMLDocument xml;
 	tinyxml2::XMLError err = readXML(fn, xml);
-	if(err != tinyxml2::XML_NO_ERROR)
+	if(err != tinyxml2::XML_SUCCESS)
 	{
 		lua_pushboolean(L, false);
 		lua_pushinteger(L, err);
