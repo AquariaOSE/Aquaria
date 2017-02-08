@@ -2291,6 +2291,10 @@ void Core::shutdown()
 		debugLog("OK");
 	}
 
+	debugLog("Dark layer...");
+		darkLayer.unloadDevice();
+	debugLog("OK");
+
 	debugLog("Core's framebuffer...");
 		frameBuffer.unloadDevice();
 	debugLog("OK");
