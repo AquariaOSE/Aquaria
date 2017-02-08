@@ -21,6 +21,10 @@ must not be misrepresented as being the original software.
 distribution.
 */
 
+// MODIFICATION: Disabled LoadFile() functions to catch misuse - Aquaria uses its own VFS, not FILE* -- fg
+// MODIFICATION: Do not require stdint.h, use minipstdint.h instead -- fg
+
+
 #ifndef TINYXML2_INCLUDED
 #define TINYXML2_INCLUDED
 
@@ -40,7 +44,7 @@ distribution.
 #   include <cstdlib>
 #   include <cstring>
 #endif
-#include <stdint.h>
+#include "minipstdint.h"
 
 /*
    TODO: intern strings instead of allocation.
@@ -1616,7 +1620,7 @@ public:
     	Returns XML_NO_ERROR (0) on success, or
     	an errorID.
     */
-    XMLError LoadFile( const char* filename );
+    //XMLError LoadFile( const char* filename );
 
     /**
     	Load an XML file from disk. You are responsible
@@ -1629,7 +1633,7 @@ public:
     	Returns XML_NO_ERROR (0) on success, or
     	an errorID.
     */
-    XMLError LoadFile( FILE* );
+    //XMLError LoadFile( FILE* );
 
     /**
     	Save the XML file to disk.
