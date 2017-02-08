@@ -191,6 +191,10 @@
 				RelativePath="..\..\ExternalLibs\minihttp.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\minipstdint.h"
+				>
+			</File>
 			<Filter
 				Name="glpng"
 				>
