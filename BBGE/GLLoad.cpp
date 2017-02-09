@@ -14,7 +14,7 @@
 #define GLAPIENTRY
 #endif
 
-#include "glext.h"
+#include <GL/glext.h>
 
 
 PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;

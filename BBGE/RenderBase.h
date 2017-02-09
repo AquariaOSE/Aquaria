@@ -9,8 +9,8 @@
 #endif
 
 #define GL_GLEXT_LEGACY 1
-#include "gl.h"
-#include "glext.h"
+#include <GL/gl.h>
+#include <GL/glext.h>
 
 #ifdef _WINDOWS_
 #error windows.h was included! euuugh!
