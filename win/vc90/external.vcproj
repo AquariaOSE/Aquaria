@@ -1556,11 +1556,11 @@
 			Name="tinyxml2"
 			>
 			<File
-				RelativePath="..\..\ExternalLibs\tinyxml2.cpp"
+				RelativePath="..\..\ExternalLibs\tinyxml2\tinyxml2.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\ExternalLibs\tinyxml2.h"
+				RelativePath="..\..\ExternalLibs\tinyxml2\tinyxml2.h"
 				>
 			</File>
 		</Filter>

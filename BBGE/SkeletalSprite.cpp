@@ -25,7 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SimpleIStringStream.h"
 #include "ReadXML.h"
 
-#include "tinyxml2.h"
+#include <tinyxml2.h>
 using namespace tinyxml2;
 
 std::string SkeletalSprite::animationPath				= "data/animations/";

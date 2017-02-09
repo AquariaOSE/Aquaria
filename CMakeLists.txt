@@ -233,8 +233,8 @@ if(NOT AQUARIA_INTERNAL_TINYXML2)
 endif(NOT AQUARIA_INTERNAL_TINYXML2)
 if(NOT TINYXML2_FOUND)
     message(STATUS "Using internal copy of TinyXML2")
-    set(TINYXML2_INCLUDE_DIRS "${EXTLIBDIR}")
-    set(TINYXML2_SRCS "${EXTLIBDIR}/tinyxml2.cpp")
+    set(TINYXML2_INCLUDE_DIRS "${EXTLIBDIR}/tinyxml2")
+    set(TINYXML2_SRCS "${EXTLIBDIR}/tinyxml2/tinyxml2.cpp")
 endif(NOT TINYXML2_FOUND)
 
 ### FTGL
