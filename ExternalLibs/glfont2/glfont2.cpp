@@ -19,7 +19,7 @@ using namespace std;
 #include <windows.h>
 #undef GetCharWidth
 #endif
-#include "gl.h"
+#include <GL/gl.h>
 
 //glFont header
 #include "glfont2.h"

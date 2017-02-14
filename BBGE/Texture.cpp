@@ -20,7 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Texture.h"
 #include "Core.h"
-#include "../ExternalLibs/glpng.h"
+#include <GL/glpng.h>
 #include "ByteBuffer.h"
 #include "RenderBase.h"
 #include <assert.h>
