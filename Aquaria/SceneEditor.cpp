@@ -18,6 +18,8 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
+#include "SceneEditor.h"
 #include "../BBGE/MathFunctions.h"
 #include <GL/glpng.h>
 #include "../BBGE/Gradient.h"
@@ -1525,18 +1527,11 @@ void SceneEditor::skinLevel()
 		dsq->screenMessage("Cannot skin without generated level.");
 		return;
 	}
-	pngRawInfo rawinfo;
-	std::string file = getMapTemplateFilename();
-	bool success = pngLoadRaw(file.c_str(), &rawinfo);
-	if (success)
-	{
-		skinLevel(&rawinfo, skinMinX, skinMinY, skinMaxX, skinMaxY);
-		if (rawinfo.Data != NULL)
-			free(rawinfo.Data);
-	}
+
+	skinLevel(skinMinX, skinMinY, skinMaxX, skinMaxY);
 }
 
-void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int maxY)
+void SceneEditor::skinLevel(int minX, int minY, int maxX, int maxY)
 {
 	std::vector<Element*> deleteElements;
 	size_t i = 0;

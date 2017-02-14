@@ -30,8 +30,7 @@
 
 //#define GL_GLEXT_PROTOTYPES
 
-//#include <GL/glpng.h>
-#include "GL/glpng.h"
+#include <GL/glpng.h>
 #include <GL/gl.h>
 #include <GL/glext.h>
 #include <stdlib.h>
