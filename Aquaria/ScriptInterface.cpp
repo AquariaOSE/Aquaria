@@ -7932,11 +7932,11 @@ luaFunc(filterNearestEntitiesAdd)
 
 luaFunc(getNextFilteredEntity)
 {
-	EntityDistancePair ep = filteredEntities[filteredEntityIdx];
-	if (ep.first)
-		++filteredEntityIdx;
+	const EntityDistancePair& ep = filteredEntities[filteredEntityIdx];
 	luaPushPointer(L, ep.first);
 	lua_pushnumber(L, ep.second);
+	if (ep.first)
+		++filteredEntityIdx;
 	return 2;
 }
 
