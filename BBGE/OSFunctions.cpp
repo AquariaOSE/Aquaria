@@ -66,11 +66,12 @@ void initIcon(void *screen)
 
 #ifdef BBGE_BUILD_SDL2
 	SDL_GetWindowWMInfo((SDL_Window*)screen, &wminfo);
+	HWND hwnd = wminfo.info.win.window;
 #else
-	SDL_GetWindowWMInfo((SDL_Surface*)screen, &wminfo);
+	SDL_GetWMInfo(&wminfo);
+	HWND hwnd = wminfo.window;
 #endif
 
-	HWND hwnd = wminfo.info.win.window;
 	::SetClassLongPtr(hwnd, -14, (LONG) icon_windows); // -14 is GCL_HICON (32bit) or GCLP_HICON (64bit)
 #endif
 }

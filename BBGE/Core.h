@@ -486,7 +486,7 @@ protected:
 	bool initInputLibrary();
 	void initJoystickLibrary();
 	bool initGraphicsLibrary(int w, int h, bool fullscreen, bool vsync, int bpp, int display, int hz);
-	void createWindow(int w, int h, bool resizable, bool fullscreen);
+	void createWindow(int w, int h, bool resizable, bool fullscreen, int bpp);
 	void shutdownInputLibrary();
 	void shutdownJoystickLibrary();
 	void shutdownGraphicsLibrary();

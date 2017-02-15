@@ -122,6 +122,8 @@
 
 #else // BBGE_BUILD_SDL2
 
+// ------------- SDL 1.2 code path -----------------
+
 #include <SDL_keysym.h>
 
 #define KEY_LSUPER SDLK_LSUPER

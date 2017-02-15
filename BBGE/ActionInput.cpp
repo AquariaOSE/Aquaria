@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ActionMapper.h"
 #include "Core.h"
 #include "SDL.h"
+#include "LegacyKeycodes.h"
 
 
 static std::string inputcode2string(int k)
@@ -31,17 +32,15 @@ static std::string inputcode2string(int k)
 		return std::string();
 	if(k < KEY_MAXARRAY)
 	{
-		const char *name;
-#ifdef BBGE_BUILD_SDL2
-		name = SDL_GetScancodeName((SDL_Scancode)k);
-#else
-		name = SDL_GetKeyName((SDLKey)k);
-#endif
-		if(name)
-			return name;
-
+		// See parseKey() below
 		std::stringstream os;
-		os << "K:" << k;
+		os << "K:";
+#ifdef BBGE_BUILD_SDL2
+		int keycode = SDL_GetKeyFromScancode((SDL_Scancode)k);
+		os << keycode << "," << k;
+#else
+		os << k;
+#endif
 		return os.str();
 	}
 
@@ -149,10 +148,36 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 	return inputcode2string(k);
 }
 
-#ifndef BBGE_BUILD_SDL2
-static bool s_needKeyTabInit = false;
-std::map<std::string, SDLKey> s_keyNameMap;
+// two comma-separated ints
+// first is the keycode, second the scancode
+// (Keymap-independent) Scancodes are used when built with SDL2 support and specified
+// (Keymap-dependent) Keycode is used otherwise
+static int parseKey(const char *ks)
+{
+	int k = 0;
+
+#ifdef BBGE_BUILD_SDL2
+	if(const char *comma = strchr(ks, ','))
+	{
+		k = atoi(comma + 1);
+		if(k && k < KEY_MAXARRAY)
+			return k;
+	}
 #endif
+
+	// Use the keycode
+	k = atoi(ks);
+	if(k < KEY_MAXARRAY)
+	{
+#ifdef BBGE_BUILD_SDL2
+		// But when we're on SDL2, don't forget to turn they keycode back into a scancode, since we work with scancodes internally
+		k = SDL_GetScancodeFromKey(k);
+#endif
+		return k;
+	}
+
+	return 0;
+}
 
 int getStringToInputCode(const std::string& s)
 {
@@ -163,7 +188,7 @@ int getStringToInputCode(const std::string& s)
 	if(s == "MMB")
 		return MOUSE_BUTTON_MIDDLE;
 	if(!strncmp(s.c_str(), "K:", 2))
-		return atoi(s.c_str() + 2);
+		return parseKey(s.c_str() + 2);
 	if(!strncmp(s.c_str(), "JB:", 3))
 		return JOY_BUTTON_0 + atoi(s.c_str() + 3);
 	if(!strncmp(s.c_str(), "MB:", 3))
@@ -181,11 +206,12 @@ int getStringToInputCode(const std::string& s)
 	if(s == "NONE")
 		return 0;
 
-#ifdef BBGE_BUILD_SDL2
-	return SDL_GetScancodeFromName(underscoresToSpaces(s).c_str());
-#else
-	return SDL_GetKeyFromName(underscoresToSpaces(s).c_str());
-#endif
+	// Maybe we're upgrading from an old config?
+	// Note that this returns 0 for "0", which was considered "no key"
+	if(int k = getInputCodeFromLegacyName(s.c_str()))
+		return k;
+
+	return 0;
 }
 
 

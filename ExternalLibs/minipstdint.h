@@ -9,13 +9,18 @@
 #include <limits.h>
 
 #if defined(_MSC_VER) && _MSC_VER < 1600
+#include "SDL_version.h"
+#if SDL_VERSION_ATLEAST(2, 0, 0) // AQUARIA HACK: Included SDL 1.2 includes define some of these, SDL does not. Avoid conflicts.
     typedef signed __int8     int8_t;
-    typedef signed __int16    int16_t;
-    typedef signed __int32    int32_t;
-    typedef signed __int64    int64_t;
     typedef unsigned __int8   uint8_t;
+    typedef signed __int16    int16_t;
     typedef unsigned __int16  uint16_t;
+    typedef signed __int32    int32_t;
     typedef unsigned __int32  uint32_t;
+#else
+#include "SDL_config.h"
+#endif
+    typedef signed __int64    int64_t;
     typedef unsigned __int64  uint64_t;
 #   ifdef __cplusplus
         namespace std
