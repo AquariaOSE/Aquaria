@@ -16,19 +16,26 @@ EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
+		Debug-SDL1.2|Win32 = Debug-SDL1.2|Win32
 		Release|Win32 = Release|Win32
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
 		{4DB6D5AA-4EAD-4195-9B54-389B558036D8}.Debug|Win32.ActiveCfg = Debug|Win32
 		{4DB6D5AA-4EAD-4195-9B54-389B558036D8}.Debug|Win32.Build.0 = Debug|Win32
+		{4DB6D5AA-4EAD-4195-9B54-389B558036D8}.Debug-SDL1.2|Win32.ActiveCfg = Debug-SDL1.2|Win32
+		{4DB6D5AA-4EAD-4195-9B54-389B558036D8}.Debug-SDL1.2|Win32.Build.0 = Debug-SDL1.2|Win32
 		{4DB6D5AA-4EAD-4195-9B54-389B558036D8}.Release|Win32.ActiveCfg = Release|Win32
 		{4DB6D5AA-4EAD-4195-9B54-389B558036D8}.Release|Win32.Build.0 = Release|Win32
 		{4C2AD812-6776-4728-A4B0-ABA397224152}.Debug|Win32.ActiveCfg = Debug|Win32
 		{4C2AD812-6776-4728-A4B0-ABA397224152}.Debug|Win32.Build.0 = Debug|Win32
+		{4C2AD812-6776-4728-A4B0-ABA397224152}.Debug-SDL1.2|Win32.ActiveCfg = Debug-SDL1.2|Win32
+		{4C2AD812-6776-4728-A4B0-ABA397224152}.Debug-SDL1.2|Win32.Build.0 = Debug-SDL1.2|Win32
 		{4C2AD812-6776-4728-A4B0-ABA397224152}.Release|Win32.ActiveCfg = Release|Win32
 		{4C2AD812-6776-4728-A4B0-ABA397224152}.Release|Win32.Build.0 = Release|Win32
 		{6A2DACD7-DA30-49A1-9214-CCDEB48E6050}.Debug|Win32.ActiveCfg = Debug|Win32
 		{6A2DACD7-DA30-49A1-9214-CCDEB48E6050}.Debug|Win32.Build.0 = Debug|Win32
+		{6A2DACD7-DA30-49A1-9214-CCDEB48E6050}.Debug-SDL1.2|Win32.ActiveCfg = Debug-SDL1.2|Win32
+		{6A2DACD7-DA30-49A1-9214-CCDEB48E6050}.Debug-SDL1.2|Win32.Build.0 = Debug-SDL1.2|Win32
 		{6A2DACD7-DA30-49A1-9214-CCDEB48E6050}.Release|Win32.ActiveCfg = Release|Win32
 		{6A2DACD7-DA30-49A1-9214-CCDEB48E6050}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection

@@ -8,6 +8,7 @@ class ActionSet;
 
 const unsigned mouseExtraButtons = 8;
 
+// *_END is non-inclusive!
 enum ActionButtonType
 {
 	MOUSE_BUTTON_LEFT	=  KEY_MAXARRAY + 1,

@@ -126,7 +126,12 @@ void Core::reloadDevice()
 
 void Core::setup_opengl()
 {
+#ifdef BBGE_BUILD_SDL2
 	assert(gGLctx);
+#else
+	assert(gScreen);
+#endif
+
 
 	glViewport(0, 0, width, height);
 
@@ -150,6 +155,11 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 {
 	assert(lib_graphics);
 
+	const int oldw = width;
+	const int oldh = height;
+	bool reloadRes = false;
+
+#ifdef BBGE_BUILD_SDL2
 	const int oldDisplay = getDisplayIndex();
 	assert(oldDisplay >= 0);
 	if(display == -1)
@@ -174,11 +184,12 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 		SDL_SetWindowPosition(gScreen, center, center);
 	}
 
-	const int oldw = width;
-	const int oldh = height;
-
-
 	const bool useDesktop = w == 0 || h == 0 || (oldw && w == -1 && oldh && h == -1 && _useDesktopResolution);
+#else
+	const bool useDesktop = false;
+#endif
+
+	
 	const bool wasFullscreen = _fullscreen;
 
 	if(hz == -1)
@@ -190,11 +201,13 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 	if (vsync == -1)
 		vsync = _vsync;
 
+#ifdef BBGE_BUILD_SDL2
 	if(useDesktop)
 	{
 		w = displaymode.w;
 		h = displaymode.h;
 	}
+#endif
 
 	if (w == -1)
 		w = width;
@@ -209,9 +222,10 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 	_fullscreen = fullscreen;
 	_bpp = bpp;
 	_refreshRate = hz;
-	displaymode.refresh_rate = hz;
 
 #ifdef BBGE_BUILD_SDL2
+	displaymode.refresh_rate = hz;
+
 	if(vsync)
 	{
 		if(SDL_GL_SetSwapInterval(-1) != 0)
@@ -227,7 +241,6 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 	SDL_SetWindowFullscreen(gScreen, 0);
 
 	bool resize = true;
-	bool reloadRes = false;
 	bool maximize = true;
 	if(useDesktop != _useDesktopResolution)
 	{
@@ -245,7 +258,7 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 			useh = oldh;
 			maximize = false;
 		}
-		createWindow(usew, useh, useDesktop, false);
+		createWindow(usew, useh, useDesktop, false, bpp);
 
 		reloadRes = true;
 	}
@@ -276,7 +289,7 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 
 	if(resize && !fullscreen && !useDesktop)
 	{
-		if(w != oldw|| h != oldh)
+		if(w != oldw || h != oldh)
 		{
 			SDL_SetWindowSize(gScreen, w, h);
 			int c = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
@@ -284,16 +297,19 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 		}
 	}
 
-#else
+	if(!resize)
+		SDL_GetWindowSize(gScreen, &w, &h);
 
-#	error FIXME: backport to support SDL 1.2
+#else
+	if(w != oldw || h != oldh)
+	{
+		reloadRes = true; // Always reload resources on SDL 1.2, since it loses the GL context!
+		createWindow(w, h, false, fullscreen, bpp);
+	}
 
 #endif
 
 	_useDesktopResolution = useDesktop;
-
-	if(!resize)
-		SDL_GetWindowSize(gScreen, &w, &h);
 
 	updateWindowDrawSize(w, h);
 
@@ -525,8 +541,10 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	nestedMains = 0;
 	afterEffectManager = 0;
 	loopDone = false;
+#ifdef BBGE_BUILD_SDL2
 	winPosX = SDL_WINDOWPOS_CENTERED;
 	winPosY = SDL_WINDOWPOS_CENTERED;
+#endif
 	core = this;
 
 	for (int i = 0; i < KEY_MAXARRAY; i++)
@@ -866,20 +884,24 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 
 	initIcon(gScreen);
 
-	std::ostringstream os;
-	os << "setting vsync: " << vsync;
-	debugLog(os.str());
-#ifndef BBGE_BUILD_SDL2
-	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, vsync);
-	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 
-	#ifdef _DEBUG
-		SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS SDL_GL_CONTEXT_DEBUG_FLAG);
-	#endif
+
+#ifdef BBGE_BUILD_SDL2
+#  ifdef _DEBUG
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#  endif
+	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
+#else
+	{
+		std::ostringstream os;
+		os << "setting vsync: " << vsync;
+		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, vsync); // SDL 1.2 can't set this on an existing context
+		debugLog(os.str());
+	}
 #endif
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	createWindow(width, height, !width && !height, fullscreen);
+	createWindow(width, height, !width && !height, fullscreen, bpp);
 
 	if (SDL_GL_LoadLibrary(NULL) == -1)
 	{
@@ -913,7 +935,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 	return true;
 }
 
-void Core::createWindow(int w, int h, bool resizable, bool fullscreen)
+void Core::createWindow(int w, int h, bool resizable, bool fullscreen, int bpp)
 {
 #ifdef BBGE_BUILD_SDL2
 	if(gScreen)
@@ -1039,7 +1061,7 @@ void Core::enumerateScreenModes()
 		{
 			if (modes[i]->w > modes[i]->h)
 			{
-				screenModes.push_back(ScreenMode(i, modes[i]->w, modes[i]->h, 0));
+				screenModes.push_back(ScreenMode(i, modes[i]->w, modes[i]->h));
 			}
 		}
 	}

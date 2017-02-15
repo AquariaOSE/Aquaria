@@ -910,6 +910,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	SDL_Init(SDL_INIT_VIDEO);
 	if (fullscreen && !sdlVideoModeOK(user.video.displayindex, user.video.resx, user.video.resy, user.video.bits))
 	{
+#ifdef BBGE_BUILD_SDL2
 		SDL_DisplayMode mode, closest;
 		mode.format = 0;
 		mode.driverdata = 0;
@@ -923,11 +924,13 @@ This build is not yet final, and as such there are a couple things lacking. They
 			user.video.hz = closest.refresh_rate;
 		}
 		else
+#endif
 		{
 			// maybe we can force a sane resolution if SetVideoMode is going to fail...
 			user.video.resx = 800;
 			user.video.resy = 600;
 			user.video.hz = 60;
+			user.video.bits = 32;
 			user.video.displayindex = 0;
 			if (!sdlVideoModeOK(0, user.video.resx, user.video.resy, user.video.bits))
 				fullscreen = false;  // last chance.
