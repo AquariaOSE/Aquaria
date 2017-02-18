@@ -1,11 +1,12 @@
-#include "LegacyKeycodes.h"
+#include "GameKeyNames.h"
 #include "ActionStatus.h"
+#include <stdio.h>
 #include <map>
-#include <sstream>
 
 typedef std::map<std::string, int> InputCodeMap;
 
 InputCodeMap inputCodeMap;
+static std::string keyNames[KEY_MAXARRAY];
 
 static void initInputCodeMap()
 {
@@ -84,6 +85,22 @@ static void initInputCodeMap()
 	K(KEY_RETURN)
 	K(KEY_TAB)
 	K(KEY_ESCAPE)
+	K(KEY_SPACE)
+	K(KEY_BACKSPACE)
+	K(KEY_NUMPADMINUS)
+	K(KEY_NUMPADPERIOD)
+	K(KEY_NUMPADPLUS)
+	K(KEY_NUMPADSLASH)
+	K(KEY_NUMPADSTAR)
+	K(KEY_PGDN)
+	K(KEY_PGUP)
+	K(KEY_APOSTROPHE)
+	K(KEY_EQUALS)
+	K(KEY_SEMICOLON)
+	K(KEY_LBRACKET)
+	K(KEY_RBRACKET)
+	K(KEY_TILDE)
+
 
 	K(MOUSE_BUTTON_LEFT)
 	K(MOUSE_BUTTON_RIGHT)
@@ -92,20 +109,30 @@ static void initInputCodeMap()
 
 	for (int jb = JOY_BUTTON_0; jb < JOY_BUTTON_END; jb++)
 	{
-		std::ostringstream os;
-		os << "JOY_BUTTON_" << jb - JOY_BUTTON_0;
-		inputCodeMap[os.str()] = jb;
+		char buf[32];
+		sprintf(buf, "JOY_BUTTON_%d", jb - JOY_BUTTON_0);
+		inputCodeMap[buf] = jb;
 	}
+
+	// ----------------------
+
+	// Can just use pointers to the strings in the map; they'll stay where they are in memory
+	for(InputCodeMap::iterator it = inputCodeMap.begin(); it != inputCodeMap.end(); ++it)
+		keyNames[it->second] = it->first;
 }
 
-int getInputCodeFromLegacyName(const char *name)
+int getInputCodeFromKeyName(const char *name)
 {
 	return inputCodeMap[name];
 }
 
-
-struct LegacyKeymapInitializer
+const std::string& getKeyNameFromInputCode(int k)
 {
-	LegacyKeymapInitializer() { initInputCodeMap(); }
+	return keyNames[k];
+}
+
+struct KeyNameInitializer
+{
+	KeyNameInitializer() { initInputCodeMap(); }
 };
-static LegacyKeymapInitializer s_kinit;
+static KeyNameInitializer s_kinit;

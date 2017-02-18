@@ -363,6 +363,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\GameKeyNames.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\GameKeyNames.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\GameKeys.h"
 				>
 			</File>
@@ -388,14 +396,6 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\Joystick.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\LegacyKeycodes.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\LegacyKeycodes.h"
 				>
 			</File>
 			<File

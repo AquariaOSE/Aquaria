@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ActionMapper.h"
 #include "Core.h"
 #include "SDL.h"
-#include "LegacyKeycodes.h"
+#include "GameKeyNames.h"
 
 
 static std::string inputcode2string(int k)
@@ -32,35 +32,34 @@ static std::string inputcode2string(int k)
 		return std::string();
 	if(k < KEY_MAXARRAY)
 	{
-		// See parseKey() below
-		std::stringstream os;
-		os << "K:";
-#ifdef BBGE_BUILD_SDL2
-		int keycode = SDL_GetKeyFromScancode((SDL_Scancode)k);
-		os << keycode << "," << k;
-#else
-		os << k;
-#endif
+		// Returns KEY_* or NULL
+		const std::string& str = getKeyNameFromInputCode(k);
+		if(str.length())
+			return str;
+
+		// fallback
+		std::ostringstream os;
+		os << "K:" << k;
 		return os.str();
 	}
 
 	if(k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
 	{
-		std::stringstream os;
+		std::ostringstream os;
 		os << "JB:" << (k - JOY_BUTTON_0);
 		return os.str();
 	}
 
 	if(k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
 	{
-		std::stringstream os;
+		std::ostringstream os;
 		os << "AX:+" << (k - JOY_AXIS_0_POS);
 		return os.str();
 	}
 
 	if(k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
 	{
-		std::stringstream os;
+		std::ostringstream os;
 		os << "AX:-" << (k - JOY_AXIS_0_NEG);
 		return os.str();
 	}
@@ -97,14 +96,10 @@ static const char *jbtnname(int joystickID, int btn)
 	return j ? j->getButtonName(btn) : NULL;
 }
 
-
-
 std::string getInputCodeToString(int k)
 {
 	std::string s = inputcode2string(k);
-	if(s.empty())
-		return "NONE";
-	return spacesToUnderscores(s);
+	return s.empty() ? "0" : s;
 }
 
 std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
@@ -117,6 +112,7 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 	if(k < KEY_MAXARRAY)
 	{
 #ifdef BBGE_BUILD_SDL2
+		pretty = SDL_GetScancodeName((SDL_Scancode)k);
 		const SDL_Keycode kcode = SDL_GetKeyFromScancode((SDL_Scancode)k);
 		if(kcode != SDLK_UNKNOWN)
 			pretty = SDL_GetKeyName(kcode);
@@ -145,38 +141,8 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 		return s;
 	}
 
-	return inputcode2string(k);
-}
-
-// two comma-separated ints
-// first is the keycode, second the scancode
-// (Keymap-independent) Scancodes are used when built with SDL2 support and specified
-// (Keymap-dependent) Keycode is used otherwise
-static int parseKey(const char *ks)
-{
-	int k = 0;
-
-#ifdef BBGE_BUILD_SDL2
-	if(const char *comma = strchr(ks, ','))
-	{
-		k = atoi(comma + 1);
-		if(k && k < KEY_MAXARRAY)
-			return k;
-	}
-#endif
-
-	// Use the keycode
-	k = atoi(ks);
-	if(k < KEY_MAXARRAY)
-	{
-#ifdef BBGE_BUILD_SDL2
-		// But when we're on SDL2, don't forget to turn they keycode back into a scancode, since we work with scancodes internally
-		k = SDL_GetScancodeFromKey(k);
-#endif
-		return k;
-	}
-
-	return 0;
+	std::string s = inputcode2string(k);
+	return s.empty() ? "-" : s;
 }
 
 int getStringToInputCode(const std::string& s)
@@ -188,7 +154,7 @@ int getStringToInputCode(const std::string& s)
 	if(s == "MMB")
 		return MOUSE_BUTTON_MIDDLE;
 	if(!strncmp(s.c_str(), "K:", 2))
-		return parseKey(s.c_str() + 2);
+		return atoi(s.c_str() + 2);
 	if(!strncmp(s.c_str(), "JB:", 3))
 		return JOY_BUTTON_0 + atoi(s.c_str() + 3);
 	if(!strncmp(s.c_str(), "MB:", 3))
@@ -203,12 +169,10 @@ int getStringToInputCode(const std::string& s)
 			default: return 0;
 		}
 	}
-	if(s == "NONE")
-		return 0;
 
 	// Maybe we're upgrading from an old config?
-	// Note that this returns 0 for "0", which was considered "no key"
-	if(int k = getInputCodeFromLegacyName(s.c_str()))
+	// This handles KEY_* and some old mouse/joystick names.
+	if(int k = getInputCodeFromKeyName(s.c_str()))
 		return k;
 
 	return 0;
@@ -218,9 +182,8 @@ int getStringToInputCode(const std::string& s)
 
 ActionInput::ActionInput()
 {
-	for (int i = 0; i < INP_MSESIZE; i++)	data.single.mse[i] = 0;
-	for (int i = 0; i < INP_KEYSIZE; i++)	data.single.key[i] = 0;
-	for (int i = 0; i < INP_JOYSIZE; i++)	data.single.joy[i] = 0;
+	for (int i = 0; i < INP_COMBINED_SIZE; i++)
+		data.all[i] = 0;
 }
 
 std::string ActionInput::toString() const
