@@ -153,8 +153,6 @@ void Core::setup_opengl()
 
 void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int display, int hz)
 {
-	assert(lib_graphics);
-
 	const int oldw = width;
 	const int oldh = height;
 	bool reloadRes = false;
@@ -241,7 +239,7 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 	SDL_SetWindowFullscreen(gScreen, 0);
 
 	bool resize = true;
-	bool maximize = true;
+	bool maximize = useDesktop;
 	if(useDesktop != _useDesktopResolution)
 	{
 		int usew = 0, useh = 0;
@@ -885,7 +883,6 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 	initIcon(gScreen);
 
 
-
 #ifdef BBGE_BUILD_SDL2
 #  ifdef _DEBUG
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
@@ -901,14 +898,9 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 #endif
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	createWindow(width, height, !width && !height, fullscreen, bpp);
+	createWindow(320, 240, false, false, bpp);
 
-	if (SDL_GL_LoadLibrary(NULL) == -1)
-	{
-		std::string err = std::string("SDL_GL_LoadLibrary Error: ") + std::string(SDL_GetError());
-		SDL_Quit();
-		exit_error(err);
-	}
+	enumerateScreenModes();
 
 	if (!lookup_all_glsyms())
 	{
@@ -918,18 +910,16 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 		exit_error(os.str());
 	}
 
+	initGraphics(width, height, fullscreen, vsync, bpp, display, hz);
+
 	debugLog("GL vendor, renderer & version:");
 	debugLog((const char*)glGetString(GL_VENDOR));
 	debugLog((const char*)glGetString(GL_RENDERER));
 	debugLog((const char*)glGetString(GL_VERSION));
 
-	lib_graphics = true;
-
-	enumerateScreenModes();
-
-	initGraphics(width, height, fullscreen, vsync, bpp, display, hz);
-
 	_hasFocus = true;
+
+	lib_graphics = true;
 
 	// init success
 	return true;
@@ -981,6 +971,7 @@ void Core::createWindow(int w, int h, bool resizable, bool fullscreen, int bpp)
 		SDL_Quit();
 		exit(0);
 	}
+	SDL_GL_MakeCurrent(gScreen, gGLctx);
 
 	{
 		const char *name = SDL_GetCurrentVideoDriver();
@@ -994,10 +985,11 @@ void Core::createWindow(int w, int h, bool resizable, bool fullscreen, int bpp)
 	flags = SDL_OPENGL;
 	if(fullscreen)
 		flags |= SDL_FULLSCREEN;
-	if (resizable)
-		flags |= SDL_RESIZABLE;
+	// No well supported in SDL 1.2
+	//if (resizable)
+	//	flags |= SDL_RESIZABLE;
 
-	gScreen = SDL_SetVideoMode(width, height, bpp, flags);
+	gScreen = SDL_SetVideoMode(w, h, bpp, flags);
 	if (gScreen == NULL)
 	{
 		std::ostringstream os;
