@@ -109,7 +109,7 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 	// Special case keyboard input:
 	// Return key name for current keyboard layout!
 	// It's just confusing to see Y instead of Z with a german keyboard layout...
-	if(k < KEY_MAXARRAY)
+	if(k && k < KEY_MAXARRAY)
 	{
 #ifdef BBGE_BUILD_SDL2
 		pretty = SDL_GetScancodeName((SDL_Scancode)k);
@@ -142,7 +142,10 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 	}
 
 	std::string s = inputcode2string(k);
-	return s.empty() ? "-" : s;
+	return s.empty() ? "•" : s; // Ø •
+	// Actually, • looks interesting.
+	// It shows up as a box, presumably because the font doesn't have that character.
+	// I'll leave this as it is, because those boxes are kinda cool. -- fg
 }
 
 int getStringToInputCode(const std::string& s)
