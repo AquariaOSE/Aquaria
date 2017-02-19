@@ -190,7 +190,7 @@ protected:
 	InputSetType inputSetType;
 	int inputIdx;
 	TTFText *keyConfigFont;
-	Quad *bg;
+	Quad *bg, *bg2;
 	size_t actionSetIndex;
 	bool acceptEsc;
 	bool rejectJoyAxis;

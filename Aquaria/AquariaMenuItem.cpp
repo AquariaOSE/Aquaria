@@ -493,14 +493,26 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 , rejectJoyAxis(false)
 {
 	bg = new Quad();
+	bg2 = new Quad();
 	if (inputSetType == INPUTSET_OTHER)
+	{
 		bg->setWidthHeight(40, 20);
+		bg2->setWidthHeight(40, 20);
+	}
 	else
+	{
 		bg->setWidthHeight(90, 20);
+		bg2->setWidthHeight(90, 20);
+	}
 
-	bg->color = Vector(0.5, 0.5, 0.5);
+	bg->color = Vector(0.5f, 0.5f, 0.5f);
 	bg->alphaMod = 0;
+	bg->position = Vector(0, -3);
+	bg2->color = Vector(0.4f, 0.4f, 0.6f);
+	bg2->alphaMod = 0;
+	bg2->position = Vector(0, -3);
 	addChild(bg, PM_POINTER);
+	addChild(bg2, PM_POINTER);
 
 
 
@@ -617,6 +629,9 @@ void AquariaKeyConfig::onUpdate(float dt)
 		else if (actionInputName == "s2ay")
 			k = &as.joycfg.s2ay;
 	}
+
+	if(k && *k)
+		bg2->alphaMod = 0.3f;
 
 	if (waitingForInput == this)
 	{
@@ -890,7 +905,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 		}
 	}
 
-	Vector p = getWorldPosition();
+	Vector p = bg->getWorldPosition();
 
 	if (waitingForInput == this || (!waitingForInput &&
 		(core->mouse.position.x > (p.x - bg->getWidth()*0.5f) && core->mouse.position.x < (p.x + bg->getWidth()*0.5f)
