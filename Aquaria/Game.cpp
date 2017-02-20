@@ -2564,6 +2564,16 @@ void Game::action(int id, int state, int source, InputDevice device)
 	{
 		if (id == ACTION_TOGGLEGRID && !state)			toggleGridRender();
 	}
+
+	// Forward these to Lua scripts (because digital swim movement should be seen as menu movement as well)
+	if(id == ACTION_SWIMLEFT)
+		action(ACTION_MENULEFT, state, source, device);
+	else if(id == ACTION_SWIMRIGHT)
+		action(ACTION_MENURIGHT, state, source, device);
+	else if(id == ACTION_SWIMUP)
+		action(ACTION_MENUUP, state, source, device);
+	else if(id == ACTION_SWIMDOWN)
+		action(ACTION_MENUDOWN, state, source, device);
 }
 
 void Game::toggleWorldMap()

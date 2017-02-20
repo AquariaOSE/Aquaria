@@ -60,6 +60,7 @@ enum AquariaActions
 
 	ACTION_TOGGLEGRID				=5,
 
+	// Automatically sent on either ACTION_SWIM* or sufficient analog controller input
 	ACTION_MENULEFT					=6,
 	ACTION_MENURIGHT				=7,
 	ACTION_MENUUP					=8,
