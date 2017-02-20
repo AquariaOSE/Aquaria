@@ -948,7 +948,6 @@ void InGameMenu::bindInput()
 		as.importAction(this, "MenuDown",		ACTION_MENUDOWN, sourceID);
 		as.importAction(this, "MenuLeft",		ACTION_MENULEFT, sourceID);
 		as.importAction(this, "MenuRight",		ACTION_MENURIGHT, sourceID);
-
 	}
 }
 
@@ -2165,10 +2164,6 @@ void InGameMenu::create()
 
 		addKeyConfigLine(kk, SB(2116), "Escape",		offx, y+=yi, true);
 		addKeyConfigLine(kk, SB(2128), "ToggleHelp",	offx, y+=yi);
-		addKeyConfigLine(kk, SB(2135), "MenuUp",				offx, y+=yi);
-		addKeyConfigLine(kk, SB(2136), "MenuDown",				offx, y+=yi);
-		addKeyConfigLine(kk, SB(2137), "MenuLeft",				offx, y+=yi);
-		addKeyConfigLine(kk, SB(2138), "MenuRight",			offx, y+=yi);
 		addKeyConfigLine(kk, SB(2121), "PrevPage",		offx, y+=yi);
 		addKeyConfigLine(kk, SB(2122), "NextPage",		offx, y+=yi);
 		addKeyConfigLine(kk, SB(2123), "CookFood",		offx, y+=yi);

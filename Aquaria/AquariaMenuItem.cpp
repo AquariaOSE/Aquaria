@@ -382,7 +382,9 @@ bool AquariaSlider::doSliderInput(float dt)
 
 	float inputAmount;  // How much to adjust by?
 
-	Vector jpos;
+	// disabled the jaxis threshold check;
+	// ACTION_MENU* should be sent automatically when above the threshold -- fg
+	/*Vector jpos;
 	for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 		if(Joystick *j = core->getJoystick(i))
 			if(j->isEnabled())
@@ -390,14 +392,14 @@ bool AquariaSlider::doSliderInput(float dt)
 				jpos = core->getJoystick(i)->position;
 				if(fabsf(jpos.x) > SLIDER_JOY_THRESHOLD)
 					break;
-			}
+			}*/
 
 	StateObject *obj = dsq->getTopStateObject();
-	if (jpos.x <= -SLIDER_JOY_THRESHOLD)
+	/*if (jpos.x <= -SLIDER_JOY_THRESHOLD)
 		inputAmount = -0.1f;
 	else if (jpos.x >= SLIDER_JOY_THRESHOLD)
 		inputAmount = +0.1f;
-	else if (obj && obj->isActing(ACTION_MENULEFT, -1))
+	else*/ if (obj && obj->isActing(ACTION_MENULEFT, -1))
 		inputAmount = -0.1f;
 	else if (obj && obj->isActing(ACTION_MENURIGHT, -1))
 		inputAmount = +0.1f;
