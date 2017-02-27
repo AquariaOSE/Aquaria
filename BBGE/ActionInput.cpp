@@ -148,36 +148,63 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 	// I'll leave this as it is, because those boxes are kinda cool. -- fg
 }
 
+static int checkInp(const char *s, int category, int limit, const char *err)
+{
+	const int k = atoi(s);
+	if(!k)
+		return 0;
+	if(k < limit)
+		return k + category;
+
+	std::ostringstream os;
+	os << err << k;
+	errorLog(os.str());
+	return 0;
+}
+
 int getStringToInputCode(const std::string& s)
 {
+	int k = 0;
+
 	if(s == "LMB")
-		return MOUSE_BUTTON_LEFT;
-	if(s == "RMB")
-		return MOUSE_BUTTON_RIGHT;
-	if(s == "MMB")
-		return MOUSE_BUTTON_MIDDLE;
-	if(!strncmp(s.c_str(), "K:", 2))
-		return atoi(s.c_str() + 2);
-	if(!strncmp(s.c_str(), "JB:", 3))
-		return JOY_BUTTON_0 + atoi(s.c_str() + 3);
-	if(!strncmp(s.c_str(), "MB:", 3))
-		return MOUSE_BUTTON_LEFT + atoi(s.c_str() + 3);
-	if(s.length() > 4 && !strncmp(s.c_str(), "AX:", 3))
+		k = MOUSE_BUTTON_LEFT;
+	else if(s == "RMB")
+		k = MOUSE_BUTTON_RIGHT;
+	else if(s == "MMB")
+		k = MOUSE_BUTTON_MIDDLE;
+	else if(!strncmp(s.c_str(), "K:", 2))
+		k = checkInp(s.c_str() + 2, 0, KEY_MAXARRAY, "Invalid key id: ");
+	else if(!strncmp(s.c_str(), "JB:", 3))
+		k = checkInp(s.c_str() + 3, JOY_BUTTON_0, JOY_BUTTON_END, "Invalid joy button value: ");
+	else if(!strncmp(s.c_str(), "MB:", 3))
+		k = checkInp(s.c_str() + 3, MOUSE_BUTTON_LEFT, MOUSE_BUTTON_EXTRA_END, "Invalid mouse button id: ");
+	else if(s.length() > 4 && !strncmp(s.c_str(), "AX:", 3))
 	{
-		int n = atoi(s.c_str() + 4);
 		switch(s[3])
 		{
-			case '+': return JOY_AXIS_0_POS + n;
-			case '-': return JOY_AXIS_0_NEG + n;
-			default: return 0;
+			case '+':
+				k = checkInp(s.c_str() + 4, JOY_AXIS_0_POS, JOY_AXIS_END_POS, "Invalid joy axis(+): ");
+				break;
+			case '-':
+				k = checkInp(s.c_str() + 4, JOY_AXIS_0_NEG, JOY_AXIS_END_NEG, "Invalid joy axis(-): ");
+				break;
+			default:
+				return 0;
 		}
 	}
+	else
+	{
+		// Maybe we're upgrading from an old config?
+		// This handles KEY_* and some old mouse/joystick names.
+		k = getInputCodeFromKeyName(s.c_str());
+	}
 
-	// Maybe we're upgrading from an old config?
-	// This handles KEY_* and some old mouse/joystick names.
-	if(int k = getInputCodeFromKeyName(s.c_str()))
+	if(k < ACTION_BUTTON_ENUM_SIZE)
 		return k;
 
+	std::ostringstream os;
+	os << "ActionButton out of range: [" << s << "] = " << k;
+	errorLog(os.str());
 	return 0;
 }
 
