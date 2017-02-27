@@ -432,7 +432,6 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/Entity.cpp
     ${SRCDIR}/FlockEntity.cpp
     ${SRCDIR}/Game.cpp
-    ${SRCDIR}/GameKeyNames.cpp
     ${SRCDIR}/GameStructs.cpp
     ${SRCDIR}/GameplayVariables.cpp
     ${SRCDIR}/GasCloud.cpp
@@ -506,6 +505,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Emitter.cpp
     ${BBGEDIR}/Event.cpp
     ${BBGEDIR}/FrameBuffer.cpp
+    ${BBGEDIR}/GameKeyNames.cpp
     ${BBGEDIR}/Gradient.cpp
     ${BBGEDIR}/GLLoad.cpp
     ${BBGEDIR}/Joystick.cpp
