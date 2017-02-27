@@ -6,7 +6,7 @@
 typedef std::map<std::string, int> InputCodeMap;
 
 InputCodeMap inputCodeMap;
-static std::string keyNames[KEY_MAXARRAY];
+static std::string keyNames[ACTION_BUTTON_ENUM_SIZE];
 
 static void initInputCodeMap()
 {
