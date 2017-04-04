@@ -10,7 +10,7 @@
 --   Assignments to those will not cause warnings and go to _G.
 --   Assignments to non-globals will go to _G.v.
 --   Undefined reads from either _G or v will cause a warning (in dev mode).
--- * Mods can provide their own compatibility hooks.
+-- * Mods must provide their own mod-compat.lua file (optionally containing aditional hooks).
 
 local rawset = rawset
 local rawget = rawget
