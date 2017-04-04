@@ -771,6 +771,7 @@ bool Core::getMouseButtonState(int m)
 
 bool Core::getKeyState(int k)
 {
+	assert(k < KEY_MAXARRAY);
 	return k > 0 && k < KEY_MAXARRAY ? keys[k] : 0;
 }
 
