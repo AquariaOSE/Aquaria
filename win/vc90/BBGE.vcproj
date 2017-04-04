@@ -229,6 +229,77 @@
 				Name="VCPostBuildEventTool"
 			/>
 		</Configuration>
+		<Configuration
+			Name="Release-SDL1.2|Win32"
+			OutputDirectory="$(SolutionDir)\temp\$(ConfigurationName)\$(ProjectName)"
+			IntermediateDirectory="$(SolutionDir)\temp\$(ConfigurationName)\$(ProjectName)"
+			ConfigurationType="4"
+			CharacterSet="2"
+			WholeProgramOptimization="1"
+			>
+			<Tool
+				Name="VCPreBuildEventTool"
+			/>
+			<Tool
+				Name="VCCustomBuildTool"
+			/>
+			<Tool
+				Name="VCXMLDataGeneratorTool"
+			/>
+			<Tool
+				Name="VCWebServiceProxyGeneratorTool"
+			/>
+			<Tool
+				Name="VCMIDLTool"
+			/>
+			<Tool
+				Name="VCCLCompilerTool"
+				Optimization="3"
+				InlineFunctionExpansion="2"
+				EnableIntrinsicFunctions="true"
+				FavorSizeOrSpeed="1"
+				OmitFramePointers="true"
+				EnableFiberSafeOptimizations="true"
+				WholeProgramOptimization="true"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;FTGL_LIBRARY_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;_HAS_EXCEPTIONS=0;VFS_ENABLE_C_API=1;BBGE_USE_GLM=1;AQUARIA_INTERNAL_FTGL=1"
+				StringPooling="true"
+				ExceptionHandling="0"
+				BufferSecurityCheck="false"
+				EnableEnhancedInstructionSet="0"
+				FloatingPointModel="2"
+			/>
+			<Tool
+				Name="VCManagedResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCResourceCompilerTool"
+			/>
+			<Tool
+				Name="VCPreLinkEventTool"
+			/>
+			<Tool
+				Name="VCLibrarianTool"
+				AdditionalDependencies="SDL.lib SDLmain.lib OpenAL32.lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\ExternalLibs\AL\lib\win32&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\lib\win32&quot;"
+				IgnoreAllDefaultLibraries="true"
+			/>
+			<Tool
+				Name="VCALinkTool"
+			/>
+			<Tool
+				Name="VCXDCMakeTool"
+			/>
+			<Tool
+				Name="VCBscMakeTool"
+			/>
+			<Tool
+				Name="VCFxCopTool"
+			/>
+			<Tool
+				Name="VCPostBuildEventTool"
+			/>
+		</Configuration>
 	</Configurations>
 	<References>
 	</References>
