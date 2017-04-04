@@ -594,6 +594,8 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 	ActionInput *ai = 0;
 
+	bool used = false;
+
 	if (inputSetType != INPUTSET_OTHER)
 	{
 		ai = as.getActionInputByName(actionInputName);
@@ -618,7 +620,9 @@ void AquariaKeyConfig::onUpdate(float dt)
 			k = 0;
 		break;
 		}
+		used = k && *k;
 	}
+
 
 	if (inputSetType == INPUTSET_OTHER)
 	{
@@ -630,10 +634,13 @@ void AquariaKeyConfig::onUpdate(float dt)
 			k = &as.joycfg.s2ax;
 		else if (actionInputName == "s2ay")
 			k = &as.joycfg.s2ay;
+		used = k && int(*k) >= 0;
 	}
 
-	if(k && *k)
+	if(used)
 		bg2->alphaMod = 0.3f;
+	else
+		bg2->alphaMod = 0;
 
 	if (waitingForInput == this)
 	{
