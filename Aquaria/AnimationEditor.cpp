@@ -688,6 +688,8 @@ void AnimationEditor::selectNextBone()
 void AnimationEditor::update(float dt)
 {
 	StateObject::update(dt);
+	if(!editSprite->getCurrentAnimation())
+		return;
 	std::ostringstream os;
 	os << editingFile;
 	os << " anim[" << editSprite->getCurrentAnimation()->name << "] ";

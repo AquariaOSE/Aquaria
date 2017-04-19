@@ -1211,7 +1211,8 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 
 void SkeletalSprite::stopAnimation(int layer)
 {
-	animLayers[layer].stopAnimation();
+	if(size_t(layer) < animLayers.size())
+		animLayers[layer].stopAnimation();
 }
 
 void SkeletalSprite::stopAllAnimations()
@@ -1224,7 +1225,8 @@ void SkeletalSprite::stopAllAnimations()
 
 void SkeletalSprite::playCurrentAnimation(int loop, int layer)
 {
-	animLayers[layer].playCurrentAnimation(loop);
+	if(size_t(layer) < animLayers.size())
+		animLayers[layer].playCurrentAnimation(loop);
 }
 
 void SkeletalSprite::loadSkeletal(const std::string &fn)
