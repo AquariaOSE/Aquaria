@@ -1067,14 +1067,9 @@ This build is not yet final, and as such there are a couple things lacking. They
 #ifdef AQUARIA_BUILD_CONSOLE
 	debugLog("Creating console");
 	console = new DebugFont;
-
 	{
-		console->position = Vector(10 - virtualOffX,400);
 		console->followCamera = 1;
 		console->alpha = 0;
-
-
-
 		console->setFontSize(6);
 	}
 	addRenderObject(console, LR_DEBUG_TEXT);
@@ -4005,6 +4000,11 @@ void DSQ::onUpdate(float dt)
 		fpsText->setText(os.str());
 	}
 
+#ifdef AQUARIA_BUILD_CONSOLE
+	if(console && console->alpha == 1)
+		console->position = Vector(10 - virtualOffX,400);
+#endif
+
 	if (shakeCameraTimer > 0)
 	{
 		shakeCameraTimer -= dt;
@@ -4043,18 +4043,6 @@ void DSQ::shakeCamera(float mag, float time)
 bool DSQ::isShakingCamera()
 {
 	return (shakeCameraTimer > 0);
-}
-
-bool DSQ::isScriptRunning()
-{
-	if (nestedMains>1)
-	{
-		return true;
-	}
-	else
-	{
-		return false;
-	}
 }
 
 void DSQ::delay(float dt)
