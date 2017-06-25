@@ -1089,14 +1089,8 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 		cmDebug = new DebugFont();
 		{
-
-
-			cmDebug->position = Vector(20 - virtualOffX,50);
 			cmDebug->followCamera = 1;
 			cmDebug->alpha = 0;
-
-
-
 			cmDebug->setFontSize(6);
 		}
 		addRenderObject(cmDebug, LR_DEBUG_TEXT);
@@ -1299,11 +1293,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 	{
 		fpsText->color = Vector(1,1,1);
 		fpsText->setFontSize(6);
-
-		fpsText->position = Vector(10 - virtualOffX,580);
-		fpsText->position.z = 5;
-
-
 		fpsText->setText("FPS");
 		fpsText->alpha= 0;
 
@@ -3999,6 +3988,7 @@ void DSQ::onUpdate(float dt)
 		os << "elemu: " << game->elementUpdateList.size() << " elemi: " << game->elementInteractionList.size() << std::endl;
 		os << "Lua mem: " << scriptInterface.gcGetStats() << " KB" << std::endl;
 
+		cmDebug->position = Vector(20 - virtualOffX,50);
 		cmDebug->setText(os.str());
 	}
 
@@ -4011,8 +4001,7 @@ void DSQ::onUpdate(float dt)
 		os << " | sndQ: " << core->dbg_numThreadDecoders;
 		os << " | dt: " << core->get_current_dt();
 
-
-
+		fpsText->position = Vector(10 - virtualOffX,580);
 		fpsText->setText(os.str());
 	}
 
