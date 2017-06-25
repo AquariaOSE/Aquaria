@@ -214,7 +214,6 @@ public:
 
 	void cutsceneEffects(bool on);
 
-	bool isScriptRunning();
 	void delay(float dt); // active delay - game continues to run
 
 	void newGame();
