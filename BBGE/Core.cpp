@@ -712,7 +712,8 @@ void Core::init()
 	SDL_putenv((char *) "SDL_MOUSE_RELATIVE=0");
 #endif
 
-	if((SDL_Init(SDL_INIT_EVERYTHING))==-1)
+	// Haptic is inited separately, in Jostick.cpp, when a joystick is actually plugged in
+	if((SDL_Init(SDL_INIT_EVERYTHING & ~SDL_INIT_HAPTIC))==-1)
 	{
 		std::string msg("Failed to init SDL: ");
 		msg.append(SDL_GetError());
@@ -2849,7 +2850,6 @@ void Core::onJoystickRemoved(int instanceID)
 		if(Joystick *j = joysticks[i])
 			if(j->getInstanceID() == instanceID)
 			{
-				j->shutdown();
 				delete j;
 				joysticks[i] = NULL;
 			}
