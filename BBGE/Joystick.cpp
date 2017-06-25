@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Joystick.h"
 #include "Core.h"
+#include "SDL.h"
 
 unsigned Joystick::GetNumJoysticks()
 {
@@ -33,6 +34,9 @@ Joystick::Joystick()
 #  ifdef BBGE_BUILD_SDL2
 	sdl_controller = NULL;
 	sdl_haptic = NULL;
+	if(!SDL_WasInit(SDL_INIT_HAPTIC))
+		if(SDL_InitSubSystem(SDL_INIT_HAPTIC) < 0)
+			debugLog("Failed to init haptic subsystem");
 #  endif
 	sdl_joy = NULL;
 	buttonBitmask = 0;
@@ -49,6 +53,16 @@ Joystick::Joystick()
 	s2ay = 3;
 
 	enabled = false;
+}
+
+Joystick::~Joystick()
+{
+	shutdown();
+
+#ifdef BBGE_BUILD_SDL2
+	if(SDL_WasInit(SDL_INIT_HAPTIC))
+		SDL_QuitSubSystem(SDL_INIT_HAPTIC);
+#endif
 }
 
 const char *Joystick::getName() const

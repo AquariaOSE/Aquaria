@@ -22,6 +22,8 @@ public:
 	static unsigned GetNumJoysticks();
 
 	Joystick();
+	~Joystick();
+
 	bool init(int stick=0);
 	void shutdown();
 	//Ranges from 0 to 1 (full speed).
