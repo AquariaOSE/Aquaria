@@ -175,13 +175,6 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 		display = oldDisplay;
 	}
 
-	// Move window to specified display if necessary
-	if(display != oldDisplay)
-	{
-		int center = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
-		SDL_SetWindowPosition(gScreen, center, center);
-	}
-
 	const bool useDesktop = w == 0 || h == 0 || (oldw && w == -1 && oldh && h == -1 && _useDesktopResolution);
 #else
 	const bool useDesktop = false;
@@ -256,9 +249,16 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 			useh = oldh;
 			maximize = false;
 		}
-		createWindow(usew, useh, useDesktop, false, bpp);
+		createWindow(usew, useh, useDesktop, false, bpp, display);
 
 		reloadRes = true;
+	}
+
+	// Move window to specified display if necessary
+	if(display != oldDisplay)
+	{
+		int center = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
+		SDL_SetWindowPosition(gScreen, center, center);
 	}
 
 	if(fullscreen)
@@ -528,6 +528,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	_fullscreen = false;
 	_refreshRate = 0;
 	_useDesktopResolution = false;
+	_lastEnumeratedDisplayIndex = -1;
 	afterEffectManagerLayer = 0;
 	renderObjectLayers.resize(1);
 	invGlobalScale = 1.0;
@@ -900,9 +901,9 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 #endif
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
 
-	createWindow(320, 240, false, false, bpp);
+	createWindow(320, 240, false, false, bpp, display);
 
-	enumerateScreenModes();
+	enumerateScreenModes(display);
 
 	if (!lookup_all_glsyms())
 	{
@@ -927,7 +928,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 	return true;
 }
 
-void Core::createWindow(int w, int h, bool resizable, bool fullscreen, int bpp)
+void Core::createWindow(int w, int h, bool resizable, bool fullscreen, int bpp, int display)
 {
 #ifdef BBGE_BUILD_SDL2
 	if(gScreen)
@@ -955,7 +956,8 @@ void Core::createWindow(int w, int h, bool resizable, bool fullscreen, int bpp)
 		w = 640;
 	if(h <= 0)
 		h = 480;
-	gScreen = SDL_CreateWindow(appName.c_str(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, w, h, flags);
+	int pos = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
+	gScreen = SDL_CreateWindow(appName.c_str(), pos, pos, w, h, flags);
 	if (gScreen == NULL)
 	{
 		std::ostringstream os;
@@ -1010,22 +1012,40 @@ void Core::createWindow(int w, int h, bool resizable, bool fullscreen, int bpp)
 #endif
 }
 
-void Core::enumerateScreenModes()
+void Core::enumerateScreenModesIfNecessary(int display /* = -1 */)
 {
+	if(display == -1)
+	{
+#ifdef BBGE_BUILD_SDL2
+		if(gScreen)
+			display = SDL_GetWindowDisplayIndex(gScreen);
+		else
+#endif
+			display = 0;
+	}
+	if(_lastEnumeratedDisplayIndex == display)
+		return;
+
+	enumerateScreenModes(display);
+}
+
+void Core::enumerateScreenModes(int display)
+{
+	_lastEnumeratedDisplayIndex = display;
 	screenModes.clear();
 
 #ifdef BBGE_BUILD_SDL2
 	screenModes.push_back(ScreenMode(0, 0, 0)); // "Desktop" screen mode
 
 	SDL_DisplayMode mode;
-	const int modecount = SDL_GetNumDisplayModes(0);
+	const int modecount = SDL_GetNumDisplayModes(display);
 	if(modecount == 0){
 		debugLog("No modes available!");
 		return;
 	}
 
 	for (int i = 0; i < modecount; i++) {
-		SDL_GetDisplayMode(0, i, &mode);
+		SDL_GetDisplayMode(display, i, &mode);
 		if (mode.w && mode.h && (mode.w > mode.h))
 		{
 			screenModes.push_back(ScreenMode(mode.w, mode.h, mode.refresh_rate));
