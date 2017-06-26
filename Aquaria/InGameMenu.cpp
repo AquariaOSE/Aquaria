@@ -1809,6 +1809,7 @@ void InGameMenu::create()
 
 	resBox = new AquariaComboBox(Vector(0.7f, 1.0f));
 	resBox->position = Vector(196, 285);
+	core->enumerateScreenModesIfNecessary();
 	for (size_t i = 0; i < core->screenModes.size(); i++)
 	{
 		const ScreenMode& m = core->screenModes[i];

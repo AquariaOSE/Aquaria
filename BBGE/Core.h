@@ -427,7 +427,8 @@ public:
 
 	void enable2DWide(int rx, int ry);
 
-	void enumerateScreenModes();
+	void enumerateScreenModes(int display);
+	void enumerateScreenModesIfNecessary(int display = -1);
 
 	std::vector<ScreenMode> screenModes;
 
@@ -486,7 +487,7 @@ protected:
 	bool initInputLibrary();
 	void initJoystickLibrary();
 	bool initGraphicsLibrary(int w, int h, bool fullscreen, bool vsync, int bpp, int display, int hz);
-	void createWindow(int w, int h, bool resizable, bool fullscreen, int bpp);
+	void createWindow(int w, int h, bool resizable, bool fullscreen, int bpp, int display);
 	void shutdownInputLibrary();
 	void shutdownJoystickLibrary();
 	void shutdownGraphicsLibrary();
@@ -518,6 +519,7 @@ protected:
 	int _vsync, _bpp, _refreshRate;
 	bool _fullscreen, _useDesktopResolution;
 	int winPosX, winPosY; // pre-fullscreen
+	int _lastEnumeratedDisplayIndex;
 
 	CountedPtr<Texture> texError;
 
