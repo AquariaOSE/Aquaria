@@ -1409,22 +1409,18 @@ void Entity::moveOutOfWall()
 
 void Entity::setDamageTarget(DamageType dt, bool v)
 {
+	DisabledDamageTypes::iterator it = std::lower_bound(disabledDamageTypes.begin(), disabledDamageTypes.end(), dt);
 	if (v)
 	{
-		for(size_t i = 0; i < disabledDamageTypes.size(); ++i)
-		{
-			if(disabledDamageTypes[i] == dt)
-			{
-				disabledDamageTypes[i] = disabledDamageTypes.back();
-				disabledDamageTypes.pop_back();
-				break;
-			}
-		}
+		if(it != disabledDamageTypes.end() && *it == dt)
+			disabledDamageTypes.erase(it);
 	}
 	else
 	{
-		if(isDamageTarget(dt))
+		if(it == disabledDamageTypes.end())
 			disabledDamageTypes.push_back(dt);
+		else if(*it != dt)
+			disabledDamageTypes.insert(it, dt);
 	}
 }
 
@@ -1455,11 +1451,7 @@ void Entity::setAllDamageTargets(bool v)
 
 bool Entity::isDamageTarget(DamageType dt)
 {
-	const size_t sz = disabledDamageTypes.size();
-	for(size_t i = 0; i < sz; ++i)
-		if(disabledDamageTypes[i] == dt)
-			return false;
-	return true;
+	return std::binary_search(disabledDamageTypes.begin(), disabledDamageTypes.end(), dt);
 }
 
 float Entity::getHealthPerc()
