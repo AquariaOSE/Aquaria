@@ -1451,7 +1451,7 @@ void Entity::setAllDamageTargets(bool v)
 
 bool Entity::isDamageTarget(DamageType dt)
 {
-	return std::binary_search(disabledDamageTypes.begin(), disabledDamageTypes.end(), dt);
+	return !std::binary_search(disabledDamageTypes.begin(), disabledDamageTypes.end(), dt);
 }
 
 float Entity::getHealthPerc()
