@@ -232,16 +232,6 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 				inf >> tmp;
 				inf >> currentEmitter->data.texture;
 			}
-			else if (token == "AvatarVelocity")
-			{
-				inf >> tmp;
-				inf >> currentEmitter->data.avatarVelocity;
-			}
-			else if (token == "AlphaModTimesVel")
-			{
-				inf >> tmp;
-				inf >> currentEmitter->data.alphaModTimesVel;
-			}
 			else if (token == "RandomScale")
 			{
 				inf >> tmp;
@@ -357,16 +347,6 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 			{
 				inf >> tmp;
 				inf >> currentEmitter->data.life;
-			}
-			else if (token == "GroupRender")
-			{
-				inf >> tmp;
-				inf >> currentEmitter->data.groupRender;
-			}
-			else if (token == "Shape")
-			{
-				inf >> tmp;
-				inf >> tmp;
 			}
 			else if (token == "Suck")
 			{
