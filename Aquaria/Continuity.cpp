@@ -2664,6 +2664,8 @@ bool Continuity::loadFileData(int slot, XMLDocument &doc)
 				return true;
 			err =  doc.GetErrorStr1();
 		}
+		else // No save for this slot - no error
+			return false;
 	}
 
 	errorLog("Failed to load save data: " + teh_file + " -- Error: " + err);
