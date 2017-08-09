@@ -353,6 +353,7 @@ public:
 	void rumble(float leftMotor, float rightMotor, float time, int source, InputDevice device);
 	void vision(std::string folder, int num, bool ignoreMusic = false);
 
+	void run(float runTime = -1); // same as Core::run() but with recursion check
 	void watch(float t, int canQuit = 0);
 
 	std::string lastVoiceFile;
