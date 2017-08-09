@@ -7141,7 +7141,7 @@ luaFunc(watch)
 
 luaFunc(wait)
 {
-	core->run(lua_tonumber(L, 1));
+	dsq->run(lua_tonumber(L, 1)); // run() with recursion checking
 	luaReturnNil();
 }
 
