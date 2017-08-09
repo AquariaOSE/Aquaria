@@ -25,14 +25,12 @@ SpawnParticleData::SpawnParticleData()
 	suckIndex = -1;
 	suckStr = 0;
 
-	alphaModTimesVel = 0;
 	randomScale1 = 1;
 	randomScale2 = 1;
 	randomAlphaMod1 = 1;
 	randomAlphaMod2 = 1;
 	influenced = 0;
 	spawnLocal = false;
-	avatarVelocity = 0;
 	useSpawnRate = false;
 	counter = 0;
 	life = 1;
@@ -67,7 +65,6 @@ SpawnParticleData::SpawnParticleData()
 	justOne = didOne = false;
 	flipH = flipV = 0;
 	spawnTimeOffset = 0;
-	groupRender = 0;
 	pauseLevel = 0;
 	copyParentFlip = 0;
 	inheritColor = false;

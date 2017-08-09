@@ -41,7 +41,6 @@ struct SpawnParticleData
 	int flipH, flipV;
 	SpawnArea spawnArea;
 
-	float avatarVelocity;
 	float updateMultiplier;
 
 	InterpolatedVector velocityMagnitude;
@@ -56,8 +55,6 @@ struct SpawnParticleData
 	int randomSpawnRadiusRange;
 	bool didOne;
 	int justOne;
-
-	int alphaModTimesVel;
 
 	int copyParentRotation, copyParentFlip;
 	bool useSpawnRate;
@@ -76,7 +73,6 @@ struct SpawnParticleData
 	bool inheritAlpha;
 
 	float lastDTDifference;
-	int groupRender;
 	int influenced;
 	std::string deathPrt;
 
