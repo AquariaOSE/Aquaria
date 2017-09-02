@@ -375,7 +375,8 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     # It doesn't seem to work well, and it adds bulk to the binary.
     CHECK_C_COMPILER_FLAG("-fno-stack-protector" AQUARIA_GCC_HAS_STACKPROT)
     IF(AQUARIA_GCC_HAS_STACKPROT)
-        ADD_DEFINITIONS(-fno-stack-protector)
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fno-stack-protector")
+        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -fno-stack-protector")
     ENDIF(AQUARIA_GCC_HAS_STACKPROT)
 
     # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
