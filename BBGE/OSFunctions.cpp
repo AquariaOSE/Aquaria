@@ -61,18 +61,21 @@ void initIcon(void *screen)
 	HINSTANCE handle = ::GetModuleHandle(NULL);
 	if(!icon_windows)
 		icon_windows = ::LoadIcon(handle, "icon");
-	SDL_SysWMinfo wminfo;
-	SDL_VERSION(&wminfo.version)
+	if(icon_windows)
+	{
+		SDL_SysWMinfo wminfo;
+		SDL_VERSION(&wminfo.version)
 
 #ifdef BBGE_BUILD_SDL2
-	SDL_GetWindowWMInfo((SDL_Window*)screen, &wminfo);
-	HWND hwnd = wminfo.info.win.window;
+		SDL_GetWindowWMInfo((SDL_Window*)screen, &wminfo);
+		HWND hwnd = wminfo.info.win.window;
 #else
-	SDL_GetWMInfo(&wminfo);
-	HWND hwnd = wminfo.window;
+		SDL_GetWMInfo(&wminfo);
+		HWND hwnd = wminfo.window;
 #endif
 
-	::SetClassLongPtr(hwnd, -14, (LONG) icon_windows); // -14 is GCL_HICON (32bit) or GCLP_HICON (64bit)
+		::SetClassLongPtr(hwnd, -14, (LONG)(uintptr_t)icon_windows); // -14 is GCL_HICON (32bit) or GCLP_HICON (64bit)
+	}
 #endif
 }
 

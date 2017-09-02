@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include <fstream>
 #include <SDL.h>
+#include <SDL_main.h>
 
 #ifdef BBGE_BUILD_WINDOWS
 	#define WIN32_LEAN_AND_MEAN
