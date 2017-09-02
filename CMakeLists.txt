@@ -368,8 +368,8 @@ IF(UNIX AND NOT HAIKU)
 ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCC)
-    ADD_DEFINITIONS(-pipe -fsigned-char)
-    #ADD_DEFINITIONS(-Wall)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -pipe -fsigned-char")
+    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -pedantic -pipe -fsigned-char -std=gnu99")
 
     # See if -fno-stack-protector is available to us.
     # It doesn't seem to work well, and it adds bulk to the binary.
@@ -391,9 +391,6 @@ IF(CMAKE_COMPILER_IS_GNUCC)
         SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
     ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
-
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
-set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -pedantic -std=gnu99")
 
 CHECK_CXX_COMPILER_FLAG("-std=gnu++11" AQUARIA_CC_HAS_GNUXX11)
 CHECK_CXX_COMPILER_FLAG("-std=gnu++1x" AQUARIA_CC_HAS_GNUXX1X)

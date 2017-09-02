@@ -716,7 +716,7 @@ void AnimationEditor::update(float dt)
 	text->setText(os.str());
 
 	char t2buf[128];
-	sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f  strip: %lu pass: %d (%d)", ebdata.x, ebdata.y, ebdata.z, selectedStripPoint, pass, origpass);
+	sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f  strip: %u pass: %d (%d)", ebdata.x, ebdata.y, ebdata.z, (unsigned)selectedStripPoint, pass, origpass);
 	text2->setText(t2buf);
 
 	if (core->mouse.buttons.middle)
