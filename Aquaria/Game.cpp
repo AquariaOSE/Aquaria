@@ -4817,6 +4817,7 @@ Shot *Game::fireShot(const std::string &bankShot, Entity *firer, Entity *target,
 
 
 		core->getTopStateData()->addRenderObject(s, LR_PROJECTILES);
+		s->init();
 	}
 
 	return s;
