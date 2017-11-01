@@ -109,6 +109,7 @@ static const char * const interfaceFunctions[] = {
 	"songNote",
 	"songNoteDone",
 	"sporesDropped",
+	"targetDied",
 	"update",
 	"useIngredient",
 	"useTreasure",
@@ -12002,6 +12003,42 @@ bool Script::call(const char *name, void *param1, void *param2, void *param3, fl
 	return true;
 }
 
+bool Script::call(const char *name, void *param1, bool *ret1)
+{
+	lookupFunc(name);
+	luaPushPointer(L, param1);
+	if (!doCall(1, 1))
+		return false;
+	*ret1 = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
+
+bool Script::call(const char *name, void *param1, bool param2, bool *ret1)
+{
+	lookupFunc(name);
+	luaPushPointer(L, param1);
+	lua_pushboolean(L, param2);
+	if (!doCall(2, 1))
+		return false;
+	*ret1 = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
+
+bool Script::call(const char *name, void *param1, void *param2, bool *ret1)
+{
+	lookupFunc(name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	if (!doCall(2, 1))
+		return false;
+	*ret1 = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
+
+
 bool Script::call(const char *name, const char *param, bool *ret)
 {
 	lookupFunc(name);
@@ -12066,4 +12103,35 @@ int Script::pushLocalVars(lua_State *Ltarget)
 {
 	pushLocalVarTab(Ltarget, L);
 	return 1;
+}
+
+std::string ScriptInterface::MakeScriptFileName(const std::string& name, const char *subdir)
+{
+	if(name.empty())
+		return name;
+
+	std::string file;
+
+	if (name[0]=='@' && dsq->mod.isActive())
+	{
+		file = dsq->mod.getPath() + "scripts/" + name.substr(1, name.size()) + ".lua";
+		return file;
+	}
+	else if (dsq->mod.isActive())
+	{
+		file = dsq->mod.getPath() + "scripts/" + name + ".lua";
+		if(exists(file))
+			return file;
+	}
+
+	if(subdir && *subdir)
+	{
+		std::ostringstream os;
+		os << "scripts/" << subdir << "/" << name << ".lua";
+		file = os.str();
+		if(exists(file))
+			return file;
+	}
+
+	return "scripts/" + name + ".lua";
 }

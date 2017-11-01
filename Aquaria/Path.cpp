@@ -311,7 +311,7 @@ void Path::refreshScript()
 	if (exists(scr))
 	{
 		script = dsq->scriptInterface.openScript(scr);
-		updateFunction = activateFunction = true;
+		updateFunction = activateFunction = !!script;
 	}
 
 	if (label == "seting")
