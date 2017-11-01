@@ -50,29 +50,10 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	reverseSegments = false;
 	manaBallAmount = 1;
 	this->name = scriptName;
+	if(scriptName.length() && scriptName[0] == '@')
+		this->name = this->name.substr(1, this->name.size());
 
-	std::string file;
-	if (!scriptName.empty())
-	{
-		if (scriptName[0]=='@' && dsq->mod.isActive())
-		{
-			file = dsq->mod.getPath() + "scripts/" + scriptName.substr(1, scriptName.size()) + ".lua";
-			this->name = scriptName.substr(1, scriptName.size());
-		}
-		else if (dsq->mod.isActive())
-		{
-			file = dsq->mod.getPath() + "scripts/" + scriptName + ".lua";
-
-			if (!exists(file))
-			{
-				file = "scripts/entities/" + scriptName + ".lua";
-			}
-		}
-		else
-		{
-			file = "scripts/entities/" + scriptName + ".lua";
-		}
-	}
+	std::string file = ScriptInterface::MakeScriptFileName(scriptName, "entities");
 	script = dsq->scriptInterface.openScript(file);
 	if (!script)
 	{

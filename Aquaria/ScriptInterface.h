@@ -65,6 +65,12 @@ public:
 	bool call(const char *name, void *param1, void *param2, void *param3, float param4, float param5, float param6, float param7, void *param8, bool *ret1);
 	// boolean = function(string)
 	bool call(const char *name, const char *param, bool *ret);
+	// boolean = function(pointer)
+	bool call(const char *name, void *param1, bool *ret1);
+	// boolean = function(pointer, bool)
+	bool call(const char *name, void *param1, bool param2, bool *ret1);
+	// boolean = function(pointer, pointer)
+	bool call(const char *name, void *param1, void *param2, bool *ret1);
 	// string = function(string)
 	bool call(const char *name, const char *param, std::string *ret);
 	// string = function(string, string, string)
@@ -104,6 +110,8 @@ public:
 
 	bool runScript(const std::string &file, const std::string &func, bool ignoremissing = false);
 	bool runScriptNum(const std::string &file, const std::string &func, int num);
+
+	static std::string MakeScriptFileName(const std::string& name, const char *subdir);
 
 protected:
 	lua_State *createLuaVM();
