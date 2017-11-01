@@ -251,9 +251,13 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 			// if having weirdness, check for these
 			errorLog(file + " : unidentified token: " + token);
 		}
-
-
 	}
+}
+
+void Shot::init()
+{
+	if(script)
+		script->call("init", this);
 }
 
 void Shot::fire(bool playSfx)
@@ -294,6 +298,8 @@ Shot::Shot() : Quad(), Segmented(0,0)
 	enqueuedForDelete = false;
 	shotIdx = shots.size();
 	shots.push_back(this);
+	script = 0;
+	updateScript = false;
 }
 
 void loadShotCallback(const std::string &filename, void *param)
@@ -394,16 +400,11 @@ void Shot::applyShotData(ShotData *shotData)
 			initSegments(position);
 		}
 	}
-}
 
-void Shot::suicide()
-{
-	setLife(1);
-	setDecayRate(20);
-	velocity = 0;
-	fadeAlphaWithLife = true;
-	dead = true;
-	onHitWall();
+	std::string scriptname = "shot_" + shotData->name;
+	std::string file = ScriptInterface::MakeScriptFileName(scriptname, "shots");
+	script = dsq->scriptInterface.openScript(file, true);
+	updateScript = !!script;
 }
 
 void Shot::setParticleEffect(const std::string &particleEffect)
@@ -427,6 +428,12 @@ void Shot::setParticleEffect(const std::string &particleEffect)
 
 void Shot::onEndOfLife()
 {
+	if(script)
+	{
+		script->call("dieNormal", this);
+		dsq->scriptInterface.closeScript(script);
+		script = 0;
+	}
 	destroySegments(0.2f);
 	dead = true;
 
@@ -455,17 +462,27 @@ void Shot::doHitEffects()
 	}
 }
 
-void Shot::onHitWall()
+void Shot::suicide()
 {
-	BBGE_PROF(Shot_onHitWall);
-	doHitEffects();
-	updateSegments(position);
+	setLife(1);
+	setDecayRate(20);
+	velocity = 0;
+	fadeAlphaWithLife = true;
+	dead = true;
+	
 	destroySegments(0.2f);
 	if (emitter)
 	{
 		emitter->killParticleEffect();
 		emitter = 0;
 	}
+}
+
+bool Shot::onHitWall(bool reflect)
+{
+	BBGE_PROF(Shot_onHitWall);
+	doHitEffects();
+	updateSegments(position);
 
 	if (shotData)
 	{
@@ -483,6 +500,10 @@ void Shot::onHitWall()
 			}
 		}
 	}
+
+	bool doDefault = true;
+	return !script
+		|| (script->call("hitSurface", this, reflect, &doDefault) && !doDefault);
 }
 
 void Shot::killAllShots()
@@ -520,9 +541,6 @@ void Shot::reflectFromEntity(Entity *e)
 	{
 		firer = e;
 		target = oldFirer;
-
-
-
 	}
 }
 
@@ -531,20 +549,20 @@ void Shot::targetDied(Entity *target)
 	int c = 0;
 	for (Shots::iterator i = shots.begin(); i != shots.end(); i++)
 	{
-		if ((*i)->target == target)
+		Shot *s = *i;
+		if (s->target == target)
 		{
 			debugLog("removing target from shot");
-			(*i)->target = 0;
+			if(s->script)
+				s->script->call("targetDied", (*i), target);
+			s->target = 0;
 		}
-		if ((*i)->firer == target)
+		if (s->firer == target)
 		{
-			(*i)->firer = 0;
+			s->firer = 0;
 		}
 		c++;
 	}
-
-
-
 }
 
 bool Shot::isHitEnts() const
@@ -556,6 +574,17 @@ bool Shot::isHitEnts() const
 	return false;
 }
 
+bool Shot::canHit(Entity *e, Bone *b)
+{
+	// isHitEnts() is already checked on a much higher level
+	if(!script)
+		return true; // no script? always hit
+	bool hit = true;
+	if(!script->call("canShotHit", e, b, &hit))
+		return true; // script failed / doesn't have the function / returned nil? hit.
+	return hit; // let script decide
+}
+
 void Shot::hitEntity(Entity *e, Bone *b)
 {
 	if (!dead)
@@ -565,6 +594,9 @@ void Shot::hitEntity(Entity *e, Bone *b)
 
 		if (e)
 		{
+			if(!canHit(e, b))
+				return;
+
 			DamageData d;
 			d.attacker = firer;
 			d.bone = b;
@@ -607,21 +639,18 @@ void Shot::hitEntity(Entity *e, Bone *b)
 			{
 				firer->shotHitEntity(e, this, b);
 			}
-
-
-
-		}
-		else
-		{
-
 		}
 
 		if (doEffects)
 			doHitEffects();
 
+		bool willDie = (!shotData || shotData->dieOnHit) && die;
+		if(script)
+			script->call("hitEntity", e, b);
+
 		target = 0;
 
-		if ((!shotData || shotData->dieOnHit) && die)
+		if (willDie)
 		{
 			lifeTime = 0;
 			fadeAlphaWithLife = true;
@@ -637,8 +666,6 @@ void Shot::hitEntity(Entity *e, Bone *b)
 			}
 		}
 	}
-
-
 }
 
 void Shot::noSegs()
@@ -782,6 +809,9 @@ void Shot::onUpdate(float dt)
 	updateSegments(position);
 	if (!dead)
 	{
+		if(script && updateScript)
+			updateScript = script->call("update", this, dt);
+
 		if (lifeTime > 0)
 		{
 			lifeTime -= dt;
@@ -810,36 +840,39 @@ void Shot::onUpdate(float dt)
 				{
 				case BOUNCE_REAL:
 				{
-					// Should have been checked in last onUpdate()
-					// If it is stuck now, it must have been fired from a bad position,
-					// the obstruction map changed, or it was a bouncing beast form shot,
-					// fired from avatar head - which may be inside a wall.
-					// In any of these cases, there is nowhere to bounce, so we let the shot die. -- FG
-					if (!isObstructed(0))
+					if(onHitWall(true))
 					{
-						if (!shotData->bounceSfx.empty())
+						// Should have been checked in last onUpdate()
+						// If it is stuck now, it must have been fired from a bad position,
+						// the obstruction map changed, or it was a bouncing beast form shot,
+						// fired from avatar head - which may be inside a wall.
+						// In any of these cases, there is nowhere to bounce, so we let the shot die. -- FG
+						if (!isObstructed(0))
 						{
-							dsq->playPositionalSfx(shotData->bounceSfx, position);
-							if(!shotData->bouncePrt.empty())
-								dsq->spawnParticleEffect(shotData->bouncePrt, position);
-						}
-						float len = velocity.getLength2D();
-						Vector I = velocity/len;
-						Vector N = dsq->game->getWallNormal(position);
+							if (!shotData->bounceSfx.empty())
+							{
+								dsq->playPositionalSfx(shotData->bounceSfx, position);
+								if(!shotData->bouncePrt.empty())
+									dsq->spawnParticleEffect(shotData->bouncePrt, position);
+							}
+							float len = velocity.getLength2D();
+							Vector I = velocity/len;
+							Vector N = dsq->game->getWallNormal(position);
 
-						if (!N.isZero())
-						{
+							if (!N.isZero())
+							{
 
-							velocity = 2*(-I.dot(N))*N + I;
-							velocity *= len;
+								velocity = 2*(-I.dot(N))*N + I;
+								velocity *= len;
+							}
+							break;
 						}
-						break;
 					}
-
 				}
 				default:
 				{
-					suicide();
+					if(onHitWall(false))
+						suicide();
 				}
 				break;
 				}

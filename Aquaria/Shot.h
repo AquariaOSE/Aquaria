@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Segmented.h"
 
 class ParticleEffect;
+class Script;
 
 struct ShotData
 {
@@ -93,6 +94,7 @@ public:
 	int targetPt;
 	float maxSpeed;
 
+	void init();
 	void fire(bool playSfx = true);
 	void hitEntity(Entity *e, Bone *b);
 
@@ -116,6 +118,7 @@ public:
 	ShotData *shotData;
 	void updatePosition();
 	bool isHitEnts() const;
+	bool canHit(Entity *e, Bone *b);
 	bool isObstructed(float dt) const;
 	inline bool isActive() const { return !dead; }
 	inline const char *getName() const { return shotData ? shotData->name.c_str() : ""; }
@@ -134,13 +137,15 @@ protected:
 
 	ParticleEffect *emitter;
 
-	void onHitWall();
+	bool onHitWall(bool reflect);
 	void onEndOfLife();
 
 	bool dead;
 	bool fired;
 	bool enqueuedForDelete;
 	void onUpdate(float dt);
+	Script *script;
+	bool updateScript;
 
 private:
 	unsigned int shotIdx;
