@@ -334,6 +334,12 @@ static inline void luaPushPointer(lua_State *L, void *ptr)
 		lua_pushnumber(L, 0);
 }
 
+static inline void luaPushPointerNonNull(lua_State *L, void *ptr)
+{
+	assert(ptr);
+	lua_pushlightuserdata(L, ptr);
+}
+
 static std::string luaFormatStackInfo(lua_State *L, int level = 1)
 {
 	lua_Debug ar;
@@ -7864,7 +7870,8 @@ static bool _entityDistanceEq(const EntityDistancePair& a, const EntityDistanceP
 	return a.first == b.first;
 }
 
-static size_t _entityFilter(lua_State *L)
+template<typename F>
+static size_t _entityFilterT(lua_State *L, F& func)
 {
 	const Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	const float radius = lua_tonumber(L, 3);
@@ -7893,7 +7900,7 @@ static size_t _entityFilter(lua_State *L)
 					{
 						if (dt == DT_NONE || e->isDamageTarget(dt))
 						{
-							filteredEntities.push_back(std::make_pair(e, distsq));
+							func.add(L, e, distsq);
 							++added;
 						}
 					}
@@ -7901,6 +7908,21 @@ static size_t _entityFilter(lua_State *L)
 			}
 		}
 	}
+	return added;
+}
+
+struct StaticEntityFilter
+{
+	inline void add(lua_State *L, Entity *e, float distsq)
+	{
+		filteredEntities.push_back(std::make_pair(e, distsq));
+	}
+};
+
+static size_t _entityFilter(lua_State *L)
+{
+	StaticEntityFilter filt;
+	const size_t added = _entityFilterT(L, filt);
 	if(added)
 	{
 		std::sort(filteredEntities.begin(), filteredEntities.end(), _entityDistanceCmp);
@@ -7916,6 +7938,17 @@ static size_t _entityFilter(lua_State *L)
 
 	return added;
 }
+
+struct EntityFilterTableWriter
+{
+	EntityFilterTableWriter() : _idx(0) {}
+	inline void add(lua_State *L, Entity *e, float distsq)
+	{
+		luaPushPointer(L, e);
+		lua_rawseti(L, -2, ++_idx);
+	}
+	unsigned _idx;
+};
 
 luaFunc(filterNearestEntities)
 {
@@ -7941,10 +7974,57 @@ luaFunc(getNextFilteredEntity)
 	return 2;
 }
 
-// MISSING FOR ANDROID COMPAT
-//luaFunc(getEntityList)
-//luaFunc(entity_getEntityListInRange) // (me, range)
-//luaFunc(vector_getEntityListInRange) // (x, y, range)
+// FIXME: make sure this is compatible with the android version. -- fg
+luaFunc(getEntityList)
+{
+	if(!lua_istable(L, 1))
+		lua_createtable(L, (int)dsq->entities.size(), 0); // rough guess
+	int i = 1; // always next index
+	FOR_ENTITIES(ep)
+	{
+		Entity *e = *ep;
+		luaPushPointerNonNull(L, e);
+		lua_rawseti(L, -2, i++);
+	}
+	lua_pushinteger(L, i-1);
+	return 2;
+}
+
+// FIXME: make sure this is compatible with the android version. -- fg
+static int getEntityListInRange(lua_State *L, const Vector& pos, float range)
+{
+	if(!lua_istable(L, 3))
+		lua_newtable(L);
+	int i = 1; // always next index
+	FOR_ENTITIES(ep)
+	{
+		Entity *e = *ep;
+		if((e->position - pos).isLength2DIn(range))
+		{
+			luaPushPointerNonNull(L, e);
+			lua_rawseti(L, -2, i++);
+		}
+	}
+	lua_pushinteger(L, i-1);
+	return 2;
+}
+
+luaFunc(entity_getEntityListInRange)
+{
+	Entity *me = entity(L);
+	if(!me)
+		luaReturnNil();
+	return getEntityListInRange(L, me->position, lua_tonumber(L, 2));
+}
+
+luaFunc(vector_getEntityListInRange)
+{
+	Entity *me = entity(L);
+	if(!me)
+		luaReturnNil();
+	Vector pos(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	return getEntityListInRange(L, pos, lua_tonumber(L, 3));
+}
 
 luaFunc(getEntity)
 {
@@ -10263,6 +10343,9 @@ static const struct {
 	luaRegister(filterNearestEntities),
 	luaRegister(filterNearestEntitiesAdd),
 	luaRegister(getNextFilteredEntity),
+	luaRegister(getEntityList),
+	luaRegister(entity_getEntityListInRange),
+	luaRegister(vector_getEntityListInRange),
 
 	luaRegister(setStory),
 	luaRegister(getStory),
