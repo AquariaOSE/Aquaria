@@ -463,6 +463,7 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/StatsAndAchievements.cpp
     ${SRCDIR}/SteamRender.cpp
     ${SRCDIR}/Strand.cpp
+    ${SRCDIR}/StringBank_gen.h
     ${SRCDIR}/SubtitlePlayer.cpp
     ${SRCDIR}/ToolTip.cpp
     ${SRCDIR}/UserSettings.cpp
