@@ -867,7 +867,7 @@ void TreasureSlot::refresh()
 
 		setWidthHeight(w*scl, h*scl);
 
-		std::string parse = dsq->continuity.stringBank.get(flag);
+		std::string parse = stringbank.get(flag);
 
 		int p1 = parse.find_first_of('[');
 		if (p1 != std::string::npos)
@@ -1691,7 +1691,7 @@ static std::string screenModeStr(const ScreenMode& m)
 	std::ostringstream os;
 	if(!m.x && !m.y)
 	{
-		os << dsq->continuity.stringBank.get(2142);
+		os << stringbank.get(2142);
 	}
 	else
 	{
@@ -1931,7 +1931,7 @@ void InGameMenu::create()
 	tip = new ToolTip;
 	tip->alpha = 0;
 	tip->setCircularAreaFromCenter(worldLeftCenter, 240);
-	tip->setText(dsq->continuity.stringBank.get(0), Vector(200,450), 350);
+	tip->setText(stringbank.get(0), Vector(200,450), 350);
 	game->addRenderObject(tip, LR_HUD);
 	foodTips.push_back(tip);
 
@@ -1939,7 +1939,7 @@ void InGameMenu::create()
 	tip = new ToolTip;
 	tip->alpha = 0;
 	tip->setCircularAreaFromCenter(worldRightCenter, 240);
-	tip->setText(dsq->continuity.stringBank.get(1), Vector(600,450), 350);
+	tip->setText(stringbank.get(1), Vector(600,450), 350);
 	game->addRenderObject(tip, LR_HUD);
 	foodTips.push_back(tip);
 
@@ -1948,7 +1948,7 @@ void InGameMenu::create()
 	tip = new ToolTip;
 	tip->alpha = 0;
 	tip->setCircularAreaFromCenter(worldLeftCenter, 240);
-	tip->setText(dsq->continuity.stringBank.get(14), Vector(200,450), 350);
+	tip->setText(stringbank.get(14), Vector(200,450), 350);
 	game->addRenderObject(tip, LR_HUD);
 	songTips.push_back(tip);
 
@@ -1957,7 +1957,7 @@ void InGameMenu::create()
 	tip = new ToolTip;
 	tip->alpha = 0;
 	tip->setAreaFromCenter(Vector(400,300), 800, 600);
-	tip->setText(dsq->continuity.stringBank.get(16), Vector(400,300), 400);
+	tip->setText(stringbank.get(16), Vector(400,300), 400);
 	game->addRenderObject(tip, LR_HUD);
 	petTips.push_back(tip);
 	*/
@@ -1965,14 +1965,14 @@ void InGameMenu::create()
 	tip = new ToolTip;
 	tip->alpha = 0;
 	tip->setCircularAreaFromCenter(worldLeftCenter, 240);
-	tip->setText(dsq->continuity.stringBank.get(17), Vector(200,450), 350);
+	tip->setText(stringbank.get(17), Vector(200,450), 350);
 	game->addRenderObject(tip, LR_HUD);
 	petTips.push_back(tip);
 
 	tip = new ToolTip;
 	tip->alpha = 0;
 	tip->setAreaFromCenter(Vector(400,350), 150, 50);
-	tip->setText(dsq->continuity.stringBank.get(15), Vector(400,450), 450);
+	tip->setText(stringbank.get(15), Vector(400,450), 450);
 	game->addRenderObject(tip, LR_HUD);
 	songTips.push_back(tip);
 	foodTips.push_back(tip);
@@ -1993,7 +1993,7 @@ void InGameMenu::create()
 	game->addRenderObject(keyConfigButton, LR_MENU);
 
 
-#define SB(x) dsq->continuity.stringBank.get(x)
+#define SB(x) stringbank.get(x)
 
 	keyConfigBg = new RoundedRect();
 	keyConfigBg->position = Vector(400,276 - 10 - 40);
@@ -2327,7 +2327,7 @@ void InGameMenu::create()
 	recipeMenu.header = new BitmapText(&dsq->font);
 	recipeMenu.header->color = 0;
 	recipeMenu.header->followCamera = 1;
-	recipeMenu.header->setText(dsq->continuity.stringBank.get(2007));
+	recipeMenu.header->setText(stringbank.get(2007));
 	recipeMenu.header->alpha = 0;
 	recipeMenu.header->position = Vector(scrollx, 5); //10
 	game->addRenderObject(recipeMenu.header, LR_RECIPES);
@@ -2336,7 +2336,7 @@ void InGameMenu::create()
 	recipeMenu.page->color = 0;
 	recipeMenu.page->followCamera = 1;
 	recipeMenu.page->position = Vector(scrollx, 400);
-	recipeMenu.page->setText(dsq->continuity.stringBank.get(2006));
+	recipeMenu.page->setText(stringbank.get(2006));
 	recipeMenu.page->alpha = 0;
 	game->addRenderObject(recipeMenu.page, LR_RECIPES);
 
@@ -3158,7 +3158,7 @@ void InGameMenu::onCook()
 	else
 	{
 		dsq->sound->playSfx("Denied");
-		dsq->centerMessage(dsq->continuity.stringBank.get(27));
+		dsq->centerMessage(stringbank.get(27));
 	}
 	refreshFoodSlots(true);
 
@@ -4237,14 +4237,14 @@ void InGameMenu::updateJoystickText()
 	else if(as.joystickID == ACTIONSET_REASSIGN_JOYSTICK)
 	{
 		std::string s = "(";
-		s += dsq->continuity.stringBank.get(2141);
+		s += stringbank.get(2141);
 		s += " ";
 		s += as.joystickName;
 		s += ")";
 		joystickNameText->setText(s);
 	}
 	else
-		joystickNameText->setText(dsq->continuity.stringBank.get(2139));
+		joystickNameText->setText(stringbank.get(2139));
 
 	if(j && as.joystickID >= 0)
 		joystickGUIDText->setText(as.joystickGUID);

@@ -28,7 +28,7 @@ void GameplayVariables::load()
 	InStream inFile("data/variables.txt");
 	if(!inFile)
 	{
-		exit_error(dsq->continuity.stringBank.get(2017));
+		exit_error(stringbank.get(2017));
 	}
 	std::string s;
 	inFile >> s >> maxSlowSwimSpeed;

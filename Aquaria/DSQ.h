@@ -402,6 +402,7 @@ public:
 
 	Mod mod;
 
+	void loadStringBank();
 	void loadMods();
 	void applyPatches();
 	void refreshResourcesForPatch(const std::string& name);

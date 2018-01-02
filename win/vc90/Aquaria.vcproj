@@ -708,14 +708,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Aquaria\StringBank.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Aquaria\StringBank.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Aquaria\SubtitlePlayer.cpp"
 				>
 			</File>

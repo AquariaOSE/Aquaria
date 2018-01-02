@@ -19,40 +19,30 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "StringBank.h"
-#include "DSQ.h"
 #include "ttvfs_stdio.h"
+
+StringBank stringbank;
+static const std::string emptyStr;
 
 StringBank::StringBank()
 {
 }
 
-void StringBank::load()
+void StringBank::clear()
 {
 	stringMap.clear();
-
-	// First, load the default string banks
-	_load("data/stringbank.txt");
-	if (dsq->mod.isActive())
-		_load(dsq->mod.getPath() + "stringbank.txt");
-
-	// Then, load localized ones. If some entries in these are missing, the default for each is taken.
-	std::string fname = localisePath("data/stringbank.txt");
-	_load(fname);
-
-	if (dsq->mod.isActive()) {
-		fname = localisePath(dsq->mod.getPath() + "stringbank.txt", dsq->mod.getPath());
-		_load(fname);
-	}
-
-	if(stringMap.empty())
-		exit_error("Failed to load data/stringbank.txt");
 }
 
-void StringBank::_load(const std::string &file)
+bool StringBank::empty() const
 {
+	return stringMap.empty();
+}
 
-
+bool StringBank::load(const std::string &file)
+{
 	InStream in(file.c_str());
+	if(!in)
+		return false;
 
 	std::string line;
 	int idx;
@@ -60,8 +50,6 @@ void StringBank::_load(const std::string &file)
 	while (in >> idx)
 	{
 		std::getline(in, line);
-
-
 
 		if (!line.empty() && line[0] == ' ')
 			line = line.substr(1, line.size());
@@ -72,10 +60,18 @@ void StringBank::_load(const std::string &file)
 		}
 		stringMap[idx] = line;
 	}
+	return true;
 }
 
-const std::string& StringBank::get(int idx)
+const std::string& StringBank::get(int idx) const
 {
-	return stringMap[idx];
+	StringMap::const_iterator it = stringMap.find(idx);
+	return it != stringMap.end() ? it->second : emptyStr;
 }
 
+void StringBank::addDefault(int idx, const char *str)
+{
+	StringMap::iterator it = stringMap.find(idx);
+	if(it == stringMap.end())
+		stringMap[idx] = str;
+}

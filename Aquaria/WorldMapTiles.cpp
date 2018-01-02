@@ -287,11 +287,11 @@ void WorldMap::save()
 			WorldMapTile *t = &worldMapTiles[i];
 			out << t->index << " " << t->stringIndex << " " << t->name << " " << t->layer << " " << t->scale << " " << t->gridPos.x << " " << t->gridPos.y << " " << t->prerevealed << " " << t->scale2 << std::endl;
 		}
-		dsq->screenMessage(dsq->continuity.stringBank.get(2019) + " " + fn);
+		dsq->screenMessage(stringbank.get(2019) + " " + fn);
 	}
 	else
 	{
-		dsq->screenMessage(dsq->continuity.stringBank.get(2020) + " " + fn);
+		dsq->screenMessage(stringbank.get(2020) + " " + fn);
 	}
 }
 

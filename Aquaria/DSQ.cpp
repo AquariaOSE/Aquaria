@@ -502,7 +502,7 @@ void DSQ::debugMenu()
 		{
 			core->frameOutputMode = false;
 			dsq->game->togglePause(true);
-			std::string s = dsq->getUserInputString(dsq->continuity.stringBank.get(2012), "");
+			std::string s = dsq->getUserInputString(stringbank.get(2012), "");
 			stringToUpper(s);
 
 
@@ -658,7 +658,7 @@ void DSQ::debugMenu()
 				{
 					std::ostringstream os;
 					os << dsq->game->avatar->health;
-					std::istringstream is(dsq->getUserInputString(dsq->continuity.stringBank.get(2013), os.str()));
+					std::istringstream is(dsq->getUserInputString(stringbank.get(2013), os.str()));
 					float h = 0;
 					is >> h;
 					dsq->game->avatar->health = h;
@@ -743,7 +743,7 @@ void DSQ::setVersionLabelText()
 #ifdef AQUARIA_OVERRIDE_VERSION_STRING
 	std::string overrideText = AQUARIA_OVERRIDE_VERSION_STRING;
 	if(user.system.allowDangerousScriptFunctions)
-		overrideText += continuity.stringBank.get(2050);
+		overrideText += stringbank.get(2050);
 	versionLabel->setText(overrideText);
 	return;
 #endif
@@ -780,7 +780,7 @@ void DSQ::setVersionLabelText()
 	#endif
 
 	if(user.system.allowDangerousScriptFunctions)
-		os << continuity.stringBank.get(2050);
+		os << stringbank.get(2050);
 
 	versionLabel->setText(os.str());
 }
@@ -838,7 +838,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	// steam gets inited in here
 	Core::init();
 
-	continuity.stringBank.load();
+	loadStringBank();
 
 	vars = &v;
 	v.load();
@@ -1036,8 +1036,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	loadBit(LOAD_FONTS);
 
-	dsq->continuity.stringBank.load();
-
 	setTexturePointers();
 
 	cursor = new Quad;
@@ -1158,14 +1156,14 @@ This build is not yet final, and as such there are a couple things lacking. They
 	addRenderObject(cutscene_bg, LR_SUBTITLES);
 
 	cutscene_text = new BitmapText(&dsq->font);
-	cutscene_text->setText(dsq->continuity.stringBank.get(2004));
+	cutscene_text->setText(stringbank.get(2004));
 	cutscene_text->position = Vector(400,300-16);
 	cutscene_text->alpha.x = 0;
 	cutscene_text->followCamera = 1;
 	addRenderObject(cutscene_text, LR_SUBTITLES);
 
 	cutscene_text2 = new BitmapText(&dsq->smallFont);
-	cutscene_text2->setText(dsq->continuity.stringBank.get(2005));
+	cutscene_text2->setText(stringbank.get(2005));
 	cutscene_text2->position = Vector(400,300+10);
 	cutscene_text2->alpha.x = 0;
 	cutscene_text2->followCamera = 1;
@@ -1567,7 +1565,7 @@ int DSQ::getEntityLayerToLayer(int lcode)
 
 void DSQ::setStory()
 {
-	std::string flagString = getUserInputString(dsq->continuity.stringBank.get(2014), "0");
+	std::string flagString = getUserInputString(stringbank.get(2014), "0");
 	int flag = 0;
 	std::istringstream is(flagString);
 	is >> flag;
@@ -1575,7 +1573,7 @@ void DSQ::setStory()
 	core->run(0.2f);
 	std::ostringstream os;
 	os << dsq->continuity.getFlag(flag);
-	flagString = getUserInputString(dsq->continuity.stringBank.get(2015), os.str());
+	flagString = getUserInputString(stringbank.get(2015), os.str());
 	int value = 0;
 	std::istringstream is2(flagString);
 	is2 >> value;
@@ -2574,7 +2572,7 @@ void DSQ::clearModSelector()
 void DSQ::updateSaveSlotPageCount()
 {
 	std::ostringstream os;
-	os << dsq->continuity.stringBank.get(2006) << " " << user.data.savePage+1 << "/" << maxPages+1;
+	os << stringbank.get(2006) << " " << user.data.savePage+1 << "/" << maxPages+1;
 	saveSlotPageCount->setText(os.str());
 }
 
@@ -2667,9 +2665,9 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 
 	BitmapText *txt = new BitmapText(&dsq->font);
 	if (ssm == SSM_LOAD)
-		txt->setText(continuity.stringBank.get(2001));
+		txt->setText(stringbank.get(2001));
 	else
-		txt->setText(continuity.stringBank.get(2000));
+		txt->setText(stringbank.get(2000));
 	txt->position = Vector(230, 68);
 	txt->followCamera = 1;
 	addRenderObject(txt, LR_MENU);
@@ -4538,4 +4536,31 @@ void DSQ::importActionButtons()
 		ActionButtonStatus *abs = actionStatus[i];
 		abs->import(as);
 	}
+}
+
+void DSQ::loadStringBank()
+{
+	stringbank.clear();
+
+	// First, load the default string banks
+	stringbank.load("data/stringbank.txt");
+	if (mod.isActive())
+		stringbank.load(mod.getPath() + "stringbank.txt");
+
+	// Then, load localized ones. If some entries in these are missing, the default for each is taken.
+	std::string fname = localisePath("data/stringbank.txt");
+	stringbank.load(fname);
+
+	if (mod.isActive()) {
+		fname = localisePath(mod.getPath() + "stringbank.txt", mod.getPath());
+		stringbank.load(fname);
+	}
+
+	if(stringbank.empty())
+		exit_error("Failed to load data/stringbank.txt");
+
+
+	// ADD DEFAULTS
+
+	stringbank.addDefault(2153, "--");
 }

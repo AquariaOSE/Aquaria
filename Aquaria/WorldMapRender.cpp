@@ -746,7 +746,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 
 	if (activeTile)
 	{
-		areaLabel2->setText(dsq->continuity.stringBank.get(activeTile->stringIndex));
+		areaLabel2->setText(stringbank.get(activeTile->stringIndex));
 	}
 
 	originalActiveTile = activeTile;
@@ -918,12 +918,12 @@ void WorldMapRender::onUpdate(float dt)
 			{
 				if (activeTile)
 				{
-					areaLabel3->setText(dsq->continuity.stringBank.get(activeTile->stringIndex));
+					areaLabel3->setText(stringbank.get(activeTile->stringIndex));
 				}
 
 				if (selectedTile)
 				{
-					areaLabel->setText(dsq->continuity.stringBank.get(selectedTile->stringIndex));
+					areaLabel->setText(stringbank.get(selectedTile->stringIndex));
 
 					if (activeTile && !mover && !dsq->isNested() && isCursorOffHud())
 					{
@@ -1476,7 +1476,7 @@ void WorldMapRender::toggle(bool turnON)
 
 void WorldMapRender::createGemHint(const std::string &gfx)
 {
-	std::string useString = dsq->getUserInputString(dsq->continuity.stringBank.get(860), "", true);
+	std::string useString = dsq->getUserInputString(stringbank.get(860), "", true);
 	if (!useString.empty())
 	{
 		doubleClickTimer = 0;
