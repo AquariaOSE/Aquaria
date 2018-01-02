@@ -256,3 +256,8 @@
 2151 Menu
 2152 Quick Keys
 2153 --
+2154 Invalid key id: 
+2155 Invalid joy button value: 
+2156 Invalid mouse button id: 
+2157 Invalid joy axis(+): 
+2158 Invalid joy axis(-): 

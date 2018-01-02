@@ -143,10 +143,10 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 	}
 
 	std::string s = inputcode2string(k);
-	return s.empty() ? stringbank.get(2153) : s;
+	return s.empty() ? stringbank.get(SB_BBGE_NO_KEY) : s;
 }
 
-static int checkInp(const char *s, int category, int limit, const char *err)
+static int checkInp(const char *s, int category, int limit, StringBankIndexBBGE errid)
 {
 	const int k = atoi(s);
 	if(!k)
@@ -155,7 +155,7 @@ static int checkInp(const char *s, int category, int limit, const char *err)
 		return k + category;
 
 	std::ostringstream os;
-	os << err << k;
+	os << stringbank.get(errid) << k;
 	errorLog(os.str());
 	return 0;
 }
@@ -171,20 +171,20 @@ int getStringToInputCode(const std::string& s)
 	else if(s == "MMB")
 		k = MOUSE_BUTTON_MIDDLE;
 	else if(!strncmp(s.c_str(), "K:", 2))
-		k = checkInp(s.c_str() + 2, 0, KEY_MAXARRAY, "Invalid key id: ");
+		k = checkInp(s.c_str() + 2, 0, KEY_MAXARRAY, SB_BBGE_INVALID_KEY_ID);
 	else if(!strncmp(s.c_str(), "JB:", 3))
-		k = checkInp(s.c_str() + 3, JOY_BUTTON_0, JOY_BUTTON_END, "Invalid joy button value: ");
+		k = checkInp(s.c_str() + 3, JOY_BUTTON_0, JOY_BUTTON_END, SB_BBGE_INVALID_JOY_BTN);
 	else if(!strncmp(s.c_str(), "MB:", 3))
-		k = checkInp(s.c_str() + 3, MOUSE_BUTTON_LEFT, MOUSE_BUTTON_EXTRA_END, "Invalid mouse button id: ");
+		k = checkInp(s.c_str() + 3, MOUSE_BUTTON_LEFT, MOUSE_BUTTON_EXTRA_END, SB_BBGE_INVALID_MOUSE_BTN);
 	else if(s.length() > 4 && !strncmp(s.c_str(), "AX:", 3))
 	{
 		switch(s[3])
 		{
 			case '+':
-				k = checkInp(s.c_str() + 4, JOY_AXIS_0_POS, JOY_AXIS_END_POS, "Invalid joy axis(+): ");
+				k = checkInp(s.c_str() + 4, JOY_AXIS_0_POS, JOY_AXIS_END_POS, SB_BBGE_INVALID_JOY_AXIS_POS);
 				break;
 			case '-':
-				k = checkInp(s.c_str() + 4, JOY_AXIS_0_NEG, JOY_AXIS_END_NEG, "Invalid joy axis(-): ");
+				k = checkInp(s.c_str() + 4, JOY_AXIS_0_NEG, JOY_AXIS_END_NEG, SB_BBGE_INVALID_JOY_AXIS_NEG);
 				break;
 			default:
 				return 0;

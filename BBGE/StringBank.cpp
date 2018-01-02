@@ -69,9 +69,7 @@ const std::string& StringBank::get(int idx) const
 	return it != stringMap.end() ? it->second : emptyStr;
 }
 
-void StringBank::addDefault(int idx, const char *str)
+void StringBank::set(int idx, const char *str)
 {
-	StringMap::iterator it = stringMap.find(idx);
-	if(it == stringMap.end())
-		stringMap[idx] = str;
+	stringMap[idx] = str;
 }

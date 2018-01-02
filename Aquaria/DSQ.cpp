@@ -4542,6 +4542,10 @@ void DSQ::loadStringBank()
 {
 	stringbank.clear();
 
+#define BANKSTRING(id, str) stringbank.set(id, str);
+#include "StringBank_gen.h"
+#undef BANKSTRING
+
 	// First, load the default string banks
 	stringbank.load("data/stringbank.txt");
 	if (mod.isActive())
@@ -4555,12 +4559,4 @@ void DSQ::loadStringBank()
 		fname = localisePath(mod.getPath() + "stringbank.txt", mod.getPath());
 		stringbank.load(fname);
 	}
-
-	if(stringbank.empty())
-		exit_error("Failed to load data/stringbank.txt");
-
-
-	// ADD DEFAULTS
-
-	stringbank.addDefault(2153, "--");
 }
