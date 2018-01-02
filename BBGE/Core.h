@@ -529,7 +529,7 @@ protected:
 	void setupFileAccess();
 	std::string _extraDataDir;
 
-	std::vector<ActionButtonStatus*> actionStatus;
+	std::vector<ActionButtonStatus*> actionStatus; // contains at least 1 element (the sentinel)
 	virtual void updateActionButtons();
 	void clearActionButtons();
 
