@@ -8,14 +8,18 @@ class StringBank
 {
 public:
 	StringBank();
-	void load();
+	bool load(const std::string &file);
+	void clear();
+	bool empty() const;
+	void addDefault(int idx, const char *str);
 
-	const std::string& get(int idx);
+	const std::string& get(int idx) const;
 protected:
-	void _load(const std::string &file);
 
 	typedef std::map<int, std::string> StringMap;
 	StringMap stringMap;
 };
+
+extern StringBank stringbank;
 
 #endif

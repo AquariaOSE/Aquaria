@@ -82,7 +82,7 @@ Ingredient *Game::getNearestIngredient(const Vector &pos, float radius)
 	return returnIngredient;
 }
 
-Entity *Game::getNearestEntity(const Vector &pos, float radius, Entity *ignore, EntityType et, DamageType dt, unsigned lrStart, unsigned lrEnd)
+Entity *Game::getNearestEntity(const Vector &pos, float radius, Entity *ignore, EntityType et, DamageType dt, int lrStart, int lrEnd)
 {
 	int sqrRadius = radius*radius;
 	Entity *closest = 0;
@@ -833,7 +833,7 @@ void Game::loadEntityTypeList()
 	std::string line;
 	if(!in)
 	{
-		exit_error(dsq->continuity.stringBank.get(2008).c_str());
+		exit_error(stringbank.get(2008).c_str());
 	}
 	while (std::getline(in, line))
 	{
@@ -3609,7 +3609,7 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 #endif
 
 		// !!! FIXME: this is such a hack.
-		data += "\n\n" + dsq->continuity.stringBank.get(2032) + "\n\n";
+		data += "\n\n" + stringbank.get(2032) + "\n\n";
 		dsq->continuity.statsAndAchievements->appendStringData(data);
 
 		helpBG = new Quad;
@@ -5253,7 +5253,7 @@ void Game::learnedRecipe(Recipe *r, bool effects)
 	if (nocasecmp(dsq->getTopStateData()->name,"Game")==0 && !applyingState)
 	{
 		std::ostringstream os;
-		os << dsq->continuity.stringBank.get(23) << " "  << r->resultDisplayName << " " << dsq->continuity.stringBank.get(24);
+		os << stringbank.get(23) << " "  << r->resultDisplayName << " " << stringbank.get(24);
 		IngredientData *data = dsq->continuity.getIngredientDataByName(r->result);
 		if (data)
 		{

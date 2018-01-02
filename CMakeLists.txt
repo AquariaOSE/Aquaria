@@ -463,7 +463,6 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/StatsAndAchievements.cpp
     ${SRCDIR}/SteamRender.cpp
     ${SRCDIR}/Strand.cpp
-    ${SRCDIR}/StringBank.cpp
     ${SRCDIR}/SubtitlePlayer.cpp
     ${SRCDIR}/ToolTip.cpp
     ${SRCDIR}/UserSettings.cpp
@@ -533,6 +532,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/SpawnParticleData.cpp
     ${BBGEDIR}/StateMachine.cpp
     ${BBGEDIR}/StateManager.cpp
+    ${BBGEDIR}/StringBank.cpp
     ${BBGEDIR}/Texture.cpp
     ${BBGEDIR}/TTFFont.cpp
     ${BBGEDIR}/Vector.cpp
@@ -803,6 +803,12 @@ ADD_EXECUTABLE(aquaria ${EXETYPE}
     ${OPTIONAL_SRCS}
 )
 TARGET_LINK_LIBRARIES(aquaria ${OPTIONAL_LIBS})
+
+IF(WIN32)
+    SET(RC_DEFINES "" FORCE)
+    SET(RC_INCLUDES "" FORCE)
+    SET(RC_FLAGS "" FORCE)
+endif(WIN32)
 
 # end of CMakeLists.txt ...
 

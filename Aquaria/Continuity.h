@@ -7,7 +7,6 @@
 #include "StatsAndAchievements.h"
 #include "GameEnums.h"
 #include "WorldMap.h"
-#include "StringBank.h"
 
 namespace tinyxml2 { class XMLDocument; }
 
@@ -257,8 +256,6 @@ public:
 	std::string getIngredientAffectsString(IngredientData *data);
 
 	WorldMap worldMap;
-
-	StringBank stringBank;
 
 	TreasureData treasureData;
 

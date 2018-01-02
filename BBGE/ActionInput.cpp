@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Core.h"
 #include "SDL.h"
 #include "GameKeyNames.h"
+#include "StringBank.h"
 
 
 static std::string inputcode2string(int k)
@@ -142,10 +143,7 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 	}
 
 	std::string s = inputcode2string(k);
-	return s.empty() ? "•" : s; // Ø •
-	// Actually, • looks interesting.
-	// It shows up as a box, presumably because the font doesn't have that character.
-	// I'll leave this as it is, because those boxes are kinda cool. -- fg
+	return s.empty() ? stringbank.get(2153) : s;
 }
 
 static int checkInp(const char *s, int category, int limit, const char *err)

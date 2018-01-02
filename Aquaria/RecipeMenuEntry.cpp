@@ -138,7 +138,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 			std::string typeName = dsq->continuity.getIngredientDisplayName(recipe->types[i].typeName);
 
 			if (recipe->types[i].type != IT_ANYTHING)
-				typeName = dsq->continuity.stringBank.get(2031) + "\n" + typeName;
+				typeName = stringbank.get(2031) + "\n" + typeName;
 			else
 				typeName = std::string("\n") + typeName;
 
@@ -430,7 +430,7 @@ void RecipeMenu::createPage(int p)
 	dsq->game->addRenderObject(description, scroll->layer);
 
 	std::ostringstream os2;
-	os2 << dsq->continuity.stringBank.get(2006) << " " << currentPage+1 << "/" << getNumPages()+1;
+	os2 << stringbank.get(2006) << " " << currentPage+1 << "/" << getNumPages()+1;
 	page->setText(os2.str());
 
 	debugLog("done: " + os2.str());

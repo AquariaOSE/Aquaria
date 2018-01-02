@@ -61,7 +61,7 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	if (description.length() > 0)
 	{
 		std::ostringstream os;
-		os << dsq->continuity.stringBank.get(2002) << " " << (slot+1) << " - " << description;
+		os << stringbank.get(2002) << " " << (slot+1) << " - " << description;
 		text1->setText(os.str());
 		glowText->setText(os.str());
 
@@ -70,7 +70,7 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 	else
 	{
 		std::ostringstream os;
-		os << dsq->continuity.stringBank.get(2002) << " " << (slot+1) << " - " << dsq->continuity.stringBank.get(2003);
+		os << stringbank.get(2002) << " " << (slot+1) << " - " << stringbank.get(2003);
 		text1->setText(os.str());
 		glowText->setText(os.str());
 		empty = true;
@@ -278,104 +278,104 @@ static std::string getPrettySceneName_internal(const XMLElement *startData)
 	stringToLower(location);
 	if (location.find("boilerroom")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1000);
+		location = stringbank.get(1000);
 	}
 	else if (location.find("seahorse")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1028);
+		location = stringbank.get(1028);
 	}
 	else if (location.find("whale")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1001);
+		location = stringbank.get(1001);
 	}
 	else if (location.find("frozenveil")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1002);
+		location = stringbank.get(1002);
 	}
 	else if (location.find("bubblecave")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1003);
+		location = stringbank.get(1003);
 	}
 	else if (location.find("energytemple")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1004);
+		location = stringbank.get(1004);
 	}
 	else if (location.find("trainingcave")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1023);
+		location = stringbank.get(1023);
 	}
 	else if (location.find("vedhacave")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1005);
+		location = stringbank.get(1005);
 	}
 	else if (location.find("naijacave")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1006);
+		location = stringbank.get(1006);
 	}
 	else if (location.find("songcave")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1007);
+		location = stringbank.get(1007);
 	}
 	else if (location.find("mainarea")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1008);
+		location = stringbank.get(1008);
 	}
 	else if (location.find("openwater")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1009);
+		location = stringbank.get(1009);
 	}
 	else if (location.find("forest")!=std::string::npos
 		|| location.find("tree")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1010);
+		location = stringbank.get(1010);
 	}
 	else if (location.find("mithalas")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1011);
+		location = stringbank.get(1011);
 	}
 	else if (location.find("cathedral")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1012);
+		location = stringbank.get(1012);
 	}
 	else if (location.find("suntemple")!=std::string::npos || location.find("sunworm")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1013);
+		location = stringbank.get(1013);
 	}
 	else if (location.find("veil")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1014);
+		location = stringbank.get(1014);
 	}
 	else if (location.find("abyss")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1015);
+		location = stringbank.get(1015);
 	}
 	else if (location.find("sunkencity")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1016);
+		location = stringbank.get(1016);
 	}
 	else if (location.find("fishcave")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1017);
+		location = stringbank.get(1017);
 	}
 	else if (location.find("octocave")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1018);
+		location = stringbank.get(1018);
 	}
 	else if (location.find("icecave")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1019);
+		location = stringbank.get(1019);
 	}
 	else if (location.find("secret")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1020);
+		location = stringbank.get(1020);
 	}
 	else if (location.find("final")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1021);
+		location = stringbank.get(1021);
 	}
 	else if (location.find("licave")!=std::string::npos)
 	{
-		location = dsq->continuity.stringBank.get(1029);
+		location = stringbank.get(1029);
 	}
 	return location;
 }

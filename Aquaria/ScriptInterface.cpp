@@ -2243,7 +2243,7 @@ luaFunc(foundLostMemory)
 	if (dsq->continuity.getFlag(FLAG_SECRET03)) num++;
 
 	int sbank = 800+(num-1);
-	dsq->game->setControlHint(dsq->continuity.stringBank.get(sbank), 0, 0, 0, 4, "13/face");
+	dsq->game->setControlHint(stringbank.get(sbank), 0, 0, 0, 4, "13/face");
 
 	dsq->sound->playSfx("memory-found");
 
@@ -4733,7 +4733,7 @@ luaFunc(beam_getEndPos)
 
 luaFunc(getStringBank)
 {
-	luaReturnStr(dsq->continuity.stringBank.get(lua_tointeger(L, 1)).c_str());
+	luaReturnStr(stringbank.get(lua_tointeger(L, 1)).c_str());
 }
 
 luaFunc(isPlat)

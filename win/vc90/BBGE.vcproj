@@ -678,6 +678,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\StringBank.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\StringBank.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\Texture.cpp"
 				>
 			</File>

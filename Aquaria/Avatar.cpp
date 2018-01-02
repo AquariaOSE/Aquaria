@@ -3379,7 +3379,7 @@ void Avatar::lockToWall()
 
 				if (!dsq->game->isControlHint()){
 					dsq->continuity.setFlag("lockedToWall", 1);
-					dsq->game->setControlHint(dsq->continuity.stringBank.get(13), 1, 0, 0, 6, "", true);
+					dsq->game->setControlHint(stringbank.get(13), 1, 0, 0, 6, "", true);
 				}
 			}
 
