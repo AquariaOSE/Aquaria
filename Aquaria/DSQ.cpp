@@ -3617,9 +3617,9 @@ bool DSQ::isQuitFlag()
 	return watchQuitFlag;
 }
 
-void DSQ::run(float runTime /* = -1 */)
+void DSQ::run(float runTime /* = -1 */, bool skipRecurseCheck)
 {
-	if(isDeveloperKeys() && isNested())
+	if(isDeveloperKeys() && isNested() && !skipRecurseCheck)
 		errorLog("Warning: Nesting recursive main()");
 
 	Core::run(runTime);

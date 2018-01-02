@@ -7878,8 +7878,8 @@ static size_t _entityFilterT(lua_State *L, F& func)
 	const Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
 	const EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
 	const DamageType dt = lua_isnumber(L, 6) ? (DamageType)lua_tointeger(L, 6) : DT_NONE;
-	const unsigned lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
-	const unsigned lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
+	const int lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
+	const int lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
 
 	const float sqrRadius = radius * radius;
 	float distsq;
