@@ -59,6 +59,7 @@ public:
 	ActionInput *addActionInput(const std::string &name);
 	ActionInput *getActionInputByName(const std::string &name);
 
+	InputDevice inputMode;
 	size_t joystickID; // >= 0: use that, -1 = no joystick, or ACTIONSET_REASSIGN_JOYSTICK
 
 	// --- Saved in config ---

@@ -8396,7 +8396,8 @@ luaFunc(disableInput)
 
 luaFunc(getInputMode)
 {
-	luaReturnInt(dsq->inputMode);
+	int source = lua_tointeger(L, 1);
+	luaReturnInt(dsq->getInputModeSafe(source - 1));
 }
 
 static Joystick *_getJoystick(lua_State *L, int idx = 1)

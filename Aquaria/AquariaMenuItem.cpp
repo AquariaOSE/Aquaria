@@ -89,7 +89,7 @@ void AquariaGuiElement::setFocus(bool v)
 	if (v)
 	{
 		currentFocus = this;
-		if (dsq->inputMode == INPUT_JOYSTICK || dsq->inputMode == INPUT_KEYBOARD)
+		if (dsq->getInputMode() == INPUT_JOYSTICK || dsq->getInputMode() == INPUT_KEYBOARD)
 			core->setMousePosition(getGuiPosition());
 
 		AquariaGuiElement *gui=0, *guiThis = (AquariaGuiElement*)this;
