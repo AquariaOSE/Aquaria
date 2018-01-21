@@ -646,7 +646,7 @@ void FoodSlot::onUpdate(float dt)
 			{
 				if (!themenu->recipeMenu.on)
 				{
-					if (dsq->inputMode == INPUT_MOUSE)
+					if (dsq->getInputMode() == INPUT_MOUSE)
 					{
 						Vector diff = core->mouse.position - getWorldPosition();
 						position += diff;

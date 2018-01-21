@@ -163,7 +163,7 @@ void Avatar::bindInput()
 Vector Avatar::getAim()
 {
 	Vector d;
-	if (dsq->inputMode == INPUT_JOYSTICK)
+	if (dsq->getInputMode() == INPUT_JOYSTICK)
 	{
 		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 			if(Joystick *j = core->getJoystick(i))
@@ -1730,7 +1730,7 @@ void Avatar::updateSingingInterface(float dt)
 {
 	if (songIcons.size()>0 && songIcons[0]->alpha.x > 0)
 	{
-		if (dsq->inputMode != INPUT_JOYSTICK && !core->mouse.change.isZero())
+		if (dsq->getInputMode() != INPUT_JOYSTICK && !core->mouse.change.isZero())
 		{
 			if (dsq->game->songLineRender && songIcons[0]->alpha.x == 1)
 			{
@@ -1756,7 +1756,7 @@ void Avatar::updateSingingInterface(float dt)
 		}
 		else
 		{
-			if (dsq->inputMode == INPUT_JOYSTICK)
+			if (dsq->getInputMode() == INPUT_JOYSTICK)
 			{
 				Vector d;
 				for(size_t i = 0; i < core->getNumJoysticks(); ++i)
@@ -1948,7 +1948,7 @@ void Avatar::updateTargets(float dt, bool override)
 			break;
 		}
 	}
-	if ((dsq->inputMode == INPUT_MOUSE || dsq->inputMode == INPUT_KEYBOARD) && !(wasDown && core->mouse.buttons.right))
+	if ((dsq->getInputMode() == INPUT_MOUSE || dsq->getInputMode() == INPUT_KEYBOARD) && !(wasDown && core->mouse.buttons.right))
 	{
 		wasDown = false;
 		float mod = 1;

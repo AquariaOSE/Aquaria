@@ -142,7 +142,7 @@ const bool isReleaseCandidate	= false;
 const bool isFinalCandidate		= false;
 const bool isGoldMaster			= true;
 
-Vector savesz;
+static const Vector savesz(750.0f/1024.0f, 750.0f/1024.0f);
 
 /// WARNING: this is just to init, the actual value is set from user settings!
 #define PARTICLE_AMOUNT_DEFAULT			2048
@@ -2605,7 +2605,6 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 
 
 	menu[1] = new Quad("gui/save-menu", Vector(400,300));
-	savesz = Vector(750.0f/1024.0f, 750.0f/1024.0f);
 	menu[1]->alpha = 0;
 	menu[1]->alpha.interpolateTo(1, t);
 	menu[1]->scale = savesz * 0.5f;
@@ -4559,4 +4558,31 @@ void DSQ::loadStringBank()
 		fname = localisePath(mod.getPath() + "stringbank.txt", mod.getPath());
 		stringbank.load(fname);
 	}
+}
+
+InputDevice DSQ::getInputMode() const
+{
+	return lastInputMode;
+}
+
+InputDevice DSQ::getInputMode(int source) const
+{
+	assert(source >= 0 && size_t(source) < _inputModes.size());
+	return _inputModes[source];
+}
+
+void DSQ::getInputModeSafe(int source) const
+{
+	return source < 0 ? lastInputMode :
+		(size_t(source) < _inputModes.size() ? _inputModes[source] : INPUT_NODEVICE);
+}
+
+bool DSQ::useMouseInput() const
+{
+	return lastInputMode == INPUT_MOUSE;
+}
+
+bool DSQ::useJoystickInput() const
+{
+	return lastInputMode == INPUT_JOYSTICK;
 }

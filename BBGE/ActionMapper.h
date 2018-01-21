@@ -22,14 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define _actionmapper_
 
 #include "Base.h"
-
-enum InputDevice
-{
-	INPUT_NODEVICE = 0,
-	INPUT_MOUSE,
-	INPUT_JOYSTICK,
-	INPUT_KEYBOARD
-};
+#include "ActionInput.h"
 
 InputDevice getDeviceForActionbutton(int k);
 

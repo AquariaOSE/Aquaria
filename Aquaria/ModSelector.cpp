@@ -120,7 +120,7 @@ void ModSelectorScreen::onUpdate(float dt)
 		}
 	}
 
-	if(!AquariaGuiElement::currentFocus && dsq->inputMode == INPUT_JOYSTICK)
+	if(!AquariaGuiElement::currentFocus && dsq->getInputMode() == INPUT_JOYSTICK)
 	{
 		AquariaGuiElement *closest = AquariaGuiElement::getClosestGuiElement(core->mouse.position);
 		if(closest)

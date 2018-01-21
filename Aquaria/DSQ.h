@@ -347,8 +347,16 @@ public:
 
 	InterpolatedVector gameSpeed;
 
-	InputDevice inputMode;
+private:
+	InputDevice lastInputMode; // really don't want to expose this one
+	std::vector<InputDevice> _inputModes; // index: FIXME ADD INFO
+public:
 	void setInputMode(InputDevice mode);
+	InputDevice getInputMode() const;
+	InputDevice getInputMode(int source) const;
+	InputDevice getInputModeSafe(int source) const;
+	bool useMouseInput() const;
+	bool useJoystickInput() const;
 
 	void rumble(float leftMotor, float rightMotor, float time, int source, InputDevice device);
 	void vision(std::string folder, int num, bool ignoreMusic = false);

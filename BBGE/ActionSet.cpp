@@ -33,6 +33,7 @@ JoystickConfig::JoystickConfig()
 
 ActionSet::ActionSet()
 {
+	inputMode = INPUT_NODEVICE;
 	enabled = true;
 	joystickID = ACTIONSET_REASSIGN_JOYSTICK;
 }

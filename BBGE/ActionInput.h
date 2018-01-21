@@ -66,4 +66,12 @@ enum InputSetType
 	INPUTSET_OTHER		= 4
 };
 
+enum InputDevice
+{
+	INPUT_NODEVICE = 0,
+	INPUT_MOUSE,
+	INPUT_JOYSTICK,
+	INPUT_KEYBOARD
+};
+
 #endif
