@@ -192,7 +192,7 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	subbox = 0;
 	modSelectorScr = 0;
 	blackout = 0;
-	inputMode = INPUT_MOUSE;
+	lastInputMode = INPUT_MOUSE;
 	overlay = 0;
 	recentSaveSlot = -1;
 	arialFontData = 0;
@@ -1684,8 +1684,8 @@ void DSQ::toggleVersionLabel(bool on)
 
 void DSQ::setInputMode(InputDevice mode)
 {
-	inputMode = mode;
-	switch(inputMode)
+	lastInputMode = mode;
+	switch(mode)
 	{
 	case INPUT_JOYSTICK:
 		core->joystickAsMouse = true;
@@ -3854,7 +3854,7 @@ void DSQ::onUpdate(float dt)
 
 	if (joystickEnabled)
 	{
-		if (dsq->inputMode != INPUT_JOYSTICK)
+		if (dsq->getInputMode() != INPUT_JOYSTICK)
 		{
 			const float thresh = JOY_AXIS_THRESHOLD;
 			for(size_t i = 0; i < getNumJoysticks(); ++i)
@@ -3866,7 +3866,7 @@ void DSQ::onUpdate(float dt)
 							dsq->setInputMode(INPUT_JOYSTICK);
 						}
 		}
-		else if (dsq->inputMode != INPUT_MOUSE)
+		else if (dsq->getInputMode() != INPUT_MOUSE)
 		{
 			if ((!core->mouse.change.isLength2DIn(5) || (core->getMouseButtonState(0) || core->getMouseButtonState(1))) /*&& !core->joystick.anyButton()*/)
 			{
@@ -3891,7 +3891,7 @@ void DSQ::onUpdate(float dt)
 	if (user.control.flipInputButtons)
 		cb = 1;
 
-	if (dsq->inputMode == INPUT_KEYBOARD && (core->getMouseButtonState(cb)))
+	if (dsq->getInputMode() == INPUT_KEYBOARD && (core->getMouseButtonState(cb)))
 	{
 		dsq->setInputMode(INPUT_MOUSE);
 	}
@@ -3932,7 +3932,7 @@ void DSQ::onUpdate(float dt)
 			os << " look: " << dsq->game->avatar->state.updateLookAtTime << " ";
 
 			os << "inputMode: ";
-			switch(dsq->inputMode)
+			switch(dsq->getInputMode())
 			{
 			case INPUT_MOUSE:
 				os << "mouse";
@@ -4472,7 +4472,7 @@ void DSQ::resetLayerPasses()
 
 bool DSQ::isMiniMapCursorOkay()
 {
-	return ((inputMode != INPUT_MOUSE) ||  (!game->miniMapRender || !game->miniMapRender->isCursorIn()));
+	return (!useMouseInput() ||  (!game->miniMapRender || !game->miniMapRender->isCursorIn()));
 }
 
 void DSQ::onJoystickAdded(int deviceID)
@@ -4571,7 +4571,7 @@ InputDevice DSQ::getInputMode(int source) const
 	return _inputModes[source];
 }
 
-void DSQ::getInputModeSafe(int source) const
+InputDevice DSQ::getInputModeSafe(int source) const
 {
 	return source < 0 ? lastInputMode :
 		(size_t(source) < _inputModes.size() ? _inputModes[source] : INPUT_NODEVICE);

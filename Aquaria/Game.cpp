@@ -4245,13 +4245,13 @@ void Game::updateCursor(float dt)
 {
 	bool rotate = false;
 
-	if (dsq->inputMode == INPUT_MOUSE)
+	if (dsq->getInputMode() == INPUT_MOUSE)
 	{
 		dsq->cursor->offset.stop();
 		dsq->cursor->offset = Vector(0,0);
 		//debugLog("offset lerp stop in mouse!");
 	}
-	else if (dsq->inputMode == INPUT_JOYSTICK)
+	else if (dsq->getInputMode() == INPUT_JOYSTICK)
 	{
 		if (!dsq->game->isPaused() || dsq->game->isInGameMenu() || !dsq->game->avatar->isInputEnabled())
 		{
@@ -4284,7 +4284,7 @@ void Game::updateCursor(float dt)
 		// Don't show the cursor in keyboard/joystick mode if it's not
 		// already visible (this keeps the cursor from appearing for an
 		// instant during map fadeout).
-		if (dsq->inputMode == INPUT_MOUSE || isSceneEditorActive() || dsq->game->isPaused())
+		if (dsq->getInputMode() == INPUT_MOUSE || isSceneEditorActive() || dsq->game->isPaused())
 			dsq->cursor->alphaMod = 0.5;
 
 		/*
@@ -4295,7 +4295,7 @@ void Game::updateCursor(float dt)
 	else if (avatar)
 	{
 		//Vector v = avatar->getVectorToCursorFromScreenCentre();
-		if (dsq->inputMode == INPUT_JOYSTICK)// && !avatar->isSinging() && !dsq->game->isInGameMenu() && !dsq->game->isPaused())
+		if (dsq->getInputMode() == INPUT_JOYSTICK)// && !avatar->isSinging() && !dsq->game->isInGameMenu() && !dsq->game->isPaused())
 		{
 			dsq->cursor->alphaMod = 0;
 			if (!avatar->isSinging())
