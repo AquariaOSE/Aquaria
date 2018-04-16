@@ -21,20 +21,31 @@ addons:
   apt:
     packages:
       - libopenal-dev
+      - libsdl2-dev
       - libsdl-dev
 
 before_install:
   - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew update          ; fi
-  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install sdl openal-soft; fi
+  - if [[ "$TRAVIS_OS_NAME" == "osx" ]]; then brew install sdl sdl2 openal-soft; fi
 
 script:
 # ALL THE BUILD COMMANDS HERE
   - export CMAKE_PREFIX_PATH="$CMAKE_PREFIX_PATH;/usr/lib/x86_64-linux-gnu/"
   - CMAKE_OPTIONS='-DCMAKE_PREFIX_PATH='"$CMAKE_PREFIX_PATH"' -DCMAKE_BUILD_TYPE=RelWithDebInfo -DAQUARIA_INTERNAL_FREETYPE=OFF -DAQUARIA_INTERNAL_LUA=OFF -DAQUARIA_INTERNAL_OGGVORBIS=OFF -DAQUARIA_INTERNAL_OPENAL=OFF -DAQUARIA_INTERNAL_PNG=OFF -DAQUARIA_INTERNAL_SDL=OFF -DAQUARIA_INTERNAL_TINYXML2=OFF -DAQUARIA_INTERNAL_ZLIB=OFF'
+# Build SDL 2
+  - echo "----------------------------------------------BUILD SDL2----------------------------------------------"
   - rm -rf cmake-build
   - mkdir cmake-build
   - cd cmake-build
-  - cmake $CMAKE_OPTIONS ..
+  - cmake $CMAKE_OPTIONS -DAQUARIA_USE_SDL2=ON ..
+  - make -j 2
+# Build SDL 1.2
+  - echo "----------------------------------------------BUILD SDL 1.2----------------------------------------------"
+  - cd ..
+  - rm -rf cmake-build
+  - mkdir cmake-build
+  - cd cmake-build
+  - cmake $CMAKE_OPTIONS -DAQUARIA_USE_SDL2=OFF ..
   - make -j 2
 
 notifications:
