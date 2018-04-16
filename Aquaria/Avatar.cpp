@@ -2108,11 +2108,11 @@ void Avatar::updateTargetQuads(float dt)
 			targetQuads[i]->position = cursorpos;
 			if (dsq->continuity.form == FORM_ENERGY && isInputEnabled())
 			{
-				if (dsq->inputMode == INPUT_JOYSTICK && targetQuads[i]->isRunning())
+				if (dsq->getInputMode() == INPUT_JOYSTICK && targetQuads[i]->isRunning())
 				{
 					targetQuads[i]->stop();
 				}
-				else if (dsq->inputMode != INPUT_JOYSTICK && !targetQuads[i]->isRunning())
+				else if (dsq->getInputMode() != INPUT_JOYSTICK && !targetQuads[i]->isRunning())
 				{
 					targetQuads[i]->start();
 				}
@@ -2189,7 +2189,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	bool clearTargets = false;
 
 	// allow autoAim if desired
-	if ((dsq->inputMode == INPUT_JOYSTICK && !aimAt) || dsq->user.control.autoAim)
+	if ((dsq->getInputMode() == INPUT_JOYSTICK && !aimAt) || dsq->user.control.autoAim)
 	{
 		if (targets.empty())
 		{
@@ -4189,11 +4189,11 @@ Vector Avatar::getKeyDir()
 
 Vector Avatar::getFakeCursorPosition()
 {
-	if (dsq->inputMode == INPUT_KEYBOARD)
+	if (dsq->getInputMode() == INPUT_KEYBOARD)
 	{
 		return getKeyDir() * 350;
 	}
-	if (dsq->inputMode == INPUT_JOYSTICK)
+	if (dsq->getInputMode() == INPUT_JOYSTICK)
 	{
 		float axisInput = 0;
 		Joystick *j = 0;
@@ -4219,7 +4219,7 @@ Vector Avatar::getVectorToCursorFromScreenCentre()
 		return getVectorToCursor();
 	else
 	{
-		if (dsq->inputMode != INPUT_MOUSE)
+		if (dsq->getInputMode() != INPUT_MOUSE)
 			return getFakeCursorPosition();
 		return (core->mouse.position+offset) - Vector(400,300);
 	}
@@ -4231,7 +4231,7 @@ Vector Avatar::getVectorToCursor(bool trueMouse)
 	Vector pos = dsq->getGameCursorPosition();
 
 
-	if (!trueMouse && dsq->inputMode != INPUT_MOUSE)
+	if (!trueMouse && dsq->getInputMode() != INPUT_MOUSE)
 		return getFakeCursorPosition();
 
 	return pos - (position+offset);
@@ -4997,7 +4997,7 @@ void Avatar::updateRoll(float dt)
 		stopRoll();
 	}
 
-	if (!core->mouse.buttons.left && dsq->inputMode == INPUT_MOUSE && !rollact)
+	if (!core->mouse.buttons.left && dsq->getInputMode() == INPUT_MOUSE && !rollact)
 	{
 		if (rolling)
 			stopRoll();
@@ -5789,7 +5789,7 @@ void Avatar::onUpdate(float dt)
 	// revert stuff
 	float revertGrace = 0.4f;
 	static bool revertButtonsAreDown = false;
-	if (inputEnabled && (dsq->inputMode == INPUT_KEYBOARD || dsq->inputMode == INPUT_MOUSE) && (!pathToActivate && !entityToActivate))
+	if (inputEnabled && (dsq->getInputMode() == INPUT_KEYBOARD || dsq->getInputMode() == INPUT_MOUSE) && (!pathToActivate && !entityToActivate))
 	{
 		if (dsq->continuity.form != FORM_NORMAL && (core->mouse.pure_buttons.left && core->mouse.pure_buttons.right) && getVectorToCursor(true).isLength2DIn(minMouse))
 		{
@@ -6134,13 +6134,14 @@ void Avatar::onUpdate(float dt)
 
 			if (dsq->isMiniMapCursorOkay() && !isActing(ACTION_ROLL, -1) &&
 				_isUnderWater && !riding && !boneLock.on &&
-				(movingOn || ((dsq->inputMode == INPUT_JOYSTICK || dsq->inputMode== INPUT_KEYBOARD) || (core->mouse.buttons.left || bursting))))
+				(movingOn || ((dsq->getInputMode() == INPUT_JOYSTICK || dsq->getInputMode()== INPUT_KEYBOARD) || (core->mouse.buttons.left || bursting))))
 			{
-				if (dsq->inputMode == INPUT_MOUSE || !this->singing)
+				const bool isMouse = dsq->getInputMode() == INPUT_MOUSE;
+				if (isMouse || !this->singing)
 				{
 					addVec = getVectorToCursorFromScreenCentre();//getVectorToCursor();
 
-					if (dsq->inputMode == INPUT_MOUSE)
+					if (isMouse)
 					{
 						static Vector lastAddVec;
 						if (!isActing(ACTION_PRIMARY, -1) && bursting)
@@ -6156,7 +6157,7 @@ void Avatar::onUpdate(float dt)
 
 					if (addVec.isLength2DIn(minMouse))
 					{
-						if (dsq->inputMode == INPUT_JOYSTICK)
+						if (dsq->getInputMode() == INPUT_JOYSTICK)
 							addVec = Vector(0,0,0);
 					}
 
@@ -6185,7 +6186,7 @@ void Avatar::onUpdate(float dt)
 						// For joystick/keyboard control, don't stop unless
 						// the Swim (primary action) button is pressed with
 						// no movement input.  --achurch
-						if ((dsq->inputMode == INPUT_MOUSE || isActing(ACTION_PRIMARY, -1))
+						if ((isMouse || isActing(ACTION_PRIMARY, -1))
 							&& addVec.isLength2DIn(STOP_DISTANCE))
 						{
 							vel *= 0.9f;
@@ -6280,7 +6281,7 @@ void Avatar::onUpdate(float dt)
 						else
 						{
 							float t = 0;
-							if (dsq->inputMode == INPUT_KEYBOARD)
+							if (dsq->getInputMode() == INPUT_KEYBOARD)
 								t = 0.1f;
 							rotateToVec(addVec, t);
 						}
