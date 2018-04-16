@@ -302,7 +302,7 @@ void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int di
 	if(w != oldw || h != oldh)
 	{
 		reloadRes = true; // Always reload resources on SDL 1.2, since it loses the GL context!
-		createWindow(w, h, false, fullscreen, bpp);
+		createWindow(w, h, false, fullscreen, bpp, 0);
 	}
 
 #endif
@@ -706,15 +706,20 @@ void Core::init()
 {
 	setupFileAccess();
 
+	unsigned sdlflags = SDL_INIT_EVERYTHING;
+
 	quitNestedMainFlag = false;
-#ifndef BBGE_BUILD_SDL2
+#ifdef BBGE_BUILD_SDL2
+	// Haptic is inited separately, in Jostick.cpp, when a joystick is actually plugged in
+	sdlflags &= ~SDL_INIT_HAPTIC;
+#else
 	// Disable relative mouse motion at the edges of the screen, which breaks
 	// mouse control for absolute input devices like Wacom tablets and touchscreens.
 	SDL_putenv((char *) "SDL_MOUSE_RELATIVE=0");
 #endif
 
 	// Haptic is inited separately, in Jostick.cpp, when a joystick is actually plugged in
-	if((SDL_Init(SDL_INIT_EVERYTHING & ~SDL_INIT_HAPTIC))==-1)
+	if((SDL_Init(sdlflags))==-1)
 	{
 		std::string msg("Failed to init SDL: ");
 		msg.append(SDL_GetError());
