@@ -709,6 +709,22 @@
 				RelativePath="..\..\BBGE\Vector.h"
 				>
 			</File>
+			<File
+				RelativePath="..\..\BBGE\Window.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Window.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Window_SDL1.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Window_SDL2.cpp"
+				>
+			</File>
 		</Filter>
 		<Filter
 			Name="Header Files"

@@ -299,10 +299,6 @@ public:
 	ParticleEffect *spawnParticleEffect(const std::string &name, Vector position, float rot=0, float t=0, int layer=LR_PARTICLES, float follow=0);
 	void spawnAllIngredients(const Vector &position);
 
-	bool isShakingCamera();
-
-	std::string languagePack;
-
 	int getEntityTypeIndexByName(std::string s);
 	void screenMessage(const std::string &msg);
 #ifdef AQUARIA_BUILD_CONSOLE  // No need to override it otherwise.

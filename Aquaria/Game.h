@@ -27,7 +27,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AquariaMenuItem.h"
 #include "ScriptedEntity.h"
 #include "TileVector.h"
-#include "AquariaProgressBar.h"
 
 #ifdef AQUARIA_DEMO
 #undef AQUARIA_BUILD_SCENEEDITOR
