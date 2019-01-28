@@ -28,11 +28,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "StateManager.h"
 #include "Effects.h"
 #include "Localization.h"
+#include "Window.h"
 
 #include "DarkLayer.h"
 
 #include "GameKeys.h"
-
 
 class ParticleEffect;
 class Joystick;
@@ -49,10 +49,9 @@ struct ScreenMode
 
 struct CoreSettings
 {
-	CoreSettings() { renderOn = true; updateOn = true; runInBackground = false; prebufferSounds = false; }
+	CoreSettings() { renderOn = true; runInBackground = false; prebufferSounds = false; }
 	bool renderOn;
 	bool runInBackground;
-	bool updateOn; // NOT IMPLEMENTED YET
 	bool prebufferSounds;
 };
 
@@ -89,7 +88,7 @@ struct Mouse
 {
 	Mouse()
 	{
-		scrollWheel = scrollWheelChange = lastScrollWheel = 0;
+		scrollWheelChange = 0;
 		buttonsEnabled = true;
 	}
 	Vector position, lastPosition;
@@ -99,7 +98,7 @@ struct Mouse
 	Vector change;
 	bool buttonsEnabled;
 
-	int scrollWheel, scrollWheelChange, lastScrollWheel;
+	int scrollWheelChange;
 };
 
 enum FollowCameraLock
@@ -195,8 +194,21 @@ protected:
 	size_t iter;
 };
 
+class CoreWindow : public Window
+{
+public:
+	virtual ~CoreWindow();
+
+protected:
+	virtual void onEvent(const SDL_Event& ev);
+	virtual void onResize(unsigned w, unsigned h);
+	virtual void onQuit();
+};
+
+
 class Core : public ActionMapper, public StateManager
 {
+	friend class CoreWindow;
 public:
 
 	// init
@@ -278,7 +290,6 @@ public:
 
 	unsigned getTicks();
 
-	void initGraphics(int w, int h, int fullscreen=-1, int vsync=-1, int bpp=-1, int display=-1, int hz=-1); // pass 0x0 for desktop resolution
 	void updateWindowDrawSize(int w, int h);
 
 	Vector getGameCursorPosition();
@@ -430,9 +441,12 @@ public:
 	void enumerateScreenModes(int display);
 	void enumerateScreenModesIfNecessary(int display = -1);
 
+	void resizeWindow(int w, int h, int full, int bpp, int vsync, int display, int hz);
+
 	std::vector<ScreenMode> screenModes;
 
 	void pollEvents(float dt);
+	void onEvent(const SDL_Event& event);
 
 	CoreSettings settings;
 
@@ -447,6 +461,8 @@ public:
 	void initLocalization();
 
 protected:
+
+	CoreWindow *window;
 
 	void updateCullData();
 
@@ -465,11 +481,8 @@ protected:
 
 	CountedPtr<Texture> doTextureAdd(const std::string &texture, const std::string &name, std::string internalTextureName);
 
-	void deleteRenderObjectMemory(RenderObject *r);
-	bool _hasFocus;
 	bool lib_graphics, lib_sound, lib_input;
 	Vector clearColor;
-	bool updateCursorFromMouse;
 	virtual void unloadDevice();
 	virtual void reloadDevice();
 
@@ -486,8 +499,7 @@ protected:
 	bool initSoundLibrary(const std::string &defaultDevice);
 	bool initInputLibrary();
 	void initJoystickLibrary();
-	bool initGraphicsLibrary(int w, int h, bool fullscreen, bool vsync, int bpp, int display, int hz);
-	void createWindow(int w, int h, bool resizable, bool fullscreen, int bpp, int display);
+	void initGraphicsLibrary(int w, int h, bool fullscreen, bool vsync, int bpp, int display, int hz);
 	void shutdownInputLibrary();
 	void shutdownJoystickLibrary();
 	void shutdownGraphicsLibrary();
@@ -516,12 +528,7 @@ protected:
 
 	int nowTicks, thenTicks;
 
-	int _vsync, _bpp, _refreshRate;
-	bool _fullscreen, _useDesktopResolution;
-	int winPosX, winPosY; // pre-fullscreen
 	int _lastEnumeratedDisplayIndex;
-
-	CountedPtr<Texture> texError;
 
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}

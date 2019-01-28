@@ -156,6 +156,7 @@ static const Vector savesz(750.0f/1024.0f, 750.0f/1024.0f);
 DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 : Core(fileSystem, extraDataDir, LR_MAX, APPNAME, PARTICLE_AMOUNT_DEFAULT, "Aquaria")
 {
+	assert(!dsq);
 	dsq = this;
 
 	cutscene_bg = 0;
@@ -206,7 +207,6 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	console = 0;
 #endif
 	cmDebug = 0;
-	languagePack = "english";
 	saveSlotMode = SSM_NONE;
 	afterEffectManagerLayer = LR_AFTER_EFFECTS; // LR_AFTER_EFFECTS
 	renderObjectLayers.resize(LR_MAX);
@@ -224,14 +224,16 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 
 DSQ::~DSQ()
 {
+	assert(dsq == this);
 	dsq = 0;
 }
 
 // actually toggle
 void DSQ::toggleFullscreen()
 {
-	setFullscreen(!_fullscreen);
-	user.video.full = _fullscreen;
+	bool newfull = !window->isFullscreen();
+	setFullscreen(newfull);
+	user.video.full = newfull;
 }
 
 // for handling the input, not the actual switch functionality
@@ -1689,12 +1691,10 @@ void DSQ::setInputMode(InputDevice mode)
 	{
 	case INPUT_JOYSTICK:
 		core->joystickAsMouse = true;
-		updateCursorFromMouse = false;
 	break;
 	case INPUT_MOUSE:
 		setMousePosition(core->mouse.position);
 		core->joystickAsMouse = false;
-		updateCursorFromMouse = true;
 	break;
 	case INPUT_KEYBOARD:
 	break;
@@ -3045,7 +3045,7 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 
 	AquariaGuiElement::currentGuiInputLevel = GUILEVEL_CONFIRM;
 
-	dsq->run(t);
+	dsq->run(t, true);
 
 	float t2 = 0.05f;
 
@@ -3116,11 +3116,11 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 	txt->alpha.interpolateTo(1, t2);
 	addRenderObject(txt, LR_CONFIRM);
 
-	dsq->run(t2);
+	dsq->run(t2, true);
 
 	while (!confirmDone)
 	{
-		dsq->run(FRAME_TIME);
+		dsq->run(FRAME_TIME, true);
 		if (countdown > 0) {
 			countdown -= FRAME_TIME;
 			if (countdown < 0)
@@ -3133,11 +3133,11 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 	txt->alpha.interpolateTo(0, t2);
 	if (yes)	yes->alpha.interpolateTo(0, t2);
 	if (no)		no->alpha.interpolateTo(0, t2);
-	dsq->run(t2);
+	dsq->run(t2, true);
 
 	bgLabel->alpha.interpolateTo(0, t);
 	bgLabel->scale.interpolateTo(Vector(0.5, 0.5), t);
-	dsq->run(t);
+	dsq->run(t, true);
 
 	bgLabel->safeKill();
 	txt->safeKill();
@@ -4024,10 +4024,6 @@ void DSQ::onUpdate(float dt)
 		}
 	}
 
-	static bool lastfullscreen = false;
-
-	lastfullscreen = _fullscreen;
-
 	updatepecue(dt);
 
 	Network::update();
@@ -4043,11 +4039,6 @@ void DSQ::shakeCamera(float mag, float time)
 	cameraOffset = Vector(0,0);
 	shakeCameraMag = mag;
 	shakeCameraTimer = time;
-}
-
-bool DSQ::isShakingCamera()
-{
-	return (shakeCameraTimer > 0);
 }
 
 void DSQ::delay(float dt)

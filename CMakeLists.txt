@@ -414,7 +414,6 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/AnimationEditor.cpp
     ${SRCDIR}/AquariaComboBox.cpp
     ${SRCDIR}/AquariaMenuItem.cpp
-    ${SRCDIR}/AquariaProgressBar.cpp
     ${SRCDIR}/AquariaSaveSlot.cpp
     ${SRCDIR}/Avatar.cpp
     ${SRCDIR}/Beam.cpp
@@ -537,6 +536,9 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Texture.cpp
     ${BBGEDIR}/TTFFont.cpp
     ${BBGEDIR}/Vector.cpp
+    ${BBGEDIR}/Window.cpp
+    ${BBGEDIR}/Window_SDL1.cpp
+    ${BBGEDIR}/Window_SDL2.cpp
     ${BBGEDIR}/FmodOpenALBridge.cpp
     ${COCOA_SRCS}
     ${EXTLIBDIR}/DeflateCompressor.cpp

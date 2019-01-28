@@ -368,14 +368,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Aquaria\AquariaProgressBar.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\Aquaria\AquariaProgressBar.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Aquaria\AquariaSaveSlot.cpp"
 				>
 			</File>

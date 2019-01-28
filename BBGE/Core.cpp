@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Particles.h"
 #include "GLLoad.h"
 #include "RenderBase.h"
+#include "Window.h"
 
 #include <time.h>
 #include <iostream>
@@ -46,17 +47,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <direct.h>
 #endif
 
-	#include "SDL_syswm.h"
-	#ifdef BBGE_BUILD_SDL2
-	static SDL_Window *gScreen=0;
-	static SDL_GLContext gGLctx=0;
-	#else
-	static SDL_Surface *gScreen=0;
-	#endif
-
-	bool ignoreNextMouse=false;
-	Vector unchange;
-
 #ifdef BBGE_BUILD_VFS
 #include "ttvfs.h"
 #endif
@@ -65,10 +55,30 @@ Core *core = 0;
 
 static 	std::ofstream _logOut;
 
-#ifndef KMOD_GUI
-	#define KMOD_GUI KMOD_META
-#endif
+CoreWindow::~CoreWindow()
+{
+}
 
+void CoreWindow::onResize(unsigned w, unsigned h)
+{
+	core->updateWindowDrawSize(w, h);
+}
+
+void CoreWindow::onQuit()
+{
+	// smooth
+	//core->quitNestedMain();
+	//core->quit();
+
+	// instant
+	SDL_Quit();
+	_exit(0);
+}
+
+void CoreWindow::onEvent(const SDL_Event& ev)
+{
+	core->onEvent(ev);
+}
 
 void Core::resetCamera()
 {
@@ -126,13 +136,6 @@ void Core::reloadDevice()
 
 void Core::setup_opengl()
 {
-#ifdef BBGE_BUILD_SDL2
-	assert(gGLctx);
-#else
-	assert(gScreen);
-#endif
-
-
 	glViewport(0, 0, width, height);
 
 	SDL_ShowCursor(SDL_DISABLE);
@@ -150,173 +153,9 @@ void Core::setup_opengl()
 		afterEffectManager->updateDevice();
 }
 
-
-void Core::initGraphics(int w, int h, int fullscreen, int vsync, int bpp, int display, int hz)
+void Core::resizeWindow(int w, int h, int full, int bpp, int vsync, int display, int hz)
 {
-	const int oldw = width;
-	const int oldh = height;
-	bool reloadRes = false;
-
-#ifdef BBGE_BUILD_SDL2
-	const int oldDisplay = getDisplayIndex();
-	assert(oldDisplay >= 0);
-	if(display == -1)
-		display = oldDisplay;
-
-	SDL_DisplayMode displaymode;
-	if(SDL_GetDesktopDisplayMode(display, &displaymode) != 0)
-	{
-		// fail-safe
-		displaymode.w = 800;
-		displaymode.h = 600;
-		displaymode.driverdata = 0;
-		displaymode.refresh_rate = 0;
-		displaymode.format = 0;
-		display = oldDisplay;
-	}
-
-	const bool useDesktop = w == 0 || h == 0 || (oldw && w == -1 && oldh && h == -1 && _useDesktopResolution);
-#else
-	const bool useDesktop = false;
-#endif
-
-	
-	const bool wasFullscreen = _fullscreen;
-
-	if(hz == -1)
-		hz = _refreshRate;
-
-	if (fullscreen == -1)
-		fullscreen = _fullscreen;
-
-	if (vsync == -1)
-		vsync = _vsync;
-
-#ifdef BBGE_BUILD_SDL2
-	if(useDesktop)
-	{
-		w = displaymode.w;
-		h = displaymode.h;
-	}
-#endif
-
-	if (w == -1)
-		w = width;
-
-	if (h == -1)
-		h = height;
-
-	if (bpp == -1)
-		bpp = _bpp;
-
-	_vsync = vsync;
-	_fullscreen = fullscreen;
-	_bpp = bpp;
-	_refreshRate = hz;
-
-#ifdef BBGE_BUILD_SDL2
-	displaymode.refresh_rate = hz;
-
-	if(vsync)
-	{
-		if(SDL_GL_SetSwapInterval(-1) != 0)
-			SDL_GL_SetSwapInterval(1);
-	}
-	else
-		SDL_GL_SetSwapInterval(0);
-
-	// Record window position so we can properly restore it when leaving fullscreen
-	//if(fullscreen && !wasFullscreen)
-	//	SDL_GetWindowPosition(gScreen, &winPosX, &winPosY);
-
-	SDL_SetWindowFullscreen(gScreen, 0);
-
-	bool resize = true;
-	bool maximize = useDesktop;
-	if(useDesktop != _useDesktopResolution)
-	{
-		int usew = 0, useh = 0;
-		bool maximize = !fullscreen;
-		if(!useDesktop)
-		{
-			usew = w;
-			useh = h;
-			maximize = false;
-		}
-		if(useDesktop && !fullscreen && wasFullscreen)
-		{
-			usew = oldw;
-			useh = oldh;
-			maximize = false;
-		}
-		createWindow(usew, useh, useDesktop, false, bpp, display);
-
-		reloadRes = true;
-	}
-
-	// Move window to specified display if necessary
-	if(display != oldDisplay)
-	{
-		int center = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
-		SDL_SetWindowPosition(gScreen, center, center);
-	}
-
-	if(fullscreen)
-	{
-		int screenflags = useDesktop ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN;
-		displaymode.w = w;
-		displaymode.h = h;
-		// must not be already in fullscreen here, otherwise new display mode doesn't apply properly
-		SDL_SetWindowSize(gScreen, w, h);
-		SDL_SetWindowDisplayMode(gScreen, &displaymode);
-		SDL_SetWindowFullscreen(gScreen, screenflags);
-		maximize = false;
-	}
-
-	if(!fullscreen && wasFullscreen)
-	{
-		// Need to do this; else the window ends up at (0, 0) with the title bar outside the screen area
-		int c = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
-		SDL_SetWindowPosition(gScreen, c, c);
-	}
-	if(maximize)
-	{
-		SDL_MaximizeWindow(gScreen);
-		resize = false;
-	}
-
-	if(resize && !fullscreen && !useDesktop)
-	{
-		if(w != oldw || h != oldh)
-		{
-			SDL_SetWindowSize(gScreen, w, h);
-			int c = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
-			SDL_SetWindowPosition(gScreen, c, c);
-		}
-	}
-
-	if(!resize)
-		SDL_GetWindowSize(gScreen, &w, &h);
-
-#else
-	if(w != oldw || h != oldh)
-	{
-		reloadRes = true; // Always reload resources on SDL 1.2, since it loses the GL context!
-		createWindow(w, h, false, fullscreen, bpp, 0);
-	}
-
-#endif
-
-	_useDesktopResolution = useDesktop;
-
-	updateWindowDrawSize(w, h);
-
-	if(reloadRes)
-	{
-		unloadResources();
-		reloadResources();
-		resetTimer();
-	}
+	window->open(w, h, full, bpp, vsync, display, hz);
 }
 
 void Core::updateWindowDrawSize(int w, int h)
@@ -332,18 +171,29 @@ void Core::updateWindowDrawSize(int w, int h)
 void Core::onWindowResize(int w, int h)
 {
 	updateWindowDrawSize(w, h);
+
+	bool reloadRes = false;
+#ifndef BBGE_BUILD_SDL2
+	reloadRes = true; // SDL1.2 loses the GL context on resize, so all resources must be reloaded
+#endif
+
+	if(reloadRes)
+	{
+		unloadResources();
+		reloadResources();
+		resetTimer();
+	}
+
+	updateWindowDrawSize(w, h);
 }
 
 void Core::setFullscreen(bool full)
 {
-	if(full == !!_fullscreen)
-		return;
-
-	sound->pause();
-	initGraphics(-1, -1, full);
+	//sound->pause();
+	window->setFullscreen(full);
 	cacheRender();
 	resetTimer();
-	sound->resume();
+	//sound->resume();
 }
 
 RenderObjectLayer *Core::getRenderObjectLayer(int i)
@@ -389,8 +239,6 @@ void Core::debugLog(const std::string &s)
 	std::cout << s << std::endl;
 #endif
 }
-
-#ifdef BBGE_BUILD_WINDOWS
 static bool checkWritable(const std::string& path, bool warn, bool critical)
 {
 	bool writeable = false;
@@ -413,14 +261,13 @@ static bool checkWritable(const std::string& path, bool warn, bool critical)
 				<< "or try running it as administrator, that may help as well.";
 			if(critical)
 				os << "\n\nWill now exit.";
-			MessageBoxA(NULL, os.str().c_str(), "Need to write but can't!", MB_OK | MB_ICONERROR);
+			errorLog(os.str());
 		}
 		if(critical)
 			exit(1);
 	}
 	return writeable;
 }
-#endif
 
 
 Core::Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
@@ -507,10 +354,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 
 	particleManager = new ParticleManager(particleSize);
 	nowTicks = thenTicks = 0;
-	_hasFocus = false;
 	lib_graphics = lib_sound = lib_input = false;
-	clearColor = Vector(0,0,0);
-	updateCursorFromMouse = true;
 	mouseConstraint = false;
 	mouseCircle = 0;
 	overrideStartLayer = 0;
@@ -525,9 +369,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	doScreenshot = false;
 	baseCullRadius = 1;
 	width = height = 0;
-	_fullscreen = false;
-	_refreshRate = 0;
-	_useDesktopResolution = false;
 	_lastEnumeratedDisplayIndex = -1;
 	afterEffectManagerLayer = 0;
 	renderObjectLayers.resize(1);
@@ -540,10 +381,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	nestedMains = 0;
 	afterEffectManager = 0;
 	loopDone = false;
-#ifdef BBGE_BUILD_SDL2
-	winPosX = SDL_WINDOWPOS_CENTERED;
-	winPosY = SDL_WINDOWPOS_CENTERED;
-#endif
 	core = this;
 
 	for (int i = 0; i < KEY_MAXARRAY; i++)
@@ -658,12 +495,7 @@ void Core::updateInputGrab()
 {
 	// Can and MUST always ungrab if window is not in focus
 	const bool on = grabInput && isWindowFocus();
-
-	#ifdef BBGE_BUILD_SDL2
-	SDL_SetWindowGrab(gScreen, on ? SDL_TRUE : SDL_FALSE);
-	#else
-	SDL_WM_GrabInput(on?SDL_GRAB_ON:SDL_GRAB_OFF);
-	#endif
+	window->setGrabInput(on);
 }
 
 void Core::setInputGrab(bool on)
@@ -674,27 +506,22 @@ void Core::setInputGrab(bool on)
 
 bool Core::isFullscreen()
 {
-	return _fullscreen;
+	return window->isFullscreen();
 }
 
 bool Core::isDesktopResolution()
 {
-	return _useDesktopResolution;
+	return window->isDesktopResolution();
 }
 
 int Core::getDisplayIndex()
 {
-#ifdef BBGE_BUILD_SDL2
-	int display = SDL_GetWindowDisplayIndex(gScreen);
-	return display < 0 ? 0 : display; // if there's an error, assume primary display
-#else
-	return 0;
-#endif
+	return window->getDisplayIndex();
 }
 
 int Core::getRefreshRate()
 {
-	return _refreshRate;
+	return window->getRefreshRate();
 }
 
 bool Core::isShuttingDown()
@@ -838,7 +665,6 @@ void Core::onUpdate(float dt)
 	if (minimized) return;
 
 	core->mouse.lastPosition = core->mouse.position;
-	core->mouse.lastScrollWheel = core->mouse.scrollWheel;
 
 	pollEvents(dt);
 
@@ -866,50 +692,19 @@ void Core::globalScaleChanged()
 
 void Core::setClearColor(const Vector &c)
 {
-	clearColor = c;
-
 	glClearColor(c.x, c.y, c.z, 0.0);
-
+	clearColor = c;
 }
 
-bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsync, int bpp, int display, int hz)
+void Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsync, int bpp, int display, int hz)
 {
-	assert(!gScreen);
+	if(!window)
+		window = new CoreWindow;
 
-	_hasFocus = false;
+	window->open(width, height, fullscreen, bpp, vsync, display, hz);
+	window->setTitle(appName.c_str());
 
-#ifndef BBGE_BUILD_SDL2
-#if !defined(BBGE_BUILD_MACOSX)
-	// have to cast away constness, since SDL_putenv() might be #defined to
-	//  putenv(), which takes a (char *), and freaks out newer GCC releases
-	//  when you try to pass a (const!) string literal here...  --ryan.
-	SDL_putenv((char *) "SDL_VIDEO_CENTERED=1");
-#endif
-	SDL_WM_SetCaption(appName.c_str(), appName.c_str());
-#endif
-
-	initIcon(gScreen);
-
-
-#ifdef BBGE_BUILD_SDL2
-#  ifdef _DEBUG
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-#  endif
-	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
-#else
-	{
-		std::ostringstream os;
-		os << "setting vsync: " << vsync;
-		SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, vsync); // SDL 1.2 can't set this on an existing context
-		debugLog(os.str());
-	}
-#endif
-	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-
-	createWindow(320, 240, false, false, bpp, display);
-
-	enumerateScreenModes(display);
-
+	// get GL symbols AFTER opening the window, otherwise we get a super old GL context on windows and nothing works
 	if (!lookup_all_glsyms())
 	{
 		std::ostringstream os;
@@ -918,103 +713,16 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 		exit_error(os.str());
 	}
 
-	initGraphics(width, height, fullscreen, vsync, bpp, display, hz);
-
 	debugLog("GL vendor, renderer & version:");
 	debugLog((const char*)glGetString(GL_VENDOR));
 	debugLog((const char*)glGetString(GL_RENDERER));
 	debugLog((const char*)glGetString(GL_VERSION));
 
-	_hasFocus = true;
+	enumerateScreenModes(window->getDisplayIndex());
 
+	window->initSize();
+	cacheRender(); // Clears the window bg to black early; prevents flickering
 	lib_graphics = true;
-
-	// init success
-	return true;
-}
-
-void Core::createWindow(int w, int h, bool resizable, bool fullscreen, int bpp, int display)
-{
-#ifdef BBGE_BUILD_SDL2
-	if(gScreen)
-	{
-		SDL_DestroyWindow(gScreen);
-		gScreen = NULL;
-	}
-	if(gGLctx)
-	{
-		SDL_GL_MakeCurrent(gScreen, NULL);
-		SDL_GL_DeleteContext(gGLctx);
-		gGLctx = NULL;
-	}
-	Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
-	if(resizable)
-		flags |= SDL_WINDOW_RESIZABLE;
-	if(fullscreen)
-	{
-		if(!w && !h)
-			flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-		else
-			flags |= SDL_WINDOW_FULLSCREEN;
-	}
-	if(w <= 0)
-		w = 640;
-	if(h <= 0)
-		h = 480;
-	int pos = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
-	gScreen = SDL_CreateWindow(appName.c_str(), pos, pos, w, h, flags);
-	if (gScreen == NULL)
-	{
-		std::ostringstream os;
-		os << "Couldn't set resolution [" << w << "x" << h << "]\n" << SDL_GetError();
-		errorLog(os.str());
-		SDL_Quit();
-		exit(0);
-	}
-	gGLctx = SDL_GL_CreateContext(gScreen);
-	if (gGLctx == NULL)
-	{
-		std::ostringstream os;
-		os << "Couldn't create OpenGL context!\n" << SDL_GetError();
-		errorLog(os.str());
-		SDL_Quit();
-		exit(0);
-	}
-	SDL_GL_MakeCurrent(gScreen, gGLctx);
-
-	{
-		const char *name = SDL_GetCurrentVideoDriver();
-		std::ostringstream os2;
-		os2 << "Video Driver Name [" << name << "]";
-		debugLog(os2.str());
-	}
-
-#else
-	Uint32 flags = 0;
-	flags = SDL_OPENGL;
-	if(fullscreen)
-		flags |= SDL_FULLSCREEN;
-	// No well supported in SDL 1.2
-	//if (resizable)
-	//	flags |= SDL_RESIZABLE;
-
-	gScreen = SDL_SetVideoMode(w, h, bpp, flags);
-	if (gScreen == NULL)
-	{
-		std::ostringstream os;
-		os << "Couldn't set resolution [" << width << "x" << height << "]\n" << SDL_GetError();
-		SDL_Quit();
-		exit_error(os.str());
-	}
-
-	{
-		char name[256];
-		SDL_VideoDriverName((char*)name, 256);
-		std::ostringstream os2;
-		os2 << "Video Driver Name [" << name << "]";
-		debugLog(os2.str());
-	}
-#endif
 }
 
 void Core::enumerateScreenModesIfNecessary(int display /* = -1 */)
@@ -1022,8 +730,8 @@ void Core::enumerateScreenModesIfNecessary(int display /* = -1 */)
 	if(display == -1)
 	{
 #ifdef BBGE_BUILD_SDL2
-		if(gScreen)
-			display = SDL_GetWindowDisplayIndex(gScreen);
+		if(window)
+			display = window->getDisplayIndex();
 		else
 #endif
 			display = 0;
@@ -1101,17 +809,9 @@ void Core::shutdownGraphicsLibrary()
 
 	glFinish();
 
-#ifdef BBGE_BUILD_SDL2
-	SDL_GL_MakeCurrent(gScreen, NULL);
-	SDL_GL_DeleteContext(gGLctx);
-	SDL_DestroyWindow(gScreen);
-	gGLctx = 0;
-#endif
+	delete window;
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
-	gScreen = 0;
 	unload_all_glsyms();
-
-	_hasFocus = false;
 
 	lib_graphics = false;
 
@@ -1121,8 +821,6 @@ void Core::shutdownGraphicsLibrary()
 void Core::quit()
 {
 	enqueueJumpState("STATE_QUIT");
-
-
 }
 
 void Core::applyState(const std::string &state)
@@ -1133,37 +831,6 @@ void Core::applyState(const std::string &state)
 	}
 	StateManager::applyState(state);
 }
-
-
-
-#ifdef BBGE_BUILD_WINDOWS
-void centerWindow(HWND hwnd)
-{
-	int x, y;
-	HWND hwndDeskTop;
-	RECT rcWnd, rcDeskTop;
-	// Get a handle to the desktop window
-	hwndDeskTop = ::GetDesktopWindow();
-	// Get dimension of desktop in a rect
-	::GetWindowRect(hwndDeskTop, &rcDeskTop);
-	// Get dimension of main window in a rect
-	::GetWindowRect(hwnd, &rcWnd);
-	// Find center of desktop
-	x = (rcDeskTop.right - rcDeskTop.left)/2;
-	y = (rcDeskTop.bottom - rcDeskTop.top)/2;
-	x -= (rcWnd.right - rcWnd.left)/2;
-	y -= (rcWnd.bottom - rcWnd.top)/2;
-	// Set top and left to center main window on desktop
-	::SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
-
-}
-#endif
-
-
-// No longer part of C/C++ standard
-#ifndef M_PI
-#define M_PI		   3.14159265358979323846
-#endif
 
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 {
@@ -1273,11 +940,10 @@ void Core::setMousePosition(const Vector &p)
 	float px = p.x + virtualOffX;
 	float py = p.y;
 
-	#ifdef BBGE_BUILD_SDL2
-	SDL_WarpMouseInWindow(gScreen, px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
-	#else
-	SDL_WarpMouse( px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
-	#endif
+	window->warpMouse(
+		px * (float(width)/float(virtualWidth)),
+		py * (float(height)/float(virtualHeight))
+	);
 }
 
 // used to update all render objects either uniformly or as part of a time sliced update process
@@ -1325,17 +991,11 @@ std::string getScreenshotFilename(bool png)
 unsigned Core::getTicks()
 {
 	return SDL_GetTicks();
-	return 0;
 }
 
 bool Core::isWindowFocus()
 {
-	#ifdef BBGE_BUILD_SDL2
-	return ((SDL_GetWindowFlags(gScreen) & SDL_WINDOW_INPUT_FOCUS) != 0);
-	#else
-	return ((SDL_GetAppState() & SDL_APPINPUTFOCUS) != 0);
-	#endif
-	return true;
+	return window->hasInputFocus();
 }
 
 void Core::onBackgroundUpdate()
@@ -1582,8 +1242,6 @@ bool Core::doMouseConstraint()
 {
 	if (mouseConstraint)
 	{
-
-
 		Vector h = mouseConstraintCenter;
 		Vector d = mouse.position - h;
 		if (!d.isLength2DIn(mouseCircle))
@@ -1595,6 +1253,122 @@ bool Core::doMouseConstraint()
 		}
 	}
 	return false;
+}
+
+void Core::onEvent(const SDL_Event& event)
+{
+	const bool focus = window->hasFocus();
+	switch (event.type)
+	{
+		case SDL_KEYDOWN:
+		{
+			if ((event.key.keysym.sym == SDLK_g) && (event.key.keysym.mod & KMOD_CTRL))
+			{
+				setInputGrab(!grabInput);
+			}
+			else if (focus)
+			{
+#ifdef BBGE_BUILD_SDL2
+				unsigned kidx = event.key.keysym.scancode;
+#else
+				unsigned kidx = event.key.keysym.sym;
+#endif
+				if(kidx < KEY_MAXARRAY)
+					keys[kidx] = 1;
+			}
+		}
+		break;
+
+		case SDL_KEYUP:
+		{
+			if (focus)
+			{
+#ifdef BBGE_BUILD_SDL2
+				unsigned kidx = event.key.keysym.scancode;
+#else
+				unsigned kidx = event.key.keysym.sym;
+#endif
+				if(kidx < KEY_MAXARRAY)
+					keys[kidx] = 0;
+			}
+		}
+		break;
+
+		case SDL_MOUSEMOTION:
+		{
+			if (focus && updateMouse)
+			{
+				mouse.lastPosition = mouse.position;
+
+				mouse.position.x = ((event.motion.x) * (float(virtualWidth)/float(getWindowWidth()))) - getVirtualOffX();
+				mouse.position.y = event.motion.y * (float(virtualHeight)/float(getWindowHeight()));
+
+				mouse.change = mouse.position - mouse.lastPosition;
+
+				if (doMouseConstraint())
+					setMousePosition(mouse.position);
+			}
+		}
+		break;
+
+#ifdef BBGE_BUILD_SDL2
+
+		case SDL_MOUSEWHEEL:
+		{
+			if (focus && updateMouse)
+			{
+				if (event.wheel.y > 0)
+					mouse.scrollWheelChange = 1;
+				else if (event.wheel.y < 0)
+					mouse.scrollWheelChange = -1;
+			}
+		}
+		break;
+
+		case SDL_JOYDEVICEADDED:
+			onJoystickAdded(event.jdevice.which);
+			break;
+
+		case SDL_JOYDEVICEREMOVED:
+			onJoystickRemoved(event.jdevice.which);
+			break;
+
+#else
+		case SDL_MOUSEBUTTONDOWN:
+		{
+			if (focus && updateMouse)
+			{
+				switch(event.button.button)
+				{
+				case 4:
+					mouse.scrollWheelChange = 1;
+					break;
+				case 5:
+					mouse.scrollWheelChange = -1;
+					break;
+				}
+			}
+		}
+		break;
+
+		case SDL_MOUSEBUTTONUP:
+		{
+			if (focus && updateMouse)
+			{
+				switch(event.button.button)
+				{
+				case 4:
+					mouse.scrollWheelChange = 1;
+					break;
+				case 5:
+					mouse.scrollWheelChange = -1;
+					break;
+				}
+			}
+		}
+		break;
+#endif
+	}
 }
 
 void Core::pollEvents(float dt)
@@ -1634,182 +1408,7 @@ void Core::pollEvents(float dt)
 		mouse.change = Vector(0,0);
 	}
 
-
-
-	SDL_Event event;
-
-
-
-	while ( SDL_PollEvent (&event) ) {
-		switch (event.type) {
-			case SDL_KEYDOWN:
-			{
-				#if __APPLE__
-					#if SDL_VERSION_ATLEAST(2, 0, 0)
-						if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_GUI))
-					#else
-						if ((event.key.keysym.sym == SDLK_q) && (event.key.keysym.mod & KMOD_META))
-					#endif
-				#else
-				if ((event.key.keysym.sym == SDLK_F4) && (event.key.keysym.mod & KMOD_ALT))
-				#endif
-				{
-					quitNestedMain();
-					quit();
-				}
-
-				if ((event.key.keysym.sym == SDLK_g) && (event.key.keysym.mod & KMOD_CTRL))
-				{
-					setInputGrab(!grabInput);
-				}
-				else if (_hasFocus)
-				{
-#ifdef BBGE_BUILD_SDL2
-					unsigned kidx = event.key.keysym.scancode;
-#else
-					unsigned kidx = event.key.keysym.sym;
-#endif
-					if(kidx < KEY_MAXARRAY)
-						keys[kidx] = 1;
-				}
-			}
-			break;
-
-			case SDL_KEYUP:
-			{
-				if (_hasFocus)
-				{
-#ifdef BBGE_BUILD_SDL2
-					unsigned kidx = event.key.keysym.scancode;
-#else
-					unsigned kidx = event.key.keysym.sym;
-#endif
-					if(kidx < KEY_MAXARRAY)
-						keys[kidx] = 0;
-				}
-			}
-			break;
-
-			case SDL_MOUSEMOTION:
-			{
-				if (_hasFocus && updateMouse)
-				{
-					mouse.lastPosition = mouse.position;
-
-					mouse.position.x = ((event.motion.x) * (float(virtualWidth)/float(getWindowWidth()))) - getVirtualOffX();
-					mouse.position.y = event.motion.y * (float(virtualHeight)/float(getWindowHeight()));
-
-					mouse.change = mouse.position - mouse.lastPosition;
-
-					if (doMouseConstraint()) warpMouse = true;
-				}
-			}
-			break;
-
-#ifdef BBGE_BUILD_SDL2
-			case SDL_WINDOWEVENT:
-			{
-				switch(event.window.event)
-				{
-					case SDL_WINDOWEVENT_CLOSE:
-						SDL_Quit();
-						_exit(0);
-						break;
-					case SDL_WINDOWEVENT_RESIZED:
-						onWindowResize(event.window.data1, event.window.data2);
-						break;
-					/*case SDL_WINDOWEVENT_FOCUS_GAINED:
-						_hasFocus = true;
-						break;
-					case SDL_WINDOWEVENT_FOCUS_LOST:
-						_hasFocus = false;*/
-				}
-			}
-			break;
-
-			case SDL_MOUSEWHEEL:
-			{
-				if (_hasFocus && updateMouse)
-				{
-					if (event.wheel.y > 0)
-						mouse.scrollWheelChange = 1;
-					else if (event.wheel.y < 0)
-						mouse.scrollWheelChange = -1;
-				}
-			}
-			break;
-
-			case SDL_JOYDEVICEADDED:
-				onJoystickAdded(event.jdevice.which);
-				break;
-
-			case SDL_JOYDEVICEREMOVED:
-				onJoystickRemoved(event.jdevice.which);
-				break;
-
-#else
-			case SDL_MOUSEBUTTONDOWN:
-			{
-				if (_hasFocus && updateMouse)
-				{
-					switch(event.button.button)
-					{
-					case 4:
-						mouse.scrollWheelChange = 1;
-					break;
-					case 5:
-						mouse.scrollWheelChange = -1;
-					break;
-					}
-				}
-			}
-			break;
-
-			case SDL_MOUSEBUTTONUP:
-			{
-				if (_hasFocus && updateMouse)
-				{
-					switch(event.button.button)
-					{
-					case 4:
-						mouse.scrollWheelChange = 1;
-					break;
-					case 5:
-						mouse.scrollWheelChange = -1;
-					break;
-					}
-				}
-			}
-			break;
-#endif
-
-			case SDL_QUIT:
-				SDL_Quit();
-				_exit(0);
-
-
-			break;
-
-			case SDL_SYSWMEVENT:
-			{
-
-			}
-			break;
-
-			default:
-			break;
-		}
-	}
-
-	if (updateMouse)
-	{
-		mouse.scrollWheel += mouse.scrollWheelChange;
-
-		if (warpMouse)
-		{
-			setMousePosition(mouse.position);
-		}
-	}
+	window->handleInput();
 
 	for(size_t i = 0; i < joysticks.size(); ++i)
 		if(joysticks[i])
@@ -2223,14 +1822,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 void Core::showBuffer()
 {
-	BBGE_PROF(Core_showBuffer);
-#ifdef BBGE_BUILD_SDL2
-	SDL_GL_SwapWindow(gScreen);
-#else
-	SDL_GL_SwapBuffers();
-
-#endif
-
+	window->present();
 }
 
 // WARNING: only for use during shutdown
@@ -2555,12 +2147,6 @@ void Core::removeTexture(Texture *res)
 	resources.swap(copy);
 }
 
-void Core::deleteRenderObjectMemory(RenderObject *r)
-{
-
-	delete r;
-}
-
 void Core::removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag)
 {
 	if (r)
@@ -2572,12 +2158,10 @@ void Core::removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag)
 		if (flag != DO_NOT_DESTROY_RENDER_OBJECT )
 		{
 			r->destroy();
-
-			deleteRenderObjectMemory(r);
+			delete r;
 		}
 	}
 }
-
 
 void Core::enqueueRenderObjectDeletion(RenderObject *object)
 {
@@ -2602,7 +2186,7 @@ void Core::clearGarbage()
 
 	for (RenderObjects::iterator i = garbage.begin(); i != garbage.end(); i++)
 	{
-		deleteRenderObjectMemory(*i);
+		delete *i;
 	}
 
 	garbage.clear();

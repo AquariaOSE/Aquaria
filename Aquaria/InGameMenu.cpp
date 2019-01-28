@@ -1705,8 +1705,7 @@ static std::string screenModeStr(const ScreenMode& m)
 static bool isCurrentScreenMode(const ScreenMode& m)
 {
 	if(!m.x && !m.y && core->isDesktopResolution())
-		return true;
-
+			return true;
 	return m.x == dsq->user.video.resx && m.y == dsq->user.video.resy && (!m.hz || dsq->user.video.hz == m.hz);
 }
 
@@ -3280,7 +3279,7 @@ void InGameMenu::onOptionsSave()
 		|| v.hz != bv.hz
 	)
 	{
-		dsq->initGraphics(v.resx, v.resy, v.full,  v.vsync, v.bits, -1, v.hz);
+		dsq->resizeWindow(v.resx, v.resy, v.full,  v.vsync, v.bits, -1, v.hz);
 		if (dsq->confirm("", "graphics", false, 10)) {
 		} else {
 			v.resx = bv.resx;
@@ -3292,7 +3291,7 @@ void InGameMenu::onOptionsSave()
 
 			dsq->user.apply();
 
-			dsq->initGraphics(v.resx, v.resy, v.full);
+			dsq->resizeWindow(v.resx, v.resy, v.full, -1, -1, -1, -1);
 		}
 	}
 
