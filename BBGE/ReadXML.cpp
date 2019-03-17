@@ -1,5 +1,6 @@
 #include "ReadXML.h"
 #include "Base.h"
+#include <sstream>
 
 tinyxml2::XMLError readXML(const std::string& fn, tinyxml2::XMLDocument& doc)
 {
@@ -18,6 +19,15 @@ tinyxml2::XMLDocument *readXML(const std::string& fn, tinyxml2::XMLError *perr /
 		*perr = err;
 	if(err != tinyxml2::XML_SUCCESS && !keepEmpty)
 	{
+		const char *e1 = doc->GetErrorStr1();
+		const char *e2 = doc->GetErrorStr2();
+		std::ostringstream os;
+		os << "readXML(" << fn << ") failed!\n";
+		if(e1)
+			os << e1 << "\n";
+		if(e2)
+			os << e2 << "\n";
+		errorLog(os.str());
 		delete doc;
 		doc = NULL;
 	}
