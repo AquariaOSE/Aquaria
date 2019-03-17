@@ -84,12 +84,6 @@ void Intro::applyState()
 
 	ActionMapper::clearActions();
 
-	/*
-	m = new Mappy;
-	dsq->user.control.actionSet.importAction(m, "Escape", ACTION_ESC);
-	addRenderObject(m, LR_BACKGROUND);
-	*/
-
 	done = false;
 }
 
@@ -136,48 +130,6 @@ bool Intro::waitQuit(float t)
 {
 	dsq->run(t);
 	return false;
-
-	/*
-	dsq->main(t);
-	if (quitFlag)
-	{
-		//errorLog("quitFlag!");
-		endIntro();
-		return true;
-	}
-	return false;
-	*/
-
-	/*
-	float frameTime = 0.01;
-	float c = 0;
-	bool tminus=false;
-	while (c < t)
-	{
-		float dt = frameTime;
-		if ((c + dt) > t)
-		{
-			dt = (t-c);
-			tminus = true;
-		}
-
-		std::ostringstream os;
-		os << " tminus: " << tminus << " dt: " << dt << " c: " << c;
-		debugLog(os.str());
-
-		dsq->main(dt);
-		c += dt;
-
-		if (m->isActing(ACTION_ESC))
-		//if (core->getKeyState(KEY_ESCAPE))
-		{
-			endIntro();
-			return true;
-		}
-	}
-
-	return false;
-	*/
 }
 
 void Intro::createMeteor(int layer, Vector pos, Vector off, Vector sz)
