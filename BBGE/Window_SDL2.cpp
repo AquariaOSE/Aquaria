@@ -66,6 +66,7 @@ void Window::_open(unsigned w, unsigned h, bool full, unsigned bpp, bool vsync, 
 #  endif
 	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+	SDL_SetHint("SDL_VIDEO_HIGHDPI_DISABLED", "1");
 
 	Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
 	if(full)
@@ -178,32 +179,16 @@ void Window::warpMouse(int x, int y)
 	SDL_WarpMouseInWindow(WIN, x, y);
 }
 
-#ifndef KMOD_GUI
-#define KMOD_GUI KMOD_META
-#endif
-
 void Window::_onEventImpl(const SDL_Event& ev)
 {
 	switch(ev.type)
 	{
-#if 0
 		case SDL_KEYDOWN:
-		{
 #if __APPLE__
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-			if ((ev.key.keysym.sym == SDLK_q) && (ev.key.keysym.mod & KMOD_GUI))
-#else
-			if ((ev.key.keysym.sym == SDLK_q) && (ev.key.keysym.mod & KMOD_META))
+		if ((ev.key.keysym.sym == SDLK_q) && (ev.key.keysym.mod & KMOD_GUI))
+			onQuit();
 #endif
-#else
-			if ((ev.key.keysym.sym == SDLK_F4) && (ev.key.keysym.mod & KMOD_ALT))
-#endif
-			{
-				onQuit()
-			}
-		}
 		break;
-#endif
 
 		case SDL_WINDOWEVENT:
 		{
