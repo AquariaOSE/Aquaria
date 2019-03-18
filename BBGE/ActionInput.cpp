@@ -197,6 +197,10 @@ int getStringToInputCode(const std::string& s)
 		k = getInputCodeFromKeyName(s.c_str());
 	}
 
+	// Non-configurable keys
+	if(k == KEY_ESCAPE)
+		return 0;
+
 	if(k < ACTION_BUTTON_ENUM_SIZE)
 		return k;
 

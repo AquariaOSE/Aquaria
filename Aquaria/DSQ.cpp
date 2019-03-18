@@ -3696,6 +3696,7 @@ void DSQ::bindInput()
 	almb.clear();
 	armb.clear();
 
+	addAction(ACTION_ESC, KEY_ESCAPE, -1);
 	addAction(MakeFunctionEvent(DSQ, onSwitchScreenMode), KEY_RETURN, 1);
 
 	if (isDeveloperKeys())
