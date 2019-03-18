@@ -925,6 +925,8 @@ InGameMenu::~InGameMenu()
 
 void InGameMenu::bindInput()
 {
+	addAction(ACTION_ESC, KEY_ESCAPE, -1);
+
 	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
 	{
 		const ActionSet& as = dsq->user.control.actionSets[i];
@@ -1522,7 +1524,7 @@ void InGameMenu::hide(bool effects, bool cancel)
 }
 
 
-void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int x, int y, bool acceptEsc, bool rejectJoyAxis)
+void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int x, int y, bool rejectJoyAxis)
 {
 	TTFText *lb = new TTFText(&dsq->fontArialSmallest);
 	lb->setText(label);
@@ -1540,14 +1542,12 @@ void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label,
 	k1->position = Vector(x,y);
 	group->addChild(k1, PM_POINTER);
 	keyConfigs.push_back(k1);
-	k1->setAcceptEsc(acceptEsc);
 	x += KEYCONFIG_COL_DISTANCE;
 
 	AquariaKeyConfig *k2 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 1);
 	k2->position = Vector(x,y);
 	group->addChild(k2, PM_POINTER);
 	keyConfigs.push_back(k2);
-	k2->setAcceptEsc(acceptEsc);
 	x += KEYCONFIG_COL_DISTANCE;
 
 	AquariaKeyConfig *j1 = new AquariaKeyConfig(actionInputName, INPUTSET_JOY, 0);
@@ -2127,10 +2127,10 @@ void InGameMenu::create()
 
 		addKeyConfigLine(kk, SB(2107), "PrimaryAction",		offx, y+=yi);
 		addKeyConfigLine(kk, SB(2108), "SecondaryAction",		offx, y+=yi);
-		addKeyConfigLine(kk, SB(2109), "SwimUp",				offx, y+=yi, false, true);
-		addKeyConfigLine(kk, SB(2110), "SwimDown",				offx, y+=yi, false, true);
-		addKeyConfigLine(kk, SB(2111), "SwimLeft",				offx, y+=yi, false, true);
-		addKeyConfigLine(kk, SB(2112), "SwimRight",			offx, y+=yi, false, true);
+		addKeyConfigLine(kk, SB(2109), "SwimUp",				offx, y+=yi, true);
+		addKeyConfigLine(kk, SB(2110), "SwimDown",				offx, y+=yi, true);
+		addKeyConfigLine(kk, SB(2111), "SwimLeft",				offx, y+=yi, true);
+		addKeyConfigLine(kk, SB(2112), "SwimRight",			offx, y+=yi, true);
 		addKeyConfigLine(kk, SB(2113), "Roll",					offx, y+=yi);
 		addKeyConfigLine(kk, SB(2114), "Revert",				offx, y+=yi);
 		addKeyConfigLine(kk, SB(2115), "WorldMap",				offx, y+=yi);
@@ -2162,7 +2162,7 @@ void InGameMenu::create()
 
 		int y = offy;
 
-		addKeyConfigLine(kk, SB(2116), "Escape",		offx, y+=yi, true);
+		addKeyConfigLine(kk, SB(2116), "Escape",		offx, y+=yi);
 		addKeyConfigLine(kk, SB(2128), "ToggleHelp",	offx, y+=yi);
 		addKeyConfigLine(kk, SB(2121), "PrevPage",		offx, y+=yi);
 		addKeyConfigLine(kk, SB(2122), "NextPage",		offx, y+=yi);

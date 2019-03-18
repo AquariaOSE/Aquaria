@@ -3226,6 +3226,8 @@ void Game::bindInput()
 	ActionMapper::clearActions();
 	//ActionMapper::clearCreatedEvents();
 
+	addAction(ACTION_ESC, KEY_ESCAPE, -1);
+
 
 #ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->canOpenEditor())

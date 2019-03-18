@@ -491,7 +491,6 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 , inputSetType(inputSetType)
 , inputIdx(inputIdx)
 , actionSetIndex(0)
-, acceptEsc(false)
 , rejectJoyAxis(false)
 {
 	bg = new Quad();
@@ -760,7 +759,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 				{
 					if(*k == i) // clear key if pressed again
 						*k = 0;
-					else if(acceptEsc || i != KEY_ESCAPE)
+					else if(i != KEY_ESCAPE)
 					{
 						if (i == KEY_DELETE || i == KEY_BACKSPACE)
 							*k = 0;
@@ -961,11 +960,6 @@ void AquariaKeyConfig::onUpdate(float dt)
 void AquariaKeyConfig::setActionSetIndex(size_t idx)
 {
 	actionSetIndex = idx;
-}
-
-void AquariaKeyConfig::setAcceptEsc(bool a)
-{
-	acceptEsc = a;
 }
 
 void AquariaKeyConfig::setRejectJoyAxis(bool b)
