@@ -123,6 +123,9 @@ void Window::_onEventImpl(const SDL_Event& ev)
 		case SDL_VIDEORESIZE:
 			onResize(ev.resize.w, ev.resize.h);
 			break;
+
+		case SDL_ACTIVEEVENT:
+			_hasFocus = ev.active.state;
 	}
 }
 
