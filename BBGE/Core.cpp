@@ -1063,7 +1063,6 @@ void Core::run(float runTime)
 		{
 			if (isWindowFocus())
 			{
-				_hasFocus = true;
 				if (wasInactive)
 				{
 					debugLog("WINDOW ACTIVE");
@@ -1073,37 +1072,33 @@ void Core::run(float runTime)
 			}
 			else
 			{
-				if (_hasFocus)
+				if (!wasInactive)
+					debugLog("WINDOW INACTIVE");
+
+				wasInactive = true;
+				updateInputGrab();
+				sound->pause();
+
+				while (!isWindowFocus())
 				{
-					if (!wasInactive)
-						debugLog("WINDOW INACTIVE");
+					pollEvents(dt);
 
-					wasInactive = true;
-					_hasFocus = false;
-					updateInputGrab();
-					sound->pause();
-
-					while (!isWindowFocus())
-					{
-						pollEvents(dt);
-
-						onBackgroundUpdate();
-
-						resetTimer();
-					}
-
-					debugLog("app back in focus");
+					onBackgroundUpdate();
 
 					resetTimer();
-
-					sound->resume();
-
-					resetTimer();
-
-					SDL_ShowCursor(SDL_DISABLE);
-
-					continue;
 				}
+
+				debugLog("app back in focus");
+
+				resetTimer();
+
+				sound->resume();
+
+				resetTimer();
+
+				SDL_ShowCursor(SDL_DISABLE);
+
+				continue;
 			}
 		}
 #endif
