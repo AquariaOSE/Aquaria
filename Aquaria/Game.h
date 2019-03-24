@@ -443,7 +443,7 @@ public:
 
 	bool cameraOffBounds;
 
-	void toggleHelpScreen() { action(ACTION_TOGGLEHELPSCREEN, 0, -1, INPUT_NODEVICE); }
+	void toggleHelpScreen();
 
 	void setWorldPaused(bool b) { worldPaused = b; }
 	bool isWorldPaused() const { return worldPaused; }
