@@ -96,6 +96,8 @@ public:
 
 	float menuSelectDelay;
 
+	bool isInKeyConfigMenu() const { return keyConfigMenu; }
+
 private:
 	void updateOptionsMenu(float dt);
 	void updateKeyConfigMenu(float dt);

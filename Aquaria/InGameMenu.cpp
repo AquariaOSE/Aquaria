@@ -3929,13 +3929,15 @@ void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 		{
 			for (int i = 0; i <= 1; i++)
 				menu[i]->alpha.interpolateTo(1, t);
-			for (int i = 4; i <= 9; i++)
+			for (int i = 4; i <= 8; i++)
 			{
 				menu[i]->alpha.interpolateTo(1, t);
 			}
 
 			if (!isKeyConfig)
 			{
+				menu[9]->alpha.interpolateTo(1, t);
+
 				switch(lastOptionsMenuPage)
 				{
 				case MENUPAGE_FOOD:

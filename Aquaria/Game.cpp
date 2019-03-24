@@ -2521,6 +2521,11 @@ float Game::getHalfTimer(float mod)
 	return halfTimer*mod;
 }
 
+void Game::toggleHelpScreen()
+{
+	action(ACTION_TOGGLEHELPSCREEN, 0, -1, INPUT_NODEVICE);
+}
+
 void Game::action(int id, int state, int source, InputDevice device)
 {
 	for (size_t i = 0; i < paths.size(); i++)
@@ -3528,7 +3533,7 @@ void Game::onToggleHelpScreen()
 {
 	if (inHelpScreen)
 		toggleHelpScreen(false);
-	else if (core->isStateJumpPending())
+	else if (core->isStateJumpPending() || themenu->isInKeyConfigMenu())
 		return;
 	else
 	{
