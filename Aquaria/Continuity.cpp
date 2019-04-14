@@ -2668,7 +2668,7 @@ bool Continuity::loadFileData(int slot, XMLDocument &doc)
 			return false;
 	}
 
-	errorLog("Failed to load save data: " + teh_file + " -- Error: " + err);
+	debugLog("Failed to load save data: " + teh_file + " -- Error: " + err);
 	return false;
 }
 
