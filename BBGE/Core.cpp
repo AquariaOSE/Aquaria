@@ -273,6 +273,7 @@ static bool checkWritable(const std::string& path, bool warn, bool critical)
 Core::Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
 : ActionMapper(), StateManager(), appName(appName)
 {
+	window = NULL;
 	sound = NULL;
 	_extraDataDir = extraDataDir;
 
@@ -810,6 +811,7 @@ void Core::shutdownGraphicsLibrary()
 	glFinish();
 
 	delete window;
+	window = NULL;
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
 	unload_all_glsyms();
 
