@@ -1035,18 +1035,6 @@ Entity *Game::createEntity(const std::string &t, int id, Vector position, int ro
 	return establishEntity(e, id, position, rot, createSaveData, name, et, doPostInit);
 }
 
-void Game::initEntities()
-{
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e)
-		{
-			e->init();
-		}
-	}
-}
-
 EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e, Vector pos)
 {
 

@@ -102,7 +102,6 @@ static const char * const interfaceFunctions[] = {
 	"lightFlare",
 	"msg",
 	"postInit",
-	"preUpdate",
 	"shiftWorlds",
 	"shotHitEntity",
 	"song",
@@ -11066,10 +11065,10 @@ static const struct {
 	luaConstant(EP_BLOCKER),
 
 	// ACTIVATION TYPES
-	{"AT_NONE",				-1},
-	{"AT_NORMAL",			0},
-	{"AT_CLICK",			0},
-	{"AT_RANGE",			1},
+	{"AT_NONE",    Entity::ACT_NONE},
+	{"AT_NORMAL",  Entity::ACT_CLICK},
+	{"AT_CLICK",   Entity::ACT_CLICK},
+	{"AT_RANGE",   Entity::ACT_RANGE},
 
 	luaConstant(WT_NORMAL),
 	luaConstant(WT_SPIRIT),
