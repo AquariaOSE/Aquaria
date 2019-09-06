@@ -895,7 +895,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		bone->SetAttribute("fv", this->bones[i]->isfv());
 		bone->SetAttribute("gc", this->bones[i]->generateCollisionMask);
 		bone->SetAttribute("cr", this->bones[i]->collideRadius);
-		if (!this->bones[i]->renderQuad)
+		if (!this->bones[i]->fileRenderQuad)
 		{
 			bone->SetAttribute("rq", this->bones[i]->fileRenderQuad);
 		}
