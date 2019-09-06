@@ -481,7 +481,6 @@ protected:
 	void warpPrep();
 	bool shuttingDownGameState;
 	Quad *image;
-	void initEntities();
 
 	float controlHintTimer;
 	bool cameraConstrained;
