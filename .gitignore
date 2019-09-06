@@ -17,6 +17,7 @@
 *.aps
 temp/*
 build/*
+build-*/*
 bin/*
 
 *.patch
