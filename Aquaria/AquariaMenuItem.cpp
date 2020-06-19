@@ -713,7 +713,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 						while (dsq->game->getKeyState(i))
 						{
-							dsq->run(0.1f);
+							dsq->run(0.1f, true);
 						}
 					}
 				}
@@ -729,7 +729,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 							{
 								ac = i;
 								while (fabsf(j->getAxisUncalibrated(i)) > JOY_AXIS_THRESHOLD)
-									dsq->run(0.1f);
+									dsq->run(0.1f, true);
 								break;
 							}
 						}
@@ -769,7 +769,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 					while (dsq->game->getKeyState(i))
 					{
-						dsq->run(0.1f);
+						dsq->run(0.1f, true);
 					}
 
 					toggleEnterKey(0);
@@ -788,13 +788,13 @@ void AquariaKeyConfig::onUpdate(float dt)
 			if (core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
 			{
 				while(core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
-					dsq->run(0.1f);
+					dsq->run(0.1f, true);
 				clear = true;
 			}
 			else if(core->getKeyState(KEY_ESCAPE))
 			{
 				while(core->getKeyState(KEY_ESCAPE))
-					dsq->run(0.1f);
+					dsq->run(0.1f, true);
 				abort = true;
 			}
 			else if(dsq->mouse.rawButtonMask)
@@ -802,7 +802,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 				MouseButtons btns = dsq->mouse.buttons;
 
 				while(dsq->mouse.rawButtonMask)
-					dsq->run(0.1f);
+					dsq->run(0.1f, true);
 
 				if(btns.left)
 					ac = MOUSE_BUTTON_LEFT;
@@ -850,7 +850,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 			{
 				abort = true;
 				while(core->getKeyState(KEY_ESCAPE))
-					dsq->run(0.1f);
+					dsq->run(0.1f, true);
 			}
 			else
 			{
@@ -862,7 +862,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 						{
 							ac = JOY_BUTTON_0 + i;
 							while (j->getButton(i))
-								dsq->run(0.1f);
+								dsq->run(0.1f, true); // skip recursion check; we're already in the menu so this would always warn
 							break;
 						}
 
@@ -874,7 +874,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 							{
 								ac = (ax < 0.0f ? JOY_AXIS_0_NEG : JOY_AXIS_0_POS) + i;
 								while (fabsf(j->getAxisUncalibrated(i)) > JOY_AXIS_THRESHOLD)
-									dsq->run(0.1f);
+									dsq->run(0.1f, true);
 								break;
 							}
 						}
