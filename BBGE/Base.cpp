@@ -21,6 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Base.h"
 #include "Core.h"
 #include <algorithm>
+#include <signal.h>
 
 #ifdef BBGE_BUILD_WINDOWS
 	#include <shellapi.h>
