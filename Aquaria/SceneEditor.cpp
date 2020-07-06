@@ -3386,7 +3386,7 @@ void SceneEditor::update(float dt)
 				else if (cursorOffset.x < oldPosition.x-10)
 					right = false;
 				else
-					noSide++;
+					noSide = 1;
 				if (cursorOffset.y > oldPosition.y+10)
 					down = true;
 				else if (cursorOffset.y < oldPosition.y-10)
