@@ -10409,7 +10409,7 @@ static const struct {
 #undef MK_ALIAS
 #define MK_FUNC(base, getter, prefix, suffix) luaRegister(prefix##_##suffix),
 #define MK_STR(s) #s
-#define MK_ALIAS(prefix, suffix, alias) {MK_STR(prefix)"_"MK_STR(alias), l_##prefix##_##suffix},
+#define MK_ALIAS(prefix, suffix, alias) {MK_STR(prefix) "_" MK_STR(alias), l_##prefix##_##suffix},
 
 	EXPAND_FUNC_PROTOTYPES
 
