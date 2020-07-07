@@ -221,7 +221,7 @@ private:
 	AquariaComboBox *actionSetBox;
 	AquariaCheckBox *actionSetCheck;
 	int selectedActionSetIdx;
-	TTFText *joystickNameText, *joystickGUIDText;
+	TTFText *joystickNameText, *joystickGUIDText, *joystickButtonsText;
 	void updateActionSetComboBox();
 	void switchToActionSet(int idx);
 	void nextJoystick();

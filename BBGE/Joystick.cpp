@@ -45,6 +45,8 @@ Joystick::Joystick()
 
 	clearRumbleTime= 0;
 	numJoyAxes = 0;
+	numHats = 0;
+	numButtons = 0;
 	clearAxes();
 
 	s1ax = 0;
@@ -136,7 +138,8 @@ bool Joystick::init(int stick)
 		if(numJoyAxes > MAX_JOYSTICK_AXIS)
 			numJoyAxes = MAX_JOYSTICK_AXIS;
 
-		
+		numHats = SDL_JoystickNumHats(sdl_joy);
+		numButtons = SDL_JoystickNumButtons(sdl_joy);
 		
 
 		return true;
@@ -243,7 +246,7 @@ void Joystick::update(float dt)
 		}
 		if (sdl_controller)
 		{
-			for(int i = 0; i < numJoyAxes; ++i)
+			for(unsigned i = 0; i < numJoyAxes; ++i)
 			{
 				Sint16 ax = SDL_GameControllerGetAxis(sdl_controller, (SDL_GameControllerAxis)i);
 				axisRaw[i] = float(ax)/32768.0f;
@@ -265,7 +268,7 @@ void Joystick::update(float dt)
 #endif
 		// Note: this connects with the else above when the SDL2 path is compiled!
 		{
-			for(int i = 0; i < numJoyAxes; ++i)
+			for(unsigned i = 0; i < numJoyAxes; ++i)
 			{
 				Sint16 ax = SDL_JoystickGetAxis(sdl_joy, i);
 				axisRaw[i] = float(ax)/32768.0f;
@@ -290,8 +293,10 @@ void Joystick::update(float dt)
 		else
 #endif
 		{
-			for (unsigned i = 0; i < MAX_JOYSTICK_BTN; i++)
+			for (unsigned i = 0; i < numButtons; i++)
 				buttonBitmask |= !!SDL_JoystickGetButton(sdl_joy, i) << i;
+
+			//for (unsigned i = 0; i < numHats; i++)
 		}
 	}
 
@@ -310,7 +315,7 @@ bool Joystick::anyButton() const
 	return !!buttonBitmask;;
 }
 
-int Joystick::getNumAxes() const
+unsigned Joystick::getNumAxes() const
 {
 #ifdef BBGE_BUILD_SDL2
 	return sdl_controller ? SDL_CONTROLLER_AXIS_MAX : numJoyAxes;
@@ -319,12 +324,22 @@ int Joystick::getNumAxes() const
 #endif
 }
 
+unsigned Joystick::getNumButtons() const
+{
+	return numButtons;
+}
+
+unsigned Joystick::getNumHats() const
+{
+	return numHats;
+}
+
 float Joystick::getAxisUncalibrated(int id) const
 {
 	return id < MAX_JOYSTICK_AXIS ? axisRaw[id] : 0.0f;
 }
 
-const char *Joystick::getAxisName(int axis) const
+const char *Joystick::getAxisName(unsigned axis) const
 {
 	if(axis >= numJoyAxes)
 		return NULL;
@@ -335,7 +350,7 @@ const char *Joystick::getAxisName(int axis) const
 	return NULL;
 }
 
-const char *Joystick::getButtonName(int btn) const
+const char *Joystick::getButtonName(unsigned btn) const
 {
 #ifdef BBGE_BUILD_SDL2
 	if(sdl_controller)
