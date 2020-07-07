@@ -15,6 +15,16 @@
 #define MAX_JOYSTICK_AXIS 32
 #define MAX_JOYSTICK_HATS 8
 
+enum JoyHatDirection // bitmask
+{
+	JOY_HAT_DIR_CENTERED  = 0,
+	JOY_HAT_DIR_UP        = 1,
+	JOY_HAT_DIR_DOWN      = 2,
+	JOY_HAT_DIR_LEFT      = 4,
+	JOY_HAT_DIR_RIGHT     = 8
+};
+
+
 const static float JOY_AXIS_THRESHOLD = 0.6f;
 
 class Joystick
@@ -38,7 +48,8 @@ public:
 	void calibrate(Vector &vec, float dead);
 	bool anyButton() const;
 	bool getButton(size_t id) const { return !!(buttonBitmask & (1u << id)); }
-	float getAxisUncalibrated(int id) const;
+	float getAxisUncalibrated(unsigned id) const;
+	JoyHatDirection getHat(unsigned id) const;
 	unsigned getNumAxes() const;
 	unsigned getNumButtons() const;
 	unsigned getNumHats() const;

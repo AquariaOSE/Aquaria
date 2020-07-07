@@ -334,9 +334,30 @@ unsigned Joystick::getNumHats() const
 	return numHats;
 }
 
-float Joystick::getAxisUncalibrated(int id) const
+float Joystick::getAxisUncalibrated(unsigned id) const
 {
 	return id < MAX_JOYSTICK_AXIS ? axisRaw[id] : 0.0f;
+}
+
+JoyHatDirection Joystick::getHat(unsigned id) const
+{
+	unsigned dir = SDL_JoystickGetHat(sdl_joy, id);
+	unsigned ret = JOY_HAT_DIR_CENTERED;
+	switch(dir)
+	{
+		case SDL_HAT_UP: ret = JOY_HAT_DIR_UP; break;
+		case SDL_HAT_DOWN: ret = JOY_HAT_DIR_DOWN; break;
+		case SDL_HAT_LEFT: ret = JOY_HAT_DIR_LEFT; break;
+		case SDL_HAT_RIGHT: ret = JOY_HAT_DIR_RIGHT; break;
+
+		case SDL_HAT_LEFTUP: ret = JOY_HAT_DIR_UP | JOY_HAT_DIR_LEFT; break;
+		case SDL_HAT_RIGHTUP: ret = JOY_HAT_DIR_UP | JOY_HAT_DIR_RIGHT; break;
+		case SDL_HAT_LEFTDOWN: ret = JOY_HAT_DIR_DOWN | JOY_HAT_DIR_LEFT; break;
+		case SDL_HAT_RIGHTDOWN: ret = JOY_HAT_DIR_DOWN | JOY_HAT_DIR_RIGHT; break;
+
+		default: ;
+	}
+	return (JoyHatDirection)ret;
 }
 
 const char *Joystick::getAxisName(unsigned axis) const

@@ -4169,48 +4169,49 @@ void Avatar::startWallBurst(bool useCursor)
 	}
 }
 
-Vector Avatar::getKeyDir()
+bool Avatar::isActionAndGetDir(Vector& dir)
 {
-	Vector dir;
-	if (isActing(ACTION_SWIMLEFT, -1))
-		dir += Vector(-1,0);
-	if (isActing(ACTION_SWIMRIGHT, -1))
-		dir += Vector(1,0);
-	if (isActing(ACTION_SWIMUP, -1))
-		dir += Vector(0,-1);
-	if (isActing(ACTION_SWIMDOWN, -1))
-		dir += Vector(0,1);
+	bool dL = isActing(ACTION_SWIMLEFT, -1);
+	bool dR = isActing(ACTION_SWIMRIGHT, -1);
+	bool dU = isActing(ACTION_SWIMUP, -1);
+	bool dD = isActing(ACTION_SWIMDOWN, -1);
+	Vector a;
+	if (dL)
+		a += Vector(-1,0);
+	if (dR)
+		a += Vector(1,0);
+	if (dU)
+		a += Vector(0,-1);
+	if (dD)
+		a += Vector(0,1);
 
-	if (dir.x != 0 && dir.y != 0)
-		dir/=2;
+	if ((dL || dR) && (dU || dD))
+		a *= 0.70710678f; // 1 / sqrt(2)
 
-	return dir;
+	dir += a;
+	return dL || dR || dU || dD;
 }
 
 Vector Avatar::getFakeCursorPosition()
 {
-	if (dsq->getInputMode() == INPUT_KEYBOARD)
-	{
-		return getKeyDir() * 350;
-	}
-	if (dsq->getInputMode() == INPUT_JOYSTICK)
-	{
-		float axisInput = 0;
-		Joystick *j = 0;
-		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
-			if( ((j = core->getJoystick(i))) )
-				if(j->isEnabled())
+	Vector dir;
+	if(isActionAndGetDir(dir))
+		return dir * 350;
+
+	for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+		if(Joystick *j = core->getJoystick(i))
+			if(j->isEnabled())
+			{
+				float axisInput = j->position.getLength2D();
+				if(axisInput >= JOYSTICK_LOW_THRESHOLD)
 				{
-					axisInput = j->position.getLength2D();
-					if(axisInput >= JOYSTICK_LOW_THRESHOLD)
-					{
-						const float axisMult = (maxMouse - minMouse) / (JOYSTICK_HIGH_THRESHOLD - JOYSTICK_LOW_THRESHOLD);
-						const float distance = minMouse + ((axisInput - JOYSTICK_LOW_THRESHOLD) * axisMult);
-						return (j->position * (distance / axisInput));
-					}
+					const float axisMult = (maxMouse - minMouse) / (JOYSTICK_HIGH_THRESHOLD - JOYSTICK_LOW_THRESHOLD);
+					const float distance = minMouse + ((axisInput - JOYSTICK_LOW_THRESHOLD) * axisMult);
+					return (j->position * (distance / axisInput));
 				}
-	}
-	return Vector(0,0,0);
+			}
+
+	return dir;
 }
 
 Vector Avatar::getVectorToCursorFromScreenCentre()

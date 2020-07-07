@@ -73,51 +73,78 @@ void ActionButtonStatus::_queryAllStatus()
 
 bool ActionButtonStatus::_queryStatus(int k) const
 {
-	bool keyState = false;
 	if (k > 0 && k < KEY_MAXARRAY)
+		return core->getKeyState(k);
+
+	if (k == MOUSE_BUTTON_LEFT)
+		return core->mouse.buttons.left == DOWN;
+
+	if (k == MOUSE_BUTTON_RIGHT)
+		return core->mouse.buttons.right == DOWN;
+
+	if (k == MOUSE_BUTTON_MIDDLE)
+		return core->mouse.buttons.middle == DOWN;
+
+	if (k >= MOUSE_BUTTON_EXTRA_START && k < MOUSE_BUTTON_EXTRA_END)
+		return core->mouse.buttons.extra[k - MOUSE_BUTTON_EXTRA_START];
+
+	// --- joystick from here ---
+
+	Joystick *j = core->getJoystick(joystickID);
+	if(!j || !j->isEnabled())
+		return false;
+
+	if (k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
+		return j->getButton(k - JOY_BUTTON_0);
+
+	if (k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
 	{
-		keyState = core->getKeyState(k);
-	}
-	else if (k == MOUSE_BUTTON_LEFT)
-	{
-		keyState = core->mouse.buttons.left == DOWN;
-	}
-	else if (k == MOUSE_BUTTON_RIGHT)
-	{
-		keyState = core->mouse.buttons.right == DOWN;
-	}
-	else if (k == MOUSE_BUTTON_MIDDLE)
-	{
-		keyState = core->mouse.buttons.middle == DOWN;
-	}
-	else if (k >= MOUSE_BUTTON_EXTRA_START && k < MOUSE_BUTTON_EXTRA_END)
-	{
-		keyState  = core->mouse.buttons.extra[k - MOUSE_BUTTON_EXTRA_START];
-	}
-	else if (k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
-	{
-		Joystick *j = core->getJoystick(joystickID);
-		if(j && j->isEnabled())
-			keyState = j->getButton(k - JOY_BUTTON_0);
-	}
-	else if (k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
-	{
-		Joystick *j = core->getJoystick(joystickID);
-		if(j && j->isEnabled())
-		{
-			float ax = j->getAxisUncalibrated(k - JOY_AXIS_0_POS);
-			keyState = ax > JOY_AXIS_THRESHOLD;
-		}
-	}
-	else if (k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
-	{
-		Joystick *j = core->getJoystick(joystickID);
-		if(j && j->isEnabled())
-		{
-			float ax = j->getAxisUncalibrated(k - JOY_AXIS_0_NEG);
-			keyState = ax < -JOY_AXIS_THRESHOLD;
-		}
+		float ax = j->getAxisUncalibrated(k - JOY_AXIS_0_POS);
+		return ax > JOY_AXIS_THRESHOLD;
 	}
 
-	return keyState;
+	if (k >= JOY_AXIS_0_NEG && k < JOY_AXIS_END_NEG)
+	{
+		float ax = j->getAxisUncalibrated(k - JOY_AXIS_0_NEG);
+		return ax < -JOY_AXIS_THRESHOLD;
+	}
+
+	if(k >= JOY_HAT_BEGIN && k < JOY_HAT_END)
+	{
+		if (k >= JOY_HAT_0_LEFT && k < JOY_HAT_END_LEFT)
+			return j->getHat(k - JOY_HAT_0_LEFT);
+
+		if (k >= JOY_HAT_0_RIGHT && k < JOY_HAT_END_RIGHT)
+			return j->getHat(k - JOY_HAT_0_RIGHT);
+
+		if (k >= JOY_HAT_0_UP && k < JOY_HAT_END_UP)
+			return j->getHat(k - JOY_HAT_0_UP);
+
+		if (k >= JOY_HAT_0_DOWN && k < JOY_HAT_END_DOWN)
+			return j->getHat(k - JOY_HAT_0_DOWN);
+	}
+
+	return false;
 }
+
+ActionButtonType joyHatToActionButton(unsigned hatID, JoyHatDirection dir)
+{
+	unsigned ret = 0;
+	if(hatID < MAX_JOYSTICK_HATS)
+	{
+		if(dir & JOY_HAT_DIR_LEFT)
+			ret = JOY_HAT_0_LEFT;
+		else if(dir & JOY_HAT_DIR_RIGHT)
+			ret = JOY_HAT_0_RIGHT;
+		else if(dir & JOY_HAT_DIR_UP)
+			ret = JOY_HAT_0_UP;
+		else if(dir & JOY_HAT_DIR_DOWN)
+			ret = JOY_HAT_0_DOWN;
+
+		if(ret)
+			ret += hatID;
+	}
+
+	return (ActionButtonType)ret;
+}
+

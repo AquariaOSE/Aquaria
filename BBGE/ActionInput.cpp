@@ -64,6 +64,34 @@ static std::string inputcode2string(int k)
 		os << "AX:-" << (k - JOY_AXIS_0_NEG);
 		return os.str();
 	}
+	
+	if(k >= JOY_HAT_BEGIN && k < JOY_HAT_END)
+	{
+		if(k >= JOY_HAT_0_LEFT && k < JOY_HAT_END_LEFT)
+		{
+			std::ostringstream os;
+			os << "HL" << (k - JOY_HAT_0_LEFT);
+			return os.str();
+		}
+		else if(k >= JOY_HAT_0_RIGHT && k < JOY_HAT_END_RIGHT)
+		{
+			std::ostringstream os;
+			os << "HR" << (k - JOY_HAT_0_RIGHT);
+			return os.str();
+		}
+		else if(k >= JOY_HAT_0_UP && k < JOY_HAT_END_UP)
+		{
+			std::ostringstream os;
+			os << "HU" << (k - JOY_HAT_0_UP);
+			return os.str();
+		}
+		else if(k >= JOY_HAT_0_DOWN && k < JOY_HAT_END_DOWN)
+		{
+			std::ostringstream os;
+			os << "HD" << (k - JOY_HAT_0_DOWN);
+			return os.str();
+		}
+	}
 
 	switch(k)
 	{
@@ -134,15 +162,44 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 	else if(k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
 		pretty = jbtnname(joystickID, k - JOY_BUTTON_0);
 
+	std::string s;
 	if(pretty && *pretty)
 	{
-		std::string s = pretty;
+		s = pretty;
 		if(tail)
 			s += tail;
 		return s;
 	}
 
-	std::string s = inputcode2string(k);
+	if(k >= JOY_HAT_BEGIN && k < JOY_HAT_END)
+	{
+		if(k >= JOY_HAT_0_LEFT && k < JOY_HAT_END_LEFT)
+		{
+			std::ostringstream os;
+			os << "H" << (k - JOY_HAT_0_LEFT) << "<";
+			return os.str();
+		}
+		else if(k >= JOY_HAT_0_RIGHT && k < JOY_HAT_END_RIGHT)
+		{
+			std::ostringstream os;
+			os << "H" << (k - JOY_HAT_0_RIGHT) << ">";
+			return os.str();
+		}
+		else if(k >= JOY_HAT_0_UP && k < JOY_HAT_END_UP)
+		{
+			std::ostringstream os;
+			os << "H" << (k - JOY_HAT_0_UP) << "^";
+			return os.str();
+		}
+		else if(k >= JOY_HAT_0_DOWN && k < JOY_HAT_END_DOWN)
+		{
+			std::ostringstream os;
+			os << "H" << (k - JOY_HAT_0_DOWN) << "v";
+			return os.str();
+		}
+	}
+
+	s = inputcode2string(k);
 	return s.empty() ? stringbank.get(SB_BBGE_NO_KEY) : s;
 }
 
@@ -189,6 +246,20 @@ int getStringToInputCode(const std::string& s)
 			default:
 				return 0;
 		}
+	}
+	else if(s.length()  > 2 && s[0] == 'H')  // joystick hat
+	{
+		JoyHatDirection hd;
+		switch(s[1])
+		{
+			case 'L': hd = JOY_HAT_DIR_LEFT; break;
+			case 'R': hd = JOY_HAT_DIR_RIGHT; break;
+			case 'U': hd = JOY_HAT_DIR_UP; break;
+			case 'D': hd = JOY_HAT_DIR_DOWN; break;
+			default: return 0;
+		}
+		unsigned hatID = atoi(s.c_str() + 2);
+		return joyHatToActionButton(hatID, hd);
 	}
 	else
 	{

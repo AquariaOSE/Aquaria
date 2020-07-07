@@ -867,13 +867,26 @@ void AquariaKeyConfig::onUpdate(float dt)
 						}
 
 					if(!ac)
-						for(int i = 0; i < MAX_JOYSTICK_AXIS; ++i)
+						for(size_t i = 0; i < MAX_JOYSTICK_AXIS; ++i)
 						{
 							float ax = j->getAxisUncalibrated(i);
 							if(fabsf(ax) > JOY_AXIS_THRESHOLD)
 							{
 								ac = (ax < 0.0f ? JOY_AXIS_0_NEG : JOY_AXIS_0_POS) + i;
 								while (fabsf(j->getAxisUncalibrated(i)) > JOY_AXIS_THRESHOLD)
+									dsq->run(0.1f, true);
+								break;
+							}
+						}
+
+					if(!ac)
+						for(size_t i = 0; i < MAX_JOYSTICK_HATS; ++i)
+						{
+							JoyHatDirection hd = j->getHat(i);
+							if(hd != JOY_HAT_DIR_CENTERED)
+							{
+								ac = joyHatToActionButton(i, hd);
+								while (j->getHat(i) != JOY_HAT_DIR_CENTERED)
 									dsq->run(0.1f, true);
 								break;
 							}

@@ -175,7 +175,7 @@ public:
 	void clearTargets();
 	bool singing;
 
-	Vector getKeyDir();
+	bool isActionAndGetDir(Vector& dir);
 
 	void startBurstCommon();
 
