@@ -471,13 +471,9 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		readInt(xml_control, "AutoAim", "on", &control.autoAim);
 		readInt(xml_control, "Targeting", "on", &control.targeting);
 		readInt(xml_control, "FlipInputButtons", "on", &control.flipInputButtons);
-		readInt(xml_control, "MinActionSets", "num", &control.minActionSets);
 		readInt(xml_control, "ToolTipsOn", "on", &control.toolTipsOn);
 
-		if(control.minActionSets < 1)
-			control.minActionSets = 1;
 		control.actionSets.clear();
-		control.actionSets.reserve(control.minActionSets);
 
 		for(XMLElement *xml_actionSet = xml_control->FirstChildElement("ActionSet"); xml_actionSet; xml_actionSet = xml_actionSet->NextSiblingElement("ActionSet"))
 		{
@@ -514,18 +510,10 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 				}
 			}
 		}
-
-		int nas = (int)control.actionSets.size();
-		if(nas < control.minActionSets)
-			control.actionSets.resize(control.minActionSets);
-		while(nas < control.minActionSets)
-		{
-			ActionSet& as = control.actionSets[nas];
-			ensureDefaultActions(as);
-			as.enabled = false;
-			++nas;
-		}
 	}
+
+	if(control.actionSets.size() == 1)
+		control.actionSets[0].enabled = true;
 
 	XMLElement *xml_demo = doc.FirstChildElement("Demo");
 	if (xml_demo)
