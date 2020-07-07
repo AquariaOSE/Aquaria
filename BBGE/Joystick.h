@@ -13,6 +13,7 @@
 
 #define MAX_JOYSTICK_BTN 32
 #define MAX_JOYSTICK_AXIS 32
+#define MAX_JOYSTICK_HATS 8
 
 const static float JOY_AXIS_THRESHOLD = 0.6f;
 
@@ -38,14 +39,16 @@ public:
 	bool anyButton() const;
 	bool getButton(size_t id) const { return !!(buttonBitmask & (1u << id)); }
 	float getAxisUncalibrated(int id) const;
-	int getNumAxes() const;
+	unsigned getNumAxes() const;
+	unsigned getNumButtons() const;
+	unsigned getNumHats() const;
 	int getIndex() const { return stickIndex; }
 	int getInstanceID() const { return instanceID; }
 	inline bool isEnabled() const { return enabled; }
 	inline void setEnabled(bool on) { enabled = on; }
 
-	const char *getAxisName(int axis) const;
-	const char *getButtonName(int btn) const;
+	const char *getAxisName(unsigned axis) const;
+	const char *getButtonName(unsigned btn) const;
 	const char *getName() const;
 	const char *getGUID() const;
 
@@ -59,7 +62,7 @@ private:
 	int stickIndex;
 	int instanceID;
 	unsigned buttonBitmask;
-	int numJoyAxes;
+	unsigned numJoyAxes, numHats, numButtons;
 	SDL_Joystick *sdl_joy;
 	float axisRaw[MAX_JOYSTICK_AXIS];
 	std::string name;

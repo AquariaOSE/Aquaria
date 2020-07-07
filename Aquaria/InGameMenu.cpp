@@ -2020,17 +2020,24 @@ void InGameMenu::create()
 	keyConfigBg->addChild(nextJoystickBtn, PM_POINTER);
 
 	joystickNameText = new TTFText(&dsq->fontArialSmallest);
-	joystickNameText->position = Vector(offx + 100 + 32, offy + 390);
+	joystickNameText->position = Vector(offx + 100 + 32, offy + 380);
 	keyConfigBg->addChild(joystickNameText, PM_POINTER);
 
 	joystickGUIDText = new TTFText(&dsq->fontArialSmallest);
-	joystickGUIDText->position = Vector(offx + 100 + 32, offy + 390 + 15);
+	joystickGUIDText->position = Vector(offx + 100 + 32, offy + 380 + 15);
 	joystickGUIDText->color = Vector(0.5f, 0.5f, 0.5f);
 	keyConfigBg->addChild(joystickGUIDText, PM_POINTER);
 
+	joystickButtonsText = new TTFText(&dsq->fontArialSmallest);
+	joystickButtonsText->position = Vector(offx + 100 + 32, offy + 380 + 30);
+	joystickButtonsText->color = Vector(0.7f, 0.7f, 0.7f);
+	keyConfigBg->addChild(joystickButtonsText, PM_POINTER);
 
 	updateJoystickText();
 
+	actionSetBox = NULL;
+	actionSetCheck = NULL;
+	if(dsq->user.control.actionSets.size() > 1)
 	{
 		float x = offx;
 		TTFText *header_actionset = new TTFText(&dsq->fontArialSmall);
@@ -2057,6 +2064,14 @@ void InGameMenu::create()
 	}
 	offy += 40;
 
+
+	Quad *keyConfigPagesBg = new Quad;
+	keyConfigPagesBg->alphaMod = 0.6f;
+	keyConfigPagesBg->color = Vector(0.2f,0.2f,0.3f);
+	keyConfigPagesBg->position = Vector(0, offy);
+	keyConfigPagesBg->setWidthHeight(580, 40);
+	keyConfigBg->addChild(keyConfigPagesBg, PM_POINTER);
+	keyConfigPagesBg->moveToBack();
 
 	TTFText *header_tabs = new TTFText(&dsq->fontArialSmall);
 	header_tabs->setText(SB(2130));
@@ -2190,7 +2205,8 @@ void InGameMenu::create()
 		addKeyConfigLine(kk, SB(2132), "Screenshot",		offx, y+=yi);
 	}
 
-	actionSetBox->moveToFront();
+	if(actionSetBox)
+		actionSetBox->moveToFront();
 
 
 #undef SB
@@ -3972,19 +3988,22 @@ void InGameMenu::updateKeyConfigMenu(float dt)
 	if(!keyConfigMenu)
 		return;
 
-	bool isopen = actionSetBox->isOpen();
+	bool isopen = actionSetBox && actionSetBox->isOpen();
 	AquariaMenuItem::currentGuiInputLevel = isopen ? 50 : 0;
 	float a = isopen ? 0.0f : 1.0f;
 	// HACK: debug buttons ignore input at < 1 alpha
 	for(size_t i = 0; i < keyCategoryButtons.size(); ++i)
 		keyCategoryButtons[i]->alpha = a;
 
-	const int curAS = actionSetBox->getSelectedItem();
-	if(selectedActionSetIdx != curAS)
-		switchToActionSet(curAS);
+	if(actionSetBox)
+	{
+		const int curAS = actionSetBox->getSelectedItem();
+		if(selectedActionSetIdx != curAS)
+			switchToActionSet(curAS);
 
-	dsq->user.control.actionSets[selectedActionSetIdx].enabled
-		= actionSetCheck->getValue();
+		dsq->user.control.actionSets[selectedActionSetIdx].enabled
+			= actionSetCheck->getValue();
+	}
 
 	updateJoystickText();
 }
@@ -4186,8 +4205,11 @@ void InGameMenu::onDebugSave()
 void InGameMenu::switchToActionSet(int idx)
 {
 	selectedActionSetIdx = idx;
-	actionSetBox->setSelectedItem(idx);
-	actionSetCheck->setValue(dsq->user.control.actionSets[idx].enabled);
+	if(actionSetBox)
+	{
+		actionSetBox->setSelectedItem(idx);
+		actionSetCheck->setValue(dsq->user.control.actionSets[idx].enabled);
+	}
 	for(size_t i = 0; i < keyConfigs.size(); ++i)
 		keyConfigs[i]->setActionSetIndex(idx);
 }
@@ -4223,6 +4245,9 @@ void InGameMenu::nextJoystick()
 	}
 	while (!j);
 
+	if(j)
+		j->rumble(0.3f, 0.3f, 0.2f);
+
 	as.assignJoystickIdx(i, true);
 	if(as.joystickID < 0)
 		as.joystickName = "NONE";
@@ -4233,8 +4258,16 @@ void InGameMenu::updateJoystickText()
 {
 	ActionSet& as = dsq->user.control.actionSets[selectedActionSetIdx];
 	Joystick *j = core->getJoystick(as.joystickID);
+	std::ostringstream jbt;
+
 	if(j)
+	{
 		joystickNameText->setText(j->getName());
+		int numb = j->getNumButtons();
+		for(int i = 0; i < numb; ++i)
+			if(j->getButton(i))
+				jbt << i << "  ";
+	}
 	else if(as.joystickID == ACTIONSET_REASSIGN_JOYSTICK)
 	{
 		std::string s = "(";
@@ -4246,6 +4279,8 @@ void InGameMenu::updateJoystickText()
 	}
 	else
 		joystickNameText->setText(stringbank.get(2139));
+
+	joystickButtonsText->setText(jbt.str());
 
 	if(j && as.joystickID >= 0)
 		joystickGUIDText->setText(as.joystickGUID);
