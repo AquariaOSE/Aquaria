@@ -1,0 +1,13 @@
+Linux_task:
+  container:
+    image: debian:testing-slim
+
+  install_script:
+    - apt update
+    - apt install -y -q build-essential cmake libsdl2-dev libopenal-dev
+
+  script:
+    - mkdir build
+    - cd build
+    - cmake .. -DAQUARIA_USE_SDL2=ON
+    - make -j2
