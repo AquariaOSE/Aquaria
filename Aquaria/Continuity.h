@@ -119,10 +119,6 @@ public:
 	void setStory(float v);
 
 	float getSpeedType(size_t speedType);
-	void setNaijaModel(std::string model);
-
-
-	std::string naijaModel;
 
 	FormType form;
 
