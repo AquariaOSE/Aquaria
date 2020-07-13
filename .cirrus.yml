@@ -15,3 +15,24 @@ Linux_task:
   env:
     CC:  clang
     CXX: clang++
+
+
+macOS_task:
+  osx_instance:
+    image: catalina-xcode
+
+  install_script:
+    - brew update
+    - brew upgrade
+    - brew install cmake llvm make openal-soft sdl2
+    - brew info    cmake llvm make openal-soft sdl2
+
+  script:
+    - mkdir build
+    - cd build
+    - cmake .. -DAQUARIA_USE_SDL2=ON
+    - make -j2
+
+  env:
+    CC:  clang
+    CXX: clang++
