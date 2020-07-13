@@ -3,10 +3,10 @@ FreeBSD_task:
     image_family: freebsd-12-1
 
   install_script:
-    - pkg install -y cmake gmake openal-soft png sdl2
+    - pkg install -y cmake ninja openal-soft png sdl2
 
   script:
-    - cmake -B build/ -DAQUARIA_INTERNAL_PNG=OFF -DAQUARIA_USE_SDL2=ON
+    - cmake -B build/ -G Ninja -DAQUARIA_INTERNAL_PNG=OFF -DAQUARIA_USE_SDL2=ON
     - cmake --build build/
 
 Linux_task:
@@ -15,10 +15,10 @@ Linux_task:
 
   install_script:
     - apt update
-    - apt install -y -q build-essential cmake libsdl2-dev libopenal-dev clang
+    - apt install -y -q build-essential clang cmake libsdl2-dev libopenal-dev ninja
 
   script:
-    - cmake -B build/ -DAQUARIA_USE_SDL2=ON
+    - cmake -B build/ -G Ninja -DAQUARIA_USE_SDL2=ON
     - cmake --build build/
 
   env:
@@ -33,11 +33,11 @@ macOS_task:
   install_script:
     - brew update
     - brew upgrade
-    - brew install cmake llvm make openal-soft sdl2
-    - brew info    cmake llvm make openal-soft sdl2
+    - brew install cmake llvm ninja openal-soft sdl2
+    - brew info    cmake llvm ninja openal-soft sdl2
 
   script:
-    - cmake -B build/ -DAQUARIA_USE_SDL2=ON
+    - cmake -B build/ -G Ninja -DAQUARIA_USE_SDL2=ON
     - cmake --build build/
 
   env:
