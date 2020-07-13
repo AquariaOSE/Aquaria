@@ -1,3 +1,16 @@
+FreeBSD_task:
+  freebsd_instance:
+    image_family: freebsd-12-1
+
+  install_script:
+    - pkg install -y cmake gmake openal-soft png sdl2
+
+  script:
+    - mkdir build
+    - cd build
+    - cmake .. -DAQUARIA_INTERNAL_PNG=OFF -DAQUARIA_USE_SDL2=ON
+    - make -j2
+
 Linux_task:
   container:
     image: debian:testing-slim
