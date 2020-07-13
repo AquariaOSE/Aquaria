@@ -15,7 +15,7 @@ Linux_task:
 
   install_script:
     - apt update
-    - apt install -y -q build-essential clang cmake libsdl2-dev libopenal-dev ninja
+    - apt install -y -q build-essential clang cmake libsdl2-dev libopenal-dev ninja-build
 
   script:
     - cmake -B build/ -G Ninja -DAQUARIA_USE_SDL2=ON
