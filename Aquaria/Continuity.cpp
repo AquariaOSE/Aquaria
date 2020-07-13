@@ -2467,7 +2467,6 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	startData->SetAttribute("exp", dsq->continuity.exp);
 	startData->SetAttribute("h", dsq->continuity.maxHealth);
 	startData->SetAttribute("ch", dsq->continuity.health);
-	startData->SetAttribute("naijaModel", dsq->continuity.naijaModel.c_str());
 	startData->SetAttribute("costume", dsq->continuity.costume.c_str());
 	startData->SetAttribute("form", dsq->continuity.form);
 	if (dsq->mod.isActive())
@@ -3217,11 +3216,6 @@ bool Continuity::loadFile(int slot)
 	return true;
 }
 
-void Continuity::setNaijaModel(std::string model)
-{
-
-}
-
 int Continuity::getFlag(int flag)
 {
 	if (flag == 0)
@@ -3496,8 +3490,6 @@ void Continuity::reset()
 	loadEatBank();
 	dsq->loadElementEffects();
 	form = FORM_NORMAL;
-
-	naijaModel = "Naija";
 	costume = "";
 	dsq->emote.load("data/naijaemote.txt");
 
