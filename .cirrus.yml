@@ -6,10 +6,8 @@ FreeBSD_task:
     - pkg install -y cmake gmake openal-soft png sdl2
 
   script:
-    - mkdir build
-    - cd build
-    - cmake .. -DAQUARIA_INTERNAL_PNG=OFF -DAQUARIA_USE_SDL2=ON
-    - make -j2
+    - cmake -B build/ -DAQUARIA_INTERNAL_PNG=OFF -DAQUARIA_USE_SDL2=ON
+    - cmake --build build/
 
 Linux_task:
   container:
@@ -20,10 +18,8 @@ Linux_task:
     - apt install -y -q build-essential cmake libsdl2-dev libopenal-dev clang
 
   script:
-    - mkdir build
-    - cd build
-    - cmake .. -DAQUARIA_USE_SDL2=ON
-    - make -j2
+    - cmake -B build/ -DAQUARIA_USE_SDL2=ON
+    - cmake --build build/
 
   env:
     CC:  clang
@@ -41,10 +37,8 @@ macOS_task:
     - brew info    cmake llvm make openal-soft sdl2
 
   script:
-    - mkdir build
-    - cd build
-    - cmake .. -DAQUARIA_USE_SDL2=ON
-    - make -j2
+    - cmake -B build/ -DAQUARIA_USE_SDL2=ON
+    - cmake --build build/
 
   env:
     CC:  clang
