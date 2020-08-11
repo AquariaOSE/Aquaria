@@ -89,7 +89,7 @@ public:
 	void flipElementVert();
 	void deleteSelectedElement();
 	void deleteElement(int selectedIdx);
-	virtual void action(int id, int state, int source, InputDevice device);
+	virtual void action(int id, int state, int source, InputDeviceType device);
 	void scaleElementUp();
 	void scaleElementDown();
 	void scaleElement1();

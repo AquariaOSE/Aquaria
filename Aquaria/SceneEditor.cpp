@@ -577,37 +577,37 @@ void SceneEditor::init()
 
 
 
-	addAction(ACTION_ZOOMIN,		KEY_PGUP, -1);
-	addAction(ACTION_ZOOMOUT,		KEY_PGDN, -1);
+	addAction(ACTION_ZOOMIN,		KEY_PGUP);
+	addAction(ACTION_ZOOMOUT,		KEY_PGDN);
 
-	addAction(ACTION_CAMLEFT,		KEY_A, -1);
-	addAction(ACTION_CAMRIGHT,		KEY_D, -1);
-	addAction(ACTION_CAMUP,			KEY_W, -1);
-	addAction(ACTION_CAMDOWN,		KEY_S, -1);
+	addAction(ACTION_CAMLEFT,		KEY_A);
+	addAction(ACTION_CAMRIGHT,		KEY_D);
+	addAction(ACTION_CAMUP,			KEY_W);
+	addAction(ACTION_CAMDOWN,		KEY_S);
 
-	addAction(ACTION_BGLAYEREND,	KEY_0, -1);
+	addAction(ACTION_BGLAYEREND,	KEY_0);
 
-	addAction(ACTION_BGLAYER1,		KEY_1, -1);
-	addAction(ACTION_BGLAYER2,		KEY_2, -1);
-	addAction(ACTION_BGLAYER3,		KEY_3, -1);
-	addAction(ACTION_BGLAYER4,		KEY_4, -1);
-	addAction(ACTION_BGLAYER5,		KEY_5, -1);
-	addAction(ACTION_BGLAYER6,		KEY_6, -1);
-	addAction(ACTION_BGLAYER7,		KEY_7, -1);
-	addAction(ACTION_BGLAYER8,		KEY_8, -1);
-	addAction(ACTION_BGLAYER9,		KEY_9, -1);
+	addAction(ACTION_BGLAYER1,		KEY_1);
+	addAction(ACTION_BGLAYER2,		KEY_2);
+	addAction(ACTION_BGLAYER3,		KEY_3);
+	addAction(ACTION_BGLAYER4,		KEY_4);
+	addAction(ACTION_BGLAYER5,		KEY_5);
+	addAction(ACTION_BGLAYER6,		KEY_6);
+	addAction(ACTION_BGLAYER7,		KEY_7);
+	addAction(ACTION_BGLAYER8,		KEY_8);
+	addAction(ACTION_BGLAYER9,		KEY_9);
 
-	addAction(ACTION_BGLAYER10,		KEY_B, -1);
-	addAction(ACTION_BGLAYER11,		KEY_N, -1);
-	addAction(ACTION_BGLAYER12,		KEY_M, -1);
+	addAction(ACTION_BGLAYER10,		KEY_B);
+	addAction(ACTION_BGLAYER11,		KEY_N);
+	addAction(ACTION_BGLAYER12,		KEY_M);
 
-	addAction(ACTION_BGLAYER13,		KEY_J, -1);
+	addAction(ACTION_BGLAYER13,		KEY_J);
 
-	addAction(ACTION_BGLAYER14,		KEY_COMMA, -1);
-	addAction(ACTION_BGLAYER15,		KEY_PERIOD, -1);
-	addAction(ACTION_BGLAYER16,		KEY_SLASH, -1);
+	addAction(ACTION_BGLAYER14,		KEY_COMMA);
+	addAction(ACTION_BGLAYER15,		KEY_PERIOD);
+	addAction(ACTION_BGLAYER16,		KEY_SLASH);
 
-	addAction(ACTION_MULTISELECT,	KEY_LALT, -1);
+	addAction(ACTION_MULTISELECT,	KEY_LALT);
 
 	placer = new Quad;
 	dsq->game->addRenderObject(placer, LR_HUD);
@@ -1845,7 +1845,7 @@ void SceneEditor::removeEntity()
 void SceneEditor::placeAvatar()
 {
 	dsq->game->avatar->position = dsq->getGameCursorPosition();
-	dsq->game->action(ACTION_PLACE_AVATAR, 0, -1, INPUT_NODEVICE);
+	dsq->game->action(ACTION_PLACE_AVATAR, 0, -1, INP_DEV_NODEVICE);
 }
 
 void SceneEditor::scaleElementUp()
@@ -1952,7 +1952,7 @@ void SceneEditor::updateMultiSelect()
 	}
 }
 
-void SceneEditor::action(int id, int state, int source, InputDevice device)
+void SceneEditor::action(int id, int state, int source, InputDeviceType device)
 {
 	if (core->getCtrlState() && editingElement)
 	{
@@ -2788,11 +2788,11 @@ void SceneEditor::update(float dt)
 		{
 		case ET_ELEMENTS:
 			editingEntity = 0;
-			if (isActing(ACTION_MULTISELECT, -1) || !selectedElements.empty())
+			if (isActing(ACTION_MULTISELECT) || !selectedElements.empty())
 			{
 				editingElement = 0;
 			}
-			if (state == ES_SELECTING && !isActing(ACTION_MULTISELECT, -1))
+			if (state == ES_SELECTING && !isActing(ACTION_MULTISELECT))
 				editingElement = this->getElementAtCursor();
 
 			if (editingElement)
@@ -2825,13 +2825,13 @@ void SceneEditor::update(float dt)
 		int camSpeed = 500/zoom.x;
 		if (core->getShiftState())
 			camSpeed = 5000/zoom.x;
-		if (isActing(ACTION_CAMLEFT, -1))
+		if (isActing(ACTION_CAMLEFT))
 			dsq->cameraPos.x -= dt*camSpeed;
-		if (isActing(ACTION_CAMRIGHT, -1))
+		if (isActing(ACTION_CAMRIGHT))
 			dsq->cameraPos.x += dt*camSpeed;
-		if (isActing(ACTION_CAMUP, -1))
+		if (isActing(ACTION_CAMUP))
 			dsq->cameraPos.y -= dt*camSpeed;
-		if (isActing(ACTION_CAMDOWN, -1))
+		if (isActing(ACTION_CAMDOWN))
 			dsq->cameraPos.y += dt*camSpeed;
 		if (core->mouse.buttons.middle && !core->mouse.change.isZero())
 		{
@@ -2841,9 +2841,9 @@ void SceneEditor::update(float dt)
 
 		float spd = 0.5;
 		const Vector oldZoom = zoom;
-		if (isActing(ACTION_ZOOMOUT, -1))
+		if (isActing(ACTION_ZOOMOUT))
 			zoom /= (1 + spd*dt);
-		else if (isActing(ACTION_ZOOMIN, -1))
+		else if (isActing(ACTION_ZOOMIN))
 			zoom *= (1 + spd*dt);
 		else if (core->mouse.scrollWheelChange < 0)
 		{

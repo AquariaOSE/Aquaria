@@ -89,7 +89,7 @@ void AquariaGuiElement::setFocus(bool v)
 	if (v)
 	{
 		currentFocus = this;
-		if (dsq->getInputMode() == INPUT_JOYSTICK || dsq->getInputMode() == INPUT_KEYBOARD)
+		if (dsq->getInputMode() == INP_DEV_JOYSTICK || dsq->getInputMode() == INP_DEV_KEYBOARD)
 			core->setMousePosition(getGuiPosition());
 
 		AquariaGuiElement *gui=0, *guiThis = (AquariaGuiElement*)this;
@@ -162,49 +162,13 @@ void AquariaGuiElement::UpdateGlobalFocus(float dt)
 Direction AquariaGuiElement::GetDirection()
 {
 	Direction dir = DIR_NONE;
-	
-	// This joystick code is already supposed to send ACTION_MENU*.
-	// Actually some places depend on the actions to be sent,
-	// So checking this here might work for a few cases,
-	// but others will break.
-	// I'll leave this in here for now -- fg
-	/*Vector p;
-	for(size_t i = 0; i < core->getNumJoysticks(); ++i)
-		if(Joystick *j = core->getJoystick(i))
-			if(j->isEnabled())
-			{
-				p = core->getJoystick(i)->position;
-				if(!p.isLength2DIn(0.4f))
-					break;
-			}
-
-	if (!p.isLength2DIn(0.4f))
+	StateObject *obj = dsq->getTopStateObject(); // usually Game...
+	if (obj)
 	{
-		if (fabsf(p.x) > fabsf(p.y))
-		{
-			if (p.x > 0)
-				dir = DIR_RIGHT;
-			else
-				dir = DIR_LEFT;
-		}
-		else
-		{
-			if (p.y > 0)
-				dir = DIR_DOWN;
-			else
-				dir = DIR_UP;
-		}
-	}
-	else*/
-	{
-		StateObject *obj = dsq->getTopStateObject(); // usually Game...
-		if (obj)
-		{
-			if (obj->isActing(ACTION_MENULEFT, -1))			dir = DIR_LEFT;
-			else if (obj->isActing(ACTION_MENURIGHT, -1))	dir = DIR_RIGHT;
-			else if (obj->isActing(ACTION_MENUUP, -1))		dir = DIR_UP;
-			else if (obj->isActing(ACTION_MENUDOWN, -1))	dir = DIR_DOWN;
-		}
+		if (obj->isActing(ACTION_MENULEFT))			dir = DIR_LEFT;
+		else if (obj->isActing(ACTION_MENURIGHT))	dir = DIR_RIGHT;
+		else if (obj->isActing(ACTION_MENUUP))		dir = DIR_UP;
+		else if (obj->isActing(ACTION_MENUDOWN))	dir = DIR_DOWN;
 	}
 	return dir;
 }
@@ -343,9 +307,6 @@ void AquariaGuiQuad::onUpdate(float dt)
 	Quad::onUpdate(dt);
 }
 
-// Joystick input threshold at which we start sliding (0.0-1.0); must be
-// less than updateMovement() threshold.
-const float SLIDER_JOY_THRESHOLD = 0.39f;
 // Initial delay before repeating for slider input (seconds).
 const float SLIDER_REPEAT_DELAY = 0.4f;
 // Scale factor for delay as repeats continue.
@@ -382,26 +343,10 @@ bool AquariaSlider::doSliderInput(float dt)
 
 	float inputAmount;  // How much to adjust by?
 
-	// disabled the jaxis threshold check;
-	// ACTION_MENU* should be sent automatically when above the threshold -- fg
-	/*Vector jpos;
-	for(size_t i = 0; i < core->getNumJoysticks(); ++i)
-		if(Joystick *j = core->getJoystick(i))
-			if(j->isEnabled())
-			{
-				jpos = core->getJoystick(i)->position;
-				if(fabsf(jpos.x) > SLIDER_JOY_THRESHOLD)
-					break;
-			}*/
-
 	StateObject *obj = dsq->getTopStateObject();
-	/*if (jpos.x <= -SLIDER_JOY_THRESHOLD)
+	if (obj && obj->isActing(ACTION_MENULEFT))
 		inputAmount = -0.1f;
-	else if (jpos.x >= SLIDER_JOY_THRESHOLD)
-		inputAmount = +0.1f;
-	else*/ if (obj && obj->isActing(ACTION_MENULEFT, -1))
-		inputAmount = -0.1f;
-	else if (obj && obj->isActing(ACTION_MENURIGHT, -1))
+	else if (obj && obj->isActing(ACTION_MENURIGHT))
 		inputAmount = +0.1f;
 	else
 		inputAmount = 0;
@@ -484,27 +429,81 @@ bool AquariaCheckBox::isGuiVisible()
 
 AquariaKeyConfig *AquariaKeyConfig::waitingForInput = 0;
 
+enum KeyMapResult
+{
+	KMR_NONE,
+	KMR_ASSIGNED,
+	KMR_CLEARED,
+	KMR_CANCELLED
+};
 
-AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetType inputSetType, int inputIdx)
+// created on the stack while waiting for keys to be pressed
+class InputSniffer : public IInputMapper
+{
+public:
+	InputSniffer(InputDeviceType dev) : _dev(dev), _res(KMR_NONE) {}
+
+	virtual void input(const RawInput *inp)
+	{
+		if(_res != KMR_NONE)
+			return;
+
+		if(inp->src.deviceType == INP_DEV_KEYBOARD && inp->src.ctrlType == INP_CTRL_BUTTON && inp->u.pressed)
+		{
+			switch(inp->src.ctrlID)
+			{
+				case KEY_ESCAPE: _res = KMR_CANCELLED; return;
+				case KEY_BACKSPACE:
+				case KEY_DELETE: _res = KMR_CLEARED; return;
+			}
+		}
+		// TODO controllerfixup: check if input is "interesting" enough
+		if(inp->src.deviceType == _dev)
+		{
+			_res = KMR_ASSIGNED;
+			stored = *inp;
+		}
+	}
+
+	KeyMapResult get(RawInput *inp) const
+	{
+		if(_res == KMR_ASSIGNED)
+			*inp = stored;
+		return _res;
+	}
+
+	RawInput stored;
+	InputDeviceType _dev;
+	KeyMapResult _res;
+};
+
+static KeyMapResult waitForInput(RawInput *raw, InputDeviceType dev)
+{
+	InputSniffer sniff(dev);
+	KeyMapResult km;
+	for(;;)
+	{
+		km = sniff.get(raw);
+		if(km != KMR_NONE)
+			break;
+		dsq->run(0.1f, true);
+	}
+	return km;
+}
+
+AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputDeviceType dev, unsigned slot)
 : AquariaGuiElement(), RenderObject()
 , actionInputName(actionInputName)
-, inputSetType(inputSetType)
-, inputIdx(inputIdx)
+, inputDevType(dev)
+, inputSlot(slot)
+, inputField(ActionInput::GetField(dev, slot))
 , actionSetIndex(0)
 , rejectJoyAxis(false)
 {
 	bg = new Quad();
 	bg2 = new Quad();
-	if (inputSetType == INPUTSET_OTHER)
-	{
-		bg->setWidthHeight(40, 20);
-		bg2->setWidthHeight(40, 20);
-	}
-	else
-	{
-		bg->setWidthHeight(90, 20);
-		bg2->setWidthHeight(90, 20);
-	}
+	bg->setWidthHeight(90, 20);
+	bg2->setWidthHeight(90, 20);
 
 	bg->color = Vector(0.5f, 0.5f, 0.5f);
 	bg->alphaMod = 0;
@@ -514,7 +513,6 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 	bg2->position = Vector(0, -3);
 	addChild(bg, PM_POINTER);
 	addChild(bg2, PM_POINTER);
-
 
 
 	keyConfigFont = new TTFText(&dsq->fontArialSmallest);
@@ -589,341 +587,28 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 	inLoop = true;
 
-	unsigned int *k = 0;
+	ActionInput &ai = as.ensureActionInput(actionInputName);
 
-	ActionInput *ai = 0;
-
-	bool used = false;
-
-	if (inputSetType != INPUTSET_OTHER)
-	{
-		ai = as.getActionInputByName(actionInputName);
-
-		if (!ai)
-		{
-			exit_error("Could not find actionInput: " + actionInputName);
-		}
-		switch(inputSetType)
-		{
-		case INPUTSET_KEY:
-			k = &ai->data.single.key[inputIdx];
-		break;
-		case INPUTSET_MOUSE:
-			k = &ai->data.single.mse[inputIdx];
-		break;
-		case INPUTSET_JOY:
-			k = &ai->data.single.joy[inputIdx];
-		break;
-		case INPUTSET_NONE:
-		case INPUTSET_OTHER:
-			k = 0;
-		break;
-		}
-		used = k && *k;
-	}
-
-
-	if (inputSetType == INPUTSET_OTHER)
-	{
-		if (actionInputName == "s1ax")
-			k = &as.joycfg.s1ax;
-		else if (actionInputName == "s1ay")
-			k = &as.joycfg.s1ay;
-		else if (actionInputName == "s2ax")
-			k = &as.joycfg.s2ax;
-		else if (actionInputName == "s2ay")
-			k = &as.joycfg.s2ay;
-		used = k && int(*k) >= 0;
-	}
+	bool used = ai.hasEntry(inputSlot);
 
 	if(used)
 		bg2->alphaMod = 0.3f;
 	else
 		bg2->alphaMod = 0;
 
-	if (waitingForInput == this)
+	if (waitingForInput != this)
+		keyConfigFont->setText(ai.prettyPrintField(inputField, as.joystickID));
+	else
 	{
 		std::string s;
 		s.reserve(6);
 		s = "_";
-		for (int i = 0; i < int(dsq->game->getTimer(5)); i++)
+		const int tm = int(dsq->game->getTimer(5));
+		for (int i = 0; i < tm; i++)
 		{
 			s += "_";
 		}
 		keyConfigFont->setText(s);
-	}
-	else
-	{
-		if (inputSetType != INPUTSET_OTHER)
-		{
-			keyConfigFont->setText(getInputCodeToUserString(*k, as.joystickID));
-		}
-		else
-		{
-			if(*k >= 0)
-			{
-				std::ostringstream os;
-				os << (*k);
-				keyConfigFont->setText(os.str());
-			}
-			else
-			{
-				keyConfigFont->setText(getInputCodeToUserString(0, as.joystickID));
-			}
-		}
-	}
-
-	if (waitingForInput == this)
-	{
-		switch(inputSetType)
-		{
-		case INPUTSET_OTHER:
-		{
-			if (k)
-			{
-				int ac = -1;
-				bool clear = false;
-				bool abort = false;
-				for (int i = 0; i < KEY_MAXARRAY; i++)
-				{
-					if (core->getKeyState(i))
-					{
-						if(i == KEY_BACKSPACE || i == KEY_DELETE)
-							clear = true;
-						else if (i == KEY_ESCAPE)
-							abort = true;
-						else
-						{
-							switch(i)
-							{
-							#define K(k) case k: ac = i-k; break
-								K(KEY_0);
-								K(KEY_1);
-								K(KEY_2);
-								K(KEY_3);
-								K(KEY_4);
-								K(KEY_5);
-								K(KEY_6);
-								K(KEY_7);
-								K(KEY_8);
-								K(KEY_9);
-							#undef K
-							}
-						}
-
-						while (dsq->game->getKeyState(i))
-						{
-							dsq->run(0.1f, true);
-						}
-					}
-				}
-
-				if(ac < 0)
-				{
-					Joystick *j = core->getJoystick(as.joystickID);
-					if(j)
-						for(int i = 0; i < MAX_JOYSTICK_AXIS; ++i)
-						{
-							float ax = j->getAxisUncalibrated(i);
-							if(fabsf(ax) > JOY_AXIS_THRESHOLD)
-							{
-								ac = i;
-								while (fabsf(j->getAxisUncalibrated(i)) > JOY_AXIS_THRESHOLD)
-									dsq->run(0.1f, true);
-								break;
-							}
-						}
-				}
-
-				if(ac >= 0 || abort || clear)
-				{
-					toggleEnterKey(0);
-					waitingForInput = 0;
-					AquariaGuiElement::canDirMoveGlobal = true;
-					if(!abort)
-					{
-						if(clear || ac == *k)
-							*k = -1;
-						else
-							*k = ac;
-					}
-				}
-			}
-		}
-		break;
-		case INPUTSET_KEY:
-		{
-			for (int i = 0; i < KEY_MAXARRAY; i++)
-			{
-				if (core->getKeyState(i))
-				{
-					if(*k == i) // clear key if pressed again
-						*k = 0;
-					else if(i != KEY_ESCAPE)
-					{
-						if (i == KEY_DELETE || i == KEY_BACKSPACE)
-							*k = 0;
-						else
-							*k = i;
-					}
-
-					while (dsq->game->getKeyState(i))
-					{
-						dsq->run(0.1f, true);
-					}
-
-					toggleEnterKey(0);
-					waitingForInput = 0;
-					AquariaGuiElement::canDirMoveGlobal = true;
-					break;
-				}
-			}
-		}
-		break;
-		case INPUTSET_MOUSE:
-		{
-			bool clear = false;
-			bool abort = false;
-			unsigned int ac = 0;
-			if (core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
-			{
-				while(core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
-					dsq->run(0.1f, true);
-				clear = true;
-			}
-			else if(core->getKeyState(KEY_ESCAPE))
-			{
-				while(core->getKeyState(KEY_ESCAPE))
-					dsq->run(0.1f, true);
-				abort = true;
-			}
-			else if(dsq->mouse.rawButtonMask)
-			{
-				MouseButtons btns = dsq->mouse.buttons;
-
-				while(dsq->mouse.rawButtonMask)
-					dsq->run(0.1f, true);
-
-				if(btns.left)
-					ac = MOUSE_BUTTON_LEFT;
-				else if(btns.right)
-					ac = MOUSE_BUTTON_RIGHT;
-				else if(btns.middle)
-					ac = MOUSE_BUTTON_MIDDLE;
-				else
-				{
-					for(unsigned i = 0; i < mouseExtraButtons; ++i)
-						if(btns.extra[i])
-						{
-							ac = MOUSE_BUTTON_EXTRA_START+i;
-							break;
-						}
-				}
-			}
-
-			if(ac || clear || abort)
-			{
-				toggleEnterKey(0);
-				waitingForInput = 0;
-				AquariaGuiElement::canDirMoveGlobal = true;
-
-				if(!abort)
-				{
-					if(clear || *k == ac) // clear key if pressed again
-						*k = 0;
-					else
-						*k = ac;
-				}
-			}
-		}
-		break;
-		case INPUTSET_JOY:
-		{
-			size_t ac = 0;
-			bool clear = false;
-			bool abort = false;
-			if (core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
-			{
-				clear = true;
-			}
-			else if(core->getKeyState(KEY_ESCAPE))
-			{
-				abort = true;
-				while(core->getKeyState(KEY_ESCAPE))
-					dsq->run(0.1f, true);
-			}
-			else
-			{
-				Joystick *j = core->getJoystick(as.joystickID);
-				if(j)
-				{
-					for (size_t i = 0; i < MAX_JOYSTICK_BTN; i++)
-						if (j->getButton(i))
-						{
-							ac = JOY_BUTTON_0 + i;
-							while (j->getButton(i))
-								dsq->run(0.1f, true); // skip recursion check; we're already in the menu so this would always warn
-							break;
-						}
-
-					if(!ac)
-						for(size_t i = 0; i < MAX_JOYSTICK_AXIS; ++i)
-						{
-							float ax = j->getAxisUncalibrated(i);
-							if(fabsf(ax) > JOY_AXIS_THRESHOLD)
-							{
-								ac = (ax < 0.0f ? JOY_AXIS_0_NEG : JOY_AXIS_0_POS) + i;
-								while (fabsf(j->getAxisUncalibrated(i)) > JOY_AXIS_THRESHOLD)
-									dsq->run(0.1f, true);
-								break;
-							}
-						}
-
-					if(!ac)
-						for(size_t i = 0; i < MAX_JOYSTICK_HATS; ++i)
-						{
-							JoyHatDirection hd = j->getHat(i);
-							if(hd != JOY_HAT_DIR_CENTERED)
-							{
-								ac = joyHatToActionButton(i, hd);
-								while (j->getHat(i) != JOY_HAT_DIR_CENTERED)
-									dsq->run(0.1f, true);
-								break;
-							}
-						}
-				}
-				else
-					clear = true;
-			}
-
-			if(abort || ac || clear)
-			{
-				toggleEnterKey(0);
-				waitingForInput = 0;
-				AquariaGuiElement::canDirMoveGlobal = true;
-
-				if(rejectJoyAxis && (
-					(ac >= JOY_AXIS_0_POS && ac < JOY_AXIS_END_POS)
-				 || (ac >= JOY_AXIS_0_NEG && ac < JOY_AXIS_END_NEG)
-				))
-				{
-					dsq->sound->playSfx("denied");
-					abort = true;
-				}
-
-				if(!abort)
-				{
-					if(clear || *k == ac) // clear key if pressed again
-						*k = 0;
-					else
-						*k = ac;
-				}
-			}
-		}
-		break;
-		case INPUTSET_NONE:
-		break;
-		}
 	}
 
 	Vector p = bg->getWorldPosition();
@@ -938,7 +623,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 			toggleEnterKey(-1);
 		}
 
-
+		// FIXME controllerfixup: don't rely on mouse emulation here?
 		if (!keyDown && (core->mouse.buttons.left || core->mouse.buttons.right))
 		{
 			keyDown = true;
@@ -958,6 +643,19 @@ void AquariaKeyConfig::onUpdate(float dt)
 				waitingForInput = this;
 				toggleEnterKey(1);
 				AquariaGuiElement::canDirMoveGlobal = false;
+
+				RawInput raw;
+				switch(waitForInput(&raw, inputDevType))
+				{
+					case KMR_ASSIGNED:
+						ai.ImportField(raw, inputField);
+						break;
+					case KMR_CLEARED:
+						ai.clearEntry(inputField);
+						break;
+					case KMR_CANCELLED:
+						break;
+				}
 			}
 		}
 	}
@@ -1218,7 +916,7 @@ void AquariaButton::goDown()
 	buttonlabel->position = Vector(0, 7);
 }
 
-void AquariaButton::action(int actionID, int state, int source, InputDevice device)
+void AquariaButton::action(int actionID, int state, int source, InputDeviceType device)
 {
 	if(actionID == ACTION_PRIMARY)
 	{

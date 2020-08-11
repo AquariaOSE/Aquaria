@@ -4,17 +4,6 @@
 #include <string>
 #include <map>
 
-// Some strings used in BBGE
-enum StringBankIndexBBGE
-{
-	SB_BBGE_NO_KEY = 2153,
-	SB_BBGE_INVALID_KEY_ID = 2154,
-	SB_BBGE_INVALID_JOY_BTN = 2155,
-	SB_BBGE_INVALID_MOUSE_BTN = 2156,
-	SB_BBGE_INVALID_JOY_AXIS_POS = 2157,
-	SB_BBGE_INVALID_JOY_AXIS_NEG = 2158,
-};
-
 class StringBank
 {
 public:

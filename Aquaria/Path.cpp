@@ -637,7 +637,7 @@ void Path::update(float dt)
 	}
 }
 
-bool Path::action(int id, int state, int source, InputDevice device)
+bool Path::action(int id, int state, int source, InputDeviceType device)
 {
 	if (hasScript())
 	{

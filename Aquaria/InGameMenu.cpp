@@ -646,7 +646,7 @@ void FoodSlot::onUpdate(float dt)
 			{
 				if (!themenu->recipeMenu.on)
 				{
-					if (dsq->getInputMode() == INPUT_MOUSE)
+					if (dsq->getInputMode() == INP_DEV_MOUSE)
 					{
 						Vector diff = core->mouse.position - getWorldPosition();
 						position += diff;
@@ -925,32 +925,25 @@ InGameMenu::~InGameMenu()
 
 void InGameMenu::bindInput()
 {
-	addAction(ACTION_ESC, KEY_ESCAPE, -1);
+	addAction(ACTION_ESC, KEY_ESCAPE);
 
-	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	const NamedAction actions[] =
 	{
-		const ActionSet& as = dsq->user.control.actionSets[i];
-		int sourceID = (int)i;
+		{ "PrimaryAction", ACTION_PRIMARY},
+		{ "SecondaryAction", ACTION_SECONDARY},
 
-		as.importAction(this, "PrimaryAction", ACTION_PRIMARY, sourceID);
-		as.importAction(this, "SecondaryAction", ACTION_SECONDARY, sourceID);
+		{ "Escape",		ACTION_ESC},
+		{ "WorldMap",		ACTION_TOGGLEWORLDMAP},
+		{ "ToggleHelp",	ACTION_TOGGLEHELPSCREEN},
 
-		as.importAction(this, "Escape",		ACTION_ESC, sourceID);
-		as.importAction(this, "WorldMap",		ACTION_TOGGLEWORLDMAP, sourceID);
-		as.importAction(this, "ToggleHelp",	ACTION_TOGGLEHELPSCREEN, sourceID);
-
-		as.importAction(this, "PrevPage",		ACTION_PREVPAGE, sourceID);
-		as.importAction(this, "NextPage",		ACTION_NEXTPAGE, sourceID);
-		as.importAction(this, "CookFood",		ACTION_COOKFOOD, sourceID);
-		as.importAction(this, "FoodLeft",		ACTION_FOODLEFT, sourceID);
-		as.importAction(this, "FoodRight",		ACTION_FOODRIGHT, sourceID);
-		as.importAction(this, "FoodDrop",		ACTION_FOODDROP, sourceID);
-
-		as.importAction(this, "MenuUp",		ACTION_MENUUP, sourceID);
-		as.importAction(this, "MenuDown",		ACTION_MENUDOWN, sourceID);
-		as.importAction(this, "MenuLeft",		ACTION_MENULEFT, sourceID);
-		as.importAction(this, "MenuRight",		ACTION_MENURIGHT, sourceID);
-	}
+		{ "PrevPage",		ACTION_PREVPAGE},
+		{ "NextPage",		ACTION_NEXTPAGE},
+		{ "CookFood",		ACTION_COOKFOOD},
+		{ "FoodLeft",		ACTION_FOODLEFT},
+		{ "FoodRight",		ACTION_FOODRIGHT},
+		{ "FoodDrop",		ACTION_FOODDROP}
+	};
+	ImportInput(actions);
 }
 
 void InGameMenu::reset()
@@ -981,7 +974,7 @@ void InGameMenu::onContinuityReset()
 	lastOptionsMenuPage = MENUPAGE_NONE;
 }
 
-void InGameMenu::action(int id, int state, int source, InputDevice device)
+void InGameMenu::action(int id, int state, int source, InputDeviceType device)
 {
 	if(game->isIgnoreAction((AquariaActions)id))
 		return;
@@ -1532,25 +1525,25 @@ void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label,
 	group->addChild(lb, PM_POINTER);
 	x += KEYCONFIG_FIRST_COL_DISTANCE;
 
-	AquariaKeyConfig *m = new AquariaKeyConfig(actionInputName, INPUTSET_MOUSE, 0);
+	AquariaKeyConfig *m = new AquariaKeyConfig(actionInputName, INP_DEV_MOUSE, 0);
 	m->position = Vector(x,y);
 	group->addChild(m, PM_POINTER);
 	keyConfigs.push_back(m);
 	x += KEYCONFIG_COL_DISTANCE;
 
-	AquariaKeyConfig *k1 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 0);
+	AquariaKeyConfig *k1 = new AquariaKeyConfig(actionInputName, INP_DEV_KEYBOARD, 0);
 	k1->position = Vector(x,y);
 	group->addChild(k1, PM_POINTER);
 	keyConfigs.push_back(k1);
 	x += KEYCONFIG_COL_DISTANCE;
 
-	AquariaKeyConfig *k2 = new AquariaKeyConfig(actionInputName, INPUTSET_KEY, 1);
+	AquariaKeyConfig *k2 = new AquariaKeyConfig(actionInputName, INP_DEV_KEYBOARD, 1);
 	k2->position = Vector(x,y);
 	group->addChild(k2, PM_POINTER);
 	keyConfigs.push_back(k2);
 	x += KEYCONFIG_COL_DISTANCE;
 
-	AquariaKeyConfig *j1 = new AquariaKeyConfig(actionInputName, INPUTSET_JOY, 0);
+	AquariaKeyConfig *j1 = new AquariaKeyConfig(actionInputName, INP_DEV_JOYSTICK, 0);
 	j1->position = Vector(x,y);
 	group->addChild(j1, PM_POINTER);
 	keyConfigs.push_back(j1);
@@ -1567,6 +1560,7 @@ void InGameMenu::addKeyConfigLine(RenderObject *group, const std::string &label,
 	k2->setDirMove(DIR_LEFT, k1);
 }
 
+/* FIXME controllerfixup
 AquariaKeyConfig *InGameMenu::addAxesConfigLine(RenderObject *group, const std::string &label, const std::string &actionInputName, int offx, int y)
 {
 	TTFText *lb = new TTFText(&dsq->fontArialSmallest);
@@ -1584,7 +1578,7 @@ AquariaKeyConfig *InGameMenu::addAxesConfigLine(RenderObject *group, const std::
 
 	return i1;
 }
-
+*/
 
 void InGameMenu::switchToSongMenu()
 {
@@ -2152,7 +2146,7 @@ void InGameMenu::create()
 		addKeyConfigLine(kk, SB(2127), "Look",				offx, y+=yi);
 
 		y+=yi+yi/2;
-		AquariaKeyConfig* s1x = addAxesConfigLine(kk, SB(2117), "s1ax", offx, y);
+		/*AquariaKeyConfig* s1x = addAxesConfigLine(kk, SB(2117), "s1ax", offx, y);
 		AquariaKeyConfig* s1y = addAxesConfigLine(kk, SB(2118), "s1ay", offx+130, y);
 		AquariaKeyConfig* s2x = addAxesConfigLine(kk, SB(2119), "s2ax", offx+260, y);
 		AquariaKeyConfig* s2y = addAxesConfigLine(kk, SB(2120), "s2ay", offx+380, y);
@@ -2167,7 +2161,7 @@ void InGameMenu::create()
 		s2x->setDirMove(DIR_RIGHT, s2y);
 
 		s2y->setDirMove(DIR_LEFT, s2x);
-		s2y->setDirMove(DIR_RIGHT, s2y);
+		s2y->setDirMove(DIR_RIGHT, s2y);*/ // FIXME controllerfixup
 	}
 
 	// PART 2
@@ -4263,10 +4257,10 @@ void InGameMenu::updateJoystickText()
 	if(j)
 	{
 		joystickNameText->setText(j->getName());
-		int numb = j->getNumButtons();
-		for(int i = 0; i < numb; ++i)
+		/*int numb = j->getNumButtons();
+		for(int i = 0; i < numb; ++i) // FIXME controllerfixup
 			if(j->getButton(i))
-				jbt << i << "  ";
+				jbt << i << "  ";*/
 	}
 	else if(as.joystickID == ACTIONSET_REASSIGN_JOYSTICK)
 	{

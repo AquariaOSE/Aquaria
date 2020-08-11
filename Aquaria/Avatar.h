@@ -138,7 +138,7 @@ public:
 	Avatar();
 	virtual ~Avatar();
 	void destroy();
-	void action(int actionID, int state, int source, InputDevice device);
+	void action(int actionID, int state, int source, InputDeviceType device);
 	AvatarState state;
 	float burst, burstTimer;
 	float burstDelay;
@@ -179,7 +179,7 @@ public:
 
 	void startBurstCommon();
 
-	void openSingingInterface(InputDevice device);
+	void openSingingInterface(InputDeviceType device);
 	void closeSingingInterface();
 	void updateSingingInterface(float dt);
 
@@ -331,9 +331,6 @@ public:
 
 	bool blockBackFlip;
 
-	int getLastActionSourceID() const { return _lastActionSourceID; }
-	InputDevice getLastActionInputDevice() const { return _lastActionInputDevice; }
-
 protected:
 	void setSongIconPositions();
 
@@ -440,11 +437,11 @@ protected:
 	Quad *glow;
 	bool swimming;
 
-	void lmbd(int source, InputDevice device);
-	void lmbu(int source, InputDevice device);
+	void lmbd(int source, InputDeviceType device);
+	void lmbu(int source, InputDeviceType device);
 
-	void rmbd(int source, InputDevice device);
-	void rmbu(int source, InputDevice device);
+	void rmbd(int source, InputDeviceType device);
+	void rmbu(int source, InputDeviceType device);
 
 	bool charging;
 
@@ -467,10 +464,6 @@ protected:
 
 	int _collisionAvoidRange;
 	float _collisionAvoidMod;
-
-	int _lastActionSourceID;
-	InputDevice _lastActionInputDevice;
-
 };
 
 #endif

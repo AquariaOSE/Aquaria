@@ -87,7 +87,7 @@ public:
 	bool useQuad(const std::string &tex);
 	void useGlow(const std::string &tex, int w, int h);
 	void useSound(const std::string &tex);
-	virtual void action(int actionID, int state, int source, InputDevice device) {}
+	virtual void action(int actionID, int state, int source, InputDeviceType device) {}
 
 	virtual bool isCursorInMenuItem();
 	Vector getGuiPosition();
@@ -166,7 +166,8 @@ protected:
 class AquariaKeyConfig : public AquariaGuiElement, public RenderObject
 {
 public:
-	AquariaKeyConfig(const std::string &actionInputName, InputSetType type, int idx);
+	// field goes from 0 to INP_NUMFIELDS-1
+	AquariaKeyConfig(const std::string &actionInputName, InputDeviceType type, unsigned field);
 	void destroy();
 
 	Vector getGuiPosition();
@@ -186,8 +187,8 @@ protected:
 
 
 	std::string actionInputName;
-	InputSetType inputSetType;
-	int inputIdx;
+	const InputDeviceType inputDevType;
+	const unsigned inputSlot, inputField;
 	TTFText *keyConfigFont;
 	Quad *bg, *bg2;
 	size_t actionSetIndex;
@@ -267,7 +268,7 @@ public:
 
 protected:
 
-	virtual void action(int actionID, int state, int source, InputDevice device);
+	virtual void action(int actionID, int state, int source, InputDeviceType device);
 	virtual void onUpdate(float dt);
 	virtual void onToggleHighlight(bool on);
 

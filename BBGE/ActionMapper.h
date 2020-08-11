@@ -24,43 +24,36 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Base.h"
 #include "ActionInput.h"
 
-InputDevice getDeviceForActionbutton(int k);
-
 class Event;
 class ActionMapper;
 
-#include "ActionStatus.h"
 #include "ActionSet.h"
 #include "Joystick.h"
 
-typedef std::vector<int> ButtonList;
-
-struct ActionData
-{
-	ActionData()
-		: id(-1), state(-1), source(-1)
-		, event(0)
-	{
-	}
-
-	int id, state, source;
-	Event *event;
-	ButtonList buttonList;
-};
+struct LegacyActionData;
 
 class ActionMapper
 {
 public:
+	struct NamedAction // for importing
+	{
+		const char * const name;
+		unsigned actionID;
+	};
 
 	// funcs
 	ActionMapper();
 	virtual ~ActionMapper();
 
-	void addAction(Event *event, int k, int state=-1);
-	void addAction(int actionID, int k, int source);
+	// Overridden to react to events (both legacy and input-mapped)
+	virtual void action(int actionID, int state, int playerID, InputDeviceType device) = 0;
 
-	bool isActing(int actionID, int source);
-	virtual void action(int actionID, int state, int source, InputDevice device) = 0;
+
+	// Legacy actions -- binds keys directly to actions.
+	// This bypasses the input mapper and checks for keys directly!
+	void addAction(Event *event, unsigned k, int state = -1);
+	void addAction(unsigned actionID, unsigned k);
+	bool isActing(unsigned actionID) const;
 
 
 	void clearActions();
@@ -69,7 +62,7 @@ public:
 
 	// vars
 
-	typedef std::vector<ActionData> ActionDataSet;
+	typedef std::vector<LegacyActionData> ActionDataSet;
 	ActionDataSet actionData;
 
 	bool cleared;
@@ -80,22 +73,41 @@ public:
 	Event *addCreatedEvent(Event *event);
 	void clearCreatedEvents();
 
-	//bool pollAction(int actionID, int source);
-	bool getKeyState(int k);
-	bool getKeyState(int k, int sourceID);
 
-	ActionData *getActionDataByIDAndSource(int actionID, int source);
+	// called by InputMapper whenever stuff happens
+	void recvAction(unsigned actionID, bool state, int playerID, InputDeviceType device);
+	void recvDirectInput(unsigned k, bool state);
+
 protected:
+	template<size_t N> static void ImportInput(const NamedAction (&a)[N])
+	{
+		ImportInput(&a[0], N);
+	}
+	static void ImportInput(const NamedAction *actions, size_t N);
 
-	std::vector<Event*>createdEvents;
+	std::vector<Event*> createdEvents;
 
-	bool inUpdate;
 	bool inputEnabled;
 	void onUpdate (float dt);
+
 private:
-	bool isKeyChanged(int k);
-	bool isKeyChanged(int k, int sourceID);
-	//bool _pollActionData(const ActionData& ad);
+	void updateDirectInput();
+	void updateActions();
+
+	LegacyActionData *getActionDataByID(int actionID);
+
+	struct ActionUpdate
+	{
+		unsigned id;
+		int playerID;
+		bool state;
+		InputDeviceType device;
+	};
+	std::vector<ActionUpdate> _actionChanges;
+	std::vector<int> _inputChanges; // >0: pressed, <0: released
+
+	bool inUpdate;
+	std::vector<unsigned char> _activeActions;
 };
 
 #endif

@@ -176,7 +176,7 @@ public:
 
 	void toggleWorldMap();
 
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDeviceType device);
 
 	InGameMenu *getInGameMenu() { return themenu; }
 
@@ -508,7 +508,7 @@ protected:
 	float deathTimer;
 
 
-	void onPressEscape(int source, InputDevice device);
+	void onPressEscape(int source, InputDeviceType device);
 
 	bool paused;
 	bool worldPaused;
@@ -540,7 +540,7 @@ private:
 	static unsigned char grid[MAX_GRID][MAX_GRID];
 };
 
-extern Game *game;
+extern Game *game; // FIXME: dupe of dsq->game, kill this
 
 // INLINE FUNCTIONS
 

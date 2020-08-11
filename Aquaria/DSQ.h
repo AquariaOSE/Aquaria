@@ -35,7 +35,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Continuity.h"
 #include "SubtitlePlayer.h"
 #include "StringBank.h"
-
+#include "GameInput.h"
 #include "TTFFont.h"
 
 #define AQUARIA_BUILD_MAPVIS
@@ -133,42 +133,6 @@ extern GameplayVariables *vars;
 
 #include "UserSettings.h"
 
-struct DemoFrame
-{
-	float t;
-	Vector avatarPos, vel, vel2;
-	Mouse mouse;
-	float rot;
-};
-
-class Demo
-{
-public:
-	enum {
-		DEMOMODE_NONE		= -1,
-		DEMOMODE_RECORD		= 0,
-		DEMOMODE_PLAYBACK	= 1
-	};
-	Demo();
-	void toggleRecord(bool on);
-	void togglePlayback(bool on);
-	void renderFramesToDisk();
-	void clearRecordedFrames();
-
-	void update(float dt);
-
-	bool getQuitKey();
-
-	void save(const std::string &name);
-	void load(const std::string &name);
-
-	unsigned int frame;
-	float time;
-	float timeDiff;
-	std::vector <DemoFrame> frames;
-	int mode;
-};
-
 enum NagType
 {
 	NAG_TOTITLE		= 0,
@@ -208,7 +172,7 @@ public:
 
 	void nag(NagType type);
 
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDeviceType device);
 
 	void title(bool fadeMusic=true);
 
@@ -343,18 +307,16 @@ public:
 
 	InterpolatedVector gameSpeed;
 
+	GameInput playerInput;
 private:
-	InputDevice lastInputMode; // really don't want to expose this one
-	std::vector<InputDevice> _inputModes; // index: FIXME ADD INFO
+	InputDeviceType lastInputMode; // really don't want to expose this one
 public:
-	void setInputMode(InputDevice mode);
-	InputDevice getInputMode() const;
-	InputDevice getInputMode(int source) const;
-	InputDevice getInputModeSafe(int source) const;
+	void setInputMode(InputDeviceType mode);
+	InputDeviceType getInputMode() const;
 	bool useMouseInput() const;
 	bool useJoystickInput() const;
 
-	void rumble(float leftMotor, float rightMotor, float time, int source, InputDevice device);
+	void rumble(float leftMotor, float rightMotor, float time, int playerID = -1);
 	void vision(std::string folder, int num, bool ignoreMusic = false);
 
 	void run(float runTime = -1, bool skipRecurseCheck = false); // same as Core::run() but with recursion check
@@ -393,8 +355,6 @@ public:
 	bool disableMiniMapOnNoInput;
 
 	std::string returnToScene;
-
-	Demo demo;
 
 	DebugFont *fpsText, *cmDebug;
 #ifdef AQUARIA_BUILD_CONSOLE
@@ -492,8 +452,6 @@ protected:
 	bool _canSkipCutscene;
 	bool skippingCutscene;
 
-	std::vector<ActionInput*> almb, armb;
-
 	void recreateBlackBars();
 
 	bool watchQuitFlag, watchForQuit;
@@ -550,12 +508,10 @@ protected:
 	virtual void onJoystickAdded(int deviceID);
 	virtual void onJoystickRemoved(int instanceID);
 
-	virtual void updateActionButtons();
+	//virtual void updateActionButtons();
 
 public:
 	void fixupJoysticks();
-	void initActionButtons();
-	void importActionButtons();
 };
 
 extern DSQ *dsq;

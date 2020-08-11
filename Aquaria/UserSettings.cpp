@@ -218,7 +218,7 @@ void UserSettings::save()
 				{
 					XMLElement *xml_action = doc.NewElement("Action");
 					const ActionInput& ai = as.inputSet[i];
-					xml_action->SetAttribute("name", ai.name.c_str());
+					xml_action->SetAttribute("name", ai.getName().c_str());
 					xml_action->SetAttribute("input", ai.toString().c_str());
 
 					xml_actionSet->InsertEndChild(xml_action);
@@ -280,30 +280,30 @@ void UserSettings::save()
 static void ensureDefaultActions(ActionSet& as)
 {
 	as.clearActions();
-	as.addActionInput("PrimaryAction");
-	as.addActionInput("SecondaryAction");
-	as.addActionInput("SwimUp");
-	as.addActionInput("SwimDown");
-	as.addActionInput("SwimLeft");
-	as.addActionInput("SwimRight");
-	as.addActionInput("Roll");
-	as.addActionInput("Revert");
-	as.addActionInput("WorldMap");
-	as.addActionInput("Escape");
-	as.addActionInput("PrevPage");
-	as.addActionInput("NextPage");
-	as.addActionInput("CookFood");
-	as.addActionInput("FoodLeft");
-	as.addActionInput("FoodRight");
-	as.addActionInput("FoodDrop");
-	as.addActionInput("Look");
-	as.addActionInput("ToggleHelp");
-	as.addActionInput("Screenshot");
+	as.ensureActionInput("PrimaryAction");
+	as.ensureActionInput("SecondaryAction");
+	as.ensureActionInput("SwimUp");
+	as.ensureActionInput("SwimDown");
+	as.ensureActionInput("SwimLeft");
+	as.ensureActionInput("SwimRight");
+	as.ensureActionInput("Roll");
+	as.ensureActionInput("Revert");
+	as.ensureActionInput("WorldMap");
+	as.ensureActionInput("Escape");
+	as.ensureActionInput("PrevPage");
+	as.ensureActionInput("NextPage");
+	as.ensureActionInput("CookFood");
+	as.ensureActionInput("FoodLeft");
+	as.ensureActionInput("FoodRight");
+	as.ensureActionInput("FoodDrop");
+	as.ensureActionInput("Look");
+	as.ensureActionInput("ToggleHelp");
+	as.ensureActionInput("Screenshot");
 	for(int i = 1; i <= 10; ++i)
 	{
 		std::ostringstream os;
 		os << "SongSlot" << i;
-		as.addActionInput(os.str());
+		as.ensureActionInput(os.str());
 	}
 }
 
@@ -505,8 +505,8 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 				const char *input = xml_action->Attribute("input");
 				if (name && *name && input && *input)
 				{
-					ActionInput *ai = as.addActionInput(name);
-					ai->fromString(input);
+					ActionInput& ai = as.ensureActionInput(name);
+					ai.fromString(input);
 				}
 			}
 		}
@@ -584,29 +584,9 @@ void UserSettings::apply()
 
 	dsq->loops.updateVolume();
 
-	for(size_t i = 0; i < control.actionSets.size(); ++i)
-	{
-		ActionSet& as = control.actionSets[i];
-		Joystick *j = core->getJoystick(as.joystickID);
-		if(j)
-		{
-			j->s1ax = as.joycfg.s1ax;
-			j->s1ay = as.joycfg.s1ay;
-			j->s2ax = as.joycfg.s2ax;
-			j->s2ay = as.joycfg.s2ay;
-			j->deadZone1 = as.joycfg.s1dead;
-			j->deadZone2 = as.joycfg.s2dead;
-		}
-	}
-	dsq->initActionButtons();
 	dsq->fixupJoysticks();
 
 	core->debugLogActive = system.debugLogOn;
-
-	if (dsq->game)
-	{
-		dsq->game->bindInput();
-	}
 
 	dsq->bindInput();
 

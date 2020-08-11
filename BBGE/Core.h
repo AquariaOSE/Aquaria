@@ -33,6 +33,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DarkLayer.h"
 
 #include "GameKeys.h"
+#include "InputMapperRaw.h"
 
 class ParticleEffect;
 class Joystick;
@@ -81,7 +82,6 @@ struct MouseButtons
 	}
 
 	ButtonState left, right, middle;
-	ButtonState extra[mouseExtraButtons];
 };
 
 struct Mouse
@@ -96,7 +96,7 @@ struct Mouse
 	MouseButtons pure_buttons;
 	unsigned rawButtonMask;
 	Vector change;
-	bool buttonsEnabled;
+	bool buttonsEnabled; //KILL
 
 	int scrollWheelChange;
 };
@@ -273,7 +273,7 @@ public:
 	void setMouseConstraint(bool on);
 	void setMouseConstraintCircle(const Vector& pos, float mouseCircle);
 
-	virtual void action(int id, int state, int source, InputDevice device){}
+	virtual void action(int id, int state, int playerID, InputDeviceType device) {}
 
 	bool exists(const std::string &file);
 
@@ -372,11 +372,10 @@ public:
 
 	void clearRenderObjects();
 
-	bool getKeyState(int k);
-	bool getMouseButtonState(int m);
+	bool getKeyState(unsigned k) const;
+	bool isKeyChanged(unsigned k) const;
 
 	int currentLayerPass;
-	int keys[KEY_MAXARRAY];
 	virtual void debugLog(const std::string &s);
 	virtual void errorLog(const std::string &s);
 	void messageBox(const std::string &title, const std::string &msg);
@@ -404,11 +403,8 @@ public:
 	int flipMouseButtons;
 	FrameBuffer frameBuffer;
 	void updateRenderObjects(float dt);
-	bool joystickAsMouse;
+	bool joystickAsMouse; //KILL?
 	virtual void prepScreen(bool t){}
-
-	bool updateMouse;
-	bool frameOutputMode;
 
 	int overrideStartLayer, overrideEndLayer;
 
@@ -536,20 +532,13 @@ protected:
 	void setupFileAccess();
 	std::string _extraDataDir;
 
-	std::vector<ActionButtonStatus*> actionStatus; // contains at least 1 element (the sentinel)
-	virtual void updateActionButtons();
-	void clearActionButtons();
+	InputMapperRaw rawInput;
 
 public:
-	// inclusive!
-	inline int getMaxActionStatusIndex() const { return int(actionStatus.size()) - 2; }
-	// pass -1 for is a sentinel that captures all input
-	inline ActionButtonStatus *getActionStatus(size_t idx) { return actionStatus[idx + 1]; }
 
 	Joystick *getJoystick(size_t idx); // warning: may return NULL/contain holes
 	// not the actual number of joysticks!
 	size_t getNumJoysticks() const { return joysticks.size(); }
-	Joystick *getJoystickForSourceID(int sourceID);
 private:
 	std::vector<Joystick*> joysticks;
 };

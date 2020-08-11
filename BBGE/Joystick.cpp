@@ -39,21 +39,7 @@ Joystick::Joystick()
 			debugLog("Failed to init haptic subsystem");
 #  endif
 	sdl_joy = NULL;
-	buttonBitmask = 0;
-	deadZone1 = 0.3f;
-	deadZone2 = 0.3f;
-
 	clearRumbleTime= 0;
-	numJoyAxes = 0;
-	numHats = 0;
-	numButtons = 0;
-	clearAxes();
-
-	s1ax = 0;
-	s1ay = 1;
-	s2ax = 4;
-	s2ay = 3;
-
 	enabled = false;
 }
 
@@ -80,7 +66,6 @@ const char *Joystick::getGUID() const
 bool Joystick::init(int stick)
 {
 	stickIndex = stick;
-	numJoyAxes = 0;
 
 	#ifdef BBGE_BUILD_SDL2
 	if (SDL_IsGameController(stick))
@@ -119,10 +104,7 @@ bool Joystick::init(int stick)
 		guid = &guidbuf[0];
 		debugLog(std::string("Initialized Joystick [") + name + "], GUID [" + guid + "]");
 		if (sdl_controller)
-		{
 			debugLog("Joystick is a Game Controller");
-			numJoyAxes = SDL_CONTROLLER_AXIS_MAX;
-		}
 		if (sdl_haptic)
 			debugLog("Joystick has force feedback support");
 		instanceID = SDL_JoystickInstanceID(sdl_joy);
@@ -133,14 +115,11 @@ bool Joystick::init(int stick)
 		instanceID = SDL_JoystickIndex(sdl_joy);
 		#endif
 
-		if(!numJoyAxes)
-			numJoyAxes = SDL_JoystickNumAxes(sdl_joy);
-		if(numJoyAxes > MAX_JOYSTICK_AXIS)
-			numJoyAxes = MAX_JOYSTICK_AXIS;
-
-		numHats = SDL_JoystickNumHats(sdl_joy);
-		numButtons = SDL_JoystickNumButtons(sdl_joy);
-		
+		std::ostringstream os;
+		os << "Joystick has " << SDL_JoystickNumAxes(sdl_joy) << " axes, "
+			<< SDL_JoystickNumButtons(sdl_joy) << " buttons, "
+			<< SDL_JoystickNumHats(sdl_joy) << " hats.";
+		debugLog(os.str());
 
 		return true;
 	}
@@ -171,14 +150,6 @@ void Joystick::shutdown()
 		SDL_JoystickClose(sdl_joy);
 		sdl_joy = 0;
 	}
-
-	numJoyAxes = 0;
-	clearAxes();
-}
-
-void Joystick::clearAxes()
-{
-	memset(axisRaw, 0, sizeof(axisRaw));
 }
 
 void Joystick::rumble(float leftMotor, float rightMotor, float time)
@@ -204,7 +175,7 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 	}
 }
 
-void Joystick::calibrate(Vector &calvec, float deadZone)
+void Joystick::Calibrate(Vector &calvec, float deadZone)
 {
 	if (calvec.isLength2DIn(deadZone))
 	{
@@ -244,20 +215,6 @@ void Joystick::update(float dt)
 			shutdown();
 			return;
 		}
-		if (sdl_controller)
-		{
-			for(unsigned i = 0; i < numJoyAxes; ++i)
-			{
-				Sint16 ax = SDL_GameControllerGetAxis(sdl_controller, (SDL_GameControllerAxis)i);
-				axisRaw[i] = float(ax)/32768.0f;
-			}
-
-			position.x = axisRaw[SDL_CONTROLLER_AXIS_LEFTX];
-			position.y = axisRaw[SDL_CONTROLLER_AXIS_LEFTY];
-			rightStick.x = axisRaw[SDL_CONTROLLER_AXIS_RIGHTX];
-			rightStick.y = axisRaw[SDL_CONTROLLER_AXIS_RIGHTY];
-		}
-		else
 #else
 		if (!SDL_JoystickOpened(stickIndex))
 		{
@@ -266,38 +223,6 @@ void Joystick::update(float dt)
 			return;
 		}
 #endif
-		// Note: this connects with the else above when the SDL2 path is compiled!
-		{
-			for(unsigned i = 0; i < numJoyAxes; ++i)
-			{
-				Sint16 ax = SDL_JoystickGetAxis(sdl_joy, i);
-				axisRaw[i] = float(ax)/32768.0f;
-			}
-			position.x = s1ax >= 0 ? axisRaw[s1ax] : 0.0f;
-			position.y = s1ay >= 0 ? axisRaw[s1ay] : 0.0f;
-			rightStick.x = s2ax >= 0 ? axisRaw[s2ax] : 0.0f;
-			rightStick.y = s2ay >= 0 ? axisRaw[s2ay] : 0.0f;
-		}
-
-		calibrate(position, deadZone1);
-		calibrate(rightStick, deadZone2);
-
-		buttonBitmask = 0;
-
-#ifdef BBGE_BUILD_SDL2
-		if (sdl_controller)
-		{
-			for (unsigned i = 0; i < SDL_CONTROLLER_BUTTON_MAX; i++)
-				buttonBitmask |= !!SDL_GameControllerGetButton(sdl_controller, (SDL_GameControllerButton)i) << i;
-		}
-		else
-#endif
-		{
-			for (unsigned i = 0; i < numButtons; i++)
-				buttonBitmask |= !!SDL_JoystickGetButton(sdl_joy, i) << i;
-
-			//for (unsigned i = 0; i < numHats; i++)
-		}
 	}
 
 	if (clearRumbleTime >= 0)
@@ -310,60 +235,8 @@ void Joystick::update(float dt)
 	}
 }
 
-bool Joystick::anyButton() const
-{
-	return !!buttonBitmask;;
-}
-
-unsigned Joystick::getNumAxes() const
-{
-#ifdef BBGE_BUILD_SDL2
-	return sdl_controller ? SDL_CONTROLLER_AXIS_MAX : numJoyAxes;
-#else
-	return numJoyAxes;
-#endif
-}
-
-unsigned Joystick::getNumButtons() const
-{
-	return numButtons;
-}
-
-unsigned Joystick::getNumHats() const
-{
-	return numHats;
-}
-
-float Joystick::getAxisUncalibrated(unsigned id) const
-{
-	return id < MAX_JOYSTICK_AXIS ? axisRaw[id] : 0.0f;
-}
-
-JoyHatDirection Joystick::getHat(unsigned id) const
-{
-	unsigned dir = SDL_JoystickGetHat(sdl_joy, id);
-	unsigned ret = JOY_HAT_DIR_CENTERED;
-	switch(dir)
-	{
-		case SDL_HAT_UP: ret = JOY_HAT_DIR_UP; break;
-		case SDL_HAT_DOWN: ret = JOY_HAT_DIR_DOWN; break;
-		case SDL_HAT_LEFT: ret = JOY_HAT_DIR_LEFT; break;
-		case SDL_HAT_RIGHT: ret = JOY_HAT_DIR_RIGHT; break;
-
-		case SDL_HAT_LEFTUP: ret = JOY_HAT_DIR_UP | JOY_HAT_DIR_LEFT; break;
-		case SDL_HAT_RIGHTUP: ret = JOY_HAT_DIR_UP | JOY_HAT_DIR_RIGHT; break;
-		case SDL_HAT_LEFTDOWN: ret = JOY_HAT_DIR_DOWN | JOY_HAT_DIR_LEFT; break;
-		case SDL_HAT_RIGHTDOWN: ret = JOY_HAT_DIR_DOWN | JOY_HAT_DIR_RIGHT; break;
-
-		default: ;
-	}
-	return (JoyHatDirection)ret;
-}
-
 const char *Joystick::getAxisName(unsigned axis) const
 {
-	if(axis >= numJoyAxes)
-		return NULL;
 #ifdef BBGE_BUILD_SDL2
 	if(sdl_controller)
 		return SDL_GameControllerGetStringForAxis((SDL_GameControllerAxis)axis);

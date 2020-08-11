@@ -193,7 +193,7 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	subbox = 0;
 	modSelectorScr = 0;
 	blackout = 0;
-	lastInputMode = INPUT_MOUSE;
+	lastInputMode = INP_DEV_MOUSE;
 	overlay = 0;
 	recentSaveSlot = -1;
 	arialFontData = 0;
@@ -249,24 +249,26 @@ void DSQ::onWindowResize(int w, int h)
 	screenTransition->reloadDevice();
 }
 
-void DSQ::rumble(float leftMotor, float rightMotor, float time, int source, InputDevice device)
+void DSQ::rumble(float leftMotor, float rightMotor, float time, int playerID /* = -1 */)
 {
-	if (device == INPUT_JOYSTICK)
-	{
-		if(source < 0)
-			for(size_t i = 0; i < user.control.actionSets.size(); ++i)
-			{
-				const ActionSet& as = user.control.actionSets[i];
-				if(Joystick *j = core->getJoystick(as.joystickID))
-					j->rumble(leftMotor, rightMotor, time);
-			}
-		else if(source < (int)user.control.actionSets.size())
+	if(lastInputMode != INP_DEV_JOYSTICK)
+		return;
+
+	/* // FIXME controllerfixup
+	if(source < 0)
+		for(size_t i = 0; i < user.control.actionSets.size(); ++i)
 		{
-			const ActionSet& as = user.control.actionSets[source];
+			const ActionSet& as = user.control.actionSets[i];
 			if(Joystick *j = core->getJoystick(as.joystickID))
 				j->rumble(leftMotor, rightMotor, time);
 		}
+	else if(source < (int)user.control.actionSets.size())
+	{
+		const ActionSet& as = user.control.actionSets[source];
+		if(Joystick *j = core->getJoystick(as.joystickID))
+			j->rumble(leftMotor, rightMotor, time);
 	}
+	*/
 }
 
 void DSQ::newGame()
@@ -502,7 +504,6 @@ void DSQ::debugMenu()
 		if (core->getShiftState())
 
 		{
-			core->frameOutputMode = false;
 			dsq->game->togglePause(true);
 			std::string s = dsq->getUserInputString(stringbank.get(2012), "");
 			stringToUpper(s);
@@ -629,32 +630,6 @@ void DSQ::debugMenu()
 					char read=' ';
 					is >> read >> nm;
 					dsq->continuity.setCostume(nm);
-				}
-				else if (c == 'R')
-				{
-					dsq->demo.toggleRecord(true);
-				}
-				else if (c == 'P')
-				{
-					dsq->demo.togglePlayback(true);
-				}
-				else if (c == 'T')
-				{
-					if (dsq->demo.frames.size()> 0)
-					{
-						dsq->game->avatar->position = dsq->demo.frames[0].avatarPos;
-						dsq->game->avatar->rotation.z = dsq->demo.frames[0].rot;
-					}
-				}
-				else if (c == 'U')
-				{
-					dsq->demo.renderFramesToDisk();
-
-
-				}
-				else if (c == 'K')
-				{
-					dsq->demo.clearRecordedFrames();
 				}
 				else if (c == 'H')
 				{
@@ -1684,21 +1659,21 @@ void DSQ::toggleVersionLabel(bool on)
 	versionLabel->alpha.interpolateTo(a, 1);
 }
 
-void DSQ::setInputMode(InputDevice mode)
+void DSQ::setInputMode(InputDeviceType mode)
 {
 	lastInputMode = mode;
 	switch(mode)
 	{
-	case INPUT_JOYSTICK:
+	case INP_DEV_JOYSTICK:
 		core->joystickAsMouse = true;
 	break;
-	case INPUT_MOUSE:
+	case INP_DEV_MOUSE:
 		setMousePosition(core->mouse.position);
 		core->joystickAsMouse = false;
 	break;
-	case INPUT_KEYBOARD:
+	case INP_DEV_KEYBOARD:
 	break;
-	case INPUT_NODEVICE:
+	case INP_DEV_NODEVICE:
 		break;
 	}
 }
@@ -3665,7 +3640,7 @@ void DSQ::watch(float t, int canQuit)
 	}
 }
 
-void DSQ::action(int id, int state, int source, InputDevice device)
+void DSQ::action(int id, int state, int source, InputDeviceType device)
 {
 	Core::action(id, state, source, device);
 
@@ -3693,10 +3668,8 @@ void DSQ::action(int id, int state, int source, InputDevice device)
 void DSQ::bindInput()
 {
 	clearActions();
-	almb.clear();
-	armb.clear();
 
-	addAction(ACTION_ESC, KEY_ESCAPE, -1);
+	addAction(ACTION_ESC, KEY_ESCAPE);
 	addAction(MakeFunctionEvent(DSQ, onSwitchScreenMode), KEY_RETURN, 1);
 
 	if (isDeveloperKeys())
@@ -3708,20 +3681,16 @@ void DSQ::bindInput()
 	}
 	addAction(MakeFunctionEvent(DSQ, debugMenu), KEY_BACKSPACE, 0);
 	//addAction(MakeFunctionEvent(DSQ, takeScreenshotKey	),		KEY_P,				0);
-	
-	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
-	{
-		ActionSet& as = dsq->user.control.actionSets[i];
-		int sourceID = (int)i;
 
-		as.importAction(this, "Escape",		ACTION_ESC, sourceID);
-		as.importAction(this, "Screenshot",		ACTION_SCREENSHOT, sourceID);
-	
-		if(ActionInput *a = as.getActionInputByName("PrimaryAction"))
-			almb.push_back(a);
-		if(ActionInput *a = as.getActionInputByName("SecondaryAction"))
-			armb.push_back(a);
-	}
+	const NamedAction actions[] =
+	{
+		{ "Escape", ACTION_ESC },
+		{ "Screenshot", ACTION_SCREENSHOT }
+	};
+	ImportInput(actions);
+
+	if(game)
+		game->bindInput();
 }
 
 void DSQ::jiggleCursor()
@@ -3731,13 +3700,15 @@ void DSQ::jiggleCursor()
 	SDL_ShowCursor(SDL_DISABLE);
 }
 
+#if 0 // FIXME controllerfixup
 void DSQ::updateActionButtons()
 {
 	// HACK: not optimal
 
+#if 0
 	// This must be done *before* Core::updateActionButtons()
 	// for LMB/RMB emulation to work properly -- fg
-	if (/*inputMode != INPUT_KEYBOARD &&*/ game->isActive())
+	if (/*inputMode != INP_DEV_KEYBOARD &&*/ game->isActive())
 	{
 		for(size_t i = 0; i < almb.size(); ++i)
 			if (ActionMapper::getKeyState(almb[i]->data.single.key[0]) || ActionMapper::getKeyState(almb[i]->data.single.key[1]))
@@ -3768,9 +3739,11 @@ void DSQ::updateActionButtons()
 					break;
 				}
 	}
+#endif
 
 	Core::updateActionButtons();
 }
+#endif
 
 static float skipSfxVol = 1.0;
 void DSQ::onUpdate(float dt)
@@ -3828,7 +3801,7 @@ void DSQ::onUpdate(float dt)
 
 	if (dsq->game && watchForQuit && isNested())
 	{
-		if (dsq->game->isActing(ACTION_ESC, -1))
+		if (dsq->game->isActing(ACTION_ESC))
 		{
 			watchQuitFlag = true;
 			quitNestedMain();
@@ -3851,11 +3824,10 @@ void DSQ::onUpdate(float dt)
 
 	subtitlePlayer.update(dt);
 
-	demo.update(dt);
-
+#if 0 //KILL
 	if (joystickEnabled)
 	{
-		if (dsq->getInputMode() != INPUT_JOYSTICK)
+		if (dsq->getInputMode() != INP_DEV_JOYSTICK)
 		{
 			const float thresh = JOY_AXIS_THRESHOLD;
 			for(size_t i = 0; i < getNumJoysticks(); ++i)
@@ -3864,39 +3836,29 @@ void DSQ::onUpdate(float dt)
 						if (j->anyButton() || !j->position.isLength2DIn(thresh) || !j->rightStick.isLength2DIn(thresh))
 						{
 							//debugLog("setting joystick input mode");
-							dsq->setInputMode(INPUT_JOYSTICK);
+							dsq->setInputMode(INP_DEV_JOYSTICK);
 						}
 		}
-		else if (dsq->getInputMode() != INPUT_MOUSE)
+		else if (dsq->getInputMode() != INP_DEV_MOUSE)
 		{
-			if ((!core->mouse.change.isLength2DIn(5) || (core->getMouseButtonState(0) || core->getMouseButtonState(1))) /*&& !core->joystick.anyButton()*/)
+			if ((!mouse.change.isLength2DIn(5) || (getKeyState(MOUSE_BUTTON_LEFT) || getKeyState(MOUSE_BUTTON_RIGHT)) /*&& !core->joystick.anyButton()*/)
 			{
 				//debugLog("setting mouse input mode");
-				dsq->setInputMode(INPUT_MOUSE);
+				setInputMode(INP_DEV_MOUSE);
 			}
-		}
-	}
-	if (dsq->game->avatar)
-	{
-		if (dsq->game->avatar->isActing(ACTION_SWIMUP, -1) ||
-			dsq->game->avatar->isActing(ACTION_SWIMDOWN, -1) ||
-			dsq->game->avatar->isActing(ACTION_SWIMLEFT, -1) ||
-			dsq->game->avatar->isActing(ACTION_SWIMRIGHT, -1))
-		{
-			dsq->setInputMode(INPUT_KEYBOARD);
 		}
 	}
 
 	// check the actual values, since mouse.buttons.left might be overwritten by keys
-	int cb = 0;
+	int cb = MOUSE_BUTTON_LEFT;
 	if (user.control.flipInputButtons)
-		cb = 1;
+		cb = MOUSE_BUTTON_RIGHT;
 
-	if (dsq->getInputMode() == INPUT_KEYBOARD && (core->getMouseButtonState(cb)))
+	if (dsq->getInputMode() == INP_DEV_KEYBOARD && getKeyState(cb))
 	{
-		dsq->setInputMode(INPUT_MOUSE);
+		dsq->setInputMode(INP_DEV_MOUSE);
 	}
-
+#endif
 
 
 	if (isDeveloperKeys() && cmDebug && cmDebug->alpha == 1 && fpsText)
@@ -3935,16 +3897,18 @@ void DSQ::onUpdate(float dt)
 			os << "inputMode: ";
 			switch(dsq->getInputMode())
 			{
-			case INPUT_MOUSE:
+			case INP_DEV_MOUSE:
 				os << "mouse";
 			break;
-			case INPUT_JOYSTICK:
+			case INP_DEV_JOYSTICK:
 				os << "joystick";
 			break;
-			case INPUT_KEYBOARD:
+			case INP_DEV_KEYBOARD:
+				os << "keyboard";
 			break;
-			case INPUT_NODEVICE:
-				break;
+			case INP_DEV_NODEVICE:
+				os << "nodevice";
+			break;
 			}
 			os << std::endl;
 			Bone *b = dsq->game->avatar->skeletalSprite.getBoneByIdx(1);
@@ -3964,7 +3928,7 @@ void DSQ::onUpdate(float dt)
 		os << std::endl;
 		os << "globalScale: " << core->globalScale.x << std::endl;
 		os << "mousePos:(" << core->mouse.position.x << ", " << core->mouse.position.y << ") mouseChange:(" << core->mouse.change.x << ", " << core->mouse.change.y << ")\n";
-		for(size_t i = 0; i < getNumJoysticks(); ++i)
+		/*for(size_t i = 0; i < getNumJoysticks(); ++i)
 			if(Joystick *j = getJoystick(i))
 			{
 				os << "J[" << i << "," << (j->isEnabled() ? " on" : "off") << "]:[";
@@ -3974,7 +3938,7 @@ void DSQ::onUpdate(float dt)
 					else
 						os << '-';
 				os << "], (" << j->position.x << ", " << j->position.y << "), ("<< j->rightStick.x << ", " << j->rightStick.y << ")\n";
-			}
+			}*/  // FIXME controllerfixup
 		os << "altState: " << core->getKeyState(KEY_LALT) << " | " << core->getKeyState(KEY_RALT) << " mb: " << mouse.buttons.left << mouse.buttons.middle << mouse.buttons.right << std::endl;
 		os << "PMFree: " << particleManager->getFree() << " Active: " << particleManager->getNumActive() << std::endl;
 		os << "cameraPos: (" << dsq->cameraPos.x << ", " << dsq->cameraPos.y << ")" << std::endl;
@@ -4226,17 +4190,6 @@ void DSQ::modifyDt(float &dt)
 
 	gameSpeed.update(dt);
 	dt *= gameSpeed.x;
-
-	if (frameOutputMode)
-	{
-		dt = 1.0f/60.0f;
-		doScreenshot = true;
-	}
-
-	if (dsq->demo.mode == Demo::DEMOMODE_RECORD)
-	{
-		dt = 1.0f/60.0f;
-	}
 }
 
 void DSQ::removeElement(Element *element)
@@ -4485,47 +4438,11 @@ void DSQ::fixupJoysticks()
 		if(Joystick *j = getJoystick(i))
 			j->setEnabled(false);
 
+	// Re-enable joysticks that are in use
 	for(size_t i = 0; i < user.control.actionSets.size(); ++i)
 	{
 		ActionSet& as = user.control.actionSets[i];
 		as.updateJoystick();
-	}
-
-	// HACK: why here? kinda dirty, but the joystick ID needs to be propagated
-	importActionButtons();
-}
-
-void DSQ::initActionButtons()
-{
-	clearActionButtons();
-
-	std::vector<int> allkeys;
-	// Don't need joysticks keys for this
-	for(int i = 0; i < MOUSE_BUTTON_EXTRA_END; ++i)
-		allkeys.push_back(i);
-
-	// create sentinel
-	ActionButtonStatus *allbtn = new ActionButtonStatus;
-	allbtn->importQuery(&allkeys[0], allkeys.size());
-	actionStatus.push_back(allbtn);
-
-	// create the rest
-	for(size_t i = 0; i < user.control.actionSets.size(); ++i)
-		actionStatus.push_back(new ActionButtonStatus);
-
-	importActionButtons();
-}
-
-void DSQ::importActionButtons()
-{
-	assert(user.control.actionSets.size()+1 == actionStatus.size());
-
-	// ignore sentinel
-	for(size_t i = 1; i < actionStatus.size(); ++i)
-	{
-		const ActionSet& as = user.control.actionSets[i-1];
-		ActionButtonStatus *abs = actionStatus[i];
-		abs->import(as);
 	}
 }
 
@@ -4547,34 +4464,23 @@ void DSQ::loadStringBank()
 	stringbank.load(fname);
 
 	if (mod.isActive()) {
+		// FIXME (after controllerfixup) load mod stringbanks HERE, not up there
 		fname = localisePath(mod.getPath() + "stringbank.txt", mod.getPath());
 		stringbank.load(fname);
 	}
 }
 
-InputDevice DSQ::getInputMode() const
+InputDeviceType DSQ::getInputMode() const
 {
 	return lastInputMode;
 }
 
-InputDevice DSQ::getInputMode(int source) const
-{
-	assert(source >= 0 && size_t(source) < _inputModes.size());
-	return _inputModes[source];
-}
-
-InputDevice DSQ::getInputModeSafe(int source) const
-{
-	return source < 0 ? lastInputMode :
-		(size_t(source) < _inputModes.size() ? _inputModes[source] : INPUT_NODEVICE);
-}
-
 bool DSQ::useMouseInput() const
 {
-	return lastInputMode == INPUT_MOUSE;
+	return lastInputMode == INP_DEV_MOUSE;
 }
 
 bool DSQ::useJoystickInput() const
 {
-	return lastInputMode == INPUT_JOYSTICK;
+	return lastInputMode == INP_DEV_JOYSTICK;
 }

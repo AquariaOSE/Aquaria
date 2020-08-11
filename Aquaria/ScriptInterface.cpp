@@ -2081,7 +2081,7 @@ luaFunc(sendAction)
 	int state = lua_tointeger(L, 2);
 	int mask = lua_tointeger(L, 3);
 	int source = lua_tointeger(L, 4);
-	InputDevice device = (InputDevice)lua_tointeger(L, 5);
+	InputDeviceType device = (InputDeviceType)lua_tointeger(L, 5);
 	if(!mask)
 		mask = -1;
 	if(mask & 1)
@@ -2117,12 +2117,8 @@ luaFunc(shakeCamera)
 
 luaFunc(rumble)
 {
-	int source = lua_tointeger(L, 4) - 1;
-	Avatar *a = dsq->game->avatar;
-	InputDevice device = (InputDevice)lua_tointeger(L, 5);
-	if(device == INPUT_NODEVICE) // default: use avatar status
-		device = a ? a->getLastActionInputDevice() : INPUT_NODEVICE;
-	dsq->rumble(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), source, device);
+	int playerID = lua_tointeger(L, 4) - 1;
+	dsq->rumble(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3), playerID);
 	luaReturnNil();
 }
 
@@ -5014,24 +5010,24 @@ luaFunc(screenFadeGo)
 
 luaFunc(isEscapeKey)
 {
-	int source = lua_tointeger(L, 1) - 1;
-	bool isDown = dsq->game->isActing(ACTION_ESC, source);
+	int playerID = lua_tointeger(L, 1) - 1; // FIXME controllerfixup
+	bool isDown = dsq->game->isActing(ACTION_ESC);
 	luaReturnBool(isDown);
 }
 
 luaFunc(isLeftMouse)
 {
-	int source = lua_tointeger(L, 1) - 1;
-	bool isDown = (source < 0 && core->mouse.buttons.left)
-		|| (dsq->game->avatar && dsq->game->avatar->isActing(ACTION_PRIMARY, source));
+	int playerID = lua_tointeger(L, 1) - 1; // FIXME controllerfixup
+	bool isDown = (playerID < 0 && core->mouse.buttons.left)
+		|| (dsq->game->avatar && dsq->game->avatar->isActing(ACTION_PRIMARY));
 	luaReturnBool(isDown);
 }
 
 luaFunc(isRightMouse)
 {
-	int source = lua_tointeger(L, 1) - 1;
-	bool isDown = (source < 0 && core->mouse.buttons.right)
-		|| (dsq->game->avatar && dsq->game->avatar->isActing(ACTION_SECONDARY, source));
+	int playerID = lua_tointeger(L, 1) - 1; // FIXME controllerfixup
+	bool isDown = (playerID < 0 && core->mouse.buttons.right)
+		|| (dsq->game->avatar && dsq->game->avatar->isActing(ACTION_SECONDARY));
 	luaReturnBool(isDown);
 }
 
@@ -8395,32 +8391,33 @@ luaFunc(disableInput)
 
 luaFunc(getInputMode)
 {
-	int source = lua_tointeger(L, 1);
-	luaReturnInt(dsq->getInputModeSafe(source - 1));
+	//int playerID = lua_tointeger(L, 1) - 1; // FIXME controllerfixup?
+	luaReturnInt(dsq->getInputMode());
 }
 
-static Joystick *_getJoystick(lua_State *L, int idx = 1)
+// FIXME: repair for controllerfixup
+/*static Joystick *_getJoystick(lua_State *L, int idx = 1)
 {
 	int source = lua_tointeger(L, idx) - 1;
 	if(source < 0)
 		return core->getJoystick(0); // HACK: FIXME: do something sensible instead
 	
 	return core->getJoystickForSourceID(source);
-}
+}*/
 
 luaFunc(getJoystickAxisLeft)
 {
 	Vector v;
-	if(Joystick *j = _getJoystick(L))
-		v = j->position;
+	//if(Joystick *j = _getJoystick(L))
+	//	v = j->position;
 	luaReturnVec2(v.x, v.y);
 }
 
 luaFunc(getJoystickAxisRight)
 {
 	Vector v;
-	if(Joystick *j = _getJoystick(L))
-		v = j->rightStick;
+	//if(Joystick *j = _getJoystick(L))
+	//	v = j->rightStick;
 	luaReturnVec2(v.x, v.y);
 }
 
@@ -11449,9 +11446,9 @@ static const struct {
 
 	luaConstant(TILE_SIZE),
 
-	luaConstant(INPUT_MOUSE),
-	luaConstant(INPUT_JOYSTICK),
-	luaConstant(INPUT_KEYBOARD),
+	luaConstant(INP_DEV_MOUSE),
+	luaConstant(INP_DEV_JOYSTICK),
+	luaConstant(INP_DEV_KEYBOARD),
 
 	luaConstant(ANIMLAYER_FLOURISH),
 	luaConstant(ANIMLAYER_OVERRIDE),

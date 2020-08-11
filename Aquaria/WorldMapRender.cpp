@@ -794,21 +794,19 @@ void WorldMapRender::bindInput()
 	clearActions();
 	clearCreatedEvents();
 
-	addAction(ACTION_TOGGLEWORLDMAPEDITOR, KEY_TAB, -1);
+	addAction(ACTION_TOGGLEWORLDMAPEDITOR, KEY_TAB);
 
-	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	const NamedAction actions[] =
 	{
-		const ActionSet& as = dsq->user.control.actionSets[i];
-		int sourceID = (int)i;
+		{ "PrimaryAction",		ACTION_PRIMARY },
+		{ "SecondaryAction",	ACTION_SECONDARY },
 
-		as.importAction(this, "PrimaryAction",		ACTION_PRIMARY, sourceID);
-		as.importAction(this, "SecondaryAction",	ACTION_SECONDARY, sourceID);
-
-		as.importAction(this, "SwimLeft",			ACTION_SWIMLEFT, sourceID);
-		as.importAction(this, "SwimRight",			ACTION_SWIMRIGHT, sourceID);
-		as.importAction(this, "SwimUp",			ACTION_SWIMUP, sourceID);
-		as.importAction(this, "SwimDown",			ACTION_SWIMDOWN, sourceID);
-	}
+		{ "SwimLeft",			ACTION_SWIMLEFT },
+		{ "SwimRight",			ACTION_SWIMRIGHT },
+		{ "SwimUp",			ACTION_SWIMUP },
+		{ "SwimDown",			ACTION_SWIMDOWN }
+	};
+	ImportInput(actions);
 }
 
 void WorldMapRender::destroy()
@@ -992,15 +990,15 @@ void WorldMapRender::onUpdate(float dt)
 		{
 			float scrollSpeed = 2.0f;
 			float amt = (400*dt)/scale.x;
-			if (isActing(ACTION_SWIMLEFT, -1))
+			if (isActing(ACTION_SWIMLEFT))
 			{
 				internalOffset += Vector(amt, 0);
 			}
-			if (isActing(ACTION_SWIMRIGHT, -1))
+			if (isActing(ACTION_SWIMRIGHT))
 			{
 				internalOffset += Vector(-amt, 0);
 			}
-			if (isActing(ACTION_SWIMDOWN, -1))
+			if (isActing(ACTION_SWIMDOWN))
 			{
 				if (core->getShiftState())
 				{
@@ -1012,7 +1010,7 @@ void WorldMapRender::onUpdate(float dt)
 					internalOffset += Vector(0, -amt);
 				}
 			}
-			if (isActing(ACTION_SWIMUP, -1))
+			if (isActing(ACTION_SWIMUP))
 			{
 				if (core->getShiftState())
 				{
@@ -1024,10 +1022,10 @@ void WorldMapRender::onUpdate(float dt)
 					internalOffset += Vector(0, amt);
 				}
 			}
-
+#if 0 // FIXME controllerfixup
 			if (core->joystickEnabled)
 			{
-				if (isActing(ACTION_SECONDARY, -1))
+				if (isActing(ACTION_SECONDARY))
 				{
 					Vector jpos;
 					for(size_t i = 0; i < core->getNumJoysticks(); ++i)
@@ -1061,6 +1059,7 @@ void WorldMapRender::onUpdate(float dt)
 					internalOffset += jpos * (-400*dt / scale.x);
 				}
 			}
+#endif
 		}
 
 		if (activeTile && activeTile->layer == 1)
@@ -1501,7 +1500,7 @@ void WorldMapRender::updateEditor()
 	areaLabel->setText(os.str());
 }
 
-void WorldMapRender::action (int id, int state, int source, InputDevice device)
+void WorldMapRender::action (int id, int state, int source, InputDeviceType device)
 {
 	if (isOn())
 	{

@@ -22,56 +22,60 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define ACTIONINPUT_H
 
 #include <string>
+#include "InputSystem.h"
 
+// Slots for each input/key type
 enum ActionInputSize
 {
 	INP_MSESIZE = 1,
 	INP_KEYSIZE = 2,
 	INP_JOYSIZE = 1,
-	INP_COMBINED_SIZE = INP_MSESIZE + INP_KEYSIZE + INP_JOYSIZE
+	INP_NUMFIELDS = INP_MSESIZE + INP_KEYSIZE + INP_JOYSIZE
 };
 
-std::string getInputCodeToString(int k);
 std::string getInputCodeToUserString(unsigned int k, size_t joystickID);
-int getStringToInputCode(const std::string& s);
 
+// Mapping for one input action ("Cook", "SwimLeft", etc)
 class ActionInput
 {
-public:
-	ActionInput();
-
-	std::string name;
-
-	union
+public: // only public because some static funcs in the cpp file need this. Don't use elsewhere!
+	struct JoyData
 	{
-		struct
-		{
-			unsigned int mse[INP_MSESIZE];
-			unsigned int key[INP_KEYSIZE];
-			unsigned int joy[INP_JOYSIZE];
-		} single;
-		int all[INP_COMBINED_SIZE];
-	} data;
+		JoyData();
+		InputControlType ctrlType;
+		unsigned ctrlID; // 0 = not set, otherwise actual id + 1
+		int x, y; // each [-1..+1]: (x,y) for hat direction, (x) for axis direction
+	};
+	inline const std::string& getName() const { return name; }
+private:
+	unsigned mse[INP_MSESIZE]; // stores button+1, 0 = not set
+	unsigned key[INP_KEYSIZE]; // 0 = no key
+	JoyData joy[INP_JOYSIZE];
+	std::string name;
+public:
 
+	ActionInput(const std::string& name_);
+
+	// indexing:
+	// slot -> per-category (start at 0 for each INP_*)
+	// field: absolute, [0 ..INP_NUMFIELDS)
+
+	static unsigned GetField(InputDeviceType dev, unsigned slot);
+
+	bool Import(const RawInput& inp, unsigned slot); // autodetects type, slot is per-category
+	bool ImportField(const RawInput& inp, unsigned field); // returns false if field and type of inp don't match
+	bool Export(RawInput& inp, unsigned field) const; // returns false if no mapping present
+	
+	// for checking whether a key/button/etc is configured
+	bool hasEntry(unsigned field) const;
+	void clearEntry(unsigned field);
+
+	// for config (de-)serialization
 	std::string toString() const;
 	void fromString(const std::string &read);
-};
 
-enum InputSetType
-{
-	INPUTSET_NONE		= 0,
-	INPUTSET_KEY		= 1,
-	INPUTSET_JOY		= 2,
-	INPUTSET_MOUSE		= 3,
-	INPUTSET_OTHER		= 4
-};
-
-enum InputDevice
-{
-	INPUT_NODEVICE = 0,
-	INPUT_MOUSE,
-	INPUT_JOYSTICK,
-	INPUT_KEYBOARD
+	// for the UI (field is in [0..INP_COMBINED_SIZE])
+	std::string prettyPrintField(unsigned field, int joystickID = -1) const;
 };
 
 #endif

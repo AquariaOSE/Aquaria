@@ -91,7 +91,7 @@ public:
 	void addNode(size_t idx);
 	void update(float dt);
 	void setActive(bool v);
-	bool action(int id, int state, int source, InputDevice device);
+	bool action(int id, int state, int source, InputDeviceType device);
 	void setEmitter(const std::string& name);
 
 	PathNode *getPathNode(size_t idx);

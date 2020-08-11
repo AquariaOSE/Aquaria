@@ -2511,10 +2511,10 @@ float Game::getHalfTimer(float mod)
 
 void Game::toggleHelpScreen()
 {
-	action(ACTION_TOGGLEHELPSCREEN, 0, -1, INPUT_NODEVICE);
+	action(ACTION_TOGGLEHELPSCREEN, 0, -1, INP_DEV_NODEVICE);
 }
 
-void Game::action(int id, int state, int source, InputDevice device)
+void Game::action(int id, int state, int source, InputDeviceType device)
 {
 	for (size_t i = 0; i < paths.size(); i++)
 	{
@@ -2557,16 +2557,6 @@ void Game::action(int id, int state, int source, InputDevice device)
 	{
 		if (id == ACTION_TOGGLEGRID && !state)			toggleGridRender();
 	}
-
-	// Forward these to Lua scripts (because digital swim movement should be seen as menu movement as well)
-	if(id == ACTION_SWIMLEFT)
-		action(ACTION_MENULEFT, state, source, device);
-	else if(id == ACTION_SWIMRIGHT)
-		action(ACTION_MENURIGHT, state, source, device);
-	else if(id == ACTION_SWIMUP)
-		action(ACTION_MENUUP, state, source, device);
-	else if(id == ACTION_SWIMDOWN)
-		action(ACTION_MENUDOWN, state, source, device);
 }
 
 void Game::toggleWorldMap()
@@ -3219,69 +3209,62 @@ void Game::bindInput()
 	ActionMapper::clearActions();
 	//ActionMapper::clearCreatedEvents();
 
-	addAction(ACTION_ESC, KEY_ESCAPE, -1);
+	addAction(ACTION_ESC, KEY_ESCAPE);
 
 
 #ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->canOpenEditor())
 	{
-		addAction(ACTION_TOGGLESCENEEDITOR, KEY_TAB, -1);
+		addAction(ACTION_TOGGLESCENEEDITOR, KEY_TAB);
 	}
 #endif
 
 	if (dsq->canOpenEditor())
 	{
 		//addAction(MakeFunctionEvent(Game, toggleMiniMapRender), KEY_M, 0);
-		addAction(ACTION_TOGGLEGRID, KEY_F9, -1);
+		addAction(ACTION_TOGGLEGRID, KEY_F9);
 	}
 
-	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	const NamedAction actions[] =
 	{
-		const ActionSet& as = dsq->user.control.actionSets[i];
-		int sourceID = (int)i;
+		{ "PrimaryAction", ACTION_PRIMARY},
+		{ "SecondaryAction", ACTION_SECONDARY},
 
-		as.importAction(this, "PrimaryAction", ACTION_PRIMARY, sourceID);
-		as.importAction(this, "SecondaryAction", ACTION_SECONDARY, sourceID);
-
-		as.importAction(this, "Escape",		ACTION_ESC, sourceID);
-		as.importAction(this, "WorldMap",		ACTION_TOGGLEWORLDMAP, sourceID);
-		as.importAction(this, "ToggleHelp",	ACTION_TOGGLEHELPSCREEN, sourceID);
+		{ "Escape",		ACTION_ESC},
+		{ "WorldMap",		ACTION_TOGGLEWORLDMAP},
+		{ "ToggleHelp",	ACTION_TOGGLEHELPSCREEN},
 
 		// used for scrolling help text
-		as.importAction(this, "SwimUp",		ACTION_SWIMUP, sourceID);
-		as.importAction(this, "SwimDown",		ACTION_SWIMDOWN, sourceID);
-		as.importAction(this, "SwimLeft",		ACTION_SWIMLEFT, sourceID);
-		as.importAction(this, "SwimRight",		ACTION_SWIMRIGHT, sourceID);
+		{ "SwimUp",		ACTION_SWIMUP},
+		{ "SwimDown",		ACTION_SWIMDOWN},
+		{ "SwimLeft",		ACTION_SWIMLEFT},
+		{ "SwimRight",		ACTION_SWIMRIGHT},
 
-		as.importAction(this, "MenuUp",		ACTION_MENUUP, sourceID);
-		as.importAction(this, "MenuDown",		ACTION_MENUDOWN, sourceID);
-		as.importAction(this, "MenuLeft",		ACTION_MENULEFT, sourceID);
-		as.importAction(this, "MenuRight",		ACTION_MENURIGHT, sourceID);
-
-		as.importAction(this, "PrevPage",		ACTION_PREVPAGE, sourceID);
-		as.importAction(this, "NextPage",		ACTION_NEXTPAGE, sourceID);
-		as.importAction(this, "CookFood",		ACTION_COOKFOOD, sourceID);
-		as.importAction(this, "FoodLeft",		ACTION_FOODLEFT, sourceID);
-		as.importAction(this, "FoodRight",		ACTION_FOODRIGHT, sourceID);
-		as.importAction(this, "FoodDrop",		ACTION_FOODDROP, sourceID);
+		{ "PrevPage",		ACTION_PREVPAGE},
+		{ "NextPage",		ACTION_NEXTPAGE},
+		{ "CookFood",		ACTION_COOKFOOD},
+		{ "FoodLeft",		ACTION_FOODLEFT},
+		{ "FoodRight",		ACTION_FOODRIGHT},
+		{ "FoodDrop",		ACTION_FOODDROP},
 
 		// To capture quick song keys via script
-		as.importAction(this, "SongSlot1",		ACTION_SONGSLOT1, sourceID);
-		as.importAction(this, "SongSlot2",		ACTION_SONGSLOT2, sourceID);
-		as.importAction(this, "SongSlot3",		ACTION_SONGSLOT3, sourceID);
-		as.importAction(this, "SongSlot4",		ACTION_SONGSLOT4, sourceID);
-		as.importAction(this, "SongSlot5",		ACTION_SONGSLOT5, sourceID);
-		as.importAction(this, "SongSlot6",		ACTION_SONGSLOT6, sourceID);
-		as.importAction(this, "SongSlot7",		ACTION_SONGSLOT7, sourceID);
-		as.importAction(this, "SongSlot8",		ACTION_SONGSLOT8, sourceID);
-		as.importAction(this, "SongSlot9",		ACTION_SONGSLOT9, sourceID);
-		as.importAction(this, "SongSlot10",	ACTION_SONGSLOT10, sourceID);
+		{ "SongSlot1",		ACTION_SONGSLOT1},
+		{ "SongSlot2",		ACTION_SONGSLOT2},
+		{ "SongSlot3",		ACTION_SONGSLOT3},
+		{ "SongSlot4",		ACTION_SONGSLOT4},
+		{ "SongSlot5",		ACTION_SONGSLOT5},
+		{ "SongSlot6",		ACTION_SONGSLOT6},
+		{ "SongSlot7",		ACTION_SONGSLOT7},
+		{ "SongSlot8",		ACTION_SONGSLOT8},
+		{ "SongSlot9",		ACTION_SONGSLOT9},
+		{ "SongSlot10",	ACTION_SONGSLOT10},
 
-		as.importAction(this, "Revert",		ACTION_REVERT, sourceID);
+		{ "Revert",		ACTION_REVERT},
 
-		as.importAction(this, "Look",			ACTION_LOOK, sourceID);
-		as.importAction(this, "Roll",			ACTION_ROLL, sourceID);
-	}
+		{ "Look",			ACTION_LOOK},
+		{ "Roll",			ACTION_ROLL}
+	};
+	ImportInput(actions);
 
 	if (avatar)
 		avatar->bindInput();
@@ -3776,7 +3759,7 @@ bool Game::updateMusic()
 	return false;
 }
 
-void Game::onPressEscape(int source, InputDevice device)
+void Game::onPressEscape(int source, InputDeviceType device)
 {
 	if (dsq->isInCutscene())
 	{
@@ -4240,13 +4223,13 @@ void Game::updateCursor(float dt)
 {
 	bool rotate = false;
 
-	if (dsq->getInputMode() == INPUT_MOUSE)
+	if (dsq->getInputMode() == INP_DEV_MOUSE)
 	{
 		dsq->cursor->offset.stop();
 		dsq->cursor->offset = Vector(0,0);
 		//debugLog("offset lerp stop in mouse!");
 	}
-	else if (dsq->getInputMode() == INPUT_JOYSTICK)
+	else if (dsq->getInputMode() == INP_DEV_JOYSTICK)
 	{
 		if (!dsq->game->isPaused() || dsq->game->isInGameMenu() || !dsq->game->avatar->isInputEnabled())
 		{
@@ -4279,7 +4262,7 @@ void Game::updateCursor(float dt)
 		// Don't show the cursor in keyboard/joystick mode if it's not
 		// already visible (this keeps the cursor from appearing for an
 		// instant during map fadeout).
-		if (dsq->getInputMode() == INPUT_MOUSE || isSceneEditorActive() || dsq->game->isPaused())
+		if (dsq->getInputMode() == INP_DEV_MOUSE || isSceneEditorActive() || dsq->game->isPaused())
 			dsq->cursor->alphaMod = 0.5;
 
 		/*
@@ -4290,7 +4273,7 @@ void Game::updateCursor(float dt)
 	else if (avatar)
 	{
 		//Vector v = avatar->getVectorToCursorFromScreenCentre();
-		if (dsq->getInputMode() == INPUT_JOYSTICK)// && !avatar->isSinging() && !dsq->game->isInGameMenu() && !dsq->game->isPaused())
+		if (dsq->getInputMode() == INP_DEV_JOYSTICK)// && !avatar->isSinging() && !dsq->game->isInGameMenu() && !dsq->game->isPaused())
 		{
 			dsq->cursor->alphaMod = 0;
 			if (!avatar->isSinging())
@@ -4518,7 +4501,7 @@ void Game::update(float dt)
 	if (inHelpScreen)
 	{
 		const float helpTextScrollSpeed = 400.0f;
-		if (isActing(ACTION_SWIMDOWN, -1))
+		if (isActing(ACTION_SWIMDOWN))
 		{
 			helpText->offset.stop();
 			helpText->offset.y -= helpTextScrollSpeed * dt;
@@ -4527,7 +4510,7 @@ void Game::update(float dt)
 				helpText->offset.y = -helpText->getHeight() + core->getVirtualHeight();
 			}
 		}
-		if (isActing(ACTION_SWIMUP, -1))
+		if (isActing(ACTION_SWIMUP))
 		{
 			helpText->offset.stop();
 			helpText->offset.y += helpTextScrollSpeed * dt;
@@ -5026,8 +5009,6 @@ void Game::removeState()
 
 	dsq->overlay->alpha.interpolateTo(1, fadeTime);
 	dsq->run(fadeTime);
-
-	dsq->rumble(0,0,0,-1, INPUT_JOYSTICK);
 
 	dsq->sound->clearFadingSfx();
 

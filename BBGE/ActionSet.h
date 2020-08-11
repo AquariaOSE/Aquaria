@@ -27,9 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "ActionInput.h"
 
-typedef std::vector<ActionInput> ActionInputSet;
-
-class ActionMapper;
+class InputMapper;
 class Event;
 
 const int ACTIONSET_REASSIGN_JOYSTICK = -2;
@@ -41,14 +39,16 @@ struct JoystickConfig
 	float s1dead, s2dead;
 };
 
+// One ActionSet is a serializable configuration of input mappings.
 class ActionSet
 {
+	typedef std::vector<ActionInput> ActionInputSet;
+
 public:
 	ActionSet();
 
-	// import this ActionSet into ActionMapper
-	void importAction(ActionMapper *mapper, const std::string &name, Event *event, int state) const;
-	void importAction(ActionMapper *mapper, const std::string &name, int actionID, int sourceID) const;
+	// import this ActionSet into InputMapper. Should be called via ActionMapper::ImportInput() only!
+	void importAction(InputMapper *mapper, const std::string &name, unsigned actionID) const;
 	void clearActions();
 	int assignJoystickByName(bool force); // -1 if no such joystick found
 	void assignJoystickIdx(int idx, bool updateValues);
@@ -56,11 +56,10 @@ public:
 	// note: this only ENABLES joysticks if they are needed, but never disables any
 	void updateJoystick();
 
-	ActionInput *addActionInput(const std::string &name);
-	ActionInput *getActionInputByName(const std::string &name);
+	ActionInput& ensureActionInput(const std::string &name);
+	const ActionInput *getActionInputByName(const std::string &name) const;
 
-	InputDevice inputMode;
-	size_t joystickID; // >= 0: use that, -1 = no joystick, or ACTIONSET_REASSIGN_JOYSTICK
+	int joystickID; // >= 0: use that, -1 = no joystick, or ACTIONSET_REASSIGN_JOYSTICK
 
 	// --- Saved in config ---
 	ActionInputSet inputSet;

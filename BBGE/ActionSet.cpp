@@ -33,7 +33,6 @@ JoystickConfig::JoystickConfig()
 
 ActionSet::ActionSet()
 {
-	inputMode = INPUT_NODEVICE;
 	enabled = true;
 	joystickID = ACTIONSET_REASSIGN_JOYSTICK;
 }
@@ -132,11 +131,11 @@ void ActionSet::updateJoystick()
 		j->setEnabled(true);
 }
 
-ActionInput *ActionSet::getActionInputByName(const std::string &name)
+const ActionInput *ActionSet::getActionInputByName(const std::string &name) const
 {
-	for (ActionInputSet::iterator i = inputSet.begin(); i != inputSet.end(); i++)
+	for (ActionInputSet::const_iterator i = inputSet.begin(); i != inputSet.end(); i++)
 	{
-		if (nocasecmp((*i).name, name) == 0)
+		if (nocasecmp(i->getName(), name) == 0)
 		{
 			return &(*i);
 		}
@@ -144,52 +143,34 @@ ActionInput *ActionSet::getActionInputByName(const std::string &name)
 	return 0;
 }
 
-void ActionSet::importAction(ActionMapper *mapper, const std::string &name, int actionID, int sourceID) const
+void ActionSet::importAction(InputMapper *mapper, const std::string &name, unsigned actionID) const
 {
 	if (!enabled) return;
 	if (!mapper) return;
 
-	for (size_t i = 0; i < inputSet.size(); i++)
+	const ActionInput *ac = getActionInputByName(name);
+	if(!ac)
 	{
-		const ActionInput *actionInput = &inputSet[i];
-		if (actionInput->name == name)
-		{
-			for (int i = 0; i < INP_COMBINED_SIZE; i++)
-				if (actionInput->data.all[i])
-					mapper->addAction(actionID, actionInput->data.all[i], sourceID);
-			return;
-		}
+		errorLog("ActionSet::importAction: Undefined action name: " + name);
+		return;
 	}
+
+	RawInput raw;
+	for(unsigned i = 0; i < INP_NUMFIELDS; ++i)
+		if(ac->Export(raw, i))
+			if(!mapper->addMapping(InputMapper::TO_BUTTON, raw, actionID))
+				errorLog("Failed to map action: " + name);
 }
 
-void ActionSet::importAction(ActionMapper *mapper, const std::string &name, Event *event, int state) const
+ActionInput& ActionSet::ensureActionInput(const std::string &name)
 {
-	if (!enabled) return;
-	if (!mapper) return;
+	for (ActionInputSet::iterator i = inputSet.begin(); i != inputSet.end(); i++)
+		if (nocasecmp(i->getName(), name) == 0)
+			return *i;
 
-	for (size_t i = 0; i < inputSet.size(); i++)
-	{
-		const ActionInput *actionInput = &inputSet[i];
-		if (actionInput->name == name)
-		{
-			for (int i = 0; i < INP_COMBINED_SIZE; i++)
-				if (actionInput->data.all[i])
-					mapper->addAction(event, actionInput->data.all[i], state);
-			return;
-		}
-	}
-}
-
-ActionInput *ActionSet::addActionInput(const std::string &name)
-{
-	ActionInput *a = getActionInputByName(name);
-	if(a)
-		return a;
-
-	ActionInput newa;
-	newa.name = name;
+	ActionInput newa(name);
 	inputSet.push_back(newa);
-	return &inputSet.back();
+	return inputSet.back();
 }
 
 /*

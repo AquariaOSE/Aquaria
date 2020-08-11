@@ -1303,13 +1303,13 @@ bool Entity::updateCurrents(float dt)
 			dist.normalize2D();
 			float v = dist.x;
 			float scale = 0.2f;
-			if (getEntityType() == ET_AVATAR)
+			if (getEntityType() == ET_AVATAR) // FIXME (after controllerfixup) should be moved to avatar update
 			{
 				Avatar *a = dsq->game->avatar;
 				if (v < 0)
-					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2f, a->getLastActionSourceID(), a->getLastActionInputDevice());
+					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2f);
 				else
-					dsq->rumble((1.0f-v)*scale, (v)*scale, 0.1f, a->getLastActionSourceID(), a->getLastActionInputDevice());
+					dsq->rumble((1.0f-v)*scale, (v)*scale, 0.1f);
 			}
 		}
 	}

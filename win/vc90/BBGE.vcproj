@@ -334,14 +334,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\ActionStatus.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\ActionStatus.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\BBGE\AfterEffect.cpp"
 				>
 			</File>
@@ -459,6 +451,34 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\Gradient.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\InputMapper.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\InputMapper.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\InputMapperRaw.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\InputMapperRaw.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\InputSystem.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\InputSystem.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\InputSystemSDL.cpp"
 				>
 			</File>
 			<File

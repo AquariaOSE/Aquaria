@@ -241,4 +241,17 @@
 
 #endif // BBGE_BUILD_SDL2
 
+
+// Extra symbolic names that the engine may use when referencing keys
+// For use with ActionMapper::addAction()
+// (also see GameKeyNames.cpp)
+enum ActionButtonType
+{
+	MOUSE_BUTTON_LEFT	=  KEY_MAXARRAY + 1,
+	MOUSE_BUTTON_RIGHT,
+	MOUSE_BUTTON_MIDDLE,
+
+	ACTION_BUTTON_ENUM_SIZE
+};
+
 #endif // BBGE_GAME_KEYS_H

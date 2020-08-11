@@ -18,76 +18,70 @@ See the GNU General Public License for more details.
 #include "ActionMapper.h"
 #include "Core.h"
 
+typedef std::vector<unsigned> ButtonList;
 
-InputDevice getDeviceForActionbutton(int k)
+// TODO: clean this up, make single vector of tagged unions, sorted by key
+struct LegacyActionData
 {
-	if(k <= KEY_MAXARRAY)
-		return INPUT_KEYBOARD;
-	if(k < MOUSE_BUTTON_EXTRA_END)
-		return INPUT_MOUSE;
-	return INPUT_JOYSTICK;
-}
+	LegacyActionData()
+		: id(-1), state(-1)
+		, event(0)
+	{
+	}
+
+	int id; // -1 if no associated event
+	int state; // -1, 0, or 1
+	Event *event;
+	ButtonList buttonList;
+};
+
+enum ActionState
+{
+	ACSTATE_ACTIVE = 0x1,    // action is active right now (button is held down)
+	ACSTATE_ACCEPTED = 0x2   // handle that action when it comes in
+};
 
 ActionMapper::ActionMapper()
 {
 	cleared = false;
 	inputEnabled = true;
 	inUpdate = false;
-	//memset(keyStatus, 0, sizeof(keyStatus));
+	InputMapper::RegisterActionMapper(this);
 }
 
 ActionMapper::~ActionMapper()
 {
+	InputMapper::UnregisterActionMapper(this);
 	clearCreatedEvents();
 }
 
-ActionData *ActionMapper::getActionDataByIDAndSource(int actionID, int source)
+LegacyActionData *ActionMapper::getActionDataByID(int actionID)
 {
 	for (ActionDataSet::iterator i = actionData.begin(); i != actionData.end(); ++i)
 	{
-		if (i->id == actionID && i->source == source)
+		if (i->id == actionID)
 			return &(*i);
 	}
 	return 0;
 }
 
-bool ActionMapper::isActing(int actionID, int source)
+bool ActionMapper::isActing(unsigned actionID) const
 {
-	if(source < 0)
-	{
-		for (ActionDataSet::iterator i = actionData.begin(); i != actionData.end(); ++i)
-		{
-			ActionData& ad = *i;
-			if(ad.id == actionID)
-				for (ButtonList::iterator ii = ad.buttonList.begin(); ii != ad.buttonList.end(); ++ii)
-					if (getKeyState(*ii, source))
-						return true;
-		}
-		return false;
-	}
-
-	ActionData *ad = getActionDataByIDAndSource(actionID, source);
-	if (ad)
-	{
-		ButtonList::iterator i = ad->buttonList.begin();
-		for (; i != ad->buttonList.end(); i++)
-		{
-			if (getKeyState(*i, source))
-				return true;
-		}
-	}
-	return false;
+	return actionID < _activeActions.size() ? _activeActions[actionID] : false;
 }
 
-void ActionMapper::addAction(int actionID, int k, int source)
+void ActionMapper::addAction(unsigned actionID, unsigned k)
 {
-	ActionData *ad = getActionDataByIDAndSource(actionID, source);
+	assert(k);
+	if(!k)
+		return;
+
+	LegacyActionData *ad = getActionDataByID(actionID);
 
 	if (!ad)
 	{
-		ActionData data;
+		LegacyActionData data;
 		data.id = actionID;
-		data.source = source;
 		actionData.push_back(data);
 		ad = &actionData.back();
 	}
@@ -96,19 +90,16 @@ void ActionMapper::addAction(int actionID, int k, int source)
 	{
 		if(std::find(ad->buttonList.begin(), ad->buttonList.end(), k) == ad->buttonList.end())
 			ad->buttonList.push_back(k);
-		//keyStatus[k] = core->getKeyState(k);
 	}
 }
 
-void ActionMapper::addAction(Event *event, int k, int state)
+void ActionMapper::addAction(Event *event, unsigned k, int state)
 {
-	ActionData data;
+	LegacyActionData data;
 	data.event = event;
 	data.state = state;
 	data.buttonList.push_back(k);
 	actionData.push_back(data);
-
-	//keyStatus[k] = core->getKeyState(k);
 }
 
 Event* ActionMapper::addCreatedEvent(Event *event)
@@ -141,89 +132,77 @@ void ActionMapper::disableInput()
 	inputEnabled = false;
 }
 
-/*
-bool ActionMapper::pollAction(int actionID, int source)
-{
-	if(source < 0)
-	{
-		for (ActionDataSet::iterator i = actionData.begin(); i != actionData.end(); i++)
-			if(i->id == actionID && _pollActionData(*i))
-				return true;
-		return false;
-	}
-
-	ActionData *ad = getActionDataByIDAndSource(actionID, source);
-	return ad && _pollActionData(*ad);
-}
-
-bool ActionMapper::_pollActionData(const ActionData& ad)
-{
-	const ButtonList& blist = ad.buttonList;
-	for (ButtonList::const_iterator j = blist.begin(); j != blist.end(); j++)
-		if (getKeyState((*j)))
-			return true;
-	return false;
-}
-*/
-
 void ActionMapper::onUpdate (float dt)
 {
-	if (inUpdate)
-		return;
-
-	inUpdate = true;
-	cleared = false;
-
-	for (ActionDataSet::iterator i = actionData.begin(); i != actionData.end(); ++i)
+	if(inputEnabled && !inUpdate)
 	{
-		for (ButtonList::iterator j = i->buttonList.begin(); j != i->buttonList.end(); j++)
-		{
-			const int k = (*j);
-			const ActionData *ad = &(*i);
-			const bool keyChanged = isKeyChanged(k, ad->source);
+		inUpdate = true;
+		updateDirectInput();
+		updateActions();
+		inUpdate = false;
+	}
 
-			if (keyChanged)
+	_actionChanges.clear();
+	_inputChanges.clear();
+
+}
+
+void ActionMapper::updateActions()
+{
+	// Trigger queued events and propagate changes
+	for(size_t i = 0; i < _actionChanges.size(); ++i)
+	{
+		const ActionUpdate& am = _actionChanges[i];
+		if(am.id >= _activeActions.size())
+			_activeActions.resize(am.id);
+		_activeActions[am.id] = am.state;
+		action(am.id, am.state, am.playerID, am.device);
+	}
+}
+
+void ActionMapper::updateDirectInput()
+{
+	cleared = false;
+	for(size_t q = 0; q < _inputChanges.size(); ++q)
+	{
+		int ik = _inputChanges[q];
+		bool keyState;
+		unsigned k;
+		if(ik < 0)
+		{
+			keyState = false;
+			k = -ik;
+		}
+		else
+		{
+			keyState = true;
+			k = ik;
+		}
+
+		for (ActionDataSet::iterator i = actionData.begin(); i != actionData.end(); ++i)
+		{
+			const LegacyActionData& ad = (*i);
+			for (ButtonList::const_iterator j = ad.buttonList.begin(); j != ad.buttonList.end(); j++)
 			{
-				bool keyState = getKeyState(k, ad->source);
-				if (inputEnabled)
+				if(k == (*j))
 				{
-					if (ad->event)
+					if (ad.event)
 					{
-						if (ad->state==-1 || keyState == !!ad->state)
+						if (ad.state==-1 || keyState == !!ad.state)
 						{
-							ad->event->act();
+							ad.event->act();
 						}
 					}
 					else
 					{
-						action(ad->id, keyState, ad->source, getDeviceForActionbutton(k));
+						action(ad.id, keyState, -1, INP_DEV_NODEVICE);
 					}
-					if (core->loopDone) goto out;
+					if (core->loopDone || cleared)
+						return;
 				}
-				if (cleared) { cleared = false; goto out; } // actionData has been cleared, stop iteration
 			}
 		}
 	}
-
-out:
-	inUpdate = false;
-}
-
-bool ActionMapper::getKeyState(int k, int sourceID)
-{
-	if(sourceID < 0)
-		return getKeyState(k);
-	return core->getActionStatus(sourceID)->getKeyState(k);
-}
-
-bool ActionMapper::getKeyState(int k)
-{
-	// all including sentinel
-	const int m = core->getMaxActionStatusIndex();
-	for(int i = -1; i <= m; ++i)
-		if(core->getActionStatus(i)->getKeyState(k))
-			return true;
-	return false;
 }
 
 void ActionMapper::clearActions()
@@ -232,19 +211,47 @@ void ActionMapper::clearActions()
 	actionData.clear();
 }
 
-bool ActionMapper::isKeyChanged(int k, int sourceID)
+void ActionMapper::recvAction(unsigned actionID, bool keyState, int playerID, InputDeviceType device)
 {
-	if(sourceID < 0)
-		return isKeyChanged(k);
-	return core->getActionStatus(sourceID)->isKeyChanged(k);
+	if(!inputEnabled)
+		return;
+
+	// enqueue change for later
+	// Since the update order isn't actually *defined* anywhere but it'm almost sure there
+	// will be subtle bugs if things aren't updated in the "right" order
+	// (aka as it happened to be, so far),
+	// use a queue so that the code can keep believing it's polling changes, while in fact
+	// under the hood it's a push-based system.
+	// Pushing every change to a queue also ensures we can't miss a button press that
+	// lasts shorter than one frame.
+	ActionUpdate am;
+	am.id = actionID;
+	am.state = keyState;
+	am.playerID = playerID;
+	am.device = device;
+	_actionChanges.push_back(am);
 }
 
-bool ActionMapper::isKeyChanged(int k)
+void ActionMapper::recvDirectInput(unsigned k, bool keyState)
 {
-	// all including sentinel
-	const int m = core->getMaxActionStatusIndex();
-	for(int i = -1; i <= m; ++i)
-		if(core->getActionStatus(i)->isKeyChanged(k))
-			return true;
-	return false;
+	if(!inputEnabled)
+		return;
+
+	_inputChanges.push_back(keyState ? (int)k : -(int)k);
+}
+
+void ActionMapper::ImportInput(const NamedAction *actions, size_t N)
+{
+	// FIXME controllerfixup
+	InputMapper *im = NULL;
+	ActionSet as;
+
+	/*
+	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	{
+	const ActionSet& as = dsq->user.control.actionSets[i];
+	*/
+
+	for(size_t i = 0; i < N; ++i)
+		as.importAction(im, actions[i].name, actions[i].actionID);
 }

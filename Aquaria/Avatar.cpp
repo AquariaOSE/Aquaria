@@ -128,34 +128,32 @@ void Avatar::bindInput()
 	ActionMapper::clearActions();
 	ActionMapper::clearCreatedEvents();
 
-	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
+	const NamedAction actions[] =
 	{
-		const ActionSet& as = dsq->user.control.actionSets[i];
-		int sourceID = (int)i;
+		{ "PrimaryAction", ACTION_PRIMARY},
+		{ "SecondaryAction", ACTION_SECONDARY},
 
-		as.importAction(this, "PrimaryAction", ACTION_PRIMARY, sourceID);
-		as.importAction(this, "SecondaryAction", ACTION_SECONDARY, sourceID);
+		{ "SwimUp",		ACTION_SWIMUP},
+		{ "SwimDown",		ACTION_SWIMDOWN},
+		{ "SwimLeft",		ACTION_SWIMLEFT},
+		{ "SwimRight",		ACTION_SWIMRIGHT},
 
-		as.importAction(this, "SwimUp",		ACTION_SWIMUP, sourceID);
-		as.importAction(this, "SwimDown",		ACTION_SWIMDOWN, sourceID);
-		as.importAction(this, "SwimLeft",		ACTION_SWIMLEFT, sourceID);
-		as.importAction(this, "SwimRight",		ACTION_SWIMRIGHT, sourceID);
+		{ "SongSlot1",		ACTION_SONGSLOT1},
+		{ "SongSlot2",		ACTION_SONGSLOT2},
+		{ "SongSlot3",		ACTION_SONGSLOT3},
+		{ "SongSlot4",		ACTION_SONGSLOT4},
+		{ "SongSlot5",		ACTION_SONGSLOT5},
+		{ "SongSlot6",		ACTION_SONGSLOT6},
+		{ "SongSlot7",		ACTION_SONGSLOT7},
+		{ "SongSlot8",		ACTION_SONGSLOT8},
+		{ "SongSlot9",		ACTION_SONGSLOT9},
+		{ "SongSlot10",	ACTION_SONGSLOT10},
 
-		as.importAction(this, "SongSlot1",		ACTION_SONGSLOT1, sourceID);
-		as.importAction(this, "SongSlot2",		ACTION_SONGSLOT2, sourceID);
-		as.importAction(this, "SongSlot3",		ACTION_SONGSLOT3, sourceID);
-		as.importAction(this, "SongSlot4",		ACTION_SONGSLOT4, sourceID);
-		as.importAction(this, "SongSlot5",		ACTION_SONGSLOT5, sourceID);
-		as.importAction(this, "SongSlot6",		ACTION_SONGSLOT6, sourceID);
-		as.importAction(this, "SongSlot7",		ACTION_SONGSLOT7, sourceID);
-		as.importAction(this, "SongSlot8",		ACTION_SONGSLOT8, sourceID);
-		as.importAction(this, "SongSlot9",		ACTION_SONGSLOT9, sourceID);
-		as.importAction(this, "SongSlot10",	ACTION_SONGSLOT10, sourceID);
-
-		as.importAction(this, "Revert",		ACTION_REVERT, sourceID);
-		as.importAction(this, "Look",			ACTION_LOOK, sourceID);
-		as.importAction(this, "Roll",			ACTION_ROLL, sourceID);
-	}
+		{ "Revert",		ACTION_REVERT},
+		{ "Look",			ACTION_LOOK},
+		{ "Roll",			ACTION_ROLL}
+	};
+	ImportInput(actions);
 }
 
 // note: z is set to 1.0 when we want the aim to be used as the shot direction
@@ -163,31 +161,22 @@ void Avatar::bindInput()
 Vector Avatar::getAim()
 {
 	Vector d;
-	if (dsq->getInputMode() == INPUT_JOYSTICK)
+	float z = 1;
+	if (dsq->getInputMode() == INP_DEV_JOYSTICK)
 	{
-		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
-			if(Joystick *j = core->getJoystick(i))
-				if(j->isEnabled() && !j->rightStick.isZero())
-				{
-					d = j->rightStick * 300;
-					d.z = 1;
-					break;
-				}
+		d = dsq->playerInput.getStick2();
 
 		if(d.isZero())
-			for(size_t i = 0; i < core->getNumJoysticks(); ++i)
-				if(Joystick *j = core->getJoystick(i))
-					if(j->isEnabled() && !j->position.isZero())
-					{
-						d = j->position * 300;
-						break;
-					}
+		{
+			d = dsq->playerInput.getStick1();
+			z = 0;
+		}
+		d *= 300;
+		d.z = z;
 	}
 	else
-	{
 		d = dsq->getGameCursorPosition() - position;
-		d.z = 1;
-	}
+	d.z = z;
 
 	if (d.isZero())
 		d = getForwardAim();
@@ -209,7 +198,7 @@ void Avatar::onAnimationKeyPassed(int key)
 	Entity::onAnimationKeyPassed(key);
 }
 
-Vector randCirclePos(Vector position, int radius)
+static Vector randCirclePos(Vector position, int radius)
 {
 	float a = ((rand()%360)*(2*PI))/360.0f;
 	return position + Vector(sinf(a), cosf(a))*radius;
@@ -1100,7 +1089,7 @@ void Avatar::onDamage(DamageData &d)
 			if (healthWillBe<=0)
 				t = 2;
 
-			dsq->rumble(d.damage, d.damage, 0.4f, _lastActionSourceID, _lastActionInputDevice);
+			dsq->rumble(d.damage, d.damage, 0.4f);
 			if (d.damage > 0)
 			{
 				//dsq->shakeCamera(5, t);
@@ -1312,12 +1301,12 @@ void Avatar::clearTargets()
 	}
 }
 
-void Avatar::openSingingInterface(InputDevice device)
+void Avatar::openSingingInterface(InputDeviceType device)
 {
 	if (!singing && health > 0 && !isEntityDead() && !blockSinging)
 	{
 		//core->mouse.position = Vector(400,300);
-		if (device != INPUT_MOUSE)
+		if (device != INP_DEV_MOUSE)
 		{
 			core->centerMouse();
 			//core->setMousePosition(Vector(400,300));
@@ -1340,7 +1329,7 @@ void Avatar::openSingingInterface(InputDevice device)
 		dsq->game->songLineRender->clear();
 
 
-		if (device == INPUT_JOYSTICK)
+		if (device == INP_DEV_JOYSTICK)
 		{
 			core->setMousePosition(core->center);
 		}
@@ -1730,7 +1719,7 @@ void Avatar::updateSingingInterface(float dt)
 {
 	if (songIcons.size()>0 && songIcons[0]->alpha.x > 0)
 	{
-		if (dsq->getInputMode() != INPUT_JOYSTICK && !core->mouse.change.isZero())
+		if (dsq->getInputMode() != INP_DEV_JOYSTICK && !core->mouse.change.isZero())
 		{
 			if (dsq->game->songLineRender && songIcons[0]->alpha.x == 1)
 			{
@@ -1756,9 +1745,10 @@ void Avatar::updateSingingInterface(float dt)
 		}
 		else
 		{
-			if (dsq->getInputMode() == INPUT_JOYSTICK)
+			if (dsq->getInputMode() == INP_DEV_JOYSTICK)
 			{
 				Vector d;
+				/* // FIXME controllerfixup
 				for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 					if(Joystick *j = core->getJoystick(i))
 						if(j->isEnabled())
@@ -1767,6 +1757,7 @@ void Avatar::updateSingingInterface(float dt)
 							if(!d.isZero())
 								break;
 						}
+				*/
 
 				if (d.isLength2DIn(JOYSTICK_NOTE_THRESHOLD))
 				{
@@ -1948,7 +1939,7 @@ void Avatar::updateTargets(float dt, bool override)
 			break;
 		}
 	}
-	if ((dsq->getInputMode() == INPUT_MOUSE || dsq->getInputMode() == INPUT_KEYBOARD) && !(wasDown && core->mouse.buttons.right))
+	if ((dsq->getInputMode() == INP_DEV_MOUSE || dsq->getInputMode() == INP_DEV_KEYBOARD) && !(wasDown && core->mouse.buttons.right))
 	{
 		wasDown = false;
 		float mod = 1;
@@ -2108,11 +2099,11 @@ void Avatar::updateTargetQuads(float dt)
 			targetQuads[i]->position = cursorpos;
 			if (dsq->continuity.form == FORM_ENERGY && isInputEnabled())
 			{
-				if (dsq->getInputMode() == INPUT_JOYSTICK && targetQuads[i]->isRunning())
+				if (dsq->getInputMode() == INP_DEV_JOYSTICK && targetQuads[i]->isRunning())
 				{
 					targetQuads[i]->stop();
 				}
-				else if (dsq->getInputMode() != INPUT_JOYSTICK && !targetQuads[i]->isRunning())
+				else if (dsq->getInputMode() != INP_DEV_JOYSTICK && !targetQuads[i]->isRunning())
 				{
 					targetQuads[i]->start();
 				}
@@ -2147,7 +2138,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 		p = boneLeftArm->getWorldPosition();
 	//&& !dsq->game->isObstructed(TileVector(position))
 	/*
-	if (dsq->inputMode == INPUT_MOUSE && state.lockedToWall )
+	if (dsq->inputMode == INP_DEV_MOUSE && state.lockedToWall )
 		dir = dsq->getGameCursorPosition() - p;
 	else
 	*/
@@ -2168,7 +2159,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	/*
 	if (target)
 	{
-		if (dsq->inputMode != INPUT_JOYSTICK && vel.isLength2DIn(50))
+		if (dsq->inputMode != INP_DEV_JOYSTICK && vel.isLength2DIn(50))
 		{
 		}
 		else
@@ -2189,7 +2180,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	bool clearTargets = false;
 
 	// allow autoAim if desired
-	if ((dsq->getInputMode() == INPUT_JOYSTICK && !aimAt) || dsq->user.control.autoAim)
+	if ((dsq->getInputMode() == INP_DEV_JOYSTICK && !aimAt) || dsq->user.control.autoAim)
 	{
 		if (targets.empty())
 		{
@@ -2252,7 +2243,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	}
 	else
 	{
-		//if (!dir.isLength2DIn(2) || dsq->inputMode == INPUT_JOYSTICK)
+		//if (!dir.isLength2DIn(2) || dsq->inputMode == INP_DEV_JOYSTICK)
 		if (true)
 		{
 			s = dsq->game->fireShot(shot, this);
@@ -2998,12 +2989,12 @@ bool Avatar::isMouseInputEnabled()
 	return true;
 }
 
-void Avatar::rmbd(int source, InputDevice device)
+void Avatar::rmbd(int source, InputDeviceType device)
 {
 	if (!isMouseInputEnabled() || isEntityDead()) return;
 	if (dsq->continuity.form == FORM_NORMAL )
 	{
-		if (device == INPUT_MOUSE)
+		if (device == INP_DEV_MOUSE)
 		{
 			Vector diff = getVectorToCursorFromScreenCentre();
 			if (diff.getSquaredLength2D() < sqr(openSingingInterfaceRadius))
@@ -3020,7 +3011,7 @@ void Avatar::rmbd(int source, InputDevice device)
 	}
 }
 
-void Avatar::rmbu(int source, InputDevice device)
+void Avatar::rmbu(int source, InputDeviceType device)
 {
 	if (!isMouseInputEnabled() || isEntityDead()) return;
 
@@ -3168,7 +3159,7 @@ void Avatar::onUpdateBoneLock()
 	rotateToVec(wallNormal, 0.01f);
 }
 
-void Avatar::lmbd(int source, InputDevice device)
+void Avatar::lmbd(int source, InputDeviceType device)
 {
 	if (!isMouseInputEnabled()) return;
 
@@ -3210,7 +3201,7 @@ void Avatar::fallOffWall()
 	}
 }
 
-void Avatar::lmbu(int source, InputDevice device)
+void Avatar::lmbu(int source, InputDeviceType device)
 {
 	if (!isMouseInputEnabled()) return;
 
@@ -3886,8 +3877,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	blockBackFlip = false;
 	elementEffectMult = 1;
-	_lastActionSourceID = 9999;
-	_lastActionInputDevice = INPUT_NODEVICE;
 }
 
 void Avatar::revert()
@@ -4056,11 +4045,11 @@ void Avatar::startBurst()
 {
 	if (!riding && canBurst() && (joystickMove || getVectorToCursor().getSquaredLength2D() > sqr(BURST_DISTANCE))
 		&& getState() != STATE_PUSH && (!skeletalSprite.getCurrentAnimation() || (skeletalSprite.getCurrentAnimation()->name != "spin"))
-		&& _isUnderWater && !isActing(ACTION_ROLL, -1))
+		&& _isUnderWater && !isActing(ACTION_ROLL))
 	{
 		if (!bursting && burst == 1)
 		{
-			dsq->rumble(0.2f, 0.2f, 0.2f, _lastActionSourceID, _lastActionInputDevice);
+			dsq->rumble(0.2f, 0.2f, 0.2f);
 			if (dsq->continuity.form != FORM_BEAST)
 				wakeEmitter.start();
 			dsq->game->playBurstSound(pushingOffWallEffect>0);
@@ -4133,7 +4122,7 @@ void Avatar::startWallBurst(bool useCursor)
 		{
 			lastBurstType = BURST_WALL;
 
-			dsq->rumble(0.22f, 0.22f, 0.2f, _lastActionSourceID, _lastActionInputDevice);
+			dsq->rumble(0.22f, 0.22f, 0.2f);
 			bittenEntities.clear();
 			if (useCursor)
 			{
@@ -4171,10 +4160,10 @@ void Avatar::startWallBurst(bool useCursor)
 
 bool Avatar::isActionAndGetDir(Vector& dir)
 {
-	bool dL = isActing(ACTION_SWIMLEFT, -1);
-	bool dR = isActing(ACTION_SWIMRIGHT, -1);
-	bool dU = isActing(ACTION_SWIMUP, -1);
-	bool dD = isActing(ACTION_SWIMDOWN, -1);
+	bool dL = isActing(ACTION_SWIMLEFT);
+	bool dR = isActing(ACTION_SWIMRIGHT);
+	bool dU = isActing(ACTION_SWIMUP);
+	bool dD = isActing(ACTION_SWIMDOWN);
 	Vector a;
 	if (dL)
 		a += Vector(-1,0);
@@ -4198,7 +4187,8 @@ Vector Avatar::getFakeCursorPosition()
 	if(isActionAndGetDir(dir))
 		return dir * 350;
 
-	for(size_t i = 0; i < core->getNumJoysticks(); ++i)
+	// FIXME controllerfixup
+	/*for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 		if(Joystick *j = core->getJoystick(i))
 			if(j->isEnabled())
 			{
@@ -4209,7 +4199,7 @@ Vector Avatar::getFakeCursorPosition()
 					const float distance = minMouse + ((axisInput - JOYSTICK_LOW_THRESHOLD) * axisMult);
 					return (j->position * (distance / axisInput));
 				}
-			}
+			}*/
 
 	return dir;
 }
@@ -4220,7 +4210,7 @@ Vector Avatar::getVectorToCursorFromScreenCentre()
 		return getVectorToCursor();
 	else
 	{
-		if (dsq->getInputMode() != INPUT_MOUSE)
+		if (dsq->getInputMode() != INP_DEV_MOUSE)
 			return getFakeCursorPosition();
 		return (core->mouse.position+offset) - Vector(400,300);
 	}
@@ -4232,20 +4222,17 @@ Vector Avatar::getVectorToCursor(bool trueMouse)
 	Vector pos = dsq->getGameCursorPosition();
 
 
-	if (!trueMouse && dsq->getInputMode() != INPUT_MOUSE)
+	if (!trueMouse && dsq->getInputMode() != INP_DEV_MOUSE)
 		return getFakeCursorPosition();
 
 	return pos - (position+offset);
 	//return core->mouse.position - Vector(400,300);
 }
 
-void Avatar::action(int id, int state, int source, InputDevice device)
+void Avatar::action(int id, int state, int source, InputDeviceType device)
 {
 	if(dsq->game->isIgnoreAction((AquariaActions)id))
 		return;
-
-	_lastActionSourceID = source;
-	_lastActionInputDevice = device;
 
 	if (id == ACTION_PRIMARY)	{ if (state) lmbd(source, device); else lmbu(source, device); }
 	if (id == ACTION_SECONDARY) { if (state) rmbd(source, device); else rmbu(source, device); }
@@ -4313,7 +4300,7 @@ void Avatar::action(int id, int state, int source, InputDevice device)
 				// done for wall bursts, but the movement there is fast
 				// enough that people probably won't notice, so I skipped
 				// that.  Sorry about the ugliness.  --achurch
-				if (device != INPUT_MOUSE)
+				if (device != INP_DEV_MOUSE)
 					skeletalSprite.transitionAnimate("swim", ANIM_TRANSITION, -1);
 			}
 		}
@@ -4515,7 +4502,7 @@ void Avatar::splash(bool down)
 		//dsq->postProcessingFx.disable(FXT_RADIALBLUR);
 		if (_isUnderWater && core->afterEffectManager)
 			core->afterEffectManager->addEffect(new ShockEffect(Vector(core->width/2, core->height/2),core->screenCenter,0.08f,0.05f,22,0.2f, 1.2f));
-		dsq->rumble(0.7f, 0.7f, 0.2f, _lastActionSourceID, _lastActionInputDevice);
+		dsq->rumble(0.7f, 0.7f, 0.2f);
 		plungeEmitter.start();
 
 		core->sound->playSfx("GoUnder");
@@ -4992,13 +4979,13 @@ void Avatar::updateRoll(float dt)
 			stopRoll();
 		}
 	}
-	const bool rollact = isActing(ACTION_ROLL, -1);
+	const bool rollact = isActing(ACTION_ROLL);
 	if (!_isUnderWater && rollact)
 	{
 		stopRoll();
 	}
 
-	if (!core->mouse.buttons.left && dsq->getInputMode() == INPUT_MOUSE && !rollact)
+	if (!core->mouse.buttons.left && dsq->getInputMode() == INP_DEV_MOUSE && !rollact)
 	{
 		if (rolling)
 			stopRoll();
@@ -5390,7 +5377,7 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 
-		if (!dsq->game->isPaused() && isActing(ACTION_LOOK, -1) && !dsq->game->avatar->isSinging() && dsq->game->avatar->isInputEnabled() && !dsq->game->isInGameMenu())
+		if (!dsq->game->isPaused() && isActing(ACTION_LOOK) && !dsq->game->avatar->isSinging() && dsq->game->avatar->isInputEnabled() && !dsq->game->isInGameMenu())
 		{
 			looking = 1;
 		}
@@ -5790,7 +5777,7 @@ void Avatar::onUpdate(float dt)
 	// revert stuff
 	float revertGrace = 0.4f;
 	static bool revertButtonsAreDown = false;
-	if (inputEnabled && (dsq->getInputMode() == INPUT_KEYBOARD || dsq->getInputMode() == INPUT_MOUSE) && (!pathToActivate && !entityToActivate))
+	if (inputEnabled && (dsq->getInputMode() == INP_DEV_KEYBOARD || dsq->getInputMode() == INP_DEV_MOUSE) && (!pathToActivate && !entityToActivate))
 	{
 		if (dsq->continuity.form != FORM_NORMAL && (core->mouse.pure_buttons.left && core->mouse.pure_buttons.right) && getVectorToCursor(true).isLength2DIn(minMouse))
 		{
@@ -6133,11 +6120,11 @@ void Avatar::onUpdate(float dt)
 
 			float len = 0;
 
-			if (dsq->isMiniMapCursorOkay() && !isActing(ACTION_ROLL, -1) &&
+			if (dsq->isMiniMapCursorOkay() && !isActing(ACTION_ROLL) &&
 				_isUnderWater && !riding && !boneLock.on &&
-				(movingOn || ((dsq->getInputMode() == INPUT_JOYSTICK || dsq->getInputMode()== INPUT_KEYBOARD) || (core->mouse.buttons.left || bursting))))
+				(movingOn || ((dsq->getInputMode() == INP_DEV_JOYSTICK || dsq->getInputMode()== INP_DEV_KEYBOARD) || (/*core->mouse.buttons.left ||*/ bursting))))
 			{
-				const bool isMouse = dsq->getInputMode() == INPUT_MOUSE;
+				const bool isMouse = dsq->getInputMode() == INP_DEV_MOUSE;
 				if (isMouse || !this->singing)
 				{
 					addVec = getVectorToCursorFromScreenCentre();//getVectorToCursor();
@@ -6145,7 +6132,7 @@ void Avatar::onUpdate(float dt)
 					if (isMouse)
 					{
 						static Vector lastAddVec;
-						if (!isActing(ACTION_PRIMARY, -1) && bursting)
+						if (!isActing(ACTION_PRIMARY) && bursting)
 						{
 							addVec = lastAddVec;
 						}
@@ -6158,7 +6145,7 @@ void Avatar::onUpdate(float dt)
 
 					if (addVec.isLength2DIn(minMouse))
 					{
-						if (dsq->getInputMode() == INPUT_JOYSTICK)
+						if (dsq->getInputMode() == INP_DEV_JOYSTICK)
 							addVec = Vector(0,0,0);
 					}
 
@@ -6187,7 +6174,7 @@ void Avatar::onUpdate(float dt)
 						// For joystick/keyboard control, don't stop unless
 						// the Swim (primary action) button is pressed with
 						// no movement input.  --achurch
-						if ((isMouse || isActing(ACTION_PRIMARY, -1))
+						if ((isMouse || isActing(ACTION_PRIMARY))
 							&& addVec.isLength2DIn(STOP_DISTANCE))
 						{
 							vel *= 0.9f;
@@ -6275,14 +6262,14 @@ void Avatar::onUpdate(float dt)
 						// here for roll key?
 						// seems like this isn't reached
 						//if (isActing("roll"))
-						if (isActing(ACTION_ROLL, -1))
+						if (isActing(ACTION_ROLL))
 						{
 							//debugLog("here");
 						}
 						else
 						{
 							float t = 0;
-							if (dsq->getInputMode() == INPUT_KEYBOARD)
+							if (dsq->getInputMode() == INP_DEV_KEYBOARD)
 								t = 0.1f;
 							rotateToVec(addVec, t);
 						}

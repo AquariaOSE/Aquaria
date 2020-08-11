@@ -3,7 +3,7 @@
 
 #include <string>
 
-int getInputCodeFromKeyName(const char *name);
-const std::string& getKeyNameFromInputCode(int k);
+unsigned getLegacyInputCodeFromKeyName(const std::string& name);
+const char *getLegacyKeyNameFromInputCode(unsigned k);
 
 #endif

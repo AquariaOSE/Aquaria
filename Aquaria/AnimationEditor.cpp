@@ -291,10 +291,10 @@ void AnimationEditor::applyState()
 
 
 
-	addAction(ACTION_SWIMLEFT,	KEY_J, -1);
-	addAction(ACTION_SWIMRIGHT, KEY_K, -1);
-	addAction(ACTION_SWIMUP,	KEY_UP, -1);
-	addAction(ACTION_SWIMDOWN,	KEY_DOWN, -1);
+	addAction(ACTION_SWIMLEFT,	KEY_J);
+	addAction(ACTION_SWIMRIGHT, KEY_K);
+	addAction(ACTION_SWIMUP,	KEY_UP);
+	addAction(ACTION_SWIMDOWN,	KEY_DOWN);
 
 
 
@@ -537,7 +537,7 @@ void AnimationEditor::redo()
 	}
 }
 
-void AnimationEditor::action(int id, int state, int source, InputDevice device)
+void AnimationEditor::action(int id, int state, int source, InputDeviceType device)
 {
 	if (editingBone && state)
 	{
@@ -726,14 +726,14 @@ void AnimationEditor::update(float dt)
 
 	if (editingStrip)
 	{
-		if (isActing(ACTION_SWIMLEFT, -1))
+		if (isActing(ACTION_SWIMLEFT))
 			moveBoneStripPoint(Vector(-dt, 0));
-		if (isActing(ACTION_SWIMRIGHT, -1))
+		if (isActing(ACTION_SWIMRIGHT))
 			moveBoneStripPoint(Vector(dt, 0));
 
-		if (isActing(ACTION_SWIMUP, -1))
+		if (isActing(ACTION_SWIMUP))
 			moveBoneStripPoint(Vector(0, -dt));
-		if (isActing(ACTION_SWIMDOWN, -1))
+		if (isActing(ACTION_SWIMDOWN))
 			moveBoneStripPoint(Vector(0, dt));
 	}
 	int spd = 1;

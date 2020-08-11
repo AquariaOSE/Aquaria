@@ -166,7 +166,7 @@ public:
 
 	void setSubText(const std::string& s);
 		
-	virtual void action(int actionID, int state, int source, InputDevice device) {}
+	virtual void action(int actionID, int state, int source, InputDeviceType device) {}
 
 protected:
 	virtual void onUpdate(float dt);

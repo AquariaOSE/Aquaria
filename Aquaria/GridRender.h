@@ -91,7 +91,7 @@ public:
 	Vector getAvatarWorldMapPosition();
 	Vector getWorldToTile(WorldMapTile *tile, Vector position, bool fromCenter, bool tilePos);
 	void setProperTileColor(WorldMapTile *tile);
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDeviceType device);
 	GemMover* addGem(GemData *gemData);
 	void bindInput();
 	void createGemHint(const std::string &gfx);

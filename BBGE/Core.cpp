@@ -360,8 +360,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	mouseCircle = 0;
 	overrideStartLayer = 0;
 	overrideEndLayer = 0;
-	frameOutputMode = false;
-	updateMouse = true;
 	particlesPaused = false;
 	joystickAsMouse = false;
 	currentLayerPass = 0;
@@ -383,11 +381,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	afterEffectManager = 0;
 	loopDone = false;
 	core = this;
-
-	for (int i = 0; i < KEY_MAXARRAY; i++)
-	{
-		keys[i] = 0;
-	}
 
 	globalResolutionScale = globalScale = Vector(1,1,1);
 
@@ -476,8 +469,6 @@ std::string Core::getUserDataFolder()
 
 Core::~Core()
 {
-	clearActionButtons();
-
 	if (particleManager)
 	{
 		delete particleManager;
@@ -534,7 +525,7 @@ void Core::init()
 {
 	setupFileAccess();
 
-	unsigned sdlflags = SDL_INIT_EVERYTHING;
+	unsigned sdlflags = SDL_INIT_EVERYTHING & ~SDL_INIT_TIMER;
 
 	quitNestedMainFlag = false;
 #ifdef BBGE_BUILD_SDL2
@@ -587,27 +578,9 @@ Vector Core::getGamePosition(const Vector &v)
 	return cameraPos + (v * invGlobalScale);
 }
 
-bool Core::getMouseButtonState(int m)
+bool Core::getKeyState(unsigned k) const
 {
-	int mcode=m;
-
-	switch(m)
-	{
-	case 0: mcode=1; break;
-	case 1: mcode=3; break;
-	case 2: mcode=2; break;
-	}
-
-	Uint8 mousestate = SDL_GetMouseState(0,0);
-
-	return mousestate & SDL_BUTTON(mcode);
-	return false;
-}
-
-bool Core::getKeyState(int k)
-{
-	assert(k < KEY_MAXARRAY);
-	return k > 0 && k < KEY_MAXARRAY ? keys[k] : 0;
+	return rawInput.isKeyPressed(k);
 }
 
 void Core::initJoystickLibrary()
@@ -652,12 +625,6 @@ void Core::detectJoysticks()
 bool Core::initInputLibrary()
 {
 	core->mouse.position = Vector(getWindowWidth()/2, getWindowHeight()/2);
-
-	for (int i = 0; i < KEY_MAXARRAY; i++)
-	{
-		keys[i] = 0;
-	}
-
 	return true;
 }
 
@@ -1255,6 +1222,10 @@ bool Core::doMouseConstraint()
 void Core::onEvent(const SDL_Event& event)
 {
 	const bool focus = window->hasFocus();
+
+	if(focus)
+		InputSystem::handleSDLEvent(&event);
+
 	switch (event.type)
 	{
 		case SDL_KEYDOWN:
@@ -1263,37 +1234,12 @@ void Core::onEvent(const SDL_Event& event)
 			{
 				setInputGrab(!grabInput);
 			}
-			else if (focus)
-			{
-#ifdef BBGE_BUILD_SDL2
-				unsigned kidx = event.key.keysym.scancode;
-#else
-				unsigned kidx = event.key.keysym.sym;
-#endif
-				if(kidx < KEY_MAXARRAY)
-					keys[kidx] = 1;
-			}
-		}
-		break;
-
-		case SDL_KEYUP:
-		{
-			if (focus)
-			{
-#ifdef BBGE_BUILD_SDL2
-				unsigned kidx = event.key.keysym.scancode;
-#else
-				unsigned kidx = event.key.keysym.sym;
-#endif
-				if(kidx < KEY_MAXARRAY)
-					keys[kidx] = 0;
-			}
 		}
 		break;
 
 		case SDL_MOUSEMOTION:
 		{
-			if (focus && updateMouse)
+			if (focus)
 			{
 				mouse.lastPosition = mouse.position;
 
@@ -1309,19 +1255,6 @@ void Core::onEvent(const SDL_Event& event)
 		break;
 
 #ifdef BBGE_BUILD_SDL2
-
-		case SDL_MOUSEWHEEL:
-		{
-			if (focus && updateMouse)
-			{
-				if (event.wheel.y > 0)
-					mouse.scrollWheelChange = 1;
-				else if (event.wheel.y < 0)
-					mouse.scrollWheelChange = -1;
-			}
-		}
-		break;
-
 		case SDL_JOYDEVICEADDED:
 			onJoystickAdded(event.jdevice.which);
 			break;
@@ -1329,82 +1262,12 @@ void Core::onEvent(const SDL_Event& event)
 		case SDL_JOYDEVICEREMOVED:
 			onJoystickRemoved(event.jdevice.which);
 			break;
-
-#else
-		case SDL_MOUSEBUTTONDOWN:
-		{
-			if (focus && updateMouse)
-			{
-				switch(event.button.button)
-				{
-				case 4:
-					mouse.scrollWheelChange = 1;
-					break;
-				case 5:
-					mouse.scrollWheelChange = -1;
-					break;
-				}
-			}
-		}
-		break;
-
-		case SDL_MOUSEBUTTONUP:
-		{
-			if (focus && updateMouse)
-			{
-				switch(event.button.button)
-				{
-				case 4:
-					mouse.scrollWheelChange = 1;
-					break;
-				case 5:
-					mouse.scrollWheelChange = -1;
-					break;
-				}
-			}
-		}
-		break;
 #endif
 	}
 }
 
 void Core::pollEvents(float dt)
 {
-	bool warpMouse=false;
-
-
-
-	if (updateMouse)
-	{
-		int x, y;
-		unsigned mousestate = SDL_GetMouseState(&x,&y);
-
-		if (mouse.buttonsEnabled)
-		{
-			mouse.buttons.left		= mousestate & SDL_BUTTON(1)?DOWN:UP;
-			mouse.buttons.right		= mousestate & SDL_BUTTON(3)?DOWN:UP;
-			mouse.buttons.middle	= mousestate & SDL_BUTTON(2)?DOWN:UP;
-
-			for(unsigned i = 0; i < mouseExtraButtons; ++i)
-				mouse.buttons.extra[i] = mousestate & SDL_BUTTON(3+i)?DOWN:UP;
-
-			mouse.pure_buttons = mouse.buttons;
-			mouse.rawButtonMask = mousestate;
-
-			if (flipMouseButtons)
-			{
-				std::swap(mouse.buttons.left, mouse.buttons.right);
-			}
-		}
-		else
-		{
-			mouse.buttons.left = mouse.buttons.right = mouse.buttons.middle = UP;
-		}
-
-		mouse.scrollWheelChange = 0;
-		mouse.change = Vector(0,0);
-	}
-
 	window->handleInput();
 
 	for(size_t i = 0; i < joysticks.size(); ++i)
@@ -1412,8 +1275,8 @@ void Core::pollEvents(float dt)
 			joysticks[i]->update(dt);
 
 	// all input done; update button states
-	updateActionButtons();
-
+	//updateActionButtons();
+	rawInput.update();
 }
 
 #define _VLN(x, y, x2, y2) glVertex2f(x, y); glVertex2f(x2, y2);
@@ -2442,11 +2305,9 @@ void Core::onJoystickAdded(int deviceID)
 		if(!joysticks[i])
 		{
 			joysticks[i] = j;
-			goto done;
+			return;
 		}
 	joysticks.push_back(j);
-done:
-	;
 }
 
 void Core::onJoystickRemoved(int instanceID)
@@ -2465,26 +2326,6 @@ Joystick *Core::getJoystick(size_t idx)
 {
 	size_t i = idx;
 	return i < joysticks.size() ? joysticks[i] : NULL;
-}
-
-void Core::updateActionButtons()
-{
-	for(size_t i = 0; i < actionStatus.size(); ++i)
-		actionStatus[i]->update();
-}
-
-void Core::clearActionButtons()
-{
-	for(size_t i = 0; i < actionStatus.size(); ++i)
-		delete actionStatus[i];
-	actionStatus.clear();
-}
-
-Joystick *Core::getJoystickForSourceID(int sourceID)
-{
-	if(unsigned(sourceID+1) < (unsigned)actionStatus.size())
-		return getJoystick(actionStatus[sourceID+1]->getJoystickID());
-	return NULL;
 }
 
 #include <png.h>

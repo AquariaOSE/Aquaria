@@ -424,10 +424,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\Aquaria\Demo.cpp"
-				>
-			</File>
-			<File
 				RelativePath="..\..\Aquaria\DSQ.cpp"
 				>
 			</File>
@@ -473,6 +469,14 @@
 			</File>
 			<File
 				RelativePath="..\..\Aquaria\GameEnums.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\GameInput.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\GameInput.h"
 				>
 			</File>
 			<File

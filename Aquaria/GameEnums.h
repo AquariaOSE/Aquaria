@@ -142,7 +142,9 @@ enum AquariaActions
 	ACTION_LOOK						,
 	ACTION_TOGGLEHELPSCREEN,
 	ACTION_PLACE_AVATAR,
-	ACTION_SCREENSHOT
+	ACTION_SCREENSHOT,
+
+	ACTION_SIZE // for array bounds
 };
 
 enum AuraType

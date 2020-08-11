@@ -113,7 +113,7 @@ public:
 
 	std::vector<KeyframeWidget*> keyframeWidgets;
 
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDeviceType device);
 
 	void rebuildKeyframeWidgets();
 
