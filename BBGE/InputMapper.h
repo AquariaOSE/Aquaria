@@ -48,7 +48,7 @@ class InputMapper : public IInputMapper
 {
 public:
 	InputMapper(int playerID);
-	~InputMapper();
+	virtual ~InputMapper();
 
 	bool acceptMouse;
 	int acceptMouseID; // -1: accept all, otherwise: that id

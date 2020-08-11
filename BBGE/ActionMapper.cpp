@@ -46,12 +46,12 @@ ActionMapper::ActionMapper()
 	cleared = false;
 	inputEnabled = true;
 	inUpdate = false;
-	InputMapper::RegisterActionMapper(this);
+	IInputMapper::RegisterActionMapper(this);
 }
 
 ActionMapper::~ActionMapper()
 {
-	InputMapper::UnregisterActionMapper(this);
+	IInputMapper::UnregisterActionMapper(this);
 	clearCreatedEvents();
 }
 

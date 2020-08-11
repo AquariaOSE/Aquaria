@@ -57,7 +57,7 @@ IInputMapper::IInputMapper()
 
 IInputMapper::~IInputMapper()
 {
-	InputSystem::addMapper(this);
+	InputSystem::removeMapper(this);
 }
 
 // ------------------
@@ -69,7 +69,6 @@ InputMapper::InputMapper(int playerID)
 
 InputMapper::~InputMapper()
 {
-	InputSystem::removeMapper(this);
 }
 
 static float rescale(float t, float lower, float upper, float rangeMin, float rangeMax)
