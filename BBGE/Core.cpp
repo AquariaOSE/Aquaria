@@ -1275,7 +1275,6 @@ void Core::pollEvents(float dt)
 			joysticks[i]->update(dt);
 
 	// all input done; update button states
-	//updateActionButtons();
 	rawInput.update();
 }
 

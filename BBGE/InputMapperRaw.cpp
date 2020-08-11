@@ -33,9 +33,7 @@ void InputMapperRaw::input(const RawInput *inp)
 	// so we don't lose button presses that are shorter than 1 frame.
 	unsigned char ch = !!inp->u.pressed;
 	keyChanged[idx] |= (keyState[idx] != ch) << 1; // bit 1 becomes bit 0 in next frame
-	keyState[idx] |= ch;
-
-
+	keyState[idx] = ch;
 }
 
 void InputMapperRaw::update()
