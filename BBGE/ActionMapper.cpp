@@ -35,12 +35,6 @@ struct LegacyActionData
 	ButtonList buttonList;
 };
 
-enum ActionState
-{
-	ACSTATE_ACTIVE = 0x1,    // action is active right now (button is held down)
-	ACSTATE_ACCEPTED = 0x2   // handle that action when it comes in
-};
-
 ActionMapper::ActionMapper()
 {
 	cleared = false;
@@ -154,8 +148,11 @@ void ActionMapper::updateActions()
 	{
 		const ActionUpdate& am = _actionChanges[i];
 		if(am.id >= _activeActions.size())
-			_activeActions.resize(am.id);
-		_activeActions[am.id] = am.state;
+			_activeActions.resize(am.id + 1);
+		if(am.state)
+			_activeActions[am.id] |= (1 << am.playerID);
+		else
+			_activeActions[am.id] &= ~(1 << am.playerID);
 		action(am.id, am.state, am.playerID, am.device);
 	}
 }
@@ -238,20 +235,4 @@ void ActionMapper::recvDirectInput(unsigned k, bool keyState)
 		return;
 
 	_inputChanges.push_back(keyState ? (int)k : -(int)k);
-}
-
-void ActionMapper::ImportInput(const NamedAction *actions, size_t N)
-{
-	// FIXME controllerfixup
-	InputMapper *im = NULL;
-	ActionSet as;
-
-	/*
-	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
-	{
-	const ActionSet& as = dsq->user.control.actionSets[i];
-	*/
-
-	for(size_t i = 0; i < N; ++i)
-		as.importAction(im, actions[i].name, actions[i].actionID);
 }

@@ -35,11 +35,6 @@ struct LegacyActionData;
 class ActionMapper
 {
 public:
-	struct NamedAction // for importing
-	{
-		const char * const name;
-		unsigned actionID;
-	};
 
 	// funcs
 	ActionMapper();
@@ -79,11 +74,11 @@ public:
 	void recvDirectInput(unsigned k, bool state);
 
 protected:
-	template<size_t N> static void ImportInput(const NamedAction (&a)[N])
+	/*template<size_t N> void importInput(const NamedAction (&a)[N])
 	{
-		ImportInput(&a[0], N);
+		importInput(&a[0], N);
 	}
-	static void ImportInput(const NamedAction *actions, size_t N);
+	void importInput(const NamedAction *actions, size_t N);*/
 
 	std::vector<Event*> createdEvents;
 
@@ -107,7 +102,7 @@ private:
 	std::vector<int> _inputChanges; // >0: pressed, <0: released
 
 	bool inUpdate;
-	std::vector<unsigned char> _activeActions;
+	std::vector<unsigned> _activeActions;
 };
 
 #endif

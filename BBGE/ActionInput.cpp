@@ -385,6 +385,10 @@ unsigned ActionInput::GetField(InputDeviceType dev, unsigned slot)
 	return base + slot;
 }
 
+InputDeviceType ActionInput::GetDevice(unsigned field)
+{
+	return getTypeAndSlot(field).type;
+}
 
 std::string ActionInput::prettyPrintField(unsigned field, int joystickID /* = -1 */) const
 {
@@ -468,11 +472,12 @@ bool ActionInput::Import(const RawInput& inp, unsigned slot)
 	return false;
 }
 
-bool ActionInput::Export(RawInput& inp, unsigned field) const
+bool ActionInput::Export(RawInput& inp, unsigned field, unsigned deviceID) const
 {
 	TypeAndSlot ts = getTypeAndSlot(field);
 	inp.src.deviceType = ts.type;
 	inp.src.ctrlType = INP_CTRL_BUTTON;
+	inp.src.deviceID = deviceID;
 	inp.u.pressed = 1;
 
 	switch(ts.type)
@@ -492,6 +497,7 @@ bool ActionInput::Export(RawInput& inp, unsigned field) const
 			if(!k)
 				return false;
 			inp.src.ctrlID = k;
+			return true;
 		}
 		case INP_DEV_JOYSTICK:
 		{

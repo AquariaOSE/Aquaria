@@ -128,7 +128,7 @@ void Avatar::bindInput()
 	ActionMapper::clearActions();
 	ActionMapper::clearCreatedEvents();
 
-	const NamedAction actions[] =
+	/*const NamedAction actions[] =
 	{
 		{ "PrimaryAction", ACTION_PRIMARY},
 		{ "SecondaryAction", ACTION_SECONDARY},
@@ -153,7 +153,7 @@ void Avatar::bindInput()
 		{ "Look",			ACTION_LOOK},
 		{ "Roll",			ACTION_ROLL}
 	};
-	ImportInput(actions);
+	importInput(actions);*/
 }
 
 // note: z is set to 1.0 when we want the aim to be used as the shot direction

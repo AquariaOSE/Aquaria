@@ -468,6 +468,10 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\GameEnums.cpp"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\GameEnums.h"
 				>
 			</File>

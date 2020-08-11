@@ -249,7 +249,7 @@ bool InputMapper::CleanupForMapping(InputControlType c, InputMapper::MapType mt,
 bool InputMapper::addMapping(MapType mt, const RawInput& inp, unsigned targetID)
 {
 	Mapping m;
-	m.buttonOrAxis = 1 + (mt == TO_BUTTON ? int(targetID) : -int(targetID));
+	m.buttonOrAxis = (mt == TO_BUTTON ? int(targetID)+1 : -int(targetID)-1);
 	m.raw = inp;
 	m.val = inp.u;
 

@@ -488,5 +488,14 @@ enum BounceType
 	BOUNCE_REAL		= 1
 };
 
+struct ActionDef
+{
+	const char * const name;
+	unsigned actionID;
+	unsigned stringID; // index in stringbank
+	unsigned page; // page# in key config menu
+};
+
+extern const ActionDef GameActionDefs[];
 
 #endif

@@ -200,24 +200,24 @@ void UserSettings::save()
 			{
 				const ActionSet& as = control.actionSets[i];
 				XMLElement *xml_actionSet = doc.NewElement("ActionSet");
-				xml_actionSet->SetAttribute("enabled", as.enabled);
-				xml_actionSet->SetAttribute("name", as.name.c_str());
-				xml_actionSet->SetAttribute("joystickName", as.joystickName.c_str());
-				xml_actionSet->SetAttribute("joystickGUID", as.joystickGUID.c_str());
+				xml_actionSet->SetAttribute("enabled", as.cfg.enabled);
+				xml_actionSet->SetAttribute("name", as.cfg.name.c_str());
+				xml_actionSet->SetAttribute("joystickName", as.cfg.joystickName.c_str());
+				xml_actionSet->SetAttribute("joystickGUID", as.cfg.joystickGUID.c_str());
 				XMLElement *xml_joyAxes = doc.NewElement("JoyAxes");
 				{
-					xml_joyAxes->SetAttribute("s1ax", as.joycfg.s1ax);
-					xml_joyAxes->SetAttribute("s1ay", as.joycfg.s1ay);
-					xml_joyAxes->SetAttribute("s2ax", as.joycfg.s2ax);
-					xml_joyAxes->SetAttribute("s2ay", as.joycfg.s2ay);
-					xml_joyAxes->SetAttribute("s1dead", as.joycfg.s1dead);
-					xml_joyAxes->SetAttribute("s2dead", as.joycfg.s2dead);
+					xml_joyAxes->SetAttribute("s1ax", as.cfg.joycfg.s1ax);
+					xml_joyAxes->SetAttribute("s1ay", as.cfg.joycfg.s1ay);
+					xml_joyAxes->SetAttribute("s2ax", as.cfg.joycfg.s2ax);
+					xml_joyAxes->SetAttribute("s2ay", as.cfg.joycfg.s2ay);
+					xml_joyAxes->SetAttribute("s1dead", as.cfg.joycfg.s1dead);
+					xml_joyAxes->SetAttribute("s2dead", as.cfg.joycfg.s2dead);
 				}
 				xml_actionSet->InsertEndChild(xml_joyAxes);
-				for (size_t i = 0; i < as.inputSet.size(); i++)
+				for (size_t i = 0; i < as.cfg.inputSet.size(); i++)
 				{
 					XMLElement *xml_action = doc.NewElement("Action");
-					const ActionInput& ai = as.inputSet[i];
+					const ActionInput& ai = as.cfg.inputSet[i];
 					xml_action->SetAttribute("name", ai.getName().c_str());
 					xml_action->SetAttribute("input", ai.toString().c_str());
 
@@ -279,32 +279,8 @@ void UserSettings::save()
 
 static void ensureDefaultActions(ActionSet& as)
 {
-	as.clearActions();
-	as.ensureActionInput("PrimaryAction");
-	as.ensureActionInput("SecondaryAction");
-	as.ensureActionInput("SwimUp");
-	as.ensureActionInput("SwimDown");
-	as.ensureActionInput("SwimLeft");
-	as.ensureActionInput("SwimRight");
-	as.ensureActionInput("Roll");
-	as.ensureActionInput("Revert");
-	as.ensureActionInput("WorldMap");
-	as.ensureActionInput("Escape");
-	as.ensureActionInput("PrevPage");
-	as.ensureActionInput("NextPage");
-	as.ensureActionInput("CookFood");
-	as.ensureActionInput("FoodLeft");
-	as.ensureActionInput("FoodRight");
-	as.ensureActionInput("FoodDrop");
-	as.ensureActionInput("Look");
-	as.ensureActionInput("ToggleHelp");
-	as.ensureActionInput("Screenshot");
-	for(int i = 1; i <= 10; ++i)
-	{
-		std::ostringstream os;
-		os << "SongSlot" << i;
-		as.ensureActionInput(os.str());
-	}
+	for(const ActionDef *acd = &GameActionDefs[0]; acd->name; ++acd)
+		as.ensureActionInput(acd->name);
 }
 
 static void readInt(XMLElement *xml, const char *elem, const char *att, int *toChange)
@@ -474,6 +450,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 		readInt(xml_control, "ToolTipsOn", "on", &control.toolTipsOn);
 
 		control.actionSets.clear();
+		unsigned playerID = 0;
 
 		for(XMLElement *xml_actionSet = xml_control->FirstChildElement("ActionSet"); xml_actionSet; xml_actionSet = xml_actionSet->NextSiblingElement("ActionSet"))
 		{
@@ -482,21 +459,21 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			ensureDefaultActions(as);
 
 			if(const char *s = xml_actionSet->Attribute("name"))
-				as.name = s;
+				as.cfg.name = s;
 			if(const char *s = xml_actionSet->Attribute("joystickName"))
-				as.joystickName = s;
+				as.cfg.joystickName = s;
 			if(const char *s = xml_actionSet->Attribute("joystickGUID"))
-				as.joystickGUID = s;
-			as.enabled = xml_actionSet->BoolAttribute("enabled");
+				as.cfg.joystickGUID = s;
+			as.cfg.enabled = xml_actionSet->BoolAttribute("enabled");
 
 			if(XMLElement *xml_joyAxes = xml_actionSet->FirstChildElement("JoyAxes"))
 			{
-				as.joycfg.s1ax = xml_joyAxes->IntAttribute("s1ax");
-				as.joycfg.s1ay = xml_joyAxes->IntAttribute("s1ay");
-				as.joycfg.s2ax = xml_joyAxes->IntAttribute("s2ax");
-				as.joycfg.s2ay = xml_joyAxes->IntAttribute("s2ay");
-				as.joycfg.s1dead = xml_joyAxes->FloatAttribute("s1dead");
-				as.joycfg.s2dead = xml_joyAxes->FloatAttribute("s2dead");
+				as.cfg.joycfg.s1ax = xml_joyAxes->IntAttribute("s1ax");
+				as.cfg.joycfg.s1ay = xml_joyAxes->IntAttribute("s1ay");
+				as.cfg.joycfg.s2ax = xml_joyAxes->IntAttribute("s2ax");
+				as.cfg.joycfg.s2ay = xml_joyAxes->IntAttribute("s2ay");
+				as.cfg.joycfg.s1dead = xml_joyAxes->FloatAttribute("s1dead");
+				as.cfg.joycfg.s2dead = xml_joyAxes->FloatAttribute("s2dead");
 			}
 
 			for(XMLElement *xml_action = xml_actionSet->FirstChildElement(); xml_action; xml_action = xml_action->NextSiblingElement())
@@ -509,11 +486,13 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 					ai.fromString(input);
 				}
 			}
+
+			as.initPlayer(playerID++);
 		}
 	}
 
 	if(control.actionSets.size() == 1)
-		control.actionSets[0].enabled = true;
+		control.actionSets[0].cfg.enabled = true;
 
 	XMLElement *xml_demo = doc.FirstChildElement("Demo");
 	if (xml_demo)
@@ -587,6 +566,15 @@ void UserSettings::apply()
 	dsq->fixupJoysticks();
 
 	core->debugLogActive = system.debugLogOn;
+
+	for(size_t i = 0; i < control.actionSets.size(); ++i)
+	{
+		ActionSet& as = control.actionSets[i];
+		as.initPlayer((unsigned)i);
+		as.clearBoundActions();
+		for(const ActionDef *acd = &GameActionDefs[0]; acd->name; ++acd)
+			as.bindAction(acd->name, acd->actionID);
+	}
 
 	dsq->bindInput();
 

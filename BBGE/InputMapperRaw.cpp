@@ -34,6 +34,8 @@ void InputMapperRaw::input(const RawInput *inp)
 	unsigned char ch = !!inp->u.pressed;
 	keyChanged[idx] |= (keyState[idx] != ch) << 1; // bit 1 becomes bit 0 in next frame
 	keyState[idx] = ch;
+
+	ForwardDirectInput(idx, ch);
 }
 
 void InputMapperRaw::update()

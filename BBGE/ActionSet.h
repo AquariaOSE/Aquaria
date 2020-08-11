@@ -46,12 +46,18 @@ class ActionSet
 
 public:
 	ActionSet();
+	ActionSet(const ActionSet& o);
+	~ActionSet();
+	void initPlayer(unsigned playerID); // call after finishing up
 
-	// import this ActionSet into InputMapper. Should be called via ActionMapper::ImportInput() only!
-	void importAction(InputMapper *mapper, const std::string &name, unsigned actionID) const;
-	void clearActions();
+	// runtime binds
+	void bindAction(const std::string& name, unsigned action);
+	void clearBoundActions();
+
 	int assignJoystickByName(bool force); // -1 if no such joystick found
 	void assignJoystickIdx(int idx, bool updateValues);
+
+	bool getDeviceID(unsigned field, unsigned& deviceID) const;
 
 	// note: this only ENABLES joysticks if they are needed, but never disables any
 	void updateJoystick();
@@ -62,17 +68,22 @@ public:
 	int joystickID; // >= 0: use that, -1 = no joystick, or ACTIONSET_REASSIGN_JOYSTICK
 
 	// --- Saved in config ---
-	ActionInputSet inputSet;
-	JoystickConfig joycfg;
-	std::string joystickName;
-	std::string joystickGUID;
-	std::string name;
-	bool enabled;
+	struct Config
+	{
+		ActionInputSet inputSet;
+		JoystickConfig joycfg;
+		std::string joystickName;
+		std::string joystickGUID;
+		std::string name;
+		bool enabled;
+	} cfg;
 	// -----------------------
 
 	//std::string insertInputIntoString(const std::string &string);
 private:
 	int _whichJoystickForName(); // -1 if no such joystick found
+
+	InputMapper *_inputmapper;
 };
 
 #endif

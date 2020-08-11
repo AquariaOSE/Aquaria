@@ -32,14 +32,32 @@ JoystickConfig::JoystickConfig()
 }
 
 ActionSet::ActionSet()
+: joystickID(ACTIONSET_REASSIGN_JOYSTICK), _inputmapper(NULL)
 {
-	enabled = true;
-	joystickID = ACTIONSET_REASSIGN_JOYSTICK;
+	cfg.enabled = true;
 }
 
-void ActionSet::clearActions()
+ActionSet::ActionSet(const ActionSet& o)
+: cfg(o.cfg), _inputmapper(NULL)
 {
-	inputSet.clear();
+}
+
+ActionSet::~ActionSet()
+{
+	delete _inputmapper;
+}
+
+void ActionSet::initPlayer(unsigned playerID)
+{
+	assert(!_inputmapper || _inputmapper->playerID == playerID);
+	if(!_inputmapper)
+		_inputmapper = new InputMapper(playerID);
+}
+
+void ActionSet::clearBoundActions()
+{
+	if(_inputmapper)
+		_inputmapper->clearMapping();
 }
 
 int ActionSet::assignJoystickByName(bool force)
@@ -56,8 +74,8 @@ void ActionSet::assignJoystickIdx(int idx, bool updateValues)
 	{
 		if(updateValues && idx != ACTIONSET_REASSIGN_JOYSTICK)
 		{
-			joystickName.clear();
-			joystickGUID.clear();
+			cfg.joystickName.clear();
+			cfg.joystickGUID.clear();
 		}
 	}
 	else if(idx < (int)core->getNumJoysticks())
@@ -66,8 +84,8 @@ void ActionSet::assignJoystickIdx(int idx, bool updateValues)
 		{
 			if(updateValues)
 			{
-				joystickGUID = j->getGUID();
-				joystickName = j->getName();
+				cfg.joystickGUID = j->getGUID();
+				cfg.joystickName = j->getName();
 			}
 		}
 		else
@@ -78,29 +96,29 @@ void ActionSet::assignJoystickIdx(int idx, bool updateValues)
 
 int ActionSet::_whichJoystickForName()
 {
-	if(joystickName == "NONE")
+	if(cfg.joystickName == "NONE")
 		return -1;
 
-	if(joystickGUID.length() && joystickName.length())
+	if(cfg.joystickGUID.length() && cfg.joystickName.length())
 		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 			if(Joystick *j = core->getJoystick(i))
-				if(j->getGUID()[0] && joystickGUID == j->getGUID() && joystickName == j->getName())
+				if(j->getGUID()[0] && cfg.joystickGUID == j->getGUID() && cfg.joystickName == j->getName())
 					return int(i);
 
-	if(joystickGUID.length())
+	if(cfg.joystickGUID.length())
 		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 			if(Joystick *j = core->getJoystick(i))
-				if(j->getGUID()[0] && joystickGUID == j->getGUID())
+				if(j->getGUID()[0] && cfg.joystickGUID == j->getGUID())
 					return int(i);
 
-	if(joystickName.length())
+	if(cfg.joystickName.length())
 		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 			if(Joystick *j = core->getJoystick(i))
-				if(joystickName == j->getName())
+				if(cfg.joystickName == j->getName())
 					return int(i);
 
 	// first attached
-	if(!joystickGUID.length() && !joystickName.length())
+	if(!cfg.joystickGUID.length() && !cfg.joystickName.length())
 		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 			if(Joystick *j = core->getJoystick(i))
 				return i;
@@ -127,13 +145,36 @@ void ActionSet::updateJoystick()
 	// joystick but disabled, so we can't just do
 	// j->setEnabled(enabled) here.
 	Joystick *j = core->getJoystick(joystickID);
-	if(j && enabled)
+	if(j && cfg.enabled)
 		j->setEnabled(true);
+}
+
+// true when device exists
+bool ActionSet::getDeviceID(unsigned field, unsigned& deviceID) const
+{
+	switch(ActionInput::GetDevice(field))
+	{
+		case INP_DEV_MOUSE:
+		case INP_DEV_KEYBOARD:
+			deviceID = 0; // SDL only supports 1 mouse and keyboard
+			return true;
+		case INP_DEV_JOYSTICK:
+			if(joystickID >= 0)
+			{
+				Joystick *j = core->getJoystick(joystickID);
+				if(j)
+					deviceID = j->getInstanceID();
+				return !!j;
+			}
+			return false;
+	}
+	assert(false);
+	return false;
 }
 
 const ActionInput *ActionSet::getActionInputByName(const std::string &name) const
 {
-	for (ActionInputSet::const_iterator i = inputSet.begin(); i != inputSet.end(); i++)
+	for (ActionInputSet::const_iterator i = cfg.inputSet.begin(); i != cfg.inputSet.end(); i++)
 	{
 		if (nocasecmp(i->getName(), name) == 0)
 		{
@@ -143,34 +184,35 @@ const ActionInput *ActionSet::getActionInputByName(const std::string &name) cons
 	return 0;
 }
 
-void ActionSet::importAction(InputMapper *mapper, const std::string &name, unsigned actionID) const
+void ActionSet::bindAction(const std::string& name, unsigned action)
 {
-	if (!enabled) return;
-	if (!mapper) return;
+	assert(_inputmapper);
+	if (!cfg.enabled) return;
 
 	const ActionInput *ac = getActionInputByName(name);
 	if(!ac)
 	{
-		errorLog("ActionSet::importAction: Undefined action name: " + name);
+		errorLog("ActionSet::importAction: Requested action but it's not in config: " + name);
 		return;
 	}
 
 	RawInput raw;
+	unsigned deviceID;
 	for(unsigned i = 0; i < INP_NUMFIELDS; ++i)
-		if(ac->Export(raw, i))
-			if(!mapper->addMapping(InputMapper::TO_BUTTON, raw, actionID))
+		if(getDeviceID(i, deviceID) && ac->Export(raw, i, deviceID)) // returns false if no key assigned
+			if(!_inputmapper->addMapping(InputMapper::TO_BUTTON, raw, action))
 				errorLog("Failed to map action: " + name);
 }
 
 ActionInput& ActionSet::ensureActionInput(const std::string &name)
 {
-	for (ActionInputSet::iterator i = inputSet.begin(); i != inputSet.end(); i++)
+	for (ActionInputSet::iterator i = cfg.inputSet.begin(); i != cfg.inputSet.end(); i++)
 		if (nocasecmp(i->getName(), name) == 0)
 			return *i;
 
 	ActionInput newa(name);
-	inputSet.push_back(newa);
-	return inputSet.back();
+	cfg.inputSet.push_back(newa);
+	return cfg.inputSet.back();
 }
 
 /*

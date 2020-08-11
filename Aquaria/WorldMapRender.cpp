@@ -796,7 +796,7 @@ void WorldMapRender::bindInput()
 
 	addAction(ACTION_TOGGLEWORLDMAPEDITOR, KEY_TAB);
 
-	const NamedAction actions[] =
+	/*const NamedAction actions[] =
 	{
 		{ "PrimaryAction",		ACTION_PRIMARY },
 		{ "SecondaryAction",	ACTION_SECONDARY },
@@ -806,7 +806,7 @@ void WorldMapRender::bindInput()
 		{ "SwimUp",			ACTION_SWIMUP },
 		{ "SwimDown",			ACTION_SWIMDOWN }
 	};
-	ImportInput(actions);
+	importInput(actions);*/
 }
 
 void WorldMapRender::destroy()

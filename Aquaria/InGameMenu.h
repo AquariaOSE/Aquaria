@@ -71,7 +71,7 @@ class InGameMenu : public ActionMapper
 	friend class SongSlot;
 	friend class FoodHolder;
 	friend class KeyConfigMenuReceiver;
-	enum { NUM_KEY_CONFIG_PAGES = 3 };
+	enum { NUM_KEY_CONFIG_PAGES = 3+1 };
 
 public:
 	InGameMenu();

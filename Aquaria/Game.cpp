@@ -3225,7 +3225,7 @@ void Game::bindInput()
 		addAction(ACTION_TOGGLEGRID, KEY_F9);
 	}
 
-	const NamedAction actions[] =
+	/*const NamedAction actions[] =
 	{
 		{ "PrimaryAction", ACTION_PRIMARY},
 		{ "SecondaryAction", ACTION_SECONDARY},
@@ -3264,7 +3264,7 @@ void Game::bindInput()
 		{ "Look",			ACTION_LOOK},
 		{ "Roll",			ACTION_ROLL}
 	};
-	ImportInput(actions);
+	importInput(actions);*/
 
 	if (avatar)
 		avatar->bindInput();

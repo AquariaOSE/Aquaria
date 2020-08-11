@@ -61,10 +61,11 @@ public:
 	// field: absolute, [0 ..INP_NUMFIELDS)
 
 	static unsigned GetField(InputDeviceType dev, unsigned slot);
+	static InputDeviceType GetDevice(unsigned field);
 
 	bool Import(const RawInput& inp, unsigned slot); // autodetects type, slot is per-category
 	bool ImportField(const RawInput& inp, unsigned field); // returns false if field and type of inp don't match
-	bool Export(RawInput& inp, unsigned field) const; // returns false if no mapping present
+	bool Export(RawInput& inp, unsigned field, unsigned deviceID) const; // returns false if no mapping present
 	
 	// for checking whether a key/button/etc is configured
 	bool hasEntry(unsigned field) const;

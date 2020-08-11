@@ -429,6 +429,7 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/Entity.cpp
     ${SRCDIR}/FlockEntity.cpp
     ${SRCDIR}/Game.cpp
+    ${SRCDIR}/GameEnums.cpp
     ${SRCDIR}/GameStructs.cpp
     ${SRCDIR}/GameplayVariables.cpp
     ${SRCDIR}/GasCloud.cpp

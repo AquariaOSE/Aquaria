@@ -3682,12 +3682,12 @@ void DSQ::bindInput()
 	addAction(MakeFunctionEvent(DSQ, debugMenu), KEY_BACKSPACE, 0);
 	//addAction(MakeFunctionEvent(DSQ, takeScreenshotKey	),		KEY_P,				0);
 
-	const NamedAction actions[] =
+	/*const NamedAction actions[] =
 	{
 		{ "Escape", ACTION_ESC },
 		{ "Screenshot", ACTION_SCREENSHOT }
 	};
-	ImportInput(actions);
+	importInput(actions);*/
 
 	if(game)
 		game->bindInput();

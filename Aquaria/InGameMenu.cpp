@@ -927,7 +927,7 @@ void InGameMenu::bindInput()
 {
 	addAction(ACTION_ESC, KEY_ESCAPE);
 
-	const NamedAction actions[] =
+	/*const NamedAction actions[] =
 	{
 		{ "PrimaryAction", ACTION_PRIMARY},
 		{ "SecondaryAction", ACTION_SECONDARY},
@@ -943,7 +943,7 @@ void InGameMenu::bindInput()
 		{ "FoodRight",		ACTION_FOODRIGHT},
 		{ "FoodDrop",		ACTION_FOODDROP}
 	};
-	ImportInput(actions);
+	importInput(actions);*/
 }
 
 void InGameMenu::reset()
@@ -2127,76 +2127,47 @@ void InGameMenu::create()
 
 	offy += 2*yi+yi/2;
 
-	// PART 1
+	for(unsigned page = 0; page < 3; ++page)
 	{
 		RenderObject *kk = createBasicKeyConfig();
-		group_keyConfig[0] = kk;
-
+		group_keyConfig[page] = kk;
 		int y = offy;
+		unsigned entry = 0;
 
-		addKeyConfigLine(kk, SB(2107), "PrimaryAction",		offx, y+=yi);
-		addKeyConfigLine(kk, SB(2108), "SecondaryAction",		offx, y+=yi);
-		addKeyConfigLine(kk, SB(2109), "SwimUp",				offx, y+=yi, true);
-		addKeyConfigLine(kk, SB(2110), "SwimDown",				offx, y+=yi, true);
-		addKeyConfigLine(kk, SB(2111), "SwimLeft",				offx, y+=yi, true);
-		addKeyConfigLine(kk, SB(2112), "SwimRight",			offx, y+=yi, true);
-		addKeyConfigLine(kk, SB(2113), "Roll",					offx, y+=yi);
-		addKeyConfigLine(kk, SB(2114), "Revert",				offx, y+=yi);
-		addKeyConfigLine(kk, SB(2115), "WorldMap",				offx, y+=yi);
-		addKeyConfigLine(kk, SB(2127), "Look",				offx, y+=yi);
+		for(const ActionDef *acd = &GameActionDefs[0]; acd->name; ++acd, ++entry)
+			if(acd->page == page)
+			{
+				std::string name = SB(acd->stringID);
+				if(page == 2) // HACK
+				{
+					std::ostringstream os;
+					os << ' ' << (entry+1);
+					name += os.str();
+				}
+				addKeyConfigLine(kk, SB(acd->stringID), name,		offx, y+=yi);
+			}
 
-		y+=yi+yi/2;
-		/*AquariaKeyConfig* s1x = addAxesConfigLine(kk, SB(2117), "s1ax", offx, y);
-		AquariaKeyConfig* s1y = addAxesConfigLine(kk, SB(2118), "s1ay", offx+130, y);
-		AquariaKeyConfig* s2x = addAxesConfigLine(kk, SB(2119), "s2ax", offx+260, y);
-		AquariaKeyConfig* s2y = addAxesConfigLine(kk, SB(2120), "s2ay", offx+380, y);
-
-		s1x->setDirMove(DIR_LEFT, s1x);
-		s1x->setDirMove(DIR_RIGHT, s1y);
-
-		s1y->setDirMove(DIR_LEFT, s1x);
-		s1y->setDirMove(DIR_RIGHT, s2x);
-
-		s2x->setDirMove(DIR_LEFT, s1y);
-		s2x->setDirMove(DIR_RIGHT, s2y);
-
-		s2y->setDirMove(DIR_LEFT, s2x);
-		s2y->setDirMove(DIR_RIGHT, s2y);*/ // FIXME controllerfixup
-	}
-
-	// PART 2
-	{
-		RenderObject *kk = createBasicKeyConfig();
-		group_keyConfig[1] = kk;
-
-		int y = offy;
-
-		addKeyConfigLine(kk, SB(2116), "Escape",		offx, y+=yi);
-		addKeyConfigLine(kk, SB(2128), "ToggleHelp",	offx, y+=yi);
-		addKeyConfigLine(kk, SB(2121), "PrevPage",		offx, y+=yi);
-		addKeyConfigLine(kk, SB(2122), "NextPage",		offx, y+=yi);
-		addKeyConfigLine(kk, SB(2123), "CookFood",		offx, y+=yi);
-		addKeyConfigLine(kk, SB(2124), "FoodLeft",		offx, y+=yi);
-		addKeyConfigLine(kk, SB(2125), "FoodRight",	offx, y+=yi);
-		addKeyConfigLine(kk, SB(2126), "FoodDrop",		offx, y+=yi);
-	}
-
-	// PART 2
-	{
-		RenderObject *kk = createBasicKeyConfig();
-		group_keyConfig[2] = kk;
-
-		int y = offy;
-		std::string slotstr = SB(2129);
-		for(unsigned i = 1; i <= 10; ++i) // SongSlot starts at 1
+		if(page == 0)
 		{
-			std::ostringstream osname;
-			osname << slotstr << ' ' << i;
-			std::ostringstream osac;
-			osac << "SongSlot" << i;
-			addKeyConfigLine(kk, osname.str(), osac.str(), offx, y+=yi);
+			y+=yi+yi/2;
+
+			/*AquariaKeyConfig* s1x = addAxesConfigLine(kk, SB(2117), "s1ax", offx, y);
+			AquariaKeyConfig* s1y = addAxesConfigLine(kk, SB(2118), "s1ay", offx+130, y);
+			AquariaKeyConfig* s2x = addAxesConfigLine(kk, SB(2119), "s2ax", offx+260, y);
+			AquariaKeyConfig* s2y = addAxesConfigLine(kk, SB(2120), "s2ay", offx+380, y);
+
+			s1x->setDirMove(DIR_LEFT, s1x);
+			s1x->setDirMove(DIR_RIGHT, s1y);
+
+			s1y->setDirMove(DIR_LEFT, s1x);
+			s1y->setDirMove(DIR_RIGHT, s2x);
+
+			s2x->setDirMove(DIR_LEFT, s1y);
+			s2x->setDirMove(DIR_RIGHT, s2y);
+
+			s2y->setDirMove(DIR_LEFT, s2x);
+			s2y->setDirMove(DIR_RIGHT, s2y);*/ // FIXME controllerfixup
 		}
-		addKeyConfigLine(kk, SB(2132), "Screenshot",		offx, y+=yi);
 	}
 
 	if(actionSetBox)
@@ -3995,7 +3966,7 @@ void InGameMenu::updateKeyConfigMenu(float dt)
 		if(selectedActionSetIdx != curAS)
 			switchToActionSet(curAS);
 
-		dsq->user.control.actionSets[selectedActionSetIdx].enabled
+		dsq->user.control.actionSets[selectedActionSetIdx].cfg.enabled
 			= actionSetCheck->getValue();
 	}
 
@@ -4202,7 +4173,7 @@ void InGameMenu::switchToActionSet(int idx)
 	if(actionSetBox)
 	{
 		actionSetBox->setSelectedItem(idx);
-		actionSetCheck->setValue(dsq->user.control.actionSets[idx].enabled);
+		actionSetCheck->setValue(dsq->user.control.actionSets[idx].cfg.enabled);
 	}
 	for(size_t i = 0; i < keyConfigs.size(); ++i)
 		keyConfigs[i]->setActionSetIndex(idx);
@@ -4214,7 +4185,7 @@ void InGameMenu::updateActionSetComboBox()
 	{
 		std::ostringstream os;
 		os << '#' << (i+1);
-		const std::string& name = dsq->user.control.actionSets[i].name;
+		const std::string& name = dsq->user.control.actionSets[i].cfg.name;
 		if(name.length())
 			os << ": " << name;
 		actionSetBox->addItem(os.str());
@@ -4244,7 +4215,7 @@ void InGameMenu::nextJoystick()
 
 	as.assignJoystickIdx(i, true);
 	if(as.joystickID < 0)
-		as.joystickName = "NONE";
+		as.cfg.joystickName = "NONE";
 	updateJoystickText();
 }
 
@@ -4267,7 +4238,7 @@ void InGameMenu::updateJoystickText()
 		std::string s = "(";
 		s += stringbank.get(2141);
 		s += " ";
-		s += as.joystickName;
+		s += as.cfg.joystickName;
 		s += ")";
 		joystickNameText->setText(s);
 	}
@@ -4277,7 +4248,7 @@ void InGameMenu::updateJoystickText()
 	joystickButtonsText->setText(jbt.str());
 
 	if(j && as.joystickID >= 0)
-		joystickGUIDText->setText(as.joystickGUID);
+		joystickGUIDText->setText(as.cfg.joystickGUID);
 	else
 		joystickGUIDText->setText("");
 }

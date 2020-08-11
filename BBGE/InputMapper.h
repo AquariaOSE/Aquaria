@@ -52,6 +52,7 @@ public:
 
 	bool acceptMouse;
 	int acceptMouseID; // -1: accept all, otherwise: that id
+	const int playerID;
 
 	// raw data go in
 	virtual void input(const RawInput *inp);
@@ -71,11 +72,10 @@ private:
 	struct Mapping
 	{
 		RawInput raw; // last input that came in, also contains src to check for
-		int buttonOrAxis;
+		int buttonOrAxis; // >0: button+1, <0: (-axis-1), never 0
 		InputValue val; // used as min. axis value to trigger, deadzone, hat direction, etc
 		unsigned char buttonState; // for buttons: consider this pressed?
 	};
-	const int playerID;
 	const GameControlState *target;
 	float wheelDelta;
 	int mouseX, mouseY;
