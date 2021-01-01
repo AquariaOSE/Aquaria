@@ -1,4 +1,4 @@
-#/*
+/*
 Copyright (C) 2007, 2010 - Bit-Blot
 
 This file is part of Aquaria.
@@ -41,6 +41,8 @@ extern "C"
 #include "Gradient.h"
 
 #include "../BBGE/MathFunctions.h"
+
+#undef quad // avoid conflict with quad precision types
 
 // Define this to 1 to check types of pointers passed to functions,
 // and warn if a type mismatch is detected. In this case,
