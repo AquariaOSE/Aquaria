@@ -44,7 +44,7 @@ int StateMachine::getPrevState()
 {
 	return prevState;
 }
-  
+
 void StateMachine::perform(int state, float time)
 {
 	//debugLog("in perform");
@@ -52,7 +52,7 @@ void StateMachine::perform(int state, float time)
 	prevState = currentState;
 	nextState = state;
 	//debugLog("onExitState");
-	
+
 	// do this to prevent scripts from repeating endlessly when running main loops
 	enqueuedState = STATE_NONE;
 
@@ -63,9 +63,9 @@ void StateMachine::perform(int state, float time)
 	nextState = STATE_NONE;
 	//debugLog("onActionInit");
 	onEnterState(currentState);
-	
+
 	//debugLog("done");
-}	 
+}
 
 void StateMachine::setState(int state, float time, bool force)
 {
@@ -95,7 +95,7 @@ void StateMachine::onEnterState(int state)
 void StateMachine::onExitState(int state)
 {
 }
- 
+
 void StateMachine::stopState(int state)
 {
 	onExitState(state);

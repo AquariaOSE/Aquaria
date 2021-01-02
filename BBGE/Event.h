@@ -50,7 +50,7 @@ public:
 
 private:
 	T *callee;
-    void (T::*callback)(void);
+	void (T::*callback)(void);
 };
 
 template <class T>
@@ -67,7 +67,7 @@ public:
 
 private:
 	T *callee;
-    void (T::*callback)(Event *e);
+	void (T::*callback)(Event *e);
 };
 
 #define EVENT(x,y) class x : public Event { public: void act(); }; x y;
@@ -80,7 +80,7 @@ enum EventManage
 {
 	EVM_NONE	= 0,
 	EVM_CLEANUP	= 1,
-	EVM_MAX		
+	EVM_MAX
 };
 
 class ActionMapper;

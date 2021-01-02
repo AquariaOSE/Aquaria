@@ -58,7 +58,7 @@ struct RecipeMenu
 	Quad *scrollEnd;
 	BitmapText *header, *page, *description;
 	AquariaMenuItem *nextPage, *prevPage;
-	
+
 
 	void toggle(bool on, bool watch=false);
 	void createPage(int p);
@@ -68,7 +68,7 @@ struct RecipeMenu
 	void goPrevPage();
 	int getNumPages();
 	int getNumKnown();
-	
+
 	int currentPage;
 
 	bool on;
@@ -100,7 +100,7 @@ const float MIN_SIZE = 0.1;
 	#undef AQUARIA_BUILD_SCENEEDITOR
 #endif
 
-//#include "GridRender.h"
+
 class GridRender;
 class MiniMapRender;
 class WaterSurfaceRender;
@@ -134,6 +134,20 @@ enum EditTypes
 	ET_MAX
 };
 #endif
+
+// impl is in Minimap.cpp
+struct MinimapIcon
+{
+	MinimapIcon();
+	bool setTexture(std::string);
+	void update(float dt);
+	CountedPtr<Texture> tex;
+	InterpolatedVector color, alpha, size;
+	float throbMult;
+	bool scaleWithDistance;
+
+	static const Vector defaultSize;
+};
 
 class ManaBall : public Quad
 {
@@ -269,7 +283,9 @@ public:
 
 	bool isEmpty();
 	bool isTrash();
+	bool isValid();
 	void setIngredient(IngredientData *i, bool effects=true);
+	void toggleValid(bool v);
 	void dropFood();
 	IngredientData *getIngredient();
 	void animateLid(bool down, bool longAnim=true);
@@ -349,7 +365,7 @@ class EntityClass
 {
 public:
 	EntityClass(std::string name, bool script=false, int idx=-1, std::string prevGfx="", float prevScale=1)
-		: name(name), script(script), idx(idx), prevGfx(prevGfx), prevScale(prevScale) {}
+		: name(name), prevScale(prevScale), prevGfx(prevGfx), script(script), idx(idx) {}
 	std::string name;
 	float prevScale;
 	std::string prevGfx;
@@ -465,7 +481,6 @@ public:
 	bool multiSelecting;
 	Vector multiSelectPoint;
 	std::vector <Element*> selectedElements;
-	void fixEntityIDs();
 
 	Vector groupCenter;
 	Vector getSelectedElementsCenter();
@@ -474,9 +489,9 @@ public:
 
 	void updateSelectedElementPosition(Vector position);
 	int selectedEntityType;
-	//int curEntity;
+
 	SelectedEntity selectedEntity;
-	//EntityGroups::iterator page;
+
 	int entityPageNum;
 
 	void checkForRebuild();
@@ -573,6 +588,7 @@ typedef std::vector<QuadList> QuadArray;
 typedef std::vector<Element*> ElementUpdateList;
 
 // Note: although this is a bitmask, only one of these values may be set at a time!
+// This is because GridRender and most Lua scripts check via ==, not for bits set (Lua 5.1 doesn't have bit ops)
 enum ObsType
 {
 	OT_EMPTY		= 0x00,
@@ -597,6 +613,8 @@ enum ObsType
 	OT_USER1 = 0x40,
 	OT_USER2 = 0x80,
 	OT_USER_MASK = OT_USER1 | OT_USER2,
+
+	OT_OUTOFBOUNDS = 0xff
 };
 
 struct EntitySaveData
@@ -617,7 +635,7 @@ public:
 	void removeState();
 	void update(float dt);
 	void onLeftMouseButton();
-	//std::vector<Item*>items;
+
 
 	Avatar *avatar;
 	Entity *li;
@@ -626,7 +644,7 @@ public:
 
 	FoodSlot *moveFoodSlotToFront;
 
-	//void doChoiceMenu(Vector position, std::vector<std::string> choices);
+
 
 	std::string getSelectedChoice() { return selectedChoice; }
 
@@ -636,6 +654,7 @@ public:
 	void setGrid(const TileVector &tile, ObsType v);
 	void addGrid(const TileVector &tile, ObsType v);
 	bool isObstructed(const TileVector &tile, int t = OT_BLOCKING) const;
+	bool isObstructedRaw(const TileVector &tile, int t) const;
 	void trimGrid();
 	void dilateGrid(unsigned int radius, ObsType test, ObsType set, ObsType allowOverwrite);
 
@@ -682,7 +701,7 @@ public:
 	void handleShotCollisionsHair(Entity *e, int num = 0, float perc = 0);
 
 	std::vector<ElementTemplate> elementTemplates;
-	std::string sceneName;
+	std::string sceneName, sceneDisplayName;
 
 	ElementTemplate *getElementTemplateByIdx(int idx);
 
@@ -807,8 +826,8 @@ public:
 
 	Precacher tileCache;
 
-	//void cameraPanToNode(Path *p, int speed=500);
-	//void cameraRestore();
+
+
 	void setCameraFollow(Vector *position);
 	Shot *fireShot(Entity *firer, const std::string &particleEffect, Vector position, bool big, Vector direction, Entity *target, int homing=0, int velLenOverride=0, int targetPt=-1);
 	Shot *fireShot(const std::string &bankShot, Entity *firer, Entity *target=0, const Vector &pos=Vector(0,0,0), const Vector &aim=Vector(0,0,0), bool playSfx=true);
@@ -893,7 +912,7 @@ public:
 
 	void selectEntityFromGroups();
 	InterpolatedVector cameraInterp;
-	//InterpolatedVector tintColor;
+
 	float getWaterLevel();
 	void setMusicToPlay(const std::string &musicToPlay);
 	Vector lastCollidePosition;
@@ -1030,7 +1049,7 @@ protected:
 	bool isCooking;
 
 	void doMenuSectionHighlight(int sect);
-	
+
 	float cookDelay;
 
 	float ingOffY;
@@ -1041,7 +1060,7 @@ protected:
 	void onPrevRecipePage();
 	void onNextRecipePage();
 
-	
+
 
 	typedef std::vector<IngredientData*> CookList;
 	CookList cookList;
@@ -1088,7 +1107,6 @@ protected:
 	Quad *options;
 
 	Quad *image;
-	void assignEntitiesUniqueIDs();
 	void initEntities();
 
 
@@ -1147,12 +1165,7 @@ protected:
 
 	float deathTimer;
 
-	/*
-	void onAssignMenuScreenItemToSlot0();
-	void onAssignMenuScreenItemToSlot1();
-	void onAssignMenuScreenItemToSlot2();
-	void onAssignMenuScreenItemToSlot3();
-	*/
+
 
 	void onInGameMenuInventory();
 	void onInGameMenuSpellBook();
@@ -1215,7 +1228,7 @@ ObsType Game::getGridRaw(const TileVector &tile) const
 {
 	return (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID))
 		? ObsType(grid[tile.x][tile.y])
-		: OT_INVISIBLE;
+		: OT_OUTOFBOUNDS;
 }
 
 inline
@@ -1255,6 +1268,12 @@ inline
 bool Game::isObstructed(const TileVector &tile, int t /* = OT_BLOCKING */) const
 {
 	return (getGrid(tile) & t);
+}
+
+inline
+bool Game::isObstructedRaw(const TileVector &tile, int t) const
+{
+	return (getGridRaw(tile) & t);
 }
 
 #endif

@@ -32,7 +32,7 @@ namespace AQCredits
 
 	void watchSlide(int slide)
 	{
-		float t = 10;//15;
+		float t = 10;
 
 		if (!(slide >= 0 && slide < slides.size())) return;
 
@@ -81,9 +81,9 @@ void Credits::applyState()
 
 	dsq->setCutscene(1,0);
 	core->resetCamera();
-	
+
 	core->sound->stopMusic();
-	
+
 	// load everything here:
 
 	bg1 = new Quad("particles/gas", Vector(400,300));
@@ -185,12 +185,12 @@ void Credits::applyState()
 	{
 		core->main(1);
 	}
-	
+
 	dsq->setCutscene(0);
 
 	dsq->game->transitionToScene("thirteenlair");
 #endif
-	//dsq->title();
+
 }
 
 void Credits::removeState()

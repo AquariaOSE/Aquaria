@@ -20,15 +20,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Core.h"
 
-#ifdef RLT_FIXED
 	#define BASE_ARRAY_SIZE 100  // Size of an object array in a new layer
-#endif
 
 RenderObjectLayer::RenderObjectLayer()
-#ifdef RLT_FIXED
 	: renderObjects(BASE_ARRAY_SIZE)
-#endif
-{	
+{
 	followCamera = NO_FOLLOW_CAMERA;
 	visible = true;
 	startPass = endPass = 0;
@@ -42,14 +38,12 @@ RenderObjectLayer::RenderObjectLayer()
 	color = Vector(1,1,1);
 
 	displayListValid = false;
-	
-#ifdef RLT_FIXED
+
 	const int size = renderObjects.size();
 	for (int i = 0; i < size; i++)
 		renderObjects[i] = 0;
 	objectCount = 0;
 	firstFreeIdx = 0;
-#endif
 }
 
 RenderObjectLayer::~RenderObjectLayer()
@@ -68,88 +62,8 @@ void RenderObjectLayer::setOptimizeStatic(bool opt)
 	clearDisplayList();
 }
 
-#ifdef RLT_DYNAMIC
-bool sortRenderObjectsByDepth(RenderObject *r1, RenderObject *r2)
-{
-	return r1->getSortDepth() < r2->getSortDepth();
-}
-#endif
-
-void RenderObjectLayer::sort()
-{
-	if (optimizeStatic && displayListValid)
-		return;  // Assume the order hasn't changed
-
-#ifdef RLT_FIXED
-	// Compress the list before sorting to boost speed.
-	const int size = renderObjects.size();
-	int from, to;
-	for (to = 0; to < size; to++) {
-		if (!renderObjects[to])
-			break;
-	}
-	for (from = to+1; from < size; from++) {
-		if (renderObjects[from])
-		{
-			renderObjects[to] = renderObjects[from];
-			renderObjects[to]->setIdx(to);
-			to++;
-		}
-	}
-	if (to < size)
-		renderObjects[to] = 0;
-	if (to != objectCount)
-	{
-		std::ostringstream os;
-		os << "Objects lost in sort! (" << to << " != " << objectCount << ")";
-		errorLog(os.str());
-		objectCount = to;
-	}
-	const int count = objectCount;
-
-	// Save a copy of all objects' depths so we don't have to call
-	// getSortDepth() in a greater-order loop.
-	std::vector<float> sortDepths(count);
-	for (int i = 0; i < count; i++)
-	{
-		sortDepths[i] = renderObjects[i]->getSortDepth();
-	}
-
-	// FIXME: Just a simple selection sort for now.  Is this fast enough?
-	// Might need to use quicksort instead.
-	for (int i = 0; i < count-1; i++)
-	{
-		int best = i;
-		float bestDepth = sortDepths[i];
-		for (int j = i+1; j < count; j++)
-		{
-			if (sortDepths[j] < bestDepth)
-			{
-				best = j;
-				bestDepth = sortDepths[j];
-			}
-		}
-		if (best != i)
-		{
-			RenderObject *r = renderObjects[i];
-			renderObjects[i] = renderObjects[best];
-			renderObjects[i]->setIdx(i);
-			renderObjects[best] = r;
-			renderObjects[best]->setIdx(best);
-			float d = sortDepths[i];
-			sortDepths[i] = sortDepths[best];
-			sortDepths[best] = d;
-		}
-	}
-#endif
-#ifdef RLT_DYNAMIC
-	renderObjectList.sort(sortRenderObjectsByDepth);
-#endif
-}
-
 void RenderObjectLayer::add(RenderObject* r)
 {
-#ifdef RLT_FIXED
 	int size = renderObjects.size();
 	if (firstFreeIdx >= size)
 	{
@@ -166,20 +80,12 @@ void RenderObjectLayer::add(RenderObject* r)
 		if (!renderObjects[firstFreeIdx])
 			break;
 	}
-#endif
-#ifdef RLT_DYNAMIC
-	renderObjectList.push_back(r);
-#endif
-#ifdef RLT_MAP
-	renderObjectMap[intptr_t(r)] = r;
-#endif
 
 	clearDisplayList();
 }
 
 void RenderObjectLayer::remove(RenderObject* r)
 {
-#ifdef RLT_FIXED
 	const int idx = r->getIdx();
 	if (idx < 0 || idx >= renderObjects.size())
 	{
@@ -196,20 +102,12 @@ void RenderObjectLayer::remove(RenderObject* r)
 	if (idx < firstFreeIdx)
 		firstFreeIdx = idx;
 	r->setIdx(-1);
-#endif
-#ifdef RLT_DYNAMIC
-	renderObjectList.remove(r);
-#endif
-#ifdef RLT_MAP
-	renderObjectMap[intptr_t(r)] = 0;
-#endif
 
 	clearDisplayList();
 }
 
 void RenderObjectLayer::moveToFront(RenderObject *r)
 {
-#ifdef RLT_FIXED
 	const int size = renderObjects.size();
 	const int curIdx = r->getIdx();
 	int lastUsed;
@@ -267,18 +165,12 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 		while (renderObjects[firstFreeIdx])
 			firstFreeIdx++;
 	}
-#endif  // RLT_FIXED
-#ifdef RLT_DYNAMIC
-	renderObjectList.remove(r);
-	renderObjectList.push_back(r);
-#endif
 
 	clearDisplayList();
 }
 
 void RenderObjectLayer::moveToBack(RenderObject *r)
 {
-#ifdef RLT_FIXED
 	const int size = renderObjects.size();
 	const int curIdx = r->getIdx();
 	int firstUsed;
@@ -341,11 +233,6 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 				break;
 		}
 	}
-#endif  // RLT_FIXED
-#ifdef RLT_DYNAMIC
-        renderObjectList.remove(r);
-	renderObjectList.push_front(r);
-#endif
 
 	clearDisplayList();
 }
@@ -364,9 +251,7 @@ void RenderObjectLayer::renderPass(int pass)
 		{
 			if (displayList[i].isList)
 			{
-#ifdef BBGE_BUILD_OPENGL
 				glCallList(displayList[i].u.listID);
-#endif
 				RenderObject::lastTextureApplied = 0;
 			}
 			else
@@ -430,7 +315,6 @@ void RenderObjectLayer::generateDisplayList()
 			}
 			else
 			{
-#ifdef BBGE_BUILD_OPENGL
 				int listID = glGenLists(1);
 				if (listID != 0)
 				{
@@ -450,16 +334,13 @@ void RenderObjectLayer::generateDisplayList()
 				}
 				else
 					debugLog("glGenLists failed");
-#endif
 			}
 		}
 		else
 		{
 			if (lastWasStatic)
 			{
-#ifdef BBGE_BUILD_OPENGL
 				glEndList();
-#endif
 				lastWasStatic = false;
 			}
 		}
@@ -477,9 +358,7 @@ void RenderObjectLayer::generateDisplayList()
 
 	if (lastWasStatic)
 	{
-#ifdef BBGE_BUILD_OPENGL
 		glEndList();
-#endif
 	}
 
 	displayList.resize(listLength);

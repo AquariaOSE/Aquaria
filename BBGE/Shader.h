@@ -45,10 +45,8 @@ public:
 protected:
 	std::string vertFile, fragFile;
 	std::string vertSrc, fragSrc;
-#ifdef BBGE_BUILD_OPENGL
 	GLuint g_programObj;
 	int numUniforms;
-#endif
 
 private:
 	static void staticInit();
@@ -64,14 +62,14 @@ private:
 		bool dirty; // need to flush if true
 		union
 		{
-			struct
+			struct si
 			{
 				int i[4];
-			};
-			struct
+			} i;
+			struct sf
 			{
 				float f[4];
-			};
+			} f;
 		} data;
 		char name[64];
 

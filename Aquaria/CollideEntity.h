@@ -27,17 +27,18 @@ class CollideEntity : public Entity
 {
 public:
 	CollideEntity();
+	virtual ~CollideEntity();
 	float bounceAmount;
 	float weight;
-	void updateMovement(float dt);	
+	void updateMovement(float dt);
 	void entityDied(Entity *e);
-protected:	
+protected:
 	virtual void onHitWall(){}
 	void onUpdateFrozen(float dt);
-	
+
 	virtual void onBounce() {}
 	void bounce(float ba);
-	
+
 };
 
 #endif

@@ -23,11 +23,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Base.h"
 
+
 enum TextureLoadResult
 {
-	TEX_FAILED  = 0x00,
-	TEX_SUCCESS = 0x01,
-	TEX_LOADED  = 0x02,
+	TEX_FAILED,
+	TEX_SUCCESS
 };
 
 struct ImageTGA
@@ -51,26 +51,21 @@ public:
 
 	int getPixelWidth();
 	int getPixelHeight();
-	
+
 	void destroy();
-	
+
 
 	int width, height;
 
 	static ImageTGA *TGAload(const char* filename);
 	static ImageTGA *TGAloadMem(void *mem, int size);
-	
+
 	static bool useMipMaps;
 	bool repeat, repeating;
 
-#ifdef BBGE_BUILD_OPENGL
 	static GLint filter;
 	static GLint format;
 	GLuint textures[1];
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	LPDIRECT3DTEXTURE9 d3dTexture;
-#endif
 
 	void reload();
 
@@ -80,6 +75,8 @@ public:
 	unsigned char *getBufferAndSize(int *w, int *h, unsigned int *size); // returned memory must be free()'d
 
 	std::string name;
+
+	TextureLoadResult getLoadResult() const { return loadResult; }
 
 protected:
 	std::string loadName;
@@ -91,7 +88,8 @@ protected:
 	bool loadTGA(ImageTGA *tga);
 
 	int ow, oh;
-	
+	TextureLoadResult loadResult;
+
 };
 
 #define UNREFTEX(x) if (x) {x = NULL;}

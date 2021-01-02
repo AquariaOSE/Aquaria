@@ -88,13 +88,14 @@ public:
         ON_CLOSE,
         ON_DESTROY
     };
-    /* Creates a virtual file from a memory buffer. The buffer is passed as-is,
+    /** Creates a virtual file from a memory buffer. The buffer is passed as-is,
        so for text files you should make sure it ends with a \0 character.
        A deletor function can be passed optionally, that the buffer will be passed to
        when the memory file is destroyed. Pass NULL or leave away to keep the buffer alive. */
     MemFile(const char *name, void *buf, unsigned int size, delete_func delfunc = NULL, DeleteMode delmode = ON_CLOSE);
     virtual ~MemFile();
-    virtual bool open(const char *mode = NULL) { return true; }
+    /** In order not to modify the passed buffer, MemFile does NOT respect the mode parameter. */
+    virtual bool open(const char *mode = NULL) { return !!_buf; }
     virtual bool isopen() const { return !!_buf; } // always open
     virtual bool iseof() const { return _pos >= _size; }
     virtual void close();

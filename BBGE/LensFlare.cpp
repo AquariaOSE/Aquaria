@@ -43,7 +43,7 @@ void LensFlare::addFlare(const std::string &tex, Vector color, int w, int h)
 
 void LensFlare::onUpdate(float dt)
 {
-	//const int maxLen = 1500;
+
 	RenderObject::onUpdate(dt);
 	Vector v = core->screenCenter - this->position;
 	if (v.getSquaredLength2D() > sqr(maxLen))
@@ -53,7 +53,7 @@ void LensFlare::onUpdate(float dt)
 		float l = v.getLength2D();
 		float a = 1.0f-(l/(float)maxLen);
 		a*=0.8f;
-		//Vector vbit = v*(1.0f/flares.size());
+
 		Vector vbit = v;
 		vbit *= inc;
 		for (int i = 0; i < flares.size(); i++)

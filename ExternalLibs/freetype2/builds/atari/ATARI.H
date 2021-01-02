@@ -1,3 +1,7 @@
+#if defined( GXVALID_H_ )
+#pragma warn -aus /* too many unevaluated variables in gxvalid */
+#endif
+
 #ifndef ATARI_H
 #define ATARI_H
 

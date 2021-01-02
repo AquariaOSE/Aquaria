@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Shot.h"
 #include "PathFinding.h"
 
-//Shader Entity::blurShader;
+
 
 void Entity::stopPull()
 {
@@ -83,15 +83,7 @@ void Entity::generateCollisionMask(int ovrCollideRadius)
 	}
 }
 
-/*
-void Entity::clearv()
-{
-	for (int i = 0; i < EV_MAX; i++)
-	{
-		vs[i] = 0;
-	}
-}
-*/
+
 
 bool Entity::setBoneLock(const BoneLock &boneLock)
 {
@@ -116,40 +108,18 @@ bool Entity::setBoneLock(const BoneLock &boneLock)
 			this->boneLock.circleOffset = this->position - (boneLock.entity->getWorldPosition());
 			this->boneLock.circleOffset.setLength2D(boneLock.entity->collideRadius);
 			this->boneLock.origRot = boneLock.entity->rotation.z;
-			/*
-			this->boneLock = boneLock;
-			this->boneLock.localOffset = this->position - (boneLock.entity->getWorldPosition());
-			this->boneLock.localOffset = boneLock.entity->getInvRotPosition(this->boneLock.localOffset);
-			this->boneLock.circleOffset = this->position - (boneLock.entity->position);
-			this->boneLock.circleOffset.setLength2D(boneLock.entity->collideRadius);
-			this->boneLock.origRot = boneLock.entity->getWorldRotation();
-			//this->boneLock.origRot = MathFunctions::toRadians(this->boneLock.origRot);
-			MathFunctions::calculateAngleBetweenVectorsInRadians(boneLock.entity->position + boneLock.entity->getForward(), boneLock.entity->position, this->boneLock.origRot);
-			//position, boneLock.entity->position,
-			MathFunctions::calculateAngleBetweenVectorsInRadians(position, boneLock.entity->position, this->boneLock.offRot);
 
-			while (this->boneLock.origRot > PI)
-				this->boneLock.origRot -= PI;
-			while (this->boneLock.origRot < 0)
-				this->boneLock.origRot += PI;
-			while (this->boneLock.offRot > PI)
-				this->boneLock.offRot -= PI;
-			while (this->boneLock.offRot < 0)
-				this->boneLock.offRot += PI;
-			//this->boneLock.offRot = atanf(this->boneLock.circleOffset.y / this->boneLock.circleOffset.x);
-			//
-			//this->boneLock.localOffset = boneLock.bone->getOriginCollidePosition(this->boneLock.localOffset);
-			*/
+
 
 		}
 		else
 		{
 			this->boneLock = boneLock;
-			//this->boneLock.localOffset = this->position - boneLock.bone->getWorldPosition();
+
 			this->boneLock.localOffset = this->position - (boneLock.bone->getWorldPosition());
 			this->boneLock.localOffset = boneLock.bone->getInvRotPosition(this->boneLock.localOffset);
 			this->boneLock.origRot = boneLock.bone->getWorldRotation();
-			//this->boneLock.localOffset = boneLock.bone->getOriginCollidePosition(this->boneLock.localOffset);
+
 
 		}
 	}
@@ -190,9 +160,9 @@ Entity::Entity()
 	setv(EV_VINEPUSH, 1);
 	setv(EV_BEASTBURST, 1);
 	setv(EV_WEBSLOW, 100);
-	//debugLog("Entity::Entity()");
-	//clampOnSwitchDir = true;
-	//registerEntityDied = false;
+
+
+
 	invincible = false;
 	lanceDelay = 0;
 	lance = 0;
@@ -213,14 +183,13 @@ Entity::Entity()
 	pauseFreeze = true;
 	canLeaveWater = false;
 	targetPriority = 0;
-	//renderPass = RENDER_ALL;
-	//crawling = 0;
+
+
 	ridingOnEntity = 0;
 	targetRange = 32;
-	//energyChargeTarget = energyShotTarget = true;
+
 	deathSound = "GenericDeath";
 	entityID = 0;
-	//assignUniqueID();
 	hair = 0;
 	maxSpeedLerp = 1;
 	fillGridFromQuad = false;
@@ -245,14 +214,14 @@ Entity::Entity()
 	entityType = EntityType(0);
 	targets.resize(10);
 	attachedTo = 0;
-	//target = 0;
+
 	frozenTimer = 0;
 	canBeTargetedByAvatar = false;
 	activationRange = 0;
 	activationType = ACT_NONE;
 	pushDamage = 0;
 
-	//debugLog("dsq->addEntity()");
+
 
 	dsq->addEntity(this);
 	maxSpeed = 300;
@@ -261,24 +230,18 @@ Entity::Entity()
 	invincibleBreak = false;
 	activationRadius = 40;
 	activationRange = 600;
-	//affectedBySpells = true;
-//	followAvatar = false;
+
+
 	followEntity = 0;
 	bubble = 0;
 
-	/*
-	copySkel.parentManagedStatic = 1;
-	copySkel.updateAfterParent = 1;
-	addChild(&copySkel);
-	*/
 
-	//debugLog("skeletalSprite init");
 
 	skeletalSprite.updateAfterParent = 1;
 	skeletalSprite.setAnimationKeyNotify(this);
 	addChild(&skeletalSprite, PM_STATIC);
 
-	//debugLog("damageTarget stuff");
+
 
 	setDamageTarget(DT_AVATAR_NATURE, false);
 	setDamageTarget(DT_AVATAR_LIZAP, true);
@@ -287,9 +250,15 @@ Entity::Entity()
 	setDamageTarget(DT_AVATAR_SEED, false);
 
 	stopSoundsOnDeath = false;
+	minimapIcon = 0;
 
 
-	//debugLog("End Entity::Entity()");
+
+}
+
+Entity::~Entity()
+{
+	delete minimapIcon;
 }
 
 void Entity::setDeathScene(bool v)
@@ -467,9 +436,9 @@ float Entity::followPath(Path *p, float speed, int dir, bool deleteOnEnd)
 	}
 	//debugLog("Calculating Time");
 	float time = position.data->path.getLength()/speed;
-	//debugLog("Starting");
+
 	position.data->path.getPathNode(0)->value = position;
-	position.startPath(time);//, 1.0f/2.0f);
+	position.startPath(time);
 	return time;
 }
 
@@ -480,64 +449,45 @@ float Entity::moveToPos(Vector dest, float speed, int dieOnPathEnd, bool swim)
 
 	Vector start = position;
 	followEntity = 0;
-	//watchingEntity = 0;
+
 
 	position.ensureData();
 	position.data->path.clear();
 	position.stop();
 
 	swimPath = swim;
-	//debugLog("Generating path to: " + path->name);
+
 	PathFinding::generatePath(this, TileVector(start), TileVector(dest));
-	//int sz = position.data->path.getNumPathNodes();
-	//position.data->path.addPathNode(path->nodes[0].position, 1);
-	//VectorPath old = position.data->path;
-	/*std::ostringstream os;
-	os << "Path length: " << sz;
-	debugLog(os.str());*/
+
+
 
 	//debugLog("Regenerating section");
 
-	//int ms = sz % 12;
-	/*
-	if (sz > 12)
-	{
-		int node = sz/2;
-		dsq->pathFinding.generatePath(this, TileVector(position), TileVector(position.path.getPathNode(node)->value));
-		old.splice(position.data->path, node);
-		position.data->path = old;
-	}
-	*/
+
+
 	this->vel = 0;
 
 	//debugLog("Molesting Path");
 
 	PathFinding::molestPath(position.data->path);
-	//position.data->path.realPercentageCalc();
-	//position.data->path.cut(4);
+
+
 
 	//debugLog("forcing path to minimum 2 nodes");
 	PathFinding::forceMinimumPath(position.data->path, start, dest);
-	//debugLog("Done");
 
-	//debugLog("Calculating Time");
+
+
 	float time = position.data->path.getLength()/speed;
-	//debugLog("Starting");
+
 	position.data->path.getPathNode(0)->value = position;
-	position.startPath(time);//, 1.0f/2.0f);
+	position.startPath(time);
 
-	/*
-	if (dieOnPathEnd)
-		position.endOfPathEvent.set(MakeFunctionEvent(Entity, safeKill));
-	*/
 
-	//debugLog("Set delete on Path end");
+
 	deleteOnPathEnd = dieOnPathEnd;
 
-	//debugLog("End of Generate Path");
 
-	//position.startSpeedPath(dsq->continuity.getSpeedType(speedType));
-	//position.startPath(((position.data->path.getNumPathNodes()*TILE_SIZE*4)-2)/dsq->continuity.getSpeedType(speedType));
 
 	return time;
 }
@@ -549,8 +499,8 @@ void Entity::stopFollowingPath()
 
 void Entity::flipToTarget(Vector pos)
 {
-	//if (dsq->game->avatar->position.x > r->position.x)
-	//else if (dsq->game->avatar->position.x < r->position.x)
+
+
 
 	if (pos.x > position.x)
 	{
@@ -590,16 +540,10 @@ void Entity::destroy()
 		this->stopAllSounds();
 	this->unlinkAllSounds();
 
-	/*
+
 	if (hair)
 	{
-		hair->safeKill();
-		hair = 0;
-	}
-	*/
-	if (hair)
-	{
-		// let the engine clean up hair
+
 		hair = 0;
 	}
 	Shot::targetDied(this);
@@ -619,14 +563,7 @@ bool Entity::checkSurface(int tcheck, int state, float statet)
 		}
 	}
 	return false;
-	/*
-	checkSurfaceDelay = math.random(3)+1
-	if entity_clampToSurface(me, 0.5, 3) then
-		entity_setState(me, STATE_WALL, 2 + math.random(2))
-	else
-		checkSurfaceDelay = 0.1
-	end
-	*/
+
 }
 
 void Entity::rotateToSurfaceNormal(float t, int n, int rot)
@@ -684,25 +621,23 @@ bool Entity::clampToSurface(int tcheck, Vector usePos, TileVector hitTile)
 		tcheck = 40;
 	bool clamped = false;
 	// HACK: ensure entity gets to location
-	//t = 0;
-	//setCrawling(true);
 	setv(EV_CRAWLING, 1);
 	burstTimer.stop();
 	// do stuff
 	Vector pos = TileVector(usePos).worldVector();
 	if (!hitTile.isZero())
 	{
-		//debugLog("using hitTile");
+
 		pos = hitTile.worldVector();
 		clamped = true;
 	}
 	else
 	{
-		//debugLog("NOT using hitTile");
+
 		if (vel.getSquaredLength2D() < 1)
 		{
 	longCheck:
-			//debugLog("LongCheck");
+
 			for (int i = 0; i < tcheck; i++)
 			{
 				int bit = i*TILE_SIZE;
@@ -767,7 +702,7 @@ bool Entity::clampToSurface(int tcheck, Vector usePos, TileVector hitTile)
 		}
 		else
 		{
-			//debugLog("VelCheck");
+
 			Vector v = vel;
 			v.normalize2D();
 			for (int i = 0; i < tcheck; i++)
@@ -788,23 +723,20 @@ bool Entity::clampToSurface(int tcheck, Vector usePos, TileVector hitTile)
 	{
 		Vector n = dsq->game->getWallNormal(pos);
 		n *= getv(EV_WALLOUT);
-		//pos += n;
+
 		Vector diff = getWorldPosition() - pos;
-		//e->offset.interpolateTo(diff, t);
+
 		offset = diff;
 		offset.interpolateTo(n, t);
 		position = pos;
 
-		//e->rotateToSurfaceNormal(t);
+
 		rotateToSurfaceNormal(0);
 
 		setv(EV_CLAMPING, 1);
 
-		//e->position.interpolateTo(pos, t);
-		/*
-		debugLog("interpolating position");
-		e->position.interpolateTo(Vector(0,0,0), t);
-		*/
+
+
 	}
 	else
 		position = pos;
@@ -837,7 +769,7 @@ void Entity::revive(float a)
 	if (getState() != STATE_IDLE)
 		perform(STATE_IDLE);
 	onHealthChange(a);
-	//health += a;
+
 }
 
 bool Entity::isGoingToBeEaten()
@@ -950,7 +882,7 @@ bool Entity::isNearObstruction(int sz, int type, TileVector *hitTile)
 	break;
 	case OBSCHECK_8DIR:
 	{
-		//debugLog("8dir");
+
 		for (int d = 0; d <= sz; d++)
 		{
 
@@ -1030,13 +962,7 @@ bool Entity::touchAvatarDamage(int radius, float dmg, const Vector &override, fl
 	{
 		usePosition = getWorldCollidePosition(collidePos);
 
-		/*
-		std::ostringstream os;
-		os << "position(" << position.x << ", " << position.y << ") - ";
-		os << "usePosition(" << usePosition.x << ", " << usePosition.y << ") - ";
-		os << "collidePos(" << collidePos.x << ", " << collidePos.y << ")";
-		debugLog(os.str());
-		*/
+
 
 	}
 	if (radius == 0 || (dsq->game->avatar->getWorldPosition() - usePosition).getSquaredLength2D() < sqr(radius+dsq->game->avatar->collideRadius))
@@ -1052,8 +978,8 @@ bool Entity::touchAvatarDamage(int radius, float dmg, const Vector &override, fl
 		{
 			Vector diff = dsq->game->avatar->position - position;
 			diff.setLength2D(speed);
-			//dsq->game->avatar->vel += diff;
-			//dsq->game->avatar->push(v, pushTime, , 0);
+
+
 			dsq->game->avatar->push(diff, pushTime, speed, dmg);
 		}
 		else if (speed > 0)
@@ -1063,41 +989,22 @@ bool Entity::touchAvatarDamage(int radius, float dmg, const Vector &override, fl
 			diff.setLength2D(speed);
 			dsq->game->avatar->vel += diff;
 		}
-		/*
-		if (pushTime != 0)
-		{
-			Vector v = (dsq->game->avatar->position - this->position);
-			v.setLength2D(1000);
-			dsq->game->avatar->push(v, pushTime, 800, 0);
-		}
-		*/
-		//dsq->game->avatar->damage(dmg);
+
+
 		return true;
 	}
 	return false;
 }
 
 const float sct = 0.15;
-//const float blurMax = 0.04;
-const float blurMax = 0.01;
-const float blurMin = 0.0;
-
-/*
-const float blurMax = 0.05;
-const float blurMin = 0.0;
-*/
 
 void Entity::onFHScale()
 {
 	flipScale.interpolateTo(Vector(1, 1), sct);
 	_fh = !_fh;
-	/*
-	copySkel.fhTo(!_fh);
-	skeletalSprite.alpha.interpolateTo(1, 0.5);
-	copySkel.alpha.interpolateTo(0, 0.5);
-	*/
-	//skeletalSprite.alpha.interpolateTo(1,sct);
-	//blurShaderAnim.interpolateTo(Vector(blurMin,0,0), sct);
+
+
+
 	fhScale = 0;
 }
 
@@ -1108,22 +1015,12 @@ void Entity::onFH()
 	if (!fhScale)
 	{
 		flipScale = Vector(1,1);
-		/*
-		copySkel.children = skeletalSprite.children;
-		copySkel.scale = skeletalSprite.scale;
-		copySkel.position = skeletalSprite.scale;
-		copySkel.animations = skeletalSprite.animations;
-		*/
-		//skeletalSprite.alpha.interpolateTo(0, sct*2);
 
-		//skeletalSprite.alpha.interpolateTo(0.5, sct);
 
-		//flipScale.interpolateTo(Vector(1.5, 1), sct);
 
 		flipScale.interpolateTo(Vector(0.6, 1), sct);
 
-		//blurShaderAnim = Vector(blurMin);
-		//blurShaderAnim.interpolateTo(Vector(blurMax,0,0), sct/2);
+
 
 		fhScale = 1;
 	}
@@ -1141,17 +1038,6 @@ void Entity::frozenUpdate(float dt)
 
 void Entity::update(float dt)
 {
-	/*
-	if (position.isnan())
-		position = backupPos;
-	if (vel.isnan())
-		vel = backupVel;
-	*/
-	/*
-	if (entityID == 0)
-		assignUniqueID();
-	*/
-
 	Vector backupPos = position;
 	Vector backupVel = vel;
 
@@ -1197,7 +1083,7 @@ void Entity::update(float dt)
 			if (dieTimer <0)
 			{
 				dieTimer = 0;
-				//safeKill();
+
 				setLife(1);
 				setDecayRate(1);
 				fadeAlphaWithLife = 1;
@@ -1220,26 +1106,8 @@ void Entity::update(float dt)
 			}
 		}
 
-		/*
-		skeletalSprite.setFreeze(false);
-		skeletalSprite.update(dt);
-		*/
 
-		/*
-		std::string bgAction;
-		if (frozenTimer > 0)
-		{
-			bgAction = currentAction;
-			currentAction = "frozen";
-		}
-		*/
 
-		/*
-		if (!bgAction.empty())
-		{
-			currentAction = bgAction;
-		}
-		*/
 	}
 
 	updateBoneLock();
@@ -1250,6 +1118,9 @@ void Entity::update(float dt)
 		vel = backupVel;
 
 	updateSoundPosition();
+
+	if(minimapIcon)
+		minimapIcon->update(dt);
 }
 
 void Entity::postUpdate(float dt)
@@ -1274,7 +1145,7 @@ bool Entity::pathBurst(bool wallJump)
 		else
 			position.data->pathTimeMultiplier = 1.5;
 		burstTimer.start(1);
-		//void pathBurst();r
+
 		return true;
 	}
 	return false;
@@ -1344,7 +1215,7 @@ void Entity::movementDetails(Vector v)
 				flipHorizontal();
 		}
 	}
-//		offset.interpolateTo(sinf(ondulateTimer)*v.getPerpendicularLeft()*32, 0.5);
+
 	if (skeletalSprite.isLoaded())
 	{
 		if (burstTimer.isActive())
@@ -1372,24 +1243,11 @@ void Entity::slowToStopPath(float t)
 bool Entity::isSlowingToStopPath()
 {
 	bool v = (slowingToStopPath > 0);
-	/*
-	if (v)
-		debugLog("isSlowingToStopPath: true");
-	*/
+
 	return v;
 }
 
-/*
-void Entity::updateAvatarRollPull(float dt)
-{
-	if (dsq->game->avatar->isRolling())
-	{
-		if (position - dsq->game->avatar->position)
-		{
-		}
-	}
-}
-*/
+
 
 bool Entity::updateCurrents(float dt)
 {
@@ -1400,7 +1258,7 @@ bool Entity::updateCurrents(float dt)
 	//if (isUnderWater())
 	// why?
 	{
-		//Path *p = dsq->game->getNearestPath(position, PATH_CURRENT);
+
 		if (!dsq->game->isWorldPaused())
 		{
 			for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
@@ -1420,11 +1278,7 @@ bool Entity::updateCurrents(float dt)
 							accum += dir;
 							c++;
 
-							/*
-							dir.setLength2D(p->currentMod);
-							vel2 += dir*dt;
-							vel2.capLength2D(p->currentMod);
-							*/
+
 						}
 					}
 				}
@@ -1474,15 +1328,10 @@ bool Entity::updateCurrents(float dt)
 		}
 		else
 		{
-			//vel2.capLength2D(cap);
+
 		}
 	}
-	/*
-	if (!inCurrent && !vel2.isZero() && !vel2.isInterpolating())
-	{
-		vel2.interpolateTo(Vector(0,0,0), 1);
-	}
-	*/
+
 	return inCurrent;
 }
 
@@ -1527,55 +1376,14 @@ bool Entity::isSittingOnInvisibleIn()
 
 	return false;
 
-	//bool invisibleIn = false;
-	////Vector f = getForward();
-	//Vector f = getNormal();
-	//TileVector t(position);
-	//float tx = float(t.x);
-	//float ty = float(t.y);
-	//float otx = float(t.x);
-	//float oty = float(t.y);
-	//
-	//for (int check = 0; check < 4; check++)
-	//{
-	//	/*
-	//	std::ostringstream os;
-	//	os << "check: " << check << " p(" << position.x <<", " << position.y << ") f(" << f.x << ", " << f.y << ") t(" << tx << ", " << ty << ") tile found: " << dsq->game->getGrid(TileVector(tx, ty));
-	//	debugLog(os.str());
-	//	*/
-	//	if (dsq->game->getGrid(TileVector(tx, ty))==OT_EMPTY)
-	//	{
-	//	}
-	//	else if (dsq->game->getGrid(TileVector(tx, ty))==OT_INVISIBLEIN)
-	//	{
-	//		invisibleIn = true;
-	//		//debugLog("invisible in!");
-	//		break;
-	//	}
-	//	else
-	//	{
-	//		//debugLog("obstruction, aborting");
-	//		break;
-	//	}
-	//	tx -= f.x;
-	//	ty -= f.y;
 
-	//	/*
-	//	tx = float(t.x) - f.x*float(check);
-	//	ty = float(t.y) - f.y*float(check);
-	//	*/
-	//}
-	//return invisibleIn;
+
 }
 
 void Entity::moveOutOfWall()
 {
-	/*
-	Vector v = getWorldCollidePosition(Vector(0,-1));
-	// HACK: is normalize necessary here? (distance of 1 presumabley)
-	Vector n = (v - position);
-	n.normalize2D();
-	*/
+
+
 	Vector n = getNormal();
 	TileVector t(position);
 	int c = 0;
@@ -1585,7 +1393,7 @@ void Entity::moveOutOfWall()
 		c++;
 		if (c > 6)
 		{
-			//debugLog("entity: " + name + " exceeded max moveOutOfWall()");
+
 			useValue = false;
 			break;
 		}
@@ -1700,12 +1508,11 @@ void Entity::onUpdate(float dt)
 		break;
 		}
 
-		//blurShaderAnim.update(dt);
+
 	}
 
 
 
-	//vel2=0;
 	Vector lastPos = position;
 
 	if (ridingOnEntity)
@@ -1718,24 +1525,20 @@ void Entity::onUpdate(float dt)
 		hair->color.x = color.x * multColor.x;
 		hair->color.y = color.y * multColor.y;
 		hair->color.z = color.z * multColor.z;
-		//hair->color = this->color;
+
 	}
 
 	if (slowingToStopPath > 0)
 	{
-		/*
-		std::ostringstream os;
-		os << "slowingToStopPath: " << slowingToStopPath;
-		debugLog(os.str());
-		*/
+
 
 		slowingToStopPathTimer += dt;
 		position.ensureData();
 		if (slowingToStopPathTimer >= slowingToStopPath)
 		{
-			// done
+
 			position.data->pathTimeMultiplier = 1;
-//			stopFollowingPath();
+
 			idle();
 			slowingToStopPath = 0;
 			slowingToStopPathTimer = 0;
@@ -1819,34 +1622,14 @@ void Entity::onUpdate(float dt)
 	if (bubble)
 		bubble->position = this->position;
 
-	/*
-	if (frozenTimer > 0)
-	{
-		frozenTimer --;
-		if (frozenTimer <= 0)
-		{
-			frozenTimer = 0;
-			popBubble();
-		}
-	}
-	*/
+
 
 	if (getState() == STATE_PUSH)
 	{
-		//vel = pushVec * this->time;
+
 		vel = pushVec;
 	}
-	/*
-	else if (this->currentAction == "freeze")
-	{
-		if (this->enqueuedAction != "freeze")
-		{
-			this->enqueuedAction = "";
-		}
-		if (canBeFrozen)
-			vel = Vector(0,0,0);
-	}
-	*/
+
 	else if (followEntity)
 	{
 		Vector lastPos = position;
@@ -1874,14 +1657,14 @@ void Entity::onUpdate(float dt)
 		Vector mov = followEntity->position + off - this->position;
 		if (mov.getSquaredLength2D() > sqr(96))
 		{
-			//following = true;
+
 			int spd = mov.getLength2D();
 			spd -= 64;
 			if (spd < 0)
 				spd = 0;
 			else if (spd < 400)
 				spd *= 2;
-				//spd /= ;
+
 			else
 				spd = 800;
 
@@ -1901,11 +1684,7 @@ void Entity::onUpdate(float dt)
 	if (stickToNaijasHead)
 	{
 		position = dsq->game->avatar->headPosition;
-		/*
-		std::ostringstream os;
-		os << "pos(" << dsq->game->avatar->headPosition.x << ", " <<dsq->game->avatar->headPosition.y << ")";
-		debugLog(os.str());
-		*/
+
 	}
 
 	updateLance(dt);
@@ -1915,14 +1694,7 @@ void Entity::updateBoneLock()
 {
 	if (boneLock.on)
 	{
-		/*
-		Vector pos = boneLock.bone->getWorldCollidePosition(boneLock.localOffset);
-		Vector bpos = boneLock.bone->getWorldPosition();
-		position = pos;
-		boneLock.wallNormal = pos - bpos;
-		boneLock.wallNormal.normalize2D();
-		rotateToVec(boneLock.wallNormal, 0.01);
-		*/
+
 
 		Vector lastPosition = position;
 
@@ -1949,36 +1721,11 @@ void Entity::updateBoneLock()
 		}
 
 
-		/*
-		Vector bpos = boneLock.bone->getWorldPosition();
-		boneLock.wallNormal = position - bpos;
-		rotateToVec(boneLock.wallNormal, 0.01);
-		*/
-
-		//debugLog("wall normal");
-
-
-
-
-		/*
-		Vector p = boneLock.bone->getWorldPosition();
-		Vector o = boneLock.localOffset;
-		position = p+o;
-
-		boneLock.wallNormal = o;
-		boneLock.wallNormal.normalize2D();
-		*/
-
-
 
 		onUpdateBoneLock();
-		/*
-		wallNormal = o;
-		wallNormal.normalize2D();
-		rotateToVec(wallNormal, 0);
-		*/
-		//position = boneLock.bone->getWorldPosition() + boneLock.localOffset;
-		//rotation = boneLock.bone->getWorldRotation();
+
+
+
 	}
 }
 
@@ -1994,7 +1741,7 @@ void Entity::idle()
 	position.stopPath();
 	perform(Entity::STATE_IDLE);
 	skeletalSprite.stopAllAnimations();
-	//skeletalSprite.animate("idle", -1, 0);
+
 	onIdle();
 
 	skeletalSprite.transitionAnimate(getIdleAnimName(), 0.3, -1);
@@ -2075,10 +1822,10 @@ Entity* Entity::getRiding()
 void Entity::attachEntity(Entity *e, Vector offset)
 {
 	attachedEntities.push_back(e);
-	//e->position - position
+
 	attachedEntitiesOffsets.push_back(offset);
 	e->attachedTo = this;
-	//dsq->game->avatar->position - avatarOffset;
+
 }
 
 void Entity::detachEntity(Entity *e)
@@ -2100,14 +1847,7 @@ void Entity::detachEntity(Entity *e)
 	}
 }
 
-//if (fabsf(rotation.z - angle) > 180)
-//{
-//	rotation.z += 360;
-//}
-/*
-if (rotation.z > 270 && angle > -45 && angle < 0)
-	angle = 360 + angle;
-*/
+
 
 void Entity::rotateToVec(Vector addVec, float time, float offsetAngle)
 {
@@ -2128,27 +1868,6 @@ void Entity::rotateToVec(Vector addVec, float time, float offsetAngle)
 		if (rotation.z >= 90 && angle <= -90)
 			rotation.z = rotation.z - 360;
 
-
-		/*
-		if (rotation.z >= 270 && angle < 90)
-		{
-			rotation.stop();
-			rotation.z -= 360;
-		}
-		if (rotation.z <= 90 && angle > 270)
-		{
-			rotation.stop();
-			rotation.z += 360;
-		}
-		*/
-
-		/*
-		if (fabsf(angle - rotation.z) > 180)
-		{
-			// something's wrong
-			rotation.z += 360;
-		}
-		*/
 
 
 		if (time == 0)
@@ -2227,15 +1946,12 @@ void Entity::push(const Vector &vec, float time, float maxSpeed, float dmg)
 			maxSpeed = this->maxSpeed;
 		}
 		this->pushMaxSpeed = maxSpeed;
-		/*
-		Vector v = vec;
-		v.setLength2D(maxSpeed);
-		*/
+
 		setState(STATE_PUSH, time);
 		pushVec = vec;
 		pushVec.z = 0;
 	}
-	//vel += pushVec;
+
 }
 
 void Entity::setMaxSpeed(float ms)
@@ -2411,7 +2127,7 @@ void Entity::onEnterState(int action)
 			sound("Gulp");
 		}
 		popBubble();
-		//dsq->game->avatar->entityDied(this);
+
 		Shot::targetDied(this);
 		if (!calledEntityDied)
 		{
@@ -2424,6 +2140,10 @@ void Entity::onEnterState(int action)
 			hair->setDecayRate(10);
 			hair->fadeAlphaWithLife = 1;
 			hair = 0;
+		}
+		if(minimapIcon)
+		{
+			minimapIcon->alpha.interpolateTo(0, 0.1f);
 		}
 
 	}
@@ -2492,43 +2212,13 @@ void Entity::onExitState(int action)
 	break;
 	}
 
-	/*
-	// this is bad, prevents DEATH
-	// try to prevent exitState from changing from deathscene
-	if (health <= 0)
-	{
-		enqueuedState = STATE_NONE;
-	}
-	*/
-	/*
-	else if (action == "freezeRecover")
-	{
-		enqueuePerform("idle", -1);
-	}
 
-	else if (action == "freeze")
-	{
-		if (nextAction == "freeze")
-		{
-		}
-		else
-		{
-			popBubble();
-			//enqueuePerform("idle", -1);
-		}
-	}
-	*/
+
 }
 
 void Entity::popBubble()
 {
-	/*
-	if (currentAction == "freeze")
-	{
-		sound("pop");
-		enqueuePerform("freezeRecover",1);
-	}
-	*/
+
 
 	if (bubble)
 	{
@@ -2542,17 +2232,7 @@ void Entity::popBubble()
 	}
 }
 
-/*
-bool Entity::onDamage(int amount, Spell *spell, Entity *attacker)
-{
-	if (bubble)
-	{
-		popBubble();
-		onDamage(1, spell, attacker);
-	}
-	return true;
-}
-*/
+
 
 bool Entity::isHit()
 {
@@ -2562,7 +2242,7 @@ bool Entity::isHit()
 bool Entity::isInvincible()
 {
 	return (invincible);
-	//|| (invincibleBreak && damageTimer.isActive())
+
 }
 
 void Entity::setInvincible(bool inv)
@@ -2613,7 +2293,7 @@ bool Entity::updateLocalWarpAreas(bool affectAvatar)
 		if (!p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];
-			if (p && n) // && core->getNestedMains() == 1
+			if (p && n)
 			{
 				if (p->warpMap.empty() && !p->warpNode.empty() && p->isCoordinateInside(position))
 				{
@@ -2669,7 +2349,7 @@ bool Entity::damage(const DamageData &dmgData)
 	DamageData d = dmgData;
 	if (d.damageType == DT_NONE)
 		return false;
-	//if () return true;
+
 	if (isEntityDead())
 	{
 		//DUPE: same as below
@@ -2682,14 +2362,10 @@ bool Entity::damage(const DamageData &dmgData)
 
 	this->multColor = Vector(1,1,1);
 	this->multColor.stop();
-	/*
-	std::ostringstream os;
-	os << "starting damage timer: " << vars->damageTime;
-	debugLog(os.str());
-	*/
+
 	if (dmgData.useTimer)
 		damageTimer.start(damageTime);
-	//3
+
 
 	//DUPE: same as above
 	//HACK: hackish
@@ -2767,32 +2443,10 @@ void Entity::clampToHit()
 	dist.setLength2D(collideRadius);
 	position = dsq->game->lastCollidePosition + dist;
 	setv(EV_CRAWLING, 1);
-	//setCrawling(true);
+
 }
 
-/*
-void Entity::damage(int amount, Spell *spell, Entity *attacker)
-{
-	//if (dsq->continuity.getWorldType() != WT_NORMAL) return;
-	if (!takeDamage) return;
-	if (isEntityDead()) return;
-	if (invincibleBreak && this->multColor.isInterpolating()) return;
-	if (onDamage(amount, spell, attacker))
-	{
-		//color = currentColor;
-		this->multColor.interpolateTo(Vector(1, 0.5, 0.5), 0.1, 3, 1);
-		health -= amount;
-		if (health <= 0)
-		{
-			if (attacker)
-				attacker->getEXP(exp);
-			health = 0;
-			entityDead = true;
-			perform(STATE_DEAD);
-		}
-	}
-}
-*/
+
 
 void Entity::doEntityAvoidance(float dt, int range, float mod, Entity *ignore)
 {
@@ -2841,24 +2495,18 @@ void Entity::render()
 		else
 			renderBorderColor = Vector(0.5,0.5,0.5);
 		renderBorder = true;
-		//errorLog("!^!^$");
+
 	}
 #endif
 
 	// HACK: need to multiply base + etc
 	skeletalSprite.setColorMult(this->color, this->alpha.x);
-	/*bool set=false;
-	if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating() && dsq->user.video.blur)
-	{
-		//swizzle
-		blurShader.setValue(color.x, color.y, color.z, blurShaderAnim.x);
-		blurShader.bind();
-		set = true;
-	}*/
+
+
 	Quad::render();
-	//if (beautyFlip && blurShader.isLoaded() && flipScale.isInterpolating())
-	//if (set)
-	//	blurShader.unbind();
+
+
+
 	renderBorder = false;
 	skeletalSprite.clearColorMult();
 	color = bcolor;
@@ -2869,7 +2517,7 @@ void Entity::doGlint(const Vector &position, const Vector &scale, const std::str
 {
 	float glintTime = 0.4;
 	Quad *glint = new Quad;
-	//glint->setBlendType(RenderObject::BLEND_ADD);
+
 	glint->setBlendType(bt);
 	glint->setTexture(tex);
 	glint->scale = Vector(0.5,0.5);
@@ -2880,7 +2528,7 @@ void Entity::doGlint(const Vector &position, const Vector &scale, const std::str
 	glint->alpha.data->path.addPathNode(1, 0.7);
 	glint->alpha.data->path.addPathNode(0, 1);
 	glint->alpha.startPath(glintTime);
-	//glint->rotation.interpolateTo(Vector(0,0,360), glintTime);
+
 	glint->rotation.z = this->rotation.z;
 	glint->setLife(glintTime);
 	glint->setDecayRate(1);
@@ -2896,27 +2544,7 @@ void Entity::doSpellAvoidance(float dt, int range, float mod)
 {
 	BBGE_PROF(Entity_doSpellAvoidance);
 	Vector accum;
-	/*
-	int c = 0;
-	for (int i = 0; i < dsq->game->spells.size(); i++)
-	{
-		Spell *s = dsq->game->spells[i];
-		if ((s->position - this->position).getSquaredLength2D() < sqr(range))
-		{
-			Vector d = this->position - s->position;
-			d.z=0;
-			d |= range - d.getLength2D();
-			accum += d;
-			c++;
-		}
-	}
-	if (accum.x != 0 || accum.y != 0)
-	{
-		accum /= c;
-		accum /= range;
-		vel += accum*getMaxSpeed()*mod;
-	}
-	*/
+
 	int c = 0;
 	for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); i++)
 	{
@@ -2956,9 +2584,10 @@ void Entity::fillGrid()
 	}
 }
 
-void Entity::assignUniqueID()
+void Entity::assignUniqueID(bool temporary)
 {
-	int id = 1;
+	const int inc = temporary ? -1 : 1;
+	int id = inc;
 	while (1)
 	{
 		bool isFree = true;
@@ -2978,7 +2607,7 @@ void Entity::assignUniqueID()
 		{
 			break;
 		}
-		id++;
+		id += inc;
 	}
 	entityID = id;
 }
@@ -2996,7 +2625,7 @@ void Entity::setID(int id)
 				std::ostringstream os;
 				os << "ID conflict between " << name << " and " << e->name;
 				debugLog(os.str());
-				e->assignUniqueID();
+				e->assignUniqueID(e->getID() < 0);
 			}
 		}
 	}
@@ -3004,14 +2633,7 @@ void Entity::setID(int id)
 
 int Entity::getID()
 {
-	/*
-	for (int i = 0; i < dsq->entities.size(); i++)
-	{
-		if (dsq->entities[i] == this)
-			return i+1;
-	}
-	return 0;
-	*/
+
 	return entityID;
 }
 
@@ -3035,15 +2657,11 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, f
 			b.setLength2D((waterBubble->rect.getWidth()*0.5f) - b.getLength2D());
 			if (b.isLength2DIn(search*TILE_SIZE))
 			{
-				/*
-				std::ostringstream os;
-				os << "b( " << b.x << ", " << b.y << ")";
-				debugLog(os.str());
-				*/
+
 				accum -= b;
 				c++;
-				//vel -= accum*getMaxSpeed()*mod;
-				//return true;
+
+
 			}
 		}
 	}
@@ -3159,4 +2777,11 @@ bool Entity::isEntityInside()
 void Entity::updateSoundPosition()
 {
 	SoundHolder::updateSoundPosition(position.x + offset.x, position.y + offset.y);
+}
+
+MinimapIcon *Entity::ensureMinimapIcon()
+{
+	if(!minimapIcon)
+		minimapIcon = new MinimapIcon;
+	return minimapIcon;
 }

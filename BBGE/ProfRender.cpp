@@ -51,22 +51,14 @@ ProfRender::ProfRender() : RenderObject()
 	cull = false;
 	alpha = 0.5;
 
-	//Prof_set_report_mode(Prof_CALL_GRAPH);
+
 }
 
 void ProfRender::onRender()
 {
-	/*
-	for (int i = 0; i < 20; i++)
-	{
-		core->print(10, 10+i*10, "ABCDEFGHIJKLMNOPQRSTUVWXYZ1234567890abcdefghijklmnopqrstuvwxyz");
-	}
-	*/
+
 #ifdef BBGE_BUILD_WINDOWS
-	/*
-	Prof_draw_gl(20, 50, 400, 400, 20, 2, prof_print, prof_width);
-	Prof_draw_graph_gl(430, 50, 2, 8);
-	*/
+
 #endif
 }
 

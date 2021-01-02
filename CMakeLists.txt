@@ -2,6 +2,7 @@ CMAKE_MINIMUM_REQUIRED(VERSION 2.6)
 PROJECT(Aquaria)
 
 INCLUDE(CheckCCompilerFlag)
+INCLUDE(CheckCXXCompilerFlag)
 INCLUDE(CheckFunctionExists)
 
 IF(NOT CMAKE_BUILD_TYPE)
@@ -46,8 +47,8 @@ SET(FREETYPE2DIR ${EXTLIBDIR}/freetype2)
 SET(FREETYPE2SRCDIR ${FREETYPE2DIR}/src)
 SET(LUADIR ${EXTLIBDIR}/lua-5.1.4)
 SET(LUASRCDIR ${LUADIR}/src)
-SET(LIBOGGDIR ${EXTLIBDIR}/libogg-1.3.0)
-SET(LIBVORBISDIR ${EXTLIBDIR}/libvorbis-1.3.3)
+SET(LIBOGGDIR ${EXTLIBDIR}/libogg)
+SET(LIBVORBISDIR ${EXTLIBDIR}/libvorbis)
 SET(ZLIBDIR ${EXTLIBDIR}/glpng/zlib)
 SET(PNGDIR ${EXTLIBDIR}/glpng/png)
 
@@ -298,14 +299,9 @@ endif(NOT(AQUARIA_EXTRA_DATA_DIR STREQUAL ""))
 
 # Aquaria/BBGE specific defines...
 
-ADD_DEFINITIONS(-DGL_GLEXT_LEGACY=1)
-ADD_DEFINITIONS(-DHAVE_PUTENV=1)
-ADD_DEFINITIONS(-DTIXML_USE_STL=1)
 ADD_DEFINITIONS(-DBBGE_SKIP_CONFIG_HEADERS=1) # if this is not defined, it will use .h files to set the necessary defines
-ADD_DEFINITIONS(-DBBGE_BUILD_SDL=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_FRAMEBUFFER=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_SHADERS=1)
-ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_OPENGL_DYNAMIC=1)
 ADD_DEFINITIONS(-DBBGE_BUILD_FMOD_OPENAL_BRIDGE=1)
 IF(AQUARIA_USE_VFS)
@@ -386,6 +382,20 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
 ENDIF(CMAKE_COMPILER_IS_GNUCC)
 
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic")
+set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -pedantic -std=gnu99")
+
+CHECK_CXX_COMPILER_FLAG("-std=gnu++11" AQUARIA_CC_HAS_GNUXX11)
+CHECK_CXX_COMPILER_FLAG("-std=gnu++1x" AQUARIA_CC_HAS_GNUXX1X)
+CHECK_CXX_COMPILER_FLAG("-std=gnu++0x" AQUARIA_CC_HAS_GNUXX0X)
+IF(AQUARIA_CC_HAS_GNUXX11)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++11")
+ELSEIF(AQUARIA_CC_HAS_GNUXX1X)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++1x")
+ELSEIF(AQUARIA_CC_HAS_GNUXX0X)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=gnu++0x")
+ENDIF(AQUARIA_CC_HAS_GNUXX11)
+
 CHECK_FUNCTION_EXISTS(strcasecmp HAVE_STRCASECMP)
 IF(HAVE_STRCASECMP)
     ADD_DEFINITIONS(-DHAVE_STRCASECMP)
@@ -454,15 +464,6 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/WorldMapTiles.cpp
 )
 
-# Apparently not used at the moment. Listed here just for completeness.
-SET(AQUARIA_SRCS_UNUSED
-    ${SRCDIR}/BoxElement.cpp
-    ${SRCDIR}/BubbleRender.cpp
-    ${SRCDIR}/FFTNotes.cpp
-    ${SRCDIR}/StarRenderer.cpp
-    ${SRCDIR}/WaterFont.cpp
-)
-
 IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
 SET_SOURCE_FILES_PROPERTIES(
     # We knowingly apply offsetof to non-POD types.
@@ -485,15 +486,12 @@ SET(BBGE_SRCS
     ${BBGEDIR}/AfterEffect.cpp
     ${BBGEDIR}/Base.cpp
     ${BBGEDIR}/BitmapFont.cpp
-    ${BBGEDIR}/Collision.cpp
     ${BBGEDIR}/Core.cpp
-    ${BBGEDIR}/Cube.cpp
     ${BBGEDIR}/DarkLayer.cpp
     ${BBGEDIR}/DebugFont.cpp
     ${BBGEDIR}/Effects.cpp
     ${BBGEDIR}/Emitter.cpp
     ${BBGEDIR}/Event.cpp
-    ${BBGEDIR}/Flags.cpp
     ${BBGEDIR}/FrameBuffer.cpp
     ${BBGEDIR}/Gradient.cpp
     ${BBGEDIR}/Joystick.cpp
@@ -560,24 +558,6 @@ SET(PNG_SRCS
     ${PNGDIR}/pngrutil.c
     ${PNGDIR}/pngset.c
     ${PNGDIR}/pngtrans.c
-)
-
-# Apparently not used at the moment. Listed here just for completeness.
-SET(BBGE_SRCS_UNUSED
-    ${BBGEDIR}/AnimatedSprite.cpp
-    ${BBGEDIR}/BloomEffect.cpp
-    ${BBGEDIR}/CShim.cpp
-    ${BBGEDIR}/Cutscene.cpp
-    ${BBGEDIR}/Datafile.cpp
-    ${BBGEDIR}/DFSprite.cpp
-    ${BBGEDIR}/FileVars.cpp
-    ${BBGEDIR}/Interpolator.cpp
-    ${BBGEDIR}/Light.cpp
-    ${BBGEDIR}/LightCone.cpp
-    ${BBGEDIR}/Model.cpp
-    ${BBGEDIR}/OggStream.cpp
-    ${BBGEDIR}/PackRead.cpp
-    ${BBGEDIR}/PointSprites.cpp
 )
 
 IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
@@ -653,7 +633,6 @@ SET(FREETYPE2_SRCS
     ${FREETYPE2SRCDIR}/base/ftsynth.c
     ${FREETYPE2SRCDIR}/base/fttype1.c
     ${FREETYPE2SRCDIR}/base/ftwinfnt.c
-    ${FREETYPE2SRCDIR}/base/ftxf86.c
     ${FREETYPE2SRCDIR}/truetype/truetype.c
     ${FREETYPE2SRCDIR}/type1/type1.c
     ${FREETYPE2SRCDIR}/cff/cff.c
@@ -690,7 +669,7 @@ ELSE(MSVC)
     ENDIF(COMPILER_HAS_NOSTRICTALIAS)
     SET_SOURCE_FILES_PROPERTIES(
         ${FREETYPE2_SRCS}
-        PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT_CONFIG_CONFIG_H='\"${FREETYPE2DIR}/include/freetype/config/ftconfig.h\"' -DFT2_BUILD_LIBRARY -DFT_CONFIG_MODULES_H='\"${FREETYPE2DIR}/include/freetype/config/ftmodule.h\"' -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H ${NOSTRICTALIAS}"
+        PROPERTIES COMPILE_FLAGS "-Wno-extended-offsetof -DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT_CONFIG_CONFIG_H='\"${FREETYPE2DIR}/include/freetype/config/ftconfig.h\"' -DFT2_BUILD_LIBRARY -DFT_CONFIG_MODULES_H='\"${FREETYPE2DIR}/include/freetype/config/ftmodule.h\"' -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H ${NOSTRICTALIAS}"
     )
 ENDIF(MSVC)
 

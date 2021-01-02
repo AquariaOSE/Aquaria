@@ -76,11 +76,12 @@ void PostProcessingFX::render()
 	{
 		if (enabled[i])
 		{
-#ifdef BBGE_BUILD_OPENGL
 			glPushMatrix();
 			FXTypes type = (FXTypes)i;
 			switch(type)
 			{
+			case FXT_MAX:
+				break;
 			case FXT_RADIALBLUR:
 
 				float windowW = core->getWindowWidth();
@@ -153,97 +154,9 @@ void PostProcessingFX::render()
 			}
 			glPopMatrix();
 
-#endif
 		}
 	}
 }
 
-/*
-GLuint		blurTexture;
-GLuint emptyTexture()											// Create An Empty Texture
-{
-	GLuint txtnumber;											// Texture ID
-	unsigned int* data;											// Stored Data
 
-	// Create Storage Space For Texture Data (128x128x4)
-	data = (unsigned int*)new GLuint[((128 * 128)* 4 * sizeof(unsigned int))];
-	ZeroMemory(data,((128 * 128)* 4 * sizeof(unsigned int)));	// Clear Storage Memory
 
-	glGenTextures(1, &txtnumber);								// Create 1 Texture
-	glBindTexture(GL_TEXTURE_2D, txtnumber);					// Bind The Texture
-	glTexImage2D(GL_TEXTURE_2D, 0, 4, 128, 128, 0,
-		GL_RGBA, GL_UNSIGNED_BYTE, data);						// Build Texture Using Information In data
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
-
-	delete [] data;												// Release data
-
-	return txtnumber;											// Return The Texture ID
-}
-
-PostProcessingFX::PostProcessingFX()
-{
-
-}
-
-void PostProcessingFX::init(FXTypes type)
-{
-	if (type == FXT_RADIALBLUR)
-	{
-		blurTexture = emptyTexture();
-	}
-	enabled[(int)type] = true;
-}
-
-void PostProcessingFX::shutdown(FXTypes type)
-{
-	enabled[int(type)] = false;
-}
-
-void PostProcessingFX::preRender()
-{
-	for (int i = 0; i < FXT_MAX; i++)
-	{
-		if (enabled[i])
-		{
-			FXTType type = (FXType)i;
-			switch(type)
-			{
-			case FXT_RADIALBLUR:
-				glViewport(0,0,128,128);									// Set Our Viewport (Match Texture Size;
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);			// Clear The Screen And Depth Buffer
-				core->render();
-				glBindTexture(GL_TEXTURE_2D,BlurTexture);					// Bind To The Blur Texture
-
-				// Copy Our ViewPort To The Blur Texture (From 0,0 To 128,128... No Border)
-				glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, 0, 0, 128, 128, 0);
-
-				glClearColor(0.0f, 0.0f, 0.5f, 0.5);						// Set The Clear Color To Medium Blue
-				glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);			// Clear The Screen And Depth Buffer
-
-				glViewport(0, 0, 800, 600);
-			break;
-			}
-		}
-	}
-}
-
-void PostProcessingFX::render()
-{
-	for (int i = 0; i < FXT_MAX; i++)
-	{
-		if (enabled[i])
-		{
-			FXTType type = (FXType)i;
-			switch(type)
-			{
-			case FXT_RADIALBLUR:
-				glBegin(GL_QUADS);
-					
-				glEnd();
-			break;
-			}
-		}
-	}
-}
-*/

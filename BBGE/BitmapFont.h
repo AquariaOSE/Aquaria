@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef BITMAPFONT_H
 #define BITMAPFONT_H
 
-//#include "DrawText.h"
+
 #include "RenderObject.h"
 #include "BaseText.h"
 

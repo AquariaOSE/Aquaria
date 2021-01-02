@@ -28,6 +28,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #undef PATH_MAX  // May be set by a system header.
 
+struct MinimapIcon;
+
 class PathNode
 {
 public:
@@ -107,11 +109,14 @@ public:
 
 	void activate(Entity *e=0);
 	void refreshScript();
+	MinimapIcon *ensureMinimapIcon();
+
 	Script *script;
 	bool updateFunction;
 	bool activateFunction;
 	bool cursorActivation;
 	int replayVox;
+	MinimapIcon *minimapIcon;
 
 	std::string warpMap, warpNode, vox, spawnEnemyName, content;
 	float amount, time;
@@ -130,7 +135,6 @@ public:
 
 	LocalWarpType localWarpType;
 
-	bool naijaHome;
 	bool catchActions;
 	bool songFunc, songNoteFunc, songNoteDoneFunc;
 	bool neverSpawned;

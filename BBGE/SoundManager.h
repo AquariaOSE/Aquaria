@@ -28,8 +28,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <set>
 #include "Vector.h"
 
-#define BBGE_BUILD_FMODEX
-
 
 #define BBGE_AUDIO_NOCHANNEL NULL
 
@@ -86,9 +84,8 @@ enum SoundLoadType
 
 struct PlaySfx
 {
-	PlaySfx() : priority(0.5), handle(0), vol(1), fade(SFT_NONE),
-		time(0), freq(1), loops(0),
-		maxdist(0), x(0), y(0), relative(true), positional(false) {}
+	PlaySfx() : handle(0), vol(1), time(0), freq(1), loops(0), priority(0.5),
+		maxdist(0), fade(SFT_NONE), x(0), y(0), relative(true), positional(false) {}
 
 	std::string name;
 	intptr_t handle;
@@ -185,19 +182,6 @@ public:
 	void pause();
 	void resume();
 
-	/*
-	void setMusVol(float v, float t=0);
-	void setSfxVol(float v, float t=0);
-	void setVoxVol(float v, float t=0);
-
-	void setMusMul(float v, float t=0);
-	void setSfxMul(float v, float t=0);
-	void setVoxMul(float v, float t=0);
-
-	float getTotalSfxVol();
-	float getTotalMusVol();
-	float getTotalVoxVol();
-	*/
 
 
 	float getVoiceTime();
@@ -258,8 +242,6 @@ private:
 
 
 extern SoundManager *sound;
-
-
 
 
 

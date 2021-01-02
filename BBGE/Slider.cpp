@@ -69,8 +69,8 @@ void Slider::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
 
-	if (alpha.x != 1) return;	
-	
+	if (alpha.x != 1) return;
+
 	bool b = (core->mouse.buttons.left || core->mouse.buttons.right) && fabsf(core->mouse.position.y-position.y) < grabRadius;
 	if (!b && inSlider)
 		inSlider = false;
@@ -111,7 +111,7 @@ void Slider::onUpdate(float dt)
 	if (inSlider)
 	{
 		slider.position.x = core->mouse.position.x - position.x + off;
-		//slider.position.interpolateTo(Vector(core->mouse.position.x - position.x), dt*2);
+
 		int w2 = sliderLength/2;
 		if (slider.position.x > w2)
 		{
@@ -177,7 +177,7 @@ void CheckBox::onUpdate(float dt)
 		{
 			if (!wasDown)
 			{
-				//debugLog("setting wasDown");
+
 				wasDown = true;
 			}
 		}
@@ -185,9 +185,9 @@ void CheckBox::onUpdate(float dt)
 		{
 			if (wasDown)
 			{
-				//debugLog("changing value");
+
 				wasDown = false;
-				if (value !=0) 
+				if (value !=0)
 				{	value = 0;	}
 				else
 				{	value= 1;	}

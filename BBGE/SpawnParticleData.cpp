@@ -62,7 +62,7 @@ SpawnParticleData::SpawnParticleData()
 	spawnArea = SPAWN_CIRCLE;
 	randomVelocityMagnitude = 0;
 	randomVelocityRange = 360;
-	//updateMultiplier = 1;
+
 	copyParentRotation = 0;
 	justOne = didOne = false;
 	flipH = flipV = 0;

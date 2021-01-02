@@ -8,10 +8,12 @@ VFS_NAMESPACE_START
 
 // Compile time assertion to make sure things work as expected
 #if defined(VFS_LARGEFILE_SUPPORT)
-static void _dummy_()
+TTVFS_UNUSED static void _dummy_()
 {
+    // Ensure vfspos is 64 bits in largefile mode.
     switch(0) { case 0:; case 4: case sizeof(vfspos): ; }
 #ifndef _MSC_VER
+    // Ensure the _FILE_OFFSET_BITS=64 setting in VFSInternal.h is effective
     switch(0) { case 0:; case 4: case sizeof(off_t): ; }
 #endif
 }

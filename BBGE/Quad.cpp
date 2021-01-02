@@ -33,15 +33,7 @@ Quad::Quad(const std::string &tex, const Vector &pos)
 	setTexture(tex);
 }
 
-/*
-void Quad::initDefaultVBO()
-{
-}
 
-void Quad::shutdownDefaultVBO()
-{
-}
-*/
 
 void Quad::setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo)
 {
@@ -67,7 +59,7 @@ void Quad::setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy,
 		createGrid(x, y);
 
 		gridTimer = 0;
-		
+
 		doUpdateGrid = true;
 	}
 }
@@ -95,10 +87,10 @@ void Quad::setStrip(const std::vector<Vector> &st)
 void Quad::createGrid(int xd, int yd)
 {
 	deleteGrid();
-	
+
 	xDivs = xd;
 	yDivs = yd;
-	
+
 	drawGrid = new Vector * [xDivs];
 	for (int i = 0; i < xDivs; i++)
 	{
@@ -108,7 +100,7 @@ void Quad::createGrid(int xd, int yd)
 			drawGrid[i][j].z = 1;
 		}
 	}
-	
+
 	resetGrid();
 }
 
@@ -166,7 +158,7 @@ void Quad::resetStrip()
 	{
 		for (int i = 0; i < strip.size(); i++)
 		{
-			//float v = (i/(float)(strip.size()-1))-0.5f;
+
 			float v = (i/(float(strip.size())));
 			strip[i].x = v;
 			strip[i].y = 0;
@@ -190,44 +182,6 @@ void Quad::resetGrid()
 	}
 }
 
-void Quad::spawnChildClone(float t)
-{
-	if (!this->texture) return;
-	Quad *q = new Quad;
-	q->setTexture(this->texture->name);
-	q->setLife(t+0.1f);
-	q->setDecayRate(1);
-	q->width = this->width;
-	q->height = this->height;
-	q->alpha = 1;
-	q->alpha.interpolateTo(0, t);
-	if (isfh())
-		q->flipHorizontal();
-	q->position = this->position;
-	q->followCamera = this->followCamera;
-	q->scale = this->scale;
-	q->offset = this->offset;
-	q->blendType = this->blendType;
-
-	//q->parentManagedPointer = true;
-	//q->renderBeforeParent = false;
-	core->getTopStateData()->addRenderObject(q, this->layer);
-	//addChild(q);
-}
-/*
-smoothly transition to texture
-by creating a copy of the current quad on top and fading it out
-*/
-void Quad::setTextureSmooth(const std::string &texture, float t)
-{
-	if (this->texture && !this->texture->name.empty())
-	{
-		spawnChildClone(t);
-		//core->getTopStateData()->addRenderObject(q, this->layer);
-	}
-	this->setTexture(texture);
-}
-
 void Quad::initQuad()
 {
 	repeatToFillScale = Vector(1,1);
@@ -235,39 +189,37 @@ void Quad::initQuad()
 	gridTimer = 0;
 	xDivs = 0;
 	yDivs = 0;
-	
+
 	doUpdateGrid = false;
 
 	autoWidth = autoHeight = 0;
 
-	//debugLog("Quad::initQuad()");
+
 
 	repeatingTextureToFill = false;
-	
+
 	drawGrid = 0;
 
 	renderBorder = false;
 	renderCenter = true;
 	width = 2; height = 2;
-	//llalpha = Vector(1);
-	//lralpha = Vector(1);
-	//ulalpha = Vector(1);
-	//uralpha = Vector(1);
-	//oriented = false;
+
+
+
 	upperLeftTextureCoordinates = Vector(0,0);
 	lowerRightTextureCoordinates = Vector(1,1);
 	renderQuad = true;
-	//debugLog("End Quad::initQuad()");
+
 }
 
 Quad::Quad() : RenderObject()
 {
 	addType(SCO_QUAD);
 	borderAlpha = 0.5;
-	//debugLog("Quad::Quad()");
+
 	initQuad();
-	//debugLog("End Quad::Quad()");
-	//textureSize = Vector(1,1);
+
+
 }
 
 void Quad::deleteGrid()
@@ -349,7 +301,7 @@ bool Quad::isCoordinateInsideWorldRect(const Vector &coord, int w, int h)
 
 void Quad::updateGrid(float dt)
 {
-	//if (xDivs == 0 && yDivs == 0) return;
+
 	if (!doUpdateGrid) return;
 
 	if (gridType == GRID_WAVY)
@@ -385,7 +337,6 @@ void Quad::renderGrid()
 	if (xDivs < 2 || yDivs < 2)
 		return;
 
-#ifdef BBGE_BUILD_OPENGL
 	const float percentX = fabsf(this->lowerRightTextureCoordinates.x - this->upperLeftTextureCoordinates.x);
 	const float percentY = fabsf(this->upperLeftTextureCoordinates.y - this->lowerRightTextureCoordinates.y);
 
@@ -411,10 +362,7 @@ void Quad::renderGrid()
 	const float blue  = this->color.z;
 	const float alpha = this->alpha.x * this->alphaMod;
 
-	/*
-	glDisable(GL_BLEND);
-	glDisable(GL_CULL_FACE);
-	*/
+
 	glBegin(GL_QUADS);
 	float u0 = baseX;
 	float u1 = u0 + incX;
@@ -429,26 +377,26 @@ void Quad::renderGrid()
 
 				glColor4f(red, green, blue, alpha*drawGrid[i][j].z);
 				glTexCoord2f(u0, v0);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u0-baseX, v0-baseY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0);
+
+
 				glVertex2f(w*drawGrid[i][j].x,		h*drawGrid[i][j].y);
-				//
+
 				glColor4f(red, green, blue, alpha*drawGrid[i][j+1].z);
 				glTexCoord2f(u0, v1);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u0-baseX, v1-baseY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,(float)(screenHeight/(yDivs-1))/16);
+
+
 				glVertex2f(w*drawGrid[i][j+1].x,		h*drawGrid[i][j+1].y);
-				//
+
 				glColor4f(red, green, blue, alpha*drawGrid[i+1][j+1].z);
 				glTexCoord2f(u1, v1);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u1-baseX, v1-baseY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,(float)(screenHeight/(yDivs-1))/16);
+
+
 				glVertex2f(w*drawGrid[i+1][j+1].x,	h*drawGrid[i+1][j+1].y);
-				//
+
 				glColor4f(red, green, blue, alpha*drawGrid[i+1][j].z);
 				glTexCoord2f(u1, v0);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB, u1-baseX, v0-baseY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,0);
+
+
 				glVertex2f(w*drawGrid[i+1][j].x,		h*drawGrid[i+1][j].y);
 			}
 		}
@@ -476,7 +424,6 @@ void Quad::renderGrid()
 		if (texture)
 			glBindTexture(GL_TEXTURE_2D, texture->textures[0]);
 	}
-#endif
 }
 
 void Quad::repeatTextureToFill(bool on)
@@ -491,15 +438,14 @@ void Quad::onRender()
 {
 	if (!renderQuad) return;
 
-#ifdef BBGE_BUILD_OPENGL
 
 	float _w2 = width/2.0f;
 	float _h2 = height/2.0f;
 
 	if (!strip.empty())
 	{
-		//glDisable(GL_BLEND);gggg
-		//glDisable(GL_CULL_FACE);
+
+
 
 		const float texBits = 1.0f / (strip.size()-1);
 
@@ -517,7 +463,7 @@ void Quad::onRender()
 		}
 		glEnd();
 
-		//glEnable(GL_CULL_FACE);
+
 		glBindTexture( GL_TEXTURE_2D, 0 );
 		glColor4f(1,0,0,1);
 		glPointSize(64);
@@ -585,123 +531,6 @@ void Quad::onRender()
 		RenderObject::lastTextureApplied = 0;
 	}
 
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	//core->setColor(color.x, color.y, color.z, alpha.x);
-	//if (!children.empty() || useDXTransform)
-	if (true)
-	{
-		if (this->texture)
-		{
-			if (upperLeftTextureCoordinates.x != 0 || upperLeftTextureCoordinates.y != 0
-				|| lowerRightTextureCoordinates.x != 1 || lowerRightTextureCoordinates.y != 1)
-			{
-				//core->blitD3DEx(this->texture->d3dTexture, fontDrawSize/2, fontDrawSize/2, u, v-ybit, u+xbit, v+ybit-ybit);
-				core->blitD3DEx(this->texture->d3dTexture, width, height, upperLeftTextureCoordinates.x, upperLeftTextureCoordinates.y, lowerRightTextureCoordinates.x, lowerRightTextureCoordinates.y);
-			}
-			else
-				core->blitD3D(this->texture->d3dTexture, width, height);
-		}
-		else
-		{
-			core->blitD3D(0, width, height);
-		}
-	}
-	else
-	{
-		if (this->texture)
-			core->blitD3DPreTrans(this->texture->d3dTexture, position.x+offset.x, position.y+offset.y, width*scale.x, width.y*scale.y);
-		else
-			core->blitD3DPreTrans(0, position.x+offset.x, position.y+offset.y, width*scale.x, width.y*scale.y);
-	}
-
-	/*
-	if (this->texture)
-	{
-		core->getD3DSprite()->Begin(D3DXSPRITE_ALPHABLEND);
-		D3DXVECTOR2 scaling((1.0f/float(this->texture->width))*width*scale.x,
-			(1.0f/float(this->texture->height))*height*scale.y);
-		if (isfh())
-			scaling.x = -scaling.x;
-		D3DXVECTOR2 spriteCentre=D3DXVECTOR2((this->texture->width/2), (this->texture->height/2));
-		///scale.x
-		//D3DXVECTOR2 trans=D3DXVECTOR2(position.x, position.y);
-
-
-		if (blendType == BLEND_DEFAULT)
-		{
-			core->getD3DDevice()->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
-			core->getD3DDevice()->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_INVSRCALPHA );
-		}
-		else
-		{
-			core->getD3DDevice()->SetRenderState( D3DRS_SRCBLEND, D3DBLEND_SRCALPHA );
-			core->getD3DDevice()->SetRenderState( D3DRS_DESTBLEND, D3DBLEND_ONE );
-		}
-
-		D3DXVECTOR2 rotationCentre = spriteCentre;
-		D3DXVECTOR2 trans=D3DXVECTOR2(position.x,position.y) - spriteCentre;
-		if (followCamera != 1)
-		{
-			trans.x -= core->cameraPos.x;
-			trans.y -= core->cameraPos.y;
-		}
-		D3DXMATRIX mat, scale, final;
-		//D3DXVECTOR2 centre = trans + spriteCentre;
-		float rotation = (this->rotation.z*PI)/180.0f;
-		//D3DXVECTOR2 scaling((1.0f/float(this->texture->width))*width*scale.x,(1.0f/float(this->texture->height))*height*scale.y);
-
-		//D3DXVECTOR2 scaling(1,1);
-		const D3DCOLOR d3dColor=D3DCOLOR_ARGB(int(alpha.x*255), int(color.x*255), int(color.y*255), int(color.z*255));
-		//const D3DCOLOR d3dColor=D3DCOLOR_ARGB(int(alpha.x*255), int(color.x*255), int(color.y*255), int(color.z*255));
-		FLOAT scalingRotation = 0;
-		//D3DXMatrixTransformation2D(&mat,NULL,0.0,&scaling,&spriteCentre,rotation,&trans);
-		D3DXMatrixTransformation2D(&mat,
-			&spriteCentre,
-			scalingRotation,
-			&scaling,
-			&spriteCentre,
-			rotation,
-			&trans
-		);
-
-		if (followCamera != 1)
-		{
-			D3DXMatrixScaling(&scale,core->globalScale.x*core->globalResolutionScale.x,core->globalScale.y*core->globalResolutionScale.y,1);
-			D3DXMatrixMultiply(&final, &mat, &scale);
-
-			core->getD3DSprite()->SetTransform(&final);
-		}
-		else
-		{
-			D3DXMatrixScaling(&scale,core->globalResolutionScale.x,core->globalResolutionScale.y,1);
-			D3DXMatrixMultiply(&final, &mat, &scale);
-			core->getD3DSprite()->SetTransform(&final);
-		}
-
-
-		//mat = scale * mat;
-
-		if (this->texture)
-		{
-			core->getD3DSprite()->Draw(this->texture->d3dTexture,NULL,NULL,NULL,d3dColor);//0xFFFFFFFF);//d3dColor);
-			core->getD3DSprite()->End();
-		}
-		else
-		{
-			core->getD3DSprite()->End();
-			D3DRECT rect;
-			rect.x1 = trans.x - this->width/2;
-			rect.x2 = trans.x + this->width/2;
-			rect.y1 = trans.y - this->height/2;
-			rect.y2 = trans.y + this->height/2;
-			core->getD3DDevice()->Clear(1,&rect,D3DCLEAR_TARGET,d3dColor,0,0);
-		}
-		//core->getD3DSprite()->End();
-	}
-	*/
-
-#endif
 }
 
 

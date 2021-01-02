@@ -132,10 +132,9 @@ void DebugFont::onRender()
 {
 	const float vspc = 1.5;
 
-#ifdef BBGE_BUILD_OPENGL
 	for (int i = 0; i < lines.size(); i++)
 	{
-		//float width = (lines[i].size()-1) * fontDrawSize * 1.4f * 0.75f;
+
 		float width = (lines[i].size()) * fontDrawSize * 1.4f * 0.75f;
 		if (align == ALIGN_CENTER)
 		{
@@ -152,7 +151,6 @@ void DebugFont::onRender()
 			glTranslatef(width*0.5f, 0, 0);
 		}
 	}
-#endif
 }
 
 void DebugFont::setAlign(Align align)
@@ -164,7 +162,12 @@ void DebugFont::setAlign(Align align)
 #include "../BBGE/Quad.h"
 
 DebugButton::DebugButton(int buttonID, DebugButtonReceiver *receiver, int bgWidth, int fsize, bool quitMain)
- : RenderObject(), label(0), highlight(0), quitMain(quitMain), receiver(receiver), buttonID(buttonID)
+	: RenderObject()
+	, label(0)
+	, quitMain(quitMain)
+	, buttonID(buttonID)
+	, highlight(0)
+	, receiver(receiver)
 {
 	if (bgWidth == 0)
 		bgWidth = 150;

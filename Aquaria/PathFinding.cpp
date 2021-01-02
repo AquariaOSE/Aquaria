@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class SearchGridRaw
 {
 public:
-	SearchGridRaw(ObsType blocking) : game(dsq->game), blockingObsBits(blocking) {}
+	SearchGridRaw(ObsType blocking) : blockingObsBits(blocking), game(dsq->game) {}
 	inline bool operator()(unsigned x, unsigned y) const
 	{
 		return (game->getGridRaw(TileVector(x, y)) & blockingObsBits) == OT_EMPTY;
@@ -58,7 +58,7 @@ void PathFinding::forceMinimumPath(VectorPath &path, const Vector &start, const 
 {
 	if (path.getNumPathNodes() <= 2)
 	{
-		//debugLog(" Path is <= 2 nodes... setting up simple path");
+
 		path.clear();
 		path.addPathNode(start, 0);
 		path.addPathNode(dest, 1);
@@ -79,8 +79,7 @@ void PathFinding::molestPath(VectorPath &path)
 	{
 		Vector node = path.getPathNode(i)->value;
 		float dist;
-		int sample = 20;
-		float maxDist = sample * TILE_SIZE;
+		const int sample = 20;
 		{
 			Vector n = dsq->game->getWallNormal(node, sample, &dist);
 			if (dist != -1 && (n.x != 0 || n.y != 0))
@@ -105,7 +104,7 @@ void PathFinding::molestPath(VectorPath &path)
 			}
 		}
 	}
-	
+
 	// use wall normal to push out node a bit
 	std::vector<Vector> newNormals;
 	newNormals.resize(normals.size());
@@ -210,18 +209,19 @@ void PathFinding::beginFindPath(PathFinding::State *state, const Vector& start, 
 		obs = OT_BLOCKING;
 
 	state->grid.blockingObsBits = (ObsType)obs;
-	JPS::Position istart = JPS::Pos(start.x, start.y);
-	JPS::Position iend = JPS::Pos(end.x, end.y);
+	TileVector tstart(start);
+	TileVector tend(end);
+	JPS::Position istart = JPS::Pos(tstart.x, tstart.y);
+	JPS::Position iend = JPS::Pos(tend.x, tend.y);
 	state->result = state->searcher.findPathInit(istart, iend);
 }
 
 bool PathFinding::updateFindPath(PathFinding::State *state, int limit)
 {
-	int oldres = state->result;
-	if(oldres == JPS::NEED_MORE_STEPS)
+	if(state->result == JPS::NEED_MORE_STEPS)
 	{
 		state->result = state->searcher.findPathStep(limit);
-		return oldres != state->result;
+		return state->result != JPS::NEED_MORE_STEPS;
 	}
 	return true; // done
 }
@@ -229,13 +229,18 @@ bool PathFinding::updateFindPath(PathFinding::State *state, int limit)
 bool PathFinding::finishFindPath(PathFinding::State *state, VectorPath& path, unsigned step /* = 0 */)
 {
 	if(state->result != JPS::FOUND_PATH)
-		return false;
+		return state->result == JPS::EMPTY_PATH;
 
 	JPS::PathVector rawpath;
 	state->searcher.findPathFinish(rawpath, step);
 	generateVectorPath(rawpath, path, 0, 0);
 	molestPath(path);
 	return true;
+}
+
+void PathFinding::purgeFindPath(PathFinding::State *state)
+{
+	state->searcher.freeMemory();
 }
 
 void PathFinding::getStats(PathFinding::State *state, unsigned& stepsDone, unsigned& nodesExpanded)

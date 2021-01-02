@@ -36,7 +36,7 @@ public:
 	int getLayer();
 	int getRenderLayer();
 	bool isUsed();
-	
+
 	void unloadDevice();
 	void reloadDevice();
 
@@ -47,8 +47,8 @@ protected:
 	int quality;
 	bool active;
 	int layer, renderLayer;
-	
-	
+
+
 	GLuint texture;
 	GLuint format;
 };

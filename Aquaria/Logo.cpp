@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 void Logo::JumpTitle::act()
 {
-	//dsq->title();
+
 }
 
 Logo::Logo() : StateObject()
@@ -36,25 +36,8 @@ void Logo::applyState()
 
 
 	core->setClearColor(Vector(1,1,1));
-	//glClearColor(1,1,1,0);
 
 
-	//core->enable2D(800);
-
-	/*
-	Quad *q = new Quad;
-	{
-		q->setTexture("zs");
-		q->width=800;
-		q->height=100;
-		q->position = Vector(400,300);
-		q->alpha = 0;
-		q->alpha.interpolateTo(1, 3, 0);
-	}
-	addRenderObject(q);
-
-	addAction(&jumpTitle, MOUSE_BUTTON_LEFT, 1);
-	*/
 
 	Quad *q = new Quad;
 	{

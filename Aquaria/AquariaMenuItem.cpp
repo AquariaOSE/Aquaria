@@ -77,7 +77,7 @@ void AquariaGuiElement::setCanDirMove(bool on)
 void AquariaGuiElement::setFocus(bool v)
 {
 	hasFocus = v;
-	
+
 	if (v)
 	{
 		currentFocus = this;
@@ -100,17 +100,11 @@ void AquariaGuiElement::setFocus(bool v)
 
 void AquariaGuiElement::updateMovement(float dt)
 {
-	//debugLog("in update movement");
+
 	if (hasFocus && isGuiVisible() && canDirMove && canDirMoveGlobal && hasInput())
 	{
-		//debugLog("has focus");
-		/*
-		if (alpha.x <= 0 || alphaMod <= 0)
-		{
-			setFocus(false);
-			return;
-		}
-		*/
+
+
 
 		if (guiMoveTimer > 0)
 		{
@@ -162,14 +156,13 @@ void AquariaGuiElement::updateMovement(float dt)
 				if (gui)
 				{
 					gui->setFocus(true);
-					//this->setFocus(false);
 
-					
+
 
 					guiMoveTimer = moveDelay;
 				}
 			}
-			
+
 			if (!gui)
 			{
 				debugLog("updating closest");
@@ -461,21 +454,12 @@ AquariaKeyConfig::AquariaKeyConfig(const std::string &actionInputName, InputSetT
 	bg->alphaMod = 0;
 	addChild(bg, PM_POINTER);
 
-	/*
-	label = new BitmapText(&dsq->smallFont);
-	label->setText("KeyConfig");
-	label->parentManagedPointer = 1;
-	label->position = Vector(0, -10);
-	label->scale = Vector(0.8, 0.8);
-	addChild(label);
-	*/
 
-	//keyConfigFont = new DebugFont(6, "keyConfig");
 
 	keyConfigFont = new TTFText(&dsq->fontArialSmallest);
 
 	keyConfigFont->setAlign(ALIGN_CENTER);
-	//keyConfigFont->position = Vector(0, -10);
+
 	addChild(keyConfigFont, PM_POINTER);
 
 
@@ -523,16 +507,7 @@ void AquariaKeyConfig::toggleEnterKey(int on)
 		bg->alphaMod = 0.5;
 		bg->color = Vector(0.5, 0.5, 0.5);
 	}
-	/*
-	if (on)
-	{
-		label->scale = Vector(2, 2);
-	}
-	else
-	{
-		label->scale = Vector(1, 1);
-	}
-	*/
+
 }
 
 void AquariaKeyConfig::setLock(int lock)
@@ -546,9 +521,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 	if (inLoop) return;
 
-	
 
-	
 
 	AquariaGuiElement::updateMovement(dt);
 
@@ -562,7 +535,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 	int *k = 0;
 
 	ActionInput *ai = 0;
-	
+
 	if (inputSetType != INPUTSET_OTHER)
 	{
 		ai = dsq->user.control.actionSet.getActionInputByName(actionInputName);
@@ -640,15 +613,8 @@ void AquariaKeyConfig::onUpdate(float dt)
 					{
 						if (i != KEY_ESCAPE)
 						{
-							/*
-							if (i == KEY_DELETE || i == KEY_BACKSPACE)
-							else
-							{
-							*/
-							/*
-							if (i == KEY_0 || i == KEY_1 || i == KEY_2 || i == KEY_3 || i == KEY_4 || i == KEY_5 || i == KEY_6 || i == KEY_7
-								|| i == KEY_8 || i == KEY_9)
-							*/
+
+
 							if (i >= KEY_0 && i <= KEY_9)
 							{
 								*value = i-KEY_0;
@@ -714,7 +680,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 					if (dsq->game->getKeyState(i))
 					{
 						*k = i;
-						
+
 						while (dsq->game->getKeyState(i))
 						{
 							dsq->main(0.1);
@@ -728,6 +694,8 @@ void AquariaKeyConfig::onUpdate(float dt)
 				}
 			}
 		}
+		break;
+		case INPUTSET_NONE:
 		break;
 		}
 	}
@@ -745,11 +713,11 @@ void AquariaKeyConfig::onUpdate(float dt)
 		}
 
 
-		if (!keyDown && (core->mouse.buttons.left || core->mouse.buttons.right/* || core->getKeyState(KEY_RETURN)*/))
+		if (!keyDown && (core->mouse.buttons.left || core->mouse.buttons.right))
 		{
 			keyDown = true;
 		}
-		else if (keyDown && (!core->mouse.buttons.left && !core->mouse.buttons.right /*&& !core->getKeyState(KEY_RETURN)*/))
+		else if (keyDown && (!core->mouse.buttons.left && !core->mouse.buttons.right ))
 		{
 			keyDown = false;
 
@@ -805,18 +773,15 @@ AquariaMenuItem::AquariaMenuItem() : Quad(), ActionMapper(), AquariaGuiElement()
 	glowFont->position = Vector(0, -sz/2, 0);
 	glowFont->setBlendType(BLEND_ADD);
 	glowFont->alpha = 0;
-	//glowFont->scale.interpolateTo(Vector(1.1,1.1), 0.5, -1, 1, 1);
+
 	addChild(glowFont, PM_POINTER, RBP_OFF);
 
-	//setTexture("bubble");
-	//this->shareAlphaWithChildren = true;
+
+
 	width = 0;
 	height = 0;
 	highlighted = false;
-	/*
-	width = 256;
-	height = 64;
-	*/
+
 	cull = false;
 	followCamera = 1;
 	addAction(MakeFunctionEvent(AquariaMenuItem, onClick), ActionMapper::MOUSE_BUTTON_LEFT, 0);
@@ -887,10 +852,9 @@ void AquariaMenuItem::onClick()
 			dsq->playMenuSelectSfx();
 
 		event.call();
-		
-		//glowFont->scale.interpolateTo(Vector(4,4), 0.5, 1, 1);
-		//glowFont->alpha.interpolateTo(0, 0.5);
-		//scale.interpolateTo(Vector(4, 4), 3);
+
+
+
 	}
 }
 
@@ -899,7 +863,7 @@ void AquariaMenuItem::setLabel(const std::string &label)
 	font->setText(label);
 	glowFont->setText(label);
 }
- 
+
 void AquariaMenuItem::toggleHighlight(bool state)
 {
 	highlighted = state;
@@ -913,7 +877,7 @@ void AquariaMenuItem::toggleHighlight(bool state)
 		{
 			glowFont->alpha.interpolateTo(0.3, 0.2);
 		}
-		//scale.interpolateTo(Vector(1.1, 1.1), 0.2);
+
 	}
 	else
 	{
@@ -922,11 +886,11 @@ void AquariaMenuItem::toggleHighlight(bool state)
 		else
 			glowFont->alpha.interpolateTo(0, 0.2);
 	}
-		//scale.interpolateTo(Vector(1,1), 0.2);
+
 }
 
 void AquariaMenuItem::onUpdate(float dt)
-{	
+{
 	AquariaGuiElement::updateMovement(dt);
 
 	if (font)
@@ -951,16 +915,13 @@ void AquariaMenuItem::onUpdate(float dt)
 		quad->alpha.x = alpha.x;
 	}
 
-	/*
-	font->position = this->position;
-	font->alpha = this->alpha;
-	*/
+
 	if (hasInput())
 	{
 		if (alpha.x == 1)
 		{
 			bool on = true;
-			
+
 
 			if (isCursorInMenuItem())
 			{
@@ -969,9 +930,9 @@ void AquariaMenuItem::onUpdate(float dt)
 			}
 			else
 				on = false;
-			
+
 			if (!on && highlighted)
-				toggleHighlight(false);	
+				toggleHighlight(false);
 		}
 		else
 		{

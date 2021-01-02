@@ -10,3 +10,7 @@ add_library(ttvfs_cfileapi ${cfileapi_SRC})
 
 target_link_libraries(ttvfs_cfileapi ttvfs)
 
+install(TARGETS ttvfs_cfileapi DESTINATION lib)
+
+install(DIRECTORY ./ DESTINATION include/ttvfs
+    FILES_MATCHING PATTERN "*.h")

@@ -40,10 +40,11 @@
 			/>
 			<Tool
 				Name="VCCLCompilerTool"
+				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.3.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.3\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;VFS_ENABLE_C_API=1"
-				MinimalRebuild="true"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;VFS_ENABLE_C_API=1"
+				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
 				EnableFunctionLevelLinking="true"
@@ -115,7 +116,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg-1.3.0\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis-1.3.3\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;_HAS_EXCEPTIONS=0;VFS_ENABLE_C_API=1"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -187,6 +188,10 @@
 			</File>
 			<File
 				RelativePath="..\..\ExternalLibs\minihttp.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\minipstdint.h"
 				>
 			</File>
 			<Filter
@@ -457,11 +462,11 @@
 				Name="libogg"
 				>
 				<File
-					RelativePath="..\..\ExternalLibs\libogg-1.3.0\src\bitwise.c"
+					RelativePath="..\..\ExternalLibs\libogg\src\bitwise.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libogg-1.3.0\src\framing.c"
+					RelativePath="..\..\ExternalLibs\libogg\src\framing.c"
 					>
 				</File>
 			</Filter>
@@ -469,167 +474,167 @@
 				Name="libvorbis"
 				>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\analysis.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\analysis.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\backends.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\backends.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\bitrate.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\bitrate.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\bitrate.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\bitrate.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\block.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\block.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\codebook.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\codebook.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\codebook.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\codebook.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\codec_internal.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\codec_internal.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\envelope.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\envelope.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\envelope.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\envelope.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\floor0.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\floor0.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\floor1.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\floor1.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\highlevel.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\highlevel.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\info.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\info.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\lookup.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\lookup.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\lookup.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\lookup.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\lookup_data.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\lookup_data.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\lpc.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\lpc.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\lpc.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\lpc.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\lsp.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\lsp.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\lsp.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\lsp.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\mapping0.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\mapping0.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\masking.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\masking.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\mdct.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\mdct.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\mdct.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\mdct.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\misc.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\misc.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\os.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\os.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\psy.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\psy.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\psy.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\psy.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\registry.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\registry.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\registry.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\registry.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\res0.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\res0.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\scales.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\scales.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\sharedbook.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\sharedbook.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\smallft.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\smallft.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\smallft.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\smallft.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\synthesis.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\synthesis.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\vorbisenc.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\vorbisenc.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\vorbisfile.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\vorbisfile.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\window.c"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\window.c"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\lib\window.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\lib\window.h"
 					>
 				</File>
 			</Filter>
@@ -750,10 +755,6 @@
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\freetype2\src\base\ftwinfnt.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\freetype2\src\base\ftxf86.c"
 					>
 				</File>
 				<File
@@ -1367,15 +1368,15 @@
 				Name="libvorbis"
 				>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\include\vorbis\codec.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\include\vorbis\codec.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\include\vorbis\vorbisenc.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\include\vorbis\vorbisenc.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libvorbis-1.3.3\include\vorbis\vorbisfile.h"
+					RelativePath="..\..\ExternalLibs\libvorbis\include\vorbis\vorbisfile.h"
 					>
 				</File>
 			</Filter>
@@ -1383,11 +1384,11 @@
 				Name="libogg"
 				>
 				<File
-					RelativePath="..\..\ExternalLibs\libogg-1.3.0\include\ogg\ogg.h"
+					RelativePath="..\..\ExternalLibs\libogg\include\ogg\ogg.h"
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\libogg-1.3.0\include\ogg\os_types.h"
+					RelativePath="..\..\ExternalLibs\libogg\include\ogg\os_types.h"
 					>
 				</File>
 			</Filter>

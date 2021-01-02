@@ -32,7 +32,6 @@ Path::Path()
 	pathShape = PATHSHAPE_RECT;
 	toFlip = -1;
 	replayVox = 0;
-	naijaHome = false;
 	addEmitter = false;
 	emitter = 0;
 	active = true;
@@ -55,6 +54,7 @@ Path::Path()
 	spiritFreeze = true;
 	pauseFreeze = true;
 	activationRange = 800;
+	minimapIcon = 0;
 }
 
 void Path::clampPosition(Vector *pos, float radius)
@@ -207,6 +207,9 @@ int Path::getDown()
 
 void Path::destroy()
 {
+	delete minimapIcon;
+	minimapIcon = NULL;
+
 	if (emitter)
 	{
 		emitter->safeKill();
@@ -346,6 +349,11 @@ void Path::refreshScript()
 	else if (label == "cook")
 	{
 		pathType = PATH_COOK;
+		ensureMinimapIcon();
+		minimapIcon->setTexture("gui/icon-food");
+		minimapIcon->size = Vector(16, 16);
+		minimapIcon->scaleWithDistance = false;
+		minimapIcon->throbMult = 0.0f;
 	}
 	else if (label == "zoom")
 	{
@@ -371,6 +379,10 @@ void Path::refreshScript()
 	else if (label == "savepoint")
 	{
 		pathType = PATH_SAVEPOINT;
+		ensureMinimapIcon();
+		minimapIcon->setTexture("gui/minimap/ripple");
+		minimapIcon->color = Vector(1, 0, 0);
+		minimapIcon->alpha = 0.75f;
 	}
 	else if (label == "steam")
 	{
@@ -379,7 +391,7 @@ void Path::refreshScript()
 		std::string dummy;
 		is >> dummy;
 
-		float v = 0; 
+		float v = 0;
 		is >> v;
 		if (v != 0)
 			currentMod = v;
@@ -405,6 +417,10 @@ void Path::refreshScript()
 		else if (type == "out")
 			localWarpType = LOCALWARP_OUT;
 		pathType = PATH_WARP;
+
+		ensureMinimapIcon();
+		minimapIcon->setTexture("gui/minimap/ripple");
+		minimapIcon->alpha = 0.75f;
 	}
 	else if (label == "vox" || label == "voice")
 	{
@@ -422,10 +438,12 @@ void Path::refreshScript()
 		// warpType is just char, which does not automatically skip spaces like strings would
 		warpType = warpTypeStr.length() ? warpTypeStr[0] : 0;
 
+		ensureMinimapIcon();
+		minimapIcon->setTexture("gui/minimap/ripple");
+		minimapIcon->alpha = 0.75f;
 		if (warpMap.find("vedha")!=std::string::npos)
-		{
-			naijaHome = true;
-		}
+			minimapIcon->color = Vector(1.0f, 0.9f, 0.2f);
+
 		pathType = PATH_WARP;
 	}
 	else if (label == "se")
@@ -436,20 +454,15 @@ void Path::refreshScript()
 		spawnEnemyDistance = 0;
 		is >> dummy >> spawnEnemyName >> spawnEnemyDistance >> spawnEnemyNumber;
 		neverSpawned = true;
-		/*
-		if (!spawnedEntity && !nodes.empty())
-		{
-			spawnedEntity = dsq->game->createEntity(spawnEnemyName, 0, nodes[0].position, 0, false, "");
-		}
-		*/
+
 	}
 	else if (label == "pe")
 	{
 		std::string dummy, particleEffect;
 		SimpleIStringStream is(name);
 		is >> dummy >> particleEffect;
-		//core->removeRenderObject(&emitter, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-		//core->getTopStateData()->addRenderObject(&emitter, LR_PARTICLES);
+
+
 
 		setEmitter(particleEffect);
 	}
@@ -489,6 +502,9 @@ void Path::init()
 
 void Path::update(float dt)
 {
+	if(minimapIcon)
+		minimapIcon->update(dt);
+
 	if (!(pauseFreeze && dsq->game->isPaused()) && !(spiritFreeze && dsq->game->isWorldPaused()))
 	{
 		if (addEmitter && emitter)
@@ -531,10 +547,7 @@ void Path::update(float dt)
 		if (pathType == PATH_CURRENT && !dsq->game->isWorldPaused())
 		{
 			animOffset -= currentMod*(dt/830);
-			/*
-			while (animOffset < -1.0f)
-				animOffset += 1.0f;
-			*/
+
 		}
 		if (pathType == PATH_GEM && dsq->game->avatar)
 		{
@@ -574,18 +587,12 @@ void Path::update(float dt)
 				Vector start = nodes[0].position;
 				Vector end = nodes[1].position;
 				Vector v = end - start;
-				Vector left = v.getPerpendicularLeft();
-				Vector right = v.getPerpendicularRight();
-				Vector mid = (end-start) + start;
 				FOR_ENTITIES(i)
 				{
 					Entity *e = *i;
 					if (e)
 					{
-						/*
-						if (e->getEntityType() == ET_AVATAR && dsq->continuity.form == FORM_SPIRIT)
-							continue;
-						*/
+
 						if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.5f))
 						{
 							if (e->getEntityType() == ET_AVATAR)
@@ -600,24 +607,13 @@ void Path::update(float dt)
 								d.damage = 0.1;
 								d.damageType = DT_STEAM;
 								e->damage(d);
-								//a->position = a->lastPosition;
+
 							}
 							Vector push;
 
 							push = e->position - dsq->game->lastCollidePosition;
 
-							// old method:
-							/*
-							int d1 = ((mid + left)-e->position).getSquaredLength2D();
-							if (((mid + right)-e->position).getSquaredLength2D() < d1)
-							{
-								push = right;
-							}
-							else
-							{
-								push = left;
-							}
-							*/
+
 
 							push.setLength2D(1000*dt);
 							if (e->vel2.isLength2DIn(1000) && !e->isNearObstruction(3))
@@ -629,11 +625,7 @@ void Path::update(float dt)
 							if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.25f))
 							{
 								push.setLength2D(100);
-								/*
-								Vector oldVel = e->vel;
-								Vector nvel = v;
-								nvel.setLength2D(e->vel);
-								*/
+
 								e->vel = 0;
 								e->vel += push;
 							}
@@ -730,4 +722,11 @@ int Path::messageVariadic(lua_State *L, int nparams)
 void Path::luaDebugMsg(const std::string &func, const std::string &msg)
 {
 	debugLog("luaScriptError: Path [" + name + "]: " + func + " : " + msg);
+}
+
+MinimapIcon *Path::ensureMinimapIcon()
+{
+	if(!minimapIcon)
+		minimapIcon = new MinimapIcon;
+	return minimapIcon;
 }

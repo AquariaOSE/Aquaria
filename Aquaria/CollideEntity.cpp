@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "CollideEntity.h"
 #include "DSQ.h"
 #include "Game.h"
-//#include "ParticleEffects.h"
+
 
 CollideEntity::CollideEntity() : Entity()
 {
@@ -30,6 +30,10 @@ CollideEntity::CollideEntity() : Entity()
 	weight = 0;
 	bounceAmount = 0.5f;
 	this->updateCull = 4000;
+}
+
+CollideEntity::~CollideEntity()
+{
 }
 
 void CollideEntity::entityDied(Entity *e)
@@ -47,7 +51,7 @@ void CollideEntity::bounce(float ba)
 	if (getState() == STATE_PUSH)
 	{
 		dsq->spawnParticleEffect("HitSurface", dsq->game->lastCollidePosition);
-		//dsq->effectCollisionSmoke(position);
+
 		sound("RockHit");
 		// HACK: replace damage function
 		//damage(pushDamage);
@@ -60,13 +64,13 @@ void CollideEntity::bounce(float ba)
 	{
 		if (!vel.isZero())
 		{
-			float len = vel.getLength2D();	
+			float len = vel.getLength2D();
 			Vector I = vel/len;
-			Vector N = dsq->game->getWallNormal(dsq->game->lastCollidePosition);	
+			Vector N = dsq->game->getWallNormal(dsq->game->lastCollidePosition);
 
 			if (!N.isZero())
 			{
-				//2*(-I dot N)*N + I 
+
 				vel = 2*(-I.dot(N))*N + I;
 				vel.setLength2D(len*ba);
 			}
@@ -89,26 +93,22 @@ void CollideEntity::bounce(float ba)
 		}
 	}
 	break;
+	case BOUNCE_NONE:
+	break;
 	}
-	//mov.setLength2D(-len * ba);
+
 
 
 	onBounce();
 }
 
 void CollideEntity::updateMovement(float dt)
-{	
+{
 	if (isEntityDead()) return;
 	if (position.isFollowingPath()) return;
 	vel.capLength2D(getMaxSpeed()*maxSpeedLerp.x);
-	/*
-	if (vel.getSquaredLength2D() > sqr(getMaxSpeed()))
-	{
-		vel.setLength2D(getMaxSpeed());
-		vel.z = 0;
-	}
-	*/
-	//Vector lastPos = pos;
+
+
 
 	updateVel2(dt);
 
@@ -128,27 +128,13 @@ void CollideEntity::updateMovement(float dt)
 			{
 				position.y = dsq->game->getWaterLevel()+collideRadius;
 			}
-			
+
 		}
 	}
-	/*
-	if (!canLeaveWater)
-	{
-		if (waterBubble)
-		{
-		}
-		else
-		{
-			if (position.y-collideRadius < dsq->game->getWaterLevel())
-			{
-				
-			}
-		}
-	}
-	*/
+
 
 	bool collided = false;
-	
+
 	if (vel.x != 0 || vel.y != 0)
 	{
 
@@ -157,8 +143,8 @@ void CollideEntity::updateMovement(float dt)
 
 		if (isv(EV_COLLIDELEVEL,1))
 		{
-			
-			
+
+
 
 			bool doesFreeRange = !isPullable();
 			if (doesFreeRange)
@@ -170,8 +156,8 @@ void CollideEntity::updateMovement(float dt)
 				}
 			}
 		}
-		
-		//Vector lastPosition = lastPos;
+
+
 		Vector newPosition = position + (getMoveVel() * dt);
 		position = newPosition;
 
@@ -187,7 +173,7 @@ void CollideEntity::updateMovement(float dt)
 				}
 			}
 			else
-			{			
+			{
 				if (!freeRange && ((!canLeaveWater && !isUnderWater() && wasUnderWater) || dsq->game->collideCircleWithGrid(position, hw)))
 				{
 					position = lastPosition;
@@ -207,7 +193,7 @@ void CollideEntity::updateMovement(float dt)
 	{
 		attachedEntities[i]->position = this->position + attachedEntitiesOffsets[i];
 		attachedEntities[i]->rotation = this->rotation;
-	}	
+	}
 
 	wasUnderWater = underWater;
 }
