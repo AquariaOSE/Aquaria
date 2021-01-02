@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 //WARNING: FrameBuffer objects have to have reloadDevice/unloadDevice called manually!
 
-#ifdef BBGE_BUILD_FRAMEBUFFER
+#if defined(BBGE_BUILD_FRAMEBUFFER) && defined(BBGE_BUILD_OPENGL_DYNAMIC)
 	PFNGLISRENDERBUFFEREXTPROC glIsRenderbufferEXT = NULL;
 	PFNGLBINDRENDERBUFFEREXTPROC glBindRenderbufferEXT = NULL;
 	PFNGLDELETERENDERBUFFERSEXTPROC glDeleteRenderbuffersEXT = NULL;
@@ -131,6 +131,7 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 	}
 	else
 	{
+#if defined(BBGE_BUILD_OPENGL_DYNAMIC)
 		if (!glIsRenderbufferEXT)
 		{
 			glIsRenderbufferEXT = (PFNGLISRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glIsRenderbufferEXT");
@@ -162,6 +163,7 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen, GLint filter)
 			debugLog("One or more EXT_framebuffer_object functions were not found");
 			return false;
 		}
+#endif
 
 		//
 		// Create a frame-buffer object and a render-buffer object...
