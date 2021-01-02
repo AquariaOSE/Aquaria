@@ -29,8 +29,8 @@ GasCloud::GasCloud(Entity *source, const Vector &position, const std::string &pa
 	this->poisonTime = poisonTime;
 
 	this->particles = particles;
-	//this->gfx = gfx;
-	//this->isMoney = isMoney;
+
+
 	this->position = position;
 	this->damage = damage;
 	this->radius = radius;
@@ -46,10 +46,10 @@ GasCloud::GasCloud(Entity *source, const Vector &position, const std::string &pa
 	emitter->load(particles);
 	emitter->start();
 	emitter->setDie(true);
-	//emitter->parentManagedStatic = true;
-	//addChild(&emitter);
+
+
 	dsq->game->addRenderObject(emitter, LR_PARTICLES);
-	//setDamageTarget(DT_ENEMY_GAS, false)
+
 	setEntityType(ET_NEUTRAL);
 
 	deathSound = "";
@@ -96,32 +96,7 @@ void GasCloud::onUpdate(float dt)
 			}
 
 		}
-		/*
-		pTimer += dt;
-		while (pTimer > pSpawnRate)
-		{
-			int a = rand()%360;
-			int r = rand()%radius;
-			Vector pos = position;
-			pos += Vector(sinf(a)*r, cosf(a)*r);
-			Quad *quad = new Quad;
-			{
-				quad->rotation.z = rand()%360;
-				quad->position = pos;
-				quad->color = color;
-				quad->setTexture(gfx);
-				quad->alpha.path.addPathNode(0, 0);
-				quad->alpha.path.addPathNode(0.5, 0.2);
-				quad->alpha.path.addPathNode(0.5, 0.8);
-				quad->alpha.path.addPathNode(0, 1);
-				quad->alpha.startPath(3);
-				quad->scale = Vector(0.5, 0.5);
-				quad->scale.interpolateTo(Vector(2,2),4);
-			}
-			dsq->getTopStateData()->addRenderObject(quad, LR_PARTICLES);
-			pTimer -= pSpawnRate;
-		}
-		*/
+
 	}
 	else
 	{

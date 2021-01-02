@@ -22,7 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h>
 
 QuadTrail::QuadTrail(int maxPoints, float pointDist)
-: RenderObject(), maxPoints(maxPoints), pointDist(pointDist), numPoints(0)
+	: RenderObject()
+	, numPoints(0)
+	, maxPoints(maxPoints)
+	, pointDist(pointDist)
 {
 	quadTrailAlphaEffect = QTAE_NORMAL;
 	cull = false;
@@ -58,8 +61,7 @@ void QuadTrail::onRender()
 {
 	if (numPoints < 2) return;
 
-#ifdef BBGE_BUILD_OPENGL
-	//glDisable(GL_CULL_FACE);
+
 	int c = 0;
 	Vector p, diff, dl, dr;
 	Vector lastPoint;
@@ -114,7 +116,6 @@ void QuadTrail::onRender()
 			glVertex2f((*i).point.x, (*i).point.y);
 		}
 	glEnd();
-#endif
 }
 
 void QuadTrail::onUpdate(float dt)

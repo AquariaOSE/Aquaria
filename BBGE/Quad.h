@@ -32,7 +32,7 @@ public:
 
 	bool renderCenter;
 protected:
-	
+
 	int w, h, w2, h2;
 	int lineSize;
 
@@ -43,7 +43,7 @@ class Quad : public RenderObject
 {
 public:
 	Quad(const std::string &tex, const Vector &pos);
-	Quad();	
+	Quad();
 	void createGrid(int x, int y);
 	void destroy();
 	bool isCoordinateInside(Vector coord, int minSize=0);
@@ -52,19 +52,14 @@ public:
 
 	void flipVertical();
 	void flipHorizontal();
-	void setTextureSmooth(const std::string &texture, float t);
-	void spawnChildClone(float t);
-	void burn();
-	void unburn();
 	void setWidthHeight(float w, float h=-1);
 	void setWidth(float w);
 	void setHeight(float h);
 	int getWidth() const {return int(width);}
 	int getHeight() const {return int(height);}
-	
-	void setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);	
+
+	void setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
 	void setDrawGridAlpha(int x, int y, float alpha);
-	void calculateQuadLighting();
 	void repeatTextureToFill(bool on);
 	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatingTextureToFill; }
@@ -74,16 +69,15 @@ public:
 	float getStripSegmentSize();
 	void resetStrip();
 	Vector ** getDrawGrid() { return drawGrid; }
-	
+
 	void reloadDevice();
 
 	void deleteGrid();
 
 
 	InterpolatedVector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
-	//InterpolatedVector upperLeftColor, upperRightColor, lowerLeftColor, lowerRightColor;
-	//InterpolatedVector llalpha, lralpha, ulalpha, uralpha;
-	//bool oriented;
+
+
 
 	enum GridType
 	{
@@ -93,7 +87,7 @@ public:
 	unsigned char gridType;  // unsigned char to save space
 
 	char autoWidth, autoHeight;  // char to save space
-	
+
 	bool renderQuad, renderBorder, renderCenter;
 	bool stripVert;
 	std::vector<Vector>strip;
@@ -111,7 +105,7 @@ protected:
 	void resetGrid();
 	void updateGrid(float dt);
 	void renderGrid();
-	
+
 
 	float drawGridOffsetX;
 	float drawGridOffsetY;
@@ -119,9 +113,9 @@ protected:
 	float drawGridModY;
 	float drawGridTimeMultiplier;
 	bool drawGridOut;
-	
+
 	static Vector renderBorderColor;
-	
+
 	void onSetTexture();
 	void onRender();
 	void onUpdate(float dt);
@@ -136,7 +130,7 @@ public:
 	PauseQuad();
 	int pauseLevel;
 protected:
-	
+
 	void onUpdate(float dt);
 };
 

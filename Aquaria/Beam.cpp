@@ -31,7 +31,7 @@ Beam::Beam(Vector pos, float angle) : Quad()
 	addType(SCO_BEAM);
 	cull = false;
 	trace();
-	//rotation.z = angle;
+
 	this->angle = angle;
 	position = pos;
 
@@ -91,17 +91,13 @@ void Beam::killAllBeams()
 void Beam::trace()
 {
 	float angle = MathFunctions::toRadians(this->angle);
-		//(float(-this->angle)/180.0f)*PI;
-	//float angle = rotation.z;
+
+
 	Vector mov(sinf(angle), cosf(angle));
 	TileVector t(position);
 	Vector startTile(t.x, t.y);
 
-	/*
-	std::ostringstream os;
-	os << "rotation.z = " << rotation.z << " mov(" << mov.x << ", " << mov.y << ")";
-	debugLog(os.str());
-	*/
+
 
 	int moves = 0;
 	while (!dsq->game->isObstructed(TileVector(startTile.x, startTile.y)))
@@ -114,38 +110,24 @@ void Beam::trace()
 	t = TileVector(startTile.x, startTile.y);
 	endPos = t.worldVector();
 
-	/*
-	offset = endPos - position;
-	offset /= 2;
-	offset *= -1;
-	*/
 
 
-	//width = (endPos - position).getLength2D();
 }
 
 void Beam::render()
 {
 
-	/*
-	glLineWidth(4);
-	glColor4f(1,1,1,1);
-	glBegin(GL_LINES);
-		glVertex2f(position.x, position.y);
-		glVertex2f(endPos.x, endPos.y);
-	glEnd();
-	*/
+
 
 	Quad::render();
 }
 
 void Beam::onRender()
 {
-#ifdef BBGE_BUILD_OPENGL
-	//glDisable(GL_CULL_FACE);
+
 	Vector diff = endPos - position;
 	Vector side = diff;
-	//side.normalize2D();
+
 	side.setLength2D(beamWidth*2);
 	Vector sideLeft = side.getPerpendicularLeft();
 	Vector sideRight = side.getPerpendicularRight();
@@ -160,7 +142,6 @@ void Beam::onRender()
 		glTexCoord2f(0, 1);
 		glVertex2f(sideRight.x, sideRight.y);
 	glEnd();
-#endif
 }
 
 void Beam::onUpdate(float dt)

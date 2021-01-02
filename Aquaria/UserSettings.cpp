@@ -32,7 +32,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 void UserSettings::save()
 {
-	//initInputCodeMap();
+
 
 	XMLDocument doc;
 	{
@@ -268,7 +268,7 @@ void UserSettings::save()
 	doc.SaveFile(userSettingsFilename.c_str());
 #endif
 
-	//clearInputCodeMap();
+
 }
 
 static void readInt(XMLElement *xml, const char *elem, const char *att, int *toChange)
@@ -328,7 +328,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	}
 
 	control.actionSet.clearActions();
-	//initInputCodeMap();
+
 
 	control.actionSet.addActionInput("lmb");
 	control.actionSet.addActionInput("rmb");
@@ -419,9 +419,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 
 		readInt(xml_video, "FpsSmoothing", "v", &video.fpsSmoothing);
 
-		/*
-		readInt(xml_video, "Parallax", "on", &video.parallaxOn);
-		*/
+
 		XMLElement *xml_parallax = xml_video->FirstChildElement("Parallax");
 		if (xml_parallax)
 		{
@@ -484,12 +482,10 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			xml_action = xml_actionSet->FirstChildElement();
 			while (xml_action)
 			{
-				std::string name = xml_action->Attribute("name");
-
-				if (!name.empty())
+				const char *name = xml_action->Attribute("name");
+				if (name && *name)
 				{
 					ActionInput *ai = control.actionSet.addActionInput(name);
-
 					ai->fromString(xml_action->Attribute("input"));
 				}
 				xml_action = xml_action->NextSiblingElement();
@@ -534,7 +530,7 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			network.masterServer = serv;
 	}
 
-	//clearInputCodeMap();
+
 
 	if (system.locale.empty())
 	{
@@ -578,11 +574,6 @@ void UserSettings::apply()
 	if (dsq->game)
 	{
 		dsq->game->bindInput();
-
-		if (dsq->game->avatar)
-		{
-			dsq->game->avatar->updateHeartbeatSfx();
-		}
 	}
 
 	dsq->bindInput();

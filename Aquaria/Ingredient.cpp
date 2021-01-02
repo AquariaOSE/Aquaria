@@ -22,9 +22,15 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 
 IngredientData::IngredientData(const std::string &name, const std::string &gfx, IngredientType type)
-: name(name), gfx(gfx), amount(0), maxAmount(MAX_INGREDIENT_AMOUNT), held(0), type(type), marked(0), sorted(false)
-, displayName(dsq->continuity.getIngredientDisplayName(name))
-, rotKind(!(type == IT_OIL || type == IT_EGG))
+	: name(name)
+	, gfx(gfx)
+	, displayName(dsq->continuity.getIngredientDisplayName(name))
+	, type(type)
+	, amount(0)
+	, maxAmount(MAX_INGREDIENT_AMOUNT)
+	, held(0)
+	, marked(0)
+	, rotKind(!(type == IT_OIL || type == IT_EGG))
 {
 }
 
@@ -38,13 +44,17 @@ bool IngredientData::hasIET(IngredientEffectType iet)
 	for (IngredientEffects::iterator i = effects.begin(); i != effects.end(); i++)
 	{
 		if ((*i).type == iet)
-			return true; 
+			return true;
 	}
 	return false;
 }
 
 Ingredient::Ingredient(const Vector &pos, IngredientData *data, int amount)
- : Entity(),  data(data), amount(amount), gone(false), used(false)
+	: Entity()
+	, data(data)
+	, used(false)
+	, gone(false)
+	, amount(amount)
 {
 	addType(SCO_INGREDIENT);
 	entityType = ET_INGREDIENT;
@@ -59,7 +69,7 @@ Ingredient::Ingredient(const Vector &pos, IngredientData *data, int amount)
 		velocity = randVector(mag)*0.5f + Vector(0, -mag)*0.5f;
 	else
 		velocity = Vector(0,-mag*0.5f);
-	gravity = Vector(0, 250); //300
+	gravity = Vector(0, 250);
 	scale = Vector(0.2,0.2);
 	scale.interpolateTo(Vector(1, 1), 0.75);
 
@@ -89,7 +99,7 @@ bool Ingredient::isRotKind()
 
 IngredientData *Ingredient::getIngredientData()
 {
-	return data;	
+	return data;
 }
 
 void Ingredient::eat(Entity *e)
@@ -110,12 +120,7 @@ void Ingredient::onUpdate(float dt)
 	if (dsq->game->collideCircleWithGrid(position, 24))
 	{
 		position = lastPosition;
-		/*
-		if (velocity.x < velocity.y)
-			velocity.x = -velocity.x;
-		else
-			velocity.y = -velocity.y;
-		*/
+
 		velocity = 0;
 	}
 
@@ -145,7 +150,7 @@ void Ingredient::onUpdate(float dt)
 			dsq->game->pickupIngredientEffects(data);
 
 			dsq->spawnParticleEffect("IngredientCollect", position);
-			
+
 			dsq->sound->playSfx("pickup-ingredient");
 		}
 	}

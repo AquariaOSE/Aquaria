@@ -304,11 +304,7 @@ void Continuity::sortFood()
 
 	switch (dsq->continuity.foodSortType)
 	{
-	/*
-	case FOODSORT_UNSORTED:
-		sortOrder = sortByUnsort;
-	break;
-	*/
+
 	case FOODSORT_BYTYPE:
 		sortOrder = sortByType;
 	break;
@@ -321,8 +317,7 @@ void Continuity::sortFood()
 
 	}
 
-	//IngredientData *plantLeaf = dsq->continuity.getIngredientHeldByName("PlantLeaf");
-	//int oldHeld = plantLeaf->held;
+
 
 	if (doSort)
 	{
@@ -391,11 +386,11 @@ void Continuity::sortFood()
 			ingredients.push_back(sort[i]);
 		}
 		sort.clear();
-		//dsq->continuity.ingredients = sort;
+
 	}
 
-	//IngredientData *plantLeaf2 = dsq->continuity.getIngredientHeldByName("PlantLeaf");
-	//int newHeld = plantLeaf2->held;
+
+
 }
 
 void Continuity::setRegen(float t)
@@ -564,7 +559,7 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 		os << dsq->continuity.stringBank.get(210);
 		os << " " << dsq->continuity.stringBank.get(205) << " " << (fx.magnitude*5) << " " << dsq->continuity.stringBank.get(203);
 		return os.str();
-		//return dsq->continuity.stringBank.get(210);
+
 	break;
 	case IET_ENERGY:
 		os << dsq->continuity.stringBank.get(211) << " " << fx.magnitude;
@@ -612,6 +607,10 @@ std::string Continuity::getIEString(IngredientData *data, int i)
 			return ret;
 		}
 	break;
+	case IET_NONE:
+	case IET_RANDOM:
+	case IET_MAX:
+		break;
 	}
 
 	return "";
@@ -829,7 +828,7 @@ bool Continuity::applyIngredientEffects(IngredientData *data)
 			dsq->centerMessage(getIEString(data, i), y);
 
 			dsq->continuity.setWeb(webTime);
-			//dsq->centerMessage(dsq->continuity.stringBank.get(216), y);
+
 		}
 		break;
 		case IET_ALLSTATUS:
@@ -1246,6 +1245,9 @@ std::string Continuity::getInternalFormName()
 		return "sun";
 	case FORM_DUAL:
 		return "dual";
+	case FORM_NONE:
+	case FORM_MAX:
+		break;
 	}
 	return "";
 }
@@ -1477,8 +1479,8 @@ void Continuity::castSong(int num)
 		os << "Could not find song with index [" << num << "]";
 		debugLog(os.str());
 	}
-	//float et = 0.5;
-	//float et = 10;
+
+
 	float et = 0.5;
 	std::ostringstream os;
 	os << "Song/SongSlot-" << dsq->continuity.getSongSlotByType(num);
@@ -1487,7 +1489,7 @@ void Continuity::castSong(int num)
 	effect->setTexture(os.str());
 	effect->position = selected->position + selected->offset;
 	effect->scale.interpolateTo(Vector(3,3), et);
-	//effect->setBlendType(RenderObject::BLEND_ADD);
+
 	effect->alpha.ensureData();
 	effect->alpha.data->path.addPathNode(0, 0);
 	effect->alpha.data->path.addPathNode(0.5, 0.1);
@@ -1536,12 +1538,7 @@ void Continuity::castSong(int num)
 			sound->playSfx("Heal");
 			selected->heal(2);
 
-			/*
-			Wynia *wynia = new Wynia;
-			wynia->trackTo(selected);
-			wynia->position = selected->position;
-			core->getTopStateData()->addRenderObject(wynia, PROJECTILES);
-			*/
+
 			selected->skeletalSprite.animate("healSelf", 0, 1);
 		break;
 		case SONG_TIME:
@@ -1575,7 +1572,7 @@ void Continuity::castSong(int num)
 			{
 				if (!dsq->game->avatar->isNearObstruction(2) && !dsq->game->avatar->state.lockedToWall && !(dsq->game->li->position - dsq->game->avatar->position).isLength2DIn(400))
 				{
-					//dsq->game->avatar->disableInput();
+
 					dsq->overlay->color = Vector(1,1,1);
 					dsq->fade(1, 0.3);
 					dsq->main(0.3);
@@ -1583,7 +1580,7 @@ void Continuity::castSong(int num)
 					dsq->fade(0, 0.3);
 					dsq->main(0.3);
 					dsq->overlay->color = 0;
-					//dsq->game->avatar->enableInput();
+
 				}
 				else if ((dsq->game->li->position - dsq->game->avatar->position).isLength2DIn(500))
 				{
@@ -1597,13 +1594,7 @@ void Continuity::castSong(int num)
 				{
 					core->sound->playSfx("Denied");
 				}
-				/*
-				}
-				else
-				{
-					core->sound->playSfx("SongFail");
-				}
-				*/
+
 			}
 			else
 			{
@@ -1651,6 +1642,10 @@ void Continuity::castSong(int num)
 			dsq->game->avatar->changeForm(FORM_FISH);
 		break;
 		case SONG_SONGDOOR1:
+		case SONG_SONGDOOR2:
+		case SONG_ANIMA:
+		case SONG_NONE:
+		case SONG_MAX:
 		break;
 #endif
 		}
@@ -1785,12 +1780,8 @@ loop:
 			// make sure last note is more or less close
 			if (song.notes.size()-last < 2)
 			{
-				//rank += song.size()-last;
-				/*
-				std::ostringstream os;
-				os << "songCheck: " << songChecks[i].songIdx << " completed with rank " << rank;
-				debugLog(os.str());
-				*/
+
+
 
 				songChecks[i].pass = true;
 				songChecks[i].rank = rank;
@@ -1813,11 +1804,7 @@ loop:
 		}
 	}
 
-	/*
-	std::ostringstream os;
-	os << "lowest rank: " << lowestRank;
-	debugLog(os.str());
-	*/
+
 
 	return songIdx;
 }
@@ -1835,7 +1822,7 @@ int Continuity::checkSong(const Song &song)
 			Song *s = &songBank[i];
 			if (s->notes.empty()) continue;
 			int j = 0;
-			//if (s->size() == song.size())
+
 			{
 				bool foundSong = false;
 				int currentNote = 0;
@@ -1867,7 +1854,7 @@ int Continuity::checkSong(const Song &song)
 					}
 				}
 				if (j != song.notes.size()-1) foundSong = false;
-				//if (j == s->size())
+
 				if (foundSong)
 				{
 					return i;
@@ -1910,7 +1897,7 @@ void Continuity::update(float dt)
 		statsAndAchievements->RunFrame();
 	}
 
-	if (dsq->game->isActive() && !dsq->game->isPaused() /*&& !(getWorldType() == WT_SPIRIT)*/)
+	if (dsq->game->isActive() && !dsq->game->isPaused() )
 	{
 
 		if (liPowerTimer.updateCheck(dt))
@@ -2011,18 +1998,14 @@ void Continuity::update(float dt)
 
 		if (regenTimer.isActive())
 		{
-			/*
-			static float regenBit = 0;
-			regenBit += dt;
-			if (regenBit > 1)
-			*/
+
 			{
 				Avatar *a = dsq->game->avatar;
 				if (a)
 				{
 					a->heal(dt*0.5f);
 				}
-				//regenBit = 0;
+
 			}
 		}
 	}
@@ -2104,17 +2087,14 @@ void Continuity::applyWorldEffects(WorldType type, bool transition, bool affectM
 		{
 			core->postProcessingFx.blendType = 1;
 			core->postProcessingFx.intensity = 0.2f;
-			core->postProcessingFx.layer = LR_AFTER_EFFECTS;//LR_AFTER_EFFECTS;
+			core->postProcessingFx.layer = LR_AFTER_EFFECTS;
 			core->postProcessingFx.renderLayer = LR_AFTER_EFFECTS;
 			core->postProcessingFx.enable(FXT_RADIALBLUR);
 		}
 
 		dsq->game->avatar->canWarp = false;
 
-		/*
-		if (affectMusic)
-			dsq->sound->toggleEffects(1);
-		*/
+
 		dsq->game->backupSceneColor = dsq->game->sceneColor;
 		dsq->game->sceneColor.interpolateTo(Vector(0.4, 0.8, 0.9), time);
 		dsq->game->avatar->applyWorldEffects(type);
@@ -2124,23 +2104,15 @@ void Continuity::applyWorldEffects(WorldType type, bool transition, bool affectM
 		dsq->game->avatar->canWarp = true;
 
 		core->postProcessingFx.disable(FXT_RADIALBLUR);
-		//worldType = WT_SPIRIT;
-		/*
-		if (affectMusic)
-			dsq->sound->toggleEffects(0);
-		*/
-		//dsq->game->sceneColor.interpolateTo(dsq->game->backupSceneColor, time);
+
+
+
 		dsq->game->sceneColor.interpolateTo(Vector(1,1,1), time);
 		dsq->game->avatar->applyWorldEffects(type);
 	}
 	if (time > 0)
 	{
-		/*
-		dsq->game->avatar->slowToRest();
-		dsq->game->avatar->disableInput();
-		core->main(time);
-		dsq->game->avatar->enableInput();
-		*/
+
 	}
 	worldType = type;
 }
@@ -2291,12 +2263,7 @@ void Continuity::setFlag(std::string flag, int v)
 	flags[flag] = v;
 }
 
-/*
-void Continuity::setActivePet(int flag)
-{
-	setFlag(FLAG_ACTIVEPET, flag);
-}
-*/
+
 
 void Continuity::loadPetData()
 {
@@ -2474,7 +2441,6 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		}
 		worldMap->SetAttribute("b", os.str().c_str());
 
-#ifdef AQUARIA_BUILD_MAPVIS
 		if (dsq->game->worldMapRender)
 		{
 			std::ostringstream os;
@@ -2487,7 +2453,6 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			}
 			worldMap->SetAttribute("va", os.str().c_str());
 		}
-#endif
 	}
 	doc.InsertEndChild(worldMap);
 
@@ -2552,6 +2517,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	startData->SetAttribute("x", int(position.x));
 	startData->SetAttribute("y", int(position.y));
 	startData->SetAttribute("scene", dsq->game->sceneName.c_str());
+	startData->SetAttribute("sceneDisplayName", dsq->game->sceneDisplayName.c_str());
 	startData->SetAttribute("exp", dsq->continuity.exp);
 	startData->SetAttribute("h", dsq->continuity.maxHealth);
 	startData->SetAttribute("ch", dsq->continuity.health);
@@ -2788,20 +2754,7 @@ void Continuity::loadFile(int slot)
 		e = e->NextSiblingElement("Flag");
 	}
 
-	/*
-	if (debugEntityflags)
-	{
-		for (EntityFlags::iterator i = entityFlags.begin(); i != entityFlags.end(); i++)
-		{
-			if ((*i).first == name)
-			{
-				std::ostringstream os;
-				os << "Duplicate entity flag: " << name << " please report this error";
-				errorLog(os.str());
-			}
-		}
-	}
-	*/
+
 
 	XMLElement *efx = doc.FirstChildElement("EFX");
 	if (efx)
@@ -3017,7 +2970,6 @@ void Continuity::loadFile(int slot)
 		}
 
 
-#ifdef AQUARIA_BUILD_MAPVIS
 		if (worldMap->Attribute("va") && dsq->continuity.worldMap.getNumWorldMapTiles())
 		{
 			std::istringstream is(worldMap->Attribute("va"));
@@ -3026,7 +2978,7 @@ void Continuity::loadFile(int slot)
 
 			int idx;
 
-			//worldMapTiles.clear();
+
 
 			while (is >> idx)
 			{
@@ -3043,7 +2995,6 @@ void Continuity::loadFile(int slot)
 				tile->stringToData(is);
 			}
 		}
-#endif
 	}
 
 
@@ -3321,13 +3272,7 @@ void Continuity::loadFile(int slot)
 
 void Continuity::setNaijaModel(std::string model)
 {
-	/*
-	naijaModel = model;
-	if (dsq->game->avatar)
-	{
-		dsq->game->avatar->refreshModel();
-	}
-	*/
+
 }
 
 int Continuity::getFlag(int flag)
@@ -3403,7 +3348,7 @@ public:
 
 		timer = 0;
 
-		//GemGet *q = this;
+
 
 		setTexture("Gems/" + gem);
 
@@ -3423,11 +3368,7 @@ public:
 		setLife(timeScale+0.1f);
 		setDecayRate(1);
 
-		/*
-		q->position.path.addPathNode(Vector(400,400), 0.6);
-		q->position.path.addPathNode(dsq->game->miniMapRender->position, 0.9);
-		q->position.startPath(t);
-		*/
+
 	}
 protected:
 	float timer;
@@ -3495,26 +3436,7 @@ GemData *Continuity::pickupGem(std::string name, bool effects)
 
 		GemGet *gg = new GemGet(g.name);
 		dsq->game->addRenderObject(gg, LR_MINIMAP);
-		/*
-		Quad *q = new Quad;
-		q->setTexture("Gems/" + g.name);
 
-		q->followCamera = 1;
-		q->scale = Vector(0, 0);
-		q->scale.path.addPathNode(Vector(0,0), 0);
-		q->scale.path.addPathNode(Vector(1,1), 0.3);
-		q->scale.path.addPathNode(Vector(1,1), 0.6);
-		q->scale.path.addPathNode(Vector(0.5,0.5), 0.9);
-		q->scale.path.addPathNode(Vector(0.1,0.1), 1);
-		q->scale.startPath(t);
-
-		q->position = Vector(400,400);
-		q->position.path.addPathNode(Vector(400,400), 0.6);
-		q->position.path.addPathNode(dsq->game->miniMapRender->position, 0.9);
-		q->position.startPath(t);
-
-		dsq->game->addRenderObject(q, LR_MESSAGEBOX);
-		*/
 
 
 		if (!getFlag("tokenHint"))
@@ -3522,8 +3444,8 @@ GemData *Continuity::pickupGem(std::string name, bool effects)
 			setFlag("tokenHint", 1);
 			dsq->game->setControlHint(dsq->continuity.stringBank.get(4), false, false, false, 8);
 		}
-		//dsq->watch(1);
-		//dsq->resetTimer();
+
+
 	}
 
 	// return the last one
@@ -3579,7 +3501,7 @@ void Continuity::reset()
 		dsq->game->recipeMenu.currentPage = 0;
 	}
 
-	//worldMapTiles.clear();
+
 
 	speedMult = biteMult = fishPoison = defenseMult = 1;
 	speedMult2 = 1;
@@ -3635,12 +3557,12 @@ void Continuity::reset()
 	loadEatBank();
 	dsq->loadElementEffects();
 	form = FORM_NORMAL;
-	//cm.reset();
+
 	naijaModel = "Naija";
 	costume = "";
 	dsq->emote.load("data/naijaemote.txt");
 
-	//learnSong(SONG_SONGDOOR1);
+
 
 	worldType = WT_NORMAL;
 
@@ -3668,7 +3590,7 @@ void Continuity::reset()
 		inFile >> spd;
 		speedTypes.push_back(spd);
 	}
-	//selectedSpell = SpellType(0);
+
 
 	if (!dsq->mod.isActive())
 	{

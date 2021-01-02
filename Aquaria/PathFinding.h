@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define PATHFINDING_H
 
 #include "../BBGE/Base.h"
-//#include "Astar.h"
+
 #include "TileVector.h"
 #include <assert.h>
 
@@ -47,6 +47,7 @@ namespace PathFinding
 	bool updateFindPath(State *state, int limit);
 	bool finishFindPath(State *state, VectorPath& path, unsigned step = 0);
 	void getStats(State *state, unsigned& stepsDone, unsigned& nodesExpanded);
+	void purgeFindPath(PathFinding::State *state);
 };
 
 #endif

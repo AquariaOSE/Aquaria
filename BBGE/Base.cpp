@@ -47,7 +47,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifdef BBGE_BUILD_VFS
 #  include "ttvfs.h"
 #  ifndef VFS_IGNORE_CASE
-#    error Must define VFS_IGNORE_CASE, see VFSDefines.h
+#	error Must define VFS_IGNORE_CASE, see VFSDefines.h
 #  endif
    ttvfs::Root vfs; // extern
 #endif
@@ -68,6 +68,13 @@ Vector getDirVector(Direction dir)
 	case DIR_RIGHT:
 		return Vector(1, 0);
 	break;
+	case DIR_UPLEFT:
+	case DIR_UPRIGHT:
+	case DIR_DOWNLEFT:
+	case DIR_DOWNRIGHT:
+	case DIR_MAX:
+	case DIR_NONE:
+		break;
 	}
 	return Vector(0,0);
 }
@@ -88,6 +95,13 @@ Direction getOppositeDir(Direction dir)
 	case DIR_RIGHT:
 		return DIR_LEFT;
 	break;
+	case DIR_UPLEFT:
+	case DIR_UPRIGHT:
+	case DIR_DOWNLEFT:
+	case DIR_DOWNRIGHT:
+	case DIR_MAX:
+	case DIR_NONE:
+		break;
 	}
 
 	return DIR_NONE;
@@ -108,6 +122,13 @@ Direction getNextDirClockwise(Direction dir)
 		break;
 	case DIR_RIGHT:
 		return DIR_DOWN;
+		break;
+	case DIR_UPLEFT:
+	case DIR_UPRIGHT:
+	case DIR_DOWNLEFT:
+	case DIR_DOWNRIGHT:
+	case DIR_MAX:
+	case DIR_NONE:
 		break;
 	}
 	return DIR_NONE;
@@ -153,15 +174,14 @@ std::string removeSpaces(const std::string &input)
 
 unsigned hash(const std::string &string)
 {
-    unsigned hash = 5381;
+	unsigned hash = 5381;
 
-    for (int i = 0; i < string.size(); i++)
-        hash = ((hash << 5) + hash) + (unsigned char)string[i];
+	for (int i = 0; i < string.size(); i++)
+		hash = ((hash << 5) + hash) + (unsigned char)string[i];
 
-    return hash;
+	return hash;
 }
 
-/* hash * 33 + c */
 
 
 static unsigned char lowerToUpperTable[256];
@@ -198,11 +218,6 @@ struct TransatableStaticInit
 static TransatableStaticInit _transtable_static_init;
 
 static unsigned char charIsUpper(unsigned char c)
-{
-	return c == upperToLowerTable[c];
-}
-
-static unsigned char charIsLower(unsigned char c)
 {
 	return c == lowerToUpperTable[c];
 }
@@ -284,8 +299,8 @@ void stringToLowerUserData(std::string &s)
 	const std::string userdata = core->getUserDataFolder();
 	const size_t len = userdata.length();
 	const bool match = (s.length() > len) &&
-	                   ((s[len] == '/') || (s[len] == '\\')) &&
-	                   !strncmp(userdata.c_str(), s.c_str(), len);
+					   ((s[len] == '/') || (s[len] == '\\')) &&
+					   !strncmp(userdata.c_str(), s.c_str(), len);
 	if (!match)
 		stringToLower(s);
 	else
@@ -305,18 +320,18 @@ int nocasecmp(const std::string &s1, const std::string &s2)
   //stop when either string's end has been reached
   while ( *it1 && *it2 )
   {
-    if(charToUpper(*it1) != charToUpper(*it2)) //letters differ?
-     // return -1 to indicate smaller than, 1 otherwise
-      return (charToUpper(*it1)  < charToUpper(*it2)) ? -1 : 1;
-    //proceed to the next character in each string
-    ++it1;
-    ++it2;
+	if(charToUpper(*it1) != charToUpper(*it2)) //letters differ?
+	 // return -1 to indicate smaller than, 1 otherwise
+	  return (charToUpper(*it1)  < charToUpper(*it2)) ? -1 : 1;
+	//proceed to the next character in each string
+	++it1;
+	++it2;
   }
   size_t size1=s1.size(), size2=s2.size();// cache lengths
    //return -1,0 or 1 according to strings' lengths
-    if (size1==size2)
-      return 0;
-    return (size1<size2) ? -1 : 1;
+	if (size1==size2)
+	  return 0;
+	return (size1<size2) ? -1 : 1;
 }
 #endif  // #if !HAVE_STRCASECMP
 
@@ -352,8 +367,7 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 
 void drawCircle(float radius, int stepSize)
 {
-#ifdef BBGE_BUILD_OPENGL
-	//glDisable(GL_CULL_FACE);
+
 
 	glBegin(GL_POLYGON);
 	{
@@ -364,8 +378,7 @@ void drawCircle(float radius, int stepSize)
 	}
 	glEnd();
 
-	//glEnable(GL_CULL_FACE);
-#endif
+
 }
 
 void exit_error(const std::string &message)
@@ -386,9 +399,7 @@ std::string parseCommand(const std::string &line, const std::string &command)
 
 void glColor3_256(int r, int g, int b)
 {
-#ifdef BBGE_BUILD_OPENGL
 	glColor4f(float(r)/256.0f, float(g)/256.0f, float(b)/256.0f, 1.0f);
-#endif
 }
 
 bool chance(int perc)
@@ -405,68 +416,7 @@ bool chancef(float p)
 	return ((rand()%100) <= p*100);
 }
 
-/*
-PHYSFS_file *openRead(const std::string &f)
-{
 
-	PHYSFS_file *file = PHYSFS_openRead(f.c_str());
-	if (!file)
-	{
-		errorLog ("Could not open [" + f + "]");
-		exit(0);
-	}
-
-	return file;
-}
-
-
-void pfread(void *buffer, PHYSFS_uint32 size, PHYSFS_uint32 objs, PHYSFS_file *handle)
-{
-	PHYSFS_read(handle, buffer, size, objs);
-}
-
-void pfseek(PHYSFS_file *handle,PHYSFS_uint64 byte,int origin)
-{
-	if (origin == SEEK_CUR)
-	{
-		byte += PHYSFS_tell(handle);
-	}
-	PHYSFS_seek(handle,byte);
-}
-
-void pfclose(PHYSFS_file *handle)
-{
-	PHYSFS_close(handle);
-}
-
-std::string pLoadStream(const std::string &filename)
-{
-	PHYSFS_file *f = openRead(filename.c_str());
-	int len = PHYSFS_fileLength(f);
-	std::string s;
-	for (int i = 0; i < len; i++)
-	{
-		char p;
-		PHYSFS_read(f, &p, sizeof(char), 1);
-		s += p;
-	}
-	//std::istringstream is(s);
-
-	PHYSFS_close(f);
-	return s;
-
-}
-
-
-void pSaveStream(const std::string &filename, std::ostringstream &os)
-{
-	PHYSFS_file *f = PHYSFS_openWrite(filename.c_str());
-	//int size = os.str().size();
-	//PHYSFS_write(f, (void*)size, sizeof(int), 1);
-	PHYSFS_write(f, (void*)os.str().c_str(), sizeof(char)*os.str().size(), 1);
-	PHYSFS_close(f);
-}
-*/
 
 void errorLog(const std::string &s)
 {
@@ -562,29 +512,7 @@ tinyxml2::XMLDocument *readXML(const std::string& fn, tinyxml2::XMLError *perr /
 	return doc;
 }
 
-/*
-void pForEachFile(std::string path, std::string type, void callback(const std::string &filename, int param), int param)
-{
-	char **rc = PHYSFS_enumerateFiles(path.c_str());
-	char **i;
 
-	for (i = rc; *i != NULL; i++)
-	{
-		std::string s(*i);
-		int p=0;
-		if ((p=s.find('.'))!=std::string::npos)
-		{
-			std::string ext = s.susbtr(p, s.getLength2D());
-			if (ext == type)
-			{
-				callback(fielnameafhghaha
-			}
-		}
-	}
-
- PHYSFS_freeList(rc);
-}
-*/
 
 void doSingleFile(const std::string &path, const std::string &type, std::string filename, void callback(const std::string &filename, int param), int param)
 {
@@ -593,9 +521,9 @@ void doSingleFile(const std::string &path, const std::string &type, std::string 
 		std::string search = filename;
 		stringToLower(search);
 		std::string filetype = filename.substr(search.size()-4, search.size());
-		//stringToUpper(filetype);
-		//debugLog("comparing: " + filetype + " and: " + type);
-		//if (filetype==type)
+
+
+
 		debugLog("checking:" + search + " for type:" + type);
 		if (search.find(type)!=std::string::npos)
 		{
@@ -626,22 +554,22 @@ std::string stripEndlineForUnix(const std::string &in)
 
 struct vfscallback_s
 {
-    std::string *path;
-    const char *ext;
-    intptr_t param;
-    void (*callback)(const std::string &filename, intptr_t param);
+	std::string *path;
+	const char *ext;
+	intptr_t param;
+	void (*callback)(const std::string &filename, intptr_t param);
 };
 
 void forEachFile_vfscallback(VFILE *vf, void *user)
 {
-    vfscallback_s *d = (vfscallback_s*)user;
-    if(d->ext)
-    {
-        const char *e = strrchr(vf->name(), '.');
-        if(e && nocasecmp(d->ext, e))
-            return;
-    }
-    d->callback(*(d->path) + vf->name(), d->param);
+	vfscallback_s *d = (vfscallback_s*)user;
+	if(d->ext)
+	{
+		const char *e = strrchr(vf->name(), '.');
+		if(e && nocasecmp(d->ext, e))
+			return;
+	}
+	d->callback(*(d->path) + vf->name(), d->param);
 }
 
 #endif
@@ -677,45 +605,45 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 	dir = opendir(path.c_str());
 	if (dir)
 	{
-	    dirent *file=0;
+		dirent *file=0;
 		while ( (file=readdir(dir)) != NULL )
 		{
-		    if (file->d_name && strlen(file->d_name) > 4)
-		    {
-                debugLog(file->d_name);
-                char *extension=strrchr(file->d_name,'.');
-                if (extension)
-                {
-                    debugLog(extension);
-                    if (extension!=NULL)
-                    {
-                        if (strcasecmp(extension,type.c_str())==0)
-                        {
-                            callback(path + std::string(file->d_name), param);
-                        }
-                    }
-                }
-		    }
+			if (strlen(file->d_name) > 4)
+			{
+				debugLog(file->d_name);
+				char *extension=strrchr(file->d_name,'.');
+				if (extension)
+				{
+					debugLog(extension);
+					if (extension!=NULL)
+					{
+						if (strcasecmp(extension,type.c_str())==0)
+						{
+							callback(path + std::string(file->d_name), param);
+						}
+					}
+				}
+			}
 		}
 		closedir(dir);
 	}
 	else
 	{
-	    debugLog("FAILED TO OPEN DIR");
+		debugLog("FAILED TO OPEN DIR");
 	}
 #endif
 
 #ifdef BBGE_BUILD_WINDOWS
-    BOOL            fFinished;
-    HANDLE          hList;
-    TCHAR           szDir[MAX_PATH+1];
-    WIN32_FIND_DATA FileData;
+	BOOL			fFinished;
+	HANDLE		  hList;
+	TCHAR		   szDir[MAX_PATH+1];
+	WIN32_FIND_DATA FileData;
 
 	int end = path.size()-1;
 	if (path[end] != '/')
 		path[end] += '/';
 
-    // Get the proper directory path
+	// Get the proper directory path
 	// \\ %s\\*
 
 
@@ -726,36 +654,34 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 	}
 
 
-	//std::string add = "%s*" + type;
 
-	//sprintf(szDir, "%s*", path.c_str());
 	sprintf(szDir, "%s\\*", path.c_str());
 
 	stringToUpper(type);
 
-    // Get the first file
-    hList = FindFirstFile(szDir, &FileData);
-    if (hList == INVALID_HANDLE_VALUE)
-    {
-        //printf("No files found\n\n");
+	// Get the first file
+	hList = FindFirstFile(szDir, &FileData);
+	if (hList == INVALID_HANDLE_VALUE)
+	{
+
 		debugLog("No files of type " + type + " found in path " + path);
-    }
-    else
-    {
-        // Traverse through the directory structure
-        fFinished = FALSE;
-        while (!fFinished)
-        {
-            // Check the object is a directory or not
-            //printf("%*s%s\n", indent, "", FileData.cFileName);
+	}
+	else
+	{
+		// Traverse through the directory structure
+		fFinished = FALSE;
+		while (!fFinished)
+		{
+			// Check the object is a directory or not
+			//printf("%*s%s\n", indent, "", FileData.cFileName);
 			std::string filename = FileData.cFileName;
-			//debugLog("found: " + filename);
+
 			if (filename.size()>4)
 			{
 
 				std::string filetype = filename.substr(filename.size()-4, filename.size());
 				stringToUpper(filetype);
-				//debugLog("comparing: " + filetype + " and: " + type);
+
 				if (filetype==type)
 				{
 					callback(path+filename, param);
@@ -763,20 +689,15 @@ void forEachFile(std::string path, std::string type, void callback(const std::st
 			}
 
 
-            if (!FindNextFile(hList, &FileData))
-            {
-				/*
-                if (GetLastError() == ERROR_NO_MORE_FILES)
-                {
-                    fFinished = TRUE;
-                }
-				*/
-				fFinished = TRUE;
-            }
-        }
-    }
+			if (!FindNextFile(hList, &FileData))
+			{
 
-    FindClose(hList);
+				fFinished = TRUE;
+			}
+		}
+	}
+
+	FindClose(hList);
 #endif
 }
 
@@ -785,51 +706,46 @@ std::vector<std::string> getFileList(std::string path, std::string type, int par
 	std::vector<std::string> list;
 
 #ifdef BBGE_BUILD_WINDOWS
-    BOOL            fFinished;
-    HANDLE          hList;
-    TCHAR           szDir[MAX_PATH+1];
-    WIN32_FIND_DATA FileData;
+	BOOL			fFinished;
+	HANDLE		  hList;
+	TCHAR		   szDir[MAX_PATH+1];
+	WIN32_FIND_DATA FileData;
 
-    // Get the proper directory path
-    sprintf(szDir, "%s\\*", path.c_str());
+	// Get the proper directory path
+	sprintf(szDir, "%s\\*", path.c_str());
 
 
-    // Get the first file
-    hList = FindFirstFile(szDir, &FileData);
-    if (hList == INVALID_HANDLE_VALUE)
-    {
-        printf("No files found\n\n");
-    }
-    else
-    {
-        // Traverse through the directory structure
-        fFinished = FALSE;
-        while (!fFinished)
-        {
-            // Check the object is a directory or not
-            //printf("%*s%s\n", indent, "", FileData.cFileName);
+	// Get the first file
+	hList = FindFirstFile(szDir, &FileData);
+	if (hList == INVALID_HANDLE_VALUE)
+	{
+		printf("No files found\n\n");
+	}
+	else
+	{
+		// Traverse through the directory structure
+		fFinished = FALSE;
+		while (!fFinished)
+		{
+			// Check the object is a directory or not
+			//printf("%*s%s\n", indent, "", FileData.cFileName);
 			std::string filename = FileData.cFileName;
 			if (filename.size()>4 && filename.substr(filename.size()-4, filename.size())==type)
 			{
-				//callback(path+filename, param);
+
 				list.push_back (filename);
 			}
 
 
-            if (!FindNextFile(hList, &FileData))
-            {
-				/*
-                if (GetLastError() == ERROR_NO_MORE_FILES)
-                {
-                    fFinished = TRUE;
-                }
-				*/
-				fFinished = TRUE;
-            }
-        }
-    }
+			if (!FindNextFile(hList, &FileData))
+			{
 
-    FindClose(hList);
+				fFinished = TRUE;
+			}
+		}
+	}
+
+	FindClose(hList);
 #endif
 
 	return list;
@@ -842,7 +758,7 @@ void cocoaMessageBox(const std::string &title, const std::string &msg);
 void messageBox(const std::string& title, const std::string &msg)
 {
 #ifdef BBGE_BUILD_WINDOWS
-    MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
+	MessageBox (0,msg.c_str(),title.c_str(),MB_OK);
 #elif SDL_VERSION_ATLEAST(2,0,0)
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_BUTTON_RETURNKEY_DEFAULT, title.c_str(),
 							 msg.c_str(), NULL);
@@ -884,39 +800,28 @@ Vector getNearestPointOnLine(Vector a, Vector b, Vector c)
 	return nearest;
 }
 
-/*
-bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius)
-{
-	Vector p = getNearestPointOnLine(lineStart, lineEnd, point);
-	Vector diff = p - point;
-	std::ostringstream os;
-	os << "s(" << lineStart.x << ", " << lineStart.y << ") e(";
-	os << lineEnd.x << ", " << lineEnd.y << ") - p(" << point.x << ", " << point.y << ")";
-	debugLog(os.str());
-	return (diff.getSquaredLength2D() < sqr(radius));
-}
-*/
+
 
 bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius, Vector *closestP)
 {
-    Vector dir = lineEnd - lineStart;
-    Vector diff = point - lineStart;
-    Vector closest;
-    if (!dir.isZero()) {
+	Vector dir = lineEnd - lineStart;
+	Vector diff = point - lineStart;
+	Vector closest;
+	if (!dir.isZero()) {
 	float t = diff.dot2D(dir) / dir.dot2D(dir);
 	if (t < 0.0f)
-	    t = 0.0f;
+		t = 0.0f;
 	if (t > 1.0f)
-	    t = 1.0f;
+		t = 1.0f;
 	closest = lineStart + t * dir;
-    } else {
+	} else {
 	closest = lineStart;
-    }
-    Vector d = point - closest;
-    float distsqr = d.dot2D(d);
+	}
+	Vector d = point - closest;
+	float distsqr = d.dot2D(d);
 	if (closestP)
 		(*closestP) = closest;
-    return distsqr <= radius*radius;
+	return distsqr <= radius*radius;
 }
 
 
@@ -931,14 +836,12 @@ GLuint generateEmptyTexture(int quality)											// Create An Empty Texture
 
 	memset(data, 0, size);	// Clear Storage Memory
 
-#ifdef BBGE_BUILD_OPENGL
 	glGenTextures(1, &txtnumber);								// Create 1 Texture
 	glBindTexture(GL_TEXTURE_2D, txtnumber);					// Bind The Texture
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, quality, quality, 0,
 		GL_RGBA, GL_UNSIGNED_BYTE, data);						// Build Texture Using Information In data
-#endif
 
 	delete [] data;												// Release data
 
@@ -997,56 +900,56 @@ int packFile(const std::string &sourcef, const std::string &destf, int level)
 	if (!source || !dest)
 		return 0;
 
-    int ret, flush;
-    unsigned have;
-    z_stream strm;
-    unsigned char in[CHUNK];
-    unsigned char out[CHUNK];
+	int ret, flush;
+	unsigned have;
+	z_stream strm;
+	unsigned char in[CHUNK];
+	unsigned char out[CHUNK];
 
-    /* allocate deflate state */
-    strm.zalloc = Z_NULL;
-    strm.zfree = Z_NULL;
-    strm.opaque = Z_NULL;
-    ret = deflateInit(&strm, level);
-    if (ret != Z_OK)
-        return ret;
+	/* allocate deflate state */
+	strm.zalloc = Z_NULL;
+	strm.zfree = Z_NULL;
+	strm.opaque = Z_NULL;
+	ret = deflateInit(&strm, level);
+	if (ret != Z_OK)
+		return ret;
 
-    /* compress until end of file */
-    do {
-        strm.avail_in = fread(in, 1, CHUNK, source);
-        if (ferror(source)) {
-            (void)deflateEnd(&strm);
-            return Z_ERRNO;
-        }
-        flush = feof(source) ? Z_FINISH : Z_NO_FLUSH;
-        strm.next_in = in;
+	/* compress until end of file */
+	do {
+		strm.avail_in = fread(in, 1, CHUNK, source);
+		if (ferror(source)) {
+			(void)deflateEnd(&strm);
+			return Z_ERRNO;
+		}
+		flush = feof(source) ? Z_FINISH : Z_NO_FLUSH;
+		strm.next_in = in;
 
-        /* run deflate() on input until output buffer not full, finish
-           compression if all of source has been read in */
-        do {
-            strm.avail_out = CHUNK;
-            strm.next_out = out;
-            ret = deflate(&strm, flush);    /* no bad return value */
-            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
-            have = CHUNK - strm.avail_out;
-            if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
-                (void)deflateEnd(&strm);
-                return Z_ERRNO;
-            }
-        } while (strm.avail_out == 0);
-        assert(strm.avail_in == 0);     /* all input will be used */
+		/* run deflate() on input until output buffer not full, finish
+		   compression if all of source has been read in */
+		do {
+			strm.avail_out = CHUNK;
+			strm.next_out = out;
+			ret = deflate(&strm, flush);	/* no bad return value */
+			assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+			have = CHUNK - strm.avail_out;
+			if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
+				(void)deflateEnd(&strm);
+				return Z_ERRNO;
+			}
+		} while (strm.avail_out == 0);
+		assert(strm.avail_in == 0);	 /* all input will be used */
 
-        /* done when last data in file processed */
-    } while (flush != Z_FINISH);
-    assert(ret == Z_STREAM_END);        /* stream will be complete */
+		/* done when last data in file processed */
+	} while (flush != Z_FINISH);
+	assert(ret == Z_STREAM_END);		/* stream will be complete */
 
-    /* clean up and return */
-    (void)deflateEnd(&strm);
+	/* clean up and return */
+	(void)deflateEnd(&strm);
 
 	fclose(source);
 	fclose(dest);
 
-    return Z_OK;
+	return Z_OK;
 }
 
 /* Decompress from file source to file dest until stream ends or EOF.
@@ -1063,64 +966,64 @@ int unpackFile(const std::string &sourcef, const std::string &destf)
 	if (!source || !dest)
 		return 0;
 
-    int ret;
-    unsigned have;
-    z_stream strm;
-    unsigned char in[CHUNK];
-    unsigned char out[CHUNK];
+	int ret;
+	unsigned have;
+	z_stream strm;
+	unsigned char in[CHUNK];
+	unsigned char out[CHUNK];
 
-    /* allocate inflate state */
-    strm.zalloc = Z_NULL;
-    strm.zfree = Z_NULL;
-    strm.opaque = Z_NULL;
-    strm.avail_in = 0;
-    strm.next_in = Z_NULL;
-    ret = inflateInit(&strm);
-    if (ret != Z_OK)
-        return ret;
+	/* allocate inflate state */
+	strm.zalloc = Z_NULL;
+	strm.zfree = Z_NULL;
+	strm.opaque = Z_NULL;
+	strm.avail_in = 0;
+	strm.next_in = Z_NULL;
+	ret = inflateInit(&strm);
+	if (ret != Z_OK)
+		return ret;
 
-    /* decompress until deflate stream ends or end of file */
-    do {
-        strm.avail_in = fread(in, 1, CHUNK, source);
-        if (ferror(source)) {
-            (void)inflateEnd(&strm);
-            return Z_ERRNO;
-        }
-        if (strm.avail_in == 0)
-            break;
-        strm.next_in = in;
+	/* decompress until deflate stream ends or end of file */
+	do {
+		strm.avail_in = fread(in, 1, CHUNK, source);
+		if (ferror(source)) {
+			(void)inflateEnd(&strm);
+			return Z_ERRNO;
+		}
+		if (strm.avail_in == 0)
+			break;
+		strm.next_in = in;
 
-        /* run inflate() on input until output buffer not full */
-        do {
-            strm.avail_out = CHUNK;
-            strm.next_out = out;
-            ret = inflate(&strm, Z_NO_FLUSH);
-            assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
-            switch (ret) {
-            case Z_NEED_DICT:
-                ret = Z_DATA_ERROR;     /* and fall through */
-            case Z_DATA_ERROR:
-            case Z_MEM_ERROR:
-                (void)inflateEnd(&strm);
-                return ret;
-            }
-            have = CHUNK - strm.avail_out;
-            if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
-                (void)inflateEnd(&strm);
-                return Z_ERRNO;
-            }
-        } while (strm.avail_out == 0);
+		/* run inflate() on input until output buffer not full */
+		do {
+			strm.avail_out = CHUNK;
+			strm.next_out = out;
+			ret = inflate(&strm, Z_NO_FLUSH);
+			assert(ret != Z_STREAM_ERROR);  /* state not clobbered */
+			switch (ret) {
+			case Z_NEED_DICT:
+				ret = Z_DATA_ERROR;	 /* and fall through */
+			case Z_DATA_ERROR:
+			case Z_MEM_ERROR:
+				(void)inflateEnd(&strm);
+				return ret;
+			}
+			have = CHUNK - strm.avail_out;
+			if (fwrite(out, 1, have, dest) != have || ferror(dest)) {
+				(void)inflateEnd(&strm);
+				return Z_ERRNO;
+			}
+		} while (strm.avail_out == 0);
 
-        /* done when inflate() says it's done */
-    } while (ret != Z_STREAM_END);
+		/* done when inflate() says it's done */
+	} while (ret != Z_STREAM_END);
 
-    /* clean up and return */
-    (void)inflateEnd(&strm);
+	/* clean up and return */
+	(void)inflateEnd(&strm);
 
 	fclose(source);
 	fclose(dest);
 
-    return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
+	return ret == Z_STREAM_END ? Z_OK : Z_DATA_ERROR;
 }
 #endif
 

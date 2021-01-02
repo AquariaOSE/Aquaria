@@ -78,14 +78,10 @@ Bone::Bone() : Quad()
 
 	minDist = maxDist = 128;
 	reverse = false;
+	selectable = true;
+	originalRenderPass = 0;
 }
-/*
-void Bone::createStrip(bool vert, int num)
-{
-	Quad::createStrip(vert, num);
-	changeStrip.resize(num);
-}
-*/
+
 
 void Bone::destroy()
 {
@@ -141,7 +137,7 @@ Quad* Bone::addFrame(const std::string &gfx)
 
 void Bone::showFrame(int idx)
 {
-	//float t = 0.1;
+
 	int c = 0;
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
@@ -179,11 +175,7 @@ void Bone::showFrame(int idx)
 
 void Bone::setAnimated(int b)
 {
-	/*
-	std::ostringstream os;
-	os << "setting animated: " << b;
-	debugLog(os.str());
-	*/
+
 
 	animated = b;
 }
@@ -198,10 +190,7 @@ void Bone::setSegmentProps(int minDist, int maxDist, bool reverse)
 
 void Bone::updateSegment(Bone *b, const Vector &diff)
 {
-	/*
-	int maxDist, minDist;
-	maxDist = minDist = 128;
-	*/
+
 
 	float angle = -1;
 	if (diff.getSquaredLength2D() > sqr(maxDist))
@@ -213,21 +202,17 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
 	}
-	else if (diff.getSquaredLength2D() > sqr(minDist)) // 6.3
+	else if (diff.getSquaredLength2D() > sqr(minDist))
 	{
 		b->position += diff*0.05f;
 
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
 
-		//b->rotation.interpolateTo(Vector(0,0,angle),0.2);
+
 	}
 	if (angle != -1)
 	{
-		/*
-		std::ostringstream os;
-		os << "rotz: " << b->rotation.z << " angle: " << angle;
-		debugLog(os.str());
-		*/
+
 
 		if (b->rotation.z >= 270 && angle < 90)
 		{
@@ -244,35 +229,15 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 
 		b->rotation.interpolateTo(Vector(0,0,angle),0.2);
 	}
-	/*
-	else
-	{
-		float angle;
-		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
-		b->rotation.interpolateTo(Vector(0,0,angle),0);
-	}
-	*/
+
 }
 
 void Bone::updateSegments()
 {
 	if (segmentChain>0 && !segments.empty())
 	{
-		//bool reverse = true;
 
-		/*
-		std::vector<Bone*> segments;
-		Bone *child = (Bone*)(this->children.front());
-		while (child)
-		{
-			segments.push_back(child);
 
-			if (child->children.empty())
-				child = 0;
-			else
-				child = (Bone*)(child->children.front());
-		}
-		*/
 
 		if (!reverse)
 		{
@@ -310,7 +275,7 @@ void Bone::updateSegments()
 	}
 }
 
-void BoneCommand::parse(Bone *b, SimpleIStringStream &is)
+bool BoneCommand::parse(Bone *b, SimpleIStringStream &is)
 {
 	std::string type;
 	is >> type;
@@ -334,35 +299,38 @@ void BoneCommand::parse(Bone *b, SimpleIStringStream &is)
 	{
 		command = AC_PRT_START;
 		is >> slot;
-		/*
-		Emitter *e = b->emitters[slot];
-		if (e)
-		{
-			e->start();
-		}
-		*/
+
 	}
 	else if (type=="AC_PRT_STOP")
 	{
 		command = AC_PRT_STOP;
 		is >> slot;
-		/*
-		Emitter *e = b->emitters[slot];
-		if (e)
-		{
-			e->stop();
-		}
-		*/
+
 	}
 	else if (type=="AC_SEGS_START")
 		command = AC_SEGS_START;
 	else if (type=="AC_SEGS_STOP")
 		command = AC_SEGS_STOP;
+	else if (type == "AC_SET_PASS")
+	{
+		command = AC_SET_PASS;
+		is >> slot;
+	}
+	else if(type == "AC_RESET_PASS")
+		command = AC_RESET_PASS;
+	else // fail
+	{
+		std::ostringstream os;
+		os << "Failed to parse bone command string: invalid command: " << type;
+		errorLog(os.str());
+	}
+
+	return true;
 }
 
 void BoneCommand::run()
 {
-	//debugLog("running CMD");
+
 	switch(command)
 	{
 	case AC_SND_PLAY:
@@ -398,6 +366,15 @@ void BoneCommand::run()
 			e->stop();
 	}
 	break;
+	case AC_SET_PASS:
+		b->setRenderPass(slot);
+	break;
+	case AC_RESET_PASS:
+		b->setRenderPass(b->originalRenderPass);
+	break;
+	case AC_SEGS_START:
+	case AC_SEGS_STOP:
+		break;
 	}
 }
 
@@ -406,7 +383,7 @@ AnimationLayer::AnimationLayer()
 {
 	lastNewKey = 0;
 	fallThru= 0;
-	//index = -1;
+
 	timer = 0;
 	loop = 0;
 	enqueuedAnimationLoop = 0;
@@ -430,8 +407,8 @@ void AnimationLayer::playCurrentAnimation(int loop)
 
 void AnimationLayer::animate(const std::string &a, int loop)
 {
-    std::string animation = a;
-    stringToLower(animation);
+	std::string animation = a;
+	stringToLower(animation);
 
 	bool played = false;
 	for (int i = 0; i < s->animations.size(); i++)
@@ -459,7 +436,7 @@ void AnimationLayer::playAnimation(int idx, int loop)
 		fallThruSpeed = 10;
 	}
 	timeMultiplier = 1;
-	//currentKeyframe = 0;
+
 	currentAnimation = idx;
 	timer = 0;
 	animating = true;
@@ -467,7 +444,7 @@ void AnimationLayer::playAnimation(int idx, int loop)
 	this->loop = loop;
 
 	animationLength = getCurrentAnimation()->getAnimationLength();
-	//doNextKeyframe();
+
 }
 
 void AnimationLayer::enqueueAnimation(const std::string& anim, int loop)
@@ -479,7 +456,7 @@ void AnimationLayer::enqueueAnimation(const std::string& anim, int loop)
 
 float AnimationLayer::transitionAnimate(std::string anim, float time, int loop)
 {
-    stringToLower(anim);
+	stringToLower(anim);
 	float totalTime =0;
 	if (createTransitionAnimation(anim, time))
 	{
@@ -524,7 +501,7 @@ Animation* AnimationLayer::getCurrentAnimation()
 
 bool AnimationLayer::createTransitionAnimation(const std::string& anim, float time)
 {
-	//Animation *a = getCurrentAnimation();
+
 	Animation *to = s->getAnimation(anim);
 	if (!to) return false;
 	blendAnimation.keyframes.clear();
@@ -558,6 +535,8 @@ bool AnimationLayer::createTransitionAnimation(const std::string& anim, float ti
 
 void AnimationLayer::stopAnimation()
 {
+	if(s->loaded && getCurrentAnimation()->resetPassOnEnd)
+		resetPass();
 	animating = false;
 	if (!enqueuedAnimation.empty())
 	{
@@ -575,6 +554,11 @@ bool AnimationLayer::isAnimating()
 float AnimationLayer::getAnimationLength()
 {
 	return animationLength;
+}
+
+Animation::Animation()
+: resetPassOnEnd(false)
+{
 }
 
 int Animation::getNumKeyframes()
@@ -623,10 +607,7 @@ SkeletalKeyframe *Animation::getFirstKeyframe()
 
 void Animation::reorderKeyframes()
 {
-	/*
-	std::vector<SkeletalKeyframe> copy = this->keyframes;
-	keyframes.clear();
-	*/
+
 	for (int i = 0; i < keyframes.size(); i++)
 	{
 		for (int j = 0; j < keyframes.size()-1; j++)
@@ -717,7 +698,7 @@ SkeletalKeyframe *Animation::getNextKeyframe(float t)
 			break;
 		}
 	}
-//	kf++;
+
 	if (kf == -1)
 		return 0;
 	if (kf >= keyframes.size())
@@ -801,17 +782,12 @@ void SkeletalSprite::onUpdate(float dt)
 		}
 	}
 
-	/*
-	for (int i = 0; i < bones.size(); i++)
-	{
-		bones[i]->update(dt);
-	}
-	*/
+
 	for (i = 0; i < animLayers.size(); i++)
 	{
 		animLayers[i].update(dt);
 	}
-	//updateBones();
+
 }
 
 void AnimationLayer::update(float dt)
@@ -922,26 +898,14 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		{
 			bone->SetAttribute("rq", this->bones[i]->fileRenderQuad);
 		}
-		if (!this->bones[i]->collisionRects.empty())
+		if (!this->bones[i]->selectable)
 		{
-			std::ostringstream os;
-			os << this->bones[i]->collisionRects.size() << " ";
-			for (int j = 0; j < this->bones[i]->collisionRects.size(); j++)
-			{
-				RectShape *r = &this->bones[i]->collisionRects[j];
-				int x, y, w, h;
-				r->getCWH(&x, &y, &w, &h);
-				os << x << " " << y << " " << w << " " << h << " ";
-			}
-			bone->SetAttribute("crects", os.str().c_str());
+			bone->SetAttribute("sel", this->bones[i]->selectable);
 		}
-		std::ostringstream os;
-		os << this->bones[i]->collidePosition.x << " " << this->bones[i]->collidePosition.y;
-		bone->SetAttribute("cp", os.str().c_str());
 		if (this->bones[i]->rbp)
 			bone->SetAttribute("rbp", this->bones[i]->rbp);
-		if (this->bones[i]->getRenderPass())
-			bone->SetAttribute("pass", this->bones[i]->getRenderPass());
+		if (this->bones[i]->originalRenderPass)
+			bone->SetAttribute("pass", this->bones[i]->originalRenderPass);
 		if (this->bones[i]->offset.x)
 			bone->SetAttribute("offx", this->bones[i]->offset.x);
 		if (this->bones[i]->offset.y)
@@ -970,14 +934,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			os << this->bones[i]->originalScale.x << " " << this->bones[i]->originalScale.y;
 			bone->SetAttribute("sz", os.str().c_str());
 		}
-		/*
-		if (this->bones[i]->color.x != 1 || this->bones[i]->color.y != 1 || this->bones[i]->color.z != 1)
-		{
-			std::ostringstream os;
-			os << this->bones[i]->color.x << " " << this->bones[i]->color.y << " " << this->bones[i]->color.z;
-			bone->SetAttribute("color", os.str().c_str());
-		}
-		*/
+
 
 		for (Children::iterator j = this->bones[i]->children.begin(); j != this->bones[i]->children.end(); j++)
 		{
@@ -1005,6 +962,8 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		Animation *a = &this->animations[i];
 		XMLElement *animation = xml->NewElement("Animation");
 		animation->SetAttribute("name", a->name.c_str());
+		if(a->resetPassOnEnd)
+			animation->SetAttribute("resetPassOnEnd", a->resetPassOnEnd);
 		for (int j = 0; j < a->keyframes.size(); j++)
 		{
 			XMLElement *key = xml->NewElement("Key");
@@ -1093,7 +1052,7 @@ Bone *SkeletalSprite::getBoneByIdx(int idx)
 	return 0;
 }
 
-Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std::string name, float cr, bool fh, bool fv, const Vector &cp)
+Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std::string name, float cr, bool fh, bool fv)
 {
 	Bone *b = new Bone;
 	b->boneIdx = idx;
@@ -1104,9 +1063,8 @@ Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, int rbp, std:
 	b->renderBeforeParent = rbp;
 	b->pidx = pidx;
 	b->collideRadius = cr;
-	b->collidePosition = cp;
 	b->name = name;
-	//core->generateCollisionMask(b);
+
 	if (fh)
 		b->flipHorizontal();
 	if (fv)
@@ -1150,7 +1108,6 @@ void SkeletalSprite::deleteBones()
 	{
 		(*it)->safeKill();
 	}
-	bones.clear();
 }
 
 Animation *SkeletalSprite::getAnimation(const std::string& anim)
@@ -1237,25 +1194,8 @@ void SkeletalSprite::loadSkin(const std::string &fn)
 						b->flipVertical();
 				}
 
-				/*
-				if (boneXml->Attribute("a"))
-				{
-					float alpha = 0;
-					boneXml->Attribute("a", &alpha);
-					b->alpha = alpha;
-				}
-				*/
-				/*
-				// this is for SKINS
-				if (boneXml->Attribute("sz"))
-				{
-					float v1, v2;
-					SimpleIStringStream is(boneXml->Attribute("sz"));
-					is >> v1 >> v2;
-					b->scale = Vector(v1,v2);
-					b->originalScale = b->scale;
-				}
-				*/
+
+
 			}
 			else
 			{
@@ -1345,7 +1285,6 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			int pidx = -1, rbp=0, cr=0, fh=0, fv=0;
 
 			std::string name;
-			Vector cp;
 			if (bone->Attribute("pidx"))
 				pidx = atoi(bone->Attribute("pidx"));
 			if (bone->Attribute("rbp"))
@@ -1359,38 +1298,13 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				fh = atoi(bone->Attribute("fh"));
 			if (bone->Attribute("fv"))
 				fv = atoi(bone->Attribute("fv"));
-			if (bone->Attribute("cp"))
-			{
-				SimpleIStringStream is(bone->Attribute("cp"));
-				is >> cp.x >> cp.y;
-			}
-
-
-
-
 
 			std::string gfx = bone->Attribute("gfx");
-			Bone *newb = initBone(idx, gfx, pidx, rbp, name, cr, fh, fv, cp);
+			Bone *newb = initBone(idx, gfx, pidx, rbp, name, cr, fh, fv);
 			if (bone->Attribute("offx"))
 				newb->offset.x = atoi(bone->Attribute("offx"));
 			if (bone->Attribute("offy"))
 				newb->offset.y = atoi(bone->Attribute("offy"));
-
-			if (bone->Attribute("crects"))
-			{
-				SimpleIStringStream is(bone->Attribute("crects"));
-				int num = 0;
-				is >> num;
-				for (int i = 0; i < num; i++)
-				{
-					RectShape r;
-					int x, y, w, h;
-					is >> x >> y >> w >> h;
-					r.setCWH(x, y, w, h);
-
-					newb->collisionRects.push_back(r);
-				}
-			}
 
 			if (bone->Attribute("prt"))
 			{
@@ -1438,7 +1352,9 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			}
 			if (bone->Attribute("pass"))
 			{
-				newb->setRenderPass(atoi(bone->Attribute("pass")));
+				int pass = atoi(bone->Attribute("pass"));
+				newb->originalRenderPass = pass;
+				newb->setRenderPass(pass);
 			}
 			if (bone->Attribute("gc"))
 			{
@@ -1512,6 +1428,10 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				SimpleIStringStream in(bone->Attribute("color"));
 				in >> newb->color.x >> newb->color.y >> newb->color.z;
 			}
+			if (bone->Attribute("sel"))
+			{
+				newb->selectable = bone->BoolAttribute("sel");
+			}
 			bone = bone->NextSiblingElement("Bone");
 		}
 		// attach bones
@@ -1582,6 +1502,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 		{
 			Animation newAnimation;
 			newAnimation.name = animation->Attribute("name");
+			newAnimation.resetPassOnEnd = animation->BoolAttribute("resetPassOnEnd");
 			stringToLower(newAnimation.name);
 
 			XMLElement *key = animation->FirstChildElement("Key");
@@ -1617,7 +1538,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 							for (int i = 0; i < b.strip.size(); i++)
 							{
 								is >> b.strip[i].x >> b.strip[i].y;
-								//b.strip[i].y *= 10;
+
 							}
 						}
 						if (key->Attribute("sz"))
@@ -1675,8 +1596,15 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 						if (b)
 						{
 							BoneCommand bcmd;
-							bcmd.parse(b, is);
+							if(!bcmd.parse(b, is))
+								break;
 							newSkeletalKeyframe.commands.push_back(bcmd);
+						}
+						else
+						{
+							std::ostringstream os;
+							os << "SkeletalSprite::loadSkeletal: File " << fn << " anim " << newAnimation.name << " specifies non-existing bone idx " << bidx;
+							errorLog(os.str());
 						}
 					}
 				}
@@ -1713,6 +1641,36 @@ void SkeletalSprite::setTime(float time, int layer)
 		animLayers[layer].timer = time;
 }
 
+void AnimationLayer::resetPass()
+{
+	for (int i = 0; i < s->bones.size(); i++)
+	{
+		Bone *b = s->bones[i];
+		if (contains(b))
+			b->setRenderPass(b->originalRenderPass);
+	}
+}
+
+bool AnimationLayer::contains(const Bone *b) const
+{
+	const int idx = b->boneIdx;
+	if (!ignoreBones.empty())
+	{
+		for (int j = 0; j < ignoreBones.size(); j++)
+			if (idx == ignoreBones[j])
+				return false;
+	}
+	else if (!includeBones.empty())
+	{
+		for (int j = 0; j < includeBones.size(); j++)
+			if (idx == includeBones[j])
+				return true;
+		return false;
+	}
+
+	return true;
+}
+
 void AnimationLayer::updateBones()
 {
 	if (!animating && !(&s->animLayers[0] == this) && fallThru == 0) return;
@@ -1723,10 +1681,7 @@ void AnimationLayer::updateBones()
 	float t1 = key1->t;
 	float t2 = key2->t;
 
-	/*
-	if (key1 == key2)
-		stopAnimation();
-	*/
+
 
 	float diff = t2-t1;
 	float dt;
@@ -1755,10 +1710,8 @@ void AnimationLayer::updateBones()
 	}
 	lastNewKey = key2;
 
-	bool c = 0;
 	for (int i = 0; i < s->bones.size(); i++)
 	{
-		int idx = s->bones[i]->boneIdx;
 		Bone *b = s->bones[i];
 
 		if (b->segmentChain == 1)
@@ -1767,31 +1720,9 @@ void AnimationLayer::updateBones()
 		}
 		if (b->segmentChain < 2)
 		{
-			c=0;
-			if (!ignoreBones.empty())
+			if (b->animated != Bone::ANIM_NONE && contains(b))
 			{
-				for (int j = 0; j < ignoreBones.size(); j++)
-				{
-					if (idx == ignoreBones[j])
-					{	c=1; break; }
-				}
-			}
-			else if (!includeBones.empty())
-			{
-				c = 1;
-				for (int j = 0; j < includeBones.size(); j++)
-				{
-					if (idx == includeBones[j])
-					{	c=0; break; }
-				}
-			}
-			if (b->animated==Bone::ANIM_NONE)
-			{
-				c = 1;
-			}
-			if (!c)
-			{
-
+				int idx = b->boneIdx;
 				BoneKeyframe *bkey1 = key1->getBoneKeyframe(idx);
 				BoneKeyframe *bkey2 = key2->getBoneKeyframe(idx);
 				if (bkey1 && bkey2)
@@ -1858,16 +1789,7 @@ void SkeletalSprite::updateBones()
 			animLayers[i].updateBones();
 		}
 	}
-	/*
-	for (int i = animLayers.size()-1; i >= 0; i--)
-	{
-		if (animLayers[i].animating)
-		{
-			animLayers[i].updateBones();
-			return;
-		}
-	}
-	*/
+
 
 }
 
@@ -1894,7 +1816,7 @@ Bone* SkeletalSprite::getSelectedBone(bool mouseBased)
 			if (bones[i]->renderQuad || core->getShiftState())
 			{
 				bones[i]->color = Vector(1,1,1);
-				if (bones[i]->renderQuad && bones[i]->isCoordinateInsideWorld(p))
+				if (bones[i]->selectable && bones[i]->renderQuad && bones[i]->isCoordinateInsideWorld(p))
 				{
 					float dist = (bones[i]->getWorldPosition() - p).getSquaredLength2D();
 					if (dist <= closestDist)
@@ -1939,17 +1861,31 @@ void SkeletalSprite::setSelectedBone(int b)
 
 void SkeletalSprite::selectPrevBone()
 {
-	selectedBone++;
-	if (selectedBone >= bones.size())
-		selectedBone = 0;
+	const int oldsel = selectedBone;
+	do
+	{
+		selectedBone++;
+		if(selectedBone == oldsel)
+			break;
+		if (selectedBone >= bones.size())
+			selectedBone = 0;
+	}
+	while (!bones[selectedBone]->selectable);
 	updateSelectedBoneColor();
 }
 
 void SkeletalSprite::selectNextBone()
 {
-	selectedBone--;
-	if (selectedBone < 0)
-		selectedBone = bones.size()-1;
+	const int oldsel = selectedBone;
+	do
+	{
+		selectedBone--;
+		if(selectedBone == oldsel)
+			break;
+		if (selectedBone < 0)
+			selectedBone = bones.size()-1;
+	}
+	while (!bones[selectedBone]->selectable);
 	updateSelectedBoneColor();
 }
 

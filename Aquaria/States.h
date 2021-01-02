@@ -68,7 +68,7 @@ protected:
 	bool done;
 
 	Precacher cachy;
-	//void update(float dt);
+
 };
 
 class Intro2 : public StateObject
@@ -88,11 +88,11 @@ public:
 	void applyState();
 	void removeState();
 	void update(float dt);
-	
+
 	void doShortBitBlot();
 	void getOut();
 	void skipLogo();
-	
+
 	bool watchQuit(float time);
 protected:
 	int quitFlag;

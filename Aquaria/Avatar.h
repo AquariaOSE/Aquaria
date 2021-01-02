@@ -118,7 +118,7 @@ public:
 	bool blind;
 	bool wasUnderWater;
 	float shotDelay;
-	//Timer shockTimer;
+
 	Timer useItemDelay;
 	Timer lockToWallDelay;
 	float spellCharge;
@@ -138,7 +138,6 @@ class Avatar : public Entity, public ActionMapper
 {
 public:
 	Avatar();
-	void postInit();
 	virtual ~Avatar();
 	void destroy();
 	void action(int actionID, int state);
@@ -147,7 +146,7 @@ public:
 	float burstDelay;
 	bool bursting;
 	BurstType lastBurstType;
-	//void damage(int amount);
+
 	bool isCharging();
 	void setBlind(float time);
 
@@ -169,8 +168,6 @@ public:
 
 	void toggleMovement(bool on);
 
-	Vector getFacing();
-
 	void refreshModel(std::string file, const std::string &skin, bool forceIdle=false);
 	void refreshDualFormModel();
 	void switchDualFormMode();
@@ -180,16 +177,10 @@ public:
 	void clearTargets();
 	bool singing;
 
-	void doBounce();
 	Vector getKeyDir();
 
 	void startBurstCommon();
 	void updateJoystick(float dt);
-
-	int getNotesOpen();
-	int getLastNote();
-
-	int lastNote;
 
 	void openSingingInterface();
 	void closeSingingInterface();
@@ -253,8 +244,6 @@ public:
 	void fallOffWall();
 
 	float fireDelay;
-	int getSingingInterfaceRadius();
-	int getOpenSingingInterfaceRadius();
 	AuraType activeAura;
 	float auraTimer;
 	bool fireAtNearestValidEntity(const std::string &shot);
@@ -276,10 +265,9 @@ public:
 
 	float songInterfaceTimer;
 	void removeEatData(int idx);
-	//std::list<Entity*>bittenEntities;
+
 	typedef std::list<Entity*> BittenEntities;
 	BittenEntities bittenEntities;
-	void updateHeartbeatSfx(float t = 0);
 	Target getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override=false, std::vector<Target> *ignore=0, EntityList *entityList=0);
 
 	void toggleCape(bool on);
@@ -303,7 +291,7 @@ public:
 
 	Vector getHeadPosition();
 
-	Bone *boneRightFoot, *boneLeftFoot, *boneRightArm, *boneLeftArm, *boneFish2, *bone_head;
+	Bone *boneLeftArm, *boneFish2, *bone_head, *bone_dualFormGlow;
 	Bone *boneLeftHand, *boneRightHand;
 
 	void startFlourish();
@@ -317,10 +305,8 @@ public:
 	Web *web;
 	float rollDelay;
 
-	void loseTargets();
-
 	bool canSetBoneLock();
-	
+
 	void revert();
 	void doBindSong();
 	void doShieldSong();
@@ -347,7 +333,7 @@ public:
 	float elementEffectMult;
 
 	bool blockBackFlip;
-	
+
 protected:
 	void setSongIconPositions();
 
@@ -374,6 +360,9 @@ protected:
 	Vector bodyOffset;
 	bool flourish;
 	bool blockSinging;
+	bool _isUnderWater;
+	Path *lastWaterBubble;
+	bool lastJumpOutFromWaterBubble;
 	int spiritEnergyAbsorbed;
 	float formAbilityDelay;
 	Vector bodyPosition;
@@ -397,7 +386,7 @@ protected:
 	void updateCursor(float dt);
 	bool rolling;
 	int rollDidOne;
-	
+
 	void startRoll(int dir);
 	void stopRoll();
 	int getQuadrantDirection(int lastQuad, int quad);
@@ -438,15 +427,13 @@ protected:
 	void removeBlindEffects();
 
 	float zoomVel;
-	// implement "bobbing" in a lower class
-	int getBeamWidth();
 	Vector getWallNormal(TileVector t);
 	bool checkWarpAreas();
 
 	float splashDelay;
-	//Hair *hair;
 
-	//Item *currentItem;
+
+
 	void onUpdate(float dt);
 	void onRender();
 

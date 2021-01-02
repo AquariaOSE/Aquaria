@@ -27,7 +27,7 @@ class Logo : public StateObject
 {
 public:
 	Logo();
-	EVENT(JumpTitle, jumpTitle);
+    EVENT(JumpTitle, jumpTitle)
 	void applyState();
 	void removeState();
 };

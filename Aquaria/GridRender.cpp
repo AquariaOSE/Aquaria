@@ -24,18 +24,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 GridRender::GridRender(ObsType obsType) : RenderObject()
 {
 	color = Vector(1, 0, 0);
-	//color = Vector(0.2,0.2,1);
+
 	position.z = 5;
 	cull = false;
 	alpha = 0.5f;
 	this->obsType = obsType;
 	blendEnabled = false;
-	//setTexture("grid");
+
 }
 
 void GridRender::onUpdate(float dt)
 {
-	RenderObject::onUpdate(dt);	
+	RenderObject::onUpdate(dt);
 	if (obsType != OT_BLACK) { blendEnabled = true; }
 }
 
@@ -46,22 +46,13 @@ inline static void doRenderGrid(int x, int startCol, int endCol)
 	const int drawy1 = startCol*TILE_SIZE;
 	const int drawy2 = (endCol+1)*TILE_SIZE;
 
-#ifdef BBGE_BUILD_OPENGL
 	glBegin(GL_QUADS);
 	glVertex3i(drawx1, drawy2, 0.0f);
 	glVertex3i(drawx2, drawy2, 0.0f);
 	glVertex3i(drawx2, drawy1, 0.0f);
 	glVertex3i(drawx1, drawy1, 0.0f);
 	glEnd();
-#endif
 
-#ifdef BBGE_BUILD_DIRECTX
-	core->blitD3DVerts(0,
-		drawx1, drawy1,
-		drawx2, drawy1,
-		drawx2, drawy2,
-		drawx1, drawy2);
-#endif
 }
 
 void GridRender::onRender()
@@ -159,11 +150,10 @@ void SongLineRender::clear()
 void SongLineRender::onRender()
 {
 	int w=core->getWindowWidth();
-	//core->getWindowWidth(&w);
+
 	int ls = (4*w)/1024.0f;
 	if (ls < 0)
 		ls = 1;
-#ifdef BBGE_BUILD_OPENGL
 	glLineWidth(ls);
 	const int alphaLine = pts.size()*(0.9f);
 	float a = 1;
@@ -173,11 +163,10 @@ void SongLineRender::onRender()
 		if (i < alphaLine)
 			a = float(i)/float(alphaLine);
 		else
-			a = 1;		
+			a = 1;
 		glColor4f(pts[i].color.x, pts[i].color.y, pts[i].color.z, a);
 		glVertex2f(pts[i].pt.x, pts[i].pt.y);
 	}
 	glEnd();
-#endif
 }
 

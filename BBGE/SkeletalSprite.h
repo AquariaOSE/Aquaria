@@ -33,7 +33,9 @@ enum AnimationCommand
 	AC_SEGS_START		,
 	AC_FRM_SHOW			,
 	AC_SND_PLAY			,
-	AC_SEGS_STOP
+	AC_SEGS_STOP,
+	AC_SET_PASS,
+	AC_RESET_PASS,
 };
 
 class ParticleEffect;
@@ -61,7 +63,7 @@ public:
 	std::map<int, ParticleEffect*> emitters;
 	std::string prt;
 	std::vector<Vector> changeStrip;
-	
+
 	bool generateCollisionMask;
 	int animated;
 	Vector originalScale;
@@ -75,12 +77,13 @@ public:
 
 	SkeletalSprite *skeleton;
 
-	
+
 	void setSegmentProps(int minDist, int maxDist, bool reverse);
 	Vector segmentOffset;
 
 	bool fileRenderQuad;
-
+	bool selectable;
+	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
 
 protected:
 	int minDist, maxDist, reverse;
@@ -90,7 +93,7 @@ protected:
 class BoneCommand
 {
 public:
-	void parse(Bone *b, SimpleIStringStream &is);
+	bool parse(Bone *b, SimpleIStringStream &is);
 	void run();
 	AnimationCommand command;
 	Bone *b;
@@ -102,7 +105,7 @@ public:
 class BoneKeyframe
 {
 public:
-	BoneKeyframe() : idx(0), x(0), y(0), rot(0), doScale(0), sx(1), sy(1) {}
+	BoneKeyframe() : idx(0), x(0), y(0), rot(0), sx(1), sy(1), doScale(0) {}
 	int idx, x, y, rot;
 	float sx, sy;
 	bool doScale;
@@ -131,6 +134,7 @@ public:
 class Animation
 {
 public:
+	Animation();
 	std::string name;
 	typedef std::vector <SkeletalKeyframe> Keyframes;
 	Keyframes keyframes;
@@ -138,7 +142,7 @@ public:
 	SkeletalKeyframe *getLastKeyframe();
 	SkeletalKeyframe *getFirstKeyframe();
 	SkeletalKeyframe *getPrevKeyframe(float t);
-	SkeletalKeyframe *getNextKeyframe(float t);	
+	SkeletalKeyframe *getNextKeyframe(float t);
 	void cloneKey(int key, float toffset);
 	void deleteKey(int key);
 	void reorderKeyframes();
@@ -146,6 +150,7 @@ public:
 	int getSkeletalKeyframeIndex(SkeletalKeyframe *skey);
 	int getNumKeyframes();
 	void reverse();
+	bool resetPassOnEnd;
 };
 
 class SkeletalSprite;
@@ -153,10 +158,10 @@ class SkeletalSprite;
 class AnimationLayer
 {
 public:
-	
+
 	//----
 	AnimationLayer();
-	void setSkeletalSprite(SkeletalSprite *s);	
+	void setSkeletalSprite(SkeletalSprite *s);
 	Animation *getCurrentAnimation();
 	void animate(const std::string &animation, int loop);
 	void update(float dt);
@@ -170,8 +175,9 @@ public:
 	float transitionAnimate(std::string anim, float time, int loop);
 	void setTimeMultiplier(float t);
 	bool isAnimating();
-	//float lerp(float v1, float v2, float dt, int lerpType);
-	
+	bool contains(const Bone *b) const;
+	void resetPass();
+
 	//----
 	float fallThru;
 	float fallThruSpeed;
@@ -181,7 +187,7 @@ public:
 	SkeletalSprite *s;
 
 	SkeletalKeyframe *lastNewKey;
-	//int index;
+
 	float timer;
 	int loop;
 	Animation blendAnimation;
@@ -194,13 +200,13 @@ public:
 	int currentAnimation;
 	bool animating;
 
-	
+
 };
 
 class SkeletalSprite : public RenderObject
 {
 public:
-	
+
 	SkeletalSprite();
 	void loadSkeletal(const std::string &fn);
 	bool saveSkeletal(const std::string &fn);
@@ -209,9 +215,9 @@ public:
 	Bone *getBoneByIdx(int idx);
 	Bone *getBoneByName(const std::string &name);
 	void animate(const std::string &animation, int loop = 0, int layer=0);
-	
 
-	
+
+
 	void setTime(float time, int layer=0);
 
 	void updateBones();
@@ -223,12 +229,12 @@ public:
 
 	bool isAnimating(int layer=0);
 
-	void setTimeMultiplier(float t, int layer=0);	
+	void setTimeMultiplier(float t, int layer=0);
 
 	Bone* getSelectedBone(bool mouseBased = true);
 	Animation *getCurrentAnimation(int layer=0);
 
-	
+
 	void nextAnimation();
 	void prevAnimation();
 	void lastAnimation();
@@ -237,9 +243,9 @@ public:
 
 
 	void setFreeze(bool f);
-	
-	
-	
+
+
+
 	Animation *getAnimation(const std::string& anim);
 
 	std::vector<Animation> animations;
@@ -263,7 +269,7 @@ public:
 
 	static std::string animationPath, skinPath, secondaryAnimationPath;
 	static void clearCache();
-	
+
 protected:
 	bool frozen;
 	RenderObject *animKeyNotify;
@@ -271,7 +277,7 @@ protected:
 	int selectedBone;
 	friend class AnimationLayer;
 	std::vector<AnimationLayer> animLayers;
-	Bone* initBone(int idx, std::string gfx, int pidx, int rbp=0, std::string name="", float cr=0, bool fh=false, bool fv=false, const Vector &cp=Vector(0,0,0));
+	Bone* initBone(int idx, std::string gfx, int pidx, int rbp=0, std::string name="", float cr=0, bool fh=false, bool fv=false);
 	void deleteBones();
 	void onUpdate(float dt);
 };

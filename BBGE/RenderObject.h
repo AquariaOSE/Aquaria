@@ -23,7 +23,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Base.h"
 #include "Texture.h"
-#include "Flags.h"
 #include "ScriptObject.h"
 
 class Core;
@@ -68,8 +67,6 @@ struct MotionBlurFrame
 	Vector position;
 	float rotz;
 };
-
-typedef std::vector<RectShape> CollideRects;
 
 class RenderObjectLayer;
 
@@ -123,7 +120,7 @@ public:
 		blendType = bt;
 	}
 
-	//enum DestroyType { RANDOM=0, REMOVE_STATE };
+
 	virtual void destroy();
 
 	virtual void flipHorizontal();
@@ -166,8 +163,6 @@ public:
 	Vector getRealPosition();
 	Vector getRealScale();
 
-	virtual float getSortDepth();
-
 	StateData *getStateData();
 
 	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
@@ -183,7 +178,7 @@ public:
 	const RenderObject &operator=(const RenderObject &r);
 
 	void toggleCull(bool value);
-	
+
 	void safeKill();
 
 	void enqueueChildDeletion(RenderObject *r);
@@ -245,18 +240,14 @@ public:
 	unsigned char blendType;
 
 	float life;
-	//float lifeAlphaFadeMultiplier;
+
 	float followCamera;
 
-	//bool useColor;
+
 	bool renderBeforeParent;
 	bool updateAfterParent;
 
-	//bool followXOnly;
-	//bool renderOrigin;
 
-	//float updateMultiplier;
-	//EventPtr deathEvent;
 
 	bool colorIsSaved;  // Used for both color and alpha
 	Vector savedColor;  // Saved values from setColorMult()
@@ -271,30 +262,23 @@ public:
 
 	InterpolatedVector *positionSnapTo;
 
-	//DestroyType destroyType;
+
 	typedef std::vector<RenderObject*> Children;
 	Children children, childGarbage;
 
-	//Flags flags;
 
-#ifdef BBGE_BUILD_DIRECTX
-	bool useDXTransform;
-	//D3DXMATRIX matrix;
-#endif
 
 	float collideRadius;
-	Vector collidePosition;
 	std::vector<Vector> collisionMask;
 	std::vector<Vector> transformedCollisionMask;
 
-	CollideRects collisionRects;
 	float collisionMaskRadius;
 
 	float alphaMod;
 
 	bool ignoreUpdate;
 	bool useOldDT;
-	
+
 protected:
 	virtual void onFH(){}
 	virtual void onFV(){}
@@ -317,7 +301,7 @@ protected:
 		}
 		if (fadeAlphaWithLife && !alpha.isInterpolating())
 		{
-			//alpha = ((life*lifeAlphaFadeMultiplier)/maxLife);
+
 			alpha = life/maxLife;
 		}
 	}
@@ -329,7 +313,6 @@ protected:
 	void renderCollision();
 
 	bool repeatTexture;
-	//ParentManaged pm;
 	unsigned char pm;  // unsigned char to save space
 	typedef std::list<RenderObject*> RenderObjectList;
 	RenderObjectList deathNotifications;
@@ -345,7 +328,7 @@ protected:
 	bool _hidden;
 	bool _static;
 	bool _fv, _fh;
-	//bool rotateFirst;
+
 	int idx;
 	RenderObject *parent;
 	StateData *stateData;

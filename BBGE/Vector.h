@@ -23,12 +23,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <cmath>
 #include <float.h>
-#include <vector> 
+#include <vector>
 #include "Event.h"
 
-#ifdef BBGE_BUILD_DIRECTX
-	#include <d3dx9.h>
-#endif
 typedef float scalar_t;
 
 class Vector
@@ -53,7 +50,7 @@ public:
 		 v[0] = x; v[1] = y; v[2] = z; v[3] = param;
 		 return v;
 	 }
-		 
+
 	 // vector assignment
      const Vector &operator=(const Vector &vec)
      {
@@ -84,7 +81,7 @@ public:
 
      // vector add (opposite of negation)
      const Vector operator+() const
-     {    
+     {
           return Vector(*this);
      }
 
@@ -98,13 +95,13 @@ public:
 
      // vector subtraction
      const Vector operator-(const Vector& vec) const
-     {    
+     {
           return Vector(x - vec.x, y - vec.y, z - vec.z);
      }
-     
+
      // vector negation
      const Vector operator-() const
-     {    
+     {
           return Vector(-x, -y, -z);
      }
 
@@ -124,7 +121,7 @@ public:
           x *= s;
           y *= s;
           z *= s;
-          
+
           return *this;
      }
 
@@ -178,11 +175,6 @@ public:
           return vec*s;
      }
 
-/*   friend inline const Vector operator*(const Vector &vec, const scalar_t &s)
-     {
-          return Vector(vec.x*s, vec.y*s, vec.z*s);
-     }
-*/
    // divecide by scalar
      const Vector operator/(scalar_t s) const
      {
@@ -253,7 +245,7 @@ public:
 	 {
 		if (x == 0 && y == 0 && z == 0)
 		{
-			//debugLog("Normalizing 0 vector");
+
 			x = y = z = 0;
 		}
 		else
@@ -265,7 +257,7 @@ public:
 	 {
 		if (x == 0 && y == 0)
 		{
-			//debugLog("Normalizing 0 vector");
+
 			x = y = z= 0;
 		}
 		else
@@ -279,27 +271,14 @@ public:
           return sqrtf(x*x + y*y + z*z);
      }
 
-	 /*
-     // return vector with specified length
-     const Vector operator | (const scalar_t length) const
-     {
-          return *this * (length / !(*this));
-     }
 
-     // set length of vector equal to length
-     const Vector& operator |= (const float length)
-     {
-          (*this).setLength2D(length);
-		  return *this;
-     }
-	 */
 
 	 inline void setLength3D(const float l)
 	 {
 		// IGNORE !!
 		if (l == 0)
 		{
-			//debugLog("setLength3D divide by 0");
+
 		}
 		else
 		{
@@ -314,14 +293,14 @@ public:
 		float len = getLength2D();
 		if (len == 0)
 		{
-			//debugLog("divide by zero!");
+
 		}
 		else
 		{
 			this->x *= (l/len);
 			this->y *= (l/len);
 		}
-		//this->z = 0;
+
 	 }
 
      // return angle between two vectors
@@ -330,31 +309,14 @@ public:
           return acosf(*this % normal);
      }
 
-	 /*
-	 inline scalar_t cheatLen() const
-	 {
-			return (x*x + y*y + z*z);
-	 }
-	 inline scalar_t cheatLen2D() const
-	 {
-		 return (x*x + y*y);
-	 }
-	 inline scalar_t getCheatLength3D() const;
-	 */
+
 
 	 inline bool isLength2DIn(float radius) const
 	 {
 		return (x*x + y*y) <= (radius*radius);
 	 }
 
-     // reflect this vector off surface with normal vector
-	 /*
-     const Vector inline Reflection(const Vector& normal) const
-     {    
-          const Vector vec(*this | 1);     // normalize this vector
-          return (vec - normal * 2.0f * (vec % normal)) * !*this;
-     }
-	 */
+
 
 	 inline void setZero()
 	 {
@@ -392,12 +354,6 @@ public:
 			z += 360;
 	 }
 
-#ifdef BBGE_BUILD_DIRECTX
-	 const D3DCOLOR getD3DColor(float alpha)
-	 {
-		 return D3DCOLOR_RGBA(int(x*255), int(y*255), int(z*255), int(alpha*255));
-	 }
-#endif
 	 void rotate2DRad(float rad);
 	 void rotate2D360(float angle);
 };
@@ -451,7 +407,7 @@ struct InterpolatedVectorData
 		pathTimeMultiplier = 1;
 		timePassed = 0;
 		timePeriod = 0;
-		//fakeTimePassed = 0;
+
 		ease = false;
 		followingPath = false;
 	}
@@ -515,8 +471,7 @@ public:
 		return *this;
 	}
 
-	enum InterpolateToFlag { NONE=0, IS_LOOPING };
-	float interpolateTo (Vector vec, float timePeriod, int loopType = 0, bool pingPong = false, bool ease = false, InterpolateToFlag flag = NONE);
+	float interpolateTo (Vector vec, float timePeriod, int loopType = 0, bool pingPong = false, bool ease = false);
 	void inline update(float dt)
 	{
 		if (!data)

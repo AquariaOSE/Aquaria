@@ -49,7 +49,7 @@ bool Spore::isPositionClear(const Vector &position)
 {
 	if (dsq->game->isObstructed(TileVector(position)))
 		return false;
-	for (Spores::iterator i = spores.begin(); i != spores.end(); i++)	
+	for (Spores::iterator i = spores.begin(); i != spores.end(); i++)
 	{
 		Spore *s = *i;
 		if (s->position == position)
@@ -68,7 +68,7 @@ void Spore::destroy()
 
 void Spore::onEndOfLife()
 {
-	//::onEndLife();
+
 	spores.remove(this);
 }
 
@@ -84,9 +84,9 @@ void Spore::onEnterState(int state)
 }
 
 void Spore::killAllSpores()
-{	
+{
 	std::queue<Spore*>sporeDeleteQueue;
-	for (Spores::iterator i = spores.begin(); i != spores.end(); i++)	
+	for (Spores::iterator i = spores.begin(); i != spores.end(); i++)
 	{
 		sporeDeleteQueue.push(*i);
 	}
@@ -104,8 +104,8 @@ void Spore::killAllSpores()
 }
 
 void Spore::onUpdate(float dt)
-{	
-	
+{
+
 	CollideEntity::onUpdate(dt);
 
 	if (life < 1) return;
@@ -118,7 +118,7 @@ void Spore::onUpdate(float dt)
 		int sporeCr = 48;
 
 		collideRadius = scale.x * sporeCr;
-		
+
 		if (touchAvatarDamage(collideRadius, 1, Vector(-1,-1,-1), 500))
 		{
 			// YAY!

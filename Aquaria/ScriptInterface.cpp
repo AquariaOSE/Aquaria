@@ -1,4 +1,4 @@
-/*
+#/*
 Copyright (C) 2007, 2010 - Bit-Blot
 
 This file is part of Aquaria.
@@ -586,16 +586,6 @@ BaseText *getText(lua_State *L, int slot = 1)
 	return q;
 }
 
-static inline
-Shader *getShader(lua_State *L, int slot = 1)
-{
-	Shader *q = (Shader*)lua_touserdata(L, slot);
-	ENSURE_TYPE(q, SCO_SHADER);
-	if (!q)
-		scriptDebug(L, "Invalid Shader");
-	return q;
-}
-
 static SkeletalSprite *getSkeletalSprite(Entity *e)
 {
 	return e ? &e->skeletalSprite : NULL;
@@ -898,6 +888,17 @@ luaFunc(getModPath)
 	luaReturnStr(path.c_str());
 }
 
+luaFunc(getInterfaceFunctionNames)
+{
+	lua_newtable(L);
+	for(unsigned i = 0; interfaceFunctions[i]; ++i)
+	{
+		lua_pushstring(L, interfaceFunctions[i]);
+		lua_rawseti(L, -2, i+1);
+	}
+	return 1;
+}
+
 
 
 // ----- RenderObject common functions -----
@@ -1129,6 +1130,12 @@ luaFunc(obj_setBlendType)
 	luaReturnNil();
 }
 
+luaFunc(obj_getBlendType)
+{
+	RenderObject *r = robj(L);
+	luaReturnInt(r ? r->blendType : 0);
+}
+
 luaFunc(obj_setTexture)
 {
 	RenderObject *r = robj(L);
@@ -1215,6 +1222,51 @@ luaFunc(obj_addChild)
 			r->addChild(which, PM_STATIC);
 	}
 	luaReturnNil();
+}
+
+luaFunc(obj_getChild)
+{
+	RenderObject *r = robj(L);
+	size_t idx = lua_tointeger(L, 2);
+	luaReturnPtr(r && idx < r->children.size() ? r->children[idx] : NULL);
+}
+
+luaFunc(obj_removeChild)
+{
+	RenderObject *r = robj(L);
+	RenderObject *which = robj(L, 2);
+	if(r && which)
+		r->removeChild(which);
+	luaReturnNil();
+}
+
+luaFunc(obj_removeChildIdx)
+{
+	RenderObject *r = robj(L);
+	size_t idx = lua_tointeger(L, 2);
+	if(r && idx < r->children.size())
+		r->removeChild(r->children[idx]);
+	luaReturnNil();
+}
+
+luaFunc(obj_removeAllChildren)
+{
+	RenderObject *r = robj(L);
+	bool del = getBool(L, 2);
+	if(r)
+	{
+		if(del)
+			for(RenderObject::Children::iterator it = r->children.begin(); it != r->children.end(); ++it)
+				(*it)->safeKill();
+		r->children.clear();
+	}
+	luaReturnNil();
+}
+
+luaFunc(obj_getNumChildren)
+{
+	RenderObject *r = robj(L);
+	luaReturnInt(r ? (int)r->children.size() : 0);
 }
 
 luaFunc(obj_setRenderBeforeParent)
@@ -1831,6 +1883,7 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  x				) \
 	RO_FUNC(getter, prefix,  y				) \
 	RO_FUNC(getter, prefix,  setBlendType	) \
+	RO_FUNC(getter, prefix,  getBlendType	) \
 	RO_FUNC(getter, prefix,  setTexture		) \
 	RO_FUNC(getter, prefix,  delete			) \
 	RO_FUNC(getter, prefix,  getLife		) \
@@ -1864,6 +1917,11 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  setRenderBeforeParent) \
 	RO_FUNC(getter, prefix,  isRenderBeforeParent) \
 	RO_FUNC(getter, prefix,  addChild		) \
+	RO_FUNC(getter, prefix,  getChild		) \
+	RO_FUNC(getter, prefix,  removeChild	) \
+	RO_FUNC(getter, prefix,  removeChildIdx	) \
+	RO_FUNC(getter, prefix,  removeAllChildren) \
+	RO_FUNC(getter, prefix,  getNumChildren	) \
 	RO_FUNC(getter, prefix,  fh				) \
 	RO_FUNC(getter, prefix,  fv				) \
 	RO_FUNC(getter, prefix,  fhTo			) \
@@ -2090,7 +2148,7 @@ luaFunc(getNoteColor)
 
 luaFunc(getRandNote)
 {
-	//int note = lua_tointeger(L, 1);
+
 
 	luaReturnNum(dsq->getRandNote());
 }
@@ -2212,11 +2270,7 @@ luaFunc(shot_setOut)
 		Vector adjust = shot->velocity;
 		adjust.setLength2D(outness);
 		shot->position += adjust;
-		/*
-		std::ostringstream os;
-		os << "out(" << adjust.x << ", " << adjust.y << ")";
-		debugLog(os.str());
-		*/
+
 	}
 	luaReturnNil();
 }
@@ -2478,7 +2532,7 @@ static size_t _shotFilter(lua_State *L)
 	for(Shot::Shots::iterator it = Shot::shots.begin(); it != Shot::shots.end(); ++it)
 	{
 		Shot *s = *it;
-		
+
 		if (s->isActive() && s->life >= 1.0f)
 		{
 			if (dt == DT_NONE || s->getDamageType() == dt)
@@ -2675,7 +2729,7 @@ luaFunc(entity_getBoneLockEntity)
 	{
 		BoneLock *b = e->getBoneLock();
 		ent = b->entity;
-		//ent = e->boneLock.entity;
+
 	}
 	luaReturnPtr(ent);
 }
@@ -2935,11 +2989,7 @@ luaFunc(isWithin)
 	Vector v1 = getVector(L, 1);
 	Vector v2 = getVector(L, 3);
 	float dist = lua_tonumber(L, 5);
-	/*
-	std::ostringstream os;
-	os << "v1(" << v1.x << ", " << v1.y << ") v2(" << v2.x << ", " << v2.y << ")";
-	debugLog(os.str());
-	*/
+
 	Vector d = v2-v1;
 	bool v = false;
 	if (d.isLength2DIn(dist))
@@ -4031,29 +4081,13 @@ luaFunc(entity_isNearGround)
 		Vector v = dsq->game->getWallNormal(e->position, sampleArea);
 		if (!v.isZero())
 		{
-			//if (v.y < -0.5f && fabsf(v.x) < 0.4f)
+
 			if (v.y < 0 && fabsf(v.x) < 0.6f)
 			{
 				value = true;
 			}
 		}
-		/*
-		Vector v = e->position + Vector(0,e->collideRadius + TILE_SIZE/2);
-		std::ostringstream os;
-		os << "checking (" << v.x << ", " << v.y << ")";
-		debugLog(os.str());
-		TileVector t(v);
-		TileVector c;
-		for (int i = -5; i < 5; i++)
-		{
-			c.x = t.x+i;
-			c.y = t.y;
-			if (dsq->game->isObstructed(t))
-			{
-				value = true;
-			}
-		}
-		*/
+
 	}
 	luaReturnBool(value);
 }
@@ -4498,7 +4532,7 @@ luaFunc(entity_getAnimationLoop)
 luaFunc(entity_move)
 {
 	Entity *e = entity(L);
-	bool ease = lua_tointeger(L, 5);
+    //bool ease = lua_tointeger(L, 5);
 	Vector p(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	if (getBool(L, 6))
 		p = e->position + p;
@@ -4662,7 +4696,7 @@ luaFunc(savePoint)
 	Vector position;
 	if (p)
 	{
-		//dsq->game->avatar->moveToNode(p, 0, 0, 1);
+
 		position = p->nodes[0].position;
 	}
 
@@ -4673,6 +4707,12 @@ luaFunc(savePoint)
 luaFunc(saveMenu)
 {
 	dsq->doSaveSlotMenu(SSM_SAVE);
+	luaReturnNil();
+}
+
+luaFunc(setSceneDisplayNameInSave)
+{
+	dsq->game->sceneDisplayName = getString(L);
 	luaReturnNil();
 }
 
@@ -4794,7 +4834,7 @@ luaFunc(entity_damage)
 	if (e)
 	{
 		DamageData d;
-		//d.attacker = e;
+
 		d.attacker = lua_isuserdata(L, 2) ? entity(L, 2) : NULL;
 		d.damage = lua_tonumber(L, 3);
 		d.damageType = (DamageType)lua_tointeger(L, 4);
@@ -4967,11 +5007,7 @@ luaFunc(decrFlag)
 
 luaFunc(setFlag)
 {
-	/*
-	if (lua_isstring(L, 1))
-		dsq->continuity.setFlag(lua_tostring(L, 1), lua_tonumber(L, 2));
-	else
-	*/
+
 	dsq->continuity.setFlag(lua_tointeger(L, 1), lua_tointeger(L, 2));
 	luaReturnNil();
 }
@@ -4979,11 +5015,7 @@ luaFunc(setFlag)
 luaFunc(getFlag)
 {
 	int v = 0;
-	/*
-	if (lua_isstring(L, 1))
-		v = dsq->continuity.getFlag(lua_tostring(L, 1));
-	else if (lua_isnumber(L, 1))
-	*/
+
 	v = dsq->continuity.getFlag(lua_tointeger(L, 1));
 
 	luaReturnNum(v);
@@ -6219,12 +6251,8 @@ luaFunc(entity_getBoneByName)
 luaFunc(entity_getBoneByInternalId)
 {
 	Entity *e = entity(L);
-	if(!e)
-		luaReturnPtr(NULL);
-	size_t i = lua_tointeger(L, 1);
-	if(i >= e->skeletalSprite.bones.size())
-		luaReturnPtr(NULL);
-	luaReturnPtr(e->skeletalSprite.bones[i]);
+	size_t i = lua_tointeger(L, 2);
+	luaReturnPtr((e && i < e->skeletalSprite.bones.size()) ? e->skeletalSprite.bones[i] : NULL);
 }
 
 luaFunc(entity_getNumBones)
@@ -6668,7 +6696,7 @@ luaFunc(playMusic)
 luaFunc(playMusicStraight)
 {
 	dsq->sound->setMusicFader(1,0);
-	dsq->sound->playMusic(getString(L, 1), SLT_LOOP, SFT_IN, 0.5); //SFT_IN, 0.1);//, SFT_IN, 0.2);
+	dsq->sound->playMusic(getString(L, 1), SLT_LOOP, SFT_IN, 0.5);
 	luaReturnNil();
 }
 
@@ -6793,7 +6821,7 @@ luaFunc(entity_adjustPositionBySurfaceNormal)
 			e->position += v;
 		}
 		e->setv(EV_CRAWLING, 0);
-		//e->setCrawling(false);
+
 	}
 	luaReturnNil();
 }
@@ -6807,16 +6835,10 @@ luaFunc(entity_moveAlongSurface)
 	{
 		e->lastPosition = e->position;
 
-		//if (!e->position.isInterpolating())
+
 		{
 
 
-			/*
-			if (dsq->game->isObstructed(TileVector(e->position)))
-			{
-				e->moveOutOfWall();
-			}
-			*/
 
 			Vector v;
 			if (e->ridingOnEntity)
@@ -6826,58 +6848,22 @@ luaFunc(entity_moveAlongSurface)
 			}
 			else
 				v = dsq->game->getWallNormal(e->position);
-			//int outFromWall = lua_tointeger(L, 5);
+
 			int outFromWall = e->getv(EV_WALLOUT);
 			bool invisibleIn = e->isSittingOnInvisibleIn();
 
-			/*
-			if (invisibleIn)
-				debugLog("Found invisibleIn");
-			else
-				debugLog("NOT FOUND");
-			*/
 
-			/*
-			for (int x = -2; x < 2; x++)
-			{
-				for (int y = -2; y< 2; y++)
-				{
-					if (dsq->game->getGrid(TileVector(x,y))== OT_INVISIBLEIN)
-					{
-						debugLog("found invisible in");
-						invisibleIn = true;
-						break;
-					}
-				}
-			}
-			*/
+
 			if (invisibleIn)
 				outFromWall -= TILE_SIZE;
 			float t = 0.1;
 			e->offset.interpolateTo(v*outFromWall, t);
-			/*
-			if (outFromWall)
-			{
-				//e->lastWallOffset = dsq->game->getWallNormal(e->position)*outFromWall;
-				//e->offset.interpolateTo(dsq->game->getWallNormal(e->position)*outFromWall, time*2);
-				//e->offset = v*outFromWall;
 
-				//float t = 0;
-				e->offset.interpolateTo(v*outFromWall, t);
-				//pos += e->lastWallOffset;
-			}
-			else
-			{
-				e->offset.interpolateTo(Vector(0,0), t);
-				//e->offset.interpolateTo(Vector(0,0), time*2);
-				//e->lastWallOffset = Vector(0,0);g
-			}
-			*/
-			// HACK: make this an optional parameter?
-			//e->rotateToVec(v, 0.1);
+
+
 			float dt = lua_tonumber(L, 2);
 			float speed = lua_tonumber(L, 3);
-			//int climbHeight = lua_tonumber(L, 4);
+
 			Vector mov;
 			if (e->surfaceMoveDir==1)
 				mov = Vector(v.y, -v.x);
@@ -6890,49 +6876,8 @@ luaFunc(entity_moveAlongSurface)
 
 			e->vel = 0;
 
-			/*
-			float adjustbit = float(speed)/float(TILE_SIZE);
-			if (e->isNearObstruction(0))
-			{
-				Vector n = dsq->game->getWallNormal(e->position);
-				if (!n.isZero())
-				{
-					Vector sp = e->position;
-					e->position += n * adjustbit * dt;
-				}
-			}
-			if (!e->isNearObstruction(1))
-			{
-				Vector n = dsq->game->getWallNormal(e->position);
-				if (!n.isZero())
-				{
-					Vector sp = e->position;
-					e->position -= n * adjustbit * dt;
-				}
-			}
-			*/
-				/*
-				Vector sp = e->position;
-				e->clampToSurface();
-				*/
-				/*
-				e->position = sp;
-				e->internalOffset.interpolateTo(e->position-sp, 0.2);
-				*/
-				/*
-				e->position = e->lastPosition;
-				e->position.interpolateTo(to*0.5f + e->position*0.5f, 0.5);
-				*/
-					/*
-					Vector to = e->position;
-					e->position = e->lastPosition;
-					e->position.interpolateTo(to, 0.5);
-					*/
-					/*
-					e->position = sp;
-					e->internalOffset.interpolateTo(e->position - sp, 0.2);
-					*/
-					//e->clampToSurface(0.1);
+
+
 		}
 	}
 
@@ -6941,7 +6886,7 @@ luaFunc(entity_moveAlongSurface)
 
 luaFunc(entity_rotateToSurfaceNormal)
 {
-	//ScriptedEntity *e = scriptedEntity(L);
+
 	Entity *e = entity(L);
 	float t = lua_tonumber(L, 2);
 	int n = lua_tointeger(L, 3);
@@ -6950,7 +6895,7 @@ luaFunc(entity_rotateToSurfaceNormal)
 	{
 		e->rotateToSurfaceNormal(t, n, rot);
 	}
-	//Entity *e = entity(L);
+
 
 	luaReturnNil();
 }
@@ -7199,11 +7144,7 @@ luaFunc(entity_pullEntities)
 					Vector pull = pos - ent->position;
 					pull.setLength2D(float(len) * dt);
 					ent->vel2 += pull;
-					/*
-					std::ostringstream os;
-					os << "ent: " << ent->name << " + (" << pull.x << ", " << pull.y << ")";
-					debugLog(os.str());
-					*/
+
 				}
 			}
 		}
@@ -7247,7 +7188,7 @@ luaFunc(entity_isRidingOnEntity)
 		luaReturnPtr(NULL);
 }
 
-//entity_setProperty(me, EP_SOLID, true)
+
 luaFunc(entity_isProperty)
 {
 	Entity *e = entity(L);
@@ -7259,7 +7200,7 @@ luaFunc(entity_isProperty)
 	luaReturnBool(v);
 }
 
-//entity_setProperty(me, EP_SOLID, true)
+
 luaFunc(entity_setProperty)
 {
 	Entity *e = entity(L);
@@ -7315,10 +7256,7 @@ luaFunc(entity_hurtTarget)
 		d.damage = lua_tointeger(L, 2);
 		e->getTargetEntity(e->currentEntityTarget)->damage(d);
 	}
-	/*
-	if (e && e->getTargetEntity())
-		e->getTargetEntity(e->currentEntityTarget)->damage(lua_tointeger(L, 2), 0, e);
-	*/
+
 	luaReturnNil();
 }
 
@@ -7755,7 +7693,7 @@ luaFunc(getNearestEntity)
 	Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	int radius = lua_tointeger(L, 3);
 	Entity *ignore = lua_isuserdata(L, 4) ? entity(L, 4) : NULL;
-	EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
+    //EntityType et = lua_isnumber(L, 5) ? (EntityType)lua_tointeger(L, 5) : ET_NOTYPE;
 	DamageType dt = lua_isnumber(L, 6) ? (DamageType)lua_tointeger(L, 6) : DT_NONE;
 	int lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
 	int lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
@@ -8174,7 +8112,7 @@ luaFunc(entity_getTarget)
 	if (e)
 	{
 		retEnt = e->getTargetEntity(lua_tonumber(L, 2));
-		//e->activate();
+
 	}
 	luaReturnPtr(retEnt);
 }
@@ -8672,6 +8610,12 @@ luaFunc(isObstructed)
 	luaReturnBool(dsq->game->isObstructed(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2))), obs ? obs : -1));
 }
 
+luaFunc(isObstructedRaw)
+{
+	int obs = lua_tointeger(L, 3);
+	luaReturnBool(dsq->game->isObstructedRaw(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2))), obs));
+}
+
 luaFunc(getObstruction)
 {
 	luaReturnInt(dsq->game->getGrid(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)))));
@@ -8789,11 +8733,7 @@ luaFunc(entity_getFlag)
 luaFunc(isFlag)
 {
 	int v = 0;
-	/*
-	if (lua_isstring(L, 1))
-		v = dsq->continuity.getFlag(lua_tostring(L, 1));
-	else if (lua_isnumber(L, 1))
-	*/
+
 	bool f = false;
 	if (lua_isnumber(L, 1))
 	{
@@ -8805,11 +8745,7 @@ luaFunc(isFlag)
 		v = dsq->continuity.getFlag(getString(L, 1));
 		f = (v == lua_tointeger(L, 2));
 	}
-	/*
-	int f = 0;
-	dsq->continuity.getFlag(lua_tostring(L, 1));
 
-	*/
 	luaReturnBool(f);
 }
 
@@ -8970,9 +8906,9 @@ luaFunc(createFindPath)
 luaFunc(findPathBegin)
 {
 	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
-	Vector start(lua_tonumber(L, 1), lua_tonumber(L, 2));
-	Vector end(lua_tonumber(L, 3), lua_tonumber(L, 4));
-	ObsType obs = ObsType(lua_tointeger(L, 8));
+	Vector start(lua_tonumber(L, 2), lua_tonumber(L, 3));
+	Vector end(lua_tonumber(L, 4), lua_tonumber(L, 5));
+	ObsType obs = ObsType(lua_tointeger(L, 6));
 	PathFinding::beginFindPath(state, start, end, obs);
 	luaReturnNil();
 }
@@ -8989,12 +8925,12 @@ luaFunc(findPathFinish)
 {
 	PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
 	VectorPath path;
-	bool found = PathFinding::finishFindPath(state, path);
+	bool found = PathFinding::finishFindPath(state, path, lua_tointeger(L, 2));
 	if(!found)
 		luaReturnBool(false);
 
 	lua_pushinteger(L, (int)path.getNumPathNodes());
-	_fillPathfindTables(L, path, 2, 3);
+	_fillPathfindTables(L, path, 3, 4);
 	return 3;
 }
 
@@ -9008,6 +8944,13 @@ luaFunc(findPathGetStats)
 	return 2;
 }
 
+luaFunc(findPathFreeMemory)
+{
+    PathFinding::State *state = *(PathFinding::State**)luaL_checkudata(L, 1, "pathfinder");
+    PathFinding::purgeFindPath(state);
+    luaReturnNil();
+}
+
 luaFunc(castLine)
 {
 	Vector v(lua_tonumber(L, 1), lua_tonumber(L, 2));
@@ -9015,20 +8958,38 @@ luaFunc(castLine)
 	int tiletype = lua_tointeger(L, 5);
 	if(!tiletype)
 		tiletype = OT_BLOCKING;
+	bool invert = getBool(L, 6);
 	Vector step = end - v;
 	int steps = step.getLength2D() / TILE_SIZE;
 	step.setLength2D(TILE_SIZE);
 
-	for(int i = 0; i < steps; ++i)
+	if(!invert)
 	{
-		if(dsq->game->getGridRaw(TileVector(v)) & tiletype)
+		for(int i = 0; i < steps; ++i)
 		{
-			lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
-			lua_pushnumber(L, v.x);
-			lua_pushnumber(L, v.y);
-			return 3;
+			if(dsq->game->getGridRaw(TileVector(v)) & tiletype)
+			{
+				lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
+				lua_pushnumber(L, v.x);
+				lua_pushnumber(L, v.y);
+				return 3;
+			}
+			v += step;
 		}
-		v += step;
+	}
+	else
+	{
+		for(int i = 0; i < steps; ++i)
+		{
+			if(!(dsq->game->getGridRaw(TileVector(v)) & tiletype))
+			{
+				lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
+				lua_pushnumber(L, v.x);
+				lua_pushnumber(L, v.y);
+				return 3;
+			}
+			v += step;
+		}
 	}
 
 	lua_pushboolean(L, false);
@@ -9377,6 +9338,191 @@ luaFunc(getPerformanceFreq)
 #endif
 }
 
+// ---------- Minimap related ------------------
+
+luaFunc(getMinimapRender)
+{
+	luaReturnPtr(dsq->game->miniMapRender);
+}
+
+luaFunc(minimap_setWaterBitTex)
+{
+	luaReturnBool(MiniMapRender::setWaterBitTex(getString(L)));
+}
+luaFunc(minimap_setTopTex)
+{
+	luaReturnBool(MiniMapRender::setTopTex(getString(L)));
+}
+luaFunc(minimap_setBottomTex)
+{
+	luaReturnBool(MiniMapRender::setBottomTex(getString(L)));
+}
+luaFunc(minimap_setAvatarIconTex)
+{
+	luaReturnBool(MiniMapRender::setAvatarTex(getString(L)));
+}
+luaFunc(minimap_setHealthBarTex)
+{
+	luaReturnBool(MiniMapRender::setAvatarTex(getString(L)));
+}
+luaFunc(minimap_setMaxHealthMarkerTex)
+{
+	luaReturnBool(MiniMapRender::setMaxHealthMarkerTex(getString(L)));
+}
+
+template<typename T>
+int mmicon_delete(lua_State *L, T *obj)
+{
+	delete obj->minimapIcon;
+	obj->minimapIcon = NULL;
+	luaReturnNil();
+}
+template<typename T>
+int mmicon_tex(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	MinimapIcon *ico = obj->ensureMinimapIcon();
+	bool good = ico->setTexture(getString(L, 2));
+	luaReturnBool(good);
+}
+template<typename T>
+int mmicon_size(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	luaReturnNum(interpolateVec2(L, obj->ensureMinimapIcon()->size, 2));
+}
+template<typename T>
+int mmicon_color(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	luaReturnNum(interpolateVec3(L, obj->ensureMinimapIcon()->color, 2));
+}
+template<typename T>
+int mmicon_alpha(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	luaReturnNum(interpolateVec1(L, obj->ensureMinimapIcon()->alpha, 2));
+}
+template<typename T>
+int mmicon_scaleWithDistance(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	obj->ensureMinimapIcon()->scaleWithDistance = getBool(L, 2);
+	luaReturnNil();
+}
+template<typename T>
+int mmicon_throb(lua_State *L, T *obj)
+{
+	if(!obj)
+		luaReturnNil();
+	obj->ensureMinimapIcon()->throbMult = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(entity_mmicon_delete) { return mmicon_delete(L, entity(L)); }
+luaFunc(entity_mmicon_tex) { return mmicon_tex(L, entity(L)); }
+luaFunc(entity_mmicon_size) { return mmicon_size(L, entity(L)); }
+luaFunc(entity_mmicon_color) { return mmicon_color(L, entity(L)); }
+luaFunc(entity_mmicon_alpha) { return mmicon_alpha(L, entity(L)); }
+luaFunc(entity_mmicon_scaleWithDistance) { return mmicon_scaleWithDistance(L, entity(L)); }
+luaFunc(entity_mmicon_throb) { return mmicon_throb(L, entity(L)); }
+
+luaFunc(node_mmicon_delete) { return mmicon_delete(L, path(L)); }
+luaFunc(node_mmicon_tex) { return mmicon_tex(L, path(L)); }
+luaFunc(node_mmicon_size) { return mmicon_size(L, path(L)); }
+luaFunc(node_mmicon_color) { return mmicon_color(L, path(L)); }
+luaFunc(node_mmicon_alpha) { return mmicon_alpha(L, path(L)); }
+luaFunc(node_mmicon_scaleWithDistance) { return mmicon_scaleWithDistance(L, path(L)); }
+luaFunc(node_mmicon_throb) { return mmicon_throb(L, path(L)); }
+
+
+class LuaXMLConverter : public tinyxml2::XMLVisitor
+{
+public:
+	LuaXMLConverter(lua_State *lua) : L(lua) {}
+	virtual ~LuaXMLConverter() {}
+
+	virtual bool VisitEnter( const tinyxml2::XMLDocument& /*doc*/ )
+	{
+		lua_newtable(L);
+		indexes.push_back(0);
+		return true;
+	}
+
+	virtual bool VisitExit( const tinyxml2::XMLDocument& /*doc*/ )
+	{
+		indexes.pop_back();
+		assert(indexes.empty());
+		// Leave the root table on the stack
+		return true;
+	}
+
+	virtual bool VisitEnter( const tinyxml2::XMLElement& element, const tinyxml2::XMLAttribute *a)
+	{
+		lua_newtable(L);
+		indexes.push_back(0);
+		if(a)
+		{
+			lua_newtable(L);
+			for( ; a; a = a->Next())
+			{
+				lua_pushstring(L, a->Value());
+				lua_setfield(L, -2, a->Name());
+			}
+			lua_setfield(L, -2, "attr");
+		}
+		if(const char *name = element.Value())
+		{
+			lua_pushstring(L, name);
+			lua_setfield(L, -2, "name");
+		}
+		if(const char *text = element.GetText())
+		{
+			lua_pushstring(L, text);
+			lua_setfield(L, -2, "text");
+		}
+		return true;
+	}
+
+	virtual bool VisitExit( const tinyxml2::XMLElement& /*element*/ )
+	{
+		indexes.pop_back();
+		lua_rawseti(L, -2, ++indexes.back());
+		return true;
+	}
+
+protected:
+	std::vector<unsigned> indexes;
+	lua_State * const L;
+};
+
+luaFunc(loadXMLTable)
+{
+	const std::string s = getString(L);
+	safePath(L, s);
+	std::string fn;
+	if(!findFile_helper(s.c_str(), fn))
+		luaReturnNil();
+
+	tinyxml2::XMLDocument xml;
+	tinyxml2::XMLError err = readXML(fn, xml);
+	if(err != tinyxml2::XML_SUCCESS)
+	{
+		lua_pushboolean(L, false);
+		lua_pushinteger(L, err);
+		return 2;
+	}
+
+	LuaXMLConverter cvt(L);
+	xml.Accept(&cvt);
+	return 1;
+}
+
 //--------------------------------------------------------------------------------------------
 
 #define luaRegister(func)	{#func, l_##func}
@@ -9393,6 +9539,7 @@ static const struct {
 	luaRegister(fileExists),
 	luaRegister(getModName),
 	luaRegister(getModPath),
+	luaRegister(getInterfaceFunctionNames),
 
 	luaRegister(debugBreak),
 	luaRegister(setIgnoreAction),
@@ -9549,6 +9696,7 @@ static const struct {
 
 	luaRegister(entity_setDeathParticleEffect),
 	luaRegister(entity_setDeathSound),
+    luaRegister(entity_setStopSoundsOnDeath),
 
 	luaRegister(entity_setDamageTarget),
 	luaRegister(entity_setAllDamageTargets),
@@ -9801,7 +9949,7 @@ static const struct {
 	luaRegister(resetTimer),
 
 	luaRegister(addInfluence),
-	luaRegister(setSuckPosition),
+    luaRegister(getSuckPosition),
 	luaRegister(setSuckPosition),
 	luaRegister(setNumSuckPositions),
 	luaRegister(setupBasicEntity),
@@ -9875,6 +10023,7 @@ static const struct {
 
 	luaRegister(savePoint),
 	luaRegister(saveMenu),
+	luaRegister(setSceneDisplayNameInSave),
 	luaRegister(wait),
 	luaRegister(watch),
 
@@ -9942,6 +10091,7 @@ static const struct {
 
 	luaRegister(singSong),
 	luaRegister(isObstructed),
+	luaRegister(isObstructedRaw),
 	luaRegister(isObstructedBlock),
 	luaRegister(getObstruction),
 	luaRegister(getGridRaw),
@@ -9951,6 +10101,7 @@ static const struct {
 	luaRegister(findPathUpdate),
 	luaRegister(findPathFinish),
 	luaRegister(findPathGetStats),
+	luaRegister(findPathFreeMemory),
 	luaRegister(castLine),
 	luaRegister(getUserInputString),
 	luaRegister(getMaxCameraValues),
@@ -10403,7 +10554,29 @@ static const struct {
 	luaRegister(getPerformanceCounter),
 	luaRegister(getPerformanceFreq),
 
+	luaRegister(getMinimapRender),
+	luaRegister(minimap_setWaterBitTex),
+	luaRegister(minimap_setTopTex),
+	luaRegister(minimap_setBottomTex),
+    luaRegister(minimap_setAvatarIconTex),
+    luaRegister(minimap_setHealthBarTex),
+    luaRegister(minimap_setMaxHealthMarkerTex),
+	luaRegister(entity_mmicon_delete),
+	luaRegister(entity_mmicon_tex),
+	luaRegister(entity_mmicon_size),
+	luaRegister(entity_mmicon_color),
+	luaRegister(entity_mmicon_alpha),
+	luaRegister(entity_mmicon_scaleWithDistance),
+	luaRegister(entity_mmicon_throb),
+	luaRegister(node_mmicon_delete),
+	luaRegister(node_mmicon_tex),
+	luaRegister(node_mmicon_size),
+	luaRegister(node_mmicon_color),
+	luaRegister(node_mmicon_alpha),
+	luaRegister(node_mmicon_scaleWithDistance),
+	luaRegister(node_mmicon_throb),
 
+	luaRegister(loadXMLTable),
 
 #undef MK_FUNC
 #undef MK_ALIAS
@@ -11114,6 +11287,7 @@ static const struct {
 	luaConstant(OT_MASK_BLACK),
 	luaConstant(OT_BLOCKING),
 	luaConstant(OT_USER_MASK),
+	luaConstant(OT_OUTOFBOUNDS),
 
 	luaConstant(SEE_MAP_NEVER),
 	luaConstant(SEE_MAP_DEFAULT),

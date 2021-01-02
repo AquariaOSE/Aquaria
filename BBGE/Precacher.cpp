@@ -82,7 +82,7 @@ void precacherCallback(const std::string &file, intptr_t param)
 }
 
 // precacheTex
-// caches one texture 
+// caches one texture
 // also support simple wildcard to cache multiple textures
 // e.g. naija/*.png
 void Precacher::precacheTex(const std::string &tex)
@@ -97,12 +97,12 @@ void Precacher::precacheTex(const std::string &tex)
 
 	if (core->debugLogTextures)
 		debugLog("PRECACHING: " + tex);
-		
+
 	if (tex.find('*')!=std::string::npos)
 	{
 		if (core->debugLogTextures)
 			debugLog("searching directory");
-			
+
 		int loc = tex.find('*');
 		std::string path  = tex.substr(0, loc);
 		std::string type = tex.substr(loc+1, tex.size());
@@ -137,11 +137,11 @@ void Precacher::precacheList(const std::string &list, void progressCallback())
 		if (!t.empty())
 		{
 #if defined(BBGE_BUILD_UNIX)
-			//debugLog("precache["+t+"]");
+
 			t = t.substr(0,t.size()-1);
 			debugLog("precache["+t+"]");
 #endif
-            stringToLower(t);
+			stringToLower(t);
 			precacheTex(t);
 		}
 	}

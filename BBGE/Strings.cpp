@@ -159,9 +159,9 @@ std::string getInputCodeToUserString(int key)
 				use = "Right Mouse Button";
 			if (use == "MOUSE_BUTTON_MIDDLE")
 				use = "Middle Mouse Button";
-			
+
 			return use;
-			//return (*i).first;
+
 		}
 	}
 	return "";

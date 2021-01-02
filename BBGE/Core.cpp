@@ -44,7 +44,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <direct.h>
 #endif
 
-#ifdef BBGE_BUILD_SDL
 	#include "SDL_syswm.h"
 	#ifdef BBGE_BUILD_SDL2
 	static SDL_Window *gScreen=0;
@@ -55,7 +54,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 	bool ignoreNextMouse=false;
 	Vector unchange;
-#endif
 
 #ifdef BBGE_BUILD_VFS
 #include "ttvfs.h"
@@ -75,8 +73,8 @@ void Core::initIcon()
 {
 #ifdef BBGE_BUILD_WINDOWS
 	HINSTANCE handle = ::GetModuleHandle(NULL);
-	//if (icon_windows)
-	//	::DestroyIcon(icon_windows);
+
+
 
 	icon_windows = ::LoadIcon(handle, "icon");
 
@@ -84,8 +82,8 @@ void Core::initIcon()
 	SDL_VERSION(&wminfo.version)
 	if (SDL_GetWindowWMInfo(gScreen, &wminfo) != 1)
 	{
-		//errorLog("wrong SDL version");
-		// error: wrong SDL version
+
+
 	}
 
 	HWND hwnd = wminfo.info.win.window;
@@ -171,7 +169,7 @@ void Core::resetGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 	shutdownGraphicsLibrary();
 
 	initGraphicsLibrary(w, h, fullscreen, vsync, bpp);
-	
+
 	enable2DWide(w, h);
 
 	reloadResources();
@@ -183,45 +181,28 @@ void Core::resetGraphics(int w, int h, int fullscreen, int vsync, int bpp)
 
 void Core::toggleScreenMode(int t)
 {
-#ifdef BBGE_BUILD_GLFW
-/*
-		glfwCloseWindow();
-
-		createWindow(800,600,32,false,"");
-		initGraphicsLibrary(false, true);
-		enable2D(800);
-		//reloadResources();
-		*/
-#endif
-#ifdef BBGE_BUILD_SDL
 	sound->pause();
 	resetGraphics(-1, -1, t);
 	cacheRender();
 	resetTimer();
 	sound->resume();
-#endif
 }
 
 void Core::updateCursorFromJoystick(float dt, int spd)
 {
-	//debugLog("updating mouse from joystick");
+
 
 	core->mouse.position += joystick.position*dt*spd;
 
-/*
-	if (!joystick.position.isZero())
-		setMousePosition(core->mouse.position);
-	*/
+
 
 	doMouseConstraint();
 }
 
 void Core::setWindowCaption(const std::string &caption, const std::string &icon)
 {
-#ifdef BBGE_BUILD_SDL
 #ifndef BBGE_BUILD_SDL2
 	SDL_WM_SetCaption(caption.c_str(), icon.c_str());
-#endif
 #endif
 }
 
@@ -232,584 +213,40 @@ RenderObjectLayer *Core::getRenderObjectLayer(int i)
 	return &renderObjectLayers[i];
 }
 
-#if defined(BBGE_BUILD_WINDOWS) && !defined(BBGE_BUILD_SDL)
-	LPDIRECTINPUT8			g_pDI       = NULL; // The DirectInput object
-	LPDIRECTINPUTDEVICE8	g_pKeyboard = NULL; // The keyboard device
-	LPDIRECTINPUTDEVICE8	g_pMouse	= NULL;
-
-	D3DCOLOR				d3dColor	=0xFFFFFFFF;
-#endif
-
-#ifdef BBGE_BUILD_DIRECTX
-
-	__int64 timerStart=0, timerEnd=0, timerFreq=0;
-	//Direct3D 9 interface
-	IDirect3D9* d3d						= NULL;
-	//Capabilities of graphics adapter
-	D3DCAPS9 d3dCaps;
-
-	//Direct3D present parameters
-	D3DPRESENT_PARAMETERS d3dPresent;
-	LPDIRECT3DDEVICE9       g_pd3dDevice = NULL; // Our rendering device
-	LPD3DXSPRITE			d3dSprite	= NULL;
-	LPD3DXMATRIXSTACK		d3dMatrixStack = NULL;
-	IDirect3DVertexBuffer9* vertexBuffer	= NULL;
-	IDirect3DVertexBuffer9* preTransVertexBuffer = NULL;
-
-	//Custom vertex
-	struct TLVERTEX
-	{
-	    float x;
-	    float y;
-	    float z;
-	    //float rhw;
-	    D3DCOLOR colour;
-	    float u;
-	    float v;
-	};
-	const DWORD D3DFVF_TLVERTEX = D3DFVF_XYZ | D3DFVF_DIFFUSE | D3DFVF_TEX1;
-	struct PTLVERTEX
-	{
-	    float x;
-	    float y;
-	    float z;
-	    float rhw;
-	    D3DCOLOR colour;
-	    float u;
-	    float v;
-	};
-
-	const DWORD D3DFVF_PTLVERTEX = D3DFVF_XYZRHW | D3DFVF_DIFFUSE | D3DFVF_TEX1;
-#endif
-
-
-
-	#ifdef BBGE_BUILD_DIRECTX
-	/*
-	LPDIRECT3DVERTEXBUFFER9 g_pVB        = NULL; // Buffer to hold vertices
-	LPDIRECT3DTEXTURE9      g_pTexture   = NULL; // Our texture
-	*/
-	// A structure for our custom vertex type
-	struct CUSTOMVERTEX
-	{
-	    FLOAT x, y, z, rhw; // The transformed position for the vertex
-	    DWORD color;        // The vertex color
-	};
-
-	// Our custom FVF, which describes our custom vertex structure
-	#define D3DFVF_CUSTOMVERTEX (D3DFVF_XYZRHW|D3DFVF_DIFFUSE)
-
-	LPD3DXMATRIXSTACK Core::getD3DMatrixStack()
-	{
-		return d3dMatrixStack;
-	}
-
-	LPDIRECT3DDEVICE9 Core::getD3DDevice()
-	{
-		return g_pd3dDevice;
-	}
-
-	LPD3DXSPRITE Core::getD3DSprite()
-	{
-		return d3dSprite;
-	}
-
-	LRESULT WINAPI MsgProc( HWND hWnd, UINT msg, WPARAM wParam, LPARAM lParam )
-	{
-		switch( msg )
-		{
-	        case WM_DESTROY:
-				//Cleanup();
-				PostQuitMessage( 0 );
-				return 0;
-		}
-
-	    return DefWindowProc( hWnd, msg, wParam, lParam );
-}
-	void Core::blitD3DVerts(IDirect3DTexture9 *texture, float v1x, float v1y, float v2x, float v2y, float v3x, float v3y, float v4x, float v4y)
-	{
-		TLVERTEX* vertices;
-
-		//Lock the vertex buffer
-		vertexBuffer->Lock(0, 0, (void**)&vertices, NULL);
-
-		vertices[0].colour = d3dColor;
-		vertices[0].x = v1x;
-		vertices[0].y = v1y;
-		vertices[0].z = 1.0f;
-		vertices[0].u = 0.0f;
-		vertices[0].v = 1.0f-1.0f;
-
-		vertices[1].colour = d3dColor;
-		vertices[1].x = v2x;
-		vertices[1].y = v2y;
-		vertices[1].z = 1.0f;
-		vertices[1].u = 1.0f;
-		vertices[1].v = 1.0f-1.0f;
-
-		vertices[2].colour = d3dColor;
-		vertices[2].x = v3x;
-		vertices[2].y = v3y;
-		vertices[2].z = 1.0f;
-		vertices[2].u = 1.0f;
-		vertices[2].v = 1.0f-0.0f;
-
-		vertices[3].colour = d3dColor;
-		vertices[3].x = v4x;
-		vertices[3].y = v4y;
-		vertices[3].z = 1.0f;
-		vertices[3].u = 0.0f;
-		vertices[3].v = 1.0f-0.0f;
-		//Unlock the vertex buffer
-		vertexBuffer->Unlock();
-
-		//Set texture
-		g_pd3dDevice->SetTexture (0, texture);
-
-		//Draw image
-		g_pd3dDevice->DrawPrimitive (D3DPT_TRIANGLEFAN, 0, 2);
-	}
-
-	void Core::blitD3DEx (IDirect3DTexture9 *texture, int w2, int h2, float u1, float v1, float u2, float v2)
-	{
-		TLVERTEX* vertices;
-
-		/*
-		int w2=width/2;
-		int h2=height/2;
-		*/
-		//Lock the vertex buffer
-		vertexBuffer->Lock(0, 0, (void**)&vertices, NULL);
-
-		//Setup vertices
-		//A -0.5f modifier is applied to vertex coordinates to match texture
-		//and screen coords. Some drivers may compensate for this
-		//automatically, but on others texture alignment errors are introduced
-		//More information on this can be found in the Direct3D 9 documentation
-		vertices[0].colour = d3dColor;
-		vertices[0].x = -0.5f*w2;
-		vertices[0].y = -0.5f*h2;
-		vertices[0].z = 1.0f;
-		//vertices[0].rhw = 1.0f;
-		vertices[0].u = u1;
-		vertices[0].v = 1.0f-v2;
-
-		vertices[1].colour = d3dColor;
-		vertices[1].x = 0.5f*w2;
-		vertices[1].y = -0.5f*h2;
-		vertices[1].z = 1.0f;
-		//vertices[1].rhw = 1.0f;
-		vertices[1].u = u2;
-		vertices[1].v = 1.0f-v2;
-
-		vertices[2].colour = d3dColor;
-		vertices[2].x = 0.5f*w2;
-		vertices[2].y = 0.5f*h2;
-		vertices[2].z = 1.0f;
-		//vertices[2].rhw = 1.0f;
-		vertices[2].u = u2;
-		vertices[2].v = 1.0f-v1;
-
-		vertices[3].colour = d3dColor;
-		vertices[3].x = -0.5f*w2;
-		vertices[3].y = 0.5f*h2;
-		vertices[3].z = 1.0f;
-		//vertices[3].rhw = 1.0f;
-		vertices[3].u = u1;
-		vertices[3].v = 1.0f-v1;
-		//Unlock the vertex buffer
-		vertexBuffer->Unlock();
-
-		//Set texture
-		g_pd3dDevice->SetTexture (0, texture);
-
-		//Draw image
-		g_pd3dDevice->DrawPrimitive (D3DPT_TRIANGLEFAN, 0, 2);
-	}
-
-	void Core::blitD3DGradient(D3DCOLOR ulc0, D3DCOLOR ulc1, D3DCOLOR ulc2, D3DCOLOR ulc3)
-	{
-		TLVERTEX* vertices;
-
-		//Lock the vertex buffer
-		vertexBuffer->Lock(0, 0, (void**)&vertices, NULL);
-		vertices[0].colour = ulc0;
-		vertices[0].x = -0.5f;
-		vertices[0].y = -0.5f;
-		vertices[0].z = 1.0f;
-		//vertices[0].rhw = 1.0f;
-		vertices[0].u = 0.0f;
-		vertices[0].v = 1.0f-1.0f;
-
-		vertices[1].colour = ulc1;
-		vertices[1].x = 0.5f;
-		vertices[1].y = -0.5f;
-		vertices[1].z = 1.0f;
-		//vertices[1].rhw = 1.0f;
-		vertices[1].u = 1.0f;
-		vertices[1].v = 1.0f-1.0f;
-
-		vertices[2].colour = ulc2;
-		vertices[2].x = 0.5f;
-		vertices[2].y = 0.5f;
-		vertices[2].z = 1.0f;
-		//vertices[2].rhw = 1.0f;
-		vertices[2].u = 1.0f;
-		vertices[2].v = 1.0f-0.0f;
-
-		vertices[3].colour = ulc3;
-		vertices[3].x = -0.5f;
-		vertices[3].y = 0.5f;
-		vertices[3].z = 1.0f;
-		//vertices[3].rhw = 1.0f;
-		vertices[3].u = 0.0f;
-		vertices[3].v = 1.0f-0.0f;
-		//Unlock the vertex buffer
-		vertexBuffer->Unlock();
-
-		//Set texture
-		//g_pd3dDevice->SetTexture (0, texture);
-		g_pd3dDevice->SetTexture (0, 0);
-
-		//Draw image
-		g_pd3dDevice->DrawPrimitive (D3DPT_TRIANGLEFAN, 0, 2);
-	}
-
-	void Core::blitD3DPreTrans(IDirect3DTexture9 *texture, float x, float y, int w2, int h2)
-	{
-		/*
-		PTLVERTEX* vertices;
-		//Lock the vertex buffer
-		preTransVertexBuffer->Lock(0, 0, (void**)&vertices, NULL);
-		*/
-		TLVERTEX* vertices;
-		//Lock the vertex buffer
-		vertexBuffer->Lock(0, 0, (void**)&vertices, NULL);
-
-
-		//Setup vertices
-		//A -0.5f modifier is applied to vertex coordinates to match texture
-		//and screen coords. Some drivers may compensate for this
-		//automatically, but on others texture alignment errors are introduced
-		//More information on this can be found in the Direct3D 9 documentation
-		vertices[0].colour = d3dColor;
-		vertices[0].x = x-0.5f*w2;
-		vertices[0].y = y-0.5f*h2;
-		vertices[0].z = 1.0f;
-		//vertices[0].rhw = 1.0f;
-		vertices[0].u = 0.0f;
-		vertices[0].v = 1.0f-1.0f;
-
-		vertices[1].colour = d3dColor;
-		vertices[1].x = x+0.5f*w2;
-		vertices[1].y = y-0.5f*h2;
-		vertices[1].z = 1.0f;
-		//vertices[1].rhw = 1.0f;
-		vertices[1].u = 1.0f;
-		vertices[1].v = 1.0f-1.0f;
-
-		vertices[2].colour = d3dColor;
-		vertices[2].x = x+0.5f*w2;
-		vertices[2].y = y+0.5f*h2;
-		vertices[2].z = 1.0f;
-		//vertices[2].rhw = 1.0f;
-		vertices[2].u = 1.0f;
-		vertices[2].v = 1.0f-0.0f;
-
-		vertices[3].colour = d3dColor;
-		vertices[3].x = x-0.5f*w2;
-		vertices[3].y = y+0.5f*h2;
-		vertices[3].z = 1.0f;
-		//vertices[3].rhw = 1.0f;
-		vertices[3].u = 0.0f;
-		vertices[3].v = 1.0f-0.0f;
-		/*
-		//Unlock the vertex buffer
-		preTransVertexBuffer->Unlock();
-		*/
-		vertexBuffer->Unlock();
-
-
-		//Set texture
-		g_pd3dDevice->SetTexture (0, texture);
-
-		//Draw image
-		g_pd3dDevice->DrawPrimitive (D3DPT_TRIANGLEFAN, 0, 2);
-	}
-	void Core::blitD3D (IDirect3DTexture9 *texture, int w2, int h2)
-	{
-		TLVERTEX* vertices;
-		//D3DCOLOR d3dColor = 0xFFFFFFFF;
-
-		/*
-		int w2=width/2;
-		int h2=height/2;
-		*/
-		//Lock the vertex buffer
-		vertexBuffer->Lock(0, 0, (void**)&vertices, NULL);
-
-		//Setup verticeserr
-		//A -0.5f modifier is applied to vertex coordinates to match texture
-		//and screen coords. Some drivers may compensate for this
-		//automatically, but on others texture alignment ors are introduced
-		//More information on this can be found in the Direct3D 9 documentation
-		vertices[0].colour = d3dColor;
-		vertices[0].x = -0.5f*w2;
-		vertices[0].y = -0.5f*h2;
-		vertices[0].z = 1.0f;
-		//vertices[0].rhw = 1.0f;
-		vertices[0].u = 0.0f;
-		vertices[0].v = 1.0f-1.0f;
-
-		vertices[1].colour = d3dColor;
-		vertices[1].x = 0.5f*w2;
-		vertices[1].y = -0.5f*h2;
-		vertices[1].z = 1.0f;
-		//vertices[1].rhw = 1.0f;
-		vertices[1].u = 1.0f;
-		vertices[1].v = 1.0f-1.0f;
-
-		vertices[2].colour = d3dColor;
-		vertices[2].x = 0.5f*w2;
-		vertices[2].y = 0.5f*h2;
-		vertices[2].z = 1.0f;
-		//vertices[2].rhw = 1.0f;
-		vertices[2].u = 1.0f;
-		vertices[2].v = 1.0f-0.0f;
-
-		vertices[3].colour = d3dColor;
-		vertices[3].x = -0.5f*w2;
-		vertices[3].y = 0.5f*h2;
-		vertices[3].z = 1.0f;
-		//vertices[3].rhw = 1.0f;
-		vertices[3].u = 0.0f;
-		vertices[3].v = 1.0f-0.0f;
-		//Unlock the vertex buffer
-		vertexBuffer->Unlock();
-
-		//Set texture
-		g_pd3dDevice->SetTexture (0, texture);
-
-		//Draw image
-		g_pd3dDevice->DrawPrimitive (D3DPT_TRIANGLEFAN, 0, 2);
-	}
-
-	HRESULT InitD3D( HWND hWnd, bool fullscreen, int vsync)
-	{
-		// Create the D3D object.
-		HRESULT hr;
-
-		//Make Direct3D object
-		d3d = Direct3DCreate9(D3D_SDK_VERSION);
-
-		//Make sure NULL pointer was not returned
-		if (!d3d)
-			return FALSE;
-
-		//Get device capabilities
-		ZeroMemory (&d3dCaps, sizeof(d3dCaps));
-		if (FAILED(d3d->GetDeviceCaps (D3DADAPTER_DEFAULT, D3DDEVTYPE_HAL, &d3dCaps)))
-			return FALSE;
-
-		//Setup present parameters
-		ZeroMemory(&d3dPresent,sizeof(d3dPresent));
-		d3dPresent.hDeviceWindow = hWnd;
-
-		//Check if windowed
-		if (!fullscreen)
-		{
-			D3DDISPLAYMODE d3ddm;
-			RECT rWindow;
-
-			//Get display mode
-			d3d->GetAdapterDisplayMode (D3DADAPTER_DEFAULT, &d3ddm);
-
-			//Get window bounds
-			GetClientRect (hWnd, &rWindow);
-
-			//Setup screen dimensions
-			core->width = rWindow.right - rWindow.left;
-			core->height = rWindow.bottom - rWindow.top;
-
-			//Setup backbuffer
-			d3dPresent.Windowed = true;
-			d3dPresent.BackBufferWidth = rWindow.right - rWindow.left;
-			d3dPresent.BackBufferHeight = rWindow.bottom - rWindow.top;
-		}
-		else
-		{
-			d3dPresent.Windowed = false;
-			d3dPresent.BackBufferWidth = core->width;
-			d3dPresent.BackBufferHeight = core->height;
-		}
-		d3dPresent.BackBufferFormat = D3DFMT_A8R8G8B8;
-		d3dPresent.BackBufferCount = 1;
-		d3dPresent.SwapEffect = D3DSWAPEFFECT_DISCARD;
-
-		if (vsync>0)
-			d3dPresent.PresentationInterval = D3DPRESENT_INTERVAL_ONE;
-		else
-			d3dPresent.PresentationInterval = D3DPRESENT_INTERVAL_IMMEDIATE;
-
-
-		//Check if hardware vertex processing is available
-		if (d3dCaps.DevCaps & D3DDEVCAPS_HWTRANSFORMANDLIGHT)
-		{
-			debugLog("hardware T&L!");
-			//Create device with hardware vertex processing
-			hr = d3d->CreateDevice(D3DADAPTER_DEFAULT,D3DDEVTYPE_HAL, hWnd,
-				D3DCREATE_HARDWARE_VERTEXPROCESSING, &d3dPresent, &g_pd3dDevice);
-		}
-		else
-		{
-			debugLog("no hardware T&L.");
-			//Create device with software vertex processing
-			hr = d3d->CreateDevice(D3DADAPTER_DEFAULT,D3DDEVTYPE_HAL, hWnd,
-				D3DCREATE_SOFTWARE_VERTEXPROCESSING, &d3dPresent, &g_pd3dDevice);
-		}
-
-		//Make sure device was created
-		if (FAILED(hr))
-		{
-			errorLog ("directx init failed");
-			return false;
-		}
-
-		g_pd3dDevice->SetSamplerState(0, D3DSAMP_MINFILTER, D3DTEXF_LINEAR);
-		g_pd3dDevice->SetSamplerState(0, D3DSAMP_MAGFILTER, D3DTEXF_LINEAR);
-		// Turn off culling
-		g_pd3dDevice->SetRenderState( D3DRS_CULLMODE, D3DCULL_CCW );
-		/*
-			D3DCULL_NONE = 1,
-			D3DCULL_CW = 2,
-			D3DCULL_CCW = 3,
-		*/
-		// Turn off D3D lighting
-		g_pd3dDevice->SetRenderState( D3DRS_LIGHTING, FALSE );
-		// Turn on the zbuffer
-		g_pd3dDevice->SetRenderState( D3DRS_ZENABLE, FALSE);
-
-		D3DXCreateSprite(core->getD3DDevice(), &d3dSprite);
-		D3DXCreateMatrixStack(0, &d3dMatrixStack);
-
-		//Set vertex shader
-		g_pd3dDevice->SetVertexShader(NULL);
-		g_pd3dDevice->SetFVF(D3DFVF_TLVERTEX);
-
-		//Create vertex buffer
-		g_pd3dDevice->CreateVertexBuffer(sizeof(TLVERTEX) * 4, NULL, D3DFVF_TLVERTEX, D3DPOOL_MANAGED, &vertexBuffer, NULL);
-		g_pd3dDevice->SetStreamSource(0, vertexBuffer, 0, sizeof(TLVERTEX));
-
-		/*
-		g_pd3dDevice->CreateVertexBuffer(sizeof(PTLVERTEX) * 4, NULL, D3DFVF_TLVERTEX, D3DPOOL_MANAGED, &preTransVertexBuffer, NULL);
-		g_pd3dDevice->SetStreamSource(0, preTransVertexBuffer, 0, sizeof(PTLVERTEX));
-		*/
-
-		g_pd3dDevice->Clear(0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(0,0,0), 1.0f, 0);
-
-		g_pd3dDevice->SetRenderState( D3DRS_DIFFUSEMATERIALSOURCE, D3DMCS_COLOR1);
-		g_pd3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG1, D3DTA_TEXTURE);
-		g_pd3dDevice->SetTextureStageState(0, D3DTSS_ALPHAARG2, D3DTA_DIFFUSE);
-		g_pd3dDevice->SetTextureStageState(0, D3DTSS_ALPHAOP, D3DTOP_MODULATE);
-
-		return S_OK;
-	}
-#endif
 
 
 void Core::setColor(float r, float g, float b, float a)
 {
-#ifdef BBGE_BUILD_OPENGL
 	glColor4f(r, g, b, a);
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	d3dColor = D3DCOLOR_RGBA(int(r*255), int(g*255), int(b*255), int(a*255));
-#endif
 }
 
 void Core::bindTexture(int stage, unsigned int handle)
 {
-#ifdef BBGE_BUILD_DIRECTX
-	getD3DDevice()->SetTexture(stage, (IDirect3DBaseTexture9*)handle);
-#endif
-#ifdef BBGE_BUILD_OPENGL
-	//glBindTexture(GL_TEXTURE_2D, handle);
-#endif
+
 }
 
 void Core::translateMatrixStack(float x, float y, float z)
 {
-#ifdef BBGE_BUILD_OPENGL
 	glTranslatef(x, y, z);
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	/*
-	D3DXMATRIX matTranslation;
-	D3DXMatrixTranslation (&matTranslation, x, y, 0);
-	*/
-	/*
-	float usex, usey;
-    usex = x - (float)core->getWindowWidth() / 2;
-    usey = -y + (float)core->getWindowHeight() / 2;
-	*/
-	//core->getD3DMatrixStack()->MultMatrixLocal(&matTranslation);
-	core->getD3DMatrixStack()->TranslateLocal(x, y, z);
-#endif
 }
 
 void Core::scaleMatrixStack(float x, float y, float z)
 {
-#ifdef BBGE_BUILD_OPENGL
 	glScalef(x, y, z);
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	if (x != 1 || y != 1)
-		core->getD3DMatrixStack()->ScaleLocal(x, y, 1);
-#endif
 }
 
 void Core::rotateMatrixStack(float x, float y, float z)
 {
-#ifdef BBGE_BUILD_OPENGL
 	glRotatef(0, 0, 1, z);
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	if (z != 0)
-	{
-		D3DXVECTOR3 axis(0,0,1);
-		core->getD3DMatrixStack()->RotateAxisLocal(&axis,D3DXToRadian(z));
-	}
-#endif
 }
 
 void Core::applyMatrixStackToWorld()
 {
-#ifdef BBGE_BUILD_DIRECTX
-	g_pd3dDevice->SetTransform(D3DTS_WORLD, core->getD3DMatrixStack()->GetTop());
-#endif
 }
 
 void Core::rotateMatrixStack(float z)
 {
-#ifdef BBGE_BUILD_OPENGL
 	glRotatef(0, 0, 1, z);
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	//core->getD3DMatrixStack()->RotateAxis(0, 0, z);
-	/*
-	D3DXVECTOR3 axis(0,0,1);
-	float angle = D3DXToRadian(z);
-	if (angle == D3DX_PI)
-		angle += 0.001f;
-	core->getD3DMatrixStack()->RotateAxisLocal(&axis,angle);
-	*/
-	if (z != 0)
-	{
-		D3DXMATRIX mat;
-		D3DXMatrixRotationZ(&mat,D3DXToRadian(z));
-		core->getD3DMatrixStack()->MultMatrixLocal(&mat);
-	}
-#endif
 }
 
 bool Core::getShiftState()
@@ -887,24 +324,20 @@ static bool checkWritable(const std::string& path, bool warn, bool critical)
 #endif
 
 
-const float SORT_DELAY = 10;
 Core::Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
 : ActionMapper(), StateManager(), appName(appName)
 {
 	sound = NULL;
 	screenCapScale = Vector(1,1,1);
-	timeUpdateType = TIMEUPDATE_DYNAMIC;
 	_extraDataDir = extraDataDir;
-
-	fixedFPS = 60;
 
 	if (userDataSubFolder.empty())
 		userDataSubFolder = appName;
-		
+
 #if defined(BBGE_BUILD_UNIX)
 	const char *envr = getenv("HOME");
 	if (envr == NULL)
-        envr = ".";  // oh well.
+		envr = ".";  // oh well.
 	const std::string home(envr);
 
 	createDir(home);  // just in case.
@@ -965,7 +398,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	debugLogActive = true;
 
 	debugLogTextures = true;
-	
+
 	grabInputOnReentry = -1;
 
 	srand(time(NULL));
@@ -981,15 +414,10 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 
 	viewOffX = viewOffY = 0;
 
-	/*
-	aspectX = 1440;  //4.0f;
-	aspectY = 900;   //3.0f;
-	*/
+
 
 	particleManager = new ParticleManager(particleSize);
-#ifdef BBGE_BUILD_SDL
 	nowTicks = thenTicks = 0;
-#endif
 	_hasFocus = false;
 	lib_graphics = lib_sound = lib_input = false;
 	clearColor = Vector(0,0,0);
@@ -1017,8 +445,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	renderObjectCount = 0;
 	avgFPS.resize(1);
 	minimized = false;
-	sortFlag = true;
-	sortTimer = SORT_DELAY;
 	numSavedScreenshots = 0;
 	shuttingDown = false;
 	clearedGarbageFlag = false;
@@ -1038,8 +464,8 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 		keys[i] = 0;
 	}
 
-	aspect = (aspectX/aspectY);//320.0f/240.0f;
-	//1.3333334f;
+	aspect = (aspectX/aspectY);
+
 
 	globalResolutionScale = globalScale = Vector(1,1,1);
 
@@ -1053,7 +479,7 @@ void Core::initPlatform(const std::string &filesystem)
 #if defined(BBGE_BUILD_MACOSX) && !defined(BBGE_BUILD_MACOSX_NOBUNDLEPATH)
 	// FIXME: filesystem not handled
 	CFBundleRef mainBundle = CFBundleGetMainBundle();
-	//CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
+
 	CFURLRef resourcesURL = CFBundleCopyBundleURL(mainBundle);
 	char path[PATH_MAX];
 	if (!CFURLGetFileSystemRepresentation(resourcesURL, TRUE, (UInt8 *)path, PATH_MAX))
@@ -1200,7 +626,7 @@ std::string Core::adjustFilenameCase(const char *_buf)
 	if (strcmp(_buf, buf) != 0)
 	{
 		fprintf(stderr, "Corrected filename case: '%s' => '%s (%s)'\n",
-		        _buf, buf, rc ? "found" : "not found");
+				_buf, buf, rc ? "found" : "not found");
 	}
 	#endif
 
@@ -1236,13 +662,11 @@ void Core::setInputGrab(bool on)
 {
 	if (isWindowFocus())
 	{
-#ifdef BBGE_BUILD_SDL
 		#ifdef BBGE_BUILD_SDL2
 		SDL_SetWindowGrab(gScreen, on ? SDL_TRUE : SDL_FALSE);
 		#else
 		SDL_WM_GrabInput(on?SDL_GRAB_ON:SDL_GRAB_OFF);
 		#endif
-#endif
 	}
 }
 
@@ -1272,13 +696,7 @@ void Core::init()
 {
 	setupFileAccess();
 
-	flags.set(CF_CLEARBUFFERS);
 	quitNestedMainFlag = false;
-#ifdef BBGE_BUILD_GLFW
-	if (!glfwInit())
-		exit(0);
-#endif
-#ifdef BBGE_BUILD_SDL
 #ifndef BBGE_BUILD_SDL2
 	// Disable relative mouse motion at the edges of the screen, which breaks
 	// mouse control for absolute input devices like Wacom tablets and touchscreens.
@@ -1289,14 +707,8 @@ void Core::init()
 	{
 		exit_error("Failed to init SDL");
 	}
-	
-#endif
-	/*
-#ifdef BBGE_BUILD_DIRECTX
-	if (!glfwInit())
-		exit(0);
-#endif
-		*/
+
+
 	loopDone = false;
 	clearedGarbageFlag = false;
 
@@ -1304,7 +716,7 @@ void Core::init()
 
 	initLocalization();
 
-	//glfwSetWindowSizeCallback(lockWindowSize);
+
 }
 
 void Core::initRenderObjectLayers(int num)
@@ -1337,7 +749,6 @@ Vector Core::getGamePosition(const Vector &v)
 
 bool Core::getMouseButtonState(int m)
 {
-#ifdef BBGE_BUILD_SDL
 	int mcode=m;
 
 	switch(m)
@@ -1350,23 +761,17 @@ bool Core::getMouseButtonState(int m)
 	Uint8 mousestate = SDL_GetMouseState(0,0);
 
 	return mousestate & SDL_BUTTON(mcode);
-#endif
 	return false;
 }
 
 bool Core::getKeyState(int k)
 {
-#ifdef BBGE_BUILD_GLFW
-	return glfwGetKey(k)==GLFW_PRESS;
-#endif
 
-#ifdef BBGE_BUILD_SDL
 	if (k >= KEY_MAXARRAY || k < 0)
 	{
 		return 0;
 	}
 	return keys[k];
-#endif
 
 #ifdef BBGE_BUILD_WINDOWS
 	if (k >= KEY_MAXARRAY || k < 0)
@@ -1379,225 +784,44 @@ bool Core::getKeyState(int k)
 	return 0;
 }
 
-//#ifdef BBGE_BUILD_DIRECTX
 
-//float sensitivity = 1.0;
 
 Vector joychange;
 Vector lastjoy;
 void readJoystickData()
 {
-	/*
-	if (core->joystickEnabled && core->numJoysticks > 0)
-	{
-		//DIJOYSTATE2 js;
-		core->joysticks[0]->poll(&core->joystate);
 
-		Vector joy = Vector(core->joystate.lX, core->joystate.lY);
-		joychange = joy-lastjoy;
-		lastjoy = joy;
-		core->joystickPosition = Vector(core->joystate.lX - (65536/2), core->joystate.lY - (65536/2));
-		core->joystickPosition /= (65536/2);
 
-		// HACK: super hacky!!
-		core->mouse.buttons.left = (core->joystate.rgbButtons[0] & 0x80) ? Buttons::DOWN : Buttons::UP;
-		core->mouse.buttons.right = (core->joystate.rgbButtons[1] & 0x80) ? Buttons::DOWN : Buttons::UP;
-	}
-	*/
+
 }
 
 void readMouseData()
 {
-#if defined(BBGE_BUILD_WINDOWS) && !defined(BBGE_BUILD_SDL)
-	if (!core->updateMouse) return;
-    HRESULT       hr;
-    DIMOUSESTATE2 dims2;      // DirectInput Mouse state structure
 
-    if( NULL == g_pMouse )
-        return;
-
-    // Get the input's device state, and put the state in dims
-    ZeroMemory( &dims2, sizeof(dims2) );
-    hr = g_pMouse->GetDeviceState( sizeof(DIMOUSESTATE2), &dims2 );
-    if( FAILED(hr) )
-    {
-        // DirectInput may be telling us that the input stream has been
-        // interrupted.  We aren't tracking any state between polls, so
-        // we don't have any special reset that needs to be done.
-        // We just re-acquire and try again.
-
-        // If input is lost then acquire and keep trying
-        hr = g_pMouse->Acquire();
-        while( hr == DIERR_INPUTLOST )
-            hr = g_pMouse->Acquire();
-
-        // hr may be DIERR_OTHERAPPHASPRIO or other errors.  This
-        // may occur when the app is minimized or in the process of
-        // switching, so just try again later
-        return;
-    }
-
-	//float sensitivity = float(core->width) / float(core->getVirtualWidth());
-	float sensitivity = 1;
-	core->mouse.position.x += dims2.lX*sensitivity;
-	core->mouse.position.y += dims2.lY*sensitivity;
-	core->mouse.position.z += dims2.lZ;
-	core->mouse.change.x = dims2.lX*sensitivity;
-	core->mouse.change.y = dims2.lY*sensitivity;
-	core->mouse.change.z = dims2.lZ;
-	core->mouse.scrollWheelChange = dims2.lZ;
-	if (!core->flipMouseButtons)
-	{
-		core->mouse.buttons.left = (dims2.rgbButtons[0] & 0x80) ? DOWN : UP;
-		core->mouse.buttons.right = (dims2.rgbButtons[1] & 0x80) ? DOWN : UP;
-	}
-	else
-	{
-		core->mouse.buttons.left = (dims2.rgbButtons[1] & 0x80) ? DOWN : UP;
-		core->mouse.buttons.right = (dims2.rgbButtons[0] & 0x80) ? DOWN : UP;
-	}
-	core->mouse.buttons.middle = (dims2.rgbButtons[2] & 0x80) ? DOWN : UP;
-
-#elif defined(BBGE_BUILD_SDL)
-	//core->mouse.position += dMouse;
-#elif defined(BBGE_BUILD_GLFW)
-	//HACK: may not always want 800x600 virtual
-	/*
-	static int lastx=400, lasty=300;
-	int x, y;
-	glfwGetMousePos(&x,&y);
-	int mickeyx,mickeyy;
-	mickeyx = x - lastx;
-	mickeyy = y - lasty;
-	lastx = x;
-	lasty = y;
-	core->mouse.position.x += mickeyx;
-	core->mouse.position.y += mickeyy;
-	*/
-
-	int x,y;
-	glfwGetMousePos(&x,&y);
-	core->mouse.position = Vector(x, y);
-
-
-/*
-	int mid_x = core->width / 2;
-	int mid_y = core->height / 2;
-	int dx=0,dy=0;
-	int x,y;
-	glfwGetMousePos(&x, &y);
-	// Don't do anything if mouse hasn't moved
-	if (x == mid_x && y == mid_y)
-	{
-	}
-	else
-	{
-		dx = x - mid_x;
-		dy = y - mid_y;
-	}
-
-	std::ostringstream os;
-	os << "d(" << dx << ", " << dy <<")";
-	debugLog(os.str());
-
-	core->mouse.position += Vector(dx, dy);
-
-
-	// Now move the mouse back to the middle, because
-	// we don't care where it really is, just how much
-	// it moves.
-	glfwSetMousePos(mid_x, mid_y);
-	*/
-
-
-
-	core->mouse.buttons.left = glfwGetMouseButton(GLFW_MOUSE_BUTTON_LEFT) ? DOWN : UP;
-	core->mouse.buttons.right = glfwGetMouseButton(GLFW_MOUSE_BUTTON_RIGHT) ? DOWN : UP;
-	core->mouse.buttons.middle = glfwGetMouseButton(GLFW_MOUSE_BUTTON_MIDDLE) ? DOWN : UP;
-	core->mouse.scrollWheel = glfwGetMouseWheel();
-#endif
 }
 
 void readKeyData()
 {
 
-#if defined(BBGE_BUILD_WINDOWS) && !defined(BBGE_BUILD_SDL)
-	if( NULL == g_pKeyboard )
-		return;
-	HRESULT hr;
-	BYTE    diks[256];
-    // Get the input's device state, and put the state in dims
-    ZeroMemory( diks, sizeof(diks) );
-    hr = g_pKeyboard->GetDeviceState( sizeof(diks), diks );
-    if( FAILED(hr) )
-    {
-        // DirectInput may be telling us that the input stream has been
-        // interrupted.  We aren't tracking any state between polls, so
-        // we don't have any special reset that needs to be done.
-        // We just re-acquire and try again.
-
-        // If input is lost then acquire and keep trying
-        hr = g_pKeyboard->Acquire();
-        while( hr == DIERR_INPUTLOST )
-            hr = g_pKeyboard->Acquire();
-
-        // hr may be DIERR_OTHERAPPHASPRIO or other errors.  This
-        // may occur when the app is minimized or in the process of
-        // switching, so just try again later
-        return;
-    }
-
-    // Make a string of the index values of the keys that are down
-    for(int i = 0; i < 256; i++ )
-    {
-        core->keys[i] = ( diks[i] & 0x80 );
-    }
-#endif
 }
-//#endif
+
 
 
 bool Core::initJoystickLibrary(int numSticks)
 {
-	//joystickEnabled = false;
-#ifdef BBGE_BUILD_SDL
+
 #ifdef BBGE_BUILD_SDL2
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK | SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER);
 #else
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
-#endif
 #endif
 
 	if (numSticks > 0)
 		joystick.init(0);
 
 	joystickEnabled = true;
-	/*
-	numJoysticks = Joystick::deviceCount();
-	std::ostringstream os;
-	os << "Found " << numJoysticks << " joysticks";
-	debugLog(os.str());
-	if (numJoysticks > 0)
-	{
-		if (numJoysticks > 4)
-			numJoysticks = 4;
 
-		// HACK: memory leak... add code to clean this up!
-		for (int i = 0; i < numJoysticks; i++) {
-			joysticks[i] = new Joystick(i);
-			joysticks[i]->open();
 
-			// Print the name of the joystick.
-			char name[MAX_PATH];
-			joysticks[i]->deviceName(name);
-			std::ostringstream os;
-			os << "   Joystick " << i << ": " << name;
-			debugLog(os.str());
-		}
-		joystickEnabled = true;
-		return true;
-	}
-	*/
 
 	return true;
 }
@@ -1606,127 +830,13 @@ bool Core::initInputLibrary()
 {
 	core->mouse.position = Vector(getWindowWidth()/2, getWindowHeight()/2);
 
-#ifdef BBGE_BUILD_GFLW
-	glfwDisable(GLFW_MOUSE_CURSOR);
-	//glfwEnable( GLFW_SYSTEM_KEYS );
-#endif
 	for (int i = 0; i < KEY_MAXARRAY; i++)
 	{
 		keys[i] = 0;
 	}
-#if defined(BBGE_BUILD_WINDOWS) && !defined(BBGE_BUILD_SDL)
-
-	HRESULT hr;
-    BOOL    bExclusive = true;
-    BOOL    bForeground = true;
-    //BOOL    bImmediate = true;
-    BOOL    bDisableWindowsKey = false;
-    DWORD   dwCoopFlags;
-
-    if( bExclusive )
-        dwCoopFlags = DISCL_EXCLUSIVE;
-    else
-        dwCoopFlags = DISCL_NONEXCLUSIVE;
-
-    if( bForeground )
-        dwCoopFlags |= DISCL_FOREGROUND;
-    else
-        dwCoopFlags |= DISCL_BACKGROUND;
-
-    // Disabling the windows key is only allowed only if we are in foreground nonexclusive
-    if( bDisableWindowsKey && !bExclusive && bForeground )
-        dwCoopFlags |= DISCL_NOWINKEY;
-
-    // Create a DInput object
-    if( FAILED( hr = DirectInput8Create( GetModuleHandle(NULL), DIRECTINPUT_VERSION,
-                                         IID_IDirectInput8, (VOID**)&g_pDI, NULL ) ) )
-        return false;
-
-    // Obtain an interface to the system keyboard device.
-    if( FAILED( hr = g_pDI->CreateDevice( GUID_SysKeyboard, &g_pKeyboard, NULL ) ) )
-        return false;
-
-    // Set the data format to "Keyboard format" - a predefined data format
-    //
-    // A data format specifies which controls on a device we
-    // are interested in, and how they should be reported.
-    //
-    // This tells DirectInput that we will be passing an array
-    // of 256 bytes to IDirectInputDevice::GetDeviceState.
-    if( FAILED( hr = g_pKeyboard->SetDataFormat( &c_dfDIKeyboard ) ) )
-        return false;
-
-    // Set the cooperativity level to let DirectInput know how
-    // this device should interact with the system and with other
-    // DirectInput applications.
-    hr = g_pKeyboard->SetCooperativeLevel( this->hWnd, dwCoopFlags );
-    if( hr == DIERR_UNSUPPORTED && !bForeground && bExclusive )
-    {
-		debugLog("could not set cooperative level");
-        //FreeDirectInput();
-		//errorLog ("failed to init input");
-		/*
-        MessageBox( hDlg, _T("SetCooperativeLevel() returned DIERR_UNSUPPORTED.\n")
-                          _T("For security reasons, background exclusive Keyboard\n")
-                          _T("access is not allowed."), _T("Keyboard"), MB_OK );
-		*/
-        //return false;;
-    }
-
-	/*
-    if( FAILED(hr) )
-	{
-		errorLog("failed to init input");
-		return false;
-	}
-	*/
-
-
-    // Acquire the newly created device
-    g_pKeyboard->Acquire();
-
-
-//#ifdef BBGE_BUILD_DIRECTX
-
-	if( FAILED( hr = g_pDI->CreateDevice( GUID_SysMouse, &g_pMouse, NULL ) ) )
-        return false;
-
-    // Set the data format to "Mouse format" - a predefined data format
-    //
-    // A data format specifies which controls on a device we
-    // are interested in, and how they should be reported.
-    //
-    // This tells DirectInput that we will be passing a
-    // DIMOUSESTATE2 structure to IDirectInputDevice::GetDeviceState.
-    if( FAILED( hr = g_pMouse->SetDataFormat( &c_dfDIMouse2 ) ) )
-        return false;
-
-    // Set the cooperativity level to let DirectInput know how
-    // this device should interact with the system and with other
-    // DirectInput applications.
-    hr = g_pMouse->SetCooperativeLevel( this->hWnd, dwCoopFlags );
-    if( hr == DIERR_UNSUPPORTED && !bForeground && bExclusive )
-    {
-        //FreeDirectInput();
-		//errorLog ("mouse failed");
-		debugLog("could not set cooperative level");
-        //return false;
-    }
-
-	/*
-    if( FAILED(hr) )
-		return false;
-	*/
-
-    // Acquire the newly created device
-    g_pMouse->Acquire();
-
-#endif
 
 
 
-	// joystick init
-//#endif
 	return true;
 }
 
@@ -1748,60 +858,9 @@ void Core::onUpdate(float dt)
 
 
 
-
-
-
-	/*
-	std::ostringstream os;
-	os << "x: " << joystate.lX << " y: " << joystate.lY;
-	os << " frx: " << joystate.lFRx << " fry: " << joystate.lFRy;
-	debugLog(os.str());
-	*/
-
-	/*
-	if (joystickOverrideMouse && !joychange.isZero())
-	{
-		Vector joy(joystate.lX, joystate.lY);
-		//core->mouse.position += joychange * 0.001f;
-		core->mouse.position = Vector(400,300) + ((joy * 600) / (65536/2))-300;
-	}
-	*/
-
-
-	/*
-
-	*/
-
-
-	/*
-	if (mouse.position.x < 0)
-		mouse.position.x = 0;
-	if (mouse.position.x > core->getVirtualWidth())
-		mouse.position.x = core->getVirtualWidth();
-	if (mouse.position.y < 0)
-		mouse.position.y = 0;
-	if (mouse.position.y > core->getVirtualHeight())
-		mouse.position.y = core->getVirtualHeight();
-	*/
-
 	onMouseInput();
 
-	/*
-#ifdef BBGE_BUILD_GLFW
-	glfwSetMousePos(mouse.position.x, mouse.position.y);
-#endif
-	*/
-#ifdef BBGE_BUILD_DIRECTX
-#endif
-	//core->mouse.change = core->mouse.position - core->mouse.lastPosition;
 
-	//core->mouse.scrollWheelChange = core->mouse.scrollWheel - core->mouse.lastScrollWheel;
-
-
-
-
-
-	//script.update(dt);
 
 	globalScale.update(dt);
 	core->globalScaleChanged();
@@ -1809,19 +868,6 @@ void Core::onUpdate(float dt)
 	if (afterEffectManager)
 	{
 		afterEffectManager->update(dt);
-	}
-
-	if (!sortFlag)
-	{
-		if (sortTimer>0)
-		{
-			sortTimer -= dt;
-			if (sortTimer <= 0)
-			{
-				sortTimer = SORT_DELAY;
-				sort();
-			}
-		}
 	}
 }
 
@@ -1840,13 +886,8 @@ void Core::setClearColor(const Vector &c)
 {
 	clearColor = c;
 
-#ifdef BBGE_BUILD_OPENGL
 	glClearColor(c.x, c.y, c.z, 0.0);
-#endif
 
-#ifdef BBGE_BUILD_DIRECTX
-
-#endif
 }
 
 void Core::setSDLGLAttributes()
@@ -1855,13 +896,11 @@ void Core::setSDLGLAttributes()
 	os << "setting vsync: " << _vsync;
 	debugLog(os.str());
 
-#ifdef BBGE_BUILD_SDL
 #ifndef BBGE_BUILD_SDL2
 	SDL_GL_SetAttribute(SDL_GL_SWAP_CONTROL, _vsync);
 #endif
 
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-#endif
 }
 
 
@@ -1879,10 +918,10 @@ unsigned int Core::dbg_numRenderCalls = 0;
 
 #ifdef BBGE_BUILD_OPENGL_DYNAMIC
 #define GL_FUNC(ret,fn,params,call,rt) \
-    extern "C" { \
-        static ret (GLAPIENTRY *p##fn) params = NULL; \
-        ret GLAPIENTRY fn params { ++Core::dbg_numRenderCalls; rt p##fn call; } \
-    }
+	extern "C" { \
+		static ret (GLAPIENTRY *p##fn) params = NULL; \
+		ret GLAPIENTRY fn params { ++Core::dbg_numRenderCalls; rt p##fn call; } \
+	}
 #include "OpenGLStubs.h"
 #undef GL_FUNC
 
@@ -1912,15 +951,15 @@ static bool lookup_all_glsyms(void)
 
 
 bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync, int bpp, bool recreate)
-{	
+{
 	static bool didOnce = false;
-	
+
 	aspectX = width;
 	aspectY = height;
 
 	aspect = (aspectX/aspectY);
 
-	
+
 
 	this->width = width;
 	this->height = height;
@@ -1930,10 +969,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 
 	_hasFocus = false;
 
-#if defined(BBGE_BUILD_SDL)
 
-	//setenv("SDL_VIDEO_CENTERED", "1", 1);
-	//SDL_putenv("SDL_VIDEO_WINDOW_POS=400,300");
 
 #ifndef BBGE_BUILD_SDL2
 #if !defined(BBGE_BUILD_MACOSX)
@@ -1943,7 +979,7 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 	SDL_putenv((char *) "SDL_VIDEO_CENTERED=1");
 #endif
 #endif
-	//SDL_putenv((char *) "LIBGL_DEBUG=verbose"); // temp, to track errors on linux with nouveau drivers.
+
 
 	if (recreate)
 	{
@@ -1965,11 +1001,11 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 	setWindowCaption(appName, appName);
 
 	initIcon();
-    // Create window
+	// Create window
 
 	setSDLGLAttributes();
 
-	//if (!didOnce)
+
 	{
 #ifdef BBGE_BUILD_SDL2
 		Uint32 flags = 0;
@@ -2054,57 +1090,23 @@ bool Core::initGraphicsLibrary(int width, int height, bool fullscreen, int vsync
 		keys[i] = 0;
 	}
 
-/*
-#ifdef BBGE_BUILD_WINDOWS
-	SDL_SysWMinfo wmInfo;
-	SDL_GetWMInfo(&wmInfo);
-	hWnd = wmInfo.window;
-#endif
-*/
 
-#endif
 
-#if defined(BBGE_BUILD_OPENGL)
 	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
 	glClearColor(0.0f, 0.0f, 0.0f, 0.0f);				// Black Background
 	glClearDepth(1.0);								// Depth Buffer Setup
 	glDisable(GL_CULL_FACE);
-	
-	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
-	//glHint(GL_PERSPECTIVE_CORRECTION_HINT, GL_NICEST);
+
+
 
 	glLoadIdentity();
-	
+
 	glFinish();
 
-#ifdef BBGE_BUILD_GLFW
-	glfwSwapInterval(vsync);
-#endif
 
-#endif
-
-
-
-#if defined(BBGE_BUILD_DIRECTX)
-
-	// Initialize Direct3D
-	if( SUCCEEDED( InitD3D( this->hWnd, fullscreen, vsync ) ) )
-	{
-		// Show the window
-		ShowWindow( this->hWnd, SW_SHOWDEFAULT );
-		UpdateWindow( this->hWnd );
-		//initPipeline(PT_NORMAL);
-	}
-	else
-	{
-		errorLog("Could not init D3D");
-		exit(-1);
-	}
-
-#endif
 
 	setClearColor(clearColor);
-	
+
 	clearBuffers();
 	showBuffer();
 
@@ -2125,7 +1127,6 @@ void Core::enumerateScreenModes()
 {
 	screenModes.clear();
 
-#ifdef BBGE_BUILD_SDL
 #ifdef BBGE_BUILD_SDL2
 	SDL_DisplayMode mode;
 	const int modecount = SDL_GetNumDisplayModes(0);
@@ -2133,7 +1134,7 @@ void Core::enumerateScreenModes()
 		debugLog("No modes available!");
 		return;
 	}
-	
+
 	for (int i = 0; i < modecount; i++) {
 		SDL_GetDisplayMode(0, i, &mode);
 		if (mode.w && mode.h && (mode.w > mode.h))
@@ -2170,7 +1171,6 @@ void Core::enumerateScreenModes()
 		}
 	}
 #endif
-#endif
 }
 
 void Core::shutdownSoundLibrary()
@@ -2179,7 +1179,6 @@ void Core::shutdownSoundLibrary()
 
 void Core::shutdownGraphicsLibrary(bool killVideo)
 {
-#ifdef BBGE_BUILD_SDL
 	glFinish();
 	if (killVideo) {
 		#ifdef BBGE_BUILD_SDL2
@@ -2207,7 +1206,6 @@ void Core::shutdownGraphicsLibrary(bool killVideo)
 		#undef GL_FUNC
 #endif
 	}
-#endif
 
 	_hasFocus = false;
 
@@ -2226,8 +1224,8 @@ void Core::shutdownGraphicsLibrary(bool killVideo)
 void Core::quit()
 {
 	enqueueJumpState("STATE_QUIT");
-	//loopDone = true;
-	//popAllStates();
+
+
 }
 
 void Core::applyState(const std::string &state)
@@ -2239,58 +1237,32 @@ void Core::applyState(const std::string &state)
 	StateManager::applyState(state);
 }
 
-#ifdef BBGE_BUILD_GLFW
-void GLFWCALL windowResize(int w, int h)
-{
-	// this gets called on minimize + restore?
-	if (w == 0 && h == 0)
-	{
-		core->minimized = true;
-		return;
-	}
-	else
-		core->minimized = false;
-	if (w != core->width || h != core->height)
-		glfwSetWindowSize(core->width,core->height);
-}
-#endif
 
 
 #ifdef BBGE_BUILD_WINDOWS
 void centerWindow(HWND hwnd)
 {
-    int x, y;
-    HWND hwndDeskTop;
-    RECT rcWnd, rcDeskTop;
-    // Get a handle to the desktop window
-    hwndDeskTop = ::GetDesktopWindow();
-    // Get dimension of desktop in a rect
-    ::GetWindowRect(hwndDeskTop, &rcDeskTop);
-    // Get dimension of main window in a rect
-    ::GetWindowRect(hwnd, &rcWnd);
-    // Find center of desktop
+	int x, y;
+	HWND hwndDeskTop;
+	RECT rcWnd, rcDeskTop;
+	// Get a handle to the desktop window
+	hwndDeskTop = ::GetDesktopWindow();
+	// Get dimension of desktop in a rect
+	::GetWindowRect(hwndDeskTop, &rcDeskTop);
+	// Get dimension of main window in a rect
+	::GetWindowRect(hwnd, &rcWnd);
+	// Find center of desktop
 	x = (rcDeskTop.right - rcDeskTop.left)/2;
 	y = (rcDeskTop.bottom - rcDeskTop.top)/2;
-    x -= (rcWnd.right - rcWnd.left)/2;
+	x -= (rcWnd.right - rcWnd.left)/2;
 	y -= (rcWnd.bottom - rcWnd.top)/2;
-    // Set top and left to center main window on desktop
-    ::SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
-//	::ShowWindow(hwnd, 1);
+	// Set top and left to center main window on desktop
+	::SetWindowPos(hwnd, HWND_TOP, x, y, 0, 0, SWP_NOSIZE);
+
 }
 #endif
 
-/*
-void Core::adjustWindowPosition(int x, int y)
-{
-#ifdef BBGE_BUILD_WINDOWS
-	RECT rcWnd;
-	::GetWindowRect(hWnd, &rcWnd);
-	rcWnd.left += x;
-	rcWnd.top += y;
-	::SetWindowPos(hWnd, HWND_TOP, rcWnd.left, rcWnd.top, 0, 0, SWP_NOSIZE);
-#endif
-}
-*/
+
 
 bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::string windowTitle)
 {
@@ -2298,140 +1270,27 @@ bool Core::createWindow(int width, int height, int bits, bool fullscreen, std::s
 	this->height = height;
 
 	redBits = greenBits = blueBits = alphaBits = 0;
-#ifdef BBGE_BUILD_SDL
 	return true;
-#endif
-
-#ifdef BBGE_BUILD_GLFW
-	int redbits, greenbits, bluebits, alphabits;
-	redbits = greenbits = bluebits = 8;
-	alphabits = 0;
-	switch(bits)
-	{
-	case 16:
-		redbits = 5;
-		greenbits = 6;
-		bluebits = 5;
-	break;
-	case 24:
-		redbits = 8;
-		bluebits = 8;
-		greenbits = 8;
-		alphabits = 0;
-	break;
-	case 32:
-		redbits = 8;
-		greenbits = 8;
-		bluebits = 8;
-		alphabits = 8;
-	break;
-	case 8:
-		redbits = 2;
-		greenbits = 2;
-		bluebits = 2;
-	break;
-	}
-	if (glfwOpenWindow(width, height, redbits, greenbits, bluebits, 0, 0, 0, fullscreen ? GLFW_FULLSCREEN : GLFW_WINDOW) == GL_TRUE)
-	{
-		glfwSetWindowTitle(windowTitle.c_str());
-		resize(width,height);
 
 
-#ifdef BBGE_BUILD_WINDOWS
-		this->hWnd = (HWND)glfwGetWindowHandle();
-
-		if (!fullscreen)	centerWindow(hWnd);
-#endif
-
-		glfwSetWindowSizeCallback(windowResize);
-
-		redBits = glfwGetWindowParam(GLFW_RED_BITS);
-		blueBits = glfwGetWindowParam(GLFW_BLUE_BITS);
-		greenBits = glfwGetWindowParam(GLFW_GREEN_BITS);
-		alphaBits = glfwGetWindowParam(GLFW_ALPHA_BITS);
-
-		if (redBits < 8 && (bits == 32 || bits == 24))
-		{
-			int sayBits = 32;
-			std::ostringstream os;
-			os << "(" << width << ", " << height << ") " << sayBits << "-bit mode could not be enabled. Please try setting your desktop to " << sayBits << "-bit color depth";
-			if (!fullscreen)
-				os << ", or try running in fullscreen.";
-			else
-				os << ".";
-			os << " This resolution may not be supported on your machine.";
-			errorLog(os.str());
-			exit(0); return false;
-		}
-		return true;
-	}
-	else
-		return false;
-#endif
-
-#ifdef BBGE_BUILD_DIRECTX
-	// Register the window class
-    WNDCLASSEX wc = { sizeof(WNDCLASSEX), CS_CLASSDC, MsgProc, 0L, 0L,
-                      GetModuleHandle(NULL), NULL, NULL, NULL, NULL,
-                      windowTitle.c_str(), NULL };
-    RegisterClassEx( &wc );
-
-	this->hWnd = CreateWindow( windowTitle.c_str(), windowTitle.c_str(),
-							WS_OVERLAPPEDWINDOW, 100, 100, width, height+10,
-							GetDesktopWindow(), NULL, wc.hInstance, NULL );
-	return true;
-#endif
 }
 
 // No longer part of C/C++ standard
 #ifndef M_PI
-#define M_PI           3.14159265358979323846
+#define M_PI		   3.14159265358979323846
 #endif
-
-static void
-bbgePerspective(float fovy, float aspect, float zNear, float zFar)
-{
-    float sine, cotangent, deltaZ;
-    float radians = fovy / 2.0f * M_PI / 180.0f;
-
-    deltaZ = zFar - zNear;
-    sine = sinf(radians);
-    if ((deltaZ == 0.0f) || (sine == 0.0f) || (aspect == 0.0f)) {
-        return;
-    }
-    cotangent = cosf(radians) / sine;
-
-    GLfloat m[4][4] = {
-        { 1.0f, 0.0f, 0.0f, 0.0f },
-        { 0.0f, 1.0f, 0.0f, 0.0f },
-        { 0.0f, 0.0f, 1.0f, 0.0f },
-        { 0.0f, 0.0f, 0.0f, 1.0f }
-    };
-    m[0][0] = (GLfloat) (cotangent / aspect);
-    m[1][1] = (GLfloat) cotangent;
-    m[2][2] = (GLfloat) (-(zFar + zNear) / deltaZ);
-    m[2][3] = -1.0f;
-    m[3][2] = (GLfloat) (-2.0f * zNear * zFar / deltaZ);
-    m[3][3] = 0.0f;
-
-    glMultMatrixf(&m[0][0]);
-}
 
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 {
-	/*
-	piScaleX = pixelScaleX;
-	piScaleY = pixelScaleY;
-	*/
+
 	virtualWidth = pixelScaleX;
-	//MAX(virtualWidth, 800);
-	virtualHeight = pixelScaleY;//int((pixelScale*aspectY)/aspectX);					//assumes 4:3 aspect ratio
+	virtualHeight = pixelScaleY;	//assumes 4:3 aspect ratio
 	this->baseCullRadius = 1.1f * sqrtf(sqr(getVirtualWidth()/2) + sqr(getVirtualHeight()/2));
 
 	std::ostringstream os;
 	os << "virtual(" << virtualWidth << ", " << virtualHeight << ")";
 	debugLog(os.str());
-	
+
 	vw2 = virtualWidth/2;
 	vh2 = virtualHeight/2;
 
@@ -2465,53 +1324,33 @@ void Core::enable2DWide(int rx, int ry)
 	if (aspect >= 1.3f)
 	{
 		int vw = int(float(baseVirtualHeight) * (float(rx)/float(ry)));
-		//vw = MAX(vw, baseVirtualWidth);
+
 		core->enable2D(vw, baseVirtualHeight, 1);
 	}
 	else
 	{
 		int vh = int(float(baseVirtualWidth) * (float(ry)/float(rx)));
-		//vh = MAX(vh, baseVirtualHeight);
+
 		core->enable2D(baseVirtualWidth, vh, 1);
 	}
 }
 
 static void bbgeOrtho2D(float left, float right, float bottom, float top)
 {
-    glOrtho(left, right, bottom, top, -1.0, 1.0);
+	glOrtho(left, right, bottom, top, -1.0, 1.0);
 }
 
 void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 {
-	// why do this again? don't really get it
-	/*
-	if (mode == MODE_2D)
-	{
-		if (forcePixelScale || (pixelScaleX!=0 && core->width!=pixelScaleX) || (pixelScaleY!=0 && core->height!=pixelScaleY))
-		{
-			float widthFactor = core->width/float(pixelScaleX);
-			float heightFactor = core->height/float(pixelScaleY);
-			core->globalResolutionScale = Vector(widthFactor,heightFactor,1.0f);
-			setPixelScale(pixelScaleX, pixelScaleY);
 
-			std::ostringstream os;
-			os << "top of call: ";
-			os << "widthFactor: " << widthFactor;
-			os << "heightFactor: " << heightFactor;
-			debugLog(os.str());
-		}
-		return;
-	}
-	*/
-	
-#ifdef BBGE_BUILD_OPENGL
 
-    GLint viewPort[4];
-    glGetIntegerv(GL_VIEWPORT, viewPort);
 
-    glMatrixMode(GL_PROJECTION);
-    //glPushMatrix();
-    glLoadIdentity();
+	GLint viewPort[4];
+	glGetIntegerv(GL_VIEWPORT, viewPort);
+
+	glMatrixMode(GL_PROJECTION);
+
+	glLoadIdentity();
 
 	float vw=0,vh=0;
 
@@ -2534,168 +1373,34 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY, bool forcePixelScale)
 
 
 
-	/*
-	vh = float(baseVirtualHeight * viewPort[2]) / float(baseVirtualWidth);
-
-	viewOffY = (viewPort[3] - vh) * 0.5f;
-	*/
-	
-
-	/*
-	std::ostringstream os;
-	os << "vw: " << vw << " OFFX: " << viewOffX << " ";
-	os << "vh: " << vh << " OFFY: " << viewOffY;
-	debugLog(os.str());
-	*/
-
-
-	/*
-	float aspect = float(width) / float (height);
-
-	if (aspect < 1.3f)
-	{
-		viewOffX *= 0.5f;
-	}
-	*/
-
-	
-//#else
-//	int offx=0,offy=0;
-//#endif
-
-	//+offx
-	//-offx
-	//glOrtho(0.0f,viewPort[2],viewPort[3],0.0f,-1000.0f,1000.0f);
-	//glOrtho(0.0f+offx,viewPort[2]+offx,viewPort[3]+offy,0.0f+offy,-1.0f,1.0f);
 	bbgeOrtho2D(0.0f-viewOffX,viewPort[2]-viewOffX,viewPort[3]-viewOffY,0.0f-viewOffY);
-	/*
-	static bool doOnce = false;
-	if (!doOnce)
-	{
-		glOrtho(0.0f,viewPort[2],viewPort[3],0.0f,-10.0f,10.0f);
-		doOnce = true;
-	}
-	*/
-	//glOrtho(-viewPort[2]/2,viewPort[2]/2,viewPort[3]/2,-viewPort[3]/2,-10.0f,10.0f);
-    //glOrtho(0, viewPort[2], 0, viewPort[3], -100, 100);
 
-    glMatrixMode(GL_MODELVIEW);
-    //glPushMatrix();
-    glLoadIdentity();
+
+
+	glMatrixMode(GL_MODELVIEW);
+
+	glLoadIdentity();
 
 	setupRenderPositionAndScale();
-#endif
 
-#ifdef BBGE_BUILD_DIRECTX
-	D3DXMATRIX matOrtho;
-	D3DXMATRIX matIdentity;
-
-	//Setup orthographic projection matrix
-
-	D3DXMatrixOrthoOffCenterLH(&matOrtho, 0, getWindowWidth(), getWindowHeight(), 0, 1, 10);
-	//D3DXMatrixOrthoLH (&matOrtho, getWindowWidth(), getWindowHeight(), 1.0f, 10.0f);
-	D3DXMatrixIdentity (&matIdentity);
-	g_pd3dDevice->SetTransform (D3DTS_PROJECTION, &matOrtho);
-	g_pd3dDevice->SetTransform (D3DTS_WORLD, &matIdentity);
-	g_pd3dDevice->SetTransform (D3DTS_VIEW, &matIdentity);
-	// For our world matrix, we will just leave it as the identity
-	/*
-    D3DXMATRIXA16 matWorld;
-    D3DXMatrixIdentity( &matWorld );
-    //D3DXMatrixRotationX( &matWorld, 0/1000.0f );
-    g_pd3dDevice->SetTransform( D3DTS_WORLD, &matWorld );
-
-    // Set up our view matrix. A view matrix can be defined given an eye point,
-    // a point to lookat, and a direction for which way is up. Here, we set the
-    // eye five units back along the z-axis and up three units, look at the
-    // origin, and define "up" to be in the y-direction.
-    D3DXVECTOR3 vEyePt( 0.0f, 0.0f,0.0f );
-    D3DXVECTOR3 vLookatPt( 0.0f, 0.0f, 0.0f );
-    D3DXVECTOR3 vUpVec( 0.0f, 1.0f, 0.0f );
-    D3DXMATRIXA16 matView;
-    D3DXMatrixLookAtLH( &matView, &vEyePt, &vLookatPt, &vUpVec );
-    g_pd3dDevice->SetTransform( D3DTS_VIEW, &matView );
-
-    // For the projection matrix, we set up a perspective transform (which
-    // transforms geometry from 3D view space to 2D viewport space, with
-    // a perspective divide making objects smaller in the distance). To build
-    // a perpsective transform, we need the field of view (1/4 pi is common),
-    // the aspect ratio, and the near and far clipping planes (which define at
-    // what distances geometry should be no longer be rendered).
-	///LPDIRECT3DVIEWPORT3 Viewport;
-
-	D3DVIEWPORT9 viewport;
-	viewport.Width = core->getWindowWidth();
-	viewport.Height = core->getWindowHeight();
-	viewport.MaxZ = 5;
-	viewport.MinZ = -5;
-	viewport.X = 0;
-	viewport.Y = 0;
-
-	g_pd3dDevice->SetViewport( &viewport );
-
-	D3DXMATRIXA16 matProj;
-	D3DXMatrixOrthoLH(&matProj, 800, 600, -5, 5);
-	g_pd3dDevice->SetTransform( D3DTS_PROJECTION, &matProj );
-	*/
-
-	// Create the viewport
-	/*
-	if (FAILED(g_pd3dDevice->CreateViewport(&Viewport,NULL)))
-	{ errorLog("Failed to create a viewport"); };
-	if (FAILED(g_pd3dDevice->AddViewport(Viewport)))
-	{ errorLog("Failed to add a viewport"); };
-	if (FAILED(g_pd3dDevice->SetViewport2(&Viewdata)))
-	{ errorLog("Failed to set Viewport data"); };
-	g_pd3dDevice->SetCurrentViewport(Viewport);
-	*/
-
-	/*
-	D3DXMATRIXA16 matProj;
-	D3DXMatrixOrthoLH(&matProj, 4, 3, -5, 5);
-    g_pd3dDevice->SetTransform( D3DTS_PROJECTION, &matProj );
-	*/
-
-	/*
-   D3DVIEWPORT9 viewport;
-   g_pd3dDevice->GetViewport(&viewport);
-   D3DXMATRIX matProj;
-   D3DXMatrixOrthoLH(&matProj, viewport.Width, viewport.Height, -10, 10);
-   g_pd3dDevice->SetTransform( D3DTS_PROJECTION, &matProj );
-   */
-
-
-#endif
 
 	if (forcePixelScale || (pixelScaleX!=0 && core->width!=pixelScaleX) || (pixelScaleY!=0 && core->height!=pixelScaleY))
 	{
-		/*
-		float f = core->width/float(pixelScale);
-		core->globalResolutionScale = Vector(f,f,1.0f);
-		*/
-		//debugLog("HEEEREEE");
+
+
 		float widthFactor = core->width/float(pixelScaleX);
 		float heightFactor = core->height/float(pixelScaleY);
-		//float heightFactor = 
+
 		core->globalResolutionScale = Vector(widthFactor,heightFactor,1.0f);
 		setPixelScale(pixelScaleX, pixelScaleY);
 
-		//core->globalResolutionScale = Vector(1.5,1.5,1);
-		/*
-		std::ostringstream os;
-		os << "bottom of call: ";
-		os << "widthFactor: " << widthFactor;
-		os << " heightFactor: " << heightFactor;
-		debugLog(os.str());
-		*/
+
+
 	}
 	setPixelScale(pixelScaleX, pixelScaleY);
 
-	//core->globalResolutionScale.x = 1.6;
 
-	//setupRenderPositionAndScale();
 
-	
 }
 
 void Core::quitNestedMain()
@@ -2708,16 +1413,7 @@ void Core::quitNestedMain()
 
 void Core::resetTimer()
 {
-#ifdef BBGE_BUILD_GLFW
-	glfwSetTime(0);
-#endif
-#ifdef BBGE_BUILD_SDL
 	nowTicks = thenTicks = SDL_GetTicks();
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	QueryPerformanceCounter((LARGE_INTEGER*)&timerEnd);
-	timerStart = timerEnd;
-#endif
 
 	for (int i = 0; i < avgFPS.size(); i++)
 	{
@@ -2734,12 +1430,8 @@ void Core::setMousePosition(const Vector &p)
 	Vector lp = core->mouse.position;
 
 	core->mouse.position = p;
-#if !defined(BBGE_BUILD_WINDOWS) && defined(BBGE_BUILD_GLFW)
-	glfwSetMousePos(p.x,p.y);
-#endif
-#ifdef BBGE_BUILD_SDL
 	float px = p.x + virtualOffX;
-	float py = p.y;// + virtualOffY;
+	float py = p.y;
 
 	#ifdef BBGE_BUILD_SDL2
 	SDL_WarpMouseInWindow(gScreen, px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
@@ -2747,17 +1439,8 @@ void Core::setMousePosition(const Vector &p)
 	SDL_WarpMouse( px * (float(width)/float(virtualWidth)), py * (float(height)/float(virtualHeight)));
 	#endif
 
-	/*
-	ignoreNextMouse = true;
-	unchange = core->mouse.position - lp;
-	*/
-#endif
 
-	/*
-	std::ostringstream os;
-	os << "setting position (" << p.x << ", " << p.y << ")";
-	debugLog(os.str());
-	*/
+
 }
 
 // used to update all render objects either uniformly or as part of a time sliced update process
@@ -2799,17 +1482,15 @@ std::string getScreenshotFilename()
 		std::ostringstream os;
 		os << core->getUserDataFolder() << "/screenshots/screen" << screenshotNum << ".tga";
 		screenshotNum ++;
-        std::string str(os.str());
+		std::string str(os.str());
 		if (!core->exists(str))  // keep going until we hit an unused filename.
 			return str;
 	}
 }
 
-uint32 Core::getTicks()
+unsigned Core::getTicks()
 {
-#ifdef BBGE_BUILD_SDL
 	return SDL_GetTicks();
-#endif
 	return 0;
 }
 
@@ -2830,21 +1511,17 @@ float Core::stopWatch(int d)
 
 bool Core::isWindowFocus()
 {
-#ifdef BBGE_BUILD_SDL
 	#ifdef BBGE_BUILD_SDL2
 	return ((SDL_GetWindowFlags(gScreen) & SDL_WINDOW_INPUT_FOCUS) != 0);
 	#else
 	return ((SDL_GetAppState() & SDL_APPINPUTFOCUS) != 0);
 	#endif
-#endif
 	return true;
 }
 
 void Core::onBackgroundUpdate()
 {
-#if BBGE_BUILD_SDL
 	SDL_Delay(200);
-#endif
 }
 
 void Core::main(float runTime)
@@ -2854,117 +1531,32 @@ void Core::main(float runTime)
 	// cannot nest loops when the game is over
 	if (loopDone) return;
 
-	//QueryPerformanceCounter((LARGE_INTEGER*)&lastTime);
-	//QueryPerformanceFrequency((LARGE_INTEGER*)&freq);
+
+
 	float dt;
 	float counter = 0;
 	int frames = 0;
-	float real_dt = 0;
-	//std::ofstream out("debug.log");
+
 
 #if (!defined(_DEBUG) || defined(BBGE_BUILD_UNIX)) && defined(BBGE_BUILD_SDL)
 	bool wasInactive = false;
 #endif
 
-#ifdef BBGE_BUILD_GLFW
-	if (runTime == -1)
-		glfwSetTime(0);
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	// HACK: find out how to use performance counter again Query
-
-
-	if (verbose) debugLog("Performance Counter");
-
-	if (!QueryPerformanceFrequency((LARGE_INTEGER*)&freq))
-	{
-		errorLog ("could not get clock freq");
-		return;
-	}
-	QueryPerformanceCounter((LARGE_INTEGER*)&timerStart);
-	/*
-	DWORD ticks = GetTickCount();
-	DWORD newTicks;
-	*/
-#endif
-
-#ifdef BBGE_BUILD_SDL
 	nowTicks = thenTicks = SDL_GetTicks();
-#endif
-
-	//int i;
-
 	nestedMains++;
-	// HACK: Why block this?
-	/*
-	if (nestedMains > 1 && runTime <= 0)
-		return;
-	*/
 
-#ifdef BBGE_BUILD_DIRECTX
-	MSG msg;
-	ZeroMemory( &msg, sizeof(msg) );
-#endif
-
-	while((runTime == -1 && !loopDone) || (runTime >0))									// Loop That Runs While done=FALSE
+	while((runTime == -1 && !loopDone) || (runTime >0))
 	{
 		BBGE_PROF(Core_main);
-#ifdef BBGE_BUILD_DIRECTX
-		if( PeekMessage( &msg, NULL, 0U, 0U, PM_REMOVE ) )
-		{
-			TranslateMessage( &msg );
-			DispatchMessage( &msg );
-		}
-#endif
 
-
-#ifdef BBGE_BUILD_GLFW
-		if (verbose) debugLog("glfwSetTime");
-		dt = glfwGetTime();
-		glfwSetTime(0);
-#endif
-
-#ifdef BBGE_BUILD_DIRECTX
-		/*
-		newTicks = GetTickCount();
-		*/
-		QueryPerformanceCounter((LARGE_INTEGER*)&timerEnd);
-		dt = (float(timerEnd-timerStart)/float(freq));
-		timerStart = timerEnd;
-//		dt = float(newTicks)/1000.0f;
-		//dt = float(newTicks - ticks)/1000.0f;
-		//ticks = newTicks;
-#endif
-
-#ifdef BBGE_BUILD_SDL
-		if (timeUpdateType == TIMEUPDATE_DYNAMIC)
-		{
-			nowTicks = SDL_GetTicks();
-		}
-		/*
-		else
-		{
-			if (nowTicks == 0)
-			{
-				nowTicks = SDL_GetTicks();
-			}
-		}
-		*/
+		nowTicks = SDL_GetTicks();
 		dt = (nowTicks-thenTicks)/1000.0;
 		thenTicks = nowTicks;
-		//thenTicks = SDL_GetTicks();
-#endif
 
 		if (verbose) debugLog("avgFPS");
 		if (!avgFPS.empty())
 		{
-			/*
-			if (avgFPS[0] <= 0)
-			{
-				for (int i = 0; i < avgFPS.size(); i++)
-					avgFPS[i] = dt;
-			}
-			*/
+
 			int i = 0;
 			for (i = avgFPS.size()-1; i > 0; i--)
 			{
@@ -2982,16 +1574,12 @@ void Core::main(float runTime)
 					n ++;
 				}
 			}
-			if (n > 0) // && n == avgFPS.size() ??
+			if (n > 0)
 			{
 				c /= n;
 				dt = c;
 			}
-			/*
-			std::ostringstream os;
-			os << dt;
-			debugLog(os.str());
-			*/
+
 		}
 
 #if !defined(_DEBUG) && defined(BBGE_BUILD_SDL)
@@ -3005,7 +1593,7 @@ void Core::main(float runTime)
 				if (wasInactive)
 				{
 					debugLog("WINDOW ACTIVE");
-					
+
 					setReentryInputGrab(1);
 
 					wasInactive = false;
@@ -3030,7 +1618,7 @@ void Core::main(float runTime)
 					while (!isWindowFocus())
 					{
 						pollEvents();
-						//debugLog("app not in input focus");
+
 						onBackgroundUpdate();
 
 						resetTimer();
@@ -3053,7 +1641,7 @@ void Core::main(float runTime)
 					sound->resume();
 
 					resetTimer();
-					
+
 					SDL_ShowCursor(SDL_DISABLE);
 
 					continue;
@@ -3061,12 +1649,6 @@ void Core::main(float runTime)
 			}
 		}
 #endif
-
-		if (timeUpdateType == TIMEUPDATE_FIXED)
-		{
-			real_dt = dt;
-			dt = 1.0f/float(fixedFPS);
-		}
 
 		old_dt = dt;
 
@@ -3164,45 +1746,6 @@ void Core::main(float runTime)
 			saveScreenshotTGA(getScreenshotFilename());
 			prepScreen(0);
 		}
-		
-		// wait
-		if (timeUpdateType == TIMEUPDATE_FIXED)
-		{
-			static float avg_diff=0;
-			static int avg_diff_count=0;
-
-			float diff = (1.0f/float(fixedFPS)) - real_dt;
-
-			avg_diff_count++;
-			avg_diff += diff;
-			
-			char buf[256];
-			sprintf(buf, "real_dt: %5.4f \n realFPS: %5.4f \n fixedFPS: %5.4f \n diff: %5.4f \n delay: %5.4f \n avgdiff: %5.8f", float(real_dt), float(real_dt>0?(1.0f/real_dt):0.0f), float(fixedFPS), float(diff), float(diff*1000), float(avg_diff/(float)avg_diff_count));
-			fpsDebugString = buf;
-
-			/*
-			std::ostringstream os;
-			os << "real_dt: " << real_dt << "\n realFPS: " << (1.0/real_dt) << "\n fixedFPS: " << fixedFPS << "\n diff: " << diff << "\n delay: " << diff*1000;
-			fpsDebugString = os.str();
-			*/
-
-#ifdef BBGE_BUILD_SDL
-			nowTicks = SDL_GetTicks();
-			
-			if (diff > 0)
-			{
-				//Sleep(diff*1000);
-				//SDL_Delay(diff*1000);
-				while ((SDL_GetTicks() - nowTicks) < (diff*1000))
-				{
-					//wend, bitch
-				}
-			}
-
-			//nowTicks = SDL_GetTicks();
-#endif
-
-		}	
 	}
 	if (verbose) debugLog("bottom of function");
 	quitNestedMainFlag = false;
@@ -3212,75 +1755,15 @@ void Core::main(float runTime)
 	if (verbose) debugLog("exit Core::main");
 }
 
-// less than through pointer
-bool RenderObject_lt(RenderObject* x, RenderObject* y)
-{
-	return x->getSortDepth() < y->getSortDepth();
-}
-
-// greater than through pointer
-bool RenderObject_gt(RenderObject* x, RenderObject* y)
-{
-	return x->getSortDepth() > y->getSortDepth();
-}
-
-void Core::sortLayer(int layer)
-{
-	if (layer >= 0 && layer < renderObjectLayers.size())
-		renderObjectLayers[layer].sort();
-}
-
-void Core::sort()
-{
-	/*
-	if (sortEnabled)
-		renderObjects.sort(RenderObject_lt);
-	*/
-	// sort layeres independantly
-
-	/*
-	for (int i = renderObjects.size()-1; i >= 0; i--)
-	{
-		bool flipped = false;
-		for (int j = 0; j < i; j++)
-		{
-			//position.z
-			//position.z
-			//!renderObjects[j]->parent && !renderObjects[j+1]->parent &&
-			if (renderObjects[j]->getSortDepth() > renderObjects[j+1]->getSortDepth())
-			{
-				RenderObject *temp;
-				temp = renderObjects[j];
-				renderObjects[j] = renderObjects[j+1];
-				renderObjects[j+1] = temp;
-				flipped = true;
-			}
-		}
-		if (!flipped) break;
-	}
-	*/
-
-}
-
 void Core::clearBuffers()
 {
-	if (flags.get(CF_CLEARBUFFERS))
-	{
-#ifdef BBGE_BUILD_OPENGL
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-		g_pd3dDevice->Clear( 0, NULL, D3DCLEAR_TARGET, D3DCOLOR_XRGB(int(clearColor.x*255),int(clearColor.y*255),int(clearColor.z*255)), 1.0f, 0 );
-#endif
-	}
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
 }
 
 void Core::setupRenderPositionAndScale()
 {
-#ifdef BBGE_BUILD_OPENGL
 	glScalef(globalScale.x*globalResolutionScale.x*screenCapScale.x, globalScale.y*globalResolutionScale.y*screenCapScale.y, globalScale.z*globalResolutionScale.z);
 	glTranslatef(-(cameraPos.x+cameraOffset.x), -(cameraPos.y+cameraOffset.y), -(cameraPos.z+cameraOffset.z));
-#endif
 }
 
 void Core::setupGlobalResolutionScale()
@@ -3295,12 +1778,7 @@ void Core::initFrameBuffer()
 
 void Core::setMouseConstraint(bool on)
 {
-/*
-	if (mouseConstraint && !on)
-	{
-		setMousePosition(mouse.position);
-	}
-	*/
+
 	mouseConstraint = on;
 }
 
@@ -3312,15 +1790,7 @@ void Core::setMouseConstraintCircle(const Vector& pos, float circle)
 	mouseConstraintCenter.z = 0;
 }
 
-/*
-void Core::clearKeys()
-{
-	for (int i = 0; i < KEY_MAXARRAY; i++)
-	{
-		keys[i] = 0;
-	}
-}
-*/
+
 
 int Core::getVirtualOffX()
 {
@@ -3341,22 +1811,21 @@ bool Core::doMouseConstraint()
 {
 	if (mouseConstraint)
 	{
-		//- core->getVirtualOffX()
-		//- virtualOffX
+
+
 		Vector h = mouseConstraintCenter;
 		Vector d = mouse.position - h;
 		if (!d.isLength2DIn(mouseCircle))
 		{
 			d.setLength2D(mouseCircle);
 			mouse.position = h+d;
-			//warpMouse = true;
+
 			return true;
 		}
 	}
 	return false;
 }
 
-#if defined(BBGE_BUILD_SDL)
 
 #if defined(BBGE_BUILD_SDL2)
 typedef std::map<SDL_Keycode,int> sdlKeyMap;
@@ -3407,8 +1876,8 @@ static sdlKeyMap *initSDLKeymap(void)
 
 	SETKEYMAP(KEY_BACKSPACE, SDLK_BACKSPACE);
 
-	//SETKEYMAP(KEY_CAPSLOCK, DIK_CAPSLOCK);
-	//SETKEYMAP(KEY_CIRCUMFLEX, DIK_CIRCUMFLEX);
+
+
 	SETKEYMAP(KEY_LALT, SDLK_LALT);
 	SETKEYMAP(KEY_RALT, SDLK_RALT);
 	SETKEYMAP(KEY_LSHIFT, SDLK_LSHIFT);
@@ -3427,7 +1896,7 @@ static sdlKeyMap *initSDLKeymap(void)
 	SETKEYMAP(KEY_SEMICOLON, SDLK_SEMICOLON);
 	SETKEYMAP(KEY_LBRACKET, SDLK_LEFTBRACKET);
 	SETKEYMAP(KEY_RBRACKET, SDLK_RIGHTBRACKET);
-	//SETKEYMAP(KEY_RALT, GLFW_SETKEYMAP(KEY_RALT);
+
 	SETKEYMAP(KEY_TILDE, SDLK_BACKQUOTE);
 	SETKEYMAP(KEY_0, SDLK_0);
 	SETKEYMAP(KEY_1, SDLK_1);
@@ -3501,8 +1970,8 @@ static sdlKeyMap *initSDLKeymap(void)
 	SETKEYMAP(KEY_F15, SDLK_F15);
 
 	SETKEYMAP(KEY_ESCAPE, SDLK_ESCAPE);
-	//SETKEYMAP(KEY_ANYKEY, 4059);
-	//SETKEYMAP(KEY_MAXARRAY, SDLK_LAST+1
+
+
 
 	#undef SETKEYMAP
 
@@ -3521,21 +1990,13 @@ static int mapSDLKeyToGameKey(const SDLKey val)
 
 	return (*keymap)[val];
 }
-#endif
 
 
 void Core::pollEvents()
 {
-#if defined(BBGE_BUILD_SDL)
 	bool warpMouse=false;
 
-	/*
-	Uint8 *keystate = SDL_GetKeyState(NULL);
-	for (int i = 0; i < KEY_MAXARRAY; i++)
-	{
-		keys[i] = keystate[i];
-	}
-	*/
+
 
 	if (updateMouse)
 	{
@@ -3566,11 +2027,9 @@ void Core::pollEvents()
 
 
 
-
-
 	SDL_Event event;
 
-	
+
 
 	while ( SDL_PollEvent (&event) ) {
 		switch (event.type) {
@@ -3592,7 +2051,7 @@ void Core::pollEvents()
 
 				if ((event.key.keysym.sym == SDLK_g) && (event.key.keysym.mod & KMOD_CTRL))
 				{
-					// toggle mouse grab with the magic hotkey.
+
 					grabInputOnReentry = (grabInputOnReentry)?0:-1;
 					setReentryInputGrab(1);
 				}
@@ -3635,8 +2094,8 @@ void Core::pollEvents()
 				{
 					SDL_Quit();
 					_exit(0);
-					//loopDone = true;
-					//quit();
+
+
 				}
 			}
 			break;
@@ -3691,26 +2150,13 @@ void Core::pollEvents()
 			case SDL_QUIT:
 				SDL_Quit();
 				_exit(0);
-				//loopDone = true;
-				//quit();
+
+
 			break;
 
 			case SDL_SYSWMEVENT:
 			{
-				/*
-				debugLog("SYSWM!");
-				if (event.syswm.type == WM_ACTIVATE)
-				{
-					debugLog("ACTIVE");
-					this->unloadDevice();
-					this->reloadDevice();
-				}
-				else
-				{
-					debugLog("NOT ACTIVE");
-					this->unloadDevice();
-				}
-				*/
+
 			}
 			break;
 
@@ -3729,26 +2175,20 @@ void Core::pollEvents()
 		}
 	}
 
-#endif
 }
 
 #define _VLN(x, y, x2, y2) glVertex2f(x, y); glVertex2f(x2, y2);
 
 void Core::print(int x, int y, const char *str, float sz)
 {
-	//Prof(Core_print);
-	/*
-	glLoadIdentity();
-	core->setupRenderPositionAndScale();
-	*/
-	///glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-#ifdef BBGE_BUILD_OPENGL
+
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	glPushMatrix();
-	//sz *= 8;
-	//float osz = sz;
+
+
 	float xx = x;
 	float yy = y;
 	glTranslatef(x, y-0.5f*sz, 0);
@@ -3757,13 +2197,7 @@ void Core::print(int x, int y, const char *str, float sz)
 	bool isLower = false, wasLower = false;
 	int c=0;
 
-	/*
-	if (a == 1)
-		glDisable(GL_BLEND);
-	else
-		glEnable(GL_BLEND);
-	glColor4f(r,g,b,a);
-	*/
+
 	glLineWidth(1);
 	glScalef(sz*0.75f, sz, 1);
 
@@ -3776,15 +2210,7 @@ void Core::print(int x, int y, const char *str, float sz)
 		else
 			isLower = false;
 
-		/*
-		if (isLower)
-			glScalef(sz*0.5f, sz*0.5f, 1);
-		else if (wasLower)
-		{
-			glScalef(sz, sz, 1);
-			wasLower = false;
-		}
-		*/
+
 
 		switch(toupper(str[c]))
 		{
@@ -4033,11 +2459,7 @@ void Core::print(int x, int y, const char *str, float sz)
 			_VLN(xx, y+1, xx+1, y);
 		break;
 		default:
-			/*
-			std::ostringstream os;
-			os << "Core::print doesn't know char: " << str[c];
-			debugLog(os.str());
-			*/
+
 		break;
 		}
 		if (isLower)
@@ -4051,9 +2473,8 @@ void Core::print(int x, int y, const char *str, float sz)
 	glEnd();
 
 	glPopMatrix();
-	//glPopAttrib();
 
-#endif
+
 }
 
 void Core::cacheRender()
@@ -4076,7 +2497,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 {
 
 	BBGE_PROF(Core_render);
-	//HWND hwnd = _glfwWin.Wnd;
+
 
 	if (startLayer == -1 && endLayer == -1 && overrideStartLayer != 0)
 	{
@@ -4100,7 +2521,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 	totalRenderObjectCount = 0;
 
 
-#ifdef BBGE_BUILD_OPENGL
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glLoadIdentity();									// Reset The View
 	clearBuffers();
@@ -4111,42 +2531,13 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 	}
 
 	setupRenderPositionAndScale();
-#endif
-
-#ifdef BBGE_BUILD_DIRECTX
-	bool doRender = false;
-
-	core->getD3DMatrixStack()->LoadIdentity();
 
 
-	core->scaleMatrixStack(globalScale.x*globalResolutionScale.x, globalScale.y*globalResolutionScale.y);
-	core->translateMatrixStack(-(cameraPos.x+cameraOffset.x), -(cameraPos.y+cameraOffset.y));
 
-	clearBuffers();
-	if( SUCCEEDED( g_pd3dDevice->BeginScene() ) )
-    {
-		doRender = true;
-		//d3dSprite->Begin(D3DXSPRITE_BILLBOARD | D3DXSPRITE_ALPHABLEND);
-    }
-
-#endif
-
-
-	/*
-	//default
-	if (renderObjectLayerOrder.empty())
-	{
-		renderObjectLayerOrder.resize(renderObjectLayers.size());
-		for (int i = 0; i < renderObjectLayerOrder.size(); i++)
-		{
-			renderObjectLayerOrder[i] = i;
-		}
-	}
-	*/
 	RenderObject::rlayer = 0;
 
 	for (int c = 0; c < renderObjectLayerOrder.size(); c++)
-	//for (int i = 0; i < renderObjectLayers.size(); i++)
+
 	{
 		int i = renderObjectLayerOrder[c];
 		if (i == -1) continue;
@@ -4163,12 +2554,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 		if (darkLayer.isUsed() )
 		{
-			/*
-			if (i == darkLayer.getLayer())
-			{
-				darkLayer.preRender();
-			}
-			*/
+
 			if (i == darkLayer.getRenderLayer())
 			{
 				darkLayer.render();
@@ -4203,15 +2589,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 		}
 	}
 
-#ifdef BBGE_BUILD_DIRECTX
-	if (doRender)
-	{
-		// End the scene
-		//d3dSprite->End();
-		//core->getD3DMatrixStack()->Pop();
-		g_pd3dDevice->EndScene();
-	}
-#endif
 
 }
 
@@ -4220,19 +2597,11 @@ void Core::showBuffer()
 	BBGE_PROF(Core_showBuffer);
 #ifdef BBGE_BUILD_SDL2
 	SDL_GL_SwapWindow(gScreen);
-#elif BBGE_BUILD_SDL
+#else
 	SDL_GL_SwapBuffers();
-	//glFlush();
+
 #endif
 
-#ifdef BBGE_BUILD_GLFW
-	glfwSwapBuffers();
-	//_glfwPlatSwapBuffers();
-#endif
-#ifdef BBGE_BUILD_DIRECTX
-	// Present the backbuffer contents to the display
-    g_pd3dDevice->Present( NULL, NULL, NULL, NULL );
-#endif
 }
 
 // WARNING: only for use during shutdown
@@ -4251,23 +2620,13 @@ void Core::clearResources()
 
 void Core::shutdownInputLibrary()
 {
-#if defined(BBGE_BUILD_WINDOWS) && !defined(BBGE_BUILD_SDL)
-	g_pKeyboard->Unacquire();
-	g_pKeyboard->Release();
-	g_pKeyboard = 0;
-	g_pMouse->Unacquire();
-	g_pMouse->Release();
-	g_pMouse = 0;
-#endif
 }
 
 void Core::shutdownJoystickLibrary()
 {
 	if (joystickEnabled) {
 		joystick.shutdown();
-#ifdef BBGE_BUIDL_SDL
 		SDL_QuitSubSystem(SDL_INIT_JOYSTICK);
-#endif
 		joystickEnabled = false;
 	}
 }
@@ -4276,11 +2635,7 @@ void Core::clearRenderObjects()
 {
 	for (int i = 0; i < renderObjectLayers.size(); i++)
 	{
-		/*
-		for (int j = 0; j < renderObjectLayers[i].renderObjects.size(); j++)
-		{
-			RenderObject *r = renderObjectLayers[i].renderObjects[j];
-		*/
+
 		RenderObject *r = renderObjectLayers[i].getFirst();
 		while (r)
 		{
@@ -4358,13 +2713,6 @@ void Core::shutdown()
 
 
 
-#ifdef BBGE_BUILD_GLFW
-	debugLog("Terminate GLFW...");
-		//killGlWindow();
-		glfwTerminate();
-	debugLog("OK");
-#endif
-
 #ifdef BBGE_BUILD_VFS
 	debugLog("Unload VFS...");
 		vfs.Clear();
@@ -4372,22 +2720,18 @@ void Core::shutdown()
 #endif
 
 
-#ifdef BBGE_BUILD_SDL
 	debugLog("SDL Quit...");
 		SDL_Quit();
 	debugLog("OK");
-#endif
 }
 
 //util funcs
 
 void Core::instantQuit()
 {
-#ifdef BBGE_BUILD_SDL
-    SDL_Event event;
-    event.type = SDL_QUIT;
-    SDL_PushEvent(&event);
-#endif
+	SDL_Event event;
+	event.type = SDL_QUIT;
+	SDL_PushEvent(&event);
 }
 
 bool Core::exists(const std::string &filename)
@@ -4397,8 +2741,8 @@ bool Core::exists(const std::string &filename)
 
 CountedPtr<Texture> Core::findTexture(const std::string &name)
 {
-	//stringToUpper(name);
-	//std::ofstream out("texturefind.log");
+
+
 	int sz = resources.size();
 	for (int i = 0; i < sz; i++)
 	{
@@ -4429,7 +2773,7 @@ std::string Core::getTextureLoadName(const std::string &texture)
 	return loadName;
 }
 
-std::pair<CountedPtr<Texture>, TextureLoadResult> Core::doTextureAdd(const std::string &texture, const std::string &loadName, std::string internalTextureName)
+CountedPtr<Texture> Core::doTextureAdd(const std::string &texture, const std::string &loadName, std::string internalTextureName)
 {
 	if (texture.empty() || !ISPATHROOT(texture))
 	{
@@ -4448,35 +2792,34 @@ std::pair<CountedPtr<Texture>, TextureLoadResult> Core::doTextureAdd(const std::
 	stringToLowerUserData(internalTextureName);
 	CountedPtr<Texture> t = core->findTexture(internalTextureName);
 	if (t)
-		return std::make_pair(t, TEX_SUCCESS);
+		return t;
 
 	t = new Texture;
 	t->name = internalTextureName;
-	unsigned res = TEX_FAILED;
 
 	if(t->load(loadName))
-		res |= (TEX_LOADED | TEX_SUCCESS);
+	{
+		std::ostringstream os;
+		os << "LOADED TEXTURE FROM DISK: [" << internalTextureName << "] idx: " << resources.size()-1;
+		debugLog(os.str());
+	}
 	else
 	{
 		t->width = 64;
 		t->height = 64;
 	}
 
-	return std::make_pair(t, (TextureLoadResult)res);
+	return t;
 }
 
-CountedPtr<Texture> Core::addTexture(const std::string &textureName, TextureLoadResult *pLoadResult /* = 0 */)
+CountedPtr<Texture> Core::addTexture(const std::string &textureName)
 {
 	BBGE_PROF(Core_addTexture);
 
 	if (textureName.empty())
-	{
-		if(pLoadResult)
-			*pLoadResult = TEX_FAILED;
 		return NULL;
-	}
 
-	std::pair<CountedPtr<Texture>, TextureLoadResult> texResult;
+	CountedPtr<Texture> ptex;
 	std::string texture = textureName;
 	stringToLowerUserData(texture);
 	std::string internalTextureName = texture;
@@ -4493,33 +2836,25 @@ CountedPtr<Texture> Core::addTexture(const std::string &textureName, TextureLoad
 		std::string ln = loadName;
 		texture = secondaryTexturePath + texture;
 		loadName = texture;
-		texResult = doTextureAdd(texture, loadName, internalTextureName);
-		if (!texResult.second)
-			texResult = doTextureAdd(t, ln, internalTextureName);
+		ptex = doTextureAdd(texture, loadName, internalTextureName);
+		if (!ptex || ptex->getLoadResult() == TEX_FAILED)
+			ptex = doTextureAdd(t, ln, internalTextureName);
 	}
 	else
-		texResult = doTextureAdd(texture, loadName, internalTextureName);
+		ptex = doTextureAdd(texture, loadName, internalTextureName);
 
-	addTexture(texResult.first.content());
+	addTexture(ptex.content());
 
 	if(debugLogTextures)
 	{
-		if (texResult.second & TEX_LOADED)
-		{
-			std::ostringstream os;
-			os << "LOADED TEXTURE FROM DISK: [" << internalTextureName << "] idx: " << resources.size()-1;
-			debugLog(os.str());
-		}
-		else if(!(texResult.second & TEX_SUCCESS))
+		if(!ptex || ptex->getLoadResult() != TEX_SUCCESS)
 		{
 			std::ostringstream os;
 			os << "FAILED TO LOAD TEXTURE: [" << internalTextureName << "] idx: " << resources.size()-1;
 			debugLog(os.str());
 		}
 	}
-	if(pLoadResult)
-		*pLoadResult = texResult.second;
-	return texResult.first;
+	return ptex;
 }
 
 void Core::addRenderObject(RenderObject *o, int layer)
@@ -4598,7 +2933,7 @@ void Core::removeTexture(Texture *res)
 
 void Core::deleteRenderObjectMemory(RenderObject *r)
 {
-	//if (!r->allocStatic)
+
 	delete r;
 }
 
@@ -4622,7 +2957,7 @@ void Core::removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag)
 
 void Core::enqueueRenderObjectDeletion(RenderObject *object)
 {
-	if (!object->_dead) // && !object->staticallyAllocated)
+	if (!object->_dead)
 	{
 		garbage.push_back (object);
 		object->_dead = true;
@@ -4654,24 +2989,13 @@ bool Core::canChangeState()
 	return (nestedMains<=1);
 }
 
-/*
-int Core::getVirtualWidth()
-{
-	return virtualWidth;
-}
 
-int Core::getVirtualHeight()
-{
-	return virtualHeight;
-}
-*/
 
 // Take a screenshot of the specified region of the screen and store it
 // in a 32bpp pixel buffer.  delete[] the returned buffer when it's no
 // longer needed.
 unsigned char *Core::grabScreenshot(int x, int y, int w, int h)
 {
-#ifdef BBGE_BUILD_OPENGL
 
 	unsigned char *imageData;
 
@@ -4705,13 +3029,6 @@ unsigned char *Core::grabScreenshot(int x, int y, int w, int h)
 
 	return imageData;
 
-#else
-
-	#warning FIXME: Need to implement non-GL grabScreenshot().
-	// Avoid crashing, at least.
-	return new unsigned char[sizeof(unsigned char) * w * h * 4];
-
-#endif
 }
 
 // Like grabScreenshot(), but grab from the center of the screen.
@@ -4758,7 +3075,7 @@ void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop3
 	unsigned int size = sizeof(unsigned char) * w * h * 3;
 	imageData = (unsigned char *)malloc(size);
 
-	float wbit = fsz;//+1;
+	float wbit = fsz;
 	float hbit = ((fsz)*(3.0f/4.0f));
 
 	int width = core->width-1;
@@ -4789,25 +3106,8 @@ void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop3
 	debugLog(os.str());
 
 	glRasterPos2i(0, 0);
-	
-	/*
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
 
-	glDisable(GL_BLEND);
 
-	glDisable(GL_ALPHA_TEST); glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST); glDisable(GL_DITHER); glDisable(GL_FOG);
-	glDisable(GL_LIGHTING); glDisable(GL_LOGIC_OP);
-	glDisable(GL_STENCIL_TEST); glDisable(GL_TEXTURE_1D);
-	glDisable(GL_TEXTURE_2D); glPixelTransferi(GL_MAP_COLOR,
-		GL_FALSE); glPixelTransferi(GL_RED_SCALE, 1);
-	glPixelTransferi(GL_RED_BIAS, 0); glPixelTransferi(GL_GREEN_SCALE, 1);
-	glPixelTransferi(GL_GREEN_BIAS, 0); glPixelTransferi(GL_BLUE_SCALE, 1);
-	glPixelTransferi(GL_BLUE_BIAS, 0); glPixelTransferi(GL_ALPHA_SCALE, 1);
-	glPixelTransferi(GL_ALPHA_BIAS, 0);
-	*/
-
-	//glPixelStorei(GL_PACK_ALIGNMENT, 1);
 
 	debugLog("pixel zoom");
 	glPixelZoom(zx,zy);
@@ -4827,14 +3127,13 @@ void Core::saveSizedScreenshotTGA(const std::string &filename, int sz, int crop3
 	tgaSave(filename.c_str(),w,h,savebits,imageData);
 
 	debugLog("pop");
-	//glPopAttrib();
+
 
 	debugLog("done");
 }
 
 void Core::save64x64ScreenshotTGA(const std::string &filename)
 {
-#ifdef BBGE_BUILD_OPENGL
 	int w, h;
 	unsigned char *imageData;
 
@@ -4871,13 +3170,10 @@ void Core::save64x64ScreenshotTGA(const std::string &filename)
 // save the image
 	tgaSave(filename.c_str(),64,64,32,imageData);
 	glPixelZoom(1,1);
-#endif
 
-	// do NOT free imageData here
-	// it IS freed in tgaSave
-	//free(imageData);
+
+
 }
-
 
 
 
@@ -4978,7 +3274,7 @@ int Core::tgaSaveSeries(char		*filename,
  void Core::screenshot()
  {
 	 doScreenshot = true;
-//	ilutGLScreenie();
+
  }
 
 

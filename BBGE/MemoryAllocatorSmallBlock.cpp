@@ -9,7 +9,7 @@
 
 #include <assert.h>
 
-//#define DD(...) fprintf(stderr, __VA_ARGS__)
+
 #define DD(...)
 #define logdev(...)
 #define logerror(...)
