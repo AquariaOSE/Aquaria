@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Shader.h"
 #include "algorithmx.h"
 
-#ifdef BBGE_BUILD_SHADERS
+#if defined(BBGE_BUILD_SHADERS) && defined(BBGE_BUILD_OPENGL_DYNAMIC)
 	// GL_ARB_shader_objects
 	PFNGLCREATEPROGRAMOBJECTARBPROC  glCreateProgramObjectARB  = NULL;
 	PFNGLDELETEOBJECTARBPROC         glDeleteObjectARB		 = NULL;
@@ -77,6 +77,7 @@ void Shader::staticInit()
 	}
 	else
 	{
+#if defined(BBGE_BUILD_OPENGL_DYNAMIC)
 		glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
 		glDeleteObjectARB         = (PFNGLDELETEOBJECTARBPROC)SDL_GL_GetProcAddress("glDeleteObjectARB");
 		glUseProgramObjectARB     = (PFNGLUSEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glUseProgramObjectARB");
@@ -110,6 +111,7 @@ void Shader::staticInit()
 			goto end;
 		}
 	}
+#endif
 
 	// everything fine when we are here
 	_useShaders = true;
