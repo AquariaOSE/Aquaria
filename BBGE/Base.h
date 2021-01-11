@@ -66,7 +66,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma warning(disable:4005)
 #pragma warning(disable:4305)
 
-#pragma warning(disable:4018) // signed/unsigned mismatch
+//#pragma warning(disable:4018) // signed/unsigned mismatch
 #pragma warning(disable:4244) // conversion from types with possible loss of data
 #pragma warning(disable:4800) // forcing value to bool 'true' or 'false (performance warning)
 
@@ -77,7 +77,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #pragma warning(disable:4127) // conditional expression is constant
 #pragma warning(disable:4706) // assignment within conditional expression
 
-#pragma warning(disable:4389) // signed/unsigned mismatch
+//#pragma warning(disable:4389) // signed/unsigned mismatch
 
 #pragma warning(disable:4189) // UqqqqSEFUL: local variable is initialized but not referenced
 #endif
