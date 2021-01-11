@@ -159,6 +159,9 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	assert(!dsq);
 	dsq = this;
 
+	mouse.actionToLeft = ACTION_PRIMARY;
+	mouse.actionToRight = ACTION_SECONDARY;
+
 	cutscene_bg = 0;
 	cutscene_text = 0;
 	cutscene_text2 = 0;
@@ -3927,7 +3930,11 @@ void DSQ::onUpdate(float dt)
 		os << "invGlobalScale: " << core->invGlobalScale;
 		os << std::endl;
 		os << "globalScale: " << core->globalScale.x << std::endl;
-		os << "mousePos:(" << core->mouse.position.x << ", " << core->mouse.position.y << ") mouseChange:(" << core->mouse.change.x << ", " << core->mouse.change.y << ")\n";
+		os << "mouse["
+			<< (mouse.buttons.left ? 'L' : '-')
+			<< (mouse.buttons.middle ? 'M' : '-')
+			<< (mouse.buttons.right ? 'R' : '-')
+			<< "]:pos(" << core->mouse.position.x << ", " << core->mouse.position.y << ") change:(" << core->mouse.change.x << ", " << core->mouse.change.y << ")\n";
 		/*for(size_t i = 0; i < getNumJoysticks(); ++i)
 			if(Joystick *j = getJoystick(i))
 			{

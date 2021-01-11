@@ -78,7 +78,7 @@ protected:
 	{
 		importInput(&a[0], N);
 	}
-	void importInput(const NamedAction *actions, size_t N);*/
+	void importInput(const NamedAction *actions, size_t N);*/ // TODO controllerfixup: remove this everywhere
 
 	std::vector<Event*> createdEvents;
 

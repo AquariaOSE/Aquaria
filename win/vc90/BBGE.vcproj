@@ -730,6 +730,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\VirtualMouse.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\VirtualMouse.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\Window.cpp"
 				>
 			</File>

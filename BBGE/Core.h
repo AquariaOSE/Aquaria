@@ -34,6 +34,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "GameKeys.h"
 #include "InputMapperRaw.h"
+#include "VirtualMouse.h"
 
 class ParticleEffect;
 class Joystick;
@@ -69,37 +70,6 @@ class Texture;
 
 const int baseVirtualWidth		= 800;
 const int baseVirtualHeight		= 600;
-
-enum ButtonState { UP = 0, DOWN };
-
-struct MouseButtons
-{
-	MouseButtons ()
-	{
-		left = UP;
-		right = UP;
-		middle = UP;
-	}
-
-	ButtonState left, right, middle;
-};
-
-struct Mouse
-{
-	Mouse()
-	{
-		scrollWheelChange = 0;
-		buttonsEnabled = true;
-	}
-	Vector position, lastPosition;
-	MouseButtons buttons;
-	MouseButtons pure_buttons;
-	unsigned rawButtonMask;
-	Vector change;
-	bool buttonsEnabled; //KILL
-
-	int scrollWheelChange;
-};
 
 enum FollowCameraLock
 {
@@ -325,7 +295,7 @@ public:
 	int fps;
 	bool loopDone;
 
-	Mouse mouse;
+	VirtualMouse mouse;
 
 	AfterEffectManager *afterEffectManager;
 

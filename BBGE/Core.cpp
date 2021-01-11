@@ -636,11 +636,10 @@ void Core::onUpdate(float dt)
 
 	pollEvents(dt);
 
-
-
 	ActionMapper::onUpdate(dt);
 	StateManager::onUpdate(dt);
 
+	mouse.update(dt);
 	onMouseInput();
 
 	globalScale.update(dt);

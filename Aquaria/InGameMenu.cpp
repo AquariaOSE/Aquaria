@@ -2993,8 +2993,6 @@ void InGameMenu::onCook()
 
 		// do animationy stuff.
 
-		core->mouse.buttonsEnabled = false;
-
 		bool longAnim = true;
 		int cooks = dsq->continuity.getFlag(FLAG_COOKS);
 
@@ -3132,8 +3130,6 @@ void InGameMenu::onCook()
 			if (haveLeftovers)
 				updatePreviewRecipe();
 		}
-
-		core->mouse.buttonsEnabled = true;
 	}
 	else
 	{
