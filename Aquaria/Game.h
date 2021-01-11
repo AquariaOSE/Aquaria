@@ -131,9 +131,6 @@ public:
 	int idx;
 };
 
-typedef std::vector<Quad*> QuadList;
-typedef std::vector<QuadList> QuadArray;
-
 typedef std::vector<Element*> ElementUpdateList;
 
 struct EntitySaveData

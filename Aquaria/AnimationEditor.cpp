@@ -508,11 +508,10 @@ void AnimationEditor::undo()
 	{
 		if (undoEntry < undoHistory.size())
 		{
-			std::list<SkeletalSprite>::iterator it = undoHistory.begin();
-			std::advance(it, undoEntry);
-			editSprite->animations = it->animations;
-			if(undoEntry)
+			editSprite->animations = undoHistory[undoEntry].animations;
+			if(undoEntry > 0) {
 				undoEntry--;
+			}
 		}
 	}
 }
@@ -526,9 +525,7 @@ void AnimationEditor::redo()
 		undoEntry++;
 		if (undoEntry < undoHistory.size())
 		{
-			std::list<SkeletalSprite>::iterator it = undoHistory.begin();
-			std::advance(it, undoEntry);
-			editSprite->animations = it->animations;
+			editSprite->animations = undoHistory[undoEntry].animations;
 		}
 		else
 		{

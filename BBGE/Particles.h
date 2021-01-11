@@ -234,7 +234,6 @@ protected:
 	Particle* stomp();
 
 	void nextFree(size_t f=1);
-	void prevFree(size_t f=1);
 
 	size_t oldFree;
 

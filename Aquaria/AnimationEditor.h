@@ -3,7 +3,7 @@
 
 #include "../BBGE/SkeletalSprite.h"
 #include "StateManager.h"
-#include <list>
+#include <deque>
 
 class DebugFont;
 class BitmapText;
@@ -92,7 +92,7 @@ public:
 
 	void moveNextWidgets(float dt);
 
-	std::list<SkeletalSprite> undoHistory;
+	std::deque<SkeletalSprite> undoHistory;
 
 	size_t undoEntry;
 

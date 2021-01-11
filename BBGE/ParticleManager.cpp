@@ -205,15 +205,6 @@ void ParticleManager::nextFree(size_t jump)
 		free -= size;
 }
 
-void ParticleManager::prevFree(size_t jump)
-{
-	if(free < jump) {
-		free = free + size - jump;
-	} else {
-		free -= jump;
-	}
-}
-
 void ParticleManager::setFree(size_t free)
 {
 	if (free != -1)
@@ -222,8 +213,8 @@ void ParticleManager::setFree(size_t free)
 	}
 }
 
-const int spread = 8;
-const int spreadCheck = 128;
+static const size_t spread = 8;
+static const size_t spreadCheck = 128;
 
 // travel the list until you find an empty or give up
 Particle *ParticleManager::stomp()
