@@ -2538,12 +2538,18 @@ void SceneEditor::prevElement()
 
 void SceneEditor::doPrevElement()
 {
-	int oldCur = curElement;
-	curElement--;
-	if (curElement >= game->elementTemplates.size())
-		curElement = dsq->game->elementTemplates.size()-1;
+	size_t oldCur = curElement;
+	size_t maxn = dsq->game->elementTemplates.size();
 
-	if (dsq->game->elementTemplates[curElement].idx < 1024)
+	if(curElement)
+		curElement--;
+	else if(maxn)
+		curElement = maxn-1;
+
+	if (maxn && curElement >= maxn)
+		curElement = maxn-1;
+
+	if (maxn && dsq->game->elementTemplates[curElement].idx < 1024)
 	{
 		placer->setTexture(dsq->game->elementTemplates[curElement].gfx);
 	}
