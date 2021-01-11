@@ -576,6 +576,8 @@ SET(PNG_SRCS
     ${PNGDIR}/pngwrite.c
     ${PNGDIR}/pngwtran.c
     ${PNGDIR}/pngwutil.c
+    ${PNGDIR}/arm_init.c
+    ${PNGDIR}/filter_neon_intrinsics.c
 )
 
 IF(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUCXX)
