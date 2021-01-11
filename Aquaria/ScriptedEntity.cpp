@@ -139,7 +139,7 @@ void ScriptedEntity::postInit()
 	Entity::postInit();
 }
 
-void ScriptedEntity::initEmitter(int emit, const std::string &file)
+void ScriptedEntity::initEmitter(size_t emit, const std::string &file)
 {
 	if (emitters.size() <= emit)
 	{
@@ -155,7 +155,7 @@ void ScriptedEntity::initEmitter(int emit, const std::string &file)
 	emitters[emit]->load(file);
 }
 
-void ScriptedEntity::startEmitter(int emit)
+void ScriptedEntity::startEmitter(size_t emit)
 {
 	if(emit >= emitters.size())
 		return;
@@ -166,7 +166,7 @@ void ScriptedEntity::startEmitter(int emit)
 	}
 }
 
-void ScriptedEntity::stopEmitter(int emit)
+void ScriptedEntity::stopEmitter(size_t emit)
 {
 	if(emit >= emitters.size())
 		return;
@@ -177,12 +177,12 @@ void ScriptedEntity::stopEmitter(int emit)
 	}
 }
 
-ParticleEffect *ScriptedEntity::getEmitter(int emit)
+ParticleEffect *ScriptedEntity::getEmitter(size_t emit)
 {
 	return (size_t(emit) < emitters.size()) ? emitters[emit] : NULL;
 }
 
-int ScriptedEntity::getNumEmitters() const
+size_t ScriptedEntity::getNumEmitters() const
 {
 	return emitters.size();
 }
@@ -199,7 +199,7 @@ void ScriptedEntity::initSegments(int numSegments, int minDist, int maxDist, std
 	this->minDist = minDist;
 	this->maxDist = maxDist;
 	segments.resize(numSegments);
-	for (int i = segments.size()-1; i >= 0 ; i--)
+	for (size_t i = segments.size(); i-- > 0 ; )
 	{
 		Quad *q = new Quad;
 		if (i == segments.size()-1)
@@ -257,7 +257,7 @@ void ScriptedEntity::initStrands(int num, int segs, int dist, int strandSpacing,
 {
 	this->strandSpacing = strandSpacing;
 	strands.resize(num);
-	for (int i = 0; i < strands.size(); i++)
+	for (size_t i = 0; i < strands.size(); i++)
 	{
 		strands[i] = new Strand(position, segs, dist);
 		strands[i]->color = color;
@@ -392,7 +392,7 @@ void ScriptedEntity::updateStrands(float dt)
 	angle = (PI*(360-(angle-90)))/180.0;
 
 	float sz = (strands.size()/2);
-	for (int i = 0; i < strands.size(); i++)
+	for (size_t i = 0; i < strands.size(); i++)
 	{
 		float diff = (i-sz)*strandSpacing;
 		if (diff < 0)
@@ -786,7 +786,7 @@ void ScriptedEntity::onEnterState(int action)
 		destroySegments(1);
 
 
-		for (int i = 0; i < strands.size(); i++)
+		for (size_t i = 0; i < strands.size(); i++)
 		{
 			strands[i]->safeKill();
 		}

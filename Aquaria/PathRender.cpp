@@ -30,11 +30,11 @@ PathRender::PathRender() : RenderObject()
 
 void PathRender::onRender()
 {
-	const int pathcount = dsq->game->getNumPaths();
-	if (pathcount <= 0)
+	const size_t pathcount = dsq->game->getNumPaths();
+	if (pathcount == 0)
 		return;
 
-	for (int i = 0; i < pathcount; i++)
+	for (size_t i = 0; i < pathcount; i++)
 	{
 		Path *p = dsq->game->getPath(i);
 #ifdef AQUARIA_BUILD_SCENEEDITOR
@@ -45,7 +45,7 @@ void PathRender::onRender()
 			glColor4f(1, 0.5, 0.5, 0.75);
 
 		glBegin(GL_LINES);
-		for (int n = 0; n < p->nodes.size()-1; n++)
+		for (size_t n = 0; n < p->nodes.size()-1; n++)
 		{
 			PathNode *nd = &p->nodes[n];
 			PathNode *nd2 = &p->nodes[n+1];
@@ -54,7 +54,7 @@ void PathRender::onRender()
 		}
 		glEnd();
 
-		for (int n = 0; n < p->nodes.size(); n++)
+		for (size_t n = 0; n < p->nodes.size(); n++)
 		{
 			PathNode *nd = &p->nodes[n];
 

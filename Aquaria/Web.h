@@ -29,8 +29,8 @@ class Web : public RenderObject
 public:
 	Web();
 	int addPoint(const Vector &point = Vector(0,0));
-	void setPoint(int pt, const Vector &v);
-	Vector getPoint(int pt) const;
+	void setPoint(size_t pt, const Vector &v);
+	Vector getPoint(size_t pt) const;
 	void setParentEntity(Entity *e);
 	int getNumPoints();
 	typedef std::list<Web*> Webs;

@@ -165,7 +165,7 @@ void VectorPath::realPercentageCalc()
 {
 	float totalLen = getLength();
 	float len = 0;
-	for (int i = 1; i < pathNodes.size(); i++)
+	for (size_t i = 1; i < pathNodes.size(); i++)
 	{
 		Vector diff = pathNodes[i].value - pathNodes[i-1].value;
 		len += diff.getLength2D();
@@ -188,7 +188,7 @@ float VectorPath::getSubSectionLength(int startIncl, int endIncl)
 float VectorPath::getLength()
 {
 	float len = 0;
-	for (int i = 1; i < pathNodes.size(); i++)
+	for (size_t i = 1; i < pathNodes.size(); i++)
 	{
 		Vector diff = pathNodes[i].value - pathNodes[i-1].value;
 		len += diff.getLength2D();
@@ -205,7 +205,7 @@ void VectorPath::splice(const VectorPath &path, int sz)
 {
 	std::vector<VectorPathNode> copy = pathNodes;
 	pathNodes.clear();
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < path.pathNodes.size(); i++)
 		pathNodes.push_back(path.pathNodes[i]);
 	for (i = sz+1; i < copy.size(); i++)
@@ -226,7 +226,7 @@ void VectorPath::prepend(const VectorPath &path)
 {
 	std::vector<VectorPathNode> copy = pathNodes;
 	pathNodes.clear();
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < path.pathNodes.size(); i++)
 		pathNodes.push_back(path.pathNodes[i]);
 	for (i = 0; i < copy.size(); i++)
@@ -235,7 +235,7 @@ void VectorPath::prepend(const VectorPath &path)
 
 void VectorPath::calculatePercentages()
 {
-	for (int i = 0; i < pathNodes.size(); i++)
+	for (size_t i = 0; i < pathNodes.size(); i++)
 	{
 		pathNodes[i].percent = i/float(pathNodes.size());
 	}
@@ -245,7 +245,7 @@ void VectorPath::append(const VectorPath &path)
 {
 	std::vector<VectorPathNode> copy = pathNodes;
 	pathNodes.clear();
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < copy.size(); i++)
 		pathNodes.push_back(copy[i]);
 	for (i = 0; i < path.pathNodes.size(); i++)
@@ -256,7 +256,7 @@ void VectorPath::cut(int n)
 {
 	std::vector<VectorPathNode> copy = pathNodes;
 	pathNodes.clear();
-	for (int i = 0; i < copy.size(); i+=n)
+	for (size_t i = 0; i < copy.size(); i+=n)
 	{
 		pathNodes.push_back(copy[i]);
 	}
@@ -278,7 +278,7 @@ Vector VectorPath::getValue(float usePercent)
 
 	VectorPathNode *target = 0;
 	VectorPathNode *from = &pathNodes[0];
-	for (int i = 0; i < pathNodes.size(); ++i)
+	for (size_t i = 0; i < pathNodes.size(); ++i)
 	{
 		if (pathNodes[i].percent >= usePercent)
 		{

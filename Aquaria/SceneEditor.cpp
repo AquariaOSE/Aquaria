@@ -93,7 +93,7 @@ std::string getMapTemplateFilename()
 
 void WarpAreaRender::onRender()
 {
-	for (int i = 0; i < dsq->game->warpAreas.size(); i++)
+	for (size_t i = 0; i < dsq->game->warpAreas.size(); i++)
 	{
 		WarpArea *a = &dsq->game->warpAreas[i];
 		glTranslatef(a->position.x, a->position.y,0);
@@ -498,7 +498,7 @@ void SceneEditor::openMainMenu()
 void SceneEditor::closeMainMenu()
 {
 	inMainMenu = false;
-	for (int i = 0; i < mainMenu.size(); i++)
+	for (size_t i = 0; i < mainMenu.size(); i++)
 	{
 		mainMenu[i]->alpha = 0;
 		mainMenu[i]->safeKill();
@@ -779,7 +779,7 @@ void SceneEditor::createAquarian()
 	std::string t = dsq->getUserInputString("Enter Aquarian:", "");
 	stringToUpper(t);
 	Vector startPos = dsq->getGameCursorPosition();
-	for (int i = 0; i < t.size(); i++)
+	for (size_t i = 0; i < t.size(); i++)
 	{
 		int v = 0;
 		if (t[i] >= 'A' && t[i] <= 'Z')
@@ -798,7 +798,7 @@ void SceneEditor::createAquarian()
 
 Path *SceneEditor::getSelectedPath()
 {
-	if (selectedIdx >= 0 && selectedIdx < dsq->game->getNumPaths())
+	if (selectedIdx < dsq->game->getNumPaths())
 	{
 		return dsq->game->getPath(selectedIdx);
 	}
@@ -869,7 +869,7 @@ void SceneEditor::toggleWarpAreaRender()
 void SceneEditor::setGridPattern(int gi)
 {
 	if (selectedElements.size())
-		for (int i = 0; i < selectedElements.size(); ++i)
+		for (size_t i = 0; i < selectedElements.size(); ++i)
 			selectedElements[i]->setElementEffectByIndex(gi);
 	else if (editingElement)
 		editingElement->setElementEffectByIndex(gi);
@@ -913,7 +913,7 @@ void SceneEditor::moveToFront()
 		dsq->clearElements();
 
 		//  move to the foreground ... this means that the editing element should be last in the list (Added last)
-		for (int i = 0; i < copy.size(); i++)
+		for (size_t i = 0; i < copy.size(); i++)
 		{
 			if (copy[i] != editingElement)
 				dsq->addElement(copy[i]);
@@ -933,7 +933,7 @@ void SceneEditor::moveToBack()
 
 		//  move to the background ... this means that the editing element should be first in the list (Added first)
 		dsq->addElement(editingElement);
-		for (int i = 0; i < copy.size(); i++)
+		for (size_t i = 0; i < copy.size(); i++)
 		{
 			if (copy[i] != editingElement)
 				dsq->addElement(copy[i]);
@@ -1039,7 +1039,7 @@ void SceneEditor::deleteSelected()
 	{
 		if (selectedElements.size()>0)
 		{
-			for (int i = 0; i < selectedElements.size(); i++)
+			for (size_t i = 0; i < selectedElements.size(); i++)
 			{
 				selectedElements[i]->safeKill();
 				dsq->removeElement(selectedElements[i]);
@@ -1129,7 +1129,7 @@ void SceneEditor::checkForRebuild()
 	if (editType == ET_ELEMENTS && state != ES_SELECTING && !selectedElements.empty())
 	{
 		bool rebuild = false;
-		for (int i = 0; i < selectedElements.size(); i++)
+		for (size_t i = 0; i < selectedElements.size(); i++)
 		{
 			if (selectedElements[i]->elementFlag == EF_SOLID || selectedElements[i]->elementFlag == EF_HURT)
 			{
@@ -1152,7 +1152,7 @@ void SceneEditor::exitMoveState()
 {
 	if (!selectedElements.empty())
 	{
-		for (int i = 0; i < selectedElements.size(); i++)
+		for (size_t i = 0; i < selectedElements.size(); i++)
 		{
 			selectedElements[i]->position = selectedElements[i]->getWorldPosition();
 			dummy.removeChild(selectedElements[i]);
@@ -1174,7 +1174,7 @@ void SceneEditor::enterMoveState()
 			dummy.rotation = Vector(0,0,0);
 			cursorOffset = dsq->getGameCursorPosition();
 			groupCenter = getSelectedElementsCenter();
-			for (int i = 0; i < selectedElements.size(); i++)
+			for (size_t i = 0; i < selectedElements.size(); i++)
 			{
 				selectedElements[i]->position -= groupCenter;
 				dummy.addChild(selectedElements[i], PM_NONE);
@@ -1222,7 +1222,7 @@ void SceneEditor::enterRotateState()
 			oldRotation = dummy.rotation;
 			cursorOffset = dsq->getGameCursorPosition();
 			groupCenter = getSelectedElementsCenter();
-			for (int i = 0; i < selectedElements.size(); i++)
+			for (size_t i = 0; i < selectedElements.size(); i++)
 			{
 				selectedElements[i]->position -= groupCenter;
 				dummy.addChild(selectedElements[i], PM_NONE);
@@ -1255,7 +1255,7 @@ void SceneEditor::enterScaleState()
 			oldRepeatScale = Vector(1, 1); // not handled for multi-selection
 			cursorOffset = dsq->getGameCursorPosition();
 			groupCenter = getSelectedElementsCenter();
-			for (int i = 0; i < selectedElements.size(); i++)
+			for (size_t i = 0; i < selectedElements.size(); i++)
 			{
 				selectedElements[i]->position -= groupCenter;
 				dummy.addChild(selectedElements[i], PM_NONE);
@@ -1338,7 +1338,7 @@ void SceneEditor::mouseButtonRightUp()
 		{
 			if (!selectedElements.empty())
 			{
-				for (int i = 0; i < selectedElements.size(); i++)
+				for (size_t i = 0; i < selectedElements.size(); i++)
 				{
 					selectedElements[i]->position = selectedElements[i]->getWorldPosition();
 					selectedElements[i]->rotation = selectedElements[i]->getAbsoluteRotation();
@@ -1352,7 +1352,7 @@ void SceneEditor::mouseButtonRightUp()
 
 			if (!selectedElements.empty())
 			{
-				for (int i = 0; i < selectedElements.size(); i++)
+				for (size_t i = 0; i < selectedElements.size(); i++)
 				{
 					selectedElements[i]->position = selectedElements[i]->getWorldPosition();
 					selectedElements[i]->scale = selectedElements[i]->scale * dummy.scale;
@@ -1468,7 +1468,7 @@ void SceneEditor::mouseButtonLeft()
 		{
 			Path *p = getSelectedPath();
 			editingPath = p;
-			if (p && selectedNode >= 0 && selectedNode < p->nodes.size())
+			if (p && selectedNode < p->nodes.size())
 			{
 				if (core->getShiftState())
 				{
@@ -1576,12 +1576,12 @@ public:
 	int rows;
 };
 
-bool getGrassPixel(pngRawInfo *png, int x, int y)
+bool getGrassPixel(pngRawInfo *png, size_t x, size_t y)
 {
-	if (x >= png->Width || y >= png->Height || x < 0 || y < 0) return false;
+	if (x >= png->Width || y >= png->Height) return false;
 
 
-	int c = (y*png->Width)*png->Components + x*png->Components;
+	size_t c = (y*png->Width)*png->Components + x*png->Components;
 	if (png->Data[c] == 128 &&
 		png->Data[c+1] == 255 &&
 		png->Data[c+2] == 128)
@@ -1618,7 +1618,7 @@ void SceneEditor::skinLevel()
 void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int maxY)
 {
 	std::vector<Element*> deleteElements;
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < dsq->getNumElements(); i++)
 	{
 		Element *e = dsq->getElement(i);
@@ -1675,7 +1675,7 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 				offset.z = 0;
 
 				bool skip = false;
-				for (int i = 0; i < dsq->getNumElements(); i++)
+				for (size_t i = 0; i < dsq->getNumElements(); i++)
 				{
 					Element *e = dsq->getElement(i);
 					if (e->templateIdx <= 4 && e->templateIdx >= 1)
@@ -1692,7 +1692,7 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 				{
 					std::vector<int> cantUse;
 					cantUse.resize(4);
-					int i = 0;
+					size_t i = 0;
 					for (i = 0; i < dsq->getNumElements(); i++)
 					{
 						Element *e = dsq->getElement(i);
@@ -1704,10 +1704,10 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 							}
 						}
 					}
-					int useIdx = rand()%cantUse.size()+1;
+					size_t useIdx = rand()%cantUse.size()+1;
 					for (i = 0; i < cantUse.size(); i++)
 					{
-						int check = i + idxCount;
+						size_t check = i + idxCount;
 						if (check >= cantUse.size())
 							check -= cantUse.size();
 						if (cantUse[check]<=0)
@@ -1728,7 +1728,7 @@ void SceneEditor::skinLevel(pngRawInfo *png, int minX, int minY, int maxX, int m
 				}
 			}
 		}
-		for (int i = 0; i < dsq->getNumElements(); i++)
+		for (size_t i = 0; i < dsq->getNumElements(); i++)
 		{
 			Element *e = dsq->getElement(i);
 			if (e->bgLayer == 4 && e->templateIdx >= 1 && e->templateIdx <= 4)
@@ -1747,7 +1747,7 @@ void SceneEditor::generateLevel()
 
 
 
-		int maxX=0, maxY=0;
+	size_t maxX=0, maxY=0;
 	const int YELLOW=0, RED=1, GREEN=2, BLUE=3, PURPLE=4, ORANGE=5, BROWN=6, MAX=7;
 	int firstColorX[MAX], firstColorY[MAX];
 	int lastColorX[MAX], lastColorY[MAX];
@@ -1780,7 +1780,7 @@ void SceneEditor::generateLevel()
 		int scale = TILE_SIZE;
 		int c = 0;
 
-		for (int y = 0; y < rawinfo.Height; y++)
+		for (size_t y = 0; y < rawinfo.Height; y++)
 		{
 			Vector lastElement;
 			lastElement = Vector(0,0,0);
@@ -1789,7 +1789,7 @@ void SceneEditor::generateLevel()
 			Row row;
 			rowCount = 0;
 			positions.clear();
-			for (int x = 0; x < rawinfo.Width; x++)
+			for (size_t x = 0; x < rawinfo.Width; x++)
 			{
 				Vector *e = 0;
 				if
@@ -1887,7 +1887,7 @@ void SceneEditor::generateLevel()
 		}
 
 		dsq->game->clearObsRows();
-		int i = 0;
+		size_t i = 0;
 		for (i = 0; i < rows.size(); i++)
 		{
 			int w = rows[i].x2 - rows[i].x1;
@@ -2013,7 +2013,7 @@ void SceneEditor::moveElementToLayer(Element *e, int bgLayer)
 {
 	if (!selectedElements.empty())
 	{
-		for (int i = 0; i < selectedElements.size(); i++)
+		for (size_t i = 0; i < selectedElements.size(); i++)
 		{
 			Element *e = selectedElements[i];
 			core->removeRenderObject(e, Core::DO_NOT_DESTROY_RENDER_OBJECT);
@@ -2065,7 +2065,7 @@ void SceneEditor::updateMultiSelect()
 
 		selectedElements.clear();
 
-		for (int i = 0; i < dsq->getNumElements(); i++)
+		for (size_t i = 0; i < dsq->getNumElements(); i++)
 		{
 			Element *e = dsq->getElement(i);
 			if (e->bgLayer == bgLayer && e->position.x >= p1.x && e->position.y >= p1.y && e->position.x <= p2.x && e->position.y <= p2.y)
@@ -2220,7 +2220,7 @@ void destroyEntityPage()
 		se_grad->fadeAlphaWithLife = 1;
 		se_grad = 0;
 	}
-	for (int i = 0; i < qs.size(); i++)
+	for (size_t i = 0; i < qs.size(); i++)
 	{
 		qs[i]->safeKill();
 	}
@@ -2249,7 +2249,7 @@ void createEntityPage()
 
 	EntityGroup &group = game->entityGroups[game->sceneEditor.entityPageNum];
 
-	for (int i = 0; i < group.entities.size(); i++)
+	for (size_t i = 0; i < group.entities.size(); i++)
 	{
 		EntityGroupEntity ent = group.entities[i];
 		EntityClass *ec = dsq->game->getEntityClassForEntityType(ent.name);
@@ -2260,7 +2260,7 @@ void createEntityPage()
 		int type = -1;
 		if (ec)
 		{
-			int j=0;
+			size_t j=0;
 			for (j = 0; j < dsq->game->entityTypeList.size(); j++)
 			{
 				if (ec->idx == dsq->game->entityTypeList[j].idx)
@@ -2317,7 +2317,7 @@ void nextEntityPage()
 void prevEntityPage()
 {
 	game->sceneEditor.entityPageNum--;
-	if (game->sceneEditor.entityPageNum < 0)
+	if (game->sceneEditor.entityPageNum >= game->entityGroups.size())
 		game->sceneEditor.entityPageNum = game->entityGroups.size()-1;
 
 	createEntityPage();
@@ -2385,9 +2385,9 @@ void SceneEditor::updateEntityPlacer()
 
 Element* SceneEditor::cycleElementNext(Element *e1)
 {
-	int ce = e1->templateIdx;
+	size_t ce = e1->templateIdx;
 	int idx=0;
-	for (int i = 0; i < dsq->game->elementTemplates.size(); i++)
+	for (size_t i = 0; i < dsq->game->elementTemplates.size(); i++)
 	{
 		if (dsq->game->elementTemplates[i].idx == ce)
 			idx = i;
@@ -2409,9 +2409,9 @@ Element* SceneEditor::cycleElementNext(Element *e1)
 
 Element* SceneEditor::cycleElementPrev(Element *e1)
 {
-	int ce = e1->templateIdx;
-	int idx=0;
-	for (int i = 0; i < dsq->game->elementTemplates.size(); i++)
+	size_t ce = e1->templateIdx;
+	size_t idx=0;
+	for (size_t i = 0; i < dsq->game->elementTemplates.size(); i++)
 	{
 		if (dsq->game->elementTemplates[i].idx == ce)
 		{
@@ -2421,7 +2421,7 @@ Element* SceneEditor::cycleElementPrev(Element *e1)
 	}
 	ce = idx;
 	ce--;
-	if (ce < 0)
+	if (ce == -1)
 		ce = dsq->game->elementTemplates.size()-1;
 	idx = dsq->game->elementTemplates[ce].idx;
 	if (idx < 1024)
@@ -2459,7 +2459,7 @@ void SceneEditor::nextElement()
 		{
 			if (!selectedElements.empty())
 			{
-				for (int i = 0; i < selectedElements.size(); i++)
+				for (size_t i = 0; i < selectedElements.size(); i++)
 				{
 					selectedElements[i]->rotation.z = 0;
 				}
@@ -2471,7 +2471,7 @@ void SceneEditor::nextElement()
 		}
 		else if (!selectedElements.empty())
 		{
-			for (int i = 0; i < selectedElements.size(); i++)
+			for (size_t i = 0; i < selectedElements.size(); i++)
 			{
 				selectedElements[i] = cycleElementNext(selectedElements[i]);
 			}
@@ -2519,7 +2519,7 @@ void SceneEditor::prevElement()
 		if (dsq->game->elementTemplates.empty()) return;
 		if (!selectedElements.empty())
 		{
-			for (int i = 0; i < selectedElements.size(); i++)
+			for (size_t i = 0; i < selectedElements.size(); i++)
 			{
 				selectedElements[i] = cycleElementPrev(selectedElements[i]);
 			}
@@ -2540,11 +2540,8 @@ void SceneEditor::doPrevElement()
 {
 	int oldCur = curElement;
 	curElement--;
-	if (curElement < 0)
+	if (curElement >= game->elementTemplates.size())
 		curElement = dsq->game->elementTemplates.size()-1;
-
-	if (curElement < 0)
-		return;
 
 	if (dsq->game->elementTemplates[curElement].idx < 1024)
 	{
@@ -2566,7 +2563,7 @@ void SceneEditor::moveLayer()
 		is >> fromLayer >> toLayer;
 		toLayer--;
 		fromLayer--;
-		for (int i = 0; i < dsq->getNumElements(); i++)
+		for (size_t i = 0; i < dsq->getNumElements(); i++)
 		{
 			Element *e = dsq->getElement(i);
 			if (e)
@@ -2606,8 +2603,8 @@ void SceneEditor::selectEnd()
 		if (dsq->game->elementTemplates.empty()) return;
 		if (!editingElement)
 		{
-			int largest = 0;
-			for (int i = 0; i < dsq->game->elementTemplates.size(); i++)
+			size_t largest = 0;
+			for (size_t i = 0; i < dsq->game->elementTemplates.size(); i++)
 			{
 				ElementTemplate et = dsq->game->elementTemplates[i];
 				if (et.idx < 1024 && i > largest)
@@ -2671,7 +2668,7 @@ void SceneEditor::cloneSelectedElement()
 		{
 			std::vector<Element*>copy;
 			Vector groupCenter = this->getSelectedElementsCenter();
-			for (int i = 0; i < selectedElements.size(); i++)
+			for (size_t i = 0; i < selectedElements.size(); i++)
 			{
 				Element *e1 = selectedElements[i];
 				Vector dist = e1->position - groupCenter;
@@ -2937,7 +2934,7 @@ void SceneEditor::endDrawingWarpArea(char c)
 Vector SceneEditor::getSelectedElementsCenter()
 {
 	Vector c;
-	for (int i = 0; i < selectedElements.size(); i++)
+	for (size_t i = 0; i < selectedElements.size(); i++)
 	{
 		c += selectedElements[i]->position;
 	}
@@ -3066,9 +3063,12 @@ void SceneEditor::update(float dt)
 				selectedIdx = -1;
 				selectedNode = -1;
 				float smallestDist = sqr(64);
-				for (int i = 0; i < dsq->game->getNumPaths(); i++)
+				for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
 				{
-					for (int n = dsq->game->getPath(i)->nodes.size()-1; n >=0; n--)
+					if(dsq->game->getPath(i)->nodes.size() == 0) {
+						continue;
+					}
+					for (size_t n = dsq->game->getPath(i)->nodes.size(); n-- > 0; )
 					{
 						Vector v = dsq->game->getPath(i)->nodes[n].position - dsq->getGameCursorPosition();
 						float dist = v.getSquaredLength2D();
@@ -3103,8 +3103,7 @@ void SceneEditor::update(float dt)
 			}
 			break;
 			case ES_MOVING:
-				if (selectedIdx >= 0)
-					dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
+				dsq->game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
 			break;
 			case ES_ROTATING:
 			case ES_MAX:
@@ -3150,7 +3149,7 @@ void SceneEditor::update(float dt)
 			case ES_SELECTING:
 			{
 				float closest = sqr(800);
-				int idx = -1, i = 0;
+				size_t i = 0;
 				for (i = 0; i < dsq->getNumElements(); i++)
 				{
 					Vector dist = dsq->getElement(i)->getFollowCameraPosition() - dsq->getGameCursorPosition();
@@ -3158,7 +3157,6 @@ void SceneEditor::update(float dt)
 					if (len < closest)
 					{
 						closest = len;
-						idx = i;
 					}
 				}
 			}
@@ -3261,7 +3259,7 @@ void SceneEditor::update(float dt)
 							dummy.scale.y  = MIN_SIZE;
 					}
 
-					for (int i = 0; i < selectedElements.size(); i++)
+					for (size_t i = 0; i < selectedElements.size(); i++)
 						selectedElements[i]->refreshRepeatTextureToFill();
 				}
 				else if (editingElement)

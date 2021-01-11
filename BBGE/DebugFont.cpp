@@ -90,7 +90,7 @@ void DebugFont::formatText()
 	int lastSpace = -1;
 	float currentWidth = 0;
 	maxW = 0;
-	for (int i = 0; i < text.size(); i++)
+	for (size_t i = 0; i < text.size(); i++)
 	{
 		currentWidth += fontDrawSize;
 
@@ -132,7 +132,7 @@ void DebugFont::onRender()
 {
 	const float vspc = 1.5;
 
-	for (int i = 0; i < lines.size(); i++)
+	for (size_t i = 0; i < lines.size(); i++)
 	{
 
 		float width = (lines[i].size()) * fontDrawSize * 1.4f * 0.75f;

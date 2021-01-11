@@ -156,7 +156,7 @@ int Texture::getPixelWidth()
 	if (!data)
 		return 0;
 
-	int smallestx = -1, largestx = -1;
+	size_t smallestx = -1, largestx = 0;
 	for (unsigned int x = 0; x < unsigned(w); x++)
 	{
 		for (unsigned int y = 0; y < unsigned(h); y++)
@@ -164,9 +164,9 @@ int Texture::getPixelWidth()
 			unsigned int p = (y*unsigned(w)*4) + (x*4) + 3;
 			if (p < size && data[p] >= 254)
 			{
-				if (smallestx == -1 || x < smallestx)
+				if (x < smallestx)
 					smallestx = x;
-				if (largestx == -1 || x > largestx)
+				if (x > largestx)
 					largestx = x;
 			}
 		}
@@ -183,17 +183,17 @@ int Texture::getPixelHeight()
 	if (!data)
 		return 0;
 
-	int smallesty = -1, largesty = -1;
+	size_t smallesty = -1, largesty = 0;
 	for (unsigned int x = 0; x < unsigned(w); x++)
 	{
 		for (unsigned int y = 0; y < unsigned(h); y++)
 		{
-			int p = (y*unsigned(w)*4) + (x*4) + 3;
+			size_t p = (y*unsigned(w)*4) + (x*4) + 3;
 			if (p < size && data[p] >= 254)
 			{
-				if (smallesty == -1 || y < smallesty)
+				if (y < smallesty)
 					smallesty = y;
-				if (largesty == -1 || y > largesty)
+				if (y > largesty)
 					largesty = y;
 			}
 		}
@@ -453,9 +453,9 @@ ImageTGA *Texture::TGAloadMem(void *mem, int size)
 	byte length = 0;					// The length in bytes to the pixels
 	byte imageType = 0;					// The image type (RLE, RGB, Alpha...)
 	byte bits = 0;						// The bits per pixel for the image (16, 24, 32)
-	int channels = 0;					// The channels of the image (3 = RGA : 4 = RGBA)
-	int stride = 0;						// The stride (channels * width)
-	int i = 0;							// A counter
+	uint32_t channels = 0;				// The channels of the image (3 = RGA : 4 = RGBA)
+	uint32_t stride = 0;				// The stride (channels * width)
+	size_t i = 0;						// A counter
 
 	// This function loads in a TARGA (.TGA) file and returns its data to be
 	// used as a texture or what have you.  This currently loads in a 16, 24

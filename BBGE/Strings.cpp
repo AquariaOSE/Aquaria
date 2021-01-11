@@ -147,7 +147,7 @@ std::string getInputCodeToUserString(int key)
 		if ((*i).second == key)
 		{
 			std::string use = (*i).first;
-			int idx = 0;
+			size_t idx = 0;
 			idx = use.find("KEY_");
 			if (idx != std::string::npos)
 			{

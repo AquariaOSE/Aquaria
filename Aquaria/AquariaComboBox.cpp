@@ -77,14 +77,14 @@ void AquariaComboBox::enqueueSelectItem(int index)
 	enqueuedSelectItem = index;
 }
 
-void AquariaComboBox::setScroll(int sc)
+void AquariaComboBox::setScroll(size_t sc)
 {
 	scroll = sc;
 }
 
 std::string AquariaComboBox::getSelectedItemString()
 {
-	if (selectedItem >= 0 && selectedItem < items.size())
+	if (selectedItem < items.size())
 		return items[selectedItem];
 	return "";
 }
@@ -93,10 +93,8 @@ void AquariaComboBox::doScroll(int t)
 {
 	if (t == 0)
 	{
-		scroll--;
-		if (scroll < 0) scroll = 0;
-		else
-		{
+		if(scroll > 0) {
+			scroll--;
 			close(0);
 			open(0);
 		}
@@ -229,7 +227,7 @@ void AquariaComboBox::open(float t)
 {
 	shownItems.clear();
 
-	for (int i = scroll; i < scroll + numDrops; i++)
+	for (size_t i = scroll; i < scroll + numDrops; i++)
 	{
 		if (i < items.size())
 		{
@@ -254,7 +252,7 @@ void AquariaComboBox::close(float t)
 
 	isopen = false;
 
-	for (int i = 0; i < shownItems.size(); i++)
+	for (size_t i = 0; i < shownItems.size(); i++)
 	{
 		shownItems[i]->alpha.interpolateTo(0, t);
 	}
@@ -262,7 +260,7 @@ void AquariaComboBox::close(float t)
 	if (t>0)
 		dsq->main(t);
 
-	for(int i = 0; i < shownItems.size(); i++)
+	for(size_t i = 0; i < shownItems.size(); i++)
 	{
 		removeChild(shownItems[i]);
 		shownItems[i]->destroy();
@@ -277,7 +275,7 @@ void AquariaComboBox::close(float t)
 
 bool AquariaComboBox::setSelectedItem(const std::string &item)
 {
-	for (int i = 0; i < items.size(); i++)
+	for (size_t i = 0; i < items.size(); i++)
 	{
 		if (items[i] == item)
 		{
@@ -300,9 +298,9 @@ void AquariaComboBox::setSelectedItem(int index)
 	{
 		doScroll(0);
 	}
-	else
+	else if(index > 0)
 	{
-		if (index >= 0 && index < items.size())
+		if ((size_t) index < items.size())
 		{
 			selectedItem = index;
 			selectedItemLabel->setText(items[index]);

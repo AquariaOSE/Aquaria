@@ -63,7 +63,7 @@ public:
 	~Element();
 	void destroy();
 	void update(float dt);
-	int templateIdx;
+	size_t templateIdx;
 	int bgLayer;
 	Element *bgLayerNext;
 	void render();

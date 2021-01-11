@@ -44,7 +44,7 @@ void ActionSet::importAction(ActionMapper *mapper, const std::string &name, int 
 {
 	if (!mapper) return;
 
-	for (int i = 0; i < inputSet.size(); i++)
+	for (size_t i = 0; i < inputSet.size(); i++)
 	{
 		ActionInput *actionInput = &inputSet[i];
 		if (actionInput->name == name)
@@ -68,7 +68,7 @@ void ActionSet::importAction(ActionMapper *mapper, const std::string &name, Even
 {
 	if (!mapper) return;
 
-	for (int i = 0; i < inputSet.size(); i++)
+	for (size_t i = 0; i < inputSet.size(); i++)
 	{
 		ActionInput *actionInput = &inputSet[i];
 		if (actionInput->name == name)
@@ -108,8 +108,8 @@ std::string ActionSet::insertInputIntoString(const std::string &string)
 {
 	std::string str = string;
 
-	int start = str.find('{');
-	int end = str.find('}');
+	size_t start = str.find('{');
+	size_t end = str.find('}');
 	if (start == std::string::npos || end == std::string::npos)
 		return string;
 	std::string code = str.substr(start+1, end - start);
