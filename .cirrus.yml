@@ -1,0 +1,45 @@
+FreeBSD_task:
+  freebsd_instance:
+    image_family: freebsd-12-1
+
+  install_script:
+    - pkg install -y cmake ninja openal-soft png sdl2
+
+  script:
+    - cmake -B build/ -G Ninja -DAQUARIA_INTERNAL_PNG=OFF -DAQUARIA_USE_SDL2=ON
+    - cmake --build build/
+
+Linux_task:
+  container:
+    image: debian:testing-slim
+
+  install_script:
+    - apt update
+    - apt install -y -q build-essential clang cmake libsdl2-dev libopenal-dev ninja-build
+
+  script:
+    - cmake -B build/ -G Ninja -DAQUARIA_USE_SDL2=ON
+    - cmake --build build/
+
+  env:
+    CC:  clang
+    CXX: clang++
+
+
+macOS_task:
+  osx_instance:
+    image: catalina-xcode
+
+  install_script:
+    - brew update
+    - brew upgrade
+    - brew install cmake llvm ninja openal-soft sdl2
+    - brew info    cmake llvm ninja openal-soft sdl2
+
+  script:
+    - cmake -B build/ -G Ninja -DAQUARIA_USE_SDL2=ON
+    - cmake --build build/
+
+  env:
+    CC:  clang
+    CXX: clang++
