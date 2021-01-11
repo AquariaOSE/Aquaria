@@ -45,7 +45,7 @@ void Entity::setIngredientData(const std::string &name)
 
 void Entity::entityDied(Entity *e)
 {
-	for (int i = 0; i < targets.size(); i++)
+	for (size_t i = 0; i < targets.size(); i++)
 	{
 		targets[i] = 0;
 	}
@@ -73,7 +73,7 @@ void Entity::generateCollisionMask(int ovrCollideRadius)
 {
 	if (this->skeletalSprite.isLoaded())
 	{
-		for (int i = 0; i < skeletalSprite.bones.size(); i++)
+		for (size_t i = 0; i < skeletalSprite.bones.size(); i++)
 		{
 			if (skeletalSprite.bones[i]->generateCollisionMask)
 			{
@@ -196,7 +196,7 @@ Entity::Entity()
 	dropChance = 0;
 	inCurrent = false;
 	entityProperties.resize(EP_MAX);
-	for (int i = 0; i < entityProperties.size(); i++)
+	for (size_t i = 0; i < entityProperties.size(); i++)
 	{
 		entityProperties[i] = false;
 	}
@@ -428,7 +428,7 @@ float Entity::followPath(Path *p, float speed, int dir, bool deleteOnEnd)
 	}
 	else
 	{
-		for (int i = 0; i < p->nodes.size(); i++)
+		for (size_t i = 0; i < p->nodes.size(); i++)
 		{
 			PathNode pn = p->nodes[i];
 			position.data->path.addPathNode(pn.position, float(i/float(p->nodes.size())));
@@ -1265,7 +1265,7 @@ bool Entity::updateCurrents(float dt)
 			{
 				if (p->active)
 				{
-					for (int n = 1; n < p->nodes.size(); n++)
+					for (size_t n = 1; n < p->nodes.size(); n++)
 					{
 						PathNode *node2 = &p->nodes[n];
 						PathNode *node1 = &p->nodes[n-1];
@@ -1837,7 +1837,7 @@ void Entity::detachEntity(Entity *e)
 	attachedEntities.clear();
 	attachedEntitiesOffsets.clear();
 
-	for (int i = 0; i < copyEnts.size(); i++)
+	for (size_t i = 0; i < copyEnts.size(); i++)
 	{
 		if (copyEnts[i] != e)
 		{
@@ -1892,9 +1892,9 @@ int Entity::getNumTargetPoints()
 	return targetPoints.size();
 }
 
-Vector Entity::getTargetPoint(int i)
+Vector Entity::getTargetPoint(size_t i)
 {
-	if (i >= targetPoints.size() || i < 0)
+	if (i >= targetPoints.size())
 		return getEnergyShotTargetPosition();
 	return targetPoints[i];
 }
@@ -1983,9 +1983,9 @@ Vector Entity::getEnergyShotTargetPosition()
 	return getWorldPosition();
 }
 
-bool Entity::isTargetInRange(int range, int t)
+bool Entity::isTargetInRange(int range, size_t t)
 {
-	if (t < 0 || t >= targets.size())
+	if (t >= targets.size())
 	{
 		std::ostringstream os;
 		os << "isTargetInRange: invalid target index: " << t;
@@ -2287,7 +2287,7 @@ bool Entity::canSetState(int state)
 
 bool Entity::updateLocalWarpAreas(bool affectAvatar)
 {
-	for (int i = 0; i < dsq->game->getNumPaths(); i++)
+	for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		Path *p = dsq->game->getPath(i);
 		if (!p->nodes.empty())
@@ -2331,9 +2331,9 @@ void Entity::warpLastPosition()
 
 void Entity::spawnParticlesFromCollisionMask(const std::string &p, int intv)
 {
-	for (int i = 0; i < skeletalSprite.bones.size(); i++)
+	for (size_t i = 0; i < skeletalSprite.bones.size(); i++)
 	{
-		for (int j = 0; j < skeletalSprite.bones[i]->collisionMask.size(); j+=intv)
+		for (size_t j = 0; j < skeletalSprite.bones[i]->collisionMask.size(); j+=intv)
 		{
 			Vector pos = skeletalSprite.bones[i]->getWorldCollidePosition(skeletalSprite.bones[i]->collisionMask[j]);
 			dsq->spawnParticleEffect(p, pos);
@@ -2552,7 +2552,7 @@ void Entity::doSpellAvoidance(float dt, int range, float mod)
 
 		if (s->isActive() && (s->position - this->position).getSquaredLength2D() < sqr(range))
 		{
-			for (int j = 0; j < ignoreShotDamageTypes.size(); j++)
+			for (size_t j = 0; j < ignoreShotDamageTypes.size(); j++)
 			{
 				if (s->getDamageType() == ignoreShotDamageTypes[j])
 				{

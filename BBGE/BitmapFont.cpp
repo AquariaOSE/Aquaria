@@ -161,7 +161,7 @@ void BitmapText::formatText()
 	float currentWidth = 0;
 	alignWidth = 0;
 	maxW = 0;
-	for (int i = 0; i < text.size(); i++)
+	for (size_t i = 0; i < text.size(); i++)
 	{
 
 		float sz = bmpFont->font.GetCharWidth(text[i])*bmpFont->scale;
@@ -207,10 +207,10 @@ void BitmapText::setBitmapFontEffect(BitmapFontEffect bfe)
 void BitmapText::updateWordColoring()
 {
 	colorIndices.resize(lines.size());
-	for (int i = 0; i < colorIndices.size(); i++)
+	for (size_t i = 0; i < colorIndices.size(); i++)
 	{
 		colorIndices[i].resize(lines[i].size());
-		for (int j = 0; j < colorIndices[i].size(); j++)
+		for (size_t j = 0; j < colorIndices[i].size(); j++)
 		{
 			colorIndices[i][j] = Vector(1,1,1);
 		}
@@ -278,15 +278,12 @@ void BitmapText::onUpdate(float dt)
 	}
 }
 
-Vector BitmapText::getColorIndex(int i, int j)
+Vector BitmapText::getColorIndex(size_t i, size_t j)
 {
 	Vector c(1,1,1);
-	if (!(i < 0 || j < 0))
+	if ( i < colorIndices.size() && j < colorIndices[i].size())
 	{
-		if ( i < colorIndices.size() && j < colorIndices[i].size())
-		{
-			c = colorIndices[i][j];
-		}
+		c = colorIndices[i][j];
 	}
 	return c;
 }
@@ -314,7 +311,7 @@ void BitmapText::onRender()
 
 	if (scrolling)
 	{
-		for (int i = 0; i <= currentScrollLine; i++)
+		for (size_t i = 0; i <= currentScrollLine; i++)
 		{
 			std::string theLine = lines[i];
 			if (i == currentScrollLine)
@@ -336,7 +333,7 @@ void BitmapText::onRender()
 	}
 	else
 	{
-		for (int i = 0; i < lines.size(); i++)
+		for (size_t i = 0; i < lines.size(); i++)
 		{
 			x=0;
 			if (align == ALIGN_CENTER)

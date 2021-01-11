@@ -67,7 +67,7 @@ public:
 	std::string getText();
 	int getWidthOnScreen();
 	void loadSpacingMap(const std::string &file);
-	Vector getColorIndex(int i, int j);
+	Vector getColorIndex(size_t i, size_t j);
 	void updateWordColoring();
 	void autoKern();
 	void setBitmapFontEffect(BitmapFontEffect bfe);
@@ -88,8 +88,8 @@ protected:
 	void onUpdate(float dt);
 	float scrollDelay;
 	bool scrolling;
-	int currentScrollLine;
-	int currentScrollChar;
+	size_t currentScrollLine;
+	size_t currentScrollChar;
 	Align align;
 	float alignWidth;
 	typedef std::map<char, float> SpacingMap;

@@ -86,14 +86,14 @@ public:
 	std::string name; // full node string
 	std::string label; // first part only (the actual node name)
 	std::vector<PathNode>nodes;
-	void removeNode(int idx);
-	void addNode(int idx);
+	void removeNode(size_t idx);
+	void addNode(size_t idx);
 	void update(float dt);
 	void setActive(bool v);
 	bool action(int id, int state);
 	void setEmitter(const std::string& name);
 
-	PathNode *getPathNode(int idx);
+	PathNode *getPathNode(size_t idx);
 	bool isCoordinateInside(const Vector &pos, int rad=0);
 
 	void reverseNodes();

@@ -206,7 +206,7 @@ void UserSettings::save()
 
 			XMLElement *xml_actionSet = doc.NewElement("ActionSet");
 			{
-				for (int i = 0; i < control.actionSet.inputSet.size(); i++)
+				for (size_t i = 0; i < control.actionSet.inputSet.size(); i++)
 				{
 					XMLElement *xml_action = doc.NewElement("Action");
 					ActionInput *actionInput = &control.actionSet.inputSet[i];
@@ -244,8 +244,8 @@ void UserSettings::save()
 
 		XMLElement *xml_data = doc.NewElement("Data");
 		{
-			xml_data->SetAttribute("savePage",			data.savePage);
-			xml_data->SetAttribute("saveSlot",			data.saveSlot);
+			xml_data->SetAttribute("savePage", (unsigned int) data.savePage);
+			xml_data->SetAttribute("saveSlot", (unsigned int) data.saveSlot);
 
 			std::ostringstream ss;
 			for (std::set<std::string>::iterator it = dsq->activePatches.begin(); it != dsq->activePatches.end(); ++it)
@@ -506,8 +506,12 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 	XMLElement *xml_data = doc.FirstChildElement("Data");
 	if (xml_data)
 	{
-		xml_data->QueryIntAttribute("savePage", &data.savePage);
-		xml_data->QueryIntAttribute("saveSlot", &data.saveSlot);
+		// use a temporary variable so we don't get into trouble on big-endian architectures
+		unsigned int tmp;
+		xml_data->QueryUnsignedAttribute("savePage", &tmp);
+		data.savePage = tmp;
+		xml_data->QueryUnsignedAttribute("saveSlot", &tmp);
+		data.saveSlot = tmp;
 
 		if(const char *patchlist = xml_data->Attribute("activePatches"))
 		{

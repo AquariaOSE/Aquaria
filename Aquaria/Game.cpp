@@ -69,7 +69,7 @@ std::string getSceneFilename(const std::string &scene)
 	return "";
 }
 
-PetSlot::PetSlot(int pet) : AquariaGuiQuad()
+PetSlot::PetSlot(size_t pet) : AquariaGuiQuad()
 {
 	PetData *p = dsq->continuity.getPetData(pet);
 	if (p)
@@ -451,7 +451,7 @@ void FoodSlot::eatMe()
 {
 	if (ingredient && !dsq->isNested())
 	{
-		for (int i = 0; i < foodHolders.size(); i++)
+		for (size_t i = 0; i < foodHolders.size(); i++)
 		{
 			if (!foodHolders[i]->isTrash() && !foodHolders[i]->isEmpty())
 			{
@@ -556,7 +556,7 @@ void FoodSlot::onUpdate(float dt)
 					else
 					{
 						bool droppedIn = false;
-						for (int i = 0; i < foodHolders.size(); i++)
+						for (size_t i = 0; i < foodHolders.size(); i++)
 						{
 							bool in = (foodHolders[i]->getWorldPosition() - wp).isLength2DIn(32);
 							if (in)
@@ -903,11 +903,11 @@ void TreasureSlot::refresh()
 
 		std::string parse = dsq->continuity.stringBank.get(flag);
 
-		int p1 = parse.find_first_of('[');
+		size_t p1 = parse.find_first_of('[');
 		if (p1 != std::string::npos)
 		{
 			p1++;
-			int p2 = parse.find_first_of(']');
+			size_t p2 = parse.find_first_of(']');
 			treasureName = parse.substr(p1,p2-p1);
 
 			p1 = parse.find_last_of('[');
@@ -1047,7 +1047,7 @@ int Game::getNumberOfEntitiesNamed(const std::string &name)
 	return c;
 }
 
-void Game::playSongInMenu(int songType, bool override)
+void Game::playSongInMenu(size_t songType, bool override)
 {
 	if (playingSongInMenu == -1 || override)
 	{
@@ -1082,7 +1082,7 @@ void Game::flipSceneVertical(int flipY)
 		Entity *e = *itr;
 		flipRenderObjectVertical(e, flipY);
 	}
-	int i = 0;
+	size_t i = 0;
 	int flipTY = (flipY/TILE_SIZE)-1;
 	for (i = 0; i < obsRows.size(); i++)
 	{
@@ -1359,7 +1359,7 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		else
 			liCrystal->alphaMod = 0;
 
-		int i = 0;
+		size_t i = 0;
 
 
 		for (i = 0; i < songSlots.size(); i++)
@@ -1422,12 +1422,12 @@ void Game::showInGameMenu(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		eYes->setHidden(false);
 		eNo->setHidden(false);
 		menuIconGlow->setHidden(false);
-		for (int i = 0; i < menu.size(); i++)
+		for (size_t i = 0; i < menu.size(); i++)
 			menu[i]->setHidden(false);
-		for (int i = 0; i < treasureSlots.size(); i++)
+		for (size_t i = 0; i < treasureSlots.size(); i++)
 			treasureSlots[i]->setHidden(false);
 		treasureDescription->setHidden(false);
-		for (int i = 0; i < foodSlots.size(); i++)
+		for (size_t i = 0; i < foodSlots.size(); i++)
 			foodSlots[i]->setHidden(false);
 
 
@@ -1576,7 +1576,7 @@ void Game::hideInGameMenu(bool effects, bool cancel)
 			t = 0;
 		//if (avatar->isEntityDead()) return;
 
-		int i = 0;
+		size_t i = 0;
 
 		for (i = 0; i < foodHolders.size(); i++)
 		{
@@ -1652,12 +1652,12 @@ void Game::hideInGameMenu(bool effects, bool cancel)
 		inGameMenu = false;
 		//toggleMiniMapRender(1);
 
-		for (int i = 0; i < songTips.size(); i++)
+		for (size_t i = 0; i < songTips.size(); i++)
 			songTips[i]->alpha = 0;
 
 
 
-		for (int i = 0; i < dropIngrNames.size(); i++)
+		for (size_t i = 0; i < dropIngrNames.size(); i++)
 		{
 			dsq->game->spawnIngredient(dropIngrNames[i], avatar->position + Vector(0,-96), 1, 1);
 		}
@@ -1696,12 +1696,12 @@ void Game::hideInGameMenu(bool effects, bool cancel)
 	eYes->setHidden(true);
 	eNo->setHidden(true);
 	menuIconGlow->setHidden(true);
-	for (int i = 0; i < menu.size(); i++)
+	for (size_t i = 0; i < menu.size(); i++)
 		menu[i]->setHidden(true);
-	for (int i = 0; i < treasureSlots.size(); i++)
+	for (size_t i = 0; i < treasureSlots.size(); i++)
 		treasureSlots[i]->setHidden(true);
 	treasureDescription->setHidden(true);
-	for (int i = 0; i < foodSlots.size(); i++)
+	for (size_t i = 0; i < foodSlots.size(); i++)
 		foodSlots[i]->setHidden(true);
 }
 
@@ -1878,9 +1878,9 @@ void Game::transitionToScene(std::string scene)
 	core->enqueueJumpState("Game", false);
 }
 
-ElementTemplate *Game::getElementTemplateByIdx(int idx)
+ElementTemplate *Game::getElementTemplateByIdx(size_t idx)
 {
-	for (int i = 0; i < elementTemplates.size(); i++)
+	for (size_t i = 0; i < elementTemplates.size(); i++)
 	{
 		if (elementTemplates[i].idx == idx)
 		{
@@ -2031,10 +2031,10 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			// obs now empty
 
 			int sides = 0;
-			for (int i = 0; i < obsCopy.size(); i++)
+			for (size_t i = 0; i < obsCopy.size(); i++)
 			{
 				sides = 0;
-				for (int j = 0; j < obsCopy.size(); j++)
+				for (size_t j = 0; j < obsCopy.size(); j++)
 				{
 					if (i != j)
 					{
@@ -2060,7 +2060,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 
 		glPushMatrix();
 
-		for (int i = 0; i < obs.size(); i++)
+		for (size_t i = 0; i < obs.size(); i++)
 		{
 			glLoadIdentity();
 
@@ -2137,7 +2137,7 @@ void Game::reconstructGrid(bool force)
 	if (!force && isSceneEditorActive()) return;
 
 	clearGrid();
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < dsq->getNumElements(); i++)
 	{
 		Element *e = dsq->getElement(i);
@@ -2347,7 +2347,7 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 		}
 	}
 	int sz = (TILE_SIZE*(sampleArea-1));
-	for (int i = 0; i < vs.size(); i++)
+	for (size_t i = 0; i < vs.size(); i++)
 	{
 		float len = vs[i].getLength2D();
 		if (len < sz)
@@ -2425,13 +2425,13 @@ bool Game::removeEntity(Entity *selected)
 		e = e->NextSiblingElement("Enemy");
 	}
 
-	for (int i = 0; i < entitySaveData.size(); i++)
+	for (size_t i = 0; i < entitySaveData.size(); i++)
 	{
 		if (entitySaveData[i].x == int(selected->startPos.x) && entitySaveData[i].y == int(selected->startPos.y))
 		{
 			std::vector<EntitySaveData> copy = entitySaveData;
 			entitySaveData.clear();
-			for (int j = 0; j < copy.size(); j++)
+			for (size_t j = 0; j < copy.size(); j++)
 			{
 				if (j != i)
 					entitySaveData.push_back(copy[j]);
@@ -2560,7 +2560,7 @@ void Game::loadEntityTypeList()
 
 EntityClass *Game::getEntityClassForEntityType(const std::string &type)
 {
-	for (int i = 0; i < entityTypeList.size(); i++)
+	for (size_t i = 0; i < entityTypeList.size(); i++)
 	{
 	/*
 		std::ostringstream os;
@@ -2577,7 +2577,7 @@ int Game::getIdxForEntityType(std::string type)
 {
 	//if (!type.empty() && type[0] == '@')	return -1;
 
-	for (int i = 0; i < entityTypeList.size(); i++)
+	for (size_t i = 0; i < entityTypeList.size(); i++)
 	{
 		if (nocasecmp(entityTypeList[i].name, type)==0)
 			return entityTypeList[i].idx;
@@ -2588,7 +2588,7 @@ int Game::getIdxForEntityType(std::string type)
 Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
 {
 	std::string type;
-	for (int i = 0; i < dsq->game->entityTypeList.size(); i++)
+	for (size_t i = 0; i < dsq->game->entityTypeList.size(); i++)
 	{
 		EntityClass *ec = &dsq->game->entityTypeList[i];
 		if (ec->idx == idx)
@@ -2726,7 +2726,7 @@ void Game::initEntities()
 EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e, Vector pos)
 {
 
-	for (int i = 0; i < entitySaveData.size(); i++)
+	for (size_t i = 0; i < entitySaveData.size(); i++)
 	{
 		if (entitySaveData[i].e == e)
 		{
@@ -2884,12 +2884,12 @@ void Game::addPath(Path *p)
 	}
 }
 
-void Game::removePath(int idx)
+void Game::removePath(size_t idx)
 {
-	if (idx >= 0 && idx < paths.size()) paths[idx]->destroy();
+	if (idx < paths.size()) paths[idx]->destroy();
 	std::vector<Path*> copy = this->paths;
 	clearPaths();
-	for (int i = 0; i < copy.size(); i++)
+	for (size_t i = 0; i < copy.size(); i++)
 	{
 		if (i != idx)
 			addPath(copy[i]);
@@ -2905,7 +2905,7 @@ void Game::clearPaths()
 
 int Game::getIndexOfPath(Path *p)
 {
-	for (int i = 0; i < paths.size(); i++)
+	for (size_t i = 0; i < paths.size(); i++)
 	{
 		if (paths[i] == p)
 			return i;
@@ -2969,7 +2969,7 @@ Path *Game::getNearestPath(const Vector &pos, const std::string &s, const Path *
 	float smallestDist = HUGE_VALF;
 	std::string st = s;
 	stringToLower(st);
-	for (int i = 0; i < dsq->game->paths.size(); i++)
+	for (size_t i = 0; i < dsq->game->paths.size(); i++)
 	{
 		Path *cp = dsq->game->paths[i];
 		if (cp != ignore && !cp->nodes.empty() && (st.empty() || st == cp->label))
@@ -3016,7 +3016,7 @@ Path *Game::getNearestPath(Path *p, std::string s)
 Path *Game::getPathByName(std::string name)
 {
 	stringToLowerUserData(name);
-	for (int i = 0; i < paths.size(); i++)
+	for (size_t i = 0; i < paths.size(); i++)
 	{
 		if (paths[i]->label == name)
 			return paths[i];
@@ -3224,7 +3224,7 @@ void Game::sortFood()
 	std::vector<std::string> foodHolderNames;
 	foodHolderNames.resize(foodHolders.size());
 
-	for (int i = 0; i < foodHolders.size(); i++) {
+	for (size_t i = 0; i < foodHolders.size(); i++) {
 		IngredientData *ing = foodHolders[i]->getIngredient();
 		if (ing) {
 			foodHolderNames[i] = ing->name;
@@ -3252,7 +3252,7 @@ void Game::sortFood()
 	dsq->sound->playSfx("menu-switch", 0.5);
 	dsq->spawnParticleEffect("menu-switch", worldLeftCenter, 0, 0, LR_HUD3, 1);
 
-	for (int i = 0; i < foodHolders.size(); i++) {
+	for (size_t i = 0; i < foodHolders.size(); i++) {
 		if (!foodHolderNames[i].empty()) {
 			IngredientData *ing = dsq->continuity.getIngredientHeldByName(foodHolderNames[i]);
 			foodHolders[i]->setIngredient(ing, false);
@@ -3275,7 +3275,7 @@ void Game::sortFood()
 void Game::createInGameMenu()
 {
 	float menuz = 4;
-	int i = 0;
+	size_t i = 0;
 
 
 	menuBg = new Quad;
@@ -3294,7 +3294,6 @@ void Game::createInGameMenu()
 	menuBg2->position = Vector(0, 240);
 	menuBg->addChild(menuBg2, PM_POINTER);
 
-	float scale = menuBg->scale.x;
 	/*
 	songDescription = new BitmapText(&dsq->font);
 	songDescription->position = Vector(0,100);
@@ -3454,7 +3453,6 @@ void Game::createInGameMenu()
 	options->followCamera = 1;
 	addRenderObject(options, LR_MENU);
 
-	scale = 1;
 	songSlots.clear();
 	//songSlots.resize(3);
 	songSlots.resize(10);
@@ -3750,7 +3748,7 @@ void Game::createInGameMenu()
 	addRenderObject(circlePageNum, LR_MENU);
 
 	foodHolders.resize(3);
-	int holders=0;
+	size_t holders=0;
 	for (i = 0; i < foodHolders.size(); i++)
 	{
 		foodHolders[i] = new FoodHolder(i);
@@ -4699,10 +4697,8 @@ bool Game::loadSceneXML(std::string scene)
 		waSF->SetAttribute("y", a.position.y = atoi(warpArea->Attribute("y")));
 		if (warpArea->Attribute("radius"))
 			waSF->SetAttribute("radius", a.radius = atoi(warpArea->Attribute("radius")));
-		bool isRect = false;
 		if (warpArea->Attribute("w"))
 		{
-			isRect = true;
 			waSF->SetAttribute("w", a.w = atoi(warpArea->Attribute("w")));
 			waSF->SetAttribute("h", a.h = atoi(warpArea->Attribute("h")));
 		}
@@ -5193,7 +5189,7 @@ void Game::findMaxCameraValues()
 	cameraMin.y = 20;
 	cameraMax.x = -1;
 	cameraMax.y = -1;
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < obsRows.size(); i++)
 	{
 		ObsRow *r = &obsRows[i];
@@ -5386,7 +5382,7 @@ bool Game::saveScene(std::string scene)
 	*/
 
 	std::ostringstream obs;
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < obsRows.size(); i++)
 	{
 		obs << obsRows[i].tx << " " << obsRows[i].ty << " " << obsRows[i].len << " ";
@@ -5402,7 +5398,7 @@ bool Game::saveScene(std::string scene)
 		Path *p = dsq->game->getPath(i);
 		pathXml->SetAttribute("name", p->name.c_str());
 		//pathXml->SetAttribute("active", p->active);
-		for (int n = 0; n < p->nodes.size(); n++)
+		for (size_t n = 0; n < p->nodes.size(); n++)
 		{
 			XMLElement *nodeXml = saveFile.NewElement("Node");
 			std::ostringstream os;
@@ -5478,7 +5474,7 @@ bool Game::saveScene(std::string scene)
 		XMLElement *entitiesNode = saveFile.NewElement("Entities");
 
 		std::ostringstream os;
-		for (int i = 0; i < dsq->game->entitySaveData.size(); i++)
+		for (size_t i = 0; i < dsq->game->entitySaveData.size(); i++)
 		{
 			EntitySaveData *e = &dsq->game->entitySaveData[i];
 			os << e->idx << " ";
@@ -5504,7 +5500,7 @@ bool Game::saveScene(std::string scene)
 		{
 			XMLElement *simpleElementsXML = saveFile.NewElement("SE");
 			simpleElementsXML->SetAttribute("k", s.c_str());
-			simpleElementsXML->SetAttribute("l", i);
+			simpleElementsXML->SetAttribute("l", (unsigned int) i);
 			std::string repeatScaleStr = simpleElements_repeatScale[i].str();
 			if(!repeatScaleStr.empty())
 				simpleElementsXML->SetAttribute("repeatScale", repeatScaleStr.c_str());
@@ -5606,7 +5602,7 @@ bool Game::isValidTarget(Entity *e, Entity *me)
 void Game::updateMiniMapHintPosition()
 {
 	miniMapHintPosition = Vector(0,0,0);
-	for (int i = 0; i < warpAreas.size(); i++)
+	for (size_t i = 0; i < warpAreas.size(); i++)
 	{
 		if (this->sceneName == miniMapHint.scene)
 		{
@@ -5895,7 +5891,7 @@ void Game::rebuildElementUpdateList()
 
 	elementUpdateList.clear();
 	elementInteractionList.clear();
-	for (int i = 0; i < dsq->getNumElements(); i++)
+	for (size_t i = 0; i < dsq->getNumElements(); i++)
 	{
 		Element *e = dsq->getElement(i);
 		const int eeidx = e->getElementEffectIndex();
@@ -5940,7 +5936,7 @@ float Game::getHalfTimer(float mod)
 
 void Game::action(int id, int state)
 {
-	for (int i = 0; i < paths.size(); i++)
+	for (size_t i = 0; i < paths.size(); i++)
 	{
 		if (paths[i]->catchActions)
 		{
@@ -6048,7 +6044,7 @@ void Game::action(int id, int state)
 					}
 					else
 					{
-						for (int i = 0; i < foodHolders.size(); i++)
+						for (size_t i = 0; i < foodHolders.size(); i++)
 						{
 							if (!foodHolders[i]->isTrash() && !foodHolders[i]->isEmpty())
 							{
@@ -6066,7 +6062,7 @@ void Game::action(int id, int state)
 					}
 					else
 					{
-						for (int i = 0; i < foodSlots.size(); i++)
+						for (size_t i = 0; i < foodSlots.size(); i++)
 						{
 							if (foodSlots[i]->isCursorIn() && foodSlots[i]->getIngredient())
 							{
@@ -6085,7 +6081,7 @@ void Game::action(int id, int state)
 					else
 					{
 						int trashIndex = -1;
-						for (int i = 0; i < foodHolders.size(); i++)
+						for (size_t i = 0; i < foodHolders.size(); i++)
 						{
 							if (foodHolders[i]->isValid() && foodHolders[i]->isTrash())
 							{
@@ -6095,8 +6091,8 @@ void Game::action(int id, int state)
 						}
 						if (trashIndex >= 0)
 						{
-							int ingrIndex = -1;
-							for (int i = 0; i < foodSlots.size(); i++)
+							size_t ingrIndex = -1;
+							for (size_t i = 0; i < foodSlots.size(); i++)
 							{
 								if (foodSlots[i]->isCursorIn() && foodSlots[i]->getIngredient())
 								{
@@ -6104,7 +6100,7 @@ void Game::action(int id, int state)
 									break;
 								}
 							}
-							if (ingrIndex >= 0)
+							if (ingrIndex != -1)
 							{
 								foodSlots[ingrIndex]->discard();
 							}
@@ -6507,7 +6503,7 @@ void Game::applyState()
 
 	if (!warpAreaType.empty())
 	{
-		for (int i = 0; i < warpAreas.size(); i++)
+		for (size_t i = 0; i < warpAreas.size(); i++)
 		{
 			WarpArea *a = &warpAreas[i];
 			if (a->warpAreaType == warpAreaType)
@@ -6653,7 +6649,7 @@ void Game::applyState()
 		Path *closest = 0;
 		Vector closestPushOut;
 		bool doFlip = false;
-		for (int i = 0; i < dsq->game->getNumPaths(); i++)
+		for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
 		{
 			Path *p = dsq->game->getPath(i);
 			Vector pos = p->nodes[0].position;
@@ -7035,10 +7031,10 @@ void Game::bindInput()
 		worldMapRender->bindInput();
 }
 
-bool ingType(const std::vector<IngredientData*> &list, IngredientType type, int amount=1)
+bool ingType(const std::vector<IngredientData*> &list, IngredientType type, size_t amount=1)
 {
-	int c = 0;
-	for (int i = 0; i < list.size(); i++)
+	size_t c = 0;
+	for (size_t i = 0; i < list.size(); i++)
 	{
 		IngredientData *data = list[i];
 		if ((data->marked < data->held) && (data->type == type || type == IT_ANYTHING))
@@ -7053,10 +7049,10 @@ bool ingType(const std::vector<IngredientData*> &list, IngredientType type, int 
 	return false;
 }
 
-bool ingName(const std::vector<IngredientData*> &list, const std::string &name, int amount=1)
+bool ingName(const std::vector<IngredientData*> &list, const std::string &name, size_t amount=1)
 {
-	int c = 0;
-	for (int i = 0; i < list.size(); i++)
+	size_t c = 0;
+	for (size_t i = 0; i < list.size(); i++)
 	{
 		IngredientData *data = list[i];
 		if ((data->marked < data->held) && (nocasecmp(data->name, name)==0))//data->name == name)
@@ -7070,7 +7066,7 @@ bool ingName(const std::vector<IngredientData*> &list, const std::string &name, 
 	return false;
 }
 
-const int numTreasures = 16*2;
+const size_t numTreasures = 16*2;
 
 void Game::onPrevTreasurePage()
 {
@@ -7120,7 +7116,7 @@ void Game::onNextTreasurePage()
 
 void Game::onPrevFoodPage()
 {
-	int lastFoodPage = currentFoodPage;
+	size_t lastFoodPage = currentFoodPage;
 	if (currentFoodPage > 0)
 	{
 		currentFoodPage--;
@@ -7148,7 +7144,7 @@ void Game::onPrevFoodPage()
 
 void Game::onNextFoodPage()
 {
-	int lastFoodPage = currentFoodPage;
+	size_t lastFoodPage = currentFoodPage;
 	if ((currentFoodPage+1)*foodPageSize < dsq->continuity.ingredientCount())
 	{
 		currentFoodPage++;
@@ -7194,17 +7190,14 @@ Recipe *Game::findRecipe(const std::vector<IngredientData*> &list)
 
 	// there will be a number of types and a number of names
 	// the types and names DO NOT overlap
-	int rc = 0;
+	size_t rc = 0;
 	Recipe *r = 0;
-	Recipe *tr = 0;
-	int q = 0, q2 = 0;
+	size_t q = 0, q2 = 0;
 	for ( rc = 0; rc < dsq->continuity.recipes.size(); rc++)
 	{
-		for (int i = 0; i < list.size(); i++) list[i]->marked = 0;
+		for (size_t i = 0; i < list.size(); i++) list[i]->marked = 0;
 
-		tr = 0;
 		r = &dsq->continuity.recipes[rc];
-		tr = r;
 		q = 0;
 
 		// get the amount of ingredients provided by the player
@@ -7213,16 +7206,16 @@ Recipe *Game::findRecipe(const std::vector<IngredientData*> &list)
 		// get the amount of ingredients required
 		int recipeAmount = 0;
 
-		for (int i = 0; i < r->types.size(); i++)
+		for (size_t i = 0; i < r->types.size(); i++)
 			recipeAmount += r->types[i].amount;
 
-		for (int i = 0; i < r->names.size(); i++)
+		for (size_t i = 0; i < r->names.size(); i++)
 			recipeAmount += r->names[i].amount;
 
 		if (listAmount != recipeAmount)
 			continue;
 
-		for (int c = 0; c < r->types.size(); c++)
+		for (size_t c = 0; c < r->types.size(); c++)
 		{
 			RecipeType *t = &r->types[c];
 			if (ingType(list, t->type, t->amount))
@@ -7245,7 +7238,7 @@ Recipe *Game::findRecipe(const std::vector<IngredientData*> &list)
 		if (q == r->types.size())
 		{
 			q2 = 0;
-			for (int c = 0; c < r->names.size(); c++)
+			for (size_t c = 0; c < r->names.size(); c++)
 			{
 				RecipeName *n = &r->names[c];
 				if (ingName(list, n->name, n->amount))
@@ -7273,7 +7266,7 @@ Recipe *Game::findRecipe(const std::vector<IngredientData*> &list)
 		}
 	}
 
-	for (int i = 0; i < list.size(); i++) list[i]->marked = 0;
+	for (size_t i = 0; i < list.size(); i++) list[i]->marked = 0;
 
 	if (rc == dsq->continuity.recipes.size())
 	{
@@ -7292,7 +7285,7 @@ Recipe *Game::findRecipe(const std::vector<IngredientData*> &list)
 void Game::updateCookList()
 {
 	cookList.clear();
-	for (int i = 0; i < foodHolders.size(); i++)
+	for (size_t i = 0; i < foodHolders.size(); i++)
 	{
 		IngredientData *ing = foodHolders[i]->getIngredient();
 		if (!foodHolders[i]->isTrash() && ing)
@@ -7450,7 +7443,7 @@ void Game::onCook()
 
 		dsq->sound->playSfx("boil");
 
-		for (int i = 0; i < foodHolders.size(); i++)
+		for (size_t i = 0; i < foodHolders.size(); i++)
 		{
 			if (!foodHolders[i]->isEmpty())
 				dsq->spawnParticleEffect("cook-ingredient", foodHolders[i]->getWorldPosition(), 0, 0, LR_HUD3, 1);
@@ -7462,7 +7455,7 @@ void Game::onCook()
 			dsq->main(0.2);
 
 		bool haveLeftovers = true;
-		for (int i = 0; i < foodHolders.size(); i++)
+		for (size_t i = 0; i < foodHolders.size(); i++)
 		{
 			if (!foodHolders[i]->isEmpty()) {
 				IngredientData *ing = foodHolders[i]->getIngredient();
@@ -7473,7 +7466,7 @@ void Game::onCook()
 				}
 			}
 		}
-		for (int i = 0; i < foodHolders.size(); i++)
+		for (size_t i = 0; i < foodHolders.size(); i++)
 		{
 			IngredientData *ing = foodHolders[i]->getIngredient();
 			if (ing)
@@ -7489,7 +7482,7 @@ void Game::onCook()
 
 		dsq->sound->playSfx("Cook");
 
-		for (int i = 0; i < foodHolders.size(); i++)
+		for (size_t i = 0; i < foodHolders.size(); i++)
 			if (foodHolders[i]->isValid() && !foodHolders[i]->isTrash())
 				foodHolders[i]->animateLid(false);
 
@@ -7566,7 +7559,7 @@ void Game::overrideZoom(float sz, float t)
 
 FoodSlot* getFoodSlotFromIndex()
 {
-	for (int i = 0; i < dsq->game->foodSlots.size(); i++)
+	for (size_t i = 0; i < dsq->game->foodSlots.size(); i++)
 	{
 		if (dsq->game->foodSlots[i]->slot == FoodSlot::foodSlotIndex)
 		{
@@ -7606,7 +7599,7 @@ void Game::clearControlHint()
 			controlHint_image->alpha.interpolateTo(0, hintTransTime);
 		}
 
-		for (int i = 0; i < controlHintNotes.size(); i++)
+		for (size_t i = 0; i < controlHintNotes.size(); i++)
 		{
 			controlHintNotes[i]->alpha.interpolateTo(0, hintTransTime);
 		}
@@ -7670,7 +7663,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 
 		p += Vector(100, 0);
 
-		for (int i = 0; i < song->notes.size(); i++)
+		for (size_t i = 0; i < song->notes.size(); i++)
 		{
 			int note = song->notes[i];
 
@@ -7757,7 +7750,7 @@ void Game::setControlHint(const std::string &h, bool left, bool right, bool midd
 		controlHint_mouseBody->alpha.interpolateTo(0.5, hintTransTime);
 	}
 
-	for (int i = 0; i < controlHintNotes.size(); i++)
+	for (size_t i = 0; i < controlHintNotes.size(); i++)
 	{
 		controlHintNotes[i]->alpha.interpolateTo(alphaOn, hintTransTime);
 	}
@@ -8305,7 +8298,7 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, fl
 {
 	//float smallestDist = HUGE_VALF;
 	Bone *closest = 0;
-	for (int i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
+	for (size_t i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
 	{
 		Bone *b = skeletal->skeletalSprite.bones[i];
 		/*
@@ -8317,7 +8310,7 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, fl
 		// MULTIPLE CIRCLES METHOD
 		if (!b->collisionMask.empty() && b->alpha.x == 1 && b->renderQuad)
 		{
-			for (int i = 0; i < b->transformedCollisionMask.size(); i++)
+			for (size_t i = 0; i < b->transformedCollisionMask.size(); i++)
 			{
 				if (isTouchingLine(start, end, b->transformedCollisionMask[i], radius+b->collideRadius))
 				{
@@ -8384,7 +8377,7 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius)
 	float smallestDist = HUGE_VALF;
 	Bone *closest = 0;
 	if (!(pos - skeletal->position).isLength2DIn(2000)) return 0;
-	for (int i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
+	for (size_t i = 0; i < skeletal->skeletalSprite.bones.size(); i++)
 	{
 		Bone *b = skeletal->skeletalSprite.bones[i];
 
@@ -8400,7 +8393,7 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius)
 			{
 				if (dist < checkRadius)
 				{
-					for (int i = 0; i < b->transformedCollisionMask.size(); i++)
+					for (size_t i = 0; i < b->transformedCollisionMask.size(); i++)
 					{
 						if ((b->transformedCollisionMask[i] - pos).isLength2DIn(radius+b->collideRadius*skeletal->scale.x))
 						{
@@ -8836,7 +8829,7 @@ void Game::onOptionsCancel()
 
 void Game::refreshFoodSlots(bool effects)
 {
-	for (int i = 0; i < foodSlots.size(); i++)
+	for (size_t i = 0; i < foodSlots.size(); i++)
 	{
 		foodSlots[i]->refresh(effects);
 	}
@@ -8844,7 +8837,7 @@ void Game::refreshFoodSlots(bool effects)
 
 void Game::refreshTreasureSlots()
 {
-	for (int i = 0; i < treasureSlots.size(); i++)
+	for (size_t i = 0; i < treasureSlots.size(); i++)
 	{
 		treasureSlots[i]->refresh();
 	}
@@ -8868,14 +8861,12 @@ void Game::togglePetMenu(bool f)
 
 		toggleMainMenu(false);
 
-		bool hasPet = false;
-		for (int i = 0; i < petSlots.size(); i++)
+		for (size_t i = 0; i < petSlots.size(); i++)
 		{
 			petSlots[i]->alpha = 1;
 			bool has = dsq->continuity.getFlag(petSlots[i]->petFlag);
 			if (has)
 			{
-				hasPet = true;
 				/*
 				for (int j = 0; j < petSlots.size(); j++)
 				{
@@ -8922,7 +8913,7 @@ void Game::togglePetMenu(bool f)
 		}
 
 
-		for (int i = 0; i < petTips.size(); i++)
+		for (size_t i = 0; i < petTips.size(); i++)
 		{
 			/*
 			if (hasPet && i == 0)
@@ -8948,12 +8939,12 @@ void Game::togglePetMenu(bool f)
 	}
 	else if (!f && petMenu)
 	{
-		for (int i = 0; i < petSlots.size(); i++)
+		for (size_t i = 0; i < petSlots.size(); i++)
 		{
 			petSlots[i]->alpha = 0;
 		}
 
-		for (int i = 0; i < petTips.size(); i++)
+		for (size_t i = 0; i < petTips.size(); i++)
 		{
 			petTips[i]->alpha = 0;
 		}
@@ -8990,7 +8981,7 @@ void Game::toggleTreasureMenu(bool f)
 
 		refreshTreasureSlots();
 
-		for (int i = 0; i < treasureTips.size(); i++)
+		for (size_t i = 0; i < treasureTips.size(); i++)
 			treasureTips[i]->alpha = 1;
 
 		if (treasureSlots.size() > 8)
@@ -9016,7 +9007,7 @@ void Game::toggleTreasureMenu(bool f)
 	{
 		treasureMenu = false;
 
-		for (int i = 0; i < treasureTips.size(); i++)
+		for (size_t i = 0; i < treasureTips.size(); i++)
 			treasureTips[i]->alpha = 0;
 
 		menu[0]->setDirMove(DIR_UP, 0);
@@ -9027,7 +9018,7 @@ void Game::toggleTreasureMenu(bool f)
 		circlePageNum->alpha = 0;
 	}
 
-	for (int i = 0; i < treasureSlots.size(); i++)
+	for (size_t i = 0; i < treasureSlots.size(); i++)
 	{
 		if (f)
 			treasureSlots[i]->alpha = 1;
@@ -9072,7 +9063,7 @@ void Game::toggleFoodMenu(bool f)
 		toggleTreasureMenu(false);
 
 
-	for (int i = 0; i < foodHolders.size(); i++)
+	for (size_t i = 0; i < foodHolders.size(); i++)
 	{
 		foodHolders[i]->toggleValid(f);
 	}
@@ -9116,7 +9107,7 @@ void Game::toggleFoodMenu(bool f)
 
 		foodSort->alpha = 1;
 
-		for (int i = 0; i < foodTips.size(); i++)
+		for (size_t i = 0; i < foodTips.size(); i++)
 			foodTips[i]->alpha = 1;
 
 		if (foodSlots.size() >= 16)
@@ -9168,7 +9159,7 @@ void Game::toggleFoodMenu(bool f)
 
 		liCrystal->alpha = 0;
 
-		for (int i = 0; i < foodTips.size(); i++)
+		for (size_t i = 0; i < foodTips.size(); i++)
 			foodTips[i]->alpha = 0;
 
 		menu[5]->setDirMove(DIR_LEFT, 0);
@@ -9178,7 +9169,7 @@ void Game::toggleFoodMenu(bool f)
 		previewRecipe->alpha = 0;
 	}
 
-	for (int i = 0; i < foodSlots.size(); i++)
+	for (size_t i = 0; i < foodSlots.size(); i++)
 	{
 		foodSlots[i]->toggle(f);
 	}
@@ -9205,7 +9196,7 @@ void Game::toggleMainMenu(bool f)
 	if (f)
 	{
 		currentMenuPage = MENUPAGE_SONGS;
-		for (int i = 0; i < songSlots.size(); i++)
+		for (size_t i = 0; i < songSlots.size(); i++)
 		{
 			//songSlots[i]->alpha.interpolateTo(1, t);
 			songSlots[i]->alphaMod = 1;
@@ -9213,14 +9204,14 @@ void Game::toggleMainMenu(bool f)
 		songBubbles->alpha.interpolateTo(1,t);
 		energyIdol->alpha.interpolateTo(1,t);
 		liCrystal->alpha.interpolateTo(1, t);
-		for (int i = 0; i < songTips.size(); i++)
+		for (size_t i = 0; i < songTips.size(); i++)
 			songTips[i]->alpha = 1;
 		menuBg2->alpha.interpolateTo(1, t);
 
 
 		int sm=-900;
 		SongSlot *ss=0;
-		for (int i = 0; i < songSlots.size(); i++)
+		for (size_t i = 0; i < songSlots.size(); i++)
 		{
 			if (dsq->continuity.hasSong(dsq->continuity.getSongTypeBySlot(i)))
 			{
@@ -9248,12 +9239,12 @@ void Game::toggleMainMenu(bool f)
 	{
 		((AquariaMenuItem*)menu[5])->setDirMove(DIR_LEFT, 0);
 
-		for (int i = 0; i < songSlots.size(); i++)
+		for (size_t i = 0; i < songSlots.size(); i++)
 		{
 			songSlots[i]->alphaMod = 0;
 		}
 
-		for (int i = 0; i < songTips.size(); i++)
+		for (size_t i = 0; i < songTips.size(); i++)
 			songTips[i]->alpha = 0;
 
 		songBubbles->alpha.interpolateTo(0, t);
@@ -9643,7 +9634,7 @@ void Game::updateInGameMenu(float dt)
 					songMenuPlayDelay = 0;
 
 
-					if (currentSongMenuNote >= 0 && currentSongMenuNote < s.notes.size())
+					if (currentSongMenuNote < s.notes.size())
 					{
 						/*
 						std::ostringstream os;
@@ -10130,7 +10121,7 @@ void Game::update(float dt)
 	}
 
 
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < dsq->game->getNumPaths(); i++)
 	{
 		dsq->game->getPath(i)->update(dt);
@@ -10401,7 +10392,6 @@ void Game::update(float dt)
 				//cameraLerpDelay = 0.15;
 				cameraLerpDelay = vars->defaultCameraLerpDelay;
 			}
-			Vector oldCamPos = dsq->cameraPos;
 			cameraInterp.stop();
 			cameraInterp.interpolateTo(dest, cameraLerpDelay);
 			dsq->cameraPos = getCameraPositionFor(cameraInterp);
@@ -10646,9 +10636,9 @@ void Game::loadElementTemplates(std::string pack)
 	}
 	in.close();
 
-	for (int i = 0; i < elementTemplates.size(); i++)
+	for (size_t i = 0; i < elementTemplates.size(); i++)
 	{
-		for (int j = i; j < elementTemplates.size(); j++)
+		for (size_t j = i; j < elementTemplates.size(); j++)
 		{
 			if (elementTemplates[i].idx > elementTemplates[j].idx)
 			{
@@ -10677,7 +10667,7 @@ void Game::resetFromTitle()
 
 void Game::setGrid(ElementTemplate *et, Vector position, float rot360)
 {
-	for (int i = 0; i < et->grid.size(); i++)
+	for (size_t i = 0; i < et->grid.size(); i++)
 	{
 		TileVector t(position);
 		/*
@@ -10814,7 +10804,7 @@ void Game::removeState()
 	dsq->globalScale = Vector(1,1);
 	core->globalScaleChanged();
 
-	for (int i = 0; i < getNumPaths(); i++)
+	for (size_t i = 0; i < getNumPaths(); i++)
 	{
 		Path *p = getPath(i);
 		p->destroy();

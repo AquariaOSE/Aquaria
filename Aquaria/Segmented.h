@@ -27,7 +27,7 @@ class Segmented
 {
 public:
 	Segmented(float minDist, float maxDist);
-	RenderObject *getSegment(int seg);
+	RenderObject *getSegment(size_t seg);
 	void updateAlpha(float a);
 	void warpSegments(const Vector &position);
 	void setMaxDist(float m);
@@ -47,7 +47,7 @@ protected:
 class Strand : public RenderObject, public Segmented
 {
 public:
-	Strand(const Vector &position, int segs, int dist=32);
+	Strand(const Vector &position, size_t segs, size_t dist=32);
 	void destroy();
 protected:
 	void onUpdate(float dt);

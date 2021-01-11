@@ -59,7 +59,8 @@ public:
 	void destroy();
 	std::string gfx;
 	std::string name;
-	int boneIdx, pidx, rbp;
+	size_t boneIdx;
+	int pidx, rbp;
 	std::map<int, ParticleEffect*> emitters;
 	std::string prt;
 	std::vector<Vector> changeStrip;
@@ -106,7 +107,8 @@ class BoneKeyframe
 {
 public:
 	BoneKeyframe() : idx(0), x(0), y(0), rot(0), sx(1), sy(1), doScale(0) {}
-	int idx, x, y, rot;
+	size_t idx;
+	int x, y, rot;
 	float sx, sy;
 	bool doScale;
 	std::vector<Vector> strip;
@@ -124,7 +126,7 @@ public:
 	float t;
 	std::string sound;
 	std::vector<BoneKeyframe> keyframes;
-	BoneKeyframe *getBoneKeyframe(int idx);
+	BoneKeyframe *getBoneKeyframe(size_t idx);
 	std::string cmd;
 	std::vector<BoneCommand> commands;
 
@@ -138,17 +140,17 @@ public:
 	std::string name;
 	typedef std::vector <SkeletalKeyframe> Keyframes;
 	Keyframes keyframes;
-	SkeletalKeyframe *getKeyframe(int key);
+	SkeletalKeyframe *getKeyframe(size_t key);
 	SkeletalKeyframe *getLastKeyframe();
 	SkeletalKeyframe *getFirstKeyframe();
 	SkeletalKeyframe *getPrevKeyframe(float t);
 	SkeletalKeyframe *getNextKeyframe(float t);
-	void cloneKey(int key, float toffset);
-	void deleteKey(int key);
+	void cloneKey(size_t key, float toffset);
+	void deleteKey(size_t key);
 	void reorderKeyframes();
 	float getAnimationLength();
-	int getSkeletalKeyframeIndex(SkeletalKeyframe *skey);
-	int getNumKeyframes();
+	size_t getSkeletalKeyframeIndex(SkeletalKeyframe *skey);
+	size_t getNumKeyframes();
 	void reverse();
 	bool resetPassOnEnd;
 };
@@ -197,7 +199,7 @@ public:
 	//HACK: should be a lerped float
 	InterpolatedVector timeMultiplier;
 	float animationLength;
-	int currentAnimation;
+	size_t currentAnimation;
 	bool animating;
 
 
@@ -212,13 +214,13 @@ public:
 	bool saveSkeletal(const std::string &fn);
 	void loadSkin(const std::string &fn);
 
-	Bone *getBoneByIdx(int idx);
+	Bone *getBoneByIdx(size_t idx);
 	Bone *getBoneByName(const std::string &name);
 	void animate(const std::string &animation, int loop = 0, int layer=0);
 
 
 
-	void setTime(float time, int layer=0);
+	void setTime(float time, size_t layer=0);
 
 	void updateBones();
 	void playCurrentAnimation(int loop=0, int layer=0);
@@ -232,7 +234,7 @@ public:
 	void setTimeMultiplier(float t, int layer=0);
 
 	Bone* getSelectedBone(bool mouseBased = true);
-	Animation *getCurrentAnimation(int layer=0);
+	Animation *getCurrentAnimation(size_t layer=0);
 
 
 	void nextAnimation();
@@ -259,9 +261,9 @@ public:
 	bool isLoaded();
 	int getNumAnimLayers() const { return animLayers.size(); }
 
-	AnimationLayer* getAnimationLayer(int l);
-	int getBoneIdx(Bone *b);
-	void toggleBone(int idx, int v);
+	AnimationLayer* getAnimationLayer(size_t l);
+	size_t getBoneIdx(Bone *b);
+	void toggleBone(size_t idx, int v);
 
 	void setAnimationKeyNotify(RenderObject *r);
 
@@ -274,7 +276,7 @@ protected:
 	bool frozen;
 	RenderObject *animKeyNotify;
 	bool loaded;
-	int selectedBone;
+	size_t selectedBone;
 	friend class AnimationLayer;
 	std::vector<AnimationLayer> animLayers;
 	Bone* initBone(int idx, std::string gfx, int pidx, int rbp=0, std::string name="", float cr=0, bool fh=false, bool fv=false);

@@ -1388,8 +1388,8 @@ Buffer SoundManager::loadSoundIntoBank(const std::string &filename, const std::s
 		f = core->adjustFilenameCase(f);
 	}
 
-	int loc = f.find_last_of('/');
-	int loc2 = f.rfind('.');
+	size_t loc = f.find_last_of('/');
+	size_t loc2 = f.rfind('.');
 	if (loc != std::string::npos && loc2 != std::string::npos)
 	{
 		name = f.substr(loc+1, loc2-(loc+1));

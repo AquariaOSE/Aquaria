@@ -67,11 +67,11 @@ void PathFinding::forceMinimumPath(VectorPath &path, const Vector &start, const 
 
 void PathFinding::molestPath(VectorPath &path)
 {
-	int sz=path.getNumPathNodes();
+	size_t sz=path.getNumPathNodes();
 	if(!sz)
 		return;
 
-	int i = 0;
+	size_t i = 0;
 	// make normals
 	std::vector<Vector> normals;
 	normals.resize(sz);
@@ -108,8 +108,11 @@ void PathFinding::molestPath(VectorPath &path)
 	// use wall normal to push out node a bit
 	std::vector<Vector> newNormals;
 	newNormals.resize(normals.size());
-	for (i = 1; i < normals.size()-1; i++)
-		newNormals[i] = (normals[i] + normals[i-1] + normals[i+1])/3.0f;
+	if(normals.size() > 0) {
+		for (i = 1; i < normals.size()-1; i++) {
+			newNormals[i] = (normals[i] + normals[i-1] + normals[i+1])/3.0f;
+		}
+	}
 	for (i = 1; i < sz-1; i++)
 		path.getPathNode(i)->value += newNormals[i];
 
@@ -132,7 +135,7 @@ void PathFinding::molestPath(VectorPath &path)
 		lastSuccessNode = 0;
 		hadSuccess = false;
 		Vector node = path.getPathNode(i)->value;
-		for (int j = sz-1; j >= i+adjust; j--)
+		for (size_t j = sz-1; j >= i+adjust; j--)
 		{
 			Vector target = path.getPathNode(j)->value;
 			if (dsq->game->trace(node, target))

@@ -131,7 +131,7 @@ void ModSelectorScreen::onUpdate(float dt)
 	}
 }
 
-void ModSelectorScreen::showPanel(int id)
+void ModSelectorScreen::showPanel(size_t id)
 {
 	if(id == currentPanel)
 		return;
@@ -140,7 +140,7 @@ void ModSelectorScreen::showPanel(int id)
 	IconGridPanel *newgrid = panels[id];
 
 	// fade in selected panel
-	if(currentPanel < 0) // just bringing up?
+	if(currentPanel == -1) // just bringing up?
 	{
 		newgrid->scale = Vector(0.8f,0.8f);
 		newgrid->alpha = 0;
@@ -155,7 +155,7 @@ void ModSelectorScreen::updateFade()
 {
 	// fade out background panels
 	// necessary to do all of them, that icon alphas are 0... they would trigger otherwise, even if invisible because parent panel is not shown
-	for(int i = 0; i < panels.size(); ++i)
+	for(size_t i = 0; i < panels.size(); ++i)
 		panels[i]->fade(i == currentPanel, true);
 }
 
@@ -206,7 +206,7 @@ void ModSelectorScreen::init()
 		addChild(&rightbar, PM_STATIC);
 	}
 
-	for(int i = 0; i < panels.size(); ++i)
+	for(size_t i = 0; i < panels.size(); ++i)
 	{
 		if(panels[i])
 			continue;
@@ -326,7 +326,7 @@ void ModSelectorScreen::initModAndPatchPanel()
 	}
 	std::sort(tv.begin(), tv.end(), _modname_cmp);
 
-	for(int i = 0; i < tv.size(); ++i)
+	for(size_t i = 0; i < tv.size(); ++i)
 	{
 		if(!tv[i]->getParent()) // ensure it was not added earlier
 		{

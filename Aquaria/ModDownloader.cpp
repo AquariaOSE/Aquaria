@@ -310,14 +310,13 @@ bool ModDL::ParseModXML(const std::string& fn, bool allowChaining)
 		ModPackageType pkgtype = MPT_MOD;
 		int serverSize = 0;
 		int serverIconSize = 0;
-		XMLElement *fullname, *desc, *icon, *pkg, *confirm, *props, *web;
+		XMLElement *fullname, *desc, *icon, *pkg, *confirm, *props;
 		fullname = modx->FirstChildElement("Fullname");
 		desc = modx->FirstChildElement("Description");
 		icon = modx->FirstChildElement("Icon");
 		pkg = modx->FirstChildElement("Package");
 		confirm = modx->FirstChildElement("Confirm");
 		props = modx->FirstChildElement("Properties");
-		web = modx->FirstChildElement("Web");
 
 		if(fullname && fullname->Attribute("text"))
 			namestr = fullname->Attribute("text");

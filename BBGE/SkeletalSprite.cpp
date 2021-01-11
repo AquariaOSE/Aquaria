@@ -87,7 +87,7 @@ void Bone::destroy()
 {
 	Quad::destroy();
 
-	for (int i = 0; i < segments.size(); i++)
+	for (size_t i = 0; i < segments.size(); i++)
 	{
 		segments[i]->setLife(1.0);
 		segments[i]->setDecayRate(10);
@@ -241,7 +241,7 @@ void Bone::updateSegments()
 
 		if (!reverse)
 		{
-			for (int i = 0; i < segments.size(); i++)
+			for (size_t i = 0; i < segments.size(); i++)
 			{
 				Vector diff;
 				if (i == 0)
@@ -411,7 +411,7 @@ void AnimationLayer::animate(const std::string &a, int loop)
 	stringToLower(animation);
 
 	bool played = false;
-	for (int i = 0; i < s->animations.size(); i++)
+	for (size_t i = 0; i < s->animations.size(); i++)
 	{
 		if (s->animations[i].name == animation)
 		{
@@ -489,7 +489,7 @@ Animation* AnimationLayer::getCurrentAnimation()
 {
 	if (currentAnimation == -1)
 		return &blendAnimation;
-	if (currentAnimation < 0 || currentAnimation >= s->animations.size())
+	if (currentAnimation >= s->animations.size())
 	{
 		std::ostringstream os;
 		os << "skel: " << s->filenameLoaded << " currentAnimation: " << currentAnimation << " is out of range\n error in anim file?";
@@ -507,7 +507,7 @@ bool AnimationLayer::createTransitionAnimation(const std::string& anim, float ti
 	blendAnimation.keyframes.clear();
 	SkeletalKeyframe k;
 	k.t = 0;
-	for (int i = 0; i < s->bones.size(); i++)
+	for (size_t i = 0; i < s->bones.size(); i++)
 	{
 		BoneKeyframe b;
 		b.idx = s->bones[i]->boneIdx;
@@ -561,14 +561,14 @@ Animation::Animation()
 {
 }
 
-int Animation::getNumKeyframes()
+size_t Animation::getNumKeyframes()
 {
 	return keyframes.size();
 }
 
-SkeletalKeyframe *Animation::getKeyframe(int key)
+SkeletalKeyframe *Animation::getKeyframe(size_t key)
 {
-	if (key < 0 || key >= keyframes.size()) return 0;
+	if (key >= keyframes.size()) return 0;
 	return &keyframes[key];
 }
 
@@ -608,9 +608,9 @@ SkeletalKeyframe *Animation::getFirstKeyframe()
 void Animation::reorderKeyframes()
 {
 
-	for (int i = 0; i < keyframes.size(); i++)
+	for (size_t i = 0; i < keyframes.size(); i++)
 	{
-		for (int j = 0; j < keyframes.size()-1; j++)
+		for (size_t j = 0; j < keyframes.size()-1; j++)
 		{
 			if (keyframes[j].t > keyframes[j+1].t)
 			{
@@ -622,11 +622,11 @@ void Animation::reorderKeyframes()
 	}
 }
 
-void Animation::cloneKey(int key, float toffset)
+void Animation::cloneKey(size_t key, float toffset)
 {
 	std::vector<SkeletalKeyframe> copy = this->keyframes;
 	keyframes.clear();
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i <= key; i++)
 		keyframes.push_back(copy[i]);
 	for (i = key; i < copy.size(); i++)
@@ -634,20 +634,20 @@ void Animation::cloneKey(int key, float toffset)
 	keyframes[key+1].t += toffset;
 }
 
-void Animation::deleteKey(int key)
+void Animation::deleteKey(size_t key)
 {
 	std::vector<SkeletalKeyframe> copy = this->keyframes;
 	keyframes.clear();
-	int i = 0;
+	size_t i = 0;
 	for (i = 0; i < key; i++)
 		keyframes.push_back(copy[i]);
 	for (i = key+1; i < copy.size(); i++)
 		keyframes.push_back(copy[i]);
 }
 
-int Animation::getSkeletalKeyframeIndex(SkeletalKeyframe *skey)
+size_t Animation::getSkeletalKeyframeIndex(SkeletalKeyframe *skey)
 {
-	for (int i = 0; i < keyframes.size(); i++)
+	for (size_t i = 0; i < keyframes.size(); i++)
 	{
 		if (&keyframes[i] == skey)
 			return i;
@@ -655,9 +655,9 @@ int Animation::getSkeletalKeyframeIndex(SkeletalKeyframe *skey)
 	return -1;
 }
 
-BoneKeyframe *SkeletalKeyframe::getBoneKeyframe(int idx)
+BoneKeyframe *SkeletalKeyframe::getBoneKeyframe(size_t idx)
 {
-	for (int i = 0; i < keyframes.size(); i++)
+	for (size_t i = 0; i < keyframes.size(); i++)
 	{
 		if (keyframes[i].idx == idx)
 		{
@@ -669,8 +669,8 @@ BoneKeyframe *SkeletalKeyframe::getBoneKeyframe(int idx)
 
 SkeletalKeyframe *Animation::getPrevKeyframe(float t)
 {
-	int kf = -1;
-	for (int i = keyframes.size()-1; i >= 0; i--)
+	size_t kf = -1;
+	for (size_t i = keyframes.size(); i-- > 0; )
 	{
 		if (t >= keyframes[i].t)
 		{
@@ -682,15 +682,13 @@ SkeletalKeyframe *Animation::getPrevKeyframe(float t)
 		return 0;
 	if (kf >= keyframes.size())
 		kf = keyframes.size()-1;
-	if (kf < 0)
-		kf = 0;
 	return &keyframes[kf];
 }
 
 SkeletalKeyframe *Animation::getNextKeyframe(float t)
 {
-	int kf = -1;
-	for (int i = 0; i < keyframes.size(); i++)
+	size_t kf = -1;
+	for (size_t i = 0; i < keyframes.size(); i++)
 	{
 		if (t <= keyframes[i].t)
 		{
@@ -703,8 +701,6 @@ SkeletalKeyframe *Animation::getNextKeyframe(float t)
 		return 0;
 	if (kf >= keyframes.size())
 		kf = keyframes.size()-1;
-	if (kf < 0)
-		kf = 0;
 	return &keyframes[kf];
 }
 
@@ -714,7 +710,7 @@ SkeletalSprite::SkeletalSprite() : RenderObject()
 	animKeyNotify = 0;
 	loaded = false;
 	animLayers.resize(10);
-	for (int i = 0; i < animLayers.size(); i++)
+	for (size_t i = 0; i < animLayers.size(); i++)
 		animLayers[i].setSkeletalSprite(this);
 	selectedBone = -1;
 }
@@ -742,9 +738,9 @@ float SkeletalSprite::transitionAnimate(const std::string& anim, float time, int
 	return 0;
 }
 
-AnimationLayer* SkeletalSprite::getAnimationLayer(int l)
+AnimationLayer* SkeletalSprite::getAnimationLayer(size_t l)
 {
-	if (l >= 0 && l < animLayers.size())
+	if (l < animLayers.size())
 	{
 		return &animLayers[l];
 	}
@@ -764,7 +760,7 @@ void SkeletalSprite::onUpdate(float dt)
 	if (frozen) return;
 	RenderObject::onUpdate(dt);
 
-	int i = 0;
+	size_t i = 0;
 
 	for (i = 0; i < bones.size(); i++)
 	{
@@ -775,7 +771,7 @@ void SkeletalSprite::onUpdate(float dt)
 			{
 				b->transformedCollisionMask.resize(b->collisionMask.size());
 			}
-			for (int i = 0; i < b->collisionMask.size(); i++)
+			for (size_t i = 0; i < b->collisionMask.size(); i++)
 			{
 				b->transformedCollisionMask[i] = b->getWorldCollidePosition(b->collisionMask[i]);
 			}
@@ -846,7 +842,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		file = animationPath + filename + ".xml";
 	}
 
-	int i = 0;
+	size_t i = 0;
 	XMLDocument *xml = _retrieveSkeletalXML(file, true);
 	xml->Clear();
 
@@ -857,7 +853,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		if (animLayers[i].ignoreBones.size() > 0)
 		{
 			std::ostringstream os;
-			for (int j = 0; j < animLayers[i].ignoreBones.size(); j++)
+			for (size_t j = 0; j < animLayers[i].ignoreBones.size(); j++)
 			{
 				os << animLayers[i].ignoreBones[j] << " ";
 			}
@@ -866,7 +862,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		if (animLayers[i].includeBones.size() > 0)
 		{
 			std::ostringstream os;
-			for (int j = 0; j < animLayers[i].includeBones.size(); j++)
+			for (size_t j = 0; j < animLayers[i].includeBones.size(); j++)
 			{
 				os << animLayers[i].includeBones[j] << " ";
 			}
@@ -886,7 +882,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 	for (i = 0; i < this->bones.size(); i++)
 	{
 		XMLElement *bone = xml->NewElement("Bone");
-		bone->SetAttribute("idx", this->bones[i]->boneIdx);
+		bone->SetAttribute("idx", (unsigned int) this->bones[i]->boneIdx);
 		bone->SetAttribute("gfx", this->bones[i]->gfx.c_str());
 		bone->SetAttribute("pidx", this->bones[i]->pidx);
 		bone->SetAttribute("name", this->bones[i]->name.c_str());
@@ -964,7 +960,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		animation->SetAttribute("name", a->name.c_str());
 		if(a->resetPassOnEnd)
 			animation->SetAttribute("resetPassOnEnd", a->resetPassOnEnd);
-		for (int j = 0; j < a->keyframes.size(); j++)
+		for (size_t j = 0; j < a->keyframes.size(); j++)
 		{
 			XMLElement *key = xml->NewElement("Key");
 			if (!a->keyframes[j].sound.empty())
@@ -980,12 +976,12 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			std::ostringstream os;
 			os << a->keyframes[j].t << " ";
 			std::ostringstream szos;
-			for (int k = 0; k < a->keyframes[j].keyframes.size(); k++)
+			for (size_t k = 0; k < a->keyframes[j].keyframes.size(); k++)
 			{
 				BoneKeyframe *b = &a->keyframes[j].keyframes[k];
 				os << b->idx << " " << b->x << " " << b->y << " " << b->rot << " ";
 				os << b->strip.size() << " ";
-				for (int i = 0; i < b->strip.size(); i++)
+				for (size_t i = 0; i < b->strip.size(); i++)
 				{
 					os << b->strip[i].x << " " << b->strip[i].y << " ";
 				}
@@ -1008,9 +1004,9 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 	return xml->SaveFile(file.c_str()) == XML_SUCCESS;
 }
 
-int SkeletalSprite::getBoneIdx(Bone *b)
+size_t SkeletalSprite::getBoneIdx(Bone *b)
 {
-	for (int i = 0; i < bones.size(); i++)
+	for (size_t i = 0; i < bones.size(); i++)
 	{
 		if (bones[i] == b)
 			return i;
@@ -1018,9 +1014,9 @@ int SkeletalSprite::getBoneIdx(Bone *b)
 	return -1;
 }
 
-void SkeletalSprite::toggleBone(int idx, int v)
+void SkeletalSprite::toggleBone(size_t idx, int v)
 {
-	if (idx >= 0 && idx < bones.size())
+	if (idx < bones.size())
 	{
 		bones[idx]->alpha.x = v;
 	}
@@ -1028,7 +1024,7 @@ void SkeletalSprite::toggleBone(int idx, int v)
 
 Bone *SkeletalSprite::getBoneByName(const std::string &name)
 {
-	for (int i = 0; i < bones.size(); i++)
+	for (size_t i = 0; i < bones.size(); i++)
 	{
 		if (bones[i]->name == name)
 			return bones[i];
@@ -1039,9 +1035,9 @@ Bone *SkeletalSprite::getBoneByName(const std::string &name)
 	return 0;
 }
 
-Bone *SkeletalSprite::getBoneByIdx(int idx)
+Bone *SkeletalSprite::getBoneByIdx(size_t idx)
 {
-	for (int i = 0; i < bones.size(); i++)
+	for (size_t i = 0; i < bones.size(); i++)
 	{
 		if (bones[i]->boneIdx == idx)
 			return bones[i];
@@ -1097,7 +1093,7 @@ void SkeletalSprite::prevAnimation()
 {
 	stopAnimation();
 	animLayers[0].currentAnimation--;
-	if (animLayers[0].currentAnimation < 0)
+	if (animLayers[0].currentAnimation >= animations.size())
 		animLayers[0].currentAnimation = animations.size()-1;
 }
 
@@ -1112,7 +1108,7 @@ void SkeletalSprite::deleteBones()
 
 Animation *SkeletalSprite::getAnimation(const std::string& anim)
 {
-	for (int i = 0; i < animations.size(); i++)
+	for (size_t i = 0; i < animations.size(); i++)
 	{
 		if (animations[i].name == anim)
 			return &animations[i];
@@ -1215,7 +1211,7 @@ void SkeletalSprite::stopAnimation(int layer)
 
 void SkeletalSprite::stopAllAnimations()
 {
-	for (int i = 0; i < animLayers.size(); i++)
+	for (size_t i = 0; i < animLayers.size(); i++)
 	{
 		animLayers[i].stopAnimation();
 	}
@@ -1435,7 +1431,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			bone = bone->NextSiblingElement("Bone");
 		}
 		// attach bones
-		for (int i = 0; i < this->bones.size(); i++)
+		for (size_t i = 0; i < this->bones.size(); i++)
 		{
 			Bone *b = this->bones[i];
 			if (b->pidx != -1)
@@ -1535,7 +1531,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 						if (strip>0)
 						{
 							b.strip.resize(strip);
-							for (int i = 0; i < b.strip.size(); i++)
+							for (size_t i = 0; i < b.strip.size(); i++)
 							{
 								is >> b.strip[i].x >> b.strip[i].y;
 
@@ -1609,7 +1605,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					}
 				}
 				// generate empty bone keys
-				for (int i = 0; i < this->bones.size(); i++)
+				for (size_t i = 0; i < this->bones.size(); i++)
 				{
 					if (newSkeletalKeyframe.getBoneKeyframe(this->bones[i]->boneIdx))
 					{
@@ -1630,12 +1626,12 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 	}
 }
 
-Animation *SkeletalSprite::getCurrentAnimation(int layer)
+Animation *SkeletalSprite::getCurrentAnimation(size_t layer)
 {
 	return layer < animLayers.size() ? animLayers[layer].getCurrentAnimation() : NULL;
 }
 
-void SkeletalSprite::setTime(float time, int layer)
+void SkeletalSprite::setTime(float time, size_t layer)
 {
 	if(layer < animLayers.size())
 		animLayers[layer].timer = time;
@@ -1643,7 +1639,7 @@ void SkeletalSprite::setTime(float time, int layer)
 
 void AnimationLayer::resetPass()
 {
-	for (int i = 0; i < s->bones.size(); i++)
+	for (size_t i = 0; i < s->bones.size(); i++)
 	{
 		Bone *b = s->bones[i];
 		if (contains(b))
@@ -1656,13 +1652,13 @@ bool AnimationLayer::contains(const Bone *b) const
 	const int idx = b->boneIdx;
 	if (!ignoreBones.empty())
 	{
-		for (int j = 0; j < ignoreBones.size(); j++)
+		for (size_t j = 0; j < ignoreBones.size(); j++)
 			if (idx == ignoreBones[j])
 				return false;
 	}
 	else if (!includeBones.empty())
 	{
-		for (int j = 0; j < includeBones.size(); j++)
+		for (size_t j = 0; j < includeBones.size(); j++)
 			if (idx == includeBones[j])
 				return true;
 		return false;
@@ -1698,7 +1694,7 @@ void AnimationLayer::updateBones()
 		}
 		if (!key2->commands.empty())
 		{
-			for (int i = 0; i < key2->commands.size(); i++)
+			for (size_t i = 0; i < key2->commands.size(); i++)
 			{
 				key2->commands[i].run();
 			}
@@ -1710,7 +1706,7 @@ void AnimationLayer::updateBones()
 	}
 	lastNewKey = key2;
 
-	for (int i = 0; i < s->bones.size(); i++)
+	for (size_t i = 0; i < s->bones.size(); i++)
 	{
 		Bone *b = s->bones[i];
 
@@ -1762,7 +1758,7 @@ void AnimationLayer::updateBones()
 								bkey2->strip.resize(b->changeStrip.size());
 							if (bkey1->strip.size() < b->changeStrip.size())
 								bkey1->strip.resize(b->changeStrip.size());
-							for (int i = 0; i < b->changeStrip.size(); i++)
+							for (size_t i = 0; i < b->changeStrip.size(); i++)
 							{
 								b->changeStrip[i] = Vector(lerp(bkey1->strip[i].x, bkey2->strip[i].x, dt, lerpType), lerp(bkey1->strip[i].y, bkey2->strip[i].y, dt, lerpType));
 							}
@@ -1784,7 +1780,7 @@ void SkeletalSprite::updateBones()
 {
 	if (!frozen)
 	{
-		for (int i = 0; i < animLayers.size(); i++)
+		for (size_t i = 0; i < animLayers.size(); i++)
 		{
 			animLayers[i].updateBones();
 		}
@@ -1811,7 +1807,7 @@ Bone* SkeletalSprite::getSelectedBone(bool mouseBased)
 		float closestDist = HUGE_VALF;
 		Bone *b = 0;
 		Vector p = core->mouse.position;
-		for (int i = 0; i < bones.size(); i++)
+		for (size_t i = 0; i < bones.size(); i++)
 		{
 			if (bones[i]->renderQuad || core->getShiftState())
 			{
@@ -1835,7 +1831,7 @@ Bone* SkeletalSprite::getSelectedBone(bool mouseBased)
 		return b;
 	}
 	// else
-	if (!bones.empty() && selectedBone >= 0 && selectedBone < bones.size())
+	if (!bones.empty() && selectedBone < bones.size())
 		return bones[selectedBone];
 
 	return 0;
@@ -1844,7 +1840,7 @@ Bone* SkeletalSprite::getSelectedBone(bool mouseBased)
 
 void SkeletalSprite::updateSelectedBoneColor()
 {
-	for (int i = 0; i < bones.size(); i++)
+	for (size_t i = 0; i < bones.size(); i++)
 	{
 		bones[i]->color = Vector(1,1,1);
 	}
@@ -1861,7 +1857,7 @@ void SkeletalSprite::setSelectedBone(int b)
 
 void SkeletalSprite::selectPrevBone()
 {
-	const int oldsel = selectedBone;
+	const size_t oldsel = selectedBone;
 	do
 	{
 		selectedBone++;
@@ -1876,13 +1872,13 @@ void SkeletalSprite::selectPrevBone()
 
 void SkeletalSprite::selectNextBone()
 {
-	const int oldsel = selectedBone;
+	const size_t oldsel = selectedBone;
 	do
 	{
 		selectedBone--;
 		if(selectedBone == oldsel)
 			break;
-		if (selectedBone < 0)
+		if (selectedBone >= bones.size())
 			selectedBone = bones.size()-1;
 	}
 	while (!bones[selectedBone]->selectable);

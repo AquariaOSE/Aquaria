@@ -36,14 +36,14 @@ void Segmented::setMaxDist(float m)
 
 void Segmented::initSegments(const Vector &position)
 {
-	for (int i = 0; i < segments.size(); i++)
+	for (size_t i = 0; i < segments.size(); i++)
 		segments[i]->position = position;
 	numSegments = segments.size();
 }
 
 void Segmented::destroySegments(float life)
 {
-	for (int i = 0; i < segments.size(); i++)
+	for (size_t i = 0; i < segments.size(); i++)
 	{
 		segments[i]->setLife(life);
 		segments[i]->setDecayRate(1.0f);
@@ -52,9 +52,9 @@ void Segmented::destroySegments(float life)
 	segments.clear();
 }
 
-RenderObject *Segmented::getSegment(int seg)
+RenderObject *Segmented::getSegment(size_t seg)
 {
-	if (seg < 0 || seg >= segments.size())
+	if (seg >= segments.size())
 		return 0;
 	return segments[seg];
 }
@@ -85,7 +85,7 @@ void Segmented::updateSegment(int i, const Vector &diff)
 
 void Segmented::updateAlpha(float a)
 {
-	for (int i = 0; i < segments.size(); i++)
+	for (size_t i = 0; i < segments.size(); i++)
 	{
 		segments[i]->alpha = a;
 	}
@@ -93,7 +93,7 @@ void Segmented::updateAlpha(float a)
 
 void Segmented::warpSegments(const Vector &position)
 {
-	for (int i = 0; i < segments.size(); i++)
+	for (size_t i = 0; i < segments.size(); i++)
 	{
 		segments[i]->position = position;
 	}
