@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Quad.h"
 #include "SimpleIStringStream.h"
+#include <map>
 // for 2d system only
 
 enum AnimationCommand
@@ -61,9 +62,7 @@ public:
 	std::string gfx;
 	std::string name;
 	size_t boneIdx;
-	int pidx;
-	bool rbp;
-
+	int pidx, rbp;
 	std::string prt;
 	std::vector<Vector> changeStrip;
 

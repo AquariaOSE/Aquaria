@@ -2109,7 +2109,6 @@ bool Game::saveScene(std::string scene)
 			std::ostringstream os2;
 			os2 << gradBtm.x << " " << gradBtm.y << " " << gradBtm.z;
 			level->SetAttribute("gradBtm", os2.str().c_str());
-
 		}
 
 		if (!saveMusic.empty())
@@ -2626,7 +2625,6 @@ void Game::applyState()
 
 	firstSchoolFish = true;
 	invincibleOnNested = true;
-
 
 	controlHintNotes.clear();
 
@@ -3942,7 +3940,6 @@ bool Game::collideCircleVsLineAngle(RenderObject *r, float angle, float startLen
 	}
 	return collision;
 }
-
 
 Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius)
 {

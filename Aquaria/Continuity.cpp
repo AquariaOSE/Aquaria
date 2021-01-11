@@ -43,11 +43,6 @@ const float webTime			= 8;
 const float petPowerTime	= 30;
 const float lightTime		= 60;
 
-Profile::Profile()
-{
-	name = "save";
-}
-
 Continuity::Continuity()
 {
 	toggleMoveMode = false;
@@ -2627,7 +2622,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 std::string Continuity::getSaveFileName(int slot, const std::string &pfix)
 {
 	std::ostringstream os;
-	os << dsq->getSaveDirectory() << "/" << dsq->currentProfile.name << "-" << numToZeroString(slot, 4) << "." << pfix;
+	os << dsq->getSaveDirectory() << "/save-" << numToZeroString(slot, 4) << "." << pfix;
 	return os.str();
 }
 

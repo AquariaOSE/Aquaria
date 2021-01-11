@@ -419,7 +419,7 @@ ImageTGA *Texture::TGAloadMem(void *mem, int size)
 	ByteBuffer bb(mem, size, ByteBuffer::REUSE);
 
 	ImageTGA *pImageData = NULL;		// This stores our important image data
-	unsigned short width = 0, height = 0;// The dimensions of the image
+	uint16_t width = 0, height = 0;		// The dimensions of the image
 	byte length = 0;					// The length in bytes to the pixels
 	byte imageType = 0;					// The image type (RLE, RGB, Alpha...)
 	byte bits = 0;						// The bits per pixel for the image (16, 24, 32)

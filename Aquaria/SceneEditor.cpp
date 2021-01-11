@@ -96,7 +96,6 @@ std::string getMapTemplateFilename()
 	return "";
 }
 
-
 SceneEditor::SceneEditor() : ActionMapper(), on(false)
 {
 	autoSaveFile = 0;
@@ -2415,18 +2414,17 @@ void SceneEditor::prevElement()
 void SceneEditor::doPrevElement()
 {
 	size_t oldCur = curElement;
+	size_t maxn = dsq->game->elementTemplates.size();
 
-	if(dsq->game->elementTemplates.size() == 0) {
-		return;
-	}
-
-	if(curElement > 0) {
+	if(curElement)
 		curElement--;
-	}
-	if (curElement >= game->elementTemplates.size())
-		curElement = dsq->game->elementTemplates.size()-1;
+	else if(maxn)
+		curElement = maxn-1;
 
-	if (dsq->game->elementTemplates[curElement].idx < 1024)
+	if (maxn && curElement >= maxn)
+		curElement = maxn-1;
+
+	if (maxn && dsq->game->elementTemplates[curElement].idx < 1024)
 	{
 		placer->setTexture(dsq->game->elementTemplates[curElement].gfx);
 	}

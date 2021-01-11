@@ -115,13 +115,6 @@ public:
 	void load();
 };
 
-class Profile
-{
-public:
-	Profile();
-	std::string name;
-};
-
 enum SaveSlotMode
 {
 	SSM_NONE = -1,
@@ -264,8 +257,6 @@ public:
 
 	typedef std::vector<std::string> StringList;
 	StringList profiles;
-
-	Profile currentProfile;
 
 	AquariaScreenTransition *screenTransition;
 
