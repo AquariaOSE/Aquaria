@@ -24,11 +24,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "CollideEntity.h"
 #include "Segmented.h"
 #include "Particles.h"
+#include "Scriptable.h"
 
 struct lua_State;
 class Script;
 
-class ScriptedEntity : public CollideEntity, public Segmented
+class ScriptedEntity : public CollideEntity, public Segmented, public Scriptable
 {
 public:
 	ScriptedEntity(const std::string &scriptName, Vector position, EntityType et = ET_ENEMY);
@@ -50,7 +51,6 @@ public:
 	void entityDied(Entity *e);
 	void message(const std::string &msg, int v);
 	int messageVariadic(lua_State *L, int nparams);
-	int pushLuaVars(lua_State *L);
 
 	static bool runningActivation;
 
@@ -105,7 +105,6 @@ protected:
 
 	void onHitWall();
 	bool reverseSegments;
-	Script *script;
 	void onUpdate(float dt);
 	void onEnterState(int action);
 	void onExitState(int action);

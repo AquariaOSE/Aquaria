@@ -31,7 +31,6 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 {
 	addType(SCO_SCRIPTED_ENTITY);
 	crushDelay = 0;
-	script = 0;
 	songNoteFunction = songNoteDoneFunction = true;
 	addChild(&pullEmitter, PM_STATIC);
 
@@ -91,11 +90,6 @@ int ScriptedEntity::messageVariadic(lua_State *L, int nparams)
 			return res;
 	}
 	return Entity::messageVariadic(L, nparams);
-}
-
-int ScriptedEntity::pushLuaVars(lua_State *L)
-{
-	return script ? script->pushLocalVars(L) : 0;
 }
 
 void ScriptedEntity::warpSegments()
@@ -394,11 +388,7 @@ void ScriptedEntity::destroy()
 {
 	CollideEntity::destroy();
 
-	if (script)
-	{
-		dsq->scriptInterface.closeScript(script);
-		script = 0;
-	}
+	closeScript();
 }
 
 void ScriptedEntity::song(SongType songType)

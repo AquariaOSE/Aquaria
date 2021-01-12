@@ -3057,6 +3057,12 @@ luaFunc(node_v)
 	return n ? n->pushLuaVars(L) : 0;
 }
 
+luaFunc(shot_v)
+{
+	Shot *s = getShot(L);
+	return s ? s->pushLuaVars(L) : 0;
+}
+
 luaFunc(isQuitFlag)
 {
 	luaReturnBool(dsq->isQuitFlag());
@@ -9938,6 +9944,7 @@ static const struct {
 
 	luaRegister(entity_v),
 	luaRegister(node_v),
+	luaRegister(shot_v),
 
 	luaRegister(isQuitFlag),
 	luaRegister(isDeveloperKeys),

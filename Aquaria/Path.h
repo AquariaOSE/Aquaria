@@ -24,12 +24,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/Base.h"
 #include "../BBGE/Particles.h"
 #include "../BBGE/ScriptObject.h"
-#include "ScriptInterface.h"
 #include "Rect.h"
+#include "Scriptable.h"
 
 #undef PATH_MAX  // May be set by a system header.
 
 struct MinimapIcon;
+class Entity;
 
 class PathNode
 {
@@ -72,7 +73,7 @@ enum PathShape
 	PATHSHAPE_CIRCLE	= 1
 };
 
-class Path : public ScriptObject
+class Path : public ScriptObject, public Scriptable
 {
 public:
 	Path();
@@ -112,7 +113,6 @@ public:
 	void refreshScript();
 	MinimapIcon *ensureMinimapIcon();
 
-	Script *script;
 	bool updateFunction;
 	bool activateFunction;
 	bool cursorActivation;
@@ -157,7 +157,6 @@ public:
 
 	int messageVariadic(lua_State *L, int nparams);
 	void luaDebugMsg(const std::string &func, const std::string &msg);
-	int pushLuaVars(lua_State *L);
 };
 
 #endif

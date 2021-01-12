@@ -632,6 +632,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\Aquaria\Scriptable.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\Aquaria\Scriptable.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\ScriptedEntity.cpp"
 				>
 			</File>

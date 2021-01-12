@@ -453,6 +453,7 @@ SET(AQUARIA_SRCS
     ${SRCDIR}/RecipeMenuEntry.cpp
     ${SRCDIR}/SceneEditor.cpp
     ${SRCDIR}/SchoolFish.cpp
+    ${SRCDIR}/Scriptable.cpp
     ${SRCDIR}/ScriptedEntity.cpp
     ${SRCDIR}/ScriptInterface.cpp
     ${SRCDIR}/Segmented.cpp

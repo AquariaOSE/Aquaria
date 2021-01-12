@@ -40,7 +40,6 @@ Path::Path()
 	pathType = PATH_NONE;
 	neverSpawned = true;
 	spawnedEntity = 0;
-	script = 0;
 	updateFunction = activateFunction = false;
 	cursorActivation = false;
 	rect.setWidth(64);
@@ -215,11 +214,7 @@ void Path::destroy()
 		emitter->safeKill();
 		emitter = 0;
 	}
-	if (script)
-	{
-		dsq->scriptInterface.closeScript(script);
-		script = 0;
-	}
+	closeScript();
 }
 
 Path::~Path()
@@ -722,11 +717,6 @@ int Path::messageVariadic(lua_State *L, int nparams)
 void Path::luaDebugMsg(const std::string &func, const std::string &msg)
 {
 	debugLog("luaScriptError: Path [" + name + "]: " + func + " : " + msg);
-}
-
-int Path::pushLuaVars(lua_State *L)
-{
-	return script ?  script->pushLocalVars(L) : 0;
 }
 
 MinimapIcon *Path::ensureMinimapIcon()
