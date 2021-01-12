@@ -945,11 +945,6 @@ void InGameMenu::bindInput()
 		as.importAction(this, "FoodLeft",		ACTION_FOODLEFT, sourceID);
 		as.importAction(this, "FoodRight",		ACTION_FOODRIGHT, sourceID);
 		as.importAction(this, "FoodDrop",		ACTION_FOODDROP, sourceID);
-
-		as.importAction(this, "MenuUp",		ACTION_MENUUP, sourceID);
-		as.importAction(this, "MenuDown",		ACTION_MENUDOWN, sourceID);
-		as.importAction(this, "MenuLeft",		ACTION_MENULEFT, sourceID);
-		as.importAction(this, "MenuRight",		ACTION_MENURIGHT, sourceID);
 	}
 }
 

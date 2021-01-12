@@ -4500,8 +4500,7 @@ void DSQ::initActionButtons()
 	clearActionButtons();
 
 	std::vector<int> allkeys;
-	// Don't need joysticks keys for this
-	for(int i = 0; i < MOUSE_BUTTON_EXTRA_END; ++i)
+	for(int i = 0; i < INTERNALLY_USED_ACTION_BUTTONS_END; ++i)
 		allkeys.push_back(i);
 
 	// create sentinel

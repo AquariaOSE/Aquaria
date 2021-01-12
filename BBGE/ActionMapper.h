@@ -85,9 +85,10 @@ public:
 	bool getKeyState(int k, int sourceID);
 
 	ActionData *getActionDataByIDAndSource(int actionID, int source);
+
 protected:
 
-	std::vector<Event*>createdEvents;
+	std::vector<Event*> createdEvents;
 
 	bool inUpdate;
 	bool inputEnabled;

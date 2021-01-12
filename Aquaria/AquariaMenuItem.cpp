@@ -163,49 +163,15 @@ Direction AquariaGuiElement::GetDirection()
 {
 	Direction dir = DIR_NONE;
 	
-	// This joystick code is already supposed to send ACTION_MENU*.
-	// Actually some places depend on the actions to be sent,
-	// So checking this here might work for a few cases,
-	// but others will break.
-	// I'll leave this in here for now -- fg
-	/*Vector p;
-	for(size_t i = 0; i < core->getNumJoysticks(); ++i)
-		if(Joystick *j = core->getJoystick(i))
-			if(j->isEnabled())
-			{
-				p = core->getJoystick(i)->position;
-				if(!p.isLength2DIn(0.4f))
-					break;
-			}
+	StateObject *obj = dsq->getTopStateObject(); // usually Game...
+	if (obj)
+	{
+		if (obj->isActing(ACTION_MENULEFT, -1))			dir = DIR_LEFT;
+		else if (obj->isActing(ACTION_MENURIGHT, -1))	dir = DIR_RIGHT;
+		else if (obj->isActing(ACTION_MENUUP, -1))		dir = DIR_UP;
+		else if (obj->isActing(ACTION_MENUDOWN, -1))	dir = DIR_DOWN;
+	}
 
-	if (!p.isLength2DIn(0.4f))
-	{
-		if (fabsf(p.x) > fabsf(p.y))
-		{
-			if (p.x > 0)
-				dir = DIR_RIGHT;
-			else
-				dir = DIR_LEFT;
-		}
-		else
-		{
-			if (p.y > 0)
-				dir = DIR_DOWN;
-			else
-				dir = DIR_UP;
-		}
-	}
-	else*/
-	{
-		StateObject *obj = dsq->getTopStateObject(); // usually Game...
-		if (obj)
-		{
-			if (obj->isActing(ACTION_MENULEFT, -1))			dir = DIR_LEFT;
-			else if (obj->isActing(ACTION_MENURIGHT, -1))	dir = DIR_RIGHT;
-			else if (obj->isActing(ACTION_MENUUP, -1))		dir = DIR_UP;
-			else if (obj->isActing(ACTION_MENUDOWN, -1))	dir = DIR_DOWN;
-		}
-	}
 	return dir;
 }
 
@@ -380,31 +346,13 @@ bool AquariaSlider::doSliderInput(float dt)
 	if (!(core->mouse.position - this->position).isLength2DIn(5))
 		return false;
 
-	float inputAmount;  // How much to adjust by?
-
-	// disabled the jaxis threshold check;
-	// ACTION_MENU* should be sent automatically when above the threshold -- fg
-	/*Vector jpos;
-	for(size_t i = 0; i < core->getNumJoysticks(); ++i)
-		if(Joystick *j = core->getJoystick(i))
-			if(j->isEnabled())
-			{
-				jpos = core->getJoystick(i)->position;
-				if(fabsf(jpos.x) > SLIDER_JOY_THRESHOLD)
-					break;
-			}*/
+	float inputAmount = 0;  // How much to adjust by?
 
 	StateObject *obj = dsq->getTopStateObject();
-	/*if (jpos.x <= -SLIDER_JOY_THRESHOLD)
-		inputAmount = -0.1f;
-	else if (jpos.x >= SLIDER_JOY_THRESHOLD)
-		inputAmount = +0.1f;
-	else*/ if (obj && obj->isActing(ACTION_MENULEFT, -1))
+	if (obj && obj->isActing(ACTION_MENULEFT, -1))
 		inputAmount = -0.1f;
 	else if (obj && obj->isActing(ACTION_MENURIGHT, -1))
 		inputAmount = +0.1f;
-	else
-		inputAmount = 0;
 
 	if (inputAmount != 0)
 	{
