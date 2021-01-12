@@ -100,31 +100,29 @@ void Window::_adjust(unsigned w, unsigned h, bool full, unsigned bpp, bool vsync
 	const bool useDesktop = w == 0 || h == 0;
 
 	SDL_DisplayMode displaymode;
-	if(SDL_GetDesktopDisplayMode(display, &displaymode) != 0)
+	if(useDesktop)
 	{
-		// fail-safe
-		displaymode.w = 800;
-		displaymode.h = 600;
-		displaymode.driverdata = 0;
-		displaymode.refresh_rate = 0;
-		displaymode.format = 0;
-		display = 0;
+		if(SDL_GetDesktopDisplayMode(display, &displaymode) != 0)
+		{
+			// Failed to get this; use sane defaults
+			displaymode.w = 800;
+			displaymode.h = 600;
+			displaymode.driverdata = 0;
+			displaymode.refresh_rate = 0;
+			displaymode.format = 0;
+			display = 0;
+		}
+		w = displaymode.w;
+		h = displaymode.h;
 	}
 
 	setvsync(vsync);
 
-	if(useDesktop)
-	{
-		w = 800;
-		h = 600;
-	}
-
 	if(full)
 	{
 		int screenflags = useDesktop ? SDL_WINDOW_FULLSCREEN_DESKTOP : SDL_WINDOW_FULLSCREEN;
-		displaymode.w = w;
-		displaymode.h = h;
 		// must not be already in fullscreen here, otherwise new display mode doesn't apply properly
+		SDL_SetWindowFullscreen(WIN, 0);
 		SDL_SetWindowDisplayMode(WIN, &displaymode);
 		SDL_SetWindowFullscreen(WIN, screenflags);
 	}
@@ -140,7 +138,7 @@ void Window::_adjust(unsigned w, unsigned h, bool full, unsigned bpp, bool vsync
 	}
 }
 
-void Window::initSize()
+void Window::updateSize()
 {
 	int ww, hh;
 	SDL_GetWindowSize(WIN, &ww, &hh);

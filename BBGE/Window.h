@@ -23,7 +23,7 @@ public:
 	int getDisplayIndex() const; // -1 on error/unsupported
 	int getRefreshRate() const { return _hz; }
 	void warpMouse(int x, int y);
-	void initSize();
+	void updateSize();
 
 	inline bool isFullscreen() const { return _full; }
 	bool isOpen() const;

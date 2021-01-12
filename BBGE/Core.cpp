@@ -156,6 +156,7 @@ void Core::setup_opengl()
 void Core::resizeWindow(int w, int h, int full, int bpp, int vsync, int display, int hz)
 {
 	window->open(w, h, full, bpp, vsync, display, hz);
+	window->updateSize();
 }
 
 void Core::updateWindowDrawSize(int w, int h)
@@ -723,7 +724,7 @@ void Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 
 	enumerateScreenModes(window->getDisplayIndex());
 
-	window->initSize();
+	window->updateSize();
 	cacheRender(); // Clears the window bg to black early; prevents flickering
 	lib_graphics = true;
 }
