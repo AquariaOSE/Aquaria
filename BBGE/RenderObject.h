@@ -284,7 +284,6 @@ public:
 protected:
 	virtual void onFH(){}
 	virtual void onFV(){}
-	virtual void onDestroy(){}
 	virtual void onSetTexture(){}
 	virtual void onRender(){}
 	virtual void onUpdate(float dt);
