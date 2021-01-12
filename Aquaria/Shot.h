@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "CollideEntity.h"
 #include "Segmented.h"
+#include "Scriptable.h"
 
 class ParticleEffect;
 class Script;
@@ -73,7 +74,7 @@ struct ShotData
 
 };
 
-class Shot : public Quad, public Segmented
+class Shot : public Quad, public Segmented, public Scriptable
 {
 public:
 
@@ -144,7 +145,6 @@ protected:
 	bool fired;
 	bool enqueuedForDelete;
 	void onUpdate(float dt);
-	Script *script;
 	bool updateScript;
 
 private:

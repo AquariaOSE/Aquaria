@@ -298,7 +298,6 @@ Shot::Shot() : Quad(), Segmented(0,0)
 	enqueuedForDelete = false;
 	shotIdx = shots.size();
 	shots.push_back(this);
-	script = 0;
 	updateScript = false;
 }
 
@@ -431,8 +430,7 @@ void Shot::onEndOfLife()
 	if(script)
 	{
 		script->call("dieNormal", this);
-		dsq->scriptInterface.closeScript(script);
-		script = 0;
+		closeScript();
 	}
 	destroySegments(0.2f);
 	dead = true;
