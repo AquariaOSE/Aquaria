@@ -105,7 +105,10 @@ void Window::_open(unsigned w, unsigned h, bool full, unsigned bpp, bool vsync, 
 		exit_error("Failed to create GL context");
 	SDL_GL_MakeCurrent(WIN, GLCTX);
 
-	_adjust(w, h, full, bpp, vsync, display, hz);
+	setvsync(vsync);
+
+	if(!full) // When we're in fullscreen mode everything is fine by now
+		_adjust(w, h, full, bpp, vsync, display, hz);
 }
 
 void Window::_adjust(unsigned w, unsigned h, bool full, unsigned bpp, bool vsync, unsigned display, unsigned hz)
