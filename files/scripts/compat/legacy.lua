@@ -1,5 +1,8 @@
 -- 1.1.3+ compatibility wrapper
--- allows to run scripts written for the old script interface.
+-- Allows to run scripts written for the old script interface,
+-- but also exposes new functions.
 
+dofile("scripts/compat/internal/oldfunctions.lua")
 dofile("scripts/compat/internal/loader.lua")
-dofile("scripts/compat/internal/old_1.1.lua")
+dofile("scripts/compat/internal/redirect_to_v.lua")
+dofile("scripts/compat/internal/addfixes.lua")
