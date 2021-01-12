@@ -9,7 +9,7 @@ compiler:
 
 os:
   - linux
-  - osx
+#  - osx
 
 #matrix:
 
