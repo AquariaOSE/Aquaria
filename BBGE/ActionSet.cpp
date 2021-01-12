@@ -160,6 +160,8 @@ void ActionSet::importAction(ActionMapper *mapper, const std::string &name, int 
 			return;
 		}
 	}
+
+	debugLog("ActionSet::importAction: No such action: " + name);
 }
 
 void ActionSet::importAction(ActionMapper *mapper, const std::string &name, Event *event, int state) const
@@ -178,6 +180,8 @@ void ActionSet::importAction(ActionMapper *mapper, const std::string &name, Even
 			return;
 		}
 	}
+
+	debugLog("ActionSet::importAction: No such action: " + name);
 }
 
 ActionInput *ActionSet::addActionInput(const std::string &name)

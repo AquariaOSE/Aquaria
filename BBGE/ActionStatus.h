@@ -17,7 +17,15 @@ enum ActionButtonType
 	MOUSE_BUTTON_EXTRA_START,
 	MOUSE_BUTTON_EXTRA_END = MOUSE_BUTTON_EXTRA_START + mouseExtraButtons,
 
-	JOY_BUTTON_0		= MOUSE_BUTTON_EXTRA_END,
+	// maps to whatever is configured as the primary joystick x/y axes
+	JOY_STICK_LEFT = MOUSE_BUTTON_EXTRA_END,
+	JOY_STICK_RIGHT,
+	JOY_STICK_UP,
+	JOY_STICK_DOWN,
+
+	INTERNALLY_USED_ACTION_BUTTONS_END, // Engine needs anything above this for handling inputs properly
+
+	JOY_BUTTON_0		= INTERNALLY_USED_ACTION_BUTTONS_END,
 	JOY_BUTTON_END		= JOY_BUTTON_0 + MAX_JOYSTICK_BTN,
 
 	JOY_AXIS_0_POS		= JOY_BUTTON_END,

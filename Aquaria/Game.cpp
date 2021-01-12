@@ -2527,7 +2527,7 @@ void Game::action(int id, int state, int source, InputDevice device)
 	if(isIgnoreAction((AquariaActions)id))
 		return;
 
-	// forward
+	// forward menu actions
 	if(id == ACTION_TOGGLEMENU)
 	{
 		themenu->action(id, state, source, device);
@@ -2556,16 +2556,6 @@ void Game::action(int id, int state, int source, InputDevice device)
 	{
 		if (id == ACTION_TOGGLEGRID && !state)			toggleGridRender();
 	}
-
-	// Forward these to Lua scripts (because digital swim movement should be seen as menu movement as well)
-	if(id == ACTION_SWIMLEFT)
-		action(ACTION_MENULEFT, state, source, device);
-	else if(id == ACTION_SWIMRIGHT)
-		action(ACTION_MENURIGHT, state, source, device);
-	else if(id == ACTION_SWIMUP)
-		action(ACTION_MENUUP, state, source, device);
-	else if(id == ACTION_SWIMDOWN)
-		action(ACTION_MENUDOWN, state, source, device);
 }
 
 void Game::toggleWorldMap()
@@ -3251,11 +3241,6 @@ void Game::bindInput()
 		as.importAction(this, "SwimLeft",		ACTION_SWIMLEFT, sourceID);
 		as.importAction(this, "SwimRight",		ACTION_SWIMRIGHT, sourceID);
 
-		as.importAction(this, "MenuUp",		ACTION_MENUUP, sourceID);
-		as.importAction(this, "MenuDown",		ACTION_MENUDOWN, sourceID);
-		as.importAction(this, "MenuLeft",		ACTION_MENULEFT, sourceID);
-		as.importAction(this, "MenuRight",		ACTION_MENURIGHT, sourceID);
-
 		as.importAction(this, "PrevPage",		ACTION_PREVPAGE, sourceID);
 		as.importAction(this, "NextPage",		ACTION_NEXTPAGE, sourceID);
 		as.importAction(this, "CookFood",		ACTION_COOKFOOD, sourceID);
@@ -3279,6 +3264,18 @@ void Game::bindInput()
 
 		as.importAction(this, "Look",			ACTION_LOOK, sourceID);
 		as.importAction(this, "Roll",			ACTION_ROLL, sourceID);
+
+		// menu movement via ACTION_SWIM* alias
+		as.importAction(this, "SwimUp",		ACTION_MENUUP, sourceID);
+		as.importAction(this, "SwimDown",		ACTION_MENUDOWN, sourceID);
+		as.importAction(this, "SwimLeft",		ACTION_MENULEFT, sourceID);
+		as.importAction(this, "SwimRight",		ACTION_MENURIGHT, sourceID);
+
+		// menu movement via analog stick
+		addAction(ACTION_MENURIGHT, JOY_STICK_RIGHT, sourceID);
+		addAction(ACTION_MENULEFT, JOY_STICK_LEFT, sourceID);
+		addAction(ACTION_MENUDOWN, JOY_STICK_DOWN, sourceID);
+		addAction(ACTION_MENUUP, JOY_STICK_UP, sourceID);
 	}
 
 	if (avatar)

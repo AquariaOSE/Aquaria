@@ -23,6 +23,12 @@ void ActionButtonStatus::import(const ActionSet& as)
 			if(unsigned(inp.data.all[j]) < ACTION_BUTTON_ENUM_SIZE)
 				found[inp.data.all[j]] = 1;
 	}
+
+	// HACK: always query these for menu input emulation
+	found[JOY_STICK_LEFT] = 1;
+	found[JOY_STICK_RIGHT] = 1;
+	found[JOY_STICK_UP] = 1;
+	found[JOY_STICK_DOWN]= 1;
 	
 	toQuery.clear();
 	for(int k = 1; k < sizeof(found); ++k) // ignore [0]
@@ -96,6 +102,15 @@ bool ActionButtonStatus::_queryStatus(int k) const
 
 	if (k >= JOY_BUTTON_0 && k < JOY_BUTTON_END)
 		return j->getButton(k - JOY_BUTTON_0);
+
+	if(k == JOY_STICK_LEFT)
+		return j->position.x < -JOY_AXIS_THRESHOLD;
+	if(k == JOY_STICK_RIGHT)
+		return j->position.x > JOY_AXIS_THRESHOLD;
+	if(k == JOY_STICK_UP)
+		return j->position.y < -JOY_AXIS_THRESHOLD;
+	if(k == JOY_STICK_DOWN)
+		return j->position.y > JOY_AXIS_THRESHOLD;
 
 	if (k >= JOY_AXIS_0_POS && k < JOY_AXIS_END_POS)
 	{
