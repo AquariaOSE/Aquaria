@@ -261,3 +261,4 @@
 2156 Invalid mouse button id: 
 2157 Invalid joy axis(+): 
 2158 Invalid joy axis(-): 
+2159 Press key to assign, Esc to abort, same key or Backspace/Del to clear

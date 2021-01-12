@@ -2002,6 +2002,14 @@ void InGameMenu::create()
 	const float offx = 140 - keyConfigBg->position.x;
 	const float yi = 20;
 
+	keyConfigInstructions = new TTFText(&dsq->fontArialSmallest);
+	keyConfigInstructions->position = Vector(0, offy + 415);
+	keyConfigInstructions->setText(SB(2159));
+	keyConfigInstructions->color = Vector(0.6f, 0.7f, 0.8f);
+	keyConfigInstructions->alphaMod = 0;
+	keyConfigInstructions->setAlign(ALIGN_CENTER);
+	keyConfigBg->addChild(keyConfigInstructions, PM_POINTER);
+
 	TTFText *joystickLabel = new TTFText(&dsq->fontArialSmall);
 	joystickLabel->position = Vector(offx, offy + 390);
 	joystickLabel->setText(SB(2140));
@@ -3999,6 +4007,8 @@ void InGameMenu::updateKeyConfigMenu(float dt)
 		dsq->user.control.actionSets[selectedActionSetIdx].enabled
 			= actionSetCheck->getValue();
 	}
+
+	keyConfigInstructions->alphaMod = AquariaKeyConfig::waitingForInput ? 1.0f : 0.0f;
 
 	updateJoystickText();
 }

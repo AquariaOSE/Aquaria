@@ -262,4 +262,4 @@ BANKSTRING(2155, "Invalid joy button value: ")
 BANKSTRING(2156, "Invalid mouse button id: ")
 BANKSTRING(2157, "Invalid joy axis(+): ")
 BANKSTRING(2158, "Invalid joy axis(-): ")
-
+BANKSTRING(2159, "Press key to assign, Esc to abort, same key or Backspace/Del to clear")
