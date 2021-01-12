@@ -1,0 +1,77 @@
+<Version settingsVersion="1"/>
+
+<System>
+    <DebugLog on="1"/>
+    <Locale name=""/>
+    <DeveloperMode on="0"/>
+    <AllowDangerousScriptFunctions on="0"/>
+    <GrabInput on="1"/>
+</System>
+
+<Audio>
+    <Volume sfx="0.8" vox="0.9" mus="0.4" subs="1"/>
+    <Device name=""/>
+    <Prebuffer on="0"/>
+</Audio>
+
+<Video>
+    <Blur on="1"/>
+    <NoteEffects on="1"/>
+    <FpsSmoothing v="30"/>
+    <Parallax on="1 1 1"/>
+    <NumParticles v="4096"/>
+    <ScreenMode resx="0" resy="0" hz="0" bits="32" fbuffer="1" full="0" vsync="1" darkfbuffer="1" darkbuffersize="512" displaylists="0" displayindex="0"/>
+    <SaveSlotScreens on="1"/>
+    <WorldMap revealMethod="0"/>
+</Video>
+
+<Control>
+    <ToolTipsOn on="1"/>
+    <JoystickEnabled on="1"/>
+    <AutoAim on="1"/>
+    <Targeting on="1"/>
+    <FlipInputButtons on="0"/>
+    <MinActionSets num="0"/>
+    <ActionSet enabled="1" name="" joystickName="XInput Controller #1" joystickGUID="00000000000000000000000000000000">
+        <JoyAxes s1ax="0" s1ay="1" s2ax="2" s2ay="3" s1dead="0.30000001" s2dead="0.30000001"/>
+        <Action name="PrimaryAction" input="LMB KEY_SPACE 0 AX:+4 "/>
+        <Action name="SecondaryAction" input="RMB KEY_LCONTROL 0 AX:+5 "/>
+        <Action name="SwimUp" input="0 KEY_W KEY_UP JB:11 "/>
+        <Action name="SwimDown" input="0 KEY_S KEY_DOWN JB:12 "/>
+        <Action name="SwimLeft" input="0 KEY_A KEY_LEFT JB:13 "/>
+        <Action name="SwimRight" input="0 KEY_D KEY_RIGHT JB:14 "/>
+        <Action name="Roll" input="0 KEY_R 0 JB:3 "/>
+        <Action name="Revert" input="0 KEY_X 0 JB:2 "/>
+        <Action name="WorldMap" input="0 KEY_Q 0 JB:5 "/>
+        <Action name="Escape" input="0 0 0 JB:6 "/>
+        <Action name="PrevPage" input="0 KEY_A KEY_LEFT JB:9 "/>
+        <Action name="NextPage" input="0 KEY_D KEY_RIGHT JB:10 "/>
+        <Action name="CookFood" input="0 KEY_W KEY_UP JB:3 "/>
+        <Action name="FoodLeft" input="0 KEY_S KEY_DOWN JB:2 "/>
+        <Action name="FoodRight" input="0 0 0 JB:1 "/>
+        <Action name="FoodDrop" input="0 0 0 JB:0 "/>
+        <Action name="Look" input="MMB KEY_E 0 JB:8 "/>
+        <Action name="ToggleHelp" input="0 KEY_H KEY_F1 JB:4 "/>
+        <Action name="Screenshot" input="0 KEY_F12 0 0 "/>
+        <Action name="SongSlot1" input="0 KEY_1 0 0 "/>
+        <Action name="SongSlot2" input="0 KEY_2 0 0 "/>
+        <Action name="SongSlot3" input="0 KEY_3 0 0 "/>
+        <Action name="SongSlot4" input="0 KEY_4 0 0 "/>
+        <Action name="SongSlot5" input="0 KEY_5 0 0 "/>
+        <Action name="SongSlot6" input="0 KEY_6 0 0 "/>
+        <Action name="SongSlot7" input="0 KEY_7 0 0 "/>
+        <Action name="SongSlot8" input="0 KEY_8 0 0 "/>
+        <Action name="SongSlot9" input="0 KEY_9 0 0 "/>
+        <Action name="SongSlot10" input="0 KEY_0 0 0 "/>
+    </ActionSet>
+</Control>
+
+<Demo>
+    <WarpKeys on="0"/>
+    <Intro2 on="0"/>
+    <ShortLogos on="0"/>
+</Demo>
+
+<Data savePage="0" saveSlot="0" activePatches=""/>
+
+<Network masterServer=""/>
