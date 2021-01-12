@@ -1,27 +1,30 @@
 -- Compatibility wrapper [interface detouring]
 -- allows to run scripts written for the old script interface (1.1.0, 1.1.1, 1.1.2)
 -- on 1.1.3+ / OSE and its new scripting interface.
+-- Adds automatic detouring of what used to be per-script globals to the new instance-local "v" table.
+
 -- Note that this is a gross hack and a lot of guesswork is involved,
 -- but any sanely written mod should run without changes.
 
 -- Notes:
--- * Any assignment to the global "v" will break things. Like v = 0.
--- * Variables whose names only contain all-uppercase, underscores, and numbers are considered globals.
+-- * Any assignment to a global named "v" will break things. Like v = 0.
+-- * Variables whose names only contain all-uppercase, underscores, and numbers are considered true globals.
 --   Assignments to those will not cause warnings and go to _G.
 --   Assignments to non-globals will go to _G.v.
 --   Undefined reads from either _G or v will cause a warning (in dev mode).
--- * Mods must provide their own mod-compat.lua file (optionally containing aditional hooks).
 
 local rawset = rawset
 local rawget = rawget
 local _G = _G
-local debug = rawget(_G, "debug") -- not present in some 1.1.3+ versions
 
+-- All global constants are UPPERCASE_DEFINE_NAMES (hopefully)
 local function looksLikeGlobal(s)
     return not s:match("[^_%u%d]")
 end
 
-dofile("scripts/compat/internal/oldfunctions.lua")
+-- Restore functions that only existed in v1.1 and have been removed since then
+-- Most are dummied out, but it allows some mods to run
+
 
 -- loading entityinclude.lua is no longer necessary and would do more bad than good,
 -- so make sure it's not loaded even if scripts explicitly load that file.
@@ -34,17 +37,6 @@ local function dofileWrap(file)
 end
 rawset(_G, "dofile", dofileWrap)
 
-
------------------------------------------------------
----- Fixup functions that differ in behavior now ----
------------------------------------------------------
-local createEntity_o = createEntity
-rawset(_G, "createEntity", function(e, name, x, y)
-    if type(e) == "string" and #e > 0 then
-        return createEntity_o(e, name, x, y)
-    end
-    return 0
-end)
 
 -- Prepare interface function lookup table
 local INTERFACE_LUT = {}
@@ -101,7 +93,5 @@ local _G_meta =
     end
 }
 setmetatable(_G, _G_meta)
-
-rawset(_G, "OLD_SCRIPT_INTERFACE_COMPATIBLE", true) -- mod-init.lua should check for this
 
 debugLog("COMPAT/1.1: Redirecting global writes to v")

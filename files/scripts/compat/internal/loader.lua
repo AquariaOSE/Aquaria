@@ -1,5 +1,7 @@
 -- Script loader hijack
 -- Intercepts loads of script files and patches interface functions on the fly
+-- Mods may provide their own mod-compat.lua file (optionally containing aditional hooks).
+-- Requires instance variables in "v".
 
 assert(AQUARIA_VERSION)
 
@@ -10,7 +12,7 @@ local errorLog_o = assert(errorLog, "errorLog() not present")
 
 -- IMPORTANT that this gets loaded only once. Exit & re-enter the mod if the file was changed.
 if rawget(_G, ".__COMPAT_LOADED") then
-    errorLog_o("ERROR: Compat loader already loaded")
+    errorLog_o("COMPAT: Compat loader already loaded")
     return
 end
 
@@ -30,15 +32,19 @@ rawset(_G, "errorLog", errorLogWrap)
 ---- Create hook scripts for entity interface function detouring ----
 ---------------------------------------------------------------------
 
-local WARNINGS = isDeveloperKeys()
-local HOOKS = dofile("mod-compat.lua") or {}
+local WARNINGS --= isDeveloperKeys()
+local HOOKS
+if fileExists("mod-compat.lua") then
+    HOOKS = dofile("mod-compat.lua")
+end
+HOOKS = HOOKS or {}
 assert(type(HOOKS) == "table", "mod-compat.lua must return nothing or table, not " .. type(HOOKS))
 
 local v_meta
 if WARNINGS then
     local function _warnUndefInstance(tab, key)
         if WARNINGS then
-            errorLog("WARNING: script tried to get/call undefined instance variable " .. tostring(key), 3)
+            errorLog("COMPAT/WARNING: script tried to get/call undefined instance variable " .. tostring(key), 3)
             rawset(tab, key, false) -- warn only once, not spam
         end
     end
@@ -57,6 +63,8 @@ local function onCreateScript(scriptname, functable)
     local function newinit(me)
         assert(v)
         setmetatable(v, v_meta) -- global lookup: uses entity context's v
+        -- ^ and yes, this overwrites v's previous metatable that is added by C++ in dev mode.
+        -- We don't want warnings for mods that don't initialize their variables
         if oldinit then
             oldinit(me)
         end
