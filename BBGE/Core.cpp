@@ -705,6 +705,7 @@ void Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 	window->open(width, height, fullscreen, bpp, vsync, display, hz);
 	window->setTitle(appName.c_str());
 
+#ifdef BBGE_BUILD_OPENGL_DYNAMIC
 	// get GL symbols AFTER opening the window, otherwise we get a super old GL context on windows and nothing works
 	if (!lookup_all_glsyms())
 	{
@@ -713,6 +714,7 @@ void Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 		SDL_Quit();
 		exit_error(os.str());
 	}
+#endif
 
 	debugLog("GL vendor, renderer & version:");
 	debugLog((const char*)glGetString(GL_VENDOR));
@@ -827,7 +829,9 @@ void Core::shutdownGraphicsLibrary()
 	delete window;
 	window = NULL;
 	SDL_QuitSubSystem(SDL_INIT_VIDEO);
+#ifdef BBGE_BUILD_OPENGL_DYNAMIC
 	unload_all_glsyms();
+#endif
 
 	lib_graphics = false;
 

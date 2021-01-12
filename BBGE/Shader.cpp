@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderBase.h"
 #include <sstream>
 
-
 bool Shader::_wasInited = false;
 bool Shader::_useShaders = false;
 
@@ -36,46 +35,24 @@ void Shader::staticInit()
 	_wasInited = true;
 	debugLog("Initializing shaders...");
 
-	/*char *ext = (char*)glGetString( GL_EXTENSIONS );
+	bool use = true;
 
-	if( strstr( ext, "GL_ARB_shading_language_100" ) == NULL )
+#ifdef BBGE_BUILD_OPENGL_DYNAMIC
+	if( !glCreateProgramObjectARB || !glDeleteObjectARB || !glUseProgramObjectARB ||
+		!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB ||
+		!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB ||
+		!glLinkProgramARB || !glGetUniformLocationARB || !glGetActiveUniformARB ||
+		!glUniform1fvARB || !glUniform2fvARB || !glUniform3fvARB || !glUniform4fvARB ||
+		!glUniform1ivARB || !glUniform2ivARB || !glUniform3ivARB || !glUniform4ivARB)
 	{
-		//This extension string indicates that the OpenGL Shading Language,
-		// version 1.00, is supported.
-		debugLog("GL_ARB_shading_language_100 extension was not found");
-
-		goto end;
+		glCreateProgramObjectARB = 0;
+		debugLog("One or more GL_ARB_shader_objects functions were not found");
+		use = false;
 	}
+#endif
 
-	if( strstr( ext, "GL_ARB_shader_objects" ) == NULL )
-	{
-		debugLog("GL_ARB_shader_objects extension was not found");
-		goto end;
-	}
-	else*/
-	// Better to just check if the function pointers are there;
-	// the driver might truncate the extension string or something. -- fg
-	{
-		if( !glCreateProgramObjectARB || !glDeleteObjectARB || !glUseProgramObjectARB ||
-			!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB ||
-			!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB ||
-			!glLinkProgramARB || !glGetUniformLocationARB || !glGetActiveUniformARB ||
-			!glUniform1fvARB || !glUniform2fvARB || !glUniform3fvARB || !glUniform4fvARB ||
-			!glUniform1ivARB || !glUniform2ivARB || !glUniform3ivARB || !glUniform4ivARB)
-		{
-			glCreateProgramObjectARB = 0;
-			debugLog("One or more GL_ARB_shader_objects functions were not found");
-			goto end;
-		}
-	}
-
-	// everything fine when we are here
-	_useShaders = true;
-
-
-	end:
-
-	if (_useShaders)
+	_useShaders = use;
+	if (use)
 		debugLog("Shader support enabled.");
 	else
 		debugLog("Shader support not enabled.");
