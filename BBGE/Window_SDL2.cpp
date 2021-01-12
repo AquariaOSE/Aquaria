@@ -74,14 +74,27 @@ void Window::_open(unsigned w, unsigned h, bool full, unsigned bpp, bool vsync, 
 	Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
 	if(full)
 	{
-		if(!w && !h)
+		if(!w || !h)
 			flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 		else
 			flags |= SDL_WINDOW_FULLSCREEN;
 	}
 
+	unsigned usew = w;
+	unsigned useh = h;
+
+	if(!usew || !useh)
+	{
+		SDL_DisplayMode displaymode;
+		if(SDL_GetDesktopDisplayMode(display, &displaymode) == 0)
+		{
+			usew = displaymode.w;
+			useh = displaymode.h;
+		}
+	}
+
 	int pos = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
-	WIN = SDL_CreateWindow("", pos, pos, w, h, flags);
+	WIN = SDL_CreateWindow("", pos, pos, usew, useh, flags);
 	if(!WIN)
 		exit_error("Failed to create window");
 
