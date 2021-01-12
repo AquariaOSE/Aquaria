@@ -129,7 +129,7 @@ void Window::_onEventImpl(const SDL_Event& ev)
 	}
 }
 
-void Window::initSize()
+void Window::updateSize()
 {
 	onResize(WIN->w, WIN->h);
 }
