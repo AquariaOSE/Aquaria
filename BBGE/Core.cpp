@@ -762,7 +762,21 @@ void Core::enumerateScreenModes(int display)
 		SDL_GetDisplayMode(display, i, &mode);
 		if (mode.w && mode.h && (mode.w > mode.h))
 		{
-			screenModes.push_back(ScreenMode(mode.w, mode.h, mode.refresh_rate));
+			// In order to prevent cluttering the list of supported screen modes,
+			// only record the one per resolution with the highest refresh rate
+			bool add = true;
+			for(size_t k = 0; k < screenModes.size(); ++k)
+				if(screenModes[k].x == mode.w && screenModes[k].y == mode.h)
+				{
+					add = false;
+					if(screenModes[k].hz < mode.refresh_rate)
+					{
+						screenModes[k].hz = mode.refresh_rate;
+						break;
+					}
+				}
+			if(add)
+				screenModes.push_back(ScreenMode(mode.w, mode.h, mode.refresh_rate));
 		}
 	}
 
