@@ -16,6 +16,7 @@
 
 #include <GL/glext.h>
 
+#ifdef BBGE_BUILD_OPENGL_DYNAMIC
 
 PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
 
@@ -41,6 +42,7 @@ PFNGLUNIFORM2IVARBPROC           glUniform2ivARB            = NULL;
 PFNGLUNIFORM3IVARBPROC           glUniform3ivARB            = NULL;
 PFNGLUNIFORM4IVARBPROC           glUniform4ivARB            = NULL;
 
+// GL_ARB_shader_objects and related
 PFNGLISRENDERBUFFEREXTPROC glIsRenderbufferEXT = NULL;
 PFNGLBINDRENDERBUFFEREXTPROC glBindRenderbufferEXT = NULL;
 PFNGLDELETERENDERBUFFERSEXTPROC glDeleteRenderbuffersEXT = NULL;
@@ -149,7 +151,6 @@ void unload_all_glsyms()
 
 	glGenerateMipmapEXT = NULL;
 
-#if defined(BBGE_BUILD_FRAMEBUFFER)
 	// set these back to NULL and reload them upon reinit, otherwise they
 	//  might point to a bogus address when the shared library is reloaded.
 	glIsRenderbufferEXT = NULL;
@@ -168,7 +169,6 @@ void unload_all_glsyms()
 	glFramebufferTexture3DEXT = NULL;
 	glFramebufferRenderbufferEXT = NULL;
 	glGetFramebufferAttachmentParameterivEXT = NULL;
-#endif
 
 	glCreateProgramObjectARB  = NULL;
 	glDeleteObjectARB         = NULL;
@@ -191,3 +191,5 @@ void unload_all_glsyms()
 	glUniform3ivARB           = NULL;
 	glUniform4ivARB           = NULL;
 }
+
+#endif // BBGE_BUILD_OPENGL_DYNAMIC
