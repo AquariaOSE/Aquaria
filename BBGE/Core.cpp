@@ -535,12 +535,15 @@ void Core::init()
 {
 	setupFileAccess();
 
-	unsigned sdlflags = SDL_INIT_EVERYTHING;
+	// Don't want to use SDL_INIT_EVERYTHING, in case future changes to SDL add any flags.
+	// Ie. At some point SDL2 added a sensors subsystem, which may cause SDL_Init() to fail
+	// due to win10 group policies that forbid sensor usage. Probably similar things on OSX.
+	unsigned sdlflags = SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_EVENTS;
 
 	quitNestedMainFlag = false;
 #ifdef BBGE_BUILD_SDL2
 	// Haptic is inited separately, in Jostick.cpp, when a joystick is actually plugged in
-	sdlflags &= ~SDL_INIT_HAPTIC;
+	sdlflags |= SDL_INIT_GAMECONTROLLER;
 #else
 	// Disable relative mouse motion at the edges of the screen, which breaks
 	// mouse control for absolute input devices like Wacom tablets and touchscreens.
