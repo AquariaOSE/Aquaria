@@ -490,14 +490,6 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\MemoryAllocatorSmallBlock.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\MemoryAllocatorSmallBlock.h"
-				>
-			</File>
-			<File
 				RelativePath="..\..\BBGE\MT.cpp"
 				>
 			</File>

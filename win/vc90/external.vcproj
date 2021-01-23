@@ -322,6 +322,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\ExternalLibs\luaalloc.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\luaalloc.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\ExternalLibs\minihttp.cpp"
 				>
 			</File>
