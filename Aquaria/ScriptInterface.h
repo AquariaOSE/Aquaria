@@ -22,9 +22,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define SCRIPTINTERFACE_H
 
 #include "../BBGE/Base.h"
-#include "../BBGE/MemoryAllocatorSmallBlock.h"
 
 struct lua_State;
+struct LuaAlloc;
 
 class Entity;
 class CollideEntity;
@@ -115,13 +115,12 @@ public:
 
 protected:
 	lua_State *createLuaVM();
-	void destroyLuaVM(lua_State *state);
 	lua_State *createLuaThread(const std::string &file);
 	int destroyLuaThread(const std::string &file, lua_State *thread);
 	static void *the_alloc(void *ud, void *ptr, size_t osize, size_t nsize);
 
 	lua_State *baseState;
-	SmallBlockAllocator _sballoc;
+	LuaAlloc *_LA;
 };
 
 #endif

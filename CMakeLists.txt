@@ -510,7 +510,6 @@ SET(BBGE_SRCS
     ${BBGEDIR}/Joystick.cpp
     ${BBGEDIR}/LensFlare.cpp
     ${BBGEDIR}/Localization.cpp
-    ${BBGEDIR}/MemoryAllocatorSmallBlock.cpp
     ${BBGEDIR}/MT.cpp
     ${BBGEDIR}/OSFunctions.cpp
     ${BBGEDIR}/ParticleEffect.cpp
@@ -544,6 +543,7 @@ SET(BBGE_SRCS
     ${BBGEDIR}/FmodOpenALBridge.cpp
     ${COCOA_SRCS}
     ${EXTLIBDIR}/DeflateCompressor.cpp
+    ${EXTLIBDIR}/luaalloc.c
     ${EXTLIBDIR}/glfont2/glfont2.cpp
     ${EXTLIBDIR}/minihttp.cpp
     ${EXTLIBDIR}/JPS.h

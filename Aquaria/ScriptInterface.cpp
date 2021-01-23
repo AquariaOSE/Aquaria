@@ -19,15 +19,17 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+extern "C"
+{
+#include "lua.h"
+#include "lauxlib.h"
+#include "lualib.h"
+}
+#include "luaalloc.h"
+
 #include "SDL.h"
 #include "ScriptInterface.h"
 #include "../BBGE/ScriptObject.h"
-extern "C"
-{
-	#include "lua.h"
-	#include "lauxlib.h"
-	#include "lualib.h"
-}
 
 #include "ReadXML.h"
 
@@ -11498,7 +11500,7 @@ static const struct {
 //============================================================================================
 
 ScriptInterface::ScriptInterface()
-: baseState(NULL), _sballoc(8, 128)
+: baseState(NULL), _LA(NULL)
 {
 }
 
@@ -11513,6 +11515,8 @@ void ScriptInterface::init()
 
 	allowUnsafeFunctions = dsq->user.system.allowDangerousScriptFunctions;
 
+	if(!_LA)
+		_LA = luaalloc_create(NULL, NULL);
 	if (!baseState)
 		baseState = createLuaVM();
 }
@@ -11523,15 +11527,9 @@ void ScriptInterface::reset()
 	init();
 }
 
-void *ScriptInterface::the_alloc(void *ud, void *ptr, size_t osize, size_t nsize)
-{
-	ScriptInterface *this_ = (ScriptInterface*)ud;
-	return this_->_sballoc.Alloc(ptr, nsize, osize);
-}
-
 lua_State *ScriptInterface::createLuaVM()
 {
-	lua_State *state = lua_newstate(the_alloc, this);	/* opens Lua */
+	lua_State *state = lua_newstate(_LA ? luaalloc : NULL, _LA);	/* opens Lua */
 	luaL_openlibs(state);
 
 #ifdef LUAAPI_HAS_CLIPBOARD
@@ -11610,12 +11608,6 @@ lua_State *ScriptInterface::createLuaVM()
 
 	// All done, return the new state.
 	return state;
-}
-
-void ScriptInterface::destroyLuaVM(lua_State *state)
-{
-	if (state)
-		lua_close(state);
 }
 
 // Initial value for the instance-local table should be on the stack of
@@ -11721,8 +11713,16 @@ int ScriptInterface::gcGetStats()
 
 void ScriptInterface::shutdown()
 {
-	destroyLuaVM(baseState);
-	baseState = NULL;
+	if (baseState)
+	{
+		lua_close(baseState);
+		baseState = NULL;
+	}
+	if(_LA)
+	{
+		luaalloc_delete(_LA);
+		_LA = NULL;
+	}
 }
 
 Script *ScriptInterface::openScript(const std::string &file, bool ignoremissing /* = false */)
