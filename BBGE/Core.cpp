@@ -538,7 +538,7 @@ void Core::init()
 	// Don't want to use SDL_INIT_EVERYTHING, in case future changes to SDL add any flags.
 	// Ie. At some point SDL2 added a sensors subsystem, which may cause SDL_Init() to fail
 	// due to win10 group policies that forbid sensor usage. Probably similar things on OSX.
-	unsigned sdlflags = SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK | SDL_INIT_EVENTS;
+	unsigned sdlflags = SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
 
 	quitNestedMainFlag = false;
 #ifdef BBGE_BUILD_SDL2
@@ -550,7 +550,6 @@ void Core::init()
 	SDL_putenv((char *) "SDL_MOUSE_RELATIVE=0");
 #endif
 
-	// Haptic is inited separately, in Jostick.cpp, when a joystick is actually plugged in
 	if((SDL_Init(sdlflags))==-1)
 	{
 		std::string msg("Failed to init SDL: ");
