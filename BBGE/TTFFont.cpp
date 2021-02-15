@@ -20,16 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
 #include "TTFFont.h"
-
-#ifdef AQUARIA_INTERNAL_FTGL
-#include <ft2build.h>
-#include FT_FREETYPE_H
-
-#include "FTGL.h"
-#include "FTGLTextureFont.h"
-#else
-#include <FTGL/ftgl.h>
-#endif
+#include "RenderBase.h"
 
 #undef min
 #undef max
