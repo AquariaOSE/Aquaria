@@ -36,8 +36,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "FmodOpenALBridge.h"
 
-#include "al.h"
-#include "alc.h"
+#include "AL/al.h"
+#include "AL/alc.h"
 
 #include "ogg/ogg.h"
 #include "vorbis/vorbisfile.h"
