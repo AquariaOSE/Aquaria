@@ -119,9 +119,6 @@ void Hair::onUpdate(float dt)
 
 void Hair::updatePositions()
 {
-	BBGE_PROF(Hair_updatePositions);
-
-
 	for (size_t i = 1; i < hairNodes.size(); i++)
 	{
 		Vector diff = hairNodes[i].position - hairNodes[i-1].position;

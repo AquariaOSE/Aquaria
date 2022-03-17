@@ -450,7 +450,6 @@ void Shot::onEndOfLife()
 
 void Shot::doHitEffects()
 {
-	BBGE_PROF(Shot_doHitEffects);
 	if (shotData)
 	{
 		if (!shotData->hitPrt.empty())
@@ -478,7 +477,6 @@ void Shot::suicide()
 
 bool Shot::onHitWall(bool reflect)
 {
-	BBGE_PROF(Shot_onHitWall);
 	doHitEffects();
 	updateSegments(position);
 

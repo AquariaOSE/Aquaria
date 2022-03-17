@@ -330,25 +330,15 @@ void SchoolFish::applySeparation(Vector &accumulator)
 
 void SchoolFish::onUpdate(float dt)
 {
-	BBGE_PROF(SchoolFish_onUpdate);
-
-
-
-	{
-		burstDelay -= dt;
-		if (burstDelay < 0)
-		{
-			burstDelay = 0;
-		}
-	}
+	burstDelay -= dt;
+	if (burstDelay < 0)
+		burstDelay = 0;
 
 	if (stickToNaijasHead && alpha.x < 0.1f)
 		stickToNaijasHead = false;
 
 	if (this->layer < LR_ENTITIES)
 	{
-
-
 		setEntityType(ET_NEUTRAL);
 		collideRadius = 0;
 	}

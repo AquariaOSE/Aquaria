@@ -179,7 +179,6 @@ void Element::updateEffects(float dt)
 
 void Element::update(float dt)
 {
-	BBGE_PROF(Element_update);
 	if (!core->particlesPaused)
 	{
 		updateLife(dt);
