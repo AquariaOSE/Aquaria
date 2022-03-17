@@ -19,7 +19,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-#include <JPS.h>
+#include <jps.hh>
 #include "PathFinding.h"
 #include "DSQ.h"
 #include "Game.h"
@@ -41,15 +41,15 @@ public:
 class PathFinding::State : public ScriptObject
 {
 public:
-	State(ObsType obs) : grid(obs), searcher(grid), result(JPS::NO_PATH) {}
+	State(ObsType obs) : grid(obs), searcher(grid), result(JPS_NO_PATH) {}
 	SearchGridRaw grid;
 	JPS::Searcher<SearchGridRaw> searcher;
-	JPS::Result result;
+	JPS_Result result;
 };
 
 static void generateVectorPath(const JPS::PathVector& rawpath, VectorPath& vp, int offx, int offy)
 {
-	for(JPS::PathVector::const_iterator it = rawpath.begin(); it != rawpath.end(); ++it)
+	for(JPS::PathVector::const_iterator it = rawpath.cbegin(); it != rawpath.cend(); ++it)
 		vp.addPathNode(Vector((it->x*TILE_SIZE)+TILE_SIZE/2+offx, (it->y*TILE_SIZE)+TILE_SIZE/2)+offy, 0);
 }
 
@@ -221,18 +221,18 @@ void PathFinding::beginFindPath(PathFinding::State *state, const Vector& start, 
 
 bool PathFinding::updateFindPath(PathFinding::State *state, int limit)
 {
-	if(state->result == JPS::NEED_MORE_STEPS)
+	if(state->result == JPS_NEED_MORE_STEPS)
 	{
 		state->result = state->searcher.findPathStep(limit);
-		return state->result != JPS::NEED_MORE_STEPS;
+		return state->result != JPS_NEED_MORE_STEPS;
 	}
 	return true; // done
 }
 
 bool PathFinding::finishFindPath(PathFinding::State *state, VectorPath& path, unsigned step /* = 0 */)
 {
-	if(state->result != JPS::FOUND_PATH)
-		return state->result == JPS::EMPTY_PATH;
+	if(state->result != JPS_FOUND_PATH)
+		return state->result == JPS_EMPTY_PATH;
 
 	JPS::PathVector rawpath;
 	state->searcher.findPathFinish(rawpath, step);
