@@ -1400,7 +1400,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\ExternalLibs\JPS.h"
+				RelativePath="..\..\ExternalLibs\jps.hh"
 				>
 			</File>
 			<Filter
