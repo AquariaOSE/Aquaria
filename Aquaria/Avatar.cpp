@@ -1829,7 +1829,6 @@ const int chkDist = 2500*2500;
 
 Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, Entity *source, DamageType dt, bool override, std::vector<Target> *ignore)
 {
-	BBGE_PROF(Avatar_getNearestTarget);
 	Target t;
 
 	Vector targetPosition;
@@ -5330,8 +5329,6 @@ bool lastCursorKeyboard = false;
 
 void Avatar::onUpdate(float dt)
 {
-	BBGE_PROF(Avatar_onUpdate);
-
 	looking = 0;
 
 
@@ -5492,7 +5489,6 @@ void Avatar::onUpdate(float dt)
 
 			lastWaterBubble = waterBubble;
 			waterBubble = 0;
-			BBGE_PROF(Avatar_splashOut);
 			splash(false);
 
 			if (dsq->continuity.form != FORM_FISH)

@@ -39,7 +39,6 @@ void ParticleEffect::setDie(bool v)
 
 void ParticleEffect::load(const std::string &name)
 {
-	BBGE_PROF(ParticleEffect_load);
 	particleManager->loadParticleEffectFromBank(name, this);
 }
 
@@ -443,8 +442,6 @@ void ParticleEffect::stop()
 
 void ParticleEffect::onRender()
 {
-	BBGE_PROF(ParticleEffect_onRender);
-
 	RenderObject::onRender();
 }
 
