@@ -67,7 +67,7 @@ Core *core = 0;
 	HICON icon_windows = 0;
 #endif
 
-#ifndef KMOD_GUI
+#if !defined KMOD_GUI && !SDL_VERSION_ATLEAST(2, 0, 14)
 	#define KMOD_GUI KMOD_META
 #endif
 
