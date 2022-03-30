@@ -4071,7 +4071,6 @@ bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 
 void Game::handleShotCollisions(Entity *e, bool hasShield)
 {
-	BBGE_PROF(Game_handleShotCollisions);
 	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
 		Shot *shot = Shot::shots[i];
@@ -4103,7 +4102,6 @@ bool Game::isDamageTypeEnemy(DamageType dt)
 
 void Game::handleShotCollisionsSkeletal(Entity *e)
 {
-	BBGE_PROF(Game_HSSKELETAL);
 	for (size_t i = 0; i < Shot::shots.size(); ++i)
 	{
 		Shot *shot = Shot::shots[i];

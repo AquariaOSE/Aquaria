@@ -257,7 +257,6 @@ Particle *ParticleManager::stomp()
 
 Particle *ParticleManager::getFreeParticle(Emitter *emitter)
 {
-	BBGE_PROF(ParticleManager_getFreeParticle);
 	if (size == 0) return 0;
 
 	Particle *p = 0;
@@ -354,7 +353,6 @@ int ParticleManager::getSize()
 
 void ParticleManager::update(float dt)
 {
-	BBGE_PROF(ParticleManager_update);
 	numActive = 0;
 	for (size_t i = 0; i < particles.size(); i++)
 	{

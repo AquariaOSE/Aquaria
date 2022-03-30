@@ -209,20 +209,29 @@ endif(NOT SDL_FOUND)
 
 ### OpenAL
 
-OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" ${WIN32_TRUE})
-if(NOT AQUARIA_INTERNAL_OPENAL)
-    find_package(OpenAL)
-endif(NOT AQUARIA_INTERNAL_OPENAL)
-if (NOT OPENAL_FOUND)
-    if(WIN32)
-        set(OPENALDIR "${EXTLIBDIR}/AL")
-        set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
-        message(STATUS "Using internal copy of OpenAL")
-        set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
-    else(WIN32)
-        message(SEND_ERROR "We don't have a prebuilt OpenAL for this platform.")
-    endif(WIN32)
-endif (NOT OPENAL_FOUND)
+if(AQUARIA_USE_SDL2)
+    OPTION(AQUARIA_USE_MOJOAL "Use mojoAL instead of OpenAL (requires SDL2)" TRUE)
+endif()
+
+if(AQUARIA_USE_MOJOAL)
+    set(OPENALDIR "${EXTLIBDIR}/AL")
+    set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
+else()
+    OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" ${WIN32_TRUE})
+    if(NOT AQUARIA_INTERNAL_OPENAL)
+        find_package(OpenAL)
+    endif(NOT AQUARIA_INTERNAL_OPENAL)
+    if (NOT OPENAL_FOUND)
+        if(WIN32)
+            set(OPENALDIR "${EXTLIBDIR}/AL")
+            set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
+            message(STATUS "Using internal copy of OpenAL")
+            set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
+        else(WIN32)
+            message(SEND_ERROR "We don't have a prebuilt OpenAL for this platform.")
+        endif(WIN32)
+    endif (NOT OPENAL_FOUND)
+endif()
 
 ### TinyXML2
 
@@ -546,8 +555,12 @@ SET(BBGE_SRCS
     ${EXTLIBDIR}/luaalloc.cpp
     ${EXTLIBDIR}/glfont2/glfont2.cpp
     ${EXTLIBDIR}/minihttp.cpp
-    ${EXTLIBDIR}/JPS.h
+    ${EXTLIBDIR}/jps.hh
 )
+
+if(AQUARIA_USE_MOJOAL)
+    set(BBGE_SRCS ${BBGE_SRCS} ${EXTLIBDIR}/mojoal.c)
+endif()
 
 SET(ZLIB_SRCS
     ${ZLIBDIR}/adler32.c
@@ -752,7 +765,10 @@ IF(HAIKU)
 ENDIF()
 
 SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${SDL_LIBRARY})
-SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${OPENAL_LIBRARY})
+
+if(NOT AQUARIA_USE_MOJOAL)
+    SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${OPENAL_LIBRARY})
+endif()
 
 IF(ZLIB_FOUND)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${ZLIB_LIBRARIES})

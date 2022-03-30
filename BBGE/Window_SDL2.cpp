@@ -163,7 +163,7 @@ void Window::updateSize()
 
 bool Window::isDesktopResolution() const
 {
-	return !!(SDL_GetWindowFlags(WIN) & (SDL_WINDOW_MAXIMIZED || SDL_WINDOW_FULLSCREEN_DESKTOP));
+	return !!(SDL_GetWindowFlags(WIN) & (SDL_WINDOW_MAXIMIZED | SDL_WINDOW_FULLSCREEN_DESKTOP));
 }
 
 void Window::setGrabInput(bool on)
