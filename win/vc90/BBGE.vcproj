@@ -64,8 +64,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="SDL2.lib SDL2main.lib OpenAL32.lib"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\ExternalLibs\AL\lib\win32&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\lib\win32&quot;"
+				AdditionalDependencies="SDL2.lib SDL2main.lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\ExternalLibs\SDL2\lib\win32&quot;"
 				IgnoreAllDefaultLibraries="true"
 				IgnoreDefaultLibraryNames=""
 			/>
@@ -140,8 +140,8 @@
 			/>
 			<Tool
 				Name="VCLibrarianTool"
-				AdditionalDependencies="SDL2.lib SDL2main.lib OpenAL32.lib"
-				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\ExternalLibs\AL\lib\win32&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\lib\win32&quot;"
+				AdditionalDependencies="SDL2.lib SDL2main.lib"
+				AdditionalLibraryDirectories="&quot;$(SolutionDir)\..\ExternalLibs\SDL2\lib\win32&quot;"
 				IgnoreAllDefaultLibraries="true"
 			/>
 			<Tool

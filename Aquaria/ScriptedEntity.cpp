@@ -461,8 +461,6 @@ void ScriptedEntity::stopPull()
 
 void ScriptedEntity::onUpdate(float dt)
 {
-	BBGE_PROF(ScriptedEntity_onUpdate);
-
 	CollideEntity::onUpdate(dt);
 
 	if (becomeSolidDelay)

@@ -1046,8 +1046,6 @@ void Core::run(float runTime)
 
 	while((runTime == -1 && !loopDone) || (runTime >0))
 	{
-		BBGE_PROF(Core_main);
-
 		nowTicks = SDL_GetTicks();
 		dt = (nowTicks-thenTicks)/1000.0;
 		thenTicks = nowTicks;
@@ -1176,8 +1174,6 @@ void Core::run(float runTime)
 			render();
 
 			showBuffer();
-
-			BBGE_PROF(STOP);
 
 			if (nestedMains == 1)
 				clearGarbage();
@@ -1741,10 +1737,6 @@ void Core::updateCullData()
 
 void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 {
-
-	BBGE_PROF(Core_render);
-
-
 	if (startLayer == -1 && endLayer == -1 && overrideStartLayer != 0)
 	{
 		startLayer = overrideStartLayer;
@@ -2048,8 +2040,6 @@ CountedPtr<Texture> Core::doTextureAdd(const std::string &texture, const std::st
 
 CountedPtr<Texture> Core::addTexture(const std::string &textureName)
 {
-	BBGE_PROF(Core_addTexture);
-
 	if (textureName.empty())
 		return NULL;
 
@@ -2192,7 +2182,6 @@ void Core::enqueueRenderObjectDeletion(RenderObject *object)
 
 void Core::clearGarbage()
 {
-	BBGE_PROF(Core_clearGarbage);
 	// HACK: optimize this (use a list instead of a queue)
 
 	for (RenderObjects::iterator i = garbage.begin(); i != garbage.end(); i++)

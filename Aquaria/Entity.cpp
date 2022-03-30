@@ -2546,7 +2546,6 @@ void Entity::addIgnoreShotDamageType(DamageType dt)
 
 void Entity::doSpellAvoidance(float dt, int range, float mod)
 {
-	BBGE_PROF(Entity_doSpellAvoidance);
 	Vector accum;
 
 	int c = 0;

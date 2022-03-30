@@ -42,7 +42,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;VFS_ENABLE_C_API=1"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
@@ -116,7 +116,7 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;_HAS_EXCEPTIONS=0;VFS_ENABLE_C_API=1"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -187,7 +187,7 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;"
 				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;VFS_ENABLE_C_API=1"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
@@ -262,7 +262,7 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\include&quot;"
 				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;_HAS_EXCEPTIONS=0;VFS_ENABLE_C_API=1"
 				StringPooling="true"
 				ExceptionHandling="0"
@@ -340,6 +340,42 @@
 			<File
 				RelativePath="..\..\ExternalLibs\minipstdint.h"
 				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\mojoal.c"
+				>
+				<FileConfiguration
+					Name="Debug|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAs="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAs="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Debug-SDL1.2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAs="2"
+					/>
+				</FileConfiguration>
+				<FileConfiguration
+					Name="Release-SDL1.2|Win32"
+					>
+					<Tool
+						Name="VCCLCompilerTool"
+						CompileAs="2"
+					/>
+				</FileConfiguration>
 			</File>
 			<Filter
 				Name="glpng"
@@ -1400,7 +1436,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\ExternalLibs\JPS.h"
+				RelativePath="..\..\ExternalLibs\jps.hh"
 				>
 			</File>
 			<Filter

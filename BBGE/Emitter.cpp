@@ -30,7 +30,6 @@ Emitter::Emitter(ParticleEffect *pe) : Quad(), pe(pe)
 
 void Emitter::destroy()
 {
-	BBGE_PROF(Emitter_destroy);
 	for (Particles::iterator i = particles.begin(); i != particles.end(); i++)
 	{
 		(*i)->active = false;
@@ -43,7 +42,6 @@ void Emitter::destroy()
 
 void Emitter::spawnParticle(float perc)
 {
-	BBGE_PROF(Emitter_spawnParticle);
 	Particle *p = particleManager->getFreeParticle(this);
 
 	p->active = true;
@@ -231,8 +229,6 @@ void Emitter::render()
 
 void Emitter::onRender()
 {
-	BBGE_PROF(Emitter_onRender);
-
 	if (particles.empty()) return;
 
 	if (!data.spawnLocal)
