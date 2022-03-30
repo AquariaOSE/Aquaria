@@ -209,20 +209,20 @@ endif(NOT SDL_FOUND)
 
 ### OpenAL
 
-OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" ${WIN32_TRUE})
-if(NOT AQUARIA_INTERNAL_OPENAL)
-    find_package(OpenAL)
-endif(NOT AQUARIA_INTERNAL_OPENAL)
-if (NOT OPENAL_FOUND)
-    if(WIN32)
-        set(OPENALDIR "${EXTLIBDIR}/AL")
-        set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
-        message(STATUS "Using internal copy of OpenAL")
-        set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
-    else(WIN32)
-        message(SEND_ERROR "We don't have a prebuilt OpenAL for this platform.")
-    endif(WIN32)
-endif (NOT OPENAL_FOUND)
+#OPTION(AQUARIA_INTERNAL_OPENAL "Always use included OpenAL library" ${WIN32_TRUE})
+#if(NOT AQUARIA_INTERNAL_OPENAL)
+#    find_package(OpenAL)
+#endif(NOT AQUARIA_INTERNAL_OPENAL)
+#if (NOT OPENAL_FOUND)
+#    if(WIN32)
+#        set(OPENALDIR "${EXTLIBDIR}/AL")
+#        set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
+#        message(STATUS "Using internal copy of OpenAL")
+#        set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
+#    else(WIN32)
+#        message(SEND_ERROR "We don't have a prebuilt OpenAL for this platform.")
+#    endif(WIN32)
+#endif (NOT OPENAL_FOUND)
 
 ### TinyXML2
 
@@ -753,7 +753,7 @@ IF(HAIKU)
 ENDIF()
 
 SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${SDL_LIBRARY})
-SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${OPENAL_LIBRARY})
+#SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${OPENAL_LIBRARY})
 
 IF(ZLIB_FOUND)
     SET(OPTIONAL_LIBS ${OPTIONAL_LIBS} ${ZLIB_LIBRARIES})
