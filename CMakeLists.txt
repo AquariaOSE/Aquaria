@@ -546,7 +546,8 @@ SET(BBGE_SRCS
     ${EXTLIBDIR}/luaalloc.cpp
     ${EXTLIBDIR}/glfont2/glfont2.cpp
     ${EXTLIBDIR}/minihttp.cpp
-    ${EXTLIBDIR}/JPS.h
+    ${EXTLIBDIR}/jps.hh
+    ${EXTLIBDIR}/mojoal.c
 )
 
 SET(ZLIB_SRCS
