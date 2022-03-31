@@ -10,7 +10,7 @@ namespace bithacks {
 typedef unsigned int uint32;
 typedef int int32;
 
-// floor to next power of 2
+// floor to next power of 2 (not changed if already power of 2)
 inline uint32 flp2(uint32 x)
 {
 	x |= (x >> 1);
@@ -21,7 +21,7 @@ inline uint32 flp2(uint32 x)
 	return x - (x >> 1);
 }
 
-// ceil to next power of 2
+// ceil to next power of 2 (not changed if already power of 2)
 inline uint32 clp2(uint32 x)
 {
 	--x;
@@ -72,6 +72,17 @@ inline unsigned int clz(uint32 x)
 	x |= (x >> 16);
 	return 32 - popcnt(x);
 #endif
+}
+
+inline unsigned int isPowerOf2(uint32 x)
+{
+	return x && !(x & (x - 1));
+}
+
+// always rounds down to prev. power of 2. not changed if <= 1.
+inline unsigned int prevPowerOf2(uint32 x)
+{
+	return x > 1 ? flp2(x - 1) : x;
 }
 
 

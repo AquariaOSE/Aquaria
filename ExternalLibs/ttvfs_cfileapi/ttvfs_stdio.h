@@ -45,6 +45,7 @@ size_t vfwrite(const void *ptr, size_t size, size_t count, VFILE *vf);
 int vfseek(VFILE *vf, long int offset, int origin);
 char *vfgets(char *str, int num, VFILE *vf);
 long int vftell(VFILE *vf);
+int vfeof(VFILE *vf);
 int vfsize(VFILE *vf, size_t *sizep); // extension
 
 // This class is a minimal adapter to support STL-like read-only file streams for VFS files, using std::istringstream.
@@ -80,6 +81,7 @@ int ttvfs_stdio_fsize(VFILE *f, size_t *sizep); // extension
 #define vfseek        fseek
 #define vfgets        fgets
 #define vftell        ftell
+#define vfeof         feof
 #define vfsize        ttvfs_stdio_fsize
 
 //-------------------------------------------------

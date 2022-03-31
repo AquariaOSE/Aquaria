@@ -20,10 +20,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Texture.h"
 #include "Core.h"
-#include <GL/glpng.h>
+#include "Image.h"
 #include "ByteBuffer.h"
 #include "RenderBase.h"
+#include "bithacks.h"
 #include <assert.h>
+#include "GLLoad.h"
+#include "stb_image_resize.h"
 
 
 Texture::Texture()
@@ -33,9 +36,9 @@ Texture::Texture()
 
 	repeat = false;
 	repeating = false;
-	pngSetStandardOrientation(0);
 	ow = oh = -1;
 	loadResult = TEX_FAILED;
+	_mipmap = false;
 }
 
 Texture::~Texture()
@@ -135,6 +138,7 @@ void Texture::destroy()
 	core->removeTexture(this);
 }
 
+// FIXME: this should be recorded at load-time -- fg
 int Texture::getPixelWidth()
 {
 	int w = 0, h = 0;
@@ -162,6 +166,7 @@ int Texture::getPixelWidth()
 	return largestx - smallestx;
 }
 
+// FIXME: same as above
 int Texture::getPixelHeight()
 {
 	int w = 0, h = 0;
@@ -194,13 +199,13 @@ void Texture::reload()
 	debugLog("RELOADING TEXTURE: " + name + " with loadName " + loadName + "...");
 
 	unload();
-	load(loadName);
+	load(loadName, _mipmap);
 
 
 	debugLog("DONE");
 }
 
-bool Texture::load(std::string file)
+bool Texture::load(std::string file, bool mipmap)
 {
 	loadResult = TEX_FAILED;
 	if (file.size()<4)
@@ -214,6 +219,7 @@ bool Texture::load(std::string file)
 
 	loadName = file;
 	repeating = false;
+	_mipmap = mipmap;
 
 	size_t pos = file.find_last_of('.');
 
@@ -226,8 +232,6 @@ bool Texture::load(std::string file)
 			pos = std::string::npos;
 	}
 
-
-
 	bool found = exists(file);
 
 	if(!found && exists(file + ".png"))
@@ -239,6 +243,7 @@ bool Texture::load(std::string file)
 	// .tga/.zga are never used as game graphics anywhere except save slot thumbnails.
 	// if so, their file names are passed exact, not with a missing extension
 
+	bool ok = false;
 	if (found)
 	{
 		file = localisePathInternalModpath(file);
@@ -247,23 +252,27 @@ bool Texture::load(std::string file)
 
 		std::string post = file.substr(file.size()-3, 3);
 		stringToLower(post);
-		if (post == "png")
-		{
 
-			return loadPNG(file);
-
-		}
-		else if (post == "zga")
+		ImageData img = {};
+		if (post == "zga")
 		{
-			return loadZGA(file);
-		}
-		else if (post == "tga")
-		{
-			return loadTGA(file);
+			img = imageLoadZGA(file.c_str());
+			if(img.pixels)
+				mipmap = false;
+			else
+				debugLog("Can't load ZGA File: " + file);
 		}
 		else
 		{
-			debugLog("unknown image file type: " + file);
+			img = imageLoadGeneric(file.c_str(), false);
+			if(!img.pixels)
+				debugLog("unknown image file type: " + file);
+		}
+
+		if(img.pixels)
+		{
+			ok = loadInternal(img, mipmap);
+			free(img.pixels);
 		}
 	}
 	else
@@ -272,7 +281,7 @@ bool Texture::load(std::string file)
 		if (core->debugLogTextures)
 			debugLog("***Could not find texture: " + file);
 	}
-	return false;
+	return ok;
 }
 
 void Texture::apply(bool repeatOverride)
@@ -302,370 +311,113 @@ void Texture::unbind()
 {
 }
 
-bool Texture::loadPNG(const std::string &file)
+struct GlTexFormat
 {
-	if (file.empty()) return false;
-	bool good = false;
-
-	pngInfo info;
-
-	unsigned long memsize = 0;
-	const char *memptr = readFile(file, &memsize);
-	if(!memptr || !memsize)
-		goto fail;
-
-	textures[0] = pngBindMem(memptr, memsize, PNG_BUILDMIPMAPS, PNG_ALPHA, &info, GL_CLAMP_TO_EDGE, GL_LINEAR_MIPMAP_LINEAR, GL_LINEAR);
-
-	if (textures[0] != 0)
-	{
-		width = info.Width;
-		height = info.Height;
-		good = true;
-		loadResult = TEX_SUCCESS;
-	}
-	else
-	{
-		fail:
-
-		debugLog("Can't load PNG file: " + file);
-	}
-
-	if(memptr)
-		delete [] memptr;
-
-	return good;
-}
-
-// internal load functions
-bool Texture::loadTGA(const std::string &file)
+	int internalformat, format, type;
+	int alphachan; // for stb_image_resize; index of alpha channel
+};
+static const GlTexFormat formatLUT[] =
 {
-	return loadTGA(TGAload(file.c_str()));
-}
+	{ GL_LUMINANCE,       GL_R,               GL_UNSIGNED_BYTE, STBIR_ALPHA_CHANNEL_NONE },
+	{ GL_LUMINANCE_ALPHA, GL_LUMINANCE_ALPHA, GL_UNSIGNED_BYTE, 1 },
+	{ GL_RGB,             GL_RGB,             GL_UNSIGNED_BYTE, STBIR_ALPHA_CHANNEL_NONE },
+	{ GL_RGBA,            GL_RGBA,            GL_UNSIGNED_BYTE, 3 }
+};
 
-bool Texture::loadZGA(const std::string &file)
+bool Texture::loadInternal(const ImageData& img, bool mipmap)
 {
-	unsigned long size = 0;
-	char *buf = readCompressedFile(file, &size);
-	ImageTGA *tga = TGAloadMem(buf, size);
-	if (!tga)
-	{
-		debugLog("Can't load ZGA File: " + file);
+	if(!img.pixels || !img.channels || img.channels > 4 || !img.w || !img.h)
 		return false;
-	}
-	return loadTGA(tga);
-}
 
-bool Texture::loadTGA(ImageTGA *imageTGA)
-{
-	if (!imageTGA)
-		return false;
+	//if(!bithacks::isPowerOf2(img.w))
+	//	__debugbreak();
+
+	// work around bug in older ATI drivers that would cause glGenerateMipmapEXT() to fail otherwise
+	// via https://www.khronos.org/opengl/wiki/Common_Mistakes#Automatic_mipmap_generation
+	glEnable(GL_TEXTURE_2D);
+	// no padding
+	glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
 
 	glGenTextures(1, &textures[0]);
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER,GL_LINEAR);	// Linear Filtering
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER,GL_LINEAR);	// Linear Filtering
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 
-	if (imageTGA->channels==3)
-		glTexImage2D(GL_TEXTURE_2D, 0, 3, imageTGA->sizeX, imageTGA->sizeY, 0, GL_RGB, GL_UNSIGNED_BYTE, imageTGA->data);
-	else if (imageTGA->channels==4)
-		glTexImage2D(GL_TEXTURE_2D, 0, 4,imageTGA->sizeX, imageTGA->sizeY, 0, GL_RGBA, GL_UNSIGNED_BYTE, imageTGA->data);
+	const GlTexFormat& f = formatLUT[img.channels - 1];
 
-	width = imageTGA->sizeX;
-	height = imageTGA->sizeY;
+	int minfilter = GL_LINEAR;
+	int ismip = 0;
 
-	if (imageTGA->data)
-		delete[] (imageTGA->data);
-	free (imageTGA);
+	// if our super old OpenGL supports it, request automatic mipmap generation
+	// but not if glGenerateMipmapEXT is present, as it's the much better choice
+	if(mipmap && !glGenerateMipmapEXT && g_has_GL_GENERATE_MIPMAP)
+	{
+		glTexParameteri(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, GL_TRUE);
+		glGetTexParameteriv(GL_TEXTURE_2D, GL_GENERATE_MIPMAP, &ismip);
+	}
 
+	// attach base level first
+	glTexImage2D(GL_TEXTURE_2D, 0, f.internalformat, img.w, img.h, 0, f.format, f.type, img.pixels);
+
+	if(mipmap && !ismip)
+	{
+		// now that the base is attached, generate mipmaps
+		if(glGenerateMipmapEXT)
+		{
+			glHint(GL_GENERATE_MIPMAP_HINT, GL_NICEST);
+			glGenerateMipmapEXT(GL_TEXTURE_2D);
+			ismip = 1;
+		}
+
+		if(!ismip)
+		{
+			debugLog("Failed to mipmap in hardware, using software fallback");
+			ismip = 1;
+			unsigned mw = img.w;
+			unsigned mh = img.h;
+			unsigned char *pmip = img.pixels;
+			unsigned level = 0;
+			while(mw > 1 || mh > 1)
+			{
+				const unsigned oldw = mw, oldh = mh;
+				mw = bithacks::prevPowerOf2(mw);
+				mh = bithacks::prevPowerOf2(mh);
+				assert(mw && mh);
+				++level;
+				unsigned char *out = (unsigned char*)malloc(mw * mh * img.channels);
+				// when we're on hardware old enough not to have glGenerateMipmapEXT we'll
+				// likely not want to spend too much time generating mipmaps,
+				// so something fast & cheap like a box filter is enough
+				int res = stbir_resize_uint8_generic(pmip, oldw, oldh, 0, out, mw, mh, 0, img.channels,
+					f.alphachan, 0, STBIR_EDGE_CLAMP, STBIR_FILTER_BOX, STBIR_COLORSPACE_LINEAR, NULL);
+				if(!res)
+				{
+					debugLog("Failed to calculate software mipmap");
+					free(out);
+					ismip = 0;
+					break;
+				}
+				glTexImage2D(GL_TEXTURE_2D, level, f.internalformat, mw, mh, 0, f.format, f.type, out);
+
+				if(pmip != img.pixels)
+					free(pmip);
+				pmip = out;
+			}
+			if(pmip != img.pixels)
+				free(pmip);
+			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAX_LEVEL, level);
+		}
+
+		if(ismip)
+			minfilter = GL_LINEAR_MIPMAP_LINEAR;
+	}
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, minfilter);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+	width = img.w;
+	height = img.h;
 	loadResult = TEX_SUCCESS;
 	return true;
-}
-
-
-#define TGA_RGB		 2		// This tells us it's a normal RGB (really BGR) file
-#define TGA_A		 3		// This tells us it's a ALPHA file
-#define TGA_RLE		10		// This tells us that the targa is Run-Length Encoded (RLE)
-
-#if defined(BBGE_BUILD_UNIX)
-typedef uint8_t byte;
-typedef uint16_t WORD;
-#endif
-
-
-#ifdef BBGE_BUILD_WINDOWS
-	#define byte char
-#endif
-
-ImageTGA *Texture::TGAload(const char *filename)
-{
-	unsigned long size = 0;
-	char *rawbuf = readFile(filename, &size);
-	ImageTGA *tga = TGAloadMem(rawbuf, size);
-	if (rawbuf)
-		delete [] rawbuf;
-	if (!tga)
-	{
-		debugLog("Can't load TGA File!");
-		return NULL;
-	}
-	return tga;
-}
-
-ImageTGA *Texture::TGAloadMem(void *mem, int size)
-{
-	if (!mem || size < 20)
-		return NULL;
-
-	ByteBuffer bb(mem, size, ByteBuffer::REUSE);
-
-	ImageTGA *pImageData = NULL;		// This stores our important image data
-	uint16_t width = 0, height = 0;		// The dimensions of the image
-	byte length = 0;					// The length in bytes to the pixels
-	byte imageType = 0;					// The image type (RLE, RGB, Alpha...)
-	byte bits = 0;						// The bits per pixel for the image (16, 24, 32)
-	uint32_t channels = 0;				// The channels of the image (3 = RGA : 4 = RGBA)
-	uint32_t stride = 0;				// The stride (channels * width)
-
-	// This function loads in a TARGA (.TGA) file and returns its data to be
-	// used as a texture or what have you.  This currently loads in a 16, 24
-	// and 32-bit targa file, along with RLE compressed files.  Eventually you
-	// will want to do more error checking to make it more robust.  This is
-	// also a perfect start to go into a modular class for an engine.
-	// Basically, how it works is, you read in the header information, then
-	// move your file pointer to the pixel data.  Before reading in the pixel
-	// data, we check to see the if it's an RLE compressed image.  This is because
-	// we will handle it different.  If it isn't compressed, then we need another
-	// check to see if we need to convert it from 16-bit to 24 bit.  24-bit and
-	// 32-bit textures are very similar, so there's no need to do anything special.
-	// We do, however, read in an extra bit for each color.
-
-
-	// Allocate the structure that will hold our eventual image data (must free it!)
-	pImageData = (ImageTGA*)malloc(sizeof(ImageTGA));
-
-	// Read in the length in bytes from the header to the pixel data
-	bb >> length;
-
-	// Jump over one byte
-	bb.skipRead(1);
-
-	// Read in the imageType (RLE, RGB, etc...)
-	//fread(&imageType, sizeof(byte), 1, pFile);
-	bb >> imageType;
-
-	// Skip past general information we don't care about
-	bb.skipRead(9);
-
-	// Read the width, height and bits per pixel (16, 24 or 32)
-	bb >> width >> height >> bits;
-
-	/*
-	std::ostringstream os;
-	os << "TGALoad: width: " << width << " height: " << height << " bits: " << bits;
-	debugLog(os.str());
-	*/
-
-	// Now we move the file pointer to the pixel data
-	bb.skipRead(length + 1);
-
-	// Check if the image is RLE compressed or not
-	if(imageType != TGA_RLE)
-	{
-		// Check if the image is a 24 or 32-bit image
-		if(bits == 24 || bits == 32)
-		{
-			// Calculate the channels (3 or 4) - (use bits >> 3 for more speed).
-			// Next, we calculate the stride and allocate enough memory for the pixels.
-			channels = bits / 8;
-			stride = channels * width;
-			pImageData->data = new unsigned char[stride * height];
-
-			// Load in all the pixel data line by line
-			for(int y = 0; y < height; y++)
-			{
-				// Store a pointer to the current line of pixels
-				unsigned char *pLine = &(pImageData->data[stride * y]);
-
-				// Read in the current line of pixels
-				if (bb.readable() < stride)
-					break;
-				bb.read(pLine, stride);
-
-				// Go through all of the pixels and swap the B and R values since TGA
-				// files are stored as BGR instead of RGB (or use GL_BGR_EXT verses GL_RGB)
-				for(unsigned i = 0; i < stride; i += channels)
-				{
-					int temp = pLine[i];
-					pLine[i] = pLine[i + 2];
-					pLine[i + 2] = temp;
-				}
-			}
-		}
-		// Check if the image is a 16 bit image (RGB stored in 1 unsigned short)
-		else if(bits == 16)
-		{
-			unsigned short pixels = 0;
-			int r=0, g=0, b=0;
-
-			// Since we convert 16-bit images to 24 bit, we hardcode the channels to 3.
-			// We then calculate the stride and allocate memory for the pixels.
-			channels = 3;
-			stride = channels * width;
-			pImageData->data = new unsigned char[stride * height];
-
-			// Load in all the pixel data pixel by pixel
-			for(int i = 0; i < width*height; i++)
-			{
-				// Read in the current pixel
-				if (bb.readable() < sizeof(unsigned char))
-					break;
-				bb >> pixels;
-
-				// To convert a 16-bit pixel into an R, G, B, we need to
-				// do some masking and such to isolate each color value.
-				// 0x1f = 11111 in binary, so since 5 bits are reserved in
-				// each unsigned short for the R, G and B, we bit shift and mask
-				// to find each value.  We then bit shift up by 3 to get the full color.
-				b = (pixels & 0x1f) << 3;
-				g = ((pixels >> 5) & 0x1f) << 3;
-				r = ((pixels >> 10) & 0x1f) << 3;
-
-				// This essentially assigns the color to our array and swaps the
-				// B and R values at the same time.
-				pImageData->data[i * 3 + 0] = r;
-				pImageData->data[i * 3 + 1] = g;
-				pImageData->data[i * 3 + 2] = b;
-			}
-		}
-		// Else return a NULL for a bad or unsupported pixel format
-		else
-			return NULL;
-	}
-	// Else, it must be Run-Length Encoded (RLE)
-	else
-	{
-		// First, let me explain real quickly what RLE is.
-		// For further information, check out Paul Bourke's intro article at:
-		// http://astronomy.swin.edu.au/~pbourke/dataformats/rle/
-		//
-		// Anyway, we know that RLE is a basic type compression.  It takes
-		// colors that are next to each other and then shrinks that info down
-		// into the color and a integer that tells how much of that color is used.
-		// For instance:
-		// aaaaabbcccccccc would turn into a5b2c8
-		// Well, that's fine and dandy and all, but how is it down with RGB colors?
-		// Simple, you read in an color count (rleID), and if that number is less than 128,
-		// it does NOT have any optimization for those colors, so we just read the next
-		// pixels normally.  Say, the color count was 28, we read in 28 colors like normal.
-		// If the color count is over 128, that means that the next color is optimized and
-		// we want to read in the same pixel color for a count of (colorCount - 127).
-		// It's 127 because we add 1 to the color count, as you'll notice in the code.
-
-		// Create some variables to hold the rleID, current colors read, channels, & stride.
-		byte rleID = 0;
-		int colorsRead = 0;
-		channels = bits / 8;
-		stride = channels * width;
-
-		// Next we want to allocate the memory for the pixels and create an array,
-		// depending on the channel count, to read in for each pixel.
-		pImageData->data = new unsigned char[stride * height];
-		byte *pColors = new byte [channels];
-
-		// Load in all the pixel data
-		const size_t datalen = size_t(width) * size_t(height);
-		for(size_t i = 0; i < datalen; )
-		{
-			// Read in the current color count + 1
-			bb >> rleID;
-
-			// Check if we don't have an encoded string of colors
-			if(rleID < 128)
-			{
-				// Increase the count by 1
-				rleID++;
-
-				// Go through and read all the unique colors found
-				while(rleID)
-				{
-					// Read in the current color
-					if (bb.readable() < channels)
-						break;
-					bb.read(pColors, channels);
-
-					// Store the current pixel in our image array
-					pImageData->data[colorsRead + 0] = pColors[2];
-					pImageData->data[colorsRead + 1] = pColors[1];
-					pImageData->data[colorsRead + 2] = pColors[0];
-
-					// If we have a 4 channel 32-bit image, assign one more for the alpha
-					if(bits == 32)
-						pImageData->data[colorsRead + 3] = pColors[3];
-
-					// Increase the current pixels read, decrease the amount
-					// of pixels left, and increase the starting index for the next pixel.
-					i++;
-					rleID--;
-					colorsRead += channels;
-				}
-			}
-			// Else, let's read in a string of the same character
-			else
-			{
-				// Minus the 128 ID + 1 (127) to get the color count that needs to be read
-				rleID -= 127;
-
-				// Read in the current color, which is the same for a while
-				if (bb.readable() < channels)
-					break;
-				bb.read(pColors, channels);
-
-				// Go and read as many pixels as are the same
-				while(rleID)
-				{
-					// Assign the current pixel to the current index in our pixel array
-					pImageData->data[colorsRead + 0] = pColors[2];
-					pImageData->data[colorsRead + 1] = pColors[1];
-					pImageData->data[colorsRead + 2] = pColors[0];
-
-					// If we have a 4 channel 32-bit image, assign one more for the alpha
-					if(bits == 32)
-						pImageData->data[colorsRead + 3] = pColors[3];
-
-					// Increase the current pixels read, decrease the amount
-					// of pixels left, and increase the starting index for the next pixel.
-					i++;
-					rleID--;
-					colorsRead += channels;
-				}
-
-			}
-
-		}
-
-		// Free up pColors
-		delete[] pColors;
-	}
-
-	// Fill in our tImageTGA structure to pass back
-	pImageData->channels = channels;
-	pImageData->sizeX = width;
-	pImageData->sizeY = height;
-
-	// Return the TGA data (remember, you must free this data after you are done)
-	return pImageData;
-}
-
-// ceil to next power of 2
-static unsigned int clp2(unsigned int x)
-{
-	--x;
-	x |= (x >> 1);
-	x |= (x >> 2);
-	x |= (x >> 4);
-	x |= (x >> 8);
-	x |= (x >> 16);
-	return x + 1;
 }
 
 unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int *sizeparam)
@@ -679,6 +431,7 @@ unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int
 	if(width <= 0 || height <= 0)
 		goto fail;
 
+	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 
 	// As returned by graphics driver
@@ -687,8 +440,8 @@ unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, unsigned int
 	glGetTexLevelParameteriv(GL_TEXTURE_2D, 0, GL_TEXTURE_HEIGHT, &h);
 
 	// As we know it - but round to nearest power of 2 - OpenGL does this internally anyways.
-	tw = clp2(width); // known to be > 0.
-	th = clp2(height);
+	tw = bithacks::clp2(width); // known to be > 0.
+	th = bithacks::clp2(height);
 
 	if (w != tw || h != th)
 	{

@@ -450,10 +450,6 @@ public:
 
 	CoreSettings settings;
 
-	bool tgaSave(const char *filename, short unsigned int width, short unsigned int height, unsigned char	pixelDepth, unsigned char	*imageData);
-	bool zgaSave(const char *filename, short unsigned int width, short unsigned int height, unsigned char	pixelDepth, unsigned char	*imageData);
-	bool pngSave(const char *filename, unsigned width, unsigned height, unsigned char *data);
-
 	volatile int dbg_numThreadDecoders;
 
 	virtual void onBackgroundUpdate();

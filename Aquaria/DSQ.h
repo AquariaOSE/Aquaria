@@ -425,7 +425,7 @@ public:
 	BmpFont font, smallFont, subsFont, goldFont, smallFontRed;
 	TTFFont fontArialSmall, fontArialBig, fontArialSmallest;
 	unsigned char *arialFontData;
-	unsigned long arialFontDataSize;
+	size_t arialFontDataSize;
 
 	void loadFonts();
 

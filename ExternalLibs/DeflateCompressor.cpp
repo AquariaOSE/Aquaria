@@ -1,5 +1,5 @@
 
-#include <zlib.h>
+#include <miniz.h>
 
 #include "DeflateCompressor.h"
 

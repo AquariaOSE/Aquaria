@@ -869,7 +869,7 @@ static bool findFile_helper(const char *rawname, std::string &fname)
 static int loadFile_helper(lua_State *L, const char *fn)
 {
 #ifdef BBGE_BUILD_VFS
-	unsigned long size = 0;
+	size_t size = 0;
 	const char *data = readFile(fn, &size);
 	if (!data)
 	{

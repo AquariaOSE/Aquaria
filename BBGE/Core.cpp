@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Core.h"
 #include "Texture.h"
+#include "Image.h"
 #include "AfterEffect.h"
 #include "Particles.h"
 #include "GLLoad.h"
@@ -2023,7 +2024,7 @@ CountedPtr<Texture> Core::doTextureAdd(const std::string &texture, const std::st
 	t = new Texture;
 	t->name = internalTextureName;
 
-	if(t->load(loadName))
+	if(t->load(loadName, true))
 	{
 		std::ostringstream os;
 		os << "LOADED TEXTURE FROM DISK: [" << internalTextureName << "] idx: " << resources.size()-1;
@@ -2255,68 +2256,9 @@ bool Core::saveScreenshot(const std::string &filename, bool png)
 	int w = getWindowWidth(), h = getWindowHeight();
 	unsigned char *imageData = grabCenteredScreenshot(w, h);
 	bool ok = png
-		? pngSave(filename.c_str(), w, h, imageData)
-		: tgaSave(filename.c_str(),w,h,32,imageData);
+		? pngSaveRGBA(filename.c_str(), w, h, imageData)
+		: tgaSaveRGBA(filename.c_str(), w, h, imageData);
 	delete [] imageData;
-	return ok;
-}
-
-// saves an array of pixels as a TGA image
-bool Core::tgaSave(	const char	*filename,
-		short unsigned int	width,
-		short unsigned int	height,
-		unsigned char	pixelDepth,
-		unsigned char	*imageData) {
-
-	unsigned char cGarbage = 0, type,mode,aux;
-	short int iGarbage = 0;
-	int i;
-	FILE *file;
-
-// open file and check for errors
-	file = fopen(adjustFilenameCase(filename).c_str(), "wb");
-	if (!file)
-		return false;
-
-// compute image type: 2 for RGB(A), 3 for greyscale
-	mode = pixelDepth / 8;
-	if ((pixelDepth == 24) || (pixelDepth == 32))
-		type = 2;
-	else
-		type = 3;
-
-// write the header
-	if (fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1
-		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1
-		|| fwrite(&type, sizeof(unsigned char), 1, file) != 1
-		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
-		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
-		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1
-		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
-		|| fwrite(&iGarbage, sizeof(short int), 1, file) != 1
-		|| fwrite(&width, sizeof(short int), 1, file) != 1
-		|| fwrite(&height, sizeof(short int), 1, file) != 1
-		|| fwrite(&pixelDepth, sizeof(unsigned char), 1, file) != 1
-		|| fwrite(&cGarbage, sizeof(unsigned char), 1, file) != 1)
-	{
-		fclose(file);
-		return false;
-	}
-
-// convert the image data from RGB(A) to BGR(A)
-	if (mode >= 3)
-	for (i=0; i < width * height * mode ; i+= mode) {
-		aux = imageData[i];
-		imageData[i] = imageData[i+2];
-		imageData[i+2] = aux;
-	}
-
-// save the image data
-	size_t bytes = width * height * mode;
-	bool ok =  fwrite(imageData, 1, bytes, file) == bytes;
-
-	fclose(file);
-
 	return ok;
 }
 
@@ -2324,69 +2266,6 @@ void Core::screenshot()
 {
 	doScreenshot = true;
 }
-
-
- #include "DeflateCompressor.h"
-
- // saves an array of pixels as a TGA image (frees the image data passed in)
-bool Core::zgaSave(	const char	*filename,
-		short unsigned int	w,
-		short unsigned int	h,
-		unsigned char	depth,
-		unsigned char	*imageData) {
-
-	ByteBuffer::uint8 type,mode,aux, pixelDepth = depth;
-	ByteBuffer::uint8 cGarbage = 0;
-	ByteBuffer::uint16 iGarbage = 0;
-	ByteBuffer::uint16 width = w, height = h;
-
-// open file and check for errors
-	FILE *file = fopen(adjustFilenameCase(filename).c_str(), "wb");
-	if (file == NULL) {
-		return false;
-	}
-
-// compute image type: 2 for RGB(A), 3 for greyscale
-	mode = pixelDepth / 8;
-	if ((pixelDepth == 24) || (pixelDepth == 32))
-		type = 2;
-	else
-		type = 3;
-
-// convert the image data from RGB(A) to BGR(A)
-	if (mode >= 3)
-	for (int i=0; i < width * height * mode ; i+= mode) {
-		aux = imageData[i];
-		imageData[i] = imageData[i+2];
-		imageData[i+2] = aux;
-	}
-
-	ZlibCompressor z;
-	z.SetForceCompression(true);
-	z.reserve(width * height * mode + 30);
-	z	<< cGarbage
-		<< cGarbage
-		<< type
-		<< iGarbage
-		<< iGarbage
-		<< cGarbage
-		<< iGarbage
-		<< iGarbage
-		<< width
-		<< height
-		<< pixelDepth
-		<< cGarbage;
-
-	z.append(imageData, width * height * mode);
-	z.Compress(3);
-
-	bool ok  = fwrite(z.contents(), 1, z.size(), file) == z.size();
-
-	fclose(file);
-
-	return ok;
-}
-
 
 #ifdef BBGE_BUILD_VFS
 #include "ttvfs_zip/VFSZipArchiveLoader.h"
@@ -2495,64 +2374,4 @@ Joystick *Core::getJoystickForSourceID(int sourceID)
 	if(unsigned(sourceID+1) < (unsigned)actionStatus.size())
 		return getJoystick(actionStatus[sourceID+1]->getJoystickID());
 	return NULL;
-}
-
-#include <png.h>
-
-bool Core::pngSave(const char *filename, unsigned width, unsigned height, unsigned char *data)
-{
-	bool ok = true;
-	std::vector<png_byte*> rowData(height);
-	// passed in buffer is upside down; flip it
-	for(unsigned i = 0; i < height; i++)
-		rowData[height - i - 1] = i * width * 4 + data;
-
-	FILE *fp = fopen(filename, "wb");
-	if (!fp)
-		return false;
-
-	png_structp png;
-	png = png_create_write_struct(PNG_LIBPNG_VER_STRING, NULL, NULL, NULL);
-
-	if (!png)
-		goto fail;
-
-	png_infop info_ptr;
-	info_ptr = png_create_info_struct(png);
-	if (!info_ptr)
-		goto fail;
-
-	if (setjmp(png_jmpbuf(png)))
-		goto fail;
-
-	png_init_io(png, fp);
-
-	if (setjmp(png_jmpbuf(png)))
-		goto fail;
-
-	png_set_IHDR(png, info_ptr, width, height,
-		8, PNG_COLOR_TYPE_RGBA, PNG_INTERLACE_NONE,
-		PNG_COMPRESSION_TYPE_BASE, PNG_FILTER_TYPE_BASE);
-
-	png_write_info(png, info_ptr);
-
-	if (setjmp(png_jmpbuf(png)))
-		goto fail;
-
-	png_write_image(png, (png_byte**)&rowData[0]);
-
-	if (setjmp(png_jmpbuf(png)))
-		goto fail;
-
-	png_write_end(png, NULL);
-
-end:
-	if(fp)
-		fclose(fp);
-	return ok;
-
-fail:
-	debugLog("Failed to save PNG");
-	ok = false;
-	goto end;
 }

@@ -294,16 +294,16 @@ void debugLog(const std::string &s)
 // also obtain the data length by passing a pointer to an unsigned long
 // as the (optional) second parameter.  The buffer should be freed with
 // delete[] when no longer needed.
-char *readFile(const std::string& path, unsigned long *size_ret)
+char *readFile(const char *path, size_t *size_ret)
 {
-	VFILE *f = vfopen(path.c_str(), "rb");
+	VFILE *f = vfopen(path, "rb");
 	if (!f)
 		return NULL;
 
 	size_t fileSize = 0;
 	if(vfsize(f, &fileSize) < 0)
 	{
-		debugLog(path + ": Failed to get file size");
+		debugLog(std::string(path) + ": Failed to get file size");
 		vfclose(f);
 		return NULL;
 	}
@@ -423,9 +423,9 @@ std::string spacesToUnderscores(const std::string &str)
 
 #include "DeflateCompressor.h"
 
-char *readCompressedFile(std::string path, unsigned long *size_ret)
+char *readCompressedFile(const char *path, size_t *size_ret)
 {
-	unsigned long size = 0;
+	size_t size = 0;
 	char *buf = readFile(path, &size);
 	if(!buf)
 		return NULL;

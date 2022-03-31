@@ -96,3 +96,4 @@ GL_FUNC(void,glGetTexImage,(GLenum target, GLint level, GLenum format, GLenum ty
 //GL_FUNC(void,glTexImage1D,(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLint border, GLenum format, GLenum type, const GLvoid *pixels),(target,level,internalFormat,width,border,format,type,pixels),)
 GL_FUNC(void,glTexImage2D,(GLenum target, GLint level, GLint internalFormat, GLsizei width, GLsizei height, GLint border, GLenum format, GLenum type, const GLvoid *pixels),(target,level,internalFormat,width,height,border,format,type,pixels),)
 //GL_FUNC(void,glTexImage3D,(GLenum target, GLint level, GLint internalformat, GLsizei width, GLsizei height, GLsizei depth, GLint border, GLenum format, GLenum type, const GLvoid *pixels),(target,level,internalformat,width,height,depth,border,format,type,pixels),)
+GL_FUNC(void,glGetTexParameteriv,(GLenum target, GLenum pname, GLint *params),(target,pname,params),);

@@ -87,7 +87,7 @@ void ParticleEffect::bankLoad(const std::string &file, const std::string &path)
 
 	usef = adjustFilenameCase(usef);
 	debugLog(usef);
-	char *buffer = readFile(usef);
+	char *buffer = readFile(usef.c_str());
 	if (!buffer)
 	{
 		debugLog("Can't read " + usef);

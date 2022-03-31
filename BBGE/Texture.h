@@ -31,13 +31,7 @@ enum TextureLoadResult
 	TEX_SUCCESS
 };
 
-struct ImageTGA
-{
-	int channels;			// The channels in the image (3 = RGB : 4 = RGBA)
-	int sizeX;				// The width of the image in pixels
-	int sizeY;				// The height of the image in pixels
-	unsigned char *data;	// The image pixel data
-};
+struct ImageData;
 
 class Texture : public Refcounted
 {
@@ -45,7 +39,7 @@ public:
 	Texture();
 	~Texture();
 
-	bool load(std::string file);
+	bool load(std::string file, bool mipmap);
 	void apply(bool repeatOverride=false);
 	void unbind();
 	void unload();
@@ -55,11 +49,7 @@ public:
 
 	void destroy();
 
-
 	int width, height;
-
-	static ImageTGA *TGAload(const char* filename);
-	static ImageTGA *TGAloadMem(void *mem, int size);
 
 	bool repeat, repeating;
 
@@ -79,15 +69,11 @@ public:
 protected:
 	std::string loadName;
 
-	// internal load functions
-	bool loadPNG(const std::string &file);
-	bool loadTGA(const std::string &file);
-	bool loadZGA(const std::string &file);
-	bool loadTGA(ImageTGA *tga);
+	bool loadInternal(const ImageData& img, bool mipmap);
 
 	int ow, oh;
 	TextureLoadResult loadResult;
-
+	bool _mipmap;
 };
 
 #define UNREFTEX(x) if (x) {x = NULL;}
