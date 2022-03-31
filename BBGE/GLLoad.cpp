@@ -60,7 +60,9 @@ PFNGLFRAMEBUFFERTEXTURE3DEXTPROC glFramebufferTexture3DEXT = NULL;
 PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT = NULL;
 PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT = NULL;
 
-unsigned g_dbg_numRenderCalls = 0; // extern
+// extern
+unsigned g_dbg_numRenderCalls = 0;
+bool g_has_GL_GENERATE_MIPMAP = false;
 
 
 #define GL_FUNC(ret,fn,params,call,rt) \
@@ -92,11 +94,27 @@ bool lookup_all_glsyms()
 #include "OpenGLStubs.h"
 #undef GL_FUNC
 
+	if(const char *ver = (const char*)glGetString(GL_VERSION))
+	{
+		unsigned major = 0, minor = 0;
+		sscanf(ver, "%u.%u", &major, &minor);
+		std::ostringstream os;
+		os << "Detected OpenGL version: " << major << "." << minor;
+		debugLog(os.str());
+		// GL >= 1.4 and <= 2.x has GL_GENERATE_MIPMAP
+		if(major < 3 && (major > 1 || (major == 1 && minor >= 4)))
+			g_has_GL_GENERATE_MIPMAP = true;
+	}
+
 	// optional functions
 
 	// mipmaps
 	glGenerateMipmapEXT = (PFNGLGENERATEMIPMAPEXTPROC)SDL_GL_GetProcAddress("glGenerateMipmapEXT");
-
+	{
+		std::ostringstream os;
+		os << "glGenerateMipmapEXT = " << glGenerateMipmapEXT;
+		debugLog(os.str());
+	}
 	// framebuffer
 	glIsRenderbufferEXT = (PFNGLISRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glIsRenderbufferEXT");
 	glBindRenderbufferEXT = (PFNGLBINDRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glBindRenderbufferEXT");

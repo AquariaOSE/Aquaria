@@ -153,8 +153,8 @@ void Shader::load(const std::string &file, const std::string &fragFile)
 	this->vertFile = file;
 	this->fragFile = fragFile;
 
-	char *vertCode = file.length()	 ? readFile(file)	 : NULL;
-	char *fragCode = fragFile.length() ? readFile(fragFile) : NULL;
+	char *vertCode = file.length()	 ? readFile(file.c_str())	 : NULL;
+	char *fragCode = fragFile.length() ? readFile(fragFile.c_str()) : NULL;
 
 	loadSrc(vertCode, fragCode);
 

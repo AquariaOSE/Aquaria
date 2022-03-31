@@ -342,6 +342,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\ExternalLibs\miniz.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\miniz.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\ExternalLibs\mojoal.c"
 				>
 				<FileConfiguration
@@ -377,18 +385,10 @@
 					/>
 				</FileConfiguration>
 			</File>
-			<Filter
-				Name="glpng"
+			<File
+				RelativePath="..\..\ExternalLibs\tinylibs.cpp"
 				>
-				<File
-					RelativePath="..\..\ExternalLibs\glpng\glpng.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\glpng\GL\glpng.h"
-					>
-				</File>
-			</Filter>
+			</File>
 			<Filter
 				Name="FTGL"
 				>
@@ -1169,14 +1169,6 @@
 				Name="ttvfs_zip"
 				>
 				<File
-					RelativePath="..\..\ExternalLibs\ttvfs_zip\miniz.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\ttvfs_zip\miniz.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\ExternalLibs\ttvfs_zip\VFSDirZip.cpp"
 					>
 				</File>
@@ -1210,30 +1202,6 @@
 				</File>
 			</Filter>
 			<Filter
-				Name="LVPA"
-				>
-				<File
-					RelativePath="..\..\ExternalLibs\lvpa\ByteBuffer.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\lvpa\ByteConverter.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\lvpa\LVPACommon.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\lvpa\LVPACompileConfig.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\lvpa\LVPAInternal.h"
-					>
-				</File>
-			</Filter>
-			<Filter
 				Name="ttvfs_cfileapi"
 				>
 				<File
@@ -1242,186 +1210,6 @@
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\ttvfs_cfileapi\ttvfs_stdio.h"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="png"
-				>
-				<File
-					RelativePath="..\..\ExternalLibs\png\png.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\png.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngconf.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngdebug.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngerror.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngget.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pnginfo.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngmem.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngpread.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngpriv.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngread.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngrio.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngrtran.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngrutil.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngset.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngstruct.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngtest.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngtrans.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngwio.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngwrite.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngwtran.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\png\pngwutil.c"
-					>
-				</File>
-			</Filter>
-			<Filter
-				Name="zlib"
-				>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\adler32.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\compress.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\crc32.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\crc32.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\deflate.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\deflate.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\infback.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\inffast.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\inffast.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\inffixed.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\inflate.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\inflate.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\inftrees.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\inftrees.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\trees.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\trees.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\uncompr.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\zconf.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\zlib.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\zutil.c"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\zlib\zutil.h"
 					>
 				</File>
 			</Filter>
@@ -1437,6 +1225,18 @@
 			</File>
 			<File
 				RelativePath="..\..\ExternalLibs\jps.hh"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\stb_image.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\stb_image_resize.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\ExternalLibs\stb_image_write.h"
 				>
 			</File>
 			<Filter

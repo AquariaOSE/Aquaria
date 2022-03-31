@@ -4,8 +4,8 @@
 
 tinyxml2::XMLError readXML(const std::string& fn, tinyxml2::XMLDocument& doc)
 {
-	unsigned long sz = 0;
-	char *buf = readFile(fn, &sz);
+	size_t sz = 0;
+	char *buf = readFile(fn.c_str(), &sz);
 	tinyxml2::XMLError err = doc.Parse(buf, sz);
 	delete [] buf;
 	return err;

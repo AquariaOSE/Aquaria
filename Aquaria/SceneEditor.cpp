@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "SceneEditor.h"
 #include "../BBGE/MathFunctions.h"
-#include <GL/glpng.h>
+#include "Image.h"
 #include "../BBGE/Gradient.h"
 #include "../BBGE/DebugFont.h"
 
@@ -1498,21 +1498,6 @@ public:
 	int rows;
 };
 
-bool getGrassPixel(pngRawInfo *png, size_t x, size_t y)
-{
-	if (x >= png->Width || y >= png->Height) return false;
-
-
-	size_t c = (y*png->Width)*png->Components + x*png->Components;
-	if (png->Data[c] == 128 &&
-		png->Data[c+1] == 255 &&
-		png->Data[c+2] == 128)
-	{
-		return true;
-	}
-	return false;
-}
-
 void SceneEditor::regenLevel()
 {
 	generateLevel();
@@ -1679,23 +1664,18 @@ void SceneEditor::generateLevel()
 		firstColorX[i] = firstColorY[i] = -1;
 		lastColorX[i] = lastColorY[i] = -1;
 	}
-	pngRawInfo rawinfo;
-	bool success = pngLoadRaw(file.c_str(), &rawinfo);
-	if (success)
+	const ImageData img = imageLoadGeneric(file.c_str(), true);
+	if (img.pixels)
 	{
-
+		assert(img.channels == 4);
 		std::vector<Row> rows;
 		std::vector<Vector> positions;
 		const int maxRowCount = 9999;
 		int rowCount = 0;
-		if (rawinfo.Components < 3)
-		{
-			errorLog("png color depth ( < 3 bit) not supported by generate level");
-		}
 		int scale = TILE_SIZE;
 		int c = 0;
 
-		for (size_t y = 0; y < rawinfo.Height; y++)
+		for (size_t y = 0; y < img.h; y++)
 		{
 			Vector lastElement;
 			lastElement = Vector(0,0,0);
@@ -1704,23 +1684,23 @@ void SceneEditor::generateLevel()
 			Row row;
 			rowCount = 0;
 			positions.clear();
-			for (size_t x = 0; x < rawinfo.Width; x++)
+			for (size_t x = 0; x < img.w; x++)
 			{
 				Vector *e = 0;
 				if
 				(
 					(
-						rawinfo.Data[c] < 48 &&
-						rawinfo.Data[c+1] < 48 &&
-						rawinfo.Data[c+2] < 48
+						img.pixels[c] < 48 &&
+						img.pixels[c+1] < 48 &&
+						img.pixels[c+2] < 48
 					)
 					||
 					(
-						rawinfo.Data[c] == 128
+						img.pixels[c] == 128
 						&&
-						rawinfo.Data[c+1] == 255
+						img.pixels[c+1] == 255
 						&&
-						rawinfo.Data[c+2] == 128
+						img.pixels[c+2] == 128
 					)
 				)
 				{
@@ -1731,9 +1711,9 @@ void SceneEditor::generateLevel()
 					positions.push_back(Vector(x*scale+(scale/2.0f),y*scale+(scale/2.0f)));
 					e = &positions[positions.size()-1];
 				}
-				if (rawinfo.Data[c] < 32 &&
-					rawinfo.Data[c+1] > 200 &&
-					rawinfo.Data[c+2] > 200)
+				if (img.pixels[c] < 32 &&
+					img.pixels[c+1] > 200 &&
+					img.pixels[c+2] > 200)
 				{
 					dsq->game->saveWaterLevel = dsq->game->waterLevel.x = y*TILE_SIZE;
 				}
@@ -1743,11 +1723,11 @@ void SceneEditor::generateLevel()
 					bool p1, p2, p3;
 					p1=p2=p3=false;
 					int diff;
-					diff = fabsf((colorVects[i].x*255) - rawinfo.Data[c]);
+					diff = fabsf((colorVects[i].x*255) - img.pixels[c]);
 					p1 = (diff < 5);
-					diff = fabsf((colorVects[i].y*255) - rawinfo.Data[c+1]);
+					diff = fabsf((colorVects[i].y*255) - img.pixels[c+1]);
 					p2 = (diff < 5);
-					diff = fabsf((colorVects[i].z*255) - rawinfo.Data[c+2]);
+					diff = fabsf((colorVects[i].z*255) - img.pixels[c+2]);
 					p3 = (diff < 5);
 
 					if (p1 && p2 && p3)
@@ -1764,9 +1744,9 @@ void SceneEditor::generateLevel()
 
 
 
-				c += rawinfo.Components;
+				c += img.channels;
 				if ((e==0 && firstRowElement) || (firstRowElement && rowCount >= maxRowCount && hasLastElement)
-					|| (firstRowElement && x == rawinfo.Width-1))
+					|| (firstRowElement && x == img.w-1))
 				{
 
 
@@ -1825,14 +1805,13 @@ void SceneEditor::generateLevel()
 		this->skinMaxX = maxX;
 		this->skinMaxY = maxY;
 
-		if (rawinfo.Data != NULL)
-			free(rawinfo.Data);
+		if (img.pixels != NULL)
+			free(img.pixels);
 	}
 	else
 	{
 		debugLog("generateLevel: Failed to load mapTemplate");
 	}
-//	pngSetStandardOrientation(1);
 }
 
 void SceneEditor::removeEntity()
@@ -3173,7 +3152,7 @@ void SceneEditor::dumpObs()
 			break;
 	}
 	std::string outfn = dsq->getUserDataFolder() + "/griddump-" + game->sceneName + ".tga";
-	core->tgaSave(outfn.c_str(), MAX_GRID, MAX_GRID, 32, data);
+	tgaSaveRGBA(outfn.c_str(), MAX_GRID, MAX_GRID, data);
 	dsq->screenMessage("Saved grid image to " + outfn);
 }
 

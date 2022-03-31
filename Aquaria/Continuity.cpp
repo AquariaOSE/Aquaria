@@ -2636,8 +2636,8 @@ bool Continuity::loadFileData(int slot, XMLDocument &doc)
 
 	if (exists(teh_file))
 	{
-		unsigned long size = 0;
-		char *buf = readCompressedFile(teh_file, &size);
+		size_t size = 0;
+		char *buf = readCompressedFile(teh_file.c_str(), &size);
 		if (!buf)
 		{
 			errorLog("Failed to decompress save file: " + teh_file);

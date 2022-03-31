@@ -86,6 +86,10 @@ long int vftell(VFILE *vf)
     return (long int)vf->getpos();
 }
 
+int vfeof(VFILE *vf)
+{
+    return vf->iseof();
+}
 
 InStream::InStream(const std::string& fn)
 : std::istringstream()

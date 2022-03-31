@@ -108,9 +108,11 @@ float sqr(float x);
 bool exists(const std::string &f, bool makeFatal = false, bool skipVFS = false);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
-char *readFile(const std::string& path, unsigned long *size_ret = 0);
 
-char *readCompressedFile(std::string path, unsigned long *size_ret = 0);
+// free returned mem with delete[]
+char *readFile(const char *path, size_t *size_ret = 0);
+char *readCompressedFile(const char *path, size_t *size_ret = 0);
+
 std::string stripEndlineForUnix(const std::string &in);
 #ifdef HAVE_STRCASECMP
 static inline int nocasecmp(const std::string &s1, const std::string &s2)

@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ttvfs_stdio.h"
 #include "GLLoad.h"
 #include "RenderBase.h"
+#include "Image.h"
 
 #include <sys/stat.h>
 
@@ -472,7 +473,9 @@ void DSQ::loadFonts()
 	file = localisePath("data/font.ttf");
 
 	debugLog("ttf...");
-	arialFontData = (unsigned char *)readFile(file, &arialFontDataSize);
+	if(arialFontData)
+		delete [] arialFontData;
+	arialFontData = (unsigned char *)readFile(file.c_str(), &arialFontDataSize);
 	if (arialFontData)
 	{
 		fontArialSmall   .create(arialFontData, arialFontDataSize, 12);
@@ -2949,7 +2952,7 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 				int adjOffset = scrShotWidth * ((scrShotHeight-adjHeight)/2) * 4;
 				memmove(scrShotData, scrShotData + adjOffset, adjImageSize);
 				memset(scrShotData + adjImageSize, 0, imageDataSize - adjImageSize);
-				zgaSave(os.str().c_str(), scrShotWidth, scrShotHeight, 32, scrShotData);
+				zgaSaveRGBA(os.str().c_str(), scrShotWidth, scrShotHeight, scrShotData);
 			}
 
 			PlaySfx sfx;

@@ -462,6 +462,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\Image.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Image.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\Joystick.cpp"
 				>
 			</File>
