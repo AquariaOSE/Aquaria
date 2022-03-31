@@ -178,7 +178,7 @@ static void _MenuIconClickCallback(int id, void *user)
 // can be called multiple times without causing trouble
 void ModSelectorScreen::init()
 {
-	leftbar.width = 100;
+	leftbar.setBarWidth(100);
 	leftbar.height = height;
 	leftbar.alpha = 0;
 	leftbar.alpha.interpolateTo(1, 0.2f);
@@ -193,7 +193,7 @@ void ModSelectorScreen::init()
 		std::fill(panels.begin(), panels.end(), (IconGridPanel*)NULL);
 	}
 
-	rightbar.width = 100;
+	rightbar.setBarWidth(100);
 	rightbar.height = height;
 	rightbar.alpha = 0;
 	rightbar.alpha.interpolateTo(1, 0.2f);
@@ -833,6 +833,12 @@ MenuBasicBar::MenuBasicBar()
 	setTexture("modselect/bar");
 	repeatTextureToFill(true);
 	shareAlphaWithChildren = false;
+}
+
+void MenuBasicBar::setBarWidth(float w)
+{
+	width = w;
+	repeatToFillScale.x = texture->width / w;
 }
 
 void MenuBasicBar::init()

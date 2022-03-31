@@ -113,6 +113,7 @@ class MenuBasicBar : public Quad
 {
 public:
 	MenuBasicBar();
+	void setBarWidth(float w);
 	virtual void init();
 };
 
