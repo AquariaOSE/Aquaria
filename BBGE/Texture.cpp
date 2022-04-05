@@ -407,10 +407,10 @@ bool Texture::loadInternal(const ImageData& img, bool mipmap)
 				free(pmip);
 			glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAX_LEVEL, level);
 		}
-
-		if(ismip)
-			minfilter = GL_LINEAR_MIPMAP_LINEAR;
 	}
+	if(ismip)
+		minfilter = GL_LINEAR_MIPMAP_LINEAR;
+
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MIN_FILTER, minfilter);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
