@@ -31,13 +31,13 @@ unsigned Joystick::GetNumJoysticks()
 Joystick::Joystick()
 {
 	stickIndex = -1;
-#  ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	sdl_controller = NULL;
 	sdl_haptic = NULL;
 	if(!SDL_WasInit(SDL_INIT_HAPTIC))
 		if(SDL_InitSubSystem(SDL_INIT_HAPTIC) < 0)
 			debugLog("Failed to init haptic subsystem");
-#  endif
+#endif
 	sdl_joy = NULL;
 	buttonBitmask = 0;
 	deadZone1 = 0.3f;
@@ -61,7 +61,7 @@ Joystick::~Joystick()
 {
 	shutdown();
 
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	if(SDL_WasInit(SDL_INIT_HAPTIC))
 		SDL_QuitSubSystem(SDL_INIT_HAPTIC);
 #endif
@@ -82,7 +82,7 @@ bool Joystick::init(int stick)
 	stickIndex = stick;
 	numJoyAxes = 0;
 
-	#ifdef BBGE_BUILD_SDL2
+	#if SDL_VERSION_ATLEAST(2,0,0)
 	if (SDL_IsGameController(stick))
 	{
 		sdl_controller = SDL_GameControllerOpen(stick);
@@ -110,7 +110,7 @@ bool Joystick::init(int stick)
 
 	if (sdl_joy)
 	{
-		#ifdef BBGE_BUILD_SDL2
+		#if SDL_VERSION_ATLEAST(2,0,0)
 		const char *n = SDL_JoystickName(sdl_joy);
 		name = n ? n : "<?>";
 		SDL_JoystickGUID jg = SDL_JoystickGetGUID(sdl_joy);
@@ -153,7 +153,7 @@ bool Joystick::init(int stick)
 
 void Joystick::shutdown()
 {
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	if (sdl_haptic)
 	{
 		SDL_HapticClose(sdl_haptic);
@@ -185,7 +185,7 @@ void Joystick::rumble(float leftMotor, float rightMotor, float time)
 {
 	if (core->joystickEnabled)
 	{
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 		if (sdl_haptic)
 		{
 			const float power = (leftMotor + rightMotor) / 2.0f;
@@ -237,7 +237,7 @@ void Joystick::update(float dt)
 {
 	if (core->joystickEnabled && sdl_joy && stickIndex != -1)
 	{
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 		if (!SDL_JoystickGetAttached(sdl_joy))
 		{
 			debugLog("Lost Joystick");
@@ -284,7 +284,7 @@ void Joystick::update(float dt)
 
 		buttonBitmask = 0;
 
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 		if (sdl_controller)
 		{
 			for (unsigned i = 0; i < SDL_CONTROLLER_BUTTON_MAX; i++)
@@ -317,7 +317,7 @@ bool Joystick::anyButton() const
 
 unsigned Joystick::getNumAxes() const
 {
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	return sdl_controller ? SDL_CONTROLLER_AXIS_MAX : numJoyAxes;
 #else
 	return numJoyAxes;
@@ -364,7 +364,7 @@ const char *Joystick::getAxisName(unsigned axis) const
 {
 	if(axis >= numJoyAxes)
 		return NULL;
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	if(sdl_controller)
 		return SDL_GameControllerGetStringForAxis((SDL_GameControllerAxis)axis);
 #endif
@@ -373,7 +373,7 @@ const char *Joystick::getAxisName(unsigned axis) const
 
 const char *Joystick::getButtonName(unsigned btn) const
 {
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	if(sdl_controller)
 		return SDL_GameControllerGetStringForButton((SDL_GameControllerButton)btn);
 #endif

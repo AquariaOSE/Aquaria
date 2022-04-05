@@ -1,9 +1,10 @@
 #ifndef BBGE_GAME_KEYS_H
 #define BBGE_GAME_KEYS_H
 
+#include <SDL_version.h>
 #include "BBGECompileConfig.h"
 
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 
 #include <SDL_scancode.h>
 
@@ -120,7 +121,7 @@
 
 #define KEY_MAXARRAY SDL_NUM_SCANCODES
 
-#else // BBGE_BUILD_SDL2
+#else // begin SDL1
 
 // ------------- SDL 1.2 code path -----------------
 
@@ -239,6 +240,6 @@
 
 #define KEY_MAXARRAY SDLK_LAST
 
-#endif // BBGE_BUILD_SDL2
+#endif // end SDL1
 
 #endif // BBGE_GAME_KEYS_H

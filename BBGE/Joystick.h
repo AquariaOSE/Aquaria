@@ -3,8 +3,9 @@
 
 #include <string>
 #include <SDL_joystick.h>
+#include <SDL_version.h>
 
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 #include <SDL_gamecontroller.h>
 #include <SDL_haptic.h>
 #endif
@@ -79,10 +80,10 @@ private:
 	std::string name;
 	std::string guid;
 
-#  ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	SDL_GameController *sdl_controller;
 	SDL_Haptic *sdl_haptic;
-#  endif
+#endif
 };
 
 

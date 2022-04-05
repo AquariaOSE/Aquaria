@@ -140,7 +140,7 @@ std::string getInputCodeToUserString(unsigned int k, size_t joystickID)
 	// It's just confusing to see Y instead of Z with a german keyboard layout...
 	if(k && k < KEY_MAXARRAY)
 	{
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 		pretty = SDL_GetScancodeName((SDL_Scancode)k);
 		const SDL_Keycode kcode = SDL_GetKeyFromScancode((SDL_Scancode)k);
 		if(kcode != SDLK_UNKNOWN)

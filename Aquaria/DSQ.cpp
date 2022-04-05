@@ -794,7 +794,7 @@ static bool sdlVideoModeOK(int disp, const int w, const int h, const int bpp)
 {
 	if(!w && !h)
 		return true;
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	SDL_DisplayMode mode;
 	const int modecount = SDL_GetNumDisplayModes(disp);
 	for (int i = 0; i < modecount; i++) {
@@ -915,7 +915,7 @@ This build is not yet final, and as such there are a couple things lacking. They
 	SDL_Init(SDL_INIT_VIDEO);
 	if (fullscreen && !sdlVideoModeOK(user.video.displayindex, user.video.resx, user.video.resy, user.video.bits))
 	{
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 		SDL_DisplayMode mode, closest;
 		mode.format = 0;
 		mode.driverdata = 0;

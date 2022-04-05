@@ -154,7 +154,7 @@ static void init()
 
 	if(!worker)
 	{
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 		worker = SDL_CreateThread(_NetworkWorkerThread, "network", NULL);
 #else
 		worker = SDL_CreateThread(_NetworkWorkerThread, NULL);

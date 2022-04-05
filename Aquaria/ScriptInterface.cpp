@@ -916,7 +916,7 @@ luaFunc(loadfile_caseinsensitive)
 	}
 }
 
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 #define LUAAPI_HAS_CLIPBOARD
 luaFunc(os_setclipboard)
 {
@@ -9513,7 +9513,7 @@ luaFunc(pe_isRunning)
 
 luaFunc(getPerformanceCounter)
 {
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	luaReturnNum((lua_Number)SDL_GetPerformanceCounter());
 #else
 	luaReturnNum((lua_Number)SDL_GetTicks());
@@ -9522,7 +9522,7 @@ luaFunc(getPerformanceCounter)
 
 luaFunc(getPerformanceFreq)
 {
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	luaReturnNum((lua_Number)SDL_GetPerformanceFrequency());
 #else
 	luaReturnNum((lua_Number)1000);
