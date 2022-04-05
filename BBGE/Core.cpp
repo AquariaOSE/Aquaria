@@ -175,7 +175,7 @@ void Core::onWindowResize(int w, int h)
 	updateWindowDrawSize(w, h);
 
 	bool reloadRes = false;
-#ifndef BBGE_BUILD_SDL2
+#if !SDL_VERSION_ATLEAST(2,0,0)
 	reloadRes = true; // SDL1.2 loses the GL context on resize, so all resources must be reloaded
 #endif
 
@@ -542,7 +542,7 @@ void Core::init()
 	unsigned sdlflags = SDL_INIT_TIMER | SDL_INIT_AUDIO | SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
 
 	quitNestedMainFlag = false;
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	// Haptic is inited separately, in Jostick.cpp, when a joystick is actually plugged in
 	sdlflags |= SDL_INIT_GAMECONTROLLER;
 #else
@@ -616,7 +616,7 @@ bool Core::getKeyState(int k)
 
 void Core::initJoystickLibrary()
 {
-#ifndef BBGE_BUILD_SDL2
+#if !SDL_VERSION_ATLEAST(2,0,0)
 	detectJoysticks();
 #endif
 
@@ -736,7 +736,7 @@ void Core::enumerateScreenModesIfNecessary(int display /* = -1 */)
 {
 	if(display == -1)
 	{
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 		if(window)
 			display = window->getDisplayIndex();
 		else
@@ -754,7 +754,7 @@ void Core::enumerateScreenModes(int display)
 	_lastEnumeratedDisplayIndex = display;
 	screenModes.clear();
 
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 	screenModes.push_back(ScreenMode(0, 0, 0)); // "Desktop" screen mode
 
 	SDL_DisplayMode mode;
@@ -1283,7 +1283,7 @@ void Core::onEvent(const SDL_Event& event)
 			}
 			else if (focus)
 			{
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 				unsigned kidx = event.key.keysym.scancode;
 #else
 				unsigned kidx = event.key.keysym.sym;
@@ -1298,7 +1298,7 @@ void Core::onEvent(const SDL_Event& event)
 		{
 			if (focus)
 			{
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 				unsigned kidx = event.key.keysym.scancode;
 #else
 				unsigned kidx = event.key.keysym.sym;
@@ -1326,7 +1326,7 @@ void Core::onEvent(const SDL_Event& event)
 		}
 		break;
 
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 
 		case SDL_MOUSEWHEEL:
 		{

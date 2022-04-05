@@ -66,7 +66,7 @@ void initIcon(void *screen)
 		SDL_SysWMinfo wminfo;
 		SDL_VERSION(&wminfo.version)
 
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
 		SDL_GetWindowWMInfo((SDL_Window*)screen, &wminfo);
 		HWND hwnd = wminfo.info.win.window;
 #else

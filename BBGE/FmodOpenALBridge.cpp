@@ -183,7 +183,7 @@ std::list<OggDecoder*> OggDecoder::decoderList;
 void OggDecoder::startDecoderThread()
 {
     stop_thread = false;
-#ifdef BBGE_BUILD_SDL2
+#if SDL_VERSION_ATLEAST(2,0,0)
     decoderThread = SDL_CreateThread((int (*)(void *))decode_loop, "OggDecoder", NULL);
 #else
     decoderThread = SDL_CreateThread((int (*)(void *))decode_loop, NULL);
