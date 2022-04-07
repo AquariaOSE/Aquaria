@@ -255,6 +255,7 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 
 void exit_error(const std::string &message)
 {
+	fprintf(stderr, "FATAL: %s\n", message.c_str());
 	errorLog(message);
 	exit(1);
 }
@@ -268,7 +269,6 @@ bool chance(int perc)
 
 void errorLog(const std::string &s)
 {
-	fputs(s.c_str(), stderr); fputc('\n', stderr);
 	if (core)
 	{
 		core->errorLog(s);
