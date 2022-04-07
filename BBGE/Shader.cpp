@@ -37,7 +37,7 @@ void Shader::staticInit()
 
 	bool use = true;
 
-#ifdef BBGE_BUILD_OPENGL_DYNAMIC
+#ifndef BBGE_BUILD_OPENGL_STATIC
 	if( !glCreateProgramObjectARB || !glDeleteObjectARB || !glUseProgramObjectARB ||
 		!glCreateShaderObjectARB || !glCreateShaderObjectARB || !glCompileShaderARB ||
 		!glGetObjectParameterivARB || !glAttachObjectARB || !glGetInfoLogARB ||

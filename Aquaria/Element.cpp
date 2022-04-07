@@ -292,7 +292,6 @@ void Element::setElementEffectByIndex(int eidx)
 void Element::render()
 {
 	if (!elementActive) return;
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->game->isSceneEditorActive() && this->bgLayer == dsq->game->sceneEditor.bgLayer
 		&& dsq->game->sceneEditor.editType == ET_ELEMENTS)
 	{
@@ -313,7 +312,6 @@ void Element::render()
 		renderBorder = true;
 
 	}
-#endif
 
 	Quad::render();
 

@@ -846,7 +846,6 @@ void Game::loadEntityTypeList()
 	}
 	in.close();
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	entityGroups.clear();
 
 	std::string fn = "scripts/entities/entitygroups.txt";
@@ -886,7 +885,6 @@ void Game::loadEntityTypeList()
 
 	game->sceneEditor.entityPageNum = 0;
 	//game->sceneEditor.page = entityGroups.begin();
-#endif
 }
 
 EntityClass *Game::getEntityClassForEntityType(const std::string &type)
@@ -2548,9 +2546,7 @@ void Game::action(int id, int state, int source, InputDevice device)
 		}
 	}
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (id == ACTION_TOGGLESCENEEDITOR && !state)		toggleSceneEditor();
-#endif
 
 	if (dsq->isDeveloperKeys() || isSceneEditorActive())
 	{
@@ -2834,13 +2830,10 @@ void Game::applyState()
 
 	li = 0;
 
-
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->canOpenEditor())
 	{
 		sceneEditor.init();
 	}
-#endif
 
 	if (verbose) debugLog("Creating Avatar");
 	avatar = new Avatar();
@@ -3210,12 +3203,10 @@ void Game::bindInput()
 	addAction(ACTION_ESC, KEY_ESCAPE, -1);
 
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->canOpenEditor())
 	{
 		addAction(ACTION_TOGGLESCENEEDITOR, KEY_TAB, -1);
 	}
-#endif
 
 	if (dsq->canOpenEditor())
 	{
@@ -4134,7 +4125,6 @@ void Game::handleShotCollisionsHair(Entity *e, int num, float perc)
 	}
 }
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 void Game::toggleSceneEditor()
 {
 	if (!core->getAltState())
@@ -4143,7 +4133,6 @@ void Game::toggleSceneEditor()
 		setElementLayerFlags();
 	}
 }
-#endif
 
 void Game::toggleMiniMapRender()
 {
@@ -4607,11 +4596,7 @@ void Game::update(float dt)
 	}
 	themenu->update(dt);
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
-	{
-		sceneEditor.update(dt);
-	}
-#endif
+	sceneEditor.update(dt);
 
 	dsq->emote.update(dt);
 
@@ -4990,11 +4975,9 @@ void Game::removeState()
 		avatar->endOfGameState();
 	}
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	debugLog("toggle sceneEditor");
 	if (sceneEditor.isOn())
 		sceneEditor.toggle(false);
-#endif
 
 	debugLog("gameSpeed");
 	dsq->gameSpeed.interpolateTo(1, 0);
@@ -5066,9 +5049,7 @@ void Game::removeState()
 	dsq->clearElements();
 	dsq->clearEntities();
 	avatar = 0;
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	sceneEditor.shutdown();
-#endif
 
 	cameraFollow = 0;
 	core->cameraPos = Vector(0,0);

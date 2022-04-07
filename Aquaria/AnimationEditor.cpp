@@ -28,9 +28,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Game.h"
 
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR  // Through end of file
-
-
 int TIMELINE_GRIDSIZE		= 10;
 float TIMELINE_UNIT			= 0.1f;
 float TIMELINE_UNIT_STEP	= 0.01f;
@@ -1468,7 +1465,3 @@ void AnimationEditor::updateTimelineGrid()
 	os << "Grid: " << TIMELINE_GRIDSIZE;
 	gridsize->setText(os.str());
 }
-
-
-
-#endif  // AQUARIA_BUILD_SCENEEDITOR

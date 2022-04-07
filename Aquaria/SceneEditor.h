@@ -7,8 +7,6 @@
 #include "ActionMapper.h"
 #include "Quad.h"
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
-
 class Element;
 class Entity;
 class Path;
@@ -240,7 +238,5 @@ protected:
 	bool on;
 	InterpolatedVector oldGlobalScale;
 };
-
-#endif  // AQUARIA_BUILD_SCENEEDITOR
 
 #endif // AQUARIA_SCENEEDITOR_H

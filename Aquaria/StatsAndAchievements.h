@@ -21,8 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef STATS_ACH_H
 #define STATS_ACH_H
 
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
-#include <queue>
+#ifndef BBGE_BUILD_STEAMWORKS
+#include <list>
 #endif
 
 enum Achievements
@@ -143,9 +143,9 @@ private:
 	// Store stats
 	void StoreStatsIfNecessary();
 
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
+#ifndef BBGE_BUILD_STEAMWORKS
 	float unlockedDisplayTimestamp;
-	std::queue<std::string> unlockedToBeDisplayed;
+	std::list<std::string> unlockedToBeDisplayed;
 #endif
 
 	// Did we get the stats from Steam?

@@ -133,9 +133,7 @@ static void Linux_CopyTree(const char *src, const char *dst)
 
 const size_t saveSlotPageSize = 4;
 size_t maxPages = 15;
-#ifdef AQUARIA_BUILD_CONSOLE
 const int MAX_CONSOLELINES	= 18;
-#endif
 
 DSQ *dsq = 0;
 
@@ -199,14 +197,10 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	recentSaveSlot = -1;
 	arialFontData = 0;
 
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
 	achievement_text = 0;
 	achievement_box = 0;
-#endif
 
-#ifdef AQUARIA_BUILD_CONSOLE
 	console = 0;
-#endif
 	cmDebug = 0;
 	saveSlotMode = SSM_NONE;
 	afterEffectManagerLayer = LR_AFTER_EFFECTS; // LR_AFTER_EFFECTS
@@ -870,14 +864,10 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	addStateInstance(game = new Game);
 	addStateInstance(new GameOver);
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	addStateInstance(new AnimationEditor);
-#endif
 	addStateInstance(new Intro2);
 	addStateInstance(new BitBlotLogo);
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	addStateInstance(new ParticleEditor);
-#endif
 	addStateInstance(new Credits);
 	addStateInstance(new Intro);
 	addStateInstance(new Nag);
@@ -1067,7 +1057,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 	debugLog("done");
 
 
-#ifdef AQUARIA_BUILD_CONSOLE
 	debugLog("Creating console");
 	console = new DebugFont;
 	{
@@ -1076,9 +1065,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 		console->setFontSize(6);
 	}
 	addRenderObject(console, LR_DEBUG_TEXT);
-#else
-	debugLog("NOT creating console (disabled in this build)");
-#endif
 
 	debugLog("1");
 
@@ -1130,7 +1116,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 
 	addRenderObject(subtext, LR_SUBTITLES);
 
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
 	achievement_box = new Quad();
 	achievement_box->position = Vector(800,0);
 	achievement_box->alpha = 0;
@@ -1148,7 +1133,6 @@ This build is not yet final, and as such there are a couple things lacking. They
 	achievement_text->setWidth(280);
 	achievement_text->setAlign(ALIGN_LEFT);
 	addRenderObject(achievement_text, LR_SUBTITLES);
-#endif
 
 	cutscene_bg = new Quad();
 	cutscene_bg->autoWidth = AUTO_VIRTUALWIDTH;
@@ -1728,7 +1712,6 @@ void DSQ::reloadDevice()
 	recreateBlackBars();
 }
 
-#ifdef AQUARIA_BUILD_CONSOLE
 void DSQ::toggleConsole()
 {
 	if (console && isDeveloperKeys())
@@ -1773,7 +1756,6 @@ void DSQ::debugLog(const std::string &s)
 	}
 	Core::debugLog(s);
 }
-#endif  // AQUARIA_BUILD_CONSOLE
 
 int DSQ::getEntityTypeIndexByName(std::string s)
 {
@@ -2055,10 +2037,8 @@ void DSQ::shutdown()
 	UNREFTEX(texCursorSing);
 	UNREFTEX(texCursorLook);
 
-#ifdef AQUARIA_BUILD_CONSOLE
 	removeRenderObject(console);
 	console = 0;
-#endif
 	removeRenderObject(cmDebug);
 	cmDebug = 0;
 	removeRenderObject(subtext);
@@ -2066,12 +2046,10 @@ void DSQ::shutdown()
 	removeRenderObject(subbox);
 	subbox = 0;
 
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
 	removeRenderObject(achievement_text);
 	achievement_text = 0;
 	removeRenderObject(achievement_box);
 	achievement_box = 0;
-#endif
 
 	removeRenderObject(cursor);
 	removeRenderObject(cursorGlow); // is this necessary? probably
@@ -3605,11 +3583,7 @@ bool DSQ::isDeveloperKeys()
 
 bool DSQ::canOpenEditor() const
 {
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	return dsq->isDeveloperKeys() || (dsq->mod.isActive() && !dsq->mod.isEditorBlocked());
-#else
-	return false;
-#endif
 }
 
 bool DSQ::isQuitFlag()
@@ -3704,14 +3678,12 @@ void DSQ::bindInput()
 
 	if (isDeveloperKeys())
 	{
-#ifdef AQUARIA_BUILD_CONSOLE
 		addAction(MakeFunctionEvent(DSQ, toggleConsole), KEY_TILDE, 0);
-#endif
 		addAction(MakeFunctionEvent(DSQ, toggleRenderCollisionShapes), KEY_RETURN, 0);
 	}
 	addAction(MakeFunctionEvent(DSQ, debugMenu), KEY_BACKSPACE, 0);
 	//addAction(MakeFunctionEvent(DSQ, takeScreenshotKey	),		KEY_P,				0);
-	
+
 	for(size_t i = 0; i < dsq->user.control.actionSets.size(); ++i)
 	{
 		ActionSet& as = dsq->user.control.actionSets[i];
@@ -3719,7 +3691,7 @@ void DSQ::bindInput()
 
 		as.importAction(this, "Escape",		ACTION_ESC, sourceID);
 		as.importAction(this, "Screenshot",		ACTION_SCREENSHOT, sourceID);
-	
+
 		if(ActionInput *a = as.getActionInputByName("PrimaryAction"))
 			almb.push_back(a);
 		if(ActionInput *a = as.getActionInputByName("SecondaryAction"))
@@ -4009,10 +3981,8 @@ void DSQ::onUpdate(float dt)
 		fpsText->setText(os.str());
 	}
 
-#ifdef AQUARIA_BUILD_CONSOLE
 	if(console && console->alpha == 1)
 		console->position = Vector(10 - virtualOffX,400);
-#endif
 
 	if (shakeCameraTimer > 0)
 	{

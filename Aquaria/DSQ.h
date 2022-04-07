@@ -292,9 +292,7 @@ public:
 
 	int getEntityTypeIndexByName(std::string s);
 	void screenMessage(const std::string &msg);
-#ifdef AQUARIA_BUILD_CONSOLE  // No need to override it otherwise.
 	void debugLog(const std::string &s);
-#endif
 	void toggleConsole();
 	void toggleEffects();
 	void debugMenu();
@@ -388,9 +386,7 @@ public:
 	Demo demo;
 
 	DebugFont *fpsText, *cmDebug;
-#ifdef AQUARIA_BUILD_CONSOLE
 	DebugFont *console;
-#endif
 	BitmapText *versionLabel;
 
 	void setVersionLabelText();
@@ -414,10 +410,8 @@ public:
 	void startSelectedMod();
 	ModEntry* getSelectedModEntry();
 
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
 	BitmapText *achievement_text;
 	Quad *achievement_box;
-#endif
 
 	BitmapText *subtext;
 	Quad *subbox;
@@ -515,9 +509,7 @@ protected:
 	void onMouseInput();
 	std::vector<std::string> voxQueue;
 
-#ifdef AQUARIA_BUILD_CONSOLE
 	std::vector<std::string> consoleLines;
-#endif
 
 	std::vector <AquariaSaveSlot*> saveSlots;
 

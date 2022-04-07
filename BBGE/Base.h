@@ -29,8 +29,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
     #endif
 #endif
 
-#include "BBGECompileConfig.h"
-
 #define compile_assert(pred) switch(0){case 0:case (pred):;}
 
 #ifdef _MSC_VER

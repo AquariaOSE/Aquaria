@@ -2491,7 +2491,6 @@ void Entity::render()
 		color *= multColor;
 	}
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	if (dsq->game->isSceneEditorActive() && dsq->game->sceneEditor.editType == ET_ENTITIES)
 	{
 		if (dsq->game->sceneEditor.editingEntity == this)
@@ -2501,7 +2500,6 @@ void Entity::render()
 		renderBorder = true;
 
 	}
-#endif
 
 	// HACK: need to multiply base + etc
 	skeletalSprite.setColorMult(this->color, this->alpha.x);

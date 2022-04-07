@@ -129,7 +129,7 @@ StatsAndAchievements::StatsAndAchievements()
 {
 
 
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
+#ifndef BBGE_BUILD_STEAMWORKS
 	unlockedDisplayTimestamp = -1.0f;
 #endif
 
@@ -148,7 +148,7 @@ StatsAndAchievements::StatsAndAchievements()
 //-----------------------------------------------------------------------------
 void StatsAndAchievements::RunFrame()
 {
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
+#ifndef BBGE_BUILD_STEAMWORKS
 	if ( !requestedStats )
 	{
 		requestedStats = true;
@@ -731,7 +731,7 @@ void StatsAndAchievements::update(float dt)
 		}
 	}
 
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
+#ifndef BBGE_BUILD_STEAMWORKS
 	// change no state if we're still fading in/out.
 	if (!dsq->achievement_box->alpha.isInterpolating())
 	{
@@ -755,7 +755,7 @@ void StatsAndAchievements::update(float dt)
 			unlockedDisplayTimestamp = maxUnlockDisplayTime;
 			std::string text("Achievement Unlocked:\n");
 			text += name;
-			unlockedToBeDisplayed.pop();
+			unlockedToBeDisplayed.pop_front();
 			dsq->achievement_text->setText(text);
 			dsq->achievement_text->alpha.interpolateTo(1, 1);
 			dsq->achievement_box->alpha.interpolateTo(1, 0.1f);
@@ -777,8 +777,8 @@ void StatsAndAchievements::UnlockAchievement( Achievement &achievement )
 	// the icon may change once it's unlocked
 	achievement.iconImage = 0;
 
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
-	unlockedToBeDisplayed.push( std::string(achievement.name) );
+#ifndef BBGE_BUILD_STEAMWORKS
+	unlockedToBeDisplayed.push_back(achievement.name);
 #endif
 
 	// Store stats end of frame
@@ -794,7 +794,7 @@ void StatsAndAchievements::StoreStatsIfNecessary()
 	{
 		// already set any achievements in UnlockAchievement
 
-#ifdef BBGE_BUILD_ACHIEVEMENTS_INTERNAL
+#ifndef BBGE_BUILD_STEAMWORKS
 		storeStats = false;  // only ever try once.
 
 		// FIXME: We should use a temporary file to ensure that data
@@ -836,4 +836,6 @@ void StatsAndAchievements::StoreStatsIfNecessary()
 	}
 }
 
-
+#ifdef BBGE_BUILD_STEAMWORKS
+#error Someone with access to the Steamworks SDK actually has to implement this!
+#endif

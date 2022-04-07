@@ -19,17 +19,24 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
-extern "C"
-{
+// Internal Lua is built as C++ code, so we need to include the headers properly
+#ifndef AQUARIA_INTERNAL_LUA
+extern "C" {
+#endif
+
 #include "lua.h"
 #include "lauxlib.h"
 #include "lualib.h"
-}
+
+#ifndef AQUARIA_INTERNAL_LUA
+} // end extern "C"
+#endif
+
 #include "luaalloc.h"
 
 #include "SDL.h"
 #include "ScriptInterface.h"
-#include "../BBGE/ScriptObject.h"
+#include "ScriptObject.h"
 
 #include "ReadXML.h"
 
@@ -55,7 +62,7 @@ extern "C"
 #include "ActionMapper.h"
 
 
-#include "../BBGE/MathFunctions.h"
+#include "MathFunctions.h"
 
 #undef quad // avoid conflict with quad precision types
 
@@ -8414,7 +8421,7 @@ static Joystick *_getJoystick(lua_State *L, int idx = 1)
 	int source = lua_tointeger(L, idx) - 1;
 	if(source < 0)
 		return core->getJoystick(0); // HACK: FIXME: do something sensible instead
-	
+
 	return core->getJoystickForSourceID(source);
 }
 

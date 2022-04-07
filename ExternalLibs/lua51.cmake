@@ -1,0 +1,8 @@
+OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" TRUE)
+if(AQUARIA_INTERNAL_LUA)
+    message(STATUS "Using internal copy of Lua 5.1")
+    set(LUA_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/lua-5.1.4/src" CACHE INTERNAL "")
+    add_subdirectory(lua-5.1.4)
+else()
+    find_package(Lua51 REQUIRED)
+endif()
