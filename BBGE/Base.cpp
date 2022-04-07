@@ -268,6 +268,7 @@ bool chance(int perc)
 
 void errorLog(const std::string &s)
 {
+	fputs(s.c_str(), stderr); fputc('\n', stderr);
 	if (core)
 	{
 		core->errorLog(s);
