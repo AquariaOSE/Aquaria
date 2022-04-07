@@ -51,6 +51,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #undef min
 #undef max
 
+// HACK: Fix this == NULL checks with GCC 6 and up
+#if defined(__GNUC__) || defined (__clang__)
+#pragma GCC optimize("no-delete-null-pointer-checks")
+#endif
+
 // HACK: global because OpenAL has only one listener anyway
 static FMOD_VECTOR s_listenerPos;
 

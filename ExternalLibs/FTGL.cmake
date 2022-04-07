@@ -5,6 +5,7 @@ if(AQUARIA_INTERNAL_FTGL)
     set(FTGL_INCLUDE_DIRS "${FTGLDIR}/include;${FREETYPE_INCLUDE_DIRS}" CACHE INTERNAL "")
     include(freetype2.cmake) # Nothing else uses freetype2 directly
     INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
+    INCLUDE_DIRECTORIES(${EXTLIBDIR}) # For <GL/gl.h>
     add_subdirectory(FTGL)
 else()
     find_package(FTGL REQUIRED)
