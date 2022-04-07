@@ -61,4 +61,19 @@ set(lua51_src
 # Use C++ exceptions instead of setjmp() & longjmp()
 set_source_files_properties(${lua51_src} PROPERTIES LANGUAGE CXX)
 
+# Windows is detected automatically
+if(LINUX)
+    ADD_DEFINITIONS(-DLUA_USE_LINUX)
+elseif(APPLE)
+     ADD_DEFINITIONS(-DLUA_USE_MACOSX)
+elseif(POSIX)
+    ADD_DEFINITIONS(-DLUA_USE_POSIX)
+else()
+    # gcc/ld warns about tmpnam() so we might as well try to get rid of it
+    CHECK_FUNCTION_EXISTS(mkstemp HAVE_MKSTEMP)
+    IF(HAVE_MKSTEMP)
+        ADD_DEFINITIONS(-DLUA_USE_MKSTEMP)
+    ENDIF()
+endif()
+
 add_library(lua51 ${lua51_src})

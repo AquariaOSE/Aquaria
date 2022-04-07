@@ -32,6 +32,7 @@ if(AQUARIA_INTERNAL_OGGVORBIS)
         ${LIBVORBISDIR}/lib/vorbisfile.c
         ${LIBVORBISDIR}/lib/window.c
     )
+    target_link_libraries(libvorbis libogg)
 else()
     # CMake doesn't seem to have a module for libogg or libvorbis yet, so
     # we roll our own based on existing find_package modules.
