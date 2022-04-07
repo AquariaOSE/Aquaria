@@ -1,0 +1,8 @@
+OPTION(AQUARIA_INTERNAL_TINYXML2 "Always use included TinyXML2 library" TRUE)
+if(AQUARIA_INTERNAL_TINYXML2)
+    message(STATUS "Using internal copy of TinyXML2")
+    set(TINYXML2_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/tinyxml2" CACHE INTERNAL "")
+    add_library(tinyxml2 tinyxml2/tinyxml2.cpp tinyxml2/tinyxml2.h)
+else()
+    find_package(TinyXML2 REQUIRED)
+endif()

@@ -1,7 +1,16 @@
+#include "GLLoad.h"
+
+#ifdef BBGE_BUILD_OPENGL_STATIC
+
+bool lookup_all_glsyms() { return true; }
+bool void unload_all_glsyms() { return false; }
+
+#else
+
 #include "Base.h"
 
 #include "RenderBase.h"
-#include "GLLoad.h"
+
 #include <sstream>
 
 #ifdef GLAPIENTRY
@@ -16,7 +25,6 @@
 
 #include <GL/glext.h>
 
-#ifdef BBGE_BUILD_OPENGL_DYNAMIC
 
 PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
 
@@ -89,6 +97,7 @@ static bool lookup_glsym(const char *funcname, void **func)
 bool lookup_all_glsyms()
 {
 	bool retval = true;
+
 #define GL_FUNC(ret,fn,params,call,rt) \
 	if (!lookup_glsym(#fn, (void **) &p##fn)) retval = false;
 #include "OpenGLStubs.h"
@@ -210,4 +219,4 @@ void unload_all_glsyms()
 	glUniform4ivARB           = NULL;
 }
 
-#endif // BBGE_BUILD_OPENGL_DYNAMIC
+#endif // BBGE_BUILD_OPENGL_STATIC

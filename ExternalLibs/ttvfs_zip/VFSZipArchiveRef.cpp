@@ -1,7 +1,7 @@
 #include "VFSInternal.h"
 #include "VFSZipArchiveRef.h"
 #include <stdio.h>
-#include "miniz.h"
+#include <miniz.h>
 
 
 VFS_NAMESPACE_START

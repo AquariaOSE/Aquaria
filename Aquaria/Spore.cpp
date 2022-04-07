@@ -88,21 +88,12 @@ void Spore::onEnterState(int state)
 
 void Spore::killAllSpores()
 {
-	std::queue<Spore*>sporeDeleteQueue;
-	for (Spores::iterator i = spores.begin(); i != spores.end(); i++)
-	{
-		sporeDeleteQueue.push(*i);
-	}
-	Spore *s = 0;
-	while (!sporeDeleteQueue.empty())
-	{
-		s = sporeDeleteQueue.front();
-		if (s)
-		{
+	Spores sporesToDelete = spores; // copy
+
+	for (Spores::iterator it = sporesToDelete.begin(); it != sporesToDelete.end(); it++)
+		if(Spore *s = *it)
 			s->safeKill();
-		}
-		sporeDeleteQueue.pop();
-	}
+
 	spores.clear();
 }
 

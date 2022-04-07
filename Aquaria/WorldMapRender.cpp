@@ -1166,9 +1166,7 @@ void WorldMapRender::onUpdate(float dt)
 	else
 	{
 		if (!dsq->isInCutscene() && dsq->game->avatar && activeTile
-	#ifdef AQUARIA_BUILD_SCENEEDITOR
 			&& !dsq->game->sceneEditor.isOn()
-	#endif
 			)
 		{
 			const float screenWidth  = core->getVirtualWidth()  * core->invGlobalScale;

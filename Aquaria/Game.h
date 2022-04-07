@@ -27,14 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "AquariaMenuItem.h"
 #include "ScriptedEntity.h"
 #include "TileVector.h"
-
-#ifdef AQUARIA_DEMO
-#undef AQUARIA_BUILD_SCENEEDITOR
-#endif
-
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 #include "SceneEditor.h"
-#endif
 
 #include <tinyxml2.h>
 using namespace tinyxml2;
@@ -287,12 +280,8 @@ public:
 	Path *getNearestPath(const Vector &pos, PathType pathType=PATH_NONE);
 	Path *getNearestPath(Path *p, std::string name);
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	SceneEditor sceneEditor;
 	bool isSceneEditorActive() {return sceneEditor.isOn();}
-#else
-	bool isSceneEditorActive() const {return false;}
-#endif
 
 	bool isInGameMenu();
 
@@ -362,9 +351,7 @@ public:
 
 	WaterSurfaceRender *waterSurfaceRender;
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	EntityGroups entityGroups;
-#endif
 
 	std::string getNoteName(int n, const std::string &pre="");
 
@@ -521,9 +508,7 @@ protected:
 	Entity *cameraFollowEntity;
 	bool loadSceneXML(std::string scene);
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR
 	void toggleSceneEditor();
-#endif
 
 	Quad *bg, *bg2;
 

@@ -1,6 +1,6 @@
 #define VFS_ENABLE_C_API 1
 
-#include "ttvfs.h"
+#include <ttvfs.h>
 #include "ttvfs_stdio.h"
 #include <assert.h>
 #include <sstream>

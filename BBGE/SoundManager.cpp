@@ -24,15 +24,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Base.h"
 #include "ttvfs_stdio.h"
 
-#ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
-	#include "FmodOpenALBridge.h"
-#else
-	#include <fmod.h>
-	#include <fmod.hpp>
-	#ifdef BBGE_BUILD_WINDOWS
-	#pragma comment(lib, "fmodex_vc.lib")
-	#endif
-#endif
+#include "FmodOpenALBridge.h"
+
 
 
 SoundManager *sound = 0;
@@ -327,11 +320,6 @@ SoundManager::SoundManager(const std::string &defaultDevice)
 		result = SoundCore::system->init(channels, FMOD_INIT_NORMAL, 0); /* Replace with whatever channel count and flags you use! */
 		if (checkError()) goto get_out;
 	}
-
-#ifdef BBGE_BUILD_FMOD_OPENAL_BRIDGE
-	SoundCore::system->getNumChannels(&channels);
-#endif
-
 
 
 	debugLog("set file system");

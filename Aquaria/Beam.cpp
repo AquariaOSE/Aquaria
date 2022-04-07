@@ -71,21 +71,11 @@ void Beam::onEndOfLife()
 
 void Beam::killAllBeams()
 {
-	std::queue<Beam*>beamDeleteQueue;
-	for (Beams::iterator i = beams.begin(); i != beams.end(); i++)
-	{
-		beamDeleteQueue.push(*i);
-	}
-	Beam *s = 0;
-	while (!beamDeleteQueue.empty())
-	{
-		s = beamDeleteQueue.front();
-		if (s)
-		{
+	Beams beamsToDelete = beams; // copy
+	for (Beams::iterator it = beamsToDelete.begin(); it != beamsToDelete.end(); it++)
+		if(Beam *s = *it)
 			s->safeKill();
-		}
-		beamDeleteQueue.pop();
-	}
+
 	beams.clear();
 }
 

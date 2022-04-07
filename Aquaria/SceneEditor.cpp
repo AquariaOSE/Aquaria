@@ -32,9 +32,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Shot.h"
 
 
-#ifdef AQUARIA_BUILD_SCENEEDITOR  // Through end of file
-
-
 #ifdef BBGE_BUILD_WINDOWS
 	#define WIN32_LEAN_AND_MEAN
 	#include <windows.h>
@@ -3155,6 +3152,3 @@ void SceneEditor::dumpObs()
 	tgaSaveRGBA(outfn.c_str(), MAX_GRID, MAX_GRID, data);
 	dsq->screenMessage("Saved grid image to " + outfn);
 }
-
-
-#endif  // AQUARIA_BUILD_SCENEEDITOR
