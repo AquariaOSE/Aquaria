@@ -64,8 +64,14 @@ SET(AQUARIA_SRCS
 
 set(EXETYPE)
 
+
 IF(WIN32)
-    SET(EXETYPE WIN32)
+    option(AQUARIA_CONSOLE_WINDOW "Enable the console window (always on in debug builds)" FALSE)
+    if(AQUARIA_CONSOLE_WINDOW OR (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+        add_definitions(-DAQUARIA_ENABLE_CONSOLE_LOG)
+    else()
+        SET(EXETYPE WIN32)
+    endif()
     SET(AQUARIA_SRCS ${AQUARIA_SRCS} aquaria.rc)
 ENDIF()
 

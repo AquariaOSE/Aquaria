@@ -238,9 +238,11 @@ void Core::debugLog(const std::string &s)
 	{
 		_logOut << s << std::endl;
 	}
-#ifdef _DEBUG
-	std::cout << s << std::endl;
+
+#if !defined(_DEBUG)
+	if(debugOutputActive)
 #endif
+		std::cout << s << std::endl;
 }
 static bool checkWritable(const std::string& path, bool warn, bool critical)
 {
@@ -345,6 +347,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 
 	_logOut.open((debugLogPath + "debug.log").c_str());
 	debugLogActive = true;
+	debugOutputActive = false;
 
 	debugLogTextures = true;
 
