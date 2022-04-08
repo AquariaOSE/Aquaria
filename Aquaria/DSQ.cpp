@@ -158,6 +158,10 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	assert(!dsq);
 	dsq = this;
 
+#ifdef AQUARIA_ENABLE_CONSOLE_LOG
+	this->debugOutputActive = true;
+#endif
+
 	cutscene_bg = 0;
 	cutscene_text = 0;
 	cutscene_text2 = 0;

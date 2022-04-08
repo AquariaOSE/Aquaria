@@ -420,6 +420,7 @@ public:
 	float get_current_dt() { return current_dt; }
 
 	bool debugLogActive;
+	bool debugOutputActive;
 
 	void setInputGrab(bool on);
 	void updateInputGrab();

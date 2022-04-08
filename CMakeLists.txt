@@ -16,6 +16,24 @@ IF(CMAKE_SYSTEM_NAME STREQUAL "Haiku")
     SET(HAIKU TRUE)
 ENDIF()
 
+# Recommended compiler flags that cmake doesn't set automatically
+if(MSVC)
+    # /MP: parallel builds
+    # /GS-: disable security cookie (emits calls into vcrt)
+    # /Oi: enable intrinsic functions
+    # /fp:fast: -ffast-math
+    set(AQUARIA_EXTRA_COMPILE_FLAGS "/MP /GS- /Oi /fp:fast" CACHE STRING "Extra compiler flags for MSVC")
+elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
+    set(AQUARIA_EXTRA_COMPILE_FLAGS "-ffast-math" CACHE STRING "Extra compiler flags for GCC/Clang")
+else()
+    set(AQUARIA_EXTRA_COMPILE_FLAGS "" CACHE STRING "Extra compiler flags")
+endif()
+
+if(AQUARIA_EXTRA_COMPILE_FLAGS)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${AQUARIA_EXTRA_COMPILE_FLAGS}")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AQUARIA_EXTRA_COMPILE_FLAGS}")
+endif()
+
 
 OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
 OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional features." TRUE)
