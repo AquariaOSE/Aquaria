@@ -5,7 +5,7 @@
 
 bool tgaSaveRGBA(const char *filename, size_t width, size_t height, unsigned char *data);
 bool zgaSaveRGBA(const char *filename, size_t width, size_t height, unsigned char *data);
-bool pngSaveRGBA(const char *filename, size_t width, size_t height, unsigned char *data);
+bool pngSaveRGBA(const char *filename, size_t width, size_t height, unsigned char *data, unsigned compressLevel);
 
 struct ImageData
 {

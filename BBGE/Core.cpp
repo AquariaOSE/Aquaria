@@ -2265,7 +2265,7 @@ bool Core::saveScreenshot(const std::string &filename, bool png)
 	size_t w = getWindowWidth(), h = getWindowHeight();
 	unsigned char *imageData = grabCenteredScreenshot(w, h);
 	bool ok = png
-		? pngSaveRGBA(filename.c_str(), w, h, imageData)
+		? pngSaveRGBA(filename.c_str(), w, h, imageData, 3)
 		: tgaSaveRGBA(filename.c_str(), w, h, imageData);
 	delete [] imageData;
 	return ok;
