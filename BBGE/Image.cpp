@@ -5,9 +5,13 @@
 #include "ttvfs_stdio.h"
 #include "Base.h"
 
-bool pngSaveRGBA(const char *filename, size_t width, size_t height, unsigned char *data)
+bool pngSaveRGBA(const char *filename, size_t width, size_t height, unsigned char *data, unsigned compressLevel)
 {
-	return !!stbi_write_png(filename, (int)width, (int)height, 4, data, width * 4);
+	const int oldlevel = stbi_write_png_compression_level;
+	stbi_write_png_compression_level = compressLevel; // HACK: ugly API but what can you do
+	bool ok = !!stbi_write_png(filename, (int)width, (int)height, 4, data, width * 4);
+	stbi_write_png_compression_level = oldlevel;
+	return ok;
 }
 
 bool tgaSaveRGBA(const char *filename, size_t width, size_t height, unsigned char *data)
