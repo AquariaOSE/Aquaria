@@ -354,8 +354,8 @@ public:
 		return virtualHeight;
 	}
 
-	unsigned char *grabScreenshot(int x, int y, int w, int h);
-	unsigned char *grabCenteredScreenshot(int w, int h);
+	unsigned char *grabScreenshot(size_t x, size_t y, size_t w, size_t h);
+	unsigned char *grabCenteredScreenshot(size_t w, size_t h);
 	bool saveScreenshot(const std::string &filename, bool png);
 
 	bool minimized;
