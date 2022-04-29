@@ -19,6 +19,7 @@ static unsigned char * miniz_stbi_compress(unsigned char *data, int data_len, in
 			return NULL;
 		}
 	}
+	*out_len = (int)maxsz;
 	return packed;
 }
 

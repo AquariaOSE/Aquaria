@@ -2210,10 +2210,11 @@ bool Core::canChangeState()
 // Take a screenshot of the specified region of the screen and store it
 // in a 32bpp pixel buffer.  delete[] the returned buffer when it's no
 // longer needed.
-unsigned char *Core::grabScreenshot(int x, int y, int w, int h)
+unsigned char *Core::grabScreenshot(size_t x, size_t y, size_t w, size_t h)
 {
-	unsigned int size = sizeof(unsigned char) * w * h * 4;
-	unsigned char *imageData = new unsigned char[size];
+	const size_t N = w * h;
+	const size_t size = sizeof(unsigned char) * N * 4;
+	unsigned char * const imageData = new unsigned char[size];
 
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
 	glDisable(GL_BLEND);
@@ -2232,12 +2233,20 @@ unsigned char *Core::grabScreenshot(int x, int y, int w, int h)
 
 	// Force all alpha values to 255.
 	unsigned char *c = imageData;
-	for (int x = 0; x < w; x++)
+	for (size_t i = 0; i < N; ++i, c += 4)
 	{
-		for (int y = 0; y < h; y++, c += 4)
-		{
-			c[3] = 255;
-		}
+		c[3] = 255;
+	}
+
+	// OpenGL outputs the image upside down -> flip pixel rows
+	const ptrdiff_t rowOffs = 4 * w;
+	unsigned char * row0 = imageData;
+	unsigned char * row1 = imageData + size - rowOffs;
+	while(row0 < row1)
+	{
+		std::swap_ranges(row0, row0 + rowOffs, row1);
+		row0 += rowOffs;
+		row1 -= rowOffs;
 	}
 
 	return imageData;
@@ -2245,7 +2254,7 @@ unsigned char *Core::grabScreenshot(int x, int y, int w, int h)
 }
 
 // Like grabScreenshot(), but grab from the center of the screen.
-unsigned char *Core::grabCenteredScreenshot(int w, int h)
+unsigned char *Core::grabCenteredScreenshot(size_t w, size_t h)
 {
 	return grabScreenshot(core->width/2 - w/2, core->height/2 - h/2, w, h);
 }
@@ -2253,7 +2262,7 @@ unsigned char *Core::grabCenteredScreenshot(int w, int h)
 // takes a screen shot and saves it to a TGA or PNG image
 bool Core::saveScreenshot(const std::string &filename, bool png)
 {
-	int w = getWindowWidth(), h = getWindowHeight();
+	size_t w = getWindowWidth(), h = getWindowHeight();
 	unsigned char *imageData = grabCenteredScreenshot(w, h);
 	bool ok = png
 		? pngSaveRGBA(filename.c_str(), w, h, imageData)
