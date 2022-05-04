@@ -1259,7 +1259,7 @@ bool Core::doMouseConstraint()
 	{
 		Vector h = mouseConstraintCenter;
 		Vector d = mouse.position - h;
-		if (!d.isLength2DIn(mouseCircle))
+		if (!d.isLength2DIn(mouseCircle + 1)) // Only move mouse if it'll actually move (works around issues in SDL > 2.0.20)
 		{
 			d.setLength2D(mouseCircle);
 			mouse.position = h+d;
@@ -1313,15 +1313,8 @@ void Core::onEvent(const SDL_Event& event)
 		{
 			if (focus && updateMouse)
 			{
-				mouse.lastPosition = mouse.position;
-
 				mouse.position.x = ((event.motion.x) * (float(virtualWidth)/float(getWindowWidth()))) - getVirtualOffX();
 				mouse.position.y = event.motion.y * (float(virtualHeight)/float(getWindowHeight()));
-
-				mouse.change = mouse.position - mouse.lastPosition;
-
-				if (doMouseConstraint())
-					setMousePosition(mouse.position);
 			}
 		}
 		break;
@@ -1421,9 +1414,18 @@ void Core::pollEvents(float dt)
 
 		mouse.scrollWheelChange = 0;
 		mouse.change = Vector(0,0);
+		mouse.lastPosition = mouse.position;
 	}
 
 	window->handleInput();
+
+	if(updateMouse)
+	{
+		if (doMouseConstraint())
+			setMousePosition(mouse.position);
+
+		mouse.change = mouse.position - mouse.lastPosition;
+	}
 
 	for(size_t i = 0; i < joysticks.size(); ++i)
 		if(joysticks[i])
