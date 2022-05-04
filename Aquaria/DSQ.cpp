@@ -2928,12 +2928,12 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 				os << dsq->getSaveDirectory() << "/screen-" << numToZeroString(selectedSaveSlot->getSlotIndex(), 4) << ".zga";
 
 				// Cut off top and bottom to get a 4:3 aspect ratio.
-				int adjHeight = (scrShotWidth * 3.0f) / 4.0f;
+				/*int adjHeight = (scrShotWidth * 3.0f) / 4.0f;
 				int imageDataSize = scrShotWidth * scrShotHeight * 4;
 				int adjImageSize = scrShotWidth * adjHeight * 4;
 				int adjOffset = scrShotWidth * ((scrShotHeight-adjHeight)/2) * 4;
 				memmove(scrShotData, scrShotData + adjOffset, adjImageSize);
-				memset(scrShotData + adjImageSize, 0, imageDataSize - adjImageSize);
+				memset(scrShotData + adjImageSize, 0, imageDataSize - adjImageSize);*/
 				zgaSaveRGBA(os.str().c_str(), scrShotWidth, scrShotHeight, scrShotData);
 			}
 
