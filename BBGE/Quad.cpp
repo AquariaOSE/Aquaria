@@ -71,19 +71,6 @@ void Quad::createStrip(bool vert, int num)
 	resetStrip();
 }
 
-void Quad::setStrip(const std::vector<Vector> &st)
-{
-	resetStrip();
-	for (size_t i = 0; i < st.size(); i++)
-	{
-		if (i < strip.size())
-		{
-			strip[i].x += st[i].x;
-			strip[i].y += st[i].y;
-		}
-	}
-}
-
 void Quad::createGrid(int xd, int yd)
 {
 	deleteGrid();
