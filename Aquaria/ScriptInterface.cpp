@@ -60,6 +60,7 @@ extern "C" {
 #include "Spore.h"
 #include "Shader.h"
 #include "ActionMapper.h"
+#include "QuadGrid.h"
 
 
 #include "MathFunctions.h"
@@ -655,6 +656,16 @@ ParticleEffect *getParticle(lua_State *L, int slot = 1)
 	return q;
 }
 
+static inline
+QuadGrid *getQuadGrid(lua_State *L, int slot = 1)
+{
+	QuadGrid *q = (QuadGrid*)lua_touserdata(L, slot);
+	ENSURE_TYPE(q, SCO_QUAD_GRID);
+	if (!q)
+		scriptDebug(L, "Invalid QuadGrid");
+	return q;
+}
+
 static bool looksLikeGlobal(const char *s)
 {
 	for( ; *s; ++s)
@@ -1002,6 +1013,7 @@ MakeTypeCheckFunc(isBeam, SCO_BEAM)
 MakeTypeCheckFunc(isText, SCO_TEXT)
 MakeTypeCheckFunc(isShader, SCO_SHADER)
 MakeTypeCheckFunc(isParticleEffect, SCO_PARTICLE_EFFECT)
+MakeTypeCheckFunc(isQuadGrid, SCO_QUAD_GRID)
 
 #undef MakeTypeCheckFunc
 
@@ -5661,7 +5673,7 @@ luaFunc(entity_rotateToVel)
 	{
 		if (!e->vel.isZero())
 		{
-			e->rotateToVec(e->vel, lua_tonumber(L, 2), lua_tointeger(L, 3));
+			e->rotateToVec(e->vel, lua_tonumber(L, 2), lua_tonumber(L, 3));
 		}
 	}
 	luaReturnNil();
@@ -5677,7 +5689,7 @@ luaFunc(entity_rotateToEntity)
 		Vector vec = e2->position - e->position;
 		if (!vec.isZero())
 		{
-			e->rotateToVec(vec, lua_tonumber(L, 3), lua_tointeger(L, 4));
+			e->rotateToVec(vec, lua_tonumber(L, 3), lua_tonumber(L, 4));
 		}
 	}
 	luaReturnNil();
@@ -5691,7 +5703,7 @@ luaFunc(entity_rotateToVec)
 	{
 		if (!vec.isZero())
 		{
-			e->rotateToVec(vec, lua_tonumber(L, 4), lua_tointeger(L, 5));
+			e->rotateToVec(vec, lua_tonumber(L, 4), lua_tonumber(L, 5));
 		}
 	}
 	luaReturnNil();
@@ -5977,18 +5989,23 @@ luaFunc(entity_isInRect)
 	luaReturnBool(v);
 }
 
-luaFunc(createQuad)
+static void setupQuadCommon(lua_State *L, RenderObject *q, int idx)
 {
-	PauseQuad *q = new PauseQuad();
-	q->setTexture(getString(L, 1));
-	int layer = lua_tointeger(L, 2);
+	q->setTexture(getString(L, idx));
+	int layer = lua_tointeger(L, idx + 1);
 	if (layer == 13)
 		layer = 13;
 	else
 		layer = (LR_PARTICLES+1) - LR_ELEMENTS1;
 	dsq->game->addRenderObject(q, LR_ELEMENTS1+(layer-1));
 	q->moveToFront();
+}
 
+
+luaFunc(createQuad)
+{
+	PauseQuad *q = new PauseQuad();
+	setupQuadCommon(L, q, 1);
 	luaReturnPtr(q);
 }
 
@@ -9536,6 +9553,50 @@ luaFunc(getPerformanceFreq)
 #endif
 }
 
+// ----------- Grid Quad -----------------------
+
+luaFunc(createQuadGrid)
+{
+	QuadGrid *q = QuadGrid::New(luaL_checkinteger(L, 1), luaL_checkinteger(L, 2));
+	if(q)
+		setupQuadCommon(L, q, 3);
+	luaReturnPtr(q);
+}
+
+luaFunc(quadgrid_numPoints)
+{
+	QuadGrid *q = getQuadGrid(L);
+	lua_pushinteger(L, q->pointsX());
+	lua_pushinteger(L, q->pointsY());
+	return 2;
+}
+
+luaFunc(quadgrid_setPoint)
+{
+	QuadGrid *q = getQuadGrid(L);
+	size_t ix = luaL_checkinteger(L, 2);
+	size_t iy = luaL_checkinteger(L, 3);
+	if(ix < q->pointsX() && iy < q->pointsY())
+	{
+		QuadGrid::Point &p = (*q)(ix, iy);
+		if(!lua_isnoneornil(L, 4))
+			p.x = lua_tonumber(L, 4);
+		if(!lua_isnoneornil(L, 5))
+			p.y = lua_tonumber(L, 5);
+		if(!lua_isnoneornil(L, 6))
+			p.u = lua_tonumber(L, 6);
+		if(!lua_isnoneornil(L, 7))
+			p.v = lua_tonumber(L, 7);
+
+		luaReturnNil();
+	}
+	return luaL_error(L, "out of range");
+}
+
+
+q;
+// TODO: interp texOffset, setPauseLevel
+
 // ---------- Minimap related ------------------
 
 luaFunc(getMinimapRender)
@@ -9561,7 +9622,7 @@ luaFunc(minimap_setAvatarIconTex)
 }
 luaFunc(minimap_setHealthBarTex)
 {
-	luaReturnBool(MiniMapRender::setAvatarTex(getString(L)));
+	luaReturnBool(MiniMapRender::setHealthBarTex(getString(L)));
 }
 luaFunc(minimap_setMaxHealthMarkerTex)
 {

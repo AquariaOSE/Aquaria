@@ -61,6 +61,8 @@ set(BBGE_SRCS
     Precacher.h
     Quad.cpp
     Quad.h
+    QuadGrid.cpp
+    QuadGrid.h
     QuadTrail.cpp
     QuadTrail.h
     ReadXML.cpp

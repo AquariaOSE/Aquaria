@@ -64,7 +64,6 @@ public:
 	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatingTextureToFill; }
 	void setGridPoints(bool vert, const std::vector<Vector> &points);
-	void setStrip(const std::vector<Vector> &strip);
 	virtual void createStrip(bool stripVert, int num);
 	float getStripSegmentSize();
 	void resetStrip();
