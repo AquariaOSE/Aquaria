@@ -8,6 +8,7 @@ QuadGrid::QuadGrid(size_t w, size_t h)
 {
     addType(SCO_QUAD_GRID);
     _points.resize((w+1) * (h+1));
+    resetUV();
 }
 
 QuadGrid* QuadGrid::New(size_t w, size_t h)

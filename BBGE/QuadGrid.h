@@ -46,6 +46,7 @@ public:
     virtual void onUpdate(float dt);
 
     void resetUV(float xmul = 1, float ymul = 1);
+    void resetPos(float xmul = 1, float ymul = 1);
 
     inline size_t quadsX() const { return _w; }
     inline size_t quadsY() const { return _h; }

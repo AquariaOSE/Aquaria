@@ -9566,6 +9566,8 @@ luaFunc(createQuadGrid)
 luaFunc(quadgrid_numPoints)
 {
 	QuadGrid *q = getQuadGrid(L);
+	if(!q)
+		luaReturnNil();
 	lua_pushinteger(L, q->pointsX());
 	lua_pushinteger(L, q->pointsY());
 	return 2;
@@ -9574,6 +9576,8 @@ luaFunc(quadgrid_numPoints)
 luaFunc(quadgrid_setPoint)
 {
 	QuadGrid *q = getQuadGrid(L);
+	if(!q)
+		luaReturnNil();
 	size_t ix = luaL_checkinteger(L, 2);
 	size_t iy = luaL_checkinteger(L, 3);
 	if(ix < q->pointsX() && iy < q->pointsY())
@@ -9593,9 +9597,44 @@ luaFunc(quadgrid_setPoint)
 	return luaL_error(L, "out of range");
 }
 
+luaFunc(quadgrid_texOffset)
+{
+	QuadGrid *q = getQuadGrid(L);
+	if(q)
+		interpolateVec2(L, q->texOffset, 2);
+	luaReturnNil();
+}
 
-q;
-// TODO: interp texOffset, setPauseLevel
+luaFunc(quadgrid_getTexOffset)
+{
+	QuadGrid *q = getQuadGrid(L);
+	Vector v;
+	if(q)
+		v = q->texOffset;
+	luaReturnVec2(v.x, v.y);
+}
+
+luaFunc(quadgrid_setPauseLevel)
+{
+	QuadGrid *q = getQuadGrid(L);
+	if(q)
+		q->pauseLevel = lua_tointeger(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(quadgrid_getPauseLevel)
+{
+	QuadGrid *q = getQuadGrid(L);
+	luaReturnInt(q ? q->pauseLevel : 0);
+}
+
+luaFunc(quadgrid_resetUV)
+{
+	QuadGrid *q = getQuadGrid(L);
+	if(q)
+		q->resetUV();
+	luaReturnNil();
+}
 
 // ---------- Minimap related ------------------
 
@@ -10840,6 +10879,15 @@ static const struct {
 	luaRegister(node_mmicon_throb),
 
 	luaRegister(loadXMLTable),
+
+	luaRegister(createQuadGrid),
+	luaRegister(quadgrid_numPoints),
+	luaRegister(quadgrid_setPoint),
+	luaRegister(quadgrid_texOffset),
+	luaRegister(quadgrid_getTexOffset),
+	luaRegister(quadgrid_setPauseLevel),
+	luaRegister(quadgrid_getPauseLevel),
+	luaRegister(quadgrid_resetUV),
 
 #undef MK_FUNC
 #undef MK_ALIAS
