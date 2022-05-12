@@ -996,13 +996,6 @@ void Avatar::onDamage(DamageData &d)
 {
 	Entity::onDamage(d);
 
-
-	if (dsq->difficulty == DSQ::DIFF_EASY)
-	{
-		if (d.damage > 0)
-			d.damage *= MULT_DMG_EASY;
-	}
-
 	skeletalSprite.getAnimationLayer(ANIMLAYER_UPPERBODYIDLE)->stopAnimation();
 	if (dsq->continuity.form == FORM_NORMAL)
 	{

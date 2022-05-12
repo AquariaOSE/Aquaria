@@ -2488,7 +2488,6 @@ void InGameMenu::create()
 		menu[2]->position = Vector(400, 12000);
 	menu[2]->setCanDirMove(false);
 
-	menu[3]->event.set(MakeFunctionEvent(InGameMenu, onLips));
 	menu[3]->useGlow("particles/glow", 64, 64);
 	//menu[0]->position = Vector(150, 550);
 	menu[3]->position = Vector(400, 195);
@@ -3199,18 +3198,6 @@ FoodSlot* InGameMenu::getFoodSlotFromIndex()
 	}
 	return 0;
 }
-
-void InGameMenu::onLips()
-{
-	if (!foodMenu)
-	{
-		if (dsq->lastVoiceFile.find("NAIJA_SONG_") != std::string::npos)
-		{
-			dsq->stopVoice();
-		}
-	}
-}
-
 
 void InGameMenu::onExitCheckYes()
 {

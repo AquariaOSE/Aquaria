@@ -175,10 +175,6 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 
 	bar_left = bar_right = bar_up = bar_down = barFade_left = barFade_right = 0;
 
-	difficulty = DIFF_NORMAL;
-
-
-
 	watchQuitFlag = false;
 	watchForQuit = false;
 
@@ -271,8 +267,8 @@ void DSQ::rumble(float leftMotor, float rightMotor, float time, int source, Inpu
 void DSQ::newGame()
 {
 	dsq->game->resetFromTitle();
-	dsq->initScene = "NaijaCave";
-	dsq->game->transitionToScene(dsq->initScene);
+	dsq->initScene = ;
+	dsq->game->transitionToScene("NaijaCave");
 }
 
 void DSQ::loadElementEffects()
