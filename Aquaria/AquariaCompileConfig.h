@@ -15,8 +15,4 @@
 // this is defined.)
 //#define AQUARIA_SAVE_MAPVIS_RAW
 
-// Interesting, old test stuff
-//#define AQ_TEST_QUADTRAIL
-
-
 #endif //__AQUARIA_COMPILE_CONFIG_H__

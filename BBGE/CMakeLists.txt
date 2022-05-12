@@ -63,8 +63,6 @@ set(BBGE_SRCS
     Quad.h
     QuadGrid.cpp
     QuadGrid.h
-    QuadTrail.cpp
-    QuadTrail.h
     ReadXML.cpp
     ReadXML.h
     Rect.h
