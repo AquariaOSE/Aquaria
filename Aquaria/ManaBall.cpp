@@ -42,11 +42,6 @@ ManaBall::ManaBall(Vector pos, float amount) : Quad()
 	setBlendType(BLEND_ADD);
 	used = false;
 	addChild(&healEmitter, PM_STATIC);
-
-	if (dsq->difficulty == DSQ::DIFF_EASY)
-	{
-		amount *= MULT_MANABALL_EASY;
-	}
 }
 
 void ManaBall::destroy()

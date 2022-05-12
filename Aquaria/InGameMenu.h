@@ -121,7 +121,6 @@ private:
 
 	void onPrevTreasurePage();
 	void onNextTreasurePage();
-	void onLips();
 
 	void showInGameMenuExitCheck();
 	void hideInGameMenuExitCheck(bool refocus);

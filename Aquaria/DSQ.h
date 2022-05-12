@@ -255,17 +255,12 @@ public:
 	void playVisualEffect(int vfx, Vector position, Entity *target=0);
 	void playNoEffect();
 
-	typedef std::vector<std::string> StringList;
-	StringList profiles;
-
 	AquariaScreenTransition *screenTransition;
 
 	Precacher precacher;
 
 	Entity *getFirstEntity();
 	Entity *getNextEntity();
-
-	std::string initScene;
 
 	bool modIsSelected;
 
@@ -296,8 +291,6 @@ public:
 	void toggleConsole();
 	void toggleEffects();
 	void debugMenu();
-
-	std::string dialogueFile;
 
 	void takeScreenshotKey();
 
@@ -348,8 +341,6 @@ public:
 
 	void run(float runTime = -1, bool skipRecurseCheck = false); // same as Core::run() but with recursion check
 	void watch(float t, int canQuit = 0);
-
-	std::string lastVoiceFile;
 
 	UserSettings user, user_backup, user_bcontrol;
 
@@ -440,14 +431,6 @@ public:
 	std::string shotBank1;
 	std::string shotBank2;
 
-	enum Difficulty
-	{
-		DIFF_NORMAL		= 0,
-		DIFF_EASY		= 1
-	};
-
-	Difficulty difficulty;
-
 	std::string getSaveDirectory();
 
 	void clickRingEffect(Vector position, int type=0, Vector color=Vector(1,1,1), float ut=0);
@@ -513,8 +496,6 @@ protected:
 
 	std::vector <AquariaSaveSlot*> saveSlots;
 
-	BitmapText *expText, *moneyText;
-
 	void clearMenu(float t = 0.01f);
 	std::vector <RenderObject*> menu;
 	BitmapText *saveSlotPageCount;
@@ -523,7 +504,6 @@ protected:
 
 	float shakeCameraTimer;
 	float shakeCameraMag;
-	std::string currentPortrait;
 
 	void onUpdate(float dt);
 	void onRender();
