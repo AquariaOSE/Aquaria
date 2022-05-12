@@ -183,9 +183,7 @@
 2007 Recipes
 2008 error
 2009 No Description
-2010 Stopped Recording
-2011 Stopped Playback
-2012 1: Refresh|2: Heal|3: Reset Cont.|5: Set Invincible|6: Set Flag|8: All Songs|9: All Ups|S: learn song #|F: Find Entity|C: Set Costume|0: Learn MArea Songs|R: Record Demo|P: Playback Demo|T: Rewind Demo|U: Ouput Demo Frames|B: Unload Resources|A: Reload Resources|M: AutoMap|J: JumpState|Q: QuitNestedMain
+2012 1: Refresh|2: Heal|3: Reset Cont.|5: Set Invincible|6: Set Flag|8: All Songs|9: All Ups|S: learn song #|F: Find Entity|C: Set Costume|0: Learn MArea Songs|B: Unload Resources|A: Reload Resources|J: JumpState|Q: QuitNestedMain
 2013 health
 2014 Enter Flag to Set
 2015 Enter Value to Set Flag To

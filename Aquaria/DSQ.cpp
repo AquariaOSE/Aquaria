@@ -267,7 +267,6 @@ void DSQ::rumble(float leftMotor, float rightMotor, float time, int source, Inpu
 void DSQ::newGame()
 {
 	dsq->game->resetFromTitle();
-	dsq->initScene = ;
 	dsq->game->transitionToScene("NaijaCave");
 }
 
@@ -565,10 +564,8 @@ void DSQ::debugMenu()
 				{
 					dsq->quitNestedMain();
 				}
-
 				else if (c == '5')
 				{
-
 					dsq->game->invinciblity = !dsq->game->invinciblity;
 				}
 				else if (c == '6')
@@ -604,8 +601,6 @@ void DSQ::debugMenu()
 					char read=' ';
 					is >> read >> num;
 					dsq->continuity.learnSong(num);
-
-
 				}
 				else if (c == 'F')
 				{
@@ -627,32 +622,6 @@ void DSQ::debugMenu()
 					is >> read >> nm;
 					dsq->continuity.setCostume(nm);
 				}
-				else if (c == 'R')
-				{
-					dsq->demo.toggleRecord(true);
-				}
-				else if (c == 'P')
-				{
-					dsq->demo.togglePlayback(true);
-				}
-				else if (c == 'T')
-				{
-					if (dsq->demo.frames.size()> 0)
-					{
-						dsq->game->avatar->position = dsq->demo.frames[0].avatarPos;
-						dsq->game->avatar->rotation.z = dsq->demo.frames[0].rot;
-					}
-				}
-				else if (c == 'U')
-				{
-					dsq->demo.renderFramesToDisk();
-
-
-				}
-				else if (c == 'K')
-				{
-					dsq->demo.clearRecordedFrames();
-				}
 				else if (c == 'H')
 				{
 					std::ostringstream os;
@@ -661,12 +630,8 @@ void DSQ::debugMenu()
 					float h = 0;
 					is >> h;
 					dsq->game->avatar->health = h;
-
 				}
 			}
-
-
-
 		}
 	}
 }
@@ -3826,8 +3791,6 @@ void DSQ::onUpdate(float dt)
 
 	subtitlePlayer.update(dt);
 
-	demo.update(dt);
-
 	if (joystickEnabled)
 	{
 		if (dsq->getInputMode() != INPUT_JOYSTICK)
@@ -4204,11 +4167,6 @@ void DSQ::modifyDt(float &dt)
 	{
 		dt = 1.0f/60.0f;
 		doScreenshot = true;
-	}
-
-	if (dsq->demo.mode == Demo::DEMOMODE_RECORD)
-	{
-		dt = 1.0f/60.0f;
 	}
 }
 

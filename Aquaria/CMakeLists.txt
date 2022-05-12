@@ -11,7 +11,6 @@ SET(AQUARIA_SRCS
     Continuity.cpp
     Credits.cpp
     CurrentRender.cpp
-    Demo.cpp
     DSQ.cpp
     Element.cpp
     Emote.cpp

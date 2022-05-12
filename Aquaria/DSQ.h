@@ -126,42 +126,6 @@ extern GameplayVariables *vars;
 
 #include "UserSettings.h"
 
-struct DemoFrame
-{
-	float t;
-	Vector avatarPos, vel, vel2;
-	Mouse mouse;
-	float rot;
-};
-
-class Demo
-{
-public:
-	enum {
-		DEMOMODE_NONE		= -1,
-		DEMOMODE_RECORD		= 0,
-		DEMOMODE_PLAYBACK	= 1
-	};
-	Demo();
-	void toggleRecord(bool on);
-	void togglePlayback(bool on);
-	void renderFramesToDisk();
-	void clearRecordedFrames();
-
-	void update(float dt);
-
-	bool getQuitKey();
-
-	void save(const std::string &name);
-	void load(const std::string &name);
-
-	unsigned int frame;
-	float time;
-	float timeDiff;
-	std::vector <DemoFrame> frames;
-	int mode;
-};
-
 enum NagType
 {
 	NAG_TOTITLE		= 0,
@@ -373,8 +337,6 @@ public:
 	bool disableMiniMapOnNoInput;
 
 	std::string returnToScene;
-
-	Demo demo;
 
 	DebugFont *fpsText, *cmDebug;
 	DebugFont *console;
