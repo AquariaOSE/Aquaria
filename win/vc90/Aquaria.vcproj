@@ -604,6 +604,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\QuadGrid.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\QuadGrid.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\Aquaria\RecipeMenuEntry.cpp"
 				>
 			</File>
