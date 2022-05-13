@@ -9,6 +9,9 @@ QuadGrid::QuadGrid(size_t w, size_t h)
     addType(SCO_QUAD_GRID);
     _points.resize((w+1) * (h+1));
     resetUV();
+    resetPos(1, 1);
+    this->width = 2;
+    this->height = 2;
 }
 
 QuadGrid* QuadGrid::New(size_t w, size_t h)
@@ -39,6 +42,26 @@ void QuadGrid::resetUV(float xmul, float ymul)
     }
 }
 
+void QuadGrid::resetPos(float w, float h, float xoffs, float yoffs)
+{
+    const float dx = 1.0f / w;
+    const float dy = 1.0f / h;
+    const size_t NX = _w + 1;
+
+    float yy = yoffs;
+    // go over points, so <= to compare boundaries
+    for(size_t y = 0; y <= _h; ++y, yy +=  dy)
+    {
+        Point * const row = &_points[y * NX];
+        float xx = xoffs;
+        for(size_t x = 0; x < NX; ++x, xx += dx)
+        {
+            row[x].x = xx;
+            row[y].y = yy;
+        }
+    }
+}
+
 static inline void drawOnePoint(const QuadGrid::Point& p, float ox, float oy)
 {
     glTexCoord2f(p.u + ox, p.v + oy);
@@ -48,12 +71,10 @@ static inline void drawOnePoint(const QuadGrid::Point& p, float ox, float oy)
 
 void QuadGrid::onRender()
 {
-    glBindTexture(GL_TEXTURE_2D, texture->textures[0]);
     glColor4f(color.x, color.y, color.z, alpha.x * alphaMod);
 
     const float ox = texOffset.x;
     const float oy = texOffset.y;
-
     const size_t NX = _w + 1;
 
     // go over grids, so < to compare boundaries
@@ -83,3 +104,16 @@ void QuadGrid::onUpdate(float dt)
     RenderObject::onUpdate(dt);
 }
 
+void QuadGrid::onSetTexture() // same as Quad::setTexture()
+{
+    if (texture)
+    {
+        width = this->texture->width;
+        height = this->texture->height;
+    }
+    else
+    {
+        width = 64;
+        height = 64;
+    }
+}
