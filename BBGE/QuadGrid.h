@@ -44,9 +44,10 @@ public:
 
     virtual void onRender();
     virtual void onUpdate(float dt);
+    virtual void onSetTexture();
 
     void resetUV(float xmul = 1, float ymul = 1);
-    void resetPos(float xmul = 1, float ymul = 1);
+    void resetPos(float w, float h, float xoffs = 0, float yoffs = 0);
 
     inline size_t quadsX() const { return _w; }
     inline size_t quadsY() const { return _h; }
@@ -62,7 +63,7 @@ public:
 
 private:
     QuadGrid(size_t w, size_t h);
-    const size_t _w, _h;
+    const size_t _w, _h; // number of quads in each direction (2x3 quads => 3x4 grid points)
     std::vector<Point> _points;
 };
 

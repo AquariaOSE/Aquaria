@@ -9636,6 +9636,20 @@ luaFunc(quadgrid_resetUV)
 	luaReturnNil();
 }
 
+luaFunc(quadgrid_resetPos)
+{
+	QuadGrid *q = getQuadGrid(L);
+	if(q)
+	{
+		const float w     = luaL_optnumber(L, 2, 1);
+		const float h     = luaL_optnumber(L, 3, 1);
+		const float xoffs = luaL_optnumber(L, 4, 0);
+		const float yoffs = luaL_optnumber(L, 5, 0);
+		q->resetPos(w, h, xoffs, yoffs);
+	}
+	luaReturnNil();
+}
+
 // ---------- Minimap related ------------------
 
 luaFunc(getMinimapRender)
@@ -10888,6 +10902,7 @@ static const struct {
 	luaRegister(quadgrid_setPauseLevel),
 	luaRegister(quadgrid_getPauseLevel),
 	luaRegister(quadgrid_resetUV),
+	luaRegister(quadgrid_resetPos),
 
 #undef MK_FUNC
 #undef MK_ALIAS
