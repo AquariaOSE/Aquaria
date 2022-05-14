@@ -2711,7 +2711,9 @@ void SceneEditor::updateText()
 		}
 	break;
 	case ET_PATHS:
-		os << "paths (" << dsq->game->getNumPaths()<<  ") si[" << selectedIdx << "]";
+		os << "paths (" << dsq->game->getNumPaths() << ")";
+		if (selectedIdx != size_t(-1))
+			os << " si[" << selectedIdx << "]";
 		if (getSelectedPath())
 			os << " name: " << getSelectedPath()->name;
 	break;
