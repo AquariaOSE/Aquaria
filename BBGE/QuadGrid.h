@@ -49,11 +49,11 @@ public:
     void resetUV(float xmul = 1, float ymul = 1);
     void resetPos(float w, float h, float xoffs = 0, float yoffs = 0);
 
-    inline size_t quadsX() const { return _w; }
-    inline size_t quadsY() const { return _h; }
+    inline size_t quadsX() const { return _w - 1; }
+    inline size_t quadsY() const { return _h - 1; }
 
-    inline size_t pointsX() const { return _w + 1; }
-    inline size_t pointsY() const { return _h + 1; }
+    inline size_t pointsX() const { return _w; }
+    inline size_t pointsY() const { return _h; }
 
 
 public:
@@ -63,7 +63,7 @@ public:
 
 private:
     QuadGrid(size_t w, size_t h);
-    const size_t _w, _h; // number of quads in each direction (2x3 quads => 3x4 grid points)
+    const size_t _w, _h; // number of points in each direction (2x3 quads => 3x4 grid points)
     std::vector<Point> _points;
 };
 
