@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="Windows-1252"?>
 <VisualStudioProject
 	ProjectType="Visual C++"
-	Version="9,00"
+	Version="9.00"
 	Name="BBGE"
 	ProjectGUID="{4C2AD812-6776-4728-A4B0-ABA397224152}"
 	RootNamespace="Aquaria_vc90"
@@ -543,14 +543,6 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\Quad.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\QuadTrail.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\QuadTrail.h"
 				>
 			</File>
 			<File
