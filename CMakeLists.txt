@@ -23,6 +23,13 @@ if(MSVC)
     # /Oi: enable intrinsic functions
     # /fp:fast: -ffast-math
     set(AQUARIA_EXTRA_COMPILE_FLAGS "/MP /GS- /Oi /fp:fast" CACHE STRING "Extra compiler flags for MSVC")
+    
+    option(AQUARIA_MSVC_DEBUG_EDIT_AND_CONTINUE "MSVC: Enable edit+continue for debug builds?" TRUE)
+    if(AQUARIA_MSVC_DEBUG_EDIT_AND_CONTINUE)
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /ZI")
+        set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
+        set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+    endif()
 elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
     set(AQUARIA_EXTRA_COMPILE_FLAGS "-ffast-math" CACHE STRING "Extra compiler flags for GCC/Clang")
 else()
