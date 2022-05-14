@@ -9632,7 +9632,11 @@ luaFunc(quadgrid_resetUV)
 {
 	QuadGrid *q = getQuadGrid(L);
 	if(q)
-		q->resetUV();
+	{
+		const float xmul = luaL_optnumber(L, 2, 1);
+		const float ymul = luaL_optnumber(L, 3, 1);
+		q->resetUV(xmul, ymul);
+	}
 	luaReturnNil();
 }
 

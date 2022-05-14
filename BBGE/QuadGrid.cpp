@@ -4,7 +4,7 @@
 #include "Core.h"
 
 QuadGrid::QuadGrid(size_t w, size_t h)
-    : pauseLevel(0), _w(w), _h(h)
+    : pauseLevel(0), _w(w+1), _h(h+1)
 {
     addType(SCO_QUAD_GRID);
     _points.resize((w+1) * (h+1));
@@ -12,6 +12,8 @@ QuadGrid::QuadGrid(size_t w, size_t h)
     resetPos(1, 1);
     this->width = 2;
     this->height = 2;
+    this->cull = false;
+    this->repeatTexture = true;
 }
 
 QuadGrid* QuadGrid::New(size_t w, size_t h)
@@ -25,39 +27,43 @@ QuadGrid::~QuadGrid()
 
 void QuadGrid::resetUV(float xmul, float ymul)
 {
-    const float incX = 1.0f / float(_w + 1);
-    const float incY = 1.0f / float(_h + 1);
+    const float incX = xmul / float(quadsX());
+    const float incY = ymul / float(quadsY());
+    const size_t NX = pointsX();
 
-    float u0 = 0, u1 = incX, v0 = 0, v1 = incY;
+    float v = 0;
 
-    // go over points, so <= to compare boundaries
-    for(size_t y = 0; y <= _h; ++y, v0 = v1, v1 += incY)
+    // go over points
+    for(size_t y = 0; y < _h; ++y)
     {
-        Point *row = &_points[y * _w];
-        for(size_t x = 0; x <= _w; ++x, u0 = u1, u1 += incX)
+        Point *row = &_points[y * NX];
+        float u = 0;
+        for(size_t x = 0; x < NX; ++x)
         {
-            row[x].u = u0;
-            row[y].v = v0;
+            row[x].u = u;
+            row[x].v = v;
+            u += incX;
         }
+        v += incY;
     }
 }
 
 void QuadGrid::resetPos(float w, float h, float xoffs, float yoffs)
 {
-    const float dx = 1.0f / w;
-    const float dy = 1.0f / h;
-    const size_t NX = _w + 1;
+    const float dx = w / float(quadsX());
+    const float dy = h / float(quadsY());
+    const size_t NX = pointsX();
 
     float yy = yoffs;
-    // go over points, so <= to compare boundaries
-    for(size_t y = 0; y <= _h; ++y, yy +=  dy)
+    // go over points
+    for(size_t y = 0; y < _h; ++y, yy +=  dy)
     {
         Point * const row = &_points[y * NX];
         float xx = xoffs;
         for(size_t x = 0; x < NX; ++x, xx += dx)
         {
             row[x].x = xx;
-            row[y].y = yy;
+            row[x].y = yy;
         }
     }
 }
@@ -75,14 +81,16 @@ void QuadGrid::onRender()
 
     const float ox = texOffset.x;
     const float oy = texOffset.y;
-    const size_t NX = _w + 1;
+    const size_t NX = pointsX();
 
-    // go over grids, so < to compare boundaries
-    for(size_t y = 0; y < _h; ++y)
+    // go over grids
+    const size_t W = quadsX();
+    const size_t H = quadsY();
+    for(size_t y = 0; y < H; ++y)
     {
         Point * const row0 = &_points[y * NX];
         Point * const row1 = row0 + NX;
-        for(size_t x = 0; x < _w; ++x)
+        for(size_t x = 0; x < W; ++x)
         {
             glBegin(GL_QUADS);
             drawOnePoint(row0[x],   ox, oy);
