@@ -2333,16 +2333,10 @@ void Entity::warpLastPosition()
 	position = lastPosition;
 }
 
-void Entity::spawnParticlesFromCollisionMask(const std::string &p, int intv)
+void Entity::spawnParticlesFromCollisionMask(const char *p, unsigned intv, int layer, float rotz)
 {
 	for (size_t i = 0; i < skeletalSprite.bones.size(); i++)
-	{
-		for (size_t j = 0; j < skeletalSprite.bones[i]->collisionMask.size(); j+=intv)
-		{
-			Vector pos = skeletalSprite.bones[i]->getWorldCollidePosition(skeletalSprite.bones[i]->collisionMask[j]);
-			dsq->spawnParticleEffect(p, pos);
-		}
-	}
+		skeletalSprite.bones[i]->spawnParticlesFromCollisionMask(p, intv, layer, rotz);
 }
 
 //Entity *e, Entity *attacker, Bone *bone, SpellType spell, int dmg)

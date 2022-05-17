@@ -76,7 +76,7 @@ public:
 	void render();
 	void update(float dt);
 
-	void spawnParticlesFromCollisionMask(const std::string &p, int intv=1);
+	void spawnParticlesFromCollisionMask(const char *p, unsigned intv=1, int layer = LR_PARTICLES, float rotz = 0);
 
 	float health;
 	float maxHealth;

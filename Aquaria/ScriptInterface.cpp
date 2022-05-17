@@ -4051,6 +4051,14 @@ luaFunc(bone_lookAtPosition)
 	luaReturnNil();
 }
 
+luaFunc(bone_toggleCollision)
+{
+	Bone *b = bone(L);
+	if(b)
+		b->enableCollision = getBool(L, 2);
+	luaReturnNil();
+}
+
 luaFunc(entity_stopFollowingPath)
 {
 	Entity *e = entity(L);
@@ -4420,17 +4428,36 @@ luaFunc(cam_setPosition)
 	luaReturnNil();
 }
 
+template<typename T>
+void spawnParticlesFromCollisionMask(lua_State *L, T *t)
+{
+	const char *p = getCString(L, 2);
+	if(!p)
+		luaL_error(L, "expected string partcle name");
+	int intv = lua_tointeger(L, 3);
+	if (intv <= 0)
+		intv = 1;
+	int lr = luaL_optinteger(L, 4, LR_PARTICLES);
+	float rotz = lua_tonumber(L, 5);
+
+	t->spawnParticlesFromCollisionMask(p, intv, lr, rotz);
+}
+
 
 luaFunc(entity_spawnParticlesFromCollisionMask)
 {
 	Entity *e = entity(L);
 	if (e)
-	{
-		int intv = lua_tointeger(L, 3);
-		if (intv <= 0)
-			intv = 1;
-		e->spawnParticlesFromCollisionMask(getString(L, 2), intv);
-	}
+		spawnParticlesFromCollisionMask(L, e);
+
+	luaReturnNil();
+}
+
+luaFunc(bone_spawnParticlesFromCollisionMask)
+{
+	Bone *b = bone(L);
+	if (b)
+		spawnParticlesFromCollisionMask(L, b);
 
 	luaReturnNil();
 }
@@ -5527,12 +5554,11 @@ luaFunc(entity_collideSkeletalVsCirclePos)
 luaFunc(entity_collideSkeletalVsLine)
 {
 	Entity *e = entity(L);
-	int x1, y1, x2, y2, sz;
-	x1 = lua_tonumber(L, 2);
-	y1 = lua_tonumber(L, 3);
-	x2 = lua_tonumber(L, 4);
-	y2 = lua_tonumber(L, 5);
-	sz = lua_tonumber(L, 6);
+	float x1 = lua_tonumber(L, 2);
+	float y1 = lua_tonumber(L, 3);
+	float x2 = lua_tonumber(L, 4);
+	float y2 = lua_tonumber(L, 5);
+	float sz = lua_tonumber(L, 6);
 	Bone *b = 0;
 	if (e)
 	{
@@ -10041,6 +10067,8 @@ static const struct {
 
 	luaRegister(bone_lookAtEntity),
 	luaRegister(bone_lookAtPosition),
+	luaRegister(bone_spawnParticlesFromCollisionMask),
+	luaRegister(bone_toggleCollision),
 
 	luaRegister(entity_partSetSegs),
 

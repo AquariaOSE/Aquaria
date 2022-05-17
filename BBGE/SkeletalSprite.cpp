@@ -71,6 +71,7 @@ Bone::Bone() : Quad()
 	fileRenderQuad = true;
 	skeleton = 0;
 	generateCollisionMask = true;
+	enableCollision = true;
 	animated = ANIM_ALL;
 	originalScale = Vector(1,1);
 	boneIdx = pidx = -1;
@@ -99,6 +100,11 @@ void Bone::destroy()
 		segments[i]->alpha = 0;
 	}
 	segments.clear();
+}
+
+bool Bone::canCollide() const
+{
+	return this->enableCollision && this->alpha.x == 1 && this->renderQuad && (!this->collisionMask.empty() || this->collideRadius);
 }
 
 void Bone::addSegment(Bone *b)
@@ -279,6 +285,16 @@ void Bone::updateSegments()
 		}
 	}
 }
+
+void Bone::spawnParticlesFromCollisionMask(const char *p, unsigned intv, int layer, float rotz)
+{
+	for (size_t j = 0; j < this->collisionMask.size(); j+=intv)
+	{
+		Vector pos = this->getWorldCollidePosition(this->collisionMask[j]);
+		core->createParticleEffect(p, pos, layer, rotz);
+	}
+}
+
 
 bool BoneCommand::parse(Bone *b, SimpleIStringStream &is)
 {
@@ -895,6 +911,8 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		bone->SetAttribute("fv", this->bones[i]->isfv());
 		bone->SetAttribute("gc", this->bones[i]->generateCollisionMask);
 		bone->SetAttribute("cr", this->bones[i]->collideRadius);
+		if(!this->bones[i]->enableCollision)
+			bone->SetAttribute("c", this->bones[i]->enableCollision);
 		if (!this->bones[i]->fileRenderQuad)
 		{
 			bone->SetAttribute("rq", this->bones[i]->fileRenderQuad);
@@ -1367,6 +1385,10 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			if (bone->Attribute("gc"))
 			{
 				newb->generateCollisionMask = atoi(bone->Attribute("gc"));
+			}
+			if (bone->Attribute("c"))
+			{
+				newb->enableCollision = atoi(bone->Attribute("c"));
 			}
 			if (bone->Attribute("rq"))
 			{

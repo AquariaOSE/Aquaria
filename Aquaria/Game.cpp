@@ -3885,7 +3885,7 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, fl
 		Bone *b = skeletal->skeletalSprite.bones[i];
 
 		// MULTIPLE CIRCLES METHOD
-		if (!b->collisionMask.empty() && b->alpha.x == 1 && b->renderQuad)
+		if (b->canCollide() && !b->collisionMask.empty())
 		{
 			for (size_t i = 0; i < b->transformedCollisionMask.size(); i++)
 			{
@@ -3938,9 +3938,7 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius)
 	{
 		Bone *b = skeletal->skeletalSprite.bones[i];
 
-		if (b->alpha.x == 1 && b->renderQuad &&
-			(!b->collisionMask.empty() || b->collideRadius) // check this here to avoid calculating getWorldCollidePosition() if not necessary
-		)
+		if (b->canCollide()) // check this here to avoid calculating getWorldCollidePosition() if not necessary
 		{
 			float checkRadius = sqr(radius+b->collisionMaskRadius);
 			Vector bonePos = b->getWorldCollidePosition();
