@@ -67,8 +67,11 @@ public:
 	std::vector<Vector> changeStrip;
 
 	bool generateCollisionMask;
+	bool enableCollision;
 	int animated;
 	Vector originalScale;
+
+	bool canCollide() const;
 
 	void addSegment(Bone *b);
 	ParticleEffect *getEmitter(unsigned slot) const;
@@ -87,6 +90,8 @@ public:
 	bool fileRenderQuad;
 	bool selectable;
 	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
+
+	void spawnParticlesFromCollisionMask(const char *p, unsigned intv, int layer, float rotz = 0);
 
 protected:
 	std::vector<ParticleEffect*> emitters;
