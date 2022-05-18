@@ -622,16 +622,23 @@ void Quad::onSetTexture()
 	}
 }
 
-PauseQuad::PauseQuad() : Quad(), pauseLevel(0)
+PauseQuad::PauseQuad() : Quad(), pauseLevel(0), positionSnapTo(0)
 {
 	addType(SCO_PAUSEQUAD);
 }
 
 void PauseQuad::onUpdate(float dt)
 {
+	if (positionSnapTo)
+		this->position = *positionSnapTo;
+
 	if (core->particlesPaused <= pauseLevel)
 	{
 		Quad::onUpdate(dt);
 	}
 }
 
+void PauseQuad::setPositionSnapTo(InterpolatedVector *positionSnapTo)
+{
+	this->positionSnapTo = positionSnapTo;
+}

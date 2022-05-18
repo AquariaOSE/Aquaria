@@ -4738,29 +4738,6 @@ void Avatar::setHeadTexture(const std::string &name, float time)
 	}
 }
 
-void Avatar::chargeVisualEffect(const std::string &tex)
-{
-	float time = 0.4f;
-	Quad *chargeEffect = new Quad;
-	chargeEffect->setBlendType(BLEND_ADD);
-	chargeEffect->alpha.ensureData();
-	chargeEffect->alpha.data->path.addPathNode(0, 0);
-	chargeEffect->alpha.data->path.addPathNode(0.6f, 0.1f);
-	chargeEffect->alpha.data->path.addPathNode(0.6f, 0.9f);
-	chargeEffect->alpha.data->path.addPathNode(0, 1);
-	chargeEffect->alpha.startPath(time);
-	chargeEffect->setTexture(tex);
-	//chargeEffect->positionSnapTo = &this->position;
-	chargeEffect->position = this->position;
-	chargeEffect->setPositionSnapTo(&position);
-	chargeEffect->setLife(1);
-	chargeEffect->setDecayRate(1.0f/time);
-	chargeEffect->scale = Vector(0.1f, 0.1f);
-	chargeEffect->scale.interpolateTo(Vector(1,1),time);
-	//chargeEffect->rotation.interpolateTo(Vector(0,0,360), time);
-	dsq->game->addRenderObject(chargeEffect, LR_PARTICLES);
-}
-
 void Avatar::updateFormVisualEffects(float dt)
 {
 	switch (dsq->continuity.form)
@@ -5928,7 +5905,6 @@ void Avatar::onUpdate(float dt)
 
 
 					chargingEmitter->load("ChargingEnergy2");
-					//chargeVisualEffect("particles/energy-charge-2");
 				}
 			}
 			break;

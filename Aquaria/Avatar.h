@@ -218,7 +218,6 @@ public:
 	float headTextureTimer;
 	void updateDamageVisualEffects();
 	int chargeLevelAttained;
-	void chargeVisualEffect(const std::string &tex);
 	void updateFormVisualEffects(float dt);
 	bool isSinging();
 	bool isLockable();

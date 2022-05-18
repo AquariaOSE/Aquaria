@@ -167,8 +167,6 @@ public:
 
 	StateData *getStateData();
 
-	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
-
 	// HACK: This is defined in RenderObject_inline.h because it needs
 	// the class Core definition.  --achurch
 	inline bool isOnScreen();
@@ -257,8 +255,6 @@ public:
 	bool cull;
 	float updateCull;
 	int layer;
-
-	InterpolatedVector *positionSnapTo;
 
 
 	typedef std::vector<RenderObject*> Children;

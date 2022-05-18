@@ -3992,14 +3992,11 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 	{
 	case VFX_SHOCK:
 	{
-
-
-
 		core->sound->playSfx("ShockWave");
 
 		float t =1.0;
 
-		Quad *q = new Quad;
+		PauseQuad *q = new PauseQuad;
 		q->position = position;
 		q->scale = Vector(0,0);
 		q->scale.interpolateTo(Vector(5,5),t);
@@ -4013,7 +4010,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 		q->setBlendType(RenderObject::BLEND_ADD);
 		q->setTexture("particles/EnergyRing");
 		if (target)
-			q->positionSnapTo = &target->position;
+			q->setPositionSnapTo(&target->position);
 
 		game->addRenderObject(q, LR_PARTICLES);
 
@@ -4023,7 +4020,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 
 		t = 0.75f;
 		{
-			Quad *q = new Quad;
+			PauseQuad *q = new PauseQuad;
 			q->position = position;
 			q->scale = Vector(0.5,0.5);
 			q->scale.interpolateTo(Vector(2,2),t);
@@ -4036,7 +4033,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 			q->setBlendType(RenderObject::BLEND_ADD);
 			q->setTexture("particles/EnergyPart");
 			if (target)
-				q->positionSnapTo = &target->position;
+				q->setPositionSnapTo(&target->position);
 			q->rotation.z = rand()%360;
 			game->addRenderObject(q, LR_PARTICLES);
 		}
