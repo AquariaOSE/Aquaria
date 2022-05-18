@@ -396,14 +396,6 @@ void RenderObject::destroy()
 	texture = NULL;
 }
 
-void RenderObject::copyProperties(RenderObject *target)
-{
-	this->color						= target->color;
-	this->position					= target->position;
-	this->alpha						= target->alpha;
-	this->velocity					= target->velocity;
-}
-
 const RenderObject &RenderObject::operator=(const RenderObject &r)
 {
 	errorLog("Operator= not defined for RenderObject. Use 'copyProperties'");

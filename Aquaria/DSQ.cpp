@@ -2921,14 +2921,6 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 
 }
 
-std::string DSQ::getEntityFlagName(Entity *e)
-{
-	if (!game) return "";
-	std::ostringstream os;
-	os << game->sceneName << e->startPos.x << e->startPos.y;
-	return os.str();
-}
-
 void doAlphabetInputKey(int d, char c, char map[], std::string *text, char upper=0)
 {
 	if (core->getKeyState(d) && !map[d])
