@@ -138,7 +138,6 @@ void UserSettings::save()
 				xml_screenMode->SetAttribute("vsync",			video.vsync);
 				xml_screenMode->SetAttribute("darkfbuffer",		video.darkfbuffer);
 				xml_screenMode->SetAttribute("darkbuffersize",	video.darkbuffersize);
-				xml_screenMode->SetAttribute("displaylists",		video.displaylists);
 				xml_screenMode->SetAttribute("displayindex",		video.displayindex);
 			}
 			xml_video->InsertEndChild(xml_screenMode);
@@ -455,7 +454,6 @@ void UserSettings::load(bool doApply, const std::string &overrideFile)
 			xml_screenMode->QueryIntAttribute("vsync",			&video.vsync);
 			xml_screenMode->QueryIntAttribute("darkfbuffer",	&video.darkfbuffer);
 			xml_screenMode->QueryIntAttribute("darkbuffersize",	&video.darkbuffersize);
-			xml_screenMode->QueryIntAttribute("displaylists",	&video.displaylists);
 			xml_screenMode->QueryIntAttribute("displayindex",	&video.displayindex);
 		}
 

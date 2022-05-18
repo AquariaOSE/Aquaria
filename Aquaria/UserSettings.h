@@ -73,7 +73,6 @@ public:
 			bits = 32;
 			vsync = 1;
 			darkbuffersize = 256;
-			displaylists = 0;
 			worldMapRevealMethod = 0;
 		}
 		int blur;
@@ -83,7 +82,6 @@ public:
 		int saveSlotScreens;
 		int parallaxOn0, parallaxOn1, parallaxOn2;
 		int numParticles;
-		int displaylists;
 		int worldMapRevealMethod;
 	} video;
 

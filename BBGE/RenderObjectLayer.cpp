@@ -32,11 +32,8 @@ RenderObjectLayer::RenderObjectLayer()
 	followCameraLock = FCL_NONE;
 	cull = true;
 	update = true;
-	optimizeStatic = false;
 
 	color = Vector(1,1,1);
-
-	displayListValid = false;
 
 	const int size = renderObjects.size();
 	for (int i = 0; i < size; i++)
@@ -47,18 +44,11 @@ RenderObjectLayer::RenderObjectLayer()
 
 RenderObjectLayer::~RenderObjectLayer()
 {
-	clearDisplayList();
 }
 
 void RenderObjectLayer::setCull(bool cull)
 {
 	this->cull = cull;
-}
-
-void RenderObjectLayer::setOptimizeStatic(bool opt)
-{
-	this->optimizeStatic = opt;
-	clearDisplayList();
 }
 
 void RenderObjectLayer::add(RenderObject* r)
@@ -79,8 +69,6 @@ void RenderObjectLayer::add(RenderObject* r)
 		if (!renderObjects[firstFreeIdx])
 			break;
 	}
-
-	clearDisplayList();
 }
 
 void RenderObjectLayer::remove(RenderObject* r)
@@ -101,8 +89,6 @@ void RenderObjectLayer::remove(RenderObject* r)
 	if (idx < firstFreeIdx)
 		firstFreeIdx = idx;
 	r->setIdx(-1);
-
-	clearDisplayList();
 }
 
 void RenderObjectLayer::moveToFront(RenderObject *r)
@@ -164,8 +150,6 @@ void RenderObjectLayer::moveToFront(RenderObject *r)
 		while (renderObjects[firstFreeIdx])
 			firstFreeIdx++;
 	}
-
-	clearDisplayList();
 }
 
 void RenderObjectLayer::moveToBack(RenderObject *r)
@@ -232,139 +216,23 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 				break;
 		}
 	}
-
-	clearDisplayList();
 }
 
 void RenderObjectLayer::renderPass(int pass)
 {
 	core->currentLayerPass = pass;
 
-	if (optimizeStatic && (followCamera == 0 || followCamera == NO_FOLLOW_CAMERA))
-	{
-		if (!displayListValid)
-			generateDisplayList();
 
-		const int size = displayList.size();
-		for (int i = 0; i < size; i++)
-		{
-			if (displayList[i].isList)
-			{
-				glCallList(displayList[i].u.listID);
-				RenderObject::lastTextureApplied = 0;
-			}
-			else
-				renderOneObject(displayList[i].u.robj);
-		}
-	}
-	else
+	for (RenderObject *robj = getFirst(); robj; robj = getNext())
 	{
-		for (RenderObject *robj = getFirst(); robj; robj = getNext())
-		{
-			renderOneObject(robj);
-		}
+		renderOneObject(robj);
 	}
 }
 
 void RenderObjectLayer::reloadDevice()
 {
-	if (displayListValid)
-		clearDisplayList();
 }
 
-void RenderObjectLayer::clearDisplayList()
-{
-	if (!displayListValid)
-		return;
-
-	const int size = displayList.size();
-	for (int i = 0; i < size; i++)
-	{
-		if (displayList[i].isList)
-			glDeleteLists(displayList[i].u.listID, 1);
-	}
-
-	displayList.resize(0);
-	displayListValid = false;
-}
-
-void RenderObjectLayer::generateDisplayList()
-{
-	// Temporarily disable culling so all static objects are entered into
-	// the display list.
-	bool savedCull = this->cull;
-	this->cull = false;
-
-	int listSize = 0, listLength = 0;
-	bool lastWasStatic = false;
-
-	for (RenderObject *robj = getFirst(); robj; robj = getNext())
-	{
-		if (listLength >= listSize)
-		{
-			listSize += 100;
-			displayList.resize(listSize);
-		}
-		bool addEntry = true;  // Add an entry for this robj?
-		if (robj->isStatic() && robj->followCamera == 0)
-		{
-			if (lastWasStatic)
-			{
-				addEntry = false;
-			}
-			else
-			{
-				int listID = glGenLists(1);
-				if (listID != 0)
-				{
-					(void) glGetError();  // Clear error state
-					glNewList(listID, GL_COMPILE);
-					if (glGetError() == GL_NO_ERROR)
-					{
-						displayList[listLength].isList = true;
-						displayList[listLength].u.listID = listID;
-						listLength++;
-						lastWasStatic = true;
-						addEntry = false;
-						RenderObject::lastTextureApplied = 0;
-					}
-					else
-						debugLog("glNewList failed");
-				}
-				else
-					debugLog("glGenLists failed");
-			}
-		}
-		else
-		{
-			if (lastWasStatic)
-			{
-				glEndList();
-				lastWasStatic = false;
-			}
-		}
-		if (addEntry)
-		{
-			displayList[listLength].isList = false;
-			displayList[listLength].u.robj = robj;
-			listLength++;
-		}
-		else
-		{
-			renderOneObject(robj);
-		}
-	}
-
-	if (lastWasStatic)
-	{
-		glEndList();
-	}
-
-	displayList.resize(listLength);
-	displayListValid = true;
-
-	this->cull = savedCull;
-}
 
 inline void RenderObjectLayer::renderOneObject(RenderObject *robj)
 {
