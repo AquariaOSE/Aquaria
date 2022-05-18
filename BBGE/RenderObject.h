@@ -175,8 +175,6 @@ public:
 
 	bool isCoordinateInRadius(const Vector &pos, float r);
 
-	void copyProperties(RenderObject *target);
-
 	const RenderObject &operator=(const RenderObject &r);
 
 	void toggleCull(bool value);

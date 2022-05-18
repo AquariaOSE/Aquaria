@@ -234,7 +234,6 @@ public:
 	Entity *getEntityByNameNoCase(std::string name);
 
 	void doSavePoint(const Vector &position);
-	std::string getEntityFlagName(Entity *e);
 	std::string getUserInputString(std::string label, std::string t="", bool allowNonLowerCase=false);
 	bool onPickedSaveSlot(AquariaSaveSlot *slot);
 	void doSaveSlotMenu(SaveSlotMode ssm, const Vector &position = Vector(0,0,0));
