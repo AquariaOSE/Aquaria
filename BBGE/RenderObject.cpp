@@ -36,9 +36,6 @@ size_t	RenderObject::lastTextureApplied			= 0;
 bool	RenderObject::lastTextureRepeat				= false;
 bool	RenderObject::renderPaths					= false;
 
-const bool RENDEROBJECT_SHAREATTRIBUTES				= true;
-const bool RENDEROBJECT_FASTTRANSFORM				= false;
-
 RenderObjectLayer *RenderObject::rlayer				= 0;
 
 void RenderObject::toggleAlpha(float t)
@@ -574,100 +571,89 @@ void RenderObject::renderCall()
 {
 	position += offset;
 
+	glPushMatrix();
 
-	if (!RENDEROBJECT_FASTTRANSFORM)
-		glPushMatrix();
-	if (!RENDEROBJECT_SHAREATTRIBUTES)
+
+	if (layer != LR_NONE)
 	{
-		glPushAttrib(GL_ALL_ATTRIB_BITS);
+		RenderObjectLayer *l = &core->renderObjectLayers[layer];
+		if (l->followCamera != NO_FOLLOW_CAMERA)
+		{
+			followCamera = l->followCamera;
+		}
 	}
-
-
-	if (!RENDEROBJECT_FASTTRANSFORM)
+	if (followCamera!=0 && !parent)
 	{
-		if (layer != LR_NONE)
+		if (followCamera == 1)
 		{
-			RenderObjectLayer *l = &core->renderObjectLayers[layer];
-			if (l->followCamera != NO_FOLLOW_CAMERA)
-			{
-				followCamera = l->followCamera;
-			}
-		}
-		if (followCamera!=0 && !parent)
-		{
-			if (followCamera == 1)
-			{
-			 	glLoadIdentity();
-				glScalef(core->globalResolutionScale.x, core->globalResolutionScale.y,0);
-				glTranslatef(position.x, position.y, position.z);
-				if (isfh())
-				{
-
-					glRotatef(180, 0, 1, 0);
-				}
-
-				glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
-			}
-			else
-			{
-				Vector pos = getFollowCameraPosition();
-
-				glTranslatef(pos.x, pos.y, pos.z);
-				if (isfh())
-				{
-
-					glRotatef(180, 0, 1, 0);
-				}
-				glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
-			}
-		}
-		else
-		{
-
+			glLoadIdentity();
+			glScalef(core->globalResolutionScale.x, core->globalResolutionScale.y,0);
 			glTranslatef(position.x, position.y, position.z);
-
-			if (RenderObject::renderPaths && position.data && position.data->path.getNumPathNodes() > 0)
-			{
-				glLineWidth(4);
-				glEnable(GL_BLEND);
-
-				size_t i = 0;
-				glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-				glBindTexture(GL_TEXTURE_2D, 0);
-
-				glBegin(GL_LINES);
-				for (i = 0; i < position.data->path.getNumPathNodes()-1; i++)
-				{
-					glVertex2f(position.data->path.getPathNode(i)->value.x-position.x, position.data->path.getPathNode(i)->value.y-position.y);
-					glVertex2f(position.data->path.getPathNode(i+1)->value.x-position.x, position.data->path.getPathNode(i+1)->value.y-position.y);
-				}
-				glEnd();
-
-				glPointSize(20);
-				glBegin(GL_POINTS);
-				glColor4f(0.5,0.5,1,1);
-				for (i = 0; i < position.data->path.getNumPathNodes(); i++)
-				{
-					glVertex2f(position.data->path.getPathNode(i)->value.x-position.x, position.data->path.getPathNode(i)->value.y-position.y);
-				}
-				glEnd();
-			}
-
-			glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
 			if (isfh())
 			{
 
 				glRotatef(180, 0, 1, 0);
 			}
+
+			glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
+		}
+		else
+		{
+			Vector pos = getFollowCameraPosition();
+
+			glTranslatef(pos.x, pos.y, pos.z);
+			if (isfh())
+			{
+
+				glRotatef(180, 0, 1, 0);
+			}
+			glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
+		}
+	}
+	else
+	{
+
+		glTranslatef(position.x, position.y, position.z);
+
+		if (RenderObject::renderPaths && position.data && position.data->path.getNumPathNodes() > 0)
+		{
+			glLineWidth(4);
+			glEnable(GL_BLEND);
+
+			size_t i = 0;
+			glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+			glBindTexture(GL_TEXTURE_2D, 0);
+
+			glBegin(GL_LINES);
+			for (i = 0; i < position.data->path.getNumPathNodes()-1; i++)
+			{
+				glVertex2f(position.data->path.getPathNode(i)->value.x-position.x, position.data->path.getPathNode(i)->value.y-position.y);
+				glVertex2f(position.data->path.getPathNode(i+1)->value.x-position.x, position.data->path.getPathNode(i+1)->value.y-position.y);
+			}
+			glEnd();
+
+			glPointSize(20);
+			glBegin(GL_POINTS);
+			glColor4f(0.5,0.5,1,1);
+			for (i = 0; i < position.data->path.getNumPathNodes(); i++)
+			{
+				glVertex2f(position.data->path.getPathNode(i)->value.x-position.x, position.data->path.getPathNode(i)->value.y-position.y);
+			}
+			glEnd();
 		}
 
-		glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, beforeScaleOffset.z);
-		glScalef(scale.x, scale.y, 1);
-		glTranslatef(internalOffset.x, internalOffset.y, internalOffset.z);
+		glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
+		if (isfh())
+		{
 
-
-
+			glRotatef(180, 0, 1, 0);
+		}
 	}
+
+	glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, beforeScaleOffset.z);
+	glScalef(scale.x, scale.y, 1);
+	glTranslatef(internalOffset.x, internalOffset.y, internalOffset.z);
+
 
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
@@ -676,12 +662,12 @@ void RenderObject::renderCall()
 	}
 
 
-
 	{
+		Vector col = color;
 		if (rlayer)
-			glColor4f(color.x * rlayer->color.x, color.y * rlayer->color.y, color.z * rlayer->color.z, alpha.x*alphaMod);
-		else
-			glColor4f(color.x, color.y, color.z, alpha.x*alphaMod);
+			col *= rlayer->color;
+
+		glColor4f(col.x, col.y, col.z, alpha.x*alphaMod);
 	}
 
 	if (texture)
@@ -728,11 +714,6 @@ void RenderObject::renderCall()
 		onRender();
 
 
-	if (!RENDEROBJECT_SHAREATTRIBUTES)
-	{
-		glPopAttrib();
-	}
-
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
 		if (!(*i)->isDead() && !(*i)->renderBeforeParent)
@@ -740,10 +721,7 @@ void RenderObject::renderCall()
 	}
 
 
-	if (!RENDEROBJECT_FASTTRANSFORM)
-	{
-		glPopMatrix();
-	}
+	glPopMatrix();
 
 
 	position -= offset;
