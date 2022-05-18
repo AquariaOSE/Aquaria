@@ -44,8 +44,6 @@ Element::Element() : Quad()
 	bgLayer = 0;
 	templateIdx = -1;
 	eff = NULL;
-
-	setStatic(true);
 }
 
 void Element::ensureEffectData()
@@ -248,14 +246,12 @@ void Element::setElementEffectByIndex(int eidx)
 	case EFX_SEGS:
 	{
 		setSegs(e.segsx, e.segsy, e.segs_dgox, e.segs_dgoy, e.segs_dgmx, e.segs_dgmy, e.segs_dgtm, e.segs_dgo);
-		setStatic(false);
 	}
 	break;
 	case EFX_ALPHA:
 	{
 		setBlendType(e.blendType);
 		alpha = e.alpha;
-		setStatic(false);
 	}
 	break;
 	case EFX_WAVY:
@@ -273,12 +269,10 @@ void Element::setElementEffectByIndex(int eidx)
 
 		createGrid(2, e.segsy);
 		setGridFromWavy();
-		setStatic(false);
 	}
 	break;
 	default:
 		freeEffectData();
-		setStatic(true);
 	break;
 	}
 

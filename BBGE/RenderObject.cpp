@@ -163,7 +163,6 @@ RenderObject::RenderObject()
 	decayRate = 0;
 	_dead = false;
 	_hidden = false;
-	_static = false;
 	fadeAlphaWithLife = false;
 	blendType = BLEND_DEFAULT;
 

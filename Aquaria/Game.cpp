@@ -1994,12 +1994,6 @@ bool Game::loadSceneXML(std::string scene)
 
 	this->reconstructGrid(true);
 	rebuildElementUpdateList();
-	setElementLayerFlags();
-
-	// HACK: Don't try to optimize the barrier layer in Mithalas Cathedral
-	// since elements are turned off dynamically.
-	if (nocasecmp(scene, "cathedral02") == 0)
-		dsq->getRenderObjectLayer(LR_ELEMENTS3)->setOptimizeStatic(false);
 
 	findMaxCameraValues();
 
@@ -2480,19 +2474,6 @@ void Game::rebuildElementUpdateList()
 		ElementEffect ee = dsq->getElementEffectByIndex(eeidx);
 		if(ee.type == EFX_WAVY)
 			elementInteractionList.push_back(e);
-	}
-}
-
-void Game::setElementLayerFlags()
-{
-	for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS16; i++)
-	{
-		// FIXME: Background SchoolFish get added to ELEMENTS11, so
-		// we can't optimize that layer.  (Maybe create a new layer?)
-		if (i == LR_ELEMENTS11)
-			continue;
-
-		dsq->getRenderObjectLayer(i)->setOptimizeStatic(!isSceneEditorActive() && dsq->user.video.displaylists);
 	}
 }
 
@@ -4128,7 +4109,6 @@ void Game::toggleSceneEditor()
 	if (!core->getAltState())
 	{
 		sceneEditor.toggle();
-		setElementLayerFlags();
 	}
 }
 

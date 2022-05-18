@@ -120,8 +120,6 @@ public:
 	void moveToFront(RenderObject *r);
 	void moveToBack(RenderObject *r);
 	void setCull(bool cull);
-	void setOptimizeStatic(bool opt);
-	void sort();
 	void renderPass(int pass);
 	void reloadDevice();
 
@@ -170,23 +168,7 @@ public:
 	Vector color;
 
 protected:
-
-	void clearDisplayList();
-	void generateDisplayList();
 	inline void renderOneObject(RenderObject *robj);
-
-	bool optimizeStatic;
-	bool displayListValid;
-	int displayListGeneration;
-	struct DisplayListElement {
-		DisplayListElement() {isList = false; u.robj = 0;}
-		bool isList;  // True if this is a GL display list
-		union {
-			RenderObject *robj;
-			unsigned listID;
-		} u;
-	};
-	std::vector<DisplayListElement> displayList;
 
 	RenderObjects renderObjects;
 	size_t objectCount;
