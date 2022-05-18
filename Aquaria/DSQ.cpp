@@ -311,8 +311,10 @@ void DSQ::loadElementEffects()
 		{
 			efxType = EFX_ALPHA;
 			float to_x, time, loop, pingPong, ease;
-			is >> e.blendType >> e.alpha.x >> to_x >> time >> loop >> pingPong >> ease;
+			int blend;
+			is >> blend >> e.alpha.x >> to_x >> time >> loop >> pingPong >> ease;
 			e.alpha.interpolateTo(to_x, time, loop, pingPong, ease);
+			e.blendType = blend < _BLEND_MAXSIZE ? (BlendType)blend : BLEND_DISABLED;
 		}
 		e.type = efxType;
 		elementEffects.push_back(e);
@@ -330,7 +332,7 @@ ElementEffect DSQ::getElementEffectByIndex(size_t e)
 	ElementEffect empty;
 	empty.type = EFX_NONE;
 	empty.alpha = 0;
-	empty.blendType = 0;
+	empty.blendType = BLEND_DEFAULT;
 	empty.color = 0;
 	empty.segsx = empty.segsy = 0;
 	empty.segs_dgmx = empty.segs_dgmy = 0;
@@ -1135,7 +1137,7 @@ void DSQ::init()
 		cursorGlow->setTexture("glow");
 		cursorGlow->setWidthHeight(48, 48);
 		cursorGlow->alpha = 0;
-		cursorGlow->setBlendType(RenderObject::BLEND_ADD);
+		cursorGlow->setBlendType(BLEND_ADD);
 	}
 	cursor->addChild(cursorGlow, PM_NONE, RBP_OFF);
 	addRenderObject(cursorGlow, LR_CURSOR);
@@ -1207,7 +1209,7 @@ void DSQ::init()
 		sceneColorOverlay->position = Vector(400,300);
 		sceneColorOverlay->color = Vector(1,1,1);
 		sceneColorOverlay->alpha = 1;
-		sceneColorOverlay->setBlendType(RenderObject::BLEND_MULT);
+		sceneColorOverlay->setBlendType(BLEND_MULT);
 		sceneColorOverlay->autoWidth = AUTO_VIRTUALWIDTH;
 		sceneColorOverlay->autoHeight = AUTO_VIRTUALHEIGHT;
 		sceneColorOverlay->followCamera = 1;
@@ -2135,7 +2137,7 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->color = color;
 
-			q->setBlendType(RenderObject::BLEND_ADD);
+			q->setBlendType(BLEND_ADD);
 
 			q->alpha.ensureData();
 			q->alpha.data->path.addPathNode(0, 0);
@@ -2163,7 +2165,7 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 			q->scale = Vector(5,5);
 			q->scale.interpolateTo(Vector(1,1), t);
 
-			q->setBlendType(RenderObject::BLEND_ADD);
+			q->setBlendType(BLEND_ADD);
 
 			q->color = color;
 
@@ -2250,7 +2252,7 @@ void DSQ::doSavePoint(const Vector &position)
 		glow->setTexture("save-point-glow");
 		glow->alpha = 0;
 		glow->alpha.interpolateTo(0.5f, 1, 1, true, true);
-		glow->setBlendType(RenderObject::BLEND_ADD);
+		glow->setBlendType(BLEND_ADD);
 		glow->position = position;
 		glow->scale = Vector(1,1)*1.25f;
 		glow->setLife(3);
@@ -4008,7 +4010,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 		q->alpha.data->path.addPathNode(0.75f, 0.75f);
 		q->alpha.data->path.addPathNode(0, 1);
 		q->alpha.startPath(t);
-		q->setBlendType(RenderObject::BLEND_ADD);
+		q->setBlendType(BLEND_ADD);
 		q->setTexture("particles/EnergyRing");
 		if (target)
 			q->setPositionSnapTo(&target->position);
@@ -4031,7 +4033,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 			q->alpha.data->path.addPathNode(0.75f, 0.75f);
 			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
-			q->setBlendType(RenderObject::BLEND_ADD);
+			q->setBlendType(BLEND_ADD);
 			q->setTexture("particles/EnergyPart");
 			if (target)
 				q->setPositionSnapTo(&target->position);
@@ -4054,7 +4056,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 
 		q->alpha.data->path.addPathNode(0, 1);
 		q->alpha.startPath(t);
-		q->setBlendType(RenderObject::BLEND_ADD);
+		q->setBlendType(BLEND_ADD);
 		q->rotation.z = rand()%360;
 		q->setTexture("particles/EnergyRing");
 
@@ -4074,7 +4076,7 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 
 			q->alpha.data->path.addPathNode(0, 1);
 			q->alpha.startPath(t);
-			q->setBlendType(RenderObject::BLEND_ADD);
+			q->setBlendType(BLEND_ADD);
 
 			q->setTexture("particles/EnergyDeltas");
 			q->rotation.z = rand()%360;

@@ -40,6 +40,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define OVERRIDE
 #endif
 
+namespace internal
+{
+	template <typename T, size_t N>
+	char (&_ArraySizeHelper( T (&a)[N]))[N];
+
+	template<size_t n>
+	struct NotZero { static const size_t value = n; };
+	template<>
+	struct NotZero<0> {};
+}
+#define Countof(a) (internal::NotZero<(sizeof(internal::_ArraySizeHelper(a)))>::value)
+
 
 #ifdef _MSC_VER
 //#pragma warning(disable:4786)

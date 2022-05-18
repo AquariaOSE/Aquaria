@@ -26,6 +26,7 @@ set(BBGE_SRCS
     Effects.cpp
     Effects.h
     Emitter.cpp
+    EngineEnums.h
     Event.cpp
     Event.h
     FmodOpenALBridge.cpp

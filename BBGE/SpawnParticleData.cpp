@@ -34,7 +34,7 @@ SpawnParticleData::SpawnParticleData()
 	useSpawnRate = false;
 	counter = 0;
 	life = 1;
-	blendType = RenderObject::BLEND_DEFAULT;
+	blendType = BLEND_DEFAULT;
 	spawnRate = 1;
 	scale = Vector(1,1,1);
 	width = 64;

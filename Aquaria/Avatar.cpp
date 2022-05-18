@@ -247,7 +247,7 @@ SongIconParticle::SongIconParticle(Vector color, Vector pos, size_t note)
 	setDecayRate(1);
 
 	//if (rand()%6 <= 2)
-	setBlendType(RenderObject::BLEND_ADD);
+	setBlendType(BLEND_ADD);
 
 	float smallestDist = HUGE_VALF;
 	SongIcon *closest = 0;
@@ -322,7 +322,7 @@ SongIcon::SongIcon(size_t note) : Quad(), note(note)
 	glow->followCamera = 1;
 	glow->rotation.interpolateTo(Vector(0,0,360), 10, -1);
 	glow->alpha = 0;
-	glow->setBlendType(RenderObject::BLEND_ADD);
+	glow->setBlendType(BLEND_ADD);
 	glow->scale = Vector(0.5, 0.5);
 	glow->color = dsq->getNoteColor(note);
 	dsq->game->addRenderObject(glow, LR_PARTICLES2);
@@ -507,7 +507,7 @@ void SongIcon::openNote()
 	q->alpha.data->path.addPathNode(0,1);
 	q->alpha.startPath(glowLife);
 	q->color = dsq->getNoteColor(note); //*0.5f + Vector(0.5, 0.5, 0.5)
-	q->setBlendType(RenderObject::BLEND_ADD);
+	q->setBlendType(BLEND_ADD);
 	q->followCamera = 1;
 	dsq->game->addRenderObject(q, LR_HUD);
 	q->setDecayRate(1/(glowLife+0.1f));
@@ -527,7 +527,7 @@ void SongIcon::openNote()
 	q->alpha.data->path.addPathNode(0.5f,0.2f);
 	q->alpha.data->path.addPathNode(0,1);
 	q->alpha.startPath(glowLife);
-	//q->setBlendType(RenderObject::BLEND_ADD);
+	//q->setBlendType(BLEND_ADD);
 	q->followCamera = 1;
 	dsq->game->addRenderObject(q, LR_HUD);
 	q->setDecayRate(1/(glowLife+0.1f));

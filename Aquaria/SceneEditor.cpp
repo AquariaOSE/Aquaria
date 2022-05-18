@@ -158,7 +158,7 @@ public:
 		addChild(glow, PM_POINTER, RBP_ON);
 		glow->setWidthHeight(48, 64);
 		glow->alpha = 0;
-		glow->setBlendType(RenderObject::BLEND_ADD);
+		glow->setBlendType(BLEND_ADD);
 		scale = Vector(0.5, 0.5);
 		scale.interpolateTo(Vector(1,1), 0.5, 0, 0, 1);
 

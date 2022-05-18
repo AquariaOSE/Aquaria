@@ -1507,7 +1507,7 @@ bool Game::loadSceneXML(std::string scene)
 			std::string backdrop = level->Attribute("backdrop");
 			backdropQuad = new Quad;
 			backdropQuad->setTexture(backdrop);
-			backdropQuad->blendEnabled = false;
+			backdropQuad->setBlendType(BLEND_DISABLED);
 
 			if (level->Attribute("bd-x") && level->Attribute("bd-y"))
 			{
@@ -2242,9 +2242,9 @@ void Game::createGradient()
 		}
 		addRenderObject(grad, LR_BACKDROP);
 		if (bg)
-			bg->blendEnabled = true;
+			bg->setBlendType(BLEND_DEFAULT);
 		if (bg2)
-			bg2->blendEnabled = true;
+			bg2->setBlendType(BLEND_DEFAULT);
 	}
 }
 
@@ -2711,7 +2711,7 @@ void Game::applyState()
 
 	bg = new Quad;
 	{
-		bg->blendEnabled = false;
+		bg->setBlendType(BLEND_DISABLED);
 		bg->position = Vector(400, 300, -2/*-0.09f*/);
 		//bg->color = Vector(0.9, 0.9, 0.9);
 		bg->setTexture("missingImage");
@@ -2805,7 +2805,7 @@ void Game::applyState()
 		controlHint_shine->alphaMod = 0.3f;
 		controlHint_shine->setWidthHeight(core->getVirtualWidth(), 100);
 		controlHint_shine->alpha = 0;
-		controlHint_shine->setBlendType(RenderObject::BLEND_ADD);
+		controlHint_shine->setBlendType(BLEND_ADD);
 	}
 	addRenderObject(controlHint_shine, LR_HELP);
 
@@ -2906,7 +2906,7 @@ void Game::applyState()
 	GridRender *blackRender = new GridRender(OT_BLACK);
 	blackRender->color = Vector(0, 0, 0);
 	//blackRender->alpha = 0;
-	blackRender->blendEnabled = false;
+	blackRender->setBlendType(BLEND_DISABLED);
 	addRenderObject(blackRender, LR_ELEMENTS4);
 
 	miniMapRender = new MiniMapRender;

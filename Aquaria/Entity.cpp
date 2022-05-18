@@ -2509,7 +2509,7 @@ void Entity::render()
 	scale = bscale;
 }
 
-void Entity::doGlint(const Vector &position, const Vector &scale, const std::string &tex, RenderObject::BlendTypes bt)
+void Entity::doGlint(const Vector &position, const Vector &scale, const std::string &tex, BlendType bt)
 {
 	float glintTime = 0.4f;
 	Quad *glint = new Quad;

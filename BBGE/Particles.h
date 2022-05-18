@@ -65,7 +65,7 @@ struct SpawnParticleData
 	float life;
 	InterpolatedVector spawnRate;
 	std::string texture;
-	RenderObject::BlendTypes blendType;
+	BlendType blendType;
 	float counter;
 	float spawnTimeOffset;
 	bool spawnLocal;

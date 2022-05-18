@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define RENDER_OBJECT_H
 
 #include "Base.h"
+#include "EngineEnums.h"
 #include "Texture.h"
 #include "ScriptObject.h"
 #include <list>
@@ -117,9 +118,13 @@ public:
 	{
 		this->decayRate = newdecayRate;
 	}
-	void setBlendType (unsigned char bt)
+	void setBlendType (BlendType bt)
 	{
-		blendType = bt;
+		_blendType = bt;
+	}
+	inline BlendType getBlendType() const
+	{
+		return (BlendType)_blendType;
 	}
 
 
@@ -228,7 +233,6 @@ public:
 
 	// TODO: this should be a bitmask
 	bool fadeAlphaWithLife;
-	bool blendEnabled;
 	bool renderBeforeParent;
 	bool updateAfterParent;
 	bool shareAlphaWithChildren;
@@ -244,17 +248,14 @@ public:
 
 	unsigned char pm;  // unsigned char to save space
 
+	char _blendType;
+
 
 	InterpolatedVector position, scale, color, alpha, rotation;
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
 	InterpolatedVector velocity, gravity;
 
 	CountedPtr<Texture> texture;
-
-
-	enum BlendTypes { BLEND_DEFAULT = 0, BLEND_ADD, BLEND_SUB, BLEND_MULT };
-	unsigned char blendType;
-
 
 	float life;
 	float followCamera;

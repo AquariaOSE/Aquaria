@@ -1,6 +1,8 @@
 #ifndef GAMEENUMS_H
 #define GAMEENUMS_H
 
+#include "EngineEnums.h"
+
 
 // Note: although this is a bitmask, only one of these values may be set at a time!
 // This is because GridRender and most Lua scripts check via ==, not for bits set (Lua 5.1 doesn't have bit ops)

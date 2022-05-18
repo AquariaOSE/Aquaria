@@ -55,26 +55,27 @@ int RenderObject::getTopLayer()
 	return layer;
 }
 
+struct BlendParams
+{
+	GLenum src, dst;
+};
+static const BlendParams s_blendParams[] =
+{
+	{ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA },
+	{ GL_SRC_ALPHA, GL_ONE },
+	{ GL_ZERO, GL_SRC_ALPHA },
+	{ GL_ZERO, GL_SRC_COLOR },
+};
+
 void RenderObject::applyBlendType()
 {
-	if (blendEnabled)
+	compile_assert(Countof(s_blendParams) == _BLEND_MAXSIZE);
+
+	if (_blendType >= BLEND_DEFAULT)
 	{
 		glEnable(GL_BLEND);
-		switch (blendType)
-		{
-		case BLEND_DEFAULT:
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		break;
-		case BLEND_ADD:
-			glBlendFunc(GL_SRC_ALPHA,GL_ONE);
-		break;
-		case BLEND_SUB:
-			glBlendFunc(GL_ZERO, GL_SRC_ALPHA);
-		break;
-		case BLEND_MULT:
-			glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-		break;
-		}
+		const BlendParams& bp = s_blendParams[_blendType];
+		glBlendFunc(bp.src, bp.dst);
 	}
 	else
 	{
@@ -145,7 +146,6 @@ RenderObject::RenderObject()
 
 	pm = PM_NONE;
 
-	blendEnabled = true;
 	texture = 0;
 	width = 0;
 	height = 0;
@@ -158,7 +158,7 @@ RenderObject::RenderObject()
 	_dead = false;
 	_hidden = false;
 	fadeAlphaWithLife = false;
-	blendType = BLEND_DEFAULT;
+	_blendType = BLEND_DEFAULT;
 
 	followCamera = 0;
 	stateData = 0;

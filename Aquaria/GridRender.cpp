@@ -30,14 +30,11 @@ GridRender::GridRender(ObsType obsType) : RenderObject()
 	cull = false;
 	alpha = 0.5f;
 	this->obsType = obsType;
-	blendEnabled = false;
-
 }
 
 void GridRender::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
-	if (obsType != OT_BLACK) { blendEnabled = true; }
 }
 
 inline static void doRenderGrid(int x, int startCol, int endCol)
