@@ -631,6 +631,16 @@ Quad *getQuad(lua_State *L, int slot = 1)
 }
 
 static inline
+CollideQuad *getCollideQuad(lua_State *L, int slot = 1)
+{
+	CollideQuad *q = (CollideQuad*)lua_touserdata(L, slot);
+	ENSURE_TYPE(q, SCO_COLLIDE_QUAD);
+	if (!q)
+		scriptDebug(L, "Invalid CollideQuad");
+	return q;
+}
+
+static inline
 BaseText *getText(lua_State *L, int slot = 1)
 {
 	BaseText *q = (BaseText*)lua_touserdata(L, slot);
@@ -1013,6 +1023,7 @@ MakeTypeCheckFunc(isText, SCO_TEXT)
 MakeTypeCheckFunc(isShader, SCO_SHADER)
 MakeTypeCheckFunc(isParticleEffect, SCO_PARTICLE_EFFECT)
 MakeTypeCheckFunc(isQuadGrid, SCO_QUAD_GRID)
+MakeTypeCheckFunc(isCollideQuad, SCO_COLLIDE_QUAD)
 
 #undef MakeTypeCheckFunc
 
@@ -1467,13 +1478,13 @@ luaFunc(obj_getGravity)
 
 luaFunc(obj_getCollideRadius)
 {
-	RenderObject *r = robj(L);
+	CollideQuad *r = getCollideQuad(L);
 	luaReturnNum(r ? r->collideRadius : 0);
 }
 
 luaFunc(obj_setCollideRadius)
 {
-	RenderObject *r = robj(L);
+	CollideQuad *r = getCollideQuad(L);
 	if (r)
 		r->collideRadius = lua_tonumber(L, 2);
 	luaReturnNil();
@@ -1751,7 +1762,7 @@ luaFunc(obj_disableMotionBlur)
 
 luaFunc(obj_collideCircleVsLine)
 {
-	RenderObject *r = robj(L);
+	CollideQuad *r = getCollideQuad(L);
 	float x1, y1, x2, y2, sz;
 	x1 = lua_tonumber(L, 2);
 	y1 = lua_tonumber(L, 3);
@@ -1766,7 +1777,7 @@ luaFunc(obj_collideCircleVsLine)
 
 luaFunc(obj_collideCircleVsLineAngle)
 {
-	RenderObject *r = robj(L);
+	CollideQuad *r = getCollideQuad(L);
 	float angle = lua_tonumber(L, 2);
 	float start=lua_tonumber(L, 3), end=lua_tonumber(L, 4), radius=lua_tonumber(L, 5);
 	float x=lua_tonumber(L, 6);
@@ -1936,6 +1947,7 @@ luaFunc(quad_getBorderAlpha)
 	Quad *b = getQuad(L);
 	luaReturnNum(b ? b->borderAlpha : 0.0f);
 }
+
 
 // --- standard set/get functions for each type, wrapping RenderObject functions ---
 
@@ -5530,7 +5542,7 @@ luaFunc(entity_handleShotCollisionsHair)
 luaFunc(entity_collideSkeletalVsCircle)
 {
 	Entity *e = entity(L);
-	RenderObject *e2 = robj(L,2);
+	CollideQuad *e2 = getCollideQuad(L,2);
 	Bone *b = 0;
 	if (e && e2)
 	{

@@ -127,6 +127,7 @@ class PauseQuad : public Quad
 {
 public:
 	PauseQuad();
+	virtual ~PauseQuad();
 	int pauseLevel;
 
 	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
@@ -134,6 +135,16 @@ protected:
 	InterpolatedVector *positionSnapTo;
 
 	void onUpdate(float dt);
+};
+
+class CollideQuad : public Quad
+{
+public:
+	CollideQuad();
+	virtual ~CollideQuad();
+	virtual void renderCollision() OVERRIDE;
+
+	float collideRadius;
 };
 
 #define QUAD(x) Quad *x = new Quad; addRenderObject(x);

@@ -186,10 +186,10 @@ public:
 	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc=0, int *colSegment=0);
 
 	bool collideCircleVsCircle(Entity *a, Entity *b);
-	Bone *collideSkeletalVsCircle(Entity *skeletal, RenderObject *circle);
+	Bone *collideSkeletalVsCircle(Entity *skeletal, CollideQuad *circle);
 	Bone *collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius);
-	bool collideCircleVsLine(RenderObject *r, Vector start, Vector end, float radius);
-	bool collideCircleVsLineAngle(RenderObject *r, float angle, float startLen, float endLen, float radius, Vector basePos);
+	bool collideCircleVsLine(CollideQuad *r, Vector start, Vector end, float radius);
+	bool collideCircleVsLineAngle(CollideQuad *r, float angle, float startLen, float endLen, float radius, Vector basePos);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius);
 	void handleShotCollisions(Entity *e, bool hasShield=false);
 	void handleShotCollisionsSkeletal(Entity *e);

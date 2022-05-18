@@ -70,6 +70,15 @@ struct MotionBlurFrame
 	float rotz;
 };
 
+struct MotionBlurData
+{
+	MotionBlurData();
+	bool transition;
+	unsigned frameOffsetCounter, frameOffset;
+	float transitionTimer;
+	std::vector<MotionBlurFrame> positions;
+};
+
 class RenderObjectLayer;
 
 class RenderObject : public ScriptObject
@@ -79,8 +88,6 @@ public:
 	RenderObject();
 	virtual ~RenderObject();
 	virtual void render();
-
-	static RenderObjectLayer *rlayer;
 
 	void setTexturePointer(CountedPtr<Texture> t)
 	{
@@ -172,8 +179,6 @@ public:
 
 	void safeKill();
 
-	void enqueueChildDeletion(RenderObject *r);
-
 	Vector getWorldPosition();
 	Vector getWorldCollidePosition(const Vector &vec=Vector(0,0,0));
 	Vector getInvRotPosition(const Vector &vec);
@@ -206,64 +211,80 @@ public:
 	virtual void unloadDevice();
 	virtual void reloadDevice();
 
+	MotionBlurData *ensureMotionBlur();
+	void freeMotionBlur();
+
 	//-------------------------------- Methods above, fields below
 
+	static RenderObjectLayer *rlayer;
 	static bool renderCollisionShape;
 	static bool renderPaths;
 	static size_t lastTextureApplied;
 	static bool lastTextureRepeat;
 
-	float width, height;  // Only used by Quads, but stored here for getCullRadius()
+	//--------------------------
+
+	// fields ordered by hotness
+
+	// TODO: this should be a bitmask
+	bool fadeAlphaWithLife;
+	bool blendEnabled;
+	bool renderBeforeParent;
+	bool updateAfterParent;
+	bool shareAlphaWithChildren;
+	bool shareColorWithChildren;
+	bool cull;
+	bool ignoreUpdate;
+	bool useOldDT;
+	bool repeatTexture;
+	bool _dead;
+	bool _hidden;
+	bool _fv, _fh;
+
+	unsigned char pm;  // unsigned char to save space
+
+
 	InterpolatedVector position, scale, color, alpha, rotation;
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
 	InterpolatedVector velocity, gravity;
 
 	CountedPtr<Texture> texture;
 
-	//int mode;
 
-	bool fadeAlphaWithLife;
-
-	bool blendEnabled;
 	enum BlendTypes { BLEND_DEFAULT = 0, BLEND_ADD, BLEND_SUB, BLEND_MULT };
 	unsigned char blendType;
 
+
 	float life;
-
 	float followCamera;
+	float alphaMod;
+	float updateCull;
+	int layer;
+
+	float decayRate;
+	float maxLife;
 
 
-	bool renderBeforeParent;
-	bool updateAfterParent;
+	int overrideRenderPass;
+	int renderPass;
+	float overrideCullRadiusSqr;
 
-
-
+	// --- This is hack and should not exist ---
 	bool colorIsSaved;  // Used for both color and alpha
 	Vector savedColor;  // Saved values from setColorMult()
 	float savedAlpha;
 
-	bool shareAlphaWithChildren;
-	bool shareColorWithChildren;
 
-	bool cull;
-	float updateCull;
-	int layer;
+	float width, height;  // Only used by Quads, but stored here for getCullRadius()
 
+	// ----------------------
 
 	typedef std::vector<RenderObject*> Children;
 	Children children, childGarbage;
 
-
-
-	float collideRadius;
-
-
-	float alphaMod;
-
-	bool ignoreUpdate;
-	bool useOldDT;
-
 protected:
+	RenderObject *parent;
+
 	virtual void onFH(){}
 	virtual void onFV(){}
 	virtual void onSetTexture(){}
@@ -272,22 +293,7 @@ protected:
 	virtual void deathNotify(RenderObject *r);
 	virtual void onEndOfLife() {}
 
-	inline void updateLife(float dt)
-	{
-		if (decayRate > 0)
-		{
-			life -= decayRate*dt;
-			if (life<=0)
-			{
-				safeKill();
-			}
-		}
-		if (fadeAlphaWithLife && !alpha.isInterpolating())
-		{
-
-			alpha = life/maxLife;
-		}
-	}
+	void updateLife(float dt);
 
 	// Is this object or any of its children rendered in pass "pass"?
 	bool hasRenderPass(const int pass);
@@ -295,27 +301,15 @@ protected:
 	inline void renderCall();
 	virtual void renderCollision();
 
-	bool repeatTexture;
-	unsigned char pm;  // unsigned char to save space
 	typedef std::list<RenderObject*> RenderObjectList;
 	RenderObjectList deathNotifications;
-	int overrideRenderPass;
-	int renderPass;
-	float overrideCullRadiusSqr;
-	float motionBlurTransitionTimer;
-	int motionBlurFrameOffsetCounter, motionBlurFrameOffset;
-	std::vector<MotionBlurFrame>motionBlurPositions;
-	bool motionBlur, motionBlurTransition;
 
-	bool _dead;
-	bool _hidden;
-	bool _fv, _fh;
-
-	size_t idx;
-	RenderObject *parent;
+	size_t idx; // index in layer
 	StateData *stateData;
-	float decayRate;
-	float maxLife;
+	MotionBlurData *motionBlur;
+
+private:
+	void enqueueChildDeletion(RenderObject *r);
 };
 
 #endif

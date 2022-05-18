@@ -771,12 +771,15 @@ static bool sdlVideoModeOK(int disp, const int w, const int h, const int bpp)
 void DSQ::init()
 {
 #define PSIZEOF(x) { std::ostringstream os_; os_ << ("sizeof(" #x ") = ") << sizeof(x); debugLog(os_.str()); }
+	PSIZEOF(ScriptObject);
 	PSIZEOF(RenderObject);
 	PSIZEOF(Quad);
+	PSIZEOF(CollideQuad);
 	PSIZEOF(Element);
 	PSIZEOF(Shot);
 	PSIZEOF(Bone);
 	PSIZEOF(PauseQuad);
+	PSIZEOF(SkeletalSprite);
 	PSIZEOF(Entity);
 	PSIZEOF(CollideEntity);
 	PSIZEOF(ScriptedEntity);

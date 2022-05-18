@@ -66,7 +66,7 @@ void SkeletalKeyframe::copyAllButTime(SkeletalKeyframe *copy)
 	this->t = t;
 }
 
-Bone::Bone() : Quad()
+Bone::Bone() : CollideQuad()
 {
 	addType(SCO_BONE);
 	fileRenderQuad = true;
@@ -332,7 +332,7 @@ void Bone::renderCollision()
 		glPopAttrib();
 	}
 	else
-		Quad::renderCollision();
+		CollideQuad::renderCollision();
 }
 
 Vector Bone::getCollisionMaskNormal(size_t index)

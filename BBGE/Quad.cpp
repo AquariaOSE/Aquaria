@@ -627,6 +627,10 @@ PauseQuad::PauseQuad() : Quad(), pauseLevel(0), positionSnapTo(0)
 	addType(SCO_PAUSEQUAD);
 }
 
+PauseQuad::~PauseQuad()
+{
+}
+
 void PauseQuad::onUpdate(float dt)
 {
 	if (positionSnapTo)
@@ -642,3 +646,36 @@ void PauseQuad::setPositionSnapTo(InterpolatedVector *positionSnapTo)
 {
 	this->positionSnapTo = positionSnapTo;
 }
+
+CollideQuad::CollideQuad()
+	: collideRadius(0)
+{
+	addType(SCO_COLLIDE_QUAD);
+}
+
+CollideQuad::~CollideQuad()
+{
+}
+
+void CollideQuad::renderCollision()
+{
+	if (collideRadius > 0)
+	{
+		glPushMatrix();
+		glLoadIdentity();
+		core->setupRenderPositionAndScale();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glTranslatef(position.x+offset.x, position.y+offset.y, 0);
+
+		glTranslatef(internalOffset.x, internalOffset.y, 0);
+		glEnable(GL_BLEND);
+
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		glColor4f(1,0,0,0.5);
+		drawCircle(collideRadius, 8);
+		glDisable(GL_BLEND);
+		glTranslatef(offset.x, offset.y,0);
+		glPopMatrix();
+	}
+}
+

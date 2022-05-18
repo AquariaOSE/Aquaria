@@ -49,7 +49,7 @@ struct BoneLock
 	int collisionMaskIndex;
 };
 
-class Entity : public Quad, public StateMachine, public SoundHolder
+class Entity : public CollideQuad, public StateMachine, public SoundHolder
 {
 public:
 	Entity();

@@ -31,6 +31,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define compile_assert(pred) switch(0){case 0:case (pred):;}
 
+// C++11's override specifier is too useful not to use it if we have it
+#if (__cplusplus >= 201103L) || (defined(_MSC_VER) && (_MSC_VER+0 >= 1900))
+#define OVERRIDE override
+#endif
+
+#ifndef OVERRIDE
+#define OVERRIDE
+#endif
+
+
 #ifdef _MSC_VER
 //#pragma warning(disable:4786)
 //#pragma warning(disable:4005)
