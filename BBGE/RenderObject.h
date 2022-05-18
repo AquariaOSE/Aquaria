@@ -240,6 +240,7 @@ public:
 	bool _dead;
 	bool _hidden;
 	bool _fv, _fh;
+	bool _markedForDelete;
 
 	unsigned char pm;  // unsigned char to save space
 
@@ -280,7 +281,7 @@ public:
 	// ----------------------
 
 	typedef std::vector<RenderObject*> Children;
-	Children children, childGarbage;
+	Children children;
 
 protected:
 	RenderObject *parent;
@@ -307,9 +308,6 @@ protected:
 	size_t idx; // index in layer
 	StateData *stateData;
 	MotionBlurData *motionBlur;
-
-private:
-	void enqueueChildDeletion(RenderObject *r);
 };
 
 #endif
