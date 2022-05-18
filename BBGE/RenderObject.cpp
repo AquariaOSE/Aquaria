@@ -151,9 +151,6 @@ RenderObject::RenderObject()
 
 	pm = PM_NONE;
 
-	positionSnapTo = 0;
-
-
 	blendEnabled = true;
 	texture = 0;
 	width = 0;
@@ -576,12 +573,6 @@ void RenderObject::render()
 
 void RenderObject::renderCall()
 {
-
-
-
-	if (positionSnapTo)
-		this->position = *positionSnapTo;
-
 	position += offset;
 
 
@@ -1093,11 +1084,6 @@ StateData *RenderObject::getStateData()
 	}
 	else
 		return stateData;
-}
-
-void RenderObject::setPositionSnapTo(InterpolatedVector *positionSnapTo)
-{
-	this->positionSnapTo = positionSnapTo;
 }
 
 void RenderObject::setOverrideCullRadius(float ovr)

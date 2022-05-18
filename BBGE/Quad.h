@@ -128,7 +128,10 @@ class PauseQuad : public Quad
 public:
 	PauseQuad();
 	int pauseLevel;
+
+	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
 protected:
+	InterpolatedVector *positionSnapTo;
 
 	void onUpdate(float dt);
 };
