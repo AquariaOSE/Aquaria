@@ -92,11 +92,18 @@ public:
 	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
 
 	void spawnParticlesFromCollisionMask(const char *p, unsigned intv, int layer, float rotz = 0);
+	Vector getCollisionMaskNormal(size_t index);
+
+	virtual void renderCollision();
 
 protected:
 	std::vector<ParticleEffect*> emitters;
 	int minDist, maxDist, reverse;
 	std::vector<Bone*> segments;
+public:
+	std::vector<Vector> collisionMask;
+	std::vector<Vector> transformedCollisionMask;
+	float collisionMaskRadius;
 };
 
 class BoneCommand

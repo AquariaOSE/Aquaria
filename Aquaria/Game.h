@@ -304,7 +304,7 @@ public:
 	void setTimerTextAlpha(float a, float t);
 	void setTimerText(float time);
 
-	void generateCollisionMask(Quad *q, float overrideCollideRadius=0);
+	void generateCollisionMask(Bone *q, float overrideCollideRadius=0);
 	std::string fromScene, toNode;
 	int toFlip;
 	char fromWarpType;

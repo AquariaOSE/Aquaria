@@ -1067,7 +1067,7 @@ void Game::setTimerText(float time)
 	timerText->setText(os.str());
 }
 
-void Game::generateCollisionMask(Quad *q, float overrideCollideRadius /* = 0 */)
+void Game::generateCollisionMask(Bone *q, float overrideCollideRadius /* = 0 */)
 {
 	if (q->texture)
 	{

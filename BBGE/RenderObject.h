@@ -217,8 +217,6 @@ public:
 	virtual void unloadDevice();
 	virtual void reloadDevice();
 
-	Vector getCollisionMaskNormal(size_t index);
-
 	//-------------------------------- Methods above, fields below
 
 	static bool renderCollisionShape;
@@ -271,10 +269,7 @@ public:
 
 
 	float collideRadius;
-	std::vector<Vector> collisionMask;
-	std::vector<Vector> transformedCollisionMask;
 
-	float collisionMaskRadius;
 
 	float alphaMod;
 
@@ -311,7 +306,7 @@ protected:
 	bool hasRenderPass(const int pass);
 
 	inline void renderCall();
-	void renderCollision();
+	virtual void renderCollision();
 
 	bool repeatTexture;
 	unsigned char pm;  // unsigned char to save space

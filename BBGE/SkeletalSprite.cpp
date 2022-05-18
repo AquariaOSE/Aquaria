@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "MathFunctions.h"
 #include "SimpleIStringStream.h"
 #include "ReadXML.h"
+#include "RenderBase.h"
 
 #include <tinyxml2.h>
 using namespace tinyxml2;
@@ -77,6 +78,7 @@ Bone::Bone() : Quad()
 	boneIdx = pidx = -1;
 	rbp = false;
 	segmentChain = 0;
+	collisionMaskRadius = 0;
 
 	minDist = maxDist = 128;
 	reverse = false;
@@ -293,6 +295,72 @@ void Bone::spawnParticlesFromCollisionMask(const char *p, unsigned intv, int lay
 		Vector pos = this->getWorldCollidePosition(this->collisionMask[j]);
 		core->createParticleEffect(p, pos, layer, rotz);
 	}
+}
+
+void Bone::renderCollision()
+{
+	if (!collisionMask.empty())
+	{
+		glPushAttrib(GL_ALL_ATTRIB_BITS);
+		glPushMatrix();
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glLoadIdentity();
+		core->setupRenderPositionAndScale();
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+		glColor4f(1,1,0,0.5);
+
+		for (size_t i = 0; i < transformedCollisionMask.size(); i++)
+		{
+			Vector collide = this->transformedCollisionMask[i];
+
+
+
+			glTranslatef(collide.x, collide.y, 0);
+			RenderObject *parent = this->getTopParent();
+			if (parent)
+				drawCircle(collideRadius*parent->scale.x, 45);
+			glTranslatef(-collide.x, -collide.y, 0);
+		}
+
+
+		glDisable(GL_BLEND);
+		glPopMatrix();
+		glPopAttrib();
+	}
+	else
+		Quad::renderCollision();
+}
+
+Vector Bone::getCollisionMaskNormal(size_t index)
+{
+	Vector sum;
+	size_t num=0;
+	for (size_t i = 0; i < this->transformedCollisionMask.size(); i++)
+	{
+		if (i != index)
+		{
+			Vector diff = transformedCollisionMask[index] - transformedCollisionMask[i];
+			if (diff.isLength2DIn(128))
+			{
+				sum += diff;
+				num++;
+			}
+		}
+	}
+	if (!sum.isZero())
+	{
+		sum /= num;
+
+		sum.normalize2D();
+
+
+	}
+
+	return sum;
 }
 
 

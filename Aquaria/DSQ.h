@@ -258,7 +258,6 @@ public:
 
 	void takeScreenshotKey();
 
-	void generateCollisionMask(RenderObject *r);
 	void toggleRenderCollisionShapes();
 
 	void voice(const std::string &file, float volMod = -1);
