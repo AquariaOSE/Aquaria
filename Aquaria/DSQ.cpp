@@ -2923,9 +2923,9 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 
 std::string DSQ::getEntityFlagName(Entity *e)
 {
-	if (!dsq->game) return "";
+	if (!game) return "";
 	std::ostringstream os;
-	os << dsq->game->sceneName << e->startPos.x << e->startPos.y;
+	os << game->sceneName << e->startPos.x << e->startPos.y;
 	return os.str();
 }
 
@@ -2945,13 +2945,6 @@ void doAlphabetInputKey(int d, char c, char map[], std::string *text, char upper
 	{
 		map[d] = 0;
 	}
-}
-
-void DSQ::generateCollisionMask(RenderObject *r)
-{
-	Quad *q = dynamic_cast<Quad*>(r);
-	if (q)
-		game->generateCollisionMask(q);
 }
 
 void DSQ::onConfirmYes()

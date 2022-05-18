@@ -136,7 +136,6 @@ RenderObject::RenderObject()
 	overrideCullRadiusSqr = 0;
 	repeatTexture = false;
 	alphaMod = 1;
-	collisionMaskRadius = 0;
 	collideRadius = 0;
 	motionBlurTransition = false;
 	motionBlurFrameOffsetCounter = 0;
@@ -770,44 +769,7 @@ void RenderObject::renderCall()
 
 void RenderObject::renderCollision()
 {
-	if (!collisionMask.empty())
-	{
-		glPushAttrib(GL_ALL_ATTRIB_BITS);
-		glPushMatrix();
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-
-
-		glLoadIdentity();
-		core->setupRenderPositionAndScale();
-
-
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-		glColor4f(1,1,0,0.5);
-
-		for (size_t i = 0; i < transformedCollisionMask.size(); i++)
-			{
-			Vector collide = this->transformedCollisionMask[i];
-
-
-
-			glTranslatef(collide.x, collide.y, 0);
-			RenderObject *parent = this->getTopParent();
-			if (parent)
-				drawCircle(collideRadius*parent->scale.x, 45);
-			glTranslatef(-collide.x, -collide.y, 0);
-		}
-
-
-		glDisable(GL_BLEND);
-		glPopMatrix();
-		glPopAttrib();
-
-
-	}
-	else if (collideRadius > 0)
+	if (collideRadius > 0)
 	{
 		glPushMatrix();
 		glLoadIdentity();
@@ -817,8 +779,6 @@ void RenderObject::renderCollision()
 
 		glTranslatef(internalOffset.x, internalOffset.y, 0);
 		glEnable(GL_BLEND);
-
-
 
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glColor4f(1,0,0,0.5);
@@ -838,34 +798,6 @@ void RenderObject::addDeathNotify(RenderObject *r)
 void RenderObject::deathNotify(RenderObject *r)
 {
 	deathNotifications.remove(r);
-}
-
-Vector RenderObject::getCollisionMaskNormal(size_t index)
-{
-	Vector sum;
-	size_t num=0;
-	for (size_t i = 0; i < this->transformedCollisionMask.size(); i++)
-	{
-		if (i != index)
-		{
-			Vector diff = transformedCollisionMask[index] - transformedCollisionMask[i];
-			if (diff.isLength2DIn(128))
-			{
-				sum += diff;
-				num++;
-			}
-		}
-	}
-	if (!sum.isZero())
-	{
-		sum /= num;
-
-		sum.normalize2D();
-
-
-	}
-
-	return sum;
 }
 
 void RenderObject::lookAt(const Vector &pos, float t, float minAngle, float maxAngle, float offset)
