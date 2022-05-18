@@ -281,7 +281,7 @@ void Shot::fire(bool playSfx)
 }
 
 
-Shot::Shot() : Quad(), Segmented(0,0)
+Shot::Shot() : CollideQuad(), Segmented(0,0)
 {
 	addType(SCO_SHOT);
 	extraDamage= 0;
@@ -466,7 +466,7 @@ void Shot::suicide()
 	velocity = 0;
 	fadeAlphaWithLife = true;
 	dead = true;
-	
+
 	destroySegments(0.2f);
 	if (emitter)
 	{

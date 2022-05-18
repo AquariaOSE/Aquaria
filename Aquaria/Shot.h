@@ -74,7 +74,7 @@ struct ShotData
 
 };
 
-class Shot : public Quad, public Segmented, public Scriptable
+class Shot : public CollideQuad, public Segmented, public Scriptable
 {
 public:
 

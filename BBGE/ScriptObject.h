@@ -43,6 +43,7 @@ enum ScriptObjectType
 	SCO_SHADER            = 0x2000,
 	SCO_PARTICLE_EFFECT   = 0x4000,
 	SCO_QUAD_GRID         = 0x8000,
+	SCO_COLLIDE_QUAD      = 0x10000,
 
 	SCO_FORCE_32BIT = 0xFFFFFFFF
 };

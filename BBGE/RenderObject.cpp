@@ -133,11 +133,7 @@ RenderObject::RenderObject()
 	overrideCullRadiusSqr = 0;
 	repeatTexture = false;
 	alphaMod = 1;
-	collideRadius = 0;
-	motionBlurTransition = false;
-	motionBlurFrameOffsetCounter = 0;
-	motionBlurFrameOffset = 0;
-	motionBlur = false;
+	motionBlur = 0;
 	idx = -1;
 	_fv = false;
 	_fh = false;
@@ -173,11 +169,11 @@ RenderObject::RenderObject()
 	colorIsSaved = false;
 	shareAlphaWithChildren = false;
 	shareColorWithChildren = false;
-	motionBlurTransitionTimer = 0;
 }
 
 RenderObject::~RenderObject()
 {
+	freeMotionBlur();
 }
 
 Vector RenderObject::getWorldPosition()
@@ -454,22 +450,25 @@ void RenderObject::moveToBack()
 
 void RenderObject::enableMotionBlur(int sz, int off)
 {
-	motionBlur = true;
-	motionBlurPositions.resize(sz);
-	motionBlurFrameOffsetCounter = 0;
-	motionBlurFrameOffset = off;
-	for (size_t i = 0; i < motionBlurPositions.size(); i++)
+	MotionBlurData *mb = ensureMotionBlur();
+	mb->transition = false;
+	mb->positions.resize(sz);
+	mb->frameOffsetCounter = 0;
+	mb->frameOffset = off;
+	for (size_t i = 0; i < mb->positions.size(); i++)
 	{
-		motionBlurPositions[i].position = position;
-		motionBlurPositions[i].rotz = rotation.z;
+		mb->positions[i].position = position;
+		mb->positions[i].rotz = rotation.z;
 	}
 }
 
 void RenderObject::disableMotionBlur()
 {
-	motionBlurTransition = true;
-	motionBlurTransitionTimer = 1.0;
-	motionBlur = false;
+	if(MotionBlurData *mb = this->motionBlur)
+	{
+		mb->transition = true;
+		mb->transitionTimer = 1.0;
+	}
 }
 
 bool RenderObject::isfhr()
@@ -540,31 +539,27 @@ void RenderObject::render()
 		}
 	}
 
-	if (motionBlur || motionBlurTransition)
+	if (MotionBlurData *mb = this->motionBlur)
 	{
-		Vector oldPos = position;
-		float oldAlpha = alpha.x;
-		float oldRotZ = rotation.z;
-		for (size_t i = 0; i < motionBlurPositions.size(); i++)
+		const Vector oldPos = position;
+		const float oldAlpha = alpha.x;
+		const float oldRotZ = rotation.z;
+		const size_t sz = mb->positions.size();
+		const float m = 1.0f / float(sz);
+		const float m2 = 0.5f * (mb->transition ? mb->transitionTimer : 1.0f);
+		for (size_t i = 0; i < sz; i++)
 		{
-			position = motionBlurPositions[i].position;
-			rotation.z = motionBlurPositions[i].rotz;
-			alpha = 1.0f-(float(i)/float(motionBlurPositions.size()));
-			alpha *= 0.5f;
-			if (motionBlurTransition)
-			{
-				alpha *= motionBlurTransitionTimer;
-			}
+			position = mb->positions[i].position;
+			rotation.z = mb->positions[i].rotz;
+			alpha = (1.0f-(float(i) * m)) * m2;
 			renderCall();
 		}
 		position = oldPos;
 		alpha.x = oldAlpha;
 		rotation.z = oldRotZ;
-
-		renderCall();
 	}
-	else
-		renderCall();
+
+	renderCall();
 }
 
 void RenderObject::renderCall()
@@ -729,24 +724,6 @@ void RenderObject::renderCall()
 
 void RenderObject::renderCollision()
 {
-	if (collideRadius > 0)
-	{
-		glPushMatrix();
-		glLoadIdentity();
-		core->setupRenderPositionAndScale();
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glTranslatef(position.x+offset.x, position.y+offset.y, 0);
-
-		glTranslatef(internalOffset.x, internalOffset.y, 0);
-		glEnable(GL_BLEND);
-
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColor4f(1,0,0,0.5);
-		drawCircle(collideRadius, 8);
-		glDisable(GL_BLEND);
-		glTranslatef(offset.x, offset.y,0);
-		glPopMatrix();
-	}
 }
 
 void RenderObject::addDeathNotify(RenderObject *r)
@@ -967,32 +944,47 @@ void RenderObject::onUpdate(float dt)
 		childGarbage.clear();
 	}
 
-	if (motionBlur)
+	if (MotionBlurData *mb = this->motionBlur)
 	{
-		if (motionBlurFrameOffsetCounter >= motionBlurFrameOffset)
+		if(!mb->transition)
 		{
-			motionBlurFrameOffsetCounter = 0;
-			motionBlurPositions[0].position = position;
-			motionBlurPositions[0].rotz = rotation.z;
-			for (int i = motionBlurPositions.size()-1; i > 0; i--)
+			if (mb->frameOffsetCounter >= mb->frameOffset)
 			{
-				motionBlurPositions[i] = motionBlurPositions[i-1];
+				mb->frameOffsetCounter = 0;
+				mb->positions[0].position = position;
+				mb->positions[0].rotz = rotation.z;
+				for (int i = mb->positions.size()-1; i > 0; i--)
+				{
+					mb->positions[i] = mb->positions[i-1];
+				}
 			}
+			else
+				mb->frameOffsetCounter ++;
 		}
 		else
-			motionBlurFrameOffsetCounter ++;
-	}
-	if (motionBlurTransition)
-	{
-		motionBlurTransitionTimer -= dt*2;
-		if (motionBlurTransitionTimer <= 0)
 		{
-			motionBlur = motionBlurTransition = false;
-			motionBlurTransitionTimer = 0;
+			mb->transitionTimer -= dt*2;
+			if (mb->transitionTimer <= 0)
+				freeMotionBlur();
 		}
 	}
+}
 
+void RenderObject::updateLife(float dt)
+{
+	if (decayRate > 0)
+	{
+		life -= decayRate*dt;
+		if (life<=0)
+		{
+			safeKill();
+		}
+	}
+	if (fadeAlphaWithLife && !alpha.isInterpolating())
+	{
 
+		alpha = life/maxLife;
+	}
 }
 
 void RenderObject::unloadDevice()
@@ -1008,6 +1000,26 @@ void RenderObject::reloadDevice()
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
 		(*i)->reloadDevice();
+	}
+}
+
+MotionBlurData* RenderObject::ensureMotionBlur()
+{
+	MotionBlurData *mb = this->motionBlur;
+	if(!mb)
+	{
+		mb = new MotionBlurData;
+		this->motionBlur = mb;
+	}
+	return mb;
+}
+
+void RenderObject::freeMotionBlur()
+{
+	if(motionBlur)
+	{
+		delete motionBlur;
+		motionBlur = NULL;
 	}
 }
 
@@ -1073,4 +1085,9 @@ bool RenderObject::isCoordinateInRadius(const Vector &pos, float r)
 	Vector d = pos-getRealPosition();
 
 	return (d.getSquaredLength2D() < r*r);
+}
+
+MotionBlurData::MotionBlurData()
+	: transition(false), frameOffsetCounter(0), frameOffset(0), transitionTimer(0)
+{
 }

@@ -42,7 +42,7 @@ enum AnimationCommand
 class ParticleEffect;
 class SkeletalSprite;
 
-class Bone : public Quad
+class Bone : public CollideQuad
 {
 	friend class SkeletalSprite;
 public:
@@ -94,7 +94,7 @@ public:
 	void spawnParticlesFromCollisionMask(const char *p, unsigned intv, int layer, float rotz = 0);
 	Vector getCollisionMaskNormal(size_t index);
 
-	virtual void renderCollision();
+	virtual void renderCollision() OVERRIDE;
 
 protected:
 	std::vector<ParticleEffect*> emitters;

@@ -3853,7 +3853,7 @@ bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, float rad
 }
 
 // NOTE THIS FUNCTION ASSUMES THAT IF A BONE ISN'T AT FULL ALPHA (1.0) IT IS DISABLED
-Bone *Game::collideSkeletalVsCircle(Entity *skeletal, RenderObject *circle)
+Bone *Game::collideSkeletalVsCircle(Entity *skeletal, CollideQuad *circle)
 {
 	return collideSkeletalVsCircle(skeletal, circle->position, circle->collideRadius);
 }
@@ -3885,7 +3885,7 @@ Bone *Game::collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, fl
 	return closest;
 }
 
-bool Game::collideCircleVsLine(RenderObject *r, Vector start, Vector end, float radius)
+bool Game::collideCircleVsLine(CollideQuad *r, Vector start, Vector end, float radius)
 {
 	bool collision = false;
 	if (isTouchingLine(start, end, r->position, radius+r->collideRadius, &lastCollidePosition))
@@ -3895,7 +3895,7 @@ bool Game::collideCircleVsLine(RenderObject *r, Vector start, Vector end, float 
 	return collision;
 }
 
-bool Game::collideCircleVsLineAngle(RenderObject *r, float angle, float startLen, float endLen, float radius, Vector basePos)
+bool Game::collideCircleVsLineAngle(CollideQuad *r, float angle, float startLen, float endLen, float radius, Vector basePos)
 {
 	bool collision = false;
 	float rads = MathFunctions::toRadians(angle);
