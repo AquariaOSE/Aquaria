@@ -137,6 +137,7 @@ RenderObject::RenderObject()
 	idx = -1;
 	_fv = false;
 	_fh = false;
+	_markedForDelete = false;
 	updateCull = -1;
 
 	layer = LR_NONE;
@@ -383,12 +384,6 @@ void RenderObject::destroy()
 	}
 
 	texture = NULL;
-}
-
-const RenderObject &RenderObject::operator=(const RenderObject &r)
-{
-	errorLog("Operator= not defined for RenderObject. Use 'copyProperties'");
-	return *this;
 }
 
 Vector RenderObject::getRealPosition()
@@ -833,18 +828,6 @@ void RenderObject::removeChild(RenderObject *r)
 	}
 }
 
-void RenderObject::enqueueChildDeletion(RenderObject *r)
-{
-	if (r->parent == this)
-	{
-		// Don't garbage a child more than once
-		for (size_t i = 0; i < childGarbage.size(); ++i)
-			if(childGarbage[i] == r)
-				return;
-		childGarbage.push_back(r);
-	}
-}
-
 void RenderObject::safeKill()
 {
 	alpha = 0;
@@ -858,8 +841,7 @@ void RenderObject::safeKill()
 
 	if (this->parent)
 	{
-		parent->enqueueChildDeletion(this);
-
+		_markedForDelete = true;
 	}
 	else
 	{
@@ -920,6 +902,7 @@ void RenderObject::onUpdate(float dt)
 	beforeScaleOffset.update(dt);
 	rotationOffset.update(dt);
 
+	bool hasChildrenToDelete = false;
 	for (Children::iterator i = children.begin(); i != children.end(); i++)
 	{
 		if (shareAlphaWithChildren)
@@ -931,17 +914,27 @@ void RenderObject::onUpdate(float dt)
 		{
 			(*i)->update(dt);
 		}
+		hasChildrenToDelete |= (*i)->_markedForDelete;
+
 	}
 
-	if (!childGarbage.empty())
+	if (hasChildrenToDelete)
 	{
-		for (Children::iterator i = childGarbage.begin(); i != childGarbage.end(); i++)
+		size_t w = 0;
+		const size_t N = children.size();
+		for (size_t i = 0; i < N; ++i)
 		{
-			removeChild(*i);
-			(*i)->destroy();
-			delete (*i);
+			RenderObject *ro = children[i];
+			if(ro->_markedForDelete)
+			{
+				ro->parent = NULL;
+				ro->destroy();
+				delete ro;
+			}
+			else
+				children[w++] = ro;
 		}
-		childGarbage.clear();
+		children.resize(w);
 	}
 
 	if (MotionBlurData *mb = this->motionBlur)
