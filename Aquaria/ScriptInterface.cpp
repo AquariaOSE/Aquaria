@@ -408,7 +408,6 @@ static void compile_time_assertions()
 	compile_assert(oo(Path) == oo(Quad));
 	compile_assert(oo(Path) == oo(Avatar));
 	compile_assert(oo(Path) == oo(BaseText));
-	compile_assert(oo(Path) == oo(PauseQuad));
 	compile_assert(oo(Path) == oo(ParticleEffect));
 #undef oo
 }

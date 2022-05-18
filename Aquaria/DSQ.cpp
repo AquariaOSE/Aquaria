@@ -770,25 +770,23 @@ static bool sdlVideoModeOK(int disp, const int w, const int h, const int bpp)
 
 void DSQ::init()
 {
+#define PSIZEOF(x) { std::ostringstream os_; os_ << ("sizeof(" #x ") = ") << sizeof(x); debugLog(os_.str()); }
+	PSIZEOF(RenderObject);
+	PSIZEOF(Quad);
+	PSIZEOF(Element);
+	PSIZEOF(Shot);
+	PSIZEOF(Bone);
+	PSIZEOF(PauseQuad);
+	PSIZEOF(Entity);
+	PSIZEOF(CollideEntity);
+	PSIZEOF(ScriptedEntity);
+	PSIZEOF(Avatar);
+	PSIZEOF(ParticleEffect);
+	PSIZEOF(Emitter);
+	PSIZEOF(Particle);
+#undef PSIZEOF
+
 	core->settings.runInBackground = true;
-
-#ifdef BBGE_BUILD_WINDOWS
-	/*
-	const std::string welcomeMessage = \
-"Thank you for reviewing Aquaria!\n\
-This build is not yet final, and as such there are a couple things lacking. They include:\n\
-  * documentation (not 100% complete)\n\
-  * mod editing (some known issues)\n\
-  * gamepad support/config (some known issues)\n\
-\nFor the best experience, we recommend playing using the mouse or mouse and keyboard.\n\
-			Have fun!";
-
-	if (!welcomeMessage.empty())
-	{
-		MessageBox(core->hWnd, welcomeMessage.c_str(), "Welcome to Aquaria", MB_OK);
-	}
-	*/
-#endif
 
 	disableMiniMapOnNoInput = true;
 	fpsText = 0;
