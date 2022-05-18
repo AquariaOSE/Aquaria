@@ -1492,7 +1492,8 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			if (bone->Attribute("blend"))
 			{
 				//if (bone->Attribute("blend")=="add")
-				newb->blendType = blendType = BLEND_ADD;
+				newb->setBlendType(BLEND_ADD);
+				//this->setBlendType(BLEND_ADD); // FIXME: seems wrong to do this here -- fg
 			}
 
 			if (bone->Attribute("alpha"))

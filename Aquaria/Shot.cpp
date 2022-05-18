@@ -50,7 +50,7 @@ ShotData::ShotData()
 	segScale = Vector(1,1);
 	numSegs = 0;
 	segDist = 16;
-	blendType = RenderObject::BLEND_DEFAULT;
+	blendType = BLEND_DEFAULT;
 	collideRadius = 8;
 	damageType = DT_ENEMY_ENERGYBLAST;
 	lifeTime = 8;
@@ -177,7 +177,7 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 			std::string bt;
 			inf >> bt;
 			if (bt == "BLEND_ADD")
-				blendType = RenderObject::BLEND_ADD;
+				blendType = BLEND_ADD;
 		}
 		else if (token == "Damage")
 		{
@@ -386,7 +386,7 @@ void Shot::applyShotData(ShotData *shotData)
 				Quad *flame = new Quad;
 				flame->setTexture(shotData->segTexture);
 				flame->scale = shotData->segScale - Vector(shotData->segTaper, shotData->segTaper)*(i);
-				flame->setBlendType(this->blendType);
+				flame->setBlendType(this->getBlendType());
 				flame->alpha = 0.5;
 				dsq->game->addRenderObject(flame, LR_PARTICLES);
 				segments[i] = flame;

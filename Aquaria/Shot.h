@@ -36,7 +36,7 @@ struct ShotData
 	std::string hitPrt, trailPrt, firePrt, bouncePrt;
 	std::string spawnEntity;
 	BounceType bounceType;
-	int blendType;
+	BlendType blendType;
 	bool segments;
 	float damage;
 	float maxSpeed, homing, homingMax;

@@ -200,7 +200,7 @@ void GameOver::applyState()
 		shockLines->setTexture("shock-lines");
 		shockLines->position = Vector(400,300);
 		shockLines->setWidthHeight(800, 600);
-		shockLines->setBlendType(RenderObject::BLEND_ADD);
+		shockLines->setBlendType(BLEND_ADD);
 		shockLines->scale.interpolateTo(Vector(4,4), 1);
 	}
 	addRenderObject(shockLines, LR_BACKGROUND);

@@ -182,7 +182,7 @@ public:
 
 	bool hasTarget(int t=0);
 	bool isTargetInRange(int range, size_t t=0);
-	void doGlint(const Vector &position, const Vector &scale=Vector(2,2), const std::string &tex="Glint", RenderObject::BlendTypes bt=BLEND_DEFAULT);
+	void doGlint(const Vector &position, const Vector &scale=Vector(2,2), const std::string &tex="Glint", BlendType bt=BLEND_DEFAULT);
 	Entity *getTargetEntity(int t=0);
 	void setTargetEntity(Entity *e, int t=0);
 

@@ -16,7 +16,7 @@ public:
 	bool wavy_flip;
 	InterpolatedVector alpha;
 	InterpolatedVector color;
-	int blendType;
+	BlendType blendType;
 };
 
 struct EmoteData

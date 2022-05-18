@@ -712,7 +712,7 @@ SongSlot::SongSlot(int songSlot) : AquariaGuiQuad(), songSlot(songSlot)
 
 	glow = new Quad("particles/glow", Vector(0,0));
 	glow->setWidthHeight(128, 128);
-	glow->setBlendType(RenderObject::BLEND_ADD);
+	glow->setBlendType(BLEND_ADD);
 	glow->alpha = 0;
 	addChild(glow, PM_POINTER);
 
@@ -2512,7 +2512,7 @@ void InGameMenu::create()
 	menuIconGlow->alphaMod = 0.4f;
 	menuIconGlow->alpha = 0;
 	menuIconGlow->setWidthHeight(80, 80);
-	menuIconGlow->setBlendType(RenderObject::BLEND_ADD);
+	menuIconGlow->setBlendType(BLEND_ADD);
 	menuIconGlow->followCamera = 1;
 	game->addRenderObject(menuIconGlow, LR_MENU);
 
@@ -4153,7 +4153,7 @@ void InGameMenu::update(float dt)
 
 						float t = 0.5;
 						Quad *q = new Quad("particles/glow", Vector(400+237*menuBg->scale.x,300-52*menuBg->scale.x)+notePos);
-						q->setBlendType(RenderObject::BLEND_ADD);
+						q->setBlendType(BLEND_ADD);
 						q->scale = Vector(5,5);
 						q->alpha.ensureData();
 						q->alpha.data->path.addPathNode(0, 0);

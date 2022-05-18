@@ -600,6 +600,13 @@ Bone *bone(lua_State *L, int slot = 1)
 }
 
 static inline
+BlendType getBlendType(lua_State *L, int slot = 1)
+{
+	int bt = lua_tointeger(L, slot);
+	return (BlendType)((bt >= BLEND_DEFAULT && bt < _BLEND_MAXSIZE) ? bt : BLEND_DISABLED);
+}
+
+static inline
 Path *pathFromName(lua_State *L, int slot = 1)
 {
 	std::string s = getString(L, slot);
@@ -1230,14 +1237,16 @@ luaFunc(obj_setBlendType)
 {
 	RenderObject *r = robj(L);
 	if (r)
-		r->setBlendType(lua_tointeger(L, 2));
+	{
+		r->setBlendType(getBlendType(L, 2));
+	}
 	luaReturnNil();
 }
 
 luaFunc(obj_getBlendType)
 {
 	RenderObject *r = robj(L);
-	luaReturnInt(r ? r->blendType : 0);
+	luaReturnInt(r ? r->getBlendType() : 0);
 }
 
 luaFunc(obj_setTexture)
@@ -8134,7 +8143,7 @@ luaFunc(entity_partBlendType)
 {
 	ScriptedEntity *e = scriptedEntity(L);
 	if (e)
-		e->partMap[getString(L, 2)]->setBlendType(lua_tointeger(L, 3));
+		e->partMap[getString(L, 2)]->setBlendType(getBlendType(L, 3));
 	luaReturnNil();
 }
 
@@ -8338,7 +8347,7 @@ luaFunc(entity_doGlint)
 {
 	Entity *e = entity(L);
 	if (e)
-		e->doGlint(e->position, Vector(2,2), getString(L,2), (RenderObject::BlendTypes)lua_tointeger(L, 3));
+		e->doGlint(e->position, Vector(2,2), getString(L,2), getBlendType(L, 3));
 	luaReturnNil();
 }
 
@@ -11302,11 +11311,12 @@ static const struct {
 	luaConstant(SONG_ANIMA),
 	luaConstant(SONG_MAX),
 
-	luaConstantFromClass(BLEND_DEFAULT,	RenderObject),
-	luaConstantFromClass(BLEND_ADD,		RenderObject),
-	{"BLEND_ADDITIVE",					RenderObject::BLEND_ADD},
-	luaConstantFromClass(BLEND_SUB,		RenderObject),
-	luaConstantFromClass(BLEND_MULT,	RenderObject),
+	luaConstant(BLEND_DISABLED),
+	luaConstant(BLEND_DEFAULT),
+	luaConstant(BLEND_ADD),
+	{"BLEND_ADDITIVE",			BLEND_ADD},
+	luaConstant(BLEND_SUB),
+	luaConstant(BLEND_MULT),
 
 	{"ENDING_NAIJACAVE",				10},
 	{"ENDING_NAIJACAVEDONE",			11},

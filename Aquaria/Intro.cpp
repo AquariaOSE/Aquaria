@@ -139,7 +139,7 @@ void Intro::createMeteor(int layer, Vector pos, Vector off, Vector sz)
 	m->rotationOffset.interpolateTo(Vector(0,0,-360), 2.5, -1);
 	m->rotation.z = rand()%360;
 	Quad *g = new Quad("particles/glow", Vector(0,0));
-	g->setBlendType(RenderObject::BLEND_ADD);
+	g->setBlendType(BLEND_ADD);
 	g->scale = Vector(24, 24);
 	g->alpha = 0.5;
 	g->color = Vector(1, 0.5, 0.5);
@@ -800,7 +800,7 @@ void Intro::update(float dt)
 		Quad *mom = new Quad("gameover-0004", Vector(400,300));
 		mom->setWidthHeight(600,600);
 		mom->alphaMod = 0.035f;
-		mom->setBlendType(RenderObject::BLEND_ADD);
+		mom->setBlendType(BLEND_ADD);
 		mom->alpha = 0;
 		mom->alpha.interpolateTo(1, 5);
 		mom->followCamera = 1;

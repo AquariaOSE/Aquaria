@@ -132,7 +132,7 @@ void Credits::applyState()
 		slides[i] = new Quad("credits/slide-" + numToZeroString(i, 4), Vector(400, 300));
 		slides[i]->alpha = 0;
 		slides[i]->followCamera = 1;
-		slides[i]->setBlendType(RenderObject::BLEND_ADD);
+		slides[i]->setBlendType(BLEND_ADD);
 		addRenderObject(slides[i], LR_ENTITIES);
 	}
 

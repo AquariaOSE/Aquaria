@@ -233,7 +233,7 @@ void Element::setElementEffectByIndex(int eidx)
 {
 	deleteGrid();
 
-	setBlendType(RenderObject::BLEND_DEFAULT);
+	setBlendType(BLEND_DEFAULT);
 	alpha.stop();
 	alpha = 1;
 
