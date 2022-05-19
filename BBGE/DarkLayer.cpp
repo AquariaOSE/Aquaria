@@ -131,7 +131,7 @@ void DarkLayer::preRender()
 	}
 }
 
-void DarkLayer::render()
+void DarkLayer::render() const
 {
 	if (renderLayer != -1)
 	{

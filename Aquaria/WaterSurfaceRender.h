@@ -27,10 +27,11 @@ class WaterSurfaceRender : public Quad
 {
 public:
 	WaterSurfaceRender();
-	void render();
+	void render() const OVERRIDE;
 protected:
 	Quad *qSurface, *qLine, *qLine2;
-	void onRender();
+	void onRender() const OVERRIDE;
+	void onUpdate(float dt) OVERRIDE;
 };
 
 #endif

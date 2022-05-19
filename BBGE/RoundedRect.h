@@ -43,7 +43,7 @@ public:
 
 protected:
 	void onUpdate(float dt);
-	void onRender();
+	void onRender() const OVERRIDE;
 
 	bool canMove;
 	static RoundedRect *moving;
@@ -61,7 +61,7 @@ public:
 	EventPtr event;
 protected:
 	void onUpdate(float dt);
-	void onRender();
+	void onRender() const OVERRIDE;
 
 	TTFText *label;
 	int width, height, radius;

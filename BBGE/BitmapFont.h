@@ -27,13 +27,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 namespace glfont { class GLFont; }
 
-enum BitmapFontEffect
-{
-	BFE_NONE			= 0,
-	BFE_SHADOWBLUR		= 1,
-	BFE_MAX
-};
-
 struct BmpFont
 {
 	BmpFont();
@@ -69,8 +62,6 @@ public:
 	Vector getColorIndex(size_t i, size_t j);
 	void updateWordColoring();
 	void autoKern();
-	void setBitmapFontEffect(BitmapFontEffect bfe);
-	void render();
 	virtual float getHeight();
 	void unloadDevice();
 	void reloadDevice();
@@ -82,8 +73,6 @@ public:
 protected:
 	float scrollSpeed;
 	BmpFont *bmpFont;
-	int bfePass;
-	BitmapFontEffect bfe;
 	void onUpdate(float dt);
 	float scrollDelay;
 	bool scrolling;
@@ -93,7 +82,7 @@ protected:
 	float alignWidth;
 	void formatText();
 	float fontDrawSize;
-	void onRender();
+	void onRender() const OVERRIDE;
 	typedef std::vector<std::string> Lines;
 	Lines lines;
 	typedef std::vector<Vector> ColorIndices;

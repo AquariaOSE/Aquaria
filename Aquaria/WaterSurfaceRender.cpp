@@ -46,10 +46,8 @@ WaterSurfaceRender::WaterSurfaceRender() : Quad()
 	shareAlphaWithChildren = 0;
 }
 
-void WaterSurfaceRender::render()
+void WaterSurfaceRender::onUpdate(float dt)
 {
-
-
 	if (dsq->game->waterLevel.x > 0)
 	{
 
@@ -100,20 +98,9 @@ void WaterSurfaceRender::render()
 		if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
 		{
 			qSurface->alphaMod = 0.5;
-			Quad::render();
-
-		}
-		else
-		{
-
-			Quad::render();
-
-
-
 		}
 
-
-
+		Quad::render();
 	}
 	else
 	{
@@ -124,25 +111,12 @@ void WaterSurfaceRender::render()
 			qLine2->alpha = 0;
 		}
 	}
-}
-
-void WaterSurfaceRender::onRender()
-{
-	if (dsq->game->waterLevel == 0) return;
-	if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
-	{
-		dsq->frameBuffer.bindTexture();
-	}
-	else
-	{
-		glBindTexture(GL_TEXTURE_2D, 0);
-	}
 
 	if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
 	{
 		const float reflectSize = 97;
 		const float reflectPos = (dsq->game->waterLevel.x - core->cameraPos.y)
-				+ (dsq->game->waterLevel.x - core->screenCenter.y) / 3;
+			+ (dsq->game->waterLevel.x - core->screenCenter.y) / 3;
 		const float reflectOffset = -0.03f;
 		const float coordDiv = 768;
 		const float v0 = 1 + reflectOffset - (reflectPos * core->globalScale.x) / coordDiv;
@@ -153,25 +127,31 @@ void WaterSurfaceRender::onRender()
 
 		upperLeftTextureCoordinates.x = 0;
 		lowerRightTextureCoordinates.x = core->frameBuffer.getWidthP();
+	}
+}
 
+void WaterSurfaceRender::render() const
+{
+	if (dsq->game->waterLevel.x > 0)
+		Quad::render();
+}
 
-		Quad::onRender();
-
-
-
-		glBindTexture(GL_TEXTURE_2D, 0);
+void WaterSurfaceRender::onRender() const
+{
+	if (dsq->game->waterLevel == 0) return;
+	if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
+	{
+		dsq->frameBuffer.bindTexture();
 	}
 	else
 	{
-
-		glColor4f(0.4f, 0.7f, 0.8f, 0.2f);
-		Quad::onRender();
-
 		glBindTexture(GL_TEXTURE_2D, 0);
+		glColor4f(0.4f, 0.7f, 0.8f, 0.2f);
 	}
 
+	Quad::onRender();
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+
 	RenderObject::lastTextureApplied = 0;
-
-
-
 }

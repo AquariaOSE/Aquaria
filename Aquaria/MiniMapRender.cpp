@@ -474,7 +474,7 @@ void MiniMapRender::onUpdate(float dt)
 		toggleOn && dsq->game->avatar && dsq->game->avatar->getState() != Entity::STATE_TITLE && !(dsq->disableMiniMapOnNoInput && !dsq->game->avatar->isInputEnabled());
 }
 
-void MiniMapRender::onRender()
+void MiniMapRender::onRender() const
 {
 
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -498,9 +498,6 @@ void MiniMapRender::onRender()
 			glTexCoord2f(0, 0);
 			glVertex2f(-miniMapGuiSize, -miniMapGuiSize);
 		glEnd();
-
-		texMinimapBtm->unbind();
-
 
 		if (lightLevel > 0)
 		{
@@ -587,10 +584,7 @@ void MiniMapRender::onRender()
 					}
 				}
 			}
-			texWaterBit->unbind();
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
 		}
 	}
 
@@ -642,9 +636,6 @@ void MiniMapRender::onRender()
 		glVertex2f(-hsz, -hsz);
 	glEnd();
 
-	texNaija->unbind();
-	glBindTexture(GL_TEXTURE_2D, 0);
-
 	glColor4f(1,1,1,1);
 
 	texMinimapTop->apply();
@@ -658,10 +649,6 @@ void MiniMapRender::onRender()
 		glTexCoord2f(0, 0);
 		glVertex2f(-miniMapGuiSize, -miniMapGuiSize);
 	glEnd();
-	texMinimapTop->unbind();
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
 
 	const int curHealthSteps = int((lerp.x/2) * healthSteps);
 	const int maxHealthSteps = int((dsq->game->avatar->maxHealth/10.0f) * healthSteps);
@@ -731,8 +718,6 @@ void MiniMapRender::onRender()
 	}
 	glEnd();
 
-	texHealthBar->unbind();
-
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	glColor4f(1,1,1,1);
 
@@ -752,17 +737,12 @@ void MiniMapRender::onRender()
 		glVertex2f(x-healthMarkerSize, y-healthMarkerSize);
 	glEnd();
 
-	texMarker->unbind();
-
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glColor4f(1,1,1,1);
-
-	glBindTexture(GL_TEXTURE_2D, 0);
-
 }
 
-void MiniMapRender::renderIcon(MinimapIcon *ico, const Vector& pos)
+void MiniMapRender::renderIcon(const MinimapIcon *ico, const Vector& pos) const
 {
 	if(!ico->tex)
 		return;

@@ -35,7 +35,7 @@ public:
 
 	int autoWidth, autoHeight;
 protected:
-	void onRender();
+	void onRender() const OVERRIDE;
 	Vector ulc0, ulc1, ulc2, ulc3;
 };
 

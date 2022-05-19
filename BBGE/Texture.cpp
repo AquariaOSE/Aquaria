@@ -284,7 +284,7 @@ bool Texture::load(std::string file, bool mipmap)
 	return ok;
 }
 
-void Texture::apply(bool repeatOverride)
+void Texture::apply(bool repeatOverride) const
 {
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	if (repeat || repeatOverride)
@@ -305,10 +305,6 @@ void Texture::apply(bool repeatOverride)
 			repeating = false;
 		}
 	}
-}
-
-void Texture::unbind()
-{
 }
 
 struct GlTexFormat

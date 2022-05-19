@@ -204,20 +204,20 @@ void FrameBuffer::reloadDevice()
 	init(_w, _h, _fitToScreen);
 }
 
-void FrameBuffer::startCapture()
+void FrameBuffer::startCapture() const
 {
 	assert(inited);
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, g_frameBuffer );
 	glClear( GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT );
 }
 
-void FrameBuffer::endCapture()
+void FrameBuffer::endCapture() const
 {
 	assert(inited);
 	glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, 0 );
 }
 
-void FrameBuffer::bindTexture()
+void FrameBuffer::bindTexture() const
 {
 	assert(inited);
 	glBindTexture( GL_TEXTURE_2D, g_dynamicTextureID );

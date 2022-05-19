@@ -94,7 +94,7 @@ public:
 	void spawnParticlesFromCollisionMask(const char *p, unsigned intv, int layer, float rotz = 0);
 	Vector getCollisionMaskNormal(size_t index);
 
-	virtual void renderCollision() OVERRIDE;
+	virtual void renderCollision() const OVERRIDE;
 
 protected:
 	std::vector<ParticleEffect*> emitters;

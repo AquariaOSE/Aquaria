@@ -34,12 +34,7 @@ SteamRender::SteamRender() : RenderObject()
 	setBlendType(BLEND_ADD);
 }
 
-void SteamRender::onUpdate(float dt)
-{
-	RenderObject::onUpdate(dt);
-}
-
-void SteamRender::onRender()
+void SteamRender::onRender() const
 {
 
 

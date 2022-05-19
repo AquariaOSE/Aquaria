@@ -40,8 +40,7 @@ public:
 	~Texture();
 
 	bool load(std::string file, bool mipmap);
-	void apply(bool repeatOverride=false);
-	void unbind();
+	void apply(bool repeatOverride=false) const;
 	void unload();
 
 	int getPixelWidth();
@@ -51,7 +50,8 @@ public:
 
 	int width, height;
 
-	bool repeat, repeating;
+	bool repeat;
+	mutable bool repeating; // modified during rendering
 
 	unsigned textures[1];
 

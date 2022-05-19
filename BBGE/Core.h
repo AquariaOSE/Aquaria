@@ -119,7 +119,6 @@ public:
 	void remove(RenderObject* r);
 	void moveToFront(RenderObject *r);
 	void moveToBack(RenderObject *r);
-	void setCull(bool cull);
 	void renderPass(int pass);
 	void reloadDevice();
 
@@ -162,13 +161,13 @@ public:
 	float followCamera;
 
 	int followCameraLock;
-	bool cull;
+
 	bool update;
 
 	Vector color;
 
 protected:
-	inline void renderOneObject(RenderObject *robj);
+	inline void renderOneObject(const RenderObject *robj);
 
 	RenderObjects renderObjects;
 	size_t objectCount;
@@ -210,8 +209,6 @@ public:
 	void quit();
 	bool isShuttingDown();
 	bool isWindowFocus();
-
-	void instantQuit();
 
 	void cacheRender();
 
@@ -263,12 +260,12 @@ public:
 	void clearGarbage();
 
 
-	bool isNested() { return nestedMains > 1; }
-	int getNestedMains() { return nestedMains; }
+	bool isNested() const { return nestedMains > 1; }
+	int getNestedMains() const { return nestedMains; }
 	void quitNestedMain();
 
-	int getWindowWidth() { return width; }
-	int getWindowHeight() { return height; }
+	int getWindowWidth() const { return width; }
+	int getWindowHeight() const { return height; }
 
 	unsigned getTicks();
 

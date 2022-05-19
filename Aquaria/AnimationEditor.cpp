@@ -35,7 +35,7 @@ const int KEYFRAME_POS_Y	= 570;
 
 class TimelineRender : public RenderObject
 {
-	void onRender()
+	void onRender() const OVERRIDE
 	{
 		glLineWidth(1);
 		glBegin(GL_LINES);

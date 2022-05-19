@@ -223,11 +223,6 @@ void TTFText::updateFormatting()
 	lineHeight = font->font->LineHeight();
 }
 
-void TTFText::onUpdate(float dt)
-{
-	RenderObject::onUpdate(dt);
-}
-
 float TTFText::getLineHeight()
 {
 	return lineHeight;
@@ -245,7 +240,7 @@ int TTFText::findLine(const std::string &label)
 	return 0;
 }
 
-void TTFText::onRender()
+void TTFText::onRender() const
 {
 
 

@@ -34,15 +34,7 @@ CurrentRender::CurrentRender() : RenderObject()
 	rippleDelay = 2;
 }
 
-void CurrentRender::onUpdate(float dt)
-{
-	RenderObject::onUpdate(dt);
-
-
-
-}
-
-void CurrentRender::onRender()
+void CurrentRender::onRender() const
 {
 	// note: Leave cull_face disabled!?
 	//glDisable(GL_CULL_FACE);

@@ -32,7 +32,7 @@ public:
 	void toggle(bool on);
 	void setLayers(int layer, int renderLayer);
 	void preRender();
-	void render();
+	void render() const;
 	int getLayer();
 	int getRenderLayer();
 	bool isUsed();

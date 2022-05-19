@@ -441,10 +441,3 @@ void SchoolFish::onUpdate(float dt)
 
 	}
 }
-
-void SchoolFish::onRender()
-{
-	FlockEntity::onRender();
-
-}
-

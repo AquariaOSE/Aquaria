@@ -211,7 +211,7 @@ public:
 	float biteDelay, urchinDelay, jellyDelay;
 	bool movingOn;
 
-	void render();
+	void render() const OVERRIDE;
 	void activateAura(AuraType aura);
 	void stopAura();
 	void setHeadTexture(const std::string &name, float t=0);
@@ -434,7 +434,6 @@ protected:
 
 
 	void onUpdate(float dt);
-	void onRender();
 
 	Quad *glow;
 	bool swimming;

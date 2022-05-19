@@ -69,7 +69,7 @@ void PostProcessingFX::disable(FXTypes type)
 	enabled[int(type)] = false;
 }
 
-void PostProcessingFX::render()
+void PostProcessingFX::render() const
 {
 	if(!core->frameBuffer.isInited())
 		return;

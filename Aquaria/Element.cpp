@@ -283,7 +283,7 @@ void Element::setElementEffectByIndex(int eidx)
 	}
 }
 
-void Element::render()
+void Element::render() const
 {
 	if (!elementActive) return;
 	if (dsq->game->isSceneEditorActive() && this->bgLayer == dsq->game->sceneEditor.bgLayer

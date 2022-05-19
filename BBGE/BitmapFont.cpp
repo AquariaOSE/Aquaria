@@ -70,12 +70,9 @@ void BmpFont::load(const std::string &file, float scale, bool loadTexture)
 	loaded = true;
 }
 
-Texture *fontTextureTest = 0;
 BitmapText::BitmapText(BmpFont *bmpFont)
 {
 	this->bmpFont = bmpFont;
-	bfePass =0;
-	bfe = BFE_NONE;
 
 	currentScrollLine = currentScrollChar = 0;
 	scrollDelay = 0;
@@ -186,11 +183,6 @@ void BitmapText::formatText()
 	colorIndices.clear();
 }
 
-void BitmapText::setBitmapFontEffect(BitmapFontEffect bfe)
-{
-	this->bfe = bfe;
-}
-
 void BitmapText::updateWordColoring()
 {
 	colorIndices.resize(lines.size());
@@ -231,7 +223,6 @@ void BitmapText::setFontSize(float sz)
 
 void BitmapText::onUpdate(float dt)
 {
-	bfePass = 0;
 	RenderObject::onUpdate(dt);
 	if (scrollDelay > 0 && scrolling)
 	{
@@ -275,7 +266,7 @@ Vector BitmapText::getColorIndex(size_t i, size_t j)
 	return c;
 }
 
-void BitmapText::onRender()
+void BitmapText::onRender() const
 {
 	if (!bmpFont) return;
 	float top_color[3] = {bmpFont->fontTopColor.x*color.x, bmpFont->fontTopColor.y*color.y, bmpFont->fontTopColor.z*color.z};
@@ -286,8 +277,6 @@ void BitmapText::onRender()
 
 
 	bmpFont->font->Begin();
-
-	if (fontTextureTest) fontTextureTest->apply();
 
 	if (bmpFont->overrideTexture) bmpFont->overrideTexture->apply();
 
@@ -348,25 +337,6 @@ void BitmapText::reloadDevice()
 {
 	RenderObject::reloadDevice();
 	setText(this->text);
-}
-
-void BitmapText::render()
-{
-	RenderObject::render();
-	if (!bfePass)
-	{
-		if (bfe == BFE_SHADOWBLUR)
-		{
-			InterpolatedVector oldAlpha = alpha, oldPos = position;
-			Vector adjust(rand()%5-2, rand()%5-2+2);
-			position += adjust;
-			alpha *= 0.4f;
-			bfePass = 1;
-			RenderObject::render();
-			alpha = oldAlpha;
-			position = oldPos;
-		}
-	}
 }
 
 void BitmapText::stopScrollingText()

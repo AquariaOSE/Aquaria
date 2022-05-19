@@ -67,6 +67,7 @@ namespace internal
 #pragma warning(disable:4505) // unreferenced local function has been removed
 #pragma warning(disable:4702) // unreachable code
 #pragma warning(disable:4127) // conditional expression is constant
+#pragma warning(disable:26812) // unscoped enum
 //#pragma warning(disable:4706) // assignment within conditional expression
 
 //#pragma warning(disable:4389) // signed/unsigned mismatch

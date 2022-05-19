@@ -56,7 +56,7 @@ public:
 protected:
 	float segmentLength;
 	void onUpdate(float dt);
-	void onRender();
+	void onRender() const OVERRIDE;
 };
 
 #endif

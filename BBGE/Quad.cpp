@@ -134,7 +134,7 @@ void Quad::setGridPoints(bool vert, const std::vector<Vector> &points)
 	}
 }
 
-float Quad::getStripSegmentSize()
+float Quad::getStripSegmentSize() const
 {
 	return (1.0f/(float(strip.size())));
 }
@@ -228,7 +228,7 @@ void Quad::destroy()
 	RenderObject::destroy();
 }
 
-bool Quad::isCoordinateInside(Vector coord, int minSize)
+bool Quad::isCoordinateInside(Vector coord, int minSize) const
 {
 	Vector realscale = getRealScale();
 	int hw = fabsf((width)*realscale.x)*0.5f;
@@ -250,7 +250,7 @@ bool Quad::isCoordinateInside(Vector coord, int minSize)
 	return false;
 }
 
-bool Quad::isCoordinateInsideWorld(const Vector &coord, int minSize)
+bool Quad::isCoordinateInsideWorld(const Vector &coord, int minSize) const
 {
 	int hw = fabsf((width)*getRealScale().x)*0.5f;
 	int hh = fabsf((height)*getRealScale().y)*0.5f;
@@ -270,7 +270,7 @@ bool Quad::isCoordinateInsideWorld(const Vector &coord, int minSize)
 	return false;
 }
 
-bool Quad::isCoordinateInsideWorldRect(const Vector &coord, int w, int h)
+bool Quad::isCoordinateInsideWorldRect(const Vector &coord, int w, int h) const
 {
 	int hw = w*0.5f;
 	int hh = h*0.5f;
@@ -319,7 +319,7 @@ void Quad::updateGrid(float dt)
 	}
 }
 
-void Quad::renderGrid()
+void Quad::renderGrid() const
 {
 	if (xDivs < 2 || yDivs < 2)
 		return;
@@ -422,7 +422,7 @@ void Quad::repeatTextureToFill(bool on)
 
 }
 
-void Quad::onRender()
+void Quad::onRender() const
 {
 	if (!renderQuad) return;
 
@@ -657,7 +657,7 @@ CollideQuad::~CollideQuad()
 {
 }
 
-void CollideQuad::renderCollision()
+void CollideQuad::renderCollision() const
 {
 	if (collideRadius > 0)
 	{

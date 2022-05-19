@@ -37,7 +37,7 @@ public:
 	void init();
 	void update(float dt);
 	void preRender();
-	void render();
+	void render() const;
 	void toggle(FXTypes type);
 	void enable(FXTypes type);
 	void disable(FXTypes type);
