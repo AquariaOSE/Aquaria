@@ -38,7 +38,7 @@ protected:
 	void destroyTexture();
 	int textureWidth, textureHeight;
 	int windowWidth, windowHeight;
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 	float width, height;
 
 

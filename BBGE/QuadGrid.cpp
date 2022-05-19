@@ -75,7 +75,7 @@ static inline void drawOnePoint(const QuadGrid::Point& p, float ox, float oy)
 }
 
 
-void QuadGrid::onRender() const
+void QuadGrid::onRender(const RenderState& rs) const
 {
     glColor4f(color.x, color.y, color.z, alpha.x * alphaMod);
 

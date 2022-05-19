@@ -30,11 +30,11 @@ CurrentRender::CurrentRender() : RenderObject()
 	cull = false;
 
 	setTexture("Particles/Current");
-	texture->repeat = true;
+	repeatTexture = true;
 	rippleDelay = 2;
 }
 
-void CurrentRender::onRender() const
+void CurrentRender::onRender(const RenderState& rs) const
 {
 	// note: Leave cull_face disabled!?
 	//glDisable(GL_CULL_FACE);

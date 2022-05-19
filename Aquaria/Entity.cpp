@@ -2474,7 +2474,7 @@ void Entity::doEntityAvoidance(float dt, int range, float mod, Entity *ignore)
 	}
 }
 
-void Entity::render() const
+void Entity::render(const RenderState& rs) const
 {
 	InterpolatedVector bcolor = color;
 	InterpolatedVector bscale = scale;
@@ -2499,7 +2499,7 @@ void Entity::render() const
 	skeletalSprite.setColorMult(this->color, this->alpha.x);
 
 
-	Quad::render();
+	Quad::render(rs);
 
 
 

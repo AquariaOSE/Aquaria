@@ -49,7 +49,7 @@ void Strand::onUpdate(float dt)
 	updateSegments(position);
 }
 
-void Strand::onRender() const
+void Strand::onRender(const RenderState& rs) const
 {
 	const int numSegments = segments.size();
 	if (numSegments == 0) return;

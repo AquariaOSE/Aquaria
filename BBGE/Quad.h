@@ -36,7 +36,7 @@ protected:
 	int w, h, w2, h2;
 	int lineSize;
 
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
 class Quad : public RenderObject
@@ -117,7 +117,7 @@ protected:
 	static Vector renderBorderColor;
 
 	void onSetTexture();
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 	void onUpdate(float dt);
 private:
 	bool doUpdateGrid;
@@ -143,7 +143,7 @@ class CollideQuad : public Quad
 public:
 	CollideQuad();
 	virtual ~CollideQuad();
-	virtual void renderCollision() const OVERRIDE;
+	virtual void renderCollision(const RenderState& rs) const OVERRIDE;
 
 	float collideRadius;
 };

@@ -58,7 +58,7 @@ protected:
 	float lineHeight;
 	void updateAlign();
 	Align align;
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 	void updateFormatting();
 
 	std::string originalText;

@@ -34,8 +34,7 @@ Texture::Texture()
 	textures[0] = 0;
 	width = height = 0;
 
-	repeat = false;
-	repeating = false;
+	_repeating = false;
 	ow = oh = -1;
 	loadResult = TEX_FAILED;
 	_mipmap = false;
@@ -218,7 +217,6 @@ bool Texture::load(std::string file, bool mipmap)
 	file = adjustFilenameCase(file);
 
 	loadName = file;
-	repeating = false;
 	_mipmap = mipmap;
 
 	size_t pos = file.find_last_of('.');
@@ -284,26 +282,16 @@ bool Texture::load(std::string file, bool mipmap)
 	return ok;
 }
 
-void Texture::apply(bool repeatOverride) const
+static const GLenum repeatLUT[] = { GL_CLAMP_TO_EDGE, GL_REPEAT };
+void Texture::apply(bool repeat) const
 {
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
-	if (repeat || repeatOverride)
+	if(repeat != _repeating)
 	{
-		if (!repeating)
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-			repeating = true;
-		}
-	}
-	else
-	{
-		if (repeating)
-		{
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			repeating = false;
-		}
+		_repeating = repeat;
+		GLenum rep = repeatLUT[repeat];
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, rep);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, rep);
 	}
 }
 
@@ -338,6 +326,7 @@ bool Texture::loadInternal(const ImageData& img, bool mipmap)
 	glBindTexture(GL_TEXTURE_2D, textures[0]);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	_repeating = false;
 
 	const GlTexFormat& f = formatLUT[img.channels - 1];
 

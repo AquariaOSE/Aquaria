@@ -58,7 +58,7 @@ void Gradient::makeHorizontal(Vector c1, Vector c2)
 	ulc3 = c1;
 }
 
-void Gradient::onRender() const
+void Gradient::onRender(const RenderState& rs) const
 {
 
 

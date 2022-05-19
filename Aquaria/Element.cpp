@@ -283,7 +283,7 @@ void Element::setElementEffectByIndex(int eidx)
 	}
 }
 
-void Element::render() const
+void Element::render(const RenderState& rs) const
 {
 	if (!elementActive) return;
 	if (dsq->game->isSceneEditorActive() && this->bgLayer == dsq->game->sceneEditor.bgLayer
@@ -307,7 +307,7 @@ void Element::render() const
 
 	}
 
-	Quad::render();
+	Quad::render(rs);
 
 	renderBorder = false;
 }

@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "EngineEnums.h"
 #include "Texture.h"
 #include "ScriptObject.h"
+#include "RenderState.h"
 #include <list>
 
 class Core;
@@ -93,7 +94,7 @@ public:
 	friend class Core;
 	RenderObject();
 	virtual ~RenderObject();
-	virtual void render() const;
+	virtual void render(const RenderState& rs) const;
 
 	void setTexturePointer(CountedPtr<Texture> t)
 	{
@@ -213,7 +214,6 @@ public:
 
 	void lookAt(const Vector &pos, float t, float minAngle, float maxAngle, float offset=0);
 	inline RenderObject *getParent() const {return parent;}
-	void applyBlendType() const;
 	void fhTo(bool fh);
 	void addDeathNotify(RenderObject *r);
 	virtual void unloadDevice();
@@ -295,7 +295,7 @@ protected:
 	virtual void onFH(){}
 	virtual void onFV(){}
 	virtual void onSetTexture(){}
-	virtual void onRender() const {}
+	virtual void onRender(const RenderState& rs) const {}
 	virtual void onUpdate(float dt);
 	virtual void deathNotify(RenderObject *r);
 	virtual void onEndOfLife() {}
@@ -305,8 +305,8 @@ protected:
 	// Is this object or any of its children rendered in pass "pass"?
 	bool hasRenderPass(const int pass) const;
 
-	inline void renderCall() const;
-	virtual void renderCollision() const;
+	inline void renderCall(const RenderState& rs) const;
+	virtual void renderCollision(const RenderState& rs) const;
 
 	typedef std::list<RenderObject*> RenderObjectList;
 	RenderObjectList deathNotifications;

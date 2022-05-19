@@ -30,7 +30,7 @@ PathRender::PathRender() : RenderObject()
 	alpha = 0.5f;
 }
 
-void PathRender::onRender() const
+void PathRender::onRender(const RenderState& rs) const
 {
 	const size_t pathcount = dsq->game->getNumPaths();
 	if (pathcount == 0)

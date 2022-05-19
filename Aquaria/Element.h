@@ -66,7 +66,7 @@ public:
 	size_t templateIdx;
 	int bgLayer;
 	Element *bgLayerNext;
-	void render() const OVERRIDE;
+	void render(const RenderState& rs) const OVERRIDE;
 	ElementFlag elementFlag;
 	void fillGrid();
 	bool isElementActive() { return elementActive; }

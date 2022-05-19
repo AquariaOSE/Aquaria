@@ -119,7 +119,7 @@ public:
 	void remove(RenderObject* r);
 	void moveToFront(RenderObject *r);
 	void moveToBack(RenderObject *r);
-	void renderPass(int pass);
+	void renderPass(const RenderState& rs, int pass);
 	void reloadDevice();
 
 	inline bool empty()
@@ -167,7 +167,7 @@ public:
 	Vector color;
 
 protected:
-	inline void renderOneObject(const RenderObject *robj);
+	inline void renderOneObject(const RenderState& rs, const RenderObject *robj);
 
 	RenderObjects renderObjects;
 	size_t objectCount;

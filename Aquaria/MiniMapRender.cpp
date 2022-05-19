@@ -474,7 +474,7 @@ void MiniMapRender::onUpdate(float dt)
 		toggleOn && dsq->game->avatar && dsq->game->avatar->getState() != Entity::STATE_TITLE && !(dsq->disableMiniMapOnNoInput && !dsq->game->avatar->isInputEnabled());
 }
 
-void MiniMapRender::onRender() const
+void MiniMapRender::onRender(const RenderState& rs) const
 {
 
 	glBindTexture(GL_TEXTURE_2D, 0);

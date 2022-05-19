@@ -422,7 +422,7 @@ void Quad::repeatTextureToFill(bool on)
 
 }
 
-void Quad::onRender() const
+void Quad::onRender(const RenderState& rs) const
 {
 	if (!renderQuad) return;
 
@@ -657,7 +657,7 @@ CollideQuad::~CollideQuad()
 {
 }
 
-void CollideQuad::renderCollision() const
+void CollideQuad::renderCollision(const RenderState& rs) const
 {
 	if (collideRadius > 0)
 	{

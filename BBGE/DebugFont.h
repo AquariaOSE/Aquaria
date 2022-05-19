@@ -40,7 +40,7 @@ public:
 protected:
 	float fontDrawSize, textWidth;
 	void formatText();
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 	std::string text;
 	std::vector<std::string> lines;
 	Align align;

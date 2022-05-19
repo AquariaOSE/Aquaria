@@ -73,7 +73,7 @@ HairNode *Hair::getHairNode(int idx)
 	return h;
 }
 
-void Hair::onRender() const
+void Hair::onRender(const RenderState& rs) const
 {
 
 

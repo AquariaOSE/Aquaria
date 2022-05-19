@@ -1761,6 +1761,8 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 	processedRenderObjectCount = 0;
 	totalRenderObjectCount = 0;
 
+	CombinedRenderAndGPUState rgstate;
+
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glLoadIdentity();									// Reset The View
@@ -1818,13 +1820,13 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 		{
 			if (r->startPass == r->endPass)
 			{
-				r->renderPass(RenderObject::RENDER_ALL);
+				r->renderPass(rgstate, RenderObject::RENDER_ALL);
 			}
 			else
 			{
 				for (int pass = r->startPass; pass <= r->endPass; pass++)
 				{
-					r->renderPass(pass);
+					r->renderPass(rgstate, pass);
 				}
 			}
 		}

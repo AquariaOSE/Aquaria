@@ -40,7 +40,7 @@ public:
 	~Texture();
 
 	bool load(std::string file, bool mipmap);
-	void apply(bool repeatOverride=false) const;
+	void apply(bool repeat = false) const;
 	void unload();
 
 	int getPixelWidth();
@@ -49,9 +49,6 @@ public:
 	void destroy();
 
 	int width, height;
-
-	bool repeat;
-	mutable bool repeating; // modified during rendering
 
 	unsigned textures[1];
 
@@ -74,6 +71,8 @@ protected:
 	int ow, oh;
 	TextureLoadResult loadResult;
 	bool _mipmap;
+private:
+	mutable bool _repeating; // modified during rendering
 };
 
 #define UNREFTEX(x) if (x) {x = NULL;}

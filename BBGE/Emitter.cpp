@@ -222,7 +222,7 @@ void Emitter::removeParticle(Particle *p)
 
 }
 
-void Emitter::onRender() const
+void Emitter::onRender(const RenderState& rs) const
 {
 	if (particles.empty()) return;
 

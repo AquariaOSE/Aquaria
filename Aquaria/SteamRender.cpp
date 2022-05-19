@@ -29,12 +29,12 @@ SteamRender::SteamRender() : RenderObject()
 
 	alpha = 0.7f;
 	setTexture("Particles/Steam");
-	texture->repeat = true;
+	repeatTexture = true;
 	rippleDelay = 2;
 	setBlendType(BLEND_ADD);
 }
 
-void SteamRender::onRender() const
+void SteamRender::onRender(const RenderState& rs) const
 {
 
 

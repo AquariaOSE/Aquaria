@@ -129,10 +129,10 @@ void ToolTip::onUpdate(float dt)
 	}
 }
 
-void ToolTip::render() const
+void ToolTip::render(const RenderState& rs) const
 {
 	if (!game->getInGameMenu()->recipeMenu.on && toolTipsOn)
 	{
-		RenderObject::render();
+		RenderObject::render(rs);
 	}
 }

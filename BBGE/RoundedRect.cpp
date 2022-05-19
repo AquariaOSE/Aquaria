@@ -101,7 +101,7 @@ void RoundedRect::onUpdate(float dt)
 	}
 }
 
-void RoundedRect::onRender() const
+void RoundedRect::onRender(const RenderState& rs) const
 {
 
 	int w2 = width/2;
@@ -257,7 +257,7 @@ void RoundButton::onUpdate(float dt)
 	}
 }
 
-void RoundButton::onRender() const
+void RoundButton::onRender(const RenderState& rs) const
 {
 	int w2 = width/2, h2 = height/2;
 	glLineWidth(1);

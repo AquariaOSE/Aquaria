@@ -266,7 +266,7 @@ Vector BitmapText::getColorIndex(size_t i, size_t j)
 	return c;
 }
 
-void BitmapText::onRender() const
+void BitmapText::onRender(const RenderState& rs) const
 {
 	if (!bmpFont) return;
 	float top_color[3] = {bmpFont->fontTopColor.x*color.x, bmpFont->fontTopColor.y*color.y, bmpFont->fontTopColor.z*color.z};
