@@ -110,16 +110,12 @@ public:
 		followCamera = 1;
 	}
 
-	void render()
-	{
-		setProperPosition();
-		Quad::render();
-	}
-
 protected:
 	Vector truePosition;
-	void setProperPosition()
+	void onUpdate(float dt) OVERRIDE
 	{
+		Quad::onUpdate(dt);
+
 		Vector wp = parent->getWorldCollidePosition(truePosition);
 		Vector diff = wp - core->center;
 
@@ -176,12 +172,6 @@ public:
 
 	float spawnBitTimer;
 
-
-	void render()
-	{
-
-		Quad::render();
-	}
 
 protected:
 	BeaconData *beaconData;
@@ -1239,11 +1229,6 @@ Vector WorldMapRender::getWorldToTile(WorldMapTile *tile, Vector position, bool 
 	if (tilePos)
 		p += tile->gridPos;
 	return p;
-}
-
-void WorldMapRender::onRender()
-{
-	RenderObject::onRender();
 }
 
 bool WorldMapRender::isOn()

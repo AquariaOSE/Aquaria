@@ -82,13 +82,18 @@ struct MotionBlurData
 
 class RenderObjectLayer;
 
+// FIXME: -- fg
+// I've scattered a few mutables across this class
+// These should be part of some struct that gets passed along the render() calls
+// instead of updating the actual class members
+
 class RenderObject : public ScriptObject
 {
 public:
 	friend class Core;
 	RenderObject();
 	virtual ~RenderObject();
-	virtual void render();
+	virtual void render() const;
 
 	void setTexturePointer(CountedPtr<Texture> t)
 	{
@@ -137,8 +142,8 @@ public:
 	bool isfv() const { return _fv; }
 
 	// recursive
-	bool isfhr();
-	bool isfvr();
+	bool isfhr() const;
+	bool isfvr() const;
 
 	size_t getIdx() const { return idx; }
 	void setIdx(size_t newidx) { this->idx = newidx; }
@@ -156,10 +161,10 @@ public:
 		return w*w + h*h;
 	}
 
-	int getTopLayer();
+	int getTopLayer() const;
 
-	void setColorMult(const Vector &color, const float alpha);
-	void clearColorMult();
+	void setColorMult(const Vector &color, const float alpha) const; // HACK: const
+	void clearColorMult() const; // HACK: const
 
 	void enableMotionBlur(int sz=10, int off=5);
 	void disableMotionBlur();
@@ -167,42 +172,40 @@ public:
 	void addChild(RenderObject *r, ParentManaged pm, RenderBeforeParent rbp = RBP_NONE, ChildOrder order = CHILD_BACK);
 	void removeChild(RenderObject *r);
 
-	Vector getRealPosition();
-	Vector getRealScale();
+	Vector getRealPosition() const;
+	Vector getRealScale() const;
 
-	StateData *getStateData();
+	StateData *getStateData() const;
 
 	// HACK: This is defined in RenderObject_inline.h because it needs
 	// the class Core definition.  --achurch
-	inline bool isOnScreen();
+	inline bool isOnScreen() const;
 
-	bool isCoordinateInRadius(const Vector &pos, float r);
-
-	const RenderObject &operator=(const RenderObject &r);
+	bool isCoordinateInRadius(const Vector &pos, float r) const;
 
 	void toggleCull(bool value);
 
 	void safeKill();
 
-	Vector getWorldPosition();
-	Vector getWorldCollidePosition(const Vector &vec=Vector(0,0,0));
-	Vector getInvRotPosition(const Vector &vec);
-	bool isPieceFlippedHorizontal();
+	Vector getWorldPosition() const;
+	Vector getWorldCollidePosition(const Vector &vec=Vector(0,0,0)) const;
+	Vector getInvRotPosition(const Vector &vec) const;
+	bool isPieceFlippedHorizontal() const;
 
-	RenderObject *getTopParent();
+	RenderObject *getTopParent() const;
 
 	virtual void onAnimationKeyPassed(int key){}
 
-	Vector getAbsoluteRotation();
-	float getWorldRotation();
-	Vector getWorldPositionAndRotation(); // more efficient shortcut, returns rotation in vector z component
-	Vector getNormal();
-	Vector getForward();
+	Vector getAbsoluteRotation() const;
+	float getWorldRotation() const;
+	Vector getWorldPositionAndRotation() const; // more efficient shortcut, returns rotation in vector z component
+	Vector getNormal() const;
+	Vector getForward() const;
 	void setOverrideCullRadius(float ovr);
 	void setRenderPass(int pass) { renderPass = pass; }
-	int getRenderPass() { return renderPass; }
+	int getRenderPass() const { return renderPass; }
 	void setOverrideRenderPass(int pass) { overrideRenderPass = pass; }
-	int getOverrideRenderPass() { return overrideRenderPass; }
+	int getOverrideRenderPass() const { return overrideRenderPass; }
 	enum { RENDER_ALL=314, OVERRIDE_NONE=315 };
 
 	// Defined in RenderObject_inline.h
@@ -210,7 +213,7 @@ public:
 
 	void lookAt(const Vector &pos, float t, float minAngle, float maxAngle, float offset=0);
 	inline RenderObject *getParent() const {return parent;}
-	void applyBlendType();
+	void applyBlendType() const;
 	void fhTo(bool fh);
 	void addDeathNotify(RenderObject *r);
 	virtual void unloadDevice();
@@ -251,14 +254,16 @@ public:
 	char _blendType;
 
 
-	InterpolatedVector position, scale, color, alpha, rotation;
+	mutable InterpolatedVector position, scale;
+	mutable InterpolatedVector color, alpha; // HACK: mutable should go! this is for setColorMult()
+	mutable InterpolatedVector rotation;
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
 	InterpolatedVector velocity, gravity;
 
 	CountedPtr<Texture> texture;
 
 	float life;
-	float followCamera;
+	mutable float followCamera;
 	float alphaMod;
 	float updateCull;
 	int layer;
@@ -272,9 +277,9 @@ public:
 	float overrideCullRadiusSqr;
 
 	// --- This is hack and should not exist ---
-	bool colorIsSaved;  // Used for both color and alpha
-	Vector savedColor;  // Saved values from setColorMult()
-	float savedAlpha;
+	mutable bool colorIsSaved;  // Used for both color and alpha
+	mutable Vector savedColor;  // Saved values from setColorMult()
+	mutable float savedAlpha;
 
 
 	float width, height;  // Only used by Quads, but stored here for getCullRadius()
@@ -290,7 +295,7 @@ protected:
 	virtual void onFH(){}
 	virtual void onFV(){}
 	virtual void onSetTexture(){}
-	virtual void onRender(){}
+	virtual void onRender() const {}
 	virtual void onUpdate(float dt);
 	virtual void deathNotify(RenderObject *r);
 	virtual void onEndOfLife() {}
@@ -298,10 +303,10 @@ protected:
 	void updateLife(float dt);
 
 	// Is this object or any of its children rendered in pass "pass"?
-	bool hasRenderPass(const int pass);
+	bool hasRenderPass(const int pass) const;
 
-	inline void renderCall();
-	virtual void renderCollision();
+	inline void renderCall() const;
+	virtual void renderCollision() const;
 
 	typedef std::list<RenderObject*> RenderObjectList;
 	RenderObjectList deathNotifications;
@@ -309,6 +314,9 @@ protected:
 	size_t idx; // index in layer
 	StateData *stateData;
 	MotionBlurData *motionBlur;
+
+private:
+	const RenderObject &operator=(const RenderObject &r); // undefined
 };
 
 #endif

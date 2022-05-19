@@ -31,9 +31,9 @@ public:
 	~FrameBuffer();
 	bool init(int width, int height, bool fitToScreen=false);
 	bool isInited() { return inited; }
-	void startCapture();
-	void endCapture();
-	void bindTexture();
+	void startCapture() const;
+	void endCapture() const;
+	void bindTexture() const;
 	int getWidth() { return w; }
 	int getHeight() { return h; }
 	float getWidthP();

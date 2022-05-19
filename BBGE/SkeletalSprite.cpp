@@ -297,7 +297,7 @@ void Bone::spawnParticlesFromCollisionMask(const char *p, unsigned intv, int lay
 	}
 }
 
-void Bone::renderCollision()
+void Bone::renderCollision() const
 {
 	if (!collisionMask.empty())
 	{

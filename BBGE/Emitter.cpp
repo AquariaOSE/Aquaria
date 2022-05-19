@@ -222,12 +222,7 @@ void Emitter::removeParticle(Particle *p)
 
 }
 
-void Emitter::render()
-{
-	Quad::render();
-}
-
-void Emitter::onRender()
+void Emitter::onRender() const
 {
 	if (particles.empty()) return;
 
@@ -250,7 +245,7 @@ void Emitter::onRender()
 	{
 		Vector colorMult = data.inheritColor ? pe->color : Vector(1, 1, 1);
 		float alphaMult = data.inheritAlpha ? pe->alpha.x : 1;
-		for (Particles::iterator i = particles.begin(); i != particles.end(); i++)
+		for (Particles::const_iterator i = particles.begin(); i != particles.end(); i++)
 		{
 			Particle *p = *i;
 			if (p->active)
@@ -319,7 +314,7 @@ void Emitter::onRender()
 	else
 	{
 		glBegin(GL_QUADS);
-		for (Particles::iterator i = particles.begin(); i != particles.end(); i++)
+		for (Particles::const_iterator i = particles.begin(); i != particles.end(); i++)
 		{
 			Particle *p = *i;
 			if (p->active)

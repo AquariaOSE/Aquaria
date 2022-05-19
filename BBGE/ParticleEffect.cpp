@@ -439,9 +439,3 @@ void ParticleEffect::stop()
 		(*i)->stop();
 	}
 }
-
-void ParticleEffect::onRender()
-{
-	RenderObject::onRender();
-}
-

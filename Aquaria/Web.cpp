@@ -135,7 +135,7 @@ void Web::onUpdate(float dt)
 	}
 }
 
-void Web::onRender()
+void Web::onRender() const
 {
 	glBindTexture(GL_TEXTURE_2D, 0);
 

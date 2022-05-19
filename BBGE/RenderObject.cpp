@@ -46,7 +46,7 @@ void RenderObject::toggleAlpha(float t)
 		alpha.interpolateTo(0,t);
 }
 
-int RenderObject::getTopLayer()
+int RenderObject::getTopLayer() const
 {
 	if (parent)
 	{
@@ -67,7 +67,7 @@ static const BlendParams s_blendParams[] =
 	{ GL_ZERO, GL_SRC_COLOR },
 };
 
-void RenderObject::applyBlendType()
+void RenderObject::applyBlendType() const
 {
 	compile_assert(Countof(s_blendParams) == _BLEND_MAXSIZE);
 
@@ -84,7 +84,7 @@ void RenderObject::applyBlendType()
 	}
 }
 
-void RenderObject::setColorMult(const Vector &color, const float alpha)
+void RenderObject::setColorMult(const Vector &color, const float alpha) const
 {
 	if (colorIsSaved)
 	{
@@ -98,13 +98,13 @@ void RenderObject::setColorMult(const Vector &color, const float alpha)
 	this->savedAlpha = this->alpha.x;
 	this->color *= color;
 	this->alpha.x *= alpha;
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	for (Children::const_iterator i = children.begin(); i != children.end(); i++)
 	{
 		(*i)->setColorMult(color, alpha);
 	}
 }
 
-void RenderObject::clearColorMult()
+void RenderObject::clearColorMult() const
 {
 	if (!colorIsSaved)
 	{
@@ -116,7 +116,7 @@ void RenderObject::clearColorMult()
 	this->color.z = this->savedColor.z;
 	this->alpha.x = this->savedAlpha;
 	this->colorIsSaved = false;
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	for (Children::const_iterator i = children.begin(); i != children.end(); i++)
 	{
 		(*i)->clearColorMult();
 	}
@@ -177,12 +177,12 @@ RenderObject::~RenderObject()
 	freeMotionBlur();
 }
 
-Vector RenderObject::getWorldPosition()
+Vector RenderObject::getWorldPosition() const
 {
 	return getWorldCollidePosition();
 }
 
-RenderObject* RenderObject::getTopParent()
+RenderObject* RenderObject::getTopParent() const
 {
 	RenderObject *p = parent;
 	RenderObject *lastp=0;
@@ -194,7 +194,7 @@ RenderObject* RenderObject::getTopParent()
 	return lastp;
 }
 
-bool RenderObject::isPieceFlippedHorizontal()
+bool RenderObject::isPieceFlippedHorizontal() const
 {
 	RenderObject *p = getTopParent();
 	if (p)
@@ -203,13 +203,13 @@ bool RenderObject::isPieceFlippedHorizontal()
 }
 
 
-Vector RenderObject::getInvRotPosition(const Vector &vec)
+Vector RenderObject::getInvRotPosition(const Vector &vec) const
 {
 	glPushMatrix();
 	glLoadIdentity();
 
-	std::vector<RenderObject*>chain;
-	RenderObject *p = this;
+	std::vector<const RenderObject*>chain;
+	const RenderObject *p = this;
 	while(p)
 	{
 		chain.push_back(p);
@@ -286,7 +286,7 @@ static void matrixChain(RenderObject *ro)
 }
 #endif
 
-float RenderObject::getWorldRotation()
+float RenderObject::getWorldRotation() const
 {
 	Vector up = getWorldCollidePosition(Vector(0,1));
 	Vector orig = getWorldPosition();
@@ -295,7 +295,7 @@ float RenderObject::getWorldRotation()
 	return rot;
 }
 
-Vector RenderObject::getWorldPositionAndRotation()
+Vector RenderObject::getWorldPositionAndRotation() const
 {
 	Vector up = getWorldCollidePosition(Vector(0,1));
 	Vector orig = getWorldPosition();
@@ -303,7 +303,7 @@ Vector RenderObject::getWorldPositionAndRotation()
 	return orig;
 }
 
-Vector RenderObject::getWorldCollidePosition(const Vector &vec)
+Vector RenderObject::getWorldCollidePosition(const Vector &vec) const
 {
 #ifdef BBGE_USE_GLM
 	glm::mat4 transformMatrix = glm::translate(
@@ -386,7 +386,7 @@ void RenderObject::destroy()
 	texture = NULL;
 }
 
-Vector RenderObject::getRealPosition()
+Vector RenderObject::getRealPosition() const
 {
 	if (parent)
 	{
@@ -395,7 +395,7 @@ Vector RenderObject::getRealPosition()
 	return position + offset;
 }
 
-Vector RenderObject::getRealScale()
+Vector RenderObject::getRealScale() const
 {
 	if (parent)
 	{
@@ -466,9 +466,9 @@ void RenderObject::disableMotionBlur()
 	}
 }
 
-bool RenderObject::isfhr()
+bool RenderObject::isfhr() const
 {
-	RenderObject *p = this;
+	const RenderObject *p = this;
 	bool fh = false;
 	do
 		if (p->isfh())
@@ -478,9 +478,9 @@ bool RenderObject::isfhr()
 
 }
 
-bool RenderObject::isfvr()
+bool RenderObject::isfvr() const
 {
-	RenderObject *p = this;
+	const RenderObject *p = this;
 	bool fv = false;
 	do
 		if (p->isfv())
@@ -490,11 +490,11 @@ bool RenderObject::isfvr()
 
 }
 
-bool RenderObject::hasRenderPass(const int pass)
+bool RenderObject::hasRenderPass(const int pass) const
 {
 	if (pass == renderPass)
 		return true;
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	for (Children::const_iterator i = children.begin(); i != children.end(); i++)
 	{
 		if (!(*i)->isDead() && (*i)->hasRenderPass(pass))
 			return true;
@@ -502,7 +502,7 @@ bool RenderObject::hasRenderPass(const int pass)
 	return false;
 }
 
-void RenderObject::render()
+void RenderObject::render() const
 {
 	if (isHidden()) return;
 
@@ -557,7 +557,7 @@ void RenderObject::render()
 	renderCall();
 }
 
-void RenderObject::renderCall()
+void RenderObject::renderCall() const
 {
 	position += offset;
 
@@ -645,7 +645,7 @@ void RenderObject::renderCall()
 	glTranslatef(internalOffset.x, internalOffset.y, internalOffset.z);
 
 
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	for (Children::const_iterator i = children.begin(); i != children.end(); i++)
 	{
 		if (!(*i)->isDead() && (*i)->renderBeforeParent)
 			(*i)->render();
@@ -704,7 +704,7 @@ void RenderObject::renderCall()
 		onRender();
 
 
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	for (Children::const_iterator i = children.begin(); i != children.end(); i++)
 	{
 		if (!(*i)->isDead() && !(*i)->renderBeforeParent)
 			(*i)->render();
@@ -717,7 +717,7 @@ void RenderObject::renderCall()
 	position -= offset;
 }
 
-void RenderObject::renderCollision()
+void RenderObject::renderCollision() const
 {
 }
 
@@ -852,14 +852,14 @@ void RenderObject::safeKill()
 	}
 }
 
-Vector RenderObject::getNormal()
+Vector RenderObject::getNormal() const
 {
 	float a = MathFunctions::toRadians(getAbsoluteRotation().z);
 	return Vector(sinf(a),cosf(a));
 }
 
 // HACK: this is probably a slow implementation
-Vector RenderObject::getForward()
+Vector RenderObject::getForward() const
 {
 	Vector v = getWorldCollidePosition(Vector(0,-1, 0));
 	Vector r = v - getWorldCollidePosition();
@@ -869,7 +869,7 @@ Vector RenderObject::getForward()
 	return r;
 }
 
-Vector RenderObject::getAbsoluteRotation()
+Vector RenderObject::getAbsoluteRotation() const
 {
 	Vector r = rotation;
 	if (parent)
@@ -1058,7 +1058,7 @@ void RenderObject::addChild(RenderObject *r, ParentManaged pm, RenderBeforeParen
 	r->parent = this;
 }
 
-StateData *RenderObject::getStateData()
+StateData *RenderObject::getStateData() const
 {
 	if (parent)
 	{
@@ -1073,7 +1073,7 @@ void RenderObject::setOverrideCullRadius(float ovr)
 	overrideCullRadiusSqr = ovr * ovr;
 }
 
-bool RenderObject::isCoordinateInRadius(const Vector &pos, float r)
+bool RenderObject::isCoordinateInRadius(const Vector &pos, float r) const
 {
 	Vector d = pos-getRealPosition();
 

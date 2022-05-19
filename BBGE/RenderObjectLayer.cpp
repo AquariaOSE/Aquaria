@@ -30,7 +30,6 @@ RenderObjectLayer::RenderObjectLayer()
 	visible = true;
 	startPass = endPass = 0;
 	followCameraLock = FCL_NONE;
-	cull = true;
 	update = true;
 
 	color = Vector(1,1,1);
@@ -44,11 +43,6 @@ RenderObjectLayer::RenderObjectLayer()
 
 RenderObjectLayer::~RenderObjectLayer()
 {
-}
-
-void RenderObjectLayer::setCull(bool cull)
-{
-	this->cull = cull;
 }
 
 void RenderObjectLayer::add(RenderObject* r)
@@ -234,13 +228,13 @@ void RenderObjectLayer::reloadDevice()
 }
 
 
-inline void RenderObjectLayer::renderOneObject(RenderObject *robj)
+inline void RenderObjectLayer::renderOneObject(const RenderObject *robj)
 {
 	core->totalRenderObjectCount++;
 	if (robj->getParent() || robj->alpha.x == 0)
 		return;
 
-	if (!this->cull || !robj->cull || robj->isOnScreen())
+	if (!robj->cull || robj->isOnScreen())
 	{
 		robj->render();
 		core->renderObjectCount++;

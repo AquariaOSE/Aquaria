@@ -125,8 +125,6 @@ public:
 
 	SpawnParticleData data;
 
-	void render();
-
 	void start();
 	void stop();
 
@@ -138,7 +136,7 @@ public:
 	bool hasRot;
 protected:
 	Vector currentSpawn, lastSpawn;
-	void onRender();
+	void onRender() const OVERRIDE;
 	void spawnParticle(float perc=1);
 	void onUpdate(float dt);
 
@@ -170,7 +168,6 @@ protected:
 	bool waitForParticles;
 
 	void onUpdate(float dt);
-	void onRender();
 
 	float effectLife, effectLifeCounter;
 	bool running;

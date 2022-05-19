@@ -75,7 +75,7 @@ static inline void drawOnePoint(const QuadGrid::Point& p, float ox, float oy)
 }
 
 
-void QuadGrid::onRender()
+void QuadGrid::onRender() const
 {
     glColor4f(color.x, color.y, color.z, alpha.x * alphaMod);
 
@@ -88,8 +88,8 @@ void QuadGrid::onRender()
     const size_t H = quadsY();
     for(size_t y = 0; y < H; ++y)
     {
-        Point * const row0 = &_points[y * NX];
-        Point * const row1 = row0 + NX;
+        const Point * const row0 = &_points[y * NX];
+        const Point * const row1 = row0 + NX;
         for(size_t x = 0; x < W; ++x)
         {
             glBegin(GL_QUADS);

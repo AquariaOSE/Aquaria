@@ -36,7 +36,7 @@ protected:
 	int w, h, w2, h2;
 	int lineSize;
 
-	void onRender();
+	void onRender() const OVERRIDE;
 };
 
 class Quad : public RenderObject
@@ -46,9 +46,9 @@ public:
 	Quad();
 	void createGrid(int x, int y);
 	void destroy();
-	bool isCoordinateInside(Vector coord, int minSize=0);
-	bool isCoordinateInsideWorld(const Vector &coord, int minSize=0);
-	bool isCoordinateInsideWorldRect(const Vector &coord, int w, int h);
+	bool isCoordinateInside(Vector coord, int minSize=0) const;
+	bool isCoordinateInsideWorld(const Vector &coord, int minSize=0) const;
+	bool isCoordinateInsideWorldRect(const Vector &coord, int w, int h) const;
 
 	void flipVertical();
 	void flipHorizontal();
@@ -65,7 +65,7 @@ public:
 	bool isRepeatingTextureToFill() const { return repeatingTextureToFill; }
 	void setGridPoints(bool vert, const std::vector<Vector> &points);
 	virtual void createStrip(bool stripVert, int num);
-	float getStripSegmentSize();
+	float getStripSegmentSize() const;
 	void resetStrip();
 	Vector ** getDrawGrid() { return drawGrid; }
 
@@ -87,7 +87,8 @@ public:
 
 	char autoWidth, autoHeight;  // char to save space
 
-	bool renderQuad, renderBorder, renderCenter;
+	bool renderQuad, renderCenter;
+	mutable bool renderBorder; // TODO: should be part of render state
 	bool stripVert;
 	std::vector<Vector>strip;
 	Vector texOff;
@@ -103,7 +104,7 @@ protected:
 
 	void resetGrid();
 	void updateGrid(float dt);
-	void renderGrid();
+	void renderGrid() const;
 
 
 	float drawGridOffsetX;
@@ -116,7 +117,7 @@ protected:
 	static Vector renderBorderColor;
 
 	void onSetTexture();
-	void onRender();
+	void onRender() const OVERRIDE;
 	void onUpdate(float dt);
 private:
 	bool doUpdateGrid;
@@ -142,7 +143,7 @@ class CollideQuad : public Quad
 public:
 	CollideQuad();
 	virtual ~CollideQuad();
-	virtual void renderCollision() OVERRIDE;
+	virtual void renderCollision() const OVERRIDE;
 
 	float collideRadius;
 };

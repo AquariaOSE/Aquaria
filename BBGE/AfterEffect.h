@@ -88,9 +88,9 @@ public:
 
 	void resetGrid();
 
-	void render();
-	void renderGrid();
-	void renderGridPoints();
+	void render() const;
+	void renderGrid() const;
+	void renderGridPoints() const;
 
 	void loadShaders();
 	void unloadShaders(); // unloads shaders but keeps code and data intact, so that they can be reloaded.

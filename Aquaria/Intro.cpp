@@ -26,43 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SkeletalSprite.h"
 
 
-//class Mappy;
 
-namespace IntroStuff
-{
-	//Mappy *m;
-	bool quitFlag;
-}
-
-using namespace IntroStuff;
-
-/*
-class Mappy : public RenderObject, public ActionMapper
-{
-public:
-	Mappy() : RenderObject(), ActionMapper() {}
-	void render() {}
-	//bool isOnScreen() { return false; }
-	void action(int id, int state)
-	{
-		ActionMapper::action(id, state);
-		if (!quitFlag)
-		{
-			if (state)
-			{
-				quitFlag = true;
-				dsq->quitNestedMain();
-			}
-		}
-	}
-protected:
-	void onUpdate(float dt)
-	{
-		ActionMapper::onUpdate(dt);
-		RenderObject::onUpdate(dt);
-	}
-};
-*/
 
 Intro::Intro() : StateObject()
 {
@@ -71,8 +35,6 @@ Intro::Intro() : StateObject()
 
 void Intro::applyState()
 {
-	quitFlag = false;
-
 	dsq->jiggleCursor();
 	dsq->cursor->alpha = 0;
 	//core->sound->streamOgg("sc/theme", 0);
@@ -97,8 +59,6 @@ void Intro::removeState()
 
 void Intro::endIntro()
 {
-	quitFlag = true;
-
 	dsq->overlay->color.stop();
 	dsq->overlay->alpha.stop();
 

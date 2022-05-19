@@ -2474,7 +2474,7 @@ void Entity::doEntityAvoidance(float dt, int range, float mod, Entity *ignore)
 	}
 }
 
-void Entity::render()
+void Entity::render() const
 {
 	InterpolatedVector bcolor = color;
 	InterpolatedVector bscale = scale;

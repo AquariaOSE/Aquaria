@@ -45,7 +45,6 @@ protected:
 
 	void onEnterState(int action);
 	void onUpdate(float dt);
-	void onRender();
 
 	float avoidTime;
 

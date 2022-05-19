@@ -129,7 +129,7 @@ void ToolTip::onUpdate(float dt)
 	}
 }
 
-void ToolTip::render()
+void ToolTip::render() const
 {
 	if (!game->getInGameMenu()->recipeMenu.on && toolTipsOn)
 	{

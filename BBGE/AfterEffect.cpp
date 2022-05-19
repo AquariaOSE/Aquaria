@@ -168,7 +168,7 @@ void AfterEffectManager::destroyEffect(int id)
 	openSpots.push_back(id);
 }
 
-void AfterEffectManager::render()
+void AfterEffectManager::render() const
 {
 	assert(core->frameBuffer.isInited());
 
@@ -187,7 +187,7 @@ void AfterEffectManager::render()
 	glPopMatrix();
 }
 
-void AfterEffectManager::renderGrid()
+void AfterEffectManager::renderGrid() const
 {
 
 	int firstShader = -1;
@@ -205,9 +205,6 @@ void AfterEffectManager::renderGrid()
 			lastShader = i;
 		}
 	}
-
-	screenWidth = core->getWindowWidth();
-	screenHeight = core->getWindowHeight();
 
 	float percentX, percentY;
 	percentX = (float)screenWidth/(float)textureWidth;
@@ -263,8 +260,8 @@ void AfterEffectManager::renderGrid()
 	{
 		// From here on: secondary shader passes.
 		// We just outputted to the backup buffer...
-		FrameBuffer *fbIn = &core->frameBuffer;
-		FrameBuffer *fbOut = &backupBuffer;
+		const FrameBuffer *fbIn = &core->frameBuffer;
+		const FrameBuffer *fbOut = &backupBuffer;
 
 
 		for(int i = firstShader + 1; i <= lastShader; ++i)
@@ -345,7 +342,7 @@ void AfterEffectManager::renderGrid()
 	//	renderGridPoints();
 }
 
-void AfterEffectManager::renderGridPoints()
+void AfterEffectManager::renderGridPoints() const
 {
 	glColor4f(0.0f,0.0f,0.0f,1.0f);
 	for (int i = 0; i < (xDivs); i++)

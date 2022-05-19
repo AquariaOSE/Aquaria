@@ -105,7 +105,7 @@ void Beam::trace()
 
 }
 
-void Beam::onRender()
+void Beam::onRender() const
 {
 
 	Vector diff = endPos - position;

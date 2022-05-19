@@ -35,14 +35,14 @@ public:
 	void setAreaFromCenter(const Vector &center, int width, int height);
 	void setCircularAreaFromCenter(const Vector &center, int diameter);
 
-	void render();
+	void render() const OVERRIDE;
 
 	static bool toolTipsOn;
 
 	bool required;
 
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 	int areaType;
 	Vector areaCenter;

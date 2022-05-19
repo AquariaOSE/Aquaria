@@ -4447,7 +4447,7 @@ void Avatar::doShieldSong()
 	activateAura(AURA_SHIELD);
 }
 
-void Avatar::render()
+void Avatar::render() const
 {
 
 	if (dsq->continuity.form == FORM_SPIRIT && !skeletalSprite.getParent())
@@ -4460,11 +4460,6 @@ void Avatar::render()
 
 	Entity::render();
 
-}
-
-void Avatar::onRender()
-{
-	Entity::onRender();
 }
 
 void Avatar::onEnterState(int action)

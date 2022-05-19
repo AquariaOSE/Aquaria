@@ -53,7 +53,7 @@ inline static void doRenderGrid(int x, int startCol, int endCol)
 
 }
 
-void GridRender::onRender()
+void GridRender::onRender() const
 {
 	const signed char obsType = this->obsType;
 	Vector camPos = core->cameraPos;
@@ -145,7 +145,7 @@ void SongLineRender::clear()
 	pts.clear();
 }
 
-void SongLineRender::onRender()
+void SongLineRender::onRender() const
 {
 	int w=core->getWindowWidth();
 
