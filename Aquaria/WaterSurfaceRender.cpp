@@ -99,8 +99,6 @@ void WaterSurfaceRender::onUpdate(float dt)
 		{
 			qSurface->alphaMod = 0.5;
 		}
-
-		Quad::render();
 	}
 	else
 	{
@@ -130,13 +128,13 @@ void WaterSurfaceRender::onUpdate(float dt)
 	}
 }
 
-void WaterSurfaceRender::render() const
+void WaterSurfaceRender::render(const RenderState& rs) const
 {
 	if (dsq->game->waterLevel.x > 0)
-		Quad::render();
+		Quad::render(rs);
 }
 
-void WaterSurfaceRender::onRender() const
+void WaterSurfaceRender::onRender(const RenderState& rs) const
 {
 	if (dsq->game->waterLevel == 0) return;
 	if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
@@ -149,7 +147,7 @@ void WaterSurfaceRender::onRender() const
 		glColor4f(0.4f, 0.7f, 0.8f, 0.2f);
 	}
 
-	Quad::onRender();
+	Quad::onRender(rs);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 

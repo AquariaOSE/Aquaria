@@ -51,7 +51,7 @@ public:
 	void destroy();
 protected:
 	void onUpdate(float dt);
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
 #endif

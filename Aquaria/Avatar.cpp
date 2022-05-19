@@ -4447,18 +4447,18 @@ void Avatar::doShieldSong()
 	activateAura(AURA_SHIELD);
 }
 
-void Avatar::render() const
+void Avatar::render(const RenderState& rs) const
 {
 
 	if (dsq->continuity.form == FORM_SPIRIT && !skeletalSprite.getParent())
 	{
 		skeletalSprite.position = bodyPosition+bodyOffset;
 		skeletalSprite.color = Vector(0.2f, 0.3f, 0.6f);
-		skeletalSprite.render();
+		skeletalSprite.render(rs);
 		skeletalSprite.color = Vector(1,1,1);
 	}
 
-	Entity::render();
+	Entity::render(rs);
 
 }
 

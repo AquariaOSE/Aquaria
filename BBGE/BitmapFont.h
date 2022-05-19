@@ -82,7 +82,7 @@ protected:
 	float alignWidth;
 	void formatText();
 	float fontDrawSize;
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 	typedef std::vector<std::string> Lines;
 	Lines lines;
 	typedef std::vector<Vector> ColorIndices;

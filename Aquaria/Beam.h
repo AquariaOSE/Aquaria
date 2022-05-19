@@ -27,7 +27,7 @@ public:
 	void setBeamWidth(float w);
 protected:
 	float beamWidth;
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 	void onEndOfLife();
 	void onUpdate(float dt);
 };

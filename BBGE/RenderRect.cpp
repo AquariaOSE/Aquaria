@@ -40,7 +40,7 @@ void OutlineRect::setLineSize(int ls)
 	lineSize = ls;
 }
 
-void OutlineRect::onRender() const
+void OutlineRect::onRender(const RenderState& rs) const
 {
 	glLineWidth(lineSize);
 	glBegin(GL_LINES);

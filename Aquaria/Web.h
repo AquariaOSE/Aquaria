@@ -44,7 +44,7 @@ protected:
 	void onEndOfLife();
 	std::vector<Vector> points;
 	void onUpdate(float dt);
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
 #endif

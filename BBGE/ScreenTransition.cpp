@@ -111,7 +111,7 @@ bool ScreenTransition::isGoing()
 	return alpha.isInterpolating();
 }
 
-void ScreenTransition::onRender() const
+void ScreenTransition::onRender(const RenderState& rs) const
 {
 	if (alpha.x == 0) return;
 

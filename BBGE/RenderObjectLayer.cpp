@@ -212,14 +212,13 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 	}
 }
 
-void RenderObjectLayer::renderPass(int pass)
+void RenderObjectLayer::renderPass(const RenderState& rs, int pass)
 {
 	core->currentLayerPass = pass;
 
-
 	for (RenderObject *robj = getFirst(); robj; robj = getNext())
 	{
-		renderOneObject(robj);
+		renderOneObject(rs, robj);
 	}
 }
 
@@ -227,8 +226,7 @@ void RenderObjectLayer::reloadDevice()
 {
 }
 
-
-inline void RenderObjectLayer::renderOneObject(const RenderObject *robj)
+inline void RenderObjectLayer::renderOneObject(const RenderState& rs, const RenderObject *robj)
 {
 	core->totalRenderObjectCount++;
 	if (robj->getParent() || robj->alpha.x == 0)
@@ -236,7 +234,7 @@ inline void RenderObjectLayer::renderOneObject(const RenderObject *robj)
 
 	if (!robj->cull || robj->isOnScreen())
 	{
-		robj->render();
+		robj->render(rs);
 		core->renderObjectCount++;
 	}
 	core->processedRenderObjectCount++;

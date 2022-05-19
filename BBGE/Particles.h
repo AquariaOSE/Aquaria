@@ -136,7 +136,7 @@ public:
 	bool hasRot;
 protected:
 	Vector currentSpawn, lastSpawn;
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 	void spawnParticle(float perc=1);
 	void onUpdate(float dt);
 

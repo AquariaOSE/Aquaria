@@ -73,7 +73,7 @@ public:
 	Vector vel;
 	InterpolatedVector vel2;
 	float activationRadius;
-	void render() const OVERRIDE;
+	void render(const RenderState& rs) const OVERRIDE;
 	void update(float dt);
 
 	void spawnParticlesFromCollisionMask(const char *p, unsigned intv=1, int layer = LR_PARTICLES, float rotz = 0);

@@ -211,7 +211,7 @@ public:
 	float biteDelay, urchinDelay, jellyDelay;
 	bool movingOn;
 
-	void render() const OVERRIDE;
+	void render(const RenderState& rs) const OVERRIDE;
 	void activateAura(AuraType aura);
 	void stopAura();
 	void setHeadTexture(const std::string &name, float t=0);

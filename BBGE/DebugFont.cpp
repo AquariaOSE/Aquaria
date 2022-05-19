@@ -130,7 +130,7 @@ void DebugFont::setText(const std::string &text)
 	formatText();
 }
 
-void DebugFont::onRender() const
+void DebugFont::onRender(const RenderState& rs) const
 {
 	const float vspc = 1.5;
 

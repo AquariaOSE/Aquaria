@@ -42,7 +42,7 @@ public:
         return _points[y * _w + x];
     }
 
-    virtual void onRender() const OVERRIDE;
+    virtual void onRender(const RenderState& rs) const OVERRIDE;
     virtual void onUpdate(float dt);
     virtual void onSetTexture();
 

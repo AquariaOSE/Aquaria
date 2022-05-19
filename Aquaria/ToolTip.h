@@ -35,7 +35,7 @@ public:
 	void setAreaFromCenter(const Vector &center, int width, int height);
 	void setCircularAreaFromCenter(const Vector &center, int diameter);
 
-	void render() const OVERRIDE;
+	void render(const RenderState& rs) const OVERRIDE;
 
 	static bool toolTipsOn;
 

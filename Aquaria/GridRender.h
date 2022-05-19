@@ -39,7 +39,7 @@ public:
 protected:
 	ObsType obsType;
 	void onUpdate(float dt);
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
 class MiniMapRender : public RenderObject
@@ -67,7 +67,7 @@ protected:
 	bool doRender;
 	float lightLevel;
 	void onUpdate(float dt);
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 	void renderIcon(const MinimapIcon *ico, const Vector& pos) const;
 
 	InterpolatedVector lerp;
@@ -127,7 +127,7 @@ class PathRender : public RenderObject
 public:
 	PathRender();
 protected:
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
 class CurrentRender : public RenderObject
@@ -136,7 +136,7 @@ public:
 	CurrentRender();
 protected:
 	float rippleDelay;
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
 class SteamRender : public RenderObject
@@ -145,7 +145,7 @@ public:
 	SteamRender();
 protected:
 	float rippleDelay;
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
 struct SongLinePoint
@@ -161,7 +161,7 @@ public:
 	void newPoint(const Vector &pt, const Vector &color);
 	void clear();
 protected:
-	void onRender() const OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
 	std::vector<SongLinePoint> pts;
 };
 

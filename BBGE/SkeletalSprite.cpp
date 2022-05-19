@@ -297,7 +297,7 @@ void Bone::spawnParticlesFromCollisionMask(const char *p, unsigned intv, int lay
 	}
 }
 
-void Bone::renderCollision() const
+void Bone::renderCollision(const RenderState& rs) const
 {
 	if (!collisionMask.empty())
 	{
@@ -332,7 +332,7 @@ void Bone::renderCollision() const
 		glPopAttrib();
 	}
 	else
-		CollideQuad::renderCollision();
+		CollideQuad::renderCollision(rs);
 }
 
 Vector Bone::getCollisionMaskNormal(size_t index)

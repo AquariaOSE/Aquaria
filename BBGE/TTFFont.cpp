@@ -240,7 +240,7 @@ int TTFText::findLine(const std::string &label)
 	return 0;
 }
 
-void TTFText::onRender() const
+void TTFText::onRender(const RenderState& rs) const
 {
 
 

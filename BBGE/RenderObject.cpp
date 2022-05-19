@@ -55,35 +55,6 @@ int RenderObject::getTopLayer() const
 	return layer;
 }
 
-struct BlendParams
-{
-	GLenum src, dst;
-};
-static const BlendParams s_blendParams[] =
-{
-	{ GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA },
-	{ GL_SRC_ALPHA, GL_ONE },
-	{ GL_ZERO, GL_SRC_ALPHA },
-	{ GL_ZERO, GL_SRC_COLOR },
-};
-
-void RenderObject::applyBlendType() const
-{
-	compile_assert(Countof(s_blendParams) == _BLEND_MAXSIZE);
-
-	if (_blendType >= BLEND_DEFAULT)
-	{
-		glEnable(GL_BLEND);
-		const BlendParams& bp = s_blendParams[_blendType];
-		glBlendFunc(bp.src, bp.dst);
-	}
-	else
-	{
-		glDisable(GL_BLEND);
-		glDisable(GL_ALPHA_TEST);
-	}
-}
-
 void RenderObject::setColorMult(const Vector &color, const float alpha) const
 {
 	if (colorIsSaved)
@@ -502,7 +473,7 @@ bool RenderObject::hasRenderPass(const int pass) const
 	return false;
 }
 
-void RenderObject::render() const
+void RenderObject::render(const RenderState& rs) const
 {
 	if (isHidden()) return;
 
@@ -547,17 +518,17 @@ void RenderObject::render() const
 			position = mb->positions[i].position;
 			rotation.z = mb->positions[i].rotz;
 			alpha = (1.0f-(float(i) * m)) * m2;
-			renderCall();
+			renderCall(rs);
 		}
 		position = oldPos;
 		alpha.x = oldAlpha;
 		rotation.z = oldRotZ;
 	}
 
-	renderCall();
+	renderCall(rs);
 }
 
-void RenderObject::renderCall() const
+void RenderObject::renderCall(const RenderState& rs) const
 {
 	position += offset;
 
@@ -648,7 +619,7 @@ void RenderObject::renderCall() const
 	for (Children::const_iterator i = children.begin(); i != children.end(); i++)
 	{
 		if (!(*i)->isDead() && (*i)->renderBeforeParent)
-			(*i)->render();
+			(*i)->render(rs);
 	}
 
 
@@ -680,7 +651,7 @@ void RenderObject::renderCall() const
 		}
 	}
 
-	applyBlendType();
+	rs.gpu.setBlend(getBlendType());
 
 
 	bool doRender = true;
@@ -698,16 +669,16 @@ void RenderObject::renderCall() const
 	}
 
 	if (renderCollisionShape)
-		renderCollision();
+		renderCollision(rs);
 
 	if (doRender)
-		onRender();
+		onRender(rs);
 
 
 	for (Children::const_iterator i = children.begin(); i != children.end(); i++)
 	{
 		if (!(*i)->isDead() && !(*i)->renderBeforeParent)
-			(*i)->render();
+			(*i)->render(rs);
 	}
 
 
@@ -717,7 +688,7 @@ void RenderObject::renderCall() const
 	position -= offset;
 }
 
-void RenderObject::renderCollision() const
+void RenderObject::renderCollision(const RenderState& rs) const
 {
 }
 

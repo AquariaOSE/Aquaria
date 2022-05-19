@@ -4160,7 +4160,7 @@ void Game::setParallaxTextureCoordinates(Quad *q, float speed)
 {
 	//int backgroundImageRepeat = 1.2;
 	q->followCamera = 1;
-	q->texture->repeat = true;
+	q->repeatTexture = true;
 
 	float camx = (core->cameraPos.x/800.0f)*speed;
 	float camy = -(core->cameraPos.y/600.0f)*speed;
