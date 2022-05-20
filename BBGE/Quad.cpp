@@ -181,10 +181,6 @@ void Quad::initQuad()
 
 	autoWidth = autoHeight = 0;
 
-
-
-	repeatingTextureToFill = false;
-
 	drawGrid = 0;
 
 	renderBorder = false;
@@ -416,7 +412,6 @@ void Quad::renderGrid() const
 
 void Quad::repeatTextureToFill(bool on)
 {
-	repeatingTextureToFill = on;
 	repeatTexture = on;
 	refreshRepeatTextureToFill();
 
@@ -544,7 +539,7 @@ void Quad::flipVertical()
 
 void Quad::refreshRepeatTextureToFill()
 {
-	if (repeatingTextureToFill && texture)
+	if (repeatTexture && texture)
 	{
 		upperLeftTextureCoordinates.x = texOff.x;
 		upperLeftTextureCoordinates.y = texOff.y;
