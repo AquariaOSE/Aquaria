@@ -225,6 +225,8 @@ class SkeletalSprite : public RenderObject
 public:
 
 	SkeletalSprite();
+	virtual ~SkeletalSprite();
+
 	void loadSkeletal(const std::string &fn);
 	bool saveSkeletal(const std::string &fn);
 	void loadSkin(const std::string &fn);

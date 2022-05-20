@@ -48,9 +48,9 @@ enum AutoSize
 
 enum ParentManaged
 {
-	PM_NONE					= 0,
-	PM_POINTER				= 1,
-	PM_STATIC				= 2
+	PM_NONE					= 0, // child is destroyed with parent, but not deleted. The childs' update() is NOT called.
+	PM_POINTER				= 1, // child is deleted together with parent. update() is called.
+	PM_STATIC				= 2  // child is destroyed with parent, but not deleted. update() is called.
 };
 
 enum ChildOrder
@@ -237,7 +237,6 @@ public:
 	// TODO: this should be a bitmask
 	bool fadeAlphaWithLife;
 	bool renderBeforeParent;
-	bool updateAfterParent;
 	bool shareAlphaWithChildren;
 	bool shareColorWithChildren;
 	bool cull;

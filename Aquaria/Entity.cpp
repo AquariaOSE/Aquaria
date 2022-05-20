@@ -237,9 +237,8 @@ Entity::Entity()
 
 
 
-	skeletalSprite.updateAfterParent = 1;
 	skeletalSprite.setAnimationKeyNotify(this);
-	addChild(&skeletalSprite, PM_STATIC);
+	addChild(&skeletalSprite, PM_NONE);
 
 
 
@@ -1471,6 +1470,8 @@ void Entity::onEndOfLife()
 		dsq->game->entityDied(this);
 		calledEntityDied = true;
 	}
+
+	skeletalSprite.safeKill();
 }
 
 void Entity::setPoison(float m, float t)
@@ -1692,6 +1693,8 @@ void Entity::onUpdate(float dt)
 	}
 
 	updateLance(dt);
+
+	skeletalSprite.update(dt);
 }
 
 void Entity::updateBoneLock()
