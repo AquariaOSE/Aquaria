@@ -804,6 +804,9 @@ SkeletalSprite::SkeletalSprite() : RenderObject()
 	selectedBone = -1;
 }
 
+SkeletalSprite::~SkeletalSprite()
+{
+}
 
 void SkeletalSprite::setAnimationKeyNotify(RenderObject *r)
 {

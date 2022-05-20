@@ -98,7 +98,6 @@ RenderObject::RenderObject()
 	addType(SCO_RENDEROBJECT);
 	useOldDT = false;
 
-	updateAfterParent = false;
 	ignoreUpdate = false;
 	overrideRenderPass = OVERRIDE_NONE;
 	renderPass = 0;
@@ -146,6 +145,7 @@ RenderObject::RenderObject()
 RenderObject::~RenderObject()
 {
 	freeMotionBlur();
+	assert(children.empty()); // if this fires some objects were not deleted and will leak
 }
 
 Vector RenderObject::getWorldPosition() const
@@ -335,16 +335,9 @@ void RenderObject::destroy()
 		// must do this first
 		// otherwise child will try to remove THIS
 		(*i)->parent = 0;
-		switch ((*i)->pm)
-		{
-		case PM_STATIC:
-			(*i)->destroy();
-			break;
-		case PM_POINTER:
-			(*i)->destroy();
+		(*i)->destroy();
+		if((*i)->pm == PM_POINTER)
 			delete (*i);
-			break;
-		}
 	}
 	children.clear();
 
@@ -766,19 +759,7 @@ void RenderObject::update(float dt)
 	}
 	if (!isDead())
 	{
-
 		onUpdate(dt);
-
-		if (isHidden())
-			return;
-
-		for (Children::iterator i = children.begin(); i != children.end(); i++)
-		{
-			if ((*i)->updateAfterParent && (((*i)->pm == PM_POINTER) || ((*i)->pm == PM_STATIC)))
-			{
-				(*i)->update(dt);
-			}
-		}
 	}
 }
 
@@ -881,7 +862,7 @@ void RenderObject::onUpdate(float dt)
 		if (shareColorWithChildren)
 			(*i)->color = this->color;
 
-		if (!(*i)->updateAfterParent && (((*i)->pm == PM_POINTER) || ((*i)->pm == PM_STATIC)))
+		if ((*i)->pm != PM_NONE)
 		{
 			(*i)->update(dt);
 		}
@@ -900,7 +881,8 @@ void RenderObject::onUpdate(float dt)
 			{
 				ro->parent = NULL;
 				ro->destroy();
-				delete ro;
+				if(ro->pm == PM_POINTER)
+					delete ro;
 			}
 			else
 				children[w++] = ro;

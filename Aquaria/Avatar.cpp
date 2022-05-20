@@ -721,7 +721,7 @@ void Avatar::applyWorldEffects(WorldType type)
 		skeletalSprite.setFreeze(false);
 		if (!skeletalSprite.getParent())
 		{
-			addChild(&skeletalSprite, PM_STATIC);
+			addChild(&skeletalSprite, PM_NONE);
 		}
 		skeletalSprite.position = Vector(0,0,0);
 		skeletalSprite.scale = Vector(1,1,1);
