@@ -62,7 +62,7 @@ public:
 	void setDrawGridAlpha(size_t x, size_t y, float alpha);
 	void repeatTextureToFill(bool on);
 	void refreshRepeatTextureToFill();
-	bool isRepeatingTextureToFill() const { return repeatingTextureToFill; }
+	bool isRepeatingTextureToFill() const { return repeatTexture; }
 	void setGridPoints(bool vert, const std::vector<Vector> &points);
 	virtual void createStrip(bool stripVert, int num);
 	float getStripSegmentSize() const;
@@ -97,7 +97,6 @@ public:
 	Vector repeatToFillScale;
 
 protected:
-	bool repeatingTextureToFill;
 	float gridTimer;
 	size_t xDivs, yDivs;
 	Vector ** drawGrid;
