@@ -84,6 +84,7 @@ Bone::Bone() : CollideQuad()
 	reverse = false;
 	selectable = true;
 	originalRenderPass = 0;
+	stripVert = false;
 }
 
 ParticleEffect *Bone::getEmitter(unsigned slot) const
@@ -134,7 +135,6 @@ void Bone::createStrip(bool vert, int num)
 	stripVert = vert;
 	gridType = GRID_SET;
 	changeStrip.resize(num);
-	setGridPoints(vert, strip);
 }
 
 
@@ -603,7 +603,6 @@ bool AnimationLayer::createTransitionAnimation(const std::string& anim, float ti
 		b.x = s->bones[i]->position.x;
 		b.y = s->bones[i]->position.y;
 		b.rot = s->bones[i]->rotation.z;
-		b.strip = s->bones[i]->strip;
 		b.sx = s->bones[i]->scale.x;
 		b.sy = s->bones[i]->scale.y;
 		k.keyframes.push_back(b);

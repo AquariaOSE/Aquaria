@@ -64,13 +64,6 @@ void Quad::setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy,
 	}
 }
 
-void Quad::createStrip(bool vert, int num)
-{
-	strip.resize(num);
-	stripVert = vert;
-	resetStrip();
-}
-
 void Quad::createGrid(int xd, int yd)
 {
 	deleteGrid();
@@ -131,29 +124,6 @@ void Quad::setGridPoints(bool vert, const std::vector<Vector> &points)
 				}
 			}
 		}
-	}
-}
-
-float Quad::getStripSegmentSize() const
-{
-	return (1.0f/(float(strip.size())));
-}
-
-void Quad::resetStrip()
-{
-	if (!stripVert)
-	{
-		for (size_t i = 0; i < strip.size(); i++)
-		{
-
-			float v = (i/(float(strip.size())));
-			strip[i].x = v;
-			strip[i].y = 0;
-		}
-	}
-	else
-	{
-		errorLog("VERTICAL STRIP NOT SUPPORTED ^_-");
 	}
 }
 
@@ -422,66 +392,30 @@ void Quad::onRender(const RenderState& rs) const
 	if (!renderQuad) return;
 
 
-	float _w2 = width*0.5f;
-	float _h2 = height*0.5f;
+	const float _w2 = width*0.5f;
+	const float _h2 = height*0.5f;
 
-	if (!strip.empty())
+	if (!drawGrid)
 	{
-
-
-
-		const float texBits = 1.0f / (strip.size()-1);
-
-		glBegin(GL_QUAD_STRIP);
-
-		if (!stripVert)
+		glBegin(GL_QUADS);
 		{
-			for (size_t i = 0; i < strip.size(); i++)
-			{
-				glTexCoord2f(texBits*i, 0);
-				glVertex2f(strip[i].x*width-_w2,  strip[i].y*_h2*10 - _h2);
-				glTexCoord2f(texBits*i, 1);
-				glVertex2f(strip[i].x*width-_w2,  strip[i].y*_h2*10 + _h2);
-			}
-		}
-		glEnd();
+			glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
+			glVertex2f(-_w2, +_h2);
 
+			glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
+			glVertex2f(+_w2, +_h2);
 
-		glBindTexture( GL_TEXTURE_2D, 0 );
-		glColor4f(1,0,0,1);
-		glPointSize(64);
+			glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
+			glVertex2f(+_w2, -_h2);
 
-		glBegin(GL_POINTS);
-		for (size_t i = 0; i < strip.size(); i++)
-		{
-			glVertex2f((strip[i].x*width)-_w2, strip[i].y*height);
+			glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
+			glVertex2f(-_w2, -_h2);
 		}
 		glEnd();
 	}
 	else
 	{
-		if (!drawGrid)
-		{
-			glBegin(GL_QUADS);
-			{
-				glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-				glVertex2f(-_w2, +_h2);
-
-				glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-				glVertex2f(+_w2, +_h2);
-
-				glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-				glVertex2f(+_w2, -_h2);
-
-				glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-				glVertex2f(-_w2, -_h2);
-			}
-			glEnd();
-		}
-		else
-		{
-			renderGrid(rs);
-		}
+		renderGrid(rs);
 	}
 
 	if (renderBorder)

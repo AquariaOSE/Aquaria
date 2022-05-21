@@ -642,10 +642,6 @@ void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 				}
 
 				b->strip[selectedStripPoint] = sel->changeStrip[selectedStripPoint] += mov*0.006f;
-				sel->setGridPoints(sel->stripVert, sel->strip);
-
-
-
 			}
 		}
 	}

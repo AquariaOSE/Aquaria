@@ -87,6 +87,7 @@ public:
 	void setSegmentProps(int minDist, int maxDist, bool reverse);
 	Vector segmentOffset;
 
+	bool stripVert;
 	bool fileRenderQuad;
 	bool selectable;
 	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
