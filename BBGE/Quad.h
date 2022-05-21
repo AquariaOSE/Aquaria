@@ -30,7 +30,6 @@ public:
 	void setWidthHeight(int w, int h);
 	void setLineSize(int ls);
 
-	bool renderCenter;
 protected:
 
 	int w, h, w2, h2;
@@ -103,7 +102,7 @@ protected:
 
 	void resetGrid();
 	void updateGrid(float dt);
-	void renderGrid() const;
+	void renderGrid(const RenderState& rs) const;
 
 
 	float drawGridOffsetX;

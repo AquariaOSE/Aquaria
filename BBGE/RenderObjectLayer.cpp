@@ -32,8 +32,6 @@ RenderObjectLayer::RenderObjectLayer()
 	followCameraLock = FCL_NONE;
 	update = true;
 
-	color = Vector(1,1,1);
-
 	const int size = renderObjects.size();
 	for (int i = 0; i < size; i++)
 		renderObjects[i] = 0;

@@ -315,7 +315,7 @@ void Quad::updateGrid(float dt)
 	}
 }
 
-void Quad::renderGrid() const
+void Quad::renderGrid(const RenderState& rs) const
 {
 	if (xDivs < 2 || yDivs < 2)
 		return;
@@ -340,10 +340,10 @@ void Quad::renderGrid() const
 	const float w = this->getWidth();
 	const float h = this->getHeight();
 
-	const float red   = this->color.x;
-	const float green = this->color.y;
-	const float blue  = this->color.z;
-	const float alpha = this->alpha.x * this->alphaMod;
+	const float red   = rs.color.x * this->color.x;
+	const float green = rs.color.y * this->color.y;
+	const float blue  = rs.color.z * this->color.z;
+	const float alpha = rs.alpha * this->alpha.x * this->alphaMod;
 
 
 	glBegin(GL_QUADS);
@@ -422,8 +422,8 @@ void Quad::onRender(const RenderState& rs) const
 	if (!renderQuad) return;
 
 
-	float _w2 = width/2.0f;
-	float _h2 = height/2.0f;
+	float _w2 = width*0.5f;
+	float _h2 = height*0.5f;
 
 	if (!strip.empty())
 	{
@@ -480,7 +480,7 @@ void Quad::onRender(const RenderState& rs) const
 		}
 		else
 		{
-			renderGrid();
+			renderGrid(rs);
 		}
 	}
 

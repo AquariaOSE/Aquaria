@@ -164,9 +164,6 @@ public:
 
 	int getTopLayer() const;
 
-	void setColorMult(const Vector &color, const float alpha) const; // HACK: const
-	void clearColorMult() const; // HACK: const
-
 	void enableMotionBlur(int sz=10, int off=5);
 	void disableMotionBlur();
 
@@ -254,7 +251,7 @@ public:
 
 
 	mutable InterpolatedVector position, scale;
-	mutable InterpolatedVector color, alpha; // HACK: mutable should go! this is for setColorMult()
+	InterpolatedVector color, alpha;
 	mutable InterpolatedVector rotation;
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
 	InterpolatedVector velocity, gravity;
@@ -274,11 +271,6 @@ public:
 	int overrideRenderPass;
 	int renderPass;
 	float overrideCullRadiusSqr;
-
-	// --- This is hack and should not exist ---
-	mutable bool colorIsSaved;  // Used for both color and alpha
-	mutable Vector savedColor;  // Saved values from setColorMult()
-	mutable float savedAlpha;
 
 
 	float width, height;  // Only used by Quads, but stored here for getCullRadius()

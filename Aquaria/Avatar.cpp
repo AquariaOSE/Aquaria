@@ -4452,10 +4452,10 @@ void Avatar::render(const RenderState& rs) const
 
 	if (dsq->continuity.form == FORM_SPIRIT && !skeletalSprite.getParent())
 	{
+		RenderState rx(rs);
+		rx.color = Vector(0.2f, 0.3f, 0.6f);
 		skeletalSprite.position = bodyPosition+bodyOffset;
-		skeletalSprite.color = Vector(0.2f, 0.3f, 0.6f);
-		skeletalSprite.render(rs);
-		skeletalSprite.color = Vector(1,1,1);
+		skeletalSprite.render(rx);
 	}
 
 	Entity::render(rs);
