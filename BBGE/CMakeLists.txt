@@ -23,8 +23,6 @@ set(BBGE_SRCS
     DarkLayer.h
     DebugFont.cpp
     DebugFont.h
-    Effects.cpp
-    Effects.h
     Emitter.cpp
     EngineEnums.h
     Event.cpp

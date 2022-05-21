@@ -1143,9 +1143,6 @@ void Core::run(float runTime)
 				runTime = 0;
 		}
 
-		// UPDATE
-		postProcessingFx.update(dt);
-
 		updateRenderObjects(dt);
 
 		if (particleManager)
@@ -1785,15 +1782,6 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 		int i = renderObjectLayerOrder[c];
 		if (i == -1) continue;
 		if ((startLayer != -1 && endLayer != -1) && (i < startLayer || i > endLayer)) continue;
-
-		if (i == postProcessingFx.layer)
-		{
-			postProcessingFx.preRender();
-		}
-		if (i == postProcessingFx.renderLayer)
-		{
-			postProcessingFx.render();
-		}
 
 		if (darkLayer.isUsed() )
 		{

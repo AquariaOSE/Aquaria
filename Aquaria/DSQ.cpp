@@ -1020,11 +1020,6 @@ void DSQ::init()
 	dsq->darkLayer.toggle(0);
 	debugLog("done");
 
-	debugLog("post FX init");
-	dsq->postProcessingFx.init();
-	debugLog("done");
-
-
 	debugLog("Creating console");
 	console = new DebugFont;
 	{
