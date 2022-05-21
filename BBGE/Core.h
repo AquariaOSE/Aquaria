@@ -26,7 +26,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SoundManager.h"
 #include "Event.h"
 #include "StateManager.h"
-#include "Effects.h"
 #include "Localization.h"
 #include "Window.h"
 
@@ -241,8 +240,6 @@ public:
 	void clearResources();
 
 	CountedPtr<Texture> addTexture(const std::string &texture);
-
-	PostProcessingFX postProcessingFx;
 
 	enum RemoveRenderObjectFlag { DESTROY_RENDER_OBJECT=0, DO_NOT_DESTROY_RENDER_OBJECT };
 	void removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag = DESTROY_RENDER_OBJECT);
