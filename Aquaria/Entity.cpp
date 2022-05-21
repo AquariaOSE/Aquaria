@@ -2477,16 +2477,12 @@ void Entity::doEntityAvoidance(float dt, int range, float mod, Entity *ignore)
 	}
 }
 
-void Entity::render(const RenderState& rs) const
+void Entity::render(const RenderState& rsold) const
 {
-	InterpolatedVector bcolor = color;
 	InterpolatedVector bscale = scale;
 
 	scale *= flipScale;
-	if (multColor.isInterpolating())
-	{
-		color *= multColor;
-	}
+
 
 	if (dsq->game->isSceneEditorActive() && dsq->game->sceneEditor.editType == ET_ENTITIES)
 	{
@@ -2498,17 +2494,15 @@ void Entity::render(const RenderState& rs) const
 
 	}
 
-	// HACK: need to multiply base + etc
-	skeletalSprite.setColorMult(this->color, this->alpha.x);
-
+	RenderState rs(rsold);
+	rs.color *= color;
+	if (multColor.isInterpolating())
+		rs.color *= multColor;
+	rs.alpha *= alpha.x;
 
 	Quad::render(rs);
 
-
-
 	renderBorder = false;
-	skeletalSprite.clearColorMult();
-	color = bcolor;
 	scale = bscale;
 }
 

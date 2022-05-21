@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 OutlineRect::OutlineRect() : RenderObject()
 {
 	lineSize = 1;
-	renderCenter = false;
 }
 
 void OutlineRect::setWidthHeight(int w, int h)
@@ -57,19 +56,6 @@ void OutlineRect::onRender(const RenderState& rs) const
 		glVertex2f(-w2,h2);
 		glVertex2f(w2,h2);
 	glEnd();
-
-	if (renderCenter)
-	{
-		glColor3f(0.9f, 0.9f, 1);
-		glBegin(GL_LINES);
-			// lr
-			glVertex2f(-w2,0);
-			glVertex2f(w2,0);
-			// ud
-			glVertex2f(0,-h2);
-			glVertex2f(0,h2);
-		glEnd();
-	}
 }
 
 

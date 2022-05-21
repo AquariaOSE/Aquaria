@@ -55,44 +55,6 @@ int RenderObject::getTopLayer() const
 	return layer;
 }
 
-void RenderObject::setColorMult(const Vector &color, const float alpha) const
-{
-	if (colorIsSaved)
-	{
-		debugLog("setColorMult() WARNING: can't do nested multiplies");
-		return;
-	}
-	this->colorIsSaved = true;
-	this->savedColor.x = this->color.x;
-	this->savedColor.y = this->color.y;
-	this->savedColor.z = this->color.z;
-	this->savedAlpha = this->alpha.x;
-	this->color *= color;
-	this->alpha.x *= alpha;
-	for (Children::const_iterator i = children.begin(); i != children.end(); i++)
-	{
-		(*i)->setColorMult(color, alpha);
-	}
-}
-
-void RenderObject::clearColorMult() const
-{
-	if (!colorIsSaved)
-	{
-		debugLog("clearColorMult() WARNING: no saved color to restore");
-		return;
-	}
-	this->color.x = this->savedColor.x;
-	this->color.y = this->savedColor.y;
-	this->color.z = this->savedColor.z;
-	this->alpha.x = this->savedAlpha;
-	this->colorIsSaved = false;
-	for (Children::const_iterator i = children.begin(); i != children.end(); i++)
-	{
-		(*i)->clearColorMult();
-	}
-}
-
 RenderObject::RenderObject()
 {
 	addType(SCO_RENDEROBJECT);
@@ -136,8 +98,6 @@ RenderObject::RenderObject()
 
 	renderBeforeParent = false;
 
-
-	colorIsSaved = false;
 	shareAlphaWithChildren = false;
 	shareColorWithChildren = false;
 }
@@ -500,21 +460,20 @@ void RenderObject::render(const RenderState& rs) const
 
 	if (MotionBlurData *mb = this->motionBlur)
 	{
+		RenderState rx(rs);
 		const Vector oldPos = position;
-		const float oldAlpha = alpha.x;
 		const float oldRotZ = rotation.z;
 		const size_t sz = mb->positions.size();
 		const float m = 1.0f / float(sz);
-		const float m2 = 0.5f * (mb->transition ? mb->transitionTimer : 1.0f);
+		const float m2 = alpha.x * 0.5f * (mb->transition ? mb->transitionTimer : 1.0f);
 		for (size_t i = 0; i < sz; i++)
 		{
 			position = mb->positions[i].position;
 			rotation.z = mb->positions[i].rotz;
-			alpha = (1.0f-(float(i) * m)) * m2;
-			renderCall(rs);
+			rx.alpha = (1.0f-(float(i) * m)) * m2;
+			renderCall(rx);
 		}
 		position = oldPos;
-		alpha.x = oldAlpha;
 		rotation.z = oldRotZ;
 	}
 
@@ -608,20 +567,10 @@ void RenderObject::renderCall(const RenderState& rs) const
 	glScalef(scale.x, scale.y, 1);
 	glTranslatef(internalOffset.x, internalOffset.y, internalOffset.z);
 
-
 	for (Children::const_iterator i = children.begin(); i != children.end(); i++)
 	{
 		if (!(*i)->isDead() && (*i)->renderBeforeParent)
 			(*i)->render(rs);
-	}
-
-
-	{
-		Vector col = color;
-		if (rlayer)
-			col *= rlayer->color;
-
-		glColor4f(col.x, col.y, col.z, alpha.x*alphaMod);
 	}
 
 	if (texture)
@@ -644,8 +593,6 @@ void RenderObject::renderCall(const RenderState& rs) const
 		}
 	}
 
-	rs.gpu.setBlend(getBlendType());
-
 
 	bool doRender = true;
 	int pass = renderPass;
@@ -661,11 +608,20 @@ void RenderObject::renderCall(const RenderState& rs) const
 		doRender = (core->currentLayerPass == pass);
 	}
 
-	if (renderCollisionShape)
-		renderCollision(rs);
-
 	if (doRender)
+	{
+		// RenderState color applies to everything in the scene graph,
+		// so that needs to be multiplied in unconditionally
+		{
+			Vector col = this->color * rs.color;
+			glColor4f(color.x, color.y, color.z, rs.alpha*alpha.x*alphaMod);
+		}
+		rs.gpu.setBlend(getBlendType());
 		onRender(rs);
+
+		if (renderCollisionShape)
+			renderCollision(rs);
+	}
 
 
 	for (Children::const_iterator i = children.begin(); i != children.end(); i++)

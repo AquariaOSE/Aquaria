@@ -164,8 +164,6 @@ public:
 
 	bool update;
 
-	Vector color;
-
 protected:
 	inline void renderOneObject(const RenderState& rs, const RenderObject *robj);
 
