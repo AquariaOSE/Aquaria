@@ -62,10 +62,7 @@ public:
 	void repeatTextureToFill(bool on);
 	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatTexture; }
-	void setGridPoints(bool vert, const std::vector<Vector> &points);
-	virtual void createStrip(bool stripVert, int num);
-	float getStripSegmentSize() const;
-	void resetStrip();
+	void setGridPoints(bool vert, const std::vector<Vector>& points);
 	Vector ** getDrawGrid() { return drawGrid; }
 
 	void reloadDevice();
@@ -88,8 +85,6 @@ public:
 
 	bool renderQuad, renderCenter;
 	mutable bool renderBorder; // TODO: should be part of render state
-	bool stripVert;
-	std::vector<Vector>strip;
 	Vector texOff;
 
 	float borderAlpha;
