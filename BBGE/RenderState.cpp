@@ -4,7 +4,7 @@
 
 
 RenderState::RenderState(GPUState &gpu)
-    : gpu(gpu), color(1,1,1), alpha(1)
+    : gpu(gpu), color(1,1,1), alpha(1), pass(0)
 {
 }
 

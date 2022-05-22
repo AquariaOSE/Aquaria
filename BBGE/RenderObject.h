@@ -111,6 +111,9 @@ public:
 	bool isDead() const {return _dead;}
 	bool isHidden() const {return _hidden || (parent && parent->isHidden());}
 
+	bool shouldTryToRender() const; // somewhat expensive
+	bool isVisibleInPass(int pass) const;
+
 	// Set whether the object is hidden.  If hidden, no updates (except
 	// lifetime checks) or render operations will be performed, and no
 	// child objects will be updated or rendered.
@@ -221,7 +224,6 @@ public:
 
 	//-------------------------------- Methods above, fields below
 
-	static RenderObjectLayer *rlayer;
 	static bool renderCollisionShape;
 	static bool renderPaths;
 	static size_t lastTextureApplied;
@@ -267,9 +269,16 @@ public:
 	float decayRate;
 	float maxLife;
 
-
+	// When a root RenderObject has overrideRenderPass set,
+	// the override applies the same pass to ALL RenderObjects in the hierarchy.
+	// For non-root objects, it has no effect.
 	int overrideRenderPass;
+
+	// In layers that have multi-pass rendering enabled, the object will only be rendered
+	// in this pass (single-pass layers always render, regardless of this setting).
 	int renderPass;
+
+
 	float overrideCullRadiusSqr;
 
 

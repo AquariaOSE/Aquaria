@@ -364,13 +364,10 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	lib_graphics = lib_sound = lib_input = false;
 	mouseConstraint = false;
 	mouseCircle = 0;
-	overrideStartLayer = 0;
-	overrideEndLayer = 0;
 	frameOutputMode = false;
 	updateMouse = true;
 	particlesPaused = false;
 	joystickAsMouse = false;
-	currentLayerPass = 0;
 	flipMouseButtons = 0;
 	joystickEnabled = false;
 	doScreenshot = false;
@@ -382,6 +379,8 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	invGlobalScale = 1.0;
 	invGlobalScaleSqr = 1.0;
 	renderObjectCount = 0;
+	processedRenderObjectCount = 0;
+	totalRenderObjectCount = 0;
 	avgFPS.resize(1);
 	minimized = false;
 	shuttingDown = false;
@@ -1737,11 +1736,9 @@ void Core::updateCullData()
 
 void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 {
-	if (startLayer == -1 && endLayer == -1 && overrideStartLayer != 0)
-	{
-		startLayer = overrideStartLayer;
-		endLayer = overrideEndLayer;
-	}
+	renderObjectCount = 0;
+	processedRenderObjectCount = 0;
+	totalRenderObjectCount = 0;
 
 	globalScaleChanged();
 
@@ -1752,14 +1749,12 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 	updateCullData();
 
-
-
-	renderObjectCount = 0;
-	processedRenderObjectCount = 0;
-	totalRenderObjectCount = 0;
-
-	CombinedRenderAndGPUState rgstate;
-
+	// TODO: this could be done in parallel
+	for (size_t i = 0; i < renderObjectLayers.size(); ++i)
+	{
+		if(renderObjectLayers[i].visible)
+			renderObjectLayers[i].prepareRender();
+	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glLoadIdentity();									// Reset The View
@@ -1773,11 +1768,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 	setupRenderPositionAndScale();
 
 
-
-	RenderObject::rlayer = 0;
-
 	for (size_t c = 0; c < renderObjectLayerOrder.size(); c++)
-
 	{
 		int i = renderObjectLayerOrder[c];
 		if (i == -1) continue;
@@ -1803,24 +1794,11 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 		}
 
 		RenderObjectLayer *r = &renderObjectLayers[i];
-		RenderObject::rlayer = r;
-		if (r->visible)
-		{
-			if (r->startPass == r->endPass)
-			{
-				r->renderPass(rgstate, RenderObject::RENDER_ALL);
-			}
-			else
-			{
-				for (int pass = r->startPass; pass <= r->endPass; pass++)
-				{
-					r->renderPass(rgstate, pass);
-				}
-			}
-		}
+		if(!r->visible)
+			continue;
+
+		r->render();
 	}
-
-
 }
 
 void Core::showBuffer()

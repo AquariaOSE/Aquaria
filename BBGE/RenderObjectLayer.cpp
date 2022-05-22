@@ -210,30 +210,55 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 	}
 }
 
-void RenderObjectLayer::renderPass(const RenderState& rs, int pass)
-{
-	core->currentLayerPass = pass;
-
-	for (RenderObject *robj = getFirst(); robj; robj = getNext())
-	{
-		renderOneObject(rs, robj);
-	}
-}
-
 void RenderObjectLayer::reloadDevice()
 {
 }
 
-inline void RenderObjectLayer::renderOneObject(const RenderState& rs, const RenderObject *robj)
+void RenderObjectLayer::prepareRender()
 {
-	core->totalRenderObjectCount++;
-	if (robj->getParent() || robj->alpha.x == 0)
+	toRender.clear();
+
+	size_t n = 0;
+	for (const RenderObject *robj = getFirst(); robj; robj = getNext())
+	{
+		++n;
+		if(robj->shouldTryToRender())
+			toRender.push_back(robj);
+	}
+	core->renderObjectCount += toRender.size();
+	toRender.push_back(NULL); // terminate
+	core->totalRenderObjectCount += n;
+}
+
+void RenderObjectLayer::render() const
+{
+	if(toRender.size() <= 1)
 		return;
 
-	if (!robj->cull || robj->isOnScreen())
+	size_t proc = 0;
+	CombinedRenderAndGPUState rs;
+
+	if (startPass == endPass)
 	{
-		robj->render(rs);
-		core->renderObjectCount++;
+		rs.pass = RenderObject::RENDER_ALL;
+		const RenderObject * const * rlist = &toRender[0]; // known to have at least one element
+		while(const RenderObject *ro = *rlist++)
+			ro->render(rs);
+		proc += toRender.size() - 1;
 	}
-	core->processedRenderObjectCount++;
+	else
+	{
+		for (int pass = startPass; pass <= endPass; pass++)
+		{
+			rs.pass = pass;
+			const RenderObject * const * rlist = &toRender[0]; // known to have at least one element
+			while(const RenderObject *ro = *rlist++)
+				if(ro->isVisibleInPass(pass))
+				{
+					ro->render(rs);
+					++proc;
+				}
+		}
+	}
+	core->processedRenderObjectCount += proc;
 }
