@@ -36,8 +36,6 @@ size_t	RenderObject::lastTextureApplied			= 0;
 bool	RenderObject::lastTextureRepeat				= false;
 bool	RenderObject::renderPaths					= false;
 
-RenderObjectLayer *RenderObject::rlayer				= 0;
-
 void RenderObject::toggleAlpha(float t)
 {
 	if (alpha.x < 0.5f)
@@ -426,37 +424,43 @@ bool RenderObject::hasRenderPass(const int pass) const
 	return false;
 }
 
+bool RenderObject::shouldTryToRender() const
+{
+	return !parent
+		&& alpha.x > 0
+		&& (!cull || isOnScreen());
+}
+
+bool RenderObject::isVisibleInPass(int pass) const
+{
+	assert(!parent); // This check should be done for root objects only
+	assert(pass != RENDER_ALL); // why call this when we already know we don't do passes
+
+	if (this->overrideRenderPass != OVERRIDE_NONE)
+	{
+		// FIXME: overrideRenderPass is not applied to the
+		// node itself in the original check (below); is
+		// that intentional?  Doing the same thing here
+		// for the time being.  --achurch
+		if (pass != this->renderPass
+			&& pass != this->overrideRenderPass)
+			return false;
+	}
+	else
+	{
+		if (!hasRenderPass(pass))
+			return false;
+	}
+
+	return true;
+}
+
 void RenderObject::render(const RenderState& rs) const
 {
 	if (isHidden()) return;
 
 	/// new (breaks anything?)
 	if (alpha.x == 0 || alphaMod == 0) return;
-
-	if (core->currentLayerPass != RENDER_ALL && renderPass != RENDER_ALL)
-	{
-		RenderObject *top = getTopParent();
-		if (top == NULL && this->overrideRenderPass != OVERRIDE_NONE)
-		{
-			// FIXME: overrideRenderPass is not applied to the
-			// node itself in the original check (below); is
-			// that intentional?  Doing the same thing here
-			// for the time being.  --achurch
-			if (core->currentLayerPass != this->renderPass
-			 && core->currentLayerPass != this->overrideRenderPass)
-				return;
-		}
-		else if (top != NULL && top->overrideRenderPass != OVERRIDE_NONE)
-		{
-			if (core->currentLayerPass != top->overrideRenderPass)
-				return;
-		}
-		else
-		{
-			if (!hasRenderPass(core->currentLayerPass))
-				return;
-		}
-	}
 
 	if (MotionBlurData *mb = this->motionBlur)
 	{
@@ -595,9 +599,9 @@ void RenderObject::renderCall(const RenderState& rs) const
 
 
 	bool doRender = true;
-	int pass = renderPass;
-	if (core->currentLayerPass != RENDER_ALL && renderPass != RENDER_ALL)
+	if (rs.pass != RENDER_ALL)
 	{
+		int pass = renderPass;
 		RenderObject *top = getTopParent();
 		if (top)
 		{
@@ -605,7 +609,7 @@ void RenderObject::renderCall(const RenderState& rs) const
 				pass = top->overrideRenderPass;
 		}
 
-		doRender = (core->currentLayerPass == pass);
+		doRender = (rs.pass == pass);
 	}
 
 	if (doRender)

@@ -118,8 +118,11 @@ public:
 	void remove(RenderObject* r);
 	void moveToFront(RenderObject *r);
 	void moveToBack(RenderObject *r);
-	void renderPass(const RenderState& rs, int pass);
+
 	void reloadDevice();
+
+	void prepareRender();
+	void render() const;
 
 	inline bool empty()
 	{
@@ -164,9 +167,8 @@ public:
 	bool update;
 
 protected:
-	inline void renderOneObject(const RenderState& rs, const RenderObject *robj);
-
 	RenderObjects renderObjects;
+	std::vector<const RenderObject*> toRender;
 	size_t objectCount;
 	size_t firstFreeIdx;
 	size_t iter;
@@ -337,7 +339,7 @@ public:
 	float cullRadius;
 	float cullRadiusSqr;
 	Vector cullCenter;
-	unsigned int renderObjectCount, processedRenderObjectCount, totalRenderObjectCount;
+	size_t renderObjectCount, processedRenderObjectCount, totalRenderObjectCount;
 	float invGlobalScale, invGlobalScaleSqr;
 
 	void globalScaleChanged();
@@ -349,7 +351,6 @@ public:
 	bool getKeyState(int k);
 	bool getMouseButtonState(int m);
 
-	int currentLayerPass;
 	int keys[KEY_MAXARRAY];
 	virtual void debugLog(const std::string &s);
 	virtual void errorLog(const std::string &s);
@@ -383,8 +384,6 @@ public:
 
 	bool updateMouse;
 	bool frameOutputMode;
-
-	int overrideStartLayer, overrideEndLayer;
 
 	ParticleEffect* createParticleEffect(const std::string &name, const Vector &position, int layer, float rotz=0);
 

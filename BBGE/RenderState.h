@@ -27,6 +27,7 @@ struct RenderState
 
     Vector color;
     float alpha;
+    int pass;
 
 protected:
     RenderState(GPUState& gpu);
