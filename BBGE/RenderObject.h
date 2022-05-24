@@ -205,8 +205,6 @@ public:
 	void setOverrideCullRadius(float ovr);
 	void setRenderPass(int pass) { renderPass = pass; }
 	int getRenderPass() const { return renderPass; }
-	void setOverrideRenderPass(int pass) { overrideRenderPass = pass; }
-	int getOverrideRenderPass() const { return overrideRenderPass; }
 	enum { RENDER_ALL=314, OVERRIDE_NONE=315 };
 
 	// Defined in RenderObject_inline.h
@@ -268,11 +266,6 @@ public:
 
 	float decayRate;
 	float maxLife;
-
-	// When a root RenderObject has overrideRenderPass set,
-	// the override applies the same pass to ALL RenderObjects in the hierarchy.
-	// For non-root objects, it has no effect.
-	int overrideRenderPass;
 
 	// In layers that have multi-pass rendering enabled, the object will only be rendered
 	// in this pass (single-pass layers always render, regardless of this setting).

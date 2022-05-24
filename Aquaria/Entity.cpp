@@ -251,6 +251,8 @@ Entity::Entity()
 	stopSoundsOnDeath = false;
 	minimapIcon = 0;
 
+	renderPass = RENDER_ALL;
+
 
 
 }
@@ -2479,6 +2481,15 @@ void Entity::doEntityAvoidance(float dt, int range, float mod, Entity *ignore)
 
 void Entity::render(const RenderState& rsold) const
 {
+	// This is special-cased for entities:
+	// An entity that has a renderpass set is supposed to apply this to all
+	// children regardless of their setting.
+	// (In earlier versions this functionality was implemented via an overrideRenderPass
+	// but that doesn't exist anymore)
+	// -> Wait for the correct pass until we even bother to try rendering this entity
+	if(renderPass != RENDER_ALL && rsold.pass != renderPass)
+		return;
+
 	InterpolatedVector bscale = scale;
 
 	scale *= flipScale;
@@ -2499,6 +2510,12 @@ void Entity::render(const RenderState& rsold) const
 	if (multColor.isInterpolating())
 		rs.color *= multColor;
 	rs.alpha *= alpha.x;
+
+	// if we have an override render pass set:
+	// from this point, render all children in this pass
+	// regardless of what they specify
+	if(renderPass != RENDER_ALL && rs.pass == renderPass)
+		rs.pass = RENDER_ALL;
 
 	Quad::render(rs);
 
