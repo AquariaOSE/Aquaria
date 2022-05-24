@@ -3629,14 +3629,12 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	setCanLeaveWater(true);
 
-	debugLog("setOverrideRenderPass");
+	debugLog("setRenderPass");
 
-	setOverrideRenderPass(1);
+	setRenderPass(1);
 
 	debugLog("Done those");
-	/*
-	setRenderPass(2);
-	*/
+
 	rippleDelay = 0;
 	ripples = false;
 	fallGravityTimer = 0;
@@ -3700,7 +3698,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	debugLog("Avatar 3");
 	hair = new Hair();
 	hair->setTexture("Naija/Cape");
-	hair->setOverrideRenderPass(1);
 	hair->setRenderPass(1);
 	dsq->game->addRenderObject(hair, LR_ENTITIES);
 

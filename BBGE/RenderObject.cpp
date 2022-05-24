@@ -59,7 +59,6 @@ RenderObject::RenderObject()
 	useOldDT = false;
 
 	ignoreUpdate = false;
-	overrideRenderPass = OVERRIDE_NONE;
 	renderPass = 0;
 	overrideCullRadiusSqr = 0;
 	repeatTexture = false;
@@ -436,23 +435,7 @@ bool RenderObject::isVisibleInPass(int pass) const
 	assert(!parent); // This check should be done for root objects only
 	assert(pass != RENDER_ALL); // why call this when we already know we don't do passes
 
-	if (this->overrideRenderPass != OVERRIDE_NONE)
-	{
-		// FIXME: overrideRenderPass is not applied to the
-		// node itself in the original check (below); is
-		// that intentional?  Doing the same thing here
-		// for the time being.  --achurch
-		if (pass != this->renderPass
-			&& pass != this->overrideRenderPass)
-			return false;
-	}
-	else
-	{
-		if (!hasRenderPass(pass))
-			return false;
-	}
-
-	return true;
+	return hasRenderPass(pass);
 }
 
 void RenderObject::render(const RenderState& rs) const
@@ -579,7 +562,6 @@ void RenderObject::renderCall(const RenderState& rs) const
 
 	if (texture)
 	{
-
 		if (texture->textures[0] != lastTextureApplied || repeatTexture != lastTextureRepeat)
 		{
 			texture->apply(repeatTexture);
@@ -597,22 +579,7 @@ void RenderObject::renderCall(const RenderState& rs) const
 		}
 	}
 
-
-	bool doRender = true;
-	if (rs.pass != RENDER_ALL)
-	{
-		int pass = renderPass;
-		RenderObject *top = getTopParent();
-		if (top)
-		{
-			if (top->overrideRenderPass != OVERRIDE_NONE)
-				pass = top->overrideRenderPass;
-		}
-
-		doRender = (rs.pass == pass);
-	}
-
-	if (doRender)
+	if (rs.pass == RENDER_ALL || rs.pass == renderPass)
 	{
 		// RenderState color applies to everything in the scene graph,
 		// so that needs to be multiplied in unconditionally

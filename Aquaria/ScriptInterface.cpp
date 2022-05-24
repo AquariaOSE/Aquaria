@@ -1622,15 +1622,6 @@ luaFunc(obj_setRenderPass)
 	luaReturnNil();
 }
 
-luaFunc(obj_setOverrideRenderPass)
-{
-	RenderObject *r = robj(L);
-	int pass = lua_tointeger(L, 2);
-	if (r)
-		r->setOverrideRenderPass(pass);
-	luaReturnNil();
-}
-
 luaFunc(obj_fh)
 {
 	RenderObject *r = robj(L);
@@ -2049,7 +2040,6 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  setUpdateCull	) \
 	RO_FUNC(getter, prefix,  getUpdateCull	) \
 	RO_FUNC(getter, prefix,  setRenderPass	) \
-	RO_FUNC(getter, prefix,  setOverrideRenderPass	) \
 	RO_FUNC(getter, prefix,  setPositionX	) \
 	RO_FUNC(getter, prefix,  setPositionY	) \
 	RO_FUNC(getter, prefix,  enableMotionBlur	) \
@@ -5006,17 +4996,6 @@ luaFunc(entity_setEntityLayer)
 	{
 		e->setEntityLayer(l);
 	}
-	luaReturnNil();
-}
-
-// Note that this overrides the generic obj_setRenderPass function for entities.
-// (It's registered as "entity_setRenderPass" to Lua)
-luaFunc(entity_setRenderPass_override)
-{
-	Entity *e = entity(L);
-	int pass = lua_tointeger(L, 2);
-	if (e)
-		e->setOverrideRenderPass(pass);
 	luaReturnNil();
 }
 
@@ -10973,7 +10952,6 @@ static const struct {
 
 	{"bone_getPosition", l_bone_getWorldPosition},
 	{ "entity_delete", l_entity_delete_override },
-	{ "entity_setRenderPass", l_entity_setRenderPass_override },
 	{ "beam_setPosition", l_beam_setPosition_override },
 
 	// -- deprecated/compatibility related functions below here --
