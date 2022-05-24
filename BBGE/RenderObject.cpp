@@ -560,27 +560,27 @@ void RenderObject::renderCall(const RenderState& rs) const
 			(*i)->render(rs);
 	}
 
-	if (texture)
-	{
-		if (texture->textures[0] != lastTextureApplied || repeatTexture != lastTextureRepeat)
-		{
-			texture->apply(repeatTexture);
-			lastTextureRepeat = repeatTexture;
-			lastTextureApplied = texture->textures[0];
-		}
-	}
-	else
-	{
-		if (lastTextureApplied != 0 || repeatTexture != lastTextureRepeat)
-		{
-			glBindTexture(GL_TEXTURE_2D, 0);
-			lastTextureApplied = 0;
-			lastTextureRepeat = repeatTexture;
-		}
-	}
-
 	if (rs.pass == RENDER_ALL || rs.pass == renderPass)
 	{
+		if (texture)
+		{
+			if (texture->textures[0] != lastTextureApplied || repeatTexture != lastTextureRepeat)
+			{
+				texture->apply(repeatTexture);
+				lastTextureRepeat = repeatTexture;
+				lastTextureApplied = texture->textures[0];
+			}
+		}
+		else
+		{
+			if (lastTextureApplied != 0 || repeatTexture != lastTextureRepeat)
+			{
+				glBindTexture(GL_TEXTURE_2D, 0);
+				lastTextureApplied = 0;
+				lastTextureRepeat = repeatTexture;
+			}
+		}
+
 		// RenderState color applies to everything in the scene graph,
 		// so that needs to be multiplied in unconditionally
 		{
