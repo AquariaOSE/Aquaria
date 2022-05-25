@@ -11008,8 +11008,6 @@ static const struct {
 	{"EXPRESSION_LAUGH",		4},
 	{"EXPRESSION_SURPRISE",		5},
 
-	luaConstantFromClass(OVERRIDE_NONE,	RenderObject),
-
 	//actions
 	luaConstant(ACTION_MENULEFT),
 	luaConstant(ACTION_MENURIGHT),

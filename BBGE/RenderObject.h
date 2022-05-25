@@ -205,7 +205,7 @@ public:
 	void setOverrideCullRadius(float ovr);
 	void setRenderPass(int pass) { renderPass = pass; }
 	int getRenderPass() const { return renderPass; }
-	enum { RENDER_ALL=314, OVERRIDE_NONE=315 };
+	enum { RENDER_ALL=999 };
 
 	// Defined in RenderObject_inline.h
 	inline Vector getFollowCameraPosition() const;
