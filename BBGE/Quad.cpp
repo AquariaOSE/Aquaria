@@ -397,6 +397,12 @@ void Quad::onRender(const RenderState& rs) const
 
 	if (!drawGrid)
 	{
+		const float red   = rs.color.x * this->color.x;
+		const float green = rs.color.y * this->color.y;
+		const float blue  = rs.color.z * this->color.z;
+		const float alpha = rs.alpha * this->alpha.x * this->alphaMod;
+		glColor4f(red, green, blue, alpha);
+
 		glBegin(GL_QUADS);
 		{
 			glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
