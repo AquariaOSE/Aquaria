@@ -583,13 +583,15 @@ void RenderObject::renderCall(const RenderState& rs) const
 			}
 		}
 
+		rs.gpu.setBlend(getBlendType());
+
 		// RenderState color applies to everything in the scene graph,
 		// so that needs to be multiplied in unconditionally
 		{
 			Vector col = this->color * rs.color;
-			glColor4f(color.x, color.y, color.z, rs.alpha*alpha.x*alphaMod);
+			glColor4f(col.x, col.y, col.z, rs.alpha*alpha.x*alphaMod);
 		}
-		rs.gpu.setBlend(getBlendType());
+
 		onRender(rs);
 
 		if (renderCollisionShape)
