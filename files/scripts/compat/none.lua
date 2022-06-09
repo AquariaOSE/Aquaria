@@ -1,0 +1,2 @@
+-- No compatibility layer at all.
+-- Don't do anything here.

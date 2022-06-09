@@ -358,7 +358,10 @@ ModType Mod::getTypeFromXML(XMLElement *xml) // should be <AquariaMod>...</Aquar
 
 bool Mod::loadCompatScript()
 {
-	if(!compatScript.length() || dsq->runScript("scripts/compat/" + compatScript + ".lua"))
+	std::string cs = compatScript.c_str();
+	if(cs.empty())
+		cs = "default";
+	if(dsq->runScript("scripts/compat/" + cs + ".lua"))
 		return true;
 
 	dsq->scriptInterface.reset();
