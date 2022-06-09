@@ -4446,12 +4446,8 @@ void Avatar::doShieldSong()
 
 void Avatar::render(const RenderState& rs) const
 {
-
 	if (dsq->continuity.form == FORM_SPIRIT && !skeletalSprite.getParent())
-	{
-		skeletalSprite.position = bodyPosition+bodyOffset;
 		skeletalSprite.render(rs);
-	}
 
 	Entity::render(rs);
 
@@ -4777,7 +4773,7 @@ void Avatar::updateFormVisualEffects(float dt)
 	break;
 	case FORM_SPIRIT:
 		skeletalSprite.update(dt);
-		skeletalSprite.position = bodyPosition;
+		skeletalSprite.position = bodyPosition + bodyOffset;
 	break;
 	case FORM_NORMAL:
 	case FORM_BEAST:
