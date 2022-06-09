@@ -3,6 +3,8 @@
 -- Most that had no function are dummied out, some existed but threw errors,
 -- and others were registered under different names.
 
+local util = dofile("scripts/compat/internal/util.lua")
+
 local NULLREF = 0
 
 -- these did something but are now gone
@@ -88,7 +90,7 @@ end
 local REPLACED_FUNCTIONS =
 {
     -- alternate names, old name on the left, new name on the right
-    -- (Might want tp use the name on the right, they existed in 1.1.1 already)
+    -- (Might want to use the name on the right, they existed in 1.1.1 already)
     entity_getPositionX = entity_x,
     entity_getPositionY = entity_y,
     entity_applyRandomForce = entity_addRandomVel,
@@ -113,52 +115,8 @@ local REPLACED_FUNCTIONS =
     entity_watchSwimToEntitySide = entity_watchSwimToEntitySide,
 }
 
-----------------------------------------------------
----- Functors to generate replacement function -----
-----------------------------------------------------
 
-local warnLog = (isDeveloperKeys() and errorLog) or debugLog
-
--- generate function that warns when called and returns nil
-local function warndummy(name)
-    warnLog("Dummy function: " .. name .. "() - no longer present in the current API, fix the script!")
-end
-local function mkwarn(name)
-    return function() warndummy(name) end
-end
-
--- generate function that warns when called and returns a non-nil fixed value
-local function mkwarnret(name, param)
-    return function() warndummy(name) return param end
-end
-
--- generate silent dummy that does nothing when called and returns nil
-local function dummy() end
-local function mkdummy(name, param)
-    return dummy
-end
-
-
--- register existing function under a different name
-local function mkalias(name, param)
-    return assert(param, name)
-end
-
-local function makestubs(tab, gen)
-    for name, param in pairs(tab) do
-        if rawget(_G, name) then
-            errorLog("WARNING: oldfunctions.lua: function " .. name .. " already exists")
-        else
-            local f = gen(name, param)
-            rawset(_G, name, f)
-        end
-    end
-end
-
-----------------
----- Do it! ----
-----------------
-makestubs(WARN_FUNCTIONS, mkwarn)
-makestubs(WARN_FUNCTIONS_VAL, mkwarnret)
-makestubs(DUMMY_FUNCTIONS, mkdummy)
-makestubs(REPLACED_FUNCTIONS, mkalias)
+util.makestubs(WARN_FUNCTIONS, util.mkwarn)
+util.makestubs(WARN_FUNCTIONS_VAL, util.mkwarnret)
+util.makestubs(DUMMY_FUNCTIONS, util.mkdummy)
+util.makestubs(REPLACED_FUNCTIONS, util.mkalias)

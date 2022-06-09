@@ -1,5 +1,7 @@
 -- Removes more functions than to no-deprecated
 -- Some original game scripts will not work with this!
+-- This is fine to use when developing a mod, but do NOT distribute a mod with this set!
+-- (Consider using "no-deprecated", "default", "none" or simply leave the compat tag away)
 
 dofile("scripts/compat/no-deprecated.lua")
 
