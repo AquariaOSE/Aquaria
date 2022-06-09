@@ -205,6 +205,9 @@ public:
 	void setOverrideCullRadius(float ovr);
 	void setRenderPass(int pass) { renderPass = pass; }
 	int getRenderPass() const { return renderPass; }
+
+	// TODO: remove this once the render loop is split into a per-pass object collection phase
+	// and an actual rendering phase
 	enum { RENDER_ALL=999 };
 
 	// Defined in RenderObject_inline.h
