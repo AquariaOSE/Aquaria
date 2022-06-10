@@ -560,7 +560,8 @@ void RenderObject::renderCall(const RenderState& rs) const
 			(*i)->render(rs);
 	}
 
-	if (rs.pass == RENDER_ALL || rs.pass == renderPass)
+
+	if (rs.pass == RENDER_ALL || renderPass == RENDER_ALL || rs.pass == renderPass)
 	{
 		if (texture)
 		{
