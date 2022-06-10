@@ -642,7 +642,7 @@ void Shot::hitEntity(Entity *e, Bone *b)
 
 		bool willDie = (!shotData || shotData->dieOnHit) && die;
 		if(script)
-			script->call("hitEntity", e, b);
+			script->call("hitEntity", this, e, b);
 
 		target = 0;
 
