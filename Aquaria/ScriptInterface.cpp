@@ -7645,6 +7645,25 @@ luaFunc(node_setElementsInLayerActive)
 	luaReturnNil();
 }
 
+luaFunc(refreshElementsOnLayerCallback)
+{
+	int layer = lua_tointeger(L, 1);
+	for (Element *e = dsq->getFirstElementOnLayer(layer); e; e = e->bgLayerNext)
+	{
+		bool on = e->isElementActive();
+		lua_pushvalue(L, 2); // the callback
+		lua_pushinteger(L, e->templateIdx);
+		lua_pushstring(L, e->texture->name.c_str());
+		lua_pushboolean(L, e->isElementActive());
+		lua_call(L, 3, 1);
+		bool newon = lua_toboolean(L, -1);
+		lua_pop(L, 1);
+		e->setElementActive(newon);
+	}
+	luaReturnNil();
+}
+
+
 luaFunc(node_getNumEntitiesIn)
 {
 	Path *p = path(L);
@@ -10702,6 +10721,7 @@ static const struct {
 	luaRegister(node_setCatchActions),
 
 	luaRegister(node_setElementsInLayerActive),
+	luaRegister(refreshElementsOnLayerCallback),
 
 
 	luaRegister(entity_setHealth),
