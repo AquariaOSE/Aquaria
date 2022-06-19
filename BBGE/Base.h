@@ -21,6 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef BBGE_BASE_H
 #define BBGE_BASE_H
 
+#include <stddef.h>
+
 #ifdef BBGE_BUILD_WINDOWS
     #define WIN32_NOMINMAX
     #if defined(_MSC_VER) && _MSC_VER <= 1600
