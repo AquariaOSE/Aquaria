@@ -128,8 +128,8 @@ public:
 		std::string masterServer;
 	} network;
 
-	void loadDefaults(bool doApply=true);
-	void load(bool doApply=true, const std::string &overrideFile="");
+	bool loadDefaults(bool doApply=true);
+	bool load(bool doApply=true, const std::string &overrideFile="");
 	void save();
 	void apply();
 };
