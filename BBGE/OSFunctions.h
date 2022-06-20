@@ -13,5 +13,6 @@ bool createDir(const std::string& d);
 void triggerBreakpoint();
 void openURL(const std::string &url);
 std::string getSystemLocale();
+std::string getWorkingDir();
 
 #endif

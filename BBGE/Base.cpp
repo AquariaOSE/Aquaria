@@ -23,6 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h>
 #include "OSFunctions.h"
 
+#if SDL_VERSION_ATLEAST(2,0,0)
+#include "SDL_filesystem.h"
+#endif
+
 #ifdef BBGE_BUILD_VFS
 #  include "ttvfs.h"
 #  ifndef VFS_IGNORE_CASE
@@ -253,10 +257,29 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 
 
 
+std::string getPathInfoStr()
+{
+	std::ostringstream os;
+	os << "Working dir (expecting game data there):\n" << getWorkingDir() << "\n";
+	if(core)
+	{
+		os << "Preferences folder:\n" << core->getPreferencesFolder() << "\n";
+		os << "User data folder:\n" << core->getUserDataFolder() << "\n";
+		os << "Debug log path:\n" << core->getDebugLogPath() << "\n";
+	}
+#if SDL_VERSION_ATLEAST(2,0,1)
+	char *base = SDL_GetBasePath();
+	os << "SDL_GetBasePath():\n" << base << "\n";
+	SDL_free(base);
+#endif
+	return os.str();
+}
+
 void exit_error(const std::string &message)
 {
-	fprintf(stderr, "FATAL: %s\n", message.c_str());
-	errorLog(message);
+	std::string out = message + "\n\n++ Path info for debugging aid: ++\n" + getPathInfoStr();
+	fprintf(stderr, "FATAL: %s\n", out.c_str());
+	errorLog(out);
 	exit(1);
 }
 

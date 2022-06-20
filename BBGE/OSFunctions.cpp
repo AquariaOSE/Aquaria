@@ -469,3 +469,14 @@ std::string getSystemLocale()
 
 	return localeStr;
 }
+
+std::string getWorkingDir()
+{
+	char buf[1024*2] = {0};
+#ifdef _WIN32
+	GetCurrentDirectoryA(sizeof(buf), buf);
+#else
+	getcwd(buf, sizeof(buf))
+#endif
+	return buf;
+}
