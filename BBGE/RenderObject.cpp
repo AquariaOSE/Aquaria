@@ -122,14 +122,6 @@ RenderObject* RenderObject::getTopParent() const
 	return lastp;
 }
 
-bool RenderObject::isPieceFlippedHorizontal() const
-{
-	RenderObject *p = getTopParent();
-	if (p)
-		return p->isfh();
-	return isfh();
-}
-
 
 Vector RenderObject::getInvRotPosition(const Vector &vec) const
 {
@@ -644,7 +636,9 @@ void RenderObject::lookAt(const Vector &pos, float t, float minAngle, float maxA
 		p = p->parent;
 	}
 
-	if (isPieceFlippedHorizontal())
+	const bool ishfh = this->isfhr();
+
+	if (ishfh)
 	{
 		angle = 180-angle;
 
@@ -659,7 +653,7 @@ void RenderObject::lookAt(const Vector &pos, float t, float minAngle, float maxA
 		angle = maxAngle;
 
 	int amt = 10;
-	if (isPieceFlippedHorizontal())
+	if (ishfh)
 	{
 		if (pos.x < myPos.x-amt)
 		{
