@@ -48,6 +48,9 @@ OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional fe
 OPTION(AQUARIA_USE_SDL2 "Use SDL2" TRUE)
 OPTION(AQUARIA_USE_GLM "Use GLM for matrix math" TRUE)
 
+OPTION(AQUARIA_DEBUG_SHOW_PATHS "Show important paths upon game start to aid in finding path problems" FALSE)
+mark_as_advanced(AQUARIA_DEBUG_SHOW_PATHS)
+
 ################ Look for external libraries
 
 ### Pick one: SDL 1.2 or SDL2
@@ -94,6 +97,10 @@ SET(AQUARIA_EXTRA_DATA_DIR "" CACHE STRING
 if(NOT(AQUARIA_EXTRA_DATA_DIR STREQUAL ""))
     ADD_DEFINITIONS("-DAQUARIA_EXTRA_DATA_DIR=\"${AQUARIA_EXTRA_DATA_DIR}\"")
 endif(NOT(AQUARIA_EXTRA_DATA_DIR STREQUAL ""))
+
+if(AQUARIA_DEBUG_SHOW_PATHS)
+    ADD_DEFINITIONS(-DAQUARIA_DEBUG_SHOW_PATHS)
+endif(AQUARIA_DEBUG_SHOW_PATHS)
 
 # Without #define VFS_ENABLE_C_API this is just stubbed out
 include_directories(ttvfs_cfileapi)
@@ -155,8 +162,8 @@ IF(CMAKE_COMPILER_IS_GNUCC)
     # It doesn't seem to work well, and it adds bulk to the binary.
     CHECK_C_COMPILER_FLAG("-fno-stack-protector" AQUARIA_GCC_HAS_STACKPROT)
     IF(AQUARIA_GCC_HAS_STACKPROT)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -fno-stack-protector")
-        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -fno-stack-protector")
+        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector")
+        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fno-stack-protector")
     ENDIF(AQUARIA_GCC_HAS_STACKPROT)
 
     # !!! FIXME: probably not safe long-term.

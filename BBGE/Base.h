@@ -154,7 +154,7 @@ bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius=1
 
 void drawCircle(float radius, int steps=1);
 
-
+std::string getPathInfoStr();
 void exit_error(const std::string &message);
 
 unsigned hash(const std::string &string);

@@ -805,6 +805,11 @@ void DSQ::init()
 	// steam gets inited in here
 	Core::init();
 
+#ifdef AQUARIA_DEBUG_SHOW_PATHS
+	errorLog("AQUARIA_DEBUG_SHOW_PATHS:\n" + getPathInfoStr());
+#endif
+
+
 	loadStringBank();
 
 	vars = &v;
@@ -848,7 +853,15 @@ void DSQ::init()
 
 
 
-	user.load(false);
+	if(!user.load(false))
+	{
+		errorLog("Failed to load user settings, loading defaults");
+
+		if(!user.loadDefaults(false))
+		{
+			errorLog("Failed to load default user settings (default_usersettings.xml)! Controls may be broken.\n");
+		}
+	}
 
 	particleManager->setSize(user.video.numParticles);
 

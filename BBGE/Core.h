@@ -216,6 +216,7 @@ public:
 
 	std::string getPreferencesFolder();
 	std::string getUserDataFolder();
+	std::string getDebugLogPath();
 
 	void resetCamera();
 

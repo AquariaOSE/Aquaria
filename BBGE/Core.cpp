@@ -412,7 +412,7 @@ void Core::initPlatform(const std::string &filesystem)
 	if (!CFURLGetFileSystemRepresentation(resourcesURL, TRUE, (UInt8 *)path, PATH_MAX))
 	{
 		// error!
-		debugLog("CFURLGetFileSystemRepresentation");
+		errorLog("Core::initPlatform: CFURLGetFileSystemRepresentation error");
 	}
 	CFRelease(resourcesURL);
 	debugLog(path);
@@ -423,13 +423,13 @@ void Core::initPlatform(const std::string &filesystem)
 		if (chdir(filesystem.c_str()) == 0)
 			return;
 		else
-			debugLog("Failed to chdir to filesystem path " + filesystem);
+			errorLog("Core::initPlatform: Failed to chdir to filesystem path " + filesystem);
 	}
 #ifdef BBGE_DATA_PREFIX
 	if (chdir(BBGE_DATA_PREFIX) == 0 && chdir(appName.c_str()) == 0)
 		return;
 	else
-		debugLog("Failed to chdir to filesystem path " BBGE_DATA_PREFIX + appName);
+		errorLog("Core::initPlatform: Failed to chdir to filesystem path " BBGE_DATA_PREFIX + appName);
 #endif
 	char path[PATH_MAX];
 	// always a symlink to this process's binary, on modern Linux systems.
@@ -437,7 +437,7 @@ void Core::initPlatform(const std::string &filesystem)
 	if ( (rc == -1) || (rc >= (ssize_t) sizeof (path)) )
 	{
 		// error!
-		debugLog("readlink");
+		errorLog("Core::initPlatform: readlink error");
 	}
 	else
 	{
@@ -448,7 +448,7 @@ void Core::initPlatform(const std::string &filesystem)
 			*ptr = '\0';
 			debugLog(path);
 			if (chdir(path) != 0)
-				debugLog("Failed to chdir to executable path" + std::string(path));
+				errorLog("Core::initPlatform: Failed to chdir to executable path" + std::string(path));
 		}
 	}
 #endif
@@ -457,7 +457,7 @@ void Core::initPlatform(const std::string &filesystem)
 	{
 		if(_chdir(filesystem.c_str()) != 0)
 		{
-			debugLog("chdir failed: " + filesystem);
+			errorLog("chdir failed: " + filesystem);
 		}
 	}
 	// FIXME: filesystem not handled
@@ -477,6 +477,11 @@ std::string Core::getPreferencesFolder()
 std::string Core::getUserDataFolder()
 {
 	return userDataFolder;
+}
+
+std::string Core::getDebugLogPath()
+{
+	return debugLogPath;
 }
 
 Core::~Core()
