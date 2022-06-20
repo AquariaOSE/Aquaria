@@ -476,7 +476,7 @@ std::string getWorkingDir()
 #ifdef _WIN32
 	GetCurrentDirectoryA(sizeof(buf), buf);
 #else
-	getcwd(buf, sizeof(buf))
+	getcwd(buf, sizeof(buf));
 #endif
 	return buf;
 }
