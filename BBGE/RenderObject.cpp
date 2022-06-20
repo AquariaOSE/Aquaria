@@ -122,9 +122,29 @@ RenderObject* RenderObject::getTopParent() const
 	return lastp;
 }
 
+#ifdef BBGE_USE_GLM
+static glm::mat4 getInvRotation(const RenderObject *p)
+{
+	glm::mat4 m = glm::rotate(-(p->rotation.z + p->rotationOffset.z), glm::vec3(0.0f, 0.0f, 1.0f));
+	if(p->isfh())
+		m *= glm::rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+	return m;
+}
+#endif
 
 Vector RenderObject::getInvRotPosition(const Vector &vec) const
 {
+#ifdef BBGE_USE_GLM
+	glm::mat4 m = getInvRotation(this);
+	for(RenderObject *p = parent; p; p = p->parent)
+		m *= getInvRotation(p);
+	m *= glm::translate(vec.x, vec.y, 0.0f);
+	float x = m[3][0];
+	float y = m[3][1];
+	float z = m[3][2];
+
+#else
+
 	glPushMatrix();
 	glLoadIdentity();
 
@@ -160,6 +180,8 @@ Vector RenderObject::getInvRotPosition(const Vector &vec) const
 	float z = m[14];
 
 	glPopMatrix();
+#endif
+
 	return Vector(x,y,z);
 }
 

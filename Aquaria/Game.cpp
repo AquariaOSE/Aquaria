@@ -47,6 +47,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Beam.h"
 #include "Hair.h"
 
+#ifdef BBGE_USE_GLM
+#include "glm/glm.hpp"
+#include "glm/gtx/transform.hpp"
+#endif
+
 
 static const float MENUPAGETRANSTIME		= 0.2f;
 
@@ -497,6 +502,24 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 		}
 
 
+#ifdef BBGE_USE_GLM
+		const float w2f = float(w2);
+		const float h2f = float(h2);
+		for (size_t i = 0; i < obs.size(); i++)
+		{
+			glm::mat4 transformMatrix = glm::rotate(q->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
+			if(q->isfh())
+				transformMatrix *= glm::rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
+
+			transformMatrix *= glm::translate(float(obs[i].x)-w2f, float(obs[i].y)-h2f, 0.0f);
+			float x = transformMatrix[3][0];
+			float y = transformMatrix[3][1];
+
+			TileVector tvec(tpos.x+w2+x, tpos.y+h2+y);
+			if (!dsq->game->isObstructed(tvec))
+				dsq->game->addGrid(tvec, obsType);
+		}
+#else
 		glPushMatrix();
 
 		for (size_t i = 0; i < obs.size(); i++)
@@ -524,6 +547,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 
 		}
 		glPopMatrix();
+#endif
 	}
 }
 
