@@ -791,6 +791,7 @@ void RenderObject::onUpdate(float dt)
 	velocity += gravity * dt;
 	position.update(dt);
 	velocity.update(dt);
+	gravity.update(dt);
 	scale.update(dt);
 	rotation.update(dt);
 	color.update(dt);
