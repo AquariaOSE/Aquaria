@@ -17,8 +17,8 @@ static InGameMenu *themenu = 0;
 class FoodHolder;
 class PetSlot;
 
-std::vector<FoodHolder*>	foodHolders;
-std::vector<PetSlot*>		petSlots;
+static std::vector<FoodHolder*>	foodHolders;
+static std::vector<PetSlot*>		petSlots;
 
 // ---------------- Constants ----------------------------
 
@@ -31,8 +31,8 @@ const size_t numTreasures = 16*2;
 const Vector worldLeftCenter(217,250), worldRightCenter(575, 250);
 const Vector opt_save_original = Vector(350, 350), opt_cancel_original = Vector(450, 350);
 
-const int KEYCONFIG_FIRST_COL_DISTANCE = 170;
-const int KEYCONFIG_COL_DISTANCE = 105;
+static const int KEYCONFIG_FIRST_COL_DISTANCE = 170;
+static const int KEYCONFIG_COL_DISTANCE = 105;
 
 
 // --------- Private class defs, not used outside ---------------
@@ -959,7 +959,7 @@ void InGameMenu::reset()
 	optsfxdly = 0;
 	playingSongInMenu = -1;
 	menuSelectDelay = 0;
-	
+
 	dropIngrNames.clear();
 
 	create();
