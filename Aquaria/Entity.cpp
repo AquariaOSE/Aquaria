@@ -102,25 +102,19 @@ bool Entity::setBoneLock(const BoneLock &boneLock)
 		if (!boneLock.entity)
 			return false;
 
-		if (boneLock.entity && !boneLock.bone)
+		this->boneLock = boneLock;
+
+		if (!boneLock.bone)
 		{
-			this->boneLock = boneLock;
 			this->boneLock.circleOffset = this->position - (boneLock.entity->getWorldPosition());
 			this->boneLock.circleOffset.setLength2D(boneLock.entity->collideRadius);
 			this->boneLock.origRot = boneLock.entity->rotation.z;
-
-
-
 		}
 		else
 		{
-			this->boneLock = boneLock;
-
 			this->boneLock.localOffset = this->position - (boneLock.bone->getWorldPosition());
 			this->boneLock.localOffset = boneLock.bone->getInvRotPosition(this->boneLock.localOffset);
 			this->boneLock.origRot = boneLock.bone->getWorldRotation();
-
-
 		}
 	}
 
