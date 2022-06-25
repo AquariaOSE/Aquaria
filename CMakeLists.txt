@@ -12,9 +12,14 @@ IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
 
+# System fixups
 IF(CMAKE_SYSTEM_NAME STREQUAL "Haiku")
     SET(HAIKU TRUE)
 ENDIF()
+
+IF(APPLE)
+    SET(MACOSX TRUE)
+ENDIF(APPLE)
 
 # Recommended compiler flags that cmake doesn't set automatically
 if(MSVC)
