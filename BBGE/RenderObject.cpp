@@ -196,7 +196,7 @@ static glm::mat4 matrixChain(const RenderObject *ro)
 					glm::vec3(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0)
 				),
 				ro->rotation.z + ro->rotationOffset.z,
-				glm::vec3(0, 0, 1)
+				glm::vec3(0.0f, 0.0f, 1.0f)
 			),
 			glm::vec3(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0.0f)
 		),
