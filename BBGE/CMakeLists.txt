@@ -21,6 +21,8 @@ set(BBGE_SRCS
     Core.h
     DarkLayer.cpp
     DarkLayer.h
+    DataStructures.cpp
+    DataStructures.h
     DebugFont.cpp
     DebugFont.h
     Emitter.cpp

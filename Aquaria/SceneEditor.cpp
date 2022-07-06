@@ -1483,18 +1483,6 @@ void SceneEditor::down()
 	}
 }
 
-class Row
-{
-public:
-	Row()
-	{
-		x1=x2=y=0;
-		rows=1;
-	}
-	int x1, x2, y;
-	int rows;
-};
-
 void SceneEditor::regenLevel()
 {
 	generateLevel();
@@ -1551,15 +1539,27 @@ void SceneEditor::skinLevel(int minX, int minY, int maxX, int maxY)
 				)
 				)
 			{
-
-
 				float dist=0;
 				wallNormal = dsq->game->getWallNormal(t.worldVector(), 5, &dist, OT_MASK_BLACK);
 				offset = wallNormal*(-TILE_SIZE*0.6f);
 				MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), wallNormal, rot);
 				rot = 180-(360-rot);
 				addTile = true;
+			}
 
+			if(addTile)
+			{
+				const unsigned char u = tileProps.at(x, y-1, TPR_DEFAULT);
+				const unsigned char d = tileProps.at(x, y+1, TPR_DEFAULT);
+				const unsigned char l = tileProps.at(x-1, y, TPR_DEFAULT);
+				const unsigned char r = tileProps.at(x+1, y, TPR_DEFAULT);
+				if(u == TPR_DONT_SKIN
+					|| d == TPR_DONT_SKIN
+					|| l == TPR_DONT_SKIN
+					|| r == TPR_DONT_SKIN)
+				{
+					addTile = false;
+				}
 			}
 
 			if (addTile)
@@ -1637,160 +1637,73 @@ void SceneEditor::skinLevel(int minX, int minY, int maxX, int maxY)
 	}
 }
 
+SceneEditor::TileProperty SceneEditor::GetColorProperty(unsigned char r, unsigned char g, unsigned char b)
+{
+	if(r >= 200 && g > 127 && g < 200 && b >= 200)
+		return TPR_DONT_SKIN;
+
+	return TPR_DEFAULT;
+}
+
 void SceneEditor::generateLevel()
 {
-
+	tileProps.clear();
 	std::string file=getMapTemplateFilename();
 
 
 
 	size_t maxX=0, maxY=0;
-	const int YELLOW=0, RED=1, GREEN=2, BLUE=3, PURPLE=4, ORANGE=5, BROWN=6, MAX=7;
-	int firstColorX[MAX], firstColorY[MAX];
-	int lastColorX[MAX], lastColorY[MAX];
-	Vector colorVects[MAX];
-	colorVects[YELLOW] = Vector(1,1,0);
-	colorVects[RED]	= Vector(1,0,0);
-	colorVects[GREEN] = Vector(0,1,0);
-	colorVects[BLUE] = Vector(0,0,1);
-	colorVects[PURPLE] = Vector(1,0,1);
-	colorVects[ORANGE] = Vector(1,0.5,0);
-	colorVects[BROWN] = Vector(0.5,0.25,0);
-	for (int i = 0; i < MAX; i++)
-	{
-		firstColorX[i] = firstColorY[i] = -1;
-		lastColorX[i] = lastColorY[i] = -1;
-	}
+
 	const ImageData img = imageLoadGeneric(file.c_str(), true);
 	if (img.pixels)
 	{
+		dsq->game->clearObsRows();
+
 		assert(img.channels == 4);
-		std::vector<Row> rows;
-		std::vector<Vector> positions;
-		const int maxRowCount = 9999;
-		int rowCount = 0;
-		int scale = TILE_SIZE;
+		tileProps.init(img.w, img.h);
 		int c = 0;
 
 		for (size_t y = 0; y < img.h; y++)
 		{
-			Vector lastElement;
-			lastElement = Vector(0,0,0);
-			bool hasLastElement = false;
-			Vector *firstRowElement = 0;
-			Row row;
-			rowCount = 0;
-			positions.clear();
-			for (size_t x = 0; x < img.w; x++)
+			bool isobs = false; // start assuming that there is no obstruction
+			size_t xobs = 0;
+			for(size_t x = 0; x < img.w; ++x)
 			{
-				Vector *e = 0;
-				if
-				(
-					(
-						img.pixels[c] < 48 &&
-						img.pixels[c+1] < 48 &&
-						img.pixels[c+2] < 48
-					)
-					||
-					(
-						img.pixels[c] == 128
-						&&
-						img.pixels[c+1] == 255
-						&&
-						img.pixels[c+2] == 128
-					)
-				)
-				{
-					if (x > maxX)
-						maxX = x;
-					if (y > maxY)
-						maxY = y;
-					positions.push_back(Vector(x*scale+(scale/2.0f),y*scale+(scale/2.0f)));
-					e = &positions[positions.size()-1];
-				}
-				if (img.pixels[c] < 32 &&
-					img.pixels[c+1] > 200 &&
-					img.pixels[c+2] > 200)
-				{
-					dsq->game->saveWaterLevel = dsq->game->waterLevel.x = y*TILE_SIZE;
-				}
-				for (int i = 0; i < MAX; i++)
-				{
+				tileProps(x, y) = GetColorProperty(img.pixels[c], img.pixels[c+1], img.pixels[c+2]);
 
-					bool p1, p2, p3;
-					p1=p2=p3=false;
-					int diff;
-					diff = fabsf((colorVects[i].x*255) - img.pixels[c]);
-					p1 = (diff < 5);
-					diff = fabsf((colorVects[i].y*255) - img.pixels[c+1]);
-					p2 = (diff < 5);
-					diff = fabsf((colorVects[i].z*255) - img.pixels[c+2]);
-					p3 = (diff < 5);
+				// anything that is close to black is obstruction
+				bool obs = img.pixels[c] < 48 &&
+							img.pixels[c+1] < 48 &&
+							img.pixels[c+2] < 48;
 
-					if (p1 && p2 && p3)
+				if(obs != isobs)
+				{
+					isobs = obs;
+					if(obs)
 					{
-						lastColorX[i] = x;
-						lastColorY[i] = y;
-						if (firstColorX[i] == -1)
-						{
-							firstColorX[i] = x;
-							firstColorY[i] = y;
-						}
+						xobs = x; // just changed from not-obs to obs, record start
+						if (x > maxX)
+							maxX = x;
+						if (y > maxY)
+							maxY = y;
+					}
+					else if(x != xobs) // safeguard against left side starting with obs
+					{
+						assert(x > xobs);
+						dsq->game->addObsRow(xobs, y, x - xobs); // just changed from obs to not-obs, emit row
 					}
 				}
 
-
-
 				c += img.channels;
-				if ((e==0 && firstRowElement) || (firstRowElement && rowCount >= maxRowCount && hasLastElement)
-					|| (firstRowElement && x == img.w-1))
-				{
-
-
-
-					if (hasLastElement)
-						row.x2 = lastElement.x;
-
-
-					hasLastElement = false;
-					firstRowElement = 0;
-
-					bool add = true;
-
-					if (add)
-						rows.push_back(row);
-				}
-				if (!firstRowElement && e)
-				{
-					row.x1 = e->x;
-					row.y = e->y;
-					firstRowElement = e;
-					rowCount = 1;
-				}
-				if (e)
-				{
-					lastElement = *e;
-					hasLastElement = true;
-				}
-				else
-					hasLastElement = false;
-				rowCount ++ ;
 			}
-		}
-
-		dsq->game->clearObsRows();
-		size_t i = 0;
-		for (i = 0; i < rows.size(); i++)
-		{
-			int w = rows[i].x2 - rows[i].x1;
-
-			int useY = rows[i].y;
-			if (rows[i].rows > 1)
+			if(isobs) // right side ends with obs, add final row
 			{
-				useY += (rows[i].rows-1)*TILE_SIZE/2;
+				dsq->game->addObsRow(xobs, y, img.w - xobs);
+				if (img.w > maxX)
+					maxX = img.w;
+				if (y > maxY)
+					maxY = y;
 			}
-
-			dsq->game->addObsRow(rows[i].x1/TILE_SIZE, rows[i].y/TILE_SIZE, w/TILE_SIZE);
 		}
 
 		dsq->game->reconstructGrid(true);
@@ -2663,12 +2576,14 @@ bool SceneEditor::isOn()
 
 void SceneEditor::updateText()
 {
+	const Vector cursor = dsq->getGameCursorPosition();
+	TileVector tv(cursor);
+
 	std::ostringstream os;
 	os << dsq->game->sceneName << " bgL[" << bgLayer << "] (" <<
 		(int)dsq->cameraPos.x << "," << (int)dsq->cameraPos.y << ") ("
-
-
-		<< (int)dsq->getGameCursorPosition().x << "," << (int)dsq->getGameCursorPosition().y << ")" << " ";
+		<< (int)cursor.x << "," << (int)cursor.y << ") T("
+		<< tv.x << "," << tv.y << ") ";
 	switch(editType)
 	{
 	case ET_ELEMENTS:

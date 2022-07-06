@@ -120,10 +120,6 @@ Entity *Game::getNearestEntity(const Vector &pos, float radius, Entity *ignore, 
 	return closest;
 }
 
-ObsRow::ObsRow(int tx, int ty, int len) : tx(tx), ty(ty), len(len)
-{
-}
-
 int Game::getNumberOfEntitiesNamed(const std::string &name)
 {
 	int c = 0;
@@ -388,7 +384,7 @@ Element* Game::createElement(size_t idx, Vector position, size_t bgLayer, Render
 	return element;
 }
 
-void Game::addObsRow(int tx, int ty, int len)
+void Game::addObsRow(unsigned tx, unsigned ty, unsigned len)
 {
 	ObsRow obsRow(tx, ty, len);
 	obsRows.push_back(obsRow);
@@ -610,7 +606,7 @@ void Game::reconstructGrid(bool force)
 	for (size_t i = 0; i < obsRows.size(); i++)
 	{
 		o = &obsRows[i];
-		for (int tx = 0; tx < o->len; tx++)
+		for (unsigned tx = 0; tx < o->len; tx++)
 		{
 			setGrid(TileVector(o->tx + tx, o->ty), OT_BLACK);
 		}
