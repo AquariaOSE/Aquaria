@@ -6,6 +6,7 @@
 #include "DebugFont.h"
 #include "ActionMapper.h"
 #include "Quad.h"
+#include "DataStructures.h"
 
 class Element;
 class Entity;
@@ -177,6 +178,14 @@ protected:
 	void enterName();
 	void changeShape();
 	int skinMinX, skinMinY, skinMaxX, skinMaxY;
+
+	enum TileProperty
+	{
+		TPR_DEFAULT,
+		TPR_DONT_SKIN
+	};
+	Array2d<unsigned char> tileProps; // only filled on generateLevel()
+	static TileProperty GetColorProperty(unsigned char r, unsigned char g, unsigned char b);
 
 	void setGridPattern(int gi);
 	void setGridPattern0();

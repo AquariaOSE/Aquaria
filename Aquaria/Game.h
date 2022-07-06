@@ -101,8 +101,9 @@ public:
 class ObsRow
 {
 public:
-	ObsRow(int tx, int ty, int len);
-	int tx, ty, len;
+	inline ObsRow(unsigned tx, unsigned ty, unsigned len)
+		: tx(tx), ty(ty), len(len) {}
+	const unsigned tx, ty, len;
 };
 
 enum FlagCheckType
@@ -254,7 +255,7 @@ public:
 	int saveWaterLevel;
 	void warpCameraTo(RenderObject *r);
 
-	void addObsRow(int tx, int ty, int len);
+	void addObsRow(unsigned tx, unsigned ty, unsigned len);
 	void clearObsRows();
 	Entity *getEntityAtCursor();
 	Vector cameraMin, cameraMax;
