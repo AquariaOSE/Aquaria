@@ -1084,7 +1084,10 @@ void AnimationEditor::clearRot()
 	updateEditingBone();
 	if (editingBone)
 	{
-		applyRotation();
+		if(core->getCtrlState())
+			editingBone->texture->reload();
+		else
+			applyRotation();
 	}
 }
 
