@@ -24,7 +24,6 @@ if not AQUARIA_VERSION then dofile("scripts/entities/entityinclude.lua") end
 
 v.n = 0
 v.mbDown = false
-v.labelTimer = 0
 
 function init(me)
 	--stopAllVoice()
@@ -65,18 +64,9 @@ function init(me)
 	fade(1, 0)
 	fade(0, 1)
 	fade2(0, 2, 1, 1, 1)
-	
-	setVersionLabelText()
-	toggleVersionLabel(1)
-	
-	v.labelTimer = 0
 end
 
 function update(me, dt)
-	v.labelTimer = v.labelTimer + dt
-	if v.labelTimer > 0.5 then
-		setVersionLabelText()
-	end
 	cam_setPosition(node_x(me), node_y(me))
 	if isInputEnabled() then
 		debugLog("calling disable input")

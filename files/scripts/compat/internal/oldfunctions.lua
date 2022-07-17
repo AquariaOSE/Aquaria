@@ -34,7 +34,7 @@ local WARN_FUNCTIONS_VAL =
     isInDialog = false,
 }
 
--- These had no function and we can just ignore the call
+-- These had no effective function and we can just ignore the call
 local DUMMY_FUNCTIONS =
 {
     entity_setCollideWithAvatar = true,
@@ -44,7 +44,6 @@ local DUMMY_FUNCTIONS =
     entity_addGroupVel = true,
     entity_avgVel = true,
     entity_fireAtTarget = true,
-    entity_flipHToAvatar = true,
     entity_getBehaviorType = true,
     entity_isSaying = true,
     entity_moveTowardsGroupCenter = true,
@@ -68,6 +67,8 @@ local DUMMY_FUNCTIONS =
     entity_stopTimer = true,
     setEntityScript = true,
     streamSfx = true,
+    toggleVersionLabel = true,
+    setVersionLabelText = true,
 }
 
 -- Deprecated stuff from v1.1's scripts/entities/entityinclude.lua
@@ -83,6 +84,12 @@ local function entity_watchSwimToEntitySide(ent1, ent2)
     entity_clearVel(ent1)
     entity_flipToEntity(ent1, ent2)
     entity_flipToEntity(ent2, ent1)
+end
+
+-- Removed unused functions but re-implemented in Lua
+
+local function entity_flipHToAvatar(me)
+    return entity_flipToEntity(me, getNaija())
 end
 
 
@@ -103,16 +110,20 @@ local REPLACED_FUNCTIONS =
     inp = toggleInput,
     isPlayingVoice = isStreamingVoice,
     playVoice = voice,
-    
+
     -- These are unfortunately broken and can't be fixed.
     -- They are interface function names and the first loaded script would grab them,
     -- thinking an interface function with that name was provided by whichever script was just loaded.
+    -- (This happens to be Li if he's available, or any other entity if he's not spawned)
     -- So we ignore these and hope nobody misses them.
     --msg = screenMessage,
     --castSong = singSong,
-    
+
     -- entityinclude functions
     entity_watchSwimToEntitySide = entity_watchSwimToEntitySide,
+
+    -- removed from C++ but implemented in Lua
+    entity_flipHToAvatar = entity_flipHToAvatar,
 }
 
 
