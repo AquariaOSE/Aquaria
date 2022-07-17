@@ -7888,21 +7888,6 @@ luaFunc(findWall)
 	luaReturnNum(wall);
 }
 
-luaFunc(toggleVersionLabel)
-{
-	bool on = getBool(L, 1);
-
-	dsq->toggleVersionLabel(on);
-
-	luaReturnBool(on);
-}
-
-luaFunc(setVersionLabelText)
-{
-	dsq->setVersionLabelText();
-	luaReturnNil();
-}
-
 luaFunc(setCutscene)
 {
 	dsq->setCutscene(getBool(L, 1), getBool(L, 2));
@@ -10699,8 +10684,6 @@ static const struct {
 	luaRegister(node_getShape),
 
 	luaRegister(toggleSteam),
-	luaRegister(toggleVersionLabel),
-	luaRegister(setVersionLabelText),
 
 	luaRegister(appendUserDataPath),
 

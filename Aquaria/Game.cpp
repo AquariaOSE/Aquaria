@@ -2576,16 +2576,19 @@ void Game::applyState()
 
 	dsq->returnToScene = "";
 
+	bool versionlabel = false;
+
 	// new place where mods get stopped!
 	// this lets recaching work
 	// (presumably because there has been time for the garbage to be cleared)
-	if (sceneToLoad == "title" && dsq->mod.isShuttingDown())
+	if (sceneToLoad == "title")
 	{
-		if (dsq->mod.isActive())
+		if (dsq->mod.isActive() && dsq->mod.isShuttingDown())
 		{
 			dsq->mod.stop();
 			dsq->continuity.reset();
 		}
+		versionlabel = true;
 	}
 
 	dsq->collectScriptGarbage();
@@ -2602,7 +2605,7 @@ void Game::applyState()
 
 	AquariaGuiElement::canDirMoveGlobal = true;
 
-	dsq->toggleVersionLabel(false);
+	dsq->toggleVersionLabel(versionlabel);
 
 	activation = true;
 

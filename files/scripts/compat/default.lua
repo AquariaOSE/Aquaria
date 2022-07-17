@@ -3,3 +3,4 @@
 -- (In this case and for 1.1.x/Steam compatibility, use "legacy" or "legacy-strict")
 
 dofile("scripts/compat/internal/osestubs.lua")
+dofile("scripts/compat/internal/oldfunctions.lua")
