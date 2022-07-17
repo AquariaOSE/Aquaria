@@ -47,6 +47,7 @@ return {
     warnLog = warnLog,
     warndummy = warndummy,
     mkwarn = mkwarn,
+    mkwarnret = mkwarnret,
     mkdummy = mkdummy,
     mkalias = mkalias,
     makestubs = makestubs,
