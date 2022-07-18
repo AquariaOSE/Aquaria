@@ -295,7 +295,7 @@ protected:
 	virtual void deathNotify(RenderObject *r);
 	virtual void onEndOfLife() {}
 
-	void updateLife(float dt);
+	bool updateLife(float dt);
 
 	// Is this object or any of its children rendered in pass "pass"?
 	bool hasRenderPass(const int pass) const;

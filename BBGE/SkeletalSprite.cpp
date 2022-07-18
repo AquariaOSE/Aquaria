@@ -87,6 +87,10 @@ Bone::Bone() : CollideQuad()
 	stripVert = false;
 }
 
+Bone::~Bone()
+{
+}
+
 ParticleEffect *Bone::getEmitter(unsigned slot) const
 {
 	return slot < emitters.size() ? emitters[slot] : NULL;
@@ -805,6 +809,12 @@ SkeletalSprite::SkeletalSprite() : RenderObject()
 
 SkeletalSprite::~SkeletalSprite()
 {
+}
+
+void SkeletalSprite::destroy()
+{
+	bones.clear(); // they are added as children too, so the next call will do the actual deletion
+	RenderObject::destroy();
 }
 
 void SkeletalSprite::setAnimationKeyNotify(RenderObject *r)
