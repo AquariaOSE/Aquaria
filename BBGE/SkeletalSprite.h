@@ -47,6 +47,7 @@ class Bone : public CollideQuad
 	friend class SkeletalSprite;
 public:
 	Bone();
+	virtual ~Bone();
 	void setAnimated(int a);
 
 	enum {
@@ -227,6 +228,7 @@ public:
 
 	SkeletalSprite();
 	virtual ~SkeletalSprite();
+	virtual void destroy();
 
 	void loadSkeletal(const std::string &fn);
 	bool saveSkeletal(const std::string &fn);

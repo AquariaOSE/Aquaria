@@ -781,7 +781,8 @@ void RenderObject::onUpdate(float dt)
 {
 	if (isDead()) return;
 
-	updateLife(dt);
+	if(!updateLife(dt))
+		return;
 
 	// FIXME: We might not need to do lifetime checks either; I just
 	// left that above for safety since I'm not certain.  --achurch
@@ -863,7 +864,7 @@ void RenderObject::onUpdate(float dt)
 	}
 }
 
-void RenderObject::updateLife(float dt)
+bool RenderObject::updateLife(float dt)
 {
 	if (decayRate > 0)
 	{
@@ -871,6 +872,7 @@ void RenderObject::updateLife(float dt)
 		if (life<=0)
 		{
 			safeKill();
+			return false;
 		}
 	}
 	if (fadeAlphaWithLife && !alpha.isInterpolating())
@@ -878,6 +880,7 @@ void RenderObject::updateLife(float dt)
 
 		alpha = life/maxLife;
 	}
+	return true;
 }
 
 void RenderObject::unloadDevice()
