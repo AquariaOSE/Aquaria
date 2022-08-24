@@ -500,7 +500,6 @@ void DSQ::debugMenu()
 		if (core->getShiftState())
 
 		{
-			core->frameOutputMode = false;
 			dsq->game->togglePause(true);
 			std::string s = dsq->getUserInputString(stringbank.get(2012), "");
 			stringToUpper(s);
@@ -4155,12 +4154,6 @@ void DSQ::modifyDt(float &dt)
 
 	gameSpeed.update(dt);
 	dt *= gameSpeed.x;
-
-	if (frameOutputMode)
-	{
-		dt = 1.0f/60.0f;
-		doScreenshot = true;
-	}
 }
 
 void DSQ::removeElement(Element *element)
