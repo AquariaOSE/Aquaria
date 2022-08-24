@@ -49,6 +49,20 @@ struct BoneLock
 	int collisionMaskIndex;
 };
 
+// The Lance is an ability that never made it into the released version of the game.
+// The code is functional but it was never used. Keeping it around for now
+// in case any mods use it for whatever reason.
+struct LanceData
+{
+	LanceData();
+	~LanceData();
+
+	PauseQuad *gfx;
+	float timer;
+	float delay;
+	Bone *bone;
+};
+
 class Entity : public CollideQuad, public StateMachine, public SoundHolder
 {
 public:
@@ -120,7 +134,6 @@ public:
 	float activationRange;
 	Entity *followEntity;
 	Entity *ridingOnEntity;
-	bool canBeTargetedByAvatar;
 	Vector startPos;
 	void getEXP(unsigned int exp);
 	void rotateToVec(Vector addVec, float time, float offsetAngle=0);
@@ -226,7 +239,6 @@ public:
 	bool isAvatarAttackTarget();
 	int dropChance;
 	void fillGrid();
-	bool fillGridFromQuad;
 
 	void setID(int id);
 	int getID();
@@ -288,7 +300,6 @@ public:
 	bool checkSplash(const Vector &override=Vector(0,0,0));
 	EatData eatData;
 	InterpolatedVector flipScale;
-	bool beautyFlip;
 	void attachLance();
 	void setInvincible(bool inv);
 	void clampToHit();
@@ -335,7 +346,7 @@ public:
 	void setHairHeadPosition(const Vector &pos);
 	void exertHairForce(const Vector &force, float dt);
 
-	bool isEntityInside();
+	bool isEntityInside() const;
 
 	void updateSoundPosition();
 
@@ -346,9 +357,7 @@ public:
 	MinimapIcon *ensureMinimapIcon();
 
 protected:
-	bool calledEntityDied;
 	Path *waterBubble;
-	bool ridingFlip;
 	Vector ridingPosition;
 	float ridingRotation;
 
@@ -364,30 +373,14 @@ protected:
 	int vs[EV_MAX];
 	void onEndOfLife();
 
-	bool invincible;
-	PauseQuad *lanceGfx;
-	float lanceTimer;
-	float lanceDelay;
-	int lance;
-	Bone *lanceBone;
 	void updateLance(float dt);
 
-
-
-	int fhScale, fvScale;
 	void onFHScale();
 	void onFH();
-	bool deathScene;
 	float dieTimer;
 	BounceType bounceType;
 	Entity* riding;
 	EatType eatType;
-	bool stickToNaijasHead;
-
-	bool spiritFreeze;
-	bool pauseFreeze;
-	bool canLeaveWater;
-	bool wasUnderWater;
 
 	std::vector<Vector>targetPoints;
 
@@ -400,15 +393,12 @@ protected:
 	virtual void onHeal(int type){}
 	virtual void onDamage(DamageData &d){}
 	virtual void onHealthChange(float change){}
-	bool inCurrent;
-	std::vector<bool> entityProperties;
+
 	float slowingToStopPathTimer, slowingToStopPath;
 
 	void movementDetails(Vector v);
 	Entity *watchingEntity;
 	virtual void onPathEnd();
-	bool swimPath;
-	bool deleteOnPathEnd;
 	InterpolatedVector multColor;
 	EntityType entityType;
 	std::vector<Entity*> attachedEntities;
@@ -428,9 +418,7 @@ protected:
 	void onEnterState(int action);
 	void onExitState(int action);
 
-	bool invincibleBreak;
 
-	bool entityDead;
 	void onUpdate(float dt);
 
 	Vector pushVec;
@@ -444,19 +432,35 @@ protected:
 
 	float pushMaxSpeed;
 	std::string currentAnim;
-
-
-protected:
+	LanceData *lancedata;
 
 	Timer poisonTimer, poisonBitTimer;
 	float poison;
-private:
-
-
 	float maxSpeed;
 
-	bool stopSoundsOnDeath;
+	char entityProperties[EP_MAX];
 
+	// TODO: this should be a bitmask
+	bool invincible;
+	bool invincibleBreak;
+	bool stickToNaijasHead;
+	bool spiritFreeze;
+	bool pauseFreeze;
+	bool canLeaveWater;
+	bool wasUnderWater;
+	bool entityDead;
+	bool swimPath;
+	bool deleteOnPathEnd;
+	bool inCurrent;
+	bool deathScene;
+	bool fhScale;
+	bool calledEntityDied;
+	bool ridingFlip;
+	bool canBeTargetedByAvatar;
+	bool stopSoundsOnDeath;
+public:
+	bool fillGridFromQuad;
+	bool beautyFlip;
 };
 
 #endif
