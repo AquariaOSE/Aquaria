@@ -135,8 +135,6 @@ GameOver::GameOver() : StateObject()
 
 void GameOver::applyState()
 {
-	const bool frameOutputGameOver = false;
-
 	core->sound->fadeMusic(SFT_OUT, 1);
 
 
@@ -146,12 +144,6 @@ void GameOver::applyState()
 	core->cameraPos = Vector(0,0,0);
 
 	core->sound->playSfx("Death");
-
-	if (frameOutputGameOver)
-	{
-		dsq->fpsText->alpha = 0;
-		core->frameOutputMode = true;
-	}
 
 	Quad *q = new Quad;
 	{
@@ -248,13 +240,6 @@ void GameOver::applyState()
 	}
 	else
 		dsq->title();
-
-
-
-	if (frameOutputGameOver)
-		core->frameOutputMode = false;
-
-
 }
 
 void GameOver::removeState()

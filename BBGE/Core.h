@@ -89,6 +89,8 @@ struct Mouse
 	{
 		scrollWheelChange = 0;
 		buttonsEnabled = true;
+		_wasMoved = false;
+		_enableMotionEvents = true;
 	}
 	Vector position, lastPosition;
 	MouseButtons buttons;
@@ -96,8 +98,11 @@ struct Mouse
 	unsigned rawButtonMask;
 	Vector change;
 	bool buttonsEnabled;
-
 	int scrollWheelChange;
+
+	// transient; not for use outside of event handling
+	bool _wasMoved;
+	bool _enableMotionEvents;
 };
 
 enum FollowCameraLock
@@ -383,9 +388,6 @@ public:
 	bool joystickAsMouse;
 	virtual void prepScreen(bool t){}
 
-	bool updateMouse;
-	bool frameOutputMode;
-
 	ParticleEffect* createParticleEffect(const std::string &name, const Vector &position, int layer, float rotz=0);
 
 	std::string secondaryTexturePath;
@@ -523,6 +525,7 @@ public:
 	Joystick *getJoystickForSourceID(int sourceID);
 private:
 	std::vector<Joystick*> joysticks;
+	int sdlUserMouseEventID;
 };
 
 extern Core *core;

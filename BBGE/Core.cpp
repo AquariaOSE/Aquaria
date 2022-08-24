@@ -281,6 +281,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	window = NULL;
 	sound = NULL;
 	_extraDataDir = extraDataDir;
+	sdlUserMouseEventID = SDL_RegisterEvents(1);
 
 	if (userDataSubFolder.empty())
 		userDataSubFolder = appName;
@@ -364,8 +365,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	lib_graphics = lib_sound = lib_input = false;
 	mouseConstraint = false;
 	mouseCircle = 0;
-	frameOutputMode = false;
-	updateMouse = true;
 	particlesPaused = false;
 	joystickAsMouse = false;
 	flipMouseButtons = 0;
@@ -677,8 +676,6 @@ void Core::onUpdate(float dt)
 {
 	if (minimized) return;
 
-	core->mouse.lastPosition = core->mouse.position;
-
 	pollEvents(dt);
 
 
@@ -964,14 +961,20 @@ void Core::resetTimer()
 
 void Core::setMousePosition(const Vector &p)
 {
-	core->mouse.position = p;
 	float px = p.x + virtualOffX;
 	float py = p.y;
+
+	SDL_Event ev = { sdlUserMouseEventID };
+	ev.motion.state = 0;
+	SDL_PushEvent(&ev);
 
 	window->warpMouse(
 		px * (float(width)/float(virtualWidth)),
 		py * (float(height)/float(virtualHeight))
 	);
+
+	ev.motion.state = 1;
+	SDL_PushEvent(&ev);
 }
 
 // used to update all render objects either uniformly or as part of a time sliced update process
@@ -1274,6 +1277,12 @@ bool Core::doMouseConstraint()
 void Core::onEvent(const SDL_Event& event)
 {
 	const bool focus = window->hasFocus();
+	if(event.type == sdlUserMouseEventID)
+	{
+		mouse._enableMotionEvents = event.motion.state;
+		return;
+	}
+
 	switch (event.type)
 	{
 		case SDL_KEYDOWN:
@@ -1312,10 +1321,15 @@ void Core::onEvent(const SDL_Event& event)
 
 		case SDL_MOUSEMOTION:
 		{
-			if (focus && updateMouse)
+			if (focus)
 			{
-				mouse.position.x = ((event.motion.x) * (float(virtualWidth)/float(getWindowWidth()))) - getVirtualOffX();
-				mouse.position.y = event.motion.y * (float(virtualHeight)/float(getWindowHeight()));
+				const float mx = float(virtualWidth)/float(getWindowWidth());
+				const float my = float(virtualHeight)/float(getWindowHeight());
+
+				mouse.position.x = ((event.motion.x) * mx) - getVirtualOffX();
+				mouse.position.y = event.motion.y * my;
+				if(mouse._enableMotionEvents)
+					mouse._wasMoved = true;
 			}
 		}
 		break;
@@ -1324,7 +1338,7 @@ void Core::onEvent(const SDL_Event& event)
 
 		case SDL_MOUSEWHEEL:
 		{
-			if (focus && updateMouse)
+			if (focus)
 			{
 				if (event.wheel.y > 0)
 					mouse.scrollWheelChange = 1;
@@ -1345,7 +1359,7 @@ void Core::onEvent(const SDL_Event& event)
 #else
 		case SDL_MOUSEBUTTONDOWN:
 		{
-			if (focus && updateMouse)
+			if (focus)
 			{
 				switch(event.button.button)
 				{
@@ -1362,7 +1376,7 @@ void Core::onEvent(const SDL_Event& event)
 
 		case SDL_MOUSEBUTTONUP:
 		{
-			if (focus && updateMouse)
+			if (focus)
 			{
 				switch(event.button.button)
 				{
@@ -1382,49 +1396,47 @@ void Core::onEvent(const SDL_Event& event)
 
 void Core::pollEvents(float dt)
 {
-	bool warpMouse=false;
+	int x, y;
+	unsigned mousestate = SDL_GetMouseState(&x,&y);
 
-
-
-	if (updateMouse)
+	if (mouse.buttonsEnabled)
 	{
-		int x, y;
-		unsigned mousestate = SDL_GetMouseState(&x,&y);
+		mouse.buttons.left		= mousestate & SDL_BUTTON(1)?DOWN:UP;
+		mouse.buttons.right		= mousestate & SDL_BUTTON(3)?DOWN:UP;
+		mouse.buttons.middle	= mousestate & SDL_BUTTON(2)?DOWN:UP;
 
-		if (mouse.buttonsEnabled)
+		for(unsigned i = 0; i < mouseExtraButtons; ++i)
+			mouse.buttons.extra[i] = mousestate & SDL_BUTTON(3+i)?DOWN:UP;
+
+		mouse.pure_buttons = mouse.buttons;
+		mouse.rawButtonMask = mousestate;
+
+		if (flipMouseButtons)
 		{
-			mouse.buttons.left		= mousestate & SDL_BUTTON(1)?DOWN:UP;
-			mouse.buttons.right		= mousestate & SDL_BUTTON(3)?DOWN:UP;
-			mouse.buttons.middle	= mousestate & SDL_BUTTON(2)?DOWN:UP;
-
-			for(unsigned i = 0; i < mouseExtraButtons; ++i)
-				mouse.buttons.extra[i] = mousestate & SDL_BUTTON(3+i)?DOWN:UP;
-
-			mouse.pure_buttons = mouse.buttons;
-			mouse.rawButtonMask = mousestate;
-
-			if (flipMouseButtons)
-			{
-				std::swap(mouse.buttons.left, mouse.buttons.right);
-			}
+			std::swap(mouse.buttons.left, mouse.buttons.right);
 		}
-		else
-		{
-			mouse.buttons.left = mouse.buttons.right = mouse.buttons.middle = UP;
-		}
-
-		mouse.scrollWheelChange = 0;
-		mouse.change = Vector(0,0);
-		mouse.lastPosition = mouse.position;
+	}
+	else
+	{
+		mouse.buttons.left = mouse.buttons.right = mouse.buttons.middle = UP;
 	}
 
+	mouse.scrollWheelChange = 0;
+	mouse.lastPosition = mouse.position;
+	mouse.change = Vector(0, 0);
+	mouse._wasMoved = false;
+
+	// This polls SDL events and causes Core::onEvent() to be called,
+	// which also updates mouse position etc
 	window->handleInput();
 
-	if(updateMouse)
+	if(mouse._wasMoved)
 	{
-		if (doMouseConstraint())
+		if(doMouseConstraint())
+		{
 			setMousePosition(mouse.position);
-
+			window->handleInput();
+		}
 		mouse.change = mouse.position - mouse.lastPosition;
 	}
 
