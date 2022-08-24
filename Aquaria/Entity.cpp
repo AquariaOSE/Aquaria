@@ -29,6 +29,21 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "PathFinding.h"
 #include "Hair.h"
 
+LanceData::LanceData()
+	: delay(0), timer(0), gfx(NULL), bone(NULL)
+{
+}
+
+LanceData::~LanceData()
+{
+	if(gfx)
+	{
+		gfx->setLife(1.0);
+		gfx->setDecayRate(2);
+		gfx->fadeAlphaWithLife = 1;
+	}
+}
+
 
 void Entity::stopPull()
 {
@@ -158,13 +173,9 @@ Entity::Entity()
 
 
 	invincible = false;
-	lanceDelay = 0;
-	lance = 0;
-	lanceTimer = 0;
-	lanceGfx = 0;
-	lanceBone = 0;
+	lancedata = NULL;
 	beautyFlip = true;
-	fhScale = fvScale = 0;
+	fhScale = false;
 	flipScale = Vector(1,1);
 	wasUnderWater = true;
 	deathScene = false;
@@ -189,8 +200,7 @@ Entity::Entity()
 	fillGridFromQuad = false;
 	dropChance = 0;
 	inCurrent = false;
-	entityProperties.resize(EP_MAX);
-	for (size_t i = 0; i < entityProperties.size(); i++)
+	for (size_t i = 0; i < EP_MAX; i++)
 	{
 		entityProperties[i] = false;
 	}
@@ -254,6 +264,7 @@ Entity::Entity()
 Entity::~Entity()
 {
 	delete minimapIcon;
+	delete lancedata;
 }
 
 void Entity::setDeathScene(bool v)
@@ -323,12 +334,12 @@ void Entity::setPauseFreeze(bool v)
 
 void Entity::setEntityProperty(EntityProperty ep, bool value)
 {
-	entityProperties[int(ep)] = value;
+	entityProperties[ep] = value;
 }
 
 bool Entity::isEntityProperty(EntityProperty ep)
 {
-	return entityProperties[int(ep)];
+	return entityProperties[ep];
 }
 
 Vector Entity::getRidingPosition()
@@ -997,10 +1008,7 @@ void Entity::onFHScale()
 {
 	flipScale.interpolateTo(Vector(1, 1), sct);
 	_fh = !_fh;
-
-
-
-	fhScale = 0;
+	fhScale = false;
 }
 
 void Entity::onFH()
@@ -1010,14 +1018,8 @@ void Entity::onFH()
 	if (!fhScale)
 	{
 		flipScale = Vector(1,1);
-
-
-
 		flipScale.interpolateTo(Vector(0.6f, 1), sct);
-
-
-
-		fhScale = 1;
+		fhScale = true;
 	}
 }
 
@@ -1500,16 +1502,8 @@ void Entity::onUpdate(float dt)
 	if (beautyFlip)
 	{
 		flipScale.update(dt);
-
-		switch (fhScale)
-		{
-		case 1:
-			if (!flipScale.isInterpolating())
-				onFHScale();
-		break;
-		}
-
-
+		if (fhScale && !flipScale.isInterpolating())
+			onFHScale();
 	}
 
 
@@ -1756,39 +1750,36 @@ void Entity::idle()
 
 void Entity::updateLance(float dt)
 {
-	if (lance == 1)
+	if(!lancedata)
+		return;
+
+	lancedata->timer -= dt;
+	if (lancedata->timer < 0)
 	{
-		lanceTimer -= dt;
-		if (lanceTimer < 0)
+		delete lancedata;
+		lancedata = NULL;
+	}
+	else
+	{
+		lancedata->gfx->fhTo(_fh);
+		lancedata->delay += dt;
+		if (lancedata->delay > 0.1f)
 		{
-			lance = 0;
-			lanceGfx->setLife(1.0);
-			lanceGfx->setDecayRate(2);
-			lanceGfx->fadeAlphaWithLife = 1;
-			lanceGfx = 0;
-			lanceTimer = 0;
+			lancedata->delay = 0;
+			dsq->game->fireShot("Lance", this, 0, lancedata->gfx->getWorldCollidePosition(Vector(-64, 0)));
+		}
+
+		if (lancedata->bone)
+		{
+			Vector pr = lancedata->bone->getWorldPositionAndRotation();
+			lancedata->gfx->position.x = pr.x;
+			lancedata->gfx->position.y = pr.y;
+			lancedata->gfx->rotation = pr.z;
 		}
 		else
 		{
-			lanceGfx->fhTo(_fh);
-			lanceDelay = lanceDelay + dt;
-			if (lanceDelay > 0.1f)
-			{
-				lanceDelay = 0;
-				dsq->game->fireShot("Lance", this, 0, lanceGfx->getWorldCollidePosition(Vector(-64, 0)));
-			}
-
-			if (lanceBone != 0)
-			{
-				lanceGfx->position = lanceBone->getWorldPosition();
-				lanceGfx->rotation = lanceBone->getWorldRotation();
-			}
-			else
-			{
-				lanceGfx->position = getWorldPosition();
-				lanceGfx->rotation = rotation;
-			}
-
+			lancedata->gfx->position = getWorldPosition();
+			lancedata->gfx->rotation = rotation;
 		}
 	}
 }
@@ -1798,18 +1789,17 @@ void Entity::attachLance()
 	std::ostringstream os;
 	os << "attaching lance to " << this->name;
 	debugLog(os.str());
-	lance = 1;
-	lanceBone = 0;
-	if (!lanceGfx)
-	{
-		lanceGfx = new PauseQuad();
-		lanceGfx->setTexture("Particles/Lance");
-		lanceGfx->alpha = 0;
-		lanceGfx->alpha.interpolateTo(1, 0.5);
-		dsq->game->addRenderObject(lanceGfx, LR_PARTICLES);
-	}
-	lanceTimer = 8;
-	lanceBone = skeletalSprite.getBoneByName("Lance");
+	lancedata = new LanceData();
+	lancedata->timer = 8;
+	lancedata->bone = skeletalSprite.getBoneByName("Lance");
+
+	PauseQuad *q = new PauseQuad();
+	q = new PauseQuad();
+	q->setTexture("Particles/Lance");
+	q->alpha = 0;
+	q->alpha.interpolateTo(1, 0.5);
+	dsq->game->addRenderObject(q, LR_PARTICLES);
+	lancedata->gfx = q;
 }
 
 void Entity::setRiding(Entity *e)
@@ -2765,7 +2755,7 @@ void Entity::exertHairForce(const Vector &force, float dt)
 	}
 }
 
-bool Entity::isEntityInside()
+bool Entity::isEntityInside() const
 {
 	FOR_ENTITIES(i)
 	{
