@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/DebugFont.h"
 #include "RenderBase.h"
 #include "Game.h"
+#include "SplineGrid.h"
 
 
 int TIMELINE_GRIDSIZE		= 10;
@@ -198,6 +199,7 @@ void AnimationEditor::cycleLerpType()
 AnimationEditor::AnimationEditor() : StateObject()
 {
 	registerState(this, "AnimationEditor");
+
 }
 
 void AnimationEditor::resetScaleOrSave()
@@ -465,6 +467,15 @@ void AnimationEditor::applyState()
 	TimelineRender *tr = new TimelineRender();
 	tr->position = Vector(0, KEYFRAME_POS_Y);
 	addRenderObject(tr, LR_BLACKGROUND);
+
+	splinegrid = new SplineGrid;
+	splinegrid->resize(5,5,30,30);
+	splinegrid->setWidthHeight(200, 200);
+	splinegrid->position = Vector(400, 300);
+	splinegrid->resetControlPoints();
+	splinegrid->setTexture("mithalas-house-bg-0001");
+	addRenderObject(splinegrid, LR_PARTICLES_TOP);
+
 
 	editSprite->setSelectedBone(0);
 
