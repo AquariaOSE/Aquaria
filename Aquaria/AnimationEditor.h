@@ -7,6 +7,7 @@
 
 class DebugFont;
 class BitmapText;
+class SplineGrid;
 
 class KeyframeWidget : public Quad
 {
@@ -147,6 +148,8 @@ public:
 	void decrTimelineGrid();
 	void updateTimelineGrid();
 	DebugFont *gridsize, *unitsize;
+
+	SplineGrid *splinegrid;
 };
 
 
