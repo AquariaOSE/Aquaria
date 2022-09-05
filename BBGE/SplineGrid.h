@@ -6,6 +6,12 @@
 #include "glm/glm.hpp"
 #include "Quad.h"
 
+enum SplineType
+{
+	SPLINE_BSPLINE,
+	SPLINE_COSINE,
+};
+
 class SplineGridCtrlPoint : public Quad
 {
 public:
@@ -27,12 +33,16 @@ public:
 	// # of control points on each axis
 	void resize(size_t w, size_t h, size_t xres, size_t yres);
 	void recalc();
+
 	void resetControlPoints();
 
 	virtual void onRender(const RenderState& rs) const OVERRIDE;
 	virtual void onUpdate(float dt) OVERRIDE;
 
 private:
+
+	void recalcBSpline();
+	void recalcCosine();
 
 	SplineGridCtrlPoint *createControlPoint(size_t x, size_t y);
 
@@ -46,6 +56,7 @@ private:
 	size_t _yres;
 
 	std::vector<SplineGridCtrlPoint*> ctrlp;
+	SplineType splinetype;
 };
 
 

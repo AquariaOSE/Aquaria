@@ -19,6 +19,8 @@ set(BBGE_SRCS
     CMakeLists.txt
     Core.cpp
     Core.h
+    Interpolators.cpp
+    Interpolators.h
     DarkLayer.cpp
     DarkLayer.h
     DataStructures.cpp
