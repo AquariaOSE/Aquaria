@@ -469,11 +469,11 @@ void AnimationEditor::applyState()
 	addRenderObject(tr, LR_BLACKGROUND);
 
 	splinegrid = new SplineGrid;
-	splinegrid->resize(5,5,30,30);
+	splinegrid->setTexture("mithalas-house-bg-0001");
 	splinegrid->setWidthHeight(200, 200);
 	splinegrid->position = Vector(400, 300);
+	splinegrid->resize(3,3,10,10);
 	splinegrid->resetControlPoints();
-	splinegrid->setTexture("mithalas-house-bg-0001");
 	addRenderObject(splinegrid, LR_PARTICLES_TOP);
 
 

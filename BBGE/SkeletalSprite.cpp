@@ -1543,6 +1543,13 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			{
 				newb->selectable = bone->BoolAttribute("sel");
 			}
+			if (bone->Attribute("grid"))
+			{
+				SimpleIStringStream is(bone->Attribute("grid"));
+				int x, y;
+				is >> x >> y;
+				newb->createGrid(x, y);
+			}
 			bone = bone->NextSiblingElement("Bone");
 		}
 		// attach bones
@@ -1735,6 +1742,15 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				newAnimation.keyframes.push_back(newSkeletalKeyframe);
 				key = key->NextSiblingElement("Key");
 			}
+
+			XMLElement *interp = animation->FirstChildElement("Interpolator");
+			while(interp)
+			{
+
+
+				interp = interp->NextSiblingElement("Interpolator");
+			}
+
 			animation = animation->NextSiblingElement("Animation");
 			this->animations.push_back(newAnimation);
 		}
