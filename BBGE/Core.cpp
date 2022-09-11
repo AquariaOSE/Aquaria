@@ -1155,7 +1155,8 @@ void Core::run(float runTime)
 		if (particleManager)
 			particleManager->update(dt);
 
-		sound->update(dt);
+		if(sound)
+			sound->update(dt);
 
 		onUpdate(dt);
 
