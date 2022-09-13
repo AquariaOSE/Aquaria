@@ -472,7 +472,7 @@ void AnimationEditor::applyState()
 	splinegrid->setTexture("mithalas-house-bg-0001");
 	splinegrid->setWidthHeight(200, 200);
 	splinegrid->position = Vector(400, 300);
-	splinegrid->resize(3,3,10,10);
+	splinegrid->resize(3,3,10,10,3);
 	splinegrid->resetControlPoints();
 	addRenderObject(splinegrid, LR_PARTICLES_TOP);
 
@@ -647,12 +647,12 @@ void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 		{
 			if (!sel->changeStrip.empty())
 			{
-				if (b->strip.size() < sel->changeStrip.size())
+				if (b->grid.size() < sel->changeStrip.size())
 				{
-					b->strip.resize(sel->changeStrip.size());
+					b->grid.resize(sel->changeStrip.size());
 				}
 
-				b->strip[selectedStripPoint] = sel->changeStrip[selectedStripPoint] += mov*0.006f;
+				b->grid[selectedStripPoint] = sel->changeStrip[selectedStripPoint] += mov*0.006f;
 			}
 		}
 	}
@@ -1266,7 +1266,7 @@ void AnimationEditor::cloneBoneAhead()
 			b2->x = b1->x;
 			b2->y = b1->y;
 			b2->rot = b1->rot;
-			b2->strip = b1->strip;
+			b2->grid = b1->grid;
 		}
 	}
 }

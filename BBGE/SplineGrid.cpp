@@ -1,8 +1,6 @@
 #include "SplineGrid.h"
-#include "tbsp.hh"
 #include "RenderBase.h"
 #include "Core.h"
-#include "Interpolators.h"
 
 SplineGridCtrlPoint *SplineGridCtrlPoint::movingPoint;
 
@@ -15,7 +13,8 @@ SplineGridCtrlPoint::SplineGridCtrlPoint()
 Vector SplineGridCtrlPoint::getSplinePosition() const
 {
     SplineGridCtrlPoint *p = (SplineGridCtrlPoint*)getParent();
-    return Vector(2 * position.x / p->width, 2 * position.y / p->height);
+    // always return alpha == 1
+    return Vector(position.x / p->width, position.y / p->height, 1.0f);
 }
 
 void SplineGridCtrlPoint::onUpdate(float dt)
@@ -40,7 +39,7 @@ void SplineGridCtrlPoint::onUpdate(float dt)
 }
 
 SplineGrid::SplineGrid()
-    : degreeX(3), degreeY(3), _cpx(0), _cpy(0), _xres(0), _yres(0), splinetype(SPLINE_BSPLINE)
+    : _xres(0), _yres(0)
 {
     setWidthHeight(128, 128);
     renderQuad = true;
@@ -51,16 +50,13 @@ SplineGrid::~SplineGrid()
 {
 }
 
-void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres)
+void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned deg)
 {
-
-    knotsX.resize(tbsp__getNumKnots(w, degreeX));
-    knotsY.resize(tbsp__getNumKnots(h, degreeY));
-    tmp.resize(xres * h);
-    tbsp::fillKnotVector<float>(&knotsX[0], w, degreeX, -1.0f, 1.0f);
-    tbsp::fillKnotVector<float>(&knotsY[0], h, degreeY, -1.0f, 1.0f);
+    size_t oldcpx = bsp.ctrlX();
+    size_t oldcpy = bsp.ctrlY();
 
     this->createGrid(xres, yres);
+    gridpoints.resize(xres * yres);
 
     std::vector<SplineGridCtrlPoint*> oldp;
     ctrlp.swap(oldp);
@@ -68,21 +64,20 @@ void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres)
 
     // move any old points over that fit within the new size
     {
-        const size_t cw = std::min(_cpx, w);
-        const size_t ch = std::min(_cpy, h);
+        const size_t cw = std::min(oldcpx, w);
+        const size_t ch = std::min(oldcpy, h);
         for(size_t y = 0; y < ch; ++y)
             for(size_t x = 0; x < cw; ++x)
             {
-                SplineGridCtrlPoint *& ref = oldp[y * _cpx + x];
+                SplineGridCtrlPoint *& ref = oldp[y * oldcpx + x];
                 ctrlp[y * w + x] = ref;
                 ref = NULL;
             }
     }
 
-    _cpx = w;
-    _cpy = h;
     _xres = xres;
     _yres = yres;
+    bsp.resize(w, h, deg, deg, -1.0f, 1.0f);
 
     // kill any excess points
     for(size_t i = 0; i < oldp.size(); ++i)
@@ -97,102 +92,46 @@ void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres)
             if(!ref)
                 ref = createControlPoint(x, y);
         }
+
+    recalc();
 }
 
 void SplineGrid::recalc()
 {
-    switch(splinetype)
-    {
-        case SPLINE_BSPLINE:
-            recalcBSpline();
-            break;
-
-        case SPLINE_COSINE:
-            recalcCosine();
-            break;
-    }
-}
-
-void SplineGrid::recalcBSpline()
-{
-    std::vector<Vector> px(std::max(_cpx, _xres));
-    std::vector<Vector> work(std::max(degreeX, degreeY));
-
-    // Each row -> X-axis interpolation
-    for(size_t y = 0; y < _cpy; ++y)
-    {
-
-        for(size_t x = 0; x < _cpx; ++x)
-            px[x] = ctrlp[y * _cpx + x]->getSplinePosition();
-
-        Vector *dst = &tmp[y * _xres];
-        tbsp::evalRange(dst, _xres, &work[0], &knotsX[0], &px[0], _cpx, degreeX, -1.0f, 1.0f);
-    }
-
-    this->resetGrid();
+    for(size_t i = 0; i < ctrlp.size(); ++i)
+        bsp.controlpoints[i] = ctrlp[i]->getSplinePosition();
+    Vector *gp = &gridpoints[0];
+    bsp.recalc(gp, _xres, _yres);
     Vector **dg = this->getDrawGrid();
-
-    // Each column -> Y-axis interpolation
-    std::vector<Vector> out(_yres);
-    for(size_t x = 0; x < _xres; ++x)
-    {
-        for(size_t y = 0; y < _cpy; ++y)
-            px[y] = tmp[y * _xres + x];
-
-        tbsp::evalRange(&out[0], _yres, &work[0], &knotsY[0], &px[0], _cpy, degreeY, -1.0f, 1.0f);
-
-        for(size_t y = 0; y < _yres; ++y)
-        {
-            // output values are in [-1,+1] while drawgrid normally goes from [-0.5,+0.5]
-            Vector gp = out[y] * 0.5f;
-            gp.z = 1; // used as alpha
-            dg[x][y] = gp;
-        }
-    }
-
+    for(size_t y = 0; y < _yres; ++y)
+        for(size_t x = 0; x < _xres; ++x)
+            dg[x][y] = *gp++;
 }
 
-void SplineGrid::recalcCosine()
-{
-    // TODO
-    /*std::vector<Vector> px(std::max(_cpx, _xres));
-    std::vector<float> out(std::max(_xres, _yres));
-
-    CosineInterpolator top;
-    // Each row -> X-axis interpolation
-    for(size_t y = 0; y < _cpy; ++y)
-    {
-
-        for(size_t x = 0; x < _cpx; ++x)
-            px[x] = ctrlp[y * _cpx + x]->getSplinePosition();
-        std::sort(px.begin(), px.end());
-
-        top.setPoints(&px[0], _cpx);
-
-        Vector *dst = &tmp[y * _xres];
-        top.interpolateRange(&out[0,
-    */
-}
 
 void SplineGrid::resetControlPoints()
 {
-    const float dx = width / float(_cpx - 1);
-    const float dy = height / float(_cpy - 1);
+    const size_t cpx = bsp.ctrlX();
+    const size_t cpy = bsp.ctrlY();
+    const float dx = width / float(cpx - 1);
+    const float dy = height / float(cpy - 1);
     float yy = height * -0.5f;
-    for(size_t y = 0; y < _cpy; ++y, yy += dy)
+    for(size_t y = 0; y < cpy; ++y, yy += dy)
     {
         float xx = width * -0.5f;
-        SplineGridCtrlPoint **row = &ctrlp[y * _cpx];
-        for(size_t x = 0; x < _cpx; ++x, xx += dx)
+        SplineGridCtrlPoint **row = &ctrlp[y * cpx];
+        for(size_t x = 0; x < cpx; ++x, xx += dx)
             row[x]->position = Vector(xx, yy);
     }
 }
 
 SplineGridCtrlPoint* SplineGrid::createControlPoint(size_t x, size_t y)
 {
-    assert(x < _cpx && y < _cpy);
+    const size_t cpx = bsp.ctrlX();
+    const size_t cpy = bsp.ctrlY();
+    assert(x < cpx && y < cpy);
     const Vector wh(width, height);
-    const Vector pos01(float(x) / float(_cpx-1), float(y) / float(_cpy-1));
+    const Vector pos01(float(x) / float(cpx-1), float(y) / float(cpy-1));
     SplineGridCtrlPoint *cp = new SplineGridCtrlPoint();
     cp->position = (pos01 - Vector(0.5f, 0.5f)) * wh;
     this->addChild(cp, PM_POINTER);
@@ -215,12 +154,15 @@ void SplineGrid::onRender(const RenderState& rs) const
     glLineWidth(2);
     glColor4f(0.0f, 1.0f, 0.3f, 0.3f);
 
+    const size_t cpx = bsp.ctrlX();
+    const size_t cpy = bsp.ctrlY();
+
     // X axis
-    for(size_t y = 0; y < _cpy; ++y)
+    for(size_t y = 0; y < cpy; ++y)
     {
         glBegin(GL_LINE_STRIP);
-        const SplineGridCtrlPoint * const *row = &ctrlp[y * _cpx];
-        for(size_t x = 0; x < _cpx; ++x)
+        const SplineGridCtrlPoint * const *row = &ctrlp[y * cpx];
+        for(size_t x = 0; x < cpx; ++x)
         {
             const Vector p = row[x]->position;
             glVertex2f(p.x, p.y);
@@ -229,31 +171,16 @@ void SplineGrid::onRender(const RenderState& rs) const
     }
 
     // Y axis
-    for(size_t x = 0; x < _cpx; ++x)
+    for(size_t x = 0; x < cpx; ++x)
     {
         glBegin(GL_LINE_STRIP);
-        for(size_t y = 0; y < _cpy; ++y)
+        for(size_t y = 0; y < cpy; ++y)
         {
-            const Vector p = ctrlp[y * _cpx + x]->position;
+            const Vector p = ctrlp[y * cpx + x]->position;
             glVertex2f(p.x, p.y);
         }
         glEnd();
     }
-
-    /*
-    glColor4f(0.0f, 0.2f, 1.0f, 1.0f);
-    for(size_t y = 0; y < _cpy; ++y)
-    {
-        glBegin(GL_LINE_STRIP);
-        const value_type *line = &tmp[y * _xres];
-        for(size_t x = 0; x < _xres; ++x)
-        {
-            Vector pos = line[x] * wh2;
-            glVertex2f(pos.x, pos.y);
-        }
-        glEnd();
-    }
-    */
 }
 
 
