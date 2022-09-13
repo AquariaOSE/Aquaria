@@ -77,7 +77,8 @@ public:
 	enum GridType
 	{
 		GRID_WAVY	= 0,
-		GRID_SET	= 1
+		GRID_STRIP	= 1, // quad is in strip mode
+		GRID_INTERP = 2, // quad is in grid mode
 	};
 	unsigned char gridType;  // unsigned char to save space
 

@@ -1,5 +1,6 @@
 #include "Interpolators.h"
 #include <math.h>
+#include "tbsp.hh"
 
 CosineInterpolator::CosineInterpolator()
 {
@@ -65,4 +66,57 @@ tail:
     const float v = pxy.back().second;
     for( ; k < n; ++k)
         ys[k] = v;
+}
+
+BSpline2D::BSpline2D()
+    : _cpx(0), _cpy(0), _degx(0), _degy(0), _tmin(0), _tmax(0)
+{
+}
+
+void BSpline2D::resize(size_t cx, size_t cy, unsigned degx, unsigned degy, float tmin, float tmax)
+{
+    controlpoints.resize(cx * cy);
+    knotsX.resize(tbsp__getNumKnots(cx, degx));
+    knotsY.resize(tbsp__getNumKnots(cy, degy));
+    tbsp::fillKnotVector<float>(&knotsX[0], cx, degx, tmin, tmax);
+    tbsp::fillKnotVector<float>(&knotsY[0], cy, degy, tmin, tmax);
+    _cpx = cx;
+    _cpy = cy;
+    _degx = degx;
+    _degy = degy;
+    _tmin = tmin;
+    _tmax = tmax;
+}
+
+void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres)
+{
+    std::vector<Vector> tmpv;
+    size_t degn = std::max(_degx, _degy);
+    size_t tmpn = (yres * _cpx) + degn;
+    size_t tmpsz = tmpn * sizeof(Vector);
+    Vector *tmp;
+    if(tmpsz < 17*1024)
+        tmp = (Vector*)alloca(tmpsz);
+    else
+    {
+        tmpv.resize(tmpn);
+        tmp = &tmpv[0];
+    }
+    Vector *work = tmp + (tmpn - degn);
+
+    // Each column -> Y-axis interpolation
+    for(size_t x = 0; x < _cpx; ++x)
+    {
+        const Vector *srccol = &controlpoints[x];
+        Vector *dstcol = &tmp[x];
+        tbsp::evalRange(dstcol, yres, &work[0], &knotsY[0], srccol, _cpy, _degy, _tmin, _tmax, _cpx, _cpx);
+    }
+
+    // Each row -> X-axis interpolation
+    for(size_t y = 0; y < yres; ++y)
+    {
+        const Vector *srcrow = &tmp[y * _cpx];
+        tbsp::evalRange(dst, xres, &work[0], &knotsX[0], srcrow, _cpx, _degx, _tmin, _tmax);
+        dst += xres;
+    }
 }

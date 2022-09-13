@@ -5,6 +5,7 @@
 #include "Vector.h"
 #include "glm/glm.hpp"
 #include "Quad.h"
+#include "Interpolators.h"
 
 enum SplineType
 {
@@ -31,7 +32,7 @@ public:
 	~SplineGrid();
 
 	// # of control points on each axis
-	void resize(size_t w, size_t h, size_t xres, size_t yres);
+	void resize(size_t w, size_t h, size_t xres, size_t yres, unsigned deg);
 	void recalc();
 
 	void resetControlPoints();
@@ -41,22 +42,13 @@ public:
 
 private:
 
-	void recalcBSpline();
-	void recalcCosine();
-
 	SplineGridCtrlPoint *createControlPoint(size_t x, size_t y);
 
-	unsigned degreeX, degreeY;
-
-	std::vector<float> knotsX, knotsY;
-	std::vector<value_type> tmp; // X-axis temporary values
-
-	size_t _cpx, _cpy; // # of control points
-	size_t _xres; // resolution for x-axis eval before doing 2D expansion
-	size_t _yres;
-
 	std::vector<SplineGridCtrlPoint*> ctrlp;
-	SplineType splinetype;
+	std::vector<Vector> gridpoints;
+	size_t _xres, _yres;
+	unsigned deg;
+	BSpline2D bsp;
 };
 
 

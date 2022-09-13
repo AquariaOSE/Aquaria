@@ -95,14 +95,14 @@ static void genKnotsUniform(K *knots, size_t nn, K mink, K maxk)
 }
 
 template<typename K, typename T>
-static T deBoor(T *work, const T *src, const K *knots, const size_t r, const size_t k, const K t)
+static T deBoor(T *work, const T *src, const K *knots, const size_t r, const size_t k, const K t, size_t inputStride)
 {
     T last = src[0]; // init so that it works correctly even with degree == 0
     for(size_t worksize = k; worksize > 1; --worksize)
     {
         const size_t j = k - worksize + 1; // iteration number, starting with 1, going up to k
         const size_t tmp = r - k + 1 + j;
-        for(size_t w = 0; w < worksize - 1; ++w)
+        for(size_t w = 0, wr = 0; w < worksize - 1; ++w, wr += inputStride)
         {
             const size_t i = w + tmp;
             const K ki = knots[i];
@@ -111,9 +111,10 @@ static T deBoor(T *work, const T *src, const K *knots, const size_t r, const siz
             TBSP_ASSERT(div > 0);
             const K a = (t - ki) / div;
             const K a1 = K(1) - a;
-            work[w] = last = (src[w] * a1) + (src[w+1] * a); // lerp
+            work[w] = last = (src[wr] * a1) + (src[wr + inputStride] * a); // lerp
         }
         src = work; // done writing the initial data to work, now use that as input for further iterations
+        inputStride = 1;
     }
     return last;
 }
@@ -175,7 +176,7 @@ static T evalOne(T *work, const K *knots, const T *points, size_t numpoints, siz
 
 // evaluate numdst points in range [tmin..tmax], equally spaced
 template<typename K, typename T>
-static void evalRange(T *dst, size_t numdst, T *work, const K *knots, const T *points, size_t numpoints, size_t degree, K tmin, K tmax)
+static void evalRange(T *dst, size_t numdst, T *work, const K *knots, const T *points, size_t numpoints, size_t degree, K tmin, K tmax, size_t inputStride = 1, size_t outputStride = 1)
 {
     TBSP_ASSERT(tmin <= tmax);
     if(numpoints - 1 < degree)
@@ -196,7 +197,10 @@ static void evalRange(T *dst, size_t numdst, T *work, const K *knots, const T *p
 
     // left out-of-bounds
     for( ; i < numdst && t < knots[0]; ++i, t += step)
-        dst[i] = points[0];
+    {
+        *dst = points[0];
+        dst += outputStride;
+    }
 
     // actually interpolated points
     const K maxknot = knots[numknots - 1];
@@ -205,13 +209,21 @@ static void evalRange(T *dst, size_t numdst, T *work, const K *knots, const T *p
         while(r < maxidx && knots[r+1] < t) // find new index; don't need to do binary search again
             ++r;
 
-        const T* const src = &points[r - degree];
-        dst[i] = detail::deBoor(work, src, knots, r, k, t);
+        const T* const src = &points[(r - degree) * inputStride];
+        *dst = detail::deBoor(work, src, knots, r, k, t, inputStride);
+        dst += outputStride;
     }
 
     // right out-of-bounds
-    for( ; i < numdst; ++i)
-        dst[i] = points[numpoints - 1];
+    if(i < numdst)
+    {
+        T last =  points[(numpoints - 1) * inputStride];
+        for( ; i < numdst; ++i)
+        {
+            *dst = last;
+            dst += outputStride;
+        }
+    }
 }
 
 

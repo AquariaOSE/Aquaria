@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "SimpleIStringStream.h"
 #include "ReadXML.h"
 #include "RenderBase.h"
+#include "SplineGrid.h"
 
 #include <tinyxml2.h>
 using namespace tinyxml2;
@@ -137,7 +138,7 @@ void Bone::createStrip(bool vert, int num)
 		createGrid(2, num);
 	}
 	stripVert = vert;
-	gridType = GRID_SET;
+	gridType = GRID_STRIP;
 	changeStrip.resize(num);
 }
 
@@ -1083,10 +1084,10 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			{
 				BoneKeyframe *b = &a->keyframes[j].keyframes[k];
 				os << b->idx << " " << b->x << " " << b->y << " " << b->rot << " ";
-				os << b->strip.size() << " ";
-				for (size_t i = 0; i < b->strip.size(); i++)
+				os << b->grid.size() << " ";
+				for (size_t i = 0; i < b->grid.size(); i++)
 				{
-					os << b->strip[i].x << " " << b->strip[i].y << " ";
+					os << b->grid[i].x << " " << b->grid[i].y << " ";
 				}
 				if (b->doScale)
 				{
@@ -1652,10 +1653,10 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 						b.rot = rot;
 						if (strip>0)
 						{
-							b.strip.resize(strip);
-							for (size_t i = 0; i < b.strip.size(); i++)
+							b.grid.resize(strip);
+							for (size_t i = 0; i < b.grid.size(); i++)
 							{
-								is >> b.strip[i].x >> b.strip[i].y;
+								is >> b.grid[i].x >> b.grid[i].y;
 
 							}
 						}
@@ -1746,9 +1747,38 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			XMLElement *interp = animation->FirstChildElement("Interpolator");
 			while(interp)
 			{
+				Bone *bi = NULL;
+				if(const char *sbone = interp->Attribute("bone"))
+					bi = getBoneByIdx(atoi(sbone));
+				if(!bi)
+					continue;
+				//SplineType spline = SPLINE_BSPLINE;
+				int cx = 3, cy = 3, degx = 3, degy = 3;
+				if(const char *stype = interp->Attribute("type"))
+				{
+					SimpleIStringStream is(stype);
+					std::string ty;
+					is >> ty;
+					BoneGridInterpolator bgip;
+					if(ty == "bspline")
+					{
+						//spline = SPLINE_BSPLINE;
+						is >> cx >> cy >> degx >> degy;
+					}
+				}
 
+				BoneGridInterpolator bgip;
+				//bgip.type = spline;
+				bgip.idx = bi->boneIdx;
+				bgip.pointsX = cx;
+				bgip.pointsY = cy;
+				bgip.degreeX = degx;
+				bgip.degreeY = degy;
+
+				// TODO
 
 				interp = interp->NextSiblingElement("Interpolator");
+
 			}
 
 			animation = animation->NextSiblingElement("Animation");
@@ -1885,13 +1915,13 @@ void AnimationLayer::updateBones()
 						}
 						if (b->animated==Bone::ANIM_ALL && !b->changeStrip.empty())
 						{
-							if (bkey2->strip.size() < b->changeStrip.size())
-								bkey2->strip.resize(b->changeStrip.size());
-							if (bkey1->strip.size() < b->changeStrip.size())
-								bkey1->strip.resize(b->changeStrip.size());
+							if (bkey2->grid.size() < b->changeStrip.size())
+								bkey2->grid.resize(b->changeStrip.size());
+							if (bkey1->grid.size() < b->changeStrip.size())
+								bkey1->grid.resize(b->changeStrip.size());
 							for (size_t i = 0; i < b->changeStrip.size(); i++)
 							{
-								b->changeStrip[i] = Vector(lerp(bkey1->strip[i].x, bkey2->strip[i].x, dt, lerpType), lerp(bkey1->strip[i].y, bkey2->strip[i].y, dt, lerpType));
+								b->changeStrip[i] = Vector(lerp(bkey1->grid[i].x, bkey2->grid[i].x, dt, lerpType), lerp(bkey1->grid[i].y, bkey2->grid[i].y, dt, lerpType));
 							}
 							b->setGridPoints(b->stripVert, b->changeStrip);
 						}

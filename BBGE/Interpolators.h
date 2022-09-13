@@ -21,3 +21,32 @@ private:
 
 #endif
 
+class BSpline2D
+{
+public:
+    BSpline2D();
+
+    // # of control points on each axis
+    void resize(size_t cx, size_t cy, unsigned degx, unsigned degy, float tmin, float tmax);
+    void recalc(Vector *dst, size_t xres, size_t yres);
+
+    std::vector<Vector> controlpoints;
+
+    inline Vector& controlpoint(size_t x, size_t y)
+    {
+        return controlpoints[y * _cpx + x];
+    }
+
+
+    inline size_t ctrlX() const { return _cpx; }
+    inline size_t ctrlY() const { return _cpy; }
+
+    inline unsigned degX() const { return _degx; }
+    inline unsigned degY() const { return _degy; }
+
+private:
+    size_t _cpx, _cpy; // # of control points
+    unsigned _degx, _degy;
+    float _tmin, _tmax;
+    std::vector<float> knotsX, knotsY;
+};

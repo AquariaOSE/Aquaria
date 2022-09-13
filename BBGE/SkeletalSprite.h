@@ -128,7 +128,8 @@ public:
 	int x, y, rot;
 	float sx, sy;
 	bool doScale;
-	std::vector<Vector> strip;
+	std::vector<Vector> grid;
+	std::vector<Vector> controlpoints;
 };
 
 class SkeletalKeyframe
@@ -148,6 +149,15 @@ public:
 	std::vector<BoneCommand> commands;
 
 	void copyAllButTime(SkeletalKeyframe *copy);
+};
+
+class BoneGridInterpolator
+{
+public:
+	size_t idx;
+	unsigned pointsX, pointsY;
+	unsigned degreeX, degreeY;
+	void updateGrid(BoneKeyframe& bk);
 };
 
 class Animation
@@ -170,6 +180,9 @@ public:
 	size_t getNumKeyframes();
 	void reverse();
 	bool resetPassOnEnd;
+
+	typedef std::vector <BoneGridInterpolator> Interpolators;
+	Interpolators interpolators;
 };
 
 class SkeletalSprite;
