@@ -1891,20 +1891,20 @@ void AnimationLayer::updateBones()
 						float rot = (bkey2->rot - bkey1->rot)*dt + bkey1->rot;
 						p = Vector((p.x-b->position.x)*fallThru+b->position.x, (p.y-b->position.y)*fallThru+b->position.y);
 						rot = (rot-b->rotation.z)*fallThru + b->rotation.z;
-						if (b->animated==Bone::ANIM_ALL || b->animated==Bone::ANIM_POS)
+						if (b->animated & Bone::ANIM_POS)
 							b->position = p;
-						if (b->animated==Bone::ANIM_ALL || b->animated==Bone::ANIM_ROT)
+						if (b->animated & Bone::ANIM_ROT)
 							b->rotation.z = rot;
 					}
 					else
 					{
 						int lerpType = key2->lerpType;
 						//k(0)×(2u3-3u2+1) + k(1)×(3u2-2u3)
-						if (b->animated==Bone::ANIM_ALL || b->animated==Bone::ANIM_POS)
+						if (b->animated & Bone::ANIM_POS)
 						{
 							b->position = Vector(lerp(bkey1->x, bkey2->x, dt, lerpType), lerp(bkey1->y, bkey2->y, dt, lerpType));
 						}
-						if (b->animated==Bone::ANIM_ALL || b->animated==Bone::ANIM_ROT)
+						if (b->animated & Bone::ANIM_ROT)
 						{
 							b->rotation.z = lerp(bkey1->rot, bkey2->rot, dt, lerpType);
 						}
