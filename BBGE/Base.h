@@ -182,7 +182,7 @@ enum LerpType
 #define DOUBLE_CLICK_DELAY	0.5f
 
 
-float lerp(const float &v1, const float &v2, float dt, int lerpType);
+float lerp(float v1, float v2, float dt, int lerpType);
 
 
 

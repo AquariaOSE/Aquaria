@@ -403,7 +403,7 @@ Vector randVector(float mag)
 	return Vector(x*mag, y*mag);
 }
 
-float lerp(const float &v1, const float &v2, float dt, int lerpType)
+float lerp(float v1, float v2, float dt, int lerpType)
 {
 	switch(lerpType)
 	{
