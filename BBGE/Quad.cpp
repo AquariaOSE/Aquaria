@@ -285,40 +285,38 @@ void Quad::renderGrid(const RenderState& rs) const
 
 
 	glBegin(GL_QUADS);
-	float u0 = baseX;
-	float u1 = u0 + incX;
-	for (size_t x = 0; x < NX; x++, u0 = u1, u1 += incX)
+	float v0 = 1 - percentY + baseY;
+	float v1 = v0 + incY;
+	for (size_t y = 0; y < NY; y++, v0 = v1, v1 += incY)
 	{
-		float v0 = 1 - percentY + baseY;
-		float v1 = v0 + incY;
-		for (size_t y = 0; y < NY; y++, v0 = v1, v1 += incY)
+		float u0 = baseX;
+		float u1 = u0 + incX;
+		const Vector *row0 = drawGrid.row(y);
+		const Vector *row1 = drawGrid.row(y+1);
+		for (size_t x = 0; x < NX; x++, u0 = u1, u1 += incX)
 		{
-			if (drawGrid(x,y).z != 0 || drawGrid(x,y+1).z != 0 || drawGrid(x+1,y).z != 0 || drawGrid(x+1,y+1).z != 0)
+			const Vector dg00 = row0[x];
+			const Vector dg01 = row1[x];
+			const Vector dg10 = row0[x+1];
+			const Vector dg11 = row1[x+1];
+
+			if (dg00.z != 0 || dg01.z != 0 || dg10.z != 0 || dg11.z != 0)
 			{
-
-				glColor4f(red, green, blue, alpha*drawGrid(x,y).z);
+				glColor4f(red, green, blue, alpha*dg00.z);
 				glTexCoord2f(u0, v0);
+				glVertex2f(w*dg00.x,		h*dg00.y);
 
-
-				glVertex2f(w*drawGrid(x,y).x,		h*drawGrid(x,y).y);
-
-				glColor4f(red, green, blue, alpha*drawGrid(x,y+1).z);
+				glColor4f(red, green, blue, alpha*dg01.z);
 				glTexCoord2f(u0, v1);
+				glVertex2f(w*dg01.x,		h*dg01.y);
 
-
-				glVertex2f(w*drawGrid(x,y+1).x,		h*drawGrid(x,y+1).y);
-
-				glColor4f(red, green, blue, alpha*drawGrid(x+1,y+1).z);
+				glColor4f(red, green, blue, alpha*dg11.z);
 				glTexCoord2f(u1, v1);
+				glVertex2f(w*dg11.x,	h*dg11.y);
 
-
-				glVertex2f(w*drawGrid(x+1,y+1).x,	h*drawGrid(x+1,y+1).y);
-
-				glColor4f(red, green, blue, alpha*drawGrid(x+1,y).z);
+				glColor4f(red, green, blue, alpha*dg10.z);
 				glTexCoord2f(u1, v0);
-
-
-				glVertex2f(w*drawGrid(x+1,y).x,		h*drawGrid(x+1,y).y);
+				glVertex2f(w*dg10.x,		h*dg10.y);
 			}
 		}
 	}
@@ -331,9 +329,9 @@ void Quad::renderGrid(const RenderState& rs) const
 		glPointSize(2);
 		glColor3f(1,0,0);
 		glBegin(GL_POINTS);
-			for (size_t x = 0; x < NX; x++)
+			for (size_t y = 0; y < NY; y++)
 			{
-				for (size_t y = 0; y < NY; y++)
+				for (size_t x = 0; x < NX; x++)
 				{
 					glVertex2f(w*drawGrid(x,y).x,		h*drawGrid(x,y).y);
 					glVertex2f(w*drawGrid(x,y+1).x,		h*drawGrid(x,y+1).y);
