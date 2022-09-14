@@ -182,7 +182,7 @@ void Element::update(float dt)
 		updateLife(dt);
 		if (eff)
 			updateEffects(dt);
-		if (drawGrid)
+		if (!drawGrid.empty())
 			updateGrid(dt);
 	}
 }
@@ -204,28 +204,25 @@ int Element::getElementEffectIndex()
 
 void Element::setGridFromWavy()
 {
-	if (drawGrid)
+	if (!drawGrid.empty())
 	{
+		const size_t NX = drawGrid.width() - 1;
+		const size_t H = drawGrid.height();
 
-		const float w = float(getWidth());
-		for (size_t x = 0; x < xDivs-1; x++)
+		const float iw = 1.0f / float(getWidth());
+		for (size_t x = 0; x < NX; x++)
 		{
-			for (size_t y = 0; y < yDivs; y++)
+			for (size_t y = 0; y < H; y++)
 			{
-				const int wavy_y = (yDivs - y)-1;
-				const float tmp = eff->wavy[wavy_y].x / w;
-				if (wavy_y < 0 || (size_t) wavy_y < eff->wavy.size())
+				const size_t wavy_y = (H - y)-1;
+				if (wavy_y < 0 || wavy_y < eff->wavy.size())
 				{
-
-					drawGrid[x][y].x = tmp - 0.5f;
-					drawGrid[x+1][y].x = tmp + 0.5f;
+					const float tmp = eff->wavy[wavy_y].x * iw;
+					drawGrid(x,y).x = tmp - 0.5f;
+					drawGrid(x+1,y).x = tmp + 0.5f;
 				}
 			}
 		}
-	}
-	else
-	{
-		//std::cout << "no drawgrid...\n";
 	}
 }
 

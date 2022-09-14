@@ -39,7 +39,7 @@ void SplineGridCtrlPoint::onUpdate(float dt)
 }
 
 SplineGrid::SplineGrid()
-    : _xres(0), _yres(0)
+    : deg(0)
 {
     setWidthHeight(128, 128);
     renderQuad = true;
@@ -56,7 +56,6 @@ void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned d
     size_t oldcpy = bsp.ctrlY();
 
     this->createGrid(xres, yres);
-    gridpoints.resize(xres * yres);
 
     std::vector<SplineGridCtrlPoint*> oldp;
     ctrlp.swap(oldp);
@@ -75,8 +74,6 @@ void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned d
             }
     }
 
-    _xres = xres;
-    _yres = yres;
     bsp.resize(w, h, deg, deg, -1.0f, 1.0f);
 
     // kill any excess points
@@ -100,12 +97,8 @@ void SplineGrid::recalc()
 {
     for(size_t i = 0; i < ctrlp.size(); ++i)
         bsp.controlpoints[i] = ctrlp[i]->getSplinePosition();
-    Vector *gp = &gridpoints[0];
-    bsp.recalc(gp, _xres, _yres);
-    Vector **dg = this->getDrawGrid();
-    for(size_t y = 0; y < _yres; ++y)
-        for(size_t x = 0; x < _xres; ++x)
-            dg[x][y] = *gp++;
+    bsp.recalc(drawGrid.data(), drawGrid.width(), drawGrid.height());
+
 }
 
 

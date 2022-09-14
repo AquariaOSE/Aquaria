@@ -45,8 +45,6 @@ private:
 	SplineGridCtrlPoint *createControlPoint(size_t x, size_t y);
 
 	std::vector<SplineGridCtrlPoint*> ctrlp;
-	std::vector<Vector> gridpoints;
-	size_t _xres, _yres;
 	unsigned deg;
 	BSpline2D bsp;
 };

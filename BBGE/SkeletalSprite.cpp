@@ -1923,7 +1923,7 @@ void AnimationLayer::updateBones()
 							{
 								b->changeStrip[i] = Vector(lerp(bkey1->grid[i].x, bkey2->grid[i].x, dt, lerpType), lerp(bkey1->grid[i].y, bkey2->grid[i].y, dt, lerpType));
 							}
-							b->setGridPoints(b->stripVert, b->changeStrip);
+							b->setStripPoints(b->stripVert, &b->changeStrip[0], b->changeStrip.size());
 						}
 					}
 				}

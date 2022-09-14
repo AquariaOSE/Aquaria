@@ -40,101 +40,79 @@ void Quad::setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy,
 	deleteGrid();
 	if (x == 0 || y == 0)
 	{
-		gridTimer = 0;
-		xDivs = 0;
-		yDivs = 0;
 		doUpdateGrid = false;
 	}
 	else
 	{
+		doUpdateGrid = true;
 		this->drawGridOffsetX = dgox;
 		this->drawGridOffsetY = dgoy;
 		this->drawGridModX = dgmx;
 		this->drawGridModY = dgmy;
 		this->drawGridTimeMultiplier = dgtm;
 		drawGridOut = dgo;
-		xDivs = x;
-		yDivs = y;
-
 		createGrid(x, y);
-
-		gridTimer = 0;
-
-		doUpdateGrid = true;
 	}
+
+	gridTimer = 0;
 }
 
 void Quad::createGrid(int xd, int yd)
 {
-	deleteGrid();
-
-	xDivs = xd;
-	yDivs = yd;
-
-	drawGrid = new Vector * [xDivs];
-	for (size_t i = 0; i < xDivs; i++)
-	{
-		drawGrid[i] = new Vector [yDivs];
-		for (size_t j = 0; j < yDivs; j++)
-		{
-			drawGrid[i][j].z = 1;
-		}
-	}
-
+	drawGrid.init(xd, yd);
 	resetGrid();
+	Vector *dg = drawGrid.data();
+	for(size_t i = 0; i < drawGrid.linearsize(); ++i)
+		dg[i].z = 1.0f;
 }
 
 void Quad::setDrawGridAlpha(size_t x, size_t y, float alpha)
 {
-	if (x < xDivs && y < yDivs)
+	if (x < drawGrid.width() && y < drawGrid.height())
 	{
-		drawGrid[x][y].z = alpha;
+		drawGrid(x, y).z = alpha;
 	}
 }
 
-void Quad::setGridPoints(bool vert, const std::vector<Vector> &points)
+void Quad::setStripPoints(bool vert, const Vector *points, size_t n)
 {
-	if (!drawGrid) return;
+	if (drawGrid.empty()) return;
 	resetGrid();
-	for (size_t i = 0; i < points.size(); i++)
+
+	const float mul = float(n);
+
+	if (!vert) // horz
 	{
-		if (!vert) // horz
+		const size_t xmax = std::min(drawGrid.width(), n);
+		for (size_t y = 0; y < drawGrid.height(); y++)
 		{
-			for (size_t y = 0; y < yDivs; y++)
-			{
-				for (size_t x = 0; x < xDivs; x++)
-				{
-					if (x < points.size())
-					{
-						drawGrid[x][y] += points[x];
-					}
-				}
-			}
+			Vector *row = drawGrid.row(y);
+			for (size_t x = 0; x < xmax; x++)
+				row[x] += points[x] * mul;
 		}
-		else
-		{
-			for (size_t x = 0; x < xDivs; x++)
-			{
-				for (size_t y = 0; y < yDivs; y++)
-				{
-					if (y < points.size())
-					{
-						drawGrid[x][y] += points[y];
-					}
-				}
-			}
-		}
+	}
+	else
+	{
+		const size_t ymax = std::min(drawGrid.height(), n);
+		for (size_t x = 0; x < drawGrid.width(); x++)
+			for (size_t y = 0; y < ymax; y++)
+				drawGrid(x, y) += points[y] * mul;
 	}
 }
 
 void Quad::resetGrid()
 {
-	for (size_t i = 0; i < xDivs; i++)
+	const float yMulF = 1.0f / (float)(drawGrid.height()-1);
+	const float xMulF = 1.0f / (float)(drawGrid.width()-1);
+
+	for (size_t y = 0; y < drawGrid.height(); y++)
 	{
-		for (size_t j = 0; j < yDivs; j++)
+		Vector *row = drawGrid.row(y);
+		const float yval = float(y)*yMulF-0.5f;
+		for (size_t x = 0; x < drawGrid.width(); x++)
 		{
-			drawGrid[i][j].x = i/(float)(xDivs-1)-0.5f;
-			drawGrid[i][j].y = j/(float)(yDivs-1)-0.5f;
+			row[x].x = float(x)*xMulF-0.5f;
+			row[x].y = yval;
 		}
 	}
 }
@@ -144,14 +122,10 @@ void Quad::initQuad()
 	repeatToFillScale = Vector(1,1);
 	gridType = GRID_WAVY;
 	gridTimer = 0;
-	xDivs = 0;
-	yDivs = 0;
 
 	doUpdateGrid = false;
 
 	autoWidth = autoHeight = 0;
-
-	drawGrid = 0;
 
 	renderBorder = false;
 	renderCenter = true;
@@ -177,15 +151,7 @@ Quad::Quad() : RenderObject()
 
 void Quad::deleteGrid()
 {
-	if (drawGrid)
-	{
-		for (size_t i = 0; i < xDivs; i++)
-		{
-			delete[] drawGrid[i];
-		}
-		delete[] drawGrid;
-		drawGrid = 0;
-	}
+	drawGrid.clear();
 }
 
 void Quad::destroy()
@@ -254,32 +220,31 @@ bool Quad::isCoordinateInsideWorldRect(const Vector &coord, int w, int h) const
 
 void Quad::updateGrid(float dt)
 {
-
 	if (!doUpdateGrid) return;
 
 	if (gridType == GRID_WAVY)
 	{
 		gridTimer += dt * drawGridTimeMultiplier;
 		resetGrid();
-		size_t hx = xDivs/2;
-		for (size_t x = 0; x < xDivs; x++)
+		size_t hx = drawGrid.width()/2;
+		for (size_t x = 0; x < drawGrid.width(); x++)
 		{
 			float yoffset = x * drawGridOffsetY;
 			float addY = 0;
 			if (drawGridModY != 0)
 				addY = cosf(gridTimer+yoffset)*drawGridModY;
-			for (size_t y = 0; y < yDivs; y++)
+			for (size_t y = 0; y < drawGrid.height(); y++)
 			{
 				float xoffset = y * drawGridOffsetX;
 				if (drawGridModX != 0)
 				{
 					float addX = (sinf(gridTimer+xoffset)*drawGridModX);
 					if (drawGridOut && x < hx)
-						drawGrid[x][y].x += addX;
+						drawGrid(x,y).x += addX;
 					else
-						drawGrid[x][y].x -= addX;
+						drawGrid(x,y).x -= addX;
 				}
-				drawGrid[x][y].y += addY;
+				drawGrid(x,y).y += addY;
 			}
 		}
 	}
@@ -287,7 +252,7 @@ void Quad::updateGrid(float dt)
 
 void Quad::renderGrid(const RenderState& rs) const
 {
-	if (xDivs < 2 || yDivs < 2)
+	if (drawGrid.width() < 2 || drawGrid.height() < 2)
 		return;
 
 	const float percentX = fabsf(this->lowerRightTextureCoordinates.x - this->upperLeftTextureCoordinates.x);
@@ -300,12 +265,15 @@ void Quad::renderGrid(const RenderState& rs) const
 		(lowerRightTextureCoordinates.y < upperLeftTextureCoordinates.y)
 		? lowerRightTextureCoordinates.y : upperLeftTextureCoordinates.y;
 
+	const size_t NX = drawGrid.width()-1;
+	const size_t NY = drawGrid.height()-1;
+
 	// NOTE: These are used to avoid repeated expensive divide operations,
 	// but they may cause rounding error of around 1 part per million,
 	// which could in theory cause minor graphical glitches with broken
 	// OpenGL implementations.  --achurch
-	const float incX = percentX / (float)(xDivs-1);
-	const float incY = percentY / (float)(yDivs-1);
+	const float incX = percentX / float(NX);
+	const float incY = percentY / float(NY);
 
 	const float w = this->getWidth();
 	const float h = this->getHeight();
@@ -319,38 +287,38 @@ void Quad::renderGrid(const RenderState& rs) const
 	glBegin(GL_QUADS);
 	float u0 = baseX;
 	float u1 = u0 + incX;
-	for (size_t i = 0; i < (xDivs-1); i++, u0 = u1, u1 += incX)
+	for (size_t x = 0; x < NX; x++, u0 = u1, u1 += incX)
 	{
 		float v0 = 1 - percentY + baseY;
 		float v1 = v0 + incY;
-		for (size_t j = 0; j < (yDivs-1); j++, v0 = v1, v1 += incY)
+		for (size_t y = 0; y < NY; y++, v0 = v1, v1 += incY)
 		{
-			if (drawGrid[i][j].z != 0 || drawGrid[i][j+1].z != 0 || drawGrid[i+1][j].z != 0 || drawGrid[i+1][j+1].z != 0)
+			if (drawGrid(x,y).z != 0 || drawGrid(x,y+1).z != 0 || drawGrid(x+1,y).z != 0 || drawGrid(x+1,y+1).z != 0)
 			{
 
-				glColor4f(red, green, blue, alpha*drawGrid[i][j].z);
+				glColor4f(red, green, blue, alpha*drawGrid(x,y).z);
 				glTexCoord2f(u0, v0);
 
 
-				glVertex2f(w*drawGrid[i][j].x,		h*drawGrid[i][j].y);
+				glVertex2f(w*drawGrid(x,y).x,		h*drawGrid(x,y).y);
 
-				glColor4f(red, green, blue, alpha*drawGrid[i][j+1].z);
+				glColor4f(red, green, blue, alpha*drawGrid(x,y+1).z);
 				glTexCoord2f(u0, v1);
 
 
-				glVertex2f(w*drawGrid[i][j+1].x,		h*drawGrid[i][j+1].y);
+				glVertex2f(w*drawGrid(x,y+1).x,		h*drawGrid(x,y+1).y);
 
-				glColor4f(red, green, blue, alpha*drawGrid[i+1][j+1].z);
+				glColor4f(red, green, blue, alpha*drawGrid(x+1,y+1).z);
 				glTexCoord2f(u1, v1);
 
 
-				glVertex2f(w*drawGrid[i+1][j+1].x,	h*drawGrid[i+1][j+1].y);
+				glVertex2f(w*drawGrid(x+1,y+1).x,	h*drawGrid(x+1,y+1).y);
 
-				glColor4f(red, green, blue, alpha*drawGrid[i+1][j].z);
+				glColor4f(red, green, blue, alpha*drawGrid(x+1,y).z);
 				glTexCoord2f(u1, v0);
 
 
-				glVertex2f(w*drawGrid[i+1][j].x,		h*drawGrid[i+1][j].y);
+				glVertex2f(w*drawGrid(x+1,y).x,		h*drawGrid(x+1,y).y);
 			}
 		}
 	}
@@ -363,15 +331,14 @@ void Quad::renderGrid(const RenderState& rs) const
 		glPointSize(2);
 		glColor3f(1,0,0);
 		glBegin(GL_POINTS);
-			if(xDivs > 0 && yDivs > 0)
-			for (size_t i = 0; i < (xDivs-1); i++)
+			for (size_t x = 0; x < NX; x++)
 			{
-				for (size_t j = 0; j < (yDivs-1); j++)
+				for (size_t y = 0; y < NY; y++)
 				{
-					glVertex2f(w*drawGrid[i][j].x,		h*drawGrid[i][j].y);
-					glVertex2f(w*drawGrid[i][j+1].x,		h*drawGrid[i][j+1].y);
-					glVertex2f(w*drawGrid[i+1][j+1].x,	h*drawGrid[i+1][j+1].y);
-					glVertex2f(w*drawGrid[i+1][j].x,		h*drawGrid[i+1][j].y);
+					glVertex2f(w*drawGrid(x,y).x,		h*drawGrid(x,y).y);
+					glVertex2f(w*drawGrid(x,y+1).x,		h*drawGrid(x,y+1).y);
+					glVertex2f(w*drawGrid(x+1,y+1).x,	h*drawGrid(x+1,y+1).y);
+					glVertex2f(w*drawGrid(x+1,y).x,		h*drawGrid(x+1,y).y);
 				}
 			}
 		glEnd();
@@ -394,7 +361,7 @@ void Quad::onRender(const RenderState& rs) const
 	const float _w2 = width*0.5f;
 	const float _h2 = height*0.5f;
 
-	if (!drawGrid)
+	if (drawGrid.empty())
 	{
 		glBegin(GL_QUADS);
 		{
@@ -511,7 +478,7 @@ void Quad::onUpdate(float dt)
 	lowerRightTextureCoordinates.update(dt);
 	upperLeftTextureCoordinates.update(dt);
 
-	if (drawGrid && alpha.x > 0 && alphaMod > 0)
+	if (!drawGrid.empty() && alpha.x > 0 && alphaMod > 0)
 	{
 		updateGrid(dt);
 	}
