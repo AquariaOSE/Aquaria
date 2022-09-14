@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define BBGE_QUAD_H
 
 #include "RenderObject.h"
+#include "DataStructures.h"
 
 class OutlineRect : public RenderObject
 {
@@ -62,8 +63,9 @@ public:
 	void repeatTextureToFill(bool on);
 	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatTexture; }
-	void setGridPoints(bool vert, const std::vector<Vector>& points);
-	Vector ** getDrawGrid() { return drawGrid; }
+	void setStripPoints(bool vert, const Vector *points, size_t n);
+	Array2d<Vector>& getDrawGrid() { return drawGrid; }
+	const Array2d<Vector>& getDrawGrid() const { return drawGrid; }
 
 	void reloadDevice();
 
@@ -93,8 +95,7 @@ public:
 
 protected:
 	float gridTimer;
-	size_t xDivs, yDivs;
-	Vector ** drawGrid;
+	Array2d<Vector> drawGrid;
 
 	void resetGrid();
 	void updateGrid(float dt);

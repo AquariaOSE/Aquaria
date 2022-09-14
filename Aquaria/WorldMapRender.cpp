@@ -443,22 +443,22 @@ void WorldMapRender::setProperTileColor(WorldMapTile *tile)
 }
 
 
-static void tileDataToVis(WorldMapTile *tile, Vector **vis)
+static void tileDataToVis(WorldMapTile *tile, Array2d<Vector>& vis)
 {
 	const unsigned char *data = tile->getData();
 
 	if (data != 0)
 	{
 		const float a = tile->prerevealed ? 0.4f :  baseMapSegAlpha;
-		const unsigned int rowSize = MAPVIS_SUBDIV/8;
-		for (unsigned int y = 0; y < MAPVIS_SUBDIV; y++, data += rowSize)
+		const size_t rowSize = MAPVIS_SUBDIV/8;
+		for (size_t y = 0; y < MAPVIS_SUBDIV; y++, data += rowSize)
 		{
-			for (unsigned int x = 0; x < MAPVIS_SUBDIV; x += 8)
+			for (size_t x = 0; x < MAPVIS_SUBDIV; x += 8)
 			{
 				unsigned char dataByte = data[x/8];
-				for (unsigned int x2 = 0; x2 < 8; x2++)
+				for (size_t x2 = 0; x2 < 8; x2++)
 				{
-					vis[x+x2][y].z = (dataByte & (1 << x2)) ? visibleMapSegAlpha : a;
+					vis(x+x2,y).z = (dataByte & (1 << x2)) ? visibleMapSegAlpha : a;
 				}
 			}
 		}
@@ -466,14 +466,9 @@ static void tileDataToVis(WorldMapTile *tile, Vector **vis)
 	else
 	{
 		const float a = tile->prerevealed ? 0.4f :  baseMapSegAlpha;
-		for (int x = 0; x < MAPVIS_SUBDIV; x++)
-		{
-			for (int y = 0; y < MAPVIS_SUBDIV; y++)
-			{
-				vis[x][y].z = a;
-			}
-		}
-		return;
+		Vector *gp = vis.data();
+		for(size_t i = 0; i < vis.linearsize(); ++i)
+			gp[i].z = a;
 	}
 }
 

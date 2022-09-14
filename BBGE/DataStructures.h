@@ -10,8 +10,8 @@ template<typename T>
 class Array2d
 {
 protected:
-    size_t _w, _h;
     std::vector<T> _v;
+    size_t _w, _h;
 
 public:
     Array2d() : _w(0), _h(0) {}
@@ -30,6 +30,16 @@ public:
     {
         _w = _h = 0;
         _v.clear();
+    }
+
+    bool empty() const
+    {
+        return _v.empty();
+    }
+
+    size_t linearsize() const
+    {
+        return _v.size();
     }
 
     void fill(const T& v)
