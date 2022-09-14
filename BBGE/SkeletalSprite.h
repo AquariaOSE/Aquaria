@@ -51,10 +51,10 @@ public:
 	void setAnimated(int a);
 
 	enum {
-		ANIM_NONE		= 0,
-		ANIM_POS		= 1,
-		ANIM_ROT		= 2,
-		ANIM_ALL		= 10
+		ANIM_NONE		= 0x00,
+		ANIM_POS		= 0x01,
+		ANIM_ROT		= 0x02,
+		ANIM_ALL		= ANIM_POS | ANIM_ROT
 	};
 	void createStrip(bool vert, int num);
 	Quad* addFrame(const std::string &gfx);
