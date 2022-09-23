@@ -19,24 +19,16 @@ private:
     std::vector<std::pair<float, float> > pxy;
 };
 
-#endif
-
 class BSpline2D
 {
 public:
     BSpline2D();
 
     // # of control points on each axis
-    void resize(size_t cx, size_t cy, unsigned degx, unsigned degy, float tmin, float tmax);
-    void recalc(Vector *dst, size_t xres, size_t yres);
+    void resize(size_t cx, size_t cy, unsigned degx, unsigned degy);
+    void recalc(Vector *dst, size_t xres, size_t yres, const Vector *controlpoints);
 
-    std::vector<Vector> controlpoints;
-
-    inline Vector& controlpoint(size_t x, size_t y)
-    {
-        return controlpoints[y * _cpx + x];
-    }
-
+    void reset(Vector *controlpoints);
 
     inline size_t ctrlX() const { return _cpx; }
     inline size_t ctrlY() const { return _cpy; }
@@ -50,3 +42,23 @@ private:
     float _tmin, _tmax;
     std::vector<float> knotsX, knotsY;
 };
+
+
+class BSpline2DWithPoints : public BSpline2D
+{
+public:
+
+    void resize(size_t cx, size_t cy, unsigned degx, unsigned degy);
+    void recalc(Vector *dst, size_t xres, size_t yres);
+
+    void reset();
+
+    std::vector<Vector> controlpoints;
+
+    inline Vector& controlpoint(size_t x, size_t y)
+    {
+        return controlpoints[y * ctrlX() + x];
+    }
+};
+
+#endif

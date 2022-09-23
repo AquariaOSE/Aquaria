@@ -93,6 +93,10 @@ public:
 	float borderAlpha;
 	Vector repeatToFillScale;
 
+	static void ResetGrid(Vector *dst, size_t w, size_t h);
+	static void ResetGridAndAlpha(Vector *dst, size_t w, size_t h, float alpha = 1.0f);
+
+
 protected:
 	float gridTimer;
 	Array2d<Vector> drawGrid;

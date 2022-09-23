@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Quad.h"
 #include "SimpleIStringStream.h"
 #include <map>
+#include "Interpolators.h"
 // for 2d system only
 
 enum AnimationCommand
@@ -155,9 +156,10 @@ class BoneGridInterpolator
 {
 public:
 	size_t idx;
-	unsigned pointsX, pointsY;
-	unsigned degreeX, degreeY;
-	void updateGrid(BoneKeyframe& bk);
+	BSpline2D bsp;
+	bool storeBoneByIdx;
+	void updateGridOnly(BoneKeyframe& bk, const Bone *bone);
+	void updateGridAndBone(BoneKeyframe& bk, Bone *bone);
 };
 
 class Animation
@@ -181,6 +183,7 @@ public:
 	void reverse();
 	bool resetPassOnEnd;
 
+	BoneGridInterpolator *getBoneGridInterpolator(size_t boneIdx);
 	typedef std::vector <BoneGridInterpolator> Interpolators;
 	Interpolators interpolators;
 };

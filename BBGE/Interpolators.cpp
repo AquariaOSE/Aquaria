@@ -2,6 +2,16 @@
 #include <math.h>
 #include "tbsp.hh"
 
+// usually one would expect that a bspline goes from t=0 to t=1.
+// here, splines eval between these -0.5 .. +0.5.
+// this way 0 is perfectly in the center (which is a nice property to have)
+// but more importantly the Quad::drawGrid in its default state
+// has values in -0.5..+0.5 in its initial state.
+// So we follow the same here, that the spline produces values
+// in -0.5..+0.5 in its initial state.
+static const float TMIN = -0.5f;
+static const float TMAX = 0.5f;
+
 CosineInterpolator::CosineInterpolator()
 {
 }
@@ -73,9 +83,10 @@ BSpline2D::BSpline2D()
 {
 }
 
-void BSpline2D::resize(size_t cx, size_t cy, unsigned degx, unsigned degy, float tmin, float tmax)
+void BSpline2D::resize(size_t cx, size_t cy, unsigned degx, unsigned degy)
 {
-    controlpoints.resize(cx * cy);
+    const float tmin = TMIN;
+    const float tmax = TMAX;
     knotsX.resize(tbsp__getNumKnots(cx, degx));
     knotsY.resize(tbsp__getNumKnots(cy, degy));
     tbsp::fillKnotVector<float>(&knotsX[0], cx, degx, tmin, tmax);
@@ -88,7 +99,7 @@ void BSpline2D::resize(size_t cx, size_t cy, unsigned degx, unsigned degy, float
     _tmax = tmax;
 }
 
-void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres)
+void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres, const Vector *controlpoints)
 {
     std::vector<Vector> tmpv;
     size_t degn = std::max(_degx, _degy);
@@ -119,4 +130,35 @@ void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres)
         tbsp::evalRange(dst, xres, &work[0], &knotsX[0], srcrow, _cpx, _degx, _tmin, _tmax);
         dst += xres;
     }
+}
+
+// TODO: add minx/y, maxx/y params?
+// this should NOT be tmin?! probably?
+void BSpline2D::reset(Vector* controlpoints)
+{
+    const float dx = (_tmax - _tmin) / float(_cpx - 1);
+    const float dy = (_tmax - _tmin) / float(_cpy - 1);
+    float yy = _tmin;
+    for(size_t y = 0; y < _cpy; ++y, yy += dy)
+    {
+        float xx = _tmin;
+        for(size_t x = 0; x < _cpx; ++x, xx += dx)
+            *controlpoints++ = Vector(xx, yy);
+    }
+}
+
+void BSpline2DWithPoints::resize(size_t cx, size_t cy, unsigned degx, unsigned degy)
+{
+    controlpoints.resize(cx * cy);
+    BSpline2D::resize(cx, cy, degx, degy);
+}
+
+void BSpline2DWithPoints::recalc(Vector* dst, size_t xres, size_t yres)
+{
+    BSpline2D::recalc(dst, xres, yres, &controlpoints[0]);
+}
+
+void BSpline2DWithPoints::reset()
+{
+    BSpline2D::reset(&controlpoints[0]);
 }

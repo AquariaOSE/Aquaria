@@ -100,21 +100,48 @@ void Quad::setStripPoints(bool vert, const Vector *points, size_t n)
 	}
 }
 
-void Quad::resetGrid()
+void Quad::ResetGrid(Vector* dst, size_t w, size_t h)
 {
-	const float yMulF = 1.0f / (float)(drawGrid.height()-1);
-	const float xMulF = 1.0f / (float)(drawGrid.width()-1);
+	assert(w > 1 && h > 1);
+	const float xMulF = 1.0f / (float)(w-1);
+	const float yMulF = 1.0f / (float)(h-1);
 
-	for (size_t y = 0; y < drawGrid.height(); y++)
+	for (size_t y = 0; y < h; y++)
 	{
-		Vector *row = drawGrid.row(y);
 		const float yval = float(y)*yMulF-0.5f;
-		for (size_t x = 0; x < drawGrid.width(); x++)
+		for (size_t x = 0; x < w; x++)
 		{
-			row[x].x = float(x)*xMulF-0.5f;
-			row[x].y = yval;
+			dst->x = float(x)*xMulF-0.5f;
+			dst->y = yval;
+			++dst;
 		}
 	}
+}
+
+void Quad::ResetGridAndAlpha(Vector* dst, size_t w, size_t h, float alpha)
+{
+	assert(w > 1 && h > 1);
+	const float xMulF = 1.0f / (float)(w-1);
+	const float yMulF = 1.0f / (float)(h-1);
+
+	for (size_t y = 0; y < h; y++)
+	{
+		const float yval = float(y)*yMulF-0.5f;
+		for (size_t x = 0; x < w; x++)
+		{
+			dst->x = float(x)*xMulF-0.5f;
+			dst->y = yval;
+			dst->z = alpha;
+			++dst;
+		}
+	}
+}
+
+void Quad::resetGrid()
+{
+	if (drawGrid.empty()) return;
+
+	ResetGrid(drawGrid.data(), drawGrid.width(), drawGrid.height());
 }
 
 void Quad::initQuad()
