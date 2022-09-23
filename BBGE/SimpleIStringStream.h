@@ -175,8 +175,8 @@ class SimpleIStringStream {
 	/*------------------------------*/
 
 	/**
-	 * operator bool:  Evaluate the stream as a boolean.  Returns false if
-	 * an error has occurred, true otherwise.  (This allows the stream to
+	 * operator void*:  Evaluate the stream as a boolean.  Returns NULL if
+	 * an error has occurred, this otherwise.  (This allows the stream to
 	 * be used in a while loop like "while (stream >> var)", in the same
 	 * way as ordinary std::istringstream objects.)
 	 *
@@ -185,7 +185,7 @@ class SimpleIStringStream {
 	 * [Return value]
 	 *     False if an error has occurred, else true
 	 */
-	inline operator bool() const;
+	inline operator void*() const;
 
 	/**
 	 * operator>>:  Extract a value from a stream.  String extraction skips
@@ -419,10 +419,10 @@ inline SimpleIStringStream &SimpleIStringStream::operator=(
 
 /*-----------------------------------------------------------------------*/
 
-inline SimpleIStringStream::operator bool() const
+inline SimpleIStringStream::operator void*() const
 {
 #ifdef SISS_VERIFY
-	if (!error != bool(std_is)) {
+	if (!error != (void*)(std_is)) {
 		std::ostringstream os_offset; os_offset << (position - buffer);
 		debugLog(std::string("SimpleIStringStream bool MISMATCH: us=")
 		         + (!error ? "true" : "false") + " STL="
@@ -432,7 +432,7 @@ inline SimpleIStringStream::operator bool() const
 		         + os_offset.str() + ")");
 	}
 #endif
-	return !error;
+	return error ? NULL : (void*)this;
 }
 
 /*-----------------------------------------------------------------------*/
