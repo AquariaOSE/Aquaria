@@ -14,27 +14,57 @@ Vector SplineGridCtrlPoint::getSplinePosition() const
 {
     SplineGridCtrlPoint *p = (SplineGridCtrlPoint*)getParent();
     // always return alpha == 1
+    // points within the quad result in in -0.5 .. +0.5 on both axes
     return Vector(position.x / p->width, position.y / p->height, 1.0f);
+}
+
+void SplineGridCtrlPoint::setSplinePosition(Vector pos)
+{
+    SplineGridCtrlPoint *p = (SplineGridCtrlPoint*)getParent();
+    position.x = pos.x * p->width;
+    position.y = pos.y * p->height;
 }
 
 void SplineGridCtrlPoint::onUpdate(float dt)
 {
     const bool lmb = core->mouse.buttons.left;
 
+    // FIXME: selected point tracking should be done by the parent
+
+    Vector cur = core->mouse.position;
+    // bool wouldpick = isCoordinateInside(cur); // doesn't work
+    Vector wp = getWorldPosition();
+    const bool wouldpick = (cur - wp).isLength2DIn(10);
+
+    if(wouldpick)
+        color = Vector(1,0,0);
+    else
+        color = Vector(1,1,1);
+
     if(lmb)
     {
-        if(!movingPoint && isCoordinateInside(core->mouse.position))
+        if(!movingPoint && wouldpick)
+        {
             movingPoint = this;
+        }
     }
-    else
+    else if(movingPoint)
+    {
+        movingPoint->color = Vector(1,1,1);
         movingPoint = NULL;
+    }
 
     if(movingPoint == this)
     {
         SplineGrid *p = (SplineGrid*)getParent();
         const Vector parentPos = p->getWorldPosition();
-        position = core->mouse.position - parentPos;
-        p->recalc();
+        const Vector invscale = Vector(1.0f / p->scale.x, 1.0f / p->scale.y);
+        Vector newpos = (cur - parentPos) * invscale;
+        if(position != newpos)
+        {
+            position = newpos;
+            p->recalc();
+        }
     }
 }
 
@@ -50,7 +80,7 @@ SplineGrid::~SplineGrid()
 {
 }
 
-void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned deg)
+void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned degx, unsigned degy)
 {
     size_t oldcpx = bsp.ctrlX();
     size_t oldcpy = bsp.ctrlY();
@@ -74,7 +104,7 @@ void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned d
             }
     }
 
-    bsp.resize(w, h, deg, deg, -1.0f, 1.0f);
+    bsp.resize(w, h, degx, degy);
 
     // kill any excess points
     for(size_t i = 0; i < oldp.size(); ++i)
@@ -95,27 +125,29 @@ void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned d
 
 void SplineGrid::recalc()
 {
-    for(size_t i = 0; i < ctrlp.size(); ++i)
-        bsp.controlpoints[i] = ctrlp[i]->getSplinePosition();
+    exportControlPoints(&bsp.controlpoints[0]);
     bsp.recalc(drawGrid.data(), drawGrid.width(), drawGrid.height());
+    wasModified = true;
+}
 
+void SplineGrid::exportControlPoints(Vector* controlpoints)
+{
+    for(size_t i = 0; i < ctrlp.size(); ++i)
+        controlpoints[i] = ctrlp[i]->getSplinePosition();
+}
+
+void SplineGrid::importControlPoints(const Vector* controlpoints)
+{
+    for(size_t i = 0; i < ctrlp.size(); ++i)
+        ctrlp[i]->setSplinePosition(controlpoints[i]);
+    recalc();
 }
 
 
 void SplineGrid::resetControlPoints()
 {
-    const size_t cpx = bsp.ctrlX();
-    const size_t cpy = bsp.ctrlY();
-    const float dx = width / float(cpx - 1);
-    const float dy = height / float(cpy - 1);
-    float yy = height * -0.5f;
-    for(size_t y = 0; y < cpy; ++y, yy += dy)
-    {
-        float xx = width * -0.5f;
-        SplineGridCtrlPoint **row = &ctrlp[y * cpx];
-        for(size_t x = 0; x < cpx; ++x, xx += dx)
-            row[x]->position = Vector(xx, yy);
-    }
+    bsp.reset();
+    importControlPoints(&bsp.controlpoints[0]);
 }
 
 SplineGridCtrlPoint* SplineGrid::createControlPoint(size_t x, size_t y)
@@ -145,7 +177,7 @@ void SplineGrid::onRender(const RenderState& rs) const
     const Vector wh2(width * 0.5f, height * 0.5f);
 
     glLineWidth(2);
-    glColor4f(0.0f, 1.0f, 0.3f, 0.3f);
+    glColor4f(0.0f, 0.3f, 1.0f, 0.3f);
 
     const size_t cpx = bsp.ctrlX();
     const size_t cpy = bsp.ctrlY();

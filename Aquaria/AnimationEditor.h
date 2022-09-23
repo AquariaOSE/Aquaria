@@ -150,6 +150,8 @@ public:
 	DebugFont *gridsize, *unitsize;
 
 	SplineGrid *splinegrid;
+	void applySplineGridToBone();
+	void applyBoneToSplineGrid();
 };
 
 
