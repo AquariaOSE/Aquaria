@@ -86,6 +86,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 // #define SISS_VERIFY
 
+
+#ifdef SISS_VERIFY
+#  include <sstream>
+#endif
+
 /*************************************************************************/
 /*************************** Class definition ****************************/
 /*************************************************************************/
@@ -422,7 +427,7 @@ inline SimpleIStringStream &SimpleIStringStream::operator=(
 inline SimpleIStringStream::operator void*() const
 {
 #ifdef SISS_VERIFY
-	if (!error != (void*)(std_is)) {
+	if (!error != bool(std_is)) {
 		std::ostringstream os_offset; os_offset << (position - buffer);
 		debugLog(std::string("SimpleIStringStream bool MISMATCH: us=")
 		         + (!error ? "true" : "false") + " STL="
