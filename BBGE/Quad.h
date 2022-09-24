@@ -86,11 +86,11 @@ public:
 
 	char autoWidth, autoHeight;  // char to save space
 
-	bool renderQuad, renderCenter;
-	mutable bool renderBorder; // TODO: should be part of render state
+	bool renderQuad, renderCenter, renderBorder;
 	Vector texOff;
 
 	float borderAlpha;
+	Vector renderBorderColor;
 	Vector repeatToFillScale;
 
 	static void ResetGrid(Vector *dst, size_t w, size_t h);
@@ -113,14 +113,13 @@ protected:
 	float drawGridTimeMultiplier;
 	bool drawGridOut;
 
-	static Vector renderBorderColor;
-
 	void onSetTexture();
 	void onRender(const RenderState& rs) const OVERRIDE;
 	void onUpdate(float dt);
 private:
 	bool doUpdateGrid;
 	void initQuad();
+	void _renderBorder(const RenderState& rs, Vector color, float borderalpha) const;
 };
 
 class PauseQuad : public Quad

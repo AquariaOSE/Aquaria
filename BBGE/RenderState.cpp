@@ -5,6 +5,7 @@
 
 RenderState::RenderState(GPUState &gpu)
     : gpu(gpu), color(1,1,1), alpha(1), pass(0)
+	, forceRenderBorder(false), forceRenderCenter(false), renderBorderAlpha(1)
 {
 }
 

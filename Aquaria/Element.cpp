@@ -283,30 +283,34 @@ void Element::setElementEffectByIndex(int eidx)
 void Element::render(const RenderState& rs) const
 {
 	if (!elementActive) return;
+	const RenderState *rsp = &rs;
+
 	if (dsq->game->isSceneEditorActive() && this->bgLayer == dsq->game->sceneEditor.bgLayer
 		&& dsq->game->sceneEditor.editType == ET_ELEMENTS)
 	{
-		renderBorderColor = Vector(0.5,0.5,0.5);
+		RenderState rs2(rs);
+		rsp = &rs2;
+		rs2.forceRenderBorder = true;
+		rs2.forceRenderCenter = true;
+		rs2.renderBorderColor = Vector(0.5f, 0.5f, 0.5f);
+
 		if (!dsq->game->sceneEditor.selectedElements.empty())
 		{
 			for (size_t i = 0; i < dsq->game->sceneEditor.selectedElements.size(); i++)
 			{
 				if (this == dsq->game->sceneEditor.selectedElements[i])
-					renderBorderColor = Vector(1,1,1);
+					rs2.renderBorderColor = Vector(1,1,1);
 			}
 		}
 		else
 		{
 			if (dsq->game->sceneEditor.editingElement == this)
-				renderBorderColor = Vector(1,1,1);
+				rs2.renderBorderColor = Vector(1,1,1);
 		}
-		renderBorder = true;
 
 	}
 
-	Quad::render(rs);
-
-	renderBorder = false;
+	Quad::render(*rsp);
 }
 
 void Element::fillGrid()
