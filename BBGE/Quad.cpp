@@ -23,11 +23,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderBase.h"
 #include <assert.h>
 
-Vector Quad::renderBorderColor = Vector(1,1,1);
-
 Quad::Quad(const std::string &tex, const Vector &pos)
 : RenderObject()
 {
+	renderBorderColor = Vector(1,1,1);
 	initQuad();
 	position = pos;
 	setTexture(tex);
@@ -164,6 +163,36 @@ void Quad::initQuad()
 	lowerRightTextureCoordinates = Vector(1,1);
 	renderQuad = true;
 
+}
+
+void Quad::_renderBorder(const RenderState& rs, Vector color, float borderalpha) const
+{
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	if (rs.forceRenderCenter || renderCenter)
+	{
+		glColor4f(color.x, color.y, color.z, borderalpha*alpha.x*alphaMod);
+		glPointSize(16);
+		glBegin(GL_POINTS);
+			glVertex2f(0,0);
+		glEnd();
+	}
+
+	glColor4f(color.x, color.y, color.z, alpha.x*alphaMod);
+	glLineWidth(2);
+	const float _w2 = width*0.5f;
+	const float _h2 = height*0.5f;
+	glBegin(GL_LINES);
+		glVertex2f(-_w2, _h2);
+		glVertex2f(_w2, _h2);
+		glVertex2f(_w2, -_h2);
+		glVertex2f(_w2, _h2);
+		glVertex2f(-_w2, -_h2);
+		glVertex2f(-_w2, _h2);
+		glVertex2f(-_w2, -_h2);
+		glVertex2f(_w2, -_h2);
+	glEnd();
+	RenderObject::lastTextureApplied = 0;
 }
 
 Quad::Quad() : RenderObject()
@@ -409,35 +438,11 @@ void Quad::onRender(const RenderState& rs) const
 		renderGrid(rs);
 	}
 
-	if (renderBorder)
-	{
-		glLineWidth(2);
+	if(renderBorder)
+		_renderBorder(rs, renderBorderColor, borderAlpha);
+	else if(rs.forceRenderBorder)
+		_renderBorder(rs, rs.renderBorderColor, rs.renderBorderAlpha);
 
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		glColor4f(renderBorderColor.x, renderBorderColor.y, renderBorderColor.z, borderAlpha*alpha.x*alphaMod);
-
-		if (renderCenter)
-		{
-			glPointSize(16);
-			glBegin(GL_POINTS);
-				glVertex2f(0,0);
-			glEnd();
-		}
-
-		glColor4f(renderBorderColor.x, renderBorderColor.y, renderBorderColor.z, 1*alpha.x*alphaMod);
-		glBegin(GL_LINES);
-			glVertex2f(-_w2, _h2);
-			glVertex2f(_w2, _h2);
-			glVertex2f(_w2, -_h2);
-			glVertex2f(_w2, _h2);
-			glVertex2f(-_w2, -_h2);
-			glVertex2f(-_w2, _h2);
-			glVertex2f(-_w2, -_h2);
-			glVertex2f(_w2, -_h2);
-		glEnd();
-		RenderObject::lastTextureApplied = 0;
-	}
 
 }
 

@@ -29,6 +29,11 @@ struct RenderState
     float alpha;
     int pass;
 
+    bool forceRenderBorder;
+    bool forceRenderCenter;
+    Vector renderBorderColor;
+    float renderBorderAlpha;
+
 protected:
     RenderState(GPUState& gpu);
 };

@@ -2479,21 +2479,23 @@ void Entity::render(const RenderState& rsold) const
 	scale *= flipScale;
 
 
-	if (dsq->game->isSceneEditorActive() && dsq->game->sceneEditor.editType == ET_ENTITIES)
-	{
-		if (dsq->game->sceneEditor.editingEntity == this)
-			renderBorderColor = Vector(1,1,1);
-		else
-			renderBorderColor = Vector(0.5,0.5,0.5);
-		renderBorder = true;
 
-	}
 
 	RenderState rs(rsold);
 	rs.color *= color;
 	if (multColor.isInterpolating())
 		rs.color *= multColor;
 	rs.alpha *= alpha.x;
+
+
+	if (dsq->game->isSceneEditorActive() && dsq->game->sceneEditor.editType == ET_ENTITIES)
+	{
+		if (dsq->game->sceneEditor.editingEntity == this)
+			rs.renderBorderColor = Vector(1,1,1);
+		else
+			rs.renderBorderColor = Vector(0.5,0.5,0.5);
+		rs.forceRenderBorder = true;
+	}
 
 	// if we have an override render pass set:
 	// from this point, render all children in this pass
@@ -2503,7 +2505,6 @@ void Entity::render(const RenderState& rsold) const
 
 	Quad::render(rs);
 
-	renderBorder = false;
 	scale = bscale;
 }
 
