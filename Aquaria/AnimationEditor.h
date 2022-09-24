@@ -138,7 +138,14 @@ public:
 
 	void toggleRenderBorders();
 	void updateRenderBorders();
-	bool renderBorders;
+
+	enum RenderBorderMode
+	{
+		RENDER_BORDER_NONE,
+		RENDER_BORDER_MINIMAL,
+		RENDER_BORDER_ALL, // must be last
+	};
+	RenderBorderMode renderBorderMode;
 	void updateEditingBone();
 	void showAllBones();
 	void incrTimelineUnit();

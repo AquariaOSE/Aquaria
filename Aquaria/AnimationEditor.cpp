@@ -220,7 +220,7 @@ void AnimationEditor::applyState()
 	selectedStripPoint = 0;
 	mouseSelection = true;
 	editingFile = "Naija";
-	renderBorders = false;
+	renderBorderMode = RENDER_BORDER_MINIMAL;
 	ae = this;
 	StateObject::applyState();
 	boneEdit = 0;
@@ -1454,7 +1454,9 @@ void AnimationEditor::toggleRenderBorders()
 {
 	if (dsq->isNested()) return;
 
-	renderBorders = !renderBorders;
+	renderBorderMode = (RenderBorderMode)(renderBorderMode + 1);
+	if(renderBorderMode > RENDER_BORDER_ALL)
+		renderBorderMode = RENDER_BORDER_NONE;
 	updateRenderBorders();
 }
 
@@ -1463,13 +1465,43 @@ void AnimationEditor::updateRenderBorders()
 	if (!editSprite)
 		return;
 
+
+	// reset
 	for (size_t i = 0; i < editSprite->bones.size(); ++i)
 	{
 		Bone *b = editSprite->bones[i];
-		b->renderBorder = renderBorders;
-		b->renderCenter = renderBorders;
+		b->renderBorder = false;
+		b->renderCenter = false;
 		b->borderAlpha = 0.8f;
 		b->renderBorderColor = Vector(1,1,1);
+	}
+
+	if(renderBorderMode == RENDER_BORDER_NONE)
+		return;
+	else
+	{
+		Animation *a = editSprite->getCurrentAnimation();
+		for(size_t i = 0; i < a->interpolators.size(); ++i)
+		{
+			const BoneGridInterpolator& bgip = a->interpolators[i];
+			if(Bone *b = editSprite->getBoneByIdx(bgip.idx))
+			{
+				b->renderBorder = true;
+				b->renderCenter = true;
+				b->borderAlpha = 0.4f;
+				b->renderBorderColor = Vector(0.2f, 0.9f, 0.2f);
+			}
+		}
+	}
+
+	if(renderBorderMode == RENDER_BORDER_ALL)
+	{
+		for (size_t i = 0; i < editSprite->bones.size(); ++i)
+		{
+			Bone *b = editSprite->bones[i];
+			b->renderBorder = true;
+			b->renderCenter = true;
+		}
 	}
 }
 
@@ -1541,21 +1573,7 @@ void AnimationEditor::onKeyframeChanged()
 {
 	applyBoneToSplineGrid();
 
-	Animation *a = editSprite->getCurrentAnimation();
-
 	updateRenderBorders(); // restore default state
-
-	for(size_t i = 0; i < a->interpolators.size(); ++i)
-	{
-		const BoneGridInterpolator& bgip = a->interpolators[i];
-		if(Bone *b = editSprite->getBoneByIdx(bgip.idx))
-		{
-			b->renderBorder = true;
-			b->renderCenter = true;
-			b->borderAlpha = 0.4f;
-			b->renderBorderColor = Vector(0.2f, 0.9f, 0.2f);
-		}
-	}
 }
 
 void AnimationEditor::applyBoneToSplineGrid()
