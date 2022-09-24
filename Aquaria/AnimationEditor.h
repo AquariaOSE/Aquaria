@@ -149,6 +149,8 @@ public:
 	void updateTimelineGrid();
 	DebugFont *gridsize, *unitsize;
 
+	void onKeyframeChanged();
+
 	SplineGrid *splinegrid;
 	void applySplineGridToBone();
 	void applyBoneToSplineGrid();

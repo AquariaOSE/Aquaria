@@ -858,10 +858,10 @@ void AnimationEditor::nextKey()
 				editSprite->setTime(k->t);
 			else
 				currentKey --;
+
+			onKeyframeChanged();
 		}
 	}
-
-	applyBoneToSplineGrid();
 }
 
 void AnimationEditor::prevKey()
@@ -891,11 +891,11 @@ void AnimationEditor::prevKey()
 				SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
 				if (k)
 					editSprite->setTime(k->t);
+
+				onKeyframeChanged();
 			}
 		}
 	}
-
-	applyBoneToSplineGrid();
 }
 
 
@@ -1350,7 +1350,7 @@ void AnimationEditor::loadFile()
 	if (editingStrip)
 		editStripKey();
 
-	applyBoneToSplineGrid();
+	onKeyframeChanged();
 }
 
 void AnimationEditor::goToTitle()
@@ -1465,9 +1465,11 @@ void AnimationEditor::updateRenderBorders()
 
 	for (size_t i = 0; i < editSprite->bones.size(); ++i)
 	{
-		editSprite->bones[i]->renderBorder = renderBorders;
-		editSprite->bones[i]->renderCenter = renderBorders;
-		editSprite->bones[i]->borderAlpha = 0.8f;
+		Bone *b = editSprite->bones[i];
+		b->renderBorder = renderBorders;
+		b->renderCenter = renderBorders;
+		b->borderAlpha = 0.8f;
+		b->renderBorderColor = Vector(1,1,1);
 	}
 }
 
@@ -1533,6 +1535,27 @@ void AnimationEditor::updateTimelineGrid()
 	std::ostringstream os;
 	os << "Grid: " << TIMELINE_GRIDSIZE;
 	gridsize->setText(os.str());
+}
+
+void AnimationEditor::onKeyframeChanged()
+{
+	applyBoneToSplineGrid();
+
+	Animation *a = editSprite->getCurrentAnimation();
+
+	updateRenderBorders(); // restore default state
+
+	for(size_t i = 0; i < a->interpolators.size(); ++i)
+	{
+		const BoneGridInterpolator& bgip = a->interpolators[i];
+		if(Bone *b = editSprite->getBoneByIdx(bgip.idx))
+		{
+			b->renderBorder = true;
+			b->renderCenter = true;
+			b->borderAlpha = 0.4f;
+			b->renderBorderColor = Vector(0.2f, 0.9f, 0.2f);
+		}
+	}
 }
 
 void AnimationEditor::applyBoneToSplineGrid()
