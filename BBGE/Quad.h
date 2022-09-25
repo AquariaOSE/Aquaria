@@ -74,7 +74,14 @@ public:
 
 	InterpolatedVector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
 
+	enum GridDrawOrder
+	{
+		GRID_DRAW_WORLDMAP = -1, // LRTB order, uses grid.z as alpha
+		GRID_DRAW_LRTB = 0, // the default. ignores grid.z
+		GRID_DRAW_LRBT = 1, // Y axis inverted
 
+		GRID_DRAW_DEFAULT = GRID_DRAW_LRTB
+	};
 
 	enum GridType
 	{
@@ -104,7 +111,9 @@ protected:
 	void resetGrid();
 	void updateGrid(float dt);
 	void renderGrid(const RenderState& rs) const;
-
+	void renderGrid_LRTB(const RenderState& rs) const;
+	void renderGrid_LRBT(const RenderState& rs) const;
+	void renderGridWithAlpha(const RenderState& rs) const;
 
 	float drawGridOffsetX;
 	float drawGridOffsetY;
@@ -116,6 +125,9 @@ protected:
 	void onSetTexture();
 	void onRender(const RenderState& rs) const OVERRIDE;
 	void onUpdate(float dt);
+
+public:
+	GridDrawOrder drawOrder;
 private:
 	bool doUpdateGrid;
 	void initQuad();

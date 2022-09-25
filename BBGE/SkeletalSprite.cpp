@@ -1053,6 +1053,10 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			os << this->bones[i]->originalScale.x << " " << this->bones[i]->originalScale.y;
 			bone->SetAttribute("sz", os.str().c_str());
 		}
+		if(this->bones[i]->drawOrder != Quad::GRID_DRAW_DEFAULT)
+		{
+			bone->SetAttribute("gridDrawOrder", (int)this->bones[i]->drawOrder);
+		}
 
 
 		for (Children::iterator j = this->bones[i]->children.begin(); j != this->bones[i]->children.end(); j++)
@@ -1618,6 +1622,11 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					os << "Bone idx " << newb->idx << " already has a DrawGrid, ignoring \"grid\" attribute";
 					errorLog(os.str());
 				}
+			}
+			if(const char *gdo = bone->Attribute("gridDrawOrder"))
+			{
+				int ord = atoi(gdo);
+				newb->drawOrder = (Quad::GridDrawOrder)ord;
 			}
 			bone = bone->NextSiblingElement("Bone");
 		}

@@ -199,6 +199,7 @@ Quad::Quad() : RenderObject()
 {
 	addType(SCO_QUAD);
 	borderAlpha = 0.5;
+	drawOrder = GRID_DRAW_DEFAULT;
 
 	initQuad();
 
@@ -311,6 +312,170 @@ void Quad::renderGrid(const RenderState& rs) const
 	if (drawGrid.width() < 2 || drawGrid.height() < 2)
 		return;
 
+	switch(drawOrder)
+	{
+		case GRID_DRAW_LRTB:
+			renderGrid_LRTB(rs);
+			break;
+
+		case GRID_DRAW_LRBT:
+			renderGrid_LRBT(rs);
+			break;
+
+		case GRID_DRAW_WORLDMAP:
+			renderGridWithAlpha(rs);
+			break;
+	}
+
+	// debug points
+	if (RenderObject::renderCollisionShape)
+	{
+		const size_t NX = drawGrid.width()-1;
+		const size_t NY = drawGrid.height()-1;
+		const float w = this->getWidth();
+		const float h = this->getHeight();
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glPointSize(2);
+		glColor3f(1,0,0);
+		glBegin(GL_POINTS);
+			for (size_t y = 0; y < NY; y++)
+			{
+				for (size_t x = 0; x < NX; x++)
+				{
+					glVertex2f(w*drawGrid(x,y).x,		h*drawGrid(x,y).y);
+					glVertex2f(w*drawGrid(x,y+1).x,		h*drawGrid(x,y+1).y);
+					glVertex2f(w*drawGrid(x+1,y+1).x,	h*drawGrid(x+1,y+1).y);
+					glVertex2f(w*drawGrid(x+1,y).x,		h*drawGrid(x+1,y).y);
+				}
+			}
+		glEnd();
+		if (texture)
+			glBindTexture(GL_TEXTURE_2D, texture->textures[0]);
+	}
+}
+
+void Quad::renderGrid_LRTB(const RenderState& rs) const
+{
+	const float percentX = lowerRightTextureCoordinates.x - upperLeftTextureCoordinates.x;
+	const float percentY = lowerRightTextureCoordinates.y - upperLeftTextureCoordinates.y;
+
+	const float baseX = upperLeftTextureCoordinates.x;
+	const float baseY = upperLeftTextureCoordinates.y;
+
+	const size_t NX = drawGrid.width()-1;
+	const size_t NY = drawGrid.height()-1;
+
+	// NOTE: These are used to avoid repeated expensive divide operations,
+	// but they may cause rounding error of around 1 part per million,
+	// which could in theory cause minor graphical glitches with broken
+	// OpenGL implementations.  --achurch
+	const float incX = percentX / float(NX);
+	const float incY = percentY / float(NY);
+
+	const float w = this->getWidth();
+	const float h = this->getHeight();
+
+	const float red   = rs.color.x * this->color.x;
+	const float green = rs.color.y * this->color.y;
+	const float blue  = rs.color.z * this->color.z;
+	const float alpha = rs.alpha * this->alpha.x * this->alphaMod;
+
+	glColor4f(red, green, blue, alpha);
+
+	glBegin(GL_QUADS);
+	float v0 = baseY;
+	float v1 = v0 + incY;
+	for (size_t y = 0; y < NY; y++, v0 = v1, v1 += incY)
+	{
+		float u0 = baseX;
+		float u1 = u0 + incX;
+		const Vector *row0 = drawGrid.row(y);
+		const Vector *row1 = drawGrid.row(y+1);
+		for (size_t x = 0; x < NX; x++, u0 = u1, u1 += incX)
+		{
+			const Vector dg00 = row0[x];
+			const Vector dg01 = row1[x];
+			const Vector dg10 = row0[x+1];
+			const Vector dg11 = row1[x+1];
+
+			glTexCoord2f(u0, v0);
+			glVertex2f(w*dg00.x,		h*dg00.y);
+
+			glTexCoord2f(u0, v1);
+			glVertex2f(w*dg01.x,		h*dg01.y);
+
+			glTexCoord2f(u1, v1);
+			glVertex2f(w*dg11.x,		h*dg11.y);
+
+			glTexCoord2f(u1, v0);
+			glVertex2f(w*dg10.x,		h*dg10.y);
+		}
+	}
+	glEnd();
+}
+
+void Quad::renderGrid_LRBT(const RenderState& rs) const
+{
+	const float percentX = lowerRightTextureCoordinates.x - upperLeftTextureCoordinates.x;
+	const float percentY = upperLeftTextureCoordinates.y - lowerRightTextureCoordinates.y;
+
+	const float baseX = upperLeftTextureCoordinates.x;
+	const float baseY = lowerRightTextureCoordinates.y;
+
+	const size_t NX = drawGrid.width()-1;
+	const size_t NY = drawGrid.height()-1;
+
+	// NOTE: These are used to avoid repeated expensive divide operations,
+	// but they may cause rounding error of around 1 part per million,
+	// which could in theory cause minor graphical glitches with broken
+	// OpenGL implementations.  --achurch
+	const float incX = percentX / float(NX);
+	const float incY = percentY / float(NY);
+
+	const float w = this->getWidth();
+	const float h = this->getHeight();
+
+	const float red   = rs.color.x * this->color.x;
+	const float green = rs.color.y * this->color.y;
+	const float blue  = rs.color.z * this->color.z;
+	const float alpha = rs.alpha * this->alpha.x * this->alphaMod;
+
+	glColor4f(red, green, blue, alpha);
+
+	glBegin(GL_QUADS);
+	float v0 = baseY;
+	float v1 = v0 + incY;
+	for (size_t y = NY; y --> 0; v0 = v1, v1 += incY)
+	{
+		float u0 = baseX;
+		float u1 = u0 + incX;
+		const Vector *row0 = drawGrid.row(y+1);
+		const Vector *row1 = drawGrid.row(y);
+		for (size_t x = 0; x < NX; x++, u0 = u1, u1 += incX)
+		{
+			const Vector dg00 = row0[x];
+			const Vector dg01 = row1[x];
+			const Vector dg10 = row0[x+1];
+			const Vector dg11 = row1[x+1];
+
+			glTexCoord2f(u0, v0);
+			glVertex2f(w*dg00.x,		h*dg00.y);
+
+			glTexCoord2f(u0, v1);
+			glVertex2f(w*dg01.x,		h*dg01.y);
+
+			glTexCoord2f(u1, v1);
+			glVertex2f(w*dg11.x,		h*dg11.y);
+
+			glTexCoord2f(u1, v0);
+			glVertex2f(w*dg10.x,		h*dg10.y);
+		}
+	}
+	glEnd();
+}
+
+void Quad::renderGridWithAlpha(const RenderState& rs) const
+{
 	const float percentX = fabsf(this->lowerRightTextureCoordinates.x - this->upperLeftTextureCoordinates.x);
 	const float percentY = fabsf(this->upperLeftTextureCoordinates.y - this->lowerRightTextureCoordinates.y);
 
@@ -338,7 +503,6 @@ void Quad::renderGrid(const RenderState& rs) const
 	const float green = rs.color.y * this->color.y;
 	const float blue  = rs.color.z * this->color.z;
 	const float alpha = rs.alpha * this->alpha.x * this->alphaMod;
-
 
 	glBegin(GL_QUADS);
 	float v0 = 1 - percentY + baseY;
@@ -377,28 +541,6 @@ void Quad::renderGrid(const RenderState& rs) const
 		}
 	}
 	glEnd();
-
-	// debug points
-	if (RenderObject::renderCollisionShape)
-	{
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glPointSize(2);
-		glColor3f(1,0,0);
-		glBegin(GL_POINTS);
-			for (size_t y = 0; y < NY; y++)
-			{
-				for (size_t x = 0; x < NX; x++)
-				{
-					glVertex2f(w*drawGrid(x,y).x,		h*drawGrid(x,y).y);
-					glVertex2f(w*drawGrid(x,y+1).x,		h*drawGrid(x,y+1).y);
-					glVertex2f(w*drawGrid(x+1,y+1).x,	h*drawGrid(x+1,y+1).y);
-					glVertex2f(w*drawGrid(x+1,y).x,		h*drawGrid(x+1,y).y);
-				}
-			}
-		glEnd();
-		if (texture)
-			glBindTexture(GL_TEXTURE_2D, texture->textures[0]);
-	}
 }
 
 void Quad::repeatTextureToFill(bool on)
