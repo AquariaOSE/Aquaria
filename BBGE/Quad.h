@@ -55,8 +55,8 @@ public:
 	void setWidthHeight(float w, float h=-1);
 	void setWidth(float w);
 	void setHeight(float h);
-	unsigned int getWidth() const {return static_cast<unsigned int>(width);}
-	unsigned int getHeight() const {return static_cast<unsigned int>(height);}
+	float getWidth() const {return width;}
+	float getHeight() const {return height;}
 
 	void setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
 	void setDrawGridAlpha(size_t x, size_t y, float alpha);
