@@ -971,6 +971,7 @@ void AnimationEditor::editStripKey()
 				assert(bk->controlpoints.size() == interp->bsp.ctrlX() * interp->bsp.ctrlY());
 
 				splinegrid = new SplineGrid;
+				splinegrid->drawOrder = editingBone->drawOrder;
 				splinegrid->setTexture(editingBone->texture->name);
 				splinegrid->setWidthHeight(editingBone->width, editingBone->height);
 				splinegrid->position = Vector(400, 300);

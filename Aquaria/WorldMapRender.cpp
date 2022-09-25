@@ -659,6 +659,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			q->setTexture(tn);
 			q->position = pos;
 			q->alphaMod = 0;
+			q->drawOrder = Quad::GRID_DRAW_WORLDMAP;
 
 			tile->q = q;
 
