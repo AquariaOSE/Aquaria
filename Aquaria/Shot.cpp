@@ -67,6 +67,7 @@ ShotData::ShotData()
 	rotateToVel = 1;
 	waveSpeed = waveMag = 0;
 	ignoreShield = false;
+	alwaysMaxSpeed = true;
 }
 
 template <typename T> void readEquals2(T &in)
@@ -246,6 +247,8 @@ void ShotData::bankLoad(const std::string &file, const std::string &path)
 			inf >> ignoreShield;
 		else if (token == "DieOnKill")
 			inf >> dieOnKill;
+		else if (token == "AlwaysMaxSpeed")
+			inf >> alwaysMaxSpeed;
 		else
 		{
 			// if having weirdness, check for these
@@ -353,54 +356,54 @@ void Shot::loadBankShot(const std::string &ident, Shot *setter)
 		std::string id = ident;
 		stringToLower(id);
 
-		setter->applyShotData(&shotBank[id]);
+		ShotBank::const_iterator it = shotBank.find(id);
+		if(it != shotBank.end())
+			setter->applyShotData(it->second);
 	}
 }
 
-void Shot::applyShotData(ShotData *shotData)
+void Shot::applyShotData(const ShotData& shotData)
 {
-	if (shotData)
+	this->shotData = &shotData;
+	this->setBlendType(shotData.blendType);
+	this->homingness = shotData.homing;
+	this->maxSpeed = shotData.maxSpeed;
+	this->setTexture(shotData.texture);
+	this->scale = shotData.scale;
+	this->lifeTime = shotData.lifeTime;
+	this->collideRadius = shotData.collideRadius;
+	this->renderQuad = !shotData.invisible;
+	this->gravity = shotData.gravity;
+	this->damageType = shotData.damageType;
+	this->checkDamageTarget = shotData.checkDamageTarget;
+	this->alwaysMaxSpeed = shotData.alwaysMaxSpeed;
+	if (!shotData.trailPrt.empty())
 	{
-		this->shotData = shotData;
-		this->setBlendType(shotData->blendType);
-		this->homingness = shotData->homing;
-		this->maxSpeed = shotData->maxSpeed;
-		this->setTexture(shotData->texture);
-		this->scale = shotData->scale;
-		this->lifeTime = shotData->lifeTime;
-		this->collideRadius = shotData->collideRadius;
-		this->renderQuad = !shotData->invisible;
-		this->gravity = shotData->gravity;
-		this->damageType = shotData->damageType;
-		this->checkDamageTarget = shotData->checkDamageTarget;
-		if (!shotData->trailPrt.empty())
-		{
-			setParticleEffect(shotData->trailPrt);
-		}
-
-		if (shotData->numSegs > 0)
-		{
-			segments.resize(shotData->numSegs);
-			for (int i = segments.size()-1; i >=0 ; i--)
-			{
-				Quad *flame = new Quad;
-				flame->setTexture(shotData->segTexture);
-				flame->scale = shotData->segScale - Vector(shotData->segTaper, shotData->segTaper)*(i);
-				flame->setBlendType(this->getBlendType());
-				flame->alpha = 0.5;
-				dsq->game->addRenderObject(flame, LR_PARTICLES);
-				segments[i] = flame;
-				segments[i]->position = position;
-			}
-
-			maxDist = shotData->segDist;
-			minDist = 0;
-
-			initSegments(position);
-		}
+		setParticleEffect(shotData.trailPrt);
 	}
 
-	std::string scriptname = "shot_" + shotData->name;
+	if (shotData.numSegs > 0)
+	{
+		segments.resize(shotData.numSegs);
+		for (int i = segments.size()-1; i >=0 ; i--)
+		{
+			Quad *flame = new Quad;
+			flame->setTexture(shotData.segTexture);
+			flame->scale = shotData.segScale - Vector(shotData.segTaper, shotData.segTaper)*(i);
+			flame->setBlendType(this->getBlendType());
+			flame->alpha = 0.5;
+			dsq->game->addRenderObject(flame, LR_PARTICLES);
+			segments[i] = flame;
+			segments[i]->position = position;
+		}
+
+		maxDist = shotData.segDist;
+		minDist = 0;
+
+		initSegments(position);
+	}
+
+	std::string scriptname = "shot_" + shotData.name;
 	std::string file = ScriptInterface::MakeScriptFileName(scriptname, "shots");
 	script = dsq->scriptInterface.openScript(file, true);
 	updateScript = !!script;
@@ -750,13 +753,9 @@ void Shot::onUpdate(float dt)
 		else if (target->alpha == 0)
 			target = 0;
 	}
-	if (life >= 1.0f)
+	if (alwaysMaxSpeed && life >= 1.0f)
 	{
-		if (velocity.isZero())
-		{
-
-		}
-		else if (velocity.isLength2DIn(maxSpeed*0.75f))
+		if (!velocity.isZero() && velocity.isLength2DIn(maxSpeed*0.75f))
 		{
 			velocity.setLength2D(maxSpeed);
 		}
