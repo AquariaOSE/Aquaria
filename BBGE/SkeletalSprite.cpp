@@ -1146,15 +1146,18 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			{
 				BoneKeyframe *b = &a->keyframes[j].keyframes[k];
 				Bone *bone = this->getBoneByIdx(b->idx);
-				os << b->idx << " " << b->x << " " << b->y << " " << b->rot << " ";
-				// don't want to store grid points if they can be regenerated automatically
-				size_t usedGridSize = bone->gridType == Quad::GRID_INTERP ? 0 : b->grid.size();
-				os << usedGridSize << " ";
-				if(usedGridSize)
-					for (size_t i = 0; i < usedGridSize; i++)
-						os << b->grid[i].x << " " << b->grid[i].y << " ";
-				if (b->doScale)
-					szos << b->idx << " " << b->sx << " " << b->sy << " ";
+				if(bone)
+				{
+					os << b->idx << " " << b->x << " " << b->y << " " << b->rot << " ";
+					// don't want to store grid points if they can be regenerated automatically
+					size_t usedGridSize = bone->gridType == Quad::GRID_INTERP ? 0 : b->grid.size();
+					os << usedGridSize << " ";
+					if(usedGridSize)
+						for (size_t i = 0; i < usedGridSize; i++)
+							os << b->grid[i].x << " " << b->grid[i].y << " ";
+					if (b->doScale)
+						szos << b->idx << " " << b->sx << " " << b->sy << " ";
+				}
 			}
 			std::string szoss = szos.str();
 			if (!szoss.empty())
