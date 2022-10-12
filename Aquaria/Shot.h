@@ -63,7 +63,7 @@ struct ShotData
 	float waveSpeed, waveMag;
 
 	float spinSpeed;
-	bool invisible, checkDamageTarget, hitWalls, hitEnts, alwaysDoHitEffects;
+	bool invisible, checkDamageTarget, hitWalls, hitEnts, alwaysDoHitEffects, alwaysMaxSpeed;
 	float rotIncr;
 
 	float avatarKickBack, avatarKickBackTime;
@@ -108,7 +108,7 @@ public:
 	static void clearShotBank();
 	static ShotData* getShotData(const std::string &ident);
 	static void loadBankShot(const std::string &ident, Shot *shot);
-	void applyShotData(ShotData *shotData);
+	void applyShotData(const ShotData& shotData);
 
 	void setAimVector(const Vector &aim);
 	void setTarget(Entity *target);
@@ -116,7 +116,7 @@ public:
 	float getDamage() const;
 	int getCollideRadius() const;
 	DamageType getDamageType() const;
-	ShotData *shotData;
+	const ShotData *shotData;
 	void updatePosition();
 	bool isHitEnts() const;
 	bool canHit(Entity *e, Bone *b);
@@ -129,6 +129,7 @@ public:
 	float lifeTime;
 	DamageType damageType;
 	bool checkDamageTarget;
+	bool alwaysMaxSpeed;
 
 protected:
 

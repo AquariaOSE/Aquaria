@@ -2614,6 +2614,19 @@ luaFunc(shot_canHitEntity)
 	luaReturnBool(hit);
 }
 
+luaFunc(shot_setAlwaysMaxSpeed)
+{
+	if(Shot *shot = getShot(L))
+		shot->alwaysMaxSpeed = getBool(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(shot_isAlwaysMaxSpeed)
+{
+	Shot *shot = getShot(L);
+	luaReturnBool(shot && shot->alwaysMaxSpeed);
+}
+
 
 typedef std::pair<Shot*, float> ShotDistancePair;
 static std::vector<ShotDistancePair> filteredShots(20);
@@ -10602,6 +10615,8 @@ static const struct {
 	luaRegister(shot_setTargetPoint),
 	luaRegister(shot_getTargetPoint),
 	luaRegister(shot_canHitEntity),
+	luaRegister(shot_setAlwaysMaxSpeed),
+	luaRegister(shot_isAlwaysMaxSpeed),
 	luaRegister(filterNearestShots),
 	luaRegister(filterNearestShotsAdd),
 	luaRegister(getNextFilteredShot),
