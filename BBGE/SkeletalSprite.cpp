@@ -1822,7 +1822,8 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					if(!bk)
 					{
 						BoneKeyframe b;
-						b.idx = this->bones[i]->boneIdx;
+						b.idx = bone->boneIdx;
+						newSkeletalKeyframe.keyframes.push_back(b);
 					}
 				}
 				newAnimation.keyframes.push_back(newSkeletalKeyframe);
