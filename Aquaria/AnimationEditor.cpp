@@ -1479,9 +1479,8 @@ void AnimationEditor::updateRenderBorders()
 
 	if(renderBorderMode == RENDER_BORDER_NONE)
 		return;
-	else
+	else if(Animation *a = editSprite->getCurrentAnimation())
 	{
-		Animation *a = editSprite->getCurrentAnimation();
 		for(size_t i = 0; i < a->interpolators.size(); ++i)
 		{
 			const BoneGridInterpolator& bgip = a->interpolators[i];
