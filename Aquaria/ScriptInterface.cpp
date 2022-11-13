@@ -4681,6 +4681,21 @@ luaFunc(entity_getAnimationLoop)
 	luaReturnInt(loop);
 }
 
+luaFunc(entity_getAnimationTime)
+{
+	SkeletalSprite *skel = getSkeletalSprite(entity(L));
+	int layer = lua_tointeger(L, 2);
+	if (skel)
+	{
+		const AnimationLayer *a = skel->getAnimationLayer(layer);
+		if(a)
+		{
+			luaReturnVec2(a->timer, a->animationLength);
+		}
+	}
+	luaReturnNil();
+}
+
 // entity, x, y, time, ease, relative
 luaFunc(entity_move)
 {
@@ -10288,6 +10303,7 @@ static const struct {
 	luaRegister(entity_getAnimLayerTimeMult),
 	luaRegister(entity_stopAnimation),
 	luaRegister(entity_getAnimationLoop),
+	luaRegister(entity_getAnimationTime),
 
 	luaRegister(entity_setCurrentTarget),
 	luaRegister(entity_stopInterpolating),
