@@ -203,7 +203,7 @@ public:
 	void updateBones();
 	void stopAnimation();
 	float getAnimationLength();
-	bool createTransitionAnimation(const std::string& anim, float time);
+	void createTransitionAnimation(Animation& to, float time);
 	void playAnimation(int idx, int loop);
 	void playCurrentAnimation(int loop);
 	void enqueueAnimation(const std::string& anim, int loop);
