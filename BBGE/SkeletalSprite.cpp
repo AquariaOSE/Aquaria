@@ -552,24 +552,28 @@ float AnimationLayer::transitionAnimate(std::string anim, float time, int loop)
 {
 	stringToLower(anim);
 	float totalTime =0;
-	if (createTransitionAnimation(anim, time))
+	if(Animation *a = this->s->getAnimation(anim))
 	{
-		timeMultiplier = 1;
-
-		currentAnimation = -1;
-		this->loop = 0;
-		timer = 0;
-		animating = 1;
-		animationLength = getCurrentAnimation()->getAnimationLength();
-		enqueueAnimation(anim, loop);
-		Animation *a = this->s->getAnimation(anim);
-		if (a)
+		if (time <= 0) // no transition?
 		{
-			if (loop > -1)
-				totalTime = a->getAnimationLength()*(loop+1) + time;
-			else
-				totalTime = a->getAnimationLength() + time;
+			animate(anim, loop);
 		}
+		else
+		{
+			createTransitionAnimation(*a, time);
+			timeMultiplier = 1;
+
+			currentAnimation = -1;
+			this->loop = 0;
+			timer = 0;
+			animating = 1;
+			animationLength = getCurrentAnimation()->getAnimationLength();
+			enqueueAnimation(anim, loop);
+		}
+		if (loop > -1)
+			totalTime = a->getAnimationLength()*(loop+1) + time;
+		else
+			totalTime = a->getAnimationLength() + time;
 	}
 	return totalTime;
 }
@@ -593,11 +597,8 @@ Animation* AnimationLayer::getCurrentAnimation()
 	return &s->animations[currentAnimation];
 }
 
-bool AnimationLayer::createTransitionAnimation(const std::string& anim, float time)
+void AnimationLayer::createTransitionAnimation(Animation& to, float time)
 {
-
-	Animation *to = s->getAnimation(anim);
-	if (!to) return false;
 	blendAnimation.keyframes.clear();
 	SkeletalKeyframe k;
 	k.t = 0;
@@ -615,14 +616,11 @@ bool AnimationLayer::createTransitionAnimation(const std::string& anim, float ti
 	blendAnimation.keyframes.push_back(k);
 
 	SkeletalKeyframe k2;
-	SkeletalKeyframe *rk = to->getKeyframe(0);
-	if (!rk) return false;
-	k2 = *rk;
+	k2 = *to.getKeyframe(0);
 	k2.t = time;
 	blendAnimation.keyframes.push_back(k2);
 
-	blendAnimation.name = anim;
-	return true;
+	blendAnimation.name = to.name;
 }
 
 
@@ -908,7 +906,7 @@ void AnimationLayer::update(float dt)
 	{
 		timer += dt*timeMultiplier.x;
 
-		if (timer > animationLength)
+		if (timer >= animationLength)
 		{
 			float leftover;
 			if (animationLength > 0)

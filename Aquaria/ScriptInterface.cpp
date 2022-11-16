@@ -4323,16 +4323,15 @@ luaFunc(entity_isAnimating)
 luaFunc(entity_getAnimationName)
 {
 	Entity *e = entity(L);
-	const char *ret = "";
 	int layer = lua_tointeger(L, 2);
 	if (e)
 	{
 		if (Animation *anim = e->skeletalSprite.getCurrentAnimation(layer))
 		{
-			ret = anim->name.c_str();
+			luaReturnStr(anim->name.c_str());
 		}
 	}
-	luaReturnStr(ret);
+	luaReturnNil();
 }
 
 luaFunc(entity_getAnimationLength)
@@ -4342,7 +4341,7 @@ luaFunc(entity_getAnimationLength)
 	if (e)
 	{
 		Animation *anim = 0;
-		if (lua_isstring(L, 2))
+		if (lua_type(L, 2) == LUA_TSTRING) // lua_isstring() is incorrect here
 			anim = e->skeletalSprite.getAnimation(lua_tostring(L, 2));
 		else
 		{
@@ -4691,6 +4690,21 @@ luaFunc(entity_getAnimationTime)
 		if(a)
 		{
 			luaReturnVec2(a->timer, a->animationLength);
+		}
+	}
+	luaReturnNil();
+}
+
+luaFunc(entity_setAnimationTime)
+{
+	SkeletalSprite *skel = getSkeletalSprite(entity(L));
+	int layer = lua_tointeger(L, 3);
+	if (skel)
+	{
+		AnimationLayer *a = skel->getAnimationLayer(layer);
+		if(a)
+		{
+			a->timer = lua_tonumber(L, 2);
 		}
 	}
 	luaReturnNil();
@@ -6449,8 +6463,8 @@ luaFunc(bone_getIndex)
 	Bone *b = bone(L);
 	int idx = -1;
 	if (b)
-		idx = b->boneIdx;
-	luaReturnNum(idx);
+		idx = (int)b->boneIdx;
+	luaReturnInt(idx);
 }
 
 luaFunc(bone_getName)
@@ -9114,7 +9128,7 @@ luaFunc(isShuttingDownGameState)
 
 static void _fillPathfindTables(lua_State *L, VectorPath& path, int xs_idx, int ys_idx)
 {
-	const unsigned num = path.getNumPathNodes();
+	const unsigned num = (unsigned)path.getNumPathNodes();
 
 	if(lua_istable(L, xs_idx))
 		lua_pushvalue(L, xs_idx);
@@ -9159,7 +9173,7 @@ luaFunc(findPath)
 	if(!PathFinding::generatePathSimple(path, start, end, lua_tointeger(L, 5), obs))
 		luaReturnBool(false);
 
-	const unsigned num = path.getNumPathNodes();
+	const unsigned num = (unsigned)path.getNumPathNodes();
 	lua_pushinteger(L, num);
 
 	_fillPathfindTables(L, path, 6, 7);
@@ -10304,6 +10318,7 @@ static const struct {
 	luaRegister(entity_stopAnimation),
 	luaRegister(entity_getAnimationLoop),
 	luaRegister(entity_getAnimationTime),
+	luaRegister(entity_setAnimationTime),
 
 	luaRegister(entity_setCurrentTarget),
 	luaRegister(entity_stopInterpolating),
