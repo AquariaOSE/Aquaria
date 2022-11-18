@@ -1243,6 +1243,20 @@ void SkeletalSprite::firstAnimation()
 	animLayers[0].currentAnimation = 0;
 }
 
+bool SkeletalSprite::selectAnimation(const char* name)
+{
+	for(size_t i = 0; i < animations.size(); ++i)
+	{
+		if(animations[i].name == name)
+		{
+			stopAnimation();
+			animLayers[0].currentAnimation = i;
+			return true;
+		}
+	}
+	return false;
+}
+
 void SkeletalSprite::lastAnimation()
 {
 	stopAnimation();

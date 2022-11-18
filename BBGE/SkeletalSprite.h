@@ -277,6 +277,7 @@ public:
 	void prevAnimation();
 	void lastAnimation();
 	void firstAnimation();
+	bool selectAnimation(const char *name);
 	void updateSelectedBoneColor();
 
 

@@ -60,6 +60,7 @@ public:
 
 	void nextAnim();
 	void prevAnim();
+	void selectAnim();
 
 	void quit();
 
