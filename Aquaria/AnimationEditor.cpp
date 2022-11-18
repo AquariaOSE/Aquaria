@@ -277,6 +277,7 @@ void AnimationEditor::applyState()
 
 	addAction(MakeFunctionEvent(AnimationEditor, prevAnim), KEY_PGUP, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, nextAnim), KEY_PGDN, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, selectAnim), KEY_F9, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, animateOrStop), KEY_RETURN, 0);
 
 	addAction(MakeFunctionEvent(AnimationEditor, toggleRenderBorders), KEY_B, 0);
@@ -1392,6 +1393,23 @@ void AnimationEditor::prevAnim()
 		currentKey = 0;
 		rebuildKeyframeWidgets();
 	}
+}
+
+void AnimationEditor::selectAnim()
+{
+	if (dsq->isNested()) return;
+
+	std::string name = dsq->getUserInputString("Select anim name:");
+	if (name.empty())
+		return;
+
+	if(editSprite->selectAnimation(name.c_str()))
+	{
+		currentKey = 0;
+		rebuildKeyframeWidgets();
+	}
+	else
+		dsq->screenMessage("No such anim name");
 }
 
 void AnimationEditor::reverseAnim()
