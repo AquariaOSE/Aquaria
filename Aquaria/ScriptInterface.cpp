@@ -7101,7 +7101,7 @@ luaFunc(esetv)
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
 	int n = lua_tointeger(L, 3);
-	if (e)
+	if (e && ev < EV_MAX)
 		e->setv(ev, n);
 	luaReturnNum(n);
 }
@@ -7111,7 +7111,7 @@ luaFunc(egetv)
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
 	int v = 0;
-	if (e)
+	if (e && ev < EV_MAX)
 		v = e->getv(ev);
 	luaReturnNum(v);
 }
@@ -7121,7 +7121,7 @@ luaFunc(esetvf)
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
 	float n = lua_tonumber(L, 3);
-	if (e)
+	if (e  && ev < EV_MAX)
 		e->setvf(ev, n);
 	luaReturnNum(n);
 }
@@ -7129,12 +7129,10 @@ luaFunc(esetvf)
 luaFunc(egetvf)
 {
 	Entity *e = entity(L);
+	EV ev = (EV)lua_tointeger(L, 2);
 	float vf = 0;
-	if (e)
-	{
-		EV ev = (EV)lua_tointeger(L, 2);
+	if (e && ev < EV_MAX)
 		vf = e->getvf(ev);
-	}
 	luaReturnNum(vf);
 }
 
@@ -7143,9 +7141,7 @@ luaFunc(eisv)
 	Entity *e = entity(L);
 	EV ev = (EV)lua_tointeger(L, 2);
 	int n = lua_tointeger(L, 3);
-	bool b = 0;
-	if (e)
-		b = e->isv(ev, n);
+	bool b = e && ev < EV_MAX && e->isv(ev, n);
 	luaReturnBool(b);
 }
 
