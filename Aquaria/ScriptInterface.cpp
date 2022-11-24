@@ -7400,13 +7400,23 @@ luaFunc(entity_setActivation)
 	ScriptedEntity *e = scriptedEntity(L);
 	if (e)
 	{
-		int type = lua_tointeger(L, 2);
-		// cursor radius
-		float activationRadius = lua_tonumber(L, 3);
-		float range = lua_tonumber(L, 4);
-		e->activationType = (Entity::ActivationType)type;
-		e->activationRange = range;
-		e->activationRadius = activationRadius;
+		e->activationType = (Entity::ActivationType)lua_tointeger(L, 2); // cursor radius
+		e->activationRadius = lua_tonumber(L, 3);
+		e->activationRange = lua_tonumber(L, 4);
+	}
+
+	luaReturnNil();
+}
+
+luaFunc(entity_getActivation)
+{
+	ScriptedEntity *e = scriptedEntity(L);
+	if (e)
+	{
+		lua_pushinteger(L, e->activationType);
+		lua_pushnumber(L, e->activationRadius);
+		lua_pushnumber(L, e->activationRange);
+		return 3;
 	}
 
 	luaReturnNil();
@@ -10190,6 +10200,7 @@ static const struct {
 
 	luaRegister(entity_setBounce),
 	luaRegister(entity_setActivation),
+	luaRegister(entity_getActivation),
 	luaRegister(entity_rotateToEntity),
 
 	luaRegister(entity_fireGas),
