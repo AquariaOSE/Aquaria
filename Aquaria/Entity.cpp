@@ -209,7 +209,6 @@ Entity::Entity()
 	slowingToStopPathTimer = 0;
 	slowingToStopPath = 0;
 	followPos = 0;
-	watchingEntity = 0;
 	swimPath = false;
 	currentEntityTarget = 0;
 	deleteOnPathEnd = false;
@@ -532,11 +531,6 @@ void Entity::setTargetEntity(Entity *e, int t)
 bool Entity::hasTarget(int t)
 {
 	return (targets[t]!=0);
-}
-
-void Entity::watchEntity(Entity *e)
-{
-	watchingEntity = e;
 }
 
 void Entity::destroy()
@@ -1588,23 +1582,6 @@ void Entity::onUpdate(float dt)
 	if (position.isFollowingPath() && swimPath)
 	{
 		movementDetails(v);
-	}
-	else
-	{
-		if (watchingEntity)
-		{
-			Vector v = position - watchingEntity->position;
-			if (v.x < 0)
-			{
-				if (!isfh())
-					flipHorizontal();
-			}
-			else if (v.x > 0)
-			{
-				if (isfh())
-					flipHorizontal();
-			}
-		}
 	}
 
 	if (wasFollowing && !isFollowingPath())

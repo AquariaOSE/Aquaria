@@ -5917,20 +5917,6 @@ luaFunc(entity_getDistanceToPoint)
 	luaReturnNum(dist);
 }
 
-luaFunc(entity_watchEntity)
-{
-	Entity *e = entity(L);
-	Entity *e2 = 0;
-	if (lua_touserdata(L, 2) != NULL)
-		e2 = entity(L, 2);
-
-	if (e)
-	{
-		e->watchEntity(e2);
-	}
-	luaReturnNil();
-}
-
 luaFunc(setNaijaHeadTexture)
 {
 	Avatar *a = dsq->game->avatar;
@@ -10756,8 +10742,6 @@ static const struct {
 	luaRegister(getSceneColor),
 	luaRegister(setSceneColor2),
 	luaRegister(getSceneColor2),
-
-	luaRegister(entity_watchEntity),
 
 	luaRegister(entity_isEntityInRange),
 	luaRegister(entity_isPositionInRange),
