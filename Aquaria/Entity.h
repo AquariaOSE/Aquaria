@@ -135,7 +135,6 @@ public:
 	Entity *followEntity;
 	Entity *ridingOnEntity;
 	Vector startPos;
-	void getEXP(unsigned int exp);
 	void rotateToVec(Vector addVec, float time, float offsetAngle=0);
 	virtual void applyVariation(int variation){}
 
@@ -173,7 +172,6 @@ public:
 	virtual void onNotify(Entity *notify){}
 
 	float followPath(Path *p, float speed, int dir, bool deleteOnEnd = false);
-	Entity *attachedTo;
 	bool touchAvatarDamage(int radius, float dmg, const Vector &override=Vector(-1,-1,-1), float speed=0, float pushTime = 0, Vector collidePos = Vector(0,0,0));
 
 	void moveTowards(Vector p, float dt, int spd);
@@ -199,8 +197,6 @@ public:
 	Entity *getTargetEntity(int t=0);
 	void setTargetEntity(Entity *e, int t=0);
 
-	void attachEntity(Entity *e, Vector offset);
-	void detachEntity(Entity *e);
 	virtual void activate(){}
 
 	SkeletalSprite skeletalSprite;
@@ -401,8 +397,6 @@ protected:
 	virtual void onPathEnd();
 	InterpolatedVector multColor;
 	EntityType entityType;
-	std::vector<Entity*> attachedEntities;
-	std::vector<Vector> attachedEntitiesOffsets;
 
 	virtual void onFreeze(){}
 

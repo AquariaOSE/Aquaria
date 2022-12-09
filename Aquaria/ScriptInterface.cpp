@@ -6913,14 +6913,6 @@ luaFunc(updateMusic)
 	luaReturnNil();
 }
 
-luaFunc(entity_grabTarget)
-{
-	Entity *e = entity(L);
-	if (e)
-		e->attachEntity(e->getTargetEntity(), Vector(lua_tointeger(L, 2), lua_tointeger(L, 3)));
-	luaReturnNil();
-}
-
 luaFunc(entity_clampToHit)
 {
 	Entity *e = entity(L);
@@ -7085,14 +7077,6 @@ luaFunc(entity_rotateToSurfaceNormal)
 	}
 
 
-	luaReturnNil();
-}
-
-luaFunc(entity_releaseTarget)
-{
-	Entity *e = entity(L);
-	if (e)
-		e->detachEntity(e->getTargetEntity());
 	luaReturnNil();
 }
 
@@ -10213,9 +10197,6 @@ static const struct {
 	luaRegister(entity_clampToSurface),
 	luaRegister(entity_checkSurface),
 	luaRegister(entity_clampToHit),
-
-	luaRegister(entity_grabTarget),
-	luaRegister(entity_releaseTarget),
 
 	luaRegister(entity_getStateTime),
 	luaRegister(entity_setStateTime),

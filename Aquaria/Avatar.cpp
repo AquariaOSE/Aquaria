@@ -6517,7 +6517,7 @@ void Avatar::onUpdate(float dt)
 					myZoom.interpolateTo(zoomNaija, time, 0, 0, 1);
 				}
 			}
-			else if ((cheatLen > sqr(250) && cheatLen < sqr(1000)) || attachedTo || avatar->looking==1)
+			else if ((cheatLen > sqr(250) && cheatLen < sqr(1000)) || avatar->looking==1)
 			{
 				float time = 3;
 				if (avatar->looking)

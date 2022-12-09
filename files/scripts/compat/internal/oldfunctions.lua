@@ -21,6 +21,8 @@ local WARN_FUNCTIONS =
     registerSporeChildData = true,
     setMiniMapHint = true,
     setupConversationEntity = true,
+    entity_grabTarget = true,
+    entity_releaseTarget = true,
 }
 
 -- These returned something important, so here we just return a failure/dummy value
