@@ -189,11 +189,6 @@ void CollideEntity::updateMovement(float dt)
 	{
 		vel += Vector(0, weight*dt);
 	}
-	for (size_t i = 0; i < attachedEntities.size(); i++)
-	{
-		attachedEntities[i]->position = this->position + attachedEntitiesOffsets[i];
-		attachedEntities[i]->rotation = this->rotation;
-	}
 
 	wasUnderWater = underWater;
 }

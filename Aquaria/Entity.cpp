@@ -217,7 +217,6 @@ Entity::Entity()
 	collideRadius = 24;
 	entityType = EntityType(0);
 	targets.resize(10);
-	attachedTo = 0;
 
 	frozenTimer = 0;
 	canBeTargetedByAvatar = false;
@@ -1811,36 +1810,6 @@ Entity* Entity::getRiding()
 {
 	return riding;
 }
-
-void Entity::attachEntity(Entity *e, Vector offset)
-{
-	attachedEntities.push_back(e);
-
-	attachedEntitiesOffsets.push_back(offset);
-	e->attachedTo = this;
-
-}
-
-void Entity::detachEntity(Entity *e)
-{
-	e->attachedTo = 0;
-	std::vector<Entity*>copyEnts = attachedEntities;
-	std::vector<Vector> copyOffs = attachedEntitiesOffsets;
-
-	attachedEntities.clear();
-	attachedEntitiesOffsets.clear();
-
-	for (size_t i = 0; i < copyEnts.size(); i++)
-	{
-		if (copyEnts[i] != e)
-		{
-			attachedEntities.push_back(copyEnts[i]);
-			attachedEntitiesOffsets.push_back(copyOffs[i]);
-		}
-	}
-}
-
-
 
 void Entity::rotateToVec(Vector addVec, float time, float offsetAngle)
 {
