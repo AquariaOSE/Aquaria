@@ -24,6 +24,8 @@ local WARN_FUNCTIONS =
     entity_grabTarget = true,
     entity_releaseTarget = true,
     entity_watchEntity = true,
+    entityFollowEntity = true,
+    entity_followEntity = true,
 }
 
 -- These returned something important, so here we just return a failure/dummy value
@@ -72,6 +74,7 @@ local DUMMY_FUNCTIONS =
     streamSfx = true,
     toggleVersionLabel = true,
     setVersionLabelText = true,
+    entity_isFollowingEntity = true, -- never following anything now since those functions are gone
 }
 
 -- Deprecated stuff from v1.1's scripts/entities/entityinclude.lua

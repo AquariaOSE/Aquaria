@@ -208,7 +208,6 @@ Entity::Entity()
 	damageTime = vars->entityDamageTime;
 	slowingToStopPathTimer = 0;
 	slowingToStopPath = 0;
-	followPos = 0;
 	swimPath = false;
 	currentEntityTarget = 0;
 	deleteOnPathEnd = false;
@@ -233,8 +232,6 @@ Entity::Entity()
 	activationRadius = 40;
 	activationRange = 600;
 
-
-	followEntity = 0;
 	bubble = 0;
 
 
@@ -452,8 +449,6 @@ float Entity::moveToPos(Vector dest, float speed, int dieOnPathEnd, bool swim)
 		speed = getMaxSpeed();
 
 	Vector start = position;
-	followEntity = 0;
-
 
 	position.ensureData();
 	position.data->path.clear();
@@ -1597,59 +1592,7 @@ void Entity::onUpdate(float dt)
 
 	if (getState() == STATE_PUSH)
 	{
-
 		vel = pushVec;
-	}
-
-	else if (followEntity)
-	{
-		Vector lastPos = position;
-		Vector off;
-		int sz = 96;
-		if (followEntity->vel.getSquaredLength2D() > sqr(1))
-		{
-			off = followEntity->vel.getPerpendicularLeft();
-			switch (followPos)
-			{
-			case 0:		off.setLength2D(sz);		break;
-			case 1:		off.setLength2D(-sz);		break;
-			}
-		}
-		else if (followEntity->lastMove.getSquaredLength2D() > sqr(1))
-		{
-
-			off = followEntity->lastMove.getPerpendicularLeft();
-			switch (followPos)
-			{
-			case 0:		off.setLength2D(sz);		break;
-			case 1:		off.setLength2D(-sz);		break;
-			}
-		}
-		Vector mov = followEntity->position + off - this->position;
-		if (mov.getSquaredLength2D() > sqr(96))
-		{
-
-			int spd = mov.getLength2D();
-			spd -= 64;
-			if (spd < 0)
-				spd = 0;
-			else if (spd < 400)
-				spd *= 2;
-
-			else
-				spd = 800;
-
-			mov.setLength2D(spd);
-			position += mov * dt;
-			Vector diff = position - lastPos;
-			movementDetails(diff);
-		}
-		else
-		{
-			Animation *anim = skeletalSprite.getCurrentAnimation();
-			if (!anim || anim->name != "idle")
-				idle();
-		}
 	}
 
 	if (stickToNaijasHead)

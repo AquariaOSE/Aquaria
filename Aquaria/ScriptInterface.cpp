@@ -6603,42 +6603,6 @@ luaFunc(entity_setCurrentTarget)
 	luaReturnNil();
 }
 
-luaFunc(entityFollowEntity)
-{
-	Entity *e = dsq->getEntityByName(getString(L, 1));
-	if (e)
-	{
-		e->followEntity = dsq->getEntityByName(getString(L, 2));
-	}
-
-	luaReturnNil();
-}
-
-luaFunc(entity_isFollowingEntity)
-{
-	Entity *e = entity(L);
-	bool v = false;
-	if (e)
-		v = e->followEntity != 0;
-	luaReturnBool(v);
-}
-
-luaFunc(entity_followEntity)
-{
-	Entity *e1 = entity(L);
-	Entity *e2 = 0;
-	if (lua_touserdata(L, 2) != NULL)
-	{
-		e2 = entity(L, 2);
-	}
-	if (e1)
-	{
-		e1->followEntity = e2;
-		e1->followPos = lua_tointeger(L, 3);
-	}
-	luaReturnNil();
-}
-
 luaFunc(toggleInput)
 {
 	bool v = getBool(L, 1);
@@ -10300,7 +10264,6 @@ static const struct {
 	luaRegister(entity_followPath),
 	luaRegister(entity_followPathSpeed),
 	luaRegister(entity_isFollowingPath),
-	luaRegister(entity_followEntity),
 	luaRegister(entity_sound),
 	luaRegister(entity_playSfx),
 
@@ -10354,8 +10317,6 @@ static const struct {
 	luaRegister(toggleCursor),
 	luaRegister(toggleBlackBars),
 	luaRegister(setBlackBarsColor),
-
-	luaRegister(entityFollowEntity),
 
 	luaRegister(bedEffects),
 
@@ -10751,7 +10712,6 @@ static const struct {
 	luaRegister(entity_isSlowingToStopPath),
 
 	luaRegister(entity_findNearestEntityOfType),
-	luaRegister(entity_isFollowingEntity),
 	luaRegister(entity_resumePath),
 
 	luaRegister(entity_generateCollisionMask),
