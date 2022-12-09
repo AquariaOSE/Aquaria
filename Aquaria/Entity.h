@@ -219,7 +219,6 @@ public:
 	void doFriction(float dt, float len);
 
 	bool isNormalLayer() const;
-	void watchEntity(Entity *e);
 	void idle();
 	int followPos;
 	void slowToStopPath(float t);
@@ -393,7 +392,6 @@ protected:
 	float slowingToStopPathTimer, slowingToStopPath;
 
 	void movementDetails(Vector v);
-	Entity *watchingEntity;
 	virtual void onPathEnd();
 	InterpolatedVector multColor;
 	EntityType entityType;

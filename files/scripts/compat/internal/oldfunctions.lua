@@ -23,6 +23,7 @@ local WARN_FUNCTIONS =
     setupConversationEntity = true,
     entity_grabTarget = true,
     entity_releaseTarget = true,
+    entity_watchEntity = true,
 }
 
 -- These returned something important, so here we just return a failure/dummy value
