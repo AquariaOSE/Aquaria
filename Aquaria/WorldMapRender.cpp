@@ -1212,6 +1212,8 @@ Vector WorldMapRender::getAvatarWorldMapPosition()
 
 Vector WorldMapRender::getWorldToTile(WorldMapTile *tile, Vector position, bool fromCenter, bool tilePos)
 {
+	if(!tile->q)
+		return Vector();
 	const float sizew = (float)tile->q->texture->width;
 	const float halfw = sizew / 2.0f;
 	const float sizeh = (float)tile->q->texture->height;
@@ -1412,7 +1414,7 @@ void WorldMapRender::toggle(bool turnON)
 		//setVis(activeTile);
 
 		// just set the color
-		if (activeTile)
+		if (activeTile && activeTile->q)
 		{
 			activeTile->q->color = Vector(1,1,1);
 			activeTile->q->alphaMod = 1;
