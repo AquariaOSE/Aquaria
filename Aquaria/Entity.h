@@ -132,7 +132,6 @@ public:
 
 	ActivationType activationType;
 	float activationRange;
-	Entity *followEntity;
 	Entity *ridingOnEntity;
 	Vector startPos;
 	void rotateToVec(Vector addVec, float time, float offsetAngle=0);
@@ -220,7 +219,6 @@ public:
 
 	bool isNormalLayer() const;
 	void idle();
-	int followPos;
 	void slowToStopPath(float t);
 	bool isSlowingToStopPath();
 	Vector lastMove;
