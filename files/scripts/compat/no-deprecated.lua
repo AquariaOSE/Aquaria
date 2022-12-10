@@ -2,9 +2,6 @@
 
 user_set_demo_intro = nil
 user_save = nil
-entity_followEntity = nil
-entityFollowEntity = nil
-entity_isFollowingEntity = nil
 entity_slowToStopPath = nil
 entity_isSlowingToStopPath = nil
 entity_isNearGround = nil
@@ -16,7 +13,5 @@ node_isEntityPast = nil
 entity_pathBurst = nil
 avatar_clampPosition = nil
 bedEffects = nil
-entity_grabTarget = nil
-entity_releaseTarget = nil
 entity_offsetUpdate = nil
 avatar_updatePosition = nil
