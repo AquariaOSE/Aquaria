@@ -917,6 +917,8 @@ void WorldMapRender::onUpdate(float dt)
 						{
 							if ((activeTile != selectedTile) && selectedTile->q)
 							{
+								debugLog("selectedTile: " + selectedTile->name);
+
 								if(revMethod == REVEAL_DEFAULT)
 									clearVis(activeTile);
 
@@ -1473,9 +1475,10 @@ void WorldMapRender::createGemHint(const std::string &gfx)
 void WorldMapRender::updateEditor()
 {
 	std::ostringstream os;
-	os << "EDITING... ";
+	os << "EDITING...";
 	if(activeTile)
 	{
+		os << " (" << activeTile->name << ")" << std::endl;
 		os << "x=" << activeTile->gridPos.x << "; y=" << activeTile->gridPos.y << std::endl;
 		os << "scale=" << activeTile->scale << "; scale2=" << activeTile->scale2;
 	}
