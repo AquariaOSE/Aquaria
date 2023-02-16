@@ -876,7 +876,7 @@ void WorldMapRender::onUpdate(float dt)
 		else
 		{
 			WorldMapTile *selectedTile = 0;
-			int sd=-1,d=0;
+			float sd=-1,d=0;
 			for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
 			{
 				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
@@ -889,11 +889,10 @@ void WorldMapRender::onUpdate(float dt)
 						{
 							d = (q->getWorldPosition() - core->mouse.position).getSquaredLength2D();
 
-							if (q->isCoordinateInsideWorld(core->mouse.position) && (sd == -1 || d < sd))
+							if (q->isCoordinateInsideWorld(core->mouse.position) && (sd < 0 || d < sd))
 							{
 								sd = d;
 								selectedTile = tile;
-								break;
 							}
 						}
 					}
