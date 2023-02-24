@@ -644,17 +644,18 @@ bool Path::action(int id, int state, int source, InputDevice device)
 	return true;
 }
 
-void Path::activate(Entity *e)
+void Path::activate(Entity *e, int source)
 {
 	if (hasScript() && activateFunction)
 	{
-		if (!script->call("activate", this, e))
+		if (!script->call("activate", this, e, source))
 		{
 			luaDebugMsg("activate", script->getLastError());
 			activateFunction = false;
 		}
 	}
 }
+
 
 void Path::removeNode(size_t idx)
 {
@@ -701,17 +702,27 @@ void Path::addNode(size_t idx)
 	}
 }
 
-int Path::messageVariadic(lua_State *L, int nparams)
+int Path::callVariadic(const char* func, lua_State* L, int nparams)
 {
 	if (script)
 	{
-		int res = script->callVariadic("msg", L, nparams, this);
+		int res = script->callVariadic(func, L, nparams, this);
 		if (res < 0)
-			luaDebugMsg("msg", script->getLastError());
+			luaDebugMsg(func, script->getLastError());
 		else
 			return res;
 	}
 	return 0;
+}
+
+int Path::messageVariadic(lua_State *L, int nparams)
+{
+	return callVariadic("msg", L, nparams);
+}
+
+int Path::activateVariadic(lua_State* L, int nparams)
+{
+	return callVariadic("activate", L, nparams);
 }
 
 void Path::luaDebugMsg(const std::string &func, const std::string &msg)

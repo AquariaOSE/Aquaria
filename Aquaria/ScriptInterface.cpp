@@ -580,6 +580,17 @@ Entity *entity(lua_State *L, int slot = 1)
 }
 
 static inline
+Entity *entityOpt(lua_State *L, int slot = 1)
+{
+	Entity *ent = (Entity*)lua_touserdata(L, slot);
+	if(ent)
+	{
+		ENSURE_TYPE(ent, SCO_ENTITY);
+	}
+	return ent;
+}
+
+static inline
 Vector getVector(lua_State *L, int slot = 1)
 {
 	Vector v(lua_tonumber(L, slot), lua_tonumber(L, slot+1));
@@ -3042,9 +3053,7 @@ luaFunc(entity_getLookAtPoint)
 luaFunc(entity_setRiding)
 {
 	Entity *e = entity(L);
-	Entity *e2 = 0;
-	if (lua_touserdata(L, 2) != NULL)
-		e2 = entity(L, 2);
+	Entity *e2 = entityOpt(L, 2);
 	if (e)
 	{
 		e->setRiding(e2);
@@ -3351,10 +3360,7 @@ luaFunc(entity_findNearestEntityOfType)
 luaFunc(createShot)
 {
 	Entity *e = entity(L,2);
-	Entity *t = 0;
-	if (lua_touserdata(L, 3) != NULL)
-		t = entity(L,3);
-	Shot *s = 0;
+	Entity *t = entityOpt(L, 3);
 	Vector pos, aim;
 	pos.x = lua_tonumber(L, 4);
 	pos.y = lua_tonumber(L, 5);
@@ -3362,7 +3368,7 @@ luaFunc(createShot)
 	aim.y = lua_tonumber(L, 7);
 
 
-	s = dsq->game->fireShot(getString(L, 1), e, t, pos, aim);
+	Shot *s = dsq->game->fireShot(getString(L, 1), e, t, pos, aim);
 
 	luaReturnPtr(s);
 }
@@ -4416,37 +4422,21 @@ luaFunc(cam_toNode)
 
 luaFunc(cam_toEntity)
 {
-	if (lua_touserdata(L, 1) == NULL)
-	{
-		Vector *pos = 0;
-		dsq->game->setCameraFollow(pos);
-	}
+	Entity *e = entityOpt(L);
+	if(e)
+		dsq->game->setCameraFollowEntity(e);
 	else
-	{
-		Entity *e = entity(L);
-		if (e)
-		{
-			dsq->game->setCameraFollowEntity(e);
-		}
-	}
+		dsq->game->setCameraFollow((Vector*)NULL);
 	luaReturnNil();
 }
 
 luaFunc(cam_setPosition)
 {
-	float x = lua_tonumber(L, 1);
-	float y = lua_tonumber(L, 2);
-	float time = lua_tonumber(L, 3);
-	int loopType = lua_tointeger(L, 4);
-	bool pingPong = getBool(L, 5);
-	bool ease = getBool(L, 6);
+	InterpolatedVector& camvec = dsq->game->cameraInterp;
+	camvec.stop();
+	interpolateVec2(L, camvec, 1);
 
-	Vector p(x,y);
-
-	dsq->game->cameraInterp.stop();
-	dsq->game->cameraInterp.interpolateTo(p, time, loopType, pingPong, ease);
-
-	dsq->cameraPos = dsq->game->getCameraPositionFor(dsq->game->cameraInterp);
+	dsq->cameraPos = dsq->game->getCameraPositionFor(camvec);
 	luaReturnNil();
 }
 
@@ -6318,14 +6308,9 @@ luaFunc(entity_getPrevState)
 luaFunc(entity_setTarget)
 {
 	Entity *e = entity(L);
-	Entity *t = 0;
-	if (lua_touserdata(L, 2) != NULL)
-	{
-		t = entity(L, 2);
-	}
 	if (e)
 	{
-		e->setTargetEntity(t);
+		e->setTargetEntity(entityOpt(L, 2));
 	}
 	luaReturnNil();
 }
@@ -7599,12 +7584,25 @@ luaFunc(getEntityByID)
 luaFunc(node_activate)
 {
 	Path *p = path(L);
-	Entity *e = 0;
-	if (lua_touserdata(L, 2) != NULL)
-		e = entity(L, 2);
 	if (p)
 	{
-		p->activate(e);
+		// pass everything on the stack except the node pointer
+		int res = p->activateVariadic(L, lua_gettop(L) - 1);
+		if (res >= 0)
+			return res;
+	}
+	luaReturnNil();
+}
+
+luaFunc(entity_activate)
+{
+	Entity *e = entity(L);
+	if (e)
+	{
+		// pass everything on the stack except the entity pointer
+		int res = e->activateVariadic(L, lua_gettop(L) - 1);
+		if (res >= 0)
+			return res;
 	}
 	luaReturnNil();
 }
@@ -10654,6 +10652,7 @@ static const struct {
 	luaRegister(loadSound),
 
 	luaRegister(node_activate),
+	luaRegister(entity_activate),
 	luaRegister(node_getName),
 	luaRegister(node_getLabel),
 	luaRegister(node_getPathPosition),
@@ -12186,6 +12185,15 @@ bool Script::call(const char *name, void *param1, const char *param2, void *para
 	luaPushPointer(L, param1);
 	lua_pushstring(L, param2);
 	luaPushPointer(L, param3);
+	return doCall(3);
+}
+
+bool Script::call(const char *name, void *param1, void *param2, int param3)
+{
+	lookupFunc(name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	lua_pushinteger(L, param3);
 	return doCall(3);
 }
 
