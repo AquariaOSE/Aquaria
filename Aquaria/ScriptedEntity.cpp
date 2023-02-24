@@ -79,17 +79,27 @@ void ScriptedEntity::message(const std::string &msg, int v)
 	Entity::message(msg, v);
 }
 
-int ScriptedEntity::messageVariadic(lua_State *L, int nparams)
+int ScriptedEntity::callVariadic(const char* func, lua_State* L, int nparams)
 {
 	if (script)
 	{
-		int res = script->callVariadic("msg", L, nparams, this);
+		int res = script->callVariadic(func, L, nparams, this);
 		if (res < 0)
-			luaDebugMsg("msg", script->getLastError());
+			luaDebugMsg(func, script->getLastError());
 		else
 			return res;
 	}
-	return Entity::messageVariadic(L, nparams);
+	return 0;
+}
+
+int ScriptedEntity::messageVariadic(lua_State *L, int nparams)
+{
+	return callVariadic("msg", L, nparams);
+}
+
+int ScriptedEntity::activateVariadic(lua_State* L, int nparams)
+{
+	return callVariadic("activate", L, nparams);
 }
 
 void ScriptedEntity::warpSegments()
@@ -646,15 +656,15 @@ void ScriptedEntity::onHitWall()
 	}
 }
 
-void ScriptedEntity::activate()
+void ScriptedEntity::activate(Entity *by, int source)
 {
 	if (runningActivation) return;
-	Entity::activate();
+	Entity::activate(by, source);
 
 	runningActivation = true;
 	if (script)
 	{
-		if (!script->call("activate", this))
+		if (!script->call("activate", this, by, source))
 			luaDebugMsg("activate", script->getLastError());
 	}
 	runningActivation = false;

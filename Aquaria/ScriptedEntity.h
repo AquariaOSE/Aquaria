@@ -45,12 +45,14 @@ public:
 	typedef std::map<std::string, RenderObject*> PartMap;
 	PartMap partMap;
 	bool surfaceMoveDir;
-	void activate();
+	void activate(Entity *by, int source); // override
 	void warpSegments();
 	void lightFlare();
 	void entityDied(Entity *e);
 	void message(const std::string &msg, int v);
+	int callVariadic(const char *func, lua_State *L, int nparams);
 	int messageVariadic(lua_State *L, int nparams);
+	int activateVariadic(lua_State *L, int nparams);
 
 	static bool runningActivation;
 

@@ -109,7 +109,7 @@ public:
 	Vector getEnterPosition(int outAmount=1);
 	Vector getEnterNormal();
 
-	void activate(Entity *e=0);
+	void activate(Entity *e, int source);
 	void refreshScript();
 	MinimapIcon *ensureMinimapIcon();
 
@@ -155,7 +155,9 @@ public:
 
 	void parseWarpNodeData(const std::string &dataString);
 
+	int callVariadic(const char *func, lua_State *L, int nparams);
 	int messageVariadic(lua_State *L, int nparams);
+	int activateVariadic(lua_State *L, int nparams);
 	void luaDebugMsg(const std::string &func, const std::string &msg);
 };
 

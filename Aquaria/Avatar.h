@@ -415,7 +415,6 @@ protected:
 	float revertTimer;
 
 	void endCharge();
-	Entity *activateEntity;
 	bool canMove;
 
 	void onEnterState(int action);

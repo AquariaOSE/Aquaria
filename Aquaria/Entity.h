@@ -105,6 +105,7 @@ public:
 
 	virtual void message(const std::string &msg, int v) {}
 	virtual int messageVariadic(lua_State *L, int nparams) { return 0; }
+	virtual int activateVariadic(lua_State *L, int nparams) { return 0; }
 
 	bool isUnderWater(const Vector &o=Vector());
 
@@ -196,7 +197,7 @@ public:
 	Entity *getTargetEntity(int t=0);
 	void setTargetEntity(Entity *e, int t=0);
 
-	virtual void activate(){}
+	virtual void activate(Entity *by, int source){}
 
 	SkeletalSprite skeletalSprite;
 

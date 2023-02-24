@@ -3036,12 +3036,12 @@ void Avatar::rmbu(int source, InputDevice device)
 
 	if (entityToActivate)
 	{
-		activateEntity = entityToActivate;
+		entityToActivate->activate(this, source);
 		entityToActivate = 0;
 	}
 	if (pathToActivate)
 	{
-		pathToActivate->activate();
+		pathToActivate->activate(this, source);
 		pathToActivate = 0;
 	}
 }
@@ -3661,7 +3661,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	damageTime = vars->avatarDamageTime;
 
-	activateEntity = 0;
 	canMove = true;
 	//scale = Vector(0.5, 0.5);
 	scale = Vector(0.5, 0.5);
@@ -5301,11 +5300,7 @@ void Avatar::onUpdate(float dt)
 	}
 
 	applyRidingPosition();
-	if (activateEntity)
-	{
-		activateEntity->activate();
-		activateEntity = 0;
-	}
+
 	if (bone_head)
 		headPosition = bone_head->getWorldPosition();
 

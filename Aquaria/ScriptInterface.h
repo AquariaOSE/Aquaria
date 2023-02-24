@@ -55,6 +55,8 @@ public:
 	bool call(const char *name, void *param1, const char *param2, float param3);
 	// function(pointer, string, pointer)
 	bool call(const char *name, void *param1, const char *param2, void *param3);
+	// function(pointer, pointer, int)
+	bool call(const char *name, void *param1, void *param2, int param3);
 	// function(pointer, pointer, pointer)
 	bool call(const char *name, void *param1, void *param2, void *param3);
 	// function(pointer, number, number, number)
