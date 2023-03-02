@@ -375,9 +375,11 @@ public:
 	void clear();
 	void addPathNode(Vector v, float p);
 	Vector getValue(float percent);
-	size_t getNumPathNodes() { return pathNodes.size(); }
+	inline size_t getNumPathNodes() { return pathNodes.size(); }
 	void resizePathNodes(size_t sz) { pathNodes.resize(sz); }
 	VectorPathNode *getPathNode(size_t i) { if (i<getNumPathNodes()) return &pathNodes[i]; return 0; }
+	inline VectorPathNode& operator[](size_t i) { return pathNodes[i]; }
+	inline const VectorPathNode& operator[](size_t i) const { return pathNodes[i]; }
 	void cut(int n);
 	void splice(const VectorPath &path, int sz);
 	void prepend(const VectorPath &path);
