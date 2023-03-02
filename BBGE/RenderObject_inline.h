@@ -34,9 +34,16 @@ inline bool RenderObject::isOnScreen() const
 
 Vector RenderObject::getFollowCameraPosition() const
 {
+	assert(!parent); // this makes no sense when we're not a root object
 	float f = followCamera;
-	if (f == 0 && layer != -1)
-		f = core->renderObjectLayers[layer].followCamera;
+	int fcl = 0;
+	if (layer != LR_NONE)
+	{
+		const RenderObjectLayer &rl = core->renderObjectLayers[layer];
+		if(!f)
+			f = rl.followCamera;
+		fcl = rl.followCameraLock;
+	}
 
 	if (f <= 0)
 	{
@@ -45,9 +52,6 @@ Vector RenderObject::getFollowCameraPosition() const
 	else
 	{
 		Vector pos = position;
-		int fcl = 0;
-		if (layer != -1)
-			fcl = core->renderObjectLayers[layer].followCameraLock;
 
 		switch (fcl)
 		{

@@ -59,8 +59,6 @@ enum CoreLayers
 	LR_NONE		= -1
 };
 
-const int NO_FOLLOW_CAMERA = -999;
-
 class AfterEffectManager;
 
 class Texture;
@@ -167,7 +165,7 @@ public:
 	bool visible;
 	float followCamera;
 
-	int followCameraLock;
+	int followCameraLock; // TODO: replace this with x/y scroll factor
 
 	bool update;
 
