@@ -258,8 +258,11 @@ public:
 
 	float life;
 
-	// if 0: use value from RenderLayer.
-	// UI elements have this == 1, ie. are totally unaffacted by camera movement.
+	// if 0: use value from RenderLayer. If still 0, render normally.
+	// UI elements have this == 1, ie. are totally unaffected by camera movement
+	// and stay always on the same place on the screen.
+	// Any value > 0 and < 1 is parallax scrolling, where closer to 0 moves slower
+	// (looks like further away).
 	float followCamera;
 
 	float alphaMod;
