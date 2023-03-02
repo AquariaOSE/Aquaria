@@ -252,7 +252,8 @@ public:
 	char _blendType;
 
 
-	mutable InterpolatedVector position, scale;
+	InterpolatedVector position;
+	mutable InterpolatedVector scale;
 	InterpolatedVector color, alpha;
 	mutable InterpolatedVector rotation;
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
@@ -300,7 +301,7 @@ protected:
 	// Is this object or any of its children rendered in pass "pass"?
 	bool hasRenderPass(const int pass) const;
 
-	inline void renderCall(const RenderState& rs) const;
+	inline void renderCall(const RenderState& rs, const Vector& renderAt) const;
 	virtual void renderCollision(const RenderState& rs) const;
 
 	typedef std::list<RenderObject*> RenderObjectList;

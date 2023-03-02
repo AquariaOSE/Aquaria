@@ -462,28 +462,26 @@ void RenderObject::render(const RenderState& rs) const
 	if (MotionBlurData *mb = this->motionBlur)
 	{
 		RenderState rx(rs);
-		const Vector oldPos = position;
 		const float oldRotZ = rotation.z;
 		const size_t sz = mb->positions.size();
 		const float m = 1.0f / float(sz);
 		const float m2 = alpha.x * 0.5f * (mb->transition ? mb->transitionTimer : 1.0f);
 		for (size_t i = 0; i < sz; i++)
 		{
-			position = mb->positions[i].position;
+			const Vector& renderAt = mb->positions[i].position;
 			rotation.z = mb->positions[i].rotz;
 			rx.alpha = (1.0f-(float(i) * m)) * m2;
-			renderCall(rx);
+			renderCall(rx, renderAt);
 		}
-		position = oldPos;
 		rotation.z = oldRotZ;
 	}
 
-	renderCall(rs);
+	renderCall(rs, position);
 }
 
-void RenderObject::renderCall(const RenderState& rs) const
+void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt) const
 {
-	position += offset;
+	const Vector renderPos = renderAt + offset;
 
 	glPushMatrix();
 
@@ -502,7 +500,7 @@ void RenderObject::renderCall(const RenderState& rs) const
 		{
 			glLoadIdentity();
 			glScalef(core->globalResolutionScale.x, core->globalResolutionScale.y,0);
-			glTranslatef(position.x, position.y, position.z);
+			glTranslatef(renderPos.x, renderPos.y, renderPos.z);
 			if (isfh())
 			{
 
@@ -527,34 +525,38 @@ void RenderObject::renderCall(const RenderState& rs) const
 	else
 	{
 
-		glTranslatef(position.x, position.y, position.z);
+		glTranslatef(renderPos.x, renderPos.y, renderPos.z);
 
-		if (RenderObject::renderPaths && position.data && position.data->path.getNumPathNodes() > 0)
-		{
-			glLineWidth(4);
-			glEnable(GL_BLEND);
-
-			size_t i = 0;
-			glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			glBegin(GL_LINES);
-			for (i = 0; i < position.data->path.getNumPathNodes()-1; i++)
+		// TODO: move this to debug render
+		if (RenderObject::renderPaths && position.data)
+			if(size_t N = position.data->path.getNumPathNodes())
 			{
-				glVertex2f(position.data->path.getPathNode(i)->value.x-position.x, position.data->path.getPathNode(i)->value.y-position.y);
-				glVertex2f(position.data->path.getPathNode(i+1)->value.x-position.x, position.data->path.getPathNode(i+1)->value.y-position.y);
-			}
-			glEnd();
+				glLineWidth(4);
+				glEnable(GL_BLEND);
 
-			glPointSize(20);
-			glBegin(GL_POINTS);
-			glColor4f(0.5,0.5,1,1);
-			for (i = 0; i < position.data->path.getNumPathNodes(); i++)
-			{
-				glVertex2f(position.data->path.getPathNode(i)->value.x-position.x, position.data->path.getPathNode(i)->value.y-position.y);
+				glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+				glBindTexture(GL_TEXTURE_2D, 0);
+
+				glBegin(GL_LINES);
+				for (size_t i = 0; i < N-1; i++)
+				{
+					const VectorPathNode a = position.data->path[i];
+					const VectorPathNode b = position.data->path[i+1];
+					glVertex2f(a.value.x-position.x, a.value.y-position.y);
+					glVertex2f(b.value.x-position.x, b.value.y-position.y);
+				}
+				glEnd();
+
+				glPointSize(20);
+				glBegin(GL_POINTS);
+				glColor4f(0.5,0.5,1,1);
+				for (size_t i = 0; i < N; i++)
+				{
+					const VectorPathNode& a = position.data->path[i];
+					glVertex2f(a.value.x-position.x, a.value.y-position.y);
+				}
+				glEnd();
 			}
-			glEnd();
-		}
 
 		glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
 		if (isfh())
@@ -620,9 +622,6 @@ void RenderObject::renderCall(const RenderState& rs) const
 
 
 	glPopMatrix();
-
-
-	position -= offset;
 }
 
 void RenderObject::renderCollision(const RenderState& rs) const
