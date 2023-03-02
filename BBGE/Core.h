@@ -164,8 +164,8 @@ public:
 	int startPass, endPass;
 	bool visible;
 	float followCamera;
-
-	int followCameraLock; // TODO: replace this with x/y scroll factor
+	Vector followCameraMult; // calculated based on followCameraLock
+	int followCameraLock;
 
 	bool update;
 

@@ -228,6 +228,14 @@ void RenderObjectLayer::prepareRender()
 	core->renderObjectCount += toRender.size();
 	toRender.push_back(NULL); // terminate
 	core->totalRenderObjectCount += n;
+
+	switch(followCameraLock)
+	{
+		default:
+		case FCL_NONE: followCameraMult = Vector(1, 1); break; // both H and V affected
+		case FCL_HORZ: followCameraMult = Vector(1, 0); break; // only H affected
+		case FCL_VERT: followCameraMult = Vector(0, 1); break; // only V affected
+	}
 }
 
 void RenderObjectLayer::render() const

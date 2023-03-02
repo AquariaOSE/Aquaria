@@ -454,6 +454,7 @@ bool RenderObject::isVisibleInPass(int pass) const
 
 void RenderObject::render(const RenderState& rs) const
 {
+	assert(layer != LR_NONE);
 	if (isHidden()) return;
 
 	/// new (breaks anything?)
@@ -484,21 +485,26 @@ void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt, flo
 
 	glPushMatrix();
 
-	float followCamera = this->followCamera;
-	if (layer != LR_NONE && !followCamera)
+	if(!parent)
 	{
-		const RenderObjectLayer& rl = core->renderObjectLayers[layer];
-		followCamera = rl.followCamera;
-	}
-	if (followCamera!=0 && !parent)
-	{
-		if (followCamera == 1)
+		// Is root object. followCamera has an influence.
+		float followCamera = this->followCamera;
+		if (!followCamera)
+		{
+			// Not set for object. Use global layer value
+			const RenderObjectLayer& rl = core->renderObjectLayers[layer];
+			followCamera = rl.followCamera;
+			if(followCamera == 0) // normal object on normal layer
+				goto nofollow;
+		}
+
+		if (followCamera == 1) // UI overlay or similar; is independent of camera aka stays in the same spot on the screen
 		{
 			glLoadIdentity();
 			glScalef(core->globalResolutionScale.x, core->globalResolutionScale.y,0);
 			glTranslatef(renderPos.x, renderPos.y, renderPos.z);
 		}
-		else
+		else // parallax scrolling
 		{
 			Vector pos = getFollowCameraPosition();
 			glTranslatef(pos.x, pos.y, pos.z);
@@ -518,6 +524,9 @@ void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt, flo
 	}
 	else
 	{
+nofollow:
+		// The vast majority of objects ends up here. We're a child, or followCamera == 0 and not on a parallax layer.
+
 		glTranslatef(renderPos.x, renderPos.y, renderPos.z);
 
 		if (RenderObject::renderPaths) // TODO: move this to debug render
