@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 RenderObjectLayer::RenderObjectLayer()
 	: renderObjects(BASE_ARRAY_SIZE)
 {
-	followCamera = NO_FOLLOW_CAMERA;
+	followCamera = 0;
 	visible = true;
 	startPass = endPass = 0;
 	followCameraLock = FCL_NONE;

@@ -83,11 +83,6 @@ struct MotionBlurData
 
 class RenderObjectLayer;
 
-// FIXME: -- fg
-// I've scattered a few mutables across this class
-// These should be part of some struct that gets passed along the render() calls
-// instead of updating the actual class members
-
 class RenderObject : public ScriptObject
 {
 public:
@@ -262,7 +257,11 @@ public:
 	CountedPtr<Texture> texture;
 
 	float life;
-	mutable float followCamera;
+
+	// if 0: use value from RenderLayer.
+	// UI elements have this == 1, ie. are totally unaffacted by camera movement.
+	float followCamera;
+
 	float alphaMod;
 	float updateCull;
 	int layer;
@@ -303,6 +302,7 @@ protected:
 
 	inline void renderCall(const RenderState& rs, const Vector& renderAt, float renderRotation) const;
 	virtual void renderCollision(const RenderState& rs) const;
+	void debugRenderPaths() const;
 
 	typedef std::list<RenderObject*> RenderObjectList;
 	RenderObjectList deathNotifications;

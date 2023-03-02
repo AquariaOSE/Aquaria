@@ -484,14 +484,11 @@ void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt, flo
 
 	glPushMatrix();
 
-
-	if (layer != LR_NONE)
+	float followCamera = this->followCamera;
+	if (layer != LR_NONE && !followCamera)
 	{
-		RenderObjectLayer *l = &core->renderObjectLayers[layer];
-		if (l->followCamera != NO_FOLLOW_CAMERA)
-		{
-			followCamera = l->followCamera;
-		}
+		const RenderObjectLayer& rl = core->renderObjectLayers[layer];
+		followCamera = rl.followCamera;
 	}
 	if (followCamera!=0 && !parent)
 	{
@@ -521,39 +518,10 @@ void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt, flo
 	}
 	else
 	{
-
 		glTranslatef(renderPos.x, renderPos.y, renderPos.z);
 
-		// TODO: move this to debug render
-		if (RenderObject::renderPaths && position.data)
-			if(size_t N = position.data->path.getNumPathNodes())
-			{
-				glLineWidth(4);
-				glEnable(GL_BLEND);
-
-				glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
-				glBindTexture(GL_TEXTURE_2D, 0);
-
-				glBegin(GL_LINES);
-				for (size_t i = 0; i < N-1; i++)
-				{
-					const VectorPathNode a = position.data->path[i];
-					const VectorPathNode b = position.data->path[i+1];
-					glVertex2f(a.value.x-position.x, a.value.y-position.y);
-					glVertex2f(b.value.x-position.x, b.value.y-position.y);
-				}
-				glEnd();
-
-				glPointSize(20);
-				glBegin(GL_POINTS);
-				glColor4f(0.5,0.5,1,1);
-				for (size_t i = 0; i < N; i++)
-				{
-					const VectorPathNode& a = position.data->path[i];
-					glVertex2f(a.value.x-position.x, a.value.y-position.y);
-				}
-				glEnd();
-			}
+		if (RenderObject::renderPaths) // TODO: move this to debug render
+			debugRenderPaths();
 
 		// This is the correct way to rotate things.
 		glRotatef(renderRotation, 0, 0, 1);
@@ -622,6 +590,42 @@ void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt, flo
 
 void RenderObject::renderCollision(const RenderState& rs) const
 {
+}
+
+void RenderObject::debugRenderPaths() const
+{
+	if(!position.data)
+		return;
+
+	const size_t N = position.data->path.getNumPathNodes();
+	if(!N)
+		return;
+
+	glLineWidth(4);
+	glEnable(GL_BLEND);
+
+	glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	glBegin(GL_LINES);
+	for (size_t i = 0; i < N-1; i++)
+	{
+		const VectorPathNode a = position.data->path[i];
+		const VectorPathNode b = position.data->path[i+1];
+		glVertex2f(a.value.x-position.x, a.value.y-position.y);
+		glVertex2f(b.value.x-position.x, b.value.y-position.y);
+	}
+	glEnd();
+
+	glPointSize(20);
+	glBegin(GL_POINTS);
+	glColor4f(0.5,0.5,1,1);
+	for (size_t i = 0; i < N; i++)
+	{
+		const VectorPathNode& a = position.data->path[i];
+		glVertex2f(a.value.x-position.x, a.value.y-position.y);
+	}
+	glEnd();
 }
 
 void RenderObject::addDeathNotify(RenderObject *r)

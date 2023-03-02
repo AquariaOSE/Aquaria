@@ -2663,7 +2663,7 @@ void Game::applyState()
 	{
 		l = &dsq->renderObjectLayers[i];
 		l->followCamera = 0;
-		l->followCameraLock = 0;
+		l->followCameraLock = FCL_NONE;
 	}
 
 	dsq->resetLayerPasses();
