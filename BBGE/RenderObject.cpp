@@ -504,7 +504,7 @@ void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt, flo
 			glTranslatef(pos.x, pos.y, pos.z);
 		}
 
-		// FIXME: this is the reason why tiles on parallax layers rotate in the wrong direction!
+		// FIXME: this is the reason why flipped tiles on parallax layers rotate in the wrong direction!
 		// Unfortunately the maps were built with this in mind, so before this can be taken out
 		// and replaced with the correct version (below), the rotation needs to be fixed up somehow.
 		// Not sure yet how to do this. Fix maps on load?
