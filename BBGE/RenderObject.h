@@ -255,7 +255,7 @@ public:
 	InterpolatedVector position;
 	InterpolatedVector scale;
 	InterpolatedVector color, alpha;
-	mutable InterpolatedVector rotation;
+	InterpolatedVector rotation;
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
 	InterpolatedVector velocity, gravity;
 
@@ -301,7 +301,7 @@ protected:
 	// Is this object or any of its children rendered in pass "pass"?
 	bool hasRenderPass(const int pass) const;
 
-	inline void renderCall(const RenderState& rs, const Vector& renderAt) const;
+	inline void renderCall(const RenderState& rs, const Vector& renderAt, float renderRotation) const;
 	virtual void renderCollision(const RenderState& rs) const;
 
 	typedef std::list<RenderObject*> RenderObjectList;

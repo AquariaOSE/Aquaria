@@ -462,26 +462,25 @@ void RenderObject::render(const RenderState& rs) const
 	if (MotionBlurData *mb = this->motionBlur)
 	{
 		RenderState rx(rs);
-		const float oldRotZ = rotation.z;
 		const size_t sz = mb->positions.size();
 		const float m = 1.0f / float(sz);
 		const float m2 = alpha.x * 0.5f * (mb->transition ? mb->transitionTimer : 1.0f);
 		for (size_t i = 0; i < sz; i++)
 		{
 			const Vector& renderAt = mb->positions[i].position;
-			rotation.z = mb->positions[i].rotz;
+			const float renderRotation = mb->positions[i].rotz;
 			rx.alpha = (1.0f-(float(i) * m)) * m2;
-			renderCall(rx, renderAt);
+			renderCall(rx, renderAt, renderRotation);
 		}
-		rotation.z = oldRotZ;
 	}
 
-	renderCall(rs, position);
+	renderCall(rs, position, rotation.z);
 }
 
-void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt) const
+void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt, float renderRotation) const
 {
 	const Vector renderPos = renderAt + offset;
+	renderRotation += rotationOffset.z;
 
 	glPushMatrix();
 
@@ -501,26 +500,24 @@ void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt) con
 			glLoadIdentity();
 			glScalef(core->globalResolutionScale.x, core->globalResolutionScale.y,0);
 			glTranslatef(renderPos.x, renderPos.y, renderPos.z);
-			if (isfh())
-			{
-
-				glRotatef(180, 0, 1, 0);
-			}
-
-			glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
 		}
 		else
 		{
 			Vector pos = getFollowCameraPosition();
-
 			glTranslatef(pos.x, pos.y, pos.z);
-			if (isfh())
-			{
-
-				glRotatef(180, 0, 1, 0);
-			}
-			glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
 		}
+
+		// FIXME: this is the reason why tiles on parallax layers rotate in the wrong direction!
+		// Unfortunately the maps were built with this in mind, so before this can be taken out
+		// and replaced with the correct version (below), the rotation needs to be fixed up somehow.
+		// Not sure yet how to do this. Fix maps on load?
+		// Add a map flag "hasCorrectParallaxRotation" and an editor feature to rotate tiles and set this flag?
+		// Probably want editor compatibility with old versions so the incorrect behavior
+		// needs to be the default if nothing is specified.
+		// What a mess. Sigh. -- FG
+		if (isfh())
+			glRotatef(180, 0, 1, 0);
+		glRotatef(renderRotation, 0, 0, 1);
 	}
 	else
 	{
@@ -558,12 +555,10 @@ void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt) con
 				glEnd();
 			}
 
-		glRotatef(rotation.z+rotationOffset.z, 0, 0, 1);
+		// This is the correct way to rotate things.
+		glRotatef(renderRotation, 0, 0, 1);
 		if (isfh())
-		{
-
 			glRotatef(180, 0, 1, 0);
-		}
 	}
 
 	glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, beforeScaleOffset.z);
