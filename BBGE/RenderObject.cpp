@@ -567,7 +567,8 @@ void RenderObject::renderCall(const RenderState& rs, const Vector& renderAt) con
 	}
 
 	glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, beforeScaleOffset.z);
-	glScalef(scale.x, scale.y, 1);
+	const Vector renderScale = scale * rs.scale;
+	glScalef(renderScale.x, renderScale.y, 1);
 	glTranslatef(internalOffset.x, internalOffset.y, internalOffset.z);
 
 	for (Children::const_iterator i = children.begin(); i != children.end(); i++)

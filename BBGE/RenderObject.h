@@ -253,7 +253,7 @@ public:
 
 
 	InterpolatedVector position;
-	mutable InterpolatedVector scale;
+	InterpolatedVector scale;
 	InterpolatedVector color, alpha;
 	mutable InterpolatedVector rotation;
 	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;

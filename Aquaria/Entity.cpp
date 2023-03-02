@@ -2363,15 +2363,9 @@ void Entity::render(const RenderState& rsold) const
 	if(renderPass != RENDER_ALL && rsold.pass != renderPass)
 		return;
 
-	InterpolatedVector bscale = scale;
-
-	scale *= flipScale;
-
-
-
-
 	RenderState rs(rsold);
 	rs.color *= color;
+	rs.scale *= flipScale;
 	if (multColor.isInterpolating())
 		rs.color *= multColor;
 	rs.alpha *= alpha.x;
@@ -2393,8 +2387,6 @@ void Entity::render(const RenderState& rsold) const
 		rs.pass = RENDER_ALL;
 
 	Quad::render(rs);
-
-	scale = bscale;
 }
 
 void Entity::doGlint(const Vector &position, const Vector &scale, const std::string &tex, BlendType bt)
