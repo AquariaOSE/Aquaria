@@ -26,6 +26,7 @@ struct RenderState
     GPUState& gpu;
 
     Vector color;
+    Vector scale;
     float alpha;
     int pass;
 
