@@ -190,7 +190,11 @@ function exitState(me)
 	elseif entity_isState(me, STATE_TRAPPED) then
 		--entity_addVel(v.trappedEnt, -800, 0)
 		if v.trappedEnt ~= 0 then
-			entity_push(v.trappedEnt, -800, 0, 1)
+			local pushx = -800 -- left
+			if entity_isfh(me) then -- facing right?
+				pushx = -pushx
+			end
+			entity_push(v.trappedEnt, pushx, 0, 1)
 		end
 		v.trappedEnt = 0
 		if v.trapDelay == 0 then
