@@ -553,7 +553,7 @@ void Shot::targetDied(Entity *target)
 		{
 			debugLog("removing target from shot");
 			if(s->script)
-				s->script->call("targetDied", (*i), target);
+				s->script->call("targetDied", s, target);
 			s->target = 0;
 		}
 		if (s->firer == target)
@@ -579,7 +579,7 @@ bool Shot::canHit(Entity *e, Bone *b)
 	if(!script)
 		return true; // no script? always hit
 	bool hit = true;
-	if(!script->call("canShotHit", e, b, &hit))
+	if(!script->call("canShotHit", this, e, b, &hit))
 		return true; // script failed / doesn't have the function / returned nil? hit.
 	return hit; // let script decide
 }
