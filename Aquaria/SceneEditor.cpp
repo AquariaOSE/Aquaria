@@ -2445,6 +2445,9 @@ void SceneEditor::cloneSelectedElement()
 				Element *e = dsq->game->createElement(e1->templateIdx, placer->position + Vector(40,40) + dist, e1->bgLayer, e1);
 				e->elementFlag = e1->elementFlag;
 				e->setElementEffectByIndex(e1->getElementEffectIndex());
+				e->texOff = e1->texOff;
+				e->repeatToFillScale = e1->repeatToFillScale;
+				e->refreshRepeatTextureToFill();
 				copy.push_back(e);
 			}
 			selectedElements.clear();
@@ -2457,6 +2460,9 @@ void SceneEditor::cloneSelectedElement()
 			Element *e = dsq->game->createElement(e1->templateIdx, placer->position + Vector(40,40), e1->bgLayer, e1);
 			e->elementFlag = e1->elementFlag;
 			e->setElementEffectByIndex(e1->getElementEffectIndex());
+			e->texOff = e1->texOff;
+			e->repeatToFillScale = e1->repeatToFillScale;
+			e->refreshRepeatTextureToFill();
 
 		}
 		dsq->game->reconstructGrid();
