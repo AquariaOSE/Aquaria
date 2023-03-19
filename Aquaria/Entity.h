@@ -343,6 +343,7 @@ public:
 	bool isEntityInside() const;
 
 	void updateSoundPosition();
+	void updateBoneLock();
 
 	Vector getPushVec() const { return pushVec; }
 	float getPushDamage() const { return pushDamage; }
@@ -418,8 +419,6 @@ protected:
 
 
 	Timer damageTimer;
-
-	void updateBoneLock();
 
 	float pushMaxSpeed;
 	std::string currentAnim;
