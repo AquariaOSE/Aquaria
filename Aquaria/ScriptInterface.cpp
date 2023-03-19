@@ -1889,7 +1889,10 @@ luaFunc(quad_setRepeatScale)
 {
 	Quad *b = getQuad(L);
 	if (b)
+	{
 		b->repeatToFillScale = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
+		b->refreshRepeatTextureToFill();
+	}
 	luaReturnNil();
 }
 
@@ -2950,6 +2953,38 @@ luaFunc(entity_setBoneLock)
 			bl.collisionMaskIndex = dsq->game->lastCollideMaskIndex;
 		}
 		ret = e->setBoneLock(bl);
+	}
+	luaReturnBool(ret);
+}
+
+luaFunc(entity_setBoneLockRotation)
+{
+	bool ret = false;
+	if(Entity *e = entity(L))
+	{
+		if(BoneLock *bl = e->getBoneLock())
+		{
+			bl->origRot = lua_tonumber(L, 2);
+			e->updateBoneLock();
+			ret = true;
+		}
+	}
+	luaReturnBool(ret);
+}
+
+
+luaFunc(entity_setBoneLockOffset)
+{
+	bool ret = false;
+	if(Entity *e = entity(L))
+	{
+		if(BoneLock *bl = e->getBoneLock())
+		{
+			bl->circleOffset.x = lua_tonumber(L, 2);
+			bl->circleOffset.y = lua_tonumber(L, 3);
+			e->updateBoneLock();
+			ret = true;
+		}
 	}
 	luaReturnBool(ret);
 }
@@ -9935,6 +9970,8 @@ static const struct {
 	luaRegister(entity_getRidingRotation),
 	luaRegister(entity_getRidingFlip),
 	luaRegister(entity_setBoneLock),
+	luaRegister(entity_setBoneLockRotation),
+	luaRegister(entity_setBoneLockOffset),
 	luaRegister(entity_setIngredient),
 	luaRegister(entity_setDeathScene),
 	luaRegister(entity_isDeathScene),

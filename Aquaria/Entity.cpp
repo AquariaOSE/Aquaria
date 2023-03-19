@@ -137,6 +137,8 @@ bool Entity::setBoneLock(const BoneLock &boneLock)
 
 	onSetBoneLock();
 
+	updateBoneLock();
+
 	return true;
 }
 
