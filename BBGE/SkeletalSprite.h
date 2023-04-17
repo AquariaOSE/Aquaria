@@ -95,7 +95,7 @@ public:
 	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
 
 	void spawnParticlesFromCollisionMask(const char *p, unsigned intv, int layer, float rotz = 0);
-	Vector getCollisionMaskNormal(size_t index);
+	Vector getCollisionMaskNormal(Vector pos, float dist) const;
 
 	virtual void renderCollision(const RenderState& rs) const OVERRIDE;
 
