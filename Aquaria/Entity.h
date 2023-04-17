@@ -42,11 +42,9 @@ struct BoneLock
 	BoneLock() : entity(0), bone(0), on(false), origRot(0) {}
 	Entity *entity;
 	Bone *bone;
-	Vector localOffset;
 	bool on;
 	float origRot;
 	Vector wallNormal, circleOffset;
-	int collisionMaskIndex;
 };
 
 // The Lance is an ability that never made it into the released version of the game.
@@ -344,6 +342,7 @@ public:
 
 	void updateSoundPosition();
 	void updateBoneLock();
+	float boneLockDelay;
 
 	Vector getPushVec() const { return pushVec; }
 	float getPushDamage() const { return pushDamage; }
@@ -358,7 +357,6 @@ protected:
 
 	std::vector<DamageType> ignoreShotDamageTypes;
 	Timer vineDamageTimer;
-	float boneLockDelay;
 	virtual void onSetBoneLock(){}
 	virtual void onUpdateBoneLock(){}
 	BoneLock boneLock;

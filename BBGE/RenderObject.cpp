@@ -123,69 +123,6 @@ RenderObject* RenderObject::getTopParent() const
 }
 
 #ifdef BBGE_USE_GLM
-static glm::mat4 getInvRotation(const RenderObject *p)
-{
-	glm::mat4 m = glm::rotate(-(p->rotation.z + p->rotationOffset.z), glm::vec3(0.0f, 0.0f, 1.0f));
-	if(p->isfh())
-		m *= glm::rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
-	return m;
-}
-#endif
-
-Vector RenderObject::getInvRotPosition(const Vector &vec) const
-{
-#ifdef BBGE_USE_GLM
-	glm::mat4 m = getInvRotation(this);
-	for(RenderObject *p = parent; p; p = p->parent)
-		m *= getInvRotation(p);
-	m *= glm::translate(vec.x, vec.y, 0.0f);
-	float x = m[3][0];
-	float y = m[3][1];
-	float z = m[3][2];
-
-#else
-
-	glPushMatrix();
-	glLoadIdentity();
-
-	std::vector<const RenderObject*>chain;
-	const RenderObject *p = this;
-	while(p)
-	{
-		chain.push_back(p);
-		p = p->parent;
-	}
-
-	for (int i = chain.size()-1; i >= 0; i--)
-	{
-		glRotatef(-(chain[i]->rotation.z+chain[i]->rotationOffset.z), 0, 0, 1);
-
-		if (chain[i]->isfh())
-		{
-
-			glRotatef(180, 0, 1, 0);
-		}
-	}
-
-	if (vec.x != 0 || vec.y != 0)
-	{
-
-		glTranslatef(vec.x, vec.y, 0);
-	}
-
-	float m[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, m);
-	float x = m[12];
-	float y = m[13];
-	float z = m[14];
-
-	glPopMatrix();
-#endif
-
-	return Vector(x,y,z);
-}
-
-#ifdef BBGE_USE_GLM
 static glm::mat4 matrixChain(const RenderObject *ro)
 {
 	glm::mat4 tranformMatrix = glm::scale(

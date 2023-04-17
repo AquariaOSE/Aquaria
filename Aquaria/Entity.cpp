@@ -100,40 +100,36 @@ void Entity::generateCollisionMask(int ovrCollideRadius)
 
 
 
-bool Entity::setBoneLock(const BoneLock &boneLock)
+bool Entity::setBoneLock(const BoneLock &bl)
 {
 	if (!canSetBoneLock()) return false;
 
-	if (boneLock.on && boneLockDelay > 0) return false;
-	if (this->boneLock.on && boneLock.on) return false;
+	if (bl.on && boneLockDelay > 0) return false;
+	if (boneLock.on && bl.on) return false;
 
-	if (this->boneLock.on && !boneLock.on)
+	if (boneLock.on && !bl.on)
 	{
 		boneLockDelay = 0.1f;
-		this->boneLock = boneLock;
+		boneLock = bl;
 	}
 	else
 	{
-		if (!boneLock.entity)
+		if (!bl.entity)
 			return false;
 
-		this->boneLock = boneLock;
+		boneLock = bl;
+		Quad *lockObj = bl.bone;
+		if(!lockObj)
+			lockObj = bl.entity;
 
-		if (!boneLock.bone)
-		{
-			this->boneLock.circleOffset = this->position - (boneLock.entity->getWorldPosition());
-			this->boneLock.circleOffset.setLength2D(boneLock.entity->collideRadius);
-			this->boneLock.origRot = boneLock.entity->rotation.z;
-		}
-		else
-		{
-			this->boneLock.localOffset = this->position - (boneLock.bone->getWorldPosition());
-			this->boneLock.localOffset = boneLock.bone->getInvRotPosition(this->boneLock.localOffset);
-			this->boneLock.origRot = boneLock.bone->getWorldRotation();
-		}
+		Vector posAndRot = lockObj->getWorldPositionAndRotation();
+		boneLock.origRot = posAndRot.z;
+		posAndRot.z = 0;
+		Vector offs = position - posAndRot;
+		boneLock.circleOffset = offs;
 	}
 
-	setv(EV_BONELOCKED, boneLock.on);
+	setv(EV_BONELOCKED, bl.on);
 
 	onSetBoneLock();
 
@@ -1612,24 +1608,18 @@ void Entity::updateBoneLock()
 {
 	if (boneLock.on)
 	{
-
-
 		Vector lastPosition = position;
+		const Quad *lockObj = boneLock.bone;
+		if(!lockObj)
+			lockObj = boneLock.entity;
 
-		if (boneLock.bone)
-		{
-			position = boneLock.bone->transformedCollisionMask[boneLock.collisionMaskIndex];
-			boneLock.wallNormal = boneLock.bone->getCollisionMaskNormal(boneLock.collisionMaskIndex);
-			rotateToVec(boneLock.wallNormal, 0.01f);
-		}
-		else
-		{
-			Vector currentOffset = getRotatedVector(boneLock.circleOffset, boneLock.entity->rotation.z - boneLock.origRot);
-			position = boneLock.entity->getWorldPosition() + currentOffset;
-			boneLock.wallNormal = currentOffset;
-			boneLock.wallNormal.normalize2D();
-			rotateToVec(boneLock.wallNormal, 0.01f);
-		}
+		Vector posAndRot = lockObj->getWorldPositionAndRotation();
+		Vector currentOffset = getRotatedVector(boneLock.circleOffset, posAndRot.z - boneLock.origRot);
+		posAndRot.z = 0;
+		position = posAndRot + currentOffset;
+		currentOffset.normalize2D();
+		boneLock.wallNormal = currentOffset;
+		rotateToVec(currentOffset, 0.01f);
 
 		if (dsq->game->collideCircleWithGrid(position, collideRadius))
 		{
@@ -1638,12 +1628,7 @@ void Entity::updateBoneLock()
 			return;
 		}
 
-
-
 		onUpdateBoneLock();
-
-
-
 	}
 }
 
