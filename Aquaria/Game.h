@@ -382,8 +382,6 @@ public:
 	bool isShuttingDownGameState() { return shuttingDownGameState; }
 	void warpToSceneNode(std::string scene, std::string node);
 
-	int lastCollideMaskIndex;
-
 	void ensureLimit(Entity *e, int num, int state=0);
 
 	void rebuildElementUpdateList();

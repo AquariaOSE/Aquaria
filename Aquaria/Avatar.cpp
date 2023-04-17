@@ -3139,9 +3139,6 @@ void Avatar::onSetBoneLock()
 		skeletalSprite.transitionAnimate("wallLookUp", 0.2f, -1);
 		lockToWallCommon();
 		state.lockedToWall = 1;
-		wallNormal = boneLock.localOffset;
-		wallNormal.normalize2D();
-		rotateToVec(wallNormal, 0.1f);
 	}
 	else
 	{

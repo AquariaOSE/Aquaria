@@ -223,7 +223,6 @@ Game::Game() : StateObject()
 
 	loadEntityTypeList();
 
-	lastCollideMaskIndex = -1;
 	worldPaused = false;
 
 	cookingScript = 0;
@@ -3958,7 +3957,6 @@ Bone *Game::collideSkeletalVsCircle(Entity *skeletal, Vector pos, float radius)
 						{
 							closest = b;
 							smallestDist = dist;
-							lastCollideMaskIndex = i;
 							break;
 						}
 					}

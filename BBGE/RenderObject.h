@@ -185,7 +185,6 @@ public:
 
 	Vector getWorldPosition() const;
 	Vector getWorldCollidePosition(const Vector &vec=Vector(0,0,0)) const;
-	Vector getInvRotPosition(const Vector &vec) const;
 
 	RenderObject *getTopParent() const;
 

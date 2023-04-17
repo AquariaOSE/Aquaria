@@ -2883,8 +2883,8 @@ luaFunc(entity_getBoneLockData)
 	lua_pushnumber(L, b.origRot);
 	lua_pushnumber(L, b.wallNormal.x);
 	lua_pushnumber(L, b.wallNormal.y);
-	lua_pushnumber(L, b.localOffset.x);
-	lua_pushnumber(L, b.localOffset.y);
+	lua_pushnumber(L, b.circleOffset.x);
+	lua_pushnumber(L, b.circleOffset.y);
 	return 7;
 }
 
@@ -2950,7 +2950,6 @@ luaFunc(entity_setBoneLock)
 			bl.entity = e2;
 			bl.bone = b;
 			bl.on = true;
-			bl.collisionMaskIndex = dsq->game->lastCollideMaskIndex;
 		}
 		ret = e->setBoneLock(bl);
 	}
@@ -2987,6 +2986,21 @@ luaFunc(entity_setBoneLockOffset)
 		}
 	}
 	luaReturnBool(ret);
+}
+
+luaFunc(entity_setBoneLockDelay)
+{
+	if(Entity *e = entity(L))
+		e->boneLockDelay = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(entity_getBoneLockDelay)
+{
+	float t = 0;
+	if(Entity *e = entity(L))
+		t = e->boneLockDelay;
+	luaReturnNum(t);
 }
 
 luaFunc(entity_setIngredient)
@@ -9972,6 +9986,8 @@ static const struct {
 	luaRegister(entity_setBoneLock),
 	luaRegister(entity_setBoneLockRotation),
 	luaRegister(entity_setBoneLockOffset),
+	luaRegister(entity_setBoneLockDelay),
+	luaRegister(entity_getBoneLockDelay),
 	luaRegister(entity_setIngredient),
 	luaRegister(entity_setDeathScene),
 	luaRegister(entity_isDeathScene),
