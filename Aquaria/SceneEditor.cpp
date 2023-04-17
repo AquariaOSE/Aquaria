@@ -3064,14 +3064,13 @@ void SceneEditor::dumpObs()
 	TileVector tv;
 	unsigned char *data = new unsigned char[MAX_GRID * MAX_GRID * sizeof(unsigned)];
 	unsigned *ptr = (unsigned*)data;
-	for(tv.y = MAX_GRID - 1; ; --tv.y)
-	{
+	for(tv.y = 0; tv.y < MAX_GRID; ++tv.y)
 		for(tv.x = 0; tv.x < MAX_GRID; ++tv.x)
 			*ptr++ = game->isObstructed(tv, OT_MASK_BLACK) ? 0xFF000000 : 0xFFFFFFFF;
-		if(tv.y == 0)
-			break;
-	}
-	std::string outfn = dsq->getUserDataFolder() + "/griddump-" + game->sceneName + ".tga";
-	tgaSaveRGBA(outfn.c_str(), MAX_GRID, MAX_GRID, data);
-	dsq->screenMessage("Saved grid image to " + outfn);
+	std::string outfn = dsq->getUserDataFolder() + "/griddump-" + game->sceneName + ".png";
+	if(pngSaveRGBA(outfn.c_str(), MAX_GRID, MAX_GRID, data, 3))
+		dsq->screenMessage("Saved grid image to " + outfn);
+	else
+		dsq->screenMessage("Failed to save grid dump: " + outfn);
+	delete [] data;
 }
