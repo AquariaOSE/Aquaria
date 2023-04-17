@@ -6498,6 +6498,15 @@ luaFunc(bone_getName)
 	luaReturnStr(n);
 }
 
+luaFunc(bone_getCollisionMaskNormal)
+{
+	Vector n;
+	Bone *b = bone(L);
+	if(b)
+		n = b->getCollisionMaskNormal(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4));
+	luaReturnVec2(n.x, n.y);
+}
+
 luaFunc(bone_isName)
 {
 	Bone *b = bone(L);
@@ -10799,6 +10808,7 @@ static const struct {
 	luaRegister(bone_getName),
 	luaRegister(bone_isName),
 	luaRegister(bone_getIndex),
+	luaRegister(bone_getCollisionMaskNormal),
 	luaRegister(node_x),
 	luaRegister(node_y),
 	luaRegister(node_isEntityPast),

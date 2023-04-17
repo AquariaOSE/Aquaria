@@ -340,31 +340,16 @@ void Bone::renderCollision(const RenderState& rs) const
 		CollideQuad::renderCollision(rs);
 }
 
-Vector Bone::getCollisionMaskNormal(size_t index)
+Vector Bone::getCollisionMaskNormal(Vector pos, float dist) const
 {
 	Vector sum;
-	size_t num=0;
 	for (size_t i = 0; i < this->transformedCollisionMask.size(); i++)
 	{
-		if (i != index)
-		{
-			Vector diff = transformedCollisionMask[index] - transformedCollisionMask[i];
-			if (diff.isLength2DIn(128))
-			{
-				sum += diff;
-				num++;
-			}
-		}
+		Vector diff = pos - transformedCollisionMask[i];
+		if (diff.isLength2DIn(dist))
+			sum += diff;
 	}
-	if (!sum.isZero())
-	{
-		sum /= num;
-
-		sum.normalize2D();
-
-
-	}
-
+	sum.normalize2D();
 	return sum;
 }
 
