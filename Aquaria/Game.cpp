@@ -702,63 +702,36 @@ void Game::dilateGrid(unsigned int radius, ObsType test, ObsType set, ObsType al
 
 Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 {
-	TileVector t(pos);
-	//Vector p = t.worldVector();
+	const TileVector t(pos); // snap to grid
 	Vector avg;
+	float mindist = HUGE_VALF;
+	const float szf = (TILE_SIZE*(sampleArea-1));
 	int c = 0;
-	//float maxLen = -1;
-	std::vector<Vector> vs;
-	if (dist != NULL)
-		*dist = -1;
 	for (int x = t.x-sampleArea; x <= t.x+sampleArea; x++)
 	{
 		for (int y = t.y-sampleArea; y <= t.y+sampleArea; y++)
 		{
 			if (x == t.x && y == t.y) continue;
-			TileVector ct(x,y);
-			Vector vt = ct.worldVector();
+			const TileVector ct(x,y);
 			if (isObstructed(ct, obs))
 			{
-				int xDiff = pos.x-vt.x;
-				int yDiff = pos.y-vt.y;
-				Vector v(xDiff, yDiff);
-				vs.push_back (v);
-
-				if (dist!=NULL)
+				Vector v = pos - ct.worldVector();
+				const float d = v.getLength2D();
+				if (d < mindist)
+					mindist = d;
+				if (d < szf)
 				{
-					float d = (vt-pos).getLength2D();
-					if (*dist == -1 || d < *dist)
-					{
-						*dist = d;
-					}
+					v.setLength2D(szf - d);
+					avg += v;
+					++c;
 				}
+
 			}
 		}
 	}
-	const int sz = (TILE_SIZE*(sampleArea-1));
-	for (size_t i = 0; i < vs.size(); i++)
-	{
-		float len = vs[i].getLength2D();
-		if (len < sz)
-		{
-			vs[i].setLength2D(sz - len);
-			c++;
-			avg += vs[i];
-		}
-	}
-	if (c)
-	{
-		avg /= c;
-		if (avg.x != 0 || avg.y != 0)
-		{
-			avg.normalize2D();
-			avg.z = 0;
-		}
-	}
-	else
-	{
-		avg.x = avg.y = 0;
-	}
+	if(dist)
+		*dist = c ? mindist : -1.0f;
+	avg.normalize2D();
 	return avg;
 }
 
