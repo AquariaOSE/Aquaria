@@ -700,11 +700,10 @@ void Game::dilateGrid(unsigned int radius, ObsType test, ObsType set, ObsType al
 	}
 }
 
-Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
+Vector Game::getWallNormal(Vector pos, int sampleArea, int obs)
 {
 	const TileVector t(pos); // snap to grid
 	Vector avg;
-	float mindist = HUGE_VALF;
 	const float szf = (TILE_SIZE*(sampleArea-1));
 	int c = 0;
 	for (int x = t.x-sampleArea; x <= t.x+sampleArea; x++)
@@ -717,8 +716,6 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 			{
 				Vector v = pos - ct.worldVector();
 				const float d = v.getLength2D();
-				if (d < mindist)
-					mindist = d;
 				if (d < szf)
 				{
 					v.setLength2D(szf - d);
@@ -729,8 +726,6 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, float *dist, int obs)
 			}
 		}
 	}
-	if(dist)
-		*dist = c ? mindist : -1.0f;
 	avg.normalize2D();
 	return avg;
 }

@@ -237,7 +237,7 @@ public:
 
 	Vector positionToAvatar;
 
-	Vector getWallNormal(Vector pos, int sampleArea = 5, float *dist=0, int obs = -1);
+	Vector getWallNormal(Vector pos, int sampleArea = 5, int obs = -1);
 
 	void updateMiniMapHintPosition();
 	EntitySaveData *getEntitySaveDataForEntity(Entity *e, Vector pos);

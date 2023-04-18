@@ -78,11 +78,10 @@ void PathFinding::molestPath(VectorPath &path)
 	for (i = 0; i < sz; i++)
 	{
 		Vector node = path.getPathNode(i)->value;
-		float dist;
 		const int sample = 20;
 		{
-			Vector n = dsq->game->getWallNormal(node, sample, &dist);
-			if (dist != -1 && (n.x != 0 || n.y != 0))
+			Vector n = dsq->game->getWallNormal(node, sample);
+			if (!n.isZero())
 			{
 				n.setLength2D(200);
 				TileVector test(node + n);
