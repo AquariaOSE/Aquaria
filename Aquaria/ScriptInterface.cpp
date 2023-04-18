@@ -5195,7 +5195,7 @@ luaFunc(getWallNormal)
 	if (!obs)
 		obs = OT_BLOCKING;
 
-	Vector n = dsq->game->getWallNormal(Vector(x, y), range, NULL, obs);
+	Vector n = dsq->game->getWallNormal(Vector(x, y), range, obs);
 
 	luaReturnVec2(n.x, n.y);
 }

@@ -1539,8 +1539,7 @@ void SceneEditor::skinLevel(int minX, int minY, int maxX, int maxY)
 				)
 				)
 			{
-				float dist=0;
-				wallNormal = dsq->game->getWallNormal(t.worldVector(), 5, &dist, OT_MASK_BLACK);
+				wallNormal = dsq->game->getWallNormal(t.worldVector(), 5, OT_MASK_BLACK);
 				offset = wallNormal*(-TILE_SIZE*0.6f);
 				MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), wallNormal, rot);
 				rot = 180-(360-rot);
