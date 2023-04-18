@@ -705,7 +705,6 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, int obs)
 	const TileVector t(pos); // snap to grid
 	Vector avg;
 	const float szf = (TILE_SIZE*(sampleArea-1));
-	int c = 0;
 	for (int x = t.x-sampleArea; x <= t.x+sampleArea; x++)
 	{
 		for (int y = t.y-sampleArea; y <= t.y+sampleArea; y++)
@@ -720,7 +719,6 @@ Vector Game::getWallNormal(Vector pos, int sampleArea, int obs)
 				{
 					v.setLength2D(szf - d);
 					avg += v;
-					++c;
 				}
 
 			}
