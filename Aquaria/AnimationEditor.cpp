@@ -735,27 +735,28 @@ void AnimationEditor::update(float dt)
 		if (isActing(ACTION_SWIMDOWN, -1))
 			moveBoneStripPoint(Vector(0, dt));
 	}
-	int spd = 1;
+	float spd = 1.0f;
 	if (core->mouse.scrollWheelChange < 0)
 	{
-		ctrlSprite->scale -= Vector(spd*0.05f,spd*0.05f);
+		ctrlSprite->scale.x /= 1.12f;
 	}
 	else if (core->mouse.scrollWheelChange > 0)
 	{
-		ctrlSprite->scale += Vector(spd*0.05f,spd*0.05f);
+		ctrlSprite->scale.x *= 1.12f;
 	}
 	if (core->getKeyState(KEY_PGDN) && core->getShiftState())
 	{
-		ctrlSprite->scale -= Vector(spd*0.05f,spd*0.05f);
+		ctrlSprite->scale.x /= (1 + spd*dt);
 	}
 	if (core->getKeyState(KEY_PGUP) && core->getShiftState())
 	{
-		ctrlSprite->scale += Vector(spd*0.05f,spd*0.05f);
+		ctrlSprite->scale.x *= (1 + spd*dt);
 	}
 	if (ctrlSprite->scale.x < 0.05f)
 	{
-		ctrlSprite->scale = Vector(0.05f,0.05f);
+		ctrlSprite->scale.x = 0.05f;
 	}
+	ctrlSprite->scale.y = ctrlSprite->scale.x;
 
 	if (boneEdit == 0)
 	{
