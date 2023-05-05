@@ -787,11 +787,23 @@ void SceneEditor::reversePath()
 
 void SceneEditor::setGridPattern(int gi)
 {
-	if (selectedElements.size())
-		for (size_t i = 0; i < selectedElements.size(); ++i)
-			selectedElements[i]->setElementEffectByIndex(gi);
-	else if (editingElement)
-		editingElement->setElementEffectByIndex(gi);
+	if(core->getCtrlState())
+	{
+		const int tag = gi + 1; // key 0 is tag 0... otherwise it's all off by one
+		if (selectedElements.size())
+			for (size_t i = 0; i < selectedElements.size(); ++i)
+				selectedElements[i]->setTag(tag);
+		else if (editingElement)
+			editingElement->setTag(tag);
+	}
+	else
+	{
+		if (selectedElements.size())
+			for (size_t i = 0; i < selectedElements.size(); ++i)
+				selectedElements[i]->setElementEffectByIndex(gi);
+		else if (editingElement)
+			editingElement->setElementEffectByIndex(gi);
+	}
 }
 
 void SceneEditor::setGridPattern0()
@@ -1755,6 +1767,23 @@ void SceneEditor::flipElementHorz()
 	if (editType != ET_ELEMENTS)
 		return;
 
+	if(core->getCtrlState())
+	{
+		if(!selectedElements.empty() || editingElement)
+		{
+			std::string inp = dsq->getUserInputString("Enter tag (int):");
+			if(inp.empty())
+				return;
+			int tag = atoi(inp.c_str());
+			if(!selectedElements.empty())
+				for(size_t i = 0; i < selectedElements.size(); ++i)
+					selectedElements[i]->setTag(tag);
+			else
+				editingElement->setTag(tag);
+		}
+		return;
+	}
+
 	if (editingElement)
 		editingElement->flipHorizontal();
 	else
@@ -2607,10 +2636,11 @@ void SceneEditor::updateText()
 			if (e)
 			{
 				os << " id: " << e->templateIdx;
+				os << " efx: " << (e->getElementEffectIndex() + 1); // +1 so that it resembles the layout on numpad
+				os << " tag: " << e->tag;
 				ElementTemplate *et = game->getElementTemplateByIdx(e->templateIdx);
 				if (et)
 					os << " gfx: " << et->gfx;
-				os << " efx: " << (e->getElementEffectIndex() + 1); // +1 so that it resembles the layout on numpad
 			}
 		}
 	break;

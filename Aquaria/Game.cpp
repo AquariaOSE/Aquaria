@@ -1889,7 +1889,7 @@ bool Game::loadSceneXML(std::string scene)
 		}
 		if (simpleElements->Attribute("repeatScale"))
 		{
-			SimpleIStringStream is2(simpleElements->Attribute("repeatScale"));
+			SimpleIStringStream is2(simpleElements->Attribute("repeatScale"), SimpleIStringStream::REUSE);
 			for(size_t i = 0; i < loadedElements.size(); ++i)
 			{
 				Element *e = loadedElements[i];
@@ -1902,6 +1902,18 @@ bool Game::loadSceneXML(std::string scene)
 					e->repeatToFillScale.y = repeatScaleY;
 					e->refreshRepeatTextureToFill();
 				}
+			}
+		}
+		if (simpleElements->Attribute("tag"))
+		{
+			SimpleIStringStream is2(simpleElements->Attribute("tag"), SimpleIStringStream::REUSE);
+			for(size_t i = 0; i < loadedElements.size(); ++i)
+			{
+				Element *e = loadedElements[i];
+				int tag = 0;
+				if(!(is2 >> tag))
+					break;
+				e->setTag(tag);
 			}
 		}
 		simpleElements = simpleElements->NextSiblingElement("SE");
@@ -2130,6 +2142,8 @@ bool Game::saveScene(std::string scene)
 
 	std::ostringstream simpleElements[LR_MAX];
 	std::ostringstream simpleElements_repeatScale[LR_MAX];
+	std::ostringstream simpleElements_tag[LR_MAX];
+	unsigned tagBitsUsed[LR_MAX] = { 0 };
 
 	for (size_t i = 0; i < dsq->getNumElements(); i++)
 	{
@@ -2153,6 +2167,9 @@ bool Game::saveScene(std::string scene)
 			SE_rs << e->repeatToFillScale.x << " "
 			      << e->repeatToFillScale.y << " ";
 		}
+
+		simpleElements_tag[e->bgLayer] << e->tag << " ";
+		tagBitsUsed[e->bgLayer] |= e->tag;
 	}
 
 	if (dsq->game->entitySaveData.size() > 0)
@@ -2187,9 +2204,16 @@ bool Game::saveScene(std::string scene)
 			XMLElement *simpleElementsXML = saveFile.NewElement("SE");
 			simpleElementsXML->SetAttribute("k", s.c_str());
 			simpleElementsXML->SetAttribute("l", i);
-			std::string repeatScaleStr = simpleElements_repeatScale[i].str();
-			if(!repeatScaleStr.empty())
-				simpleElementsXML->SetAttribute("repeatScale", repeatScaleStr.c_str());
+			std::string str = simpleElements_repeatScale[i].str();
+			if(!str.empty())
+				simpleElementsXML->SetAttribute("repeatScale", str.c_str());
+			if(tagBitsUsed[i]) // skip writing tags on layers where it's all zero (mainly to avoid putting a long string of 0's for border elements)
+			{
+				str = simpleElements_tag[i].str();
+				if(!str.empty())
+					simpleElementsXML->SetAttribute("tag", str.c_str());
+			}
+
 			saveFile.InsertEndChild(simpleElementsXML);
 		}
 	}

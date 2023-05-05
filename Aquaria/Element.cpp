@@ -42,6 +42,7 @@ Element::Element() : Quad()
 	elementFlag = EF_NONE;
 	elementActive = true;
 	bgLayer = 0;
+	tag = 0;
 	templateIdx = -1;
 	eff = NULL;
 }
@@ -280,37 +281,66 @@ void Element::setElementEffectByIndex(int eidx)
 	}
 }
 
+// shamelessly ripped from paint.net default palette
+static const Vector s_tagColors[] =
+{
+	/* 0 */ Vector(0.5f, 0.5f, 0.5f),
+	/* 1 */ Vector(1,0,0),
+	/* 2 */ Vector(1, 0.415686f, 0),
+	/* 3 */ Vector(1,0.847059f, 0),
+	/* 4 */ Vector(0.298039f,1,0),
+	/* 5 */ Vector(0,1,1),
+	/* 6 */ Vector(0,0.580392,1),
+	/* 7 */ Vector(0,0.149020f,1),
+	/* 8 */ Vector(0.282353f,0,1),
+	/* 9 */ Vector(0.698039f,0,1),
+
+	/* 10 */ Vector(1,0,1), // anything outside of the pretty range
+};
+
+static inline const Vector& getTagColor(int tag)
+{
+	const unsigned idx = std::min<unsigned>(unsigned(tag), Countof(s_tagColors)-1);
+	return s_tagColors[idx];
+
+}
+
 void Element::render(const RenderState& rs) const
 {
 	if (!elementActive) return;
-	const RenderState *rsp = &rs;
 
 	if (dsq->game->isSceneEditorActive() && this->bgLayer == dsq->game->sceneEditor.bgLayer
 		&& dsq->game->sceneEditor.editType == ET_ELEMENTS)
 	{
-		RenderState rs2(rs);
-		rsp = &rs2;
-		rs2.forceRenderBorder = true;
-		rs2.forceRenderCenter = true;
-		rs2.renderBorderColor = Vector(0.5f, 0.5f, 0.5f);
-
+		Vector tagColor = getTagColor(tag);
+		bool hl = false;
 		if (!dsq->game->sceneEditor.selectedElements.empty())
 		{
 			for (size_t i = 0; i < dsq->game->sceneEditor.selectedElements.size(); i++)
 			{
 				if (this == dsq->game->sceneEditor.selectedElements[i])
-					rs2.renderBorderColor = Vector(1,1,1);
+				{
+					hl = true;
+					break;
+				}
 			}
 		}
 		else
 		{
-			if (dsq->game->sceneEditor.editingElement == this)
-				rs2.renderBorderColor = Vector(1,1,1);
+			hl = dsq->game->sceneEditor.editingElement == this;
 		}
 
-	}
+		if(hl)
+			tagColor += Vector(0.5f, 0.5f, 0.5f);
 
-	Quad::render(*rsp);
+		RenderState rs2(rs);
+		rs2.forceRenderBorder = true;
+		rs2.forceRenderCenter = true;
+		rs2.renderBorderColor = tagColor;
+		Quad::render(rs2);
+	}
+	else // render normally
+		Quad::render(rs);
 }
 
 void Element::fillGrid()
@@ -336,3 +366,7 @@ void Element::fillGrid()
 	}
 }
 
+void Element::setTag(int tag)
+{
+	this->tag = tag;
+}

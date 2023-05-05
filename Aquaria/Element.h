@@ -65,15 +65,17 @@ public:
 	void update(float dt);
 	size_t templateIdx;
 	int bgLayer;
+	int tag;
 	Element *bgLayerNext;
 	void render(const RenderState& rs) const OVERRIDE;
 	ElementFlag elementFlag;
 	void fillGrid();
-	bool isElementActive() { return elementActive; }
+	bool isElementActive() const { return elementActive; }
 	int getElementEffectIndex();
 	void setElementEffectByIndex(int e);
 	void setElementActive(bool v) { elementActive = v; }
 	void doInteraction(Entity *ent, float mult, float touchWidth);
+	void setTag(int tag);
 protected:
 	void ensureEffectData();
 	void freeEffectData();
