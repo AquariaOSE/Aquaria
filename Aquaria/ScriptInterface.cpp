@@ -7672,9 +7672,10 @@ luaFunc(node_setElementsInLayerActive)
 	{
 		int l = lua_tointeger(L, 2);
 		bool v = getBool(L, 3);
+		int tag = lua_tointeger(L, 3);
 		for (Element *e = dsq->getFirstElementOnLayer(l); e; e = e->bgLayerNext)
 		{
-			if (e && p->isCoordinateInside(e->position))
+			if (e && (!tag || e->tag == tag) && p->isCoordinateInside(e->position))
 			{
 				e->setElementActive(v);
 			}
@@ -7683,22 +7684,55 @@ luaFunc(node_setElementsInLayerActive)
 	luaReturnNil();
 }
 
+static int pushElementData(lua_State *L, const Element *e)
+{
+	lua_pushinteger(L, e->templateIdx);
+	lua_pushstring(L, e->texture->name.c_str());
+	lua_pushboolean(L, e->isElementActive());
+	lua_pushinteger(L, e->bgLayer);
+	lua_pushinteger(L, e->tag);
+	return 5;
+}
+
+// (layer, func)
 luaFunc(refreshElementsOnLayerCallback)
 {
-	int layer = lua_tointeger(L, 1);
+	const int layer = lua_tointeger(L, 1);
+	size_t done = 0;
 	for (Element *e = dsq->getFirstElementOnLayer(layer); e; e = e->bgLayerNext)
 	{
-		bool on = e->isElementActive();
 		lua_pushvalue(L, 2); // the callback
-		lua_pushinteger(L, e->templateIdx);
-		lua_pushstring(L, e->texture->name.c_str());
-		lua_pushboolean(L, e->isElementActive());
-		lua_call(L, 3, 1);
+		int args = pushElementData(L, e);
+		lua_call(L, args, 1);
 		bool newon = lua_toboolean(L, -1);
 		lua_pop(L, 1);
 		e->setElementActive(newon);
+		++done;
 	}
-	luaReturnNil();
+	luaReturnInt(done);
+}
+
+// (tag, func)
+luaFunc(refreshElementsWithTagCallback)
+{
+	const int tag = lua_tointeger(L, 1);
+	const size_t N = dsq->getNumElements();
+	size_t done = 0;
+	for(size_t i = 0; i < N; ++i)
+	{
+		Element *e = dsq->getElement(i);
+		if(e->tag == tag)
+		{
+			lua_pushvalue(L, 2); // the callback
+			int args = pushElementData(L, e);
+			lua_call(L, args, 1);
+			bool newon = lua_toboolean(L, -1);
+			lua_pop(L, 1);
+			e->setElementActive(newon);
+			++done;
+		}
+	}
+	luaReturnInt(done);
 }
 
 
@@ -10747,6 +10781,7 @@ static const struct {
 
 	luaRegister(node_setElementsInLayerActive),
 	luaRegister(refreshElementsOnLayerCallback),
+	luaRegister(refreshElementsWithTagCallback),
 
 
 	luaRegister(entity_setHealth),
