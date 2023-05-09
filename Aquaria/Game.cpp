@@ -943,10 +943,10 @@ Entity* Game::getEntityByID(int id) const
 
 EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e)
 {
-
+	const int id = e->getID();
 	for (size_t i = 0; i < entitySaveData.size(); i++)
 	{
-		if (entitySaveData[i].e == e)
+		if (entitySaveData[i].id == id)
 		{
 			return &entitySaveData[i];
 		}
@@ -1010,7 +1010,9 @@ Entity* Game::createEntityOnMap(const EntitySaveData& sav)
 	e->rotation.z = sav.rot;
 
 	int idx = getIdxForEntityType(type);
-	entitySaveData.push_back(EntitySaveData(sav.id, sav.x, sav.y, sav.rot, sav.idx, type, e));
+	EntitySaveData copy = sav;
+	copy.name = type;
+	entitySaveData.push_back(copy);
 
 	establishEntity(e, sav.id, pos);
 
