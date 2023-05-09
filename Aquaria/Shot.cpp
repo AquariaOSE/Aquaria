@@ -487,7 +487,7 @@ bool Shot::onHitWall(bool reflect)
 	{
 		if (!shotData->spawnEntity.empty())
 		{
-			dsq->game->createEntity(shotData->spawnEntity, 0, position, 0, false, "", ET_ENEMY, true);
+			dsq->game->createEntityTemp(shotData->spawnEntity.c_str(), position, true);
 
 			if (shotData->spawnEntity == "NatureFormFlowers")
 			{

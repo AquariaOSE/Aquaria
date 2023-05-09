@@ -4172,8 +4172,9 @@ luaFunc(entity_createEntity)
 {
 	Entity *e = entity(L);
 	Entity *ret = NULL;
-	if (e)
-		ret = dsq->game->createEntity(dsq->getEntityTypeIndexByName(getString(L, 2)), 0, e->position, 0, false, "", ET_ENEMY, true);
+	const char *name = lua_tostring(L, 2);
+	if (e && name)
+		ret = dsq->game->createEntityTemp(name, e->position, true);
 	luaReturnPtr(ret);
 }
 
@@ -4779,15 +4780,16 @@ luaFunc(spawnAroundEntity)
 	float radius = lua_tonumber(L, 3);
 	std::string entType = getString(L, 4);
 	std::string name = getString(L, 5);
-	int idx = dsq->game->getIdxForEntityType(entType);
 	if (e)
 	{
-		Vector pos = e->position;
+		const Vector center = e->position;
 		for (int i = 0; i < num; i++)
 		{
 			float angle = i*((2*PI)/float(num));
-
-			e = dsq->game->createEntity(idx, 0, pos + Vector(sinf(angle)*radius, cosf(angle)*radius), 0, false, name);
+			Vector spawnPos = center + Vector(sinf(angle)*radius, cosf(angle)*radius);
+			Entity *spawned = dsq->game->createEntityTemp(entType.c_str(), spawnPos, true);
+			if(spawned && !name.empty())
+				spawned->setName(name);
 		}
 	}
 	luaReturnNil();
@@ -4905,8 +4907,9 @@ luaFunc(createEntity)
 	int x = lua_tointeger(L, 3);
 	int y = lua_tointeger(L, 4);
 
-	Entity *e = 0;
-	e = dsq->game->createEntity(type, 0, Vector(x, y), 0, false, name, ET_ENEMY, true);
+	Entity *e = dsq->game->createEntityTemp(type.c_str(), Vector(x, y), true);
+	if(e && !name.empty())
+		e->setName(name);
 
 	luaReturnPtr(e);
 }
@@ -7602,40 +7605,8 @@ luaFunc(entity_getID)
 
 luaFunc(getEntityByID)
 {
-	//debugLog("Calling getEntityByID");
 	int v = lua_tointeger(L, 1);
-	Entity *found = 0;
-	if (v)
-	{
-		//std::ostringstream os;
-		//os << "searching for entity with id: " << v;
-		//debugLog(os.str());
-		FOR_ENTITIES(i)
-		{
-			Entity *e = *i;
-			if (e->getID() == v)
-			{
-				found = e;
-				break;
-			}
-		}
-		/*if (!found)
-		{
-			std::ostringstream os;
-			os << "entity with id: " << v << " not found!";
-			debugLog(os.str());
-		}
-		else
-		{
-			std::ostringstream os;
-			os << "Found: " << found->name;
-			debugLog(os.str());
-		}*/
-	}
-	/*else
-	{
-		debugLog("entity ID was 0");
-	}*/
+	Entity *found = dsq->game->getEntityByID(v);
 	luaReturnPtr(found);
 }
 

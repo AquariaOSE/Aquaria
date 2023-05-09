@@ -39,6 +39,7 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	strandSpacing = 10;
 	animKeyFunc = true;
 	canShotHitFunc = true;
+	postInitDone = false;
 
 
 	setEntityType(et);
@@ -120,6 +121,9 @@ void ScriptedEntity::init()
 
 void ScriptedEntity::postInit()
 {
+	if(postInitDone)
+		return;
+	postInitDone = true;
 	if (script)
 	{
 		if (!script->call("postInit", this))

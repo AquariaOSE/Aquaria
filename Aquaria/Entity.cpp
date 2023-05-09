@@ -202,7 +202,6 @@ Entity::Entity()
 	{
 		entityProperties[i] = false;
 	}
-	entityTypeIdx = -1;
 	damageTime = vars->entityDamageTime;
 	slowingToStopPathTimer = 0;
 	slowingToStopPath = 0;
@@ -2446,6 +2445,7 @@ void Entity::fillGrid()
 	}
 }
 
+/*
 void Entity::assignUniqueID(bool temporary)
 {
 	const int inc = temporary ? -1 : 1;
@@ -2473,24 +2473,12 @@ void Entity::assignUniqueID(bool temporary)
 	}
 	entityID = id;
 }
+*/
 
+// caller must make sure that the ID is unused
 void Entity::setID(int id)
 {
 	entityID = id;
-	FOR_ENTITIES(i)
-	{
-		Entity *e = *i;
-		if (e != this)
-		{
-			if (e->getID() == entityID)
-			{
-				std::ostringstream os;
-				os << "ID conflict between " << name << " and " << e->name;
-				debugLog(os.str());
-				e->assignUniqueID(e->getID() < 0);
-			}
-		}
-	}
 }
 
 int Entity::getID()
