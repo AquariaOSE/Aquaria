@@ -241,7 +241,6 @@ public:
 	InterpolatedVector maxSpeedLerp;
 	Hair *hair;
 
-	void assignUniqueID(bool temporary);
 	int entityID;
 	int getMaxSpeed();
 	std::string deathSound;

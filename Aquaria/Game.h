@@ -92,7 +92,6 @@ public:
 	std::vector <TileVector> grid;
 	int w,h;
 	float tu1, tu2, tv1, tv2;
-	void setGrid(Vector position);
 	bool cull;
 	float alpha;
 	size_t idx;
@@ -240,7 +239,6 @@ public:
 
 	Vector getWallNormal(Vector pos, int sampleArea = 5, int obs = -1);
 
-	void updateMiniMapHintPosition();
 	EntitySaveData *getEntitySaveDataForEntity(Entity *e);
 	Entity *createEntityOnMap(const EntitySaveData& sav); // when loading from save (saved to map). Caller must postInit().
 	Entity *createEntityOnMap(const char *type, Vector pos); // when spawning in the editor (saved to map). Caller must postInit().
@@ -360,7 +358,6 @@ public:
 
 	std::string getNoteName(int n, const std::string &pre="");
 
-	void selectEntityFromGroups();
 	InterpolatedVector cameraInterp;
 
 	float getWaterLevel();

@@ -109,10 +109,6 @@ public:
 
 	void regenLevel();
 
-	void updateSaveFileEnemyPosition(Entity *ent);
-	void startMoveEntity();
-	void endMoveEntity();
-
 	void down();
 	void up();
 
