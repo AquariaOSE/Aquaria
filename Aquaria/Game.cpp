@@ -758,20 +758,16 @@ bool Game::removeEntityAtCursor()
 
 bool Game::removeEntity(Entity *selected)
 {
+	const int id = selected->getID();
+
 	selected->setState(Entity::STATE_DEAD);
 	selected->safeKill();
 
 	for (size_t i = 0; i < entitySaveData.size(); i++)
 	{
-		if (entitySaveData[i].x == int(selected->startPos.x) && entitySaveData[i].y == int(selected->startPos.y))
+		if (entitySaveData[i].id == id)
 		{
-			std::vector<EntitySaveData> copy = entitySaveData;
-			entitySaveData.clear();
-			for (size_t j = 0; j < copy.size(); j++)
-			{
-				if (j != i)
-					entitySaveData.push_back(copy[j]);
-			}
+			entitySaveData.erase(entitySaveData.begin() + i);
 			return true;
 		}
 	}
