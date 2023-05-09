@@ -1022,39 +1022,6 @@ void SceneEditor::deleteSelected()
 	}
 }
 
-void SceneEditor::updateSaveFileEnemyPosition(Entity *ent)
-{
-	XMLElement *exml = dsq->game->saveFile->FirstChildElement("Enemy");
-	while (exml)
-	{
-		int x = atoi(exml->Attribute("x"));
-		int y = atoi(exml->Attribute("y"));
-		if (ent->startPos.x == x && ent->startPos.y == y)
-		{
-			ent->startPos = Vector(int(ent->position.x), int(ent->position.y));
-			exml->SetAttribute("x", int(ent->startPos.x));
-			exml->SetAttribute("y", int(ent->startPos.y));
-			return;
-		}
-		exml = exml->NextSiblingElement("Enemy");
-	}
-	exml = dsq->game->saveFile->FirstChildElement("Entity");
-	while (exml)
-	{
-		int x = atoi(exml->Attribute("x"));
-		int y = atoi(exml->Attribute("y"));
-		if (ent->startPos.x == x && ent->startPos.y == y)
-		{
-			ent->startPos = Vector(int(ent->position.x), int(ent->position.y));
-			exml->SetAttribute("x", int(ent->startPos.x));
-			exml->SetAttribute("y", int(ent->startPos.y));
-			return;
-		}
-		exml = exml->NextSiblingElement("Entity");
-	}
-
-}
-
 void SceneEditor::checkForRebuild()
 {
 	if (editType == ET_ELEMENTS && state != ES_SELECTING && !selectedElements.empty())
@@ -1451,20 +1418,6 @@ void SceneEditor::mouseButtonRight()
 	}
 	if (editType == ET_ELEMENTS && state == ES_MOVING)
 	{
-	}
-}
-
-void SceneEditor::startMoveEntity()
-{
-	movingEntity = dsq->game->getEntityAtCursor();
-}
-
-void SceneEditor::endMoveEntity()
-{
-	if (movingEntity)
-	{
-		updateSaveFileEnemyPosition(movingEntity);
-		movingEntity = 0;
 	}
 }
 
@@ -2578,8 +2531,6 @@ void SceneEditor::toggle(bool on)
 		for (int i = 0; i < 9; i++)
 			dsq->getRenderObjectLayer(LR_ELEMENTS1+i)->visible = true;
 
-		if (movingEntity)
-			endMoveEntity();
 		movingEntity = 0;
 
 		dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = false;

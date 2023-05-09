@@ -760,20 +760,6 @@ bool Game::removeEntity(Entity *selected)
 {
 	selected->setState(Entity::STATE_DEAD);
 	selected->safeKill();
-	XMLElement *e = this->saveFile->FirstChildElement("Enemy");
-	while (e)
-	{
-		int x = atoi(e->Attribute("x"));
-		int y = atoi(e->Attribute("y"));
-		if (int(selected->startPos.x) == x && int(selected->startPos.y) == y)
-		{
-			this->saveFile->DeleteChild(e);
-			//delete e;
-			return true;
-		}
-
-		e = e->NextSiblingElement("Enemy");
-	}
 
 	for (size_t i = 0; i < entitySaveData.size(); i++)
 	{

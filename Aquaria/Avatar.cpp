@@ -2514,66 +2514,6 @@ void Avatar::formAbility()
 				seedName = "SeedUberVine";
 
 			dsq->game->fireShot(seedName, this, 0, pos, getAim());
-
-
-			/*
-			Vector pos = getAim();
-			if (!pos.isZero())
-				pos.setLength2D(64);
-			pos += position;
-
-
-			//dsq->spawnParticleEffect("Fertilizer", pos);
-
-			Entity *e = 0;
-			std::string seedName;
-			if (chargeLevelAttained == 0)
-				seedName = "SeedFlower";
-			else if (chargeLevelAttained == 2)
-				seedName = "SeedUberVine";
-
-			e = dsq->game->createEntity(seedName, 0, pos, 0, false, "");
-
-			Vector add = pos - position;
-			add.setLength2D(800);
-			e->vel += add;
-			*/
-
-			/*
-			if (chargeLevelAttained == 0)
-			{
-			}
-			else if (chargeLevelAttained == 1)
-			{
-				e->setState(STATE_CHARGE1);
-			}
-			else if (chargeLevelAttained == 2)
-			{
-				e->setState(STATE_CHARGE2);
-			}
-
-			e->update(0);
-			*/
-			// idle = charge 0
-			// attack = charge1
-			// something = charge2
-			/*
-			FOR_ENTITIES (i)
-			{
-				Entity *e = *i;
-				if (e && e->getEntityType() == ET_ENEMY && e->isDamageTarget(DT_AVATAR_NATURE))
-				{
-					if ((e->position - pos).isLength2DIn(128))
-					{
-						DamageData d;
-						d.damageType = DT_AVATAR_NATURE;
-						d.damage = 1;
-						d.attacker = this;
-						e->damage(d);
-					}
-				}
-			}
-			*/
 		}
 	break;
 	case FORM_BEAST:
@@ -2957,9 +2897,7 @@ void Avatar::formAbilityUpdate(float dt)
 			if (state.abilityDelay == 0)
 			{
 				state.abilityDelay = bubbleRate;
-				//state.abilityDelay -= bubbleRate;
 				// spawn bubble
-				//Entity *bubble = dsq->game->createEntity("FishFormBubble", 0, position, 0, false, "");
 				Vector dir = getAim();
 				dir.normalize2D();
 

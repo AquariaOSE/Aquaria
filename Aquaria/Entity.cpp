@@ -2445,36 +2445,6 @@ void Entity::fillGrid()
 	}
 }
 
-/*
-void Entity::assignUniqueID(bool temporary)
-{
-	const int inc = temporary ? -1 : 1;
-	int id = inc;
-	while (1)
-	{
-		bool isFree = true;
-		FOR_ENTITIES(i)
-		{
-			Entity *e = *i;
-			if (e != this)
-			{
-				if (e->getID() == id)
-				{
-					isFree = false;
-					break;
-				}
-			}
-		}
-		if (isFree)
-		{
-			break;
-		}
-		id += inc;
-	}
-	entityID = id;
-}
-*/
-
 // caller must make sure that the ID is unused
 void Entity::setID(int id)
 {
