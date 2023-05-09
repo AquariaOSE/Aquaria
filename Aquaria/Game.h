@@ -129,11 +129,10 @@ typedef std::vector<Element*> ElementUpdateList;
 struct EntitySaveData
 {
 public:
-	EntitySaveData() : id(0), x(0), y(0), rot(0), idx(0), e(0) {}
-	EntitySaveData(int id, int x, int y, int rot, int idx, const std::string &name, Entity *e) : name(name), id(id), x(x), y(y), rot(rot), idx(idx), e(e) {}
+	EntitySaveData() : id(0), x(0), y(0), rot(0), idx(0) {}
+	EntitySaveData(int id, int x, int y, int rot, int idx, const std::string &name) : name(name), id(id), x(x), y(y), rot(rot), idx(idx) {}
 	std::string name;
 	int id, x, y, rot, idx;
-	Entity *e;
 };
 
 class Game : public StateObject
