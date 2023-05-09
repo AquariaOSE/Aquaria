@@ -532,7 +532,7 @@ void Path::update(float dt)
 			if (neverSpawned || !(nodes[0].position - dsq->game->avatar->position).isLength2DIn(spawnEnemyDistance))
 			{
 				neverSpawned = false;
-				spawnedEntity = dsq->game->createEntity(spawnEnemyName, 0, nodes[0].position, 0, false, "");
+				spawnedEntity = dsq->game->createEntityTemp(spawnEnemyName.c_str(), nodes[0].position, true);
 			}
 		}
 		if (spawnedEntity && spawnedEntity->life < 1.0f)

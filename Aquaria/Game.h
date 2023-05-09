@@ -130,10 +130,11 @@ typedef std::vector<Element*> ElementUpdateList;
 struct EntitySaveData
 {
 public:
-	EntitySaveData(Entity *e, int idx, int x, int y, int rot, int id, const std::string &name) : e(e), idx(idx), x(x), y(y), rot(rot), id(id), name(name) {}
-	Entity *e;
-	int idx, x, y, rot, id;
+	EntitySaveData() : id(0), x(0), y(0), rot(0), idx(0), e(0) {}
+	EntitySaveData(int id, int x, int y, int rot, int idx, const std::string &name, Entity *e) : name(name), id(id), x(x), y(y), rot(rot), idx(idx), e(e) {}
 	std::string name;
+	int id, x, y, rot, idx;
+	Entity *e;
 };
 
 class Game : public StateObject
@@ -240,10 +241,13 @@ public:
 	Vector getWallNormal(Vector pos, int sampleArea = 5, int obs = -1);
 
 	void updateMiniMapHintPosition();
-	EntitySaveData *getEntitySaveDataForEntity(Entity *e, Vector pos);
-	Entity *createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, bool doPostInit=false);
-	Entity *createEntity(const std::string &type, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType = ET_ENEMY, bool doPostInit=false);
-	Entity *establishEntity(Entity *e, int id=0, Vector position=Vector(0,0), int rot=0, bool createSaveData=false, std::string name="", EntityType = ET_ENEMY,bool doPostInit=false);
+	EntitySaveData *getEntitySaveDataForEntity(Entity *e);
+	Entity *createEntityOnMap(const EntitySaveData& sav); // when loading from save (saved to map). Caller must postInit().
+	Entity *createEntityOnMap(const char *type, Vector pos); // when spawning in the editor (saved to map). Caller must postInit().
+	Entity *createEntityTemp(const char *type, Vector pos, bool doPostInit); // when spawning via script (not saved to map). Never does postInit() if we're currently loading a map.
+	void establishEntity(Entity *e, int id, Vector startPos);
+	Entity *getEntityByID(int id) const;
+	int findUnusedEntityID(bool temporary) const; // pass temporary=true for script-spawned entities, false for entities that are spawned on the map
 	void setCameraFollow(RenderObject *r);
 	void setCameraFollowEntity(Entity *e);
 
@@ -505,6 +509,7 @@ protected:
 	RenderObject *cameraFollowObject;
 	Entity *cameraFollowEntity;
 	bool loadSceneXML(std::string scene);
+	void spawnEntities(const EntitySaveData *sav, size_t n);
 
 	void toggleSceneEditor();
 

@@ -1218,12 +1218,11 @@ void SceneEditor::updateEntitySaveData(Entity *editingEntity)
 	if (editingEntity)
 	{
 
-		EntitySaveData *d = dsq->game->getEntitySaveDataForEntity(editingEntity, oldPosition);
+		EntitySaveData *d = dsq->game->getEntitySaveDataForEntity(editingEntity);
 		if (d)
 		{
 			std::ostringstream os;
-			os << "idx1: " << d->idx << " ";
-			os << "idx2: " << editingEntity->entityTypeIdx << " ";
+			os << "idx: " << d->idx << " ";
 			os << "name: " << editingEntity->name;
 
 			debugLog(os.str());
@@ -2429,10 +2428,9 @@ void SceneEditor::placeElement()
 	}
 	else if (editType == ET_ENTITIES)
 	{
-		if (!selectedEntity.nameBased)
-			dsq->game->createEntity(selectedEntity.index, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, true);
-		else
-			dsq->game->createEntity(selectedEntity.name, 0, dsq->getGameCursorPosition(), 0, true, "", ET_ENEMY, true);
+		Entity *e = dsq->game->createEntityOnMap(selectedEntity.name.c_str(), dsq->getGameCursorPosition());
+		if(e)
+			e->postInit();
 	}
 	else if (editType == ET_PATHS)
 	{

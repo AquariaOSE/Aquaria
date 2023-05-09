@@ -70,8 +70,6 @@ public:
 	virtual void postInit(){}
 
 	Vector lastPosition;
-	// postInit gets called after the entity IDs are determined
-	int entityTypeIdx;
 	enum ActivationType
 	{
 		ACT_NONE = -1,

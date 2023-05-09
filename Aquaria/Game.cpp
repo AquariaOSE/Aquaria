@@ -164,7 +164,7 @@ Ingredient *Game::spawnIngredient(const std::string &ing, const Vector &pos, int
 				i->velocity.x = 0;
 				i->velocity.y = -500;
 			}
-			establishEntity(i);
+			establishEntity(i, findUnusedEntityID(true), pos);
 			//addRenderObject(i, LR_ENTITIES);
 		}
 		else
@@ -179,7 +179,7 @@ void Game::spawnIngredientFromEntity(Entity *ent, IngredientData *data)
 {
 	Ingredient *i = new Ingredient(ent->position, data);
 	ingredients.push_back(i);
-	establishEntity(i);
+	establishEntity(i, findUnusedEntityID(true), ent->position);
 	//addRenderObject(i, LR_ENTITIES);
 }
 
@@ -892,32 +892,17 @@ int Game::getIdxForEntityType(std::string type)
 	return -1;
 }
 
-Entity *Game::createEntity(int idx, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
-{
-	std::string type;
-	for (size_t i = 0; i < dsq->game->entityTypeList.size(); i++)
-	{
-		EntityClass *ec = &dsq->game->entityTypeList[i];
-		if (ec->idx == idx)
-		{
-			type = ec->name;
-			return createEntity(type, id, position, rot, createSaveData, name, et, doPostInit);
-		}
-	}
-	return 0;
-}
-
 // ensure a limit of entity types in the current level
 // older entities with be culled if state is set to 0
 // otherwise, the older entities will have the state set
-void Game::ensureLimit(Entity *e, int num, int state)
+void Game::ensureLimit(Entity *me, int num, int state)
 {
-	int idx = e->entityTypeIdx;
 	int c = 0;
-	std::list<Entity*> entityList;
+	std::vector<Entity*> entityList;
 	FOR_ENTITIES(i)
 	{
-		if ((*i)->entityTypeIdx == idx && (state == 0 || (*i)->getState() != state))
+		Entity *e = *i;
+		if ((state == 0 || e->getState() != state) && !nocasecmp(me->name, e->name))
 		{
 			entityList.push_back(*i);
 			c++;
@@ -927,7 +912,7 @@ void Game::ensureLimit(Entity *e, int num, int state)
 	int numDelete = c-(num+1);
 	if (numDelete >= 0)
 	{
-		for (std::list<Entity*>::iterator i = entityList.begin(); i != entityList.end(); i++)
+		for (std::vector<Entity*>::iterator i = entityList.begin(); i != entityList.end(); i++)
 		{
 			if (state == 0)
 				(*i)->safeKill();
@@ -937,88 +922,40 @@ void Game::ensureLimit(Entity *e, int num, int state)
 			if (numDelete <= 0)
 				break;
 		}
+
 	}
 }
 
-Entity* Game::establishEntity(Entity *e, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
+void Game::establishEntity(Entity *e, int id, Vector startPos)
 {
 	// e->layer must be set BEFORE calling this function!
 
-	std::string type = e->name;
-	stringToLower(type);
+	assert(id); // 0 is invalid/reserved
+	assert(!getEntityByID(id)); // must not already exist
 
+	e->setID(id);
+	e->position = startPos;
+	e->startPos = startPos;
 
-
-	// i'm thinking this *should* hold up for new files
-	// it will mess up if you're importing an old file
-	// the logic being that you're not going to load in an non-ID-specified entity in new files
-	// so assignUniqueID should never be called
-	// so what i'm going to do is have it bitch
-
-	// note that when not loading a scene, it is valid to call assignUniqueID here
-	if (id != 0)
-	{
-		e->setID(id);
-	}
-	else
-	{
-		if (loadingScene)
-		{
-			std::ostringstream os;
-			os << "ERROR: Assigning Unique ID to a loaded Entity... if this is called from loadScene then Entity IDs may be invalid";
-			os << "\nEntityName: " << e->name;
-			errorLog(os.str());
-		}
-		else
-		{
-			e->assignUniqueID(!createSaveData); // when entity is placed on map, give positive ID; otherwise, if script-spawned, give negative ID
-		}
-	}
-
-	// NOTE: init cannot be called after "addRenderObject" for some unknown reason
+	// most scripts call setupEntity() in init(), which also sets the layer.
+	// otherwise the script is expected to set the render layer here if not using the default.
 	e->init();
 
-	Vector usePos = position;
-	e->startPos = usePos;
-	if (!name.empty())
-		e->name = name;
-
-	e->rotation.z = rot;
-
-	int idx = getIdxForEntityType(type);
-	e->entityTypeIdx = idx;
-
-
-	if (createSaveData)
-	{
-		int idx = dsq->game->getIdxForEntityType(type);
-		entitySaveData.push_back(EntitySaveData(e, idx, usePos.x, usePos.y, rot, e->getID(), e->name));
-	}
-
-	addRenderObject(e, e->layer);
-
-	if (doPostInit)
-	{
-		e->postInit();
-	}
-
-	return e;
+	addRenderObject(e, e->layer); // layer was just set in init()
 }
 
-Entity *Game::createEntity(const std::string &t, int id, Vector position, int rot, bool createSaveData, std::string name, EntityType et, bool doPostInit)
+Entity* Game::getEntityByID(int id) const
 {
-	std::string type = t;
-	stringToLower(type);
-
-	ScriptedEntity *e;
-
-	e = new ScriptedEntity(type, position, et);
-
-
-	return establishEntity(e, id, position, rot, createSaveData, name, et, doPostInit);
+	FOR_ENTITIES(i)
+	{
+		Entity *e = *i;
+		if (e->getID() == id)
+			return e;
+	}
+	return NULL;
 }
 
-EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e, Vector pos)
+EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e)
 {
 
 	for (size_t i = 0; i < entitySaveData.size(); i++)
@@ -1029,6 +966,95 @@ EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e, Vector pos)
 		}
 	}
 	return 0;
+}
+
+int Game::findUnusedEntityID(bool temporary) const
+{
+	const int inc = temporary ? -1 : 1;
+	int id = 0;
+retry:
+	id += inc;
+	FOR_ENTITIES(i)
+	{
+		Entity *e = *i;
+		if (e->getID() == id)
+			goto retry;
+	}
+	return id;
+}
+
+// caller must do e->postInit() when all map entities have been created
+Entity* Game::createEntityOnMap(const EntitySaveData& sav)
+{
+	assert(sav.id > 0);
+	std::string type = sav.name;
+
+	// legacy entities have no name recorded and instead use the idx specified in scripts/entities.txt
+	// newer entities and all those added by mods have idx==-1 and use the name directly
+	if(type.empty())
+	{
+		for (size_t i = 0; i < entityTypeList.size(); i++)
+		{
+			const EntityClass& ec = entityTypeList[i];
+			if (ec.idx == sav.idx)
+			{
+				type = ec.name;
+				break;
+			}
+		}
+		if(type.empty())
+		{
+			std::ostringstream os;
+			os << "Game::createEntityOnMap: Don't know entity type name for idx " << sav.idx;
+			errorLog(os.str());
+			return NULL;
+		}
+	}
+
+	if(Entity *e = getEntityByID(sav.id))
+	{
+		assert(false);
+		return NULL; // can't spawn, entity with that ID is already present
+	}
+
+	stringToLower(type);
+
+	Vector pos(sav.x, sav.y);
+	ScriptedEntity *e = new ScriptedEntity(type, pos, ET_ENEMY);
+	e->rotation.z = sav.rot;
+
+	int idx = getIdxForEntityType(type);
+	entitySaveData.push_back(EntitySaveData(sav.id, sav.x, sav.y, sav.rot, sav.idx, type, e));
+
+	establishEntity(e, sav.id, pos);
+
+	return e;
+}
+
+Entity *Game::createEntityOnMap(const char * type, const Vector pos)
+{
+	int id = findUnusedEntityID(false);
+	EntitySaveData data;
+	data.id = id;
+	data.idx = -1;
+	data.name = type;
+	data.rot = 0;
+	data.x = pos.x;
+	data.y = pos.y;
+	return createEntityOnMap(data);
+}
+
+Entity* Game::createEntityTemp(const char* type, Vector pos, bool doPostInit)
+{
+	int id = findUnusedEntityID(true);
+	ScriptedEntity *e = new ScriptedEntity(type, pos, ET_ENEMY);
+	establishEntity(e, id, pos);
+	// it's possible that we're loading a map, and an entity spawned via createEntityOnMap()
+	// calls createEntity() in its script's init() function. That's when we end up here.
+	// Delay postInit() until we're sure that the map has been loaded, then call postInit() for all.
+	if(doPostInit && !loadingScene)
+		e->postInit(); // if we're already running the map, do postInit() now
+	return e;
 }
 
 void Game::setTimerTextAlpha(float a, float t)
@@ -1965,29 +1991,30 @@ bool Game::loadSceneXML(std::string scene)
 
 	this->reconstructGrid(true);
 
+	std::vector<EntitySaveData> toSpawn;
+
 	XMLElement *entitiesNode = doc.FirstChildElement("Entities");
 	while(entitiesNode)
 	{
 		if (entitiesNode->Attribute("j"))
 		{
 			SimpleIStringStream is(entitiesNode->Attribute("j"));
-			int idx, x, y, rot, groupID, id;
-			std::string name;
-			while (is >> idx)
+			EntitySaveData sav;
+			int unusedGroupID;
+			while (is >> sav.idx)
 			{
-				name="";
-				if (idx == -1)
-					is >> name;
-				is >> x >> y >> rot >> groupID >> id;
-
-				if (!name.empty())
-					dsq->game->createEntity(name, id, Vector(x,y), rot, true, "", ET_ENEMY);
-				else
-					dsq->game->createEntity(idx, id, Vector(x,y), rot, true, "", ET_ENEMY);
+				sav.name.clear();
+				if (sav.idx == -1)
+					is >> sav.name;
+				if(is >> sav.x >> sav.y >> sav.rot >> unusedGroupID >> sav.id)
+					toSpawn.push_back(sav);
 			}
 		}
 		entitiesNode = entitiesNode->NextSiblingElement("Entities");
 	}
+
+	if(toSpawn.size())
+		spawnEntities(&toSpawn[0], toSpawn.size());
 
 	this->reconstructGrid(true);
 	rebuildElementUpdateList();
@@ -1995,6 +2022,90 @@ bool Game::loadSceneXML(std::string scene)
 	findMaxCameraValues();
 
 	return true;
+}
+
+void Game::spawnEntities(const EntitySaveData *sav, size_t n)
+{
+	std::vector<size_t> conflicting, usable;
+	for(size_t i = 0; i < n; ++i)
+	{
+		const EntitySaveData& es = sav[i];
+
+		// check for ID conflicts
+		int id = es.id;
+		bool renumber = id <= 0; // entities spawned on map load must have id > 0
+		if(!renumber)
+		{
+			for(size_t k = 0; k < i; ++k)
+			{
+				if(sav[k].id == id)
+				{
+					renumber = true;
+					break;
+				}
+			}
+		}
+
+		if(!renumber)
+			usable.push_back(i);
+		else
+			conflicting.push_back(i);
+	}
+
+	{
+		std::ostringstream os;
+		os << "Game::spawnEntities: Spawning " << usable.size() << " entities";
+		if(conflicting.size())
+			os << " without issues, another " << conflicting.size() << " have ID conflicts and need to be renumbered";
+		debugLog(os.str());
+	}
+
+	size_t failed = 0;
+
+	// create all entities that are possible to spawn without ID conflicts
+	for(size_t i = 0; i < usable.size(); ++i)
+	{
+		const EntitySaveData& es = sav[usable[i]];
+		failed += !createEntityOnMap(es);
+	}
+
+	// spawn and renumber the rest
+	int lastid = 0;
+	for(size_t i = 0; i < conflicting.size(); ++i)
+	{
+		// find an unused ID
+		int id = lastid; // assume any ID up to this is already taken...
+		bool ok;
+		do
+		{
+			++id; // ... which is why the first thing we do is to increment this
+			ok = true;
+			for(size_t k = 0; k < n; ++k)
+			{
+				if(sav[k].id == id)
+				{
+					ok = false;
+					break;
+				}
+			}
+		}
+		while(!ok);
+		lastid = id;
+
+		EntitySaveData es = sav[conflicting[i]];
+		std::ostringstream os;
+		os << "Renumbering entity [" << es.idx << ", " << es.name << "] id " << es.id << " to " << id;
+		debugLog(os.str());
+		es.id = id;
+		failed += !createEntityOnMap(es);
+	}
+
+	if(failed)
+	{
+		std::ostringstream os;
+		os << "Game::spawnEntities: Failed to spawn " << failed << " entities, on map [" << sceneName << "]";
+		errorLog(os.str());
+	}
 }
 
 void Game::setMusicToPlay(const std::string &m)
@@ -2269,6 +2380,7 @@ bool Game::isValidTarget(Entity *e, Entity *me)
 
 void Game::createPets()
 {
+	debugLog("createPets()");
 	setActivePet(dsq->continuity.getFlag(FLAG_PET_ACTIVE));
 }
 
@@ -2290,9 +2402,9 @@ Entity* Game::setActivePet(int flag)
 		PetData *p = dsq->continuity.getPetData(petv);
 		if (p)
 		{
-			std::string name = p->namePart;
+			std::string name = "Pet_" + p->namePart;
 
-			Entity *e = createEntity("Pet_" + name, -1, avatar->position, 0, false, "");
+			Entity *e = createEntityTemp(name.c_str(), avatar->position, false);
 			if (e)
 			{
 				currentPet = e;
@@ -2315,7 +2427,7 @@ void Game::createLi()
 	if (liFlag == 100)
 	{
 		debugLog("Creating Li");
-		li = createEntity("Li", 0, Vector(0,0), 0, false, "");
+		li = createEntityTemp("Li", Vector(0,0), false);
 		//li->skeletalSprite.animate("idle");
 	}
 }
@@ -2416,6 +2528,7 @@ void Game::entityDied(Entity *eDead)
 
 void Game::postInitEntities()
 {
+	debugLog("postInitEntities()");
 	FOR_ENTITIES(i)
 	{
 		Entity *e = *i;

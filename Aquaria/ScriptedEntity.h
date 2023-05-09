@@ -112,6 +112,7 @@ protected:
 	void onExitState(int action);
 	virtual void deathNotify(RenderObject *r);
 	bool canShotHitFunc;
+	bool postInitDone;
 };
 
 #endif
