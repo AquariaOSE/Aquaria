@@ -513,11 +513,6 @@ void SceneEditor::init()
 	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeftUp), MOUSE_BUTTON_LEFT, 0);
 	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRightUp), MOUSE_BUTTON_RIGHT, 0);
 
-	addAction(MakeFunctionEvent(SceneEditor, alignHorz), KEY_C, 1);
-	addAction(MakeFunctionEvent(SceneEditor, alignVert), KEY_V, 1);
-
-
-
 	addAction(MakeFunctionEvent(SceneEditor, placeElement), KEY_SPACE, 1);
 
 	addAction(MakeFunctionEvent(SceneEditor, enterName), KEY_N, 0);
@@ -625,76 +620,6 @@ void SceneEditor::init()
 	updateText();
 
 	doPrevElement();
-}
-
-void SceneEditor::alignHorz()
-{
-	if (core->getShiftState()) return;
-	if (editType == ET_ELEMENTS && state == ES_SELECTING && editingElement)
-	{
-		TileVector t(editingElement->position);
-		int startOn = dsq->game->getGrid(t);
-		TileVector c=t;
-		bool found = false;
-		int dir = -1;
-		for (int i = 1; i < 5; i++)
-		{
-			// search down
-			c.y = t.y + i;
-			if (dsq->game->getGrid(c) != startOn)
-			{
-				found = true;
-				dir = 1;
-				break;
-			}
-			c.y = t.y - i;
-			if (dsq->game->getGrid(c) != startOn)
-			{
-				found = true;
-				dir = -1;
-				break;
-			}
-		}
-		if (found)
-		{
-			editingElement->position.y = c.worldVector().y + (editingElement->texture->getPixelHeight()/2)*(-dir);
-		}
-	}
-}
-
-void SceneEditor::alignVert()
-{
-	if (core->getShiftState()) return;
-	if (editType == ET_ELEMENTS && state == ES_SELECTING && editingElement)
-	{
-		TileVector t(editingElement->position);
-		int startOn = dsq->game->getGrid(t);
-		TileVector c=t;
-		bool found = false;
-		int dir = -1;
-		for (int i = 1; i < 5; i++)
-		{
-			// search down
-			c.x = t.x + i;
-			if (dsq->game->getGrid(c) != startOn)
-			{
-				found = true;
-				dir = 1;
-				break;
-			}
-			c.x = t.x - i;
-			if (dsq->game->getGrid(c) != startOn)
-			{
-				found = true;
-				dir = -1;
-				break;
-			}
-		}
-		if (found)
-		{
-			editingElement->position.x = c.worldVector().x + (editingElement->texture->getPixelWidth()/2)*(-dir);
-		}
-	}
 }
 
 void SceneEditor::createAquarian()

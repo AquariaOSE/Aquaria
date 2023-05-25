@@ -114,9 +114,6 @@ public:
 
 	void exitMoveState();
 
-	void alignHorz();
-	void alignVert();
-
 	EditTypes editType;
 	EditorStates state;
 

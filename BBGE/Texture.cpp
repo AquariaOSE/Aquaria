@@ -137,62 +137,6 @@ void Texture::destroy()
 	core->removeTexture(this);
 }
 
-// FIXME: this should be recorded at load-time -- fg
-int Texture::getPixelWidth()
-{
-	int w = 0, h = 0;
-	unsigned int size = 0;
-	unsigned char *data = getBufferAndSize(&w, &h, &size);
-	if (!data)
-		return 0;
-
-	size_t smallestx = -1, largestx = 0;
-	for (unsigned int x = 0; x < unsigned(w); x++)
-	{
-		for (unsigned int y = 0; y < unsigned(h); y++)
-		{
-			unsigned int p = (y*unsigned(w)*4) + (x*4) + 3;
-			if (p < size && data[p] >= 254)
-			{
-				if (x < smallestx)
-					smallestx = x;
-				if (x > largestx)
-					largestx = x;
-			}
-		}
-	}
-	free(data);
-	return largestx - smallestx;
-}
-
-// FIXME: same as above
-int Texture::getPixelHeight()
-{
-	int w = 0, h = 0;
-	unsigned int size = 0;
-	unsigned char *data = getBufferAndSize(&w, &h, &size);
-	if (!data)
-		return 0;
-
-	size_t smallesty = -1, largesty = 0;
-	for (unsigned int x = 0; x < unsigned(w); x++)
-	{
-		for (unsigned int y = 0; y < unsigned(h); y++)
-		{
-			size_t p = (y*unsigned(w)*4) + (x*4) + 3;
-			if (p < size && data[p] >= 254)
-			{
-				if (y < smallesty)
-					smallesty = y;
-				if (y > largesty)
-					largesty = y;
-			}
-		}
-	}
-	free(data);
-	return largesty - smallesty;
-}
-
 void Texture::reload()
 {
 	debugLog("RELOADING TEXTURE: " + name + " with loadName " + loadName + "...");

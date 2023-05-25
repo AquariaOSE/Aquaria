@@ -43,9 +43,6 @@ public:
 	void apply(bool repeat = false) const;
 	void unload();
 
-	int getPixelWidth();
-	int getPixelHeight();
-
 	void destroy();
 
 	int width, height;
