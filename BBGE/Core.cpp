@@ -2070,22 +2070,18 @@ CountedPtr<Texture> Core::addTexture(const std::string &textureName)
 	return ptex;
 }
 
-void Core::addRenderObject(RenderObject *o, size_t layer)
+void Core::addRenderObject(RenderObject *o, unsigned layer)
 {
-	if (!o) return;
+	assert(o->layer == LR_NONE);
+	assert(layer < renderObjectLayers.size());
 	o->layer = layer;
-	if (layer >= renderObjectLayers.size())
-	{
-		std::ostringstream os;
-		os << "attempted to add render object to invalid layer [" << layer << "]";
-		errorLog(os.str());
-	}
 	renderObjectLayers[layer].add(o);
 }
 
-void Core::switchRenderObjectLayer(RenderObject *o, int toLayer)
+void Core::switchRenderObjectLayer(RenderObject *o, unsigned toLayer)
 {
-	if (!o) return;
+	assert(o->layer != LR_NONE);
+	assert(toLayer < renderObjectLayers.size());
 	renderObjectLayers[o->layer].remove(o);
 	renderObjectLayers[toLayer].add(o);
 	o->layer = toLayer;

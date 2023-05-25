@@ -910,8 +910,6 @@ void Game::ensureLimit(Entity *me, int num, int state)
 
 void Game::establishEntity(Entity *e, int id, Vector startPos)
 {
-	// e->layer must be set BEFORE calling this function!
-
 	assert(id); // 0 is invalid/reserved
 	assert(!getEntityByID(id)); // must not already exist
 
@@ -923,7 +921,9 @@ void Game::establishEntity(Entity *e, int id, Vector startPos)
 	// otherwise the script is expected to set the render layer here if not using the default.
 	e->init();
 
-	addRenderObject(e, e->layer); // layer was just set in init()
+	unsigned layer = e->layer; // layer was either set in ctor, or in init()
+	e->layer = LR_NONE; // addRenderObject wants this to be not set
+	addRenderObject(e, layer);
 }
 
 Entity* Game::getEntityByID(int id) const
@@ -1005,9 +1005,9 @@ Entity* Game::createEntityOnMap(const EntitySaveData& sav)
 	ScriptedEntity *e = new ScriptedEntity(type, pos, ET_ENEMY);
 	e->rotation.z = sav.rot;
 
-	int idx = getIdxForEntityType(type);
 	EntitySaveData copy = sav;
 	copy.name = type;
+	copy.idx = getIdxForEntityType(type);
 	entitySaveData.push_back(copy);
 
 	establishEntity(e, sav.id, pos);

@@ -391,7 +391,7 @@ bool RenderObject::isVisibleInPass(int pass) const
 
 void RenderObject::render(const RenderState& rs) const
 {
-	assert(layer != LR_NONE);
+	assert(parent || layer != LR_NONE);
 	if (isHidden()) return;
 
 	/// new (breaks anything?)

@@ -76,7 +76,7 @@ public:
 		ACT_CLICK = 0,
 		ACT_RANGE = 1
 	};
-	void destroy();
+	void destroy() OVERRIDE;
 
 	bool isEntityDead() const {return entityDead;}
 	std::string name;
@@ -84,7 +84,7 @@ public:
 	InterpolatedVector vel2;
 	float activationRadius;
 	void render(const RenderState& rs) const OVERRIDE;
-	void update(float dt);
+	void update(float dt) OVERRIDE;
 
 	void spawnParticlesFromCollisionMask(const char *p, unsigned intv=1, int layer = LR_PARTICLES, float rotz = 0);
 
@@ -97,7 +97,7 @@ public:
 
 	void push(const Vector &vec, float time, float maxSpeed, float dmg);
 
-	bool canSetState(int state);
+	bool canSetState(int state) OVERRIDE;
 
 	virtual void message(const std::string &msg, int v) {}
 	virtual int messageVariadic(lua_State *L, int nparams) { return 0; }
@@ -361,12 +361,12 @@ protected:
 	virtual void onDieEaten() {}
 	IngredientData *ingredientData;
 	int vs[EV_MAX];
-	void onEndOfLife();
+	void onEndOfLife() OVERRIDE;
 
 	void updateLance(float dt);
 
 	void onFHScale();
-	void onFH();
+	void onFH() OVERRIDE;
 	float dieTimer;
 	BounceType bounceType;
 	Entity* riding;
@@ -402,11 +402,11 @@ protected:
 
 	void doDeathEffects(float manaBallEnergy=0, bool die=true);
 
-	void onEnterState(int action);
-	void onExitState(int action);
+	void onEnterState(int action) OVERRIDE;
+	void onExitState(int action) OVERRIDE;
 
 
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 	Vector pushVec;
 	float pushDamage;

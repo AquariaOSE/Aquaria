@@ -137,8 +137,8 @@ class Avatar : public Entity, public ActionMapper
 public:
 	Avatar();
 	virtual ~Avatar();
-	void destroy();
-	void action(int actionID, int state, int source, InputDevice device);
+	void destroy() OVERRIDE;
+	void action(int actionID, int state, int source, InputDevice device) OVERRIDE;
 	AvatarState state;
 	float burst, burstTimer;
 	float burstDelay;
@@ -151,8 +151,7 @@ public:
 	void revive();
 
 	bool canWarp;
-	void entityDied(Entity *e);
-	void onCollide(Entity *e);
+	void entityDied(Entity *e) OVERRIDE;
 	bool zoomOverriden;
 	void clampPosition();
 
@@ -170,8 +169,8 @@ public:
 	void refreshDualFormModel();
 	void switchDualFormMode();
 
-	void enableInput();
-	void disableInput();
+	void enableInput() OVERRIDE;
+	void disableInput() OVERRIDE;
 	void clearTargets();
 	bool singing;
 
@@ -226,7 +225,7 @@ public:
 	int getBurstDistance();
 	int getStopDistance();
 	int looking;
-	std::string getIdleAnimName();
+	std::string getIdleAnimName() OVERRIDE;
 	bool isRolling() { return rolling; }
 	int rollDir;
 	std::string getBurstAnimName();
@@ -253,7 +252,7 @@ public:
 	Vector headPosition;
 	void updatePosition();
 	float quickSongCastDelay;
-	void onAnimationKeyPassed(int key);
+	void onAnimationKeyPassed(int key) OVERRIDE;
 
 	bool isSwimming();
 
@@ -301,7 +300,7 @@ public:
 	Web *web;
 	float rollDelay;
 
-	bool canSetBoneLock();
+	bool canSetBoneLock() OVERRIDE;
 
 	void revert();
 	void doBindSong();
@@ -341,8 +340,8 @@ protected:
 	void checkUpgradeForShot(Shot *s);
 	size_t getNumShots();
 	void lockToWallCommon();
-	void onSetBoneLock();
-	void onUpdateBoneLock();
+	void onSetBoneLock() OVERRIDE;
+	void onUpdateBoneLock() OVERRIDE;
 
 	void adjustHeadRot();
 	std::string lastHeadTexture;
@@ -375,8 +374,8 @@ protected:
 	Vector fallGravity;
 	int lastOutOfWaterMaxSpeed;
 
-	void onIdle();
-	void onHeal(int type);
+	void onIdle() OVERRIDE;
+	void onHeal(int type) OVERRIDE;
 	ParticleEffect biteLeftEmitter, biteRightEmitter, swimEmitter, auraHitEmitter;
 	ParticleEffect auraEmitter, auraLowEmitter, wakeEmitter, healEmitter, hitEmitter, rollLeftEmitter, rollRightEmitter, spiritBeaconEmitter, plungeEmitter;
 	ParticleEffect speedEmitter, defenseEmitter, invincibleEmitter, regenEmitter;
@@ -391,7 +390,7 @@ protected:
 	int getQuadrantDirection(int lastQuad, int quad);
 	void updateRoll(float dt);
 	int lastQuad, lastQuadDir;
-	void onDamage(DamageData &d);
+	void onDamage(DamageData &d) OVERRIDE;
 	void updateHair(float dt);
 
 	void lostTarget(int i, Entity *e);
@@ -400,7 +399,7 @@ protected:
 	void updateAura(float dt);
 
 
-	void onHealthChange(float change);
+	void onHealthChange(float change) OVERRIDE;
 	void startWallBurst(bool useCursor=true);
 	void startBurst();
 
@@ -417,8 +416,8 @@ protected:
 	void endCharge();
 	bool canMove;
 
-	void onEnterState(int action);
-	void onExitState(int action);
+	void onEnterState(int action) OVERRIDE;
+	void onExitState(int action) OVERRIDE;
 	std::vector<ParticleEffect*>targetQuads;
 	Quad *blinder, *fader, *tripper;
 	void applyBlindEffects();
@@ -432,7 +431,7 @@ protected:
 
 
 
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 	Quad *glow;
 	bool swimming;

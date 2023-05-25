@@ -60,7 +60,7 @@ public:
 	void createStrip(bool vert, int num);
 	Quad* addFrame(const std::string &gfx);
 	void showFrame(int i);
-	void destroy();
+	void destroy() OVERRIDE;
 	std::string gfx;
 	std::string name;
 	size_t boneIdx;

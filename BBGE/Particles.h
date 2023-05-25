@@ -119,7 +119,7 @@ class Emitter : public Quad
 {
 public:
 	Emitter(ParticleEffect *pe);
-	void destroy();
+	void destroy() OVERRIDE;
 	void addParticle(Particle *p);
 	void removeParticle(Particle *p);
 
@@ -138,7 +138,7 @@ protected:
 	Vector currentSpawn, lastSpawn;
 	void onRender(const RenderState& rs) const OVERRIDE;
 	void spawnParticle(float perc=1);
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 	ParticleEffect *pe;
 

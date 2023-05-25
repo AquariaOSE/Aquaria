@@ -38,7 +38,7 @@ public:
 	GridRender(ObsType obsType);
 protected:
 	ObsType obsType;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
@@ -46,7 +46,7 @@ class MiniMapRender : public RenderObject
 {
 public:
 	MiniMapRender();
-	void destroy();
+	void destroy() OVERRIDE;
 
 	bool isCursorIn();
 	void slide(int slid);
@@ -66,7 +66,7 @@ protected:
 	bool mouseDown;
 	bool doRender;
 	float lightLevel;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
 	void renderIcon(const MinimapIcon *ico, const Vector& pos) const;
 

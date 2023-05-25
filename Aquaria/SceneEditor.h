@@ -236,7 +236,7 @@ protected:
 	void mouseButtonLeft();
 	void mouseButtonRight();
 
-	size_t curElement, selectedVariation, possibleSelectedIdx;
+	size_t curElement;
 
 	Quad *placer;
 	DebugFont *text;

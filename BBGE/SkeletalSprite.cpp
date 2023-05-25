@@ -741,6 +741,7 @@ BoneGridInterpolator * Animation::getBoneGridInterpolator(size_t boneIdx)
 			return &bgip;
 		}
 	}
+	return 0;
 }
 
 

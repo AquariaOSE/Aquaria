@@ -45,13 +45,13 @@ public:
 	Quad(const std::string &tex, const Vector &pos);
 	Quad();
 	void createGrid(int x, int y);
-	void destroy();
+	void destroy() OVERRIDE;
 	bool isCoordinateInside(Vector coord, int minSize=0) const;
 	bool isCoordinateInsideWorld(const Vector &coord, int minSize=0) const;
 	bool isCoordinateInsideWorldRect(const Vector &coord, int w, int h) const;
 
-	void flipVertical();
-	void flipHorizontal();
+	void flipVertical() OVERRIDE;
+	void flipHorizontal() OVERRIDE;
 	void setWidthHeight(float w, float h=-1);
 	void setWidth(float w);
 	void setHeight(float h);
@@ -67,7 +67,7 @@ public:
 	Array2d<Vector>& getDrawGrid() { return drawGrid; }
 	const Array2d<Vector>& getDrawGrid() const { return drawGrid; }
 
-	void reloadDevice();
+	void reloadDevice() OVERRIDE;
 
 	void deleteGrid();
 
@@ -122,9 +122,9 @@ protected:
 	float drawGridTimeMultiplier;
 	bool drawGridOut;
 
-	void onSetTexture();
+	void onSetTexture() OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 public:
 	GridDrawOrder drawOrder;

@@ -30,8 +30,8 @@ public:
 	void go(float time);
 	virtual void capture();
 	void transition(float time);
-	void reloadDevice();
-	void unloadDevice();
+	void reloadDevice() OVERRIDE;
+	void unloadDevice() OVERRIDE;
 	bool isGoing();
 protected:
 	void createTexture();

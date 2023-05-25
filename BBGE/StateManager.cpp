@@ -44,7 +44,7 @@ void StateObject::removeState()
 
 }
 
-void StateObject::addRenderObject(RenderObject *renderObject, int layer)
+void StateObject::addRenderObject(RenderObject *renderObject, unsigned layer)
 {
 	stateManager->getState(name)->addRenderObject(renderObject, layer);
 }
@@ -75,12 +75,11 @@ StateData::~StateData()
 	}
 }
 
-void StateData::addRenderObject(RenderObject *renderObject, int layer)
+void StateData::addRenderObject(RenderObject* renderObject, unsigned layer)
 {
 	core->addRenderObject(renderObject, layer);
 	renderObjects.push_back (renderObject);
 	renderObject->setStateDataObject(this);
-	renderObject->layer = layer;
 }
 
 void StateData::removeRenderObject(RenderObject *renderObject)

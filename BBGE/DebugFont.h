@@ -28,15 +28,15 @@ class DebugFont : public BaseText
 {
 public:
 	DebugFont(int initFontSize=0, const std::string &initText="");
-	void setText(const std::string &text);
-	void setWidth(float width);
-	void setFontSize(float sz);
-	size_t getNumLines() { return lines.size(); }
-	virtual void setAlign(Align align);
-	virtual float getHeight();
-	virtual float getLineHeight();
-	virtual float getStringWidth(const std::string& text);
-	virtual float getActualWidth();
+	void setText(const std::string &text) OVERRIDE;
+	void setWidth(float width) OVERRIDE;
+	void setFontSize(float sz) OVERRIDE;
+	size_t getNumLines() const OVERRIDE { return lines.size(); }
+	virtual void setAlign(Align align) OVERRIDE;
+	virtual float getHeight() const OVERRIDE;
+	virtual float getLineHeight() const OVERRIDE;
+	virtual float getStringWidth(const std::string& text) const OVERRIDE;
+	virtual float getActualWidth() const OVERRIDE;
 protected:
 	float fontDrawSize, textWidth;
 	void formatText();

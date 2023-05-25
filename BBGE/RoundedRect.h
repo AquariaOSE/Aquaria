@@ -42,7 +42,7 @@ public:
 
 
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
 
 	bool canMove;
@@ -60,7 +60,7 @@ public:
 
 	EventPtr event;
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
 
 	TTFText *label;

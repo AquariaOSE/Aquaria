@@ -48,9 +48,9 @@ class Strand : public RenderObject, public Segmented
 {
 public:
 	Strand(const Vector &position, size_t segs, size_t dist=32);
-	void destroy();
+	void destroy() OVERRIDE;
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
 };
 

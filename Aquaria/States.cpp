@@ -151,7 +151,7 @@ void GameOver::applyState()
 		q->setWidthHeight(800, 600);
 		q->position = Vector(400,300,-0.1f);
 	}
-	addRenderObject(q);
+	addRenderObject(q, LR_ZERO);
 
 
 

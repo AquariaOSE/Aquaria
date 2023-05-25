@@ -48,8 +48,6 @@ SET(AQUARIA_SRCS
     Ingredient.h
     Intro.cpp
     Intro.h
-    Logo.cpp
-    Logo.h
     Main.cpp
     ManaBall.cpp
     ManaBall.h
@@ -113,12 +111,13 @@ SET(AQUARIA_SRCS
 
 set(EXETYPE)
 
+option(AQUARIA_CONSOLE_WINDOW "Enable console output (always on in debug builds)" TRUE)
+if(AQUARIA_CONSOLE_WINDOW OR (CMAKE_BUILD_TYPE STREQUAL "Debug"))
+    add_definitions(-DAQUARIA_ENABLE_CONSOLE_LOG)
+endif()
 
 IF(WIN32)
-    option(AQUARIA_CONSOLE_WINDOW "Enable the console window (always on in debug builds)" FALSE)
-    if(AQUARIA_CONSOLE_WINDOW OR (CMAKE_BUILD_TYPE STREQUAL "Debug"))
-        add_definitions(-DAQUARIA_ENABLE_CONSOLE_LOG)
-    else()
+    if(NOT AQUARIA_CONSOLE_WINDOW)
         SET(EXETYPE WIN32)
     endif()
     SET(AQUARIA_SRCS ${AQUARIA_SRCS} aquaria.rc)
