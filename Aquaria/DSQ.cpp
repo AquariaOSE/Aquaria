@@ -24,7 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include "States.h"
 #include "Game.h"
-#include "Logo.h"
 #include "Avatar.h"
 #include "Entity.h"
 #include "Avatar.h"

@@ -43,7 +43,7 @@ public:
 	StateObject *stateObject;
 
 	void clearGarbage();
-	void addRenderObject(RenderObject *renderObject, int layer);
+	void addRenderObject(RenderObject *renderObject, unsigned layer);
 	void eraseRenderObjects();
 	void removeRenderObject(RenderObject *renderObject);
 	void removeRenderObjectFromList(RenderObject *renderObject);
@@ -61,7 +61,7 @@ public:
 	virtual void removeState();
 	virtual void update(float dt);
 
-	void addRenderObject(RenderObject *renderObject, int layer=0);
+	void addRenderObject(RenderObject *renderObject, unsigned layer);
 	void removeRenderObject(RenderObject *renderObject);
 	std::string name;
 

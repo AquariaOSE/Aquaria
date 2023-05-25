@@ -41,9 +41,9 @@ public:
 protected:
 	float existence;
 	Entity *parentEntity;
-	void onEndOfLife();
+	void onEndOfLife() OVERRIDE;
 	std::vector<Vector> points;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
 };
 

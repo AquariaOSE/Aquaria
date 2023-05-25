@@ -48,32 +48,32 @@ class BitmapText : public BaseText
 {
 public:
 	BitmapText(BmpFont *bmpFont);
-	void setText(const std::string &text);
-	void setWidth(float width);
+	void setText(const std::string &text) OVERRIDE;
+	void setWidth(float width) OVERRIDE;
 	float getSetWidth(); // get the width that was set
 	void scrollText(const std::string &text, float scrollSpeed);
-	void setFontSize(float sz);
+	void setFontSize(float sz) OVERRIDE;
 	bool isScrollingText();
 	void stopScrollingText();
 	bool isEmpty();
-	virtual void setAlign(Align align);
+	virtual void setAlign(Align align) OVERRIDE;
 	std::string getText();
 	int getWidthOnScreen();
 	Vector getColorIndex(size_t i, size_t j);
 	void updateWordColoring();
 	void autoKern();
-	virtual float getHeight();
-	void unloadDevice();
-	void reloadDevice();
-	float getStringWidth(const std::string& text);
-	float getActualWidth() { return maxW; }
-	float getLineHeight();
-	size_t getNumLines();
+	virtual float getHeight() const OVERRIDE;
+	void unloadDevice() OVERRIDE;
+	void reloadDevice() OVERRIDE;
+	float getStringWidth(const std::string& text) const OVERRIDE;
+	float getActualWidth() const OVERRIDE { return maxW; }
+	float getLineHeight() const OVERRIDE;
+	size_t getNumLines() const OVERRIDE;
 
 protected:
 	float scrollSpeed;
 	BmpFont *bmpFont;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	float scrollDelay;
 	bool scrolling;
 	size_t currentScrollLine;

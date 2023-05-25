@@ -31,7 +31,7 @@ public:
 	void makeVertical(Vector c1, Vector c2);
 	void makeHorizontal(Vector c1, Vector c2);
 
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 	int autoWidth, autoHeight;
 protected:

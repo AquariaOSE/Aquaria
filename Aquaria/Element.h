@@ -61,8 +61,8 @@ class Element : public Quad
 public:
 	Element();
 	~Element();
-	void destroy();
-	void update(float dt);
+	void destroy() OVERRIDE;
+	void update(float dt) OVERRIDE;
 	size_t templateIdx;
 	int bgLayer;
 	int tag;

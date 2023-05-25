@@ -42,17 +42,17 @@ class TTFText : public BaseText
 {
 public:
 	TTFText(TTFFont *font);
-	void setText(const std::string &txt);
-	void setAlign(Align align);
-	void setWidth(float width);
-	float getHeight();
-	float getActualWidth() { return maxW; }
-	void setFontSize(float); // dummy
-	float getStringWidth(const std::string& s);
+	void setText(const std::string &txt) OVERRIDE;
+	void setAlign(Align align) OVERRIDE;
+	void setWidth(float width) OVERRIDE;
+	float getHeight() const OVERRIDE;
+	float getActualWidth() const OVERRIDE { return maxW; }
+	void setFontSize(float) OVERRIDE; // dummy
+	float getStringWidth(const std::string& s) const OVERRIDE;
 	bool shadow;
 	int findLine(const std::string &label);
-	float getLineHeight();
-	size_t getNumLines();
+	float getLineHeight() const OVERRIDE;
+	size_t getNumLines() const OVERRIDE;
 protected:
 	float width;
 	float lineHeight;

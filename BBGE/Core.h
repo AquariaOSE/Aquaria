@@ -238,8 +238,8 @@ public:
 	void setFullscreen(bool full);
 
 	void enable2D(int pixelScaleX, int pixelScaleY);
-	void addRenderObject(RenderObject *o, size_t layer=0);
-	void switchRenderObjectLayer(RenderObject *o, int toLayer);
+	void addRenderObject(RenderObject *o, unsigned layer);
+	void switchRenderObjectLayer(RenderObject *o, unsigned toLayer);
 	void addTexture(Texture *r);
 	CountedPtr<Texture> findTexture(const std::string &name);
 	void removeTexture(Texture *res);
@@ -523,7 +523,7 @@ public:
 	Joystick *getJoystickForSourceID(int sourceID);
 private:
 	std::vector<Joystick*> joysticks;
-	int sdlUserMouseEventID;
+	unsigned sdlUserMouseEventID;
 };
 
 extern Core *core;

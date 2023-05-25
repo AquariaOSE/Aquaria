@@ -43,8 +43,8 @@ public:
     }
 
     virtual void onRender(const RenderState& rs) const OVERRIDE;
-    virtual void onUpdate(float dt);
-    virtual void onSetTexture();
+    virtual void onUpdate(float dt) OVERRIDE;
+    virtual void onSetTexture() OVERRIDE;
 
     void resetUV(float xmul = 1, float ymul = 1);
     void resetPos(float w, float h, float xoffs = 0, float yoffs = 0);

@@ -28,8 +28,8 @@ public:
 protected:
 	float beamWidth;
 	void onRender(const RenderState& rs) const OVERRIDE;
-	void onEndOfLife();
-	void onUpdate(float dt);
+	void onEndOfLife() OVERRIDE;
+	void onUpdate(float dt) OVERRIDE;
 };
 
 #endif

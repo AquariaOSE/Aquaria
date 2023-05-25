@@ -124,13 +124,13 @@ float BitmapText::getSetWidth()
 	return textWidth;
 }
 
-float BitmapText::getHeight()
+float BitmapText::getHeight() const
 {
 	float sz = bmpFont->font->GetCharHeight('A') * bmpFont->scale;
 	return lines.size()*sz;
 }
 
-float BitmapText::getLineHeight()
+float BitmapText::getLineHeight() const
 {
 	return bmpFont->font->GetCharHeight('A') * bmpFont->scale;
 }
@@ -349,12 +349,12 @@ bool BitmapText::isScrollingText()
 	return scrolling;
 }
 
-size_t BitmapText::getNumLines()
+size_t BitmapText::getNumLines() const
 {
 	return lines.size();
 }
 
-float BitmapText::getStringWidth(const std::string& text)
+float BitmapText::getStringWidth(const std::string& text) const
 {
 	std::string tmp;
 	int maxsize = 0;

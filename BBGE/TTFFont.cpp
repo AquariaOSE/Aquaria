@@ -110,17 +110,17 @@ void TTFText::updateAlign()
 	}
 }
 
-size_t TTFText::getNumLines()
+size_t TTFText::getNumLines() const
 {
 	return (int)text.size();
 }
 
-float TTFText::getHeight()
+float TTFText::getHeight() const
 {
 	return text.size()*lineHeight;
 }
 
-float TTFText::getStringWidth(const std::string& s)
+float TTFText::getStringWidth(const std::string& s) const
 {
 	float w = 0;
 	std::string cp = s;
@@ -223,7 +223,7 @@ void TTFText::updateFormatting()
 	lineHeight = font->font->LineHeight();
 }
 
-float TTFText::getLineHeight()
+float TTFText::getLineHeight() const
 {
 	return lineHeight;
 }

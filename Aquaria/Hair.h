@@ -55,7 +55,7 @@ public:
 	HairNode *getHairNode(int idx);
 protected:
 	float segmentLength;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
 };
 

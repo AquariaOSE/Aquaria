@@ -496,7 +496,6 @@ void SceneEditor::init()
 
 	dsq->game->addRenderObject(text, LR_HUD);
 	text->alpha = 0;
-	selectedVariation = -1;
 	on = false;
 
 	addAction(MakeFunctionEvent(SceneEditor, loadScene), KEY_F1, 0);

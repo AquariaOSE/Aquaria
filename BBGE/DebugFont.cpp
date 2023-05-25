@@ -50,17 +50,17 @@ void DebugFont::setFontSize(float sz)
 	fontDrawSize = sz;
 }
 
-float DebugFont::getHeight()
+float DebugFont::getHeight() const
 {
 	return fontDrawSize * lines.size() * 1.5f; // vspc in render()
 }
 
-float DebugFont::getLineHeight()
+float DebugFont::getLineHeight() const
 {
 	return fontDrawSize * 1.5f; // vspc in render()
 }
 
-float DebugFont::getStringWidth(const std::string& text)
+float DebugFont::getStringWidth(const std::string& text) const
 {
 	int maxchars = 0;
 	int c = 0;
@@ -78,7 +78,7 @@ float DebugFont::getStringWidth(const std::string& text)
 	return fontDrawSize * maxchars * (1.4f * 0.75f);
 }
 
-float DebugFont::getActualWidth()
+float DebugFont::getActualWidth() const
 {
 	return maxW * (1.4f * 0.75f); // numbers taken from onRender()
 }
