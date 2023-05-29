@@ -1183,9 +1183,6 @@ Bone *SkeletalSprite::getBoneByName(const std::string &name)
 		if (bones[i]->name == name)
 			return bones[i];
 	}
-	std::ostringstream os;
-	os << "Could not find bone with name[" << name << "]";
-	debugLog(os.str());
 	return 0;
 }
 
@@ -1196,9 +1193,6 @@ Bone *SkeletalSprite::getBoneByIdx(size_t idx)
 		if (bones[i]->boneIdx == idx)
 			return bones[i];
 	}
-	std::ostringstream os;
-	os << "Could not find bone with idx[" << idx << "]";
-	debugLog(os.str());
 	return 0;
 }
 
