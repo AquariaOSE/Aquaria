@@ -231,7 +231,6 @@ Game::Game() : StateObject()
 Game::~Game()
 {
 	delete themenu;
-	tileCache.clean();
 	game = 0;
 }
 
@@ -410,7 +409,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 		tpos.y -= h2;
 
 		int w = 0, h = 0;
-		unsigned int size = 0;
+		size_t size = 0;
 		unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
@@ -1082,7 +1081,7 @@ void Game::generateCollisionMask(Bone *q, float overrideCollideRadius /* = 0 */)
 		tpos.y -= h2;
 
 		int w = 0, h = 0;
-		unsigned int size = 0;
+		size_t size = 0;
 		unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
@@ -1285,7 +1284,6 @@ bool Game::loadSceneXML(std::string scene)
 {
 	bgSfxLoop = "";
 	airSfxLoop = "";
-	elementTemplatePack = "Main";
 	entitySaveData.clear();
 	std::string fn = getSceneFilename(scene);
 	if (!exists(fn))
@@ -1317,17 +1315,13 @@ bool Game::loadSceneXML(std::string scene)
 	if (level)
 	{
 		XMLElement *levelSF = saveFile->NewElement("Level");
-		if (level->Attribute("tileset"))
+		const char *tileset = level->Attribute("tileset");
+		if(!tileset)
+			tileset = level->Attribute("elementTemplatePack"); // legacy, still present in some very old maps
+		if (tileset)
 		{
-			elementTemplatePack = level->Attribute("tileset");
-			loadElementTemplates(elementTemplatePack);
-			levelSF->SetAttribute("tileset", elementTemplatePack.c_str());
-		}
-		else if (level->Attribute("elementTemplatePack"))
-		{
-			elementTemplatePack = level->Attribute("elementTemplatePack");
-			loadElementTemplates(elementTemplatePack);
-			levelSF->SetAttribute("tileset", elementTemplatePack.c_str());
+			loadElementTemplates(tileset);
+			levelSF->SetAttribute("tileset", tileset);
 		}
 		else
 			return false;
@@ -1729,204 +1723,193 @@ bool Game::loadSceneXML(std::string scene)
 		saveFile->InsertEndChild(newSF);
 	}
 
-	std::vector<Element*> loadedElements;
-	loadedElements.reserve(200);
+	struct ElementDef
+	{
+		ElementDef(int lr)
+			: layer(lr), idx(0), x(0), y(0), rot(0), fh(0), fv(0), flags(0), efxIdx(0), repeat(0)
+			, tag(0), sx(1), sy(1), rsx(1), rsy(1)
+		{}
+
+		int layer, idx, x, y, rot, fh, fv, flags, efxIdx, repeat, tag;
+		float sx, sy, rsx, rsy;
+	};
+	std::vector<ElementDef> elemsDefs;
+	elemsDefs.reserve(256);
+
 	XMLElement *simpleElements = doc.FirstChildElement("SE");
 	while (simpleElements)
 	{
-		int idx, x, y, rot;
-		float sz,sz2;
-		loadedElements.clear();
-		if (simpleElements->Attribute("d"))
-		{
-			SimpleIStringStream is(simpleElements->Attribute("d"));
-			while (is >> idx)
-			{
-				is >> x >> y >> rot;
-				Element *e = createElement(idx, Vector(x,y), 4);
-				e->rotation.z = rot;
-				loadedElements.push_back(e);
-			}
-		}
-		if (simpleElements->Attribute("e"))
-		{
-			SimpleIStringStream is2(simpleElements->Attribute("e"));
-			int l = atoi(simpleElements->Attribute("l"));
-			while(is2 >> idx)
-			{
-				is2 >> x >> y >> rot;
-				Element *e = createElement(idx, Vector(x,y), l);
-				e->rotation.z = rot;
-				loadedElements.push_back(e);
-			}
-		}
-		if (simpleElements->Attribute("f"))
-		{
-			SimpleIStringStream is2(simpleElements->Attribute("f"));
-			int l = atoi(simpleElements->Attribute("l"));
-			while(is2 >> idx)
-			{
-				is2 >> x >> y >> rot >> sz;
-				Element *e = createElement(idx, Vector(x,y), l);
-				e->scale = Vector(sz,sz);
-				e->rotation.z = rot;
-				loadedElements.push_back(e);
-			}
-		}
-		if (simpleElements->Attribute("g"))
-		{
-			SimpleIStringStream is2(simpleElements->Attribute("g"));
-			int l = atoi(simpleElements->Attribute("l"));
-			while(is2 >> idx)
-			{
-				int fh, fv;
-				is2 >> x >> y >> rot >> sz >> fh >> fv;
-				Element *e = createElement(idx, Vector(x,y), l);
-				if (fh)
-					e->flipHorizontal();
-				if (fv)
-					e->flipVertical();
-				e->scale = Vector(sz,sz);
-				e->rotation.z = rot;
-				loadedElements.push_back(e);
-			}
-		}
-		if (simpleElements->Attribute("h"))
-		{
-			SimpleIStringStream is2(simpleElements->Attribute("h"));
-			int l = atoi(simpleElements->Attribute("l"));
-			while(is2 >> idx)
-			{
-				int fh, fv;
-				int flags;
-				is2 >> x >> y >> rot >> sz >> fh >> fv >> flags;
-				Element *e = createElement(idx, Vector(x,y), l);
-				e->elementFlag = (ElementFlag)flags;
-				if (e->elementFlag >= EF_MAX || e->elementFlag < EF_NONE)
-					e->elementFlag = EF_NONE;
-				if (fh)
-					e->flipHorizontal();
-				if (fv)
-					e->flipVertical();
-				e->scale = Vector(sz,sz);
-				e->rotation.z = rot;
-				loadedElements.push_back(e);
-			}
-		}
-		if (simpleElements->Attribute("i"))
-		{
-			SimpleIStringStream is2(simpleElements->Attribute("i"));
-			int l = atoi(simpleElements->Attribute("l"));
-			while(is2 >> idx)
-			{
-				int fh, fv;
-				int flags;
-				int efxIdx;
-				is2 >> x >> y >> rot >> sz >> fh >> fv >> flags >> efxIdx;
-				if (sz < MIN_SIZE)
-					sz = MIN_SIZE;
-				Element *e = createElement(idx, Vector(x,y), l);
-				e->elementFlag = (ElementFlag)flags;
-				if (fh)
-					e->flipHorizontal();
-				if (fv)
-					e->flipVertical();
+		const size_t defsBeginIdx = elemsDefs.size();
+		const int layer = atoi(simpleElements->Attribute("l"));
 
-				e->scale = Vector(sz,sz);
-				e->rotation.z = rot;
-				e->setElementEffectByIndex(efxIdx);
-				loadedElements.push_back(e);
+		if (const char *attr = simpleElements->Attribute("d"))
+		{
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			ElementDef d(4); // legacy crap
+			while (is >> d.idx)
+			{
+				is >> d.x >> d.y >> d.rot;
+				elemsDefs.push_back(d);
 			}
 		}
-		if (simpleElements->Attribute("j"))
+		if (const char *attr = simpleElements->Attribute("e"))
 		{
-			SimpleIStringStream is2(simpleElements->Attribute("j"));
-			int l = atoi(simpleElements->Attribute("l"));
-			while(is2 >> idx)
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			ElementDef d(layer);
+			while(is >> d.idx)
 			{
-				int fh, fv;
-				int flags;
-				int efxIdx;
-				int repeat;
-				is2 >> x >> y >> rot >> sz >> fh >> fv >> flags >> efxIdx >> repeat;
-				if (sz < MIN_SIZE)
-					sz = MIN_SIZE;
-				Element *e = createElement(idx, Vector(x,y), l);
-				e->elementFlag = (ElementFlag)flags;
-				if (fh)
-					e->flipHorizontal();
-				if (fv)
-					e->flipVertical();
-
-				e->scale = Vector(sz,sz);
-				e->rotation.z = rot;
-				e->setElementEffectByIndex(efxIdx);
-				if (repeat)
-					e->repeatTextureToFill(true);
-				loadedElements.push_back(e);
+				is >> d.x >> d.y >> d.rot;
+				elemsDefs.push_back(d);
 			}
 		}
-		if (simpleElements->Attribute("k"))
+		if (const char *attr = simpleElements->Attribute("f"))
 		{
-			SimpleIStringStream is2(simpleElements->Attribute("k"));
-			int l = atoi(simpleElements->Attribute("l"));
-			while(is2 >> idx)
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			ElementDef d(layer);
+			while(is >> d.idx)
 			{
-				int fh, fv;
-				int flags;
-				int efxIdx;
-				int repeat;
-				is2 >> x >> y >> rot >> sz >> sz2 >> fh >> fv >> flags >> efxIdx >> repeat;
-				if (sz < MIN_SIZE)
-					sz = MIN_SIZE;
-				if (sz2 < MIN_SIZE)
-					sz2 = MIN_SIZE;
-				Element *e = createElement(idx, Vector(x,y), l);
-				e->elementFlag = (ElementFlag)flags;
-				if (fh)
-					e->flipHorizontal();
-				if (fv)
-					e->flipVertical();
-
-				e->scale = Vector(sz,sz2);
-				e->rotation.z = rot;
-				e->setElementEffectByIndex(efxIdx);
-				if (repeat)
-					e->repeatTextureToFill(true);
-
-				loadedElements.push_back(e);
+				is >> d.x >> d.y >> d.rot >> d.sx;
+				d.sy = d.sx;
+				elemsDefs.push_back(d);
 			}
 		}
-		if (simpleElements->Attribute("repeatScale"))
+		if (const char *attr = simpleElements->Attribute("g"))
 		{
-			SimpleIStringStream is2(simpleElements->Attribute("repeatScale"), SimpleIStringStream::REUSE);
-			for(size_t i = 0; i < loadedElements.size(); ++i)
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			ElementDef d(layer);
+			while(is >> d.idx)
 			{
-				Element *e = loadedElements[i];
-				if(e->isRepeatingTextureToFill())
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv;
+				d.sy = d.sx;
+				elemsDefs.push_back(d);
+			}
+		}
+		if (const char *attr = simpleElements->Attribute("h"))
+		{
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			ElementDef d(layer);
+			while(is >> d.idx)
+			{
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.flags;
+				d.sy = d.sx;
+				elemsDefs.push_back(d);
+			}
+		}
+		if (const char *attr = simpleElements->Attribute("i"))
+		{
+
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			ElementDef d(layer);
+			while(is >> d.idx)
+			{
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.flags >> d.efxIdx;
+				d.sy = d.sx;
+				elemsDefs.push_back(d);
+			}
+		}
+		if (const char *attr = simpleElements->Attribute("j"))
+		{
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			ElementDef d(layer);
+			while(is >> d.idx)
+			{
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.flags >> d.efxIdx >> d.repeat;
+				d.sy = d.sx;
+				elemsDefs.push_back(d);
+			}
+		}
+		if (const char *attr = simpleElements->Attribute("k"))
+		{
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			ElementDef d(layer);
+			while(is >> d.idx)
+			{
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.sy >> d.fh >> d.fv >> d.flags >> d.efxIdx >> d.repeat;
+				elemsDefs.push_back(d);
+			}
+		}
+
+		// done loading raw data, now for some possible extensions added later
+
+		if (const char *attr = simpleElements->Attribute("repeatScale"))
+		{
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			for(size_t i = defsBeginIdx; i < elemsDefs.size(); ++i)
+			{
+				ElementDef& d = elemsDefs[i];
+				if(d.repeat)
 				{
-					float repeatScaleX = 1, repeatScaleY = 1;
-					if(!(is2 >> repeatScaleX >> repeatScaleY))
+					if(!(is >> d.rsx >> d.rsx))
 						break;
-					e->repeatToFillScale.x = repeatScaleX;
-					e->repeatToFillScale.y = repeatScaleY;
-					e->refreshRepeatTextureToFill();
 				}
 			}
 		}
-		if (simpleElements->Attribute("tag"))
+		if (const char *attr = simpleElements->Attribute("tag"))
 		{
-			SimpleIStringStream is2(simpleElements->Attribute("tag"), SimpleIStringStream::REUSE);
-			for(size_t i = 0; i < loadedElements.size(); ++i)
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			for(size_t i = defsBeginIdx; i < elemsDefs.size(); ++i)
 			{
-				Element *e = loadedElements[i];
-				int tag = 0;
-				if(!(is2 >> tag))
+				ElementDef& d = elemsDefs[i];
+				if(!(is >> d.tag))
 					break;
-				e->setTag(tag);
 			}
 		}
 		simpleElements = simpleElements->NextSiblingElement("SE");
+	}
+
+	// figure out which textures in the tileset are used and preload those that are actually used
+	{
+		unsigned char usedIdx[1024] = {0};
+		for(size_t i = 0; i < elemsDefs.size(); ++i)
+		{
+			unsigned idx = elemsDefs[i].idx;
+			if(idx < Countof(usedIdx))
+				usedIdx[idx] = 1;
+		}
+		std::vector<std::string> usedTex;
+		usedTex.reserve(elementTemplates.size()); // optimistically assume all textures in the tileset are used
+
+		for (size_t i = 0; i < elementTemplates.size(); i++)
+		{
+			unsigned idx = elementTemplates[i].idx;
+			if (idx < Countof(usedIdx) && usedIdx[idx])
+				usedTex.push_back(elementTemplates[i].gfx);
+		}
+		std::sort(usedTex.begin(), usedTex.end());
+		// drop duplicates
+		usedTex.resize(std::distance(usedTex.begin(), std::unique(usedTex.begin(), usedTex.end())));
+
+		std::ostringstream os;
+		os << "Scene has " << elemsDefs.size() << " elements that use " << usedTex.size()
+			<< " distinct textures out of the " << elementTemplates.size() << " entries in the tileset";
+		debugLog(os.str());
+
+		// preload all used textures
+		if(usedTex.size())
+			dsq->texmgr.loadBatch(NULL, &usedTex[0], usedTex.size());
+	}
+
+	// Now that all SE tags have been processed, spawn them
+	for(size_t i = 0; i < elemsDefs.size(); ++i)
+	{
+		const ElementDef& d = elemsDefs[i];
+
+		Element *e = createElement(d.idx, Vector(d.x,d.y), d.layer);
+		e->elementFlag = (ElementFlag)d.flags;
+		if (d.fh)
+			e->flipHorizontal();
+		if (d.fv)
+			e->flipVertical();
+
+		e->scale = Vector(d.sx, d.sy);
+		e->rotation.z = d.rot;
+		e->repeatToFillScale.x = d.rsx;
+		e->repeatToFillScale.y = d.rsy;
+		if(d.efxIdx)
+			e->setElementEffectByIndex(d.efxIdx);
+		if (d.repeat)
+			e->repeatTextureToFill(true); // also applies repeatToFillScale
+		e->setTag(d.tag);
 	}
 
 	XMLElement *element = doc.FirstChildElement("Element");
@@ -2783,7 +2766,6 @@ void Game::applyState()
 	//sceneColor = Vector(0.75, 0.75, 0.8);
 	sceneColor = Vector(1,1,1);
 	sceneName = "";
-	elementTemplatePack ="";
 	clearGrid();
 	bg = 0;
 	bg2 = 0;
@@ -2950,9 +2932,9 @@ void Game::applyState()
 	bindInput();
 
 	if (verbose) debugLog("Loading Scene");
-	if (!loadScene(sceneToLoad))
+	loadScene(sceneToLoad);
 	{
-		loadElementTemplates(elementTemplatePack);
+		debugLog("Failed to load scene [" + sceneToLoad + "]");
 	}
 	if (verbose) debugLog("...Done");
 
@@ -4934,31 +4916,16 @@ void Game::loadElementTemplates(std::string pack)
 
 	elementTemplates.clear();
 
-	// HACK: need to uncache things! causes memory leak currently
-	bool doPrecache=false;
 	std::string fn;
-
 	if (dsq->mod.isActive())
 		fn = dsq->mod.getPath() + "tilesets/" + pack + ".txt";
 	else
 		fn = "data/tilesets/" + pack + ".txt";
 
-
-	if (lastTileset == fn)
-	{
-		doPrecache=false;
-	}
-
-	lastTileset = fn;
 	if (!exists(fn))
 	{
-		errorLog ("Could not open element template pack [" + fn + "]");
+		errorLog ("Could not open tileset [" + fn + "]");
 		return;
-	}
-
-	if (doPrecache)
-	{
-		tileCache.clean();
 	}
 
 	InStream in(fn.c_str());
@@ -4977,21 +4944,12 @@ void Game::loadElementTemplates(std::string pack)
 		t.w = w;
 		t.h = h;
 		elementTemplates.push_back(t);
-		if (doPrecache)
-			tileCache.precacheTex(gfx);
 	}
 	in.close();
 
-	for (size_t i = 0; i < elementTemplates.size(); i++)
-	{
-		for (size_t j = i; j < elementTemplates.size(); j++)
-		{
-			if (elementTemplates[i].idx > elementTemplates[j].idx)
-			{
-				std::swap(elementTemplates[i], elementTemplates[j]);
-			}
-		}
-	}
+
+	std::sort(elementTemplates.begin(), elementTemplates.end());
+
 	for (int i = 0; i < 27; i++)
 	{
 		elementTemplates.push_back(getElementTemplateForLetter(i));

@@ -232,10 +232,14 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 #ifdef BBGE_BUILD_VFS
 	if (!skipVFS)
 	{
-		e = !!vfs.GetFile(f.c_str());
+		e = !!vfgetfile(f.c_str());
 	}
 	else
-#endif
+	{
+		std::string tmp = adjustFilenameCase(f);
+		e = ttvfs::FileExists(tmp.c_str());
+	}
+#else
 	if (!e)
 	{
 		std::string tmp = adjustFilenameCase(f);
@@ -246,6 +250,7 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 			fclose(file);
 		}
 	}
+#endif
 
 	if (makeFatal && !e)
 	{

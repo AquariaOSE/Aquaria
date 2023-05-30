@@ -494,7 +494,7 @@ static unsigned char *tileDataToAlpha(WorldMapTile *tile)
 	const unsigned int scaleY = texHeight / MAPVIS_SUBDIV;
 
 	unsigned char *savedTexData = new unsigned char[texWidth * texHeight * 4];
-	tile->q->texture->read(0, 0, texWidth, texHeight, savedTexData);
+	tile->q->texture->readRGBA(savedTexData);
 
 	unsigned char *texData = new unsigned char[texWidth * texHeight * 4];
 	memcpy(texData, savedTexData, texWidth * texHeight * 4);
@@ -538,7 +538,7 @@ static unsigned char *tileDataToAlpha(WorldMapTile *tile)
 		}
 	}
 
-	tile->q->texture->write(0, 0, texWidth, texHeight, texData);
+	tile->q->texture->writeRGBA(0, 0, texWidth, texHeight, texData);
 	delete[] texData;
 
 	return savedTexData;
@@ -546,7 +546,7 @@ static unsigned char *tileDataToAlpha(WorldMapTile *tile)
 
 static void resetTileAlpha(WorldMapTile *tile, const unsigned char *savedTexData)
 {
-	tile->q->texture->write(0, 0, tile->q->texture->width, tile->q->texture->height, savedTexData);
+	tile->q->texture->writeRGBA(0, 0, tile->q->texture->width, tile->q->texture->height, savedTexData);
 }
 
 
@@ -629,25 +629,29 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 
 
 
-	int num = dsq->continuity.worldMap.getNumWorldMapTiles();
+	const size_t num = dsq->continuity.worldMap.getNumWorldMapTiles();
 	std::string n = dsq->game->sceneName;
 	stringToUpper(n);
-	for (int i = 0; i < num; i++)
+	std::vector<std::string> textodo(num);
+	std::vector<Texture*> texs(num, NULL);
+	textodo.reserve(num);
+	for (size_t i = 0; i < num; i++)
 	{
 		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
 		if (tile)
 		{
 			if (tile->name == n)
-			{
 				activeTile = tile;
-				break;
-			}
+			textodo[i] = "gui/worldmap/" + tile->name;
 		}
 	}
 
 	tiles.clear();
 
-	for (int i = 0; i < num; i++)
+	if(num)
+		dsq->texmgr.loadBatch(&texs[0], &textodo[0], num);
+
+	for (size_t i = 0; i < num; i++)
 	{
 		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
 		if (tile)
@@ -655,8 +659,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			Vector pos(tile->gridPos.x, tile->gridPos.y);
 
 			Quad *q = new Quad;
-			std::string tn = "Gui/WorldMap/" + tile->name;
-			q->setTexture(tn);
+			q->setTexturePointer(texs[i]);
 			q->position = pos;
 			q->alphaMod = 0;
 			q->drawOrder = Quad::GRID_DRAW_WORLDMAP;

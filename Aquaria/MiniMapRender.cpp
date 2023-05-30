@@ -106,19 +106,14 @@ void MinimapIcon::update(float dt)
 // pretty much copied from RenderObject::setTexture()
 static bool _setTex(CountedPtr<Texture> &tex, std::string name)
 {
-	stringToLowerUserData(name);
-
 	if (name.empty())
 	{
 		tex = NULL;
 		return false;
 	}
 
-	if(tex && tex->getLoadResult() == TEX_SUCCESS && name == tex->name)
-		return true; // no texture change
-
-	tex = core->addTexture(name);
-	return tex && tex->getLoadResult() == TEX_SUCCESS;
+	tex = core->getTexture(name);
+	return tex->success;
 }
 
 bool MinimapIcon::setTexture(std::string name)
@@ -168,12 +163,12 @@ MiniMapRender::MiniMapRender() : RenderObject()
 	cull = false;
 	lightLevel = 1.0;
 
-	texWaterBit			= core->addTexture("gui/minimap/waterbit");
-	texMinimapBtm		= core->addTexture("gui/minimap/btm");
-	texMinimapTop		= core->addTexture("gui/minimap/top");
-	texNaija			= core->addTexture("gems/naija-token");
-	texHealthBar		= core->addTexture("particles/glow-masked");
-	texMarker			= core->addTexture("gui/minimap/marker");
+	texWaterBit			= core->getTexture("gui/minimap/waterbit");
+	texMinimapBtm		= core->getTexture("gui/minimap/btm");
+	texMinimapTop		= core->getTexture("gui/minimap/top");
+	texNaija			= core->getTexture("gems/naija-token");
+	texHealthBar		= core->getTexture("particles/glow-masked");
+	texMarker			= core->getTexture("gui/minimap/marker");
 
 	buttons.clear();
 

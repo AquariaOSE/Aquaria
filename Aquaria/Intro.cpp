@@ -77,7 +77,7 @@ void Intro::endIntro()
 
 	dsq->sound->clearLocalSounds();
 
-	cachy.clean();
+	cachy.clear();
 
 	dsq->toggleBlackBars(0);
 

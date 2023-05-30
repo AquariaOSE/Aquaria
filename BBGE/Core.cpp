@@ -350,8 +350,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	debugLogActive = true;
 	debugOutputActive = false;
 
-	debugLogTextures = true;
-
 	grabInput = false;
 
 	srand(time(NULL));
@@ -398,6 +396,8 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	initRenderObjectLayers(numRenderLayers);
 
 	initPlatform(filesystem);
+
+	texmgr.spawnThreads(3);
 }
 
 void Core::initPlatform(const std::string &filesystem)
@@ -1824,20 +1824,6 @@ void Core::showBuffer()
 	window->present();
 }
 
-// WARNING: only for use during shutdown
-// otherwise, textures will try to remove themselves
-// when destroy is called on them
-void Core::clearResources()
-{
-	if(resources.size())
-	{
-		debugLog("Warning: The following resources were not cleared:");
-		for(size_t i = 0; i < resources.size(); ++i)
-			debugLog(resources[i]->name);
-		resources.clear(); // nothing we can do; refcounting is messed up
-	}
-}
-
 void Core::shutdownInputLibrary()
 {
 }
@@ -1897,7 +1883,7 @@ void Core::shutdown()
 	debugLog("OK");
 
 	debugLog("Clear All Resources...");
-		clearResources();
+		texmgr.shutdown();
 	debugLog("OK");
 
 
@@ -1956,118 +1942,9 @@ bool Core::exists(const std::string &filename)
 	return ::exists(filename, false); // defined in Base.cpp
 }
 
-CountedPtr<Texture> Core::findTexture(const std::string &name)
+CountedPtr<Texture> Core::getTexture(const std::string &name)
 {
-	int sz = resources.size();
-	for (int i = 0; i < sz; i++)
-	{
-		//out << resources[i]->name << " is " << name << " ?" << std::endl;
-		//NOTE: ensure all names are lowercase before this point
-		if (resources[i]->name == name)
-		{
-			return resources[i];
-		}
-	}
-	return 0;
-}
-
-// This handles unix/win32 relative paths: ./rel/path
-// Unix abs paths: /home/user/...
-// Win32 abs paths: C:/Stuff/.. and also C:\Stuff\...
-#define ISPATHROOT(x) (x[0] == '.' || x[0] == '/' || ((x).length() > 1 && x[1] == ':'))
-
-std::string Core::getTextureLoadName(const std::string &texture)
-{
-	std::string loadName = texture;
-
-	if (texture.empty() || !ISPATHROOT(texture))
-	{
-		if (texture.find(baseTextureDirectory) == std::string::npos)
-			loadName = baseTextureDirectory + texture;
-	}
-	return loadName;
-}
-
-CountedPtr<Texture> Core::doTextureAdd(const std::string &texture, const std::string &loadName, std::string internalTextureName)
-{
-	if (texture.empty() || !ISPATHROOT(texture))
-	{
-		if (texture.find(baseTextureDirectory) != std::string::npos)
-			internalTextureName = internalTextureName.substr(baseTextureDirectory.size(), internalTextureName.size());
-	}
-
-	if (internalTextureName.size() > 4)
-	{
-		if (internalTextureName[internalTextureName.size()-4] == '.')
-		{
-			internalTextureName = internalTextureName.substr(0, internalTextureName.size()-4);
-		}
-	}
-
-	stringToLowerUserData(internalTextureName);
-	CountedPtr<Texture> t = core->findTexture(internalTextureName);
-	if (t)
-		return t;
-
-	t = new Texture;
-	t->name = internalTextureName;
-
-	if(t->load(loadName, true))
-	{
-		std::ostringstream os;
-		os << "LOADED TEXTURE FROM DISK: [" << internalTextureName << "] idx: " << resources.size()-1;
-		debugLog(os.str());
-	}
-	else
-	{
-		t->width = 64;
-		t->height = 64;
-	}
-
-	return t;
-}
-
-CountedPtr<Texture> Core::addTexture(const std::string &textureName)
-{
-	if (textureName.empty())
-		return NULL;
-
-	CountedPtr<Texture> ptex;
-	std::string texture = textureName;
-	stringToLowerUserData(texture);
-	std::string internalTextureName = texture;
-	std::string loadName = getTextureLoadName(texture);
-
-	if (!texture.empty() && texture[0] == '@')
-	{
-		texture = secondaryTexturePath + texture.substr(1, texture.size());
-		loadName = texture;
-	}
-	else if (!secondaryTexturePath.empty() && texture[0] != '.' && texture[0] != '/')
-	{
-		std::string t = texture;
-		std::string ln = loadName;
-		texture = secondaryTexturePath + texture;
-		loadName = texture;
-		ptex = doTextureAdd(texture, loadName, internalTextureName);
-		if (!ptex || ptex->getLoadResult() == TEX_FAILED)
-			ptex = doTextureAdd(t, ln, internalTextureName);
-	}
-	else
-		ptex = doTextureAdd(texture, loadName, internalTextureName);
-
-	addTexture(ptex.content());
-
-	if(debugLogTextures)
-	{
-		if(!ptex || ptex->getLoadResult() != TEX_SUCCESS)
-		{
-			std::ostringstream os;
-			os << "FAILED TO LOAD TEXTURE: [" << internalTextureName << "] idx: " << resources.size()-1;
-			debugLog(os.str());
-		}
-	}
-	return ptex;
+	return texmgr.getOrLoad(name);
 }
 
 void Core::addRenderObject(RenderObject *o, unsigned layer)
@@ -2089,10 +1966,10 @@ void Core::switchRenderObjectLayer(RenderObject *o, unsigned toLayer)
 
 void Core::unloadResources()
 {
-	for (size_t i = 0; i < resources.size(); i++)
+	/*for (size_t i = 0; i < resources.size(); i++)
 	{
 		resources[i]->unload();
-	}
+	}*/
 }
 
 void Core::onReloadResources()
@@ -2101,43 +1978,30 @@ void Core::onReloadResources()
 
 void Core::reloadResources()
 {
-	for (size_t i = 0; i < resources.size(); i++)
+	/*for (size_t i = 0; i < resources.size(); i++)
 	{
 		resources[i]->reload();
 	}
-	onReloadResources();
+	onReloadResources();*/
 }
 
-void Core::addTexture(Texture *r)
+const std::string & Core::getBaseTexturePath() const
 {
-	for(size_t i = 0; i < resources.size(); ++i)
-		if(resources[i] == r)
-			return;
-
-	resources.push_back(r);
-	if (r->name.empty())
-	{
-		debugLog("Empty name resource added");
-	}
+	return texmgr.loadFromPaths.back();
 }
 
-void Core::removeTexture(Texture *res)
+void Core::setExtraTexturePath(const char * dir)
 {
-	std::vector<Texture*> copy;
-	copy.swap(resources);
+	texmgr.loadFromPaths.resize(size_t(1) + !!dir);
+	size_t w = 0;
+	if(dir)
+		texmgr.loadFromPaths[w++] = dir;
+	texmgr.loadFromPaths[w] = "gfx/";
+}
 
-	for (size_t i = 0; i < copy.size(); ++i)
-	{
-		if (copy[i] == res)
-		{
-			copy[i]->destroy();
-			copy[i] = copy.back();
-			copy.pop_back();
-			break;
-		}
-	}
-
-	resources.swap(copy);
+const char *Core::getExtraTexturePath() const
+{
+	return texmgr.loadFromPaths.size() > 1 ? texmgr.loadFromPaths[0].c_str() : NULL;
 }
 
 void Core::removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag)

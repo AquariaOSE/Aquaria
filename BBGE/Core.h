@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "StateManager.h"
 #include "Localization.h"
 #include "Window.h"
+#include "TextureMgr.h"
 
 #include "DarkLayer.h"
 
@@ -231,8 +232,6 @@ public:
 
 	// state functions
 
-	std::string getTextureLoadName(const std::string &texture);
-
 	void setMousePosition(const Vector &p);
 
 	void setFullscreen(bool full);
@@ -240,12 +239,7 @@ public:
 	void enable2D(int pixelScaleX, int pixelScaleY);
 	void addRenderObject(RenderObject *o, unsigned layer);
 	void switchRenderObjectLayer(RenderObject *o, unsigned toLayer);
-	void addTexture(Texture *r);
-	CountedPtr<Texture> findTexture(const std::string &name);
-	void removeTexture(Texture *res);
-	void clearResources();
-
-	CountedPtr<Texture> addTexture(const std::string &texture);
+	CountedPtr<Texture> getTexture(const std::string &name);
 
 	enum RemoveRenderObjectFlag { DESTROY_RENDER_OBJECT=0, DO_NOT_DESTROY_RENDER_OBJECT };
 	void removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag = DESTROY_RENDER_OBJECT);
@@ -279,8 +273,6 @@ public:
 
 	void print(int x, int y, const char *str, float sz=1);
 
-	std::vector<Texture*> resources;
-
 	RenderObjectLayer *getRenderObjectLayer(int i);
 	std::vector <int> renderObjectLayerOrder;
 
@@ -311,15 +303,9 @@ public:
 
 	ParticleManager *particleManager;
 
-
-
-	void setBaseTextureDirectory(const std::string &newBaseTextureDirectory)
-	{ this->baseTextureDirectory = newBaseTextureDirectory; }
-	std::string getBaseTextureDirectory()
-	{
-		return baseTextureDirectory;
-	}
-
+	void setExtraTexturePath(const char *dir); // pass NULL to disable secondary
+	const char *getExtraTexturePath() const; // NULL when no secondary
+	const std::string& getBaseTexturePath() const;
 
 	virtual bool canChangeState();
 	void resetTimer();
@@ -376,8 +362,6 @@ public:
 
 	bool joystickEnabled;
 
-	bool debugLogTextures;
-
 	void setup_opengl();
 	void setClearColor(const Vector &c);
 	int flipMouseButtons;
@@ -387,8 +371,6 @@ public:
 	virtual void prepScreen(bool t){}
 
 	ParticleEffect* createParticleEffect(const std::string &name, const Vector &position, int layer, float rotz=0);
-
-	std::string secondaryTexturePath;
 
 	float get_old_dt() { return old_dt; }
 	float get_current_dt() { return current_dt; }
@@ -431,6 +413,8 @@ public:
 
 	void initLocalization();
 
+	TextureMgr texmgr;
+
 protected:
 
 	CoreWindow *window;
@@ -449,8 +433,6 @@ protected:
 	std::string debugLogPath;
 
 	virtual void onReloadResources();
-
-	CountedPtr<Texture> doTextureAdd(const std::string &texture, const std::string &name, std::string internalTextureName);
 
 	bool lib_graphics, lib_sound, lib_input;
 	Vector clearColor;
@@ -495,7 +477,6 @@ protected:
 	bool shuttingDown;
 	bool quitNestedMainFlag;
 	int nestedMains;
-	std::string baseTextureDirectory;
 
 	int nowTicks, thenTicks;
 

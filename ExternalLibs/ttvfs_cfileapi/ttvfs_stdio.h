@@ -36,6 +36,9 @@ typedef ttvfs::File VFILE;
 
 void ttvfs_setroot(ttvfs::Root *root);
 
+// HACK
+VFILE *vfgetfile(const char *fn);
+
 // Note that vfopen() returns the same pointer for the same file name,
 // so effectively a file is a singleton object.
 VFILE *vfopen(const char *fn, const char *mode);

@@ -23,25 +23,28 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <vector>
 #include <string>
+#include "Texture.h"
 
 class RenderObject;
 
 class Precacher
 {
 public:
+	typedef void (*ProgressCallback)(void);
+
 	Precacher();
 	~Precacher();
-	void precacheTex(const std::string &tex);
-	void precacheList(const std::string &list, void progressCallback() = NULL);
-	void clean();
-	void loadTextureRange(const std::string &file, const std::string &type, int start, int end);
+	void precacheList(const std::string &list, ProgressCallback progress = NULL);
+	void precacheTex(const std::string &tex, ProgressCallback progress = NULL);
+	void clear();
 	void setBaseDir(const std::string& dir);
-
-	std::vector<RenderObject*> renderObjects;
 private:
-	bool cleaned;
-	void (*loadProgressCallback)();
-	std::string basedirOverride;
+	static void _Callback(const std::string &file, void *param);
+	void _precacheTex(const std::string &tex);
+	std::string basedir;
+	std::vector<CountedPtr<Texture> > texkeep;
+	std::vector<std::string> todo;
+	void doCache(ProgressCallback progress = NULL);
 };
 
 #endif

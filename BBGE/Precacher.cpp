@@ -25,129 +25,104 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 Precacher::Precacher()
 {
-	loadProgressCallback = NULL;
-	cleaned = true;
 }
 
 Precacher::~Precacher()
 {
-	if (!cleaned)
-		errorLog ("Precacher shutdown unclean");
 }
 
 void Precacher::setBaseDir(const std::string& dir)
 {
-	basedirOverride = dir;
+	basedir = dir;
 }
 
-void Precacher::clean()
+void Precacher::clear()
 {
-	for (unsigned int i = 0; i < renderObjects.size(); i++)
-	{
-		RenderObject *r = renderObjects[i];
-		r->destroy();
-		delete r;
-	}
-	renderObjects.clear();
-	cleaned = true;
+	texkeep.clear();
 }
 
-void Precacher::loadTextureRange(const std::string &file, const std::string &type, int start, int end)
-{
-	for (int t = start; t < end; t++)
-	{
-
-		std::ostringstream num_os;
-		num_os << t;
-
-		std::ostringstream os;
-		os << file;
-
-		if(num_os.str().size() <= 4) {
-			for (size_t j = 0; j < 4 - num_os.str().size(); j++) {
-				os << "0";
-			}
-		}
-
-		os << t;
-
-		os << type;
-
-		precacheTex(os.str());
-	}
-}
-
-void precacherCallback(const std::string &file, void *param)
+void Precacher::_Callback(const std::string &file, void *param)
 {
 	Precacher *p = (Precacher*)param;
-	p->precacheTex(file);
+	p->_precacheTex(file);
 }
 
 // precacheTex
 // caches one texture
 // also support simple wildcard to cache multiple textures
 // e.g. naija/*.png
-void Precacher::precacheTex(const std::string &tex)
+void Precacher::_precacheTex(const std::string &tex)
 {
-	if (tex.find("txt") != std::string::npos)
-	{
-		errorLog("Call precacheList to precache a text file of gfx names, not precacheTex!");
-	}
+	assert(!basedir.empty());
 	if (tex.empty()) return;
-
-	std::string basedir = basedirOverride.empty() ? core->getBaseTextureDirectory() : basedirOverride;
-
-	if (core->debugLogTextures)
-		debugLog("PRECACHING: " + tex);
 
 	if (tex.find('*')!=std::string::npos)
 	{
-		if (core->debugLogTextures)
-			debugLog("searching directory");
-
-		int loc = tex.find('*');
+		size_t loc = tex.find('*');
 		std::string path  = tex.substr(0, loc);
 		std::string type = tex.substr(loc+1, tex.size());
 		path = basedir + path;
-		forEachFile(path, type, precacherCallback, this);
-		return;
+		forEachFile(path, type, _Callback, this);
 	}
 	else
 	{
-		if (loadProgressCallback)
-			loadProgressCallback();
 		std::string t = tex;
 		if (tex.find(basedir) != std::string::npos)
 		{
 			t = tex.substr(basedir.size(), tex.size());
 		}
-		Quad *q = new Quad;
-		q->setTexture(t);
-		q->alpha = 0;
-		renderObjects.push_back(q);
-		cleaned = false;
+		todo.push_back(t);
 	}
 }
 
-void Precacher::precacheList(const std::string &list, void progressCallback())
+static void texLoadProgressCallback(size_t done, void *ud)
 {
-	loadProgressCallback = progressCallback;
+	Precacher::ProgressCallback cb = (Precacher::ProgressCallback)(ud);
+	cb();
+}
+
+void Precacher::doCache(ProgressCallback progress)
+{
+	if(!todo.empty())
+	{
+		std::ostringstream os;
+		os << "Precacher: Batch-loading " << todo.size() << " textures...";
+		debugLog(os.str());
+		std::vector<Texture*> tmp(todo.size());
+		core->texmgr.loadBatch(&tmp[0], &todo[0], todo.size(), TextureMgr::KEEP,
+			progress ? texLoadProgressCallback : NULL, progress);
+		todo.clear();
+		texkeep.reserve(texkeep.size() + tmp.size());
+		for(size_t i = 0; i < tmp.size(); ++i)
+			texkeep.push_back(tmp[i]);
+	}
+	debugLog("Precacher: done");
+}
+
+void Precacher::precacheList(const std::string &list, ProgressCallback progress)
+{
+	assert(todo.empty());
 	InStream in(list.c_str());
 	std::string t;
 	while (std::getline(in, t))
 	{
-		if (!t.empty())
+		while (!t.empty())
 		{
-#if defined(BBGE_BUILD_UNIX)
-
-			t = t.substr(0,t.size()-1);
-			debugLog("precache["+t+"]");
-#endif
-			stringToLower(t);
-			precacheTex(t);
+			if(t.back() == '\r' || t.back() == '\n') // linux doesn't like CRLF, make sure to trim that off
+				t.pop_back();
+			else
+				break;
 		}
+
+		if(!t.empty())
+			_precacheTex(t);
 	}
 	in.close();
-	loadProgressCallback = NULL;
+	doCache(progress);
 }
 
+void Precacher::precacheTex(const std::string& tex, ProgressCallback progress)
+{
+	_precacheTex(tex);
+	doCache(progress);
+}

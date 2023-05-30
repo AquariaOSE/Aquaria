@@ -349,8 +349,7 @@ void Quad::renderGrid(const RenderState& rs) const
 				}
 			}
 		glEnd();
-		if (texture)
-			glBindTexture(GL_TEXTURE_2D, texture->textures[0]);
+		RenderObject::lastTextureApplied = 0;
 	}
 }
 
