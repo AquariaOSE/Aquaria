@@ -1815,12 +1815,16 @@ void SceneEditor::loadSceneByName()
 {
 	std::string s = dsq->getUserInputString("Enter Name of Map to Load");
 	if (!s.empty())
+	{
+		dsq->game->noSceneTransitionFadeout = true;
 		dsq->game->transitionToScene(s);
+	}
 }
 
 void SceneEditor::reloadScene()
 {
 	debugLog("reloadScene");
+	dsq->game->noSceneTransitionFadeout = true;
 	dsq->game->positionToAvatar = dsq->game->avatar->position;
 	dsq->game->transitionToScene(dsq->game->sceneName);
 }

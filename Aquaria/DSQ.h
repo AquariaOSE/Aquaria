@@ -327,8 +327,6 @@ public:
 	static void loadModsCallback(const std::string &filename, void *param);
 	static void loadModPackagesCallback(const std::string &filename, void *param);
 
-	bool doScreenTrans;
-
 	AquariaSaveSlot *selectedSaveSlot;
 	void setStory();
 
