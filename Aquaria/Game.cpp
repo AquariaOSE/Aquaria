@@ -3219,6 +3219,9 @@ void Game::applyState()
 	// cutscenes immediately.  --achurch
 	dsq->subtitlePlayer.show(0.25);
 
+	// First cleanup -- we're now done loading everything; anything leftover from the prev. map can go
+	dsq->texmgr.clearUnused();
+
 	if (verbose) debugLog("loading map init script");
 	if (dsq->mod.isActive())
 		dsq->runScript(dsq->mod.getPath() + "scripts/map_" + sceneName + ".lua", "init", true);
@@ -3263,6 +3266,10 @@ void Game::applyState()
 	{
 		dsq->toggleCursor(true, 0.5);
 	}
+
+	// Second cleanup -- after the short map init fadeout, some entities may have
+	// decided to remove themselves, in which case their gfx are no longer needed
+	dsq->texmgr.clearUnused();
 
 	debugLog("Game::applyState Done");
 }
