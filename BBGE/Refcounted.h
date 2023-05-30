@@ -29,6 +29,10 @@ public:
 		if (!--_refcount)
 			delete this;
 	}
+	inline unsigned refcount() const
+	{
+		return _refcount;
+	}
 
 private:
 	unsigned _refcount;

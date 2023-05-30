@@ -166,6 +166,24 @@ Texture* TextureMgr::getOrLoad(const std::string& name)
     return load(name, KEEP);
 }
 
+void TextureMgr::clearUnused()
+{
+    size_t done = 0;
+    for(TexCache::iterator it = cache.begin(); it != cache.end(); )
+    {
+        if(it->second->refcount() <= 1)
+        {
+            it = cache.erase(it);
+            ++done;
+        }
+        else
+            ++it;
+    }
+    std::ostringstream os;
+    os << "TextureMgr: Dropped " << done << " unused textures, now " << cache.size() << " left";
+    debugLog(os.str());
+}
+
 void TextureMgr::shutdown()
 {
     for(TexCache::iterator it = cache.begin(); it != cache.end(); ++it)
