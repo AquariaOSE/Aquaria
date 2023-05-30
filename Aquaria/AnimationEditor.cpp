@@ -1153,7 +1153,7 @@ void AnimationEditor::clearRot()
 	if (editingBone)
 	{
 		if(core->getCtrlState())
-			editingBone->texture->reload();
+			core->texmgr.load(editingBone->texture->name, TextureMgr::OVERWRITE);
 		else if(splinegrid)
 			splinegrid->resetControlPoints();
 		else

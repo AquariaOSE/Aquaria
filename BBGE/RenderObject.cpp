@@ -491,11 +491,11 @@ nofollow:
 	{
 		if (texture)
 		{
-			if (texture->textures[0] != lastTextureApplied || repeatTexture != lastTextureRepeat)
+			if (texture->gltexid != lastTextureApplied || repeatTexture != lastTextureRepeat)
 			{
 				texture->apply(repeatTexture);
 				lastTextureRepeat = repeatTexture;
-				lastTextureApplied = texture->textures[0];
+				lastTextureApplied = texture->gltexid;
 			}
 		}
 		else
@@ -866,21 +866,9 @@ void RenderObject::freeMotionBlur()
 
 bool RenderObject::setTexture(const std::string &n)
 {
-	std::string name = n;
-	stringToLowerUserData(name);
-
-	if (name.empty())
-	{
-		setTexturePointer(NULL);
-		return false;
-	}
-
-	if(texture && texture->getLoadResult() == TEX_SUCCESS && name == texture->name)
-		return true; // no texture change
-
-	CountedPtr<Texture> tex = core->addTexture(name);
+	CountedPtr<Texture> tex = core->getTexture(n);
 	setTexturePointer(tex);
-	return tex && tex->getLoadResult() == TEX_SUCCESS;
+	return tex->success;
 }
 
 void RenderObject::addChild(RenderObject *r, ParentManaged pm, RenderBeforeParent rbp, ChildOrder order)

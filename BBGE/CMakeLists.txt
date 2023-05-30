@@ -105,6 +105,8 @@ set(BBGE_SRCS
     StringBank.h
     Texture.cpp
     Texture.h
+    TextureMgr.cpp
+    TextureMgr.h
     TTFFont.cpp
     TTFFont.h
     Vector.cpp

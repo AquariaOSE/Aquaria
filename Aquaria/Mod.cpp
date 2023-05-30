@@ -43,7 +43,7 @@ Mod::Mod()
 
 Mod::~Mod()
 {
-	modcache.clean();
+	modcache.clear();
 }
 
 /*
@@ -152,7 +152,7 @@ void Mod::load(const std::string &p)
 		}
 	}
 
-	dsq->secondaryTexturePath = path + "graphics/";
+	dsq->setExtraTexturePath((path + "graphics/").c_str());
 
 	dsq->sound->audioPath2 = path + "audio/";
 	dsq->sound->setVoicePath2(path + "audio/");
@@ -180,13 +180,13 @@ void Mod::recache()
 {
 	if(doRecache)
 	{
-		dsq->precacher.clean();
+		core->texmgr.reloadAll(TextureMgr::KEEP_IF_SAME);
 		dsq->unloadResources();
 	}
 
 	if(active)
 	{
-		modcache.setBaseDir(dsq->secondaryTexturePath);
+		modcache.setBaseDir(dsq->getExtraTexturePath());
 		std::string fname = path;
 		if(fname[fname.length() - 1] != '/')
 			fname += '/';
@@ -200,7 +200,7 @@ void Mod::recache()
 	}
 	else
 	{
-		modcache.clean();
+		modcache.clear();
 	}
 
 	if(doRecache)
@@ -292,7 +292,7 @@ void Mod::setActive(bool a)
 			mapRevealMethod = REVEAL_UNSPECIFIED;
 			setLocalisationModPath("");
 			name = path = "";
-			dsq->secondaryTexturePath = "";
+			dsq->setExtraTexturePath(NULL);
 			dsq->sound->audioPath2 = "";
 			dsq->sound->setVoicePath2("");
 			SkeletalSprite::secondaryAnimationPath = "";

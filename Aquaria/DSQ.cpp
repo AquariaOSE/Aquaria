@@ -441,27 +441,27 @@ void DSQ::loadFonts()
 	font.load(file, 1, false);
 	font.fontTopColor = Vector(0.9f,0.9f,1);
 	font.fontBtmColor = Vector(0.5f,0.8f,1);
-	font.overrideTexture = core->addTexture("font");
+	font.overrideTexture = this->getTexture("font");
 
 	smallFont.load(file, 0.6f, false);
 	smallFont.fontTopColor = Vector(0.9f,0.9f,1);
 	smallFont.fontBtmColor = Vector(0.5f,0.8f,1);
-	smallFont.overrideTexture = core->addTexture("font");
+	smallFont.overrideTexture = this->getTexture("font");
 
 	smallFontRed.load(file, 0.6f, false);
 	smallFontRed.fontTopColor = Vector(1,0.9f,0.9f);
 	smallFontRed.fontBtmColor = Vector(1,0.8f,0.5f);
-	smallFontRed.overrideTexture = core->addTexture("font");
+	smallFontRed.overrideTexture = this->getTexture("font");
 
 	subsFont.load(file, 0.5f, false);
 	subsFont.fontTopColor = Vector(1,1,1);
 	subsFont.fontBtmColor = Vector(0.5f,0.8f,1);
-	subsFont.overrideTexture = core->addTexture("font");
+	subsFont.overrideTexture = this->getTexture("font");
 
 	goldFont.load(file, 1, false);
 	goldFont.fontTopColor = Vector(1,0.9f,0.5f);
 	goldFont.fontBtmColor = Vector(0.6f,0.5f,0.25f);
-	goldFont.overrideTexture = core->addTexture("font");
+	goldFont.overrideTexture = this->getTexture("font");
 
 
 	file = localisePath("data/font.ttf");
@@ -844,10 +844,9 @@ void DSQ::init()
 	addStateInstance(new Nag);
 
 
-
-	this->setBaseTextureDirectory("gfx/");
-
 	voiceOversEnabled = true;
+
+	this->setExtraTexturePath(NULL);
 
 
 
@@ -1255,6 +1254,7 @@ void DSQ::init()
 	}
 	addRenderObject(fpsText, LR_DEBUG_TEXT);
 
+	precacher.setBaseDir(this->getBaseTexturePath());
 	precacher.precacheList("data/precache.txt", loadBitForTexPrecache);
 
 	setTexturePointers();
@@ -1899,20 +1899,10 @@ void DSQ::refreshResourcesForPatch(const std::string& name)
 	int reloaded = 0;
 	if(files.size())
 	{
-		for(size_t i = 0; i < dsq->resources.size(); ++i)
-		{
-			Texture *r = dsq->resources[i];
-			for(size_t i = 0; i < files.size(); ++i)
-				if(files[i] == r->name)
-				{
-					++reloaded;
-					r->reload();
-					break;
-				}
-		}
+		texmgr.loadBatch(NULL, &files[0], files.size(), TextureMgr::OVERWRITE);
 	}
 	os.str("");
-	os << "refreshResourcesForPatch - " << reloaded << " textures reloaded";
+	os << "refreshResourcesForPatch - " << files.size() << " textures reloaded";
 	debugLog(os.str());
 }
 #else
@@ -1995,7 +1985,7 @@ void DSQ::shutdown()
 	Network::shutdown();
 
 	scriptInterface.shutdown();
-	precacher.clean();
+	precacher.clear();
 
 
 	core->particleManager->clearParticleBank();
@@ -2086,11 +2076,11 @@ void DSQ::shutdown()
 
 void DSQ::setTexturePointers()
 {
-	texCursor = core->addTexture("cursor");
-	texCursorLook = core->addTexture("cursor-look");
-	texCursorBurst = core->addTexture("cursor-burst");
-	texCursorSwim = core->addTexture("cursor-swim");
-	texCursorSing = core->addTexture("cursor-sing");
+	texCursor = this->getTexture("cursor");
+	texCursorLook = this->getTexture("cursor-look");
+	texCursorBurst = this->getTexture("cursor-burst");
+	texCursorSwim = this->getTexture("cursor-swim");
+	texCursorSing = this->getTexture("cursor-sing");
 
 	if (cursor)
 		cursor->setTexturePointer(texCursor);
@@ -3928,7 +3918,7 @@ void DSQ::onUpdate(float dt)
 	if (isDeveloperKeys() && fpsText && cmDebug && cmDebug->alpha == 1)
 	{
 		std::ostringstream os;
-		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount << " | RC: " << g_dbg_numRenderCalls << " | RES: " << core->resources.size();
+		os << "FPS: " << core->fps << " | ROC: " << core->renderObjectCount << " | RC: " << g_dbg_numRenderCalls << " | RES: " << texmgr.getNumLoaded();
 		os << " | p: " << core->processedRenderObjectCount << " | t: " << core->totalRenderObjectCount;
 		os << " | s: " << dsq->continuity.seconds;
 		os << " | sndQ: " << core->dbg_numThreadDecoders;

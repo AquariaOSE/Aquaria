@@ -88,6 +88,7 @@ class ElementTemplate
 {
 public:
 	ElementTemplate() { alpha = 1; cull = true; w=-1; h=-1; idx=-1; tu1=tu2=tv1=tv2=0; }
+	inline bool operator<(const ElementTemplate& o) const { return idx < o.idx; }
 	std::string gfx;
 	std::vector <TileVector> grid;
 	int w,h;
@@ -293,8 +294,6 @@ public:
 	std::vector<EntitySaveData> entitySaveData;
 	int getIdxForEntityType(std::string type);
 
-	Precacher tileCache;
-
 	void setCameraFollow(Vector *position);
 	Shot *fireShot(const std::string &bankShot, Entity *firer, Entity *target=0, const Vector &pos=Vector(0,0,0), const Vector &aim=Vector(0,0,0), bool playSfx=true);
 	void playBurstSound(bool wallJump=false);
@@ -474,9 +473,6 @@ protected:
 	bool controlHint_ignoreClear;
 	BitmapText *controlHint_text;
 
-	std::string lastTileset;
-
-
 	void createLi();
 	void createPets();
 	Quad *backdropQuad;
@@ -497,9 +493,6 @@ protected:
 
 	Vector getClosestPointOnTriangle(Vector a, Vector b, Vector c, Vector p);
 	Vector getClosestPointOnLine(Vector a, Vector b, Vector p);
-
-	std::string elementTemplatePack;
-
 
 	Vector *cameraFollow;
 	RenderObject *cameraFollowObject;

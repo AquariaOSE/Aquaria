@@ -39,39 +39,30 @@ public:
 	Texture();
 	~Texture();
 
-	bool load(std::string file, bool mipmap);
 	void apply(bool repeat = false) const;
 	void unload();
 
-	void destroy();
-
+	unsigned gltexid;
 	int width, height;
 
-	unsigned textures[1];
+	void writeRGBA(int tx, int ty, int w, int h, const unsigned char *pixels);
+	void readRGBA(unsigned char *pixels);
 
-	void reload();
+	unsigned char *getBufferAndSize(int *w, int *h, size_t *size); // returned memory must be free()'d
 
-	void write(int tx, int ty, int w, int h, const unsigned char *pixels);
-	void read(int tx, int ty, int w, int h, unsigned char *pixels);
+	std::string name, filename;
+	bool upload(const ImageData& img, bool mipmap);
 
-	unsigned char *getBufferAndSize(int *w, int *h, unsigned int *size); // returned memory must be free()'d
-
-	std::string name;
-
-	TextureLoadResult getLoadResult() const { return loadResult; }
+	bool success;
 
 protected:
-	std::string loadName;
-
-	bool loadInternal(const ImageData& img, bool mipmap);
 
 	int ow, oh;
-	TextureLoadResult loadResult;
 	bool _mipmap;
 private:
 	mutable bool _repeating; // modified during rendering
 };
 
-#define UNREFTEX(x) if (x) {x = NULL;}
+#define UNREFTEX(x) {x = NULL;}
 
 #endif
