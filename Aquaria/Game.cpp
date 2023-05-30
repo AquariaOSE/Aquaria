@@ -226,6 +226,8 @@ Game::Game() : StateObject()
 	worldPaused = false;
 
 	cookingScript = 0;
+	doScreenTrans = false;
+	noSceneTransitionFadeout = false;
 }
 
 Game::~Game()
@@ -3223,7 +3225,7 @@ void Game::applyState()
 	else
 		dsq->runScript("scripts/maps/map_"+sceneName+".lua", "init", true);
 
-	if (!dsq->doScreenTrans && (dsq->overlay->alpha != 0 && !dsq->overlay->alpha.isInterpolating()))
+	if (!doScreenTrans && (dsq->overlay->alpha != 0 && !dsq->overlay->alpha.isInterpolating()))
 	{
 		if (verbose) debugLog("fading in");
 		debugLog("FADEIN");
@@ -3237,12 +3239,12 @@ void Game::applyState()
 		core->resetTimer();
 	}
 
-	if (dsq->doScreenTrans)
+	if (doScreenTrans)
 	{
 		debugLog("SCREENTRANS!");
 		core->resetTimer();
 		dsq->toggleCursor(false, 0);
-		dsq->doScreenTrans = false;
+		doScreenTrans = false;
 
 		dsq->transitionSaveSlots();
 		dsq->overlay->alpha = 0;
@@ -3257,7 +3259,7 @@ void Game::applyState()
 
 	applyingState = false;
 
-	if (!dsq->doScreenTrans)
+	if (!doScreenTrans)
 	{
 		dsq->toggleCursor(true, 0.5);
 	}
@@ -5041,10 +5043,14 @@ void Game::removeState()
 
 	controlHint_ignoreClear = false;
 	clearControlHint();
-	dsq->overlay->color = 0;
-
-	dsq->overlay->alpha.interpolateTo(1, fadeTime);
-	dsq->run(fadeTime);
+	if(noSceneTransitionFadeout)
+		noSceneTransitionFadeout = false;
+	else
+	{
+		dsq->overlay->color = 0;
+		dsq->overlay->alpha.interpolateTo(1, fadeTime);
+		dsq->run(fadeTime);
+	}
 
 	dsq->rumble(0,0,0,-1, INPUT_JOYSTICK);
 

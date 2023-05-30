@@ -165,8 +165,6 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	cutscene_text = 0;
 	cutscene_text2 = 0;
 
-	doScreenTrans = false;
-
 	cutscenePaused = false;
 	inCutscene = false;
 	_canSkipCutscene = false;
@@ -2227,7 +2225,7 @@ void DSQ::doLoadMenu()
 	if (selectedSaveSlot != 0)
 	{
 
-		dsq->doScreenTrans = true;
+		game->doScreenTrans = true;
 	}
 	else
 	{

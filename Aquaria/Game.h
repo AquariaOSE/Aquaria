@@ -349,6 +349,8 @@ public:
 	int worldMapIndex;
 
 	bool loadingScene;
+	bool doScreenTrans;
+	bool noSceneTransitionFadeout;
 
 	WaterSurfaceRender *waterSurfaceRender;
 
