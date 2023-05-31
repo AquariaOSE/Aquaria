@@ -2,6 +2,9 @@
 
 #define STB_IMAGE_IMPLEMENTATION
 #define STBI_NO_STDIO
+#define STBI_ONLY_JPEG
+#define STBI_ONLY_PNG
+#define STBI_ONLY_TGA
 #include "stb_image.h"
 
 #include <miniz.h>
@@ -30,3 +33,7 @@ static unsigned char * miniz_stbi_compress(unsigned char *data, int data_len, in
 #define STB_IMAGE_RESIZE_IMPLEMENTATION
 #define STBIR_ASSERT(x) assert(x)
 #include "stb_image_resize.h"
+
+#define QOI_IMPLEMENTATION
+#define QOI_NO_STDIO
+#include "qoi.h"

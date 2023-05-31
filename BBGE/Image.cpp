@@ -1,6 +1,7 @@
 #include "Image.h"
 #include "stb_image.h"
 #include "stb_image_write.h"
+#include "qoi.h"
 #include "DeflateCompressor.h"
 #include "ttvfs_stdio.h"
 #include "Base.h"
@@ -136,6 +137,27 @@ ImageData imageLoadZGA(const char *filename)
 		ret.channels = comp;
 		ret.w = x;
 		ret.h = y;
+	}
+	return ret;
+}
+
+ImageData imageLoadQOI(const char* filename, bool forceRGBA)
+{
+	ImageData ret = {};
+	size_t size = 0;
+	void *buf = readFile(filename, &size);
+	if(buf)
+	{
+		qoi_desc d;
+		stbi_uc *pix = (stbi_uc*)qoi_decode(buf, size, &d, forceRGBA ? 4 : 0);
+		if(pix)
+		{
+			ret.w = d.width;
+			ret.h = d.height;
+			ret.channels = forceRGBA ? 4 : d.channels;
+			ret.pixels = pix;
+		}
+		free(buf);
 	}
 	return ret;
 }
