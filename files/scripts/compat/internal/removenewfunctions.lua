@@ -31,6 +31,7 @@ local luafuncs51 =
     type = true,
     unpack = true,
     xpcall = true,
+    newproxy = true,
 }
 
 for k, f in pairs(_G) do

@@ -7,6 +7,7 @@ entity_isSlowingToStopPath = nil
 entity_isNearGround = nil
 entity_resumePath = nil
 entity_move = nil
+entity_toggleBone = nil
 createSpore = nil
 spawnAroundEntity = nil
 node_isEntityPast = nil
