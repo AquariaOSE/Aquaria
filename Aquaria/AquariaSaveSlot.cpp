@@ -40,10 +40,10 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 
 
 
-	text1 = new BitmapText(&dsq->smallFont);
+	text1 = new BitmapText(dsq->smallFont);
 	text1->setFontSize(14);
 
-	glowText = new BitmapText(&dsq->smallFont);
+	glowText = new BitmapText(dsq->smallFont);
 	glowText->alpha = 0;
 	glowText->setBlendType(BLEND_ADD);
 	glowText->setFontSize(14);

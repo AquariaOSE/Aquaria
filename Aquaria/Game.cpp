@@ -2831,7 +2831,7 @@ void Game::applyState()
 	}
 	addRenderObject(controlHint_bg, LR_HELP);
 
-	controlHint_text = new BitmapText(&dsq->smallFont);
+	controlHint_text = new BitmapText(dsq->smallFont);
 	{
 		controlHint_text->alpha = 0;
 		controlHint_text->setWidth(700);
@@ -3007,7 +3007,7 @@ void Game::applyState()
 	miniMapRender->scale = Vector(0.55f, 0.55f);
 	addRenderObject(miniMapRender, LR_MINIMAP);
 
-	timerText = new BitmapText(&dsq->smallFont);
+	timerText = new BitmapText(dsq->smallFont);
 	timerText->position = Vector(745, 550);
 	timerText->alpha = 0;
 	timerText->followCamera = 1;

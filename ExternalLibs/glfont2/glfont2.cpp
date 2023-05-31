@@ -151,45 +151,45 @@ void GLFont::Destroy (void)
 	}
 }
 //*******************************************************************
-void GLFont::GetTexSize (std::pair<int, int> *size)
+void GLFont::GetTexSize (std::pair<int, int> *size) const
 {
 	//Retrieve texture size
 	size->first = header.tex_width;
 	size->second = header.tex_height;
 }
 //*******************************************************************
-int GLFont::GetTexWidth (void)
+int GLFont::GetTexWidth (void) const
 {
 	//Return texture width
 	return header.tex_width;
 }
 //*******************************************************************
-int GLFont::GetTexHeight (void)
+int GLFont::GetTexHeight (void) const
 {
 	//Return texture height
 	return header.tex_height;
 }
 //*******************************************************************
-void GLFont::GetCharInterval (std::pair<int, int> *interval)
+void GLFont::GetCharInterval (std::pair<int, int> *interval) const
 {
 	//Retrieve character interval
 	interval->first = header.start_char;
 	interval->second = header.end_char;
 }
 //*******************************************************************
-int GLFont::GetStartChar (void)
+int GLFont::GetStartChar (void) const
 {
 	//Return start character
 	return header.start_char;
 }
 //*******************************************************************
-int GLFont::GetEndChar (void)
+int GLFont::GetEndChar (void) const
 {
 	//Return end character
 	return header.end_char;
 }
 //*******************************************************************
-void GLFont::GetCharSize (unsigned char c, std::pair<int, int> *size)
+void GLFont::GetCharSize (unsigned char c, std::pair<int, int> *size) const
 {
 	//Make sure character is in range
 	if (c < header.start_char || c > header.end_char)
@@ -210,7 +210,7 @@ void GLFont::GetCharSize (unsigned char c, std::pair<int, int> *size)
 	}
 }
 //*******************************************************************
-int GLFont::GetCharWidth (unsigned char c)
+int GLFont::GetCharWidth (unsigned char c) const
 {
 	//Make sure in range
 	if (c < header.start_char || c > header.end_char)
@@ -234,7 +234,7 @@ int GLFont::GetCharWidth (unsigned char c)
 	}
 }
 //*******************************************************************
-int GLFont::GetCharHeight (unsigned char c)
+int GLFont::GetCharHeight (unsigned char c) const
 {
 	//Make sure in range
 	if (c < header.start_char || c > header.end_char)
@@ -249,13 +249,13 @@ int GLFont::GetCharHeight (unsigned char c)
 	}
 }
 //*******************************************************************
-void GLFont::Begin (void)
+void GLFont::Begin (void) const
 {
 	//Bind to font texture
 	glBindTexture(GL_TEXTURE_2D, header.tex);
 }
 //*******************************************************************
-void GLFont::GetStringSize (const std::string &text, std::pair<int, int> *size)
+void GLFont::GetStringSize (const std::string &text, std::pair<int, int> *size) const
 {
 	unsigned int i;
 	unsigned int c;

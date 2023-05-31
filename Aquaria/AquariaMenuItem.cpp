@@ -937,12 +937,12 @@ AquariaMenuItem::AquariaMenuItem() : Quad(), ActionMapper(), AquariaGuiElement()
 
 	font = 0;
 
-	font = new BitmapText(&dsq->font);
+	font = new BitmapText(dsq->font);
 	font->setFontSize(sz);
 	font->position = Vector(0, -sz/2, 0);
 	addChild(font, PM_POINTER, RBP_ON);
 
-	glowFont = new BitmapText(&dsq->font);
+	glowFont = new BitmapText(dsq->font);
 	glowFont->setFontSize(sz);
 	glowFont->position = Vector(0, -sz/2, 0);
 	glowFont->setBlendType(BLEND_ADD);

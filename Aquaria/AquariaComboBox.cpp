@@ -42,7 +42,7 @@ AquariaComboBox::AquariaComboBox(Vector textscale) : RenderObject()
 	scrollBtnDown->alpha = 0;
 	addChild(scrollBtnDown, PM_POINTER);
 
-	selectedItemLabel = new BitmapText(&dsq->smallFont);
+	selectedItemLabel = new BitmapText(dsq->smallFont);
 	selectedItemLabel->setAlign(ALIGN_LEFT);
 	selectedItemLabel->setFontSize(8);
 	selectedItemLabel->offset.y = -10;
@@ -355,7 +355,7 @@ AquariaComboBoxItem::AquariaComboBoxItem(const std::string &str, size_t idx, Aqu
 
 	setTexture("gui/combo-drop");
 
-	label = new BitmapText(&dsq->smallFont);
+	label = new BitmapText(dsq->smallFont);
 	label->setAlign(ALIGN_LEFT);
 	label->setFontSize(8);
 	label->setText(str);

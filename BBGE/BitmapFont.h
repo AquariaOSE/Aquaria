@@ -47,7 +47,7 @@ struct BmpFont
 class BitmapText : public BaseText
 {
 public:
-	BitmapText(BmpFont *bmpFont);
+	BitmapText(const BmpFont& bmpFont);
 	void setText(const std::string &text) OVERRIDE;
 	void setWidth(float width) OVERRIDE;
 	float getSetWidth(); // get the width that was set
@@ -71,8 +71,8 @@ public:
 	size_t getNumLines() const OVERRIDE;
 
 protected:
+	const BmpFont& bmpFont;
 	float scrollSpeed;
-	BmpFont *bmpFont;
 	void onUpdate(float dt) OVERRIDE;
 	float scrollDelay;
 	bool scrolling;

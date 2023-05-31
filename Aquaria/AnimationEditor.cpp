@@ -77,7 +77,7 @@ KeyframeWidget::KeyframeWidget(int key) : Quad()
 {
 	setTexture("keyframe");
 	setWidthHeight(15, 30);
-	b = new BitmapText(&dsq->smallFont);
+	b = new BitmapText(dsq->smallFont);
 	b->position = Vector(1, -15);
 	b->setFontSize(12);
 	addChild(b, PM_POINTER);
