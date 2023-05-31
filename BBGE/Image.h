@@ -16,5 +16,6 @@ struct ImageData
 
 ImageData imageLoadGeneric(const char *filename, bool forceRGBA);
 ImageData imageLoadZGA(const char *filename);
+ImageData imageLoadQOI(const char *filename, bool forceRGBA);
 
 #endif

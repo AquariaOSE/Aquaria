@@ -32,6 +32,7 @@ set(xsrc
     stb_image_resize.h
     stb_image_write.h
     tbsp.hh
+    qoi.h
     tinylibs.cpp
     # Modified version, can't use external lib
     glfont2/glfont2.cpp

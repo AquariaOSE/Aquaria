@@ -8,7 +8,7 @@
 
 struct TexLoadTmp
 {
-    TexLoadTmp() : curTex(NULL), success(false) { img.pixels = NULL; }
+    TexLoadTmp() : loadmode(TextureMgr::KEEP), curTex(NULL), success(false) { img.pixels = NULL; }
     std::string name, filename;
     ImageData img;
     TextureMgr::LoadMode loadmode;
@@ -32,6 +32,11 @@ struct TexLoader
 static ImageData loadGeneric(const char *fn)
 {
     return imageLoadGeneric(fn, false);
+}
+
+static ImageData loadQOI(const char *fn)
+{
+    return imageLoadQOI(fn, false);
 }
 
 // This handles unix/win32 relative paths: ./rel/path
@@ -62,6 +67,7 @@ struct ExtAndLoader
 static const ExtAndLoader s_extAndLoader[] =
 {
     { "png", loadGeneric },
+    { "qoi", loadQOI },
     { "jpg", loadGeneric },
     { "zga", imageLoadZGA },
     { "tga", loadGeneric },
