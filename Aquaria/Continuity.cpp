@@ -2310,47 +2310,53 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 
 	XMLElement *gems = doc.NewElement("Gems");
 	{
-		std::ostringstream os;
-		bool hasUserString = false;
-		os << this->gems.size() << " ";
-		for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
+		// old gems format; used in 1.1.x <= 1.1.3
 		{
-			os << (*i).name << " " << (*i).pos.x << " " << (*i).pos.y << " ";
-			os << (*i).canMove << " ";
+			std::ostringstream os;
+			bool hasUserString = false;
+			os << this->gems.size() << " ";
+			for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
+			{
+				os << (*i).name << " " << (*i).pos.x << " " << (*i).pos.y << " ";
+				os << (*i).canMove << " ";
 
-			hasUserString = !(*i).userString.empty();
+				hasUserString = !(*i).userString.empty();
 
-			os << hasUserString << " ";
+				os << hasUserString << " ";
 
-			if (hasUserString)
-				os << spacesToUnderscores((*i).userString) << " ";
+				if (hasUserString)
+					os << spacesToUnderscores((*i).userString) << " ";
+			}
+			gems->SetAttribute("c", os.str().c_str());
 		}
-		gems->SetAttribute("c", os.str().c_str());
 
-		// This is the format used in the android version. Keeping this commented out for now,
-		// but it should be used instead of the code above in some time -- FG
-		/*
-		os.str("");
-		bool hasMapName = false;
-		os << this->gems.size() << " ";
-		for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
+		// This is the format used in the android version.
 		{
-			os << (*i).name << " ";
-			hasMapName = !(*i).mapName.empty();
-			os << hasMapName << " ";
-			if(hasMapName)
-				os << (*i).mapName << " "; // warning: this will fail to load if the map name contains whitespace
+			std::ostringstream os;
+			os << this->gems.size() << " ";
+			for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
+			{
+				os << (*i).name << " ";
+				bool hasMapName = !(*i).mapName.empty();
+				os << hasMapName << " ";
+				if(hasMapName)
+					os << (*i).mapName << " "; // warning: this will fail to load if the map name contains whitespace
 
-			os << (*i).pos.x << " " << (*i).pos.y << " ";
-			os << (*i).canMove << " ";
+				os << (*i).pos.x << " " << (*i).pos.y << " ";
+				os << (*i).canMove << " ";
 
-			hasUserString = !(*i).userString.empty();
-			os << hasUserString << " ";
-			if (hasUserString)
-				os << spacesToUnderscores((*i).userString) << " ";
+				bool hasUserString = !(*i).userString.empty();
+				os << hasUserString << " ";
+				if (hasUserString)
+					os << spacesToUnderscores((*i).userString) << " ";
+			}
+			gems->SetAttribute("d", os.str().c_str());
 		}
-		gems->SetAttribute("d", os.str());
-		*/
+
+		// newest format; is aware if tile-relative position
+		{
+
+		}
 
 	}
 	doc.InsertEndChild(gems);
