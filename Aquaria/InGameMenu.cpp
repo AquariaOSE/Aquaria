@@ -1726,7 +1726,7 @@ void InGameMenu::create()
 
 	float scale = menuBg->scale.x;
 	/*
-	songDescription = new BitmapText(&dsq->font);
+	songDescription = new BitmapText(dsq->font);
 	songDescription->position = Vector(0,100);
 	songDescription->parentManagedPointer = 1;
 	menuBg->addChild(songDescription);
@@ -1902,7 +1902,7 @@ void InGameMenu::create()
 	// Vector(575,250);
 
 
-	songLabel = new BitmapText(&dsq->smallFont);
+	songLabel = new BitmapText(dsq->smallFont);
 	{
 		songLabel->alpha = 0;
 		songLabel->setAlign(ALIGN_CENTER);
@@ -2296,7 +2296,7 @@ void InGameMenu::create()
 	nextTreasure->setCanDirMove(false);
 	game->addRenderObject(nextTreasure, LR_MENU);
 
-	circlePageNum = new BitmapText(&dsq->smallFont);
+	circlePageNum = new BitmapText(dsq->smallFont);
 	circlePageNum->color = Vector(0,0,0);
 	circlePageNum->position = worldLeftCenter + Vector(0, -142);
 	circlePageNum->alpha = 0;
@@ -2342,7 +2342,7 @@ void InGameMenu::create()
 	recipeMenu.scrollEnd->alpha = 0;
 	game->addRenderObject(recipeMenu.scrollEnd, LR_RECIPES);
 
-	recipeMenu.header = new BitmapText(&dsq->font);
+	recipeMenu.header = new BitmapText(dsq->font);
 	recipeMenu.header->color = 0;
 	recipeMenu.header->followCamera = 1;
 	recipeMenu.header->setText(stringbank.get(2007));
@@ -2350,7 +2350,7 @@ void InGameMenu::create()
 	recipeMenu.header->position = Vector(scrollx, 5); //10
 	game->addRenderObject(recipeMenu.header, LR_RECIPES);
 
-	recipeMenu.page = new BitmapText(&dsq->smallFont);
+	recipeMenu.page = new BitmapText(dsq->smallFont);
 	recipeMenu.page->color = 0;
 	recipeMenu.page->followCamera = 1;
 	recipeMenu.page->position = Vector(scrollx, 400);
@@ -2423,7 +2423,7 @@ void InGameMenu::create()
 		menuBg->addChild(songSlots[i], PM_POINTER);
 	}
 
-	menuDescription = new BitmapText(&dsq->smallFont);
+	menuDescription = new BitmapText(dsq->smallFont);
 	menuDescription->setFontSize(14);
 	menuDescription->position = Vector(400, 450);
 	menuDescription->setAlign(ALIGN_CENTER);
@@ -2595,7 +2595,7 @@ void InGameMenu::create()
 	}
 
 
-	foodLabel = new BitmapText(&dsq->smallFont);
+	foodLabel = new BitmapText(dsq->smallFont);
 	{
 		foodLabel->alpha = 0;
 		foodLabel->setAlign(ALIGN_CENTER);
@@ -2606,7 +2606,7 @@ void InGameMenu::create()
 	}
 	menuBg->addChild(foodLabel, PM_POINTER);
 
-	foodDescription = new BitmapText(&dsq->smallFont);
+	foodDescription = new BitmapText(dsq->smallFont);
 	{
 		foodDescription->alpha = 0;
 		foodDescription->setAlign(ALIGN_CENTER);
@@ -2643,7 +2643,7 @@ void InGameMenu::create()
 		game->addRenderObject(treasureSlots[i], LR_MENU);
 	}
 
-	treasureLabel = new BitmapText(&dsq->smallFont);
+	treasureLabel = new BitmapText(dsq->smallFont);
 	{
 		treasureLabel->alpha = 0;
 		treasureLabel->setAlign(ALIGN_CENTER);

@@ -350,9 +350,9 @@ void DSQ::centerMessage(const std::string &text, float y, int type)
 
 	BitmapText *t = 0;
 	if (type == 1)
-		t = new BitmapText(&smallFontRed);
+		t = new BitmapText(smallFontRed);
 	else
-		t = new BitmapText(&smallFont);
+		t = new BitmapText(smallFont);
 	t->position = pos;
 	t->alpha.ensureData();
 	t->alpha.data->path.addPathNode(1, 0);
@@ -372,7 +372,7 @@ void DSQ::centerText(const std::string &text)
 	Vector pos(400,200);
 	float time = 8;
 
-	BitmapText *s = new BitmapText(&font);
+	BitmapText *s = new BitmapText(font);
 	s->color = Vector(0,0,0);
 	s->position = pos;
 	s->offset = Vector(1,1);
@@ -389,7 +389,7 @@ void DSQ::centerText(const std::string &text)
 	getTopStateData()->addRenderObject(s, LR_HUD);
 
 
-	BitmapText *t = new BitmapText(&font);
+	BitmapText *t = new BitmapText(font);
 
 
 	t->position =pos;
@@ -1053,7 +1053,7 @@ void DSQ::init()
 
 	debugLog("2");
 
-	versionLabel = new BitmapText(&smallFont);
+	versionLabel = new BitmapText(smallFont);
 	{
 	setVersionLabelText();
 
@@ -1076,7 +1076,7 @@ void DSQ::init()
 	subbox->color = 0;
 	addRenderObject(subbox, LR_SUBTITLES);
 
-	subtext = new BitmapText(&dsq->subsFont);
+	subtext = new BitmapText(dsq->subsFont);
 
 	subtext->position = Vector(400,570);
 	subtext->followCamera = 1;
@@ -1096,7 +1096,7 @@ void DSQ::init()
 	achievement_box->color = 0;
 	addRenderObject(achievement_box, LR_SUBTITLES);
 
-	achievement_text = new BitmapText(&dsq->subsFont);
+	achievement_text = new BitmapText(dsq->subsFont);
 	achievement_text->position = Vector(603, 5);
 	achievement_text->followCamera = 1;
 	achievement_text->alpha = 0;
@@ -1115,14 +1115,14 @@ void DSQ::init()
 	cutscene_bg->followCamera = 1;
 	addRenderObject(cutscene_bg, LR_SUBTITLES);
 
-	cutscene_text = new BitmapText(&dsq->font);
+	cutscene_text = new BitmapText(dsq->font);
 	cutscene_text->setText(stringbank.get(2004));
 	cutscene_text->position = Vector(400,300-16);
 	cutscene_text->alpha.x = 0;
 	cutscene_text->followCamera = 1;
 	addRenderObject(cutscene_text, LR_SUBTITLES);
 
-	cutscene_text2 = new BitmapText(&dsq->smallFont);
+	cutscene_text2 = new BitmapText(dsq->smallFont);
 	cutscene_text2->setText(stringbank.get(2005));
 	cutscene_text2->position = Vector(400,300+10);
 	cutscene_text2->alpha.x = 0;
@@ -2559,7 +2559,7 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 
 	watch(t);
 
-	saveSlotPageCount = new BitmapText(&dsq->smallFont);
+	saveSlotPageCount = new BitmapText(dsq->smallFont);
 	saveSlotPageCount->followCamera = 1;
 	saveSlotPageCount->setAlign(ALIGN_LEFT);
 	saveSlotPageCount->position = Vector(590, 300);
@@ -2605,7 +2605,7 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 
 	menu[3] = arrowDown;
 
-	BitmapText *txt = new BitmapText(&dsq->font);
+	BitmapText *txt = new BitmapText(dsq->font);
 	if (ssm == SSM_LOAD)
 		txt->setText(stringbank.get(2001));
 	else
@@ -3035,7 +3035,7 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 		yes->setDirMove(DIR_LEFT, yes);
 	}
 
-	BitmapText *txt = new BitmapText(&dsq->smallFont);
+	BitmapText *txt = new BitmapText(dsq->smallFont);
 	txt->followCamera = 1;
 	txt->position = Vector(400,250);
 	txt->setText(text);

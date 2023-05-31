@@ -17,7 +17,7 @@
 //glFont namespace
 namespace glfont
 {
-	class GLFont;	
+	class GLFont;
 }
 
 //glFont class
@@ -60,38 +60,38 @@ public:
 	void Destroy (void);
 
 	//Texture size retrieval methods
-	void GetTexSize (std::pair<int, int> *size);
-	int GetTexWidth (void);
-	int GetTexHeight (void);
+	void GetTexSize (std::pair<int, int> *size) const;
+	int GetTexWidth (void) const;
+	int GetTexHeight (void) const;
 
 	//Character interval retrieval methods
-	void GetCharInterval (std::pair<int, int> *interval);
-	int GetStartChar (void);
-	int GetEndChar (void);
+	void GetCharInterval (std::pair<int, int> *interval) const;
+	int GetStartChar (void) const;
+	int GetEndChar (void) const;
 
 	//Character size retrieval methods
-	void GetCharSize (unsigned char c, std::pair<int, int> *size);
-	int GetCharWidth (unsigned char c);
-	int GetCharHeight (unsigned char c);
-	
-	void GetStringSize (const std::string &text, std::pair<int, int> *size);
+	void GetCharSize (unsigned char c, std::pair<int, int> *size) const;
+	int GetCharWidth (unsigned char c) const;
+	int GetCharHeight (unsigned char c) const;
+
+	void GetStringSize (const std::string &text, std::pair<int, int> *size) const;
 
 
 	//Begins text output with this font
-	void Begin (void);	
-	
+	void Begin (void) const;
+
 	//Template function to output a scaled, colored std::basic_string
 	template<class T> void DrawString (
 		const std::basic_string<T> &text, float scalar, float x,
-		float y, const float *top_color, const float *bottom_color, float alpha, float lastAlpha)
+		float y, const float *top_color, const float *bottom_color, float alpha, float lastAlpha) const
 	{
 		unsigned int i;
 		GLFontChar *glfont_char;
 		float width, height;
-		
+
 		//Begin rendering quads
 		glBegin(GL_QUADS);
-		
+
 		unsigned int sz = text.size();
 
 		float a = 0;
@@ -109,7 +109,7 @@ public:
 			//Get width and height
 			width = (glfont_char->dx * header.tex_width) * scalar;
 			height = (glfont_char->dy * header.tex_height) * scalar;
-			
+
 			if (i == (sz-1))
 				a = alpha*lastAlpha;
 			else
@@ -126,7 +126,7 @@ public:
 			glVertex3f(x + width, y + height, 0.0F);
 			glTexCoord2f(glfont_char->tx1, glfont_char->ty2);
 			glVertex3f(x, y + height, 0.0F);
-		
+
 			//Move to next character
 			x += width;
 		}

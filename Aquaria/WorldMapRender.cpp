@@ -704,7 +704,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	float sz = 0.6f;
 
 	//hover
-	areaLabel = new BitmapText(&dsq->smallFont);
+	areaLabel = new BitmapText(dsq->smallFont);
 	areaLabel->scale = Vector(sz,sz);
 
 	areaLabel->setAlign(ALIGN_CENTER);
@@ -714,7 +714,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	areaLabel->alpha = 0;
 
 	//in
-	areaLabel2 = new BitmapText(&dsq->smallFont);
+	areaLabel2 = new BitmapText(dsq->smallFont);
 
 	areaLabel2->scale = Vector(sz,sz);
 	areaLabel2->followCamera = 1;
@@ -724,7 +724,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	areaLabel2->alpha = 0;
 
 	//select
-	areaLabel3 = new BitmapText(&dsq->smallFont);
+	areaLabel3 = new BitmapText(dsq->smallFont);
 	areaLabel3->scale = Vector(sz,sz);
 
 	areaLabel3->followCamera = 1;

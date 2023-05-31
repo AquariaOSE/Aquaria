@@ -60,7 +60,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 		result->scale = Vector(0.7f, 0.7f);
 		addChild(result, PM_POINTER);
 
-		BitmapText *text = new BitmapText(&dsq->smallFont);
+		BitmapText *text = new BitmapText(dsq->smallFont);
 		text->scale = Vector(0.7f, 0.7f);
 		text->color = 0;
 		text->position = result->position + Vector(0, 18);
@@ -100,7 +100,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 				ing[c]->scale = Vector(0.7f, 0.7f);
 				addChild(ing[c], PM_POINTER);
 
-				BitmapText *text = new BitmapText(&dsq->smallFont);
+				BitmapText *text = new BitmapText(dsq->smallFont);
 				text->scale = Vector(0.7f, 0.7f);
 				text->color = 0;
 				text->position = ing[c]->position + Vector(0, 18);
@@ -130,7 +130,7 @@ RecipeMenuEntry::RecipeMenuEntry(Recipe *recipe) : RenderObject(), recipe(recipe
 		for (int j = 0; j < recipe->types[i].amount; j++)
 		{
 			// any type of whatever...
-			BitmapText *text = new BitmapText(&dsq->smallFont);
+			BitmapText *text = new BitmapText(dsq->smallFont);
 			text->color = 0;
 			text->scale = Vector(0.8f, 0.8f);
 			text->position = Vector(100*c, 0);
@@ -418,7 +418,7 @@ void RecipeMenu::createPage(int p)
 
 	}
 
-	description = new BitmapText(&dsq->smallFont);
+	description = new BitmapText(dsq->smallFont);
 	description->followCamera = 1;
 	description->scale = Vector(0.7f, 0.7f);
 	description->setAlign(ALIGN_LEFT);

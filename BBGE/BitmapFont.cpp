@@ -70,10 +70,9 @@ void BmpFont::load(const std::string &file, float scale, bool loadTexture)
 	loaded = true;
 }
 
-BitmapText::BitmapText(BmpFont *bmpFont)
+BitmapText::BitmapText(const BmpFont& bmpFont)
+	: bmpFont(bmpFont)
 {
-	this->bmpFont = bmpFont;
-
 	currentScrollLine = currentScrollChar = 0;
 	scrollDelay = 0;
 	scrolling = false;
@@ -126,13 +125,13 @@ float BitmapText::getSetWidth()
 
 float BitmapText::getHeight() const
 {
-	float sz = bmpFont->font->GetCharHeight('A') * bmpFont->scale;
+	float sz = bmpFont.font->GetCharHeight('A') * bmpFont.scale;
 	return lines.size()*sz;
 }
 
 float BitmapText::getLineHeight() const
 {
-	return bmpFont->font->GetCharHeight('A') * bmpFont->scale;
+	return bmpFont.font->GetCharHeight('A') * bmpFont.scale;
 }
 
 void BitmapText::formatText()
@@ -148,7 +147,7 @@ void BitmapText::formatText()
 	for (size_t i = 0; i < text.size(); i++)
 	{
 
-		float sz = bmpFont->font->GetCharWidth(text[i])*bmpFont->scale;
+		float sz = bmpFont.font->GetCharWidth(text[i])*bmpFont.scale;
 		currentWidth += sz;
 
 		if (currentWidth+sz >= textWidth || text[i] == '\n')
@@ -268,22 +267,24 @@ Vector BitmapText::getColorIndex(size_t i, size_t j)
 
 void BitmapText::onRender(const RenderState& rs) const
 {
-	if (!bmpFont) return;
-	float top_color[3] = {bmpFont->fontTopColor.x*color.x, bmpFont->fontTopColor.y*color.y, bmpFont->fontTopColor.z*color.z};
-	float bottom_color[3] = {bmpFont->fontBtmColor.x*color.x, bmpFont->fontBtmColor.y*color.y, bmpFont->fontBtmColor.z*color.z};
+	const Vector top = bmpFont.fontTopColor;
+	const Vector btm = bmpFont.fontBtmColor;
+	float top_color[3] = {top.x*color.x, top.y*color.y, top.z*color.z};
+	float bottom_color[3] = {btm.x*color.x, btm.y*color.y, btm.z*color.z};
 
 	glEnable(GL_TEXTURE_2D);
 
 
+	const glfont::GLFont * const font = bmpFont.font;
+	font->Begin();
 
-	bmpFont->font->Begin();
+	if (bmpFont.overrideTexture) bmpFont.overrideTexture->apply();
 
-	if (bmpFont->overrideTexture) bmpFont->overrideTexture->apply();
-
+	const float scale = bmpFont.scale;
 	float y=0;
 	float x=0;
 
-	float adj = bmpFont->font->GetCharHeight('A') * bmpFont->scale;
+	float adj = font->GetCharHeight('A') * scale;
 
 	if (scrolling)
 	{
@@ -297,13 +298,13 @@ void BitmapText::onRender(const RenderState& rs) const
 			if (align == ALIGN_CENTER)
 			{
 				std::pair<int, int> sz;
-				bmpFont->font->GetStringSize(lines[i], &sz);
-				x = -sz.first*0.5f*bmpFont->scale;
+				font->GetStringSize(lines[i], &sz);
+				x = -sz.first*0.5f*scale;
 			}
 			float la = 1.0f-(scrollDelay/scrollSpeed);
 
 
-			bmpFont->font->DrawString(theLine, bmpFont->scale, x, y, top_color, bottom_color, alpha.x, la);
+			font->DrawString(theLine, scale, x, y, top_color, bottom_color, alpha.x, la);
 			y += adj;
 		}
 	}
@@ -315,10 +316,10 @@ void BitmapText::onRender(const RenderState& rs) const
 			if (align == ALIGN_CENTER)
 			{
 				std::pair<int, int> sz;
-				bmpFont->font->GetStringSize(lines[i], &sz);
-				x = -sz.first*0.5f*bmpFont->scale;
+				font->GetStringSize(lines[i], &sz);
+				x = -sz.first*0.5f*scale;
 			}
-			bmpFont->font->DrawString(lines[i], bmpFont->scale, x, y, top_color, bottom_color, alpha.x, 1);
+			font->DrawString(lines[i], scale, x, y, top_color, bottom_color, alpha.x, 1);
 			y += adj;
 		}
 	}
@@ -364,7 +365,7 @@ float BitmapText::getStringWidth(const std::string& text) const
 		if(text[i] == '\n')
 		{
 			std::pair<int, int> dim;
-			bmpFont->font->GetStringSize(tmp, &dim);
+			bmpFont.font->GetStringSize(tmp, &dim);
 			maxsize = std::max(maxsize, dim.first);
 			tmp.resize(0);
 		}
@@ -372,10 +373,10 @@ float BitmapText::getStringWidth(const std::string& text) const
 			tmp += text[i];
 	}
 	std::pair<int, int> dim;
-	bmpFont->font->GetStringSize(tmp, &dim);
+	bmpFont.font->GetStringSize(tmp, &dim);
 	maxsize = std::max(maxsize, dim.first);
 
-	return maxsize * bmpFont->scale;
+	return maxsize * bmpFont.scale;
 }
 
 

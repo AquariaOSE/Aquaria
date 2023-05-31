@@ -43,10 +43,10 @@ static bool _modname_cmp(const ModIcon *a, const ModIcon *b)
 ModSelectorScreen::ModSelectorScreen()
 	: Quad()
 	, ActionMapper()
-	, dlText(&dsq->smallFont)
+	, dlText(dsq->smallFont)
 	, gotServerList(false)
 	, currentPanel(-1)
-	, subtext(&dsq->subsFont)
+	, subtext(dsq->subsFont)
 {
 	followCamera = 1;
 	shareAlphaWithChildren = false;
@@ -377,7 +377,7 @@ void ModSelectorScreen::close()
 	dsq->toggleVersionLabel(true);
 }
 
-JuicyProgressBar::JuicyProgressBar() : Quad(), txt(&dsq->smallFont)
+JuicyProgressBar::JuicyProgressBar() : Quad(), txt(dsq->smallFont)
 {
 	setTexture("modselect/tube");
 	followCamera = 1;

@@ -4426,6 +4426,7 @@ luaFunc(entity_isFollowingPath)
 		luaReturnBool(false);
 }
 
+// deprecated
 luaFunc(entity_toggleBone)
 {
 	Entity *e = entity(L);
@@ -5705,7 +5706,7 @@ luaFunc(entity_debugText)
 	const char *txt = lua_tostring(L, 2);
 	if (e && txt)
 	{
-		BitmapText *f = new BitmapText(&dsq->smallFont);
+		BitmapText *f = new BitmapText(dsq->smallFont);
 		f->setText(txt);
 		f->position = e->position;
 		core->getTopStateData()->addRenderObject(f, LR_DEBUG_TEXT);
@@ -9418,8 +9419,7 @@ luaFunc(createDebugText)
 
 luaFunc(createBitmapText)
 {
-	BmpFont *font = &dsq->smallFont;
-	BitmapText *txt = new BitmapText(font);
+	BitmapText *txt = new BitmapText(dsq->smallFont);
 	txt->setText(getString(L, 1));
 	txt->setFontSize(lua_tointeger(L, 2));
 	txt->position = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4));
