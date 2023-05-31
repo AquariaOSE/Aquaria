@@ -204,7 +204,7 @@ protected:
 
 
 
-		if (!dsq->game->worldMapRender->isOn()) return;
+		if (!game->worldMapRender->isOn()) return;
 
 		const int lenRange = 125;
 		const float pscale = 0.7f;
@@ -630,7 +630,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 
 
 	const size_t num = dsq->continuity.worldMap.getNumWorldMapTiles();
-	std::string n = dsq->game->sceneName;
+	std::string n = game->sceneName;
 	stringToUpper(n);
 	std::vector<std::string> textodo(num);
 	std::vector<Texture*> texs(num, NULL);
@@ -697,7 +697,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	tophud = new Quad("gui/worldmap-ui", Vector(400,64));
 	tophud->followCamera = 1;
 	tophud->alpha = 0;
-	dsq->game->addRenderObject(tophud, LR_WORLDMAPHUD);
+	game->addRenderObject(tophud, LR_WORLDMAPHUD);
 
 
 	float aly = 26, aly2 = 18;
@@ -710,7 +710,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	areaLabel->setAlign(ALIGN_CENTER);
 	areaLabel->followCamera = 1;
 	areaLabel->position = Vector(150,aly);
-	dsq->game->addRenderObject(areaLabel, LR_WORLDMAPHUD);
+	game->addRenderObject(areaLabel, LR_WORLDMAPHUD);
 	areaLabel->alpha = 0;
 
 	//in
@@ -720,7 +720,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	areaLabel2->followCamera = 1;
 	areaLabel2->setAlign(ALIGN_CENTER);
 	areaLabel2->position = Vector(400,aly2);
-	dsq->game->addRenderObject(areaLabel2, LR_WORLDMAPHUD);
+	game->addRenderObject(areaLabel2, LR_WORLDMAPHUD);
 	areaLabel2->alpha = 0;
 
 	//select
@@ -731,7 +731,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	areaLabel3->setAlign(ALIGN_CENTER);
 	areaLabel3->position = Vector(650, aly);
 	areaLabel3->alpha = 0;
-	dsq->game->addRenderObject(areaLabel3, LR_WORLDMAPHUD);
+	game->addRenderObject(areaLabel3, LR_WORLDMAPHUD);
 
 	if (activeTile)
 	{
@@ -750,17 +750,17 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	underlay->autoHeight = AUTO_VIRTUALHEIGHT;
 	underlay->followCamera = 1;
 	underlay->alpha = 0;
-	dsq->game->addRenderObject(underlay, LR_HUDUNDERLAY);
+	game->addRenderObject(underlay, LR_HUDUNDERLAY);
 
 	addHintQuad1 = new Quad("gems/pyramidyellow", Vector(0,0));
 	addHintQuad1->followCamera = 1;
 	addHintQuad1->alpha = 0;
-	dsq->game->addRenderObject(addHintQuad1, LR_WORLDMAPHUD);
+	game->addRenderObject(addHintQuad1, LR_WORLDMAPHUD);
 
 	addHintQuad2 = new Quad("gems/pyramidpurple", Vector(0,0));
 	addHintQuad2->followCamera = 1;
 	addHintQuad2->alpha = 0;
-	dsq->game->addRenderObject(addHintQuad2, LR_WORLDMAPHUD);
+	game->addRenderObject(addHintQuad2, LR_WORLDMAPHUD);
 
 
 	helpButton = new AquariaMenuItem;
@@ -770,7 +770,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	helpButton->useSound("Click");
 	helpButton->alpha = 0;
 
-	dsq->game->addRenderObject(helpButton, LR_WORLDMAPHUD);
+	game->addRenderObject(helpButton, LR_WORLDMAPHUD);
 }
 
 void WorldMapRender::onToggleHelpScreen()
@@ -1155,8 +1155,8 @@ void WorldMapRender::onUpdate(float dt)
 	}
 	else
 	{
-		if (!dsq->isInCutscene() && dsq->game->avatar && activeTile
-			&& !dsq->game->sceneEditor.isOn()
+		if (!dsq->isInCutscene() && game->avatar && activeTile
+			&& !game->sceneEditor.isOn()
 			)
 		{
 			const float screenWidth  = core->getVirtualWidth()  * core->invGlobalScale;
@@ -1167,10 +1167,10 @@ void WorldMapRender::onUpdate(float dt)
 			const float visWidth  = screenWidth  * visitedFraction;
 			const float visHeight = screenHeight * visitedFraction;
 			Vector tl, br;
-			tl.x = (camera.x - visWidth/2 ) / dsq->game->cameraMax.x;
-			tl.y = (camera.y - visHeight/2) / dsq->game->cameraMax.y;
-			br.x = (camera.x + visWidth/2 ) / dsq->game->cameraMax.x;
-			br.y = (camera.y + visHeight/2) / dsq->game->cameraMax.y;
+			tl.x = (camera.x - visWidth/2 ) / game->cameraMax.x;
+			tl.y = (camera.y - visHeight/2) / game->cameraMax.y;
+			br.x = (camera.x + visWidth/2 ) / game->cameraMax.x;
+			br.y = (camera.y + visHeight/2) / game->cameraMax.y;
 			const int x0 = int(tl.x * MAPVIS_SUBDIV);
 			const int y0 = int(tl.y * MAPVIS_SUBDIV);
 			const int x1 = int(br.x * MAPVIS_SUBDIV);
@@ -1202,12 +1202,12 @@ void WorldMapRender::onUpdate(float dt)
 Vector WorldMapRender::getAvatarWorldMapPosition()
 {
 	Vector p;
-	if (originalActiveTile && dsq->game && dsq->game->avatar)
+	if (originalActiveTile && game && game->avatar)
 	{
-		Vector p = dsq->game->avatar->position;
-		if (!dsq->game->avatar->warpInLocal.isZero())
+		Vector p = game->avatar->position;
+		if (!game->avatar->warpInLocal.isZero())
 		{
-			p = dsq->game->avatar->warpInLocal;
+			p = game->avatar->warpInLocal;
 		}
 		return getWorldToTile(originalActiveTile, p, true, true);
 	}
@@ -1282,29 +1282,29 @@ void WorldMapRender::addAllGems()
 void WorldMapRender::toggle(bool turnON)
 {
 	if (AquariaGuiElement::currentGuiInputLevel > 0) return;
-	if (dsq->game->miniMapRender->isRadarHide()) return;
+	if (game->miniMapRender->isRadarHide()) return;
 	if (alpha.isInterpolating()) return;
 
 	if (dsq->mod.isActive() && !dsq->mod.hasWorldMap()) return;
 
 	if (dsq->isNested()) return;
 
-	if (!dsq->game->avatar) return;
+	if (!game->avatar) return;
 
-	if (turnON && dsq->game->avatar->isSinging()) return;
+	if (turnON && game->avatar->isSinging()) return;
 
-	if (dsq->game->isInGameMenu()) return;
+	if (game->isInGameMenu()) return;
 
-	if (!dsq->game->isActive()) return;
+	if (!game->isActive()) return;
 
-	if (turnON && dsq->game->isPaused()) return;
+	if (turnON && game->isPaused()) return;
 
-	if (!this->on && !dsq->game->avatar->isInputEnabled()) return;
+	if (!this->on && !game->avatar->isInputEnabled()) return;
 
-	const SeeMapMode mapmode = dsq->game->avatar->getSeeMapMode();
+	const SeeMapMode mapmode = game->avatar->getSeeMapMode();
 
 	if (mapmode == SEE_MAP_NEVER
-		|| (mapmode == SEE_MAP_DEFAULT && dsq->game->avatar->isInDarkness() && dsq->continuity.form != FORM_SUN))
+		|| (mapmode == SEE_MAP_DEFAULT && game->avatar->isInDarkness() && dsq->continuity.form != FORM_SUN))
 	{
 		core->sound->playSfx("denied");
 		return;
@@ -1314,10 +1314,10 @@ void WorldMapRender::toggle(bool turnON)
 	this->on = turnON;
 	if (on)
 	{
-		restoreVel = dsq->game->avatar->vel;
-		dsq->game->avatar->vel = Vector(0,0,0);
+		restoreVel = game->avatar->vel;
+		game->avatar->vel = Vector(0,0,0);
 
-		dsq->game->togglePause(true);
+		game->togglePause(true);
 
 		core->sound->playSfx("menu-open");
 
@@ -1433,7 +1433,7 @@ void WorldMapRender::toggle(bool turnON)
 
 		alpha.interpolateTo(0, 0.2f);
 
-		dsq->game->togglePause(false);
+		game->togglePause(false);
 
 		underlay->alpha.interpolateTo(0, 0.2f);
 		addHintQuad1->alpha.interpolateTo(0, 0.2f);
@@ -1455,7 +1455,7 @@ void WorldMapRender::toggle(bool turnON)
 		}
 		beaconRenders.clear();
 
-		dsq->game->avatar->vel = restoreVel;
+		game->avatar->vel = restoreVel;
 	}
 }
 

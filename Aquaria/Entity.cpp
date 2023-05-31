@@ -47,9 +47,9 @@ LanceData::~LanceData()
 
 void Entity::stopPull()
 {
-	if (dsq->game->avatar->pullTarget == this)
+	if (game->avatar->pullTarget == this)
 	{
-		dsq->game->avatar->pullTarget = 0;
+		game->avatar->pullTarget = 0;
 	}
 }
 
@@ -92,7 +92,7 @@ void Entity::generateCollisionMask(int ovrCollideRadius)
 		{
 			if (skeletalSprite.bones[i]->generateCollisionMask)
 			{
-				dsq->game->generateCollisionMask(skeletalSprite.bones[i], ovrCollideRadius);
+				game->generateCollisionMask(skeletalSprite.bones[i], ovrCollideRadius);
 			}
 		}
 	}
@@ -567,9 +567,9 @@ void Entity::rotateToSurfaceNormal(float t, int n, int rot)
 	else
 	{
 		if (n == 0)
-			v = dsq->game->getWallNormal(position);
+			v = game->getWallNormal(position);
 		else
-			v = dsq->game->getWallNormal(position, n);
+			v = game->getWallNormal(position, n);
 	}
 
 	if (!v.isZero())
@@ -633,56 +633,56 @@ bool Entity::clampToSurface(int tcheck, Vector usePos, TileVector hitTile)
 			{
 				int bit = i*TILE_SIZE;
 				int backBit = (i-1)*TILE_SIZE;
-				if (dsq->game->isObstructed(TileVector(pos - Vector(bit,0))))
+				if (game->isObstructed(TileVector(pos - Vector(bit,0))))
 				{
 					TileVector t(pos - Vector(backBit,0));
 					pos = t.worldVector();
 					clamped = true;
 					break;
 				}
-				if (dsq->game->isObstructed(TileVector(pos - Vector(0,bit))))
+				if (game->isObstructed(TileVector(pos - Vector(0,bit))))
 				{
 					TileVector t(pos - Vector(0,backBit));
 					pos = t.worldVector();
 					clamped = true;
 					break;
 				}
-				if (dsq->game->isObstructed(TileVector(pos + Vector(bit,0))))
+				if (game->isObstructed(TileVector(pos + Vector(bit,0))))
 				{
 					TileVector t(pos + Vector(backBit,0));
 					pos = t.worldVector();
 					clamped = true;
 					break;
 				}
-				if (dsq->game->isObstructed(TileVector(pos + Vector(0,bit))))
+				if (game->isObstructed(TileVector(pos + Vector(0,bit))))
 				{
 					TileVector t(pos + Vector(0,backBit));
 					pos = t.worldVector();
 					clamped = true;
 					break;
 				}
-				if (dsq->game->isObstructed(TileVector(pos + Vector(-bit,-bit))))
+				if (game->isObstructed(TileVector(pos + Vector(-bit,-bit))))
 				{
 					TileVector t(pos + Vector(-backBit,-backBit));
 					pos = t.worldVector();
 					clamped = true;
 					break;
 				}
-				if (dsq->game->isObstructed(TileVector(pos + Vector(-bit,bit))))
+				if (game->isObstructed(TileVector(pos + Vector(-bit,bit))))
 				{
 					TileVector t(pos + Vector(-backBit,backBit));
 					pos = t.worldVector();
 					clamped = true;
 					break;
 				}
-				if (dsq->game->isObstructed(TileVector(pos + Vector(bit,-bit))))
+				if (game->isObstructed(TileVector(pos + Vector(bit,-bit))))
 				{
 					TileVector t(pos + Vector(backBit,-backBit));
 					pos = t.worldVector();
 					clamped = true;
 					break;
 				}
-				if (dsq->game->isObstructed(TileVector(pos + Vector(bit,bit))))
+				if (game->isObstructed(TileVector(pos + Vector(bit,bit))))
 				{
 					TileVector t(pos + Vector(backBit,backBit));
 					pos = t.worldVector();
@@ -698,7 +698,7 @@ bool Entity::clampToSurface(int tcheck, Vector usePos, TileVector hitTile)
 			v.normalize2D();
 			for (int i = 0; i < tcheck; i++)
 			{
-				if (dsq->game->isObstructed(TileVector(pos + v*TILE_SIZE*i)))
+				if (game->isObstructed(TileVector(pos + v*TILE_SIZE*i)))
 				{
 					TileVector t(pos + v*TILE_SIZE*(i-1));
 					pos = t.worldVector();
@@ -712,7 +712,7 @@ bool Entity::clampToSurface(int tcheck, Vector usePos, TileVector hitTile)
 	}
 	if (t > 0)
 	{
-		Vector n = dsq->game->getWallNormal(pos);
+		Vector n = game->getWallNormal(pos);
 		n *= getv(EV_WALLOUT);
 
 		Vector diff = getWorldPosition() - pos;
@@ -776,7 +776,7 @@ void Entity::doDeathEffects(float manaBallEnergy, bool die)
 		{
 			if (chance(dropChance))
 			{
-				dsq->game->spawnManaBall(position, manaBallEnergy);
+				game->spawnManaBall(position, manaBallEnergy);
 			}
 		}
 		if (die)
@@ -809,7 +809,7 @@ void Entity::doDeathEffects(float manaBallEnergy, bool die)
 
 	if (ingredientData)
 	{
-		dsq->game->spawnIngredientFromEntity(this, ingredientData);
+		game->spawnIngredientFromEntity(this, ingredientData);
 	}
 }
 
@@ -827,7 +827,7 @@ bool Entity::isNearObstruction(int sz, int type, TileVector *hitTile)
 			for (int y = -sz; y <= sz; y++)
 			{
 				test = TileVector(t.x+x, t.y+y);
-				if (dsq->game->isObstructed(test))
+				if (game->isObstructed(test))
 				{
 					v = true;
 					break;
@@ -841,7 +841,7 @@ bool Entity::isNearObstruction(int sz, int type, TileVector *hitTile)
 		for (int x = -sz; x <= sz; x++)
 		{
 			test = TileVector(t.x+x, t.y);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
@@ -850,7 +850,7 @@ bool Entity::isNearObstruction(int sz, int type, TileVector *hitTile)
 		for (int y = -sz; y <= sz; y++)
 		{
 			test = TileVector(t.x, t.y+y);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
@@ -863,7 +863,7 @@ bool Entity::isNearObstruction(int sz, int type, TileVector *hitTile)
 		for (int y = 0; y <= sz; y++)
 		{
 			test = TileVector(t.x, t.y+y);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
@@ -878,52 +878,52 @@ bool Entity::isNearObstruction(int sz, int type, TileVector *hitTile)
 		{
 
 			test = TileVector(t.x+d, t.y);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
 			}
 			test = TileVector(t.x-d, t.y);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
 			}
 
 			test = TileVector(t.x, t.y+d);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
 			}
 			test = TileVector(t.x, t.y-d);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
 			}
 
 			test = TileVector(t.x-d, t.y-d);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
 			}
 			test = TileVector(t.x-d, t.y+d);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
 			}
 
 			test = TileVector(t.x+d, t.y-d);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
 			}
 			test = TileVector(t.x+d, t.y+d);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				v = true;
 				break;
@@ -939,7 +939,7 @@ bool Entity::isNearObstruction(int sz, int type, TileVector *hitTile)
 
 bool Entity::touchAvatarDamage(int radius, float dmg, const Vector &override, float speed, float pushTime, Vector collidePos)
 {
-	if (isv(EV_BEASTBURST, 1) && isDamageTarget(DT_AVATAR_BITE) && dsq->continuity.form == FORM_BEAST && dsq->game->avatar->bursting)
+	if (isv(EV_BEASTBURST, 1) && isDamageTarget(DT_AVATAR_BITE) && dsq->continuity.form == FORM_BEAST && game->avatar->bursting)
 	{
 		return false;
 	}
@@ -956,29 +956,29 @@ bool Entity::touchAvatarDamage(int radius, float dmg, const Vector &override, fl
 
 
 	}
-	if (radius == 0 || (dsq->game->avatar->getWorldPosition() - usePosition).getSquaredLength2D() < sqr(radius+dsq->game->avatar->collideRadius))
+	if (radius == 0 || (game->avatar->getWorldPosition() - usePosition).getSquaredLength2D() < sqr(radius+game->avatar->collideRadius))
 	{
 		if (dmg > 0)
 		{
 			DamageData d;
 			d.damage = dmg;
 			d.attacker = this;
-			dsq->game->avatar->damage(d);
+			game->avatar->damage(d);
 		}
 		if (pushTime > 0 && speed > 0)
 		{
-			Vector diff = dsq->game->avatar->position - position;
+			Vector diff = game->avatar->position - position;
 			diff.setLength2D(speed);
 
 
-			dsq->game->avatar->push(diff, pushTime, speed, dmg);
+			game->avatar->push(diff, pushTime, speed, dmg);
 		}
 		else if (speed > 0)
 		{
-			dsq->game->avatar->fallOffWall();
-			Vector diff = dsq->game->avatar->position - position;
+			game->avatar->fallOffWall();
+			Vector diff = game->avatar->position - position;
 			diff.setLength2D(speed);
-			dsq->game->avatar->vel += diff;
+			game->avatar->vel += diff;
 		}
 
 
@@ -1024,12 +1024,12 @@ void Entity::update(float dt)
 	Vector backupVel = vel;
 
 	bool doUpdate = (updateCull < 0 || (position - core->screenCenter).isLength2DIn(updateCull));
-	if (doUpdate && !(pauseFreeze && dsq->game->isPaused()))
+	if (doUpdate && !(pauseFreeze && game->isPaused()))
 	{
 
 		if (!(getEntityType() == ET_AVATAR || getEntityType() == ET_INGREDIENT))
 		{
-			if (spiritFreeze && dsq->game->isWorldPaused())
+			if (spiritFreeze && game->isWorldPaused())
 			{
 				// possible bug here because of return
 				return;
@@ -1119,7 +1119,7 @@ bool Entity::pathBurst(bool wallJump)
 {
 	if (skeletalSprite.isLoaded() && (wallJump || (!wallJump && !burstTimer.isActive())))
 	{
-		dsq->game->playBurstSound(wallJump);
+		game->playBurstSound(wallJump);
 		skeletalSprite.animate("burst");
 		position.ensureData();
 		if (wallJump)
@@ -1241,9 +1241,9 @@ bool Entity::updateCurrents(float dt)
 	// why?
 	{
 
-		if (!dsq->game->isWorldPaused())
+		if (!game->isWorldPaused())
 		{
-			for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
+			for (Path *p = game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 			{
 				if (p->active)
 				{
@@ -1274,7 +1274,7 @@ bool Entity::updateCurrents(float dt)
 			float useLen = len;
 			if (useLen < 500)
 				useLen = 500;
-			if (!(this->getEntityType() == ET_AVATAR && dsq->game->avatar->canSwimAgainstCurrents() && dsq->game->avatar->bursting))
+			if (!(this->getEntityType() == ET_AVATAR && game->avatar->canSwimAgainstCurrents() && game->avatar->bursting))
 			{
 				doCollisionAvoidance(1, 4, 1, &vel2, useLen);
 			}
@@ -1287,7 +1287,7 @@ bool Entity::updateCurrents(float dt)
 			float scale = 0.2f;
 			if (getEntityType() == ET_AVATAR)
 			{
-				Avatar *a = dsq->game->avatar;
+				Avatar *a = game->avatar;
 				if (v < 0)
 					dsq->rumble((-v)*scale, (1.0f+v)*scale, 0.2f, a->getLastActionSourceID(), a->getLastActionInputDevice());
 				else
@@ -1295,7 +1295,7 @@ bool Entity::updateCurrents(float dt)
 			}
 		}
 	}
-	if (this->getEntityType() == ET_AVATAR && dsq->game->avatar->canSwimAgainstCurrents())
+	if (this->getEntityType() == ET_AVATAR && game->avatar->canSwimAgainstCurrents())
 	{
 		int cap = 100;
 		if (!vel.isZero())
@@ -1303,9 +1303,9 @@ bool Entity::updateCurrents(float dt)
 			if (vel.dot2D(vel2) < 0 ) // greater than 90 degrees
 			{
 				// against current
-				if (dsq->game->avatar->bursting)
+				if (game->avatar->bursting)
 					vel2 = 0;
-				else if (dsq->game->avatar->isSwimming())
+				else if (game->avatar->isSwimming())
 					vel2.capLength2D(cap);
 			}
 		}
@@ -1346,13 +1346,13 @@ bool Entity::isSittingOnInvisibleIn()
 	{
 		for (int y = 0; y < 4; y++)
 		{
-			if (dsq->game->isObstructed(TileVector(t.x+x, t.y+y), OT_INVISIBLEIN))
+			if (game->isObstructed(TileVector(t.x+x, t.y+y), OT_INVISIBLEIN))
 				return true;
-			if (dsq->game->isObstructed(TileVector(t.x-x, t.y+y), OT_INVISIBLEIN))
+			if (game->isObstructed(TileVector(t.x-x, t.y+y), OT_INVISIBLEIN))
 				return true;
-			if (dsq->game->isObstructed(TileVector(t.x+x, t.y-y), OT_INVISIBLEIN))
+			if (game->isObstructed(TileVector(t.x+x, t.y-y), OT_INVISIBLEIN))
 				return true;
-			if (dsq->game->isObstructed(TileVector(t.x-x, t.y-y), OT_INVISIBLEIN))
+			if (game->isObstructed(TileVector(t.x-x, t.y-y), OT_INVISIBLEIN))
 				return true;
 		}
 	}
@@ -1371,7 +1371,7 @@ void Entity::moveOutOfWall()
 	TileVector t(position);
 	int c = 0;
 	bool useValue = true;
-	while (dsq->game->isObstructed(t))
+	while (game->isObstructed(t))
 	{
 		c++;
 		if (c > 6)
@@ -1450,7 +1450,7 @@ void Entity::onEndOfLife()
 {
 	if (!calledEntityDied)
 	{
-		dsq->game->entityDied(this);
+		game->entityDied(this);
 		calledEntityDied = true;
 	}
 
@@ -1594,7 +1594,7 @@ void Entity::onUpdate(float dt)
 
 	if (stickToNaijasHead)
 	{
-		position = dsq->game->avatar->headPosition;
+		position = game->avatar->headPosition;
 
 	}
 
@@ -1620,7 +1620,7 @@ void Entity::updateBoneLock()
 		boneLock.wallNormal = currentOffset;
 		rotateToVec(currentOffset, 0.01f);
 
-		if (dsq->game->collideCircleWithGrid(position, collideRadius))
+		if (game->collideCircleWithGrid(position, collideRadius))
 		{
 			position = lastPosition;
 			setBoneLock(BoneLock());
@@ -1671,7 +1671,7 @@ void Entity::updateLance(float dt)
 		if (lancedata->delay > 0.1f)
 		{
 			lancedata->delay = 0;
-			dsq->game->fireShot("Lance", this, 0, lancedata->gfx->getWorldCollidePosition(Vector(-64, 0)));
+			game->fireShot("Lance", this, 0, lancedata->gfx->getWorldCollidePosition(Vector(-64, 0)));
 		}
 
 		if (lancedata->bone)
@@ -1703,7 +1703,7 @@ void Entity::attachLance()
 	q->setTexture("Particles/Lance");
 	q->alpha = 0;
 	q->alpha.interpolateTo(1, 0.5);
-	dsq->game->addRenderObject(q, LR_PARTICLES);
+	game->addRenderObject(q, LR_PARTICLES);
 	lancedata->gfx = q;
 }
 
@@ -1780,21 +1780,21 @@ bool Entity::isUnderWater(const Vector &override)
 	if (!override.isZero())
 		check = override;
 
-	if (dsq->game->useWaterLevel && dsq->game->waterLevel.x > 0 && check.y-collideRadius > dsq->game->waterLevel.x)
+	if (game->useWaterLevel && game->waterLevel.x > 0 && check.y-collideRadius > game->waterLevel.x)
 		return true;
 
 
-	Path *p = dsq->game->getNearestPath(position, PATH_WATERBUBBLE);
+	Path *p = game->getNearestPath(position, PATH_WATERBUBBLE);
 	if (p && p->active && p->isCoordinateInside(position, collideRadius))
 	{
 		waterBubble = p;
 		return true;
 	}
 
-	if (!dsq->game->useWaterLevel || dsq->game->waterLevel.x == 0) return true;
+	if (!game->useWaterLevel || game->waterLevel.x == 0) return true;
 	else
 	{
-		if (check.y-collideRadius > dsq->game->waterLevel.x)
+		if (check.y-collideRadius > game->waterLevel.x)
 		{
 			waterBubble = 0;
 			return true;
@@ -1887,10 +1887,10 @@ Entity *Entity::findTarget(int dist, int type, int t)
 
 	if (type == ET_AVATAR)
 	{
-		Vector d = dsq->game->avatar->position - this->position;
+		Vector d = game->avatar->position - this->position;
 		if (d.getSquaredLength2D() < sqr(dist))
 		{
-			targets[t] = dsq->game->avatar;
+			targets[t] = game->avatar;
 		}
 	}
 	else
@@ -1999,7 +1999,7 @@ void Entity::onEnterState(int action)
 		Shot::targetDied(this);
 		if (!calledEntityDied)
 		{
-			dsq->game->entityDied(this);
+			game->entityDied(this);
 			calledEntityDied = true;
 		}
 		if (hair)
@@ -2155,9 +2155,9 @@ bool Entity::canSetState(int state)
 
 bool Entity::updateLocalWarpAreas(bool affectAvatar)
 {
-	for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
+	for (size_t i = 0; i < game->getNumPaths(); i++)
 	{
-		Path *p = dsq->game->getPath(i);
+		Path *p = game->getPath(i);
 		if (!p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];
@@ -2165,23 +2165,23 @@ bool Entity::updateLocalWarpAreas(bool affectAvatar)
 			{
 				if (p->warpMap.empty() && !p->warpNode.empty() && p->isCoordinateInside(position))
 				{
-					Path *p2 = dsq->game->getPathByName(p->warpNode);
+					Path *p2 = game->getPathByName(p->warpNode);
 					if (p2)
 					{
 						if (affectAvatar)
 						{
 							// HACK: do something in the script to get the avatar position
-							dsq->game->avatar->position = this->position;
+							game->avatar->position = this->position;
 
-							dsq->game->preLocalWarp(p->localWarpType);
+							game->preLocalWarp(p->localWarpType);
 						}
 						position = p2->getPathNode(0)->position;
 						if (affectAvatar)
 						{
 							// HACK: do something in the script to get the avatar position
-							dsq->game->avatar->position = this->position;
+							game->avatar->position = this->position;
 
-							dsq->game->postLocalWarp();
+							game->postLocalWarp();
 						}
 						return true;
 					}
@@ -2235,7 +2235,7 @@ bool Entity::damage(const DamageData &dmgData)
 	if (d.damageType == DT_AVATAR_BITE)
 	{
 		debugLog("Entity::damage bittenEntities.push_back");
-		dsq->game->avatar->bittenEntities.push_back(this);
+		game->avatar->bittenEntities.push_back(this);
 	}
 
 	if (d.damage > 0 && frozenTimer)
@@ -2270,7 +2270,7 @@ bool Entity::damage(const DamageData &dmgData)
 	bool doDamage = !invincible;
 
 	if (entityType == ET_AVATAR)
-		doDamage = (!invincible || !dsq->game->invincibleOnNested);
+		doDamage = (!invincible || !game->invincibleOnNested);
 
 	if (doDamage)
 	{
@@ -2301,9 +2301,9 @@ bool Entity::damage(const DamageData &dmgData)
 
 void Entity::clampToHit()
 {
-	Vector dist = dsq->game->lastCollidePosition - position;
+	Vector dist = game->lastCollidePosition - position;
 	dist.setLength2D(collideRadius);
-	position = dsq->game->lastCollidePosition + dist;
+	position = game->lastCollidePosition + dist;
 	setv(EV_CRAWLING, 1);
 
 }
@@ -2357,9 +2357,9 @@ void Entity::render(const RenderState& rsold) const
 	rs.alpha *= alpha.x;
 
 
-	if (dsq->game->isSceneEditorActive() && dsq->game->sceneEditor.editType == ET_ENTITIES)
+	if (game->isSceneEditorActive() && game->sceneEditor.editType == ET_ENTITIES)
 	{
-		if (dsq->game->sceneEditor.editingEntity == this)
+		if (game->sceneEditor.editingEntity == this)
 			rs.renderBorderColor = Vector(1,1,1);
 		else
 			rs.renderBorderColor = Vector(0.5,0.5,0.5);
@@ -2441,7 +2441,7 @@ void Entity::fillGrid()
 {
 	if (fillGridFromQuad)
 	{
-		dsq->game->fillGridFromQuad(this, OT_INVISIBLEENT);
+		game->fillGridFromQuad(this, OT_INVISIBLEENT);
 	}
 }
 
@@ -2502,13 +2502,13 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, f
 		{
 			TileVector checkT(t.x+x, t.y+y);
 			bool waterBlocked=false;
-			if (!isInWaterBubble && !canLeaveWater && checkT.worldVector().y - collideRadius < dsq->game->getWaterLevel())
+			if (!isInWaterBubble && !canLeaveWater && checkT.worldVector().y - collideRadius < game->getWaterLevel())
 			{
 				waterBlocked = true;
 			}
-			if (waterBlocked || dsq->game->isObstructed(checkT))
+			if (waterBlocked || game->isObstructed(checkT))
 			{
-				if (dsq->game->isObstructed(checkT, blockObs))
+				if (game->isObstructed(checkT, blockObs))
 				{
 					Vector vtc(t.x+x, t.y+y);
 					Vector vt(t.x, t.y);
@@ -2554,7 +2554,7 @@ void Entity::initHair(int numSegments, float segmentLength, float width, const s
 	}
 	hair = new Hair(numSegments, segmentLength, width);
 	hair->setTexture(tex);
-	dsq->game->addRenderObject(hair, layer);
+	game->addRenderObject(hair, layer);
 }
 
 

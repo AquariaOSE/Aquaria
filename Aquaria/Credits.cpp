@@ -188,7 +188,7 @@ void Credits::applyState()
 
 	dsq->setCutscene(0);
 
-	dsq->game->transitionToScene("thirteenlair");
+	game->transitionToScene("thirteenlair");
 #endif
 
 }

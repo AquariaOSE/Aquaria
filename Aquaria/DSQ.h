@@ -175,8 +175,6 @@ public:
 
 	void newGame();
 
-	Game *game;
-
 	bool isQuitFlag();
 
 	void jiggleCursor();

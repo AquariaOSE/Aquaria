@@ -204,7 +204,7 @@ void ScriptedEntity::initSegments(int numSegments, int minDist, int maxDist, std
 
 		if (i > 0 && i < segments.size()-1 && taper !=0)
 			q->scale = Vector(1.0f-(i*taper), 1-(i*taper));
-		dsq->game->addRenderObject(q, LR_ENTITIES);
+		game->addRenderObject(q, LR_ENTITIES);
 		segments[i] = q;
 	}
 	Segmented::initSegments(position);
@@ -255,7 +255,7 @@ void ScriptedEntity::initStrands(int num, int segs, int dist, int strandSpacing,
 	{
 		strands[i] = new Strand(position, segs, dist);
 		strands[i]->color = color;
-		dsq->game->addRenderObject(strands[i], this->layer);
+		game->addRenderObject(strands[i], this->layer);
 	}
 	updateStrands(0);
 }
@@ -283,9 +283,9 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 			}
 
 			if (skeletalSprite.isLoaded())
-				dsq->game->handleShotCollisionsSkeletal(this);
+				game->handleShotCollisionsSkeletal(this);
 			else
-				dsq->game->handleShotCollisions(this);
+				game->handleShotCollisions(this);
 		}
 
 		if (isPullable() && !fillGridFromQuad)
@@ -338,8 +338,8 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 
 		if (isPullable())
 		{
-			Entity *followEntity = dsq->game->avatar;
-			if (followEntity && dsq->game->avatar->pullTarget == this)
+			Entity *followEntity = game->avatar;
+			if (followEntity && game->avatar->pullTarget == this)
 			{
 				Vector dist = followEntity->position - this->position;
 				if (dist.isLength2DIn(followEntity->collideRadius + collideRadius + 16))
@@ -350,8 +350,8 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 				{
 
 					vel.setZero();
-					dsq->game->avatar->pullTarget->stopPull();
-					dsq->game->avatar->pullTarget = 0;
+					game->avatar->pullTarget->stopPull();
+					game->avatar->pullTarget = 0;
 				}
 				else if (!dist.isLength2DIn(128))
 				{
@@ -360,7 +360,7 @@ void ScriptedEntity::onAlwaysUpdate(float dt)
 					moveSpeed = 4000;
 					v.setLength2D(moveSpeed);
 					vel += v*dt;
-					setMaxSpeed(dsq->game->avatar->getMaxSpeed());
+					setMaxSpeed(game->avatar->getMaxSpeed());
 				}
 				else
 				{
@@ -432,7 +432,7 @@ void ScriptedEntity::startPull()
 	if (isEntityProperty(EP_BLOCKER))
 	{
 		fillGridFromQuad = false;
-		dsq->game->reconstructEntityGrid();
+		game->reconstructEntityGrid();
 	}
 	pullEmitter.load("Pulled");
 	pullEmitter.start();
@@ -603,7 +603,7 @@ void ScriptedEntity::becomeSolid()
 
 	float oldRot = 0;
 	bool doRot=false;
-	Vector n = dsq->game->getWallNormal(position);
+	Vector n = game->getWallNormal(position);
 	if (!n.isZero())
 	{
 		oldRot = rotation.z;
@@ -611,7 +611,7 @@ void ScriptedEntity::becomeSolid()
 		doRot = true;
 	}
 	fillGridFromQuad = true;
-	dsq->game->reconstructEntityGrid();
+	game->reconstructEntityGrid();
 
 	FOR_ENTITIES(i)
 	{
@@ -621,7 +621,7 @@ void ScriptedEntity::becomeSolid()
 			e->ridingOnEntity = 0;
 			e->moveOutOfWall();
 			// if can't get the rider out of the wall, kill it
-			if (dsq->game->isObstructed(TileVector(e->position)))
+			if (game->isObstructed(TileVector(e->position)))
 			{
 				e->setState(STATE_DEAD);
 			}
@@ -637,14 +637,14 @@ void ScriptedEntity::becomeSolid()
 
 void ScriptedEntity::onHitWall()
 {
-	if (isEntityProperty(EP_BLOCKER) && !fillGridFromQuad && dsq->game->avatar->pullTarget != this)
+	if (isEntityProperty(EP_BLOCKER) && !fillGridFromQuad && game->avatar->pullTarget != this)
 	{
 		becomeSolidDelay = true;
 	}
 
 	if (isEntityProperty(EP_BLOCKER) && !fillGridFromQuad)
 	{
-		Vector n = dsq->game->getWallNormal(position);
+		Vector n = game->getWallNormal(position);
 		if (!n.isZero())
 		{
 			rotateToVec(n, 0.2f);

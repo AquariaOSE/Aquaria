@@ -246,7 +246,7 @@ void Mod::applyStart()
 		setActive(false);
 		dsq->title();
 	}
-	if (isActive() && dsq->game->sceneToLoad.empty())
+	if (isActive() && game->sceneToLoad.empty())
 	{
 		debugLog("MOD: no scene loaded in mod-init");
 		setActive(false);
@@ -291,7 +291,7 @@ void Mod::setActive(bool a)
 
 			recache();
 		}
-		dsq->game->loadEntityTypeList();
+		game->loadEntityTypeList();
 	}
 }
 
@@ -303,7 +303,7 @@ void Mod::stop()
 	debugMenu = false;
 	shuttingDown = false;
 	dsq->scriptInterface.reset();
-	dsq->game->setWorldPaused(false);
+	game->setWorldPaused(false);
 }
 
 void Mod::update(float dt)

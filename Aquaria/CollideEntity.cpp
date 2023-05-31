@@ -50,7 +50,7 @@ void CollideEntity::bounce(float ba)
 {
 	if (getState() == STATE_PUSH)
 	{
-		dsq->spawnParticleEffect("HitSurface", dsq->game->lastCollidePosition);
+		dsq->spawnParticleEffect("HitSurface", game->lastCollidePosition);
 
 		sound("RockHit");
 		// HACK: replace damage function
@@ -66,7 +66,7 @@ void CollideEntity::bounce(float ba)
 		{
 			float len = vel.getLength2D();
 			Vector I = vel/len;
-			Vector N = dsq->game->getWallNormal(dsq->game->lastCollidePosition);
+			Vector N = game->getWallNormal(game->lastCollidePosition);
 
 			if (!N.isZero())
 			{
@@ -126,7 +126,7 @@ void CollideEntity::updateMovement(float dt)
 			}
 			else
 			{
-				position.y = dsq->game->getWaterLevel()+collideRadius;
+				position.y = game->getWaterLevel()+collideRadius;
 			}
 
 		}
@@ -149,7 +149,7 @@ void CollideEntity::updateMovement(float dt)
 			bool doesFreeRange = !isPullable();
 			if (doesFreeRange)
 			{
-				if (dsq->game->collideCircleWithGrid(position, hw))
+				if (game->collideCircleWithGrid(position, hw))
 				{
 					// starting in a collision state
 					freeRange = true;
@@ -165,7 +165,7 @@ void CollideEntity::updateMovement(float dt)
 		{
 			if (getState() == STATE_PUSH)
 			{
-				if (!freeRange && dsq->game->collideCircleWithGrid(position, hw))
+				if (!freeRange && game->collideCircleWithGrid(position, hw))
 				{
 					position = lastPosition;
 					collided = true;
@@ -174,7 +174,7 @@ void CollideEntity::updateMovement(float dt)
 			}
 			else
 			{
-				if (!freeRange && ((!canLeaveWater && !isUnderWater() && wasUnderWater) || dsq->game->collideCircleWithGrid(position, hw)))
+				if (!freeRange && ((!canLeaveWater && !isUnderWater() && wasUnderWater) || game->collideCircleWithGrid(position, hw)))
 				{
 					position = lastPosition;
 					onHitWall();

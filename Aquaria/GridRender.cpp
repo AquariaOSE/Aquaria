@@ -77,7 +77,7 @@ void GridRender::onRender(const RenderState& rs) const
 		return;
 	for (int x = startX; x <= endX; ++x)
 	{
-		const unsigned char *gridColumn = dsq->game->getGridColumn(x);
+		const unsigned char *gridColumn = game->getGridColumn(x);
 		int startCol = -1, y;
 
 		// fast-forward to next drawable byte

@@ -117,21 +117,21 @@ void SchoolFish::onEnterState(int action)
 
 		if (!isGoingToBeEaten())
 		{
-			if (dsq->game->firstSchoolFish)
+			if (game->firstSchoolFish)
 			{
 				if (chance(50))
-					dsq->game->spawnIngredient("FishOil", position, 1);
+					game->spawnIngredient("FishOil", position, 1);
 				else
-					dsq->game->spawnIngredient("FishMeat", position, 1);
+					game->spawnIngredient("FishMeat", position, 1);
 
-				dsq->game->firstSchoolFish = false;
+				game->firstSchoolFish = false;
 			}
 			else
 			{
 				if (chance(8))
-					dsq->game->spawnIngredient("FishOil", position, 1);
+					game->spawnIngredient("FishOil", position, 1);
 				if (chance(5))
-					dsq->game->spawnIngredient("FishMeat", position, 1);
+					game->spawnIngredient("FishMeat", position, 1);
 			}
 		}
 	}
@@ -199,9 +199,9 @@ void SchoolFish::applyAvoidance(Vector &accumulator)
 	// only avoid the player if not in the background
 	if (this->layer < LR_ELEMENTS10)
 	{
-		if ((dsq->game->avatar->position - this->position).isLength2DIn(128))
+		if ((game->avatar->position - this->position).isLength2DIn(128))
 		{
-			avoid(accumulator, dsq->game->avatar->position);
+			avoid(accumulator, game->avatar->position);
 		}
 	}
 
@@ -220,7 +220,7 @@ void SchoolFish::applyAvoidance(Vector &accumulator)
 	{
 		for (t.y = t0.y-range; t.y <= t0.y+range; t.y += step)
 		{
-			if (dsq->game->isObstructed(t))
+			if (game->isObstructed(t))
 			{
 				obsSumX += t0.x - t.x;
 				obsSumY += t0.y - t.y;
@@ -290,9 +290,9 @@ void SchoolFish::applyCohesion(Vector &accumulator)
 
 	if (dsq->continuity.form == FORM_FISH)
 	{
-		if ((dsq->game->avatar->position - this->position).isLength2DIn(256))
+		if ((game->avatar->position - this->position).isLength2DIn(256))
 		{
-			change = dsq->game->avatar->position - position;
+			change = game->avatar->position - position;
 			change.setLength2D(maxUrgency*strengthCohesion);
 			accumulator += change;
 
@@ -347,7 +347,7 @@ void SchoolFish::onUpdate(float dt)
 	{
 		FlockEntity::onUpdate(dt);
 		respawnTimer -= dt;
-		if (!(dsq->game->avatar->position - this->position).isLength2DIn(2000))
+		if (!(game->avatar->position - this->position).isLength2DIn(2000))
 		{
 			if (respawnTimer < 0)
 			{
@@ -362,8 +362,8 @@ void SchoolFish::onUpdate(float dt)
 
 		FlockEntity::onUpdate(dt);
 
-		if (dsq->game->isValidTarget(this, 0))
-			dsq->game->handleShotCollisions(this);
+		if (game->isValidTarget(this, 0))
+			game->handleShotCollisions(this);
 
 
 
@@ -395,7 +395,7 @@ void SchoolFish::onUpdate(float dt)
 			Vector lastPosition = position;
 			position += (vel*velocityScale + vel2) * dt;
 
-			if (dsq->game->isObstructed(position))
+			if (game->isObstructed(position))
 			{
 				position = lastPosition;
 

@@ -4189,9 +4189,9 @@ void InGameMenu::onDebugSave()
 	themenu->hide();
 	game->clearControlHint();
 	core->run(0.5);
-	dsq->game->togglePause(true);
+	game->togglePause(true);
 	dsq->doSaveSlotMenu(SSM_SAVE);
-	dsq->game->togglePause(false);
+	game->togglePause(false);
 }
 
 void InGameMenu::switchToActionSet(int idx)

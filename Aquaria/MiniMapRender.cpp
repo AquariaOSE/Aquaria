@@ -307,24 +307,24 @@ void MiniMapRender::onUpdate(float dt)
 
 	radarHide = false;
 
-	if (dsq->darkLayer.isUsed() && dsq->game->avatar)
+	if (dsq->darkLayer.isUsed() && game->avatar)
 	{
-		const SeeMapMode mapmode = dsq->game->avatar->getSeeMapMode();
+		const SeeMapMode mapmode = game->avatar->getSeeMapMode();
 
 		if(mapmode == SEE_MAP_ALWAYS)
 			radarHide = false;
 		else if(mapmode == SEE_MAP_NEVER)
 			radarHide = true;
-		else if (dsq->continuity.form != FORM_SUN && dsq->game->avatar->isInDarkness())
+		else if (dsq->continuity.form != FORM_SUN && game->avatar->isInDarkness())
 		{
 			radarHide = true;
 		}
 
 		if(!radarHide)
 		{
-			for (Path *p = dsq->game->getFirstPathOfType(PATH_RADARHIDE); p; p = p->nextOfType)
+			for (Path *p = game->getFirstPathOfType(PATH_RADARHIDE); p; p = p->nextOfType)
 			{
-				if (p->active && p->isCoordinateInside(dsq->game->avatar->position))
+				if (p->active && p->isCoordinateInside(game->avatar->position))
 				{
 					radarHide = true;
 					break;
@@ -352,9 +352,9 @@ void MiniMapRender::onUpdate(float dt)
 		lightLevel = 1;
 	}
 
-	if (dsq->game->avatar && dsq->game->avatar->isInputEnabled())
+	if (game->avatar && game->avatar->isInputEnabled())
 	{
-		float v = dsq->game->avatar->health/5.0f;
+		float v = game->avatar->health/5.0f;
 		if (v < 0)
 			v = 0;
 		if (!lerp.isInterpolating() && lerp.x != v)
@@ -375,7 +375,7 @@ void MiniMapRender::onUpdate(float dt)
 	_isCursorIn = false;
 	if (alpha.x == 1)
 	{
-		if (!dsq->game->isInGameMenu() && (!dsq->game->isPaused() || (dsq->game->isPaused() && dsq->game->worldMapRender->isOn())))
+		if (!game->isInGameMenu() && (!game->isPaused() || (game->isPaused() && game->worldMapRender->isOn())))
 		{
 			if (isCursorInButtons())
 			{
@@ -396,7 +396,7 @@ void MiniMapRender::onUpdate(float dt)
 
 					bool btn=false;
 
-					if (!dsq->game->worldMapRender->isOn())
+					if (!game->worldMapRender->isOn())
 					{
 						for (size_t i = 0; i < buttons.size(); i++)
 						{
@@ -408,7 +408,7 @@ void MiniMapRender::onUpdate(float dt)
 								{
 									doubleClickDelay = 0;
 									if (!core->isStateJumpPending())
-										dsq->game->action(ACTION_TOGGLEMENU, 1, -1, INPUT_NODEVICE);
+										game->action(ACTION_TOGGLEMENU, 1, -1, INPUT_NODEVICE);
 									btn = true;
 								}
 								break;
@@ -420,9 +420,9 @@ void MiniMapRender::onUpdate(float dt)
 
 					if (!btn && !radarHide && (!dsq->mod.isActive() || dsq->mod.hasWorldMap()))
 					{
-						if (dsq->game->worldMapRender->isOn())
+						if (game->worldMapRender->isOn())
 						{
-							dsq->game->worldMapRender->toggle(false);
+							game->worldMapRender->toggle(false);
 							clickEffect(1);
 						}
 						else
@@ -433,7 +433,7 @@ void MiniMapRender::onUpdate(float dt)
 								if (dsq->continuity.gems.empty())
 									dsq->continuity.pickupGem("Naija-Token");
 
-								dsq->game->worldMapRender->toggle(true);
+								game->worldMapRender->toggle(true);
 
 								clickEffect(0);
 
@@ -466,7 +466,7 @@ void MiniMapRender::onUpdate(float dt)
 	}
 
 	core->getRenderObjectLayer(LR_MINIMAP)->visible =
-		toggleOn && dsq->game->avatar && dsq->game->avatar->getState() != Entity::STATE_TITLE && !(dsq->disableMiniMapOnNoInput && !dsq->game->avatar->isInputEnabled());
+		toggleOn && game->avatar && game->avatar->getState() != Entity::STATE_TITLE && !(dsq->disableMiniMapOnNoInput && !game->avatar->isInputEnabled());
 }
 
 void MiniMapRender::onRender(const RenderState& rs) const
@@ -476,7 +476,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 	RenderObject::lastTextureApplied = 0;
 	const float alphaValue = alpha.x;
 
-	const TileVector centerTile(dsq->game->avatar->position);
+	const TileVector centerTile(game->avatar->position);
 
 	if (alphaValue > 0)
 	{
@@ -502,10 +502,10 @@ void MiniMapRender::onRender(const RenderState& rs) const
 			glColor4f(0.1f, 0.2f, 0.9f, 0.4f*lightLevel);
 			bool curColorIsWater = true;
 
-			const int xmin = int(ceilf(dsq->game->cameraMin.x / TILE_SIZE));
-			const int ymin = int(ceilf(dsq->game->cameraMin.y / TILE_SIZE));
-			const int xmax = int(floorf(dsq->game->cameraMax.x / TILE_SIZE));
-			const int ymax = int(floorf(dsq->game->cameraMax.y / TILE_SIZE));
+			const int xmin = int(ceilf(game->cameraMin.x / TILE_SIZE));
+			const int ymin = int(ceilf(game->cameraMin.y / TILE_SIZE));
+			const int xmax = int(floorf(game->cameraMax.x / TILE_SIZE));
+			const int ymax = int(floorf(game->cameraMax.y / TILE_SIZE));
 
 			int x1 = centerTile.x - miniMapTileRadius;
 			int x2 = centerTile.x + miniMapTileRadius;
@@ -533,10 +533,10 @@ void MiniMapRender::onRender(const RenderState& rs) const
 					if (y > ymax) break;
 
 					TileVector tile(x, y);
-					if (!dsq->game->getGrid(tile))
+					if (!game->getGrid(tile))
 					{
 						const Vector tilePos(tile.worldVector());
-						if (tilePos.y < dsq->game->waterLevel.x)
+						if (tilePos.y < game->waterLevel.x)
 						{
 							if (curColorIsWater)
 							{
@@ -553,7 +553,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 							}
 						}
 
-						const Vector miniMapPos = Vector(tilePos - dsq->game->avatar->position) * (1.0f / miniMapScale);
+						const Vector miniMapPos = Vector(tilePos - game->avatar->position) * (1.0f / miniMapScale);
 
 						glTranslatef(miniMapPos.x, miniMapPos.y, 0);
 
@@ -585,16 +585,16 @@ void MiniMapRender::onRender(const RenderState& rs) const
 
 	if (!radarHide)
 	{
-		for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
+		for (size_t i = 0; i < game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->getPath(i);
+			Path *p = game->getPath(i);
 			if (!p->nodes.empty() && p->minimapIcon)
 			{
 				bool render = true;
-				Path *p2 = dsq->game->getNearestPath(p->nodes[0].position, PATH_RADARHIDE);
+				Path *p2 = game->getNearestPath(p->nodes[0].position, PATH_RADARHIDE);
 				if (p2 && p2->isCoordinateInside(p->nodes[0].position))
 				{
-					if (!p2->isCoordinateInside(dsq->game->avatar->position))
+					if (!p2->isCoordinateInside(game->avatar->position))
 					{
 						render = false;
 					}
@@ -646,7 +646,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 	glEnd();
 
 	const int curHealthSteps = int((lerp.x/2) * healthSteps);
-	const int maxHealthSteps = int((dsq->game->avatar->maxHealth/10.0f) * healthSteps);
+	const int maxHealthSteps = int((game->avatar->maxHealth/10.0f) * healthSteps);
 
 	Vector healthBarColor;
 	if (lerp.x >= 1)
@@ -741,7 +741,7 @@ void MiniMapRender::renderIcon(const MinimapIcon *ico, const Vector& pos) const
 {
 	if(!ico->tex)
 		return;
-	Vector d = pos - dsq->game->avatar->position;
+	Vector d = pos - game->avatar->position;
 	const float len = d.getLength2D();
 	float iconScale = 1;
 	if (len >= iconMaxOffset)

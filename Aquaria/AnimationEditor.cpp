@@ -1361,7 +1361,7 @@ void AnimationEditor::goToTitle()
 	if (dsq->isNested()) return;
 
 	if (!dsq->returnToScene.empty())
-		dsq->game->transitionToScene(dsq->returnToScene);
+		game->transitionToScene(dsq->returnToScene);
 	else
 		dsq->title();
 }

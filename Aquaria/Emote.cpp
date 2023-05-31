@@ -79,7 +79,7 @@ void Emote::playSfx(size_t index)
 
 void Emote::update(float dt)
 {
-	if (!dsq->game->isPaused())
+	if (!game->isPaused())
 	{
 		if (emoteTimer > 0)
 		{

@@ -530,14 +530,14 @@ void StatsAndAchievements::EvaluateAchievement( Achievement &achievement )
 		break;
 
 	case ACH_REACHED_OPEN_WATERS:
-		if (dsq->game->sceneName == "openwater02")
+		if (game->sceneName == "openwater02")
 		{
 			UnlockAchievement(achievement);
 		}
 		break;
 
 	case ACH_REACHED_SPRITE_CAVE:
-		if (dsq->game->sceneName == "forestspritecave")
+		if (game->sceneName == "forestspritecave")
 		{
 			UnlockAchievement(achievement);
 		}
@@ -559,21 +559,21 @@ void StatsAndAchievements::EvaluateAchievement( Achievement &achievement )
 		break;
 
 	case ACH_BELLY_OF_THE_WHALE:
-		if (dsq->game->sceneName == "whale")
+		if (game->sceneName == "whale")
 		{
 			UnlockAchievement(achievement);
 		}
 		break;
 
 	case ACH_ALEK_AND_DAREC:
-		if (dsq->game->sceneName == "weirdcave")
+		if (game->sceneName == "weirdcave")
 		{
 			UnlockAchievement(achievement);
 		}
 		break;
 
 	case ACH_THE_FROZEN_VEIL:
-		if (dsq->game->sceneName == "frozenveil")
+		if (game->sceneName == "frozenveil")
 		{
 			UnlockAchievement(achievement);
 		}
@@ -693,15 +693,15 @@ void StatsAndAchievements::update(float dt)
 {
 	//debugLog("update stats and achievements");
 	Avatar *avatar = 0;
-	if (dsq->game && dsq->game->avatar) {
-		avatar = dsq->game->avatar;
+	if (game && game->avatar) {
+		avatar = game->avatar;
 	}
 
 	if (avatar) {
 		BoneLock *b = avatar->getBoneLock();
 
 		if (!rodeEkkritToTheStars) {
-			if (!dsq->game->isPaused() && b->on) {
+			if (!game->isPaused() && b->on) {
 
 				if (b->entity->name == "ekkrit") {
 					ridingEkkritTime += dt;
@@ -716,7 +716,7 @@ void StatsAndAchievements::update(float dt)
 		}
 
 		// TODO: verify sceneName is correct
-		if (dsq->game->sceneName == "veil02") {
+		if (game->sceneName == "veil02") {
 			if (avatar->position.x > 18056 && avatar->position.x < 21238 && avatar->position.y < 4185) {
 				debugLog("highDiveIsHigh!");
 				highDiveIsHigh = true;

@@ -36,10 +36,10 @@ SteamRender::SteamRender() : RenderObject()
 
 void SteamRender::onRender(const RenderState& rs) const
 {
-	if(!dsq->game) return;
+	if(!game) return;
 
 
-	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
+	for (Path *p = game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
 	{
 		if (p->active)
 		{
