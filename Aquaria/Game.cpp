@@ -456,7 +456,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 				//if (num >= int((szx*szy)))
 				{
 					// add tile
-					//dsq->game->setGrid(TileVector(int(tx/TILE_SIZE)+tpos.x, int(ty/TILE_SIZE)+tpos.y), 1);
+					//setGrid(TileVector(int(tx/TILE_SIZE)+tpos.x, int(ty/TILE_SIZE)+tpos.y), 1);
 					obs.push_back(TileVector(int(tx/TILE_SIZE), int(ty/TILE_SIZE)));
 				}
 			}
@@ -512,8 +512,8 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			float y = transformMatrix[3][1];
 
 			TileVector tvec(tpos.x+w2+x, tpos.y+h2+y);
-			if (!dsq->game->isObstructed(tvec))
-				dsq->game->addGrid(tvec, obsType);
+			if (!isObstructed(tvec))
+				addGrid(tvec, obsType);
 		}
 #else
 		glPushMatrix();
@@ -536,10 +536,10 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			float x = m[12];
 			float y = m[13];
 
-			//dsq->game->setGrid(TileVector(tpos.x+(w2*TILE_SIZE)+(x/TILE_SIZE), tpos.y+(h2*TILE_SIZE)+(y/TILE_SIZE)), obsType);
+			//setGrid(TileVector(tpos.x+(w2*TILE_SIZE)+(x/TILE_SIZE), tpos.y+(h2*TILE_SIZE)+(y/TILE_SIZE)), obsType);
 			TileVector tvec(tpos.x+w2+x, tpos.y+h2+y);
-			if (!dsq->game->isObstructed(tvec))
-				dsq->game->addGrid(tvec, obsType);
+			if (!isObstructed(tvec))
+				addGrid(tvec, obsType);
 
 		}
 		glPopMatrix();
@@ -628,8 +628,8 @@ void Game::trimGrid()
 	for (int x = 0; x < MAX_GRID; x++)
 	{
 		const unsigned char *curCol   = grid[x]; // safe
-		const unsigned char *leftCol  = dsq->game->getGridColumn(x-1); // unsafe
-		const unsigned char *rightCol = dsq->game->getGridColumn(x+1); // unsafe
+		const unsigned char *leftCol  = getGridColumn(x-1); // unsafe
+		const unsigned char *rightCol = getGridColumn(x+1); // unsafe
 		for (int y = 0; y < MAX_GRID; y++)
 		{
 			if (curCol[y] & OT_MASK_BLACK)
@@ -1209,9 +1209,9 @@ Path *Game::getNearestPath(const Vector &pos, const std::string &s, const Path *
 	float smallestDist = HUGE_VALF;
 	std::string st = s;
 	stringToLower(st);
-	for (size_t i = 0; i < dsq->game->paths.size(); i++)
+	for (size_t i = 0; i < paths.size(); i++)
 	{
-		Path *cp = dsq->game->paths[i];
+		Path *cp = paths[i];
 		if (cp != ignore && !cp->nodes.empty() && (st.empty() || st == cp->label))
 		{
 			const Vector v = cp->nodes[0].position - pos;
@@ -1230,7 +1230,7 @@ Path *Game::getNearestPath(const Vector &pos, PathType pathType)
 {
 	Path *closest = 0;
 	float smallestDist = HUGE_VALF;
-	for (Path *cp = dsq->game->getFirstPathOfType(pathType); cp; cp = cp->nextOfType)
+	for (Path *cp = getFirstPathOfType(pathType); cp; cp = cp->nextOfType)
 	{
 		if (!cp->nodes.empty())
 		{
@@ -2165,7 +2165,7 @@ bool Game::saveScene(std::string scene)
 
 	if (level)
 	{
-		level->SetAttribute("waterLevel", dsq->game->saveWaterLevel);
+		level->SetAttribute("waterLevel", saveWaterLevel);
 
 		if (grad)
 		{
@@ -2196,10 +2196,10 @@ bool Game::saveScene(std::string scene)
 	saveFile.InsertEndChild(obsXml);
 
 
-	for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
+	for (size_t i = 0; i < getNumPaths(); i++)
 	{
 		XMLElement *pathXml = saveFile.NewElement("Path");
-		Path *p = dsq->game->getPath(i);
+		Path *p = getPath(i);
 		pathXml->SetAttribute("name", p->name.c_str());
 		for (size_t n = 0; n < p->nodes.size(); n++)
 		{
@@ -2252,14 +2252,14 @@ bool Game::saveScene(std::string scene)
 		tagBitsUsed[e->bgLayer] |= e->tag;
 	}
 
-	if (dsq->game->entitySaveData.size() > 0)
+	if (entitySaveData.size() > 0)
 	{
 		XMLElement *entitiesNode = saveFile.NewElement("Entities");
 
 		std::ostringstream os;
-		for (size_t i = 0; i < dsq->game->entitySaveData.size(); i++)
+		for (size_t i = 0; i < entitySaveData.size(); i++)
 		{
-			EntitySaveData *e = &dsq->game->entitySaveData[i];
+			EntitySaveData *e = &entitySaveData[i];
 			os << e->idx << " ";
 
 			if (e->idx == -1)
@@ -2527,11 +2527,11 @@ void Game::updateParticlePause()
 
 int game_collideParticle(Vector pos)
 {
-	bool aboveWaterLine = (pos.y <= dsq->game->waterLevel.x+20);
+	bool aboveWaterLine = (pos.y <= game->waterLevel.x+20);
 	bool inWaterBubble = false;
 	if (!aboveWaterLine)
 	{
-		Path *p = dsq->game->getNearestPath(pos, PATH_WATERBUBBLE);
+		Path *p = game->getNearestPath(pos, PATH_WATERBUBBLE);
 		if (p && p->active)
 		{
 			if (p->isCoordinateInside(pos))
@@ -2546,7 +2546,7 @@ int game_collideParticle(Vector pos)
 	}
 
 	TileVector t(pos);
-	return dsq->game->isObstructed(t);
+	return game->isObstructed(t);
 }
 
 void Game::rebuildElementUpdateList()
@@ -2721,7 +2721,7 @@ void Game::applyState()
 
 	for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS12; i++) // LR_ELEMENTS13 is darkness, stop before that
 	{
-		dsq->game->setElementLayerVisible(i-LR_ELEMENTS1, true);
+		setElementLayerVisible(i-LR_ELEMENTS1, true);
 	}
 
 	dsq->applyParallaxUserSettings();
@@ -2927,7 +2927,7 @@ void Game::applyState()
 
 	if (toFlip == 1)
 	{
-		dsq->game->avatar->flipHorizontal();
+		avatar->flipHorizontal();
 		toFlip = -1;
 	}
 
@@ -3033,9 +3033,9 @@ void Game::applyState()
 		Path *closest = 0;
 		Vector closestPushOut;
 		bool doFlip = false;
-		for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
+		for (size_t i = 0; i < getNumPaths(); i++)
 		{
-			Path *p = dsq->game->getPath(i);
+			Path *p = getPath(i);
 			Vector pos = p->nodes[0].position;
 			if (p && (nocasecmp(p->warpMap, fromScene)==0))
 			{
@@ -3101,7 +3101,7 @@ void Game::applyState()
 	}
 	else if (!toNode.empty())
 	{
-		Path *p = dsq->game->getPathByName(toNode);
+		Path *p = getPathByName(toNode);
 		if (p)
 		{
 			avatar->position = p->nodes[0].position;
@@ -3365,11 +3365,11 @@ void Game::overrideZoom(float sz, float t)
 {
 	if (sz == 0)
 	{
-		dsq->game->toggleOverrideZoom(false);
+		toggleOverrideZoom(false);
 	}
 	else
 	{
-		dsq->game->toggleOverrideZoom(true);
+		toggleOverrideZoom(true);
 		dsq->globalScale.stop();
 		dsq->globalScale.interpolateTo(Vector(sz, sz), t);
 		dsq->globalScaleChanged();
@@ -3624,7 +3624,7 @@ void Game::onToggleHelpScreen()
 
 void Game::toggleHelpScreen(bool on, const std::string &label)
 {
-	if (dsq->game->isSceneEditorActive()) return;
+	if (isSceneEditorActive()) return;
 
 	if (inHelpScreen == on) return;
 	if (core->getShiftState()) return;
@@ -3856,9 +3856,9 @@ void Game::onPressEscape(int source, InputDevice device)
 			toggleHelpScreen(false);
 			return;
 		}
-		if (dsq->game->worldMapRender->isOn() && !dsq->isNested())
+		if (worldMapRender->isOn() && !dsq->isNested())
 		{
-			dsq->game->worldMapRender->toggle(false);
+			worldMapRender->toggle(false);
 			return;
 		}
 
@@ -4062,11 +4062,11 @@ void Game::preLocalWarp(LocalWarpType localWarpType)
 	// won't work if you start the map inside a local warp area... but that doesn't happen much for collecting gems
 	if (localWarpType == LOCALWARP_IN)
 	{
-		dsq->game->avatar->warpInLocal = dsq->game->avatar->position;
+		avatar->warpInLocal = avatar->position;
 	}
 	else if (localWarpType == LOCALWARP_OUT)
 	{
-		dsq->game->avatar->warpInLocal = Vector(0,0,0);
+		avatar->warpInLocal = Vector(0,0,0);
 	}
 
 	dsq->screenTransition->capture();
@@ -4075,11 +4075,11 @@ void Game::preLocalWarp(LocalWarpType localWarpType)
 
 void Game::postLocalWarp()
 {
-	if (dsq->game->li && dsq->continuity.hasLi())
-		dsq->game->li->position = dsq->game->avatar->position;
-	if (dsq->game->avatar->pullTarget)
-		dsq->game->avatar->pullTarget->position = dsq->game->avatar->position;
-	dsq->game->snapCam();
+	if (li && dsq->continuity.hasLi())
+		li->position = avatar->position;
+	if (avatar->pullTarget)
+		avatar->pullTarget->position = avatar->position;
+	snapCam();
 	dsq->screenTransition->transition(0.6f);
 
 }
@@ -4125,7 +4125,7 @@ bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 	else if (e->getEntityType() == ET_AVATAR)
 	{
 		// this used to be stuff != ET_AVATAR.. but what else would do that
-		return !dsq->game->isDamageTypeAvatar(shot->getDamageType()) && (!shot->firer || shot->firer->getEntityType() == ET_ENEMY);
+		return !isDamageTypeAvatar(shot->getDamageType()) && (!shot->firer || shot->firer->getEntityType() == ET_ENEMY);
 	}
 	else if (e->getEntityType() == ET_PET)
 	{
@@ -4306,10 +4306,10 @@ void Game::updateCursor(float dt)
 	}
 	else if (dsq->getInputMode() == INPUT_JOYSTICK)
 	{
-		if (!dsq->game->isPaused() || dsq->game->isInGameMenu() || !dsq->game->avatar->isInputEnabled())
+		if (!isPaused() || isInGameMenu() || !avatar->isInputEnabled())
 		{
 			int offy = -60;
-			if (dsq->game->isInGameMenu() || !dsq->game->avatar->isInputEnabled())
+			if (isInGameMenu() || !avatar->isInputEnabled())
 			{
 				//cursor->setTexture("");
 				offy = 0;
@@ -4329,15 +4329,15 @@ void Game::updateCursor(float dt)
 		}
 	}
 
-	if (isSceneEditorActive() || dsq->game->isPaused() || (!avatar || !avatar->isInputEnabled()) ||
-		(dsq->game->miniMapRender && dsq->game->miniMapRender->isCursorIn())
+	if (isSceneEditorActive() || isPaused() || (!avatar || !avatar->isInputEnabled()) ||
+		(miniMapRender && miniMapRender->isCursorIn())
 		)
 	{
 		dsq->setCursor(CURSOR_NORMAL);
 		// Don't show the cursor in keyboard/joystick mode if it's not
 		// already visible (this keeps the cursor from appearing for an
 		// instant during map fadeout).
-		if (dsq->getInputMode() == INPUT_MOUSE || isSceneEditorActive() || dsq->game->isPaused())
+		if (dsq->getInputMode() == INPUT_MOUSE || isSceneEditorActive() || isPaused())
 			dsq->cursor->alphaMod = 0.5;
 
 		/*
@@ -4348,12 +4348,12 @@ void Game::updateCursor(float dt)
 	else if (avatar)
 	{
 		//Vector v = avatar->getVectorToCursorFromScreenCentre();
-		if (dsq->getInputMode() == INPUT_JOYSTICK)// && !avatar->isSinging() && !dsq->game->isInGameMenu() && !dsq->game->isPaused())
+		if (dsq->getInputMode() == INPUT_JOYSTICK)// && !avatar->isSinging() && !isInGameMenu() && !isPaused())
 		{
 			dsq->cursor->alphaMod = 0;
 			if (!avatar->isSinging())
 				core->setMousePosition(core->center);
-			if (!dsq->game->isPaused())
+			if (!isPaused())
 			{
 				/*
 
@@ -4377,7 +4377,7 @@ void Game::updateCursor(float dt)
 		{
 			dsq->setCursor(CURSOR_SING);
 		}
-		else if (dsq->game->isInGameMenu() || v.isLength2DIn(avatar->getStopDistance()) || (avatar->entityToActivate || avatar->pathToActivate))
+		else if (isInGameMenu() || v.isLength2DIn(avatar->getStopDistance()) || (avatar->entityToActivate || avatar->pathToActivate))
 		{
 			dsq->setCursor(CURSOR_NORMAL);
 		}
@@ -4475,7 +4475,7 @@ bool Game::trace(Vector start, Vector target)
 		pos += mov;
 
 
-		if (dsq->game->isObstructed(TileVector(pos)))
+		if (isObstructed(TileVector(pos)))
 			return false;
 
 
@@ -4492,7 +4492,7 @@ bool Game::trace(Vector start, Vector target)
 		{
 			TileVector tl(pos + pl*i);//(start.x + pl.x*i, start.y + pl.y*i);
 			TileVector tr(pos + pr*i);//(start.x + pr.x*i, start.y + pr.y*i);
-			if (dsq->game->isObstructed(tl) || dsq->game->isObstructed(tr))
+			if (isObstructed(tl) || isObstructed(tr))
 				return false;
 		}
 
@@ -4506,8 +4506,8 @@ void Game::updateBgSfxLoop()
 {
 	if (!avatar) return;
 
-	Path *p = getNearestPath(dsq->game->avatar->position, PATH_BGSFXLOOP);
-	if (p && p->isCoordinateInside(dsq->game->avatar->position) && !p->content.empty())
+	Path *p = getNearestPath(avatar->position, PATH_BGSFXLOOP);
+	if (p && p->isCoordinateInside(avatar->position) && !p->content.empty())
 	{
 		if (bgSfxLoopPlaying2 != p->content)
 		{
@@ -4540,10 +4540,10 @@ void Game::updateBgSfxLoop()
 
 	if (avatar->isUnderWater(avatar->getHeadPosition()))
 	{
-		dsq->game->switchBgLoop(0);
+		switchBgLoop(0);
 	}
 	else
-		dsq->game->switchBgLoop(1);
+		switchBgLoop(1);
 }
 
 const float helpTextScrollSpeed = 800.0f;
@@ -4643,9 +4643,9 @@ void Game::update(float dt)
 
 
 	size_t i = 0;
-	for (i = 0; i < dsq->game->getNumPaths(); i++)
+	for (i = 0; i < getNumPaths(); i++)
 	{
-		dsq->game->getPath(i)->update(dt);
+		getPath(i)->update(dt);
 	}
 
 	FOR_ENTITIES(j)
@@ -4747,14 +4747,14 @@ void Game::update(float dt)
 		avatar->pathToActivate = 0;
 
 		// make sure you also disable entityToActivate
-		if (dsq->game && dsq->game->avatar->canActivateStuff())
+		if (dsq->game && avatar->canActivateStuff())
 		{
-			Path* p = dsq->game->getScriptedPathAtCursor(true);
+			Path* p = getScriptedPathAtCursor(true);
 			if (p && p->cursorActivation)
 			{
-				Vector diff = p->nodes[0].position - dsq->game->avatar->position;
+				Vector diff = p->nodes[0].position - avatar->position;
 
-				if (p->isCoordinateInside(dsq->game->avatar->position) || diff.getSquaredLength2D() < sqr(p->activationRange))
+				if (p->isCoordinateInside(avatar->position) || diff.getSquaredLength2D() < sqr(p->activationRange))
 				{
 					//if (trace(avatar->position, p->nodes[0].position))
 					{
@@ -4795,7 +4795,7 @@ void Game::update(float dt)
 
 			if (avatar)
 			{
-				if (avatar->looking && !dsq->game->isPaused()) {
+				if (avatar->looking && !isPaused()) {
 					Vector diff = avatar->getAim();//dsq->getGameCursorPosition() - avatar->position;
 					diff.capLength2D(maxLookDistance);
 					dest += diff;
@@ -5086,11 +5086,11 @@ void Game::removeState()
 	}
 	dsq->continuity.zoom = core->globalScale;
 
-	dsq->game->toggleOverrideZoom(false);
-	dsq->game->avatar->myZoom.stop();
+	toggleOverrideZoom(false);
+	avatar->myZoom.stop();
 	dsq->globalScale.stop();
 
-	dsq->game->avatar->myZoom = Vector(1,1);
+	avatar->myZoom = Vector(1,1);
 	dsq->globalScale = Vector(1,1);
 	core->globalScaleChanged();
 
@@ -5284,7 +5284,7 @@ void Game::learnedRecipe(Recipe *r, bool effects)
 		{
 			if (effects)
 			{
-				dsq->game->setControlHint(os.str(), 0, 0, 0, 3, std::string("gfx/ingredients/") + data->gfx);
+				setControlHint(os.str(), 0, 0, 0, 3, std::string("gfx/ingredients/") + data->gfx);
 			}
 		}
 	}
