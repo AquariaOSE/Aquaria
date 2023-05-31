@@ -47,7 +47,7 @@ private:
     void thMain(); // for int
 
     void th_loadFromFile(TexLoadTmp& tt) const;
-    Texture *finalize(const TexLoadTmp& tt);
+    Texture *finalize(TexLoadTmp& tt);
 };
 
 #endif
