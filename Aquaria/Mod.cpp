@@ -63,7 +63,6 @@ bool Mod::isShuttingDown()
 void Mod::clear()
 {
 	active = false;
-	doRecache = 0;
 	debugMenu = false;
 	hasMap = false;
 	blockEditor = false;
@@ -133,7 +132,6 @@ void Mod::load(const std::string &p)
 		XMLElement *props = mod->FirstChildElement("Properties");
 		if (props)
 		{
-			props->QueryIntAttribute("recache", &doRecache);
 			props->QueryIntAttribute("debugMenu", &debugMenu);
 			props->QueryBoolAttribute("hasWorldMap", &hasMap);
 			props->QueryBoolAttribute("blockEditor", &blockEditor);
@@ -178,11 +176,7 @@ const std::string& Mod::getName() const
 
 void Mod::recache()
 {
-	if(doRecache)
-	{
-		core->texmgr.reloadAll(TextureMgr::KEEP_IF_SAME);
-		dsq->unloadResources();
-	}
+	core->texmgr.reloadAll(TextureMgr::KEEP_IF_SAME);
 
 	if(active)
 	{
@@ -193,22 +187,14 @@ void Mod::recache()
 		fname += "precache.txt";
 		fname = adjustFilenameCase(fname);
 		if (exists(fname))
-		{
 			modcache.precacheList(fname);
-			core->resetTimer();
-		}
 	}
 	else
 	{
 		modcache.clear();
 	}
 
-	if(doRecache)
-	{
-		dsq->precacher.precacheList("data/precache.txt");
-		dsq->reloadResources();
-		core->resetTimer();
-	}
+	core->resetTimer();
 }
 
 void Mod::start()

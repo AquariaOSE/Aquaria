@@ -67,7 +67,6 @@ protected:
 	bool active;
 	bool hasMap;
 	bool blockEditor;
-	int doRecache;
 	int debugMenu;
 	int enqueueModStart;
 	void applyStart();
