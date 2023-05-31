@@ -36,28 +36,40 @@ void PathRender::onRender(const RenderState& rs) const
 	if (pathcount == 0)
 		return;
 
+	glLineWidth(4);
+
+	const size_t selidx = dsq->game->sceneEditor.selectedIdx;
+
 	for (size_t i = 0; i < pathcount; i++)
 	{
-		Path *p = dsq->game->getPath(i);
+		const Path *p = dsq->game->getPath(i);
 
-		if (dsq->game->sceneEditor.selectedIdx == i)
-			glColor4f(1, 1, 1, 0.75);
+		if (selidx == i)
+			glColor4f(1, 1, 1, 0.75f);
+		else if(p->hasScript())
+			glColor4f(0.5f, 0.8f, 0.5f, 0.75f);
 		else
-			glColor4f(1, 0.5, 0.5, 0.75);
+			glColor4f(1, 0.5f, 0.5f, 0.75f);
 
 		glBegin(GL_LINES);
 		for (size_t n = 0; n < p->nodes.size()-1; n++)
 		{
-			PathNode *nd = &p->nodes[n];
-			PathNode *nd2 = &p->nodes[n+1];
+			const PathNode *nd = &p->nodes[n];
+			const PathNode *nd2 = &p->nodes[n+1];
 			glVertex3f(nd->position.x, nd->position.y, 0);
 			glVertex3f(nd2->position.x, nd2->position.y, 0);
 		}
 		glEnd();
+	}
 
+	glLineWidth(1);
+
+	for (size_t i = 0; i < pathcount; i++)
+	{
+		const Path *p = dsq->game->getPath(i);
 		for (size_t n = 0; n < p->nodes.size(); n++)
 		{
-			PathNode *nd = &p->nodes[n];
+			const PathNode *nd = &p->nodes[n];
 
 			if (n == 0)
 			{
@@ -85,22 +97,25 @@ void PathRender::onRender(const RenderState& rs) const
 				}
 				else
 				{
-					glColor4f(0.5f, 0.5f, 1, 0.5f);
+					glColor4f(0.5f, 0.5f, 1, 0.4f);
 					glTranslatef(nd->position.x, nd->position.y, 0);
 					drawCircle(p->rect.getWidth()*0.5f, 16);
 					glTranslatef(-nd->position.x, -nd->position.y, 0);
 				}
 			}
 
+			Vector color = p->hasScript() ? Vector(0.5f, 0.8f, 0.5f) : Vector(1, 0.5f, 0.5f);
 			float a = 0.75f;
 			if (!p->active)
+			{
 				a = 0.3f;
+				color *= 0.5f;
+			}
 
-			if (dsq->game->sceneEditor.selectedIdx == i)
-				glColor4f(1, 1, 1, a);
-			else
-				glColor4f(1, 0.5, 0.5, a);
+			if (selidx == i)
+				color.x = color.y = color.z = 1;
 
+			glColor4f(color.x, color.y, color.z, a);
 			glPushMatrix();
 			glTranslatef(nd->position.x, nd->position.y, 0);
 			drawCircle(32);

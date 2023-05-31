@@ -31,8 +31,8 @@ public:
 	{
 		x1 = y1 = x2 = y2 = 0;
 	}
-	int getWidth() { return x2-x1; }
-	int getHeight() { return y2-y1; }
+	int getWidth() const { return x2-x1; }
+	int getHeight() const { return y2-y1; }
 	void setWidth(int v)
 	{
 		x1 = -v/2;
@@ -45,8 +45,6 @@ public:
 	}
 	void setCWH(int x, int y, int w, int h)
 	{
-
-
 		const int w2 = w / 2;
 		const int h2 = h / 2;
 		x1 = x - w2;
@@ -54,18 +52,18 @@ public:
 		x2 = x + w2;
 		y2 = y + h2;
 	}
-	void getCWH(int *x, int *y, int *w, int *h)
+	void getCWH(int *x, int *y, int *w, int *h) const
 	{
 		*w = x2 - x1;
 		*h = y2 - y1;
 		*x = x1 + ((*w) / 2);
 		*y = y1 + ((*h) / 2);
 	}
-	bool isCoordinateInside(const Vector &vec, int radius=0)
+	bool isCoordinateInside(const Vector &vec, int radius=0) const
 	{
 		return ((vec.x >= x1-radius && vec.x <= x2+radius) && (vec.y >= y1-radius && vec.y <= y2+radius));
 	}
-	bool isEmpty()
+	bool isEmpty() const
 	{
 		return x1 != 0 || y1 != 0 || x2 != 0 || y2 != 0;
 	}
