@@ -222,7 +222,7 @@ Path::~Path()
 	destroy();
 }
 
-bool Path::hasScript()
+bool Path::hasScript() const
 {
 	return script != 0;
 }
