@@ -45,10 +45,10 @@ public:
 
 	const std::string& getBaseModPath() const;
 
-	bool isActive();
-	bool isDebugMenu();
-	bool hasWorldMap();
-	bool isEditorBlocked();
+	bool isActive() const;
+	bool isDebugMenu() const;
+	bool hasWorldMap() const;
+	bool isEditorBlocked() const;
 
 	const std::string& getPath() const;
 	const std::string& getName() const;

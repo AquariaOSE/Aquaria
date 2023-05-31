@@ -70,17 +70,17 @@ void Mod::clear()
 	compatScript = "";
 }
 
-bool Mod::isDebugMenu()
+bool Mod::isDebugMenu() const
 {
 	return debugMenu;
 }
 
-bool Mod::hasWorldMap()
+bool Mod::hasWorldMap() const
 {
 	return hasMap;
 }
 
-bool Mod::isEditorBlocked()
+bool Mod::isEditorBlocked() const
 {
 	return blockEditor;
 }
@@ -257,7 +257,7 @@ void Mod::applyStart()
 	}
 }
 
-bool Mod::isActive()
+bool Mod::isActive() const
 {
 	return active;
 }

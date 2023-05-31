@@ -250,7 +250,7 @@ public:
 
 	int getEntityTypeIndexByName(std::string s);
 	void screenMessage(const std::string &msg);
-	void debugLog(const std::string &s);
+	void _debugLog(const std::string &s) OVERRIDE;
 	void toggleConsole();
 	void toggleEffects();
 	void debugMenu();
@@ -268,7 +268,7 @@ public:
 	Vector getNoteVector(int note, float mag=1);
 	void toggleCursor(bool v, float t = -1);
 
-	bool isDeveloperKeys();
+	bool isDeveloperKeys() const;
 	bool canOpenEditor() const;
 
 	void loadElementEffects();
@@ -324,8 +324,8 @@ public:
 	bool mountModPackage(const std::string&);
 	bool modIsKnown(const std::string& name);
 	void unloadMods();
-	static void loadModsCallback(const std::string &filename, void *param);
-	static void loadModPackagesCallback(const std::string &filename, void *param);
+	static void LoadModsCallback(const std::string &filename, void *param);
+	static void LoadModPackagesCallback(const std::string &filename, void *param);
 
 	AquariaSaveSlot *selectedSaveSlot;
 	void setStory();

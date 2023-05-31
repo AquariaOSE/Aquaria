@@ -527,7 +527,7 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 		if(!dsq->modIsKnown(localname))
 		{
 			// yay, got something new!
-			DSQ::loadModsCallback(archiveFile, 0); // does not end in ".xml" but thats no problem here
+			DSQ::LoadModsCallback(archiveFile, dsq); // does not end in ".xml" but thats no problem here
 			if(dsq->modSelectorScr)
 				dsq->modSelectorScr->initModAndPatchPanel(); // HACK
 		}
