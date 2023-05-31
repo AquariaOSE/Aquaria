@@ -236,7 +236,7 @@ void GameOver::applyState()
 
 
 		dsq->continuity.seconds = transferSeconds;
-		dsq->game->transitionToScene(dsq->game->sceneToLoad);
+		game->transitionToScene(game->sceneToLoad);
 	}
 	else
 		dsq->title();

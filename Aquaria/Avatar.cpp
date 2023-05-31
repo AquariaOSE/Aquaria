@@ -325,7 +325,7 @@ SongIcon::SongIcon(size_t note) : Quad(), note(note)
 	glow->setBlendType(BLEND_ADD);
 	glow->scale = Vector(0.5, 0.5);
 	glow->color = dsq->getNoteColor(note);
-	dsq->game->addRenderObject(glow, LR_PARTICLES2);
+	game->addRenderObject(glow, LR_PARTICLES2);
 }
 
 void SongIcon::destroy()
@@ -343,7 +343,7 @@ void SongIcon::spawnParticles(float dt)
 		ptimer -= intv;
 		SongIconParticle *s = new SongIconParticle(noteColor, randCirclePos(position, 16), note);
 		s->followCamera = true;
-		dsq->game->addRenderObject(s, LR_HUD);
+		game->addRenderObject(s, LR_HUD);
 	}
 }
 
@@ -467,7 +467,7 @@ void SongIcon::openNote()
 	os << "Note"
 	*/
 
-	std::string sfx = dsq->game->getNoteName(note);
+	std::string sfx = game->getNoteName(note);
 
 	open = true;
 
@@ -509,7 +509,7 @@ void SongIcon::openNote()
 	q->color = dsq->getNoteColor(note); //*0.5f + Vector(0.5, 0.5, 0.5)
 	q->setBlendType(BLEND_ADD);
 	q->followCamera = 1;
-	dsq->game->addRenderObject(q, LR_HUD);
+	game->addRenderObject(q, LR_HUD);
 	q->setDecayRate(1/(glowLife+0.1f));
 	}
 
@@ -529,7 +529,7 @@ void SongIcon::openNote()
 	q->alpha.startPath(glowLife);
 	//q->setBlendType(BLEND_ADD);
 	q->followCamera = 1;
-	dsq->game->addRenderObject(q, LR_HUD);
+	game->addRenderObject(q, LR_HUD);
 	q->setDecayRate(1/(glowLife+0.1f));
 	}
 
@@ -548,17 +548,17 @@ void SongIcon::openNote()
 		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
-			if ((e->position - dsq->game->avatar->position).getSquaredLength2D() < sqr(1000))
+			if ((e->position - game->avatar->position).getSquaredLength2D() < sqr(1000))
 			{
 				e->songNote(note);
 			}
 		}
-		for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
+		for (size_t i = 0; i < game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->getPath(i);
+			Path *p = game->getPath(i);
 			if (!p->nodes.empty())
 			{
-				if ((p->nodes[0].position - dsq->game->avatar->position).getSquaredLength2D() < sqr(1000))
+				if ((p->nodes[0].position - game->avatar->position).getSquaredLength2D() < sqr(1000))
 				{
 					p->songNote(note);
 				}
@@ -572,7 +572,7 @@ void SongIcon::closeNote()
 	//if (delay > 0) return;
 	scale.interpolateTo(Vector(NOTE_SCALE, NOTE_SCALE), 0.1f);
 
-	if (dsq->game->avatar->isSinging() && dsq->user.video.noteEffects)
+	if (game->avatar->isSinging() && dsq->user.video.noteEffects)
 		glow->alpha.interpolateTo(0.3f, 1.5f, 0, 0, 1);
 	else
 		glow->alpha.interpolateTo(0, 1.5f, 0, 0, 1);
@@ -598,18 +598,18 @@ void SongIcon::closeNote()
 		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
-			int dist = (e->position - dsq->game->avatar->position).getSquaredLength2D();
-			if (e != dsq->game->avatar && dist < sqr(1000))
+			int dist = (e->position - game->avatar->position).getSquaredLength2D();
+			if (e != game->avatar && dist < sqr(1000))
 			{
 				e->songNoteDone(note, len);
 			}
 		}
-		for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
+		for (size_t i = 0; i < game->getNumPaths(); i++)
 		{
-			Path *p = dsq->game->getPath(i);
+			Path *p = game->getPath(i);
 			if (!p->nodes.empty())
 			{
-				if ((p->nodes[0].position - dsq->game->avatar->position).getSquaredLength2D() < sqr(1000))
+				if ((p->nodes[0].position - game->avatar->position).getSquaredLength2D() < sqr(1000))
 				{
 					p->songNoteDone(note, len);
 				}
@@ -687,14 +687,14 @@ void Avatar::applyWorldEffects(WorldType type)
 		//skeletalSprite.transitionAnimate("ball", 0.1, -1);
 		//skeletalSprite.alpha.interpolateTo(0, 1);
 		//skeletalSprite.alpha = 0;
-		//dsq->game->addRenderObject(&skeletalSprite, LR_ENTITIES);
+		//game->addRenderObject(&skeletalSprite, LR_ENTITIES);
 
 		removeChild(&skeletalSprite);
 		skeletalSprite.position = position;
 		skeletalSprite.setFreeze(true);
 		skeletalSprite.scale = scale;
 		skeletalSprite.alpha.interpolateTo(0.5, 1);
-		//dsq->game->addRenderObject(&skeletalSprite, LR_ENTITIES);
+		//game->addRenderObject(&skeletalSprite, LR_ENTITIES);
 		skeletalSprite.rotation.z = rotation.z;
 		skeletalSprite.rotationOffset.z = rotationOffset.z;
 
@@ -716,7 +716,7 @@ void Avatar::applyWorldEffects(WorldType type)
 		//skeletalSprite.transitionAnimate("idle", 1, -1);
 		//skeletalSprite.alpha.interpolateTo(1, 1);
 		//skeletalSprite.alpha = 1;
-		//dsq->game->removeRenderObject(&skeletalSprite);
+		//game->removeRenderObject(&skeletalSprite);
 
 		skeletalSprite.setFreeze(false);
 		if (!skeletalSprite.getParent())
@@ -784,11 +784,11 @@ void Avatar::startFlourish()
 
 void Avatar::onIdle()
 {
-	if (dsq->game->li)
+	if (game->li)
 	{
-		if (dsq->game->li->getState() == STATE_HUG && riding)
+		if (game->li->getState() == STATE_HUG && riding)
 		{
-			dsq->game->li->setState(STATE_IDLE);
+			game->li->setState(STATE_IDLE);
 		}
 	}
 	//stillTimer.stop();
@@ -941,10 +941,10 @@ void Avatar::updateHair(float dt)
 void Avatar::updateDamageVisualEffects()
 {
    	int damageThreshold = float(maxHealth/5.0f)*3.0f;
-	Quad *damageSprite = dsq->game->damageSprite;
+	Quad *damageSprite = game->damageSprite;
 	if (health <= damageThreshold)
 	{
-		//dsq->game->damageSprite->alpha.interpolateTo(0.9, 0.5);
+		//game->damageSprite->alpha.interpolateTo(0.9, 0.5);
 		float a = ((damageThreshold - health)/float(damageThreshold))*1.0f;
 		damageSprite->alpha.interpolateTo(a, 0.3f);
 
@@ -963,7 +963,7 @@ void Avatar::updateDamageVisualEffects()
 		/*
 		if (health <= 0)
 		{
-			dsq->game->sceneColor.interpolateTo(Vector(1,0.5,0.5), 0.75);
+			game->sceneColor.interpolateTo(Vector(1,0.5,0.5), 0.75);
 		}
 		*/
 	}
@@ -1018,7 +1018,7 @@ void Avatar::onDamage(DamageData &d)
 		d.damage *= MULT_DMG_FISHFORM;
 	}
 
-	if ((core->isNested() && dsq->game->invincibleOnNested) || dsq->game->invinciblity)
+	if ((core->isNested() && game->invincibleOnNested) || game->invinciblity)
 	{
 		d.damage = 0;
 		d.damageType = DT_NONE;
@@ -1062,7 +1062,7 @@ void Avatar::onDamage(DamageData &d)
 		}
 	}
 
-	if ((!invincible || !dsq->game->invincibleOnNested) && !(invincibleBreak && damageTimer.isActive() && d.useTimer) && !dsq->continuity.invincibleTimer.isActive())
+	if ((!invincible || !game->invincibleOnNested) && !(invincibleBreak && damageTimer.isActive() && d.useTimer) && !dsq->continuity.invincibleTimer.isActive())
 	{
 		if (d.damageType == DT_ENEMY_ACTIVEPOISON)
 			core->sound->playSfx("Poison");
@@ -1123,10 +1123,10 @@ void Avatar::onDamage(DamageData &d)
 
 						dsq->sound->playSfx("heartbeat");
 
-						if (healthWillBe < 2 && healthWillBe >= 1 && !dsq->game->hasPlayedLow)
+						if (healthWillBe < 2 && healthWillBe >= 1 && !game->hasPlayedLow)
 						{
 							dsq->emote.playSfx(EMOTE_NAIJALOW);
-							dsq->game->hasPlayedLow = 1;
+							game->hasPlayedLow = 1;
 						}
 
 
@@ -1247,9 +1247,9 @@ void Avatar::entityDied(Entity *e)
 void Avatar::enableInput()
 {
 	ActionMapper::enableInput();
-	dsq->game->toggleMiniMapRender(1);
+	game->toggleMiniMapRender(1);
 
-	if (!dsq->game->isApplyingState())
+	if (!game->isApplyingState())
 		dsq->toggleCursor(true);
 
 	if (movingOn)
@@ -1276,7 +1276,7 @@ void Avatar::disableInput()
 	//stillTimer.stop();
 
 	closeSingingInterface();
-	dsq->game->toggleMiniMapRender(0);
+	game->toggleMiniMapRender(0);
 	dsq->toggleCursor(false);
 	endCharge();
 	clearTargets();
@@ -1330,7 +1330,7 @@ void Avatar::openSingingInterface(InputDevice device)
 
 		songInterfaceTimer = 0;
 
-		dsq->game->songLineRender->clear();
+		game->songLineRender->clear();
 
 
 		if (device == INPUT_JOYSTICK)
@@ -1343,8 +1343,8 @@ void Avatar::openSingingInterface(InputDevice device)
 void Avatar::closeSingingInterface()
 {
 
-	if (dsq->game->songLineRender)
-		dsq->game->songLineRender->clear();
+	if (game->songLineRender)
+		game->songLineRender->clear();
 	if (singing)
 	{
 		core->setMouseConstraint(false);
@@ -1433,7 +1433,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 
 	/*
 	if (dsq->game)
-		dsq->game->clearControlHint();
+		game->clearControlHint();
 	*/
 
 	if (lastForm == FORM_NONE)
@@ -1469,7 +1469,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 
 		if (isNearObstruction(3))
 		{
-			Vector n = dsq->game->getWallNormal(position);
+			Vector n = game->getWallNormal(position);
 			if (!n.isZero())
 			{
 				n *= 400;
@@ -1505,9 +1505,9 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 	case FORM_DUAL:
 		if (dsq->continuity.hasLi())
 		{
-			dsq->game->li->alpha = 1;
-			dsq->game->li->position = position;
-			dsq->game->li->setState(STATE_IDLE);
+			game->li->alpha = 1;
+			game->li->position = position;
+			game->li->setState(STATE_IDLE);
 		}
 	break;
 	case FORM_NATURE:
@@ -1537,16 +1537,16 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		case FORM_ENERGY:
 			core->sound->playSfx("EnergyForm");
 			/*
-			dsq->game->tintColor.path.addPathNode(Vector(1,1,1),0);
-			dsq->game->tintColor.path.addPathNode(Vector(1.5,1.5,4),0.25);
-			dsq->game->tintColor.path.addPathNode(Vector(4,1.5,1),0.5);
-			dsq->game->tintColor.path.addPathNode(Vector(1,1,1),0.5);
-			dsq->game->tintColor.startPath(2);
+			game->tintColor.path.addPathNode(Vector(1,1,1),0);
+			game->tintColor.path.addPathNode(Vector(1.5,1.5,4),0.25);
+			game->tintColor.path.addPathNode(Vector(4,1.5,1),0.5);
+			game->tintColor.path.addPathNode(Vector(1,1,1),0.5);
+			game->tintColor.startPath(2);
 			*/
 
 			/*
-			dsq->game->tintColor = Vector(1,1,3);
-			dsq->game->tintColor.interpolateTo(Vector(1,1,1), 1);
+			game->tintColor = Vector(1,1,3);
+			game->tintColor.interpolateTo(Vector(1,1,1), 1);
 			*/
 
 		break;
@@ -1594,7 +1594,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 	/*
 	if (form != FORM_ENERGY)
 	{
-		dsq->game->sceneColor3.interpolateTo(Vector(1,1,1), 0.2);
+		game->sceneColor3.interpolateTo(Vector(1,1,1), 0.2);
 	}
 	*/
 	if (hair)
@@ -1691,8 +1691,8 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 	{
 		if (dsq->continuity.hasLi())
 		{
-			dsq->game->li->setState(STATE_WAIT);
-			dsq->game->li->alpha = 0;
+			game->li->setState(STATE_WAIT);
+			game->li->alpha = 0;
 		}
 		//dualFormMode = DUALFORM_LI;
 		refreshDualFormModel();
@@ -1725,7 +1725,7 @@ void Avatar::updateSingingInterface(float dt)
 	{
 		if (dsq->getInputMode() != INPUT_JOYSTICK && !core->mouse.change.isZero())
 		{
-			if (dsq->game->songLineRender && songIcons[0]->alpha.x == 1)
+			if (game->songLineRender && songIcons[0]->alpha.x == 1)
 			{
 				float smallestDist = HUGE_VALF;
 				int closest = -1;
@@ -1739,7 +1739,7 @@ void Avatar::updateSingingInterface(float dt)
 					}
 				}
 
-				dsq->game->songLineRender->newPoint(core->mouse.position, songIcons[closest]->noteColor);
+				game->songLineRender->newPoint(core->mouse.position, songIcons[closest]->noteColor);
 			}
 		}
 
@@ -1843,7 +1843,7 @@ Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, E
 		*/
 
 		//e &&
-		if (e != this && e->targetPriority >= highestPriority && this->pullTarget != e && e->isDamageTarget(dt) && dsq->game->isValidTarget(e, this))
+		if (e != this && e->targetPriority >= highestPriority && this->pullTarget != e && e->isDamageTarget(dt) && game->isValidTarget(e, this))
 		{
 
 
@@ -1934,7 +1934,7 @@ void Avatar::updateTargets(float dt, bool override)
 		if (!targets[i].e
 		|| !targets[i].e->isPresent()
 		|| targets[i].e->getState() == STATE_DEATHSCENE
-		|| !dsq->game->isValidTarget(targets[i].e, this))
+		|| !game->isValidTarget(targets[i].e, this))
 		{
 			targets.clear();
 			break;
@@ -2016,7 +2016,7 @@ void Avatar::updateTargets(float dt, bool override)
 			Entity *e = targets[i].e;
 			if (e)
 			{
-				if (!(position - e->position).isLength2DIn(e->getTargetRange() + TARGET_RANGE + TARGET_GRACE_RANGE) || !dsq->game->isValidTarget(e, this) || !e->isDamageTarget(damageType))
+				if (!(position - e->position).isLength2DIn(e->getTargetRange() + TARGET_RANGE + TARGET_GRACE_RANGE) || !game->isValidTarget(e, this) || !e->isDamageTarget(damageType))
 				{
 					lostTarget(i, targets[i].e);
 					targets[i].e = 0;
@@ -2137,7 +2137,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 	Vector p = position;
 	if(boneLeftArm)
 		p = boneLeftArm->getWorldPosition();
-	//&& !dsq->game->isObstructed(TileVector(position))
+	//&& !game->isObstructed(TileVector(position))
 	/*
 	if (dsq->inputMode == INPUT_MOUSE && state.lockedToWall )
 		dir = dsq->getGameCursorPosition() - p;
@@ -2222,20 +2222,20 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 				dir = (targets[i].e->getTargetPoint(targets[i].targetPt) - p);
 			}
 
-			s = dsq->game->fireShot(shot, this, targets[i].e);
+			s = game->fireShot(shot, this, targets[i].e);
 			s->setAimVector(dir);
 			s->setTargetPoint(targets[i].targetPt);
 
 			/*
 			if (dsq->continuity.hasFormUpgrade(FORMUPGRADE_ENERGY2))
 			{
-				s = dsq->game->fireShot("EnergyBlast2", this, targets[i].e);
+				s = game->fireShot("EnergyBlast2", this, targets[i].e);
 				s->setAimVector(dir);
 				s->setTargetPoint(targets[i].targetPt);
 			}
 			else
 			{
-				s = dsq->game->fireShot("EnergyBlast", this, targets[i].e);
+				s = game->fireShot("EnergyBlast", this, targets[i].e);
 				s->setAimVector(dir);
 				s->setTargetPoint(targets[i].targetPt);
 			}
@@ -2247,7 +2247,7 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 		//if (!dir.isLength2DIn(2) || dsq->inputMode == INPUT_JOYSTICK)
 		if (true)
 		{
-			s = dsq->game->fireShot(shot, this);
+			s = game->fireShot(shot, this);
 
 			if (dir.isLength2DIn(2))
 			{
@@ -2263,12 +2263,12 @@ bool Avatar::fireAtNearestValidEntity(const std::string &shot)
 			/*
 			if (dsq->continuity.hasFormUpgrade(FORMUPGRADE_ENERGY2))
 			{
-				s = dsq->game->fireShot("EnergyBlast2", this);
+				s = game->fireShot("EnergyBlast2", this);
 				s->setAimVector(dir);
 			}
 			else
 			{
-				s = dsq->game->fireShot("EnergyBlast", this);
+				s = game->fireShot("EnergyBlast", this);
 				s->setAimVector(dir);
 			}
 			*/
@@ -2427,7 +2427,7 @@ void Avatar::formAbility()
 							int num = 5;
 							for (; i < num; i++)
 							{
-								Shot *s = dsq->game->fireShot("DualForm", this, 0, position, 0);
+								Shot *s = game->fireShot("DualForm", this, 0, position, 0);
 								//*0.5f + getAim()*0.5f
 								Vector v1 = this->getTendrilAimVector(i, num);
 								Vector v2 = getAim();
@@ -2513,7 +2513,7 @@ void Avatar::formAbility()
 			else if (chargeLevelAttained == 2)
 				seedName = "SeedUberVine";
 
-			dsq->game->fireShot(seedName, this, 0, pos, getAim());
+			game->fireShot(seedName, this, 0, pos, getAim());
 		}
 	break;
 	case FORM_BEAST:
@@ -2531,7 +2531,7 @@ void Avatar::formAbility()
 						bool playSfx = true;
 						if (i > 0)
 							playSfx = false;
-						Shot *s = dsq->game->fireShot(d->shot, this, 0, Vector(0,0,0), Vector(0,0,0), playSfx);
+						Shot *s = game->fireShot(d->shot, this, 0, Vector(0,0,0), Vector(0,0,0), playSfx);
 						if (s->shotData && s->shotData->damage > 0)
 						{
 							s->extraDamage = 1;
@@ -2541,7 +2541,7 @@ void Avatar::formAbility()
 						if (s->shotData->homing > 0)
 						{
 							Vector p = dsq->getGameCursorPosition();
-							target = dsq->game->getNearestEntity(p, 800, this, ET_ENEMY, s->getDamageType());
+							target = game->getNearestEntity(p, 800, this, ET_ENEMY, s->getDamageType());
 						}
 						if (target)
 						{
@@ -2661,7 +2661,7 @@ void Avatar::formAbility()
 			q->fadeAlphaWithLife = 1;
 			q->scale = Vector(0,0);
 			q->scale.interpolateTo(Vector(2,2), 0.1f);
-			dsq->game->addRenderObject(q, LR_ELEMENTS13);
+			game->addRenderObject(q, LR_ELEMENTS13);
 			q->moveToFront();
 
 			FOR_ENTITIES(i)
@@ -2708,13 +2708,13 @@ void Avatar::formAbility()
 			}
 			if (spiritEnergyAbsorbed > 4)
 			{
-				dsq->game->spawnManaBall(position, 1);
+				game->spawnManaBall(position, 1);
 				spiritEnergyAbsorbed = 0;
 			}
 			spiritBeaconEmitter.start();
 			formAbilityDelay = 1.0;
 
-			Path *p = dsq->game->getNearestPath(position, "SPIRITBEACON");
+			Path *p = game->getNearestPath(position, "SPIRITBEACON");
 			if (p && p->isCoordinateInside(position))
 			{
 				bodyPosition = position;
@@ -2726,11 +2726,11 @@ void Avatar::formAbility()
 			}
 			else
 			{
-				Path *p = dsq->game->getNearestPath(position, PATH_SPIRITPORTAL);
+				Path *p = game->getNearestPath(position, PATH_SPIRITPORTAL);
 				if (p && p->isCoordinateInside(position))
 				{
 					changeForm(FORM_NORMAL);
-					dsq->game->warpToSceneFromNode(p);
+					game->warpToSceneFromNode(p);
 				}
 			}
 		}
@@ -2753,7 +2753,7 @@ Vector Avatar::getTendrilAimVector(int i, int max)
 	Vector aim(sinf(a), cosf(a));
 	if (state.lockedToWall)
 	{
-		Vector n = dsq->game->getWallNormal(position);
+		Vector n = game->getWallNormal(position);
 		if (!n.isZero())
 		{
 			aim = aim*0.4f + n*0.6f;
@@ -2845,7 +2845,7 @@ void Avatar::doShock(const std::string &shotName)
 	{
 		for (size_t i = 0; i < thits; i++)
 		{
-			Shot *s = dsq->game->fireShot(shotName, this, 0);
+			Shot *s = game->fireShot(shotName, this, 0);
 
 			s->setAimVector(getTendrilAimVector(i, thits));
 
@@ -2859,7 +2859,7 @@ void Avatar::doShock(const std::string &shotName)
 			Entity *e = entitiesToHit[i];
 			if (e)
 			{
-				Shot *s = dsq->game->fireShot(shotName, this, e);
+				Shot *s = game->fireShot(shotName, this, e);
 				if (!targets.empty())
 				{
 					for (size_t j = 0; j < targets.size(); j++)
@@ -2901,7 +2901,7 @@ void Avatar::formAbilityUpdate(float dt)
 				Vector dir = getAim();
 				dir.normalize2D();
 
-				dsq->game->fireShot("FishFormBubble", this, 0, position+dir*16, dir);
+				game->fireShot("FishFormBubble", this, 0, position+dir*16, dir);
 			}
 		}
 	}
@@ -2924,7 +2924,7 @@ bool Avatar::isMouseInputEnabled()
 	if (!inputEnabled) return false;
 	//if (dsq->continuity.getWorldType() != WT_NORMAL) return false;
 	//if (getState() != STATE_IDLE) return false;
-	if (dsq->game->isPaused()) return false;
+	if (game->isPaused()) return false;
 	return true;
 }
 
@@ -3174,7 +3174,7 @@ void Avatar::endCharge()
 
 Vector Avatar::getWallNormal(TileVector t)
 {
-	return dsq->game->getWallNormal(t.worldVector(), 5)*-1;
+	return game->getWallNormal(t.worldVector(), 5)*-1;
 }
 
 
@@ -3217,7 +3217,7 @@ void Avatar::lockToWall()
 	if (!canLockToWall()) return;
 	if (state.lockedToWall) return;
 	if (vel.x == 0 && vel.y == 0) return;
-	if (dsq->game->isPaused()) return;
+	if (game->isPaused()) return;
 
 	TileVector t(position);
 	Vector m = vel;
@@ -3226,56 +3226,56 @@ void Avatar::lockToWall()
 	t.y += int(m.y);
 
 	bool good = true;
-	if (!dsq->game->isObstructed(t))
+	if (!game->isObstructed(t))
 	{
 		do
 		{
 			TileVector test;
 
 			test = TileVector(t.x, t.y+1);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				t = test;
 				break;
 			}
 			test = TileVector(t.x, t.y-1);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				t = test;
 				break;
 			}
 			test = TileVector(t.x-1, t.y);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				t = test;
 				break;
 			}
 			test = TileVector(t.x+1, t.y);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				t = test;
 				break;
 			}
 			test = TileVector(t.x+1, t.y+1);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				t = test;
 				break;
 			}
 			test = TileVector(t.x-1, t.y+1);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				t = test;
 				break;
 			}
 			test = TileVector(t.x+1, t.y-1);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				t = test;
 				break;
 			}
 			test = TileVector(t.x-1, t.y-1);
-			if (dsq->game->isObstructed(test))
+			if (game->isObstructed(test))
 			{
 				t = test;
 				break;
@@ -3286,13 +3286,13 @@ void Avatar::lockToWall()
 		while(0);
 	}
 
-	if (dsq->game->isObstructed(t, OT_HURT) && isDamageTarget(DT_WALLHURT))
+	if (game->isObstructed(t, OT_HURT) && isDamageTarget(DT_WALLHURT))
 	{
 		good = false;
 	}
 	if (good)
 	{
-		wallNormal = dsq->game->getWallNormal(position);
+		wallNormal = game->getWallNormal(position);
 		bool outOfWaterHit = (!_isUnderWater && !(wallNormal.y < -0.1f));
 		if (wallNormal.isZero() )
 		{
@@ -3304,9 +3304,9 @@ void Avatar::lockToWall()
 			if (!dsq->mod.isActive() && !dsq->continuity.getFlag("lockedToWall"))
 			{
 
-				if (!dsq->game->isControlHint()){
+				if (!game->isControlHint()){
 					dsq->continuity.setFlag("lockedToWall", 1);
-					dsq->game->setControlHint(stringbank.get(13), 1, 0, 0, 6, "", true);
+					game->setControlHint(stringbank.get(13), 1, 0, 0, 6, "", true);
 				}
 			}
 
@@ -3333,7 +3333,7 @@ void Avatar::lockToWall()
 
 			offset.stop();
 
-			int tileType = dsq->game->getGrid(t);
+			int tileType = game->getGrid(t);
 			Vector offdiff = t.worldVector() - position;
 			if (!offdiff.isZero())
 			{
@@ -3488,9 +3488,9 @@ void Avatar::createWeb()
 {
 	web = new Web;
 	web->setParentEntity(this);
-	dsq->game->addRenderObject(web, LR_ENTITIES);
-	curWebPoint = web->addPoint(dsq->game->avatar->position);
-	curWebPoint = web->addPoint(dsq->game->avatar->position);
+	game->addRenderObject(web, LR_ENTITIES);
+	curWebPoint = web->addPoint(game->avatar->position);
+	curWebPoint = web->addPoint(game->avatar->position);
 }
 
 void Avatar::clearWeb()
@@ -3633,7 +3633,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	hair = new Hair();
 	hair->setTexture("Naija/Cape");
 	hair->setRenderPass(1);
-	dsq->game->addRenderObject(hair, LR_ENTITIES);
+	game->addRenderObject(hair, LR_ENTITIES);
 
 	debugLog("Avatar 4");
 
@@ -3651,7 +3651,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	blinder->followCamera = 1;
 
 	blinder->alpha = 0;
-	dsq->game->addRenderObject(blinder, LR_AFTER_EFFECTS);
+	game->addRenderObject(blinder, LR_AFTER_EFFECTS);
 
 	tripper = new PauseQuad;
 	tripper->position = Vector(400,300);
@@ -3662,7 +3662,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	tripper->scale = Vector(1.0125f, 1.0125f);
 	tripper->followCamera = 1;
 	tripper->alpha = 0;
-	dsq->game->addRenderObject(tripper, LR_AFTER_EFFECTS);
+	game->addRenderObject(tripper, LR_AFTER_EFFECTS);
 
 	songIcons.resize(8);
 	size_t i = 0;
@@ -3671,7 +3671,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 		songIcons[i] = new SongIcon(i);
 		songIcons[i]->alpha = 0;
 		songIcons[i]->followCamera = 1;
-		dsq->game->addRenderObject(songIcons[i], LR_HUD);
+		game->addRenderObject(songIcons[i], LR_HUD);
 	}
 
 	setSongIconPositions();
@@ -3682,7 +3682,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	fader->setWidthHeight(core->getVirtualWidth()+10);
 	fader->followCamera = 1;
 	fader->alpha = 0;
-	dsq->game->addRenderObject(fader, LR_AFTER_EFFECTS);
+	game->addRenderObject(fader, LR_AFTER_EFFECTS);
 
 	debugLog("Avatar 6");
 
@@ -3698,7 +3698,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 		targetQuads[i]->load("EnergyBlastTarget");
 
 		// HACK: should have its own layer?
-		dsq->game->addRenderObject(targetQuads[i], LR_PARTICLES);
+		game->addRenderObject(targetQuads[i], LR_PARTICLES);
 	}
 
 	lightFormGlow = new Quad("Naija/LightFormGlow", 0);
@@ -3706,12 +3706,12 @@ Avatar::Avatar() : Entity(), ActionMapper()
 
 	lightFormGlow->scale.interpolateTo(Vector(5.5f, 5.5f), 0.4f, -1, 1);
 	//lightFormGlow->positionSnapTo = &position;
-	dsq->game->addRenderObject(lightFormGlow, LR_ELEMENTS13);
+	game->addRenderObject(lightFormGlow, LR_ELEMENTS13);
 
 	lightFormGlowCone = new Quad("Naija/LightFormGlowCone", 0);
 	lightFormGlowCone->alpha = 0;
 	lightFormGlowCone->scale = Vector(1, 6); // 4.5
-	dsq->game->addRenderObject(lightFormGlowCone, LR_ELEMENTS13);
+	game->addRenderObject(lightFormGlowCone, LR_ELEMENTS13);
 
 
 	debugLog("Avatar 7");
@@ -3986,7 +3986,7 @@ void Avatar::startBurst()
 			dsq->rumble(0.2f, 0.2f, 0.2f, _lastActionSourceID, _lastActionInputDevice);
 			if (dsq->continuity.form != FORM_BEAST)
 				wakeEmitter.start();
-			dsq->game->playBurstSound(pushingOffWallEffect>0);
+			game->playBurstSound(pushingOffWallEffect>0);
 			skeletalSprite.animate(getBurstAnimName(), 0);
 			bursting = true;
 			burst = 1.0f;
@@ -4081,7 +4081,7 @@ void Avatar::startWallBurst(bool useCursor)
 			vel = wallPushVec;
 			this->state.lockedToWall = false;
 			skeletalSprite.stopAllAnimations();
-			dsq->game->playBurstSound(pushingOffWallEffect>0);
+			game->playBurstSound(pushingOffWallEffect>0);
 			skeletalSprite.animate(getBurstAnimName(), 0);
 			bursting = true;
 			burst = 1.5;
@@ -4164,7 +4164,7 @@ Vector Avatar::getVectorToCursor(bool trueMouse)
 
 void Avatar::action(int id, int state, int source, InputDevice device)
 {
-	if(dsq->game->isIgnoreAction((AquariaActions)id))
+	if(game->isIgnoreAction((AquariaActions)id))
 		return;
 
 	_lastActionSourceID = source;
@@ -4359,7 +4359,7 @@ void Avatar::doBindSong()
 	}
 	else
 	{
-		dsq->game->bindIngredients();
+		game->bindIngredients();
 		setNearestPullTarget();
 		if (!pullTarget)
 		{
@@ -4449,7 +4449,7 @@ void Avatar::splash(bool down)
 	// in the Turtle Cave).  Not sure how best to fix it in the current
 	// code.  --achurch
 	Vector hsplash = avatar->getHeadPosition();
-	hsplash.y = dsq->game->waterLevel.x;
+	hsplash.y = game->waterLevel.x;
 	core->createParticleEffect("HeadSplash", hsplash, LR_PARTICLES);
 
 	float a = 0;
@@ -4563,7 +4563,7 @@ void Avatar::updateAura(float dt)
 			for (Shot::Shots::iterator i = Shot::shots.begin(); i != Shot::shots.end(); ++i)
 			{
 				Shot *s = *i;
-				if (s->isActive() && dsq->game->isDamageTypeEnemy(s->getDamageType()) && s->firer != this
+				if (s->isActive() && game->isDamageTypeEnemy(s->getDamageType()) && s->firer != this
 					&& (!s->shotData || !s->shotData->ignoreShield))
 				{
 
@@ -4864,7 +4864,7 @@ void Avatar::updateWallJump(float dt)
 
 void Avatar::updateRoll(float dt)
 {
-	if (!inputEnabled || dsq->game->isWorldPaused() || riding)
+	if (!inputEnabled || game->isWorldPaused() || riding)
 	{
 		if (rolling)
 			stopRoll();
@@ -5094,7 +5094,7 @@ void Avatar::updateFoodParticleEffects()
 void Avatar::updateLookAt(float dt)
 {
 	//if (dsq->overlay->alpha != 0) return;
-	if (dsq->game->isShuttingDownGameState()) return;
+	if (game->isShuttingDownGameState()) return;
 	if (headTextureTimer > 0)
 	{
 		headTextureTimer -= dt;
@@ -5188,7 +5188,7 @@ void Avatar::updateLookAt(float dt)
 
 			if (state.updateLookAtTime > 1.5f)
 			{
-				state.lookAtEntity = dsq->game->getNearestEntity(position, 800, this, ET_NOTYPE, DT_NONE, LR_ENTITIES0, LR_ENTITIES2);
+				state.lookAtEntity = game->getNearestEntity(position, 800, this, ET_NOTYPE, DT_NONE, LR_ENTITIES0, LR_ENTITIES2);
 				if (state.lookAtEntity && state.lookAtEntity->isv(EV_LOOKAT, 1))
 				{
 					state.updateLookAtTime = 0;
@@ -5273,7 +5273,7 @@ void Avatar::onUpdate(float dt)
 			}
 		}
 
-		if (!dsq->game->isPaused() && isActing(ACTION_LOOK, -1) && !dsq->game->avatar->isSinging() && dsq->game->avatar->isInputEnabled() && !dsq->game->isInGameMenu())
+		if (!game->isPaused() && isActing(ACTION_LOOK, -1) && !game->avatar->isSinging() && game->avatar->isInputEnabled() && !game->isInGameMenu())
 		{
 			looking = 1;
 		}
@@ -5298,7 +5298,7 @@ void Avatar::onUpdate(float dt)
 		wakeEmitter.stop();
 		rollLeftEmitter.stop();
 		rollRightEmitter.stop();
-		dsq->game->toggleOverrideZoom(false);
+		game->toggleOverrideZoom(false);
 		if (dsq->continuity.form != FORM_NORMAL)
 			changeForm(FORM_NORMAL);
 		setHeadTexture("Pain");
@@ -5308,7 +5308,7 @@ void Avatar::onUpdate(float dt)
 	}
 	if (isEntityDead())
 	{
-		dsq->game->toggleOverrideZoom(false);
+		game->toggleOverrideZoom(false);
 	}
 
 	if (dsq->user.control.targeting)
@@ -5323,7 +5323,7 @@ void Avatar::onUpdate(float dt)
 
 	updateFoodParticleEffects();
 
-	if (!dsq->game->isPaused())
+	if (!game->isPaused())
 		myZoom.update(dt);
 
 	_isUnderWater = isUnderWater();
@@ -5358,11 +5358,11 @@ void Avatar::onUpdate(float dt)
 			}
 			else
 			{
-				if (!dsq->game->waterLevel.isInterpolating())
+				if (!game->waterLevel.isInterpolating())
 				{
 					if (vel.y < 0)
 						vel.y = -vel.y*0.5f;
-					position.y = dsq->game->waterLevel.x + collideRadius;
+					position.y = game->waterLevel.x + collideRadius;
 				}
 			}
 		}
@@ -5398,7 +5398,7 @@ void Avatar::onUpdate(float dt)
 			//stopBurst();
 
 			// if first time
-			if (!dsq->mod.isActive() && dsq->continuity.getFlag("leftWater")==0 && dsq->game->sceneName.find("veil")!=std::string::npos)
+			if (!dsq->mod.isActive() && dsq->continuity.getFlag("leftWater")==0 && game->sceneName.find("veil")!=std::string::npos)
 			{
 				setInvincible(true);
 				setv(EV_NOINPUTNOVEL, 0);
@@ -5411,7 +5411,7 @@ void Avatar::onUpdate(float dt)
 
 				core->sound->fadeMusic(SFT_OUT, 2);
 				//("Veil");
-				dsq->game->avatar->disableInput();
+				game->avatar->disableInput();
 				dsq->gameSpeed.interpolateTo(0.1f, 0.5f);
 
 				//dsq->sound->setMusicFader(0.5, 0.5);
@@ -5429,7 +5429,7 @@ void Avatar::onUpdate(float dt)
 
 				//dsq->sound->setMusicFader(1.0, 1);
 
-				dsq->game->avatar->enableInput();
+				game->avatar->enableInput();
 
 				setv(EV_NOINPUTNOVEL, 1);
 
@@ -5712,7 +5712,7 @@ void Avatar::onUpdate(float dt)
 
 	//if (core->getNestedMains() == 1)
 	{
-		if (getState() != STATE_TRANSFORM && !dsq->game->isWorldPaused())
+		if (getState() != STATE_TRANSFORM && !game->isWorldPaused())
 		{
 			formAbilityUpdate(dt);
 		}
@@ -5888,7 +5888,7 @@ void Avatar::onUpdate(float dt)
 					{
 						urchinDelay = 0.1f;
 
-						dsq->game->fireShot("urchin", this, 0, position + offset);
+						game->fireShot("urchin", this, 0, position + offset);
 					}
 				}
 			}
@@ -5911,9 +5911,9 @@ void Avatar::onUpdate(float dt)
 								d.setLength2D(16);
 							}
 
-							dsq->game->spawnManaBall(position + offset + d, JELLYCOSTUME_HEALAMOUNT);
+							game->spawnManaBall(position + offset + d, JELLYCOSTUME_HEALAMOUNT);
 
-							//Shot *s = dsq->game->fireShot("urchin", this, 0, getWorldPosition());
+							//Shot *s = game->fireShot("urchin", this, 0, getWorldPosition());
 						}
 					}
 				}
@@ -5933,7 +5933,7 @@ void Avatar::onUpdate(float dt)
 				{
 					shot = "SuperBite";
 				}
-				dsq->game->fireShot(shot, this, 0, p);
+				game->fireShot(shot, this, 0, p);
 				//s->setAimVector(getNormal());
 			}
 		}
@@ -5947,12 +5947,12 @@ void Avatar::onUpdate(float dt)
 				if (fishPoison > 0.2f)
 				{
 					fishPoison = 0;
-					dsq->game->fireShot("FishPoison", this, 0, position);
+					game->fireShot("FishPoison", this, 0, position);
 				}
 			}
 		}
 
-		if (!state.lockedToWall && _isUnderWater && !dsq->game->isWorldPaused() && canMove)
+		if (!state.lockedToWall && _isUnderWater && !game->isWorldPaused() && canMove)
 		{
 			if (bursting)
 			{
@@ -5998,7 +5998,7 @@ void Avatar::onUpdate(float dt)
 		if (state.lockedToWall)
 		{
 			rotateToVec(wallPushVec, dt*2);
-			if (!boneLock.on && !dsq->game->isObstructed(wallLockTile))
+			if (!boneLock.on && !game->isObstructed(wallLockTile))
 			{
 				//debugLog("Dropping from wall");
 				fallOffWall();
@@ -6426,7 +6426,7 @@ void Avatar::onUpdate(float dt)
 		}
 		else
 		{
-			if (dsq->game->waterLevel.x > 0 && fabsf(avatar->position.y - dsq->game->waterLevel.x) < 800)
+			if (game->waterLevel.x > 0 && fabsf(avatar->position.y - game->waterLevel.x) < 800)
 			{
 				float time = 0.5f;
 				if (!myZoom.isInterpolating() || ((!core->globalScale.data || core->globalScale.data->target != zoomSurface) && myZoom.data->timePeriod != time))
@@ -6553,9 +6553,9 @@ void Avatar::onUpdate(float dt)
 						//Vector testPosition = position + (vel *dt)*2;
 						position = newPosition;
 
-						if (dsq->game->collideCircleWithGrid(position, collideRadius))
+						if (game->collideCircleWithGrid(position, collideRadius))
 						{
-							if (dsq->game->lastCollideTileType == OT_HURT
+							if (game->lastCollideTileType == OT_HURT
 								&& isDamageTarget(DT_WALLHURT))
 							{
 								DamageData d;
@@ -6565,7 +6565,7 @@ void Avatar::onUpdate(float dt)
 								vel2 = Vector(0,0,0);
 								//doCollisionAvoidance(1, 3, 1);
 								/*
-								Vector v = dsq->game->getWallNormal(position);
+								Vector v = game->getWallNormal(position);
 								if (!v.isZero())
 								{
 									vel += v * 500;
@@ -6648,14 +6648,14 @@ void Avatar::onUpdate(float dt)
 								position = lastPosition;
 
 								// works as long as not buried in wall ... yep. =(
-								if (dsq->game->isObstructed(TileVector(position)))
+								if (game->isObstructed(TileVector(position)))
 								{
 									//vel = -vel*0.5f;
 									vel = 0;
 								}
 								else
 								{
-									// && dsq->game->getPercObsInArea(position, 4) < 0.75f
+									// && game->getPercObsInArea(position, 4) < 0.75f
 									if (!inCurrent)
 									{
 										if (bursting)
@@ -6672,7 +6672,7 @@ void Avatar::onUpdate(float dt)
 											{
 												// this bounce is what causes naija to get wedged
 												float len = vel.getLength2D();
-												Vector n = dsq->game->getWallNormal(position, 5);
+												Vector n = game->getWallNormal(position, 5);
 												if (n.x == 0 && n.y == 0)
 												{
 													vel = 0;
@@ -6724,12 +6724,12 @@ void Avatar::onUpdate(float dt)
 	}
 
 	if(canCollideWithShots())
-		dsq->game->handleShotCollisions(this, (activeAura == AURA_SHIELD));
+		game->handleShotCollisions(this, (activeAura == AURA_SHIELD));
 
 
 	if(!core->particlesPaused && elementEffectMult > 0)
 	{
-		ElementUpdateList& elems = dsq->game->elementInteractionList;
+		ElementUpdateList& elems = game->elementInteractionList;
 		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
 		{
 			(*it)->doInteraction(this, elementEffectMult, 16);
@@ -6754,7 +6754,7 @@ void Avatar::checkNearWall()
 		{
 			t.x = oT.x + v.x*i;
 			t.y = oT.y + v.y*i;
-			if (dsq->game->isObstructed(t, ~OT_HURT))
+			if (game->isObstructed(t, ~OT_HURT))
 			{
 				obs = true;
 				break;
@@ -6763,7 +6763,7 @@ void Avatar::checkNearWall()
 		}
 		if (obs)
 		{
-			Vector n = dsq->game->getWallNormal(t.worldVector());
+			Vector n = game->getWallNormal(t.worldVector());
 			if (!n.isZero())
 			{
 				state.nearWall = true;
@@ -6790,10 +6790,10 @@ void Avatar::onWarp()
 bool Avatar::checkWarpAreas()
 {
 	size_t i = 0;
-	for (i = 0; i < dsq->game->getNumPaths(); i++)
+	for (i = 0; i < game->getNumPaths(); i++)
 	{
 		bool warp = false;
-		Path *p = dsq->game->getPath(i);
+		Path *p = game->getPath(i);
 		if (p && p->active && !p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];
@@ -6840,7 +6840,7 @@ bool Avatar::checkWarpAreas()
 				if (warp)
 				{
 					if (avatar->canWarp)
-						dsq->game->warpToSceneFromNode(p);
+						game->warpToSceneFromNode(p);
 					else
 					{
 						avatar->position = backPos;
@@ -6858,12 +6858,12 @@ bool Avatar::checkWarpAreas()
 					{
 						if (p->isCoordinateInside(position))
 						{
-							Path *p2 = dsq->game->getPathByName(p->warpNode);
+							Path *p2 = game->getPathByName(p->warpNode);
 							if (p2)
 							{
-								dsq->game->preLocalWarp(p->localWarpType);
-								dsq->game->avatar->position = p2->getPathNode(0)->position;
-								dsq->game->postLocalWarp();
+								game->preLocalWarp(p->localWarpType);
+								game->avatar->position = p2->getPathNode(0)->position;
+								game->postLocalWarp();
 								//dsq->fade(0, t);
 								return true;
 							}

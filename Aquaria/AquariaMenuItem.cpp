@@ -594,7 +594,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 		std::string s;
 		s.reserve(6);
 		s = "_";
-		for (int i = 0; i < int(dsq->game->getTimer(5)); i++)
+		for (int i = 0; i < int(game->getTimer(5)); i++)
 		{
 			s += "_";
 		}
@@ -659,7 +659,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 							}
 						}
 
-						while (dsq->game->getKeyState(i))
+						while (game->getKeyState(i))
 						{
 							dsq->run(0.1f, true);
 						}
@@ -715,7 +715,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 							*k = i;
 					}
 
-					while (dsq->game->getKeyState(i))
+					while (game->getKeyState(i))
 					{
 						dsq->run(0.1f, true);
 					}

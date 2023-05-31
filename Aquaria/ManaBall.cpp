@@ -69,7 +69,7 @@ void ManaBall::use(Entity *entity)
 
 void ManaBall::onUpdate(float dt)
 {
-	if (dsq->game->isPaused()) return;
+	if (game->isPaused()) return;
 
 	Quad::onUpdate(dt);
 
@@ -87,20 +87,20 @@ void ManaBall::onUpdate(float dt)
 		}
 	}
 
-	if (dsq->game->avatar)
+	if (game->avatar)
 	{
 		if (!used)
 		{
-			Vector diff = (dsq->game->avatar->position - position);
+			Vector diff = (game->avatar->position - position);
 			if (diff.isLength2DIn(96))
 			{
-				use(dsq->game->avatar);
+				use(game->avatar);
 
 			}
 			else
 			{
 				float len = 1000;
-				if (dsq->game->avatar->isRolling() && diff.isLength2DIn(len))
+				if (game->avatar->isRolling() && diff.isLength2DIn(len))
 				{
 					float maxSpeed = 800;
 					Vector maxV = diff;
@@ -117,7 +117,7 @@ void ManaBall::onUpdate(float dt)
 		}
 		else
 		{
-			position.interpolateTo(dsq->game->avatar->position, 0.2f);
+			position.interpolateTo(game->avatar->position, 0.2f);
 
 		}
 	}

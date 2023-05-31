@@ -500,12 +500,12 @@ void Path::update(float dt)
 	if(minimapIcon)
 		minimapIcon->update(dt);
 
-	if (!(pauseFreeze && dsq->game->isPaused()) && !(spiritFreeze && dsq->game->isWorldPaused()))
+	if (!(pauseFreeze && game->isPaused()) && !(spiritFreeze && game->isWorldPaused()))
 	{
 		if (addEmitter && emitter)
 		{
 			addEmitter = false;
-			dsq->game->addRenderObject(emitter, LR_PARTICLES);
+			game->addRenderObject(emitter, LR_PARTICLES);
 		}
 
 		if (emitter && !nodes.empty())
@@ -529,24 +529,24 @@ void Path::update(float dt)
 
 		if (!nodes.empty() && !spawnedEntity && !spawnEnemyName.empty())
 		{
-			if (neverSpawned || !(nodes[0].position - dsq->game->avatar->position).isLength2DIn(spawnEnemyDistance))
+			if (neverSpawned || !(nodes[0].position - game->avatar->position).isLength2DIn(spawnEnemyDistance))
 			{
 				neverSpawned = false;
-				spawnedEntity = dsq->game->createEntityTemp(spawnEnemyName.c_str(), nodes[0].position, true);
+				spawnedEntity = game->createEntityTemp(spawnEnemyName.c_str(), nodes[0].position, true);
 			}
 		}
 		if (spawnedEntity && spawnedEntity->life < 1.0f)
 		{
 			spawnedEntity = 0;
 		}
-		if (pathType == PATH_CURRENT && !dsq->game->isWorldPaused())
+		if (pathType == PATH_CURRENT && !game->isWorldPaused())
 		{
 			animOffset -= currentMod*(dt/830);
 
 		}
-		if (pathType == PATH_GEM && dsq->game->avatar)
+		if (pathType == PATH_GEM && game->avatar)
 		{
-			if (isCoordinateInside(dsq->game->avatar->position))
+			if (isCoordinateInside(game->avatar->position))
 			{
 				if (!dsq->continuity.getPathFlag(this))
 				{
@@ -555,24 +555,24 @@ void Path::update(float dt)
 				}
 			}
 		}
-		if (active && pathType == PATH_ZOOM && dsq->game->avatar)
+		if (active && pathType == PATH_ZOOM && game->avatar)
 		{
-			if (isCoordinateInside(dsq->game->avatar->position))
+			if (isCoordinateInside(game->avatar->position))
 			{
 				naijaIn = true;
-				dsq->game->overrideZoom(amount, time);
+				game->overrideZoom(amount, time);
 			}
 			else
 			{
 				if (naijaIn)
 				{
 					naijaIn = false;
-					dsq->game->overrideZoom(0);
+					game->overrideZoom(0);
 				}
 			}
 		}
 
-		if (active && pathType == PATH_STEAM && !dsq->game->isWorldPaused())
+		if (active && pathType == PATH_STEAM && !game->isWorldPaused())
 		{
 			animOffset -= 1000*0.00002f;
 
@@ -588,7 +588,7 @@ void Path::update(float dt)
 					if (e)
 					{
 
-						if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.5f))
+						if (game->collideCircleVsLine(e, start, end, rect.getWidth()*0.5f))
 						{
 							if (e->getEntityType() == ET_AVATAR)
 							{
@@ -606,7 +606,7 @@ void Path::update(float dt)
 							}
 							Vector push;
 
-							push = e->position - dsq->game->lastCollidePosition;
+							push = e->position - game->lastCollidePosition;
 
 
 
@@ -617,7 +617,7 @@ void Path::update(float dt)
 								e->vel2 += v;
 							}
 							e->vel2 += push;
-							if (dsq->game->collideCircleVsLine(e, start, end, rect.getWidth()*0.25f))
+							if (game->collideCircleVsLine(e, start, end, rect.getWidth()*0.25f))
 							{
 								push.setLength2D(100);
 

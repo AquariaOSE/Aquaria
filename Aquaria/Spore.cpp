@@ -50,7 +50,7 @@ Spore::Spore (const Vector &position) : CollideEntity()
 
 bool Spore::isPositionClear(const Vector &position)
 {
-	if (dsq->game->isObstructed(TileVector(position)))
+	if (game->isObstructed(TileVector(position)))
 		return false;
 	for (Spores::iterator i = spores.begin(); i != spores.end(); i++)
 	{
@@ -103,7 +103,7 @@ void Spore::onUpdate(float dt)
 	CollideEntity::onUpdate(dt);
 
 	if (life < 1) return;
-	if (!(dsq->game->avatar->position - position).isLength2DIn(1024))
+	if (!(game->avatar->position - position).isLength2DIn(1024))
 	{
 		safeKill();
 	}
@@ -118,6 +118,6 @@ void Spore::onUpdate(float dt)
 			// YAY!
 		}
 
-		dsq->game->handleShotCollisions(this);
+		game->handleShotCollisions(this);
 	}
 }

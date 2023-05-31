@@ -30,7 +30,7 @@ WaterSurfaceRender::WaterSurfaceRender() : Quad()
 	qLine = new Quad("water/water-line", Vector(0,0));
 	qLine->repeatTextureToFill(1);
 	qLine->cull = false;
-	dsq->game->addRenderObject(qLine, LR_WATERSURFACE2);
+	game->addRenderObject(qLine, LR_WATERSURFACE2);
 
 	qLine2 = 0;
 
@@ -40,7 +40,7 @@ WaterSurfaceRender::WaterSurfaceRender() : Quad()
 
 	qSurface->cull = false;
 	qSurface->repeatTextureToFill(1);
-	dsq->game->addRenderObject(qSurface, LR_WATERSURFACE2);
+	game->addRenderObject(qSurface, LR_WATERSURFACE2);
 
 	shareColorWithChildren = 0;
 	shareAlphaWithChildren = 0;
@@ -48,7 +48,7 @@ WaterSurfaceRender::WaterSurfaceRender() : Quad()
 
 void WaterSurfaceRender::onUpdate(float dt)
 {
-	if (dsq->game->waterLevel.x > 0)
+	if (game->waterLevel.x > 0)
 	{
 
 		qLine->alpha = qSurface->alpha = 1;
@@ -56,7 +56,7 @@ void WaterSurfaceRender::onUpdate(float dt)
 
 
 		position.x = core->screenCenter.x;
-		position.y = dsq->game->waterLevel.x;
+		position.y = game->waterLevel.x;
 
 		width = core->getVirtualWidth()*core->invGlobalScale;
 		height = 100;
@@ -113,8 +113,8 @@ void WaterSurfaceRender::onUpdate(float dt)
 	if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
 	{
 		const float reflectSize = 97;
-		const float reflectPos = (dsq->game->waterLevel.x - core->cameraPos.y)
-			+ (dsq->game->waterLevel.x - core->screenCenter.y) / 3;
+		const float reflectPos = (game->waterLevel.x - core->cameraPos.y)
+			+ (game->waterLevel.x - core->screenCenter.y) / 3;
 		const float reflectOffset = -0.03f;
 		const float coordDiv = 768;
 		const float v0 = 1 + reflectOffset - (reflectPos * core->globalScale.x) / coordDiv;
@@ -130,13 +130,13 @@ void WaterSurfaceRender::onUpdate(float dt)
 
 void WaterSurfaceRender::render(const RenderState& rs) const
 {
-	if (dsq->game->waterLevel.x > 0)
+	if (game->waterLevel.x > 0)
 		Quad::render(rs);
 }
 
 void WaterSurfaceRender::onRender(const RenderState& rs) const
 {
-	if (dsq->game->waterLevel == 0) return;
+	if (game->waterLevel == 0) return;
 	if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
 	{
 		dsq->frameBuffer.bindTexture();

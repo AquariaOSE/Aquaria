@@ -39,7 +39,7 @@ void CurrentRender::onRender(const RenderState& rs) const
 	// note: Leave cull_face disabled!?
 	//glDisable(GL_CULL_FACE);
 	//int qs = 0;
-	for (Path *p = dsq->game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
+	for (Path *p = game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
 	{
 		if (p->active)
 		{

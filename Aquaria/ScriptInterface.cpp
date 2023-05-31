@@ -622,7 +622,7 @@ Path *pathFromName(lua_State *L, int slot = 1)
 {
 	std::string s = getString(L, slot);
 	stringToLower(s);
-	Path *p = dsq->game->getPathByName(s);
+	Path *p = game->getPathByName(s);
 	if (!p)
 	{
 		debugLog("Could not find path [" + s + "]");
@@ -1337,7 +1337,7 @@ luaFunc(obj_addChild)
 		{
 			// HACK: this is ugly, but necessary to prevent double-deletion
 			// anyways, dangerous; addChild() may fail, causing a small memory leak (and an error message)
-			dsq->getState(dsq->game->name)->removeRenderObjectFromList(which);
+			dsq->getState(game->name)->removeRenderObjectFromList(which);
 			which->setStateDataObject(NULL);
 			core->removeRenderObject(which, Core::DO_NOT_DESTROY_RENDER_OBJECT);
 			r->addChild(which, PM_POINTER, RBP_NONE, front ? CHILD_FRONT : CHILD_BACK);
@@ -1782,7 +1782,7 @@ luaFunc(obj_collideCircleVsLine)
 	sz = lua_tonumber(L, 6);
 	bool v = false;
 	if (r)
-		v = dsq->game->collideCircleVsLine(r, Vector(x1, y1), Vector(x2, y2), sz);
+		v = game->collideCircleVsLine(r, Vector(x1, y1), Vector(x2, y2), sz);
 	luaReturnBool(v);
 }
 
@@ -1795,7 +1795,7 @@ luaFunc(obj_collideCircleVsLineAngle)
 	float y=lua_tonumber(L, 7);
 	bool v = false;
 	if (r)
-		v = dsq->game->collideCircleVsLineAngle(r, angle, start, end, radius, Vector(x,y));
+		v = game->collideCircleVsLineAngle(r, angle, start, end, radius, Vector(x,y));
 	luaReturnBool(v);
 }
 
@@ -2113,13 +2113,13 @@ luaFunc(debugBreak)
 
 luaFunc(setIgnoreAction)
 {
-	dsq->game->setIgnoreAction((AquariaActions)lua_tointeger(L, 1), getBool(L, 2));
+	game->setIgnoreAction((AquariaActions)lua_tointeger(L, 1), getBool(L, 2));
 	luaReturnNil();
 }
 
 luaFunc(isIgnoreAction)
 {
-	luaReturnBool(dsq->game->isIgnoreAction((AquariaActions)lua_tointeger(L, 1)));
+	luaReturnBool(game->isIgnoreAction((AquariaActions)lua_tointeger(L, 1)));
 }
 
 luaFunc(sendAction)
@@ -2132,9 +2132,9 @@ luaFunc(sendAction)
 	if(!mask)
 		mask = -1;
 	if(mask & 1)
-		dsq->game->action(ac, state, source, device);
-	if((mask & 2) && dsq->game->avatar)
-		dsq->game->avatar->action(ac, state, source, device);
+		game->action(ac, state, source, device);
+	if((mask & 2) && game->avatar)
+		game->avatar->action(ac, state, source, device);
 	luaReturnNil();
 }
 
@@ -2165,7 +2165,7 @@ luaFunc(shakeCamera)
 luaFunc(rumble)
 {
 	int source = lua_tointeger(L, 4) - 1;
-	Avatar *a = dsq->game->avatar;
+	Avatar *a = game->avatar;
 	InputDevice device = (InputDevice)lua_tointeger(L, 5);
 	if(device == INPUT_NODEVICE) // default: use avatar status
 		device = a ? a->getLastActionInputDevice() : INPUT_NODEVICE;
@@ -2175,13 +2175,13 @@ luaFunc(rumble)
 
 luaFunc(changeForm)
 {
-	dsq->game->avatar->changeForm((FormType)lua_tointeger(L, 1));
+	game->avatar->changeForm((FormType)lua_tointeger(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(getWaterLevel)
 {
-	luaReturnNum(dsq->game->getWaterLevel());
+	luaReturnNum(game->getWaterLevel());
 }
 
 luaFunc(setPoison)
@@ -2199,21 +2199,21 @@ luaFunc(cureAllStatus)
 luaFunc(setMusicToPlay)
 {
 	if (lua_isstring(L, 1))
-		dsq->game->setMusicToPlay(getString(L, 1));
+		game->setMusicToPlay(getString(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(setActivePet)
 {
-	Entity *e = dsq->game->setActivePet(lua_tonumber(L, 1));
+	Entity *e = game->setActivePet(lua_tonumber(L, 1));
 
 	luaReturnPtr(e);
 }
 
 luaFunc(setWaterLevel)
 {
-	interpolateVec1(L, dsq->game->waterLevel, 1);
-	luaReturnNum(dsq->game->waterLevel.x);
+	interpolateVec1(L, game->waterLevel, 1);
+	luaReturnNum(game->waterLevel.x);
 }
 
 luaFunc(getForm)
@@ -2289,7 +2289,7 @@ luaFunc(foundLostMemory)
 	if (dsq->continuity.getFlag(FLAG_SECRET03)) num++;
 
 	int sbank = 800+(num-1);
-	dsq->game->setControlHint(stringbank.get(sbank), 0, 0, 0, 4, "13/face");
+	game->setControlHint(stringbank.get(sbank), 0, 0, 0, 4, "13/face");
 
 	dsq->sound->playSfx("memory-found");
 
@@ -2313,7 +2313,7 @@ luaFunc(confirm)
 luaFunc(createWeb)
 {
 	Web *web = new Web();
-	dsq->game->addRenderObject(web, LR_PARTICLES);
+	game->addRenderObject(web, LR_PARTICLES);
 	luaReturnPtr(web);
 }
 
@@ -2324,7 +2324,7 @@ luaFunc(createSpore)
 	if (Spore::isPositionClear(pos))
 	{
 		Spore *spore = new Spore(pos);
-		dsq->game->addRenderObject(spore, LR_ENTITIES);
+		game->addRenderObject(spore, LR_ENTITIES);
 		luaReturnPtr(spore);
 	}
 	else
@@ -2616,7 +2616,7 @@ luaFunc(shot_canHitEntity)
 	Shot *shot = getShot(L);
 	Entity *e = entity(L, 2);
 	bool hit = false;
-	if(shot && e && shot->isActive() && dsq->game->isEntityCollideWithShot(e, shot))
+	if(shot && e && shot->isActive() && game->isEntityCollideWithShot(e, shot))
 	{
 		DamageData d;
 		d.attacker = shot->firer;
@@ -2891,7 +2891,7 @@ luaFunc(entity_getBoneLockData)
 luaFunc(entity_ensureLimit)
 {
 	Entity *e = entity(L);
-	dsq->game->ensureLimit(e, lua_tonumber(L, 2), lua_tonumber(L, 3));
+	game->ensureLimit(e, lua_tonumber(L, 2), lua_tonumber(L, 3));
 	luaReturnNil();
 }
 
@@ -3201,7 +3201,7 @@ luaFunc(isWithin)
 
 luaFunc(toggleDamageSprite)
 {
-	dsq->game->toggleDamageSprite(getBool(L));
+	game->toggleDamageSprite(getBool(L));
 	luaReturnNil();
 }
 
@@ -3232,7 +3232,7 @@ luaFunc(toggleLiCombat)
 
 luaFunc(getNoteName)
 {
-	luaReturnStr(dsq->game->getNoteName(lua_tonumber(L, 1), getString(L, 2)).c_str());
+	luaReturnStr(game->getNoteName(lua_tonumber(L, 1), getString(L, 2)).c_str());
 }
 
 luaFunc(getWorldType)
@@ -3250,12 +3250,12 @@ luaFunc(setWorldType)
 
 luaFunc(isWorldPaused)
 {
-	luaReturnBool(dsq->game->isWorldPaused());
+	luaReturnBool(game->isWorldPaused());
 }
 
 luaFunc(setWorldPaused)
 {
-	dsq->game->setWorldPaused(getBool(L, 1));
+	game->setWorldPaused(getBool(L, 1));
 	luaReturnNil();
 }
 
@@ -3265,7 +3265,7 @@ luaFunc(getNearestNodeByType)
 	float y = lua_tonumber(L, 2);
 	int type = lua_tointeger(L, 3);
 
-	luaReturnPtr(dsq->game->getNearestPath(Vector(x,y), (PathType)type));
+	luaReturnPtr(game->getNearestPath(Vector(x,y), (PathType)type));
 }
 
 luaFunc(fadeOutMusic)
@@ -3281,34 +3281,34 @@ luaFunc(getNode)
 
 luaFunc(getNodeToActivate)
 {
-	luaReturnPtr(dsq->game->avatar->pathToActivate);
+	luaReturnPtr(game->avatar->pathToActivate);
 }
 
 luaFunc(setNodeToActivate)
 {
-	dsq->game->avatar->pathToActivate = path(L, 1);
+	game->avatar->pathToActivate = path(L, 1);
 	luaReturnNil();
 }
 
 luaFunc(getEntityToActivate)
 {
-	luaReturnPtr(dsq->game->avatar->entityToActivate);
+	luaReturnPtr(game->avatar->entityToActivate);
 }
 
 luaFunc(setEntityToActivate)
 {
-	dsq->game->avatar->entityToActivate = entity(L, 1);
+	game->avatar->entityToActivate = entity(L, 1);
 	luaReturnNil();
 }
 
 luaFunc(hasThingToActivate)
 {
-	luaReturnBool(dsq->game->avatar->hasThingToActivate());
+	luaReturnBool(game->avatar->hasThingToActivate());
 }
 
 luaFunc(setActivation)
 {
-	dsq->game->activation = getBool(L, 1);
+	game->activation = getBool(L, 1);
 	luaReturnNil();
 }
 
@@ -3330,13 +3330,13 @@ luaFunc(errorLog)
 
 luaFunc(reconstructGrid)
 {
-	dsq->game->reconstructGrid(true);
+	game->reconstructGrid(true);
 	luaReturnNil();
 }
 
 luaFunc(reconstructEntityGrid)
 {
-	dsq->game->reconstructEntityGrid();
+	game->reconstructEntityGrid();
 	luaReturnNil();
 }
 
@@ -3346,7 +3346,7 @@ luaFunc(dilateGrid)
 	ObsType test = (ObsType)lua_tointeger(L, 2);
 	ObsType set = (ObsType)lua_tointeger(L, 3);
 	ObsType allowOverwrite = (ObsType)lua_tointeger(L, 4);
-	dsq->game->dilateGrid(radius, test, set, allowOverwrite);
+	game->dilateGrid(radius, test, set, allowOverwrite);
 	luaReturnNil();
 }
 
@@ -3417,7 +3417,7 @@ luaFunc(createShot)
 	aim.y = lua_tonumber(L, 7);
 
 
-	Shot *s = dsq->game->fireShot(getString(L, 1), e, t, pos, aim);
+	Shot *s = game->fireShot(getString(L, 1), e, t, pos, aim);
 
 	luaReturnPtr(s);
 }
@@ -3682,7 +3682,7 @@ luaFunc(entity_swimToPositionSpeed)
 
 luaFunc(avatar_setCanDie)
 {
-	dsq->game->avatar->canDie = getBool(L, 1);
+	game->avatar->canDie = getBool(L, 1);
 
 	luaReturnNil();
 }
@@ -3690,69 +3690,69 @@ luaFunc(avatar_setCanDie)
 // not naming this avatar_* because it rather belongs into the UI category...
 luaFunc(setCanActivate)
 {
-	dsq->game->avatar->setCanActivateStuff(getBool(L, 1));
+	game->avatar->setCanActivateStuff(getBool(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(setSeeMapMode)
 {
-	dsq->game->avatar->setSeeMapMode((SeeMapMode)lua_tointeger(L, 1));
+	game->avatar->setSeeMapMode((SeeMapMode)lua_tointeger(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(avatar_setCanBurst)
 {
-	dsq->game->avatar->setCanBurst(getBool(L, 1));
+	game->avatar->setCanBurst(getBool(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(avatar_canBurst)
 {
-	luaReturnBool(dsq->game->avatar->canBurst());
+	luaReturnBool(game->avatar->canBurst());
 }
 
 luaFunc(avatar_setCanLockToWall)
 {
-	dsq->game->avatar->setCanLockToWall(getBool(L, 1));
+	game->avatar->setCanLockToWall(getBool(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(avatar_canLockToWall)
 {
-	luaReturnBool(dsq->game->avatar->canLockToWall());
+	luaReturnBool(game->avatar->canLockToWall());
 }
 
 luaFunc(avatar_setCanSwimAgainstCurrents)
 {
-	dsq->game->avatar->setCanSwimAgainstCurrents(getBool(L, 1));
+	game->avatar->setCanSwimAgainstCurrents(getBool(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(avatar_canSwimAgainstCurrents)
 {
-	luaReturnBool(dsq->game->avatar->canSwimAgainstCurrents());
+	luaReturnBool(game->avatar->canSwimAgainstCurrents());
 }
 
 luaFunc(avatar_setCanCollideWithShots)
 {
-	dsq->game->avatar->setCollideWithShots(getBool(L, 1));
+	game->avatar->setCollideWithShots(getBool(L, 1));
 	luaReturnNil();
 }
 
 luaFunc(avatar_canCollideWithShots)
 {
-	luaReturnBool(dsq->game->avatar->canCollideWithShots());
+	luaReturnBool(game->avatar->canCollideWithShots());
 }
 
 luaFunc(avatar_setCollisionAvoidanceData)
 {
-	dsq->game->avatar->setCollisionAvoidanceData(lua_tointeger(L, 1), lua_tonumber(L, 2));
+	game->avatar->setCollisionAvoidanceData(lua_tointeger(L, 1), lua_tonumber(L, 2));
 	luaReturnNil();
 }
 
 luaFunc(avatar_toggleCape)
 {
-	dsq->game->avatar->toggleCape(getBool(L,1));
+	game->avatar->toggleCape(getBool(L,1));
 
 	luaReturnNil();
 }
@@ -3760,62 +3760,62 @@ luaFunc(avatar_toggleCape)
 luaFunc(avatar_setBlockSinging)
 {
 	bool b = getBool(L);
-	dsq->game->avatar->setBlockSinging(b);
+	game->avatar->setBlockSinging(b);
 	luaReturnNil();
 }
 
 luaFunc(avatar_isBlockSinging)
 {
-	luaReturnBool(dsq->game->avatar->isBlockSinging());
+	luaReturnBool(game->avatar->isBlockSinging());
 }
 
 luaFunc(avatar_setBlockBackflip)
 {
-	dsq->game->avatar->blockBackFlip = getBool(L);
+	game->avatar->blockBackFlip = getBool(L);
 	luaReturnNil();
 }
 
 luaFunc(avatar_isBlockBackflip)
 {
-	dsq->game->avatar->blockBackFlip = getBool(L);
+	game->avatar->blockBackFlip = getBool(L);
 	luaReturnNil();
 }
 
 luaFunc(avatar_fallOffWall)
 {
-	dsq->game->avatar->fallOffWall();
+	game->avatar->fallOffWall();
 	luaReturnNil();
 }
 
 luaFunc(avatar_isBursting)
 {
-	luaReturnBool(dsq->game->avatar->bursting);
+	luaReturnBool(game->avatar->bursting);
 }
 
 luaFunc(avatar_isLockable)
 {
-	luaReturnBool(dsq->game->avatar->isLockable());
+	luaReturnBool(game->avatar->isLockable());
 }
 
 luaFunc(avatar_isRolling)
 {
-	luaReturnBool(dsq->game->avatar->isRolling());
+	luaReturnBool(game->avatar->isRolling());
 }
 
 luaFunc(avatar_isSwimming)
 {
-	luaReturnBool(dsq->game->avatar->isSwimming());
+	luaReturnBool(game->avatar->isSwimming());
 }
 
 luaFunc(avatar_isOnWall)
 {
-	bool v = dsq->game->avatar->state.lockedToWall;
+	bool v = game->avatar->state.lockedToWall;
 	luaReturnBool(v);
 }
 
 luaFunc(avatar_isShieldActive)
 {
-	bool v = (dsq->game->avatar->activeAura == AURA_SHIELD);
+	bool v = (game->avatar->activeAura == AURA_SHIELD);
 	luaReturnBool(v);
 }
 
@@ -3823,28 +3823,28 @@ luaFunc(avatar_setShieldActive)
 {
 	bool on = getBool(L, 1);
 	if (on)
-		dsq->game->avatar->activateAura(AURA_SHIELD);
+		game->avatar->activateAura(AURA_SHIELD);
 	else
-		dsq->game->avatar->stopAura();
+		game->avatar->stopAura();
 	luaReturnNil();
 }
 
 luaFunc(avatar_getStillTimer)
 {
-	luaReturnNum(dsq->game->avatar->stillTimer.getValue());
+	luaReturnNum(game->avatar->stillTimer.getValue());
 }
 
 luaFunc(avatar_getRollDirection)
 {
 	int v = 0;
-	if (dsq->game->avatar->isRolling())
-		v = dsq->game->avatar->rollDir;
+	if (game->avatar->isRolling())
+		v = game->avatar->rollDir;
 	luaReturnNum(v);
 }
 
 luaFunc(avatar_getSpellCharge)
 {
-	luaReturnNum(dsq->game->avatar->state.spellCharge);
+	luaReturnNum(game->avatar->state.spellCharge);
 }
 
 luaFunc(avatar_setSpeedMult)
@@ -3900,7 +3900,7 @@ luaFunc(unlearnSong)
 
 luaFunc(showInGameMenu)
 {
-	dsq->game->getInGameMenu()->show(getBool(L, 1), getBool(L, 2), (MenuPage)lua_tointeger(L, 3));
+	game->getInGameMenu()->show(getBool(L, 1), getBool(L, 2), (MenuPage)lua_tointeger(L, 3));
 	luaReturnNil();
 }
 
@@ -3908,19 +3908,19 @@ luaFunc(hideInGameMenu)
 {
 	bool skipEffect = getBool(L, 1);
 	bool cancel = getBool(L, 2);
-	dsq->game->getInGameMenu()->hide(!skipEffect, cancel);
+	game->getInGameMenu()->hide(!skipEffect, cancel);
 	luaReturnNil();
 }
 
 luaFunc(showImage)
 {
-	dsq->game->showImage(getString(L));
+	game->showImage(getString(L));
 	luaReturnNil();
 }
 
 luaFunc(hideImage)
 {
-	dsq->game->hideImage();
+	game->hideImage();
 	luaReturnNil();
 }
 
@@ -3945,15 +3945,15 @@ luaFunc(loadMap)
 	{
 		if (!n.empty())
 		{
-			if (dsq->game->avatar)
-				dsq->game->avatar->disableInput();
-			dsq->game->warpToSceneNode(s, n);
+			if (game->avatar)
+				game->avatar->disableInput();
+			game->warpToSceneNode(s, n);
 		}
 		else
 		{
-			if (dsq->game->avatar)
-				dsq->game->avatar->disableInput();
-			dsq->game->transitionToScene(s);
+			if (game->avatar)
+				game->avatar->disableInput();
+			game->transitionToScene(s);
 		}
 	}
 	luaReturnNil();
@@ -3993,14 +3993,14 @@ luaFunc(spawnIngredient)
 	int times = lua_tointeger(L, 4);
 	if (times == 0) times = 1;
 	bool out = getBool(L, 5);
-	Entity *e = dsq->game->spawnIngredient(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), times, out);
+	Entity *e = game->spawnIngredient(getString(L, 1), Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), times, out);
 
 	luaReturnPtr(e);
 }
 
 luaFunc(getNearestIngredient)
 {
-	Ingredient *i = dsq->game->getNearestIngredient(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)), lua_tonumber(L, 3));
+	Ingredient *i = game->getNearestIngredient(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)), lua_tonumber(L, 3));
 	luaReturnPtr(i);
 }
 
@@ -4174,7 +4174,7 @@ luaFunc(entity_createEntity)
 	Entity *ret = NULL;
 	const char *name = lua_tostring(L, 2);
 	if (e && name)
-		ret = dsq->game->createEntityTemp(name, e->position, true);
+		ret = game->createEntityTemp(name, e->position, true);
 	luaReturnPtr(ret);
 }
 
@@ -4211,7 +4211,7 @@ luaFunc(entity_isBeingPulled)
 	Entity *e = entity(L);
 	bool v= false;
 	if (e)
-		v = (dsq->game->avatar->pullTarget == e);
+		v = (game->avatar->pullTarget == e);
 	luaReturnBool(v);
 }
 
@@ -4221,10 +4221,10 @@ luaFunc(avatar_setPullTarget)
 	if (lua_isuserdata(L, 1))
 		e = entity(L, 1);
 
-	if (dsq->game->avatar->pullTarget != 0)
-		dsq->game->avatar->pullTarget->stopPull();
+	if (game->avatar->pullTarget != 0)
+		game->avatar->pullTarget->stopPull();
 
-	dsq->game->avatar->pullTarget = e;
+	game->avatar->pullTarget = e;
 
 	if (e)
 		e->startPull();
@@ -4246,17 +4246,17 @@ luaFunc(entity_isDead)
 
 luaFunc(getLastCollidePosition)
 {
-	luaReturnVec2(dsq->game->lastCollidePosition.x, dsq->game->lastCollidePosition.y);
+	luaReturnVec2(game->lastCollidePosition.x, game->lastCollidePosition.y);
 }
 
 luaFunc(getLastCollideTileType)
 {
-	luaReturnInt(dsq->game->lastCollideTileType);
+	luaReturnInt(game->lastCollideTileType);
 }
 
 luaFunc(collideCircleWithGrid)
 {
-	bool c = dsq->game->collideCircleWithGrid(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)), lua_tonumber(L, 3));
+	bool c = game->collideCircleWithGrid(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)), lua_tonumber(L, 3));
 	luaReturnBool(c);
 }
 
@@ -4268,7 +4268,7 @@ luaFunc(entity_isNearGround)
 	if (e)
 	{
 		int sampleArea = lua_tointeger(L, 2);
-		Vector v = dsq->game->getWallNormal(e->position, sampleArea);
+		Vector v = game->getWallNormal(e->position, sampleArea);
 		if (!v.isZero())
 		{
 
@@ -4314,7 +4314,7 @@ luaFunc(isNestedMain)
 
 luaFunc(entity_watchForPath)
 {
-	dsq->game->avatar->disableInput();
+	game->avatar->disableInput();
 
 	Entity *e = entity(L);
 	while (e && e->isFollowingPath())
@@ -4322,7 +4322,7 @@ luaFunc(entity_watchForPath)
 		core->run(FRAME_TIME);
 	}
 
-	dsq->game->avatar->enableInput();
+	game->avatar->enableInput();
 	luaReturnNil();
 }
 
@@ -4457,7 +4457,7 @@ luaFunc(entity_getEntityType)
 
 luaFunc(cam_snap)
 {
-	dsq->game->snapCam();
+	game->snapCam();
 	luaReturnNil();
 }
 
@@ -4466,7 +4466,7 @@ luaFunc(cam_toNode)
 	Path *p = path(L);
 	if (p)
 	{
-		dsq->game->setCameraFollow(&p->nodes[0].position);
+		game->setCameraFollow(&p->nodes[0].position);
 	}
 	luaReturnNil();
 }
@@ -4475,19 +4475,19 @@ luaFunc(cam_toEntity)
 {
 	Entity *e = entityOpt(L);
 	if(e)
-		dsq->game->setCameraFollowEntity(e);
+		game->setCameraFollowEntity(e);
 	else
-		dsq->game->setCameraFollow((Vector*)NULL);
+		game->setCameraFollow((Vector*)NULL);
 	luaReturnNil();
 }
 
 luaFunc(cam_setPosition)
 {
-	InterpolatedVector& camvec = dsq->game->cameraInterp;
+	InterpolatedVector& camvec = game->cameraInterp;
 	camvec.stop();
 	interpolateVec2(L, camvec, 1);
 
-	dsq->cameraPos = dsq->game->getCameraPositionFor(camvec);
+	dsq->cameraPos = game->getCameraPositionFor(camvec);
 	luaReturnNil();
 }
 
@@ -4770,7 +4770,7 @@ luaFunc(spawnManaBall)
 	p.x = lua_tonumber(L, 1);
 	p.y = lua_tonumber(L, 2);
 	float amount = lua_tonumber(L, 3);
-	dsq->game->spawnManaBall(p, amount);
+	game->spawnManaBall(p, amount);
 	luaReturnNil();
 }
 
@@ -4788,7 +4788,7 @@ luaFunc(spawnAroundEntity)
 		{
 			float angle = i*((2*PI)/float(num));
 			Vector spawnPos = center + Vector(sinf(angle)*radius, cosf(angle)*radius);
-			Entity *spawned = dsq->game->createEntityTemp(entType.c_str(), spawnPos, true);
+			Entity *spawned = game->createEntityTemp(entType.c_str(), spawnPos, true);
 			if(spawned && !name.empty())
 				spawned->setName(name);
 		}
@@ -4804,9 +4804,9 @@ luaFunc(createBeam)
 	int l = lua_tointeger(L, 4);
 	Beam *b = new Beam(Vector(x,y), a);
 	if (l == 1)
-		dsq->game->addRenderObject(b, LR_PARTICLES);
+		game->addRenderObject(b, LR_PARTICLES);
 	else
-		dsq->game->addRenderObject(b, LR_ENTITIES_MINUS2);
+		game->addRenderObject(b, LR_ENTITIES_MINUS2);
 	luaReturnPtr(b);
 }
 
@@ -4908,7 +4908,7 @@ luaFunc(createEntity)
 	int x = lua_tointeger(L, 3);
 	int y = lua_tointeger(L, 4);
 
-	Entity *e = dsq->game->createEntityTemp(type.c_str(), Vector(x, y), true);
+	Entity *e = game->createEntityTemp(type.c_str(), Vector(x, y), true);
 	if(e && !name.empty())
 		e->setName(name);
 
@@ -4937,70 +4937,70 @@ luaFunc(saveMenu)
 
 luaFunc(setSceneDisplayNameInSave)
 {
-	dsq->game->sceneDisplayName = getString(L);
+	game->sceneDisplayName = getString(L);
 	luaReturnNil();
 }
 
 luaFunc(pause)
 {
-	dsq->game->togglePause(1);
+	game->togglePause(1);
 	luaReturnNil();
 }
 
 luaFunc(unpause)
 {
-	dsq->game->togglePause(0);
+	game->togglePause(0);
 	luaReturnNil();
 }
 
 luaFunc(isPaused)
 {
-	luaReturnBool(dsq->game->isPaused());
+	luaReturnBool(game->isPaused());
 }
 
 luaFunc(isInGameMenu)
 {
-	luaReturnBool(dsq->game->isInGameMenu());
+	luaReturnBool(game->isInGameMenu());
 }
 
 luaFunc(isInEditor)
 {
-	luaReturnBool(dsq->game->isSceneEditorActive());
+	luaReturnBool(game->isSceneEditorActive());
 }
 
 luaFunc(clearControlHint)
 {
-	dsq->game->clearControlHint();
+	game->clearControlHint();
 	luaReturnNil();
 }
 
 luaFunc(setSceneColor)
 {
-	interpolateVec3(L, dsq->game->sceneColor3, 1);
+	interpolateVec3(L, game->sceneColor3, 1);
 	luaReturnNil();
 }
 
 luaFunc(getSceneColor)
 {
-	const Vector& c = dsq->game->sceneColor3;
+	const Vector& c = game->sceneColor3;
 	luaReturnVec3(c.x, c.y, c.z);
 }
 
 luaFunc(setSceneColor2)
 {
-	interpolateVec3(L, dsq->game->sceneColor2, 1);
+	interpolateVec3(L, game->sceneColor2, 1);
 	luaReturnNil();
 }
 
 luaFunc(getSceneColor2)
 {
-	const Vector& c = dsq->game->sceneColor2;
+	const Vector& c = game->sceneColor2;
 	luaReturnVec3(c.x, c.y, c.z);
 }
 
 luaFunc(setCameraLerpDelay)
 {
-	dsq->game->cameraLerpDelay = lua_tonumber(L, 1);
+	game->cameraLerpDelay = lua_tonumber(L, 1);
 	luaReturnNil();
 }
 
@@ -5019,25 +5019,25 @@ luaFunc(setControlHint)
 	if (scale == 0)
 		scale = 1;
 
-	dsq->game->setControlHint(str, left, right, middle, t, s, false, songType, scale);
+	game->setControlHint(str, left, right, middle, t, s, false, songType, scale);
 	luaReturnNil();
 }
 
 luaFunc(setCanChangeForm)
 {
-	dsq->game->avatar->canChangeForm = getBool(L);
+	game->avatar->canChangeForm = getBool(L);
 	luaReturnNil();
 }
 
 luaFunc(setInvincibleOnNested)
 {
-	dsq->game->invincibleOnNested = getBool(L);
+	game->invincibleOnNested = getBool(L);
 	luaReturnNil();
 }
 
 luaFunc(setCanWarp)
 {
-	dsq->game->avatar->canWarp = getBool(L);
+	game->avatar->canWarp = getBool(L);
 	luaReturnNil();
 }
 
@@ -5155,7 +5155,7 @@ luaFunc(screenFadeGo)
 luaFunc(isEscapeKey)
 {
 	int source = lua_tointeger(L, 1) - 1;
-	bool isDown = dsq->game->isActing(ACTION_ESC, source);
+	bool isDown = game->isActing(ACTION_ESC, source);
 	luaReturnBool(isDown);
 }
 
@@ -5163,7 +5163,7 @@ luaFunc(isLeftMouse)
 {
 	int source = lua_tointeger(L, 1) - 1;
 	bool isDown = (source < 0 && core->mouse.buttons.left)
-		|| (dsq->game->avatar && dsq->game->avatar->isActing(ACTION_PRIMARY, source));
+		|| (game->avatar && game->avatar->isActing(ACTION_PRIMARY, source));
 	luaReturnBool(isDown);
 }
 
@@ -5171,19 +5171,19 @@ luaFunc(isRightMouse)
 {
 	int source = lua_tointeger(L, 1) - 1;
 	bool isDown = (source < 0 && core->mouse.buttons.right)
-		|| (dsq->game->avatar && dsq->game->avatar->isActing(ACTION_SECONDARY, source));
+		|| (game->avatar && game->avatar->isActing(ACTION_SECONDARY, source));
 	luaReturnBool(isDown);
 }
 
 luaFunc(setTimerTextAlpha)
 {
-	dsq->game->setTimerTextAlpha(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	game->setTimerTextAlpha(lua_tonumber(L, 1), lua_tonumber(L, 2));
 	luaReturnNil();
 }
 
 luaFunc(setTimerText)
 {
-	dsq->game->setTimerText(lua_tonumber(L, 1));
+	game->setTimerText(lua_tonumber(L, 1));
 	luaReturnNil();
 }
 
@@ -5199,7 +5199,7 @@ luaFunc(getWallNormal)
 	if (!obs)
 		obs = OT_BLOCKING;
 
-	Vector n = dsq->game->getWallNormal(Vector(x, y), range, obs);
+	Vector n = game->getWallNormal(Vector(x, y), range, obs);
 
 	luaReturnVec2(n.x, n.y);
 }
@@ -5541,7 +5541,7 @@ luaFunc(registerSporeDrop)
 	y = lua_tonumber(L, 2);
 	t = lua_tointeger(L, 3);
 
-	dsq->game->registerSporeDrop(Vector(x,y), t);
+	game->registerSporeDrop(Vector(x,y), t);
 
 	luaReturnNil();
 }
@@ -5587,7 +5587,7 @@ luaFunc(entity_handleShotCollisions)
 	Entity *e = entity(L);
 	if (e)
 	{
-		dsq->game->handleShotCollisions(e);
+		game->handleShotCollisions(e);
 	}
 	luaReturnNil();
 }
@@ -5597,7 +5597,7 @@ luaFunc(entity_handleShotCollisionsSkeletal)
 	Entity *e = entity(L);
 	if (e)
 	{
-		dsq->game->handleShotCollisionsSkeletal(e);
+		game->handleShotCollisionsSkeletal(e);
 	}
 	luaReturnNil();
 }
@@ -5607,7 +5607,7 @@ luaFunc(entity_handleShotCollisionsHair)
 	Entity *e = entity(L);
 	if (e)
 	{
-		dsq->game->handleShotCollisionsHair(e, lua_tointeger(L, 2), lua_tonumber(L, 3));
+		game->handleShotCollisionsHair(e, lua_tointeger(L, 2), lua_tonumber(L, 3));
 	}
 	luaReturnNil();
 }
@@ -5619,7 +5619,7 @@ luaFunc(entity_collideSkeletalVsCircle)
 	Bone *b = 0;
 	if (e && e2)
 	{
-		b = dsq->game->collideSkeletalVsCircle(e,e2);
+		b = game->collideSkeletalVsCircle(e,e2);
 	}
 	luaReturnPtr(b);
 }
@@ -5630,7 +5630,7 @@ luaFunc(entity_collideSkeletalVsCirclePos)
 	Bone *b = 0;
 	if (e)
 	{
-		b = dsq->game->collideSkeletalVsCircle(e, Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4));
+		b = game->collideSkeletalVsCircle(e, Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4));
 	}
 	luaReturnPtr(b);
 }
@@ -5646,7 +5646,7 @@ luaFunc(entity_collideSkeletalVsLine)
 	Bone *b = 0;
 	if (e)
 	{
-		b = dsq->game->collideSkeletalVsLine(e, Vector(x1, y1), Vector(x2, y2), sz);
+		b = game->collideSkeletalVsLine(e, Vector(x1, y1), Vector(x2, y2), sz);
 	}
 	luaReturnPtr(b);
 }
@@ -5662,7 +5662,7 @@ luaFunc(entity_collideHairVsCircle)
 		// perc: percent of hairWidth to use as collide radius
 		float perc = lua_tonumber(L, 4);
 		int colSegment;
-		col = dsq->game->collideHairVsCircle(e, num, e2->position, e2->collideRadius, perc, &colSegment);
+		col = game->collideHairVsCircle(e, num, e2->position, e2->collideRadius, perc, &colSegment);
 		if(col)
 		{
 			lua_pushboolean(L, true);
@@ -5686,7 +5686,7 @@ luaFunc(entity_collideSkeletalVsCircleForListByName)
 			Entity *e2 = *i;
 			if (e2->life == 1 && e2->name == name)
 			{
-				Bone *b = dsq->game->collideSkeletalVsCircle(e, e2);
+				Bone *b = game->collideSkeletalVsCircle(e, e2);
 				if (b)
 				{
 					DamageData d;
@@ -5749,30 +5749,30 @@ luaFunc(entity_warpSegments)
 
 luaFunc(avatar_incrLeaches)
 {
-	dsq->game->avatar->leaches++;
+	game->avatar->leaches++;
 	luaReturnNil();
 }
 
 luaFunc(avatar_decrLeaches)
 {
 	// Not checking for underflow here because this allows some neat tricks.
-	dsq->game->avatar->leaches--;
+	game->avatar->leaches--;
 	luaReturnNil();
 }
 
 luaFunc(entity_incrTargetLeaches) // DEPRECATED
 {
 	Entity *e = entity(L);
-	if (e && e->getTargetEntity() == dsq->game->avatar)
-		dsq->game->avatar->leaches++;
+	if (e && e->getTargetEntity() == game->avatar)
+		game->avatar->leaches++;
 	luaReturnNil();
 }
 
 luaFunc(entity_decrTargetLeaches) // DEPRECATED
 {
 	Entity *e = entity(L);
-	if (e && e->getTargetEntity() == dsq->game->avatar)
-		dsq->game->avatar->leaches--;
+	if (e && e->getTargetEntity() == game->avatar)
+		game->avatar->leaches--;
 	luaReturnNil();
 }
 
@@ -5886,7 +5886,7 @@ luaFunc(entity_applySurfaceNormalForce)
 		Vector v;
 		if (!e->ridingOnEntity)
 		{
-			v = dsq->game->getWallNormal(e->position, 8);
+			v = game->getWallNormal(e->position, 8);
 		}
 		else
 		{
@@ -5909,7 +5909,7 @@ luaFunc(entity_doElementInteraction)
 		if (!touchWidth)
 			touchWidth = 16;
 
-		ElementUpdateList& elems = dsq->game->elementInteractionList;
+		ElementUpdateList& elems = game->elementInteractionList;
 		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
 		{
 			(*it)->doInteraction(e, mult, touchWidth);
@@ -5920,7 +5920,7 @@ luaFunc(entity_doElementInteraction)
 
 luaFunc(avatar_setElementEffectMult)
 {
-	dsq->game->avatar->elementEffectMult = lua_tonumber(L, 1);
+	game->avatar->elementEffectMult = lua_tonumber(L, 1);
 	luaReturnNil();
 }
 
@@ -5962,7 +5962,7 @@ luaFunc(entity_getDistanceToPoint)
 
 luaFunc(setNaijaHeadTexture)
 {
-	Avatar *a = dsq->game->avatar;
+	Avatar *a = game->avatar;
 	if (a)
 	{
 		a->setHeadTexture(getString(L, 1), lua_tonumber(L, 2));
@@ -6093,7 +6093,7 @@ static void setupQuadCommon(lua_State *L, RenderObject *q, int idx)
 		layer = 13;
 	else
 		layer = (LR_PARTICLES+1) - LR_ELEMENTS1;
-	dsq->game->addRenderObject(q, LR_ELEMENTS1+(layer-1));
+	game->addRenderObject(q, LR_ELEMENTS1+(layer-1));
 	q->moveToFront();
 }
 
@@ -6151,9 +6151,9 @@ luaFunc(entity_setBeautyFlip)
 
 luaFunc(setInvincible)
 {
-	dsq->game->invinciblity = getBool(L, 1);
+	game->invinciblity = getBool(L, 1);
 
-	luaReturnBool(dsq->game->invinciblity);
+	luaReturnBool(game->invinciblity);
 }
 
 luaFunc(entity_setInvincible)
@@ -6304,7 +6304,7 @@ luaFunc(entity_isValidTarget)
 		e2 = entity(L);
 	bool b = false;
 	if (e)
-		b = dsq->game->isValidTarget(e, e2);
+		b = game->isValidTarget(e, e2);
 	luaReturnBool(b);
 }
 luaFunc(entity_clearVel2)
@@ -6378,20 +6378,20 @@ luaFunc(entity_setBounce)
 
 luaFunc(avatar_isSinging)
 {
-	bool b = dsq->game->avatar->isSinging();
+	bool b = game->avatar->isSinging();
 	luaReturnBool(b);
 }
 
 luaFunc(avatar_isTouchHit)
 {
 	//avatar_canBeTouchHit
-	bool b = !(dsq->game->avatar->bursting && dsq->continuity.form == FORM_BEAST);
+	bool b = !(game->avatar->bursting && dsq->continuity.form == FORM_BEAST);
 	luaReturnBool(b);
 }
 
 luaFunc(avatar_clampPosition)
 {
-	dsq->game->avatar->clampPosition();
+	game->avatar->clampPosition();
 	luaReturnNil();
 }
 
@@ -6525,7 +6525,7 @@ luaFunc(bone_isName)
 
 luaFunc(overrideZoom)
 {
-	dsq->game->overrideZoom(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	game->overrideZoom(lua_tonumber(L, 1), lua_tonumber(L, 2));
 
 	luaReturnNil();
 }
@@ -6537,13 +6537,13 @@ luaFunc(getZoom)
 
 luaFunc(disableOverrideZoom)
 {
-	dsq->game->toggleOverrideZoom(false);
+	game->toggleOverrideZoom(false);
 	luaReturnNil();
 }
 
 luaFunc(setMaxLookDistance)
 {
-	dsq->game->maxLookDistance = lua_tonumber(L, 1);
+	game->maxLookDistance = lua_tonumber(L, 1);
 	luaReturnNil();
 }
 
@@ -6588,7 +6588,7 @@ luaFunc(entity_doCollisionAvoidance)
 
 luaFunc(setOverrideMusic)
 {
-	dsq->game->overrideMusic = getString(L, 1);
+	game->overrideMusic = getString(L, 1);
 	luaReturnNil();
 }
 
@@ -6618,10 +6618,10 @@ luaFunc(bedEffects)
 	Vector bedPosition(lua_tointeger(L, 1), lua_tointeger(L, 2));
 	if (bedPosition.x == 0 && bedPosition.y == 0)
 	{
-		bedPosition = dsq->game->avatar->position;
+		bedPosition = game->avatar->position;
 	}
-	dsq->game->positionToAvatar = bedPosition;
-	dsq->game->transitionToScene(dsq->game->sceneName);
+	game->positionToAvatar = bedPosition;
+	game->transitionToScene(game->sceneName);
 
 	luaReturnNil();
 }
@@ -6654,16 +6654,16 @@ luaFunc(toggleInput)
 {
 	bool v = getBool(L, 1);
 	if (v)
-		dsq->game->avatar->enableInput();
+		game->avatar->enableInput();
 	else
-		dsq->game->avatar->disableInput();
+		game->avatar->disableInput();
 	luaReturnNil();
 }
 
 luaFunc(warpAvatar)
 {
-	dsq->game->positionToAvatar = Vector(lua_tointeger(L, 2),lua_tointeger(L, 3));
-	dsq->game->transitionToScene(getString(L, 1));
+	game->positionToAvatar = Vector(lua_tointeger(L, 2),lua_tointeger(L, 3));
+	game->transitionToScene(getString(L, 1));
 
 	luaReturnNil();
 }
@@ -6675,13 +6675,13 @@ luaFunc(warpNaijaToSceneNode)
 	std::string flip = getString(L, 3);
 	if (!scene.empty() && !node.empty())
 	{
-		dsq->game->toNode = node;
+		game->toNode = node;
 		stringToLower(flip);
 		if (flip == "l")
-			dsq->game->toFlip = 0;
+			game->toFlip = 0;
 		if (flip == "r")
-			dsq->game->toFlip = 1;
-		dsq->game->transitionToScene(scene);
+			game->toFlip = 1;
+		game->transitionToScene(scene);
 	}
 
 	luaReturnNil();
@@ -6906,7 +6906,7 @@ luaFunc(addInfluence)
 
 luaFunc(updateMusic)
 {
-	dsq->game->updateMusic();
+	game->updateMusic();
 	luaReturnNil();
 }
 
@@ -6956,7 +6956,7 @@ luaFunc(entity_switchSurfaceDirection)
 		Vector oldPos = e->position;
 		if (e->isNearObstruction(0))
 		{
-			Vector n = dsq->game->getWallNormal(e->position);
+			Vector n = game->getWallNormal(e->position);
 			if (!n.isZero())
 			{
 				do
@@ -6991,7 +6991,7 @@ luaFunc(entity_adjustPositionBySurfaceNormal)
 	ScriptedEntity *e = scriptedEntity(L);
 	if (e && !e->ridingOnEntity)
 	{
-		Vector v = dsq->game->getWallNormal(e->position);
+		Vector v = game->getWallNormal(e->position);
 		if (v.x != 0 || v.y != 0)
 		{
 			v.setLength2D(lua_tonumber(L, 2));
@@ -7024,7 +7024,7 @@ luaFunc(entity_moveAlongSurface)
 				v.normalize2D();
 			}
 			else
-				v = dsq->game->getWallNormal(e->position);
+				v = game->getWallNormal(e->position);
 
 			int outFromWall = e->getv(EV_WALLOUT);
 			bool invisibleIn = e->isSittingOnInvisibleIn();
@@ -7238,7 +7238,7 @@ luaFunc(warpNaijaToEntity)
 		core->run(1);
 
 		Vector offset(lua_tointeger(L, 2), lua_tointeger(L, 3));
-		dsq->game->avatar->position = e->position + offset;
+		game->avatar->position = e->position + offset;
 
 		dsq->overlay->alpha.interpolateTo(0, 1);
 		core->run(1);
@@ -7251,7 +7251,7 @@ luaFunc(getTimer)
 	float n = lua_tonumber(L, 1);
 	if (n == 0)
 		n = 1;
-	luaReturnNum(dsq->game->getTimer(n));
+	luaReturnNum(game->getTimer(n));
 }
 
 luaFunc(getHalfTimer)
@@ -7259,7 +7259,7 @@ luaFunc(getHalfTimer)
 	float n = lua_tonumber(L, 1);
 	if (n == 0)
 		n = 1;
-	luaReturnNum(dsq->game->getHalfTimer(n));
+	luaReturnNum(game->getHalfTimer(n));
 }
 
 luaFunc(getOldDT)
@@ -7285,7 +7285,7 @@ luaFunc(isNested)
 luaFunc(getNumberOfEntitiesNamed)
 {
 	std::string s = getString(L);
-	int c = dsq->game->getNumberOfEntitiesNamed(s);
+	int c = game->getNumberOfEntitiesNamed(s);
 	luaReturnNum(c);
 }
 
@@ -7492,17 +7492,17 @@ luaFunc(randVector)
 
 luaFunc(getNaija)
 {
-	luaReturnPtr(dsq->game->avatar);
+	luaReturnPtr(game->avatar);
 }
 
 luaFunc(getLi)
 {
-	luaReturnPtr(dsq->game->li);
+	luaReturnPtr(game->li);
 }
 
 luaFunc(setLi)
 {
-	dsq->game->li = entity(L);
+	game->li = entity(L);
 
 	luaReturnNil();
 }
@@ -7607,7 +7607,7 @@ luaFunc(entity_getID)
 luaFunc(getEntityByID)
 {
 	int v = lua_tointeger(L, 1);
-	Entity *found = dsq->game->getEntityByID(v);
+	Entity *found = game->getEntityByID(v);
 	luaReturnPtr(found);
 }
 
@@ -7781,7 +7781,7 @@ luaFunc(node_getNearestNode)
 		if (lua_isstring(L, 2))
 			name = lua_tostring(L, 2);
 		Path *ignore = path(L, 3);
-		closest = dsq->game->getNearestPath(p->nodes[0].position, name, ignore);
+		closest = game->getNearestPath(p->nodes[0].position, name, ignore);
 	}
 	luaReturnPtr(closest);
 }
@@ -7818,7 +7818,7 @@ luaFunc(entity_getNearestNode)
 		if (lua_isstring(L, 2))
 			name = lua_tostring(L, 2);
 		Path *ignore = path(L, 3);
-		closest = dsq->game->getNearestPath(me->position, name, ignore);
+		closest = game->getNearestPath(me->position, name, ignore);
 	}
 	luaReturnPtr(closest);
 }
@@ -7907,7 +7907,7 @@ luaFunc(getNearestEntity)
 	int lrStart = lua_isnumber(L, 7) ? lua_tointeger(L, 7) : -1;
 	int lrEnd = lua_isnumber(L, 8) ? lua_tointeger(L, 8) : -1;
 
-	Entity *target = dsq->game->getNearestEntity(p, radius, ignore, ET_ENEMY, dt, lrStart, lrEnd);
+	Entity *target = game->getNearestEntity(p, radius, ignore, ET_ENEMY, dt, lrStart, lrEnd);
 	luaReturnPtr(target);
 }
 
@@ -7920,7 +7920,7 @@ luaFunc(findWall)
 	if (dirx == 0 && diry == 0){ debugLog("dirx && diry are zero!"); luaReturnNum(0); }
 
 	TileVector t(Vector(x, y));
-	while (!dsq->game->isObstructed(t))
+	while (!game->isObstructed(t))
 	{
 		t.x += dirx;
 		t.y += diry;
@@ -7946,7 +7946,7 @@ luaFunc(isInCutscene)
 luaFunc(toggleSteam)
 {
 	bool on = getBool(L, 1);
-	for (Path *p = dsq->game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
+	for (Path *p = game->getFirstPathOfType(PATH_STEAM); p; p = p->nextOfType)
 	{
 		p->setActive(on);
 	}
@@ -8439,12 +8439,12 @@ luaFunc(entity_setEatType)
 
 luaFunc(getMapName)
 {
-	luaReturnStr(dsq->game->sceneName.c_str());
+	luaReturnStr(game->sceneName.c_str());
 }
 
 luaFunc(isMapName)
 {
-	std::string s1 = dsq->game->sceneName;
+	std::string s1 = game->sceneName;
 	std::string s2 = getString(L, 1);
 	stringToUpper(s1);
 	stringToUpper(s2);
@@ -8455,7 +8455,7 @@ luaFunc(isMapName)
 
 luaFunc(mapNameContains)
 {
-	std::string s = dsq->game->sceneName;
+	std::string s = game->sceneName;
 	stringToLower(s);
 	bool b = (s.find(getString(L, 1)) != std::string::npos);
 	luaReturnBool(b);
@@ -8485,18 +8485,18 @@ luaFunc(entity_fireGas)
 
 luaFunc(isInputEnabled)
 {
-	luaReturnBool(dsq->game->avatar->isInputEnabled());
+	luaReturnBool(game->avatar->isInputEnabled());
 }
 
 luaFunc(enableInput)
 {
-	dsq->game->avatar->enableInput();
+	game->avatar->enableInput();
 	luaReturnNil();
 }
 
 luaFunc(disableInput)
 {
-	dsq->game->avatar->disableInput();
+	game->avatar->disableInput();
 	luaReturnNil();
 }
 
@@ -8719,14 +8719,14 @@ luaFunc(setGemPosition)
 	size_t gemId = lua_tointeger(L, 1);
 	std::string mapname = getString(L, 4);
 	if(mapname.empty())
-		mapname = dsq->game->sceneName;
+		mapname = game->sceneName;
 	Vector pos(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	bool result = false;
 
 	WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(mapname);
 	if(tile)
 	{
-		pos = dsq->game->worldMapRender->getWorldToTile(tile, pos, true, true);
+		pos = game->worldMapRender->getWorldToTile(tile, pos, true, true);
 		if(gemId < dsq->continuity.gems.size())
 		{
 			Continuity::Gems::iterator it = dsq->continuity.gems.begin();
@@ -8794,8 +8794,8 @@ luaFunc(removeGem)
 		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
 		std::advance(it, gemId);
 		dsq->continuity.removeGemData(&(*it));
-		if(dsq->game->worldMapRender->isOn())
-			dsq->game->worldMapRender->fixGems();
+		if(game->worldMapRender->isOn())
+			game->worldMapRender->fixGems();
 	}
 	luaReturnNil();
 }
@@ -8809,8 +8809,8 @@ luaFunc(beaconEffect)
 	float p1 = 0.7f;
 	float p2 = 1.0f - p1;
 
-	dsq->clickRingEffect(dsq->game->miniMapRender->getWorldPosition(), 0, (b->color*p1) + Vector(p2, p2, p2), 1);
-	dsq->clickRingEffect(dsq->game->miniMapRender->getWorldPosition(), 1, (b->color*p1) + Vector(p2, p2, p2), 1);
+	dsq->clickRingEffect(game->miniMapRender->getWorldPosition(), 0, (b->color*p1) + Vector(p2, p2, p2), 1);
+	dsq->clickRingEffect(game->miniMapRender->getWorldPosition(), 1, (b->color*p1) + Vector(p2, p2, p2), 1);
 
 	dsq->sound->playSfx("ping");
 
@@ -8878,13 +8878,13 @@ luaFunc(setElementLayerVisible)
 {
 	int l = lua_tointeger(L, 1);
 	bool v = getBool(L, 2);
-	dsq->game->setElementLayerVisible(l, v);
+	game->setElementLayerVisible(l, v);
 	luaReturnNil();
 }
 
 luaFunc(isElementLayerVisible)
 {
-	luaReturnBool(dsq->game->isElementLayerVisible(lua_tonumber(L, 1)));
+	luaReturnBool(game->isElementLayerVisible(lua_tonumber(L, 1)));
 }
 
 luaFunc(isStreamingVoice)
@@ -8896,23 +8896,23 @@ luaFunc(isStreamingVoice)
 luaFunc(isObstructed)
 {
 	int obs = lua_tointeger(L, 3);
-	luaReturnBool(dsq->game->isObstructed(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2))), obs ? obs : -1));
+	luaReturnBool(game->isObstructed(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2))), obs ? obs : -1));
 }
 
 luaFunc(isObstructedRaw)
 {
 	int obs = lua_tointeger(L, 3);
-	luaReturnBool(dsq->game->isObstructedRaw(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2))), obs));
+	luaReturnBool(game->isObstructedRaw(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2))), obs));
 }
 
 luaFunc(getObstruction)
 {
-	luaReturnInt(dsq->game->getGrid(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)))));
+	luaReturnInt(game->getGrid(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)))));
 }
 
 luaFunc(getGridRaw)
 {
-	luaReturnInt(dsq->game->getGridRaw(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)))));
+	luaReturnInt(game->getGridRaw(TileVector(Vector(lua_tonumber(L, 1), lua_tonumber(L, 2)))));
 }
 
 luaFunc(isObstructedBlock)
@@ -8927,7 +8927,7 @@ luaFunc(isObstructedBlock)
 	{
 		for (int yy = t.y-span; yy <= t.y+span; yy++)
 		{
-			if (dsq->game->isObstructed(TileVector(xx, yy)))
+			if (game->isObstructed(TileVector(xx, yy)))
 			{
 				obs = true;
 				break;
@@ -8978,7 +8978,7 @@ luaFunc(entity_isFlag)
 	bool b = false;
 	if (e)
 	{
-		b = (dsq->continuity.getEntityFlag(dsq->game->sceneName, e->getID())==v);
+		b = (dsq->continuity.getEntityFlag(game->sceneName, e->getID())==v);
 	}
 	luaReturnBool(b);
 }
@@ -8989,7 +8989,7 @@ luaFunc(entity_setFlag)
 	int v = lua_tointeger(L, 2);
 	if (e)
 	{
-		dsq->continuity.setEntityFlag(dsq->game->sceneName, e->getID(), v);
+		dsq->continuity.setEntityFlag(game->sceneName, e->getID(), v);
 	}
 	luaReturnNil();
 }
@@ -9014,7 +9014,7 @@ luaFunc(entity_getFlag)
 	int ret = 0;
 	if (e)
 	{
-		ret = dsq->continuity.getEntityFlag(dsq->game->sceneName, e->getID());
+		ret = dsq->continuity.getEntityFlag(game->sceneName, e->getID());
 	}
 	luaReturnNum(ret);
 }
@@ -9040,13 +9040,13 @@ luaFunc(isFlag)
 
 luaFunc(avatar_updatePosition)
 {
-	dsq->game->avatar->updatePosition();
+	game->avatar->updatePosition();
 	luaReturnNil();
 }
 
 luaFunc(avatar_toggleMovement)
 {
-	dsq->game->avatar->toggleMovement(getBool(L));
+	game->avatar->toggleMovement(getBool(L));
 	luaReturnNil();
 }
 
@@ -9125,7 +9125,7 @@ luaFunc(isMiniMapCursorOkay)
 
 luaFunc(isShuttingDownGameState)
 {
-	luaReturnBool(dsq->game->isShuttingDownGameState());
+	luaReturnBool(game->isShuttingDownGameState());
 }
 
 static void _fillPathfindTables(lua_State *L, VectorPath& path, int xs_idx, int ys_idx)
@@ -9256,9 +9256,9 @@ luaFunc(castLine)
 	{
 		for(int i = 0; i < steps; ++i)
 		{
-			if(dsq->game->getGridRaw(TileVector(v)) & tiletype)
+			if(game->getGridRaw(TileVector(v)) & tiletype)
 			{
-				lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
+				lua_pushinteger(L, game->getGrid(TileVector(v)));
 				lua_pushnumber(L, v.x);
 				lua_pushnumber(L, v.y);
 				return 3;
@@ -9270,9 +9270,9 @@ luaFunc(castLine)
 	{
 		for(int i = 0; i < steps; ++i)
 		{
-			if(!(dsq->game->getGridRaw(TileVector(v)) & tiletype))
+			if(!(game->getGridRaw(TileVector(v)) & tiletype))
 			{
-				lua_pushinteger(L, dsq->game->getGrid(TileVector(v)));
+				lua_pushinteger(L, game->getGrid(TileVector(v)));
 				lua_pushnumber(L, v.x);
 				lua_pushnumber(L, v.y);
 				return 3;
@@ -9294,7 +9294,7 @@ luaFunc(getUserInputString)
 
 luaFunc(getMaxCameraValues)
 {
-	luaReturnVec4(dsq->game->cameraMin.x, dsq->game->cameraMin.y, dsq->game->cameraMax.x, dsq->game->cameraMax.y);
+	luaReturnVec4(game->cameraMin.x, game->cameraMin.y, game->cameraMax.x, game->cameraMax.y);
 }
 
 
@@ -9339,8 +9339,8 @@ luaFunc(inv_remove)
 	{
 		data->amount--;
 		dsq->continuity.removeEmptyIngredients();
-		if(dsq->game->isInGameMenu())
-			dsq->game->getInGameMenu()->refreshFoodSlots(true);
+		if(game->isInGameMenu())
+			game->getInGameMenu()->refreshFoodSlots(true);
 	}
 	luaReturnNil();
 }
@@ -9361,7 +9361,7 @@ luaFunc(inv_pickupEffect)
 {
 	IngredientData *data = dsq->continuity.getIngredientDataByName(getString(L, 1));
 	if(data)
-		dsq->game->pickupIngredientEffects(data);
+		game->pickupIngredientEffects(data);
 	luaReturnNil();
 }
 
@@ -9398,14 +9398,14 @@ luaFunc(learnRecipe)
 
 luaFunc(setBGGradient)
 {
-	if(!dsq->game->grad)
-		dsq->game->createGradient();
+	if(!game->grad)
+		game->createGradient();
 	Vector c1(lua_tonumber(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
 	Vector c2(lua_tonumber(L, 4), lua_tonumber(L, 5), lua_tonumber(L, 6));
 	if(getBool(L, 7))
-		dsq->game->grad->makeHorizontal(c1, c2);
+		game->grad->makeHorizontal(c1, c2);
 	else
-		dsq->game->grad->makeVertical(c1, c2);
+		game->grad->makeVertical(c1, c2);
 	luaReturnNil();
 }
 
@@ -9413,7 +9413,7 @@ luaFunc(createDebugText)
 {
 	DebugFont *txt = new DebugFont(lua_tointeger(L, 2), getString(L, 1));
 	txt->position = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4));
-	dsq->game->addRenderObject(txt, LR_DEBUG_TEXT);
+	game->addRenderObject(txt, LR_DEBUG_TEXT);
 	luaReturnPtr(txt);
 }
 
@@ -9423,7 +9423,7 @@ luaFunc(createBitmapText)
 	txt->setText(getString(L, 1));
 	txt->setFontSize(lua_tointeger(L, 2));
 	txt->position = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4));
-	dsq->game->addRenderObject(txt, LR_HUD);
+	game->addRenderObject(txt, LR_HUD);
 	luaReturnPtr(txt);
 }
 
@@ -9433,7 +9433,7 @@ static int createArialText(lua_State *L, TTFFont *font)
 	txt->setText(getString(L, 1));
 	//txt->setFontSize(lua_tointeger(L, 2)); // not supported; param is ignored for API compat with the create*Text functions
 	txt->position = Vector(lua_tonumber(L, 3), lua_tonumber(L, 4));
-	dsq->game->addRenderObject(txt, LR_HUD);
+	game->addRenderObject(txt, LR_HUD);
 	luaReturnPtr(txt);
 }
 
@@ -9730,7 +9730,7 @@ luaFunc(quadgrid_resetPos)
 
 luaFunc(getMinimapRender)
 {
-	luaReturnPtr(dsq->game->miniMapRender);
+	luaReturnPtr(game->miniMapRender);
 }
 
 luaFunc(minimap_setWaterBitTex)

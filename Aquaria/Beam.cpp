@@ -91,7 +91,7 @@ void Beam::trace()
 
 
 	int moves = 0;
-	while (!dsq->game->isObstructed(TileVector(startTile.x, startTile.y)))
+	while (!game->isObstructed(TileVector(startTile.x, startTile.y)))
 	{
 		startTile += mov;
 		moves++;
@@ -129,7 +129,7 @@ void Beam::onRender(const RenderState& rs) const
 
 void Beam::onUpdate(float dt)
 {
-	if (dsq->game->isPaused()) return;
+	if (game->isPaused()) return;
 
 	Quad::onUpdate(dt);
 

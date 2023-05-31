@@ -4747,7 +4747,7 @@ void Game::update(float dt)
 		avatar->pathToActivate = 0;
 
 		// make sure you also disable entityToActivate
-		if (dsq->game && avatar->canActivateStuff())
+		if (avatar->canActivateStuff())
 		{
 			Path* p = getScriptedPathAtCursor(true);
 			if (p && p->cursorActivation)

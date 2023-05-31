@@ -348,7 +348,7 @@ void Continuity::setRegen(float t)
 void Continuity::setTrip(float t)
 {
 	tripTimer.start(t);
-	dsq->game->avatar->applyTripEffects();
+	game->avatar->applyTripEffects();
 }
 
 void Continuity::setInvincible(float t)
@@ -392,11 +392,11 @@ void Continuity::setWeb(float t)
 
 	webBitTimer.start(webBitTime);
 
-	if (dsq->game->avatar)
+	if (game->avatar)
 	{
-		if (!dsq->game->avatar->web)
+		if (!game->avatar->web)
 		{
-			dsq->game->avatar->createWeb();
+			game->avatar->createWeb();
 		}
 	}
 }
@@ -416,9 +416,9 @@ void Continuity::cureAllStatus()
 {
 	setPoison(0,0);
 
-	if (dsq->game->avatar)
+	if (game->avatar)
 	{
-		dsq->game->avatar->setBlind(0);
+		game->avatar->setBlind(0);
 	}
 }
 
@@ -546,10 +546,10 @@ std::string Continuity::getIEString(IngredientData *data, size_t i)
 		return stringbank.get(227);
 	// break;
 	case IET_SCRIPT:
-		if(dsq->game->cookingScript)
+		if(game->cookingScript)
 		{
 			std::string ret = "";
-			dsq->game->cookingScript->call("getIngredientEffectString", data->name.c_str(), &ret);
+			game->cookingScript->call("getIngredientEffectString", data->name.c_str(), &ret);
 			return ret;
 		}
 	break;
@@ -591,7 +591,7 @@ bool Continuity::applyIngredientEffects(IngredientData *data)
 		{
 		case IET_HP:
 		{
-			dsq->game->avatar->heal(fx.magnitude);
+			game->avatar->heal(fx.magnitude);
 			debugLog("ingredient effect: hp");
 			if (fx.magnitude > 0)
 			{
@@ -611,13 +611,13 @@ bool Continuity::applyIngredientEffects(IngredientData *data)
 			{
 				dsq->centerMessage(getIEString(data, i), y, 1);
 
-				dsq->game->avatar->playHitSound();
+				game->avatar->playHitSound();
 			}
 		}
 		break;
 		case IET_MAXHP:
 		{
-			dsq->game->avatar->heal(dsq->game->avatar->maxHealth);
+			game->avatar->heal(game->avatar->maxHealth);
 			debugLog("ingredient effect: maxhp");
 			core->sound->playSfx("CollectMana");
 
@@ -738,7 +738,7 @@ bool Continuity::applyIngredientEffects(IngredientData *data)
 		{
 			if (fx.magnitude < 0)
 			{
-				dsq->game->avatar->setBlind(0);
+				game->avatar->setBlind(0);
 				dsq->centerMessage(getIEString(data, i), y);
 				dsq->sound->playSfx("regen");
 			}
@@ -813,8 +813,8 @@ bool Continuity::applyIngredientEffects(IngredientData *data)
 		case IET_SCRIPT:
 		{
 			// If this fails, it will still be eaten
-			if(dsq->game->cookingScript)
-				dsq->game->cookingScript->call("useIngredient", data->name.c_str(), &eaten);
+			if(game->cookingScript)
+				game->cookingScript->call("useIngredient", data->name.c_str(), &eaten);
 		}
 		break;
 		default:
@@ -1391,9 +1391,9 @@ void Continuity::toggleLiCombat(bool t)
 	if (hasLi())
 	{
 		setFlag(FLAG_LICOMBAT, (int)t);
-		if (dsq->game->li)
+		if (game->li)
 		{
-			dsq->game->li->message("c", 0);
+			game->li->message("c", 0);
 		}
 	}
 }
@@ -1402,8 +1402,8 @@ void Continuity::warpLiToAvatar()
 {
 	if (hasLi())
 	{
-		if (dsq->game && dsq->game->li && dsq->game->avatar)
-			dsq->game->li->position = dsq->game->avatar->position - Vector(0,-1);
+		if (game && game->li && game->avatar)
+			game->li->position = game->avatar->position - Vector(0,-1);
 	}
 }
 
@@ -1415,7 +1415,7 @@ Song *Continuity::getSongByIndex(int idx)
 void Continuity::castSong(int num)
 {
 	if (!dsq->continuity.hasSong((SongType)num)) return;
-	Entity *selected = dsq->game->avatar;
+	Entity *selected = game->avatar;
 
 	Song *song = getSongByIndex(num);
 	if (!song)
@@ -1444,8 +1444,8 @@ void Continuity::castSong(int num)
 	effect->alpha.startPath(et);
 	effect->setLife(et+0.1f);
 	effect->setDecayRate(1);
-	effect->setPositionSnapTo(&dsq->game->avatar->position);
-	dsq->game->addRenderObject(effect, LR_PARTICLES);
+	effect->setPositionSnapTo(&game->avatar->position);
+	game->addRenderObject(effect, LR_PARTICLES);
 
 
 	// song->script == 0: internal handler only
@@ -1464,13 +1464,13 @@ void Continuity::castSong(int num)
 		switch((SongType)num)
 		{
 		case SONG_SHIELDAURA:
-			dsq->game->avatar->doShieldSong();
+			game->avatar->doShieldSong();
 		break;
 		case SONG_BIND:
-			dsq->game->avatar->doBindSong();
+			game->avatar->doBindSong();
 		break;
 		case SONG_ENERGYFORM:
-			dsq->game->avatar->changeForm(FORM_ENERGY);
+			game->avatar->changeForm(FORM_ENERGY);
 		break;
 #ifndef AQUARIA_DEMO
 		case SONG_HEAL:
@@ -1496,7 +1496,7 @@ void Continuity::castSong(int num)
 		break;
 		case SONG_LANCE:
 		{
-			Entity *e = dsq->game->getNearestEntity(dsq->game->avatar->position, 256, dsq->game->avatar, ET_ENEMY, DT_AVATAR_LANCEATTACH);
+			Entity *e = game->getNearestEntity(game->avatar->position, 256, game->avatar, ET_ENEMY, DT_AVATAR_LANCEATTACH);
 			if (e)
 			{
 				e->attachLance();
@@ -1509,9 +1509,9 @@ void Continuity::castSong(int num)
 				dsq->emote.playSfx(EMOTE_NAIJASADSIGH);
 			}
 			// HACK: when you first get li, the li pointer won't be set
-			if (dsq->game->li && dsq->game->avatar->isUnderWater() && dsq->continuity.hasLi())
+			if (game->li && game->avatar->isUnderWater() && dsq->continuity.hasLi())
 			{
-				if (!dsq->game->avatar->isNearObstruction(2) && !dsq->game->avatar->state.lockedToWall && !(dsq->game->li->position - dsq->game->avatar->position).isLength2DIn(400))
+				if (!game->avatar->isNearObstruction(2) && !game->avatar->state.lockedToWall && !(game->li->position - game->avatar->position).isLength2DIn(400))
 				{
 
 					dsq->overlay->color = Vector(1,1,1);
@@ -1523,13 +1523,13 @@ void Continuity::castSong(int num)
 					dsq->overlay->color = 0;
 
 				}
-				else if ((dsq->game->li->position - dsq->game->avatar->position).isLength2DIn(500))
+				else if ((game->li->position - game->avatar->position).isLength2DIn(500))
 				{
 					if (dsq->continuity.getFlag(FLAG_LICOMBAT) == 1)
 						dsq->continuity.setFlag(FLAG_LICOMBAT, 0);
 					else
 						dsq->continuity.setFlag(FLAG_LICOMBAT, 1);
-					dsq->game->li->message("c", 0);
+					game->li->message("c", 0);
 				}
 				else
 				{
@@ -1543,13 +1543,13 @@ void Continuity::castSong(int num)
 			}
 		break;
 		case SONG_SPIRITFORM:
-			if (dsq->game->avatar->isUnderWater())
+			if (game->avatar->isUnderWater())
 			{
 				// Don't try to enter spirit form while warping,
 				// or we'll get stuck in the spirit world afterward.
 				bool inWarp = false;
-				const Vector avatarPosition(dsq->game->avatar->position);
-				for (Path *p = dsq->game->getFirstPathOfType(PATH_WARP); p; p = p->nextOfType)
+				const Vector avatarPosition(game->avatar->position);
+				for (Path *p = game->getFirstPathOfType(PATH_WARP); p; p = p->nextOfType)
 				{
 					if (p->isCoordinateInside(avatarPosition))
 					{
@@ -1560,7 +1560,7 @@ void Continuity::castSong(int num)
 				if (inWarp)
 					core->sound->playSfx("SongFail");
 				else
-					dsq->game->avatar->changeForm(FORM_SPIRIT);
+					game->avatar->changeForm(FORM_SPIRIT);
 			}
 			else
 			{
@@ -1568,19 +1568,19 @@ void Continuity::castSong(int num)
 			}
 		break;
 		case SONG_NATUREFORM:
-			dsq->game->avatar->changeForm(FORM_NATURE);
+			game->avatar->changeForm(FORM_NATURE);
 		break;
 		case SONG_BEASTFORM:
-			dsq->game->avatar->changeForm(FORM_BEAST);
+			game->avatar->changeForm(FORM_BEAST);
 		break;
 		case SONG_DUALFORM:
-			dsq->game->avatar->changeForm(FORM_DUAL);
+			game->avatar->changeForm(FORM_DUAL);
 		break;
 		case SONG_SUNFORM:
-			dsq->game->avatar->changeForm(FORM_SUN);
+			game->avatar->changeForm(FORM_SUN);
 		break;
 		case SONG_FISHFORM:
-			dsq->game->avatar->changeForm(FORM_FISH);
+			game->avatar->changeForm(FORM_FISH);
 		break;
 		case SONG_MAP:
 		case SONG_SONGDOOR1:
@@ -1596,18 +1596,18 @@ void Continuity::castSong(int num)
 	FOR_ENTITIES(i)
 	{
 		Entity *e = *i;
-		if ((e->position - dsq->game->avatar->position).getSquaredLength2D() < sqr(1000))
+		if ((e->position - game->avatar->position).getSquaredLength2D() < sqr(1000))
 		{
 			e->song((SongType)num);
 		}
 	}
-	for (size_t i = 0; i < dsq->game->getNumPaths(); i++)
+	for (size_t i = 0; i < game->getNumPaths(); i++)
 	{
-		Path *p = dsq->game->getPath(i);
+		Path *p = game->getPath(i);
 		if (p && !p->nodes.empty())
 		{
 			PathNode *n = &p->nodes[0];
-			if ((n->position - dsq->game->avatar->position).isLength2DIn(1000))
+			if ((n->position - game->avatar->position).isLength2DIn(1000))
 			{
 				p->song((SongType)num);
 			}
@@ -1618,7 +1618,7 @@ void Continuity::castSong(int num)
 void Continuity::setCostume(const std::string &c)
 {
 	costume = c;
-	dsq->game->avatar->changeForm(FORM_NORMAL, false);
+	game->avatar->changeForm(FORM_NORMAL, false);
 }
 
 void Continuity::learnSong(int song)
@@ -1832,7 +1832,7 @@ std::string Continuity::getIngredientGfx(const std::string &name)
 
 void Continuity::update(float dt)
 {
-	if (dsq->game->isActive())
+	if (game->isActive())
 		seconds += dt;
 
 	if (statsAndAchievements) {
@@ -1840,7 +1840,7 @@ void Continuity::update(float dt)
 		statsAndAchievements->RunFrame();
 	}
 
-	if (dsq->game->isActive() && !dsq->game->isPaused() )
+	if (game->isActive() && !game->isPaused() )
 	{
 
 		if (liPowerTimer.updateCheck(dt))
@@ -1863,7 +1863,7 @@ void Continuity::update(float dt)
 			petPower = 0;
 		}
 
-		if (dsq->game->avatar && dsq->game->avatar->isInputEnabled())
+		if (game->avatar && game->avatar->isInputEnabled())
 		{
 			if (poisonTimer.updateCheck(dt))
 			{
@@ -1875,7 +1875,7 @@ void Continuity::update(float dt)
 				if (poisonBitTimer.updateCheck(dt))
 				{
 					poisonBitTimer.start(poisonBitTimeAvatar);
-					if (dsq->game->avatar)
+					if (game->avatar)
 					{
 						core->sound->playSfx("poison");
 
@@ -1883,25 +1883,25 @@ void Continuity::update(float dt)
 						d.damage = poison * 0.2f;
 						d.useTimer = 0;
 						d.damageType = DT_ENEMY_ACTIVEPOISON;
-						dsq->game->avatar->damage(d);
+						game->avatar->damage(d);
 
-						dsq->spawnParticleEffect("PoisonBubbles", dsq->game->avatar->position);
+						dsq->spawnParticleEffect("PoisonBubbles", game->avatar->position);
 					}
 				}
 			}
 
 			if (webTimer.updateCheck(dt))
 			{
-				dsq->game->avatar->clearWeb();
+				game->avatar->clearWeb();
 			}
 
-			if (dsq->game->avatar->web)
+			if (game->avatar->web)
 			{
 				if (webBitTimer.updateCheck(dt))
 				{
 					webBitTimer.start(webBitTime);
 
-					dsq->game->avatar->web->addPoint(dsq->game->avatar->position);
+					game->avatar->web->addPoint(game->avatar->position);
 				}
 			}
 		}
@@ -1928,7 +1928,7 @@ void Continuity::update(float dt)
 
 		if (tripTimer.updateCheck(dt))
 		{
-			dsq->game->avatar->removeTripEffects();
+			game->avatar->removeTripEffects();
 		}
 
 		if (regenTimer.updateCheck(dt))
@@ -1943,7 +1943,7 @@ void Continuity::update(float dt)
 		{
 
 			{
-				Avatar *a = dsq->game->avatar;
+				Avatar *a = game->avatar;
 				if (a)
 				{
 					a->heal(dt*0.5f);
@@ -1962,12 +1962,12 @@ void Continuity::shiftWorlds()
 	if (worldType == WT_NORMAL)
 	{
 		worldType = WT_SPIRIT;
-		dsq->game->setWorldPaused(true);
+		game->setWorldPaused(true);
 	}
 	else if (worldType == WT_SPIRIT)
 	{
 		worldType = WT_NORMAL;
-		dsq->game->setWorldPaused(false);
+		game->setWorldPaused(false);
 	}
 	FOR_ENTITIES(i)
 	{
@@ -2025,17 +2025,17 @@ void Continuity::applyWorldEffects(WorldType type, bool transition, bool affectM
 	if (!transition) time = 0;
 	if (type == WT_SPIRIT)
 	{
-		dsq->game->avatar->canWarp = false;
+		game->avatar->canWarp = false;
 
-		dsq->game->sceneColor.interpolateTo(Vector(0.4f, 0.8f, 0.9f), time);
-		dsq->game->avatar->applyWorldEffects(type);
+		game->sceneColor.interpolateTo(Vector(0.4f, 0.8f, 0.9f), time);
+		game->avatar->applyWorldEffects(type);
 	}
 	else
 	{
-		dsq->game->avatar->canWarp = true;
+		game->avatar->canWarp = true;
 
-		dsq->game->sceneColor.interpolateTo(Vector(1,1,1), time);
-		dsq->game->avatar->applyWorldEffects(type);
+		game->sceneColor.interpolateTo(Vector(1,1,1), time);
+		game->avatar->applyWorldEffects(type);
 	}
 	if (time > 0)
 	{
@@ -2059,7 +2059,7 @@ void Continuity::eatBeast(const EatData &eatData)
 
 		if (eatData.health > 0)
 		{
-			dsq->game->avatar->heal(eatData.health);
+			game->avatar->heal(eatData.health);
 		}
 	}
 }
@@ -2150,7 +2150,7 @@ void Continuity::spawnAllIngredients(const Vector &position)
 {
 	for (size_t i = 0; i < ingredientData.size(); i++)
 	{
-		dsq->game->spawnIngredient(ingredientData[i]->name, position, 4, 0);
+		game->spawnIngredient(ingredientData[i]->name, position, 4, 0);
 	}
 }
 
@@ -2260,7 +2260,7 @@ void Continuity::clearTempFlags()
 
 void Continuity::upgradeHealth()
 {
-	Avatar *a = dsq->game->avatar;
+	Avatar *a = game->avatar;
 	maxHealth = a->maxHealth+1;
 	a->maxHealth = maxHealth;
 	a->heal(maxHealth - a->health);
@@ -2268,11 +2268,11 @@ void Continuity::upgradeHealth()
 
 void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData, int scrShotWidth, int scrShotHeight)
 {
-	refreshAvatarData(dsq->game->avatar);
+	refreshAvatarData(game->avatar);
 
 	if (position.isZero())
 	{
-		position = dsq->game->avatar->position;
+		position = game->avatar->position;
 	}
 
 	dsq->user.save();
@@ -2374,7 +2374,7 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		}
 		worldMap->SetAttribute("b", os.str().c_str());
 
-		if (dsq->game->worldMapRender)
+		if (game->worldMapRender)
 		{
 			std::ostringstream os;
 			for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
@@ -2449,8 +2449,8 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	XMLElement *startData = doc.NewElement("StartData");
 	startData->SetAttribute("x", int(position.x));
 	startData->SetAttribute("y", int(position.y));
-	startData->SetAttribute("scene", dsq->game->sceneName.c_str());
-	startData->SetAttribute("sceneDisplayName", dsq->game->sceneDisplayName.c_str());
+	startData->SetAttribute("scene", game->sceneName.c_str());
+	startData->SetAttribute("sceneDisplayName", game->sceneDisplayName.c_str());
 	startData->SetAttribute("exp", dsq->continuity.exp);
 	startData->SetAttribute("h", dsq->continuity.maxHealth);
 	startData->SetAttribute("ch", dsq->continuity.health);
@@ -2523,11 +2523,11 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		startData->SetAttribute(name, osf.str().c_str()); \
 	}} while(0)
 
-	SINGLE_FLOAT_ATTR("blind", dsq->game->avatar->state.blind, dsq->game->avatar->state.blindTimer.getValue());
+	SINGLE_FLOAT_ATTR("blind", game->avatar->state.blind, game->avatar->state.blindTimer.getValue());
 	SINGLE_FLOAT_ATTR("invincible", invincibleTimer.isActive(), invincibleTimer.getValue());
 	SINGLE_FLOAT_ATTR("regen", regenTimer.isActive(), regenTimer.getValue());
 	SINGLE_FLOAT_ATTR("trip", tripTimer.isActive(), tripTimer.getValue());
-	SINGLE_FLOAT_ATTR("shieldPoints", true, dsq->game->avatar->shieldPoints);
+	SINGLE_FLOAT_ATTR("shieldPoints", true, game->avatar->shieldPoints);
 	SINGLE_FLOAT_ATTR("webTimer", webTimer.isActive(), webTimer.getValue()); // Extension; not present in the android version
 
 #undef SINGLE_FLOAT_ATTR
@@ -2556,19 +2556,19 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 		startData->SetAttribute("poison", osp.str().c_str());
 	}
 
-	if(dsq->game->avatar->activeAura != AURA_NONE)
+	if(game->avatar->activeAura != AURA_NONE)
 	{
 		std::ostringstream osa;
-		osa << dsq->game->avatar->activeAura << " " << dsq->game->avatar->auraTimer;
+		osa << game->avatar->activeAura << " " << game->avatar->auraTimer;
 		startData->SetAttribute("aura", osa.str().c_str());
 	}
 
 	// FIXME: Web is a bit weird. There are 2 webBitTimer variables in use, one in Continuity, one in Avatar.
 	// Because the avatar one ticks every 0.5 seconds, it will be hardly noticeable if that timer is off.
 	// So we just use the Continuty timers and hope for the best. -- FG
-	if(webTimer.isActive() && dsq->game->avatar->web)
+	if(webTimer.isActive() && game->avatar->web)
 	{
-		Web *w = dsq->game->avatar->web;
+		Web *w = game->avatar->web;
 		const int nump = w->getNumPoints();
 		std::ostringstream osw;
 		osw << webBitTimer.getValue() << " " << nump << " ";
@@ -2949,7 +2949,7 @@ bool Continuity::loadFile(int slot)
 	{
 		int x = atoi(startData->Attribute("x"));
 		int y = atoi(startData->Attribute("y"));
-		dsq->game->positionToAvatar = Vector(x,y);
+		game->positionToAvatar = Vector(x,y);
 		if (startData->Attribute("exp"))
 			exp = atoi(startData->Attribute("exp"));
 
@@ -3051,10 +3051,10 @@ bool Continuity::loadFile(int slot)
 			os << "MaxHealth read as: " << maxHealth;
 			debugLog(os.str());
 
-			if (dsq->game->avatar)
+			if (game->avatar)
 			{
-				dsq->game->avatar->maxHealth = maxHealth;
-				dsq->game->avatar->health = maxHealth;
+				game->avatar->maxHealth = maxHealth;
+				game->avatar->health = maxHealth;
 			}
 		}
 
@@ -3066,9 +3066,9 @@ bool Continuity::loadFile(int slot)
 			os << "CurHealth read as: " << health;
 			debugLog(os.str());
 
-			if (dsq->game->avatar)
+			if (game->avatar)
 			{
-				dsq->game->avatar->health = h;
+				game->avatar->health = h;
 			}
 		}
 
@@ -3082,15 +3082,15 @@ bool Continuity::loadFile(int slot)
 			dsq->continuity.costume = startData->Attribute("costume");
 		}
 
-		dsq->game->sceneToLoad = startData->Attribute("scene");
+		game->sceneToLoad = startData->Attribute("scene");
 
 		// Additional data introduced in the android version
 
 		if(startData->Attribute("blind"))
 		{
 			float timer = strtof(startData->Attribute("blind"), NULL);
-			if(dsq->game->avatar)
-				dsq->game->avatar->setBlind(timer);
+			if(game->avatar)
+				game->avatar->setBlind(timer);
 		}
 
 		if(startData->Attribute("invincible"))
@@ -3119,18 +3119,18 @@ bool Continuity::loadFile(int slot)
 			is >> type >> timer;
 			auraTimer = timer;
 			auraType = (AuraType)type;
-			if(dsq->game->avatar)
+			if(game->avatar)
 			{
-				dsq->game->avatar->activateAura((AuraType)type);
-				dsq->game->avatar->auraTimer = timer;
+				game->avatar->activateAura((AuraType)type);
+				game->avatar->auraTimer = timer;
 			}
 		}
 
 		if(startData->Attribute("shieldPoints"))
 		{
 			float sp = strtof(startData->Attribute("shieldPoints"), NULL);
-			if(dsq->game->avatar)
-				dsq->game->avatar->shieldPoints = sp;
+			if(game->avatar)
+				game->avatar->shieldPoints = sp;
 		}
 
 #define LOAD_MULTI_SIMPLE(attr, mth) \
@@ -3173,11 +3173,11 @@ bool Continuity::loadFile(int slot)
 			is >> wbit >> nump;
 			// 2 web points are added in setWeb() by default, so we exclude them from the calculation
 			float remainTime = webTime - (0.5 * (nump - 2)); // Avatar::webBitTimer ticks every 0.5 secs
-			if(nump > 1 && remainTime > 0 && dsq->game->avatar)
+			if(nump > 1 && remainTime > 0 && game->avatar)
 			{
-				if(!dsq->game->avatar->web)
-					dsq->game->avatar->createWeb();
-				Web *w = dsq->game->avatar->web;
+				if(!game->avatar->web)
+					game->avatar->createWeb();
+				Web *w = game->avatar->web;
 				for(int i = 0; i < nump; ++i)
 				{
 					Vector v;
@@ -3250,7 +3250,7 @@ void Continuity::setEntityFlag(const std::string &sceneName, int id, int v)
 void Continuity::setPathFlag(Path *p, int v)
 {
 	std::ostringstream os;
-	os << "p:" << dsq->game->sceneName << ":" << p->nodes[0].position.x << ":" << p->nodes[0].position.y << ":" << removeSpaces(p->name);
+	os << "p:" << game->sceneName << ":" << p->nodes[0].position.x << ":" << p->nodes[0].position.y << ":" << removeSpaces(p->name);
 
 	std::ostringstream os2;
 	os2 << hash(os.str());
@@ -3261,7 +3261,7 @@ void Continuity::setPathFlag(Path *p, int v)
 int Continuity::getPathFlag(Path *p)
 {
 	std::ostringstream os;
-	os << "p:" << dsq->game->sceneName << ":" << p->nodes[0].position.x << ":" << p->nodes[0].position.y << ":" << removeSpaces(p->name);
+	os << "p:" << game->sceneName << ":" << p->nodes[0].position.x << ":" << p->nodes[0].position.y << ":" << removeSpaces(p->name);
 	std::ostringstream os2;
 	os2 << hash(os.str());
 	return entityFlags[os2.str()];
@@ -3316,7 +3316,7 @@ protected:
 			else
 			{
 				float p = (timer - (0.6f*timeScale)) / (0.4f*timeScale);
-				position = ((dsq->game->miniMapRender->position + dsq->game->miniMapRender->offset) - startPos)*p + startPos;
+				position = ((game->miniMapRender->position + game->miniMapRender->offset) - startPos)*p + startPos;
 			}
 		}
 	}
@@ -3340,37 +3340,37 @@ GemData *Continuity::pickupGem(std::string name, bool effects)
 {
 	GemData g;
 	g.name = name;
-	g.mapName = dsq->game->sceneName;
+	g.mapName = game->sceneName;
 	int sz = gems.size();
 
 	//HACK: (hacky) using effects to determine the starting position of the gem
 	if (!effects)
 	{
-		g.pos = dsq->game->worldMapRender->getAvatarWorldMapPosition() + Vector(sz*16-64, -64);
+		g.pos = game->worldMapRender->getAvatarWorldMapPosition() + Vector(sz*16-64, -64);
 	}
 	else
 	{
 		if (!gems.empty())
-			g.pos = dsq->game->worldMapRender->getAvatarWorldMapPosition();
+			g.pos = game->worldMapRender->getAvatarWorldMapPosition();
 		else
 			g.pos = Vector(0,0);
 	}
 
 	gems.push_back(g);
 
-	if (effects && dsq->game->isActive())
+	if (effects && game->isActive())
 	{
 		core->sound->playSfx("Gem-Collect");
 
 		GemGet *gg = new GemGet(g.name);
-		dsq->game->addRenderObject(gg, LR_MINIMAP);
+		game->addRenderObject(gg, LR_MINIMAP);
 
 
 
 		if (!getFlag("tokenHint"))
 		{
 			setFlag("tokenHint", 1);
-			dsq->game->setControlHint(stringbank.get(4), false, false, false, 8);
+			game->setControlHint(stringbank.get(4), false, false, false, 8);
 		}
 
 
@@ -3398,7 +3398,7 @@ void Continuity::learnRecipe(Recipe *r, bool effects)
 	debugLog(os.str());
 
 	if (!k)
-		dsq->game->learnedRecipe(r, effects);
+		game->learnedRecipe(r, effects);
 }
 
 void Continuity::learnRecipe(const std::string &result, bool effects)
@@ -3418,8 +3418,8 @@ void Continuity::reset()
 	dualFormMode = DUALFORM_LI;
 	dualFormCharge = 0;
 
-	if (dsq->game)
-		dsq->game->onContinuityReset();
+	if (game)
+		game->onContinuityReset();
 
 
 

@@ -32,17 +32,17 @@ PathRender::PathRender() : RenderObject()
 
 void PathRender::onRender(const RenderState& rs) const
 {
-	const size_t pathcount = dsq->game->getNumPaths();
+	const size_t pathcount = game->getNumPaths();
 	if (pathcount == 0)
 		return;
 
 	glLineWidth(4);
 
-	const size_t selidx = dsq->game->sceneEditor.selectedIdx;
+	const size_t selidx = game->sceneEditor.selectedIdx;
 
 	for (size_t i = 0; i < pathcount; i++)
 	{
-		const Path *p = dsq->game->getPath(i);
+		const Path *p = game->getPath(i);
 
 		if (selidx == i)
 			glColor4f(1, 1, 1, 0.75f);
@@ -66,7 +66,7 @@ void PathRender::onRender(const RenderState& rs) const
 
 	for (size_t i = 0; i < pathcount; i++)
 	{
-		const Path *p = dsq->game->getPath(i);
+		const Path *p = game->getPath(i);
 		for (size_t n = 0; n < p->nodes.size(); n++)
 		{
 			const PathNode *nd = &p->nodes[n];

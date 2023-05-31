@@ -392,7 +392,7 @@ void Shot::applyShotData(const ShotData& shotData)
 			flame->scale = shotData.segScale - Vector(shotData.segTaper, shotData.segTaper)*(i);
 			flame->setBlendType(this->getBlendType());
 			flame->alpha = 0.5;
-			dsq->game->addRenderObject(flame, LR_PARTICLES);
+			game->addRenderObject(flame, LR_PARTICLES);
 			segments[i] = flame;
 			segments[i]->position = position;
 		}
@@ -422,7 +422,7 @@ void Shot::setParticleEffect(const std::string &particleEffect)
 	if(!emitter)
 	{
 		emitter = new ParticleEffect;
-		dsq->game->addRenderObject(emitter, LR_PARTICLES);
+		game->addRenderObject(emitter, LR_PARTICLES);
 	}
 	emitter->load(particleEffect);
 	emitter->start();
@@ -487,15 +487,15 @@ bool Shot::onHitWall(bool reflect)
 	{
 		if (!shotData->spawnEntity.empty())
 		{
-			dsq->game->createEntityTemp(shotData->spawnEntity.c_str(), position, true);
+			game->createEntityTemp(shotData->spawnEntity.c_str(), position, true);
 
 			if (shotData->spawnEntity == "NatureFormFlowers")
 			{
-				dsq->game->registerSporeDrop(position, 0);
+				game->registerSporeDrop(position, 0);
 			}
 			else
 			{
-				dsq->game->registerSporeDrop(position, 2);
+				game->registerSporeDrop(position, 2);
 			}
 		}
 	}
@@ -615,7 +615,7 @@ void Shot::hitEntity(Entity *e, Bone *b)
 			if (damageType == DT_AVATAR_BITE)
 			{
 
-				dsq->game->avatar->bittenEntities.push_back(e);
+				game->avatar->bittenEntities.push_back(e);
 			}
 
 			bool damaged = e->damage(d);
@@ -721,16 +721,16 @@ bool Shot::isObstructed(float dt) const
 	if (shotData->wallHitRadius == 0)
 	{
 		TileVector t(position + velocity * dt);
-		if (dsq->game->isObstructed(t)
-			|| dsq->game->isObstructed(TileVector(t.x+1, t.y))
-			|| dsq->game->isObstructed(TileVector(t.x-1, t.y))
-			|| dsq->game->isObstructed(TileVector(t.x, t.y+1))
-			|| dsq->game->isObstructed(TileVector(t.x, t.y-1)))
+		if (game->isObstructed(t)
+			|| game->isObstructed(TileVector(t.x+1, t.y))
+			|| game->isObstructed(TileVector(t.x-1, t.y))
+			|| game->isObstructed(TileVector(t.x, t.y+1))
+			|| game->isObstructed(TileVector(t.x, t.y-1)))
 			return true;
 	}
 	else
 	{
-		if (dsq->game->collideCircleWithGrid(position, shotData->wallHitRadius))
+		if (game->collideCircleWithGrid(position, shotData->wallHitRadius))
 		{
 			return true;
 		}
@@ -741,8 +741,8 @@ bool Shot::isObstructed(float dt) const
 
 void Shot::onUpdate(float dt)
 {
-	if (dsq->game->isPaused()) return;
-	if (dsq->game->isWorldPaused()) return;
+	if (game->isPaused()) return;
+	if (game->isWorldPaused()) return;
 	if (!shotData) return;
 
 
@@ -852,7 +852,7 @@ void Shot::onUpdate(float dt)
 							}
 							float len = velocity.getLength2D();
 							Vector I = velocity/len;
-							Vector N = dsq->game->getWallNormal(position);
+							Vector N = game->getWallNormal(position);
 
 							if (!N.isZero())
 							{

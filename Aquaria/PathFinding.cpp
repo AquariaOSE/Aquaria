@@ -28,14 +28,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 class SearchGridRaw
 {
 public:
-	SearchGridRaw(ObsType blocking) : blockingObsBits(blocking), game(dsq->game) {}
+	SearchGridRaw(ObsType blocking) : blockingObsBits(blocking) {}
 	inline bool operator()(unsigned x, unsigned y) const
 	{
 		return (game->getGridRaw(TileVector(x, y)) & blockingObsBits) == OT_EMPTY;
 	}
 
 	ObsType blockingObsBits;
-	const Game *game;
 };
 
 class PathFinding::State : public ScriptObject
@@ -80,20 +79,20 @@ void PathFinding::molestPath(VectorPath &path)
 		Vector node = path.getPathNode(i)->value;
 		const int sample = 20;
 		{
-			Vector n = dsq->game->getWallNormal(node, sample);
+			Vector n = game->getWallNormal(node, sample);
 			if (!n.isZero())
 			{
 				n.setLength2D(200);
 				TileVector test(node + n);
-				if (dsq->game->isObstructed(test))
+				if (game->isObstructed(test))
 				{
 					n.setLength2D(100);
 					test = TileVector(node+n);
-					if (dsq->game->isObstructed(test))
+					if (game->isObstructed(test))
 					{
 						n.setLength2D(50);
 						test = TileVector(node+n);
-						if (dsq->game->isObstructed(test))
+						if (game->isObstructed(test))
 						{
 							n = Vector(0,0,0);
 						}
@@ -137,7 +136,7 @@ void PathFinding::molestPath(VectorPath &path)
 		for (size_t j = sz-1; j >= i+adjust; j--)
 		{
 			Vector target = path.getPathNode(j)->value;
-			if (dsq->game->trace(node, target))
+			if (game->trace(node, target))
 			{
 				hadSuccess = true;
 				lastSuccessNode = j;

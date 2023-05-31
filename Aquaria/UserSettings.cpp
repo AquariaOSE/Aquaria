@@ -603,9 +603,9 @@ void UserSettings::apply()
 
 	core->debugLogActive = system.debugLogOn;
 
-	if (dsq->game)
+	if (game)
 	{
-		dsq->game->bindInput();
+		game->bindInput();
 	}
 
 	dsq->bindInput();

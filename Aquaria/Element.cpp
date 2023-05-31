@@ -309,16 +309,16 @@ void Element::render(const RenderState& rs) const
 {
 	if (!elementActive) return;
 
-	if (dsq->game->isSceneEditorActive() && this->bgLayer == dsq->game->sceneEditor.bgLayer
-		&& dsq->game->sceneEditor.editType == ET_ELEMENTS)
+	if (game->isSceneEditorActive() && this->bgLayer == game->sceneEditor.bgLayer
+		&& game->sceneEditor.editType == ET_ELEMENTS)
 	{
 		Vector tagColor = getTagColor(tag);
 		bool hl = false;
-		if (!dsq->game->sceneEditor.selectedElements.empty())
+		if (!game->sceneEditor.selectedElements.empty())
 		{
-			for (size_t i = 0; i < dsq->game->sceneEditor.selectedElements.size(); i++)
+			for (size_t i = 0; i < game->sceneEditor.selectedElements.size(); i++)
 			{
-				if (this == dsq->game->sceneEditor.selectedElements[i])
+				if (this == game->sceneEditor.selectedElements[i])
 				{
 					hl = true;
 					break;
@@ -327,7 +327,7 @@ void Element::render(const RenderState& rs) const
 		}
 		else
 		{
-			hl = dsq->game->sceneEditor.editingElement == this;
+			hl = game->sceneEditor.editingElement == this;
 		}
 
 		if(hl)
@@ -349,19 +349,19 @@ void Element::fillGrid()
 	{
 		if (elementFlag == EF_SOLID)
 		{
-			dsq->game->fillGridFromQuad(this, OT_INVISIBLE, true);
+			game->fillGridFromQuad(this, OT_INVISIBLE, true);
 		}
 		else if (elementFlag == EF_HURT)
 		{
-			dsq->game->fillGridFromQuad(this, OT_HURT, false);
+			game->fillGridFromQuad(this, OT_HURT, false);
 		}
 		else if (elementFlag == EF_SOLID2)
 		{
-			dsq->game->fillGridFromQuad(this, OT_INVISIBLE, false);
+			game->fillGridFromQuad(this, OT_INVISIBLE, false);
 		}
 		else if (elementFlag == EF_SOLID3)
 		{
-			dsq->game->fillGridFromQuad(this, OT_INVISIBLEIN, false);
+			game->fillGridFromQuad(this, OT_INVISIBLEIN, false);
 		}
 	}
 }

@@ -91,7 +91,7 @@ bool Ingredient::hasIET(IngredientEffectType iet)
 void Ingredient::destroy()
 {
 	Entity::destroy();
-	dsq->game->removeIngredient(this);
+	game->removeIngredient(this);
 }
 
 bool Ingredient::isRotKind()
@@ -113,13 +113,13 @@ void Ingredient::eat(Entity *e)
 
 void Ingredient::onUpdate(float dt)
 {
-	if (dsq->game->isPaused()) return;
-	if (dsq->game->isWorldPaused()) return;
+	if (game->isPaused()) return;
+	if (game->isWorldPaused()) return;
 
 	Vector lastPosition = position;
 	Entity::onUpdate(dt);
 
-	if (dsq->game->collideCircleWithGrid(position, 24))
+	if (game->collideCircleWithGrid(position, 24))
 	{
 		position = lastPosition;
 
@@ -139,7 +139,7 @@ void Ingredient::onUpdate(float dt)
 		}
 	}
 
-	Vector diff = (dsq->game->avatar->position - position);
+	Vector diff = (game->avatar->position - position);
 	if (diff.isLength2DIn(64))
 	{
 		if (scale.x == 1)
@@ -149,7 +149,7 @@ void Ingredient::onUpdate(float dt)
 
 			dsq->continuity.pickupIngredient(data, 1);
 
-			dsq->game->pickupIngredientEffects(data);
+			game->pickupIngredientEffects(data);
 
 			dsq->spawnParticleEffect("IngredientCollect", position);
 
@@ -159,7 +159,7 @@ void Ingredient::onUpdate(float dt)
 	else
 	{
 		float len = 1024;
-		if (dsq->game->avatar->isRolling() && diff.isLength2DIn(len))
+		if (game->avatar->isRolling() && diff.isLength2DIn(len))
 		{
 			float maxSpeed = 1500;
 			Vector maxV = diff;

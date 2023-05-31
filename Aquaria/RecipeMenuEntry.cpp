@@ -342,7 +342,7 @@ void RecipeMenu::toggle(bool on, bool watch)
 		if (watch)
 			dsq->run(t);
 
-		if (!dsq->game->isInGameMenu())
+		if (!game->isInGameMenu())
 		{
 			slide(scroll, 0, 0);
 			slide(scrollEnd, 0, 0);
@@ -400,7 +400,7 @@ void RecipeMenu::createPage(int p)
 					recipeMenuEntries.push_back(r);
 
 					r->position = Vector(500-5, 65 + num * 70);
-					dsq->game->addRenderObject(r, scroll->layer);
+					game->addRenderObject(r, scroll->layer);
 					num++;
 				}
 				else
@@ -427,7 +427,7 @@ void RecipeMenu::createPage(int p)
 	description->setText("");
 	description->setWidth(500); // 1000??
 
-	dsq->game->addRenderObject(description, scroll->layer);
+	game->addRenderObject(description, scroll->layer);
 
 	std::ostringstream os2;
 	os2 << stringbank.get(2006) << " " << currentPage+1 << "/" << getNumPages()+1;

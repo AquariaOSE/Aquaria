@@ -90,7 +90,7 @@ void Web::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
 
-	if (!dsq->game->isPaused())
+	if (!game->isPaused())
 	{
 		if (existence > 0)
 		{
@@ -105,7 +105,7 @@ void Web::onUpdate(float dt)
 			}
 		}
 
-		if (dsq->game->avatar && dsq->game->avatar->isInputEnabled())
+		if (game->avatar && game->avatar->isInputEnabled())
 		{
 			FOR_ENTITIES(i)
 			{
