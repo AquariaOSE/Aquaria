@@ -34,6 +34,17 @@ static ImageData loadGeneric(const char *fn)
     return imageLoadGeneric(fn, false);
 }
 
+// This handles unix/win32 relative paths: ./rel/path
+// Unix abs paths: /home/user/...
+// Win32 abs paths: C:/Stuff/.. and also C:\Stuff\...
+// -- We want to keep those paths untouched and just load as-is.
+// This is mainly used for special things like savegame thumbnails and mod preview images,
+// that exist outside of the game's known texture directories and are also not part of a running mod.
+static bool isSpecialPath(const std::string& s)
+{
+    return s[0] == '.' || s[0] == '/' || (s.length() > 1 && s[1] == ':');
+}
+
 static const std::string fixup(const std::string& fn)
 {
     std::string file = localisePathInternalModpath(fn);
@@ -95,31 +106,38 @@ static TexLoader getFullnameAndLoader(const std::string& name, const std::string
     return TexLoader(NULL, std::string());
 }
 
+static bool locateAndLoad(TexLoadTmp& tt, const std::string& basedir)
+{
+    std::string filename = basedir + tt.name;
+    TexLoader ldr = getFullnameAndLoader(filename, basedir);
+    if(!ldr.name.empty()) // name was cleaned up, use the updated one
+        tt.name = ldr.name;
+    if(ldr.loader)
+    {
+        if(tt.loadmode < TextureMgr::OVERWRITE && tt.curTex && tt.curTex->success && tt.curTex->filename == ldr.fn)
+        {
+            // still referring to the same file that was already loaded, so we wouldn't gain anything from loading it again
+            tt.success = true;
+            return true;
+        }
+
+        tt.filename = ldr.fn;
+        tt.img = ldr.load();
+        tt.success = !!tt.img.pixels;
+        return true;
+    }
+    return false;
+}
+
 void TextureMgr::th_loadFromFile(TexLoadTmp& tt) const
 {
-    std::string withoutExt;
-    for(size_t i = 0; i < loadFromPaths.size(); ++i)
-    {
-        withoutExt = loadFromPaths[i] + tt.name;
-        TexLoader ldr = getFullnameAndLoader(withoutExt, loadFromPaths[i]);
-        if(!ldr.name.empty()) // name was cleaned up, use the updated one
-            tt.name = ldr.name;
-        if(ldr.loader)
-        {
-            if(tt.loadmode < OVERWRITE && tt.curTex && tt.curTex->success && tt.curTex->filename == ldr.fn)
-            {
-                tt.success = true;
-                break;
-            }
-
-            tt.filename = ldr.fn;
-            tt.img = ldr.load();
-            tt.success = !!tt.img.pixels;
+    if(isSpecialPath(tt.name))
+        if(locateAndLoad(tt, ""))
             return;
-        }
-    }
 
-    tt.img.pixels = NULL;
+    for(size_t i = 0; i < loadFromPaths.size(); ++i)
+        if(locateAndLoad(tt, loadFromPaths[i]))
+            return;
 }
 
 
@@ -214,7 +232,7 @@ void TextureMgr::thMain()
     }
 }
 
-Texture *TextureMgr::finalize(const TexLoadTmp& tt)
+Texture *TextureMgr::finalize(TexLoadTmp& tt)
 {
     Texture *tex = tt.curTex;
     if(!tex)
@@ -236,9 +254,10 @@ Texture *TextureMgr::finalize(const TexLoadTmp& tt)
     }
     if(tt.img.pixels)
     {
-        //debugLog("LOADED TEXTURE FROM DISK: [" + tt.name + "]");
+        debugLog("LOADED TEXTURE FROM DISK: [" + tt.filename + "]");
         tex->upload(tt.img, /*tt.mipmap*/ true);
         free(tt.img.pixels);
+        tt.img.pixels = NULL;
     }
     return tex;
 }
@@ -287,7 +306,7 @@ void TextureMgr::loadBatch(Texture * pdst[], const std::string texnames[], size_
     {
         void *p;
         workdone.pop(p);
-        const TexLoadTmp& tt = *(const TexLoadTmp*)p;
+        TexLoadTmp& tt = *(TexLoadTmp*)p;
         Texture *tex = finalize(tt);
         if(pdst)
             pdst[i] = tex;
