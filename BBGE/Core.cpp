@@ -69,8 +69,8 @@ void CoreWindow::onResize(unsigned w, unsigned h)
 void CoreWindow::onQuit()
 {
 	// smooth
-	//core->quitNestedMain();
-	//core->quit();
+	//quitNestedMain();
+	//quit();
 
 	// instant
 	SDL_Quit();
@@ -95,7 +95,7 @@ ParticleEffect* Core::createParticleEffect(const std::string &name, const Vector
 	e->start();
 	e->setDie(true);
 	e->rotation.z = rotz;
-	core->getTopStateData()->addRenderObject(e, layer);
+	getTopStateData()->addRenderObject(e, layer);
 	return e;
 }
 
@@ -662,7 +662,7 @@ void Core::detectJoysticks()
 
 bool Core::initInputLibrary()
 {
-	core->mouse.position = Vector(getWindowWidth()/2, getWindowHeight()/2);
+	mouse.position = Vector(getWindowWidth()/2, getWindowHeight()/2);
 
 	for (int i = 0; i < KEY_MAXARRAY; i++)
 	{
@@ -686,7 +686,7 @@ void Core::onUpdate(float dt)
 	onMouseInput();
 
 	globalScale.update(dt);
-	core->globalScaleChanged();
+	globalScaleChanged();
 
 	if (afterEffectManager)
 	{
@@ -935,9 +935,9 @@ void Core::enable2D(int pixelScaleX, int pixelScaleY)
 	glLoadIdentity();
 	setupRenderPositionAndScale();
 
-	float widthFactor = core->width/float(pixelScaleX);
-	float heightFactor = core->height/float(pixelScaleY);
-	core->globalResolutionScale = Vector(widthFactor,heightFactor,1.0f);
+	float widthFactor = width/float(pixelScaleX);
+	float heightFactor = height/float(pixelScaleY);
+	globalResolutionScale = Vector(widthFactor,heightFactor,1.0f);
 	setPixelScale(pixelScaleX, pixelScaleY);
 }
 
@@ -1003,8 +1003,8 @@ std::string Core::getEnqueuedJumpState()
 	return this->enqueuedJumpState;
 }
 
-int screenshotNum = 0;
-std::string getScreenshotFilename(bool png)
+static int screenshotNum = 0;
+static std::string getScreenshotFilename(bool png)
 {
 	std::string prefix = core->getUserDataFolder() + "/screenshots/screen";
 	std::string ext = png ? ".png" : ".tga";
@@ -1014,7 +1014,7 @@ std::string getScreenshotFilename(bool png)
 		os << prefix << screenshotNum << ext;
 		screenshotNum ++;
 		std::string str(os.str());
-		if (!core->exists(str))  // keep going until we hit an unused filename.
+		if (!exists(str))  // keep going until we hit an unused filename.
 			return str;
 	}
 }
@@ -1255,7 +1255,7 @@ int Core::getVirtualOffY()
 
 void Core::centerMouse()
 {
-	setMousePosition(Vector((virtualWidth/2) - core->getVirtualOffX(), virtualHeight/2));
+	setMousePosition(Vector((virtualWidth/2) - getVirtualOffX(), virtualHeight/2));
 }
 
 bool Core::doMouseConstraint()
@@ -1760,7 +1760,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 	globalScaleChanged();
 
-	if (core->minimized) return;
+	if (minimized) return;
 	onRender();
 
 	RenderObject::lastTextureApplied = 0;
@@ -1937,11 +1937,6 @@ void Core::shutdown()
 
 //util funcs
 
-bool Core::exists(const std::string &filename)
-{
-	return ::exists(filename, false); // defined in Base.cpp
-}
-
 CountedPtr<Texture> Core::getTexture(const std::string &name)
 {
 	return texmgr.getOrLoad(name);
@@ -2104,7 +2099,7 @@ unsigned char *Core::grabScreenshot(size_t x, size_t y, size_t w, size_t h)
 // Like grabScreenshot(), but grab from the center of the screen.
 unsigned char *Core::grabCenteredScreenshot(size_t w, size_t h)
 {
-	return grabScreenshot(core->width/2 - w/2, core->height/2 - h/2, w, h);
+	return grabScreenshot(width/2 - w/2, height/2 - h/2, w, h);
 }
 
 // takes a screen shot and saves it to a TGA or PNG image

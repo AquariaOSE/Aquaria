@@ -249,8 +249,6 @@ public:
 
 	virtual void action(int id, int state, int source, InputDevice device){}
 
-	bool exists(const std::string &file);
-
 	void enqueueRenderObjectDeletion(RenderObject *object);
 	void clearGarbage();
 
