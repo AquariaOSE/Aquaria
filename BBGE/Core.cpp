@@ -221,10 +221,10 @@ bool Core::getCtrlState()
 	return getKeyState(KEY_LCONTROL) || getKeyState(KEY_RCONTROL);
 }
 
-void Core::errorLog(const std::string &s)
+void Core::_errorLog(const std::string &s)
 {
 	messageBox("Error!", s);
-	debugLog(s);
+	this->_debugLog(s);
 }
 
 void Core::messageBox(const std::string &title, const std::string &msg)
@@ -232,7 +232,7 @@ void Core::messageBox(const std::string &title, const std::string &msg)
 	::messageBox(title, msg);
 }
 
-void Core::debugLog(const std::string &s)
+void Core::_debugLog(const std::string &s)
 {
 	if (debugLogActive)
 	{

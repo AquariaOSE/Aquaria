@@ -342,8 +342,8 @@ public:
 	bool getMouseButtonState(int m);
 
 	int keys[KEY_MAXARRAY];
-	virtual void debugLog(const std::string &s);
-	virtual void errorLog(const std::string &s);
+	virtual void _debugLog(const std::string &s);
+	virtual void _errorLog(const std::string &s);
 	void messageBox(const std::string &title, const std::string &msg);
 	bool getShiftState();
 	bool getAltState();

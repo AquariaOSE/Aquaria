@@ -2577,7 +2577,7 @@ void SceneEditor::update(float dt)
 			if(dsq->game->saveScene(os.str()))
 			{
 				std::string m = "Map AutoSaved to " + os.str();
-				dsq->debugLog(m);
+				debugLog(m);
 				dsq->screenMessage(m);
 			}
 

@@ -299,7 +299,7 @@ void errorLog(const std::string &s)
 {
 	if (core)
 	{
-		core->errorLog(s);
+		core->_errorLog(s);
 	}
 	else
 	{
@@ -310,7 +310,7 @@ void errorLog(const std::string &s)
 void debugLog(const std::string &s)
 {
 	if (core)
-		core->debugLog(s);
+		core->_debugLog(s);
 	else
 	{
 		//MessageBox(0, s.c_str(), "DebugLog (Core Not Initalized)", MB_OK);
