@@ -673,9 +673,9 @@ static void loadBitForSoundCache()
 {
 	if (soundsLoaded > 0 && soundsLoaded < soundsExpected)
 	{
-		// Only update every 4 sounds so we don't waste too much
+		// Only update every few sounds so we don't waste too much
 		// time waiting for vsync.
-		if (soundsLoaded % 4 == 0)
+		if (soundsLoaded % 16 == 0)
 		{
 			loadBit(LOAD_SOUNDCACHE,
 					(float)soundsLoaded / soundsExpected);
@@ -685,12 +685,12 @@ static void loadBitForSoundCache()
 }
 
 static unsigned int texturesLoaded = 0;
-static const unsigned int texturesExpected = 652;
+static const unsigned int texturesExpected = 663;
 static void loadBitForTexPrecache()
 {
 	if (texturesLoaded > 0 && texturesLoaded < texturesExpected)
 	{
-		if (texturesLoaded % 16 == 0)
+		if (texturesLoaded % 32 == 0)
 		{
 			loadBit(LOAD_TEXTURES,
 					(float)texturesLoaded / texturesExpected);
