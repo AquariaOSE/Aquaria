@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "StringBank.h"
 #include "ttvfs_stdio.h"
+#include "Base.h"
 
 StringBank stringbank;
 static const std::string emptyStr;
@@ -40,6 +41,7 @@ bool StringBank::empty() const
 
 bool StringBank::load(const std::string &file)
 {
+	debugLog("Load stringbank: " + file);
 	InStream in(file.c_str());
 	if(!in)
 		return false;
