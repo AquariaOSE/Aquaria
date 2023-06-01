@@ -1817,6 +1817,7 @@ void SceneEditor::loadSceneByName()
 	if (!s.empty())
 	{
 		game->noSceneTransitionFadeout = true;
+		game->fullTilesetReload = true;
 		game->transitionToScene(s);
 	}
 }
@@ -1825,6 +1826,7 @@ void SceneEditor::reloadScene()
 {
 	debugLog("reloadScene");
 	game->noSceneTransitionFadeout = true;
+	game->fullTilesetReload = true;
 	game->positionToAvatar = game->avatar->position;
 	game->transitionToScene(game->sceneName);
 }

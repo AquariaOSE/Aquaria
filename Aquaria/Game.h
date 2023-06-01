@@ -350,6 +350,7 @@ public:
 	bool loadingScene;
 	bool doScreenTrans;
 	bool noSceneTransitionFadeout;
+	bool fullTilesetReload;
 
 	WaterSurfaceRender *waterSurfaceRender;
 

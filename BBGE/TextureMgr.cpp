@@ -8,13 +8,14 @@
 
 struct TexLoadTmp
 {
-    TexLoadTmp() : loadmode(TextureMgr::KEEP), curTex(NULL), success(false) { img.pixels = NULL; }
+    TexLoadTmp() : loadmode(TextureMgr::KEEP), curTex(NULL), success(false), arrayidx(0) { img.pixels = NULL; }
     std::string name, filename;
     ImageData img;
     TextureMgr::LoadMode loadmode;
     Texture *curTex; // immutable
     bool success; // if this is true and img.pixels is NULL, don't change anything
     //bool mipmap;
+    size_t arrayidx;
 };
 
 typedef ImageData (*ImageLoadFunc)(const char *fn);
@@ -289,6 +290,7 @@ void TextureMgr::loadBatch(Texture * pdst[], const std::string texnames[], size_
     for(size_t i = 0; i < n; ++i)
     {
         TexLoadTmp& tt = tmp[i];
+        tt.arrayidx = i;
         tt.name = texnames[i];
         stringToLower(tt.name);
         TexCache::iterator it = cache.find(tt.name);
@@ -315,7 +317,7 @@ void TextureMgr::loadBatch(Texture * pdst[], const std::string texnames[], size_
         TexLoadTmp& tt = *(TexLoadTmp*)p;
         Texture *tex = finalize(tt);
         if(pdst)
-            pdst[i] = tex;
+            pdst[tt.arrayidx] = tex;
         if(cb)
             cb(++doneCB, cbUD);
     }

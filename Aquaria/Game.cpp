@@ -227,6 +227,7 @@ Game::Game() : StateObject()
 	cookingScript = 0;
 	doScreenTrans = false;
 	noSceneTransitionFadeout = false;
+	fullTilesetReload = false;
 }
 
 Game::~Game()
@@ -1725,7 +1726,7 @@ bool Game::loadSceneXML(std::string scene)
 	struct ElementDef
 	{
 		ElementDef(int lr)
-			: layer(lr), idx(0), x(0), y(0), rot(0), fh(0), fv(0), flags(0), efxIdx(0), repeat(0)
+			: layer(lr), idx(0), x(0), y(0), rot(0), fh(0), fv(0), flags(0), efxIdx(-1), repeat(0)
 			, tag(0), sx(1), sy(1), rsx(1), rsy(1)
 		{}
 
@@ -1838,7 +1839,7 @@ bool Game::loadSceneXML(std::string scene)
 				ElementDef& d = elemsDefs[i];
 				if(d.repeat)
 				{
-					if(!(is >> d.rsx >> d.rsx))
+					if(!(is >> d.rsx >> d.rsy))
 						break;
 				}
 			}
@@ -1854,6 +1855,14 @@ bool Game::loadSceneXML(std::string scene)
 			}
 		}
 		simpleElements = simpleElements->NextSiblingElement("SE");
+	}
+
+	if(fullTilesetReload)
+	{
+		fullTilesetReload = false;
+		// used by SceneEditor
+		// no elements exist right now -> textures will be cleared and reloaded
+		dsq->texmgr.clearUnused();
 	}
 
 	// figure out which textures in the tileset are used and preload those that are actually used
@@ -1904,8 +1913,7 @@ bool Game::loadSceneXML(std::string scene)
 		e->rotation.z = d.rot;
 		e->repeatToFillScale.x = d.rsx;
 		e->repeatToFillScale.y = d.rsy;
-		if(d.efxIdx)
-			e->setElementEffectByIndex(d.efxIdx);
+		e->setElementEffectByIndex(d.efxIdx);
 		if (d.repeat)
 			e->repeatTextureToFill(true); // also applies repeatToFillScale
 		e->setTag(d.tag);
