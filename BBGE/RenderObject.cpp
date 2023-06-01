@@ -376,7 +376,7 @@ bool RenderObject::hasRenderPass(const int pass) const
 
 bool RenderObject::shouldTryToRender() const
 {
-	return !parent
+	return !parent && !_hidden
 		&& alpha.x > 0
 		&& (!cull || isOnScreen());
 }
@@ -392,7 +392,9 @@ bool RenderObject::isVisibleInPass(int pass) const
 void RenderObject::render(const RenderState& rs) const
 {
 	assert(parent || layer != LR_NONE);
-	if (isHidden()) return;
+
+	if(_hidden)
+		return;
 
 	/// new (breaks anything?)
 	if (alpha.x == 0 || alphaMod == 0) return;
