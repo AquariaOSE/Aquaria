@@ -30,9 +30,7 @@ BitBlotLogo::BitBlotLogo() : StateObject()
 
 bool BitBlotLogo::watchQuit(float time)
 {
-	core->run(time);
-	return false;
-
+	return dsq->run(time, false, true);
 }
 
 void BitBlotLogo::doShortBitBlot()
@@ -55,23 +53,15 @@ void BitBlotLogo::doShortBitBlot()
 	logo->scale = Vector(0.6f,0.6f);
 	addRenderObject(logo, LR_HUD);
 
-	core->run(1.5);
+	if(watchQuit(1.5f))
+		return;
 
 	dsq->overlay2->alpha.interpolateTo(1, 0.5f);
-	core->run(0.5);
-}
-
-void BitBlotLogo::skipLogo()
-{
-	quitFlag = 2;
-	doShortBitBlot();
-	getOut();
+	watchQuit(0.5f);
 }
 
 void BitBlotLogo::getOut()
 {
-
-
 #ifdef AQUARIA_DEMO
 	dsq->title();
 #else
@@ -84,9 +74,13 @@ void BitBlotLogo::getOut()
 
 void BitBlotLogo::applyState()
 {
+	showSequence();
+	getOut();
+}
+
+void BitBlotLogo::showSequence()
+{
 	StateObject::applyState();
-	quitFlag = 0;
-	logo = 0;
 	dsq->toggleCursor(0);
 	dsq->toggleBlackBars(1);
 
@@ -94,15 +88,7 @@ void BitBlotLogo::applyState()
 
 	if (dsq->user.demo.shortLogos)
 	{
-		skipLogo();
-		return;
-	}
-
-	logo = 1;
-
-	if (core->getKeyState(KEY_ESCAPE))
-	{
-		skipLogo();
+		doShortBitBlot();
 		return;
 	}
 
@@ -287,12 +273,6 @@ void BitBlotLogo::applyState()
 
 	dsq->overlay2->alpha.interpolateTo(1, 2);
 	if (watchQuit(2.0)) return;
-
-
-	getOut();
-
-
-
 }
 
 void BitBlotLogo::removeState()

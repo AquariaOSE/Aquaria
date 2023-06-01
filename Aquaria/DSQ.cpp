@@ -3540,55 +3540,41 @@ bool DSQ::isQuitFlag()
 	return watchQuitFlag;
 }
 
-void DSQ::run(float runTime /* = -1 */, bool skipRecurseCheck)
+bool DSQ::run(float runTime /* = -1 */, bool skipRecurseCheck, bool canQuit)
 {
 	if(isDeveloperKeys() && isNested() && !skipRecurseCheck)
 		errorLog("Warning: Nesting recursive main()");
 
+	watchQuitFlag = false;
+	watchForQuit = canQuit;
+
 	Core::run(runTime);
+
+	bool ret = canQuit && watchQuitFlag;
+	watchForQuit = false;
+
+	return ret;
 }
 
-void DSQ::watch(float t, int canQuit)
+void DSQ::watch(float t)
 {
 	watchQuitFlag = false;
 	watchForQuit = false;
 
-	bool wasInputEnabled = false;
+	bool wasInputEnabled = game && game->avatar && game->avatar->isInputEnabled();
 
-	if (game && game->avatar)
-	{
-		wasInputEnabled = game->avatar->isInputEnabled();
-
-		if (wasInputEnabled)
-		{
-			game->avatar->disableInput();
-		}
-	}
+	if (wasInputEnabled)
+		game->avatar->disableInput();
 
 	quitNestedMain();
-
-	if (canQuit)
-	{
-		watchForQuit = true;
-	}
 
 	if (t != 0.0f)
 		run(t);
 	else
 		errorLog("Called Watch with time == 0");
 
-	if (canQuit && watchQuitFlag)
-	{
-		// did it!
-	}
-
-	watchForQuit = false;
-
-	if (game && game->avatar)
-	{
-		if (wasInputEnabled)
-			game->avatar->enableInput();
-	}
+	if (wasInputEnabled && game && game->avatar)
+		game->avatar->enableInput();
 }
 
 void DSQ::action(int id, int state, int source, InputDevice device)
@@ -3752,7 +3738,7 @@ void DSQ::onUpdate(float dt)
 
 	if (game && watchForQuit && isNested())
 	{
-		if (game->isActing(ACTION_ESC, -1))
+		if (game->isActing(ACTION_ESC, -1) || getKeyState(KEY_ESCAPE))
 		{
 			watchQuitFlag = true;
 			quitNestedMain();
