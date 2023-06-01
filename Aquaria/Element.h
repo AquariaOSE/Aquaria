@@ -70,10 +70,10 @@ public:
 	void render(const RenderState& rs) const OVERRIDE;
 	ElementFlag elementFlag;
 	void fillGrid();
-	bool isElementActive() const { return elementActive; }
+	bool isElementActive() const { return !_hidden; }
 	int getElementEffectIndex();
 	void setElementEffectByIndex(int e);
-	void setElementActive(bool v) { elementActive = v; }
+	void setElementActive(bool v) { _hidden = !v; }
 	void doInteraction(Entity *ent, float mult, float touchWidth);
 	void setTag(int tag);
 protected:
@@ -82,10 +82,7 @@ protected:
 	void setGridFromWavy();
 	ElementEffectData *eff;
 
-	void updateEffects(float dt);
-
-	bool elementActive;
-};
+	void updateEffects(float dt);};
 
 typedef std::vector<Element*> ElementContainer;
 
