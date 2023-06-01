@@ -258,6 +258,8 @@ bool Mod::tryStart()
 		debugLog("MOD: no scene loaded in mod-init");
 		return false;
 	}
+
+	return true;
 }
 
 bool Mod::isActive() const
