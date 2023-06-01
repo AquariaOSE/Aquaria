@@ -315,7 +315,7 @@ enum Layers
 	LR_OVERLAY				,
 	LR_FILEMENU				,
 	LR_CONFIRM				,
-	LR_CURSOR				,
+	LR_CURSOR				, /* hidden for screenshot */
 	LR_SUBTITLES			,
 	LR_PROGRESS				,
 	LR_DEBUG_TEXT			,

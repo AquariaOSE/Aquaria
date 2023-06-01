@@ -3432,12 +3432,13 @@ void DSQ::onMouseInput()
 }
 
 //prepare for screenshot or unprepare
-void DSQ::prepScreen(bool t)
+void DSQ::prepScreen(bool screenshot)
 {
-	if (t)
-	{
-		cursor->offset = Vector(2000, 0);
+	getRenderObjectLayer(LR_CURSOR)->visible = !screenshot;
 
+	// TODO: disable minimap layer too (needs MiniMapRender.cpp LR_MINIMAP visibility hack to be removed first)
+	if (screenshot)
+	{
 		if (game->miniMapRender)
 			game->miniMapRender->offset = Vector(2000,0);
 		if (fpsText)
@@ -3445,8 +3446,6 @@ void DSQ::prepScreen(bool t)
 	}
 	else
 	{
-
-		cursor->offset = Vector(0,0);
 		if (game->miniMapRender)
 			game->miniMapRender->offset = Vector(0,0);
 		if (fpsText)
