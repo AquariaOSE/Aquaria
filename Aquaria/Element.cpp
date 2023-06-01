@@ -40,7 +40,6 @@ ElementEffectData::ElementEffectData()
 Element::Element() : Quad()
 {
 	elementFlag = EF_NONE;
-	elementActive = true;
 	bgLayer = 0;
 	tag = 0;
 	templateIdx = -1;
@@ -307,8 +306,8 @@ static inline const Vector& getTagColor(int tag)
 
 void Element::render(const RenderState& rs) const
 {
-	if (!elementActive) return;
-
+	// FIXME: this should be part of the layer render, not here
+	// (not relevant until Elements are batched per-layer)
 	if (game->isSceneEditorActive() && this->bgLayer == game->sceneEditor.bgLayer
 		&& game->sceneEditor.editType == ET_ELEMENTS)
 	{
@@ -345,7 +344,7 @@ void Element::render(const RenderState& rs) const
 
 void Element::fillGrid()
 {
-	if (life == 1 && elementActive)
+	if (life == 1 && !_hidden)
 	{
 		if (elementFlag == EF_SOLID)
 		{
