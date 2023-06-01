@@ -61,12 +61,10 @@ public:
 
 	void doShortBitBlot();
 	void getOut();
-	void skipLogo();
 
 	bool watchQuit(float time);
-protected:
-	int quitFlag;
-	int logo;
+private:
+	void showSequence();
 };
 
 class Hair;

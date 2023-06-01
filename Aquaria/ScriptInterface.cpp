@@ -4329,11 +4329,10 @@ luaFunc(entity_watchForPath)
 
 luaFunc(watchForVoice)
 {
-	int quit = lua_tointeger(L, 1);
 	while (dsq->sound->isPlayingVoice())
 	{
-		dsq->watch(FRAME_TIME, quit);
-		if (quit && dsq->isQuitFlag())
+		dsq->watch(FRAME_TIME);
+		if (dsq->isQuitFlag())
 		{
 			dsq->sound->stopVoice();
 			break;
@@ -7218,8 +7217,7 @@ luaFunc(entity_getPushDamage)
 luaFunc(watch)
 {
 	float t = lua_tonumber(L, 1);
-	int quit = lua_tointeger(L, 2);
-	dsq->watch(t, quit);
+	dsq->watch(t);
 	luaReturnNil();
 }
 
