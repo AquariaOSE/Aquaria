@@ -106,7 +106,7 @@ bool Mod::loadSavedGame(const std::string& path)
 
 	debugLog("MOD: loadSavedGame/compatScript failed");
 	setActive(false);
-	dsq->title();
+	dsq->title(false);
 	return false;
 }
 
@@ -226,13 +226,21 @@ void Mod::applyStart()
 	dsq->continuity.reset();
 	dsq->scriptInterface.reset();
 
+	if(!tryStart())
+	{
+		setActive(false);
+		dsq->title(false);
+	}
+}
+
+bool Mod::tryStart()
+{
+
 	// Before loading init.lua, load a compatibility layer, if necessary
 	if(!loadCompatScript())
 	{
 		debugLog("MOD: compatScript failed");
-		setActive(false);
-		dsq->title();
-		return;
+		return false;
 	}
 
 	// load the mod-init.lua file
@@ -243,17 +251,12 @@ void Mod::applyStart()
 	if (!dsq->runScript(scriptPath, "init"))
 	{
 		debugLog("MOD: runscript failed");
-		setActive(false);
-		dsq->title();
+		return false;
 	}
 	if (isActive() && game->sceneToLoad.empty())
 	{
 		debugLog("MOD: no scene loaded in mod-init");
-		setActive(false);
-		dsq->title();
-	}
-	else if (isActive())
-	{
+		return false;
 	}
 }
 

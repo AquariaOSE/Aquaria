@@ -1364,11 +1364,11 @@ void DSQ::init()
 
 	// Go directly to the title in dev mode
 	if(isDeveloperKeys())
-		title();
+		title(false);
 	else if (dsq->user.demo.intro != 0)
 		enqueueJumpState("Intro");
 	else if(dsq->user.demo.shortLogos)
-		title();
+		title(false);
 	else
 		enqueueJumpState("BitBlotLogo");
 }
@@ -2664,16 +2664,12 @@ void DSQ::title(bool fade)
 	if (fade)
 	{
 		sound->fadeMusic(SFT_OUT, 1);
+		run(1);
+		resetTimer();
+		sound->stopMusic();
 	}
 
-	run(1);
-
-	resetTimer();
-
-	if (fade)
-		sound->stopMusic();
-
-	user.save();
+	//user.save();
 
 	if (mod.isActive())
 	{

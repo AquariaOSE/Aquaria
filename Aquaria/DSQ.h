@@ -167,7 +167,7 @@ public:
 
 	void action(int id, int state, int source, InputDevice device);
 
-	void title(bool fadeMusic=true);
+	void title(bool fadeMusic);
 
 	void cutsceneEffects(bool on);
 

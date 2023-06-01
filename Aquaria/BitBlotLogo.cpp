@@ -62,7 +62,7 @@ void BitBlotLogo::doShortBitBlot()
 
 void BitBlotLogo::getOut()
 {
-	dsq->title();
+	dsq->title(false);
 }
 
 void BitBlotLogo::applyState()

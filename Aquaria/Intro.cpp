@@ -83,7 +83,7 @@ void Intro::endIntro()
 
 	dsq->setCutscene(0);
 
-	dsq->title();
+	dsq->title(true);
 }
 
 bool Intro::waitQuit(float t)

@@ -3877,7 +3877,7 @@ luaFunc(jumpState)
 
 luaFunc(goToTitle)
 {
-	dsq->title();
+	dsq->title(true);
 	luaReturnNil();
 }
 

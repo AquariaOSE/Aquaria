@@ -239,7 +239,7 @@ void GameOver::applyState()
 		game->transitionToScene(game->sceneToLoad);
 	}
 	else
-		dsq->title();
+		dsq->title(false);
 }
 
 void GameOver::removeState()
@@ -252,7 +252,7 @@ void GameOver::removeState()
 void GameOver::onClick()
 {
 	if (timer == 0)
-		dsq->title();
+		dsq->title(true);
 }
 
 void GameOver::update(float dt)
@@ -426,7 +426,7 @@ void Nag::onExit()
 	switch (dsq->nagType)
 	{
 	case NAG_TOTITLE:
-		dsq->title();
+		dsq->title(true);
 	break;
 	default:
 	case NAG_QUIT:
