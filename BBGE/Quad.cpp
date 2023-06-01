@@ -643,12 +643,6 @@ void Quad::onUpdate(float dt)
 	else if (autoHeight == AUTO_VIRTUALHEIGHT)
 		height = core->getVirtualHeight();
 
-
-	refreshRepeatTextureToFill();
-
-	lowerRightTextureCoordinates.update(dt);
-	upperLeftTextureCoordinates.update(dt);
-
 	if (!drawGrid.empty() && alpha.x > 0 && alphaMod > 0)
 	{
 		updateGrid(dt);
