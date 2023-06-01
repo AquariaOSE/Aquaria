@@ -62,14 +62,7 @@ void BitBlotLogo::doShortBitBlot()
 
 void BitBlotLogo::getOut()
 {
-#ifdef AQUARIA_DEMO
 	dsq->title();
-#else
-	if (dsq->user.demo.intro != 0)
-		dsq->enqueueJumpState("Intro");
-	else
-		dsq->title();
-#endif
 }
 
 void BitBlotLogo::applyState()

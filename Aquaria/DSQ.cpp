@@ -1339,7 +1339,7 @@ void DSQ::init()
 	// Don't do transitions for a faster start up in dev mode
 	if (!isDeveloperKeys())
 	{
-		float trans = 0.5;
+		float trans = 0.2f;
 		overlay->alpha.interpolateTo(1, trans);
 		run(trans);
 	}
@@ -1363,7 +1363,11 @@ void DSQ::init()
 	setInputGrab(user.system.grabInput);
 
 	// Go directly to the title in dev mode
-	if(isDeveloperKeys() || (dsq->user.demo.shortLogos && !dsq->user.demo.intro))
+	if(isDeveloperKeys())
+		title();
+	else if (dsq->user.demo.intro != 0)
+		enqueueJumpState("Intro");
+	else if(dsq->user.demo.shortLogos)
 		title();
 	else
 		enqueueJumpState("BitBlotLogo");
