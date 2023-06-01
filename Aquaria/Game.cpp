@@ -210,7 +210,6 @@ Game::Game() : StateObject()
 	controlHint_text = 0;
 
 	avatar = 0;
-	fromVel = Vector(0,-1);
 	deathTimer = 0;
 
 	game = this;
@@ -261,8 +260,6 @@ void Game::spawnManaBall(Vector pos, float a)
 void Game::warpPrep()
 {
 	avatar->onWarp();
-	fromVel = avatar->vel;
-	fromVel.setLength2D(10);
 	fromPosition = avatar->position;
 }
 
@@ -2934,7 +2931,7 @@ void Game::applyState()
 	bindInput();
 
 	if (verbose) debugLog("Loading Scene");
-	loadScene(sceneToLoad);
+	if(!loadScene(sceneToLoad))
 	{
 		debugLog("Failed to load scene [" + sceneToLoad + "]");
 	}

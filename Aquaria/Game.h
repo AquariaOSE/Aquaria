@@ -309,7 +309,6 @@ public:
 	std::string fromScene, toNode;
 	int toFlip;
 	char fromWarpType;
-	Vector fromVel;
 	void warpToSceneFromNode(Path *p);
 	Vector fromPosition;
 
