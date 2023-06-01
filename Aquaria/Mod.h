@@ -70,6 +70,7 @@ protected:
 	int debugMenu;
 	int enqueueModStart;
 	void applyStart();
+	bool tryStart();
 
 	std::string name;
 	std::string path;

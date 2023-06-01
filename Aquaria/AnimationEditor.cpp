@@ -1363,7 +1363,7 @@ void AnimationEditor::goToTitle()
 	if (!dsq->returnToScene.empty())
 		game->transitionToScene(dsq->returnToScene);
 	else
-		dsq->title();
+		dsq->title(false);
 }
 
 void AnimationEditor::quit()

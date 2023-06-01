@@ -3203,7 +3203,7 @@ void InGameMenu::onExitCheckYes()
 {
 	dsq->sound->stopAllVoice();
 	dsq->toggleCursor(0, 0.25);
-	dsq->title();
+	dsq->title(true);
 }
 
 void InGameMenu::onExitCheckNo()

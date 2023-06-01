@@ -122,7 +122,7 @@ void ParticleEditor::goToTitle()
 	if (!dsq->returnToScene.empty())
 		game->transitionToScene(dsq->returnToScene);
 	else
-		dsq->title();
+		dsq->title(false);
 }
 
 void ParticleEditor::load()
