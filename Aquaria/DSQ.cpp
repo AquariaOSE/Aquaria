@@ -936,18 +936,31 @@ void DSQ::init()
 
 	applyPatches();
 
+	precacher.setBaseDir(this->getBaseTexturePath());
+	precacher.precacheTex("loading/*.png");
+
+	Quad *loadbg = new Quad;
+	loadbg->position = Vector(400,300);
+	loadbg->color = Vector(0.06f, 0.06f, 0.08f);
+	loadbg->followCamera = 1;
+	loadbg->autoWidth = AUTO_VIRTUALWIDTH;
+	loadbg->autoHeight = AUTO_VIRTUALHEIGHT;
+	// during early startup we're not updated so AUTO_VIRTUAL* doesn't stick
+	loadbg->setWidthHeight(getVirtualWidth(), getVirtualHeight());
+	addRenderObject(loadbg, LR_BACKDROP);
+
+	Quad *logo = new Quad("bitblot/logo", Vector(400,300+220));
+	logo->followCamera = 1;
+	logo->scale = Vector(0.2f,0.2f);
+	addRenderObject(logo, LR_HUD);
+
 	loading = new Quad("loading/juice", Vector(400,300));
 	loading->alpha = 1.0;
 	loading->followCamera = 1;
 	loading->setWidthHeight(0,0);
 	addRenderObject(loading, LR_HUD);
 
-	Vector loadShift(2, 0);
-
-
 	Vector sz(800.0f/1024.0f, 600.0f/768.0f);
-
-
 
 	Quad *tube = new Quad("loading/tube", Vector(400, 300));
 	tube->followCamera = 1;
@@ -971,6 +984,8 @@ void DSQ::init()
 	sider->followCamera = 1;
 	sider->scale = sz;
 	addRenderObject(sider, LR_HUD);
+
+	precacher.clear();
 
 
 
@@ -1004,6 +1019,15 @@ void DSQ::init()
 	debugLog("OK");
 
 	loadFonts();
+
+	TTFText *url = new TTFText(&fontArialSmall);
+	url->setText("github.com/AquariaOSE");
+	url->setAlign(ALIGN_CENTER);
+	url->followCamera = 1;
+	url->position = Vector(400, 300+280);
+	url->alphaMod = 0.75;
+	url->scale = Vector(0.7f, 0.7f);
+	addRenderObject(url, LR_HUD);
 
 	loadBit(LOAD_FONTS);
 
@@ -1252,7 +1276,6 @@ void DSQ::init()
 	}
 	addRenderObject(fpsText, LR_DEBUG_TEXT);
 
-	precacher.setBaseDir(this->getBaseTexturePath());
 	precacher.precacheList("data/precache.txt", loadBitForTexPrecache);
 
 	setTexturePointers();
@@ -1327,6 +1350,9 @@ void DSQ::init()
 	removeRenderObject(sider);
 	removeRenderObject(label);
 	removeRenderObject(tube);
+	removeRenderObject(logo);
+	removeRenderObject(loadbg);
+	removeRenderObject(url);
 
 	if (useFrameBuffer && frameBuffer.isInited())
 		afterEffectManager = new AfterEffectManager(vars->afterEffectsXDivs,vars->afterEffectsYDivs);
@@ -1337,7 +1363,7 @@ void DSQ::init()
 	setInputGrab(user.system.grabInput);
 
 	// Go directly to the title in dev mode
-	if(isDeveloperKeys())
+	if(isDeveloperKeys() || (dsq->user.demo.shortLogos && !dsq->user.demo.intro))
 		title();
 	else
 		enqueueJumpState("BitBlotLogo");
