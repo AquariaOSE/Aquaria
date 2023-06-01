@@ -853,6 +853,7 @@ void Continuity::loadTreasureData()
 	if(!found)
 		file = "data/treasures.txt";
 
+	debugLog("Load treasures: " + file);
 	InStream in2(file.c_str());
 	while (std::getline(in2, line))
 	{
@@ -916,6 +917,8 @@ void Continuity::loadIngredientData()
 
 void Continuity::loadIngredientData(const std::string &file)
 {
+	debugLog("Load ingredient data: " + file);
+
 	std::string line, name, gfx, type, effects;
 
 	clearIngredientData();
@@ -1144,6 +1147,7 @@ void Continuity::loadIngredientData(const std::string &file)
 
 void Continuity::loadIngredientDisplayNames(const std::string& file)
 {
+	debugLog("Load ingredient display names: " + file);
 	InStream in(file);
 	if (!in)
 		return;
@@ -1199,6 +1203,7 @@ std::string Continuity::getInternalFormName()
 
 void Continuity::loadIntoSongBank(const std::string &file)
 {
+	debugLog("Load songbank: " + file);
 	if(!exists(file))
 		return;
 
@@ -1327,6 +1332,7 @@ void Continuity::loadEatBank()
 	if(!found)
 		file = "data/eats.txt";
 
+	debugLog("Load eats: " + file);
 	InStream inf(file.c_str());
 
 	EatData curData;
@@ -2194,6 +2200,7 @@ void Continuity::setFlag(std::string flag, int v)
 
 void Continuity::loadPetData()
 {
+	debugLog("Load pet data...");
 	petData.clear();
 	InStream in("data/pets.txt");
 	std::string read;
@@ -3500,6 +3507,7 @@ void Continuity::reset()
 	health = maxHealth;
 
 	speedTypes.clear();
+	debugLog("Load speedtypes...");
 	InStream inFile("data/speedtypes.txt");
 	int n;
 	float spd;
