@@ -72,7 +72,7 @@ public:
 	void deleteGrid();
 
 
-	InterpolatedVector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
+	Vector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
 
 	enum GridDrawOrder
 	{
