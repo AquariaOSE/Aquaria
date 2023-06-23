@@ -103,7 +103,9 @@ public:
 	virtual int messageVariadic(lua_State *L, int nparams) { return 0; }
 	virtual int activateVariadic(lua_State *L, int nparams) { return 0; }
 
-	bool isUnderWater(const Vector &o=Vector());
+	bool isUnderWater();
+	bool isUnderWater(const Vector& overridePos);
+	bool _isUnderWaterPos(const Vector& pos);
 
 
 

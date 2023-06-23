@@ -59,7 +59,7 @@ public:
 		*x = x1 + ((*w) / 2);
 		*y = y1 + ((*h) / 2);
 	}
-	bool isCoordinateInside(const Vector &vec, int radius=0) const
+	bool isCoordinateInside(const Vector &vec, float radius=0) const
 	{
 		return ((vec.x >= x1-radius && vec.x <= x2+radius) && (vec.y >= y1-radius && vec.y <= y2+radius));
 	}

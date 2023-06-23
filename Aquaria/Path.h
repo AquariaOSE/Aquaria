@@ -96,7 +96,7 @@ public:
 	void setEmitter(const std::string& name);
 
 	PathNode *getPathNode(size_t idx);
-	bool isCoordinateInside(const Vector &pos, int rad=0);
+	bool isCoordinateInside(const Vector &pos, float rad=0) const;
 
 	void reverseNodes();
 

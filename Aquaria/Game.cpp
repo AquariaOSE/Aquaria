@@ -1262,6 +1262,30 @@ Path *Game::getPathByName(std::string name)
 	return 0;
 }
 
+Path *Game::getWaterbubbleAt(const Vector& pos, float rad) const
+{
+	for (Path *p = getFirstPathOfType(PATH_WATERBUBBLE); p; p = p->nextOfType)
+		if(p->active && p->isCoordinateInside(pos, rad))
+			return p;
+	return NULL;
+}
+
+UnderWaterResult Game::isUnderWater(const Vector& pos, float rad) const
+{
+	UnderWaterResult ret { false, NULL };
+	if (!game->useWaterLevel || game->waterLevel.x == 0
+		|| (useWaterLevel && waterLevel.x > 0 && pos.y-rad > waterLevel.x))
+	{
+		ret.uw = true;
+		return ret;
+	}
+
+	Path *p = game->getWaterbubbleAt(pos, rad);
+	ret.waterbubble = p;
+	ret.uw = !!p;
+	return ret;
+}
+
 void Game::toggleOverrideZoom(bool on)
 {
 	if (avatar)
@@ -2536,14 +2560,7 @@ int game_collideParticle(Vector pos)
 	bool inWaterBubble = false;
 	if (!aboveWaterLine)
 	{
-		Path *p = game->getNearestPath(pos, PATH_WATERBUBBLE);
-		if (p && p->active)
-		{
-			if (p->isCoordinateInside(pos))
-			{
-				inWaterBubble = true;
-			}
-		}
+		inWaterBubble = !!game->getWaterbubbleAt(pos);
 	}
 	if (!inWaterBubble && aboveWaterLine)
 	{

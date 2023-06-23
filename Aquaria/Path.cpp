@@ -105,20 +105,13 @@ void Path::setActive(bool v)
 	active = v;
 }
 
-bool Path::isCoordinateInside(const Vector &pos, int radius)
+bool Path::isCoordinateInside(const Vector &pos, float radius) const
 {
 	if (nodes.empty()) return false;
-	if (pathShape == PATHSHAPE_CIRCLE)
-	{
-		Vector diff = pos - nodes[0].position;
-		return diff.isLength2DIn(this->rect.getWidth()*0.5f - radius);
-	}
-	else
-	{
-		Vector rel = pos - nodes[0].position;
-		return rect.isCoordinateInside(rel);
-	}
-	return false;
+	Vector diff = pos - nodes[0].position;
+	return pathShape == PATHSHAPE_CIRCLE
+		? diff.isLength2DIn(rect.getWidth()*0.5f - radius)
+		: rect.isCoordinateInside(diff, radius);
 }
 
 Vector Path::getEnterNormal()
