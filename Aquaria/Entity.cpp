@@ -277,13 +277,14 @@ bool Entity::checkSplash(const Vector &o)
 	if (!o.isZero())
 		check = o;
 	bool changed = false;
-	if (wasUnderWater && !isUnderWater(o))
+	bool uw = isUnderWater(o);
+	if (wasUnderWater && !uw)
 	{
 		sound("splash-outof");
 		changed = true;
 		wasUnderWater = false;
 	}
-	else if (!wasUnderWater && isUnderWater(o))
+	else if (!wasUnderWater && uw)
 	{
 		sound("splash-into");
 		changed = true;
@@ -1774,34 +1775,21 @@ int Entity::getRandomTargetPoint()
 	return rand()%targetPoints.size();
 }
 
-bool Entity::isUnderWater(const Vector &override)
+bool Entity::isUnderWater()
 {
-	Vector check = position;
-	if (!override.isZero())
-		check = override;
+	return _isUnderWaterPos(position);
+}
 
-	if (game->useWaterLevel && game->waterLevel.x > 0 && check.y-collideRadius > game->waterLevel.x)
-		return true;
+bool Entity::isUnderWater(const Vector& overridePos)
+{
+	return _isUnderWaterPos(overridePos.isZero() ? position : overridePos);
+}
 
-
-	Path *p = game->getNearestPath(position, PATH_WATERBUBBLE);
-	if (p && p->active && p->isCoordinateInside(position, collideRadius))
-	{
-		waterBubble = p;
-		return true;
-	}
-
-	if (!game->useWaterLevel || game->waterLevel.x == 0) return true;
-	else
-	{
-		if (check.y-collideRadius > game->waterLevel.x)
-		{
-			waterBubble = 0;
-			return true;
-		}
-	}
-
-	return false;
+bool Entity::_isUnderWaterPos(const Vector& pos)
+{
+	UnderWaterResult res = game->isUnderWater(pos, collideRadius);
+	waterBubble = res.waterbubble;
+	return res.uw;
 }
 
 void Entity::push(const Vector &vec, float time, float maxSpeed, float dmg)

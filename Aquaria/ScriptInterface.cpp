@@ -7930,6 +7930,15 @@ luaFunc(findWall)
 	luaReturnNum(wall);
 }
 
+luaFunc(isUnderWater)
+{
+	float x = lua_tonumber(L, 1);
+	float y = lua_tonumber(L, 2);
+	float rad = lua_tonumber(L, 3);
+	luaReturnBool(game->isUnderWater(Vector(x, y), rad).uw);
+}
+
+
 luaFunc(setCutscene)
 {
 	dsq->setCutscene(getBool(L, 1), getBool(L, 2));
@@ -10796,6 +10805,7 @@ static const struct {
 	luaRegister(entity_alpha),
 
 	luaRegister(findWall),
+	luaRegister(isUnderWater),
 
 
 	luaRegister(overrideZoom),

@@ -6,6 +6,8 @@
 #include "Vector.h"
 #include "GameEnums.h"
 
+class Path;
+
 struct ElementEffect
 {
 public:
@@ -190,6 +192,12 @@ private:
 };
 typedef std::vector<IngredientData*> IngredientDatas;
 
+
+struct UnderWaterResult
+{
+	bool uw;
+	Path *waterbubble;
+};
 
 
 #endif

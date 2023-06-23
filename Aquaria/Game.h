@@ -283,6 +283,9 @@ public:
 	Path *getNearestPath(const Vector &pos, PathType pathType=PATH_NONE);
 	Path *getNearestPath(Path *p, std::string name);
 
+	Path *getWaterbubbleAt(const Vector& pos, float rad = 0) const;
+	UnderWaterResult isUnderWater(const Vector& pos, float rad = 0) const;
+
 	SceneEditor sceneEditor;
 	bool isSceneEditorActive() {return sceneEditor.isOn();}
 
