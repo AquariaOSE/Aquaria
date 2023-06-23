@@ -209,7 +209,7 @@ void TextureMgr::clearUnused()
     debugLog(os.str());
 }
 
-void TextureMgr::shutdown()
+void TextureMgr::unloadAll()
 {
     for(TexCache::iterator it = cache.begin(); it != cache.end(); ++it)
         it->second->unload();
