@@ -1883,7 +1883,7 @@ void Core::shutdown()
 	debugLog("OK");
 
 	debugLog("Clear All Resources...");
-		texmgr.shutdown();
+		texmgr.unloadAll();
 	debugLog("OK");
 
 
@@ -1961,10 +1961,7 @@ void Core::switchRenderObjectLayer(RenderObject *o, unsigned toLayer)
 
 void Core::unloadResources()
 {
-	/*for (size_t i = 0; i < resources.size(); i++)
-	{
-		resources[i]->unload();
-	}*/
+	this->texmgr.unloadAll();
 }
 
 void Core::onReloadResources()
@@ -1973,11 +1970,8 @@ void Core::onReloadResources()
 
 void Core::reloadResources()
 {
-	/*for (size_t i = 0; i < resources.size(); i++)
-	{
-		resources[i]->reload();
-	}
-	onReloadResources();*/
+	this->texmgr.reloadAll(TextureMgr::OVERWRITE);
+	this->onReloadResources();
 }
 
 const std::string & Core::getBaseTexturePath() const

@@ -21,7 +21,7 @@ public:
     size_t getNumLoaded() const;
     Texture *getOrLoad(const std::string& name);
     void clearUnused(); // clear everything whose refcount is 1
-    void shutdown();
+    void unloadAll();
 
     enum LoadMode
     {
