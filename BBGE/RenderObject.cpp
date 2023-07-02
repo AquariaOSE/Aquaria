@@ -26,10 +26,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h>
 #include <algorithm>
 
-#ifdef BBGE_USE_GLM
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
-#endif
 
 bool	RenderObject::renderCollisionShape			= false;
 size_t	RenderObject::lastTextureApplied			= 0;
@@ -122,7 +120,6 @@ RenderObject* RenderObject::getTopParent() const
 	return lastp;
 }
 
-#ifdef BBGE_USE_GLM
 static glm::mat4 matrixChain(const RenderObject *ro)
 {
 	glm::mat4 tranformMatrix = glm::scale(
@@ -146,24 +143,6 @@ static glm::mat4 matrixChain(const RenderObject *ro)
 	tranformMatrix *= glm::translate(glm::vec3(ro->internalOffset.x, ro->internalOffset.y, 0.0f));
 	return tranformMatrix;
 }
-#else
-static void matrixChain(RenderObject *ro)
-{
-	if (RenderObject *parent = ro->getParent())
-		matrixChain(parent);
-
-	glTranslatef(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0);
-	glRotatef(ro->rotation.z+ro->rotationOffset.z, 0, 0, 1);
-	glTranslatef(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0);
-	glScalef(ro->scale.x, ro->scale.y, 0);
-	if (ro->isfh())
-	{
-
-		glRotatef(180, 0, 1, 0);
-	}
-	glTranslatef(ro->internalOffset.x, ro->internalOffset.y, 0);
-}
-#endif
 
 float RenderObject::getWorldRotation() const
 {
@@ -184,28 +163,12 @@ Vector RenderObject::getWorldPositionAndRotation() const
 
 Vector RenderObject::getWorldCollidePosition(const Vector &vec) const
 {
-#ifdef BBGE_USE_GLM
 	glm::mat4 transformMatrix = glm::translate(
 		matrixChain(this),
 		glm::vec3(vec.x, vec.y, 0.0f)
 	);
 
 	return Vector(transformMatrix[3][0], transformMatrix[3][1], 0);
-#else
-	glPushMatrix();
-	glLoadIdentity();
-
-	matrixChain(this);
-	glTranslatef(vec.x, vec.y, 0);
-
-	float m[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, m);
-	float x = m[12];
-	float y = m[13];
-
-	glPopMatrix();
-	return Vector(x,y,0);
-#endif
 }
 
 void RenderObject::fhTo(bool fh)

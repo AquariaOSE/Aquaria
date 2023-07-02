@@ -47,10 +47,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Beam.h"
 #include "Hair.h"
 
-#ifdef BBGE_USE_GLM
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
-#endif
 
 
 static const float MENUPAGETRANSTIME		= 0.2f;
@@ -495,8 +493,6 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			}
 		}
 
-
-#ifdef BBGE_USE_GLM
 		const float w2f = float(w2);
 		const float h2f = float(h2);
 		for (size_t i = 0; i < obs.size(); i++)
@@ -513,35 +509,6 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			if (!isObstructed(tvec))
 				addGrid(tvec, obsType);
 		}
-#else
-		glPushMatrix();
-
-		for (size_t i = 0; i < obs.size(); i++)
-		{
-			glLoadIdentity();
-
-			glRotatef(q->rotation.z, 0, 0, 1);
-			if (q->isfh())
-			{
-				glRotatef(180, 0, 1, 0);
-			}
-
-			//glTranslatef((obs[i].x-w2)*TILE_SIZE+TILE_SIZE/2, (obs[i].y-h2)*TILE_SIZE + TILE_SIZE/2, 0);
-			glTranslatef((obs[i].x-w2), (obs[i].y-h2), 0);
-
-			float m[16];
-			glGetFloatv(GL_MODELVIEW_MATRIX, m);
-			float x = m[12];
-			float y = m[13];
-
-			//setGrid(TileVector(tpos.x+(w2*TILE_SIZE)+(x/TILE_SIZE), tpos.y+(h2*TILE_SIZE)+(y/TILE_SIZE)), obsType);
-			TileVector tvec(tpos.x+w2+x, tpos.y+h2+y);
-			if (!isObstructed(tvec))
-				addGrid(tvec, obsType);
-
-		}
-		glPopMatrix();
-#endif
 	}
 }
 

@@ -28,7 +28,7 @@ if(MSVC)
     # /Oi: enable intrinsic functions
     # /fp:fast: -ffast-math
     set(AQUARIA_EXTRA_COMPILE_FLAGS "/MP /GS- /Oi /fp:fast" CACHE STRING "Extra compiler flags for MSVC")
-    
+
     option(AQUARIA_MSVC_DEBUG_EDIT_AND_CONTINUE "MSVC: Enable edit+continue for debug builds?" TRUE)
     if(AQUARIA_MSVC_DEBUG_EDIT_AND_CONTINUE)
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /ZI")
@@ -51,7 +51,6 @@ OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
 OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional features." TRUE)
 
 OPTION(AQUARIA_USE_SDL2 "Use SDL2" TRUE)
-OPTION(AQUARIA_USE_GLM "Use GLM for matrix math" TRUE)
 
 OPTION(AQUARIA_DEBUG_SHOW_PATHS "Show important paths upon game start to aid in finding path problems" FALSE)
 mark_as_advanced(AQUARIA_DEBUG_SHOW_PATHS)
@@ -116,10 +115,6 @@ if(AQUARIA_USE_VFS)
     INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs_zip)
     INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs_cfileapi)
 ENDIF(AQUARIA_USE_VFS)
-
-IF(AQUARIA_USE_GLM)
-    ADD_DEFINITIONS(-DBBGE_USE_GLM=1)
-ENDIF(AQUARIA_USE_GLM)
 
 if(AQUARIA_INTERNAL_FTGL)
     ADD_DEFINITIONS(-DAQUARIA_INTERNAL_FTGL=1)
