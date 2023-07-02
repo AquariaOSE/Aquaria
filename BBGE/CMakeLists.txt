@@ -70,8 +70,12 @@ set(BBGE_SRCS
     ReadXML.h
     Rect.h
     Refcounted.h
+    RenderAPI.cpp
+    RenderAPI.h
     RenderBase.cpp
     RenderBase.h
+    RenderHigh.cpp
+    RenderHigh.h
     RenderObject.cpp
     RenderObject.h
     RenderObject_inline.h
