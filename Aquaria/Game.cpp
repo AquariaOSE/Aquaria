@@ -1390,13 +1390,6 @@ bool Game::loadSceneXML(std::string scene)
 			os << "cameraConstrained: " << cameraConstrained;
 			debugLog(os.str());
 		}
-		if (level->Attribute("maxZoom"))
-		{
-			maxZoom = atof(level->Attribute("maxZoom"));
-			std::ostringstream os;
-			os << maxZoom;
-			levelSF->SetAttribute("maxZoom", os.str().c_str());
-		}
 
 		gradTop = gradBtm = Vector(0,0,0);
 		if (level->Attribute("gradient"))
@@ -2597,7 +2590,6 @@ void Game::applyState()
 	dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = false;
 
 	grad = 0;
-	maxZoom = -1;
 	maxLookDistance = 600;
 	saveFile = 0;
 	deathTimer = 0.9f;

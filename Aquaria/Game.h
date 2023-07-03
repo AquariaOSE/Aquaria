@@ -228,7 +228,6 @@ public:
 	std::string overrideMusic;
 	void resetFromTitle();
 
-	float maxZoom;
 	float maxLookDistance;
 
 	XMLDocument *saveFile;
