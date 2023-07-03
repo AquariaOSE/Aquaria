@@ -346,8 +346,6 @@ public:
 	MiniMapRender *miniMapRender;
 	WorldMapRender *worldMapRender;
 
-	int worldMapIndex;
-
 	bool loadingScene;
 	bool doScreenTrans;
 	bool noSceneTransitionFadeout;

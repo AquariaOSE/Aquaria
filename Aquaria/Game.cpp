@@ -1357,11 +1357,6 @@ bool Game::loadSceneXML(std::string scene)
 			saveWaterLevel = atoi(level->Attribute("waterLevel"));
 			levelSF->SetAttribute("waterLevel", waterLevel.x);
 		}
-		if (level->Attribute("worldMapIndex"))
-		{
-			worldMapIndex = atoi(level->Attribute("worldMapIndex"));
-			levelSF->SetAttribute("worldMapIndex", worldMapIndex);
-		}
 
 		if (level->Attribute("bgSfxLoop"))
 		{
@@ -1539,44 +1534,6 @@ bool Game::loadSceneXML(std::string scene)
 		path->refreshScript();
 		addPath(path);
 		pathXml = pathXml->NextSiblingElement("Path");
-	}
-
-	XMLElement *quad = doc.FirstChildElement("Quad");
-	while (quad)
-	{
-		XMLElement *qSF = saveFile->NewElement("Quad");
-		int x=0, y=0, z=0;
-		int w=0,h=0;
-		bool cull=true;
-		bool solid = false;
-		std::string justify;
-		std::string tex;
-		qSF->SetAttribute("x", x = atoi(quad->Attribute("x")));
-		qSF->SetAttribute("y", y = atoi(quad->Attribute("y")));
-		qSF->SetAttribute("w", w = atoi(quad->Attribute("w")));
-		qSF->SetAttribute("h", h = atoi(quad->Attribute("h")));
-		qSF->SetAttribute("tex", (tex = (quad->Attribute("tex"))).c_str());
-		qSF->SetAttribute("cull", cull = atoi(quad->Attribute("cull")));
-		qSF->SetAttribute("justify", (justify = (quad->Attribute("justify"))).c_str());
-
-		if (quad->Attribute("solid"))
-			qSF->SetAttribute("solid", solid = atoi(quad->Attribute("solid")));
-
-		Quad *q = new Quad;
-		q->position = Vector(x,y,z);
-		q->setTexture(tex);
-		q->toggleCull(cull);
-		q->setWidthHeight(w, h);
-
-		if (justify == "upperLeft")
-		{
-			q->offset = Vector((q->getWidth()*q->scale.x)/2.0f, (q->getHeight()*q->scale.y)/2.0f);
-		}
-		addRenderObject(q, LR_BACKGROUND);
-
-		saveFile->InsertEndChild(qSF);
-
-		quad = quad->NextSiblingElement("Quad");
 	}
 
 	XMLElement *schoolFish = doc.FirstChildElement("SchoolFish");
@@ -1863,50 +1820,6 @@ bool Game::loadSceneXML(std::string scene)
 		if (d.repeat)
 			e->repeatTextureToFill(true); // also applies repeatToFillScale
 		e->setTag(d.tag);
-	}
-
-	XMLElement *element = doc.FirstChildElement("Element");
-	while (element)
-	{
-		if (element->Attribute("idx"))
-		{
-			int x = atoi(element->Attribute("x"));
-			int y = atoi(element->Attribute("y"));
-			int idx = atoi(element->Attribute("idx"));
-			int layer=LR_ELEMENTS5;
-			float rot =0;
-			bool flipH = false, flipV = false;
-			if (element->Attribute("flipH"))
-				flipH = atoi(element->Attribute("flipH"));
-			if (element->Attribute("flipV"))
-				flipV = atoi(element->Attribute("flipV"));
-
-			if (element->Attribute("rot"))
-				rot = atof(element->Attribute("rot"));
-
-			if (element->Attribute("lyr"))
-				layer = atoi(element->Attribute("lyr"));
-
-
-			if (idx != -1)
-			{
-				Element *e = createElement(idx, Vector(x,y), layer);
-				e->rotation.z = rot;
-				if (flipH)
-					e->flipHorizontal();
-				if (flipV)
-					e->flipVertical();
-
-				if (element->Attribute("sz"))
-				{
-					SimpleIStringStream is(element->Attribute("sz"));
-					is >> e->scale.x >> e->scale.y;
-				}
-			}
-
-
-		}
-		element = element->NextSiblingElement("Element");
 	}
 
 	this->reconstructGrid(true);
@@ -2617,8 +2530,6 @@ void Game::applyState()
 	invincibleOnNested = true;
 
 	controlHintNotes.clear();
-
-	worldMapIndex = -1;
 
 	particleManager->setNumSuckPositions(10);
 
