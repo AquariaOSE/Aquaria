@@ -1386,12 +1386,6 @@ bool Game::loadSceneXML(std::string scene)
 
 		dsq->darkLayer.toggle(true);
 
-		if (level->Attribute("bgRepeat"))
-		{
-			SimpleIStringStream is(level->Attribute("bgRepeat"));
-			is >> backgroundImageRepeat;
-			levelSF->SetAttribute("bgRepeat", level->Attribute("bgRepeat"));
-		}
 		if (level->Attribute("cameraConstrained"))
 		{
 			SimpleIStringStream is(level->Attribute("cameraConstrained"));
@@ -1408,24 +1402,7 @@ bool Game::loadSceneXML(std::string scene)
 			os << maxZoom;
 			levelSF->SetAttribute("maxZoom", os.str().c_str());
 		}
-		if (level->Attribute("bg"))
-		{
-			std::string tex = std::string(level->Attribute("bg"));
-			if (!tex.empty())
-			{
-				bg->setTexture(tex);
-				bg->setWidthHeight(900,600);
-				levelSF->SetAttribute("bg", tex.c_str());
-			}
-			else
-			{
-				bg->alpha = 0;
-			}
-		}
-		else
-		{
-			bg->alpha = 0;
-		}
+
 		gradTop = gradBtm = Vector(0,0,0);
 		if (level->Attribute("gradient"))
 		{
@@ -1493,61 +1470,6 @@ bool Game::loadSceneXML(std::string scene)
 			levelSF->SetAttribute("parallaxLock", level->Attribute("parallaxLock"));
 		}
 
-		if (level->Attribute("bg2"))
-		{
-
-			std::string tex = std::string(level->Attribute("bg2"));
-			if (!tex.empty())
-			{
-				bg2->setTexture(tex);
-				bg2->setWidthHeight(900,600);
-				levelSF->SetAttribute("bg2", tex.c_str());
-
-			}
-			else
-				bg2->alpha = 0;
-
-			bg2->alpha = 0;
-			bg->alpha = 0;
-		}
-		else
-		{
-			bg2->alpha = 0;
-		}
-
-		if (level->Attribute("backdrop"))
-		{
-			std::string backdrop = level->Attribute("backdrop");
-			backdropQuad = new Quad;
-			backdropQuad->setTexture(backdrop);
-			backdropQuad->setBlendType(BLEND_DISABLED);
-
-			if (level->Attribute("bd-x") && level->Attribute("bd-y"))
-			{
-				int x = atoi(level->Attribute("bd-x"));
-				int y = atoi(level->Attribute("bd-y"));
-				backdropQuad->position = Vector(x,y);
-				levelSF->SetAttribute("bd-x", x);
-				levelSF->SetAttribute("bd-y", y);
-			}
-			if (level->Attribute("bd-w") && level->Attribute("bd-h"))
-			{
-				int w = atoi(level->Attribute("bd-w"));
-				int h = atoi(level->Attribute("bd-h"));
-				backdropQuad->setWidthHeight(w, h);
-				levelSF->SetAttribute("bd-w", w);
-				levelSF->SetAttribute("bd-h", h);
-			}
-			backdropQuad->toggleCull(false);
-			addRenderObject(backdropQuad, LR_SCENEBACKGROUNDIMAGE);
-
-			// upper left justify
-			backdropQuad->offset =
-				Vector((backdropQuad->getWidth()*backdropQuad->scale.x)/2.0f,
-				(backdropQuad->getHeight()*backdropQuad->scale.y)/2.0f);
-			// save
-			levelSF->SetAttribute("backdrop", backdrop.c_str());
-		}
 		musicToPlay = "";
 		if (level->Attribute("music"))
 		{
@@ -2132,17 +2054,6 @@ void Game::findMaxCameraValues()
 			cameraMax.y = v.y;
 		}
 	}
-	if (backdropQuad)
-	{
-		if (backdropQuad->getWidth() > cameraMax.x)
-		{
-			cameraMax.x = backdropQuad->getWidth();
-		}
-		if (backdropQuad->getHeight() > cameraMax.y)
-		{
-			cameraMax.y = backdropQuad->getHeight();
-		}
-	}
 }
 
 bool Game::loadScene(std::string scene)
@@ -2359,10 +2270,6 @@ void Game::createGradient()
 			grad->toggleCull(false);
 		}
 		addRenderObject(grad, LR_BACKDROP);
-		if (bg)
-			bg->setBlendType(BLEND_DEFAULT);
-		if (bg2)
-			bg2->setBlendType(BLEND_DEFAULT);
 	}
 }
 
@@ -2772,14 +2679,12 @@ void Game::applyState()
 	}
 	Shot::shots.clear(); // the shots were deleted elsewhere, drop any remaining pointers
 	Shot::deleteShots.clear();
-	backdropQuad = 0;
 	clearObsRows();
 	useWaterLevel = false;
 	waterLevel = saveWaterLevel = 0;
 
 	dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = false;
 
-	backgroundImageRepeat = 1;
 	grad = 0;
 	maxZoom = -1;
 	maxLookDistance = 600;
@@ -2791,8 +2696,6 @@ void Game::applyState()
 	sceneColor = Vector(1,1,1);
 	sceneName = "";
 	clearGrid();
-	bg = 0;
-	bg2 = 0;
 	avatar = 0;
 	SkeletalSprite::clearCache();
 	StateObject::applyState();
@@ -2811,32 +2714,6 @@ void Game::applyState()
 		damageSprite->scale.interpolateTo(Vector(1.1f, 1.1f), 0.75f, -1, 1, 1);
 	}
 	addRenderObject(damageSprite, LR_DAMAGESPRITE);
-
-	bg2 = new Quad;
-	{
-		bg2->position = Vector(400, 300, -3/*-0.09f*/);
-		//bg2->color = Vector(0.9, 0.9, 0.9);
-		bg2->setTexture("missingImage");
-		bg2->setWidthHeight(900,600);
-		//bg2->blendEnabled = false;
-		bg2->followCamera =1;
-		bg2->alpha = 0.8f;
-	}
-	addRenderObject(bg2, LR_BACKGROUND);
-
-	bg = new Quad;
-	{
-		bg->setBlendType(BLEND_DISABLED);
-		bg->position = Vector(400, 300, -2/*-0.09f*/);
-		//bg->color = Vector(0.9, 0.9, 0.9);
-		bg->setTexture("missingImage");
-		bg->setWidthHeight(900,600);
-		//bg->blendEnabled = true;
-		bg->followCamera =1;
-		bg->alpha = 1;
-	}
-	addRenderObject(bg, LR_BACKGROUND);
-
 
 	Vector mousePos(400,490);
 
@@ -4277,24 +4154,6 @@ Vector Game::getCameraPositionFor(const Vector &pos)
 	return Vector(pos.x - 400 * core->invGlobalScale, pos.y - 300 * core->invGlobalScale, 0);
 }
 
-void Game::setParallaxTextureCoordinates(Quad *q, float speed)
-{
-	//int backgroundImageRepeat = 1.2;
-	q->followCamera = 1;
-	q->repeatTexture = true;
-
-	float camx = (core->cameraPos.x/800.0f)*speed;
-	float camy = -(core->cameraPos.y/600.0f)*speed;
-
-	float camx1 = camx - float(backgroundImageRepeat)/2.0f;
-	float camx2 = camx + float(backgroundImageRepeat)/2.0f;
-	float camy1 = camy - float(backgroundImageRepeat)/2.0f;
-	float camy2 = camy + float(backgroundImageRepeat)/2.0f;
-
-	q->upperLeftTextureCoordinates = Vector(camx1*backgroundImageRepeat, camy1*backgroundImageRepeat);
-	q->lowerRightTextureCoordinates = Vector(camx2*backgroundImageRepeat, camy2*backgroundImageRepeat);
-}
-
 void Game::setCameraFollow(Vector *position)
 {
 	cameraFollow = position;
@@ -4685,14 +4544,7 @@ void Game::update(float dt)
 	sceneColor2.update(dt);
 	sceneColor3.update(dt);
 	dsq->sceneColorOverlay->color = sceneColor * sceneColor2 * sceneColor3;
-	if (bg)
-	{
-		setParallaxTextureCoordinates(bg, 0.3f);
-	}
-	if (bg2)
-	{
-		setParallaxTextureCoordinates(bg2, 0.1f);
-	}
+
 	themenu->update(dt);
 
 	sceneEditor.update(dt);

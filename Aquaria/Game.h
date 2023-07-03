@@ -231,8 +231,6 @@ public:
 	float maxZoom;
 	float maxLookDistance;
 
-	void setParallaxTextureCoordinates(Quad *q, float speed);
-
 	XMLDocument *saveFile;
 
 	Vector positionToAvatar;
@@ -480,11 +478,9 @@ protected:
 
 	void createLi();
 	void createPets();
-	Quad *backdropQuad;
 	void findMaxCameraValues();
 	std::vector<ObsRow> obsRows;
 
-	float backgroundImageRepeat;
 
 	std::string musicToPlay;
 
@@ -506,8 +502,6 @@ protected:
 	void spawnEntities(const EntitySaveData *sav, size_t n);
 
 	void toggleSceneEditor();
-
-	Quad *bg, *bg2;
 
 	void warpCameraTo(Vector position);
 
