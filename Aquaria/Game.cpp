@@ -1813,6 +1813,19 @@ bool Game::loadSceneXML(std::string scene)
 		if (d.repeat)
 			e->repeatTextureToFill(true); // also applies repeatToFillScale
 		e->setTag(d.tag);
+
+		// HACK: due to a renderer bug in old versions, we need to fix the rotation
+		// for horizontally flipped tiles on parallax layers to make maps look correct.
+		// See commit 4b52730be253dbfce9bea6f604c772a87da104e3
+		// bgLayer IDs (which are NOT LR_* constants):
+		// 0..8 are normal layers (keys 1-9)
+		// 9,10,11; 13,14,15 are parallax ones, 15 is closest, 9 is furthest away
+		// 12 is the dark layer
+		if(d.fh && d.layer >= 9 && d.layer <= 15 && d.layer != 12
+			&& dsq->renderObjectLayers[e->layer].followCamera != 0)
+		{
+			e->rotation.z = -e->rotation.z;
+		}
 	}
 
 	this->reconstructGrid(true);
@@ -2074,11 +2087,24 @@ bool Game::saveScene(std::string scene)
 	for (size_t i = 0; i < dsq->getNumElements(); i++)
 	{
 		Element *e = dsq->getElement(i);
+
+		float rot = e->rotation.z;
+
+		// HACK: Intentionally store the wrong rotation for parallax layers,
+		// to make loading a scene and the same hack there result in the correct value.
+		// This is to ensure compatibility with older game versions that have the renderer bug.
+		// See commit 4b52730be253dbfce9bea6f604c772a87da104e3
+		if(e->isfh() && e->bgLayer >= 9 && e->bgLayer <= 15 && e->bgLayer != 12
+			&& dsq->renderObjectLayers[e->layer].followCamera != 0)
+		{
+			rot = -rot;
+		}
+
 		std::ostringstream& SE = simpleElements[e->bgLayer];
 		SE << e->templateIdx << " "
 		   << int(e->position.x) << " "
 		   << int(e->position.y) << " "
-		   << int(e->rotation.z) << " "
+		   << int(rot) << " "
 		   << e->scale.x << " "
 		   << e->scale.y << " "
 		   << int(e->isfh()) << " "
