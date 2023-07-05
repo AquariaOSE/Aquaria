@@ -117,12 +117,6 @@ void UserSettings::save()
 			}
 			xml_video->InsertEndChild(xml_fpsSmoothing);
 
-			XMLElement *xml_parallax = doc.NewElement("Parallax");
-			std::ostringstream os;
-			os << video.parallaxOn0 << " " << video.parallaxOn1 << " " << video.parallaxOn2;
-			xml_parallax->SetAttribute("on", os.str().c_str());
-			xml_video->InsertEndChild(xml_parallax);
-
 			XMLElement *xml_numParticles = doc.NewElement("NumParticles");
 			xml_numParticles->SetAttribute("v", video.numParticles);
 			xml_video->InsertEndChild(xml_numParticles);
@@ -425,17 +419,6 @@ bool UserSettings::load(bool doApply, const std::string &overrideFile)
 		readInt(xml_video, "NoteEffects", "on", &video.noteEffects);
 
 		readInt(xml_video, "FpsSmoothing", "v", &video.fpsSmoothing);
-
-
-		XMLElement *xml_parallax = xml_video->FirstChildElement("Parallax");
-		if (xml_parallax)
-		{
-			if (xml_parallax->Attribute("on"))
-			{
-				std::istringstream is(xml_parallax->Attribute("on"));
-				is >> video.parallaxOn0 >> video.parallaxOn1 >> video.parallaxOn2;
-			}
-		}
 
 		readInt(xml_video, "NumParticles", "v", &video.numParticles);
 

@@ -2510,13 +2510,6 @@ void DSQ::unloadMods()
 #endif
 }
 
-void DSQ::applyParallaxUserSettings()
-{
-	getRenderObjectLayer(LR_ELEMENTS10)->visible = user.video.parallaxOn0;
-	getRenderObjectLayer(LR_ELEMENTS11)->visible = user.video.parallaxOn1;
-	getRenderObjectLayer(LR_ELEMENTS12)->visible = user.video.parallaxOn2;
-}
-
 void DSQ::clearModSelector()
 {
 	if (blackout)

@@ -2583,8 +2583,6 @@ void Game::applyState()
 		setElementLayerVisible(i-LR_ELEMENTS1, true);
 	}
 
-	dsq->applyParallaxUserSettings();
-
 	controlHintTimer = 0;
 	cameraConstrained = true;
 	// reset parallax
@@ -3638,7 +3636,6 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		{
 			core->getRenderObjectLayer(i)->visible = true;
 		}
-		dsq->applyParallaxUserSettings();
 
 		dsq->screenTransition->transition(MENUPAGETRANSTIME);
 

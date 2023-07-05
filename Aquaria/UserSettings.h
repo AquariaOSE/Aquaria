@@ -58,7 +58,6 @@ public:
 	{
 		Video() {
 			numParticles = 2048;
-			parallaxOn0 = parallaxOn1 = parallaxOn2 = 1;
 			saveSlotScreens = 1;
 			blur = 1;
 			noteEffects = 0;
@@ -80,7 +79,6 @@ public:
 		int fpsSmoothing;
 		int resx, resy, full, fbuffer, bits, vsync, darkfbuffer, darkbuffersize, hz, displayindex;
 		int saveSlotScreens;
-		int parallaxOn0, parallaxOn1, parallaxOn2;
 		int numParticles;
 		int worldMapRevealMethod;
 	} video;

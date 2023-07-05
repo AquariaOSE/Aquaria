@@ -161,8 +161,6 @@ public:
 
 	void fade(float alpha, float time);
 
-	void applyParallaxUserSettings();
-
 	void nag(NagType type);
 
 	void action(int id, int state, int source, InputDevice device);
