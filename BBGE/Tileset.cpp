@@ -19,7 +19,7 @@ bool Tileset::loadFile(const char *fn, const unsigned char *usedIdx, size_t used
 		int idx=-1, w=0, h=0;
 		SimpleIStringStream is(line.c_str(), SimpleIStringStream::REUSE);
 		is >> idx >> gfx >> w >> h;
-		if(idx > 0)
+		if(idx >= 0)
 		{
 			ElementTemplate t;
 			t.idx = idx;
