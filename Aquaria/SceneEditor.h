@@ -157,6 +157,7 @@ public:
 	void checkForRebuild();
 	void createAquarian();
 	void dumpObs();
+	void moveEverythingBy(int x, int y);
 
 	DebugButton *btnMenu;
 protected:
