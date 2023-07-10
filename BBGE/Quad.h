@@ -39,12 +39,15 @@ protected:
 	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
+class RenderGrid;
+
 class Quad : public RenderObject
 {
 public:
 	Quad(const std::string &tex, const Vector &pos);
 	Quad();
-	void createGrid(int x, int y);
+	virtual ~Quad();
+	RenderGrid *createGrid(int x, int y);
 	void destroy() OVERRIDE;
 	bool isCoordinateInside(Vector coord, int minSize=0) const;
 	bool isCoordinateInsideWorld(const Vector &coord, int minSize=0) const;
@@ -58,78 +61,44 @@ public:
 	float getWidth() const {return width;}
 	float getHeight() const {return height;}
 
-	void setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
+	RenderGrid *setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
 	void setDrawGridAlpha(size_t x, size_t y, float alpha);
 	void repeatTextureToFill(bool on);
 	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatTexture; }
 	void setStripPoints(bool vert, const Vector *points, size_t n);
-	Array2d<Vector>& getDrawGrid() { return drawGrid; }
-	const Array2d<Vector>& getDrawGrid() const { return drawGrid; }
+	RenderGrid *getGrid() { return grid; }
+	const RenderGrid *getGrid() const { return grid; }
 
 	void reloadDevice() OVERRIDE;
 
 	void deleteGrid();
 
-
 	Vector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
 
-	enum GridDrawOrder
-	{
-		GRID_DRAW_WORLDMAP = -1, // LRTB order, uses grid.z as alpha
-		GRID_DRAW_LRTB = 0, // the default. ignores grid.z
-		GRID_DRAW_LRBT = 1, // Y axis inverted
-
-		GRID_DRAW_DEFAULT = GRID_DRAW_LRTB
-	};
-
-	enum GridType
-	{
-		GRID_WAVY	= 0,
-		GRID_STRIP	= 1, // quad is in strip mode
-		GRID_INTERP = 2, // quad is in grid mode
-	};
-	unsigned char gridType;  // unsigned char to save space
-
-	char autoWidth, autoHeight;  // char to save space
-
+	// TODO: this should be a bitmask
+	char autoWidth, autoHeight;
 	bool renderQuad, renderCenter, renderBorder;
+
 	Vector texOff;
 
 	float borderAlpha;
 	Vector renderBorderColor;
 	Vector repeatToFillScale;
 
-	static void ResetGrid(Vector *dst, size_t w, size_t h);
-	static void ResetGridAndAlpha(Vector *dst, size_t w, size_t h, float alpha = 1.0f);
-
-
 protected:
-	float gridTimer;
-	Array2d<Vector> drawGrid;
+
+	RenderGrid *grid;
+
 
 	void resetGrid();
-	void updateGrid(float dt);
 	void renderGrid(const RenderState& rs) const;
-	void renderGrid_LRTB(const RenderState& rs) const;
-	void renderGrid_LRBT(const RenderState& rs) const;
-	void renderGridWithAlpha(const RenderState& rs) const;
-
-	float drawGridOffsetX;
-	float drawGridOffsetY;
-	float drawGridModX;
-	float drawGridModY;
-	float drawGridTimeMultiplier;
-	bool drawGridOut;
 
 	void onSetTexture() OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
 	void onUpdate(float dt) OVERRIDE;
 
-public:
-	GridDrawOrder drawOrder;
 private:
-	bool doUpdateGrid;
 	void initQuad();
 	void _renderBorder(const RenderState& rs, Vector color, float borderalpha) const;
 };

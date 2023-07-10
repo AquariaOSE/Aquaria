@@ -112,7 +112,7 @@ public:
 	int screenWidth, screenHeight;
 	int textureWidth, textureHeight;
 
-	Vector ** drawGrid;
+	Vector ** drawGrid; // TODO: make this + related code use RenderGrid
 
 	// returns handle > 0 on success
 	int loadShaderFile(const char *vert, const char *frag);

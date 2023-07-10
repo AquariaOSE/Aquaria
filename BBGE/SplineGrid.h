@@ -33,7 +33,7 @@ public:
 	~SplineGrid();
 
 	// # of control points on each axis
-	void resize(size_t w, size_t h, size_t xres, size_t yres, unsigned degx, unsigned degy);
+	RenderGrid *resize(size_t w, size_t h, size_t xres, size_t yres, unsigned degx, unsigned degy);
 	void recalc();
 	void exportControlPoints(Vector *controlpoints);
 	void importControlPoints(const Vector *controlpoints);

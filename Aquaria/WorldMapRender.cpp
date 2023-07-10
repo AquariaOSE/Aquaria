@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Gradient.h"
 #include "TTFFont.h"
 #include "RoundedRect.h"
+#include "RenderGrid.h"
 
 #define GEM_GRAB			 10
 
@@ -561,8 +562,12 @@ void WorldMapRender::setVis(WorldMapTile *tile)
 
 	if (visMethod == VIS_VERTEX)
 	{
-		tile->q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
-		tileDataToVis(tile, tile->q->getDrawGrid());
+		RenderGrid *g = tile->q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
+		if(g)
+		{
+			g->drawOrder = GRID_DRAW_WORLDMAP;
+			tileDataToVis(tile, g->array2d());
+		}
 	}
 	else if (visMethod == VIS_WRITE)
 	{
@@ -662,7 +667,6 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			q->setTexturePointer(texs[i]);
 			q->position = pos;
 			q->alphaMod = 0;
-			q->drawOrder = Quad::GRID_DRAW_WORLDMAP;
 
 			tile->q = q;
 

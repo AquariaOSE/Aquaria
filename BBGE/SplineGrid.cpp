@@ -1,6 +1,7 @@
 #include "SplineGrid.h"
 #include "RenderBase.h"
 #include "Core.h"
+#include "RenderGrid.h"
 
 SplineGridCtrlPoint *SplineGridCtrlPoint::movingPoint;
 
@@ -69,7 +70,7 @@ void SplineGridCtrlPoint::onUpdate(float dt)
 }
 
 SplineGrid::SplineGrid()
-    : deg(0)
+    : wasModified(false), deg(0)
 {
     setWidthHeight(128, 128);
     renderQuad = true;
@@ -80,12 +81,12 @@ SplineGrid::~SplineGrid()
 {
 }
 
-void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned degx, unsigned degy)
+RenderGrid *SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned degx, unsigned degy)
 {
     size_t oldcpx = bsp.ctrlX();
     size_t oldcpy = bsp.ctrlY();
 
-    this->createGrid(xres, yres);
+    RenderGrid *ret = this->createGrid(xres, yres);
 
     std::vector<SplineGridCtrlPoint*> oldp;
     ctrlp.swap(oldp);
@@ -121,13 +122,18 @@ void SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned d
         }
 
     recalc();
+
+    return ret;
 }
 
 void SplineGrid::recalc()
 {
     exportControlPoints(&bsp.controlpoints[0]);
-    bsp.recalc(drawGrid.data(), drawGrid.width(), drawGrid.height());
-    wasModified = true;
+    if(grid)
+    {
+        bsp.recalc(grid->data(), grid->width(), grid->height());
+        wasModified = true;
+    }
 }
 
 void SplineGrid::exportControlPoints(Vector* controlpoints)
