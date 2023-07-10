@@ -50,6 +50,7 @@ void WaterSurfaceRender::onUpdate(float dt)
 {
 	if (game->waterLevel.x > 0)
 	{
+		Quad::onUpdate(dt);
 
 		qLine->alpha = qSurface->alpha = 1;
 
