@@ -72,6 +72,8 @@ set(BBGE_SRCS
     Refcounted.h
     RenderBase.cpp
     RenderBase.h
+    RenderGrid.cpp
+    RenderGrid.h
     RenderObject.cpp
     RenderObject.h
     RenderObject_inline.h

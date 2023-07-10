@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ReadXML.h"
 #include "RenderBase.h"
 #include "SplineGrid.h"
+#include "RenderGrid.h"
 
 #include <tinyxml2.h>
 using namespace tinyxml2;
@@ -129,16 +130,9 @@ void Bone::addSegment(Bone *b)
 
 void Bone::createStrip(bool vert, int num)
 {
-	if (!vert)
-	{
-		createGrid(num, 2);
-	}
-	else
-	{
-		createGrid(2, num);
-	}
+	RenderGrid *grid = vert ? createGrid(2, num) : createGrid(num, 2);
 	stripVert = vert;
-	gridType = GRID_STRIP;
+	grid->gridType = GRID_STRIP;
 	changeStrip.resize(num);
 }
 
@@ -980,6 +974,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 	XMLElement *bones = xml->NewElement("Bones");
 	for (i = 0; i < this->bones.size(); i++)
 	{
+		const RenderGrid * const grid = this->bones[i]->getGrid();
 		XMLElement *bone = xml->NewElement("Bone");
 		bone->SetAttribute("idx", (unsigned int) this->bones[i]->boneIdx);
 		bone->SetAttribute("gfx", this->bones[i]->gfx.c_str());
@@ -1009,10 +1004,10 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			bone->SetAttribute("offy", this->bones[i]->offset.y);
 		if (!this->bones[i]->prt.empty())
 			bone->SetAttribute("prt", this->bones[i]->prt.c_str());
-		if(!this->bones[i]->getDrawGrid().empty() && this->bones[i]->gridType != Quad::GRID_STRIP)
+		if(grid && grid->gridType != GRID_STRIP)
 		{
 			std::ostringstream os;
-			os << this->bones[i]->getDrawGrid().width() << " " << this->bones[i]->getDrawGrid().height();
+			os << grid->width() << " " << grid->height();
 			bone->SetAttribute("grid", os.str().c_str());
 		}
 		else if (!this->bones[i]->changeStrip.empty())
@@ -1037,9 +1032,10 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			os << this->bones[i]->originalScale.x << " " << this->bones[i]->originalScale.y;
 			bone->SetAttribute("sz", os.str().c_str());
 		}
-		if(this->bones[i]->drawOrder != Quad::GRID_DRAW_DEFAULT)
+
+		if(grid && grid->drawOrder != GRID_DRAW_DEFAULT)
 		{
-			bone->SetAttribute("gridDrawOrder", (int)this->bones[i]->drawOrder);
+			bone->SetAttribute("gridDrawOrder", (int)grid->drawOrder);
 		}
 
 
@@ -1132,9 +1128,10 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 				Bone *bone = this->getBoneByIdx(b->idx);
 				if(bone)
 				{
+					const RenderGrid * const bgrid = bone->getGrid();
 					os << b->idx << " " << b->x << " " << b->y << " " << b->rot << " ";
 					// don't want to store grid points if they can be regenerated automatically
-					size_t usedGridSize = bone->gridType == Quad::GRID_INTERP ? 0 : b->grid.size();
+					size_t usedGridSize = (!bgrid || bgrid->gridType == GRID_INTERP) ? 0 : b->grid.size();
 					os << usedGridSize << " ";
 					if(usedGridSize)
 						for (size_t i = 0; i < usedGridSize; i++)
@@ -1604,12 +1601,13 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			}
 			if (bone->Attribute("grid"))
 			{
-				if(newb->getDrawGrid().empty())
+				RenderGrid *grid = newb->getGrid();
+				if(!grid)
 				{
 					SimpleIStringStream is(bone->Attribute("grid"), SimpleIStringStream::REUSE);
 					int x, y;
 					is >> x >> y;
-					newb->createGrid(x, y);
+					grid = newb->createGrid(x, y);
 				}
 				else
 				{
@@ -1617,11 +1615,11 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					os << "Bone idx " << newb->idx << " already has a DrawGrid, ignoring \"grid\" attribute";
 					errorLog(os.str());
 				}
-			}
-			if(const char *gdo = bone->Attribute("gridDrawOrder"))
-			{
-				int ord = atoi(gdo);
-				newb->drawOrder = (Quad::GridDrawOrder)ord;
+				if(const char *gdo = bone->Attribute("gridDrawOrder"))
+				{
+					int ord = atoi(gdo);
+					grid->drawOrder = (GridDrawOrder)ord;
+				}
 			}
 			bone = bone->NextSiblingElement("Bone");
 		}
@@ -1809,7 +1807,6 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				for (size_t i = 0; i < this->bones.size(); i++)
 				{
 					Bone *bone = this->bones[i];
-					const Array2d<Vector>& dg = bone->getDrawGrid();
 					BoneKeyframe *bk = newSkeletalKeyframe.getBoneKeyframe(bone->boneIdx);
 					if(!bk)
 					{
@@ -1845,7 +1842,8 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					debugLog(os.str());
 					continue;
 				}
-				if(bi->getDrawGrid().empty())
+				RenderGrid *grid = bi->getGrid();
+				if(!grid)
 				{
 					std::ostringstream os;
 					os << "Interpolator specifies bone [" << bi->boneIdx << "] that has no grid";
@@ -1854,7 +1852,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				}
 
 				SplineType spline = SPLINE_BSPLINE;
-				int cx = 3, cy = 3, degx = 3, degy = 3;
+				unsigned cx = 3, cy = 3, degx = 3, degy = 3;
 				if(const char *stype = interp->Attribute("type"))
 				{
 					SimpleIStringStream is(stype, SimpleIStringStream::REUSE);
@@ -1883,7 +1881,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					}
 				}
 
-				bi->gridType = Quad::GRID_INTERP;
+				grid->gridType = GRID_INTERP;
 				// bone grid should have been created via <Bone grid=... /> earlier
 
 				const char *idata = interp->Attribute("data");
@@ -1898,7 +1896,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				bgip.bsp.resize(cx, cy, degx, degy);
 
 				const size_t numcp = size_t(cx) * size_t(cy);
-				const size_t numgridp = bi->getDrawGrid().linearsize();
+				const size_t numgridp = grid->linearsize();
 
 				// data format: "W H [x y x y ... (W*H times)] W H x y x y ..."
 				//               ^- start of 1st keyframe  ^- 2nd keyframe
@@ -2062,7 +2060,8 @@ void AnimationLayer::updateBones()
 							b->scale.x = lerp(bkey1->sx, bkey2->sx, dt, lerpType);
 							b->scale.y = lerp(bkey1->sy, bkey2->sy, dt, lerpType);
 						}
-						if (b->animated==Bone::ANIM_ALL && !b->changeStrip.empty() &&  b->gridType == Quad::GRID_STRIP)
+						RenderGrid *grid = b->getGrid();
+						if (grid && b->animated==Bone::ANIM_ALL && !b->changeStrip.empty() &&  grid->gridType == GRID_STRIP)
 						{
 							if (bkey2->grid.size() < b->changeStrip.size())
 								bkey2->grid.resize(b->changeStrip.size());
@@ -2074,22 +2073,21 @@ void AnimationLayer::updateBones()
 							}
 							b->setStripPoints(b->stripVert, &b->changeStrip[0], b->changeStrip.size());
 						}
-						if (b->animated==Bone::ANIM_ALL && b->gridType == Quad::GRID_INTERP)
+						if (grid && b->animated==Bone::ANIM_ALL && grid->gridType == GRID_INTERP)
 						{
-							Array2d<Vector>& dg = b->getDrawGrid();
-							const size_t N = dg.linearsize();
+							const size_t N = grid->linearsize();
 							if(bkey1->grid.size() < N)
 							{
 								bkey1->grid.resize(N);
-								Quad::ResetGridAndAlpha(&bkey1->grid[0], dg.width(), dg.height(), 1.0f);
+								RenderGrid::ResetWithAlpha(&bkey1->grid[0], grid->width(), grid->height(), 1.0f);
 							}
 							if(bkey2->grid.size() < N)
 							{
 								bkey2->grid.resize(N);
-								Quad::ResetGridAndAlpha(&bkey2->grid[0], dg.width(), dg.height(), 1.0f);
+								RenderGrid::ResetWithAlpha(&bkey2->grid[0], grid->width(), grid->height(), 1.0f);
 							}
 
-							Vector *dst = dg.data();
+							Vector *dst = grid->data();
 							for(size_t i = 0; i < N; ++i)
 							{
 								dst[i].x = lerp(bkey1->grid[i].x, bkey2->grid[i].x, dt, lerpType);
@@ -2219,16 +2217,16 @@ void SkeletalSprite::selectNextBone()
 
 void BoneGridInterpolator::updateGridOnly(BoneKeyframe& bk, const Bone *bone)
 {
-	const Array2d<Vector>& dg = bone->getDrawGrid();
+	const RenderGrid *grid = bone->getGrid();
 	assert(bone->boneIdx == bk.idx);
-	assert(bk.grid.size() == dg.linearsize());
-	bsp.recalc(&bk.grid[0], dg.width(), dg.height(), &bk.controlpoints[0]);
+	assert(bk.grid.size() == grid->linearsize());
+	bsp.recalc(&bk.grid[0], grid->width(), grid->height(), &bk.controlpoints[0]);
 
 }
 
 void BoneGridInterpolator::updateGridAndBone(BoneKeyframe& bk, Bone *bone)
 {
 	updateGridOnly(bk, bone);
-	Vector *dst = bone->getDrawGrid().data();
+	Vector *dst = bone->getGrid()->data();
 	std::copy(bk.grid.begin(), bk.grid.end(), dst);
 }

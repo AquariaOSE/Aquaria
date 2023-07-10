@@ -20,6 +20,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 #include "Element.h"
 #include "Game.h"
+#include "RenderGrid.h"
 
 ElementEffectData::ElementEffectData()
 	: elementEffectType(EFX_NONE)
@@ -182,8 +183,8 @@ void Element::update(float dt)
 		updateLife(dt);
 		if (eff)
 			updateEffects(dt);
-		if (!drawGrid.empty())
-			updateGrid(dt);
+		if(grid)
+			grid->update(dt);
 	}
 }
 
@@ -204,26 +205,8 @@ int Element::getElementEffectIndex()
 
 void Element::setGridFromWavy()
 {
-	if (!drawGrid.empty())
-	{
-		const size_t NX = drawGrid.width() - 1;
-		const size_t H = drawGrid.height();
-
-		const float iw = 1.0f / float(getWidth());
-		for (size_t x = 0; x < NX; x++)
-		{
-			for (size_t y = 0; y < H; y++)
-			{
-				const size_t wavy_y = (H - y)-1;
-				if (wavy_y < 0 || wavy_y < eff->wavy.size())
-				{
-					const float tmp = eff->wavy[wavy_y].x * iw;
-					drawGrid(x,y).x = tmp - 0.5f;
-					drawGrid(x+1,y).x = tmp + 0.5f;
-				}
-			}
-		}
-	}
+	if(grid && eff->wavy.size())
+		grid->setFromWavy(&eff->wavy[0], eff->wavy.size(), width);
 }
 
 void Element::setElementEffectByIndex(int eidx)

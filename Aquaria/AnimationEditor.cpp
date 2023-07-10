@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderBase.h"
 #include "Game.h"
 #include "SplineGrid.h"
+#include "RenderGrid.h"
 
 
 int TIMELINE_GRIDSIZE		= 10;
@@ -958,8 +959,9 @@ void AnimationEditor::editStripKey()
 	}
 	else
 	{
-		if(editingBone && !editingBone->getDrawGrid().empty())
+		if(editingBone && editingBone->getGrid())
 		{
+			RenderGrid *grid = editingBone->getGrid();
 			Animation *a = editSprite->getCurrentAnimation();
 			BoneGridInterpolator *interp = a->getBoneGridInterpolator(editingBone->boneIdx);
 
@@ -973,12 +975,12 @@ void AnimationEditor::editStripKey()
 				assert(bk->controlpoints.size() == interp->bsp.ctrlX() * interp->bsp.ctrlY());
 
 				splinegrid = new SplineGrid;
-				splinegrid->drawOrder = editingBone->drawOrder;
+				RenderGrid *rgrid = splinegrid->resize(interp->bsp.ctrlX(), interp->bsp.ctrlY(), grid->width(), grid->height(), interp->bsp.degX(), interp->bsp.degY());
+				rgrid->drawOrder = grid->drawOrder;
 				splinegrid->setTexture(editingBone->texture->name);
 				splinegrid->setWidthHeight(editingBone->width, editingBone->height);
 				splinegrid->position = Vector(400, 300);
 				//splinegrid->followCamera = 1;
-				splinegrid->resize(interp->bsp.ctrlX(), interp->bsp.ctrlY(), editingBone->getDrawGrid().width(), editingBone->getDrawGrid().height(), interp->bsp.degX(), interp->bsp.degY());
 				splinegrid->importControlPoints(&bk->controlpoints[0]);
 				//editSprite->addChild(splinegrid, PM_STATIC, RBP_OFF, CHILD_FRONT);
 				//editSprite->alphaMod = 0.5f;
