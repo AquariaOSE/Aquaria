@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ScriptedEntity.h"
 #include "TileVector.h"
 #include "SceneEditor.h"
+#include "Tileset.h"
 
 #include <tinyxml2.h>
 using namespace tinyxml2;
@@ -83,20 +84,6 @@ struct MinimapIcon
 };
 
 typedef std::list<Ingredient*> Ingredients;
-
-class ElementTemplate
-{
-public:
-	ElementTemplate() { alpha = 1; cull = true; w=-1; h=-1; idx=-1; tu1=tu2=tv1=tv2=0; }
-	inline bool operator<(const ElementTemplate& o) const { return idx < o.idx; }
-	std::string gfx;
-	std::vector <TileVector> grid;
-	int w,h;
-	float tu1, tu2, tv1, tv2;
-	bool cull;
-	float alpha;
-	size_t idx;
-};
 
 class ObsRow
 {
@@ -171,9 +158,10 @@ public:
 
 	InGameMenu *getInGameMenu() { return themenu; }
 
-	void loadElementTemplates(std::string pack);
+	// pass usedIdx == NULL to preload all textures from tileset
+	// pass usedIdx != NULL to preload only textures where usedIdx[i] != 0
+	bool loadElementTemplates(std::string pack, const unsigned char *usedIdx, size_t usedIdxLen);
 	Element* createElement(size_t etidx, Vector position, size_t bgLayer=0, RenderObject *copy=0, ElementTemplate *et=0);
-	void setGrid(ElementTemplate *et, Vector position, float rot360=0);
 
 	void updateParticlePause();
 
@@ -196,7 +184,7 @@ public:
 	void handleShotCollisionsSkeletal(Entity *e);
 	void handleShotCollisionsHair(Entity *e, int num = 0, float perc = 0);
 
-	std::vector<ElementTemplate> elementTemplates;
+	Tileset tileset;
 	std::string sceneName, sceneDisplayName;
 
 	ElementTemplate *getElementTemplateByIdx(size_t idx);
@@ -362,7 +350,6 @@ public:
 	void setMusicToPlay(const std::string &musicToPlay);
 	Vector lastCollidePosition;
 	void switchBgLoop(int v);
-	ElementTemplate getElementTemplateForLetter(int i);
 	CurrentRender *currentRender;
 	SteamRender *steamRender;
 	SongLineRender *songLineRender;

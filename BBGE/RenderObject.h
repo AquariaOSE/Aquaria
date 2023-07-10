@@ -205,6 +205,7 @@ public:
 
 	// Defined in RenderObject_inline.h
 	inline Vector getFollowCameraPosition() const;
+	inline Vector getFollowCameraPosition(const Vector& pos) const;
 
 	void lookAt(const Vector &pos, float t, float minAngle, float maxAngle, float offset=0);
 	inline RenderObject *getParent() const {return parent;}
