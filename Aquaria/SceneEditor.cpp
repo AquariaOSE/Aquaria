@@ -371,6 +371,21 @@ void SceneEditor::executeButtonID(int bid)
 	case 130:
 		dsq->mod.recache();
 	break;
+	case 117:
+	{
+		std::ostringstream os;
+		os << "Move by how much 'x y'? " << TILE_SIZE << " is one pixel on the map template.";
+		std::string mv = dsq->getUserInputString(os.str());
+		if(!mv.empty())
+		{
+			SimpleIStringStream is(mv.c_str(), SimpleIStringStream::REUSE);
+			int x, y;
+			is >> x >> y;
+			if(x || y)
+				moveEverythingBy(x, y);
+		}
+	}
+	break;
 	}
 }
 
@@ -431,6 +446,8 @@ void SceneEditor::openMainMenu()
 
 	addMainMenuItem("PARTICLE VIEWER                            ",            120);
 	addMainMenuItem("ANIMATION EDITOR                           ",            115);
+	addMainMenuItem("MOVE EVERYTHING ON MAP                     ",            117);
+
 
 	while (1 && !core->getKeyState(KEY_TAB))
 	{
@@ -607,9 +624,9 @@ void SceneEditor::init()
 	nextElement();
 
 
-	if (curElement < game->elementTemplates.size())
+	if (curElement < game->tileset.elementTemplates.size())
 	{
-		placer->setTexture(game->elementTemplates[curElement].gfx);
+		placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
 		placer->scale = Vector(1,1);
 	}
 	else
@@ -802,9 +819,9 @@ void SceneEditor::editModeElements()
 {
 	selectedIdx = -1;
 	editType = ET_ELEMENTS;
-	if (curElement < game->elementTemplates.size())
+	if (curElement < game->tileset.elementTemplates.size())
 	{
-		placer->setTexture(game->elementTemplates[curElement].gfx);
+		placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
 		placer->scale = Vector(1,1);
 	}
 	placer->alpha = 0.5;
@@ -2061,16 +2078,16 @@ Element* SceneEditor::cycleElementNext(Element *e1)
 {
 	size_t ce = e1->templateIdx;
 	int idx=0;
-	for (size_t i = 0; i < game->elementTemplates.size(); i++)
+	for (size_t i = 0; i < game->tileset.elementTemplates.size(); i++)
 	{
-		if (game->elementTemplates[i].idx == ce)
+		if (game->tileset.elementTemplates[i].idx == ce)
 			idx = i;
 	}
 	ce = idx;
 	ce++;
-	if (ce >= game->elementTemplates.size())
+	if (ce >= game->tileset.elementTemplates.size())
 		ce = 0;
-	idx = game->elementTemplates[ce].idx;
+	idx = game->tileset.elementTemplates[ce].idx;
 	if (idx < 1024)
 	{
 		Element *e = game->createElement(idx, e1->position, e1->bgLayer, e1);
@@ -2085,9 +2102,9 @@ Element* SceneEditor::cycleElementPrev(Element *e1)
 {
 	size_t ce = e1->templateIdx;
 	size_t idx=0;
-	for (size_t i = 0; i < game->elementTemplates.size(); i++)
+	for (size_t i = 0; i < game->tileset.elementTemplates.size(); i++)
 	{
-		if (game->elementTemplates[i].idx == ce)
+		if (game->tileset.elementTemplates[i].idx == ce)
 		{
 			idx = i;
 			break;
@@ -2096,8 +2113,8 @@ Element* SceneEditor::cycleElementPrev(Element *e1)
 	ce = idx;
 	ce--;
 	if (ce == -1)
-		ce = game->elementTemplates.size()-1;
-	idx = game->elementTemplates[ce].idx;
+		ce = game->tileset.elementTemplates.size()-1;
+	idx = game->tileset.elementTemplates[ce].idx;
 	if (idx < 1024)
 	{
 		Element *e = game->createElement(idx, e1->position, e1->bgLayer, e1);
@@ -2128,7 +2145,7 @@ void SceneEditor::nextElement()
 
 	if (editType == ET_ELEMENTS)
 	{
-		if (game->elementTemplates.empty()) return;
+		if (game->tileset.elementTemplates.empty()) return;
 		if (core->getCtrlState())
 		{
 			if (!selectedElements.empty())
@@ -2159,12 +2176,12 @@ void SceneEditor::nextElement()
 		{
 			int oldCur = curElement;
 			curElement++;
-			if (curElement >= game->elementTemplates.size())
+			if (curElement >= game->tileset.elementTemplates.size())
 				curElement = 0;
 
-			if (game->elementTemplates[curElement].idx < 1024)
+			if (game->tileset.elementTemplates[curElement].idx < 1024)
 			{
-				placer->setTexture(game->elementTemplates[curElement].gfx);
+				placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
 			}
 			else
 			{
@@ -2190,7 +2207,7 @@ void SceneEditor::prevElement()
 
 	if (editType == ET_ELEMENTS)
 	{
-		if (game->elementTemplates.empty()) return;
+		if (game->tileset.elementTemplates.empty()) return;
 		if (!selectedElements.empty())
 		{
 			for (size_t i = 0; i < selectedElements.size(); i++)
@@ -2213,7 +2230,7 @@ void SceneEditor::prevElement()
 void SceneEditor::doPrevElement()
 {
 	size_t oldCur = curElement;
-	size_t maxn = game->elementTemplates.size();
+	size_t maxn = game->tileset.elementTemplates.size();
 
 	if(curElement)
 		curElement--;
@@ -2223,9 +2240,9 @@ void SceneEditor::doPrevElement()
 	if (maxn && curElement >= maxn)
 		curElement = maxn-1;
 
-	if (maxn && game->elementTemplates[curElement].idx < 1024)
+	if (maxn && game->tileset.elementTemplates[curElement].idx < 1024)
 	{
-		placer->setTexture(game->elementTemplates[curElement].gfx);
+		placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
 	}
 	else
 	{
@@ -2263,14 +2280,14 @@ void SceneEditor::selectZero()
 
 	if (editType == ET_ELEMENTS)
 	{
-		if (game->elementTemplates.empty()) return;
+		if (game->tileset.elementTemplates.empty()) return;
 		if (editingElement)
 		{
 		}
 		else
 		{
 			curElement = 0;
-			placer->setTexture(game->elementTemplates[curElement].gfx);
+			placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
 		}
 	}
 }
@@ -2280,20 +2297,20 @@ void SceneEditor::selectEnd()
 	if (state != ES_SELECTING) return;
 	if (editType == ET_ELEMENTS)
 	{
-		if (game->elementTemplates.empty()) return;
+		if (game->tileset.elementTemplates.empty()) return;
 		if (!editingElement)
 		{
 			size_t largest = 0;
-			for (size_t i = 0; i < game->elementTemplates.size(); i++)
+			for (size_t i = 0; i < game->tileset.elementTemplates.size(); i++)
 			{
-				ElementTemplate et = game->elementTemplates[i];
+				ElementTemplate et = game->tileset.elementTemplates[i];
 				if (et.idx < 1024 && i > largest)
 				{
 					largest = i;
 				}
 			}
 			curElement = largest;
-			placer->setTexture(game->elementTemplates[curElement].gfx);
+			placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
 		}
 	}
 }
@@ -2304,7 +2321,7 @@ void SceneEditor::placeElement()
 	{
 		if (!core->getShiftState() && !core->getKeyState(KEY_LALT))
 		{
-			game->createElement(game->elementTemplates[curElement].idx, placer->position, bgLayer, placer);
+			game->createElement(game->tileset.elementTemplates[curElement].idx, placer->position, bgLayer, placer);
 			updateText();
 			game->reconstructGrid();
 		}
@@ -2981,4 +2998,41 @@ void SceneEditor::dumpObs()
 	else
 		dsq->screenMessage("Failed to save grid dump: " + outfn);
 	delete [] data;
+}
+
+void SceneEditor::moveEverythingBy(int dx, int dy)
+{
+	const Vector mv(dx, dy);
+
+	FOR_ENTITIES(ei)
+	{
+		Entity *e = *ei;
+		e->startPos += mv;
+		e->position += mv;
+	}
+
+	const size_t nn = game->getNumPaths();
+	for(size_t i = 0; i < nn; ++i)
+	{
+		Path *p = game->getPath(i);
+		const size_t n = p->nodes.size();
+		for(size_t ii = 0; ii < n; ++ii)
+			p->nodes[ii].position += mv;
+	}
+
+	const size_t ne = dsq->getNumElements();
+	for(size_t i = 0; i < ne; ++i)
+	{
+		Element *elem = dsq->getElement(i);
+		elem->position += mv;
+	}
+
+	tinyxml2::XMLElement *sf = game->saveFile->FirstChildElement("SchoolFish");
+	for( ; sf; sf = sf->NextSiblingElement("SchoolFish"))
+	{
+		int sx = sf->IntAttribute("x");
+		int sy = sf->IntAttribute("y");
+		sf->SetAttribute("x", sx + dx);
+		sf->SetAttribute("y", sy + dy);
+	}
 }
