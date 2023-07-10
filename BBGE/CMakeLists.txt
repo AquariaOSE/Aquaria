@@ -109,6 +109,12 @@ set(BBGE_SRCS
     TextureMgr.h
     TTFFont.cpp
     TTFFont.h
+    Tile.cpp
+    Tile.h
+    TileRender.cpp
+    TileRender.h
+    Tileset.cpp
+    Tileset.h
     Vector.cpp
     Vector.h
     Window.cpp

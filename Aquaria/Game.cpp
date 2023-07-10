@@ -318,14 +318,7 @@ void Game::transitionToScene(std::string scene)
 
 ElementTemplate *Game::getElementTemplateByIdx(size_t idx)
 {
-	for (size_t i = 0; i < elementTemplates.size(); i++)
-	{
-		if (elementTemplates[i].idx == idx)
-		{
-			return &elementTemplates[i];
-		}
-	}
-	return 0;
+	return tileset.getByIdx(idx);
 }
 
 Element* Game::createElement(size_t idx, Vector position, size_t bgLayer, RenderObject *copy, ElementTemplate *et)
@@ -338,8 +331,7 @@ Element* Game::createElement(size_t idx, Vector position, size_t bgLayer, Render
 	Element *element = new Element();
 	if (et)
 	{
-		element->setTexture(et->gfx);
-		element->alpha = et->alpha;
+		element->setTexturePointer(et->getTexture());
 	}
 
 	element->position = position;
@@ -377,7 +369,6 @@ Element* Game::createElement(size_t idx, Vector position, size_t bgLayer, Render
 	}
 	addRenderObject(element, LR_ELEMENTS1+bgLayer);
 	dsq->addElement(element);
-	//element->updateCullVariables();
 
 	return element;
 }
@@ -1335,6 +1326,8 @@ bool Game::loadSceneXML(std::string scene)
 	}
 	clearObsRows();
 
+	std::string tilesetToLoad;
+
 	XMLElement *level = doc.FirstChildElement("Level");
 	if (level)
 	{
@@ -1344,7 +1337,7 @@ bool Game::loadSceneXML(std::string scene)
 			tileset = level->Attribute("elementTemplatePack"); // legacy, still present in some very old maps
 		if (tileset)
 		{
-			loadElementTemplates(tileset);
+			tilesetToLoad = tileset;
 			levelSF->SetAttribute("tileset", tileset);
 		}
 		else
@@ -1756,6 +1749,7 @@ bool Game::loadSceneXML(std::string scene)
 	if(fullTilesetReload)
 	{
 		fullTilesetReload = false;
+		tileset.clear();
 		// used by SceneEditor
 		// no elements exist right now -> textures will be cleared and reloaded
 		dsq->texmgr.clearUnused();
@@ -1763,6 +1757,10 @@ bool Game::loadSceneXML(std::string scene)
 
 	// figure out which textures in the tileset are used and preload those that are actually used
 	{
+		std::ostringstream os;
+		os << "Scene has " << elemsDefs.size() << " elements";
+		debugLog(os.str());
+
 		unsigned char usedIdx[1024] = {0};
 		for(size_t i = 0; i < elemsDefs.size(); ++i)
 		{
@@ -1770,27 +1768,8 @@ bool Game::loadSceneXML(std::string scene)
 			if(idx < Countof(usedIdx))
 				usedIdx[idx] = 1;
 		}
-		std::vector<std::string> usedTex;
-		usedTex.reserve(elementTemplates.size()); // optimistically assume all textures in the tileset are used
 
-		for (size_t i = 0; i < elementTemplates.size(); i++)
-		{
-			unsigned idx = elementTemplates[i].idx;
-			if (idx < Countof(usedIdx) && usedIdx[idx])
-				usedTex.push_back(elementTemplates[i].gfx);
-		}
-		std::sort(usedTex.begin(), usedTex.end());
-		// drop duplicates
-		usedTex.resize(std::distance(usedTex.begin(), std::unique(usedTex.begin(), usedTex.end())));
-
-		std::ostringstream os;
-		os << "Scene has " << elemsDefs.size() << " elements that use " << usedTex.size()
-			<< " distinct textures out of the " << elementTemplates.size() << " entries in the tileset";
-		debugLog(os.str());
-
-		// preload all used textures
-		if(usedTex.size())
-			dsq->texmgr.loadBatch(NULL, &usedTex[0], usedTex.size());
+		loadElementTemplates(tilesetToLoad, &usedIdx[0], Countof(usedIdx));
 	}
 
 	// Now that all SE tags have been processed, spawn them
@@ -4690,40 +4669,9 @@ void Game::snapCam()
 		warpCameraTo(*cameraFollow);
 }
 
-ElementTemplate Game::getElementTemplateForLetter(int i)
-{
-	float cell = 64.0f/512.0f;
-	//for (int i = 0; i < 27; i++)
-	ElementTemplate t;
-	t.idx = 1024+i;
-	t.gfx = "Aquarian";
-	int x = i,y=0;
-	while (x >= 6)
-	{
-		x -= 6;
-		y++;
-	}
-
-	t.tu1 = x*cell;
-	t.tv1 = y*cell;
-	t.tu2 = t.tu1 + cell;
-	t.tv2 = t.tv1 + cell;
-
-	t.tv2 = 1 - t.tv2;
-	t.tv1 = 1 - t.tv1;
-	std::swap(t.tv1,t.tv2);
-
-	t.w = 512*cell;
-	t.h = 512*cell;
-	//elementTemplates.push_back(t);
-	return t;
-}
-
-void Game::loadElementTemplates(std::string pack)
+bool Game::loadElementTemplates(std::string pack, const unsigned char *usedIdx, size_t usedIdxLen)
 {
 	stringToLower(pack);
-
-	elementTemplates.clear();
 
 	std::string fn;
 	if (dsq->mod.isActive())
@@ -4731,38 +4679,45 @@ void Game::loadElementTemplates(std::string pack)
 	else
 		fn = "data/tilesets/" + pack + ".txt";
 
-	if (!exists(fn))
+	if(!tileset.loadFile(fn.c_str(), usedIdx, usedIdxLen))
 	{
-		errorLog ("Could not open tileset [" + fn + "]");
-		return;
+		errorLog ("Could not load tileset [" + fn + "]");
+		return false;
 	}
 
-	InStream in(fn.c_str());
-	std::string line;
-	while (std::getline(in, line))
+	// Aquarian alphabet letters
+	if(const CountedPtr<Texture> aqtex = dsq->getTexture("aquarian"))
 	{
-		int idx=-1, w=-1, h=-1;
-		std::string gfx;
-		std::istringstream is(line);
-		is >> idx >> gfx >> w >> h;
-		ElementTemplate t;
-		t.idx = idx;
-		t.gfx = gfx;
-		if (w==0) w=-1;
-		if (h==0) h=-1;
-		t.w = w;
-		t.h = h;
-		elementTemplates.push_back(t);
+		const float cell = 64.0f/512.0f;
+		for (int i = 0; i < 27; i++)
+		{
+			ElementTemplate t;
+			t.idx = 1024+i;
+			t.tex = aqtex;
+			int x = i,y=0;
+			while (x >= 6)
+			{
+				x -= 6;
+				y++;
+			}
+
+			t.tu1 = x*cell;
+			t.tv1 = y*cell;
+			t.tu2 = t.tu1 + cell;
+			t.tv2 = t.tv1 + cell;
+
+			t.tv2 = 1 - t.tv2;
+			t.tv1 = 1 - t.tv1;
+			std::swap(t.tv1,t.tv2);
+
+			t.w = 512*cell;
+			t.h = 512*cell;
+
+			tileset.elementTemplates.push_back(t);
+		}
 	}
-	in.close();
 
-
-	std::sort(elementTemplates.begin(), elementTemplates.end());
-
-	for (int i = 0; i < 27; i++)
-	{
-		elementTemplates.push_back(getElementTemplateForLetter(i));
-	}
+	return true;
 }
 
 void Game::clearGrid(int v)
@@ -4776,40 +4731,6 @@ void Game::clearGrid(int v)
 void Game::resetFromTitle()
 {
 	overrideMusic = "";
-}
-
-void Game::setGrid(ElementTemplate *et, Vector position, float rot360)
-{
-	for (size_t i = 0; i < et->grid.size(); i++)
-	{
-		TileVector t(position);
-		int x = et->grid[i].x;
-		int y = et->grid[i].y;
-		if (rot360 >= 0 && rot360 < 90)
-		{
-		}
-		else if (rot360 >= 90 && rot360 < 180)
-		{
-			int swap = y;
-			y = x;
-			x = swap;
-			x = -x;
-		}
-		else if (rot360 >= 180 && rot360 < 270)
-		{
-			x = -x;
-			y = -y;
-		}
-		else if (rot360 >= 270 && rot360 < 360)
-		{
-			int swap = y;
-			y = x;
-			x = swap;
-			y = -y;
-		}
-		TileVector s(t.x+x, t.y+y);
-		setGrid(s, OT_INVISIBLE);
-	}
 }
 
 void Game::removeState()
