@@ -202,15 +202,6 @@ enum FormUpgradeType
 	FORMUPGRADE_MAX
 };
 
-enum EFXType
-{
-	EFX_NONE	=-1,
-	EFX_SEGS	=0,
-	EFX_ALPHA	,
-	EFX_WAVY	,
-	EFX_MAX
-};
-
 enum EmoteType
 {
 	EMOTE_NAIJAEVILLAUGH	= 0,

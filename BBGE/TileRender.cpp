@@ -2,9 +2,12 @@
 #include "RenderBase.h"
 #include "Core.h"
 #include "Tileset.h"
+#include "RenderGrid.h"
+#include "RenderObject.h"
+
 
 TileRender::TileRender(const TileStorage& tiles)
-	: storage(tiles)
+	: storage(tiles), renderBorders(false)
 {
 }
 
@@ -12,11 +15,36 @@ TileRender::~TileRender()
 {
 }
 
+// shamelessly ripped from paint.net default palette
+static const Vector s_tagColors[] =
+{
+	/* 0 */ Vector(0.5f, 0.5f, 0.5f),
+	/* 1 */ Vector(1,0,0),
+	/* 2 */ Vector(1, 0.415686f, 0),
+	/* 3 */ Vector(1,0.847059f, 0),
+	/* 4 */ Vector(0.298039f,1,0),
+	/* 5 */ Vector(0,1,1),
+	/* 6 */ Vector(0,0.580392,1),
+	/* 7 */ Vector(0,0.149020f,1),
+	/* 8 */ Vector(0.282353f,0,1),
+	/* 9 */ Vector(0.698039f,0,1),
+
+	/* 10 */ Vector(1,0,1), // anything outside of the pretty range
+};
+
+static inline const Vector& getTagColor(int tag)
+{
+	const unsigned idx = std::min<unsigned>(unsigned(tag), Countof(s_tagColors)-1);
+	return s_tagColors[idx];
+
+}
+
+
 void TileRender::onRender(const RenderState& rs) const
 {
 	// prepare. get parallax scroll factors
 	const RenderObjectLayer& rl = core->renderObjectLayers[this->layer];
-	Vector M = rl.followCameraMult; // affected by parallaxLock
+	const Vector M = rl.followCameraMult; // affected by parallaxLock
 	const float F = rl.followCamera;
 
 	// Formula from RenderObject::getFollowCameraPosition() and optimized for speed
@@ -26,17 +54,19 @@ void TileRender::onRender(const RenderState& rs) const
 
 	unsigned lastTexRepeat = false;
 	unsigned lastTexId = 0;
-	BlendType blend = BLEND_DEFAULT; // TODO: influenced by efx
-	const bool renderBorders = true; // TODO: when layer selected in editor
+
+	const bool renderBorders = this->renderBorders;
+	//bool mustSetColor = false;
 
 	for(size_t i = 0; i < storage.tiles.size(); ++i)
 	{
 		const TileData& tile = storage.tiles[i];
+		if(tile.flags & TILEFLAG_HIDDEN)
+			continue;
+
 		const Vector tilepos(tile.x, tile.y);
 		const Vector tmp = T + (F * tilepos);
 		const Vector pos = tilepos * M1 + (tmp * M); // lerp, used to select whether to use original v or parallax-corrected v
-
-		rs.gpu.setBlend(blend);
 
 		ElementTemplate * const et = tile.et;
 		if(Texture * const tex = et->tex.content())
@@ -51,34 +81,47 @@ void TileRender::onRender(const RenderState& rs) const
 			}
 		}
 		else
+		{
+			lastTexId = 0;
 			glBindTexture(GL_TEXTURE_2D, 0); // unlikely
+		}
 
 		glPushMatrix();
 		glTranslatef(pos.x, pos.y, pos.z);
 
 		glRotatef(tile.rotation, 0, 0, 1);
-		if(tile.flags & TILEFLAG_FH)
+		if(tile.flags & TILEFLAG_FH) // TODO: This is not necessary! Since we have no children, flipped texcoords are fine
 			glRotatef(180, 0, 1, 0);
 
 		// this is only relevant in editor mode and is always 0 otherwise
-		glTranslatef(tile.beforeScaleOffset.x, tile.beforeScaleOffset.y, tile.beforeScaleOffset.z);
+		glTranslatef(tile.beforeScaleOffsetX, tile.beforeScaleOffsetY, 0);
 
-		glScalef(tile.scale.x, tile.scale.y, 1);
+		glScalef(tile.scalex * et->w, tile.scaley * et->h, 1);
+		//glScalef(tile.scalex * et->w, tile.scaley * et->h, 1); // TODO use this + fixed verts
 
-		// TODO: only need to do this when prev. tile had different alpha
+		BlendType blend = BLEND_DEFAULT;
+		float alpha = rs.alpha;
+		RenderGrid *grid = NULL;
+		const TileEffectData * const eff = tile.eff;
+		if(eff)
 		{
-			const float alpha = 1; // TODO: via efx
-			Vector col = rs.color;
-			glColor4f(col.x, col.y, col.z, rs.alpha*alpha);
+			grid = eff->grid;
+			alpha *= eff->alpha.x;
+			blend = eff->blend;
 		}
 
-		const float _w2 = float(int(et->w)) * 0.5f;
-		const float _h2 = float(int(et->h)) * 0.5f;
+		rs.gpu.setBlend(blend);
 
-		// render texture
+		// TODO: only need to do this when prev. tile had different alpha
+		glColor4f(rs.color.x, rs.color.y, rs.color.z, alpha);
+
+		const Vector upperLeftTextureCoordinates(et->tu1, et->tv1);
+		const Vector lowerRightTextureCoordinates(et->tu2, et->tv2);
+
+		if(!grid)
 		{
-			const Vector upperLeftTextureCoordinates(et->tu1, et->tv1);
-			const Vector lowerRightTextureCoordinates(et->tu2, et->tv2);
+			const float _w2 = et->w * 0.5f;
+			const float _h2 = et->h * 0.5f;
 
 			glBegin(GL_QUADS);
 			{
@@ -96,14 +139,29 @@ void TileRender::onRender(const RenderState& rs) const
 			}
 			glEnd();
 		}
+		else
+		{
+			RenderState rx(rs);
+			rx.alpha = alpha;
+			grid->render(rx, upperLeftTextureCoordinates, lowerRightTextureCoordinates);
+			if (RenderObject::renderCollisionShape)
+			{
+				glBindTexture(GL_TEXTURE_2D, 0);
+				grid->renderDebugPoints(rs);
+				lastTexId = 0;
+			}
+		}
 
 		if(renderBorders)
 		{
 			lastTexId = 0;
 			glBindTexture(GL_TEXTURE_2D, 0);
 
-			Vector color(0.5f,0.5f,0.5f); // TODO: (1,1,1) when selected
-
+			float c = (tile.flags & TILEFLAG_SELECTED) ? 1.0f : 0.5f;
+			Vector color(c,c,c);
+			color *= getTagColor(tile.tag);
+			const float _w2 = et->w * 0.5f;
+			const float _h2 = et->h * 0.5f;
 
 			glColor4f(color.x, color.y, color.z, 1.0f);
 			glPointSize(16);
@@ -128,8 +186,4 @@ void TileRender::onRender(const RenderState& rs) const
 
 	RenderObject::lastTextureApplied = lastTexId;
 	RenderObject::lastTextureRepeat = !!lastTexRepeat;
-}
-
-void TileRender::onUpdate(float dt)
-{
 }

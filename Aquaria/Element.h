@@ -25,6 +25,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 class Entity;
 
+enum EFXType
+{
+	EFX_NONE	=-1,
+	EFX_SEGS	=0,
+	EFX_ALPHA	,
+	EFX_WAVY	,
+	EFX_MAX
+};
 
 enum ElementFlag
 {
@@ -52,7 +60,7 @@ struct ElementEffectData
 	float hitPerc, effectMult;
 	bool wavyWaving, wavyFlip, touching;
 	Vector touchVel;
-	std::vector<Vector> wavy, wavySave;
+	std::vector<float> wavy, wavySave;
 	int elementEffectIndex; // used by editor only
 };
 

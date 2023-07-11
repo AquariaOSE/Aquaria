@@ -154,7 +154,7 @@ void RenderGrid::setStripPoints(bool vert, const Vector* points, size_t n)
 	}
 }
 
-void RenderGrid::setFromWavy(const Vector* wavy, size_t len, float width)
+void RenderGrid::setFromWavy(const float* wavy, size_t len, float width)
 {
 	const size_t NX = grid.width() - 1;
 	const size_t H = grid.height();
@@ -165,7 +165,7 @@ void RenderGrid::setFromWavy(const Vector* wavy, size_t len, float width)
 		const size_t wavy_y = (H - y)-1;
 		if (wavy_y < len)
 		{
-			const float tmp = wavy[wavy_y].x * iw;
+			const float tmp = wavy[wavy_y] * iw;
 			Vector * const row = grid.row(y);
 			for (size_t x = 0; x < NX; x++)
 			{

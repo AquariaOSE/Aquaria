@@ -15,7 +15,8 @@ public:
 	TileRender(const TileStorage& tiles);
 	virtual ~TileRender();
 	virtual void onRender(const RenderState& rs) const;
-	virtual void onUpdate(float dt);
+
+	bool renderBorders;
 
 private:
 };
