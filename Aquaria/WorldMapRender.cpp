@@ -468,7 +468,8 @@ static void tileDataToVis(WorldMapTile *tile, Array2d<Vector>& vis)
 	{
 		const float a = tile->prerevealed ? 0.4f :  baseMapSegAlpha;
 		Vector *gp = vis.data();
-		for(size_t i = 0; i < vis.linearsize(); ++i)
+		const size_t n = vis.linearsize();
+		for(size_t i = 0; i < n; ++i)
 			gp[i].z = a;
 	}
 }
@@ -565,6 +566,7 @@ void WorldMapRender::setVis(WorldMapTile *tile)
 		RenderGrid *g = tile->q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
 		if(g)
 		{
+			g->gridType = GRID_UNDEFINED;
 			g->drawOrder = GRID_DRAW_WORLDMAP;
 			tileDataToVis(tile, g->array2d());
 		}
