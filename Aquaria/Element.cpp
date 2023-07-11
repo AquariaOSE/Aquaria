@@ -247,8 +247,11 @@ void Element::setElementEffectByIndex(int eidx)
 		eff->wavyMin = bity;
 		eff->wavyMax = bity*1.2f;
 
-		createGrid(2, e.segsy);
-		setGridFromWavy();
+		if(RenderGrid *g = createGrid(2, e.segsy))
+		{
+			g->gridType = GRID_UNDEFINED; // by default it's GRID_WAVY, but that would reset during update
+			setGridFromWavy();
+		}
 	}
 	break;
 	default:
