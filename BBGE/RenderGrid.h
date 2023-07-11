@@ -8,19 +8,19 @@ struct RenderState;
 
 enum GridDrawOrder
 {
-	GRID_DRAW_WORLDMAP = -1, // LRTB order, uses grid.z as alpha
 	GRID_DRAW_LRTB = 0, // the default. ignores grid.z
 	GRID_DRAW_LRBT = 1, // Y axis inverted
+	GRID_DRAW_WORLDMAP = 2, // LRTB order, uses grid.z as alpha
 
 	GRID_DRAW_DEFAULT = GRID_DRAW_LRTB
 };
 
 enum GridType
 {
-	GRID_UNDEFINED = -1,
-	GRID_WAVY	= 0,
-	GRID_STRIP	= 1, // quad is in strip mode
-	GRID_INTERP = 2, // quad is in grid mode
+	GRID_UNDEFINED = 0,
+	GRID_WAVY	= 1,
+	GRID_STRIP	= 2, // quad is in strip mode
+	GRID_INTERP = 3, // quad is in grid mode
 };
 
 class RenderGrid
