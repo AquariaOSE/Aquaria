@@ -32,6 +32,7 @@ class Core;
 class StateData;
 class Texture;
 
+// TODO: move all the other bools from RenderObject here
 enum RenderObjectFlags
 {
 	RO_CLEAR			= 0x00,

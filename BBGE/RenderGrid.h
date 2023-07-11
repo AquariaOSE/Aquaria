@@ -38,7 +38,7 @@ public:
 	void setAlpha(size_t x, size_t y, float a);
 	void setSegs(float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
 	void setStripPoints(bool vert, const Vector *points, size_t n);
-	void setFromWavy(const Vector *wavy, size_t len, float width);
+	void setFromWavy(const float *wavy, size_t len, float width);
 
 	size_t width() const { return grid.width(); }
 	size_t height() const { return grid.height(); }

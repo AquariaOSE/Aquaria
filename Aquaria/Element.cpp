@@ -133,11 +133,11 @@ void Element::updateEffects(float dt)
 						weight = 1.0f-weight;
 					if (weight < 0.125f)
 						weight *= 0.5f;
-					eff->wavy[i].x = sinf(eff->wavyAngleOffset + (float(i)/wavySz)*PI)*float(eff->wavyMagnitude*eff->effectMult)*weight;
+					eff->wavy[i] = sinf(eff->wavyAngleOffset + (float(i)/wavySz)*PI)*float(eff->wavyMagnitude*eff->effectMult)*weight;
 					if (!eff->wavySave.empty())
 					{
 						if (eff->wavyLerpIn < 1)
-							eff->wavy[i].x = eff->wavy[i].x*eff->wavyLerpIn + (eff->wavySave[i].x*(1.0f-eff->wavyLerpIn));
+							eff->wavy[i] = eff->wavy[i]*eff->wavyLerpIn + (eff->wavySave[i]*(1.0f-eff->wavyLerpIn));
 					}
 				}
 
@@ -237,12 +237,8 @@ void Element::setElementEffectByIndex(int eidx)
 	case EFX_WAVY:
 	{
 
-		eff->wavy.resize(e.segsy);
+		eff->wavy.resize(e.segsy, 0.0f);
 		float bity = float(getHeight())/float(e.segsy);
-		for (size_t i = 0; i < eff->wavy.size(); i++)
-		{
-			eff->wavy[i] = Vector(0, -(i*bity));
-		}
 		eff->wavyFlip = e.wavy_flip;
 		eff->wavyMin = bity;
 		eff->wavyMax = bity*1.2f;

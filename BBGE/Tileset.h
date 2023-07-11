@@ -15,7 +15,7 @@ public:
 
 	// lazily assigned when tex is loaded
 	CountedPtr<Texture> tex;
-	unsigned w,h; // custom size if used, otherwise texture size
+	float w,h; // custom size if used, otherwise texture size
 
 	// fixed
 	float tu1, tu2, tv1, tv2; // texcoords
