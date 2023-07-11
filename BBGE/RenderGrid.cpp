@@ -82,26 +82,31 @@ void RenderGrid::update(float dt)
 	{
 		gridTimer += dt * drawGridTimeMultiplier;
 		reset();
-		size_t hx = grid.width()/2;
-		for (size_t x = 0; x < grid.width(); x++)
+		const size_t w = grid.width();
+		const size_t h = grid.height();
+
+		size_t nx = w;
+		if(drawGridOut)
+			nx /= 2;
+
+		for (size_t y = 0; y < h; y++)
 		{
-			float yoffset = x * drawGridOffsetY;
-			float addY = 0;
-			if (drawGridModY != 0)
-				addY = cosf(gridTimer+yoffset)*drawGridModY;
-			for (size_t y = 0; y < grid.height(); y++)
-			{
-				float xoffset = y * drawGridOffsetX;
-				if (drawGridModX != 0)
+			Vector * const row = grid.row(y);
+			const float xoffset = y * drawGridOffsetX;
+			const float addx = sinf(gridTimer+xoffset)*drawGridModX;
+
+			size_t x;
+			for (x = 0; x < nx; x++)
+				row[x].x -= addx;
+			for (; x < w; x++)
+				row[x].x += addx;
+
+			if(const float dgmy = drawGridModY)
+				for (x = 0; x < w; x++)
 				{
-					float addX = (sinf(gridTimer+xoffset)*drawGridModX);
-					if (drawGridOut && x < hx)
-						grid(x,y).x += addX;
-					else
-						grid(x,y).x -= addX;
+					float yoffset = x * drawGridOffsetY;
+					row[x].y += cosf(gridTimer+yoffset)*dgmy;
 				}
-				grid(x,y).y += addY;
-			}
 		}
 	}
 }
@@ -155,16 +160,17 @@ void RenderGrid::setFromWavy(const Vector* wavy, size_t len, float width)
 	const size_t H = grid.height();
 
 	const float iw = 1.0f / width;
-	for (size_t x = 0; x < NX; x++) // TODO invert loop
+	for (size_t y = 0; y < H; y++)
 	{
-		for (size_t y = 0; y < H; y++)
+		const size_t wavy_y = (H - y)-1;
+		if (wavy_y < len)
 		{
-			const size_t wavy_y = (H - y)-1;
-			if (wavy_y < len)
+			const float tmp = wavy[wavy_y].x * iw;
+			Vector * const row = grid.row(y);
+			for (size_t x = 0; x < NX; x++)
 			{
-				const float tmp = wavy[wavy_y].x * iw;
-				grid(x,y).x = tmp - 0.5f;
-				grid(x+1,y).x = tmp + 0.5f;
+				row[x].x = tmp - 0.5f;
+				row[x+1].x = tmp + 0.5f;
 			}
 		}
 	}
