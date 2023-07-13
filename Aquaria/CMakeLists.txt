@@ -22,9 +22,6 @@ SET(AQUARIA_SRCS
     Damage.h
     DSQ.cpp
     DSQ.h
-    Element.cpp
-    Element.h
-    Elements.h
     Emote.cpp
     Entity.cpp
     Entity.h
@@ -95,6 +92,8 @@ SET(AQUARIA_SRCS
     StringBank_gen.h
     SubtitlePlayer.cpp
     SubtitlePlayer.h
+    TileMgr.cpp
+    TileMgr.h
     TileVector.h
     ToolTip.cpp
     ToolTip.h

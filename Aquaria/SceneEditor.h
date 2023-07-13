@@ -11,6 +11,10 @@
 class Element;
 class Entity;
 class Path;
+class PathRender;
+class TileStorage;
+
+class MultiTileHelper;
 
 struct EntityGroupEntity
 {
@@ -78,20 +82,14 @@ public:
 	void update(float dt);
 	void prevElement();
 	void nextElement();
-	void doPrevElement();
-	Element *cycleElementNext(Element *e);
-	Element *cycleElementPrev(Element *e);
+	void cyclePlacer(int direction);
+	void cycleSelectedTiles(int direction); // transmute selected to next/prev in tileset
 	void selectZero();
 	void selectEnd();
 	void placeElement();
 	void flipElementHorz();
 	void flipElementVert();
-	void deleteSelectedElement();
-	void deleteElement(int selectedIdx);
 	virtual void action(int id, int state, int source, InputDevice device);
-	void scaleElementUp();
-	void scaleElementDown();
-	void scaleElement1();
 	void placeAvatar();
 
 	void executeButtonID(int bid);
@@ -117,7 +115,7 @@ public:
 	EditTypes editType;
 	EditorStates state;
 
-	Element *getElementAtCursor();
+	int getTileAtCursor(); // <0 when no tile, otherwise index
 	Entity *getEntityAtCursor();
 
 	void mouseButtonLeftUp();
@@ -125,7 +123,6 @@ public:
 	void moveToBack();
 	void moveToFront();
 	int bgLayer;
-	Element *editingElement;
 	Entity *editingEntity;
 	Path *editingPath;
 
@@ -133,21 +130,13 @@ public:
 	size_t selectedNode;
 
 	Path *getSelectedPath();
-	void changeDepth();
 	void updateEntitySaveData(Entity *editingEntity);
-	void moveLayer();
-	void moveElementToLayer(Element *e, int bgLayer);
 	void toggleElementRepeat();
 	bool multiSelecting;
 	Vector multiSelectPoint;
-	std::vector <Element*> selectedElements;
+	std::vector <size_t> selectedTiles; // indices
 
-	Vector groupCenter;
-	Vector getSelectedElementsCenter();
-
-	Quad dummy;
-
-	void updateSelectedElementPosition(Vector position);
+	void updateSelectedElementPosition(Vector rel);
 	int selectedEntityType;
 
 	SelectedEntity selectedEntity;
@@ -203,8 +192,10 @@ protected:
 	void enterScaleState();
 	void enterRotateState();
 	void enterMoveState();
+	void enterAnyStateHelper(EditorStates newstate);
 
-	Vector oldPosition, oldRotation, oldScale, cursorOffset, oldRepeatScale;
+	float oldRotation;
+	Vector oldPosition, oldScale, cursorOffset, oldRepeatScale;
 
 	Entity *movingEntity;
 
@@ -234,12 +225,20 @@ protected:
 	void mouseButtonLeft();
 	void mouseButtonRight();
 
+	void setActiveLayer(unsigned bglayer);
+	TileStorage& getCurrentLayerTiles();
+	void clearSelection();
+	MultiTileHelper *createMultiTileHelperFromSelection();
+	void destroyMultiTileHelper();
+
 	size_t curElement;
 
 	Quad *placer;
+	MultiTileHelper *multi;
 	DebugFont *text;
 	bool on;
 	InterpolatedVector oldGlobalScale;
+	PathRender *pathRender;
 };
 
 #endif // AQUARIA_SCENEEDITOR_H

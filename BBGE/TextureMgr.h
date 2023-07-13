@@ -30,7 +30,7 @@ public:
         OVERWRITE,     // always overwrite
     };
 
-    void loadBatch(Texture *pdst[], const std::string texnames[], size_t n, LoadMode mode = KEEP, ProgressCallback cb = 0, void *cbUD = 0);
+    size_t loadBatch(Texture *pdst[], const std::string texnames[], size_t n, LoadMode mode = KEEP, ProgressCallback cb = 0, void *cbUD = 0);
     Texture *load(const std::string& texname, LoadMode mode);
     void reloadAll(LoadMode mode);
 

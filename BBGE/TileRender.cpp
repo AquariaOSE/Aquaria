@@ -9,6 +9,8 @@
 TileRender::TileRender(const TileStorage& tiles)
 	: storage(tiles), renderBorders(false)
 {
+	this->cull = false;
+	this->neverFollowCamera = true;
 }
 
 TileRender::~TileRender()
@@ -46,6 +48,7 @@ void TileRender::onRender(const RenderState& rs) const
 	const RenderObjectLayer& rl = core->renderObjectLayers[this->layer];
 	const Vector M = rl.followCameraMult; // affected by parallaxLock
 	const float F = rl.followCamera;
+	const bool parallax = rl.followCamera > 0;
 
 	// Formula from RenderObject::getFollowCameraPosition() and optimized for speed
 	const Vector C = core->screenCenter;
@@ -61,15 +64,18 @@ void TileRender::onRender(const RenderState& rs) const
 	for(size_t i = 0; i < storage.tiles.size(); ++i)
 	{
 		const TileData& tile = storage.tiles[i];
-		if(tile.flags & TILEFLAG_HIDDEN)
+		if(tile.flags & (TILEFLAG_HIDDEN | TILEFLAG_EDITOR_HIDDEN))
 			continue;
 
-		const Vector tilepos(tile.x, tile.y);
-		const Vector tmp = T + (F * tilepos);
-		const Vector pos = tilepos * M1 + (tmp * M); // lerp, used to select whether to use original v or parallax-corrected v
+		Vector pos(tile.x, tile.y);
+		if(parallax)
+		{
+			const Vector tmp = T + (F * pos);
+			pos = pos * M1 + (tmp * M); // lerp, used to select whether to use original v or parallax-corrected v
+		}
 
-		ElementTemplate * const et = tile.et;
-		if(Texture * const tex = et->tex.content())
+		const ElementTemplate * const et = tile.et;
+		if(const Texture * const tex = et->tex.content())
 		{
 			unsigned texid = tex->gltexid;
 			unsigned rep = tile.flags & TILEFLAG_REPEAT;
@@ -96,7 +102,7 @@ void TileRender::onRender(const RenderState& rs) const
 		// this is only relevant in editor mode and is always 0 otherwise
 		glTranslatef(tile.beforeScaleOffsetX, tile.beforeScaleOffsetY, 0);
 
-		glScalef(tile.scalex * et->w, tile.scaley * et->h, 1);
+		glScalef(tile.scalex, tile.scaley, 1);
 		//glScalef(tile.scalex * et->w, tile.scaley * et->h, 1); // TODO use this + fixed verts
 
 		BlendType blend = BLEND_DEFAULT;
@@ -141,6 +147,9 @@ void TileRender::onRender(const RenderState& rs) const
 		}
 		else
 		{
+			glPushMatrix();
+			glScalef(et->w, et->h, 1);
+
 			RenderState rx(rs);
 			rx.alpha = alpha;
 			grid->render(rx, upperLeftTextureCoordinates, lowerRightTextureCoordinates);
@@ -150,6 +159,8 @@ void TileRender::onRender(const RenderState& rs) const
 				grid->renderDebugPoints(rs);
 				lastTexId = 0;
 			}
+
+			glPopMatrix();
 		}
 
 		if(renderBorders)
@@ -183,7 +194,11 @@ void TileRender::onRender(const RenderState& rs) const
 		glPopMatrix();
 	}
 
-
 	RenderObject::lastTextureApplied = lastTexId;
 	RenderObject::lastTextureRepeat = !!lastTexRepeat;
+}
+
+void TileRender::onUpdate(float dt)
+{
+	//this->position = core->screenCenter;
 }

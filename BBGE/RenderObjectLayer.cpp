@@ -229,6 +229,8 @@ void RenderObjectLayer::prepareRender()
 	toRender.push_back(NULL); // terminate
 	core->totalRenderObjectCount += n;
 
+	// TODO: set followCameraMult = (0,0) when followCamera == 0 ?
+
 	switch(followCameraLock)
 	{
 		default:

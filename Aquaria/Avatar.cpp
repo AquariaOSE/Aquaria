@@ -6721,11 +6721,7 @@ void Avatar::onUpdate(float dt)
 
 	if(!core->particlesPaused && elementEffectMult > 0)
 	{
-		ElementUpdateList& elems = game->elementInteractionList;
-		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
-		{
-			(*it)->doInteraction(this, elementEffectMult, 16);
-		}
+		dsq->tilemgr.doTileInteraction(position, vel, elementEffectMult, 16);
 	}
 }
 

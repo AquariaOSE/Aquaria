@@ -269,24 +269,31 @@ Texture *TextureMgr::finalize(TexLoadTmp& tt)
     return tex;
 }
 
-void TextureMgr::loadBatch(Texture * pdst[], const std::string texnames[], size_t n, LoadMode mode, ProgressCallback cb, void *cbUD)
+size_t TextureMgr::loadBatch(Texture * pdst[], const std::string texnames[], size_t n, LoadMode mode, ProgressCallback cb, void *cbUD)
 {
+    size_t doneCB = 0;
+
     if(threads.empty())
     {
+        size_t loaded = 0;
         for(size_t i = 0; i < n; ++i)
         {
             Texture *tex = load(texnames[i], mode);
             if(pdst)
                 pdst[i] = tex;
+            if(cb)
+                cb(++doneCB, cbUD);
+            loaded += !!tex;
         }
-        return;
+        return loaded;
     }
 
     // Important that this is pre-allocated. We store pointers to elements and
     // send them to threads, so this must never reallocate.
     std::vector<TexLoadTmp> tmp(n);
 
-    size_t inprogress = 0, doneCB = 0;
+    size_t inprogress = 0;
+    size_t loaded = 0;
     for(size_t i = 0; i < n; ++i)
     {
         TexLoadTmp& tt = tmp[i];
@@ -301,6 +308,7 @@ void TextureMgr::loadBatch(Texture * pdst[], const std::string texnames[], size_
                 pdst[i] = tt.curTex;
             if(cb)
                 cb(++doneCB, cbUD);
+            ++loaded;
             continue;
         }
 
@@ -320,7 +328,9 @@ void TextureMgr::loadBatch(Texture * pdst[], const std::string texnames[], size_
             pdst[tt.arrayidx] = tex;
         if(cb)
             cb(++doneCB, cbUD);
+        loaded += !!tex;
     }
+    return loaded;
 }
 
 Texture* TextureMgr::load(const std::string& texname, LoadMode mode)

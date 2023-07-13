@@ -242,6 +242,7 @@ public:
 	bool _hidden;
 	bool _fv, _fh;
 	bool _markedForDelete;
+	bool neverFollowCamera;
 
 	unsigned char pm;  // unsigned char to save space
 

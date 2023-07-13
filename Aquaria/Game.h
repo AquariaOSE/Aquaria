@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ScriptedEntity.h"
 #include "TileVector.h"
 #include "SceneEditor.h"
-#include "Tileset.h"
+#include "TileMgr.h"
 
 #include <tinyxml2.h>
 using namespace tinyxml2;
@@ -112,8 +112,6 @@ public:
 	int idx;
 };
 
-typedef std::vector<Element*> ElementUpdateList;
-
 struct EntitySaveData
 {
 public:
@@ -160,8 +158,6 @@ public:
 
 	// pass usedIdx == NULL to preload all textures from tileset
 	// pass usedIdx != NULL to preload only textures where usedIdx[i] != 0
-	bool loadElementTemplates(std::string pack, const unsigned char *usedIdx, size_t usedIdxLen);
-	Element* createElement(size_t etidx, Vector position, size_t bgLayer=0, RenderObject *copy=0, ElementTemplate *et=0);
 
 	void updateParticlePause();
 
@@ -184,10 +180,7 @@ public:
 	void handleShotCollisionsSkeletal(Entity *e);
 	void handleShotCollisionsHair(Entity *e, int num = 0, float perc = 0);
 
-	Tileset tileset;
 	std::string sceneName, sceneDisplayName;
-
-	ElementTemplate *getElementTemplateByIdx(size_t idx);
 
 	bool saveScene(std::string scene);
 
@@ -306,6 +299,7 @@ public:
 
 	ObsType lastCollideTileType;
 
+	void fillGrid(const GridFiller& gf);
 	void fillGridFromQuad(Quad *q, ObsType ot=OT_INVISIBLEIN, bool trim=true);
 
 	bool isDamageTypeAvatar(DamageType dt);
@@ -370,8 +364,6 @@ public:
 
 	void ensureLimit(Entity *e, int num, int state=0);
 
-	void rebuildElementUpdateList();
-
 	float getTimer(float mod=1);
 	float getHalfTimer(float mod=1);
 
@@ -389,8 +381,6 @@ public:
 	std::string saveMusic;
 	GridRender *gridRender, *gridRender2, *gridRender3, *edgeRender, *gridRenderEnt, *gridRenderUser1, *gridRenderUser2;
 	void toggleGridRender();
-	ElementUpdateList elementUpdateList;
-	ElementUpdateList elementInteractionList;
 
 	bool invinciblity;
 

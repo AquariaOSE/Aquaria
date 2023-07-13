@@ -46,9 +46,9 @@ public:
 	int width, height;
 
 	void writeRGBA(int tx, int ty, int w, int h, const unsigned char *pixels);
-	void readRGBA(unsigned char *pixels);
+	void readRGBA(unsigned char *pixels) const;
 
-	unsigned char *getBufferAndSize(int *w, int *h, size_t *size); // returned memory must be free()'d
+	unsigned char *getBufferAndSize(int *w, int *h, size_t *size) const; // returned memory must be free()'d
 
 	std::string name, filename;
 	bool upload(const ImageData& img, bool mipmap);

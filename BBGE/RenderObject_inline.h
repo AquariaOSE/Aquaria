@@ -41,6 +41,8 @@ Vector RenderObject::getFollowCameraPosition(const Vector& v) const
 {
 	assert(layer != LR_NONE);
 	assert(!parent); // this makes no sense when we're not a root object
+	if(neverFollowCamera)
+		return v;
 	const RenderObjectLayer &rl = core->renderObjectLayers[layer];
 	Vector M = rl.followCameraMult;
 	float F = followCamera;

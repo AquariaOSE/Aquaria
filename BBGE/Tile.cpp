@@ -2,9 +2,9 @@
 #include "RenderGrid.h"
 #include "Tileset.h"
 #include "Base.h"
+#include <algorithm>
 
-TileStorage::TileStorage(const TileEffectStorage& eff)
-	: effstore(eff)
+TileStorage::TileStorage()
 {
 }
 
@@ -13,16 +13,31 @@ TileStorage::~TileStorage()
 	destroyAll();
 }
 
-void TileStorage::moveToFront(size_t idx)
+TileStorage::Sizes TileStorage::stats() const
 {
-	_moveToFront(idx);
-	refreshAll();
+	Sizes sz;
+	sz.tiles = tiles.size();
+	sz.update = indicesToUpdate.size();
+	sz.collide = indicesToCollide.size();
+	return sz;
 }
 
-void TileStorage::moveToBack(size_t idx)
+void TileStorage::moveToFront(const size_t *indices, size_t n)
 {
-	_moveToBack(idx);
-	refreshAll();
+	if(n)
+	{
+		_moveToFront(indices, n);
+		refreshAll();
+	}
+}
+
+void TileStorage::moveToBack(const size_t *indices, size_t n)
+{
+	if(n)
+	{
+		_moveToBack(indices, n);
+		refreshAll();
+	}
 }
 
 void TileStorage::update(float dt)
@@ -44,24 +59,58 @@ void TileStorage::doInteraction(const Vector& pos, const Vector& vel, float mult
 	}
 }
 
-void TileStorage::_moveToFront(size_t idx)
+void TileStorage::_moveToFront(const size_t *indices, size_t n)
 {
 	// move tile to front -> move it to the back of the list, to be rendered last aka on top of everything else
-	TileData tile = tiles[idx];
-	tiles.erase(tiles.begin() + idx);
-	tiles.push_back(tile);
+
+	if(n == 1)
+	{
+		TileData tile = tiles[*indices];
+		tiles.erase(tiles.begin() + *indices);
+		tiles.push_back(tile);
+		return;
+	}
+
+	_moveToPos(size(), indices, n);
 }
 
-void TileStorage::_moveToBack(size_t idx)
+void TileStorage::_moveToBack(const size_t *indices, size_t n)
 {
 	// move tile to back -> move it to the front of the list, to be rendered first aka underneath everything else
-	TileData tile = tiles[idx];
-	tiles.erase(tiles.begin() + idx);
-	tiles.insert(tiles.begin(), tile);
+
+	if(n == 1)
+	{
+		TileData tile = tiles[*indices];
+		tiles.erase(tiles.begin() + *indices);
+		tiles.insert(tiles.begin(), tile);
+		return;
+	}
+
+	_moveToPos(0, indices, n);
 }
 
-void TileStorage::moveToOther(TileStorage& other, const size_t *indices, size_t n)
+void TileStorage::_moveToPos(size_t where, const size_t * indices, size_t n)
 {
+	std::vector<size_t> tmp(indices, indices + n);
+	std::sort(tmp.begin(), tmp.end());
+
+	std::vector<TileData> tt(n);
+
+	// sorted indices -> preserve relative order of tiles
+	for(size_t i = 0; i < n; ++i)
+		tt[i] = tiles[tmp[i]];
+
+	// SORTED indices, erasing from the BACK -> we don't get a destructive index shift
+	for(size_t i = tmp.size(); i --> 0; )
+		tiles.erase(tiles.begin() + tmp[i]);
+
+	tiles.insert(tiles.begin() + where, tt.begin(), tt.end());
+}
+
+size_t TileStorage::moveToOther(TileStorage& other, const size_t *indices, size_t n)
+{
+	const size_t firstNewIdx = other.tiles.size();
+
 	for(size_t i = 0; i < n; ++i)
 		other.tiles.push_back(tiles[indices[i]]);
 
@@ -81,6 +130,7 @@ void TileStorage::moveToOther(TileStorage& other, const size_t *indices, size_t 
 
 	refreshAll();
 	other.refreshAll();
+	return firstNewIdx;
 }
 
 static void dropAttachments(TileData& t)
@@ -133,11 +183,49 @@ void TileStorage::setTag(unsigned tag, const size_t* indices, size_t n)
 	// don't need to refresh here
 }
 
-void TileStorage::setEffect(int idx, const size_t* indices, size_t n)
+void TileStorage::setEffect(const TileEffectStorage& effstore, int idx, const size_t* indices, size_t n)
 {
 	for(size_t i = 0; i < n; ++i)
 		effstore.assignEffect(tiles[indices[i]], idx);
 	refreshAll();
+}
+
+void TileStorage::changeFlags(unsigned flagsToSet, unsigned flagsToUnset, const size_t* indices, size_t n)
+{
+	for(size_t i = 0; i < n; ++i)
+	{
+		unsigned& f = tiles[indices[i]].flags;
+		unsigned tmp = f & ~flagsToUnset;
+		f = tmp | flagsToSet;
+	}
+}
+
+size_t TileStorage::cloneSome(const TileEffectStorage& effstore, const size_t* indices, size_t n)
+{
+	const size_t ret = tiles.size(); // new starting index of clone tiles
+
+	// cloning tiles is very simple, but owned pointers will be duplicated and need to be fixed up
+	const size_t N = ret + n;
+	tiles.resize(N);
+	for(size_t i = 0; i < n; ++i)
+		tiles[ret + i] = tiles[indices[i]];
+
+	// cleanup pointers
+	for(size_t i = ret; i < N; ++i) // loop only over newly added tiles
+	{
+		TileData& t = tiles[i];
+		if((t.flags & TILEFLAG_OWN_EFFDATA) && t.eff)
+		{
+			int efx = t.eff->efxidx;
+			t.eff = NULL; // not our pointer, just pretend it was never there
+			t.flags &= TILEFLAG_OWN_EFFDATA;
+			effstore.assignEffect(t, efx); // recreate effect properly
+		}
+	}
+
+	refreshAll();
+
+	return ret;
 }
 
 void TileStorage::refreshAll()
@@ -149,13 +237,16 @@ void TileStorage::refreshAll()
 	for(size_t i = 0; i < n; ++i)
 	{
 		const TileData& t = tiles[i];
-		if(const TileEffectData *e = t.eff)
+		if(!(t.flags & TILEFLAG_HIDDEN))
 		{
-			if(t.flags & TILEFLAG_OWN_EFFDATA)
+			if(const TileEffectData *e = t.eff)
 			{
-				indicesToUpdate.push_back(i);
-				if(e->efxtype == EFX_WAVY)
-					indicesToCollide.push_back(i);
+				if(t.flags & TILEFLAG_OWN_EFFDATA)
+				{
+					indicesToUpdate.push_back(i);
+					if(e->efxtype == EFX_WAVY)
+						indicesToCollide.push_back(i);
+				}
 			}
 		}
 	}
@@ -170,10 +261,14 @@ void TileStorage::clearSelection()
 
 TileEffectData::TileEffectData(const TileEffectConfig& cfg)
 	: efxtype(cfg.type), efxidx(cfg.index)
-	, grid(NULL), blend(BLEND_DEFAULT)
+	, grid(NULL), alpha(1), blend(BLEND_DEFAULT)
 {
 	switch(cfg.type)
 	{
+		case EFX_NONE:
+			assert(false);
+			break;
+
 		case EFX_WAVY:
 		{
 			float bity = 20; // FIXME
@@ -184,7 +279,7 @@ TileEffectData::TileEffectData(const TileEffectConfig& cfg)
 
 			RenderGrid *g = new RenderGrid(2, cfg.u.wavy.segsy);
 			grid = g;
-			g->gridType = GRID_UNDEFINED; // by default it's GRID_WAVY, but that would reset during update
+			g->gridType = GRID_UNDEFINED; // we do the grid update manually
 
 			wavy.angleOffset = 0;
 			wavy.magnitude = 0;
@@ -328,6 +423,15 @@ void TileEffectData::doInteraction(const TileData& t, const Vector& pos, const V
 	}
 }
 
+TileEffectStorage::TileEffectStorage()
+{
+}
+
+TileEffectStorage::~TileEffectStorage()
+{
+	clear();
+}
+
 void TileEffectStorage::assignEffect(TileData& t, int index) const
 {
 	dropAttachments(t);
@@ -343,6 +447,9 @@ void TileEffectStorage::assignEffect(TileData& t, int index) const
 	}
 	else if(idx < configs.size())
 	{
+		if(configs[idx].type == EFX_NONE)
+			return;
+
 		t.eff = new TileEffectData(configs[idx]);
 		t.flags |= TILEFLAG_OWN_EFFDATA;
 	}
@@ -353,4 +460,50 @@ void TileEffectStorage::update(float dt)
 	for(size_t i = 0; i < prepared.size(); ++i)
 		if(TileEffectData *eff = prepared[i])
 			eff->update(dt, NULL);
+}
+
+void TileEffectStorage::clear()
+{
+	clearPrepared();
+	configs.clear();
+}
+
+void TileEffectStorage::clearPrepared()
+{
+	for(size_t i = 0; i < prepared.size(); ++i)
+		delete prepared[i];
+	prepared.clear();
+}
+
+
+void TileEffectStorage::finalize()
+{
+	clearPrepared();
+	prepared.resize(configs.size(), (TileEffectData*)NULL);
+
+	for(size_t i = 0; i < configs.size(); ++i)
+	{
+		TileEffectConfig& c = configs[i];
+
+		c.index = unsigned(i); // just in case
+
+		// segs and alpha are independent of the tile they are applied to,
+		// so we can create shared instances of the effect.
+		if(c.type == EFX_SEGS || c.type == EFX_ALPHA)
+			prepared[i] = new TileEffectData(c);
+	}
+}
+
+bool TileData::isCoordinateInside(float cx, float cy, float minsize) const
+{
+
+	float hw = fabsf(et->w * scalex)*0.5f;
+	float hh = fabsf(et->h * scaley)*0.5f;
+	if (hw < minsize)
+		hw = minsize;
+	if (hh < minsize)
+		hh = minsize;
+
+	return cx >= x - hw && cx <= x + hw
+		&& cy >= y - hh && cy <= y + hh;
 }

@@ -28,8 +28,13 @@ Further observations:
   And on map reload everything is back to the same value for each tile with the same effect and params.
   So we can totally exclude the editor.
 
+Assumptions:
+- Most tiles that exist are going to be rendered
+- Only few tiles have an effect attached
+
 Gotaches:
 - Keeping a pointer to a TileData is not safe.
+- Tile indexes are not stable. Moving a tile changes the index it can be addressed with
 */
 
 class ElementTemplate;
@@ -39,12 +44,13 @@ class TileRender;
 
 enum EFXType
 {
+	EFX_NONE,
 	EFX_SEGS,
 	EFX_ALPHA,
 	EFX_WAVY
 };
 
-// static configuration for one effect type
+// static configuration for one effect type. POD.
 struct TileEffectConfig
 {
 public:
@@ -85,9 +91,10 @@ enum TileFlags
 	TILEFLAG_SOLID_IN    = 0x08, // instead of OT_INVISIBLE, generate OT_INVISIBLEIN
 	TILEFLAG_HURT        = 0x10, // always generate OT_HURT
 	TILEFLAG_FH          = 0x20, // flipped horizontally
-	TILEFLAG_OWN_EFFDATA = 0x40, // tile owns its TileEffectData, can modify & must delete
+	TILEFLAG_OWN_EFFDATA = 0x40, // tile owns its TileEffectData, can update, must delete
 	TILEFLAG_HIDDEN      = 0x80, // don't render tile
-	TILEFLAG_SELECTED    = 0x100
+	TILEFLAG_SELECTED    = 0x100, // ephemeral: selected in editor
+	TILEFLAG_EDITOR_HIDDEN = 0x200  // tile is hidden for editor reasons. temporarily set when multi-selecting and moving. doesn't count as hidden externally and is only for rendering.
 };
 
 struct TileData;
@@ -100,7 +107,7 @@ struct TileEffectData
 	void doInteraction(const TileData& t, const Vector& pos, const Vector& vel, float mult, float touchWidth);
 
 	const EFXType efxtype;
-	const unsigned efxidx; // index to ElementEffect
+	const unsigned efxidx; // index of TileEffect
 	RenderGrid *grid;
 	InterpolatedVector alpha;
 	BlendType blend;
@@ -116,46 +123,70 @@ struct TileEffectData
 		void update(float dt);
 	};
 	Wavy wavy;
+
+private:
+	TileEffectData(const TileEffectData&); // no-copy
 };
 
-// POD and as compact as possible
+// POD and as compact as possible. Intended for rendering as quickly as possible.
 // the idea is that these are linearly adjacent in memory in the order they are rendered,
 // to maximize cache & prefetch efficiency
 struct TileData
 {
-	float x, y, rotation, texscale;
-	float scalex, scaley;
-	float beforeScaleOffsetX, beforeScaleOffsetY;
+	float x, y, scalex, scaley, texscaleX, texscaleY;
+	float beforeScaleOffsetX, beforeScaleOffsetY; // almost always 0. // TODO: this is nasty, ideally get rid of this
+	float rotation;
 	unsigned flags; // TileFlags
-	unsigned tag;
-	ElementTemplate *et; // texture, texcoords, etc is here
-	TileEffectData *eff;
+	unsigned tag; // FIXME: make this int
+	const ElementTemplate *et; // never NULL. texture, texcoords, etc is here. // TODO: maybe replace with unsigned tilesetID? but that's an extra indirection or two during rendering...
+	TileEffectData *eff; // mostly NULL
+
+	// helpers for external access
+	inline void setVisible(bool on) { if(on) flags &= ~TILEFLAG_HIDDEN; else flags |= TILEFLAG_HIDDEN; }
+	inline bool isVisible() const { return !(flags & TILEFLAG_HIDDEN); }
+	bool isCoordinateInside(float cx, float cy, float minsize = 0) const;
 };
 
 class TileEffectStorage
 {
 public:
+	TileEffectStorage();
+	~TileEffectStorage();
+	void finalize(); // first fill configs[], then call this
 	void assignEffect(TileData& t, int index) const;
 	void update(float dt);
+	void clear(); // do NOT call this while there are tiles that may reference one in prepared[]
 
-	std::vector<TileEffectData*> prepared;
 	std::vector<TileEffectConfig> configs;
+
+private:
+	void clearPrepared();
+	std::vector<TileEffectData*> prepared;
+
+	TileEffectStorage(const TileEffectStorage&); // no-copy
 };
 
 class TileStorage
 {
 	friend class TileRender;
 public:
-	TileStorage(const TileEffectStorage& eff);
+	TileStorage();
 	~TileStorage();
 
-	void moveToFront(size_t idx);
-	void moveToBack(size_t idx);
-	void moveToOther(TileStorage& other, const size_t *indices, size_t n);
+	void moveToFront(const size_t *indices, size_t n);
+	void moveToBack(const size_t *indices, size_t n);
+
+	// returns starting index of new tiles. Since new tiles are always appended at the end,
+	// the new indices corresponding to the moved tiles are [retn .. retn+n)
+	size_t moveToOther(TileStorage& other, const size_t *indices, size_t n);
+	size_t cloneSome(const TileEffectStorage& effstore, const size_t *indices, size_t n);
+
 	void deleteSome(const size_t *indices, size_t n);
 
 	void setTag(unsigned tag, const size_t *indices, size_t n);
-	void setEffect(int idx, const size_t *indices, size_t n);
+	void setEffect(const TileEffectStorage& effstore, int idx, const size_t *indices, size_t n);
+
+	void changeFlags(unsigned flagsToSet, unsigned flagsToUnset, const size_t *indices, size_t n);
 
 	void update(float dt);
 	void doInteraction(const Vector& pos, const Vector& vel, float mult, float touchWidth);
@@ -164,16 +195,27 @@ public:
 
 	void clearSelection();
 
+	struct Sizes
+	{
+		size_t tiles, update, collide;
+	};
+	Sizes stats() const;
+	size_t size() const { return tiles.size(); }
+
+
+	std::vector<TileData> tiles; // must call refreshAll() after changing this
+
 private:
 
-	std::vector<TileData> tiles;
 	std::vector<size_t> indicesToUpdate;
 	std::vector<size_t> indicesToCollide;
-	const TileEffectStorage& effstore;
 
 	void _refreshTile(const TileData& t);
-	void _moveToFront(size_t idx);
-	void _moveToBack(size_t idx);
+	void _moveToFront(const size_t *indices, size_t n);
+	void _moveToBack(const size_t *indices, size_t n);
+	void _moveToPos(size_t where, const size_t *indices, size_t n);
+
+	TileStorage(const TileStorage&); // no-copy
 };
 
 

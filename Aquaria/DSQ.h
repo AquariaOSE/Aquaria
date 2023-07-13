@@ -22,12 +22,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DSQ_H
 
 #include "AquariaCompileConfig.h"
-#include "../BBGE/Core.h"
-#include "../BBGE/Quad.h"
-#include "Element.h"
-#include "../BBGE/BitmapFont.h"
-#include "../BBGE/ScreenTransition.h"
-#include "../BBGE/Precacher.h"
+#include "Core.h"
+#include "Quad.h"
+#include "TileMgr.h"
+#include "BitmapFont.h"
+#include "ScreenTransition.h"
+#include "Precacher.h"
 #include "ScriptInterface.h"
 #include "GameEnums.h"
 #include "Mod.h"
@@ -186,21 +186,6 @@ public:
 
 	int getEntityLayerToLayer(int layer);
 
-	void addElement(Element *e);
-	size_t getNumElements() const {return elements.size();}
-	Element *getElement(size_t idx) const {return elements[idx];}
-	Element *getFirstElementOnLayer(size_t layer) const {return layer>15 ? 0 : firstElementOnLayer[layer];}
-	void clearElements();
-	// Used only by scene editor:
-	void removeElement(size_t idx);
-	void removeElement(Element *e);
-	ElementContainer getElementsCopy() const {return elements;}
-
-protected:  // These should never be accessed from outside (use the functions above).
-	ElementContainer elements;
-	Element *firstElementOnLayer[16];
-public:
-
 	void addEntity(Entity *entity);
 	void removeEntity(Entity *e);
 	void clearEntities();
@@ -267,10 +252,9 @@ public:
 	bool isDeveloperKeys() const;
 	bool canOpenEditor() const;
 
-	void loadElementEffects();
-	ElementEffect getElementEffectByIndex(size_t e);
-	typedef std::vector<ElementEffect> ElementEffects;
-	ElementEffects elementEffects;
+	void loadTileEffects();
+	bool loadTileset(std::string pack, const unsigned char *usedIdx, size_t usedIdxLen);
+	TileMgr tilemgr;
 
 	bool playedVoice(const std::string &file);
 

@@ -34,22 +34,6 @@ enum EFXType
 	EFX_MAX
 };
 
-enum ElementFlag
-{
-	EF_NONE			= 0,
-	EF_SOLID		= 1,
-	EF_MOVABLE		= 2,
-	EF_HURT			= 3,
-	EF_SOLID2		= 4,
-	EF_SOLID3		= 5,
-	EF_MAX			= 6
-	/*
-	EF_GLASS		= 0x00000020,
-	EF_FORCEBREAK	= 0x00000100,
-	EF_HURT			= 0x00000200
-	*/
-};
-
 struct ElementEffectData
 {
 	ElementEffectData();

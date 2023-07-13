@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/LensFlare.h"
 #include "../BBGE/RoundedRect.h"
 #include "../BBGE/SimpleIStringStream.h"
+#include "TileRender.h"
 
 #include "ttvfs_stdio.h"
 #include "ReadXML.h"
@@ -46,6 +47,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Ingredient.h"
 #include "Beam.h"
 #include "Hair.h"
+
 
 #ifdef BBGE_USE_GLM
 #include "glm/glm.hpp"
@@ -316,63 +318,6 @@ void Game::transitionToScene(std::string scene)
 	core->enqueueJumpState("Game", false);
 }
 
-ElementTemplate *Game::getElementTemplateByIdx(size_t idx)
-{
-	return tileset.getByIdx(idx);
-}
-
-Element* Game::createElement(size_t idx, Vector position, size_t bgLayer, RenderObject *copy, ElementTemplate *et)
-{
-	if (idx == -1) return 0;
-
-	if (!et)
-		et = this->getElementTemplateByIdx(idx);
-
-	Element *element = new Element();
-	if (et)
-	{
-		element->setTexturePointer(et->getTexture());
-	}
-
-	element->position = position;
-	element->position.z = -0.05f;
-	element->templateIdx = idx;
-
-	element->bgLayer = bgLayer;
-
-	if (et)
-	{
-		if (et->w != -1 && et->h != -1)
-			element->setWidthHeight(et->w, et->h);
-	}
-	if (et)
-	{
-		if (et->tu1 != 0 || et->tu2 != 0 || et->tv1 != 0 || et->tv2 != 0)
-		{
-			element->upperLeftTextureCoordinates = Vector(et->tu1, et->tv1);
-			element->lowerRightTextureCoordinates = Vector(et->tu2, et->tv2);
-		}
-	}
-	if (copy)
-	{
-		element->scale = copy->scale;
-		if (copy->isfh())
-			element->flipHorizontal();
-		if (copy->isfv())
-			element->flipVertical();
-		element->rotation = copy->rotation;
-		Quad *q = dynamic_cast<Quad*>(copy);
-		if (q)
-		{
-			element->repeatTextureToFill(q->isRepeatingTextureToFill());
-		}
-	}
-	addRenderObject(element, LR_ELEMENTS1+bgLayer);
-	dsq->addElement(element);
-
-	return element;
-}
-
 void Game::addObsRow(unsigned tx, unsigned ty, unsigned len)
 {
 	ObsRow obsRow(tx, ty, len);
@@ -386,12 +331,27 @@ void Game::clearObsRows()
 
 void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 {
-	if (q->texture)
+	GridFiller f;
+	f.obs = obsType;
+	f.trim = trim;
+	f.fh = q->isfh();
+	f.position = q->position;
+	f.rotation = q->rotation.z;
+	f.scale = q->scale;
+	f.texture = q->texture.content();
+	f.width = q->width;
+	f.height = q->height;
+	fillGrid(f);
+}
+
+void Game::fillGrid(const GridFiller& gf)
+{
+	if (gf.texture)
 	{
 		std::vector<TileVector> obs;
-		TileVector tpos(q->position);
-		int widthscale = q->getWidth()*q->scale.x;
-		int heightscale = q->getHeight()*q->scale.y;
+		TileVector tpos(gf.position);
+		int widthscale = int(gf.width*gf.scale.x);
+		int heightscale = int(gf.height*gf.scale.y);
 		int w2 = widthscale/2;
 		int h2 = heightscale/2;
 		w2/=TILE_SIZE;
@@ -401,15 +361,15 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 
 		int w = 0, h = 0;
 		size_t size = 0;
-		unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
+		unsigned char *data = gf.texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
 			debugLog("Failed to get buffer in Game::fillGridFromQuad()");
 			return;
 		}
 
-		int szx = TILE_SIZE/q->scale.x;
-		int szy = TILE_SIZE/q->scale.y;
+		int szx = TILE_SIZE/gf.scale.x;
+		int szy = TILE_SIZE/gf.scale.y;
 		if (szx < 1) szx = 1;
 		if (szy < 1) szy = 1;
 
@@ -424,8 +384,8 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 					{
 						// starting position =
 						// tx / scale.x
-						unsigned int px = int(tx/q->scale.x) + x;
-						unsigned int py = int(ty/q->scale.y) + y;
+						unsigned int px = int(tx/gf.scale.x) + x;
+						unsigned int py = int(ty/gf.scale.y) + y;
 						if (px < unsigned(w) && py < unsigned(h))
 						{
 							unsigned int p = (py*unsigned(w)*4) + (px*4) + 3; // position of alpha component
@@ -453,7 +413,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 
 		free(data);
 
-		if (trim)
+		if (gf.trim)
 		{
 			std::vector<TileVector> obsCopy;
 			obsCopy.swap(obs);
@@ -492,8 +452,8 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 		const float h2f = float(h2);
 		for (size_t i = 0; i < obs.size(); i++)
 		{
-			glm::mat4 transformMatrix = glm::rotate(q->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-			if(q->isfh())
+			glm::mat4 transformMatrix = glm::rotate(gf.rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+			if(gf.fh)
 				transformMatrix *= glm::rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
 			transformMatrix *= glm::translate(float(obs[i].x)-w2f, float(obs[i].y)-h2f, 0.0f);
@@ -502,7 +462,7 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 
 			TileVector tvec(tpos.x+w2+x, tpos.y+h2+y);
 			if (!isObstructed(tvec))
-				addGrid(tvec, obsType);
+				addGrid(tvec, gf.obs);
 		}
 #else
 		glPushMatrix();
@@ -511,8 +471,8 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 		{
 			glLoadIdentity();
 
-			glRotatef(q->rotation.z, 0, 0, 1);
-			if (q->isfh())
+			glRotatef(gf.rotation, 0, 0, 1);
+			if (gf.fh)
 			{
 				glRotatef(180, 0, 1, 0);
 			}
@@ -585,16 +545,21 @@ void Game::reconstructGrid(bool force)
 	if (!force && isSceneEditorActive()) return;
 
 	clearGrid();
-	for (size_t i = 0; i < dsq->getNumElements(); i++)
+	std::vector<GridFiller> fillers;
+	dsq->tilemgr.exportGridFillers(fillers);
+
+	std::ostringstream os;
+	os << "ReconstructGrid using " << fillers.size() << " tiles";
+	debugLog(os.str());
+
+	for (size_t i = 0; i < fillers.size(); i++)
 	{
-		Element *e = dsq->getElement(i);
-		e->fillGrid();
+		fillGrid(fillers[i]);
 	}
 
-	ObsRow *o;
 	for (size_t i = 0; i < obsRows.size(); i++)
 	{
-		o = &obsRows[i];
+		const ObsRow *o = &obsRows[i];
 		for (unsigned tx = 0; tx < o->len; tx++)
 		{
 			setGrid(TileVector(o->tx + tx, o->ty), OT_BLACK);
@@ -1612,109 +1577,107 @@ bool Game::loadSceneXML(std::string scene)
 		saveFile->InsertEndChild(newSF);
 	}
 
-	struct ElementDef
-	{
-		ElementDef(int lr)
-			: layer(lr), idx(0), x(0), y(0), rot(0), fh(0), fv(0), flags(0), efxIdx(-1), repeat(0)
-			, tag(0), sx(1), sy(1), rsx(1), rsy(1)
-		{}
 
-		int layer, idx, x, y, rot, fh, fv, flags, efxIdx, repeat, tag;
-		float sx, sy, rsx, rsy;
-	};
-	std::vector<ElementDef> elemsDefs;
-	elemsDefs.reserve(256);
+	std::vector<TileDef> tilesDefs;
+	tilesDefs.reserve(256);
 
 	XMLElement *simpleElements = doc.FirstChildElement("SE");
 	while (simpleElements)
 	{
-		const size_t defsBeginIdx = elemsDefs.size();
-		const int layer = atoi(simpleElements->Attribute("l"));
+		const size_t defsBeginIdx = tilesDefs.size();
 
 		if (const char *attr = simpleElements->Attribute("d"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(4); // legacy crap
+			TileDef d(4); // legacy crap
 			while (is >> d.idx)
 			{
 				is >> d.x >> d.y >> d.rot;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
+
+		const int layer = atoi(simpleElements->Attribute("l"));
+		if(layer < 0 || layer >= MAX_TILE_LAYERS)
+		{
+			errorLog("Save file specifies invalid layer in SE tag, ignoring (if you save the map now, you may lose data!)");
+			goto next_SE;
+		}
+
 		if (const char *attr = simpleElements->Attribute("e"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
 				is >> d.x >> d.y >> d.rot;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("f"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
 				is >> d.x >> d.y >> d.rot >> d.sx;
 				d.sy = d.sx;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("g"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
 				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv;
 				d.sy = d.sx;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("h"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
-				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.flags;
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.ef;
 				d.sy = d.sx;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("i"))
 		{
 
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
-				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.flags >> d.efxIdx;
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.ef >> d.efxIdx;
 				d.sy = d.sx;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("j"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
-				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.flags >> d.efxIdx >> d.repeat;
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.ef >> d.efxIdx >> d.repeat;
 				d.sy = d.sx;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("k"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
-				is >> d.x >> d.y >> d.rot >> d.sx >> d.sy >> d.fh >> d.fv >> d.flags >> d.efxIdx >> d.repeat;
-				elemsDefs.push_back(d);
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.sy >> d.fh >> d.fv >> d.ef >> d.efxIdx >> d.repeat;
+				tilesDefs.push_back(d);
 			}
 		}
 
@@ -1723,9 +1686,9 @@ bool Game::loadSceneXML(std::string scene)
 		if (const char *attr = simpleElements->Attribute("repeatScale"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			for(size_t i = defsBeginIdx; i < elemsDefs.size(); ++i)
+			for(size_t i = defsBeginIdx; i < tilesDefs.size(); ++i)
 			{
-				ElementDef& d = elemsDefs[i];
+				TileDef& d = tilesDefs[i];
 				if(d.repeat)
 				{
 					if(!(is >> d.rsx >> d.rsy))
@@ -1736,76 +1699,64 @@ bool Game::loadSceneXML(std::string scene)
 		if (const char *attr = simpleElements->Attribute("tag"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			for(size_t i = defsBeginIdx; i < elemsDefs.size(); ++i)
+			for(size_t i = defsBeginIdx; i < tilesDefs.size(); ++i)
 			{
-				ElementDef& d = elemsDefs[i];
+				TileDef& d = tilesDefs[i];
 				if(!(is >> d.tag))
 					break;
 			}
 		}
+
+next_SE:
 		simpleElements = simpleElements->NextSiblingElement("SE");
 	}
+
+	dsq->tilemgr.clearTiles();
 
 	if(fullTilesetReload)
 	{
 		fullTilesetReload = false;
-		tileset.clear();
+		dsq->tilemgr.tileset.clear();
 		// used by SceneEditor
-		// no elements exist right now -> textures will be cleared and reloaded
+		// no tiles exist right now -> textures will be cleared and reloaded
 		dsq->texmgr.clearUnused();
 	}
 
 	// figure out which textures in the tileset are used and preload those that are actually used
 	{
 		std::ostringstream os;
-		os << "Scene has " << elemsDefs.size() << " elements";
+		os << "Scene has " << tilesDefs.size() << " static tiles";
 		debugLog(os.str());
 
 		unsigned char usedIdx[1024] = {0};
-		for(size_t i = 0; i < elemsDefs.size(); ++i)
+		for(size_t i = 0; i < tilesDefs.size(); ++i)
 		{
-			unsigned idx = elemsDefs[i].idx;
+			TileDef& d = tilesDefs[i];
+			unsigned idx = d.idx;
 			if(idx < Countof(usedIdx))
 				usedIdx[idx] = 1;
+
+
+			// HACK: due to a renderer bug in old versions, we need to fix the rotation
+			// for horizontally flipped tiles on parallax layers to make maps look correct.
+			// See commit 4b52730be253dbfce9bea6f604c772a87da104e3
+			// bgLayer IDs (which are NOT LR_* constants):
+			// 0..8 are normal layers (keys 1-9)
+			// 9,10,11; 13,14,15 are parallax ones, 15 is closest, 9 is furthest away
+			// 12 is the dark layer
+			if(d.fh && d.layer >= 9 && d.layer <= 15 && d.layer != 12
+				&& dsq->renderObjectLayers[LR_ELEMENTS1 + d.layer].followCamera != 0)
+			{
+				d.rot = -d.rot;
+			}
 		}
 
-		loadElementTemplates(tilesetToLoad, &usedIdx[0], Countof(usedIdx));
+		dsq->loadTileset(tilesetToLoad, &usedIdx[0], Countof(usedIdx));
 	}
 
 	// Now that all SE tags have been processed, spawn them
-	for(size_t i = 0; i < elemsDefs.size(); ++i)
-	{
-		const ElementDef& d = elemsDefs[i];
-
-		Element *e = createElement(d.idx, Vector(d.x,d.y), d.layer);
-		e->elementFlag = (ElementFlag)d.flags;
-		if (d.fh)
-			e->flipHorizontal();
-		if (d.fv)
-			e->flipVertical();
-
-		e->scale = Vector(d.sx, d.sy);
-		e->rotation.z = d.rot;
-		e->repeatToFillScale.x = d.rsx;
-		e->repeatToFillScale.y = d.rsy;
-		e->setElementEffectByIndex(d.efxIdx);
-		if (d.repeat)
-			e->repeatTextureToFill(true); // also applies repeatToFillScale
-		e->setTag(d.tag);
-
-		// HACK: due to a renderer bug in old versions, we need to fix the rotation
-		// for horizontally flipped tiles on parallax layers to make maps look correct.
-		// See commit 4b52730be253dbfce9bea6f604c772a87da104e3
-		// bgLayer IDs (which are NOT LR_* constants):
-		// 0..8 are normal layers (keys 1-9)
-		// 9,10,11; 13,14,15 are parallax ones, 15 is closest, 9 is furthest away
-		// 12 is the dark layer
-		if(d.fh && d.layer >= 9 && d.layer <= 15 && d.layer != 12
-			&& dsq->renderObjectLayers[e->layer].followCamera != 0)
-		{
-			e->rotation.z = -e->rotation.z;
-		}
-	}
+	if(!tilesDefs.empty())
+		dsq->tilemgr.createTiles(&tilesDefs[0], tilesDefs.size());
 
 	this->reconstructGrid(true);
 
@@ -1835,7 +1786,6 @@ bool Game::loadSceneXML(std::string scene)
 		spawnEntities(&toSpawn[0], toSpawn.size());
 
 	this->reconstructGrid(true);
-	rebuildElementUpdateList();
 
 	findMaxCameraValues();
 
@@ -2058,49 +2008,71 @@ bool Game::saveScene(std::string scene)
 		saveFile.InsertEndChild(pathXml);
 	}
 
-	std::ostringstream simpleElements[LR_MAX];
-	std::ostringstream simpleElements_repeatScale[LR_MAX];
-	std::ostringstream simpleElements_tag[LR_MAX];
-	unsigned tagBitsUsed[LR_MAX] = { 0 };
-
-	for (size_t i = 0; i < dsq->getNumElements(); i++)
+	for(size_t lr = 0; lr < MAX_TILE_LAYERS; ++lr)
 	{
-		Element *e = dsq->getElement(i);
+		const TileStorage& ts = dsq->tilemgr.tilestore[lr];
+		std::ostringstream simpleElements;
+		std::ostringstream simpleElements_repeatScale;
+		std::ostringstream simpleElements_tag;
+		unsigned tagBitsUsed = 0;
 
-		float rot = e->rotation.z;
+		const size_t N = ts.tiles.size();
+		const bool isParallax = lr >= 9 && lr <= 15 && lr != 12
+			&& dsq->renderObjectLayers[LR_ELEMENTS1 + lr].followCamera != 0;
 
-		// HACK: Intentionally store the wrong rotation for parallax layers,
-		// to make loading a scene and the same hack there result in the correct value.
-		// This is to ensure compatibility with older game versions that have the renderer bug.
-		// See commit 4b52730be253dbfce9bea6f604c772a87da104e3
-		if(e->isfh() && e->bgLayer >= 9 && e->bgLayer <= 15 && e->bgLayer != 12
-			&& dsq->renderObjectLayers[e->layer].followCamera != 0)
+		for (size_t i = 0; i < N; i++)
 		{
-			rot = -rot;
+			TileDef d(lr, ts.tiles[i]);
+
+			// HACK: Intentionally store the wrong rotation for parallax layers,
+			// to make loading a scene and the same hack there result in the correct value.
+			// This is to ensure compatibility with older game versions that have the renderer bug.
+			// See commit 4b52730be253dbfce9bea6f604c772a87da104e3
+			if(isParallax && d.fh)
+				d.rot = -d.rot;
+
+			simpleElements
+				<< d.idx << " "
+				<< int(d.x) << " "
+				<< int(d.y) << " "
+				<< int(d.rot) << " "
+				<< d.sx << " "
+				<< d.sy << " "
+				<< int(d.fh) << " "
+				<< int(d.fv) << " "
+				<< d.ef << " "
+				<< d.efxIdx << " "
+				<< d.repeat << " ";
+
+			if(d.repeat)
+			{
+				simpleElements_repeatScale
+					<< d.rsx << " "
+					<< d.rsy << " ";
+			}
+
+			simpleElements_tag << d.tag << " ";
+			tagBitsUsed |= d.tag;
 		}
 
-		std::ostringstream& SE = simpleElements[e->bgLayer];
-		SE << e->templateIdx << " "
-		   << int(e->position.x) << " "
-		   << int(e->position.y) << " "
-		   << int(rot) << " "
-		   << e->scale.x << " "
-		   << e->scale.y << " "
-		   << int(e->isfh()) << " "
-		   << int(e->isfv()) << " "
-		   << e->elementFlag << " "
-		   << e->getElementEffectIndex()<< " "
-		   << e->isRepeatingTextureToFill() << " ";
-
-		if(e->isRepeatingTextureToFill())
+		std::string s = simpleElements.str();
+		if (!s.empty())
 		{
-			std::ostringstream& SE_rs = simpleElements_repeatScale[e->bgLayer];
-			SE_rs << e->repeatToFillScale.x << " "
-			      << e->repeatToFillScale.y << " ";
-		}
+			XMLElement *simpleElementsXML = saveFile.NewElement("SE");
+			simpleElementsXML->SetAttribute("k", s.c_str());
+			simpleElementsXML->SetAttribute("l", (unsigned)lr);
+			std::string str = simpleElements_repeatScale.str();
+			if(!str.empty())
+				simpleElementsXML->SetAttribute("repeatScale", str.c_str());
+			if(tagBitsUsed) // skip writing tags on layers where it's all zero (mainly to avoid putting a long string of 0's for border elements)
+			{
+				str = simpleElements_tag.str();
+				if(!str.empty())
+					simpleElementsXML->SetAttribute("tag", str.c_str());
+			}
 
-		simpleElements_tag[e->bgLayer] << e->tag << " ";
-		tagBitsUsed[e->bgLayer] |= e->tag;
+			saveFile.InsertEndChild(simpleElementsXML);
+		}
 	}
 
 	if (entitySaveData.size() > 0)
@@ -2125,28 +2097,6 @@ bool Game::saveScene(std::string scene)
 		}
 		entitiesNode->SetAttribute("j", os.str().c_str());
 		saveFile.InsertEndChild(entitiesNode);
-	}
-
-	for (int i = 0; i < LR_MAX; i++)
-	{
-		std::string s = simpleElements[i].str();
-		if (!s.empty())
-		{
-			XMLElement *simpleElementsXML = saveFile.NewElement("SE");
-			simpleElementsXML->SetAttribute("k", s.c_str());
-			simpleElementsXML->SetAttribute("l", i);
-			std::string str = simpleElements_repeatScale[i].str();
-			if(!str.empty())
-				simpleElementsXML->SetAttribute("repeatScale", str.c_str());
-			if(tagBitsUsed[i]) // skip writing tags on layers where it's all zero (mainly to avoid putting a long string of 0's for border elements)
-			{
-				str = simpleElements_tag[i].str();
-				if(!str.empty())
-					simpleElementsXML->SetAttribute("tag", str.c_str());
-			}
-
-			saveFile.InsertEndChild(simpleElementsXML);
-		}
 	}
 
 	bool result =  saveFile.SaveFile(fn.c_str()) == XML_SUCCESS;
@@ -2389,25 +2339,6 @@ int game_collideParticle(Vector pos)
 	return game->isObstructed(t);
 }
 
-void Game::rebuildElementUpdateList()
-{
-	for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
-		dsq->getRenderObjectLayer(i)->update = false;
-
-	elementUpdateList.clear();
-	elementInteractionList.clear();
-	for (size_t i = 0; i < dsq->getNumElements(); i++)
-	{
-		Element *e = dsq->getElement(i);
-		const int eeidx = e->getElementEffectIndex();
-		if (eeidx != -1 && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
-			elementUpdateList.push_back(e);
-		ElementEffect ee = dsq->getElementEffectByIndex(eeidx);
-		if(ee.type == EFX_WAVY)
-			elementInteractionList.push_back(e);
-	}
-}
-
 float Game::getTimer(float mod)
 {
 	return timer*mod;
@@ -2556,6 +2487,11 @@ void Game::applyState()
 	dsq->overlay->alpha = 1;
 	dsq->overlay->color = 0;
 
+	for (unsigned i = 0; i < MAX_TILE_LAYERS; ++i)
+	{
+		TileRender *tr = new TileRender(dsq->tilemgr.tilestore[i]);
+		addRenderObject(tr, LR_ELEMENTS1 + i);
+	}
 
 	for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS12; i++) // LR_ELEMENTS13 is darkness, stop before that
 	{
@@ -2607,7 +2543,7 @@ void Game::applyState()
 	StateObject::applyState();
 
 	dsq->clearEntities();
-	dsq->clearElements();
+	dsq->tilemgr.clearTiles();
 
 	damageSprite = new Quad;
 	{
@@ -4422,12 +4358,6 @@ void Game::update(float dt)
 	StateObject::update(dt);
 
 
-	for (ElementUpdateList::iterator e = elementUpdateList.begin(); e != elementUpdateList.end(); e++)
-	{
-		(*e)->update(dt);
-	}
-
-
 	size_t i = 0;
 	for (i = 0; i < getNumPaths(); i++)
 	{
@@ -4669,57 +4599,6 @@ void Game::snapCam()
 		warpCameraTo(*cameraFollow);
 }
 
-bool Game::loadElementTemplates(std::string pack, const unsigned char *usedIdx, size_t usedIdxLen)
-{
-	stringToLower(pack);
-
-	std::string fn;
-	if (dsq->mod.isActive())
-		fn = dsq->mod.getPath() + "tilesets/" + pack + ".txt";
-	else
-		fn = "data/tilesets/" + pack + ".txt";
-
-	if(!tileset.loadFile(fn.c_str(), usedIdx, usedIdxLen))
-	{
-		errorLog ("Could not load tileset [" + fn + "]");
-		return false;
-	}
-
-	// Aquarian alphabet letters
-	if(const CountedPtr<Texture> aqtex = dsq->getTexture("aquarian"))
-	{
-		const float cell = 64.0f/512.0f;
-		for (int i = 0; i < 27; i++)
-		{
-			ElementTemplate t;
-			t.idx = 1024+i;
-			t.tex = aqtex;
-			int x = i,y=0;
-			while (x >= 6)
-			{
-				x -= 6;
-				y++;
-			}
-
-			t.tu1 = x*cell;
-			t.tv1 = y*cell;
-			t.tu2 = t.tu1 + cell;
-			t.tv2 = t.tv1 + cell;
-
-			t.tv2 = 1 - t.tv2;
-			t.tv1 = 1 - t.tv1;
-			std::swap(t.tv1,t.tv2);
-
-			t.w = 512*cell;
-			t.h = 512*cell;
-
-			tileset.elementTemplates.push_back(t);
-		}
-	}
-
-	return true;
-}
-
 void Game::clearGrid(int v)
 {
 	// ensure that grid is really a byte-array
@@ -4789,9 +4668,6 @@ void Game::removeState()
 
 	core->particlesPaused = false;
 
-	elementUpdateList.clear();
-	elementInteractionList.clear();
-
 	dsq->setCursor(CURSOR_NORMAL);
 	dsq->darkLayer.toggle(0);
 	dsq->shakeCamera(0,0);
@@ -4824,7 +4700,7 @@ void Game::removeState()
 	clearPaths();
 
 	StateObject::removeState();
-	dsq->clearElements();
+	dsq->tilemgr.clearTiles();
 	dsq->clearEntities();
 	avatar = 0;
 	sceneEditor.shutdown();

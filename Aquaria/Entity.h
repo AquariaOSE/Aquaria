@@ -117,9 +117,9 @@ public:
 	virtual void lightFlare(){}
 	virtual void sporesDropped(const Vector &pos, int type) {}
 
-	bool isPullable();
+	bool isPullable() const;
 
-	bool isInDarkness();
+	bool isInDarkness() const;
 
 	bool isPresent() const
 	{
@@ -224,7 +224,7 @@ public:
 	float damageTime;
 
 	void setEntityProperty(EntityProperty ep, bool value=true);
-	bool isEntityProperty(EntityProperty ep);
+	bool isEntityProperty(EntityProperty ep) const;
 	virtual void song(SongType songType){}
 	bool updateCurrents(float dt);
 	void updateVel2(float dt, bool override=false);

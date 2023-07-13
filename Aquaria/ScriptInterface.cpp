@@ -5908,11 +5908,7 @@ luaFunc(entity_doElementInteraction)
 		if (!touchWidth)
 			touchWidth = 16;
 
-		ElementUpdateList& elems = game->elementInteractionList;
-		for (ElementUpdateList::iterator it = elems.begin(); it != elems.end(); ++it)
-		{
-			(*it)->doInteraction(e, mult, touchWidth);
-		}
+		dsq->tilemgr.doTileInteraction(e->position, e->vel, mult, touchWidth);
 	}
 	luaReturnNil();
 }
@@ -7640,44 +7636,59 @@ luaFunc(node_setElementsInLayerActive)
 	Path *p = path(L);
 	if (p)
 	{
-		int l = lua_tointeger(L, 2);
+		unsigned l = lua_tointeger(L, 2);
 		bool v = getBool(L, 3);
 		int tag = lua_tointeger(L, 3);
-		for (Element *e = dsq->getFirstElementOnLayer(l); e; e = e->bgLayerNext)
+
+		if(l < MAX_TILE_LAYERS)
 		{
-			if (e && (!tag || e->tag == tag) && p->isCoordinateInside(e->position))
+			TileStorage& ts = dsq->tilemgr.tilestore[l];
+			const size_t N = ts.tiles.size();
+			for(size_t i = 0; i < N; ++i)
 			{
-				e->setElementActive(v);
+				TileData& t = ts.tiles[i];
+				if((!tag || t.tag == tag) && p->isCoordinateInside(Vector(t.x, t.y)))
+					t.setVisible(v);
 			}
+			ts.refreshAll();
 		}
 	}
 	luaReturnNil();
 }
 
-static int pushElementData(lua_State *L, const Element *e)
+static int pushTileData(lua_State *L, const TileData& t, unsigned layer)
 {
-	lua_pushinteger(L, e->templateIdx);
-	lua_pushstring(L, e->texture->name.c_str());
-	lua_pushboolean(L, e->isElementActive());
-	lua_pushinteger(L, e->bgLayer);
-	lua_pushinteger(L, e->tag);
+	lua_pushinteger(L, t.et->idx);
+	lua_pushstring(L, t.et->tex->name.c_str());
+	lua_pushboolean(L, t.isVisible());
+	lua_pushinteger(L, layer);
+	lua_pushinteger(L, t.tag);
 	return 5;
 }
 
 // (layer, func)
 luaFunc(refreshElementsOnLayerCallback)
 {
-	const int layer = lua_tointeger(L, 1);
+	const unsigned layer = lua_tointeger(L, 1);
 	size_t done = 0;
-	for (Element *e = dsq->getFirstElementOnLayer(layer); e; e = e->bgLayerNext)
+
+	if(layer < MAX_TILE_LAYERS)
 	{
-		lua_pushvalue(L, 2); // the callback
-		int args = pushElementData(L, e);
-		lua_call(L, args, 1);
-		bool newon = lua_toboolean(L, -1);
-		lua_pop(L, 1);
-		e->setElementActive(newon);
-		++done;
+		TileStorage& ts = dsq->tilemgr.tilestore[layer];
+		const size_t N = ts.tiles.size();
+		for(size_t i = 0; i < N; ++i)
+		{
+			lua_pushvalue(L, 2); // the callback
+			TileData& t = ts.tiles[i];
+			int args = pushTileData(L, t, layer);
+			lua_call(L, args, 1);
+			bool newon = lua_toboolean(L, -1);
+			lua_pop(L, 1);
+			t.setVisible(newon);
+			++done;
+		}
+		if(done)
+			ts.refreshAll();
 	}
 	luaReturnInt(done);
 }
@@ -7686,23 +7697,31 @@ luaFunc(refreshElementsOnLayerCallback)
 luaFunc(refreshElementsWithTagCallback)
 {
 	const int tag = lua_tointeger(L, 1);
-	const size_t N = dsq->getNumElements();
-	size_t done = 0;
-	for(size_t i = 0; i < N; ++i)
+	size_t total = 0;
+	for(unsigned layer = 0; layer < MAX_TILE_LAYERS; ++layer)
 	{
-		Element *e = dsq->getElement(i);
-		if(e->tag == tag)
+		TileStorage& ts = dsq->tilemgr.tilestore[layer];
+		const size_t N = ts.tiles.size();
+		size_t done = 0;
+		for(size_t i = 0; i < N; ++i)
 		{
-			lua_pushvalue(L, 2); // the callback
-			int args = pushElementData(L, e);
-			lua_call(L, args, 1);
-			bool newon = lua_toboolean(L, -1);
-			lua_pop(L, 1);
-			e->setElementActive(newon);
-			++done;
+			TileData& t = ts.tiles[i];
+			if(t.tag == tag)
+			{
+				lua_pushvalue(L, 2); // the callback
+				int args = pushTileData(L, t, layer);
+				lua_call(L, args, 1);
+				bool newon = lua_toboolean(L, -1);
+				lua_pop(L, 1);
+				t.setVisible(newon);
+				++done;
+			}
 		}
+		if(done)
+			ts.refreshAll();
+		total += done;
 	}
-	luaReturnInt(done);
+	luaReturnInt(total);
 }
 
 

@@ -209,9 +209,6 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	avgFPS.resize(user.video.fpsSmoothing);
 
 	cursor = cursorGlow = 0;
-
-	for (int i = 0; i < 16; i++)
-		firstElementOnLayer[i] = 0;
 }
 
 DSQ::~DSQ()
@@ -265,82 +262,6 @@ void DSQ::newGame()
 {
 	game->resetFromTitle();
 	game->transitionToScene("NaijaCave");
-}
-
-void DSQ::loadElementEffects()
-{
-	bool found = false;
-	std::string fn;
-	if (mod.isActive())
-	{
-		fn = mod.getPath() + "elementeffects.txt";
-		if(exists(fn))
-			found = true;
-	}
-	if(!found)
-		fn = "data/elementeffects.txt";
-
-	InStream inFile(fn.c_str());
-	elementEffects.clear();
-	std::string line;
-	while (std::getline(inFile, line))
-	{
-		debugLog("Line: " + line);
-		std::istringstream is(line);
-		ElementEffect e;
-		int efxType = EFX_NONE;
-		int idx;
-		std::string type;
-		is >> idx >> type;
-		if (type == "EFX_SEGS")
-		{
-			efxType = EFX_SEGS;
-			is >> e.segsx >> e.segsy >> e.segs_dgox >> e.segs_dgoy >> e.segs_dgmx >> e.segs_dgmy >> e.segs_dgtm >> e.segs_dgo;
-		}
-		else if (type == "EFX_WAVY")
-		{
-			debugLog("loading wavy");
-			efxType = EFX_WAVY;
-			is >> e.segsy >> e.wavy_radius >> e.wavy_flip;
-
-		}
-		else if (type == "EFX_ALPHA")
-		{
-			efxType = EFX_ALPHA;
-			float to_x, time, loop, pingPong, ease;
-			int blend;
-			is >> blend >> e.alpha.x >> to_x >> time >> loop >> pingPong >> ease;
-			e.alpha.interpolateTo(to_x, time, loop, pingPong, ease);
-			e.blendType = blend < _BLEND_MAXSIZE ? (BlendType)blend : BLEND_DISABLED;
-		}
-		e.type = efxType;
-		elementEffects.push_back(e);
-	}
-	inFile.close();
-}
-
-ElementEffect DSQ::getElementEffectByIndex(size_t e)
-{
-	if (e < elementEffects.size())
-	{
-		return elementEffects[e];
-	}
-
-	ElementEffect empty;
-	empty.type = EFX_NONE;
-	empty.alpha = 0;
-	empty.blendType = BLEND_DEFAULT;
-	empty.color = 0;
-	empty.segsx = empty.segsy = 0;
-	empty.segs_dgmx = empty.segs_dgmy = 0;
-	empty.segs_dgo = 0;
-	empty.segs_dgox = empty.segs_dgoy = 0;
-	empty.segs_dgtm = 0;
-	empty.wavy_flip = false;
-	empty.wavy_max = empty.wavy_min = 0;
-	empty.wavy_radius = 0;
-
-	return empty;
 }
 
 void DSQ::centerMessage(const std::string &text, float y, int type)
@@ -773,7 +694,7 @@ void DSQ::init()
 	PSIZEOF(RenderObject);
 	PSIZEOF(Quad);
 	PSIZEOF(CollideQuad);
-	PSIZEOF(Element);
+	PSIZEOF(TileData);
 	PSIZEOF(Shot);
 	PSIZEOF(Bone);
 	PSIZEOF(PauseQuad);
@@ -3553,6 +3474,74 @@ bool DSQ::canOpenEditor() const
 	return isDeveloperKeys() || (mod.isActive() && !mod.isEditorBlocked());
 }
 
+void DSQ::loadTileEffects()
+{
+	bool found = false;
+	std::string fn;
+	if (mod.isActive())
+	{
+		fn = mod.getPath() + "elementeffects.txt";
+		if(exists(fn))
+			found = true;
+	}
+	if(!found)
+		fn = "data/elementeffects.txt";
+
+	return tilemgr.loadTileEffects(fn.c_str());
+}
+
+bool DSQ::loadTileset(std::string pack, const unsigned char *usedIdx, size_t usedIdxLen)
+{
+	stringToLower(pack);
+
+	std::string fn;
+	if (mod.isActive())
+		fn = mod.getPath() + "tilesets/" + pack + ".txt";
+	else
+		fn = "data/tilesets/" + pack + ".txt";
+
+	if(!tilemgr.tileset.loadFile(fn.c_str(), usedIdx, usedIdxLen))
+	{
+		errorLog ("Could not load tileset [" + fn + "]");
+		return false;
+	}
+
+	// Aquarian alphabet letters
+	if(const CountedPtr<Texture> aqtex = getTexture("aquarian"))
+	{
+		const float cell = 64.0f/512.0f;
+		for (int i = 0; i < 27; i++)
+		{
+			ElementTemplate t;
+			t.idx = 1024+i;
+			t.tex = aqtex;
+			t.loaded = true;
+			int x = i,y=0;
+			while (x >= 6)
+			{
+				x -= 6;
+				y++;
+			}
+
+			t.tu1 = x*cell;
+			t.tv1 = y*cell;
+			t.tu2 = t.tu1 + cell;
+			t.tv2 = t.tv1 + cell;
+
+			t.tv2 = 1 - t.tv2;
+			t.tv1 = 1 - t.tv1;
+			std::swap(t.tv1,t.tv2);
+
+			t.w = 512*cell;
+			t.h = 512*cell;
+
+			tilemgr.tileset.elementTemplates.push_back(t);
+		}
+	}
+
+	return true;
+}
+
 bool DSQ::isQuitFlag()
 {
 	return watchQuitFlag;
@@ -3751,6 +3740,8 @@ void DSQ::onUpdate(float dt)
 	// This queries pressed keys and updates ActionMapper
 	Core::onUpdate(dt);
 
+	tilemgr.update(dt);
+
 
 	mod.update(dt);
 
@@ -3912,7 +3903,8 @@ void DSQ::onUpdate(float dt)
 		os << sound->getVolumeString() << std::endl;
 		os << "runInBG: " << settings.runInBackground << " nested: " << getNestedMains() << std::endl;
 		os << globalResolutionScale.x << ", " << globalResolutionScale.y << std::endl;
-		os << "elemu: " << game->elementUpdateList.size() << " elemi: " << game->elementInteractionList.size() << std::endl;
+		TileStorage::Sizes tsz = tilemgr.getStats();
+		os << "Tiles: " << tsz.tiles << ", u: " << tsz.update << ", i: " << tsz.collide << std::endl;
 		os << "Lua mem: " << scriptInterface.gcGetStats() << " KB" << std::endl;
 
 		cmDebug->position = Vector(20 - virtualOffX,50);
@@ -4093,20 +4085,6 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 	}
 }
 
-void DSQ::addElement(Element *e)
-{
-	elements.push_back(e);
-	if (e->bgLayer >= 0 && e->bgLayer < 16)
-	{
-		e->bgLayerNext = firstElementOnLayer[e->bgLayer];
-		firstElementOnLayer[e->bgLayer] = e;
-	}
-	else
-	{
-		e->bgLayerNext = 0;
-	}
-}
-
 void DSQ::modifyDt(float &dt)
 {
 	if (isDeveloperKeys())
@@ -4148,46 +4126,6 @@ void DSQ::modifyDt(float &dt)
 	gameSpeed.update(dt);
 	dt *= gameSpeed.x;
 }
-
-void DSQ::removeElement(Element *element)
-{
-	for (size_t i = 0; i < elements.size(); i++)
-	{
-		if (elements[i] == element)
-		{
-			removeElement(i);
-			break;
-		}
-	}
-
-}
-// only happens in editor, no need to optimize
-void DSQ::removeElement(size_t idx)
-{
-	ElementContainer copy = elements;
-	clearElements();
-	size_t i = 0;
-	for (i = 0; i < idx; i++)
-	{
-		addElement(copy[i]);
-	}
-	for (i = idx+1; i < copy.size(); i++)
-	{
-		addElement(copy[i]);
-	}
-	copy.clear();
-
-	if (!game->elementUpdateList.empty())
-		game->rebuildElementUpdateList();
-}
-
-void DSQ::clearElements()
-{
-	elements.clear();
-	for (int i = 0; i < 16; i++)
-		firstElementOnLayer[i] = 0;
-}
-
 
 void DSQ::addEntity(Entity *entity)
 {

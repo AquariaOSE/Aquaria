@@ -330,7 +330,7 @@ void Entity::setEntityProperty(EntityProperty ep, bool value)
 	entityProperties[ep] = value;
 }
 
-bool Entity::isEntityProperty(EntityProperty ep)
+bool Entity::isEntityProperty(EntityProperty ep) const
 {
 	return entityProperties[ep];
 }
@@ -2012,7 +2012,7 @@ void Entity::onEnterState(int action)
 	}
 }
 
-bool Entity::isPullable()
+bool Entity::isPullable() const
 {
 	return ((isEntityProperty(EP_MOVABLE)) || (frozenTimer > 0));
 }
@@ -2106,11 +2106,14 @@ void Entity::setInvincible(bool inv)
 	invincible = inv;
 }
 
-bool Entity::isInDarkness()
+bool Entity::isInDarkness() const
 {
-	for (Element *e = dsq->getFirstElementOnLayer(12); e; e = e->bgLayerNext)
+	const TileStorage& ts = dsq->tilemgr.tilestore[12];
+	const size_t n = ts.tiles.size();
+	for(size_t i = 0; i < n; ++i)
 	{
-		if (e->isCoordinateInside(position))
+		const TileData& t = ts.tiles[i];
+		if(t.isVisible() && t.isCoordinateInside(position.x, position.y))
 			return true;
 	}
 	return false;

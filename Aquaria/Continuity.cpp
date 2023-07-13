@@ -3482,7 +3482,7 @@ void Continuity::reset()
 	knowsSong.clear();
 	loadSongBank();
 	loadEatBank();
-	dsq->loadElementEffects();
+	dsq->loadTileEffects();
 	form = FORM_NORMAL;
 	costume = "";
 	dsq->emote.load("data/naijaemote.txt");

@@ -97,6 +97,7 @@ RenderObject::RenderObject()
 
 	shareAlphaWithChildren = false;
 	shareColorWithChildren = false;
+	neverFollowCamera = false;
 }
 
 RenderObject::~RenderObject()

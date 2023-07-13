@@ -47,7 +47,7 @@ Texture::~Texture()
 	unload();
 }
 
-void Texture::readRGBA(unsigned char *pixels)
+void Texture::readRGBA(unsigned char *pixels) const
 {
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glBindTexture(GL_TEXTURE_2D, gltexid);
@@ -207,7 +207,7 @@ bool Texture::upload(const ImageData& img, bool mipmap)
 	return true;
 }
 
-unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, size_t *sizeparam)
+unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, size_t *sizeparam) const
 {
 	const size_t bytes = size_t(width) * size_t(height) * 4;
 	unsigned char *data = (unsigned char*)malloc(bytes);
