@@ -75,6 +75,17 @@ void TileRender::onRender(const RenderState& rs) const
 		}
 
 		const ElementTemplate * const et = tile.et;
+
+		// adapted from RenderObject::isOnScreen()
+		{
+			const float cw = et->w * tile.scalex;
+			const float ch = et->h * tile.scaley;
+			const float cullRadiusSqr = ((cw*cw + ch*ch) * core->invGlobalScaleSqr) + core->cullRadiusSqr;
+
+			if ((pos - core->cullCenter).getSquaredLength2D() >= cullRadiusSqr)
+				continue;
+		}
+
 		if(const Texture * const tex = et->tex.content())
 		{
 			unsigned texid = tex->gltexid;
