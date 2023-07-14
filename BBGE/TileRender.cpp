@@ -155,7 +155,9 @@ void TileRender::onRender(const RenderState& rs) const
 
 		if(!grid)
 		{
-			const float *tcbuf = tile.et->texcoordQuadPtr;
+			const float *tcbuf = (tile.flags & TILEFLAG_REPEAT)
+				? &tile.rep->texcoords[0]
+				: tile.et->texcoordQuadPtr;
 			assert(tcbuf);
 			if(lastTexcoordBuf != tcbuf)
 			{
@@ -167,8 +169,19 @@ void TileRender::onRender(const RenderState& rs) const
 		else
 		{
 			rx.alpha = alpha;
-			const Vector upperLeftTextureCoordinates(et->tu1, et->tv1);
-			const Vector lowerRightTextureCoordinates(et->tu2, et->tv2);
+
+			Vector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
+			if(tile.flags & TILEFLAG_REPEAT)
+			{
+				upperLeftTextureCoordinates = Vector(tile.rep->tu1, tile.rep->tv1);
+				lowerRightTextureCoordinates = Vector(tile.rep->tu2, tile.rep->tv2);
+			}
+			else
+			{
+				upperLeftTextureCoordinates = Vector(et->tu1, et->tv1);
+				lowerRightTextureCoordinates = Vector(et->tu2, et->tv2);
+			}
+
 			grid->render(rx, upperLeftTextureCoordinates, lowerRightTextureCoordinates);
 		}
 

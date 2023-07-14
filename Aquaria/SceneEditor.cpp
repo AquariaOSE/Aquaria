@@ -277,8 +277,11 @@ public:
 			q->setTexturePointer(t.et->tex);
 			q->fhTo(!!(t.flags & TILEFLAG_FH));
 			q->rotation.z = t.rotation;
-			q->repeatToFillScale = Vector(t.texscaleX, t.texscaleY);
-			q->repeatTextureToFill(!!(t.flags & TILEFLAG_REPEAT));
+			if(t.flags & TILEFLAG_REPEAT && t.rep)
+			{
+				q->repeatToFillScale = Vector(t.rep->texscaleX, t.rep->texscaleY);
+				q->repeatTextureToFill(true);
+			}
 			th->addChild(q, PM_POINTER, RBP_ON);
 			th->_quads.push_back(q);
 		}
@@ -1046,7 +1049,9 @@ void SceneEditor::enterAnyStateHelper(EditorStates newstate)
 		if(selectedTiles.size() == 1)
 		{
 			const TileData& t = getCurrentLayerTiles().tiles[selectedTiles[0]];
-			oldRepeatScale = Vector(t.texscaleX, t.texscaleY);
+			oldRepeatScale = Vector(1,1);
+			if(t.flags & TILEFLAG_REPEAT)
+				oldRepeatScale = Vector(t.rep->texscaleX, t.rep->texscaleY);
 			oldScale = Vector(t.scalex, t.scaley);
 			oldRotation = t.rotation;
 		}

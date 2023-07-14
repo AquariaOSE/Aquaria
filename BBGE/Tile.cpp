@@ -3,6 +3,7 @@
 #include "Tileset.h"
 #include "Base.h"
 #include <algorithm>
+#include "Texture.h"
 
 TileStorage::TileStorage()
 {
@@ -133,7 +134,7 @@ size_t TileStorage::moveToOther(TileStorage& other, const size_t *indices, size_
 	return firstNewIdx;
 }
 
-static void dropAttachments(TileData& t)
+static void dropEffect(TileData& t)
 {
 	if(t.flags & TILEFLAG_OWN_EFFDATA)
 	{
@@ -142,6 +143,23 @@ static void dropAttachments(TileData& t)
 	}
 	t.eff = NULL;
 }
+
+static void dropRepeat(TileData& t)
+{
+	if(t.flags & TILEFLAG_OWN_REPEAT)
+	{
+		delete t.rep;
+		t.flags &= ~TILEFLAG_OWN_REPEAT;
+	}
+	t.rep = NULL;
+}
+
+static void dropAll(TileData& t)
+{
+	dropEffect(t);
+	dropRepeat(t);
+}
+
 
 void TileStorage::deleteSome(const size_t* indices, size_t n)
 {
@@ -154,7 +172,7 @@ void TileStorage::deleteSome(const size_t* indices, size_t n)
 		for(size_t k = 0; k < n; ++i) // not particularly efficient, could be much better by sorting first but eh
 			if(indices[k] == i)
 			{
-				dropAttachments(tmp[i]);
+				dropAll(tmp[i]);
 				goto skip;
 			}
 
@@ -170,7 +188,7 @@ void TileStorage::destroyAll()
 {
 	const size_t n = tiles.size();
 	for(size_t i = 0; i < n; ++i)
-		dropAttachments(tiles[i]);
+		dropAll(tiles[i]);
 	tiles.clear();
 	indicesToCollide.clear();
 	indicesToUpdate.clear();
@@ -221,6 +239,10 @@ size_t TileStorage::cloneSome(const TileEffectStorage& effstore, const size_t* i
 			t.flags &= TILEFLAG_OWN_EFFDATA;
 			effstore.assignEffect(t, efx); // recreate effect properly
 		}
+		if((t.flags & TILEFLAG_OWN_REPEAT) && t.rep)
+		{
+			t.rep = new TileRepeatData(*t.rep);
+		}
 	}
 
 	refreshAll();
@@ -236,7 +258,8 @@ void TileStorage::refreshAll()
 	const size_t n = tiles.size();
 	for(size_t i = 0; i < n; ++i)
 	{
-		const TileData& t = tiles[i];
+		TileData& t = tiles[i];
+		t.refreshRepeat();
 		if(!(t.flags & TILEFLAG_HIDDEN))
 		{
 			if(const TileEffectData *e = t.eff)
@@ -434,7 +457,7 @@ TileEffectStorage::~TileEffectStorage()
 
 void TileEffectStorage::assignEffect(TileData& t, int index) const
 {
-	dropAttachments(t);
+	dropEffect(t);
 
 	if(index < 0)
 		return;
@@ -506,4 +529,66 @@ bool TileData::isCoordinateInside(float cx, float cy, float minsize) const
 
 	return cx >= x - hw && cx <= x + hw
 		&& cy >= y - hh && cy <= y + hh;
+}
+
+void TileRepeatData::refresh(const ElementTemplate& et, float scalex, float scaley)
+{
+	float tw, th;
+	if(et.tex)
+	{
+		tw = et.tex->width;
+		th = et.tex->height;
+	}
+	else
+	{
+		tw = et.w;
+		th = et.h;
+	}
+
+	const float tu1 = texOffX;
+	const float tv1 = texOffY;
+	const float tu2 = (et.w*scalex*texscaleX)/tw + texOffX;
+	const float tv2 = (et.h*scaley*texscaleY)/th + texOffY;
+
+	this->tu1 = tu1;
+	this->tv1 = tv1;
+	this->tu2 = tu2;
+	this->tv2 = tv2;
+
+	texcoords[0] =      tu1;
+	texcoords[1] = 1.0f-tv1;
+	texcoords[2] =      tu2;
+	texcoords[3] = 1.0f-tv1;
+	texcoords[4] =      tu2;
+	texcoords[5] = 1.0f-tv2;
+	texcoords[6] =      tu1;
+	texcoords[7] = 1.0f-tv2;
+}
+
+TileRepeatData* TileData::setRepeatOn(float texscalex, float texscaley, float offx, float offy)
+{
+	if(rep && !(flags & TILEFLAG_OWN_REPEAT))
+		rep = NULL;
+	flags |= (TILEFLAG_OWN_REPEAT | TILEFLAG_REPEAT);
+	if(!rep)
+		rep = new TileRepeatData;
+	rep->texscaleX = texscalex;
+	rep->texscaleY = texscaley;
+	rep->texOffX = offx;
+	rep->texOffY = offy;
+	rep->refresh(*et, scalex, scaley);
+	return rep;
+}
+
+void TileData::setRepeatOff()
+{
+	flags &= ~TILEFLAG_REPEAT;
+}
+
+void TileData::refreshRepeat()
+{
+	if((flags & TILEFLAG_OWN_REPEAT) && rep)
+	{
+		rep->refresh(*et, scalex, scaley);
+	}
 }

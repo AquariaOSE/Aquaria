@@ -94,7 +94,8 @@ enum TileFlags
 	TILEFLAG_OWN_EFFDATA = 0x40, // tile owns its TileEffectData, can update, must delete
 	TILEFLAG_HIDDEN      = 0x80, // don't render tile
 	TILEFLAG_SELECTED    = 0x100, // ephemeral: selected in editor
-	TILEFLAG_EDITOR_HIDDEN = 0x200  // tile is hidden for editor reasons. temporarily set when multi-selecting and moving. doesn't count as hidden externally and is only for rendering.
+	TILEFLAG_EDITOR_HIDDEN = 0x200, // tile is hidden for editor reasons. temporarily set when multi-selecting and moving. doesn't count as hidden externally and is only for rendering.
+	TILEFLAG_OWN_REPEAT  = 0x400  // owns TileRepeatData, may update, must delete
 };
 
 struct TileData;
@@ -128,23 +129,41 @@ private:
 	TileEffectData(const TileEffectData&); // no-copy
 };
 
+struct TileRepeatData
+{
+	// written via refresh()
+	float texcoords[8];
+	float tu1, tv1, tu2, tv2;
+
+	// set by user
+	float texscaleX, texscaleY;
+	float texOffX, texOffY;
+
+	// pass ET & scale of owning tile
+	void refresh(const ElementTemplate& et, float scalex, float scaley);
+};
+
 // POD and as compact as possible. Intended for rendering as quickly as possible.
 // the idea is that these are linearly adjacent in memory in the order they are rendered,
 // to maximize cache & prefetch efficiency
 struct TileData
 {
-	float x, y, scalex, scaley, texscaleX, texscaleY;
+	float x, y, scalex, scaley;
 	//float beforeScaleOffsetX, beforeScaleOffsetY; // almost always 0. // TODO: this is nasty, ideally get rid of this
 	float rotation;
 	unsigned flags; // TileFlags
 	unsigned tag; // FIXME: make this int
 	const ElementTemplate *et; // never NULL. texture, texcoords, etc is here. // TODO: maybe replace with unsigned tilesetID? but that's an extra indirection or two during rendering...
 	TileEffectData *eff; // mostly NULL
+	TileRepeatData *rep;
 
 	// helpers for external access
 	inline void setVisible(bool on) { if(on) flags &= ~TILEFLAG_HIDDEN; else flags |= TILEFLAG_HIDDEN; }
 	inline bool isVisible() const { return !(flags & TILEFLAG_HIDDEN); }
 	bool isCoordinateInside(float cx, float cy, float minsize = 0) const;
+	TileRepeatData *setRepeatOn(float texscalex = 1, float texscaley = 1, float offx = 0, float offy = 0);
+	void setRepeatOff();
+	void refreshRepeat();
 };
 
 class TileEffectStorage

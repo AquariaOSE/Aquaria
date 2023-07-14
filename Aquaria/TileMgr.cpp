@@ -123,13 +123,11 @@ void TileMgr::createTiles(const TileDef* defs, size_t n)
 			if(d.fh)
 				t->flags |= TILEFLAG_FH;
 			if(d.repeat)
-				t->flags |= TILEFLAG_REPEAT;
+				t->setRepeatOn(d.rsx, d.rsy);
 
 			// FIXME: handle fv
 
 			t->rotation = d.rot;
-			t->texscaleX = d.rsx;
-			t->texscaleY = d.rsy;
 			t->tag = d.tag;
 			t->scalex = d.sx;
 			t->scaley = d.sy;
@@ -183,8 +181,6 @@ TileData* TileMgr::_createTile(unsigned tilesetID, unsigned layer,  float x, flo
 	t.x = x;
 	t.y = y;
 	t.rotation = 0;
-	t.texscaleX = 1;
-	t.texscaleY = 1;
 	t.scalex = 1;
 	t.scaley = 1;
 	//t.beforeScaleOffsetX = 0;
@@ -273,6 +269,11 @@ TileDef::TileDef(unsigned lr, const TileData& t)
 	, repeat(!!(t.flags & TILEFLAG_REPEAT))
 	, tag(t.tag)
 	, sx(t.scalex), sy(t.scaley)
-	, rsx(t.texscaleX), rsy(t.texscaleY)
+	, rsx(1), rsy(1)
 {
+	if(t.flags & TILEFLAG_REPEAT)
+	{
+		rsx = t.rep->texscaleX;
+		rsy = t.rep->texscaleY;
+	}
 }
