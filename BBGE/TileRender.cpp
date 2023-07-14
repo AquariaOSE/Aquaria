@@ -41,9 +41,26 @@ static inline const Vector& getTagColor(int tag)
 
 }
 
+static const float s_quadVerts[] =
+{
+	-0.5f, +0.5f,
+	+0.5f, +0.5f,
+	+0.5f, -0.5f,
+	-0.5f, -0.5f,
+};
 
 void TileRender::onRender(const RenderState& rs) const
 {
+	if(storage.tiles.empty())
+		return;
+
+	glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_VERTEX_ARRAY);
+	glVertexPointer(2, GL_FLOAT, 0, s_quadVerts);
+
+	RenderState rx(rs);
+
 	// prepare. get parallax scroll factors
 	const RenderObjectLayer& rl = core->renderObjectLayers[this->layer];
 	const Vector M = rl.followCameraMult; // affected by parallaxLock
@@ -58,8 +75,10 @@ void TileRender::onRender(const RenderState& rs) const
 	unsigned lastTexRepeat = false;
 	unsigned lastTexId = 0;
 
-	const bool renderBorders = this->renderBorders;
-	//bool mustSetColor = false;
+	const bool renderExtras = renderBorders || RenderObject::renderCollisionShape;
+	const TileEffectData *prevEff = ((TileEffectData*)NULL)+1; // initial value is different from anything else
+	const RenderGrid *grid = NULL;
+	const float *lastTexcoordBuf = NULL;
 
 	for(size_t i = 0; i < storage.tiles.size(); ++i)
 	{
@@ -75,13 +94,12 @@ void TileRender::onRender(const RenderState& rs) const
 		}
 
 		const ElementTemplate * const et = tile.et;
+		const float sw = et->w * tile.scalex;
+		const float sh = et->h * tile.scaley;
 
 		// adapted from RenderObject::isOnScreen()
 		{
-			const float cw = et->w * tile.scalex;
-			const float ch = et->h * tile.scaley;
-			const float cullRadiusSqr = ((cw*cw + ch*ch) * core->invGlobalScaleSqr) + core->cullRadiusSqr;
-
+			const float cullRadiusSqr = ((sw*sw + sh*sh) * core->invGlobalScaleSqr) + core->cullRadiusSqr;
 			if ((pos - core->cullCenter).getSquaredLength2D() >= cullRadiusSqr)
 				continue;
 		}
@@ -107,103 +125,91 @@ void TileRender::onRender(const RenderState& rs) const
 		glTranslatef(pos.x, pos.y, pos.z);
 
 		glRotatef(tile.rotation, 0, 0, 1);
-		if(tile.flags & TILEFLAG_FH) // TODO: This is not necessary! Since we have no children, flipped texcoords are fine
+		if(tile.flags & TILEFLAG_FH)
 			glRotatef(180, 0, 1, 0);
 
 		// this is only relevant in editor mode and is always 0 otherwise
-		glTranslatef(tile.beforeScaleOffsetX, tile.beforeScaleOffsetY, 0);
+		//glTranslatef(tile.beforeScaleOffsetX, tile.beforeScaleOffsetY, 0);
 
-		glScalef(tile.scalex, tile.scaley, 1);
-		//glScalef(tile.scalex * et->w, tile.scaley * et->h, 1); // TODO use this + fixed verts
+		glScalef(sw, sh, 1);
 
-		BlendType blend = BLEND_DEFAULT;
 		float alpha = rs.alpha;
-		RenderGrid *grid = NULL;
 		const TileEffectData * const eff = tile.eff;
-		if(eff)
+		if(eff != prevEff) // effects between tiles are often shared so this works not only for NULL
 		{
-			grid = eff->grid;
-			alpha *= eff->alpha.x;
-			blend = eff->blend;
+			prevEff = eff;
+			BlendType blend = BLEND_DEFAULT;
+			alpha = rs.alpha;
+			grid = NULL;
+
+			if(eff)
+			{
+				grid = eff->grid;
+				alpha *= eff->alpha.x;
+				blend = eff->blend;
+			}
+
+			rs.gpu.setBlend(blend);
+			glColor4f(rs.color.x, rs.color.y, rs.color.z, alpha);
 		}
-
-		rs.gpu.setBlend(blend);
-
-		// TODO: only need to do this when prev. tile had different alpha
-		glColor4f(rs.color.x, rs.color.y, rs.color.z, alpha);
-
-		const Vector upperLeftTextureCoordinates(et->tu1, et->tv1);
-		const Vector lowerRightTextureCoordinates(et->tu2, et->tv2);
 
 		if(!grid)
 		{
-			const float _w2 = et->w * 0.5f;
-			const float _h2 = et->h * 0.5f;
-
-			glBegin(GL_QUADS);
+			const float *tcbuf = tile.et->texcoordQuadPtr;
+			assert(tcbuf);
+			if(lastTexcoordBuf != tcbuf)
 			{
-				glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-				glVertex2f(-_w2, +_h2);
-
-				glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-				glVertex2f(+_w2, +_h2);
-
-				glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-				glVertex2f(+_w2, -_h2);
-
-				glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-				glVertex2f(-_w2, -_h2);
+				lastTexcoordBuf = tcbuf;
+				glTexCoordPointer(2, GL_FLOAT, 0, tcbuf);
 			}
-			glEnd();
+			glDrawArrays(GL_QUADS, 0, 4);
 		}
 		else
 		{
-			glPushMatrix();
-			glScalef(et->w, et->h, 1);
-
-			RenderState rx(rs);
 			rx.alpha = alpha;
+			const Vector upperLeftTextureCoordinates(et->tu1, et->tv1);
+			const Vector lowerRightTextureCoordinates(et->tu2, et->tv2);
 			grid->render(rx, upperLeftTextureCoordinates, lowerRightTextureCoordinates);
-			if (RenderObject::renderCollisionShape)
+		}
+
+		if(renderExtras)
+		{
+			glBindTexture(GL_TEXTURE_2D, 0);
+			lastTexId = 0;
+			prevEff = ((TileEffectData*)NULL)+1;
+
+			if(grid && RenderObject::renderCollisionShape)
 			{
-				glBindTexture(GL_TEXTURE_2D, 0);
 				grid->renderDebugPoints(rs);
-				lastTexId = 0;
 			}
 
-			glPopMatrix();
+			if(renderBorders)
+			{
+				float c = (tile.flags & TILEFLAG_SELECTED) ? 1.0f : 0.5f;
+				Vector color(c,c,c);
+				color *= getTagColor(tile.tag);
+
+				glColor4f(color.x, color.y, color.z, 1.0f);
+				glPointSize(16);
+				glBegin(GL_POINTS);
+					glVertex2f(0,0);
+				glEnd();
+
+				glLineWidth(2);
+				glBegin(GL_LINE_STRIP);
+					glVertex2f(0.5f, 0.5f);
+					glVertex2f(0.5f, -0.5f);
+					glVertex2f(-0.5f, -0.5f);
+					glVertex2f(-0.5f, 0.5f);
+					glVertex2f(0.5f, 0.5f);
+				glEnd();
+			}
 		}
-
-		if(renderBorders)
-		{
-			lastTexId = 0;
-			glBindTexture(GL_TEXTURE_2D, 0);
-
-			float c = (tile.flags & TILEFLAG_SELECTED) ? 1.0f : 0.5f;
-			Vector color(c,c,c);
-			color *= getTagColor(tile.tag);
-			const float _w2 = et->w * 0.5f;
-			const float _h2 = et->h * 0.5f;
-
-			glColor4f(color.x, color.y, color.z, 1.0f);
-			glPointSize(16);
-			glBegin(GL_POINTS);
-				glVertex2f(0,0);
-			glEnd();
-
-			glLineWidth(2);
-			glBegin(GL_LINE_STRIP);
-				glVertex2f(_w2, _h2);
-				glVertex2f(_w2, -_h2);
-				glVertex2f(-_w2, -_h2);
-				glVertex2f(-_w2, _h2);
-				glVertex2f(_w2, _h2);
-			glEnd();
-		}
-
 
 		glPopMatrix();
 	}
+
+	glPopClientAttrib();
 
 	RenderObject::lastTextureApplied = lastTexId;
 	RenderObject::lastTextureRepeat = !!lastTexRepeat;

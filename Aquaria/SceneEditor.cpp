@@ -703,7 +703,7 @@ void SceneEditor::init()
 
 	if (curElement < dsq->tilemgr.tileset.elementTemplates.size())
 	{
-		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement].gfx);
+		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement]->gfx);
 		placer->scale = Vector(1,1);
 	}
 	else
@@ -888,7 +888,7 @@ void SceneEditor::editModeElements()
 	editType = ET_ELEMENTS;
 	if (curElement < dsq->tilemgr.tileset.elementTemplates.size())
 	{
-		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement].gfx);
+		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement]->gfx);
 		placer->scale = Vector(1,1);
 	}
 	placer->alpha = 0.5;
@@ -2002,7 +2002,6 @@ void SceneEditor::cycleSelectedTiles(int direction)
 	const int maxn = (int)dsq->tilemgr.tileset.elementTemplates.size();
 	if(!maxn)
 		return;
-	const ElementTemplate * const base = &dsq->tilemgr.tileset.elementTemplates[0];
 	for(size_t i = 0; i < n; ++i)
 	{
 		TileData& t = ts.tiles[selectedTiles[i]];
@@ -2093,9 +2092,9 @@ void SceneEditor::cyclePlacer(int direction)
 	if(nextidx >= maxn)
 		nextidx -= maxn;
 
-	if (maxn && dsq->tilemgr.tileset.elementTemplates[curElement].idx < 1024)
+	if (maxn && dsq->tilemgr.tileset.elementTemplates[curElement]->idx < 1024)
 	{
-		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement].gfx);
+		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement]->gfx);
 		curElement = nextidx;
 	}
 }
@@ -2108,7 +2107,7 @@ void SceneEditor::selectZero()
 	{
 		if (dsq->tilemgr.tileset.elementTemplates.empty()) return;
 		curElement = 0;
-		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement].gfx);
+		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement]->gfx);
 	}
 }
 
@@ -2122,14 +2121,14 @@ void SceneEditor::selectEnd()
 		size_t largest = 0;
 		for (size_t i = 0; i < dsq->tilemgr.tileset.elementTemplates.size(); i++)
 		{
-			ElementTemplate et = dsq->tilemgr.tileset.elementTemplates[i];
-			if (et.idx < 1024 && i > largest)
+			ElementTemplate *et = dsq->tilemgr.tileset.elementTemplates[i];
+			if (et->idx < 1024 && i > largest)
 			{
 				largest = i;
 			}
 		}
 		curElement = largest;
-		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement].gfx);
+		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement]->gfx);
 	}
 }
 
@@ -2139,7 +2138,7 @@ void SceneEditor::placeElement()
 	{
 		if (!core->getShiftState() && !core->getKeyState(KEY_LALT))
 		{
-			unsigned tilesetID = dsq->tilemgr.tileset.elementTemplates[curElement].idx;
+			unsigned tilesetID = dsq->tilemgr.tileset.elementTemplates[curElement]->idx;
 			dsq->tilemgr.createOneTile(tilesetID, bgLayer, placer->position.x, placer->position.y);
 			// FIXME: need to update grid or no?
 			updateText();

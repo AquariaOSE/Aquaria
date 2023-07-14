@@ -3512,10 +3512,9 @@ bool DSQ::loadTileset(std::string pack, const unsigned char *usedIdx, size_t use
 		const float cell = 64.0f/512.0f;
 		for (int i = 0; i < 27; i++)
 		{
-			ElementTemplate t;
-			t.idx = 1024+i;
-			t.tex = aqtex;
-			t.loaded = true;
+			ElementTemplate *et = new ElementTemplate;
+			et->idx = 1024+i;
+			et->tex = aqtex;
 			int x = i,y=0;
 			while (x >= 6)
 			{
@@ -3523,19 +3522,20 @@ bool DSQ::loadTileset(std::string pack, const unsigned char *usedIdx, size_t use
 				y++;
 			}
 
-			t.tu1 = x*cell;
-			t.tv1 = y*cell;
-			t.tu2 = t.tu1 + cell;
-			t.tv2 = t.tv1 + cell;
+			et->tu1 = x*cell;
+			et->tv1 = y*cell;
+			et->tu2 = et->tu1 + cell;
+			et->tv2 = et->tv1 + cell;
 
-			t.tv2 = 1 - t.tv2;
-			t.tv1 = 1 - t.tv1;
-			std::swap(t.tv1,t.tv2);
+			et->tv2 = 1 - et->tv2;
+			et->tv1 = 1 - et->tv1;
+			std::swap(et->tv1,et->tv2);
 
-			t.w = 512*cell;
-			t.h = 512*cell;
+			et->w = 512*cell;
+			et->h = 512*cell;
 
-			tilemgr.tileset.elementTemplates.push_back(t);
+			et->finalize();
+			tilemgr.tileset.elementTemplates.push_back(et);
 		}
 	}
 

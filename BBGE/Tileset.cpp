@@ -16,7 +16,7 @@ Tileset::~Tileset()
 
 bool Tileset::loadFile(const char *fn, const unsigned char *usedIdx, size_t usedIdxLen)
 {
-	elementTemplates.clear();
+	clear();
 
 	InStream in(fn);
 	if(!in)
@@ -34,12 +34,12 @@ bool Tileset::loadFile(const char *fn, const unsigned char *usedIdx, size_t used
 		{
 			if(idx < 1024)
 			{
-				ElementTemplate t;
-				t.idx = idx;
-				t.gfx = gfx;
-				t.w = w;
-				t.h = h;
-				elementTemplates.push_back(t);
+				ElementTemplate *et = new ElementTemplate;
+				et->idx = idx;
+				et->gfx = gfx;
+				et->w = w;
+				et->h = h;
+				elementTemplates.push_back(et);
 			}
 			else
 				warn = true;
@@ -59,9 +59,9 @@ bool Tileset::loadFile(const char *fn, const unsigned char *usedIdx, size_t used
 
 	for (size_t i = 0; i < elementTemplates.size(); i++)
 	{
-		size_t idx = elementTemplates[i].idx;
+		size_t idx = elementTemplates[i]->idx;
 		if (!usedIdx || (idx < usedIdxLen && usedIdx[idx]))
-			usedTex.push_back(elementTemplates[i].gfx);
+			usedTex.push_back(elementTemplates[i]->gfx);
 	}
 	std::sort(usedTex.begin(), usedTex.end());
 	// drop duplicates
@@ -90,15 +90,16 @@ bool Tileset::loadFile(const char *fn, const unsigned char *usedIdx, size_t used
 	std::ostringstream failed;
 	for (size_t i = 0; i < elementTemplates.size(); i++)
 	{
-		ElementTemplate& et = elementTemplates[i];
+		ElementTemplate *et = elementTemplates[i];
 		// only check those that are actualy loaded; otherwise this would load in textures
 		// that we didn't bother to batch-load above
-		if(!usedIdx || (et.idx < usedIdxLen && usedIdx[et.idx]))
+		if(!usedIdx || (et->idx < usedIdxLen && usedIdx[et->idx]))
 		{
-			if(!et.getTexture()) // assigns width/height and caches texture pointer
+			et->finalize(); // assigns width/height and caches texture pointer
+			if(!et->tex)
 			{
 				++nfailed;
-				failed << et.gfx << " ";
+				failed << et->gfx << " ";
 			}
 		}
 	}
@@ -119,6 +120,9 @@ void Tileset::clear()
 	for(size_t i = 0; i < dummies.size(); ++i)
 		delete dummies[i];
 	dummies.clear();
+
+	for(size_t i = 0; i < elementTemplates.size(); ++i)
+		delete elementTemplates[i];
 	elementTemplates.clear();
 }
 
@@ -126,11 +130,11 @@ const ElementTemplate *Tileset::getByIdx(size_t idx)
 {
 	for (size_t i = 0; i < elementTemplates.size(); i++)
 	{
-		ElementTemplate& et = elementTemplates[i];
-		if (et.idx == idx)
+		ElementTemplate *et = elementTemplates[i];
+		if (et->idx == idx)
 		{
-			et.getTexture(); // HACK: make sure the texture is loaded before this gets used
-			return &et;
+			et->finalize(); // HACK: make sure the texture is loaded before this gets used
+			return et;
 		}
 	}
 
@@ -151,6 +155,7 @@ const ElementTemplate *Tileset::getByIdx(size_t idx)
 
 	ElementTemplate *dummy = new ElementTemplate;
 	dummy->idx = idx;
+	dummy->finalize();
 	dummies.push_back(dummy);
 
 	return dummy;
@@ -160,17 +165,22 @@ const ElementTemplate* Tileset::getAdjacent(size_t idx, int direction, bool wrap
 {
 	ElementTemplate *et = _getAdjacent(idx, direction, wraparound);
 	if(et)
-		et->getTexture(); // load just in case
+		et->finalize(); // load just in case
 	return et;
 }
 
-Texture* ElementTemplate::getTexture()
+static const float s_defaultTexcoordBuf[] =
 {
-	if(loaded)
-		return tex.content();
+	0, 1,
+	1, 1,
+	1, 0,
+	0, 0
+};
 
-	loaded = true;
-	tex = core->getTexture(gfx); // may end up NULL
+void ElementTemplate::finalize()
+{
+	if(!gfx.empty())
+		tex = core->getTexture(gfx); // may end up NULL
 	if(tex)
 	{
 		if(!w)
@@ -186,8 +196,20 @@ Texture* ElementTemplate::getTexture()
 			h = 64;
 	}
 
-	return tex.content();
-
+	if(tu1 == 0 && tv1 == 0 && tu2 == 1 && tv2 == 1)
+		texcoordQuadPtr = s_defaultTexcoordBuf;
+	else
+	{
+		texcoordQuadPtr = &texcoordQuadBuffer[0];
+		texcoordQuadBuffer[0] =      tu1;
+		texcoordQuadBuffer[1] = 1.0f-tv1;
+		texcoordQuadBuffer[2] =      tu2;
+		texcoordQuadBuffer[3] = 1.0f-tv1;
+		texcoordQuadBuffer[4] =      tu2;
+		texcoordQuadBuffer[5] = 1.0f-tv2;
+		texcoordQuadBuffer[6] =      tu1;
+		texcoordQuadBuffer[7] = 1.0f-tv2;
+	}
 }
 
 ElementTemplate * Tileset::_getAdjacent(size_t idx, int direction, bool wraparound)
@@ -198,21 +220,21 @@ ElementTemplate * Tileset::_getAdjacent(size_t idx, int direction, bool wraparou
 	int mindiff = 0;
 	for (size_t i = 0; i < maxn; i++)
 	{
-		if (elementTemplates[i].idx == idx)
+		if (elementTemplates[i]->idx == idx)
 		{
 			if(wraparound)
 			{
 				if(!i && direction < 0)
-					return &elementTemplates.back();
+					return elementTemplates.back();
 				if(i + direction >= maxn)
-					return &elementTemplates[0];
+					return elementTemplates[0];
 			}
 			else
 
 			i += direction; // may underflow
-			return i < maxn ? &elementTemplates[i] : NULL;
+			return i < maxn ? elementTemplates[i] : NULL;
 		}
-		int diff = labs((int)elementTemplates[i].idx - (int)idx);
+		int diff = labs((int)elementTemplates[i]->idx - (int)idx);
 		if(diff < mindiff || !mindiff)
 		{
 			mindiff = diff;
@@ -230,11 +252,11 @@ ElementTemplate * Tileset::_getAdjacent(size_t idx, int direction, bool wraparou
 	else if(wraparound)
 	{
 		if(!closest && direction < 0)
-			return &elementTemplates.back();
+			return elementTemplates.back();
 		if(closest + direction >= maxn)
-			return &elementTemplates[0];
+			return elementTemplates[0];
 	}
 
 	size_t i = closest + direction;
-	return i < maxn ? &elementTemplates[i] : NULL;
+	return i < maxn ? elementTemplates[i] : NULL;
 }

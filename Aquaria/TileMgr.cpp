@@ -187,8 +187,8 @@ TileData* TileMgr::_createTile(unsigned tilesetID, unsigned layer,  float x, flo
 	t.texscaleY = 1;
 	t.scalex = 1;
 	t.scaley = 1;
-	t.beforeScaleOffsetX = 0;
-	t.beforeScaleOffsetY = 0;
+	//t.beforeScaleOffsetX = 0;
+	//t.beforeScaleOffsetY = 0;
 	t.flags = GetTileFlags(ef);
 	t.tag = 0;
 	t.et = tileset.getByIdx(tilesetID);

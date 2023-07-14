@@ -134,7 +134,7 @@ private:
 struct TileData
 {
 	float x, y, scalex, scaley, texscaleX, texscaleY;
-	float beforeScaleOffsetX, beforeScaleOffsetY; // almost always 0. // TODO: this is nasty, ideally get rid of this
+	//float beforeScaleOffsetX, beforeScaleOffsetY; // almost always 0. // TODO: this is nasty, ideally get rid of this
 	float rotation;
 	unsigned flags; // TileFlags
 	unsigned tag; // FIXME: make this int

@@ -8,21 +8,24 @@
 class ElementTemplate
 {
 public:
-	ElementTemplate() { w=0; h=0; idx=-1; tu1=tv1=0; tu2=tv2=1; loaded=false; }
+	ElementTemplate() { w=0; h=0; idx=-1; tu1=tv1=0; tu2=tv2=1; texcoordQuadPtr=NULL; }
 	inline bool operator<(const ElementTemplate& o) const { return idx < o.idx; }
 
-	Texture *getTexture(); // loads if not already loaded
+	void finalize(); // call after settings params
 
 	// lazily assigned when tex is loaded
 	CountedPtr<Texture> tex; // NULL if failed to load or not yet loaded
 	float w,h; // custom size if used, otherwise texture size
+	const float *texcoordQuadPtr;
+	float texcoordQuadBuffer[8];
 
 	// fixed
 	float tu1, tu2, tv1, tv2; // texcoords
 	size_t idx;
 	std::string gfx;
 
-	bool loaded;
+private:
+	ElementTemplate(const ElementTemplate&); // no copy
 };
 
 class Tileset
@@ -43,7 +46,7 @@ public:
 	// never returns dummy ET. May return NULL.
 	const ElementTemplate *getAdjacent(size_t idx, int direction, bool wraparound);
 
-	std::vector<ElementTemplate> elementTemplates;
+	std::vector<ElementTemplate*> elementTemplates;
 
 private:
 	ElementTemplate *_getAdjacent(size_t idx, int direction, bool wraparound);
