@@ -58,7 +58,6 @@ set(BBGE_SRCS
     OSFunctions.h
     ParticleEffect.cpp
     ParticleManager.cpp
-    Particles.cpp
     Particles.h
     Precacher.cpp
     Precacher.h
