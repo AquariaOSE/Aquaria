@@ -2342,6 +2342,7 @@ void SceneEditor::updateText()
 			os << " efx: " << (t.eff ? (t.eff->efxidx + 1) : 0); // +1 so that it resembles the layout on numpad
 			os << " tag: " << t.tag;
 			os << " gfx: " << t.et->gfx;
+			os << " F:" << ((t.flags & TILEFLAG_FH) ? "H" : "") << ((t.flags & TILEFLAG_FV) ? "V" : "");
 		}
 	break;
 	case ET_ENTITIES:

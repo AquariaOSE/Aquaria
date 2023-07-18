@@ -121,18 +121,6 @@ void TileRender::onRender(const RenderState& rs) const
 			glBindTexture(GL_TEXTURE_2D, 0); // unlikely
 		}
 
-		glPushMatrix();
-		glTranslatef(pos.x, pos.y, pos.z);
-
-		glRotatef(tile.rotation, 0, 0, 1);
-		if(tile.flags & TILEFLAG_FH)
-			glRotatef(180, 0, 1, 0);
-
-		// this is only relevant in editor mode and is always 0 otherwise
-		//glTranslatef(tile.beforeScaleOffsetX, tile.beforeScaleOffsetY, 0);
-
-		glScalef(sw, sh, 1);
-
 		float alpha = rs.alpha;
 		const TileEffectData * const eff = tile.eff;
 		if(eff != prevEff) // effects between tiles are often shared so this works not only for NULL
@@ -152,6 +140,44 @@ void TileRender::onRender(const RenderState& rs) const
 			rs.gpu.setBlend(blend);
 			glColor4f(rs.color.x, rs.color.y, rs.color.z, alpha);
 		}
+
+		glPushMatrix();
+		glTranslatef(pos.x, pos.y, pos.z);
+
+		// HACK: Due to a renderer bug in older versions, vertical flip is ignored
+		// when a grid-based tile effect is applied.
+		// Maps were designed with the bug present so we need to replicate it,
+		// otherwise things won't look correct.
+		unsigned effflag = tile.flags;
+		if(grid)
+			effflag &= ~TILEFLAG_FV;
+
+		float effrot = tile.rotation;
+
+		// both set? that's effectively a rotation by 180°
+		if ((effflag & (TILEFLAG_FH | TILEFLAG_FV)) == (TILEFLAG_FH | TILEFLAG_FV))
+			effrot += 180;
+
+		glRotatef(effrot, 0, 0, 1);
+
+		switch(effflag & (TILEFLAG_FH | TILEFLAG_FV))
+		{
+			case TILEFLAG_FH:
+				glRotatef(180, 0, 1, 0);
+				break;
+
+			case TILEFLAG_FV:
+				glRotatef(180, 1, 0, 0);
+				break;
+
+			default: ; // both or none set, nothing to do
+		}
+
+		// this is only relevant in editor mode and is always 0 otherwise
+		//glTranslatef(tile.beforeScaleOffsetX, tile.beforeScaleOffsetY, 0);
+
+		glScalef(sw, sh, 1);
+
 
 		if(!grid)
 		{

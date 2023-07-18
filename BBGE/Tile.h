@@ -95,7 +95,8 @@ enum TileFlags
 	TILEFLAG_HIDDEN      = 0x80, // don't render tile
 	TILEFLAG_SELECTED    = 0x100, // ephemeral: selected in editor
 	TILEFLAG_EDITOR_HIDDEN = 0x200, // tile is hidden for editor reasons. temporarily set when multi-selecting and moving. doesn't count as hidden externally and is only for rendering.
-	TILEFLAG_OWN_REPEAT  = 0x400  // owns TileRepeatData, may update, must delete
+	TILEFLAG_OWN_REPEAT  = 0x400, // owns TileRepeatData, may update, must delete
+	TILEFLAG_FV          = 0x800, // flipped vertically
 };
 
 struct TileData;

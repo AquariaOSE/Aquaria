@@ -122,10 +122,10 @@ void TileMgr::createTiles(const TileDef* defs, size_t n)
 
 			if(d.fh)
 				t->flags |= TILEFLAG_FH;
+			if(d.fv)
+				t->flags |= TILEFLAG_FV;
 			if(d.repeat)
 				t->setRepeatOn(d.rsx, d.rsy);
-
-			// FIXME: handle fv
 
 			t->rotation = d.rot;
 			t->tag = d.tag;
@@ -152,6 +152,7 @@ void TileMgr::exportGridFillers(std::vector<GridFiller>& fillers) const
 			{
 				GridFiller gf;
 				gf.fh = !!(t.flags & TILEFLAG_FH);
+				//gf.fv = !!(t.flags & TILEFLAG_FV); // doesn't exist; vertical flip is never considered for grid collision
 				gf.position = Vector(t.x, t.y);
 				gf.rotation = t.rotation;
 				gf.scale = Vector(t.scalex, t.scaley);
@@ -263,7 +264,7 @@ TileDef::TileDef(unsigned lr)
 TileDef::TileDef(unsigned lr, const TileData& t)
 	: layer(lr), idx((unsigned)t.et->idx), x(t.x), y(t.y), rot(t.rotation)
 	, fh(!!(t.flags & TILEFLAG_FH))
-	, fv(false) // FIXME
+	, fv(!!(t.flags & TILEFLAG_FV))
 	, ef(TileMgr::GetElementFlag((TileFlags)t.flags))
 	, efxIdx(t.eff ? t.eff->efxidx : -1)
 	, repeat(!!(t.flags & TILEFLAG_REPEAT))
