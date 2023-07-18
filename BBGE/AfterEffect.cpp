@@ -284,13 +284,13 @@ void AfterEffectManager::renderGrid() const
 
 			// note that offx, offy are negative here!
 			glBegin(GL_QUADS);
-				glTexCoord2d(0.0f, 0.0f);
+				glTexCoord2f(0.0f, 0.0f);
 				glVertex3f(offx, vh+offy,  0.0f);
-				glTexCoord2d(percentX, 0.0f);
+				glTexCoord2f(percentX, 0.0f);
 				glVertex3f( vw+offx, vh+offy,  0.0f);
-				glTexCoord2d(percentX, percentY);
+				glTexCoord2f(percentX, percentY);
 				glVertex3f( vw+offx,  offy,  0.0f);
-				glTexCoord2d(0.0f, percentY);
+				glTexCoord2f(0.0f, percentY);
 				glVertex3f(offx,  offy,  0.0f);
 			glEnd();
 

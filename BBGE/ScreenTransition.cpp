@@ -124,13 +124,13 @@ void ScreenTransition::onRender(const RenderState& rs) const
 	glBindTexture(GL_TEXTURE_2D, screen_texture);
 
 	glBegin(GL_QUADS);
-		glTexCoord2d(0, 0);
+		glTexCoord2f(0, 0);
 		glVertex3f(-width2, height2,  0.0);
-		glTexCoord2d(pw, 0);
+		glTexCoord2f(pw, 0);
 		glVertex3f( width2, height2,  0.0);
-		glTexCoord2d(pw, ph);
+		glTexCoord2f(pw, ph);
 		glVertex3f( width2,  -height2,  0.0);
-		glTexCoord2d(0, ph);
+		glTexCoord2f(0, ph);
 		glVertex3f(-width2,  -height2,  0.0);
 	glEnd();
 
