@@ -68,9 +68,19 @@ PFNGLFRAMEBUFFERTEXTURE3DEXTPROC glFramebufferTexture3DEXT = NULL;
 PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT = NULL;
 PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT = NULL;
 
+// ARB_vertex_buffer_object
+PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;
+PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;
+PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;
+PFNGLBUFFERSUBDATAARBPROC glBufferSubDataARB = NULL;
+PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;
+PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL;
+PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
+
 // extern
 unsigned g_dbg_numRenderCalls = 0;
 bool g_has_GL_GENERATE_MIPMAP = false;
+bool g_has_GL_BUFFERS = false;
 
 
 #define GL_FUNC(ret,fn,params,call,rt) \
@@ -164,6 +174,15 @@ bool lookup_all_glsyms()
 	glUniform3ivARB           = (PFNGLUNIFORM3IVARBPROC)SDL_GL_GetProcAddress("glUniform3ivARB");
 	glUniform4ivARB           = (PFNGLUNIFORM4IVARBPROC)SDL_GL_GetProcAddress("glUniform4ivARB");
 
+	// VBOs
+	glGenBuffersARB           = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
+	glDeleteBuffersARB        = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
+	glBufferDataARB           = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferData");
+	glBufferSubDataARB        = (PFNGLBUFFERSUBDATAARBPROC)SDL_GL_GetProcAddress("glBufferSubData");
+	glBindBufferARB           = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
+	glMapBufferARB            = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
+	glUnmapBufferARB          = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
+
 	return retval;
 }
 
@@ -217,6 +236,15 @@ void unload_all_glsyms()
 	glUniform2ivARB           = NULL;
 	glUniform3ivARB           = NULL;
 	glUniform4ivARB           = NULL;
+
+	glGenBuffersARB           = NULL;
+	glDeleteBuffersARB        = NULL;
+	glBufferDataARB           = NULL;
+	glBufferSubDataARB        = NULL;
+	glBindBufferARB           = NULL;
+	glMapBufferARB            = NULL;
+	glUnmapBufferARB          = NULL;
+
 }
 
 #endif // BBGE_BUILD_OPENGL_STATIC

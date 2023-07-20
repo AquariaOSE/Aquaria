@@ -29,7 +29,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Localization.h"
 #include "Window.h"
 #include "TextureMgr.h"
-
+#include "VertexBuffer.h"
 #include "DarkLayer.h"
 
 #include "GameKeys.h"
@@ -413,6 +413,8 @@ public:
 
 	TextureMgr texmgr;
 
+	inline const DynamicGPUBuffer *getDefaultQuadVertexBuffer() const { return &defaultQuadVertexBuf; }
+
 protected:
 
 	CoreWindow *window;
@@ -489,6 +491,8 @@ protected:
 	std::vector<ActionButtonStatus*> actionStatus; // contains at least 1 element (the sentinel)
 	virtual void updateActionButtons();
 	void clearActionButtons();
+
+	DynamicGPUBuffer defaultQuadVertexBuf;
 
 public:
 	// inclusive!

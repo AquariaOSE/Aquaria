@@ -169,13 +169,12 @@ const ElementTemplate* Tileset::getAdjacent(size_t idx, int direction, bool wrap
 	return et;
 }
 
-static const float s_defaultTexcoordBuf[] =
+
+ElementTemplate::~ElementTemplate()
 {
-	0, 1,
-	1, 1,
-	1, 0,
-	0, 0
-};
+	if(ownsVertexbuf)
+		delete const_cast<DynamicGPUBuffer*>(vertexbuf);
+}
 
 void ElementTemplate::finalize()
 {
@@ -197,18 +196,19 @@ void ElementTemplate::finalize()
 	}
 
 	if(tu1 == 0 && tv1 == 0 && tu2 == 1 && tv2 == 1)
-		texcoordQuadPtr = s_defaultTexcoordBuf;
+	{
+		// this avoids buffer switches later on
+		vertexbuf = core->getDefaultQuadVertexBuffer();
+		ownsVertexbuf = false;
+	}
 	else
 	{
-		texcoordQuadPtr = &texcoordQuadBuffer[0];
-		texcoordQuadBuffer[0] =      tu1;
-		texcoordQuadBuffer[1] = 1.0f-tv1;
-		texcoordQuadBuffer[2] =      tu2;
-		texcoordQuadBuffer[3] = 1.0f-tv1;
-		texcoordQuadBuffer[4] =      tu2;
-		texcoordQuadBuffer[5] = 1.0f-tv2;
-		texcoordQuadBuffer[6] =      tu1;
-		texcoordQuadBuffer[7] = 1.0f-tv2;
+		DynamicGPUBuffer *vb = ownsVertexbuf
+			? const_cast<DynamicGPUBuffer*>(vertexbuf)
+			: new DynamicGPUBuffer(GPUBUF_STATIC | GPUBUF_VERTEXBUF);
+		vb->initQuadVertices(tu1, tv1, tu2, tv2);
+		vertexbuf = vb;
+		ownsVertexbuf = true;
 	}
 }
 

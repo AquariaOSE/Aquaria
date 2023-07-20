@@ -4,6 +4,7 @@
 #include <vector>
 #include "Vector.h"
 #include "EngineEnums.h"
+#include "VertexBuffer.h"
 
 // A Tile is a very stripped down RenderObject that bypasses the default
 // rendering pipeline for efficiency reasons.
@@ -132,8 +133,10 @@ private:
 
 struct TileRepeatData
 {
+	TileRepeatData();
+
 	// written via refresh()
-	float texcoords[8];
+	DynamicGPUBuffer vertexbuf;
 	float tu1, tv1, tu2, tv2;
 
 	// set by user

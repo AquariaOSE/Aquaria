@@ -18,8 +18,6 @@ public:
 	virtual void onUpdate(float dt) OVERRIDE;
 
 	bool renderBorders;
-
-private:
 };
 
 

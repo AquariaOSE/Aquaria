@@ -531,6 +531,11 @@ bool TileData::isCoordinateInside(float cx, float cy, float minsize) const
 		&& cy >= y - hh && cy <= y + hh;
 }
 
+TileRepeatData::TileRepeatData()
+	: vertexbuf(GPUBUF_STATIC | GPUBUF_VERTEXBUF)
+{
+}
+
 void TileRepeatData::refresh(const ElementTemplate& et, float scalex, float scaley)
 {
 	float tw, th;
@@ -555,14 +560,7 @@ void TileRepeatData::refresh(const ElementTemplate& et, float scalex, float scal
 	this->tu2 = tu2;
 	this->tv2 = tv2;
 
-	texcoords[0] =      tu1;
-	texcoords[1] = 1.0f-tv1;
-	texcoords[2] =      tu2;
-	texcoords[3] = 1.0f-tv1;
-	texcoords[4] =      tu2;
-	texcoords[5] = 1.0f-tv2;
-	texcoords[6] =      tu1;
-	texcoords[7] = 1.0f-tv2;
+	vertexbuf.initQuadVertices(tu1, tv1, tu2, tv2);
 }
 
 TileRepeatData* TileData::setRepeatOn(float texscalex, float texscaley, float offx, float offy)

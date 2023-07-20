@@ -41,23 +41,10 @@ static inline const Vector& getTagColor(int tag)
 
 }
 
-static const float s_quadVerts[] =
-{
-	-0.5f, +0.5f,
-	+0.5f, +0.5f,
-	+0.5f, -0.5f,
-	-0.5f, -0.5f,
-};
-
 void TileRender::onRender(const RenderState& rs) const
 {
 	if(storage.tiles.empty())
 		return;
-
-	glPushClientAttrib(GL_CLIENT_ALL_ATTRIB_BITS);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glVertexPointer(2, GL_FLOAT, 0, s_quadVerts);
 
 	RenderState rx(rs);
 
@@ -78,7 +65,7 @@ void TileRender::onRender(const RenderState& rs) const
 	const bool renderExtras = renderBorders || RenderObject::renderCollisionShape;
 	const TileEffectData *prevEff = ((TileEffectData*)NULL)+1; // initial value is different from anything else
 	const RenderGrid *grid = NULL;
-	const float *lastTexcoordBuf = NULL;
+	const DynamicGPUBuffer *lastVertexBuf = NULL;
 
 	for(size_t i = 0; i < storage.tiles.size(); ++i)
 	{
@@ -181,16 +168,16 @@ void TileRender::onRender(const RenderState& rs) const
 
 		if(!grid)
 		{
-			const float *tcbuf = (tile.flags & TILEFLAG_REPEAT)
-				? &tile.rep->texcoords[0]
-				: tile.et->texcoordQuadPtr;
-			assert(tcbuf);
-			if(lastTexcoordBuf != tcbuf)
+			const DynamicGPUBuffer *vb = !(tile.flags & TILEFLAG_REPEAT)
+				? tile.et->vertexbuf
+				: &tile.rep->vertexbuf;
+			assert(vb);
+			if(vb != lastVertexBuf)
 			{
-				lastTexcoordBuf = tcbuf;
-				glTexCoordPointer(2, GL_FLOAT, 0, tcbuf);
+				lastVertexBuf = vb;
+				vb->apply();
 			}
-			glDrawArrays(GL_QUADS, 0, 4);
+			vb->DrawArrays(GL_TRIANGLE_FAN, 4);
 		}
 		else
 		{
@@ -248,7 +235,7 @@ void TileRender::onRender(const RenderState& rs) const
 		glPopMatrix();
 	}
 
-	glPopClientAttrib();
+	glBindBufferARB(GL_ARRAY_BUFFER, 0);
 
 	RenderObject::lastTextureApplied = lastTexId;
 	RenderObject::lastTextureRepeat = !!lastTexRepeat;

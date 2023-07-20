@@ -145,7 +145,8 @@ void Core::setup_opengl()
 	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
 	glClearDepth(1.0);								// Depth Buffer Setup
 	glDisable(GL_CULL_FACE);
-
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_VERTEX_ARRAY);
 	glLoadIdentity();
 
 	setClearColor(clearColor);
@@ -153,6 +154,8 @@ void Core::setup_opengl()
 	frameBuffer.init(-1, -1, true);
 	if(afterEffectManager)
 		afterEffectManager->updateDevice();
+
+	defaultQuadVertexBuf.initQuadVertices(0, 0, 1, 1);
 }
 
 void Core::resizeWindow(int w, int h, int full, int bpp, int vsync, int display, int hz)
@@ -276,7 +279,7 @@ static bool checkWritable(const std::string& path, bool warn, bool critical)
 
 
 Core::Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
-: ActionMapper(), StateManager(), appName(appName)
+: ActionMapper(), StateManager(), appName(appName), defaultQuadVertexBuf(GPUBUF_STATIC | GPUBUF_VERTEXBUF)
 {
 	window = NULL;
 	sound = NULL;
@@ -1916,6 +1919,8 @@ void Core::shutdown()
 	debugLog("Core's framebuffer...");
 		frameBuffer.unloadDevice();
 	debugLog("OK");
+
+	defaultQuadVertexBuf.dropBuffer();
 
 	debugLog("Shutdown Graphics Library...");
 		shutdownGraphicsLibrary();

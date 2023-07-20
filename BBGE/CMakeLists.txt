@@ -116,6 +116,8 @@ set(BBGE_SRCS
     TileRender.h
     Tileset.cpp
     Tileset.h
+    VertexBuffer.cpp
+    VertexBuffer.h
     Vector.cpp
     Vector.h
     Window.cpp
