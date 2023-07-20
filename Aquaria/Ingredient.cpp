@@ -64,7 +64,7 @@ Ingredient::Ingredient(const Vector &pos, IngredientData *data, int amount)
 	lifeSpan = 30;
 	if (data)
 	{
-		setTexture("Ingredients/"+data->gfx);
+		setTexture("ingredients/"+data->gfx);
 	}
 	int mag = 600;
 	if (isRotKind())

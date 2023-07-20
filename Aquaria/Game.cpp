@@ -240,7 +240,7 @@ Game::~Game()
 
 void Game::pickupIngredientEffects(IngredientData *data)
 {
-	Quad *q = new Quad("gfx/ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), (570-2*(100*miniMapRender->scale.y))+ingOffY));
+	Quad *q = new Quad("ingredients/" + data->gfx, Vector(800-20 + core->getVirtualOffX(), (570-2*(100*miniMapRender->scale.y))+ingOffY));
 	q->scale = Vector(0.8f, 0.8f);
 	q->followCamera = 1;
 	q->alpha.ensureData();
@@ -4881,7 +4881,7 @@ void Game::learnedRecipe(Recipe *r, bool effects)
 		{
 			if (effects)
 			{
-				setControlHint(os.str(), 0, 0, 0, 3, std::string("gfx/ingredients/") + data->gfx);
+				setControlHint(os.str(), 0, 0, 0, 3, "ingredients/" + data->gfx);
 			}
 		}
 	}
