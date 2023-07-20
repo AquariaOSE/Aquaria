@@ -202,17 +202,13 @@ void RenderGrid::renderDebugPoints(const RenderState& rs) const
 	glPointSize(2);
 	glColor3f(1,0,0);
 	glBegin(GL_POINTS);
-		const size_t NX = grid.width()-1;
-		const size_t NY = grid.height()-1;
-		for (size_t y = 0; y < NY; y++)
+		const size_t W = grid.width();
+		const size_t H = grid.height();
+		for (size_t y = 0; y < H; y++)
 		{
-			for (size_t x = 0; x < NX; x++)
-			{
-				glVertex2f(grid(x,y).x,     grid(x,y).y);
-				glVertex2f(grid(x,y+1).x,   grid(x,y+1).y);
-				glVertex2f(grid(x+1,y+1).x, grid(x+1,y+1).y);
-				glVertex2f(grid(x+1,y).x,   grid(x+1,y).y);
-			}
+			const Vector * const row = grid.row(y);
+			for (size_t x = 0; x < W; x++)
+				glVertex2f(row[x].x, row[x].y);
 		}
 	glEnd();
 }
