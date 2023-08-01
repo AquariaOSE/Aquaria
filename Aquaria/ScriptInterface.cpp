@@ -7656,12 +7656,32 @@ luaFunc(node_setElementsInLayerActive)
 
 static int pushElementData(lua_State *L, const Element *e)
 {
-	lua_pushinteger(L, e->templateIdx);
-	lua_pushstring(L, e->texture->name.c_str());
-	lua_pushboolean(L, e->isElementActive());
-	lua_pushinteger(L, e->bgLayer);
-	lua_pushinteger(L, e->tag);
-	return 5;
+	/*  1 */ lua_pushinteger(L, e->templateIdx);
+	/*  2 */ lua_pushstring(L, e->texture->name.c_str());
+	/*  3 */ lua_pushboolean(L, e->isElementActive());
+	/*  4 */ lua_pushinteger(L, e->bgLayer);
+	/*  5 */ lua_pushinteger(L, e->tag);
+	/*  6 */ lua_pushnumber(L, e->position.x);
+	/*  7 */ lua_pushnumber(L, e->position.y);
+	/*  8 */ lua_pushnumber(L, e->scale.x);
+	/*  9 */ lua_pushnumber(L, e->scale.y);
+	/* 10 */ lua_pushnumber(L, e->rotation.z);
+	/* 11 */ lua_pushboolean(L, e->isfh());
+	/* 12 */ lua_pushboolean(L, e->isfv());
+
+	// 13, 14
+	if(e->isRepeatingTextureToFill())
+	{
+		lua_pushnumber(L, e->repeatToFillScale.x);
+		lua_pushnumber(L, e->repeatToFillScale.y);
+	}
+	else
+	{
+		lua_pushnil(L);
+		lua_pushnil(L);
+	}
+
+	return 14;
 }
 
 // (layer, func)
