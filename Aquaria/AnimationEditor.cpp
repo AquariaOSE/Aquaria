@@ -1604,7 +1604,7 @@ void AnimationEditor::applyBoneToSplineGrid()
 		Animation *a = editSprite->getCurrentAnimation();
 		BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 		assert(bk->controlpoints.size() == splinegrid->getSpline().ctrlX() * splinegrid->getSpline().ctrlY());
-		assert(bk->grid.size() == editingBone->getDrawGrid().linearsize());
+		assert(bk->grid.size() == editingBone->getGrid()->linearsize());
 		splinegrid->importControlPoints(&bk->controlpoints[0]);
 	}
 }
@@ -1616,7 +1616,7 @@ void AnimationEditor::applySplineGridToBone()
 		Animation *a = editSprite->getCurrentAnimation();
 		BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 		assert(bk->controlpoints.size() == splinegrid->getSpline().ctrlX() * splinegrid->getSpline().ctrlY());
-		assert(bk->grid.size() == editingBone->getDrawGrid().linearsize());
+		assert(bk->grid.size() == editingBone->getGrid()->linearsize());
 		splinegrid->exportControlPoints(&bk->controlpoints[0]);
 		BoneGridInterpolator *interp = a->getBoneGridInterpolator(editingBone->boneIdx);
 		interp->updateGridAndBone(*bk, editingBone);

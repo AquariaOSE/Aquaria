@@ -1073,7 +1073,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			const BoneGridInterpolator& bgip = a->interpolators[j];
 			XMLElement *interp = xml->NewElement("Interpolator");
 			Bone *bone = this->getBoneByIdx(bgip.idx);
-			assert(bone->gridType == Quad::GRID_INTERP);
+			assert(bone->grid->gridType == GRID_INTERP);
 			if(bgip.storeBoneByIdx)
 				interp->SetAttribute("bone", (int)bone->boneIdx);
 			else
