@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "TextureMgr.h"
 #include "VertexBuffer.h"
 #include "DarkLayer.h"
-
+#include "RenderGrid.h"
 #include "GameKeys.h"
 
 class ParticleEffect;
@@ -413,7 +413,7 @@ public:
 
 	TextureMgr texmgr;
 
-	inline const DynamicGPUBuffer *getDefaultQuadVertexBuffer() const { return &defaultQuadVertexBuf; }
+	inline const RenderGrid *getDefaultQuadGrid() const { return &defaultQuadGrid; }
 
 protected:
 
@@ -492,7 +492,7 @@ protected:
 	virtual void updateActionButtons();
 	void clearActionButtons();
 
-	DynamicGPUBuffer defaultQuadVertexBuf;
+	RenderGrid defaultQuadGrid;
 
 public:
 	// inclusive!

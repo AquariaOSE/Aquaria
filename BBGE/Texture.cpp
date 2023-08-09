@@ -30,6 +30,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "GLLoad.h"
 #include "stb_image_resize.h"
 
+bool TexCoordBox::isStandard() const
+{
+	return u1 == 0 && v1 == 0 && u2 == 1 && v2 == 1;
+}
+
+void TexCoordBox::setStandard()
+{
+	u1 = 0;
+	v1 = 0;
+	u2 = 1;
+	v2 = 1;
+}
+
 
 Texture::Texture()
 {
@@ -88,13 +101,13 @@ static const GLenum repeatLUT[] = { GL_CLAMP_TO_EDGE, GL_REPEAT };
 void Texture::apply(bool repeat) const
 {
 	glBindTexture(GL_TEXTURE_2D, gltexid);
-	if(repeat != _repeating)
+	/*if(repeat != _repeating)
 	{
 		_repeating = repeat;
 		GLenum rep = repeatLUT[repeat];
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, rep);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, rep);
-	}
+	}*/
 }
 
 struct GlTexFormat
@@ -127,8 +140,8 @@ bool Texture::upload(const ImageData& img, bool mipmap)
 	if(!gltexid)
 		glGenTextures(1, &gltexid);
 	glBindTexture(GL_TEXTURE_2D, gltexid);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_REPEAT);
 	_repeating = false;
 
 	const GlTexFormat& f = formatLUT[img.channels - 1];

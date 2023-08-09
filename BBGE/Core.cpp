@@ -155,7 +155,9 @@ void Core::setup_opengl()
 	if(afterEffectManager)
 		afterEffectManager->updateDevice();
 
-	defaultQuadVertexBuf.initQuadVertices(0, 0, 1, 1);
+	TexCoordBox	defaultTC;
+	defaultTC.setStandard();
+	defaultQuadGrid.init(2, 2, defaultTC);
 }
 
 void Core::resizeWindow(int w, int h, int full, int bpp, int vsync, int display, int hz)
@@ -279,7 +281,7 @@ static bool checkWritable(const std::string& path, bool warn, bool critical)
 
 
 Core::Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
-: ActionMapper(), StateManager(), appName(appName), defaultQuadVertexBuf(GPUBUF_STATIC | GPUBUF_VERTEXBUF)
+: ActionMapper(), StateManager(), appName(appName)
 {
 	window = NULL;
 	sound = NULL;
@@ -730,6 +732,8 @@ void Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 	debugLog((const char*)glGetString(GL_VENDOR));
 	debugLog((const char*)glGetString(GL_RENDERER));
 	debugLog((const char*)glGetString(GL_VERSION));
+
+	DynamicGPUBuffer::StaticInit();
 
 	enumerateScreenModes(window->getDisplayIndex());
 
@@ -1920,7 +1924,7 @@ void Core::shutdown()
 		frameBuffer.unloadDevice();
 	debugLog("OK");
 
-	defaultQuadVertexBuf.dropBuffer();
+	defaultQuadGrid.dropBuffers();
 
 	debugLog("Shutdown Graphics Library...");
 		shutdownGraphicsLibrary();

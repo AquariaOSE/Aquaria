@@ -3,6 +3,8 @@
 
 #include <stdlib.h> // size_t
 
+struct TexCoordBox;
+
 enum BufUsage
 {
     // usage
@@ -43,9 +45,8 @@ enum AccessFlags
 
 class DynamicGPUBuffer
 {
-    friend class BufMapW;
 public:
-    void StaticInit();
+    static void StaticInit();
     DynamicGPUBuffer(unsigned usage);
     ~DynamicGPUBuffer();
     void dropBuffer();
@@ -54,37 +55,51 @@ public:
 
     // beginWrite(), then write exactly newsize bytes, then commit
     void *beginWrite(BufDataType type, size_t newsize, unsigned access); // AccessFlags
-    bool commitWrite();
+    bool commitWrite(); // used same size as passed to beginWrite()
+    bool commitWrite(size_t used); // explicitly specify used size (may be less than initially requested)
 
     void upload(BufDataType type, const void *data, size_t size);
 
-    static void DrawArrays(unsigned glmode, size_t n, size_t first = 0); // uses last applied buffer for drawing
-
     // uses own data for indexing and prev. applied buffer for the data to draw
-    void drawElements(unsigned glmode, size_t n, size_t first = 0);
+    void drawElements(unsigned glmode, size_t n, size_t first = 0) const;
 
 
     void apply(BufDataType usetype = GPUBUFTYPE_NONE) const;
 
     // Inteded for use with DrawArrays(4) and GL_TRIANGLE_FAN or GL_QUADS (both work)
-    void initQuadVertices(float tu1, float tu2, float tv1, float tv2);
+    void initQuadVertices(const TexCoordBox& tc, unsigned access);
+
+    // Init indices for drawing a grid, like this 4x3 grid:
+    // 0---1---2---3
+    // |   |   |   |
+    // 4---5---6---7
+    // |   |   |   |
+    // 8---9---10--11
+    // Returns the number of triangles to use with GL_TRIANGLES.
+    // Pass invert==true to draw from bottom to top.
+    size_t initGridIndices_Triangles(size_t w, size_t h, bool invert, unsigned access);
 
 private:
 
     void* _allocBytes(size_t bytes);
     void* _ensureBytes(size_t bytes);
     unsigned _ensureDBuf();
+    bool _commitWrite(size_t used);
 
     unsigned _bufid;
     unsigned _binding;
     size_t _size;
-    size_t _cap;
+    size_t _h_cap;
     void *_h_data;
+    size_t _d_cap;
     void *_d_map;
     const unsigned _usage;
     BufDataType _datatype;
 
     static bool _HasARB;
+
+    DynamicGPUBuffer(const DynamicGPUBuffer&); // no copy
+    DynamicGPUBuffer& operator=(const DynamicGPUBuffer&); // no assign
 };
 
 

@@ -39,7 +39,7 @@ protected:
 	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
-class RenderGrid;
+class DynamicRenderGrid;
 
 class Quad : public RenderObject
 {
@@ -47,7 +47,7 @@ public:
 	Quad(const std::string &tex, const Vector &pos);
 	Quad();
 	virtual ~Quad();
-	RenderGrid *createGrid(int x, int y);
+	DynamicRenderGrid *createGrid(int x, int y);
 	void destroy() OVERRIDE;
 	bool isCoordinateInside(Vector coord, int minSize=0) const;
 	bool isCoordinateInsideWorld(const Vector &coord, int minSize=0) const;
@@ -61,14 +61,14 @@ public:
 	float getWidth() const {return width;}
 	float getHeight() const {return height;}
 
-	RenderGrid *setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
+	DynamicRenderGrid *setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
 	void setDrawGridAlpha(size_t x, size_t y, float alpha);
 	void repeatTextureToFill(bool on);
 	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatTexture; }
 	void setStripPoints(bool vert, const Vector *points, size_t n);
-	RenderGrid *getGrid() { return grid; }
-	const RenderGrid *getGrid() const { return grid; }
+	DynamicRenderGrid *getGrid() { return grid; }
+	const DynamicRenderGrid *getGrid() const { return grid; }
 
 	void reloadDevice() OVERRIDE;
 
@@ -88,7 +88,7 @@ public:
 
 protected:
 
-	RenderGrid *grid;
+	DynamicRenderGrid *grid;
 
 
 	void resetGrid();

@@ -5,6 +5,9 @@
 #include "Vector.h"
 #include "EngineEnums.h"
 #include "VertexBuffer.h"
+#include "RenderGrid.h"
+#include "Texture.h" // TexCoordBox
+
 
 // A Tile is a very stripped down RenderObject that bypasses the default
 // rendering pipeline for efficiency reasons.
@@ -33,14 +36,17 @@ Assumptions:
 - Most tiles that exist are going to be rendered
 - Only few tiles have an effect attached
 
-Gotaches:
+Gotchas:
 - Keeping a pointer to a TileData is not safe.
 - Tile indexes are not stable. Moving a tile changes the index it can be addressed with
+- Tile repeat causes a tile to have non-standard texcoords.
+  Grid effect texcoords need to be synced with repeat tc, if repeat is toggled.
+  Also mind non-standard texcoords in ElementTemplate (eg. aquarian glyphs)
 */
 
 class ElementTemplate;
 class Texture;
-class RenderGrid;
+class DynamicRenderGrid;
 class TileRender;
 
 enum EFXType
@@ -50,6 +56,8 @@ enum EFXType
 	EFX_ALPHA,
 	EFX_WAVY
 };
+
+struct TileData;
 
 // static configuration for one effect type. POD.
 struct TileEffectConfig
@@ -81,6 +89,9 @@ public:
 			BlendType blend;
 		} alpha;
 	} u;
+
+
+	bool needsOwnInstanceForTile(const TileData& t) const;
 };
 
 enum TileFlags
@@ -96,24 +107,23 @@ enum TileFlags
 	TILEFLAG_HIDDEN      = 0x80, // don't render tile
 	TILEFLAG_SELECTED    = 0x100, // ephemeral: selected in editor
 	TILEFLAG_EDITOR_HIDDEN = 0x200, // tile is hidden for editor reasons. temporarily set when multi-selecting and moving. doesn't count as hidden externally and is only for rendering.
-	TILEFLAG_OWN_REPEAT  = 0x400, // owns TileRepeatData, may update, must delete
-	TILEFLAG_FV          = 0x800, // flipped vertically
+	TILEFLAG_FV          = 0x400, // flipped vertically
 };
-
-struct TileData;
 
 struct TileEffectData
 {
-	TileEffectData(const TileEffectConfig& cfg);
+	TileEffectData(const TileEffectConfig& cfg, const TileData *t); // NULL is passed in during global prepare, when we don't have a tile
 	~TileEffectData();
 	void update(float dt, const TileData *t); // optional t needed for EFX_WAVY
 	void doInteraction(const TileData& t, const Vector& pos, const Vector& vel, float mult, float touchWidth);
 
 	const EFXType efxtype;
 	const unsigned efxidx; // index of TileEffect
-	RenderGrid *grid;
+	DynamicRenderGrid *grid; // may or may not own this. This possibly points to a tile's TileRepeatData::grid
 	InterpolatedVector alpha;
 	BlendType blend;
+	bool ownGrid; // true if we own grid
+	bool shared; // only used for assertions. set if this tile effect instance is pre-made and shared across many tiles
 
 	struct Wavy
 	{
@@ -128,23 +138,29 @@ struct TileEffectData
 	Wavy wavy;
 
 private:
+	DynamicRenderGrid *_ensureGrid(size_t w, size_t h, const TileData *t);
 	TileEffectData(const TileEffectData&); // no-copy
 };
 
 struct TileRepeatData
 {
 	TileRepeatData();
+	TileRepeatData(const TileRepeatData& o);
+	const TexCoordBox& getTexCoords() const { return grid.getTexCoords(); }
+	const DynamicRenderGrid& getGrid() const { return grid; }
 
 	// written via refresh()
-	DynamicGPUBuffer vertexbuf;
-	float tu1, tv1, tu2, tv2;
+	DynamicRenderGrid grid; // need this here because a repeating tile WITH a grid-based tile effect is a special and annoying case to handle
 
 	// set by user
 	float texscaleX, texscaleY;
 	float texOffX, texOffY;
 
-	// pass ET & scale of owning tile
-	void refresh(const ElementTemplate& et, float scalex, float scaley);
+	// pass owning tile
+	void refresh(const TileData& t);
+
+private:
+	TexCoordBox calcTexCoords(const TileData& t) const;
 };
 
 // POD and as compact as possible. Intended for rendering as quickly as possible.
@@ -157,9 +173,9 @@ struct TileData
 	float rotation;
 	unsigned flags; // TileFlags
 	unsigned tag; // FIXME: make this int
-	const ElementTemplate *et; // never NULL. texture, texcoords, etc is here. // TODO: maybe replace with unsigned tilesetID? but that's an extra indirection or two during rendering...
-	TileEffectData *eff; // mostly NULL
-	TileRepeatData *rep;
+	const ElementTemplate *et; // never NULL. texture, texcoords, etc is here.
+	TileEffectData *eff; // mostly NULL. owned if flags & TILEFLAG_OWN_EFFDATA, otherwise shared
+	TileRepeatData *rep; // NULL in most cases, set if repeating. Always owned.
 
 	// helpers for external access
 	inline void setVisible(bool on) { if(on) flags &= ~TILEFLAG_HIDDEN; else flags |= TILEFLAG_HIDDEN; }
@@ -168,6 +184,11 @@ struct TileData
 	TileRepeatData *setRepeatOn(float texscalex = 1, float texscaley = 1, float offx = 0, float offy = 0);
 	void setRepeatOff();
 	void refreshRepeat();
+
+	bool hasStandardTexcoords() const;
+
+	const TexCoordBox& getTexcoords() const;
+	const RenderGrid *getGrid() const;
 };
 
 class TileEffectStorage

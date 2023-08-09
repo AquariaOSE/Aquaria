@@ -124,13 +124,15 @@ void TileMgr::createTiles(const TileDef* defs, size_t n)
 				t->flags |= TILEFLAG_FH;
 			if(d.fv)
 				t->flags |= TILEFLAG_FV;
-			if(d.repeat)
-				t->setRepeatOn(d.rsx, d.rsy);
 
 			t->rotation = d.rot;
 			t->tag = d.tag;
 			t->scalex = d.sx;
 			t->scaley = d.sy;
+
+			// must be done last
+			if(d.repeat)
+				t->setRepeatOn(d.rsx, d.rsy);
 		}
 	}
 
@@ -188,6 +190,7 @@ TileData* TileMgr::_createTile(unsigned tilesetID, unsigned layer,  float x, flo
 	//t.beforeScaleOffsetY = 0;
 	t.flags = GetTileFlags(ef);
 	t.tag = 0;
+	t.rep = NULL;
 	t.et = tileset.getByIdx(tilesetID);
 	assert(t.et);
 	/* t.eff = */ tileEffects.assignEffect(t, effidx);

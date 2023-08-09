@@ -81,12 +81,12 @@ SplineGrid::~SplineGrid()
 {
 }
 
-RenderGrid *SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned degx, unsigned degy)
+DynamicRenderGrid *SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned degx, unsigned degy)
 {
     size_t oldcpx = bsp.ctrlX();
     size_t oldcpy = bsp.ctrlY();
 
-    RenderGrid *ret = this->createGrid(xres, yres);
+    DynamicRenderGrid *ret = this->createGrid(xres, yres);
 
     std::vector<SplineGridCtrlPoint*> oldp;
     ctrlp.swap(oldp);

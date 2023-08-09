@@ -4,12 +4,14 @@
 #include "Vector.h"
 #include <vector>
 #include "Texture.h"
-#include "VertexBuffer.h"
+#include "RenderGrid.h"
+
+class DynamicRenderGrid;
 
 class ElementTemplate
 {
 public:
-	ElementTemplate() { w=0; h=0; idx=-1; tu1=tv1=0; tu2=tv2=1; vertexbuf = NULL; ownsVertexbuf = false; }
+	ElementTemplate() { w=0; h=0; idx=-1; tc.setStandard(); grid = NULL; }
 	~ElementTemplate();
 	inline bool operator<(const ElementTemplate& o) const { return idx < o.idx; }
 
@@ -18,11 +20,10 @@ public:
 	// lazily assigned when tex is loaded
 	CountedPtr<Texture> tex; // NULL if failed to load or not yet loaded
 	float w,h; // custom size if used, otherwise texture size
-	const DynamicGPUBuffer * vertexbuf; // never NULL
-	bool ownsVertexbuf;
+	RenderGrid *grid; // NULL if default, otherwise we own this
 
 	// fixed
-	float tu1, tu2, tv1, tv2; // texcoords
+	TexCoordBox tc;
 	size_t idx;
 	std::string gfx;
 

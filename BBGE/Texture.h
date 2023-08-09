@@ -24,6 +24,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <string>
 #include "Refcounted.h"
 
+struct TexCoordBox
+{
+	float u1, v1; // upper left (x,y)
+	float u2, v2; // lower right (x,y)
+
+	bool isStandard() const;
+	void setStandard();
+};
 
 enum TextureLoadResult
 {

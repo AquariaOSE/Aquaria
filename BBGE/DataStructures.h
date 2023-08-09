@@ -84,4 +84,35 @@ public:
 };
 
 
+template<typename T>
+class Accessor2d
+{
+public:
+    Accessor2d(T *p, size_t w, size_t h) : _p(p), _w(w), _h(h) {}
+
+    size_t width() const {return _w;}
+    size_t height() const {return _h;}
+    size_t linearsize() const {return _w * _h;}
+
+    inline T& operator()(size_t x, size_t y)
+    {
+        return _p[y * _w + x];
+    }
+    inline const T& operator()(size_t x, size_t y) const
+    {
+        return _p[y * _w + x];
+    }
+
+    const T *data() const { return _p; }
+          T *data()       { return _p; }
+
+    const T *row(size_t y) const { return &_p[y * _w]; }
+          T *row(size_t y)       { return &_p[y * _w]; }
+
+private:
+    const T *_p;
+    const size_t _w, _h;
+};
+
+
 #endif

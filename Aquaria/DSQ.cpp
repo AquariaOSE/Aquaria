@@ -3522,14 +3522,14 @@ bool DSQ::loadTileset(std::string pack, const unsigned char *usedIdx, size_t use
 				y++;
 			}
 
-			et->tu1 = x*cell;
-			et->tv1 = y*cell;
-			et->tu2 = et->tu1 + cell;
-			et->tv2 = et->tv1 + cell;
+			et->tc.u1 = x*cell;
+			et->tc.v1 = y*cell;
+			et->tc.u2 = et->tc.u1 + cell;
+			et->tc.v2 = et->tc.v1 + cell;
 
-			et->tv2 = 1 - et->tv2;
-			et->tv1 = 1 - et->tv1;
-			std::swap(et->tv1,et->tv2);
+			/*et->tc.v2 = 1 - et->tc.v2;
+			et->tc.v1 = 1 - et->tc.v1;
+			std::swap(et->tc.v1,et->tc.v2);*/
 
 			et->w = 512*cell;
 			et->h = 512*cell;

@@ -2,6 +2,7 @@
 #include "RenderBase.h"
 #include "Base.h"
 #include <assert.h>
+#include "Texture.h" // TexCoordBox
 
 bool DynamicGPUBuffer::_HasARB = false;
 
@@ -34,8 +35,9 @@ DynamicGPUBuffer::DynamicGPUBuffer(unsigned usage)
     : _bufid(0)
     , _binding((usage & GPUBUF_INDEXBUF) ? GL_ELEMENT_ARRAY_BUFFER_ARB : GL_ARRAY_BUFFER_ARB)
     , _size(0)
-    , _cap(0)
+    , _h_cap(0)
     , _h_data(NULL)
+    , _d_cap(0)
     , _d_map(NULL)
     , _usage(toGlUsage(usage))
     , _datatype(BufDataType(-1))
@@ -55,7 +57,7 @@ void* DynamicGPUBuffer::_allocBytes(size_t bytes)
     void *p = realloc(_h_data, bytes);
     if(p)
     {
-        _cap = bytes;
+        _h_cap = bytes;
         _h_data = p;
     }
     return p;
@@ -63,10 +65,10 @@ void* DynamicGPUBuffer::_allocBytes(size_t bytes)
 
 void* DynamicGPUBuffer::_ensureBytes(size_t bytes)
 {
-    if(bytes < _cap)
+    if(bytes < _h_cap)
         return _h_data;
 
-    size_t newsize = 2 * _size;
+    size_t newsize = 2 * _h_cap;
     if(newsize < bytes)
         newsize += bytes;
 
@@ -81,9 +83,10 @@ void* DynamicGPUBuffer::beginWrite(BufDataType type, size_t newsize, unsigned ac
     if(_HasARB)
     {
         glBindBufferARB(_binding, _ensureDBuf());
-        glBufferDataARB(_binding, newsize, NULL, _usage); // orphan buffer
         if(!(access & GPUACCESS_HOSTCOPY))
         {
+            _d_cap = newsize;
+            glBufferDataARB(_binding, newsize, NULL, _usage); // orphan buffer
             void *p = glMapBufferARB(_binding, GL_WRITE_ONLY_ARB);
             _d_map = p;
             if(p)
@@ -96,20 +99,40 @@ void* DynamicGPUBuffer::beginWrite(BufDataType type, size_t newsize, unsigned ac
 
 bool DynamicGPUBuffer::commitWrite()
 {
+    return _commitWrite(_size);
+}
+
+bool DynamicGPUBuffer::commitWrite(size_t used)
+{
+    _size = used;
+    return _commitWrite(used);
+}
+
+bool DynamicGPUBuffer::_commitWrite(size_t used)
+{
     if(_HasARB)
     {
         if(_d_map)
         {
+            assert(used <= _d_cap);
             _d_map = NULL;
             return glUnmapBufferARB(_binding); // can fail
         }
-        // otherwise, the prev. call to glMapBufferARB failed (or GPUACCESS_NOMAP was set).
+        // otherwise, the prev. call to glMapBufferARB failed (or GPUACCESS_HOSTCOPY was set).
         // -> didn't map, but wrote to host memory. upload it.
         assert(_h_data);
-        glBufferSubDataARB(_binding, 0, _size, _h_data);
+        assert(used <= _h_cap);
+        if(used <= _d_cap)
+            glBufferSubDataARB(_binding, 0, used, _h_data); // update existing buffer
+        else
+        {
+            _d_cap = used;
+            glBufferDataARB(_binding, used, _h_data, _usage); // alloc new buffer
+        }
     }
     // else nothing to do
 
+    assert(used <= _h_cap);
     return true;
 }
 
@@ -144,33 +167,40 @@ void DynamicGPUBuffer::apply(BufDataType usetype) const
     if(!usetype)
         usetype = _datatype;
 
+    const unsigned bufid = this->_bufid;
+
     void *p;
-    if(_HasARB)
+    if(bufid)
     {
-        unsigned bufid = this->_bufid;
-        assert(bufid != s_lastVertexBuffer); // check that it's no redundant state change
-        if(bufid == s_lastVertexBuffer && usetype == s_lastDataType)
-            return;
         p = NULL;
-        s_lastVertexBuffer = bufid;
-        glBindBufferARB(GL_ARRAY_BUFFER_ARB, bufid);
+        //if(bufid != s_lastVertexBuffer)
+        //    glBindBufferARB(GL_ARRAY_BUFFER_ARB, bufid);
     }
     else
     {
         p = (void*)this->_h_data;
-        assert(p != s_lastHostPtr); // check that it's no redundant state change
-        if(p == s_lastHostPtr && usetype == s_lastDataType) // don't need to check for datatype since that's const for the buffer with that ptr
-            return;
+        //assert(p != s_lastHostPtr); // check that it's no redundant state change
+        //if(p == s_lastHostPtr && usetype == s_lastDataType) // don't need to check for datatype since that's const for the buffer with that ptr
+        //    return;
     }
 
-    s_lastDataType = usetype;
+    assert(bufid || p);
 
-    assert((ty & 0xf) < Countof(s_gltype));
-    const unsigned gltype = s_gltype[usetype & 0xf];
-    const unsigned scalars = (usetype >> 4) & 0xf;
-    const unsigned stride = (usetype >> 8) & 0xff;
-    const unsigned tcoffset = (usetype >> 16) & 0xff;
-    const unsigned coloroffset = usetype >> 24;
+    glBindBufferARB(GL_ARRAY_BUFFER_ARB, bufid);
+
+    //if(bufid == s_lastVertexBuffer && usetype == s_lastDataType && p == s_lastHostPtr)
+    //    return;
+
+    s_lastDataType = usetype;
+    s_lastVertexBuffer = bufid;
+
+    unsigned u = usetype; // always want unsigned shifts
+    assert((u & 0xf) < Countof(s_gltype));
+    const unsigned gltype = s_gltype[u & 0xf];
+    const unsigned scalars = (u >> 4u) & 0xf;
+    const unsigned stride = (u >> 8u) & 0xff;
+    const unsigned tcoffset = (u >> 16u) & 0xff;
+    const unsigned coloroffset = u >> 24u;
 
     // vertex and texcoords are always enabled
     glVertexPointer(scalars, gltype, stride, p);
@@ -225,38 +255,107 @@ void DynamicGPUBuffer::dropBuffer()
     _size = 0;
 }
 
-void DynamicGPUBuffer::DrawArrays(unsigned glmode, size_t n, size_t first)
+static unsigned getBoundBuffer(unsigned target)
 {
-    glDrawArrays(glmode, first, n);
+    int id = 0;
+    glGetIntegerv(target, &id);
+    return id;
 }
 
-void DynamicGPUBuffer::drawElements(unsigned glmode, size_t n, size_t first)
+void DynamicGPUBuffer::drawElements(unsigned glmode, size_t n, size_t first) const
 {
     assert(_binding == GL_ELEMENT_ARRAY_BUFFER_ARB);
     assert(s_gltype[_datatype & 0xf] == GL_SHORT);
+    assert(getBoundBuffer(GL_ARRAY_BUFFER_BINDING)); // FIXME: this assert is wrong if indices are on the host
 
-    if(s_lastIndexBuffer != _bufid)
-    {
-        s_lastIndexBuffer = _bufid;
-        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, _bufid);
-    }
+    unsigned id = _bufid;
 
-    glDrawElements(glmode, n, GL_SHORT, NULL);
+    //if(s_lastIndexBuffer != id)
+    //{
+    //    s_lastIndexBuffer = id;
+        glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, id);
+    //}
+
+    void *p = id ? NULL : _h_data;
+    assert(p || id);
+
+    glDrawElements(glmode, n, GL_UNSIGNED_SHORT, p);
 }
 
-void DynamicGPUBuffer::initQuadVertices(float tu1, float tv1, float tu2, float tv2)
+void DynamicGPUBuffer::initQuadVertices(const TexCoordBox& tc, unsigned access)
 {
     do
     {
-        float *p = (float*)beginWrite(GPUBUFTYPE_VEC2_TC, (4*4) * sizeof(float), GPUACCESS_DEFAULT);
+        float *p = (float*)beginWrite(GPUBUFTYPE_VEC2_TC, (4*4) * sizeof(float), access);
         *p++ = -0.5f; *p++ = +0.5f;     // xy
-	    *p++ = tu1;   *p++ = 1.0f-tv1;  //   uv
+	    *p++ = tc.u1;   *p++ = tc.v1;  //   uv
 	    *p++ = +0.5f; *p++ = +0.5f;     // xy
-	    *p++ = tu2;   *p++ = 1.0f-tv1;  //   uv
+	    *p++ = tc.u2;   *p++ = tc.v1;  //   uv
 	    *p++ = +0.5f; *p++ = -0.5f;     // xy
-	    *p++ = tu2;   *p++ = 1.0f-tv2;  //   uv
+	    *p++ = tc.u2;   *p++ = tc.v2;  //   uv
 	    *p++ = -0.5f; *p++ = -0.5f;     // xy
-	    *p++ = tu1;   *p++ = 1.0f-tv2;   //   uv
+	    *p++ = tc.u1;   *p++ = tc.v2;  //   uv
     }
     while(!commitWrite());
+}
+
+// 0---1---2---3
+// |   |   |   |
+// 4---5---6---7
+// |   |   |   |
+// 8---9---10--11
+// This is a 4x3 grid
+// Which is 3*2 = 6 quads
+// That's 12 triangles
+// Each triangle is 3 indices, so we get 36 indices in total
+size_t DynamicGPUBuffer::initGridIndices_Triangles(size_t w, size_t h, bool invert, unsigned access)
+{
+    assert(w * h < 0xffff);
+
+    const size_t quadsx = w - 1;
+    const size_t quadsy = h - 1;
+    const size_t quads = quadsx * quadsy;
+    do
+    {
+        unsigned short *p = (unsigned short*)beginWrite(GPUBUFTYPE_U16, 6*quads * sizeof(short), access);
+
+        if(!invert)
+        {
+            // top to bottom
+            for(size_t y = 0; y < quadsy; ++y)
+            {
+                size_t i = y * w;
+                for(size_t x = 0; x < quadsx; ++x)
+                {
+                    *p++ = (unsigned short)(i);         // 0
+                    *p++ = (unsigned short)(i + 1);     // 1
+                    *p++ = (unsigned short)(i + w);     // 4
+
+                    *p++ = (unsigned short)(i + 1);     // 1
+                    *p++ = (unsigned short)(i + w + 1); // 5
+                    *p++ = (unsigned short)(i + w);     // 4
+                }
+            }
+        }
+        else
+        {
+            // bottom to top
+            for(size_t y = quadsy; y --> 0; )
+            {
+                size_t i = y * w;
+                for(size_t x = 0; x < quadsx; ++x)
+                {
+                    *p++ = (unsigned short)(i);         // 0
+                    *p++ = (unsigned short)(i + 1);     // 1
+                    *p++ = (unsigned short)(i + w);     // 4
+
+                    *p++ = (unsigned short)(i + 1);     // 1
+                    *p++ = (unsigned short)(i + w + 1); // 5
+                    *p++ = (unsigned short)(i + w);     // 4
+                }
+            }
+        }
+    }
+    while(!commitWrite());
+    return quads * 6; // each quad is 2 triangles x 3 verts
 }

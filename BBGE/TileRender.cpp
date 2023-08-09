@@ -64,8 +64,6 @@ void TileRender::onRender(const RenderState& rs) const
 
 	const bool renderExtras = renderBorders || RenderObject::renderCollisionShape;
 	const TileEffectData *prevEff = ((TileEffectData*)NULL)+1; // initial value is different from anything else
-	const RenderGrid *grid = NULL;
-	const DynamicGPUBuffer *lastVertexBuf = NULL;
 
 	for(size_t i = 0; i < storage.tiles.size(); ++i)
 	{
@@ -114,12 +112,9 @@ void TileRender::onRender(const RenderState& rs) const
 		{
 			prevEff = eff;
 			BlendType blend = BLEND_DEFAULT;
-			alpha = rs.alpha;
-			grid = NULL;
 
 			if(eff)
 			{
-				grid = eff->grid;
 				alpha *= eff->alpha.x;
 				blend = eff->blend;
 			}
@@ -136,7 +131,7 @@ void TileRender::onRender(const RenderState& rs) const
 		// Maps were designed with the bug present so we need to replicate it,
 		// otherwise things won't look correct.
 		unsigned effflag = tile.flags;
-		if(grid)
+		if(eff && eff->grid)
 			effflag &= ~TILEFLAG_FV;
 
 		float effrot = tile.rotation;
@@ -166,37 +161,12 @@ void TileRender::onRender(const RenderState& rs) const
 		glScalef(sw, sh, 1);
 
 
+		const RenderGrid *grid = tile.getGrid();
 		if(!grid)
-		{
-			const DynamicGPUBuffer *vb = !(tile.flags & TILEFLAG_REPEAT)
-				? tile.et->vertexbuf
-				: &tile.rep->vertexbuf;
-			assert(vb);
-			if(vb != lastVertexBuf)
-			{
-				lastVertexBuf = vb;
-				vb->apply();
-			}
-			vb->DrawArrays(GL_TRIANGLE_FAN, 4);
-		}
-		else
-		{
-			rx.alpha = alpha;
+			grid = core->getDefaultQuadGrid();
+		rx.alpha = alpha;
+		grid->render(rx);
 
-			Vector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
-			if(tile.flags & TILEFLAG_REPEAT)
-			{
-				upperLeftTextureCoordinates = Vector(tile.rep->tu1, tile.rep->tv1);
-				lowerRightTextureCoordinates = Vector(tile.rep->tu2, tile.rep->tv2);
-			}
-			else
-			{
-				upperLeftTextureCoordinates = Vector(et->tu1, et->tv1);
-				lowerRightTextureCoordinates = Vector(et->tu2, et->tv2);
-			}
-
-			grid->render(rx, upperLeftTextureCoordinates, lowerRightTextureCoordinates);
-		}
 
 		if(renderExtras)
 		{
@@ -221,6 +191,7 @@ void TileRender::onRender(const RenderState& rs) const
 					glVertex2f(0,0);
 				glEnd();
 
+				// TODO: move this to the IBO
 				glLineWidth(2);
 				glBegin(GL_LINE_STRIP);
 					glVertex2f(0.5f, 0.5f);
@@ -235,7 +206,8 @@ void TileRender::onRender(const RenderState& rs) const
 		glPopMatrix();
 	}
 
-	glBindBufferARB(GL_ARRAY_BUFFER, 0);
+	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
+	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
 	RenderObject::lastTextureApplied = lastTexId;
 	RenderObject::lastTextureRepeat = !!lastTexRepeat;

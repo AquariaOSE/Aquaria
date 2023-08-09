@@ -172,8 +172,7 @@ const ElementTemplate* Tileset::getAdjacent(size_t idx, int direction, bool wrap
 
 ElementTemplate::~ElementTemplate()
 {
-	if(ownsVertexbuf)
-		delete const_cast<DynamicGPUBuffer*>(vertexbuf);
+	delete grid;
 }
 
 void ElementTemplate::finalize()
@@ -195,20 +194,16 @@ void ElementTemplate::finalize()
 			h = 64;
 	}
 
-	if(tu1 == 0 && tv1 == 0 && tu2 == 1 && tv2 == 1)
+	if(tc.isStandard())
 	{
-		// this avoids buffer switches later on
-		vertexbuf = core->getDefaultQuadVertexBuffer();
-		ownsVertexbuf = false;
+		delete grid;
+		grid = NULL;
 	}
 	else
 	{
-		DynamicGPUBuffer *vb = ownsVertexbuf
-			? const_cast<DynamicGPUBuffer*>(vertexbuf)
-			: new DynamicGPUBuffer(GPUBUF_STATIC | GPUBUF_VERTEXBUF);
-		vb->initQuadVertices(tu1, tv1, tu2, tv2);
-		vertexbuf = vb;
-		ownsVertexbuf = true;
+		if(!grid)
+			grid = new RenderGrid;
+		grid->init(2, 2, tc);
 	}
 }
 

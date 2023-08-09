@@ -146,12 +146,11 @@ static void dropEffect(TileData& t)
 
 static void dropRepeat(TileData& t)
 {
-	if(t.flags & TILEFLAG_OWN_REPEAT)
+	if(t.rep)
 	{
 		delete t.rep;
-		t.flags &= ~TILEFLAG_OWN_REPEAT;
+		t.rep = NULL;
 	}
-	t.rep = NULL;
 }
 
 static void dropAll(TileData& t)
@@ -232,16 +231,16 @@ size_t TileStorage::cloneSome(const TileEffectStorage& effstore, const size_t* i
 	for(size_t i = ret; i < N; ++i) // loop only over newly added tiles
 	{
 		TileData& t = tiles[i];
+		if(t.rep)
+		{
+			t.rep = new TileRepeatData(*t.rep); // must be done BEFORE assigning eff
+		}
 		if((t.flags & TILEFLAG_OWN_EFFDATA) && t.eff)
 		{
 			int efx = t.eff->efxidx;
 			t.eff = NULL; // not our pointer, just pretend it was never there
 			t.flags &= TILEFLAG_OWN_EFFDATA;
 			effstore.assignEffect(t, efx); // recreate effect properly
-		}
-		if((t.flags & TILEFLAG_OWN_REPEAT) && t.rep)
-		{
-			t.rep = new TileRepeatData(*t.rep);
 		}
 	}
 
@@ -282,9 +281,11 @@ void TileStorage::clearSelection()
 		tiles[i].flags &= ~TILEFLAG_SELECTED;
 }
 
-TileEffectData::TileEffectData(const TileEffectConfig& cfg)
+TileEffectData::TileEffectData(const TileEffectConfig& cfg, const TileData *t)
 	: efxtype(cfg.type), efxidx(cfg.index)
 	, grid(NULL), alpha(1), blend(BLEND_DEFAULT)
+	, ownGrid(false), shared(false)
+
 {
 	switch(cfg.type)
 	{
@@ -294,14 +295,14 @@ TileEffectData::TileEffectData(const TileEffectConfig& cfg)
 
 		case EFX_WAVY:
 		{
-			float bity = 20; // FIXME
+			assert(t);
+			float bity = t->et->h/float(cfg.u.wavy.segsy);
 			wavy.wavy.resize(cfg.u.wavy.segsy, 0.0f);
 			wavy.flip = cfg.u.wavy.flip;
 			wavy.min = bity;
 			wavy.max = bity*1.2f;
 
-			RenderGrid *g = new RenderGrid(2, cfg.u.wavy.segsy);
-			grid = g;
+			DynamicRenderGrid *g = _ensureGrid(2, cfg.u.wavy.segsy, t);
 			g->gridType = GRID_UNDEFINED; // we do the grid update manually
 
 			wavy.angleOffset = 0;
@@ -317,8 +318,7 @@ TileEffectData::TileEffectData(const TileEffectConfig& cfg)
 
 		case EFX_SEGS:
 		{
-			RenderGrid *g = new RenderGrid(cfg.u.segs.x, cfg.u.segs.y);
-			grid = g;
+			DynamicRenderGrid *g = _ensureGrid(cfg.u.segs.x, cfg.u.segs.y, t);
 			g->setSegs(cfg.u.segs.dgox, cfg.u.segs.dgoy, cfg.u.segs.dgmx, cfg.u.segs.dgmy, cfg.u.segs.dgtm, cfg.u.segs.dgo);
 		}
 		break;
@@ -335,7 +335,43 @@ TileEffectData::TileEffectData(const TileEffectConfig& cfg)
 
 TileEffectData::~TileEffectData()
 {
-	delete grid;
+	if(ownGrid)
+		delete grid;
+}
+
+DynamicRenderGrid *TileEffectData::_ensureGrid(size_t w, size_t h, const TileData *t)
+{
+	DynamicRenderGrid *g = grid;
+	if(ownGrid)
+	{
+		assert(g);
+		return g;
+	}
+
+	if(t && t->rep)
+	{
+		assert(!shared); // a shared instance MUST have its own grid and MUST NOT refer to the grid of any tile
+		if(ownGrid)
+			delete g;
+		g = &t->rep->grid;
+		ownGrid = false;
+	}
+
+	if(!g)
+	{
+		g = new DynamicRenderGrid;
+		ownGrid = true;
+	}
+	grid = g;
+	TexCoordBox tc;
+	if(t)
+		tc = t->getTexcoords();
+	else
+		tc.setStandard();
+	g->init(w, h, tc);
+	if(t && t->rep)
+		t->rep->refresh(*t);
+	return g;
 }
 
 void TileEffectData::Wavy::update(float dt)
@@ -463,18 +499,27 @@ void TileEffectStorage::assignEffect(TileData& t, int index) const
 		return;
 
 	size_t idx = size_t(index);
+	if(idx >= configs.size())
+		return;
 
-	if(idx < prepared.size() && prepared[idx])
+
+	bool needinstance = false;
+	if(idx < configs.size())
 	{
-		t.eff = prepared[idx];
+		needinstance = configs[idx].needsOwnInstanceForTile(t);
 	}
-	else if(idx < configs.size())
+
+	if(needinstance)
 	{
 		if(configs[idx].type == EFX_NONE)
 			return;
 
-		t.eff = new TileEffectData(configs[idx]);
+		t.eff = new TileEffectData(configs[idx], &t);
 		t.flags |= TILEFLAG_OWN_EFFDATA;
+	}
+	else if(idx < prepared.size() && prepared[idx])
+	{
+		t.eff = prepared[idx];
 	}
 }
 
@@ -513,7 +558,10 @@ void TileEffectStorage::finalize()
 		// segs and alpha are independent of the tile they are applied to,
 		// so we can create shared instances of the effect.
 		if(c.type == EFX_SEGS || c.type == EFX_ALPHA)
-			prepared[i] = new TileEffectData(c);
+		{
+			prepared[i] = new TileEffectData(c, NULL);
+			prepared[i]->shared = true;
+		}
 	}
 }
 
@@ -532,12 +580,21 @@ bool TileData::isCoordinateInside(float cx, float cy, float minsize) const
 }
 
 TileRepeatData::TileRepeatData()
-	: vertexbuf(GPUBUF_STATIC | GPUBUF_VERTEXBUF)
+	: texscaleX(1), texscaleY(1)
+	, texOffX(0), texOffY(0)
 {
 }
 
-void TileRepeatData::refresh(const ElementTemplate& et, float scalex, float scaley)
+TileRepeatData::TileRepeatData(const TileRepeatData& o)
+	: texscaleX(o.texscaleX), texscaleY(o.texscaleY)
+	, texOffX(o.texOffX), texOffY(o.texOffY)
 {
+}
+
+TexCoordBox TileRepeatData::calcTexCoords(const TileData& t) const
+{
+	const ElementTemplate& et = *t.et;
+
 	float tw, th;
 	if(et.tex)
 	{
@@ -550,43 +607,118 @@ void TileRepeatData::refresh(const ElementTemplate& et, float scalex, float scal
 		th = et.h;
 	}
 
-	const float tu1 = texOffX;
-	const float tv1 = texOffY;
-	const float tu2 = (et.w*scalex*texscaleX)/tw + texOffX;
-	const float tv2 = (et.h*scaley*texscaleY)/th + texOffY;
+	TexCoordBox tc;
+	tc.u1 = texOffX;
+	tc.v1 = texOffY;
+	tc.u2 = (et.w*t.scalex*texscaleX)/tw + texOffX;
+	tc.v2 = (et.h*t.scaley*texscaleY)/th + texOffY;
 
-	this->tu1 = tu1;
-	this->tv1 = tv1;
-	this->tu2 = tu2;
-	this->tv2 = tv2;
+	// HACK: partially repeated textures have a weird Y axis. assuming a repeat factor of 0.5,
+	// instead of texcoords from 0 -> 0.4 everything is biased towards the opposite end, ie. 0.6 -> 1.
+	// This is especially true for partial repeats, we always need to bias towards the other end.
+	// I have no idea why this has to be like this for tiles, but this is NOT the case for fonts.
+	// And NOTE: without this, maps may look deceivingly correct, but they really are not.
+	const float percentY = tc.v2 - tc.v1;
+	const float remainder = 1.0f - fmodf(percentY, 1.0f);
+	tc.v1 += remainder; // bias towards next int
+	tc.v2 += remainder;
 
-	vertexbuf.initQuadVertices(tu1, tv1, tu2, tv2);
+	return tc;
+}
+
+void TileRepeatData::refresh(const TileData& t)
+{
+	TexCoordBox tc = calcTexCoords(t);
+
+	/*if(t.eff)
+		if(const DynamicRenderGrid *g = t.eff->grid)
+		{
+			grid.init(g->width(), g->height(), grid.getTexCoords());
+			grid.gridType = g->gridType;
+		}*/
+
+	if(grid.empty())
+		grid.init(2, 2, tc);
+	else
+	{
+		grid.setTexCoords(tc);
+		grid.reset();
+		grid.updateVBO();
+	}
 }
 
 TileRepeatData* TileData::setRepeatOn(float texscalex, float texscaley, float offx, float offy)
 {
-	if(rep && !(flags & TILEFLAG_OWN_REPEAT))
-		rep = NULL;
-	flags |= (TILEFLAG_OWN_REPEAT | TILEFLAG_REPEAT);
+	flags |= TILEFLAG_REPEAT;
 	if(!rep)
 		rep = new TileRepeatData;
 	rep->texscaleX = texscalex;
 	rep->texscaleY = texscaley;
 	rep->texOffX = offx;
 	rep->texOffY = offy;
-	rep->refresh(*et, scalex, scaley);
+	rep->refresh(*this);
+
+	// FIXME: if eff, link eff->grid to rep->grid
+
 	return rep;
 }
 
 void TileData::setRepeatOff()
 {
 	flags &= ~TILEFLAG_REPEAT;
+	// don't delete this->rep; if we're in editor mode we don't want to lose the repeat data just yet
+	// also, a TileEffectData may point to rep->grid
 }
 
 void TileData::refreshRepeat()
 {
-	if((flags & TILEFLAG_OWN_REPEAT) && rep)
+	if(rep)
 	{
-		rep->refresh(*et, scalex, scaley);
+		rep->refresh(*this);
 	}
+}
+
+bool TileData::hasStandardTexcoords() const
+{
+	// repeat applies per-tile texcoords, so if that's set it's non-standard
+	return !rep && et->tc.isStandard();
+}
+
+const TexCoordBox& TileData::getTexcoords() const
+{
+	return !(flags & TILEFLAG_REPEAT)
+		? et->tc
+		: rep->grid.getTexCoords();
+}
+
+const RenderGrid *TileData::getGrid() const
+{
+	if(flags & TILEFLAG_REPEAT)
+		return &rep->getGrid();
+
+	if(eff && eff->grid)
+		return eff->grid;
+
+	return et->grid;
+}
+
+bool TileEffectConfig::needsOwnInstanceForTile(const TileData& t) const
+{
+	const bool rep = !!(t.flags & TILEFLAG_REPEAT);
+
+	switch(type)
+	{
+		case EFX_NONE:
+		case EFX_ALPHA:
+			return false;
+
+		case EFX_WAVY:
+			return true;
+
+		case EFX_SEGS:
+			return rep || !t.hasStandardTexcoords();
+	}
+
+	assert(false);
+	return true; // uhhhh
 }

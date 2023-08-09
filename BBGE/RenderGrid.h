@@ -3,6 +3,8 @@
 
 #include "Vector.h"
 #include "DataStructures.h"
+#include "VertexBuffer.h"
+#include "Texture.h" // TexCoordBox
 
 struct RenderState;
 
@@ -23,23 +25,26 @@ enum GridType
 	GRID_INTERP = 3, // quad is in grid mode
 };
 
+// simple render grid, must be manually uploaded to GPU if changed
 class RenderGrid
 {
 public:
-	RenderGrid(size_t w, size_t h);
+	RenderGrid();
 	~RenderGrid();
+	void dropBuffers();
 
-	void init(size_t w, size_t h);
+	void init(size_t w, size_t h, const TexCoordBox& tc);
 	void reset();
 	void resetWithAlpha(float a);
-	void update(float dt);
-	void render(const RenderState& rs, const Vector& upperLeftTexCoords, const Vector& lowerRightTexCoords) const;
+	void render(const RenderState& rs) const;
 	void renderDebugPoints(const RenderState& rs) const;
 	void setAlpha(size_t x, size_t y, float a);
-	void setSegs(float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
-	void setStripPoints(bool vert, const Vector *points, size_t n);
-	void setFromWavy(const float *wavy, size_t len, float width);
+	void setDrawOrder(GridDrawOrder ord, bool force = false);
+	inline GridDrawOrder getDrawOrder() const { return GridDrawOrder(drawOrder); }
+	void setTexCoords(const TexCoordBox& tc);
+	const TexCoordBox& getTexCoords() const { return tc; }
 
+	bool empty() const { return !(width() | height()); }
 	size_t width() const { return grid.width(); }
 	size_t height() const { return grid.height(); }
 	size_t linearsize() const { return grid.linearsize(); }
@@ -47,11 +52,39 @@ public:
 	Vector *data() { return grid.data(); }
 	Array2d<Vector>& array2d() { return grid; }
 	const Array2d<Vector>& array2d() const { return grid; }
+	const DynamicGPUBuffer& getVBO() const { return vbo; }
+	void updateVBO();
 
 	static void ResetWithAlpha(Vector* dst, size_t w, size_t h, float alpha);
 
 protected:
+	DynamicGPUBuffer indexbuf, vbo;
+	size_t trisToDraw;
 	Array2d<Vector> grid;
+	TexCoordBox tc;
+	bool needVBOUpdate;
+
+	void render_Indexed(const RenderState& rs) const;
+	void render_WithAlpha(const RenderState& rs) const;
+
+public:
+	GridDrawOrder drawOrder;
+};
+
+// supports animation and automatic upload
+class DynamicRenderGrid : public RenderGrid
+{
+public:
+	DynamicRenderGrid();
+	~DynamicRenderGrid();
+
+	void update(float dt);
+
+	void setSegs(float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
+	void setStripPoints(bool vert, const Vector *points, size_t n);
+	void setFromWavy(const float *wavy, size_t len, float width);
+
+protected:
 	float gridTimer;
 	float drawGridOffsetX;
 	float drawGridOffsetY;
@@ -61,11 +94,6 @@ protected:
 	bool drawGridOut;
 public:
 	unsigned char gridType;  // unsigned char to save space
-	unsigned char drawOrder;
-
-	void render_LRTB(const RenderState& rs, const Vector& upperLeftTexCoords, const Vector& lowerRightTexCoords) const;
-	void render_LRBT(const RenderState& rs, const Vector& upperLeftTexCoords, const Vector& lowerRightTexCoords) const;
-	void render_WithAlpha(const RenderState& rs, const Vector& upperLeftTexCoords, const Vector& lowerRightTexCoords) const;
 };
 
 #endif

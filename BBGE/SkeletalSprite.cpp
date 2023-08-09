@@ -130,7 +130,7 @@ void Bone::addSegment(Bone *b)
 
 void Bone::createStrip(bool vert, int num)
 {
-	RenderGrid *grid = vert ? createGrid(2, num) : createGrid(num, 2);
+	DynamicRenderGrid *grid = vert ? createGrid(2, num) : createGrid(num, 2);
 	stripVert = vert;
 	grid->gridType = GRID_STRIP;
 	changeStrip.resize(num);
@@ -974,7 +974,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 	XMLElement *bones = xml->NewElement("Bones");
 	for (i = 0; i < this->bones.size(); i++)
 	{
-		const RenderGrid * const grid = this->bones[i]->getGrid();
+		const DynamicRenderGrid * const grid = this->bones[i]->getGrid();
 		XMLElement *bone = xml->NewElement("Bone");
 		bone->SetAttribute("idx", (unsigned int) this->bones[i]->boneIdx);
 		bone->SetAttribute("gfx", this->bones[i]->gfx.c_str());
@@ -1033,9 +1033,9 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			bone->SetAttribute("sz", os.str().c_str());
 		}
 
-		if(grid && grid->drawOrder != GRID_DRAW_DEFAULT)
+		if(grid && grid->getDrawOrder() != GRID_DRAW_DEFAULT)
 		{
-			bone->SetAttribute("gridDrawOrder", (int)grid->drawOrder);
+			bone->SetAttribute("gridDrawOrder", (int)grid->getDrawOrder());
 		}
 
 
@@ -1073,7 +1073,8 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			const BoneGridInterpolator& bgip = a->interpolators[j];
 			XMLElement *interp = xml->NewElement("Interpolator");
 			Bone *bone = this->getBoneByIdx(bgip.idx);
-			assert(bone->gridType == Quad::GRID_INTERP);
+			DynamicRenderGrid *grid = bone->getGrid();
+			assert(grid && grid->gridType == GRID_INTERP);
 			if(bgip.storeBoneByIdx)
 				interp->SetAttribute("bone", (int)bone->boneIdx);
 			else
@@ -1128,7 +1129,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 				Bone *bone = this->getBoneByIdx(b->idx);
 				if(bone)
 				{
-					const RenderGrid * const bgrid = bone->getGrid();
+					const DynamicRenderGrid * const bgrid = bone->getGrid();
 					os << b->idx << " " << b->x << " " << b->y << " " << b->rot << " ";
 					// don't want to store grid points if they can be regenerated automatically
 					size_t usedGridSize = (!bgrid || bgrid->gridType == GRID_INTERP) ? 0 : b->grid.size();
@@ -1601,7 +1602,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			}
 			if (bone->Attribute("grid"))
 			{
-				RenderGrid *grid = newb->getGrid();
+				DynamicRenderGrid *grid = newb->getGrid();
 				if(!grid)
 				{
 					SimpleIStringStream is(bone->Attribute("grid"), SimpleIStringStream::REUSE);
@@ -1618,7 +1619,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				if(const char *gdo = bone->Attribute("gridDrawOrder"))
 				{
 					int ord = atoi(gdo);
-					grid->drawOrder = (GridDrawOrder)ord;
+					grid->setDrawOrder((GridDrawOrder)ord);
 				}
 			}
 			bone = bone->NextSiblingElement("Bone");
@@ -1842,7 +1843,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					debugLog(os.str());
 					continue;
 				}
-				RenderGrid *grid = bi->getGrid();
+				DynamicRenderGrid *grid = bi->getGrid();
 				if(!grid)
 				{
 					std::ostringstream os;
@@ -2060,7 +2061,7 @@ void AnimationLayer::updateBones()
 							b->scale.x = lerp(bkey1->sx, bkey2->sx, dt, lerpType);
 							b->scale.y = lerp(bkey1->sy, bkey2->sy, dt, lerpType);
 						}
-						RenderGrid *grid = b->getGrid();
+						DynamicRenderGrid *grid = b->getGrid();
 						if (grid && b->animated==Bone::ANIM_ALL && !b->changeStrip.empty() &&  grid->gridType == GRID_STRIP)
 						{
 							if (bkey2->grid.size() < b->changeStrip.size())
@@ -2079,12 +2080,12 @@ void AnimationLayer::updateBones()
 							if(bkey1->grid.size() < N)
 							{
 								bkey1->grid.resize(N);
-								RenderGrid::ResetWithAlpha(&bkey1->grid[0], grid->width(), grid->height(), 1.0f);
+								DynamicRenderGrid::ResetWithAlpha(&bkey1->grid[0], grid->width(), grid->height(), 1.0f);
 							}
 							if(bkey2->grid.size() < N)
 							{
 								bkey2->grid.resize(N);
-								RenderGrid::ResetWithAlpha(&bkey2->grid[0], grid->width(), grid->height(), 1.0f);
+								DynamicRenderGrid::ResetWithAlpha(&bkey2->grid[0], grid->width(), grid->height(), 1.0f);
 							}
 
 							Vector *dst = grid->data();
@@ -2217,7 +2218,7 @@ void SkeletalSprite::selectNextBone()
 
 void BoneGridInterpolator::updateGridOnly(BoneKeyframe& bk, const Bone *bone)
 {
-	const RenderGrid *grid = bone->getGrid();
+	const DynamicRenderGrid *grid = bone->getGrid();
 	assert(bone->boneIdx == bk.idx);
 	assert(bk.grid.size() == grid->linearsize());
 	bsp.recalc(&bk.grid[0], grid->width(), grid->height(), &bk.controlpoints[0]);

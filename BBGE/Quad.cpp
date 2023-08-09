@@ -75,20 +75,29 @@ void Quad::destroy()
 
 
 
-RenderGrid *Quad::setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo)
+DynamicRenderGrid *Quad::setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo)
 {
-	RenderGrid *g = createGrid(x, y);
+	DynamicRenderGrid *g = createGrid(x, y);
 	if(g)
 		g->setSegs(dgox, dgoy, dgmx, dgmy, dgtm, dgo);
 	return g;
 }
 
-RenderGrid *Quad::createGrid(int xd, int yd)
+DynamicRenderGrid *Quad::createGrid(int xd, int yd)
 {
 	delete grid;
-	return (grid = xd && yd
-		? new RenderGrid(xd, yd)
-		: NULL);
+	grid = NULL;
+	if(xd && yd)
+	{
+		TexCoordBox tc;
+		tc.u1 = upperLeftTextureCoordinates.x;
+		tc.v1 = upperLeftTextureCoordinates.y;
+		tc.u2 = lowerRightTextureCoordinates.x;
+		tc.v2 = lowerRightTextureCoordinates.y;
+		grid = new DynamicRenderGrid();
+		grid->init(xd, yd, tc);
+	}
+	return grid;
 }
 
 void Quad::setDrawGridAlpha(size_t x, size_t y, float alpha)
@@ -208,7 +217,7 @@ void Quad::renderGrid(const RenderState& rs) const
 	glPushMatrix();
 	glScalef(width, height, 1);
 
-	grid->render(rx, upperLeftTextureCoordinates, lowerRightTextureCoordinates);
+	grid->render(rx);
 
 	// debug points
 	if (RenderObject::renderCollisionShape)

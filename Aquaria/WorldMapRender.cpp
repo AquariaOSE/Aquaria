@@ -563,11 +563,11 @@ void WorldMapRender::setVis(WorldMapTile *tile)
 
 	if (visMethod == VIS_VERTEX)
 	{
-		RenderGrid *g = tile->q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
+		DynamicRenderGrid *g = tile->q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
 		if(g)
 		{
 			g->gridType = GRID_UNDEFINED;
-			g->drawOrder = GRID_DRAW_WORLDMAP;
+			g->setDrawOrder(GRID_DRAW_WORLDMAP);
 			tileDataToVis(tile, g->array2d());
 		}
 	}

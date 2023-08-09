@@ -961,7 +961,7 @@ void AnimationEditor::editStripKey()
 	{
 		if(editingBone && editingBone->getGrid())
 		{
-			RenderGrid *grid = editingBone->getGrid();
+			DynamicRenderGrid *grid = editingBone->getGrid();
 			Animation *a = editSprite->getCurrentAnimation();
 			BoneGridInterpolator *interp = a->getBoneGridInterpolator(editingBone->boneIdx);
 
@@ -975,8 +975,8 @@ void AnimationEditor::editStripKey()
 				assert(bk->controlpoints.size() == interp->bsp.ctrlX() * interp->bsp.ctrlY());
 
 				splinegrid = new SplineGrid;
-				RenderGrid *rgrid = splinegrid->resize(interp->bsp.ctrlX(), interp->bsp.ctrlY(), grid->width(), grid->height(), interp->bsp.degX(), interp->bsp.degY());
-				rgrid->drawOrder = grid->drawOrder;
+				DynamicRenderGrid *rgrid = splinegrid->resize(interp->bsp.ctrlX(), interp->bsp.ctrlY(), grid->width(), grid->height(), interp->bsp.degX(), interp->bsp.degY());
+				rgrid->setDrawOrder(grid->getDrawOrder());
 				splinegrid->setTexture(editingBone->texture->name);
 				splinegrid->setWidthHeight(editingBone->width, editingBone->height);
 				splinegrid->position = Vector(400, 300);
@@ -1604,7 +1604,7 @@ void AnimationEditor::applyBoneToSplineGrid()
 		Animation *a = editSprite->getCurrentAnimation();
 		BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 		assert(bk->controlpoints.size() == splinegrid->getSpline().ctrlX() * splinegrid->getSpline().ctrlY());
-		assert(bk->grid.size() == editingBone->getDrawGrid().linearsize());
+		assert(bk->grid.size() == editingBone->getGrid()->linearsize());
 		splinegrid->importControlPoints(&bk->controlpoints[0]);
 	}
 }
@@ -1616,7 +1616,7 @@ void AnimationEditor::applySplineGridToBone()
 		Animation *a = editSprite->getCurrentAnimation();
 		BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 		assert(bk->controlpoints.size() == splinegrid->getSpline().ctrlX() * splinegrid->getSpline().ctrlY());
-		assert(bk->grid.size() == editingBone->getDrawGrid().linearsize());
+		assert(bk->grid.size() == editingBone->getGrid()->linearsize());
 		splinegrid->exportControlPoints(&bk->controlpoints[0]);
 		BoneGridInterpolator *interp = a->getBoneGridInterpolator(editingBone->boneIdx);
 		interp->updateGridAndBone(*bk, editingBone);
