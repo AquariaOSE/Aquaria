@@ -23,8 +23,55 @@ bool void unload_all_glsyms() { return false; }
 #define GLAPIENTRY
 #endif
 
-#include <GL/glext.h>
+static const char *glDebugTypeToStr(unsigned e)
+{
+	switch(e)
+	{
+		case GL_DEBUG_TYPE_ERROR_ARB: return " ERR";
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB: return "depr";
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB: return " UB!";
+		case GL_DEBUG_TYPE_PORTABILITY_ARB: return "port";
+		case GL_DEBUG_TYPE_PERFORMANCE_ARB: return "perf";
+		case GL_DEBUG_TYPE_OTHER_ARB: return "othr";
+	}
+	return "unknown";
+}
+static const char *glDebugSeverityToStr(unsigned e)
+{
+	switch(e)
+	{
+		case GL_DEBUG_SEVERITY_HIGH_ARB: return "###";
+		case GL_DEBUG_SEVERITY_MEDIUM_ARB: return "+++";
+		case GL_DEBUG_SEVERITY_LOW_ARB: return "---";
+		//case GL_DEBUG_SEVERITY_NOTIFICATION: return "   ";
+	}
+	return "";
+}
 
+
+static void GLAPIENTRY debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
+{
+	switch(severity)
+	{
+		case GL_DEBUG_SEVERITY_HIGH_ARB:
+		case GL_DEBUG_SEVERITY_MEDIUM_ARB:
+		case GL_DEBUG_SEVERITY_LOW_ARB:
+		{
+			const char *ty = glDebugTypeToStr(type);
+			const char *sev = glDebugSeverityToStr(severity);
+
+			std::ostringstream os;
+			os << sev << " GL[" << ty << "]: " << message;
+			debugLog(os.str());
+		}
+		break;
+
+		/*case GL_DEBUG_SEVERITY_NOTIFICATION:
+			break;
+		default:
+			assert(false);*/
+	}
+}
 
 PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
 
@@ -182,6 +229,25 @@ bool lookup_all_glsyms()
 	glBindBufferARB           = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
 	glMapBufferARB            = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
 	glUnmapBufferARB          = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
+
+
+#if _DEBUG
+	//PFNGLDEBUGMESSAGECONTROLARBPROC glDebugMessageControlARB = (PFNGLDEBUGMESSAGECONTROLARBPROC)SDL_GL_GetProcAddress("glDebugMessageControlARB");
+	PFNGLDEBUGMESSAGECALLBACKARBPROC glDebugMessageCallbackARB = (PFNGLDEBUGMESSAGECALLBACKARBPROC)SDL_GL_GetProcAddress("glDebugMessageCallbackARB");
+	//PFNGLDEBUGMESSAGEINSERTARBPROC glDebugMessageInsertARB = (PFNGLDEBUGMESSAGEINSERTARBPROC)SDL_GL_GetProcAddress("glDebugMessageInsertARB");
+	if(glDebugMessageCallbackARB)
+	{
+		/*glDebugMessageCallbackARB(debugCallback, NULL);
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);*/
+	}
+
+	//if(glDebugMessageControlARB)
+	//	glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, NULL, 0, GL_TRUE);
+
+	//if(glDebugMessageInsertARB)
+	//	glDebugMessageInsertARB(GL_DEBUG_SOURCE_APPLICATION_ARB, GL_DEBUG_TYPE_OTHER_ARB, 0, GL_DEBUG_SEVERITY_HIGH_ARB, 0, "GL debug test");
+
+#endif
 
 	return retval;
 }

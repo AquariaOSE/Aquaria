@@ -93,6 +93,10 @@ void Window::_open(unsigned w, unsigned h, bool full, unsigned bpp, bool vsync, 
 		}
 	}
 
+#ifdef _DEBUG
+	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
+#endif
+
 	int pos = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
 	WIN = SDL_CreateWindow("", pos, pos, usew, useh, flags);
 	if(!WIN)
