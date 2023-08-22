@@ -739,11 +739,17 @@ void AnimationEditor::update(float dt)
 	float spd = 1.0f;
 	if (core->mouse.scrollWheelChange < 0)
 	{
-		ctrlSprite->scale.x /= 1.12f;
+		if(splinegrid && core->getShiftState())
+			splinegrid->setPointScale(std::max(splinegrid->getPointScale() / 1.12f, 0.05f));
+		else
+			ctrlSprite->scale.x /= 1.12f;
 	}
 	else if (core->mouse.scrollWheelChange > 0)
 	{
-		ctrlSprite->scale.x *= 1.12f;
+		if(splinegrid && core->getShiftState())
+			splinegrid->setPointScale(splinegrid->getPointScale() * 1.12f);
+		else
+			ctrlSprite->scale.x *= 1.12f;
 	}
 	if (core->getKeyState(KEY_PGDN) && core->getShiftState())
 	{
