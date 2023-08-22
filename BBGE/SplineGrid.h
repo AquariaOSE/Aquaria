@@ -39,6 +39,9 @@ public:
 	void importControlPoints(const Vector *controlpoints);
 	void resetControlPoints();
 
+	void setPointScale(const float scale);
+	float getPointScale() const { return pointscale; }
+
 
 	virtual void onRender(const RenderState& rs) const OVERRIDE;
 	virtual void onUpdate(float dt) OVERRIDE;
@@ -55,6 +58,7 @@ private:
 	std::vector<SplineGridCtrlPoint*> ctrlp;
 	unsigned deg;
 	BSpline2DWithPoints bsp;
+	float pointscale;
 };
 
 
