@@ -47,7 +47,7 @@ public:
 	Texture();
 	~Texture();
 
-	void apply(bool repeat = false) const;
+	void apply() const;
 	void unload();
 
 	unsigned gltexid;
@@ -67,8 +67,6 @@ protected:
 
 	int ow, oh;
 	bool _mipmap;
-private:
-	mutable bool _repeating; // modified during rendering
 };
 
 #define UNREFTEX(x) {x = NULL;}

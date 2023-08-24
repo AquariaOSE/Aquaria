@@ -49,7 +49,6 @@ Texture::Texture()
 	gltexid = 0;
 	width = height = 0;
 
-	_repeating = false;
 	ow = oh = -1;
 	_mipmap = false;
 	success = false;
@@ -98,16 +97,9 @@ void Texture::unload()
 }
 
 static const GLenum repeatLUT[] = { GL_CLAMP_TO_EDGE, GL_REPEAT };
-void Texture::apply(bool repeat) const
+void Texture::apply() const
 {
 	glBindTexture(GL_TEXTURE_2D, gltexid);
-	/*if(repeat != _repeating)
-	{
-		_repeating = repeat;
-		GLenum rep = repeatLUT[repeat];
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, rep);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, rep);
-	}*/
 }
 
 struct GlTexFormat
@@ -142,7 +134,6 @@ bool Texture::upload(const ImageData& img, bool mipmap)
 	glBindTexture(GL_TEXTURE_2D, gltexid);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_REPEAT);
-	_repeating = false;
 
 	const GlTexFormat& f = formatLUT[img.channels - 1];
 

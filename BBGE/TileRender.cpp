@@ -59,7 +59,6 @@ void TileRender::onRender(const RenderState& rs) const
 	const Vector M1 = Vector(1,1) - M;
 	const Vector T = C * (1 - F);
 
-	unsigned lastTexRepeat = false;
 	unsigned lastTexId = 0;
 
 	const bool renderExtras = renderBorders || RenderObject::renderCollisionShape;
@@ -92,12 +91,10 @@ void TileRender::onRender(const RenderState& rs) const
 		if(const Texture * const tex = et->tex.content())
 		{
 			unsigned texid = tex->gltexid;
-			unsigned rep = tile.flags & TILEFLAG_REPEAT;
-			if(texid != lastTexId || rep != lastTexRepeat)
+			if(texid != lastTexId)
 			{
 				lastTexId = texid;
-				lastTexRepeat = rep;
-				tex->apply(!!rep);
+				tex->apply();
 			}
 		}
 		else
@@ -210,7 +207,6 @@ void TileRender::onRender(const RenderState& rs) const
 	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
 
 	RenderObject::lastTextureApplied = lastTexId;
-	RenderObject::lastTextureRepeat = !!lastTexRepeat;
 }
 
 void TileRender::onUpdate(float dt)

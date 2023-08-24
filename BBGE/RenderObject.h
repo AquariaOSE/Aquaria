@@ -223,7 +223,6 @@ public:
 	static bool renderCollisionShape;
 	static bool renderPaths;
 	static size_t lastTextureApplied;
-	static bool lastTextureRepeat;
 
 	//--------------------------
 

@@ -33,7 +33,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 bool	RenderObject::renderCollisionShape			= false;
 size_t	RenderObject::lastTextureApplied			= 0;
-bool	RenderObject::lastTextureRepeat				= false;
 bool	RenderObject::renderPaths					= false;
 
 void RenderObject::toggleAlpha(float t)
@@ -482,20 +481,18 @@ nofollow:
 	{
 		if (texture)
 		{
-			if (texture->gltexid != lastTextureApplied || repeatTexture != lastTextureRepeat)
+			if (texture->gltexid != lastTextureApplied)
 			{
-				texture->apply(repeatTexture);
-				lastTextureRepeat = repeatTexture;
+				texture->apply();
 				lastTextureApplied = texture->gltexid;
 			}
 		}
 		else
 		{
-			if (lastTextureApplied != 0 || repeatTexture != lastTextureRepeat)
+			if (lastTextureApplied != 0)
 			{
 				glBindTexture(GL_TEXTURE_2D, 0);
 				lastTextureApplied = 0;
-				lastTextureRepeat = repeatTexture;
 			}
 		}
 
