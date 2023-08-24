@@ -1229,11 +1229,6 @@ void Core::setupRenderPositionAndScale()
 	glTranslatef(-(cameraPos.x+cameraOffset.x), -(cameraPos.y+cameraOffset.y), -(cameraPos.z+cameraOffset.z));
 }
 
-void Core::setupGlobalResolutionScale()
-{
-	glScalef(globalResolutionScale.x, globalResolutionScale.y, globalResolutionScale.z);
-}
-
 void Core::setMouseConstraint(bool on)
 {
 

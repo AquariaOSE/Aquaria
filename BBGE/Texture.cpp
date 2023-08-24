@@ -96,7 +96,6 @@ void Texture::unload()
 	}
 }
 
-static const GLenum repeatLUT[] = { GL_CLAMP_TO_EDGE, GL_REPEAT };
 void Texture::apply() const
 {
 	glBindTexture(GL_TEXTURE_2D, gltexid);

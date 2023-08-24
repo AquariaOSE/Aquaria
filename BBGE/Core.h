@@ -352,7 +352,6 @@ public:
 	DarkLayer darkLayer;
 
 	void setupRenderPositionAndScale();
-	void setupGlobalResolutionScale();
 
 
 	int particlesPaused;
