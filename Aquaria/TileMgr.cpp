@@ -100,9 +100,10 @@ void TileMgr::doTileInteraction(const Vector& pos, const Vector& vel, float mult
 
 TileData* TileMgr::createOneTile(unsigned tilesetID, unsigned layer, float x, float y, ElementFlag ef, int effidx)
 {
-	TileData *t = _createTile(tilesetID, layer, x, y, ef, effidx);
+	TileData *t = _createTile(tilesetID, layer, x, y, ef);
 	if(t)
 	{
+		tileEffects.assignEffect(*t, effidx);
 		TileStorage& ts = tilestore[layer];
 		ts.refreshAll();
 	}
@@ -115,7 +116,7 @@ void TileMgr::createTiles(const TileDef* defs, size_t n)
 	for(size_t i = 0; i < n; ++i)
 	{
 		const TileDef& d = defs[i];
-		TileData *t = _createTile(d.idx, d.layer, d.x, d.y, (ElementFlag)d.ef, d.efxIdx);
+		TileData *t = _createTile(d.idx, d.layer, d.x, d.y, (ElementFlag)d.ef);
 		if(t)
 		{
 			used[d.layer] = 1;
@@ -130,9 +131,10 @@ void TileMgr::createTiles(const TileDef* defs, size_t n)
 			t->scalex = d.sx;
 			t->scaley = d.sy;
 
-			// must be done last
 			if(d.repeat)
 				t->setRepeatOn(d.rsx, d.rsy);
+
+			tileEffects.assignEffect(*t, d.efxIdx);
 		}
 	}
 
@@ -175,7 +177,7 @@ void TileMgr::exportGridFillers(std::vector<GridFiller>& fillers) const
 	}
 }
 
-TileData* TileMgr::_createTile(unsigned tilesetID, unsigned layer,  float x, float y, ElementFlag ef, int effidx)
+TileData* TileMgr::_createTile(unsigned tilesetID, unsigned layer,  float x, float y, ElementFlag ef)
 {
 	if(layer >= Countof(tilestore))
 		return NULL;
@@ -186,14 +188,11 @@ TileData* TileMgr::_createTile(unsigned tilesetID, unsigned layer,  float x, flo
 	t.rotation = 0;
 	t.scalex = 1;
 	t.scaley = 1;
-	//t.beforeScaleOffsetX = 0;
-	//t.beforeScaleOffsetY = 0;
 	t.flags = GetTileFlags(ef);
 	t.tag = 0;
 	t.rep = NULL;
 	t.et = tileset.getByIdx(tilesetID);
 	assert(t.et);
-	/* t.eff = */ tileEffects.assignEffect(t, effidx);
 
 	TileStorage& ts = tilestore[layer];
 	ts.tiles.push_back(t);

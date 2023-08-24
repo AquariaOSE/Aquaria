@@ -333,10 +333,25 @@ TileEffectData::TileEffectData(const TileEffectConfig& cfg, const TileData *t)
 	}
 }
 
-TileEffectData::~TileEffectData()
+TileEffectData::TileEffectData(const TileEffectData& o)
+	: efxtype(o.efxtype), efxidx(o.efxidx), grid(NULL)
+	, alpha(o.alpha), blend(o.blend)
+	, ownGrid(false), shared(false), wavy(o.wavy)
+{
+}
+
+void TileEffectData::deleteGrid()
 {
 	if(ownGrid)
+	{
+		ownGrid = false;
 		delete grid;
+	}
+}
+
+TileEffectData::~TileEffectData()
+{
+	deleteGrid();
 }
 
 DynamicRenderGrid *TileEffectData::_ensureGrid(size_t w, size_t h, const TileData *t)
@@ -351,10 +366,8 @@ DynamicRenderGrid *TileEffectData::_ensureGrid(size_t w, size_t h, const TileDat
 	if(t && t->rep)
 	{
 		assert(!shared); // a shared instance MUST have its own grid and MUST NOT refer to the grid of any tile
-		if(ownGrid)
-			delete g;
+		deleteGrid();
 		g = &t->rep->grid;
-		ownGrid = false;
 	}
 
 	if(!g)
@@ -613,7 +626,7 @@ TexCoordBox TileRepeatData::calcTexCoords(const TileData& t) const
 	tc.u2 = (et.w*t.scalex*texscaleX)/tw + texOffX;
 	tc.v2 = (et.h*t.scaley*texscaleY)/th + texOffY;
 
-	// HACK: partially repeated textures have a weird Y axis. assuming a repeat factor of 0.5,
+	// HACK: partially repeated textures have a weird Y axis. assuming a repeat factor of 0.4,
 	// instead of texcoords from 0 -> 0.4 everything is biased towards the opposite end, ie. 0.6 -> 1.
 	// This is especially true for partial repeats, we always need to bias towards the other end.
 	// I have no idea why this has to be like this for tiles, but this is NOT the case for fonts.
@@ -658,7 +671,24 @@ TileRepeatData* TileData::setRepeatOn(float texscalex, float texscaley, float of
 	rep->texOffY = offy;
 	rep->refresh(*this);
 
-	// FIXME: if eff, link eff->grid to rep->grid
+	// link eff->grid to rep->grid. create own instance if necessary.
+	/*if(eff)
+	{
+		const unsigned char gridtype = eff->grid ? eff->grid->gridType : GRID_UNDEFINED;
+		if(flags & TILEFLAG_OWN_EFFDATA)
+		{
+			assert(!eff->shared);
+			eff->deleteGrid();
+		}
+		else
+		{
+			eff = new TileEffectData(*eff);
+			flags |= TILEFLAG_OWN_EFFDATA;
+		}
+		assert(!eff->ownGrid);
+		eff->grid = &rep->grid;
+		eff->grid->gridType = gridtype;
+	}*/
 
 	return rep;
 }
@@ -693,11 +723,11 @@ const TexCoordBox& TileData::getTexcoords() const
 
 const RenderGrid *TileData::getGrid() const
 {
+	if(eff && eff->grid)
+		return eff->grid; // this points to rep.grid if eff is present and repeat is on
+
 	if(flags & TILEFLAG_REPEAT)
 		return &rep->getGrid();
-
-	if(eff && eff->grid)
-		return eff->grid;
 
 	return et->grid;
 }

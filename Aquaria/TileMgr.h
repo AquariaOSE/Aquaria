@@ -76,7 +76,7 @@ public:
 	static ElementFlag GetElementFlag(TileFlags tf);
 
 private:
-	TileData *_createTile(unsigned tilesetID, unsigned layer, float x, float y, ElementFlag ef = EF_NONE, int effidx = -1);
+	TileData *_createTile(unsigned tilesetID, unsigned layer, float x, float y, ElementFlag ef = EF_NONE);
 
 	TileMgr(const TileMgr&); // no-copy
 };

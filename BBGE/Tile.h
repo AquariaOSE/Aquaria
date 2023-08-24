@@ -112,10 +112,13 @@ enum TileFlags
 
 struct TileEffectData
 {
+	friend struct TileData;
+
 	TileEffectData(const TileEffectConfig& cfg, const TileData *t); // NULL is passed in during global prepare, when we don't have a tile
 	~TileEffectData();
 	void update(float dt, const TileData *t); // optional t needed for EFX_WAVY
 	void doInteraction(const TileData& t, const Vector& pos, const Vector& vel, float mult, float touchWidth);
+	void deleteGrid();
 
 	const EFXType efxtype;
 	const unsigned efxidx; // index of TileEffect
@@ -138,8 +141,8 @@ struct TileEffectData
 	Wavy wavy;
 
 private:
+	TileEffectData(const TileEffectData&); // internal use only
 	DynamicRenderGrid *_ensureGrid(size_t w, size_t h, const TileData *t);
-	TileEffectData(const TileEffectData&); // no-copy
 };
 
 struct TileRepeatData
