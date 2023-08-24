@@ -77,6 +77,7 @@ void* DynamicGPUBuffer::_ensureBytes(size_t bytes)
 
 void* DynamicGPUBuffer::beginWrite(BufDataType type, size_t newsize, unsigned access)
 {
+    assert(!_d_map);
     _size = newsize;
     _datatype = type;
 
@@ -115,8 +116,10 @@ bool DynamicGPUBuffer::_commitWrite(size_t used)
         if(_d_map)
         {
             assert(used <= _d_cap);
-            _d_map = NULL;
-            return glUnmapBufferARB(_binding); // can fail
+            bool ok = glUnmapBufferARB(_binding); // can fail
+            if(ok)
+                _d_map = NULL;
+            return ok;
         }
         // otherwise, the prev. call to glMapBufferARB failed (or GPUACCESS_HOSTCOPY was set).
         // -> didn't map, but wrote to host memory. upload it.
@@ -255,18 +258,18 @@ void DynamicGPUBuffer::dropBuffer()
     _size = 0;
 }
 
-static unsigned getBoundBuffer(unsigned target)
+/*static unsigned getBoundBuffer(unsigned target)
 {
     int id = 0;
     glGetIntegerv(target, &id);
     return id;
-}
+}*/
 
 void DynamicGPUBuffer::drawElements(unsigned glmode, size_t n, size_t first) const
 {
     assert(_binding == GL_ELEMENT_ARRAY_BUFFER_ARB);
     assert(s_gltype[_datatype & 0xf] == GL_SHORT);
-    assert(getBoundBuffer(GL_ARRAY_BUFFER_BINDING)); // FIXME: this assert is wrong if indices are on the host
+    //assert(getBoundBuffer(GL_ARRAY_BUFFER_BINDING)); // FIXME: this assert is wrong if indices are on the host
 
     unsigned id = _bufid;
 
