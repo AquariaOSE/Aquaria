@@ -126,7 +126,7 @@ public:
 	void reloadDevice();
 
 	void prepareRender();
-	void render() const;
+	void render(const RenderState& rs) const;
 
 	inline bool empty()
 	{

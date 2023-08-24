@@ -240,17 +240,16 @@ void RenderObjectLayer::prepareRender()
 	}
 }
 
-void RenderObjectLayer::render() const
+void RenderObjectLayer::render(const RenderState& rs) const
 {
 	if(toRender.size() <= 1)
 		return;
 
 	size_t proc = 0;
-	CombinedRenderAndGPUState rs;
 
 	if (startPass == endPass)
 	{
-		rs.pass = RenderObject::RENDER_ALL;
+		assert(rs.pass == RenderObject::RENDER_ALL);
 		const RenderObject * const * rlist = &toRender[0]; // known to have at least one element
 		while(const RenderObject *ro = *rlist++)
 			ro->render(rs);
@@ -258,14 +257,15 @@ void RenderObjectLayer::render() const
 	}
 	else
 	{
+		RenderState rx(rs);
 		for (int pass = startPass; pass <= endPass; pass++)
 		{
-			rs.pass = pass;
+			rx.pass = pass;
 			const RenderObject * const * rlist = &toRender[0]; // known to have at least one element
 			while(const RenderObject *ro = *rlist++)
 				if(ro->isVisibleInPass(pass))
 				{
-					ro->render(rs);
+					ro->render(rx);
 					++proc;
 				}
 		}

@@ -127,8 +127,7 @@ void RenderGrid::render(const RenderState& rs) const
 
 void RenderGrid::renderDebugPoints(const RenderState& rs) const
 {
-	(void)rs; // unused
-
+	(void)rs; // unused yet
 	glPointSize(2);
 	glColor3f(1,0,0);
 	vbo.apply();

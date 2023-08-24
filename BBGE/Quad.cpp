@@ -223,7 +223,7 @@ void Quad::renderGrid(const RenderState& rs) const
 	if (RenderObject::renderCollisionShape)
 	{
 		glBindTexture(GL_TEXTURE_2D, 0);
-		grid->renderDebugPoints(rx);
+		grid->renderDebugPoints(rs);
 		RenderObject::lastTextureApplied = 0;
 	}
 

@@ -1792,6 +1792,8 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 	setupRenderPositionAndScale();
 
+	CombinedRenderAndGPUState rs;
+
 
 	for (size_t c = 0; c < renderObjectLayerOrder.size(); c++)
 	{
@@ -1815,14 +1817,14 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 		if (afterEffectManager && afterEffectManager->active && i == afterEffectManagerLayer)
 		{
-			afterEffectManager->render();
+			afterEffectManager->render(rs);
 		}
 
 		RenderObjectLayer *r = &renderObjectLayers[i];
 		if(!r->visible)
 			continue;
 
-		r->render();
+		r->render(rs);
 	}
 }
 
