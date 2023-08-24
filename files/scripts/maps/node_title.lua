@@ -27,7 +27,7 @@ v.mbDown = false
 
 function init(me)
 	--stopAllVoice()
-	resetContinuity()
+	--resetContinuity()
 	setOverrideMusic("")
 	
 	v.n = getNaija()
@@ -59,7 +59,7 @@ function init(me)
 	
 	avatar_toggleCape(false)
 	
-	setMousePos(400, 550)
+	--setMousePos(400, 550)
 	
 	fade(1, 0)
 	fade(0, 1)
