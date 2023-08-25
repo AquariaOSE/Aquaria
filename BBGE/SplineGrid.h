@@ -17,6 +17,7 @@ class SplineGridCtrlPoint : public Quad
 {
 public:
 	SplineGridCtrlPoint();
+	virtual ~SplineGridCtrlPoint();
 	virtual void onUpdate(float dt) OVERRIDE;
 	Vector getSplinePosition() const;
 	void setSplinePosition(Vector pos);
@@ -30,7 +31,7 @@ public:
 	typedef Vector value_type;
 
 	SplineGrid();
-	~SplineGrid();
+	virtual ~SplineGrid();
 
 	// # of control points on each axis
 	RenderGrid *resize(size_t w, size_t h, size_t xres, size_t yres, unsigned degx, unsigned degy);
