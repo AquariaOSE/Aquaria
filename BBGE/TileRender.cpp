@@ -46,6 +46,9 @@ void TileRender::onRender(const RenderState& rs) const
 	if(storage.tiles.empty())
 		return;
 
+	if(renderBorders)
+		glLineWidth(2);
+
 	RenderState rx(rs);
 
 	// prepare. get parallax scroll factors
@@ -187,7 +190,6 @@ void TileRender::onRender(const RenderState& rs) const
 				core->getDefaultQuadBorderBuf()->apply();
 				glPointSize(16);
 				glDrawArrays(GL_POINTS, 4, 1);
-				glLineWidth(2);
 				glDrawArrays(GL_LINE_LOOP, 0, 4);
 			}
 		}
