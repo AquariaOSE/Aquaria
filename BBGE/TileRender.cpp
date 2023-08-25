@@ -156,9 +156,6 @@ void TileRender::onRender(const RenderState& rs) const
 			default: ; // both or none set, nothing to do
 		}
 
-		// this is only relevant in editor mode and is always 0 otherwise
-		//glTranslatef(tile.beforeScaleOffsetX, tile.beforeScaleOffsetY, 0);
-
 		glScalef(sw, sh, 1);
 
 

@@ -252,7 +252,7 @@ public:
 	InterpolatedVector scale;
 	InterpolatedVector color, alpha;
 	InterpolatedVector rotation;
-	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
+	InterpolatedVector offset, rotationOffset, internalOffset;
 	InterpolatedVector velocity, gravity;
 
 	CountedPtr<Texture> texture;

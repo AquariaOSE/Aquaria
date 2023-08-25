@@ -126,16 +126,13 @@ RenderObject* RenderObject::getTopParent() const
 static glm::mat4 matrixChain(const RenderObject *ro)
 {
 	glm::mat4 tranformMatrix = glm::scale(
-		glm::translate(
-			glm::rotate(
-				glm::translate(
-					ro->getParent() ? matrixChain(ro->getParent()) : glm::mat4(1.0f),
-					glm::vec3(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0)
-				),
-				ro->rotation.z + ro->rotationOffset.z,
-				glm::vec3(0.0f, 0.0f, 1.0f)
+		glm::rotate(
+			glm::translate(
+				ro->getParent() ? matrixChain(ro->getParent()) : glm::mat4(1.0f),
+				glm::vec3(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0)
 			),
-			glm::vec3(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0.0f)
+			ro->rotation.z + ro->rotationOffset.z,
+			glm::vec3(0.0f, 0.0f, 1.0f)
 		),
 		glm::vec3(ro->scale.x, ro->scale.y, 0.0f)
 	);
@@ -154,7 +151,6 @@ static void matrixChain(RenderObject *ro)
 
 	glTranslatef(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0);
 	glRotatef(ro->rotation.z+ro->rotationOffset.z, 0, 0, 1);
-	glTranslatef(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0);
 	glScalef(ro->scale.x, ro->scale.y, 0);
 	if (ro->isfh())
 	{
@@ -465,7 +461,6 @@ nofollow:
 	if (isfh())
 		glRotatef(180, 0, 1, 0);
 
-	glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, beforeScaleOffset.z);
 	const Vector renderScale = scale * rs.scale;
 	glScalef(renderScale.x, renderScale.y, 1);
 	glTranslatef(internalOffset.x, internalOffset.y, internalOffset.z);
@@ -732,7 +727,6 @@ void RenderObject::onUpdate(float dt)
 	alpha.update(dt);
 	offset.update(dt);
 	internalOffset.update(dt);
-	beforeScaleOffset.update(dt);
 	rotationOffset.update(dt);
 
 	bool hasChildrenToDelete = false;
