@@ -66,14 +66,6 @@ public:
 	float currentDistance;
 };
 
-class RippleEffect : public Effect
-{
-public:
-	RippleEffect();
-	void update(float dt, Array2d<Vector>& grid, int xDivs, int yDivs) OVERRIDE;
-	float time;
-};
-
 class AfterEffectManager
 {
 public:
@@ -100,20 +92,6 @@ public:
 	void reloadDevice();
 	void updateDevice();
 
-	std::vector<Effect*> effects;
-	std::vector<int> openSpots;
-
-	bool active;
-
-	bool bRenderGridPoints;
-
-	int numEffects;
-	int xDivs, yDivs;
-	int screenWidth, screenHeight;
-	int textureWidth, textureHeight;
-
-	RenderGrid grid, blitQuad;
-
 	// returns handle > 0 on success
 	int loadShaderFile(const char *vert, const char *frag);
 	int loadShaderSrc(const char *vert, const char *frag);
@@ -127,6 +105,14 @@ protected:
 	int _insertShader(Shader *sh);
 	void _initGrid();
 
+	RenderGrid grid, blitQuad;
+	bool active;
+	int numEffects;
+	int xDivs, yDivs;
+	int screenWidth, screenHeight;
+	int textureWidth, textureHeight;
+	std::vector<Effect*> effects;
+	std::vector<int> openSpots;
 	std::vector<Shader*> shaderPipeline; // Shaders are applied in this order. Can contain the same pointer more than once.
 	std::vector<Shader*> loadedShaders;
 	FrameBuffer backupBuffer;

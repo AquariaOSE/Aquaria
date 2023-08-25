@@ -3,7 +3,7 @@
 #include "RenderState.h"
 
 
-static void ResetGrid(Vector* dst, size_t w, size_t h)
+static void ResetGridZeroCenter(Vector* dst, size_t w, size_t h)
 {
 	assert(w > 1 && h > 1);
 	const float xMulF = 1.0f / (float)(w-1);
@@ -20,6 +20,25 @@ static void ResetGrid(Vector* dst, size_t w, size_t h)
 		}
 	}
 }
+
+static void ResetGrid01(Vector* dst, size_t w, size_t h)
+{
+	assert(w > 1 && h > 1);
+	const float xMulF = 1.0f / (float)(w-1);
+	const float yMulF = 1.0f / (float)(h-1);
+
+	for (size_t y = 0; y < h; y++)
+	{
+		const float yval = float(y)*yMulF;
+		for (size_t x = 0; x < w; x++)
+		{
+			dst->x = float(x)*xMulF;
+			dst->y = yval;
+			++dst;
+		}
+	}
+}
+
 
 void RenderGrid::ResetWithAlpha(Vector* dst, size_t w, size_t h, float alpha)
 {
@@ -77,10 +96,16 @@ void RenderGrid::init(size_t w, size_t h, const TexCoordBox& tc)
 	this->init(w, h);
 }
 
+void RenderGrid::reset01()
+{
+	ResetGrid01(grid.data(), grid.width(), grid.height());
+	needVBOUpdate = true;
+}
+
 
 void RenderGrid::reset()
 {
-	ResetGrid(grid.data(), grid.width(), grid.height());
+	ResetGridZeroCenter(grid.data(), grid.width(), grid.height());
 	needVBOUpdate = true;
 }
 

@@ -35,6 +35,7 @@ public:
 
 	void init(size_t w, size_t h);
 	void init(size_t w, size_t h, const TexCoordBox& tc);
+	void reset01();
 	void reset();
 	void resetWithAlpha(float a);
 	void render(const RenderState& rs) const;

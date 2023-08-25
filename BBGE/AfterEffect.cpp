@@ -35,7 +35,6 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 {
 	active = false;
 	numEffects = 0;
-	bRenderGridPoints = true;
 	shaderPipeline.resize(10, 0);
 
 	this->xDivs = xDivs;
@@ -105,10 +104,15 @@ void AfterEffectManager::update(float dt)
 {
 	if (core->particlesPaused) return;
 
+	const size_t N = effects.size();
+
+	if(!N && !active)
+		return;
+
 	resetGrid();
 
 	bool isactive = false;
-	for (size_t i = 0; i < effects.size(); i++)
+	for (size_t i = 0; i < N; i++)
 	{
 		Effect *e = effects[i];
 		if (e)
@@ -132,20 +136,7 @@ void AfterEffectManager::update(float dt)
 
 void AfterEffectManager::resetGrid()
 {
-	Array2d<Vector>& a = grid.array2d();
-	const float mx = 1.0f / (float)(xDivs-1);
-	const float my = 1.0f / (float)(yDivs-1);
-	for (int y = 0; y < yDivs; y++)
-	{
-		Vector *row = a.row(y);
-		const float yy = y * my;
-		for (int x = 0; x < xDivs; x++)
-		{
-			row[x].x = x*mx;
-			row[x].y = yy;
-		}
-	}
-	grid.needVBOUpdate = true;
+	grid.reset01();
 }
 
 void AfterEffectManager::destroyEffect(int id)
@@ -212,7 +203,13 @@ void AfterEffectManager::renderGrid(const RenderState& rs) const
 	glTranslatef(offx, offy, 0);
 	glScalef(vw, vh, 1);
 
-	grid.render(rs);
+	if(active)
+	{
+		grid.render(rs);
+		//renderGridPoints(rs);
+	}
+	else
+		blitQuad.render(rs);
 
 	if (activeShader)
 		activeShader->unbind();
@@ -246,19 +243,7 @@ void AfterEffectManager::renderGrid(const RenderState& rs) const
 			activeShader->bind();
 			activeShader->setInt("tex", 0);
 
-			//blitQuad.render(rs);
-
-			// note that offx, offy are negative here!
-			glBegin(GL_QUADS);
-				glTexCoord2f(0.0f, 0.0f);
-				glVertex3f(offx, vh+offy,  0.0f);
-				glTexCoord2f(percentX, 0.0f);
-				glVertex3f( vw+offx, vh+offy,  0.0f);
-				glTexCoord2f(percentX, percentY);
-				glVertex3f( vw+offx,  offy,  0.0f);
-				glTexCoord2f(0.0f, percentY);
-				glVertex3f(offx,  offy,  0.0f);
-			glEnd();
+			blitQuad.render(rs);
 
 			activeShader->unbind();
 		}
@@ -266,9 +251,6 @@ void AfterEffectManager::renderGrid(const RenderState& rs) const
 
 	RenderObject::lastTextureApplied = 0;
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	//if (bRenderGridPoints)
-	renderGridPoints(rs);
 }
 
 void AfterEffectManager::renderGridPoints(const RenderState& rs) const
@@ -280,6 +262,7 @@ void AfterEffectManager::unloadDevice()
 {
 	backupBuffer.unloadDevice();
 	grid.dropBuffers();
+	blitQuad.dropBuffers();
 	unloadShaders();
 }
 
@@ -372,7 +355,7 @@ void ShockEffect::update(float dt, Array2d<Vector>& grid, int xDivs, int yDivs)
 	const float adjWaveLength = waveLength/distFromCamp;
 	const float adjAmplitude = amplitude/distFromCamp;
 
-	const float m = -1.0f / (adjWaveLength+currentDistance);
+	const float invAdjVaveLen = -1.0f / adjWaveLength;
 	const float dist = currentDistance*adjWaveLength;
 
 	if (amplitude < 0)
@@ -383,46 +366,17 @@ void ShockEffect::update(float dt, Array2d<Vector>& grid, int xDivs, int yDivs)
 		Vector *row = grid.row(y);
 		for (int x = 1; x < (xDivs-1); x++)
 		{
-			float xDist = (centerPoint.x - row[x].x)/.75f;
+			float xDist = (centerPoint.x - row[x].x)/.75f; // factor for 4:3 internal resolution
 			float yDist = centerPoint.y - row[x].y;
 
 			float tDist = sqrtf(xDist*xDist+yDist*yDist);
 
 			if (tDist < dist)
 			{
-				const float a = tDist * m;
+				const float a = tDist * invAdjVaveLen + currentDistance;
 				row[x].x += adjAmplitude*sinf(a)*.75f;
 				row[x].y += adjAmplitude*cosf(a);
 			}
-		}
-	}
-}
-
-
-RippleEffect::RippleEffect() : Effect()
-{
-	time = 0;
-}
-
-void RippleEffect::update(float dt, Array2d<Vector>& grid, int xDivs, int yDivs)
-{
-	const float offx = (core->screenCenter.x/float(core->width)/2);
-	const float offy = (core->screenCenter.y/float(core->height)/2);
-	const float invx = 1.0f / float(xDivs);
-	time += dt*0.5f;
-	float amp = 0.002f;
-
-	for (int y = 0; y < (yDivs-1); y++)
-	{
-		float offbase = y*invx + offx + offy;
-		Vector *row = grid.row(y);
-		for (int x = 0; x < (xDivs-1); x++)
-		{
-			float offset = x*invx + offbase;
-			float a = (time+offset)*7.5f;
-
-			row[x].x += sinf(a)*(amp*0.5f);
-			row[x].y += cosf(a)*amp;
 		}
 	}
 }
@@ -495,6 +449,8 @@ void AfterEffectManager::_initGrid()
 		grid.dropBuffers();
 
 	blitQuad.init(2, 2);
+	blitQuad.reset01();
+	blitQuad.updateVBO(); // never changed afterwards
 }
 
 void AfterEffectManager::deleteShader(int handle)
