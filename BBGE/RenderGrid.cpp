@@ -58,18 +58,23 @@ void RenderGrid::dropBuffers()
 	indexbuf.dropBuffer();
 }
 
-void RenderGrid::init(size_t w, size_t h, const TexCoordBox& tc)
+void RenderGrid::init(size_t w, size_t h)
 {
 	assert(w > 1 && h > 1);
 	grid.init(w, h);
 	setDrawOrder((GridDrawOrder)drawOrder, true);
-	this->tc = tc;
 	reset();
 	Vector *dg = grid.data();
 	for(size_t i = 0; i < grid.linearsize(); ++i)
 		dg[i].z = 1.0f;
 
 	updateVBO();
+}
+
+void RenderGrid::init(size_t w, size_t h, const TexCoordBox& tc)
+{
+	this->tc = tc;
+	this->init(w, h);
 }
 
 
@@ -175,6 +180,12 @@ void RenderGrid::updateVBO()
 	while(!vbo.commitWrite());
 
 	needVBOUpdate = false;
+}
+
+void RenderGrid::updateVBOIfNecessary()
+{
+	if(needVBOUpdate)
+		updateVBO();
 }
 
 void RenderGrid::render_Indexed(const RenderState& rs) const

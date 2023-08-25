@@ -1810,7 +1810,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 			}
 		}
 
-		if (afterEffectManager && afterEffectManager->active && i == afterEffectManagerLayer)
+		if (afterEffectManager /*&& afterEffectManager->active*/ && i == afterEffectManagerLayer)
 		{
 			afterEffectManager->render(rs);
 		}

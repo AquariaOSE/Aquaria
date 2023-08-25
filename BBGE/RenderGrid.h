@@ -33,6 +33,7 @@ public:
 	~RenderGrid();
 	void dropBuffers();
 
+	void init(size_t w, size_t h);
 	void init(size_t w, size_t h, const TexCoordBox& tc);
 	void reset();
 	void resetWithAlpha(float a);
@@ -54,6 +55,7 @@ public:
 	const Array2d<Vector>& array2d() const { return grid; }
 	const DynamicGPUBuffer& getVBO() const { return vbo; }
 	void updateVBO();
+	void updateVBOIfNecessary();
 
 	static void ResetWithAlpha(Vector* dst, size_t w, size_t h, float alpha);
 
@@ -62,12 +64,12 @@ protected:
 	size_t trisToDraw;
 	Array2d<Vector> grid;
 	TexCoordBox tc;
-	bool needVBOUpdate;
 
 	void render_Indexed(const RenderState& rs) const;
 	void render_WithAlpha(const RenderState& rs) const;
 
 public:
+	bool needVBOUpdate;
 	GridDrawOrder drawOrder;
 };
 
