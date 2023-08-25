@@ -11,6 +11,10 @@ SplineGridCtrlPoint::SplineGridCtrlPoint()
     setWidthHeight(8, 8);
 }
 
+SplineGridCtrlPoint::~SplineGridCtrlPoint()
+{
+}
+
 Vector SplineGridCtrlPoint::getSplinePosition() const
 {
     SplineGridCtrlPoint *p = (SplineGridCtrlPoint*)getParent();
