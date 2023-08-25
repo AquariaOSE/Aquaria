@@ -327,8 +327,7 @@ size_t DynamicGPUBuffer::initGridIndices_Triangles(size_t w, size_t h, bool inve
             // top to bottom
             for(size_t y = 0; y < quadsy; ++y)
             {
-                size_t i = y * w;
-                for(size_t x = 0; x < quadsx; ++x)
+                for(size_t x = 0, i = y * w; x < quadsx; ++x, ++i)
                 {
                     *p++ = (unsigned short)(i);         // 0
                     *p++ = (unsigned short)(i + 1);     // 1
@@ -345,8 +344,7 @@ size_t DynamicGPUBuffer::initGridIndices_Triangles(size_t w, size_t h, bool inve
             // bottom to top
             for(size_t y = quadsy; y --> 0; )
             {
-                size_t i = y * w;
-                for(size_t x = 0; x < quadsx; ++x)
+                for(size_t x = 0, i = y * w; x < quadsx; ++x, ++i)
                 {
                     *p++ = (unsigned short)(i);         // 0
                     *p++ = (unsigned short)(i + 1);     // 1
