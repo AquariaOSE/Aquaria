@@ -279,17 +279,17 @@ void DynamicGPUBuffer::drawElements(unsigned glmode, size_t n, size_t first) con
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, id);
     //}
 
-    void *p = id ? NULL : _h_data;
+    const unsigned short *p = (unsigned short*)(id ? NULL : _h_data);
     assert(p || id);
 
-    glDrawElements(glmode, n, GL_UNSIGNED_SHORT, p);
+    glDrawElements(glmode, n, GL_UNSIGNED_SHORT, p + first);
 }
 
 void DynamicGPUBuffer::initQuadVertices(const TexCoordBox& tc, unsigned access)
 {
     do
     {
-        float *p = (float*)beginWrite(GPUBUFTYPE_VEC2_TC, (4*4) * sizeof(float), access);
+        float *p = (float*)beginWrite(GPUBUFTYPE_VEC2_TC, (4*4 + 4) * sizeof(float), access);
         *p++ = -0.5f; *p++ = +0.5f;     // xy
 	    *p++ = tc.u1;   *p++ = tc.v1;  //   uv
 	    *p++ = +0.5f; *p++ = +0.5f;     // xy
@@ -298,6 +298,9 @@ void DynamicGPUBuffer::initQuadVertices(const TexCoordBox& tc, unsigned access)
 	    *p++ = tc.u2;   *p++ = tc.v2;  //   uv
 	    *p++ = -0.5f; *p++ = -0.5f;     // xy
 	    *p++ = tc.u1;   *p++ = tc.v2;  //   uv
+
+        for(size_t i = 0; i < 4; ++i)
+            *p++ = 0; // zero/center xy uv (uv isn't used)
     }
     while(!commitWrite());
 }
@@ -318,9 +321,10 @@ size_t DynamicGPUBuffer::initGridIndices_Triangles(size_t w, size_t h, bool inve
     const size_t quadsx = w - 1;
     const size_t quadsy = h - 1;
     const size_t quads = quadsx * quadsy;
+    const size_t border = 4; // for GL_LINE_LOOP
     do
     {
-        unsigned short *p = (unsigned short*)beginWrite(GPUBUFTYPE_U16, 6*quads * sizeof(short), access);
+        unsigned short *p = (unsigned short*)beginWrite(GPUBUFTYPE_U16, (6*quads + border) * sizeof(short), access);
 
         if(!invert)
         {

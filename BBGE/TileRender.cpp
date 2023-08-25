@@ -62,6 +62,7 @@ void TileRender::onRender(const RenderState& rs) const
 	unsigned lastTexId = 0;
 
 	const bool renderExtras = renderBorders || RenderObject::renderCollisionShape;
+
 	const TileEffectData *prevEff = ((TileEffectData*)NULL)+1; // initial value is different from anything else
 
 	for(size_t i = 0; i < storage.tiles.size(); ++i)
@@ -183,20 +184,11 @@ void TileRender::onRender(const RenderState& rs) const
 				color *= getTagColor(tile.tag);
 
 				glColor4f(color.x, color.y, color.z, 1.0f);
+				core->getDefaultQuadBorderBuf()->apply();
 				glPointSize(16);
-				glBegin(GL_POINTS);
-					glVertex2f(0,0);
-				glEnd();
-
-				// TODO: move this to the IBO
+				glDrawArrays(GL_POINTS, 4, 1);
 				glLineWidth(2);
-				glBegin(GL_LINE_STRIP);
-					glVertex2f(0.5f, 0.5f);
-					glVertex2f(0.5f, -0.5f);
-					glVertex2f(-0.5f, -0.5f);
-					glVertex2f(-0.5f, 0.5f);
-					glVertex2f(0.5f, 0.5f);
-				glEnd();
+				glDrawArrays(GL_LINE_LOOP, 0, 4);
 			}
 		}
 

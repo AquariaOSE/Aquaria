@@ -413,6 +413,7 @@ public:
 	TextureMgr texmgr;
 
 	inline const RenderGrid *getDefaultQuadGrid() const { return &defaultQuadGrid; }
+	inline const DynamicGPUBuffer *getDefaultQuadBorderBuf() const { return &defautQuadBorder; }
 
 protected:
 
@@ -492,6 +493,7 @@ protected:
 	void clearActionButtons();
 
 	RenderGrid defaultQuadGrid;
+	DynamicGPUBuffer defautQuadBorder;
 
 public:
 	// inclusive!
