@@ -27,8 +27,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 FrameBuffer::FrameBuffer()
 {
 	inited = false;
-	w = 0;
-	h = 0;
+	texw = 0;
+	texh = 0;
 	g_frameBuffer = 0;
 	g_depthRenderBuffer = 0;
 	g_dynamicTextureID = 0;
@@ -40,20 +40,14 @@ FrameBuffer::~FrameBuffer()
 	unloadDevice();
 }
 
-float FrameBuffer::getWidthP()
+float FrameBuffer::getWidthP() const
 {
-	float px=0;
-	int sw=core->getWindowWidth();
-	px = (float)sw/(float)w;
-	return px;
+	return (float)core->getWindowWidth()/(float)texw;
 }
 
-float FrameBuffer::getHeightP()
+float FrameBuffer::getHeightP() const
 {
-	float py=0;
-	int sh=core->getWindowHeight();
-	py = (float)sh/(float)h;
-	return py;
+	return (float)core->getWindowHeight()/(float)texh;
 }
 
 bool FrameBuffer::init(int width, int height, bool fitToScreen)
@@ -77,11 +71,11 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 	if (width == 0 || height == 0)
 		return false;
 
+	texw = width;
+	texh = height;
 
-	w=width;
-	h=height;
 	std::ostringstream os;
-	os << "Loading EXT_framebuffer_object (" << w << ", " << h << ")";
+	os << "Loading EXT_framebuffer_object (" << texw << ", " << texh << ")";
 	debugLog(os.str());
 
 	if( !glIsRenderbufferEXT || !glBindRenderbufferEXT || !glDeleteRenderbuffersEXT ||

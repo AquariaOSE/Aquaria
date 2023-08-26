@@ -30,14 +30,14 @@ public:
 	FrameBuffer();
 	~FrameBuffer();
 	bool init(int width, int height, bool fitToScreen=false);
-	bool isInited() { return inited; }
+	bool isInited() const { return inited; }
 	void startCapture() const;
 	void endCapture() const;
 	void bindTexture() const;
-	int getWidth() { return w; }
-	int getHeight() { return h; }
-	float getWidthP();
-	float getHeightP();
+	int getTexWidth() const { return texw; }
+	int getTexHeight() const { return texh; }
+	float getWidthP() const;
+	float getHeightP() const;
 
 	void unloadDevice();
 	void reloadDevice();
@@ -48,7 +48,7 @@ protected:
 	unsigned g_frameBuffer;
 	unsigned g_depthRenderBuffer;
 	unsigned g_dynamicTextureID;
-	int w,h;
+	int texw, texh;
 	bool inited;
 };
 

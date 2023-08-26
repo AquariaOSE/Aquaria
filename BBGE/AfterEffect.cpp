@@ -273,8 +273,8 @@ void AfterEffectManager::_updateScreenSize()
 
 	if (core->frameBuffer.isInited())
 	{
-		textureWidth = core->frameBuffer.getWidth();
-		textureHeight = core->frameBuffer.getHeight();
+		textureWidth = core->frameBuffer.getTexWidth();
+		textureHeight = core->frameBuffer.getTexHeight();
 	}
 	else
 	{
