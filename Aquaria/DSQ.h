@@ -458,6 +458,8 @@ public:
 	void fixupJoysticks();
 	void initActionButtons();
 	void importActionButtons();
+
+	TileRender *tileRenders[MAX_TILE_LAYERS];
 };
 
 extern DSQ *dsq;
