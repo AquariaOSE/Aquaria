@@ -239,6 +239,7 @@ public:
 	void refreshAll(); // call this after changing properties or moving to front/back
 	void destroyAll();
 
+	void select(const size_t *indices, size_t n);
 	void clearSelection();
 
 	struct Sizes

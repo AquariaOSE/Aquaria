@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "GridRender.h"
 #include "Shot.h"
 #include "Tile.h"
-
+#include "TileRender.h"
 
 #ifdef BBGE_BUILD_WINDOWS
 	#define WIN32_LEAN_AND_MEAN
@@ -1678,6 +1678,11 @@ void SceneEditor::setActiveLayer(unsigned bglayer)
 	if(this->bgLayer == bglayer)
 		return;
 
+	for(size_t i = 0; i < MAX_TILE_LAYERS; ++i)
+		dsq->tileRenders[i]->renderBorders = false;
+
+	dsq->tileRenders[bglayer]->renderBorders = true;
+
 	destroyMultiTileHelper();
 	clearSelection();
 	this->bgLayer = bglayer;
@@ -1697,12 +1702,14 @@ void SceneEditor::action(int id, int state, int source, InputDevice device)
 
 		if(editType == ET_ELEMENTS)
 		{
+			bool change = true;
 			if(size_t N = selectedTiles.size())
 			{
 				TileStorage& ts = getCurrentLayerTiles();
 
 				if (core->getCtrlState())
 				{
+					change = false;
 					if (id == ACTION_BGLAYEREND)
 					{
 						ts.setEffect(dsq->tilemgr.tileEffects, -1, &selectedTiles[0], N);
@@ -1728,13 +1735,13 @@ void SceneEditor::action(int id, int state, int source, InputDevice device)
 							for(size_t i = 0; i < N; ++i)
 								selectedTiles.push_back(idx + i);
 							//ts.changeFlags(TILEFLAG_SELECTED, 0, &selectedTiles[0], N); // they still have that flag
+							change = false;
 						}
 					}
-
-					setActiveLayer(newLayer);
-
 				}
 			}
+			if(change)
+				setActiveLayer(newLayer);
 		}
 	}
 
@@ -2257,6 +2264,7 @@ void SceneEditor::toggle(bool on)
 	{
 		btnMenu->alpha = 1;
 		dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = true;
+		dsq->tileRenders[bgLayer]->renderBorders = true;
 
 		game->togglePause(on);
 		if (game->avatar)
@@ -2294,6 +2302,7 @@ void SceneEditor::toggle(bool on)
 		movingEntity = 0;
 
 		dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = false;
+		dsq->tileRenders[bgLayer]->renderBorders = false;
 
 		game->togglePause(on);
 		if (game->avatar)
@@ -2408,10 +2417,18 @@ void SceneEditor::update(float dt)
 			int sel = -1;
 			if (state == ES_SELECTING && !ismulti)
 			{
-				selectedTiles.clear();
 				sel = this->getTileAtCursor();
+				//if(sel < 0 || (selectedTiles.size() == 1 && selectedTiles[0] != (size_t)sel))
+				{
+					selectedTiles.clear();
+					getCurrentLayerTiles().clearSelection();
+				}
 				if(sel >= 0)
+				{
 					selectedTiles.push_back(sel);
+					const size_t idx = sel;
+					getCurrentLayerTiles().select(&idx, 1);
+				}
 			}
 
 			if (sel >= 0 || ismulti)

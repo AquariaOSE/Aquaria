@@ -217,6 +217,11 @@ void TileStorage::changeFlags(unsigned flagsToSet, unsigned flagsToUnset, const 
 	}
 }
 
+void TileStorage::select(const size_t *indices, size_t n)
+{
+	changeFlags(TILEFLAG_SELECTED, 0, indices, n);
+}
+
 size_t TileStorage::cloneSome(const TileEffectStorage& effstore, const size_t* indices, size_t n)
 {
 	const size_t ret = tiles.size(); // new starting index of clone tiles

@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "GLLoad.h"
 #include "RenderBase.h"
 #include "Image.h"
+#include "TileRender.h"
 
 #include <sys/stat.h>
 

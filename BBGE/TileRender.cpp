@@ -172,6 +172,8 @@ void TileRender::onRender(const RenderState& rs) const
 			lastTexId = 0;
 			prevEff = ((TileEffectData*)NULL)+1;
 
+			rs.gpu.setBlend(BLEND_DEFAULT);
+
 			if(grid && RenderObject::renderCollisionShape)
 			{
 				grid->renderDebugPoints(rs);

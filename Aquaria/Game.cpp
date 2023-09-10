@@ -2491,6 +2491,7 @@ void Game::applyState()
 	{
 		TileRender *tr = new TileRender(dsq->tilemgr.tilestore[i]);
 		addRenderObject(tr, LR_ELEMENTS1 + i);
+		dsq->tileRenders[i] = tr;
 	}
 
 	for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS12; i++) // LR_ELEMENTS13 is darkness, stop before that
