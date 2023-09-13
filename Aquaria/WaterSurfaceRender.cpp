@@ -121,11 +121,11 @@ void WaterSurfaceRender::onUpdate(float dt)
 		const float v0 = 1 + reflectOffset - (reflectPos * core->globalScale.x) / coordDiv;
 		const float v1 = v0 + (reflectSize * core->globalScale.x) / coordDiv;
 
-		upperLeftTextureCoordinates.y = v0 * core->frameBuffer.getHeightP();
+		/*upperLeftTextureCoordinates.y = v0 * core->frameBuffer.getHeightP();
 		lowerRightTextureCoordinates.y = v1 * core->frameBuffer.getHeightP();
 
 		upperLeftTextureCoordinates.x = 0;
-		lowerRightTextureCoordinates.x = core->frameBuffer.getWidthP();
+		lowerRightTextureCoordinates.x = core->frameBuffer.getWidthP();*/
 	}
 }
 

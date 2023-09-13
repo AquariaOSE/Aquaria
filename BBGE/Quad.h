@@ -41,6 +41,15 @@ protected:
 
 class DynamicRenderGrid;
 
+/*class QuadRepeatData
+{
+	DynamicRenderGrid grid; // need this here because a repeating tile WITH a grid-based tile effect is a special and annoying case to handle
+
+	// set by user
+	float texscaleX, texscaleY;
+	float texOffX, texOffY;
+};*/
+
 class Quad : public RenderObject
 {
 public:
@@ -53,8 +62,6 @@ public:
 	bool isCoordinateInsideWorld(const Vector &coord, int minSize=0) const;
 	bool isCoordinateInsideWorldRect(const Vector &coord, int w, int h) const;
 
-	void flipVertical() OVERRIDE;
-	void flipHorizontal() OVERRIDE;
 	void setWidthHeight(float w, float h=-1);
 	void setWidth(float w);
 	void setHeight(float h);
@@ -74,7 +81,7 @@ public:
 
 	void deleteGrid();
 
-	Vector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
+	TexCoordBox texcoords;
 
 	// TODO: this should be a bitmask
 	char autoWidth, autoHeight;

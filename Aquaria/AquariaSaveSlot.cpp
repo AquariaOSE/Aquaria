@@ -116,8 +116,8 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 		screen->alphaMod = 1;
 
 	core->resetTimer();
-	screen->upperLeftTextureCoordinates = Vector(0, 1);
-	screen->lowerRightTextureCoordinates = Vector(1, 0.25f);
+	//screen->upperLeftTextureCoordinates = Vector(0, 1);
+	//screen->lowerRightTextureCoordinates = Vector(1, 0.25f);
 
 
 	if (screen->getWidth() == 0)

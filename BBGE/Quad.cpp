@@ -54,9 +54,8 @@ void Quad::initQuad()
 	renderBorder = false;
 	renderCenter = true;
 	width = 2; height = 2;
+	texcoords.setStandard();
 
-	upperLeftTextureCoordinates = Vector(0,0);
-	lowerRightTextureCoordinates = Vector(1,1);
 	renderQuad = true;
 	grid = NULL;
 }
@@ -89,13 +88,8 @@ DynamicRenderGrid *Quad::createGrid(int xd, int yd)
 	grid = NULL;
 	if(xd && yd)
 	{
-		TexCoordBox tc;
-		tc.u1 = upperLeftTextureCoordinates.x;
-		tc.v1 = upperLeftTextureCoordinates.y;
-		tc.u2 = lowerRightTextureCoordinates.x;
-		tc.v2 = lowerRightTextureCoordinates.y;
 		grid = new DynamicRenderGrid();
-		grid->init(xd, yd, tc);
+		grid->init(xd, yd, texcoords);
 	}
 	return grid;
 }
@@ -214,9 +208,6 @@ void Quad::renderGrid(const RenderState& rs) const
 	rx.color = rs.color * this->color;
 	rx.alpha = rs.alpha * this->alpha.x * this->alphaMod;
 
-	glPushMatrix();
-	glScalef(width, height, 1);
-
 	grid->render(rx);
 
 	// debug points
@@ -226,8 +217,6 @@ void Quad::renderGrid(const RenderState& rs) const
 		grid->renderDebugPoints(rs);
 		RenderObject::lastTextureApplied = 0;
 	}
-
-	glPopMatrix();
 }
 
 
@@ -242,26 +231,19 @@ void Quad::onRender(const RenderState& rs) const
 {
 	if (!renderQuad) return;
 
-	const float _w2 = width*0.5f;
-	const float _h2 = height*0.5f;
+
+	// previously, vertical flip was implemented by texcoord inversion.
+	// ie. child objects were never affected. not sure if this is desirable behavior but it'll stay like
+	// this for now. should probably make it affect children as well.
+	glPushMatrix();
+	if(_fv)
+		glRotatef(180, 1, 0, 0);
+
+	glScalef(width, height, 1);
 
 	if (!grid)
 	{
-		glBegin(GL_QUADS);
-		{
-			glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-			glVertex2f(-_w2, +_h2);
-
-			glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-			glVertex2f(+_w2, +_h2);
-
-			glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-			glVertex2f(+_w2, -_h2);
-
-			glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-			glVertex2f(-_w2, -_h2);
-		}
-		glEnd();
+		core->getDefaultQuadGrid()->render(rs);
 	}
 	else
 	{
@@ -273,43 +255,33 @@ void Quad::onRender(const RenderState& rs) const
 	else if(rs.forceRenderBorder)
 		_renderBorder(rs, rs.renderBorderColor, rs.renderBorderAlpha);
 
-
-}
-
-
-void Quad::flipHorizontal()
-{
-	RenderObject::flipHorizontal();
-}
-
-void Quad::flipVertical()
-{
-	if (!_fv)
-	{
-		lowerRightTextureCoordinates.y = 0;
-		upperLeftTextureCoordinates.y = 1;
-	}
-	else
-	{
-		lowerRightTextureCoordinates.y = 1;
-		upperLeftTextureCoordinates.y = 0;
-	}
-	RenderObject::flipVertical();
+	glPopMatrix();
 }
 
 void Quad::refreshRepeatTextureToFill()
 {
 	if (repeatTexture && texture)
 	{
-		upperLeftTextureCoordinates.x = texOff.x;
-		upperLeftTextureCoordinates.y = texOff.y;
-		lowerRightTextureCoordinates.x = (width*scale.x*repeatToFillScale.x)/texture->width + texOff.x;
-		lowerRightTextureCoordinates.y = (height*scale.y*repeatToFillScale.y)/texture->height + texOff.y;
+		texcoords.u1 = texOff.x;
+		texcoords.v1 = texOff.y;
+		texcoords.u2 = (width*scale.x*repeatToFillScale.x)/texture->width + texOff.x;
+		texcoords.v2 = (height*scale.y*repeatToFillScale.y)/texture->height + texOff.y;
+
+		if(!grid)
+		{
+			createGrid(2, 2)->gridType = GRID_UNDEFINED;
+		}
 	}
 	else
 	{
-		if (fabsf(lowerRightTextureCoordinates.x) > 1 || fabsf(lowerRightTextureCoordinates.y)>1)
-			lowerRightTextureCoordinates = Vector(1,1);
+		if (fabsf(texcoords.u2) > 1 || fabsf(texcoords.v2) > 1)
+		{
+			texcoords.u2 = 1;
+			texcoords.v2 = 1;
+
+			if(grid && grid->gridType == GRID_UNDEFINED && texcoords.isStandard())
+				deleteGrid();
+		}
 	}
 }
 
