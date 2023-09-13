@@ -134,7 +134,6 @@ public:
 	Entity *ridingOnEntity;
 	Vector startPos;
 	void rotateToVec(Vector addVec, float time, float offsetAngle=0);
-	virtual void applyVariation(int variation){}
 
 	void popBubble();
 	void sound(const std::string &sound, float freq=1, float fadeOut=0);
@@ -167,7 +166,6 @@ public:
 		STATE_FOLLOW		=23,
 		STATE_TITLE			=24
 	};
-	virtual void onNotify(Entity *notify){}
 
 	float followPath(Path *p, float speed, int dir, bool deleteOnEnd = false);
 	bool touchAvatarDamage(int radius, float dmg, const Vector &override=Vector(-1,-1,-1), float speed=0, float pushTime = 0, Vector collidePos = Vector(0,0,0));
@@ -205,7 +203,6 @@ public:
 	bool isFollowingPath();
 	void stopFollowingPath();
 	void overideMaxSpeed(int ms, float time);
-	void disableOverideMaxSpeed();
 	int currentEntityTarget;
 	float moveToPos(Vector pos, float speed, int dieOnPathEnd=0, bool swim = false);
 	bool isHit();
@@ -220,7 +217,6 @@ public:
 	void idle();
 	void slowToStopPath(float t);
 	bool isSlowingToStopPath();
-	Vector lastMove;
 	float damageTime;
 
 	void setEntityProperty(EntityProperty ep, bool value=true);
