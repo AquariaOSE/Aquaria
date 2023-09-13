@@ -32,6 +32,7 @@ SET(AQUARIA_SRCS
     FlockEntity.h
     Game.cpp
     Game.h
+    GameEnums.cpp
     GameEnums.h
     GameplayVariables.cpp
     GameStructs.cpp
@@ -60,7 +61,6 @@ SET(AQUARIA_SRCS
     ModSelector.h
     Network.cpp
     Network.h
-    NotEntities.h
     ParticleEditor.cpp
     Path.cpp
     Path.h
