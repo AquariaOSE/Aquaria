@@ -24,10 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "StatsAndAchievements.h"
 #include "ttvfs_stdio.h"
 
-#ifndef ARRAYSIZE
-#define ARRAYSIZE(x) (sizeof (x) / sizeof ((x)[0]))
-#endif
-
 #define _ACH_ID( id, name ) { id, #id, name, "", 0, 0 }
 
 static Achievement g_rgAchievements[] =
@@ -153,7 +149,7 @@ void StatsAndAchievements::RunFrame()
 	{
 		requestedStats = true;
 
-		const size_t max_achievements = ARRAYSIZE(g_rgAchievements);
+		const size_t max_achievements = Countof(g_rgAchievements);
 		VFILE *io = NULL;
 
 		// Get generic achievement data...
@@ -229,7 +225,7 @@ void StatsAndAchievements::RunFrame()
 	// but only if we're not in a mod
 	if (!dsq->mod.isActive())
 	{
-		for (size_t iAch = 0; iAch < ARRAYSIZE( g_rgAchievements ); ++iAch )
+		for (size_t iAch = 0; iAch < Countof( g_rgAchievements ); ++iAch )
 		{
 			EvaluateAchievement( g_rgAchievements[iAch] );
 		}
@@ -252,7 +248,7 @@ void StatsAndAchievements::appendStringData(std::string &data)
 
 	count = 0;
 	data += "Unlocked:\n\n";
-	for (size_t iAch = 0; iAch < ARRAYSIZE( g_rgAchievements ); ++iAch )
+	for (size_t iAch = 0; iAch < Countof( g_rgAchievements ); ++iAch )
 	{
 		const Achievement &ach = g_rgAchievements[iAch];
 		if (!ach.achieved)
@@ -271,7 +267,7 @@ void StatsAndAchievements::appendStringData(std::string &data)
 
 	count = 0;
 	data += "Locked:\n\n";
-	for (size_t iAch = 0; iAch < ARRAYSIZE( g_rgAchievements ); ++iAch )
+	for (size_t iAch = 0; iAch < Countof( g_rgAchievements ); ++iAch )
 	{
 		const Achievement &ach = g_rgAchievements[iAch];
 		if (ach.achieved)
@@ -812,7 +808,7 @@ void StatsAndAchievements::StoreStatsIfNecessary()
 		if (io == NULL)
 			return;
 
-		const size_t max_achievements = ARRAYSIZE(g_rgAchievements);
+		const size_t max_achievements = Countof(g_rgAchievements);
 		unsigned char *buf = new unsigned char[max_achievements];
 
 		for (size_t i = 0; i < max_achievements; i++)
@@ -828,7 +824,7 @@ void StatsAndAchievements::StoreStatsIfNecessary()
 		char cruft[101];
 		for (size_t i = 0; i < sizeof (cruft); i++)
 			cruft[i] = (char) rand();
-		if (fwrite(cruft, sizeof (cruft[0]), ARRAYSIZE(cruft), io) != ARRAYSIZE(cruft))
+		if (fwrite(cruft, sizeof (cruft[0]), Countof(cruft), io) != Countof(cruft))
 			debugLog("Failed to write achievements 2");
 
 		fclose(io);
