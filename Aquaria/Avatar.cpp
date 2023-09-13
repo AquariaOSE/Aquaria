@@ -3063,11 +3063,6 @@ void Avatar::setBlockSinging(bool v)
 	}
 }
 
-bool Avatar::canSetBoneLock()
-{
-	return true;
-}
-
 void Avatar::onSetBoneLock()
 {
 	Entity::onSetBoneLock();

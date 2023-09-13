@@ -91,7 +91,7 @@ public:
 	float health;
 	float maxHealth;
 
-	bool setBoneLock(const BoneLock &boneLock);
+	bool setBoneLock(const BoneLock &boneLock, bool force = false);
 
 	void heal(float a, int type=0);
 
@@ -329,8 +329,6 @@ public:
 	bool isGoingToBeEaten();
 	void setPoison(float m, float t);
 	inline float getPoison() const { return poison; }
-
-	virtual bool canSetBoneLock();
 
 	void initHair(int numSegments, float segmentLength, float width, const std::string &tex);
 	void updateHair(float dt);

@@ -61,17 +61,18 @@ void Entity::setIngredientData(const std::string &name)
 void Entity::entityDied(Entity *e)
 {
 	for (size_t i = 0; i < targets.size(); i++)
+		if(targets[i] == e)
+			targets[i] = NULL;
+
+	if (boneLock.on && boneLock.entity == e)
 	{
-		targets[i] = 0;
+		setBoneLock(BoneLock(), true);
 	}
 
-	if (boneLock.on)
-	{
-		if (boneLock.entity == e)
-		{
-			setBoneLock(BoneLock());
-		}
-	}
+	if(riding == e)
+		riding = NULL;
+	if(ridingOnEntity == e)
+		ridingOnEntity = NULL;
 }
 
 void Entity::setBounceType(BounceType bt)
@@ -98,14 +99,13 @@ void Entity::generateCollisionMask(int ovrCollideRadius)
 	}
 }
 
-
-
-bool Entity::setBoneLock(const BoneLock &bl)
+bool Entity::setBoneLock(const BoneLock &bl, bool force)
 {
-	if (!canSetBoneLock()) return false;
-
-	if (bl.on && boneLockDelay > 0) return false;
-	if (boneLock.on && bl.on) return false;
+	if(!force)
+	{
+		if (bl.on && boneLockDelay > 0) return false;
+		if (boneLock.on && bl.on) return false;
+	}
 
 	if (boneLock.on && !bl.on)
 	{
@@ -135,11 +135,6 @@ bool Entity::setBoneLock(const BoneLock &bl)
 
 	updateBoneLock();
 
-	return true;
-}
-
-bool Entity::canSetBoneLock()
-{
 	return true;
 }
 
