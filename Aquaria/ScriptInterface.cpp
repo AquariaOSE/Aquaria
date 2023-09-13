@@ -1633,6 +1633,15 @@ luaFunc(obj_setRenderPass)
 	luaReturnNil();
 }
 
+luaFunc(obj_getRenderPass)
+{
+	RenderObject *r = robj(L);
+	int pass = 0;
+	if (r)
+		pass = r->getRenderPass();
+	luaReturnInt(pass);
+}
+
 luaFunc(obj_fh)
 {
 	RenderObject *r = robj(L);
@@ -2054,6 +2063,7 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  setUpdateCull	) \
 	RO_FUNC(getter, prefix,  getUpdateCull	) \
 	RO_FUNC(getter, prefix,  setRenderPass	) \
+	RO_FUNC(getter, prefix,  getRenderPass	) \
 	RO_FUNC(getter, prefix,  setPositionX	) \
 	RO_FUNC(getter, prefix,  setPositionY	) \
 	RO_FUNC(getter, prefix,  enableMotionBlur	) \
