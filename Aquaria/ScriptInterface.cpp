@@ -5990,7 +5990,7 @@ luaFunc(entity_flipToEntity)
 	Entity *e2 = entity(L, 2);
 	if (e && e2)
 	{
-		e->flipToTarget(e2->position);
+		e->flipToPos(e2->position);
 	}
 	luaReturnNil();
 }
@@ -6002,7 +6002,7 @@ luaFunc(entity_flipToNode)
 	PathNode *n = &p->nodes[0];
 	if (e && n)
 	{
-		e->flipToTarget(n->position);
+		e->flipToPos(n->position);
 	}
 	luaReturnNil();
 }
@@ -7413,22 +7413,20 @@ luaFunc(entity_setActivationType)
 luaFunc(entity_hasTarget)
 {
 	Entity *e = entity(L);
-	if (e)
-		luaReturnBool(e->hasTarget(e->currentEntityTarget));
-	else
-		luaReturnBool(false);
+	luaReturnBool(e && e->getTargetEntity(e->currentEntityTarget));
 }
 
 luaFunc(entity_hurtTarget)
 {
 	Entity *e = entity(L);
-	if (e && e->getTargetEntity())
-	{
-		DamageData d;
-		d.attacker = e;
-		d.damage = lua_tointeger(L, 2);
-		e->getTargetEntity(e->currentEntityTarget)->damage(d);
-	}
+	if (e)
+		if(Entity *t = e->getTargetEntity(e->currentEntityTarget))
+		{
+			DamageData d;
+			d.attacker = e;
+			d.damage = lua_tointeger(L, 2);
+			t->damage(d);
+		}
 
 	luaReturnNil();
 }

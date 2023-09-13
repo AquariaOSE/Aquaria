@@ -206,7 +206,6 @@ Entity::Entity()
 	multColor = Vector(1,1,1);
 	collideRadius = 24;
 	entityType = EntityType(0);
-	targets.resize(10);
 
 	frozenTimer = 0;
 	canBeTargetedByAvatar = false;
@@ -489,11 +488,8 @@ void Entity::stopFollowingPath()
 	position.stopPath();
 }
 
-void Entity::flipToTarget(Vector pos)
+void Entity::flipToPos(Vector pos)
 {
-
-
-
 	if (pos.x > position.x)
 	{
 		if (!isfh())
@@ -506,19 +502,25 @@ void Entity::flipToTarget(Vector pos)
 	}
 }
 
-Entity* Entity::getTargetEntity(int t)
+Entity* Entity::getTargetEntity(size_t t) const
 {
-	return targets[t];
+	return t < targets.size() ? targets[t] : NULL;
 }
 
-void Entity::setTargetEntity(Entity *e, int t)
+void Entity::setTargetEntity(Entity *e, size_t t)
 {
+	if(t < targets.size())
+	{
+		targets[t] = e;
+		return;
+	}
+
+	if(!e)
+		return;
+
+	if(targets.size() <= t)
+		targets.resize(t + 1);
 	targets[t] = e;
-}
-
-bool Entity::hasTarget(int t)
-{
-	return (targets[t]!=0);
 }
 
 void Entity::destroy()
@@ -1860,25 +1862,21 @@ EntityType Entity::getEntityType()
 	return entityType;
 }
 
-/* types:
-
-*/
-Entity *Entity::findTarget(int dist, int type, int t)
+Entity *Entity::findTarget(int dist, int type, size_t t)
 {
-	targets[t] = 0;
+	Entity *target = NULL;
 
 	if (type == ET_AVATAR)
 	{
 		Vector d = game->avatar->position - this->position;
 		if (d.getSquaredLength2D() < sqr(dist))
 		{
-			targets[t] = game->avatar;
+			target = game->avatar;
 		}
 	}
 	else
 	{
 		int closestDist = -1;
-		Entity *target = 0;
 		FOR_ENTITIES(i)
 		{
 			Entity *e = *i;
@@ -1892,12 +1890,10 @@ Entity *Entity::findTarget(int dist, int type, int t)
 				}
 			}
 		}
-		if (target)
-		{
-			targets[t] = target;
-		}
 	}
-	return targets[t];
+	setTargetEntity(target, t);
+
+	return target;
 }
 
 void Entity::moveTowards(Vector p, float dt, int spd)
@@ -1930,15 +1926,15 @@ void Entity::moveAroundAngle(int angle, float dt, int spd, int dir)
 	moveAround(p, dt, spd, dir);
 }
 
-void Entity::moveTowardsTarget(float dt, int spd, int t)
+void Entity::moveTowardsTarget(float dt, int spd, size_t t)
 {
-	if (!targets[t]) return;
+	if (targets.size() < t || !targets[t]) return;
 	moveTowards(targets[t]->position, dt, spd);
 }
 
-void Entity::moveAroundTarget(float dt, int spd, int dir, int t)
+void Entity::moveAroundTarget(float dt, int spd, int dir, size_t t)
 {
-	if (!targets[t]) return;
+	if (targets.size() < t || !targets[t]) return;
 	moveAround(targets[t]->position, dt, spd, dir);
 }
 

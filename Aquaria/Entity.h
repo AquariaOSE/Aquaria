@@ -176,8 +176,8 @@ public:
 	void moveTowardsAngle(int angle, float dt, int spd);
 	void moveAroundAngle(int angle, float dt, int spd, int dir);
 
-	void moveTowardsTarget(float dt, int spd, int t=0);
-	void moveAroundTarget(float dt, int spd, int d, int t=0);
+	void moveTowardsTarget(float dt, int spd, size_t t=0);
+	void moveAroundTarget(float dt, int spd, int d, size_t t=0);
 	void moveAroundEntity(float dt, int spd, int d, Entity *e);
 	void moveTowardsGroupCenter(float dt, int spd);
 	void moveTowardsGroupHeading(float dt, int spd);
@@ -185,13 +185,12 @@ public:
 	void doSpellAvoidance(float dt, int range, float mod);
 	void doEntityAvoidance(float dt, int range, float mod, Entity *ignore =0);
 	void setMaxSpeed(float ms);
-	Entity *findTarget(int dist, int type, int t=0);
+	Entity *findTarget(int dist, int type, size_t t=0);
 
-	bool hasTarget(int t=0);
 	bool isTargetInRange(int range, size_t t=0);
 	void doGlint(const Vector &position, const Vector &scale=Vector(2,2), const std::string &tex="Glint", BlendType bt=BLEND_DEFAULT);
-	Entity *getTargetEntity(int t=0);
-	void setTargetEntity(Entity *e, int t=0);
+	Entity *getTargetEntity(size_t t=0) const;
+	void setTargetEntity(Entity *e, size_t t=0);
 
 	virtual void activate(Entity *by, int source){}
 
@@ -199,7 +198,7 @@ public:
 
 	void setEntityType(EntityType et);
 	EntityType getEntityType();
-	void flipToTarget(Vector pos);
+	void flipToPos(Vector pos);
 	bool isFollowingPath();
 	void stopFollowingPath();
 	void overideMaxSpeed(int ms, float time);
