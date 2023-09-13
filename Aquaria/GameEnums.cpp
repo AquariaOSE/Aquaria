@@ -86,7 +86,7 @@ const char *EnumName(Layers lr)
 {
 	compile_assert(Countof(s_LayerNames) == LR_MAX);
 
-	return lr < LR_MAX ? s_LayerNames[lr] : NULL;
+	return lr < Countof(s_LayerNames) ? s_LayerNames[lr] : NULL;
 }
 
 const char *s_AquariaActionNames_0[ACTION_MAX] =
