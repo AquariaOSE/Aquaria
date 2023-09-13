@@ -1566,7 +1566,6 @@ void Entity::onUpdate(float dt)
 	Quad::onUpdate(dt);
 
 	Vector v = position - lastPos;
-	lastMove = v;
 	if (position.isFollowingPath() && swimPath)
 	{
 		movementDetails(v);
