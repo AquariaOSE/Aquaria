@@ -11740,6 +11740,20 @@ static const struct {
 	luaConstant(PATHSHAPE_CIRCLE),
 };
 
+template<typename T>
+static void luaRegisterEnums(lua_State *L, T first, T last)
+{
+	assert(first <= last);
+	for(T i = first; i <= last; i = T(i + 1))
+	{
+		if(const char *name = EnumName(i))
+		{
+			lua_pushinteger(L, i);
+			lua_setglobal(L, name);
+		}
+	}
+}
+
 //============================================================================================
 // F U N C T I O N S
 //============================================================================================
@@ -11828,6 +11842,8 @@ lua_State *ScriptInterface::createLuaVM()
 		lua_pushnumber(state, luaConstantTable[i].value);
 		lua_setglobal(state, luaConstantTable[i].name);
 	}
+	luaRegisterEnums(state, LR_ZERO, LR_MAX);
+	luaRegisterEnums(state, ACTION_PRIMARY, ACTION_MAX);
 
 	// Add hooks to monitor global get/set operations if requested.
 	if (complainOnGlobalVar)

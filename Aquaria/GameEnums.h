@@ -52,21 +52,21 @@ enum CursorType
 	CURSOR_LOOK		= 4
 };
 
-enum AquariaActions
+enum AquariaActions  // Keep in sync with GameEnums.cpp
 {
-	ACTION_PRIMARY					=0,
-	ACTION_SECONDARY				=1,
-	ACTION_ESC						=2,
-	ACTION_TOGGLESCENEEDITOR		=3,
-	ACTION_TOGGLEWORLDMAP			=4,
+	ACTION_PRIMARY,
+	ACTION_SECONDARY,
+	ACTION_ESC,
+	ACTION_TOGGLESCENEEDITOR,
+	ACTION_TOGGLEWORLDMAP,
 
-	ACTION_TOGGLEGRID				=5,
+	ACTION_TOGGLEGRID,
 
 	// Automatically sent on either ACTION_SWIM* or sufficient analog controller input
-	ACTION_MENULEFT					=6,
-	ACTION_MENURIGHT				=7,
-	ACTION_MENUUP					=8,
-	ACTION_MENUDOWN					=9,
+	ACTION_MENULEFT,
+	ACTION_MENURIGHT,
+	ACTION_MENUUP,
+	ACTION_MENUDOWN,
 
 	ACTION_PREVPAGE,
 	ACTION_NEXTPAGE,
@@ -78,7 +78,7 @@ enum AquariaActions
 	ACTION_TOGGLEMENU,
 
 
-
+	// ------------------------
 	ACTION_SWIMUP = 100,
 	ACTION_SWIMDOWN,
 	ACTION_SWIMLEFT,
@@ -106,6 +106,7 @@ enum AquariaActions
 	ACTION_SLOW,						// currently unused
 	ACTION_REVERT,
 
+	// ------------------------
 	ACTION_ZOOMIN		= 200,
 	ACTION_ZOOMOUT,
 
@@ -144,8 +145,11 @@ enum AquariaActions
 	ACTION_LOOK						,
 	ACTION_TOGGLEHELPSCREEN,
 	ACTION_PLACE_AVATAR,
-	ACTION_SCREENSHOT
+	ACTION_SCREENSHOT,
+
+	ACTION_MAX
 };
+const char *EnumName(AquariaActions a);
 
 enum AuraType
 {
@@ -232,7 +236,7 @@ enum VisualEffectsType
 	VFX_MAX			= 3
 };
 
-enum Layers
+enum Layers  // keep in sync with GameEnums.cpp
 {
 	// GAME WILL CLEAR THESE
 	LR_ZERO						= 0,
@@ -313,6 +317,7 @@ enum Layers
 	LR_BLACKBARS			,
 	LR_MAX
 };
+const char *EnumName(Layers lr);
 
 
 enum IngredientType
