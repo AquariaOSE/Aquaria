@@ -300,8 +300,6 @@ public:
 	Web *web;
 	float rollDelay;
 
-	bool canSetBoneLock() OVERRIDE;
-
 	void revert();
 	void doBindSong();
 	void doShieldSong();
