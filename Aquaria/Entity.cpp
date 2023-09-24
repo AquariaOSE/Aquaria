@@ -1928,13 +1928,13 @@ void Entity::moveAroundAngle(int angle, float dt, int spd, int dir)
 
 void Entity::moveTowardsTarget(float dt, int spd, size_t t)
 {
-	if (targets.size() < t || !targets[t]) return;
+	if (t >= targets.size() || !targets[t]) return;
 	moveTowards(targets[t]->position, dt, spd);
 }
 
 void Entity::moveAroundTarget(float dt, int spd, int dir, size_t t)
 {
-	if (targets.size() < t || !targets[t]) return;
+	if (t >= targets.size() || !targets[t]) return;
 	moveAround(targets[t]->position, dt, spd, dir);
 }
 
