@@ -273,6 +273,7 @@ public:
 			q->position = pos;
 			q->renderBorder = true;
 			q->renderBorderColor = Vector(0.75f, 0.75f, 0.75f);
+			q->borderAlpha = 1.0f;
 			q->scale = Vector(t.scalex, t.scaley);
 			q->setTexturePointer(t.et->tex);
 			q->fhTo(!!(t.flags & TILEFLAG_FH));
@@ -287,6 +288,14 @@ public:
 		}
 
 		th->position = center / float(n);
+
+		// distribute quads around center
+		for(size_t i = 0; i < n; ++i)
+		{
+			Quad *q = th->_quads[i];
+			q->position -= th->position;
+		}
+
 		core->addRenderObject(th, LR_ELEMENTS1+bgLayer);
 		return th;
 	}
