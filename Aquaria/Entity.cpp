@@ -85,7 +85,7 @@ BounceType Entity::getBounceType()
 	return bounceType;
 }
 
-void Entity::generateCollisionMask(int ovrCollideRadius)
+void Entity::generateCollisionMask(float ovrCollideRadius)
 {
 	if (this->skeletalSprite.isLoaded())
 	{
