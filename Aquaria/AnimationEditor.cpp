@@ -774,6 +774,21 @@ void AnimationEditor::update(float dt)
 
 		}
 	}
+	if (editingBone)
+	{
+		float m = 0.2f;
+		if(core->getKeyState(KEY_NUMPADSLASH))
+		{
+			editingBone->originalScale /= (1 + m*dt);
+			editingBone->scale = editingBone->originalScale;
+		}
+		if(core->getKeyState(KEY_NUMPADSTAR))
+		{
+			editingBone->originalScale *= (1 + m*dt);
+			editingBone->scale = editingBone->originalScale;
+		}
+	}
+
 	if (editingBone && boneEdit == 1 && !splinegrid)
 	{
 		Vector add = core->mouse.change;
