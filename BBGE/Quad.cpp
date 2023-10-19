@@ -116,29 +116,18 @@ void Quad::_renderBorder(const RenderState& rs, Vector color, float borderalpha)
 {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	glColor4f(color.x, color.y, color.z, borderalpha*alpha.x*alphaMod);
+
+	core->getDefaultQuadBorderBuf()->apply();
+
 	if (rs.forceRenderCenter || renderCenter)
 	{
-		glColor4f(color.x, color.y, color.z, borderalpha*alpha.x*alphaMod);
 		glPointSize(16);
-		glBegin(GL_POINTS);
-			glVertex2f(0,0);
-		glEnd();
+		glDrawArrays(GL_POINTS, 4, 1);
 	}
 
-	glColor4f(color.x, color.y, color.z, alpha.x*alphaMod);
 	glLineWidth(2);
-	const float _w2 = width*0.5f;
-	const float _h2 = height*0.5f;
-	glBegin(GL_LINES);
-		glVertex2f(-_w2, _h2);
-		glVertex2f(_w2, _h2);
-		glVertex2f(_w2, -_h2);
-		glVertex2f(_w2, _h2);
-		glVertex2f(-_w2, -_h2);
-		glVertex2f(-_w2, _h2);
-		glVertex2f(-_w2, -_h2);
-		glVertex2f(_w2, -_h2);
-	glEnd();
+	glDrawArrays(GL_LINE_LOOP, 0, 4);
 	RenderObject::lastTextureApplied = 0;
 }
 
@@ -266,11 +255,13 @@ void Quad::refreshRepeatTextureToFill()
 		texcoords.v1 = texOff.y;
 		texcoords.u2 = (width*scale.x*repeatToFillScale.x)/texture->width + texOff.x;
 		texcoords.v2 = (height*scale.y*repeatToFillScale.y)/texture->height + texOff.y;
+		//texcoords.fixflip();
 
 		if(!grid)
 		{
 			createGrid(2, 2)->gridType = GRID_UNDEFINED;
 		}
+		grid->setTexCoords(texcoords);
 	}
 	else
 	{

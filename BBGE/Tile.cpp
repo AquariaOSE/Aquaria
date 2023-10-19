@@ -168,7 +168,7 @@ void TileStorage::deleteSome(const size_t* indices, size_t n)
 
 	for(size_t i = 0; i < tmp.size(); ++i)
 	{
-		for(size_t k = 0; k < n; ++i) // not particularly efficient, could be much better by sorting first but eh
+		for(size_t k = 0; k < n; ++k) // not particularly efficient, could be much better by sorting first but eh
 			if(indices[k] == i)
 			{
 				dropAll(tmp[i]);
@@ -630,16 +630,7 @@ TexCoordBox TileRepeatData::calcTexCoords(const TileData& t) const
 	tc.v1 = texOffY;
 	tc.u2 = (et.w*t.scalex*texscaleX)/tw + texOffX;
 	tc.v2 = (et.h*t.scaley*texscaleY)/th + texOffY;
-
-	// HACK: partially repeated textures have a weird Y axis. assuming a repeat factor of 0.4,
-	// instead of texcoords from 0 -> 0.4 everything is biased towards the opposite end, ie. 0.6 -> 1.
-	// This is especially true for partial repeats, we always need to bias towards the other end.
-	// I have no idea why this has to be like this for tiles, but this is NOT the case for fonts.
-	// And NOTE: without this, maps may look deceivingly correct, but they really are not.
-	const float percentY = tc.v2 - tc.v1;
-	const float remainder = 1.0f - fmodf(percentY, 1.0f);
-	tc.v1 += remainder; // bias towards next int
-	tc.v2 += remainder;
+	//tc.fixflip();
 
 	return tc;
 }

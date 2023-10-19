@@ -31,6 +31,7 @@ struct TexCoordBox
 
 	bool isStandard() const;
 	void setStandard();
+	void fixflip(); // call this after setting up, in case flip is desired
 };
 
 enum TextureLoadResult
