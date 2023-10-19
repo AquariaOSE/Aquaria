@@ -136,7 +136,7 @@ public:
 	Vector multiSelectPoint;
 	std::vector <size_t> selectedTiles; // indices
 
-	void updateSelectedElementPosition(Vector rel);
+	void updateSelectedElementPosition(Vector dist);
 	int selectedEntityType;
 
 	SelectedEntity selectedEntity;
@@ -201,8 +201,6 @@ protected:
 
 	void nextEntityType();
 	void prevEntityType();
-
-	void removeEntity();
 
 	void selectEntityFromGroups();
 

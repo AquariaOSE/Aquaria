@@ -17,6 +17,7 @@ TileRender::~TileRender()
 {
 }
 
+
 // shamelessly ripped from paint.net default palette
 static const Vector s_tagColors[] =
 {
@@ -40,6 +41,12 @@ static inline const Vector& getTagColor(int tag)
 	return s_tagColors[idx];
 
 }
+
+Vector TileRender::GetTagColor(int tag)
+{
+	return getTagColor(tag);
+}
+
 
 void TileRender::onRender(const RenderState& rs) const
 {

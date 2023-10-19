@@ -18,6 +18,8 @@ public:
 	virtual void onUpdate(float dt) OVERRIDE;
 
 	bool renderBorders;
+
+	static Vector GetTagColor(int tag);
 };
 
 

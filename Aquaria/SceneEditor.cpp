@@ -99,6 +99,129 @@ std::string getMapTemplateFilename()
 	return "";
 }
 
+static void tileToQuad(Quad *q, const TileData& t)
+{
+	q->position = Vector(t.x, t.y);
+	q->setWidthHeight(t.et->w, t.et->h);
+	q->scale = Vector(t.scalex, t.scaley);
+	q->setTexturePointer(t.et->tex);
+	q->fhTo(!!(t.flags & TILEFLAG_FH));
+	q->rotation.z = t.rotation;
+	if(t.flags & TILEFLAG_REPEAT && t.rep)
+	{
+		q->repeatToFillScale = Vector(t.rep->texscaleX, t.rep->texscaleY);
+		q->repeatTextureToFill(true);
+	}
+	q->texcoords = t.getTexcoords();
+	q->renderBorder = true;
+	q->renderBorderColor = TileRender::GetTagColor(t.tag);
+	q->borderAlpha = 1.0f;
+}
+
+static void quadToTile(TileData& t, const Quad *q)
+{
+	Vector posAndRot = q->getWorldPositionAndRotation();
+	t.x = posAndRot.x;
+	t.y = posAndRot.y;
+	t.rotation = posAndRot.z;
+	Vector scale = q->getRealScale();
+	t.scalex = scale.x;
+	t.scaley = scale.y;
+}
+
+class MultiTileHelper : public Quad
+{
+	TileStorage& _ts;
+	std::vector<size_t> _indices;
+	std::vector<Quad*> _quads;
+
+	MultiTileHelper(TileStorage& ts, const size_t *indices, size_t n)
+		: Quad()
+		, _ts(ts), _indices(indices, indices + n)
+	{
+		_quads.reserve(n);
+		this->cull = false;
+	}
+
+public:
+	static MultiTileHelper *New(unsigned bgLayer, const size_t *indices, size_t n)
+	{
+		assert(n);
+		TileStorage& ts = dsq->tilemgr.tilestore[bgLayer];
+		MultiTileHelper *th = new MultiTileHelper(ts, indices, n);
+
+		if(n == 1)
+		{
+			TileData& t = ts.tiles[indices[0]];
+			t.flags |= TILEFLAG_EDITOR_HIDDEN;
+			tileToQuad(th, t);
+		}
+		else
+		{
+			Vector center;
+			for(size_t i = 0; i < n; ++i)
+			{
+				TileData& t = ts.tiles[indices[i]];
+				center += Vector(t.x, t.y);
+				t.flags |= TILEFLAG_EDITOR_HIDDEN;
+
+				// clone tile to quad
+				Quad *q = new Quad;
+				tileToQuad(q, t);
+
+				th->addChild(q, PM_POINTER, RBP_ON);
+				th->_quads.push_back(q);
+			}
+
+			th->position = center / float(n);
+
+			// distribute quads around center
+			for(size_t i = 0; i < n; ++i)
+			{
+				Quad *q = th->_quads[i];
+				q->position -= th->position;
+			}
+		}
+
+		core->addRenderObject(th, LR_ELEMENTS1+bgLayer);
+		return th;
+	}
+
+	virtual ~MultiTileHelper()
+	{
+	}
+
+	void onUpdate(float dt)
+	{
+		for(size_t i = 0; i < _quads.size(); ++i)
+			_quads[i]->refreshRepeatTextureToFill();
+	}
+
+	void finish()
+	{
+		size_t n = _indices.size();
+		if(n == 1)
+		{
+			TileData& t = _ts.tiles[_indices[0]];
+			t.flags &= ~TILEFLAG_EDITOR_HIDDEN;
+			quadToTile(t, this);
+		}
+		else
+		{
+			for(size_t i = 0; i < n; ++i)
+			{
+				TileData& t = _ts.tiles[_indices[i]];
+				Quad *q = _quads[i];
+				t.flags &= ~TILEFLAG_EDITOR_HIDDEN;
+				quadToTile(t, q);
+			}
+		}
+		alphaMod = 0;
+		this->safeKill(); // also deletes all children
+	}
+};
+
+
 SceneEditor::SceneEditor() : ActionMapper(), on(false)
 {
 	autoSaveFile = 0;
@@ -123,17 +246,12 @@ void SceneEditor::setBackgroundGradient()
 	}
 }
 
-void SceneEditor::updateSelectedElementPosition(Vector rel)
+void SceneEditor::updateSelectedElementPosition(Vector dist)
 {
 	if (state == ES_MOVING)
 	{
-		TileStorage& ts = getCurrentLayerTiles();
-		for(size_t i = 0; i < selectedTiles.size(); ++i)
-		{
-			TileData& t = ts.tiles[selectedTiles[i]];
-			t.x += rel.x;
-			t.y += rel.y;
-		}
+		// the actual tile position is updated when we release the mouse
+		multi->position = oldPosition + dist;
 	}
 }
 
@@ -238,101 +356,6 @@ public:
 	}
 };
 
-class MultiTileHelper : public Quad
-{
-	TileStorage& _ts;
-	std::vector<size_t> _indices;
-	std::vector<Quad*> _quads;
-
-	MultiTileHelper(TileStorage& ts, const size_t *indices, size_t n)
-		: Quad()
-		, _ts(ts), _indices(indices, indices + n)
-	{
-		_quads.reserve(n);
-		this->cull = false;
-	}
-
-public:
-	static MultiTileHelper *New(unsigned bgLayer, const size_t *indices, size_t n)
-	{
-		assert(n);
-		TileStorage& ts = dsq->tilemgr.tilestore[bgLayer];
-		MultiTileHelper *th = new MultiTileHelper(ts, indices, n);
-
-		Vector center;
-
-		for(size_t i = 0; i < n; ++i)
-		{
-			TileData& t = ts.tiles[indices[i]];
-			Vector pos(t.x, t.y);
-			center += pos;
-			t.flags |= TILEFLAG_EDITOR_HIDDEN;
-
-			// clone tile to quad
-			Quad *q = new Quad;
-			q->position = pos;
-			q->renderBorder = true;
-			q->renderBorderColor = Vector(0.75f, 0.75f, 0.75f);
-			q->borderAlpha = 1.0f;
-			q->scale = Vector(t.scalex, t.scaley);
-			q->setTexturePointer(t.et->tex);
-			q->fhTo(!!(t.flags & TILEFLAG_FH));
-			q->rotation.z = t.rotation;
-			if(t.flags & TILEFLAG_REPEAT && t.rep)
-			{
-				q->repeatToFillScale = Vector(t.rep->texscaleX, t.rep->texscaleY);
-				q->repeatTextureToFill(true);
-			}
-			th->addChild(q, PM_POINTER, RBP_ON);
-			th->_quads.push_back(q);
-		}
-
-		th->position = center / float(n);
-
-		// distribute quads around center
-		for(size_t i = 0; i < n; ++i)
-		{
-			Quad *q = th->_quads[i];
-			q->position -= th->position;
-		}
-
-		core->addRenderObject(th, LR_ELEMENTS1+bgLayer);
-		return th;
-	}
-
-	virtual ~MultiTileHelper()
-	{
-	}
-
-	void onUpdate(float dt)
-	{
-		for(size_t i = 0; i < _quads.size(); ++i)
-			_quads[i]->refreshRepeatTextureToFill();
-	}
-
-	void finish()
-	{
-		if(size_t n = _indices.size())
-		{
-			for(size_t i = 0; i < n; ++i)
-			{
-				TileData& t = _ts.tiles[_indices[i]];
-				Quad *q = _quads[i];
-				t.flags &= ~TILEFLAG_EDITOR_HIDDEN;
-				q->alphaMod = 0;
-
-				Vector posAndRot = q->getWorldPositionAndRotation();
-				t.x = posAndRot.x;
-				t.y = posAndRot.y;
-				t.rotation = posAndRot.z;
-				Vector scale = q->getRealScale();
-				t.scalex = scale.x;
-				t.scaley = scale.y;
-			}
-		}
-		this->safeKill(); // also deletes all children
-	}
-};
 
 
 std::vector<DebugButton*> mainMenu;
@@ -1061,18 +1084,16 @@ void SceneEditor::enterAnyStateHelper(EditorStates newstate)
 			oldRepeatScale = Vector(1,1);
 			if(t.flags & TILEFLAG_REPEAT)
 				oldRepeatScale = Vector(t.rep->texscaleX, t.rep->texscaleY);
-			oldScale = Vector(t.scalex, t.scaley);
-			oldRotation = t.rotation;
 		}
 		else
 		{
 			oldRepeatScale = Vector(1, 1); // not handled for multi-selection
-			oldScale = Vector(1, 1);
-			oldRotation = 0;
 		}
 
 		MultiTileHelper *m = createMultiTileHelperFromSelection();
+		oldScale = m->scale;
 		oldPosition = m->position;
+		oldRotation = m->rotation.z;
 		cursorOffset = dsq->getGameCursorPosition();
 	}
 	else if (editType == ET_ENTITIES)
@@ -1476,24 +1497,12 @@ void SceneEditor::skinLevel(int minX, int minY, int maxX, int maxY)
 
 					toAdd.push_back(d);
 
-					//Element *e = game->createElement(useIdx, p, 4, &q);
-					//e->offset = offset;
-
 					idx++;
 					if(idx > 4)
 						idx = 1;
 				}
 			}
 		}
-		/*for (size_t i = 0; i < dsq->getNumElements(); i++)
-		{
-			Element *e = dsq->getElement(i);
-			if (e->bgLayer == 4 && e->templateIdx >= 1 && e->templateIdx <= 4)
-			{
-				e->position += e->offset;
-				e->offset = Vector(0,0,0);
-			}
-		}*/
 	}
 }
 
@@ -1584,12 +1593,6 @@ void SceneEditor::generateLevel()
 	}
 }
 
-void SceneEditor::removeEntity()
-{
-	debugLog("remove entity at cursor");
-	game->removeEntityAtCursor();
-}
-
 void SceneEditor::placeAvatar()
 {
 	game->avatar->position = dsq->getGameCursorPosition();
@@ -1633,8 +1636,9 @@ void SceneEditor::flipElementVert()
 
 	if (size_t n = selectedTiles.size())
 	{
-		// FIXME: vert
-		assert(0);
+		TileStorage& ts = getCurrentLayerTiles();
+		for(size_t i = 0; i < n; ++i)
+			ts.tiles[selectedTiles[i]].flags ^= TILEFLAG_FV; // toggle bit
 	}
 	else
 		this->placer->flipVertical();
