@@ -146,8 +146,8 @@ public:
 	void setCursor(CursorType type);
 
 	Quad *cursor, *cursorGlow, *cursorBlinker;
-	Quad *overlay, *tfader, *overlay2, *overlay3, *overlayRed;
-	Quad *sceneColorOverlay;
+	PauseQuad *overlay, *tfader, *overlay2, *overlay3, *overlayRed;
+	PauseQuad *sceneColorOverlay;
 	Quad *bar_left, *bar_right, *bar_up, *bar_down;
 	Quad *barFade_left, *barFade_right;
 
@@ -344,7 +344,7 @@ public:
 	Quad *achievement_box;
 
 	BitmapText *subtext;
-	Quad *subbox;
+	PauseQuad *subbox;
 
 	BmpFont font, smallFont, subsFont, goldFont, smallFontRed;
 	TTFFont fontArialSmall, fontArialBig, fontArialSmallest;
@@ -390,7 +390,7 @@ public:
 
 protected:
 
-	Quad *cutscene_bg;
+	PauseQuad *cutscene_bg;
 	BitmapText *cutscene_text;
 	BitmapText *cutscene_text2;
 
@@ -424,7 +424,7 @@ protected:
 	void onStopVoice();
 
 	Entity **iter;
-	Quad *blackout;
+	PauseQuad *blackout;
 	void updatepecue(float dt);
 	std::vector<PECue> pecue;
 

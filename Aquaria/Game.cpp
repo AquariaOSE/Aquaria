@@ -2546,8 +2546,9 @@ void Game::applyState()
 	dsq->clearEntities();
 	dsq->tilemgr.clearTiles();
 
-	damageSprite = new Quad;
+	damageSprite = new PauseQuad;
 	{
+		damageSprite->pauseLevel = 99;
 		damageSprite->setTexture("damage");
 		damageSprite->alpha = 0;
 		damageSprite->autoWidth = AUTO_VIRTUALWIDTH;
@@ -2560,8 +2561,9 @@ void Game::applyState()
 
 	Vector mousePos(400,490);
 
-	controlHint_bg = new Quad;
+	controlHint_bg = new PauseQuad;
 	{
+		controlHint_bg->pauseLevel = 99;
 		controlHint_bg->followCamera = 1;
 		controlHint_bg->position = Vector(400,500);
 		controlHint_bg->color = 0;
@@ -3416,7 +3418,8 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		data += "\n\n" + stringbank.get(2032) + "\n\n";
 		dsq->continuity.statsAndAchievements->appendStringData(data);
 
-		helpBG = new Quad;
+		helpBG = new PauseQuad;
+		helpBG->pauseLevel = 99;
 		//helpBG->color = 0;
 		helpBG->setTexture("brick");
 		helpBG->setRepeatScale(Vector(2, 2));
@@ -3428,7 +3431,8 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		helpBG->followCamera = 1;
 		addRenderObject(helpBG, LR_HELP);
 
-		helpBG2 = new Quad;
+		helpBG2 = new PauseQuad;
+		helpBG2->pauseLevel = 99;
 		helpBG2->color = 0;
 		helpBG2->alphaMod = 0.5;
 		helpBG2->setWidth(620);
@@ -4710,7 +4714,8 @@ void Game::removeState()
 	core->cameraPos = Vector(0,0);
 	sceneColor.stop();
 
-	controlHint_mouseLeft = controlHint_mouseRight = controlHint_mouseMiddle = controlHint_mouseBody = controlHint_bg = controlHint_image = 0;
+	controlHint_mouseLeft = controlHint_mouseRight = controlHint_mouseMiddle = controlHint_mouseBody = controlHint_image = 0;
+	controlHint_bg = 0;
 	controlHint_text = 0;
 
 	miniMapRender = 0;

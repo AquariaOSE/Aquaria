@@ -419,7 +419,8 @@ protected:
 	void onEnterState(int action) OVERRIDE;
 	void onExitState(int action) OVERRIDE;
 	std::vector<ParticleEffect*>targetQuads;
-	Quad *blinder, *fader, *tripper;
+	PauseQuad *blinder, *tripper;
+	Quad *fader;
 	void applyBlindEffects();
 	void removeBlindEffects();
 

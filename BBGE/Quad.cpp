@@ -49,8 +49,6 @@ void Quad::initQuad()
 	borderAlpha = 0.5;
 	repeatToFillScale = Vector(1,1);
 
-	autoWidth = autoHeight = 0;
-
 	renderBorder = false;
 	renderCenter = true;
 	width = 2; height = 2;
@@ -292,16 +290,6 @@ void Quad::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
 
-	if (autoWidth == AUTO_VIRTUALWIDTH)
-		width = core->getVirtualWidth();
-	else if (autoWidth == AUTO_VIRTUALHEIGHT)
-		width = core->getVirtualHeight();
-
-	if (autoHeight == AUTO_VIRTUALWIDTH)
-		height = core->getVirtualWidth();
-	else if (autoHeight == AUTO_VIRTUALHEIGHT)
-		height = core->getVirtualHeight();
-
 	if (grid && alpha.x > 0 && alphaMod > 0)
 	{
 		grid->update(dt);
@@ -341,7 +329,7 @@ void Quad::onSetTexture()
 	}
 }
 
-PauseQuad::PauseQuad() : Quad(), pauseLevel(0), positionSnapTo(0)
+PauseQuad::PauseQuad() : Quad(), pauseLevel(0), positionSnapTo(0), autoWidth(0), autoHeight(0)
 {
 	addType(SCO_PAUSEQUAD);
 }
@@ -352,6 +340,27 @@ PauseQuad::~PauseQuad()
 
 void PauseQuad::onUpdate(float dt)
 {
+	if(autoWidth || autoHeight)
+	{
+		float w = width, h = height;
+		if (autoWidth == AUTO_VIRTUALWIDTH)
+			w = core->getVirtualWidth();
+		else if (autoWidth == AUTO_VIRTUALHEIGHT)
+			w = core->getVirtualHeight();
+
+		if (autoHeight == AUTO_VIRTUALWIDTH)
+			h = core->getVirtualWidth();
+		else if (autoHeight == AUTO_VIRTUALHEIGHT)
+			h = core->getVirtualHeight();
+
+		if(w != width || h != height)
+		{
+			width = w;
+			height = h;
+			updateTexCoords();
+		}
+	}
+
 	if (positionSnapTo)
 		this->position = *positionSnapTo;
 

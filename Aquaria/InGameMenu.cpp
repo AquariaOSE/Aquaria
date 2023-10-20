@@ -1214,16 +1214,18 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 
 		if (optionsOnly)
 		{
-			menu_blackout = new Quad;
-			menu_blackout->color = 0;
-			menu_blackout->autoWidth = AUTO_VIRTUALWIDTH;
-			menu_blackout->autoHeight = AUTO_VIRTUALHEIGHT;
-			menu_blackout->followCamera = 1;
-			menu_blackout->position = Vector(400,300);
-			menu_blackout->alphaMod = 0.75;
-			menu_blackout->alpha = 0;
-			menu_blackout->alpha.interpolateTo(1, 0.5);
-			game->addRenderObject(menu_blackout, LR_AFTER_EFFECTS);
+			PauseQuad *q = new PauseQuad;
+			q->color = 0;
+			q->pauseLevel = 99;
+			q->autoWidth = AUTO_VIRTUALWIDTH;
+			q->autoHeight = AUTO_VIRTUALHEIGHT;
+			q->followCamera = 1;
+			q->position = Vector(400,300);
+			q->alphaMod = 0.75;
+			q->alpha = 0;
+			q->alpha.interpolateTo(1, 0.5);
+			game->addRenderObject(q, LR_AFTER_EFFECTS);
+			menu_blackout = q;
 
 			menuBg2->alpha = 0;
 		}

@@ -87,7 +87,7 @@ public:
 	TexCoordBox texcoords;
 
 	// TODO: this should be a bitmask
-	char autoWidth, autoHeight;
+
 	bool renderQuad, renderCenter, renderBorder;
 
 	float borderAlpha;
@@ -119,6 +119,7 @@ public:
 	PauseQuad();
 	virtual ~PauseQuad();
 	int pauseLevel;
+	char autoWidth, autoHeight;
 
 	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
 protected:
@@ -136,8 +137,6 @@ public:
 
 	float collideRadius;
 };
-
-#define QUAD(x) Quad *x = new Quad; addRenderObject(x);
 
 #endif
 

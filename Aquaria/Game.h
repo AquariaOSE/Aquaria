@@ -293,7 +293,7 @@ public:
 	void warpToSceneFromNode(Path *p);
 	Vector fromPosition;
 
-	Quad *damageSprite;
+	PauseQuad *damageSprite;
 
 	void toggleDamageSprite(bool on);
 
@@ -419,7 +419,7 @@ protected:
 	void onHelpUp();
 	void onHelpDown();
 	bool helpWasPaused;
-	Quad *helpBG, *helpBG2;
+	PauseQuad *helpBG, *helpBG2;
 	AquariaMenuItem *helpUp, *helpDown, *helpCancel;
 	TTFText *helpText;
 	bool inHelpScreen;
@@ -445,8 +445,9 @@ protected:
 
 	void updateCursor(float dt);
 
-	Quad *controlHint_mouseLeft, *controlHint_mouseRight, *controlHint_mouseBody, *controlHint_mouseMiddle, *controlHint_bg, *controlHint_image;
+	Quad *controlHint_mouseLeft, *controlHint_mouseRight, *controlHint_mouseBody, *controlHint_mouseMiddle, *controlHint_image;
 	Quad *controlHint_shine;
+	PauseQuad *controlHint_bg;
 	bool controlHint_ignoreClear;
 	BitmapText *controlHint_text;
 

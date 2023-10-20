@@ -41,13 +41,14 @@ static bool _modname_cmp(const ModIcon *a, const ModIcon *b)
 }
 
 ModSelectorScreen::ModSelectorScreen()
-	: Quad()
+	: PauseQuad()
 	, ActionMapper()
 	, dlText(dsq->smallFont)
 	, gotServerList(false)
 	, currentPanel(-1)
 	, subtext(dsq->subsFont)
 {
+	pauseLevel = 99;
 	followCamera = 1;
 	shareAlphaWithChildren = false;
 	alpha = 1;
@@ -260,6 +261,7 @@ void ModSelectorScreen::init()
 
 	showPanel(0);
 
+	subbox.pauseLevel = 99;
 	subbox.position = Vector(0,260);
 	subbox.alpha = 0;
 	subbox.alphaMod = 0.7f;

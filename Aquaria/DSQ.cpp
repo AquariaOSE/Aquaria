@@ -861,7 +861,8 @@ void DSQ::init()
 	precacher.setBaseDir(this->getBaseTexturePath());
 	precacher.precacheTex("loading/*.png");
 
-	Quad *loadbg = new Quad;
+	PauseQuad *loadbg = new PauseQuad;
+	loadbg->pauseLevel = 99;
 	loadbg->position = Vector(400,300);
 	loadbg->color = Vector(0.06f, 0.06f, 0.08f);
 	loadbg->followCamera = 1;
@@ -1012,7 +1013,8 @@ void DSQ::init()
 	addRenderObject(versionLabel, LR_REGISTER_TEXT);
 
 
-	subbox = new Quad();
+	subbox = new PauseQuad();
+	subbox->pauseLevel = 99;
 	subbox->position = Vector(400,580);
 	subbox->alpha = 0;
 	subbox->alphaMod = 0.7f;
@@ -1051,7 +1053,8 @@ void DSQ::init()
 	achievement_text->setAlign(ALIGN_LEFT);
 	addRenderObject(achievement_text, LR_SUBTITLES);
 
-	cutscene_bg = new Quad();
+	cutscene_bg = new PauseQuad();
+	cutscene_bg->pauseLevel = 99;
 	cutscene_bg->autoWidth = AUTO_VIRTUALWIDTH;
 	cutscene_bg->color = 0;
 	cutscene_bg->alphaMod = 0.75;
@@ -1108,8 +1111,9 @@ void DSQ::init()
 
 	debugLog("6");
 
-	overlay = new Quad;
+	overlay = new PauseQuad;
 	{
+		overlay->pauseLevel = 99;
 		overlay->position = Vector(400,300,3);
 		overlay->color = 0;
 		overlay->autoWidth = AUTO_VIRTUALWIDTH;
@@ -1119,8 +1123,9 @@ void DSQ::init()
 	}
 	addRenderObject(overlay, LR_OVERLAY);
 
-	overlay2 = new Quad;
+	overlay2 = new PauseQuad;
 	{
+		overlay2->pauseLevel = 99;
 		overlay2->position = Vector(400,300);
 		overlay2->color = 0;
 		overlay2->autoWidth = AUTO_VIRTUALWIDTH;
@@ -1130,8 +1135,9 @@ void DSQ::init()
 	}
 	addRenderObject(overlay2, LR_OVERLAY);
 
-	overlay3 = new Quad;
+	overlay3 = new PauseQuad;
 	{
+		overlay3->pauseLevel = 99;
 		overlay3->position = Vector(400,300);
 		overlay3->color = 0;
 		overlay3->autoWidth = AUTO_VIRTUALWIDTH;
@@ -1141,8 +1147,9 @@ void DSQ::init()
 	}
 	addRenderObject(overlay3, LR_OVERLAY);
 
-	overlayRed = new Quad;
+	overlayRed = new PauseQuad;
 	{
+		overlayRed->pauseLevel = 99;
 		overlayRed->position = Vector(400,300);
 		overlayRed->color = Vector(1,0,0);
 		overlayRed->alphaMod = 0.5;
@@ -1153,8 +1160,9 @@ void DSQ::init()
 	}
 	addRenderObject(overlayRed, LR_OVERLAY);
 
-	sceneColorOverlay = new Quad;
+	sceneColorOverlay = new PauseQuad;
 	{
+		sceneColorOverlay->pauseLevel = 99;
 		sceneColorOverlay->position = Vector(400,300);
 		sceneColorOverlay->color = Vector(1,1,1);
 		sceneColorOverlay->alpha = 1;
@@ -1165,8 +1173,9 @@ void DSQ::init()
 	}
 	addRenderObject(sceneColorOverlay, LR_SCENE_COLOR);
 
-	tfader = new Quad;
+	tfader = new PauseQuad;
 	{
+		tfader->pauseLevel = 99;
 		tfader->position = Vector(400,300,3);
 		tfader->color = 0;
 		tfader->autoWidth = AUTO_VIRTUALWIDTH;
@@ -1175,6 +1184,19 @@ void DSQ::init()
 		tfader->followCamera = 1;
 	}
 	addRenderObject(tfader, LR_TRANSITION);
+
+	blackout = new PauseQuad;
+	{
+		blackout->pauseLevel = 99;
+		blackout->color = 0;
+		blackout->autoWidth = AUTO_VIRTUALWIDTH;
+		blackout->autoHeight = AUTO_VIRTUALHEIGHT;
+		blackout->followCamera = 1;
+		blackout->position = Vector(400,300);
+		blackout->alphaMod = 0.75f;
+		blackout->alpha = 0;
+	}
+	addRenderObject(blackout, LR_MENU);
 
 	screenTransition = new AquariaScreenTransition();
 	{
@@ -2356,16 +2378,7 @@ void DSQ::doModSelect()
 
 void DSQ::createModSelector()
 {
-	blackout = new Quad;
-	blackout->color = 0;
-	blackout->autoWidth = AUTO_VIRTUALWIDTH;
-	blackout->autoHeight = AUTO_VIRTUALHEIGHT;
-	blackout->followCamera = 1;
-	blackout->position = Vector(400,300);
-	blackout->alphaMod = 0.75f;
-	blackout->alpha = 0;
 	blackout->alpha.interpolateTo(1, 0.2f);
-	addRenderObject(blackout, LR_MENU);
 
 	modSelectorScr = new ModSelectorScreen();
 	modSelectorScr->position = Vector(400,300);
@@ -2434,13 +2447,7 @@ void DSQ::unloadMods()
 
 void DSQ::clearModSelector()
 {
-	if (blackout)
-	{
-		blackout->setLife(1);
-		blackout->setDecayRate(2);
-		blackout->fadeAlphaWithLife = 1;
-		blackout = 0;
-	}
+	blackout->alpha.interpolateTo(0, 0.5f);
 
 	if(modSelectorScr)
 	{
@@ -2481,18 +2488,7 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 
 	float t = 0.3f;
 
-
-	blackout = new Quad;
-	blackout->color = 0;
-	blackout->autoWidth = AUTO_VIRTUALWIDTH;
-	blackout->autoHeight = AUTO_VIRTUALHEIGHT;
-	blackout->followCamera = 1;
-	blackout->position = Vector(400,300);
-	blackout->alphaMod = 0.75f;
-	blackout->alpha = 0;
 	blackout->alpha.interpolateTo(1, 0.5f);
-	addRenderObject(blackout, LR_MENU);
-
 
 	menu[1] = new Quad("gui/save-menu", Vector(400,300));
 	menu[1]->alpha = 0;
@@ -2659,8 +2655,7 @@ void DSQ::hideSaveSlotCrap()
 {
 	clearMenu();
 
-	if (blackout)
-		blackout->alpha = 0;
+	blackout->alpha = 0;
 
 	if (saveSlotPageCount)
 		saveSlotPageCount->alpha = 0;
@@ -2673,23 +2668,8 @@ void DSQ::clearSaveSlots(bool trans)
 		sound->playSfx("menu-close");
 	}
 	float t = 0.3f;
-	if (blackout)
-	{
-		if (!trans)
-		{
-			blackout->setLife(1);
-			blackout->setDecayRate(10);
-			if (blackout->alpha.x > 0)
-				blackout->fadeAlphaWithLife = 1;
-		}
-		else
-		{
-			blackout->setLife(1);
-			blackout->setDecayRate(1);
-			if (blackout->alpha.x > 0)
-				blackout->fadeAlphaWithLife = 1;
-		}
-	}
+	blackout->alpha.interpolateTo(0, trans ? 1.0f : 0.1f);
+
 	if (saveSlotPageCount)
 	{
 		saveSlotPageCount->setLife(1);

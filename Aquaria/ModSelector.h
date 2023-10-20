@@ -141,7 +141,7 @@ protected:
 	int x, y;
 };
 
-class ModSelectorScreen : public Quad, public ActionMapper
+class ModSelectorScreen : public PauseQuad, public ActionMapper
 {
 public:
 	ModSelectorScreen();
@@ -166,7 +166,7 @@ public:
 	AquariaMenuItem arrowUp, arrowDown;
 
 	void setSubText(const std::string& s);
-		
+
 	virtual void action(int actionID, int state, int source, InputDevice device) {}
 
 protected:
@@ -175,7 +175,7 @@ protected:
 	MenuBasicBar rightbar;
 	size_t currentPanel;
 	BitmapText subtext;
-	Quad subbox;
+	PauseQuad subbox;
 	float subFadeT;
 };
 
