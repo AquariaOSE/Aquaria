@@ -303,16 +303,19 @@ void Quad::setWidthHeight(float w, float h)
 	else
 		height = h;
 	width = w;
+	updateTexCoords();
 }
 
 void Quad::setWidth(float w)
 {
 	width = w;
+	updateTexCoords();
 }
 
 void Quad::setHeight(float h)
 {
 	height = h;
+	updateTexCoords();
 }
 
 void Quad::onSetTexture()
@@ -327,6 +330,7 @@ void Quad::onSetTexture()
 		width = 64;
 		height = 64;
 	}
+	updateTexCoords();
 }
 
 PauseQuad::PauseQuad() : Quad(), pauseLevel(0), positionSnapTo(0), autoWidth(0), autoHeight(0)

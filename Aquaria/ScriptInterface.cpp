@@ -2085,6 +2085,7 @@ luaFunc(quad_getBorderAlpha)
 	Q_FUNC(getter, prefix,  setRepeatTexture) \
 	Q_FUNC(getter, prefix,  isRepeatTexture	) \
 	Q_FUNC(getter, prefix,  setRepeatScale	) \
+	Q_FUNC(getter, prefix,  getRepeatScale	) \
 	Q_FUNC(getter, prefix,  setRenderBorder	) \
 	Q_FUNC(getter, prefix,  isRenderBorder	) \
 	Q_FUNC(getter, prefix,  setRenderCenter	) \
