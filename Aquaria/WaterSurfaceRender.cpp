@@ -89,11 +89,9 @@ void WaterSurfaceRender::onUpdate(float dt)
 		qSurface->setWidthHeight(width, height);
 
 		float bit = core->cameraPos.x/300.0f;
-
-		qLine->texOff.x = bit;
-
-		qLine->refreshRepeatTextureToFill();
-
+		Vector texoff = qLine->getRepeatOffset();
+		texoff.x = bit;
+		qLine->setRepeatOffset(texoff);
 
 
 		if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())

@@ -71,8 +71,11 @@ public:
 	DynamicRenderGrid *setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
 	void setDrawGridAlpha(size_t x, size_t y, float alpha);
 	void repeatTextureToFill(bool on);
-	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatTexture; }
+	void setRepeatScale(const Vector& repscale);
+	inline const Vector& getRepeatScale() const { return repeatToFillScale; }
+	void setRepeatOffset(const Vector& repoffs);
+	inline const Vector& getRepeatOffset() const { return texOff; }
 	void setStripPoints(bool vert, const Vector *points, size_t n);
 	DynamicRenderGrid *getGrid() { return grid; }
 	const DynamicRenderGrid *getGrid() const { return grid; }
@@ -87,14 +90,14 @@ public:
 	char autoWidth, autoHeight;
 	bool renderQuad, renderCenter, renderBorder;
 
-	Vector texOff;
-
 	float borderAlpha;
 	Vector renderBorderColor;
-	Vector repeatToFillScale;
 
 protected:
+	void updateTexCoords();
 
+	Vector repeatToFillScale;
+	Vector texOff;
 	DynamicRenderGrid *grid;
 
 

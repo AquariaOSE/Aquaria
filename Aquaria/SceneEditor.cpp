@@ -109,7 +109,7 @@ static void tileToQuad(Quad *q, const TileData& t)
 	q->rotation.z = t.rotation;
 	if(t.flags & TILEFLAG_REPEAT && t.rep)
 	{
-		q->repeatToFillScale = Vector(t.rep->texscaleX, t.rep->texscaleY);
+		q->setRepeatScale(Vector(t.rep->texscaleX, t.rep->texscaleY));
 		q->repeatTextureToFill(true);
 	}
 	q->texcoords = t.getTexcoords();
@@ -193,8 +193,8 @@ public:
 
 	void onUpdate(float dt)
 	{
-		for(size_t i = 0; i < _quads.size(); ++i)
-			_quads[i]->refreshRepeatTextureToFill();
+		//for(size_t i = 0; i < _quads.size(); ++i)
+		//	_quads[i]->refreshRepeatTextureToFill();
 	}
 
 	void finish()

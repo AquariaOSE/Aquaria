@@ -3419,8 +3419,8 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		helpBG = new Quad;
 		//helpBG->color = 0;
 		helpBG->setTexture("brick");
+		helpBG->setRepeatScale(Vector(2, 2));
 		helpBG->repeatTextureToFill(true);
-		helpBG->repeatToFillScale = Vector(2, 2);
 		//helpBG->alphaMod = 0.75;
 		helpBG->autoWidth = AUTO_VIRTUALWIDTH;
 		helpBG->autoHeight = AUTO_VIRTUALHEIGHT;

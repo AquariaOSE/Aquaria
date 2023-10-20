@@ -1889,11 +1889,17 @@ luaFunc(quad_setRepeatScale)
 {
 	Quad *b = getQuad(L);
 	if (b)
-	{
-		b->repeatToFillScale = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
-		b->refreshRepeatTextureToFill();
-	}
+		b->setRepeatScale(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
 	luaReturnNil();
+}
+
+luaFunc(quad_getRepeatScale)
+{
+	Vector s;
+	Quad *b = getQuad(L);
+	if (b)
+		s = b->getRepeatScale();
+	luaReturnVec2(s.x, s.y);
 }
 
 luaFunc(quad_isRepeatTexture)
@@ -1906,7 +1912,7 @@ luaFunc(quad_setTexOffset)
 {
 	Quad *b = getQuad(L);
 	if (b)
-		b->texOff = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3));
+		b->setRepeatOffset(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
 	luaReturnNil();
 }
 
@@ -1915,7 +1921,7 @@ luaFunc(quad_getTexOffset)
 	Quad *b = getQuad(L);
 	Vector v;
 	if (b)
-		v = b->texOff;
+		v = b->getRepeatOffset();
 	luaReturnVec2(v.x, v.y);
 }
 

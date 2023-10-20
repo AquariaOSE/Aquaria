@@ -212,8 +212,20 @@ void Quad::renderGrid(const RenderState& rs) const
 void Quad::repeatTextureToFill(bool on)
 {
 	repeatTexture = on;
-	refreshRepeatTextureToFill();
+	updateTexCoords();
 
+}
+
+void Quad::setRepeatScale(const Vector& repscale)
+{
+	repeatToFillScale = repscale;
+	updateTexCoords();
+}
+
+void Quad::setRepeatOffset(const Vector& repoffs)
+{
+	texOff = repoffs;
+	updateTexCoords();
 }
 
 void Quad::onRender(const RenderState& rs) const
@@ -247,7 +259,7 @@ void Quad::onRender(const RenderState& rs) const
 	glPopMatrix();
 }
 
-void Quad::refreshRepeatTextureToFill()
+void Quad::updateTexCoords()
 {
 	if (repeatTexture && texture)
 	{
@@ -255,7 +267,6 @@ void Quad::refreshRepeatTextureToFill()
 		texcoords.v1 = texOff.y;
 		texcoords.u2 = (width*scale.x*repeatToFillScale.x)/texture->width + texOff.x;
 		texcoords.v2 = (height*scale.y*repeatToFillScale.y)/texture->height + texOff.y;
-		//texcoords.fixflip();
 
 		if(!grid)
 		{
@@ -265,14 +276,10 @@ void Quad::refreshRepeatTextureToFill()
 	}
 	else
 	{
-		if (fabsf(texcoords.u2) > 1 || fabsf(texcoords.v2) > 1)
-		{
-			texcoords.u2 = 1;
-			texcoords.v2 = 1;
-
-			if(grid && grid->gridType == GRID_UNDEFINED && texcoords.isStandard())
-				deleteGrid();
-		}
+		texcoords.setStandard();
+		// don't delete when a wavy effect is going on, for example
+		if(grid && grid->gridType == GRID_UNDEFINED)
+			deleteGrid();
 	}
 }
 
