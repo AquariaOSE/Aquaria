@@ -43,21 +43,6 @@ void TexCoordBox::setStandard()
 	v2 = 1;
 }
 
-void TexCoordBox::fixflip()
-{
-	// HACK: partially repeated textures have a weird Y axis. assuming a repeat factor of 0.4,
-	// instead of texcoords from 0 -> 0.4 everything is biased towards the opposite end, ie. 0.6 -> 1.
-	// This is especially true for partial repeats, we always need to bias towards the other end.
-	// I have no idea why this has to be like this for tiles, but this is NOT the case for fonts.
-	// And NOTE: without this, maps may look deceivingly correct, but they really are not.
-	const float percentY = v2 - v1;
-	const float remainder = 1.0f - fmodf(percentY, 1.0f);
-	v1 += remainder; // bias towards next int
-	v2 += remainder;
-
-}
-
-
 Texture::Texture()
 {
 	gltexid = 0;

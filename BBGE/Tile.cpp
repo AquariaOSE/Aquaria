@@ -630,7 +630,14 @@ TexCoordBox TileRepeatData::calcTexCoords(const TileData& t) const
 	tc.v1 = texOffY;
 	tc.u2 = (et.w*t.scalex*texscaleX)/tw + texOffX;
 	tc.v2 = (et.h*t.scaley*texscaleY)/th + texOffY;
-	//tc.fixflip();
+
+	// HACK: partially repeated textures have a weird Y axis. assuming a repeat factor of 0.4,
+	// instead of texcoords from 0 -> 0.4 everything is biased towards the opposite end, ie. 0.6 -> 1.
+	// This is especially true for partial repeats, we always need to bias towards the other end.
+	// And NOTE: without this, maps may look deceivingly correct, but they really are not.
+	tc.v2 = 1 - tc.v2;
+	tc.v1 = 1 - tc.v1;
+	std::swap(tc.v1, tc.v2);
 
 	return tc;
 }
