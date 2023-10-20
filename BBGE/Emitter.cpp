@@ -240,11 +240,12 @@ void Emitter::onRender(const RenderState& rs) const
 		texture->apply();
 
 
-
-	if (hasRot)
+	const bool flip = data.flipH != (data.copyParentFlip && pe->isfhr());
+	if (flip || hasRot)
 	{
 		Vector colorMult = data.inheritColor ? pe->color : Vector(1, 1, 1);
 		float alphaMult = data.inheritAlpha ? pe->alpha.x : 1;
+
 		for (Particles::const_iterator i = particles.begin(); i != particles.end(); i++)
 		{
 			Particle *p = *i;
@@ -257,7 +258,7 @@ void Emitter::onRender(const RenderState& rs) const
 				glColor4f(col.x, col.y, col.z, p->alpha.x * alphaMult);
 
 
-				if (p->rot.z != 0 || p->rot.isInterpolating())
+				if (flip || p->rot.z != 0 || p->rot.isInterpolating())
 				{
 					glPushMatrix();
 
@@ -265,9 +266,8 @@ void Emitter::onRender(const RenderState& rs) const
 
 						glRotatef(p->rot.z, 0, 0, 1);
 
-						if (data.flipH || (data.copyParentFlip && (pe->isfh() || (pe->getParent() && pe->getParent()->isfh()))))
+						if (flip)
 						{
-
 							glRotatef(180, 0, 1, 0);
 						}
 

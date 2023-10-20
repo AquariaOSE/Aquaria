@@ -133,7 +133,7 @@ public:
 
 	Vector getSpawnPosition();
 
-	bool hasRot;
+	bool hasRot; // FIXME: this should be removed eventually
 protected:
 	Vector currentSpawn, lastSpawn;
 	void onRender(const RenderState& rs) const OVERRIDE;
