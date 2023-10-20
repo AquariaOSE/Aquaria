@@ -51,6 +51,7 @@ void Quad::initQuad()
 
 	renderBorder = false;
 	renderCenter = true;
+	texcoordOverride = false;
 	width = 2; height = 2;
 	texcoords.setStandard();
 
@@ -259,6 +260,9 @@ void Quad::onRender(const RenderState& rs) const
 
 void Quad::updateTexCoords()
 {
+	if(texcoordOverride)
+		goto setgrid;
+
 	if (repeatTexture && texture)
 	{
 		texcoords.u1 = texOff.x;
@@ -266,6 +270,7 @@ void Quad::updateTexCoords()
 		texcoords.u2 = (width*scale.x*repeatToFillScale.x)/texture->width + texOff.x;
 		texcoords.v2 = (height*scale.y*repeatToFillScale.y)/texture->height + texOff.y;
 
+setgrid:
 		if(!grid)
 		{
 			createGrid(2, 2)->gridType = GRID_UNDEFINED;
@@ -279,6 +284,19 @@ void Quad::updateTexCoords()
 		if(grid && grid->gridType == GRID_UNDEFINED)
 			deleteGrid();
 	}
+}
+
+void Quad::setOverrideTexCoords(const TexCoordBox & tc)
+{
+	texcoordOverride = true;
+	texcoords = tc;
+	updateTexCoords();
+}
+
+void Quad::clearOverrideTexCoords()
+{
+	texcoordOverride = false;
+	updateTexCoords();
 }
 
 void Quad::reloadDevice()

@@ -111,11 +111,12 @@ static void tileToQuad(Quad *q, const TileData& t)
 	{
 		q->setRepeatScale(Vector(t.rep->texscaleX, t.rep->texscaleY));
 		q->repeatTextureToFill(true);
+		q->setOverrideTexCoords(t.getTexcoords());
 	}
-	q->texcoords = t.getTexcoords();
 	q->renderBorder = true;
 	q->renderBorderColor = TileRender::GetTagColor(t.tag);
 	q->borderAlpha = 1.0f;
+	q->update(0); // to prevent 1 frame of lag when setting
 }
 
 static void quadToTile(TileData& t, const Quad *q)
@@ -134,6 +135,7 @@ class MultiTileHelper : public Quad
 	TileStorage& _ts;
 	std::vector<size_t> _indices;
 	std::vector<Quad*> _quads;
+	Vector lastScale;
 
 	MultiTileHelper(TileStorage& ts, const size_t *indices, size_t n)
 		: Quad()
@@ -191,10 +193,50 @@ public:
 	{
 	}
 
-	void onUpdate(float dt)
+	void changeRepeatScale(const Vector& rs)
 	{
-		//for(size_t i = 0; i < _quads.size(); ++i)
-		//	_quads[i]->refreshRepeatTextureToFill();
+		size_t n = _indices.size();
+		assert(n == 1);
+		TileData& t = _ts.tiles[_indices[0]];
+		if((t.flags & TILEFLAG_REPEAT) && t.rep)
+		{
+			this->setRepeatScale(rs);
+			t.rep->texscaleX = rs.x;
+			t.rep->texscaleY = rs.y;
+			t.refreshRepeat();
+			this->setOverrideTexCoords(t.getTexcoords());
+		}
+	}
+
+	virtual void onUpdate(float dt) OVERRIDE
+	{
+		if(scale != lastScale)
+		{
+			lastScale = scale;
+			if(_indices.size() == 1)
+			{
+				TileData& t = _ts.tiles[_indices[0]];
+				t.scalex = scale.x;
+				t.scaley = scale.y;
+				t.refreshRepeat();
+				this->setOverrideTexCoords(t.getTexcoords());
+			}
+			else
+			{
+				for(size_t i = 0; i < _quads.size(); ++i)
+				{
+					TileData& t = _ts.tiles[_indices[i]];
+					Quad *q = _quads[i];
+					Vector s = q->getRealScale();
+					t.scalex = s.x;
+					t.scaley = s.y;
+					t.refreshRepeat();
+					q->setOverrideTexCoords(t.getTexcoords());
+				}
+			}
+		}
+
+		Quad::onUpdate(dt);
 	}
 
 	void finish()
@@ -218,6 +260,7 @@ public:
 		}
 		alphaMod = 0;
 		this->safeKill(); // also deletes all children
+		_ts.refreshAll();
 	}
 };
 
@@ -1078,16 +1121,13 @@ void SceneEditor::enterAnyStateHelper(EditorStates newstate)
 	state = newstate;
 	if (editType == ET_ELEMENTS)
 	{
+		oldRepeatScale = Vector(1, 1); // not handled for multi-selection
+
 		if(selectedTiles.size() == 1)
 		{
 			const TileData& t = getCurrentLayerTiles().tiles[selectedTiles[0]];
-			oldRepeatScale = Vector(1,1);
-			if(t.flags & TILEFLAG_REPEAT)
+			if(t.flags & TILEFLAG_REPEAT && t.rep)
 				oldRepeatScale = Vector(t.rep->texscaleX, t.rep->texscaleY);
-		}
-		else
-		{
-			oldRepeatScale = Vector(1, 1); // not handled for multi-selection
 		}
 
 		MultiTileHelper *m = createMultiTileHelperFromSelection();
@@ -1676,13 +1716,18 @@ void SceneEditor::updateMultiSelect()
 
 		clearSelection();
 
-		const TileStorage& ts = getCurrentLayerTiles();
+		TileStorage& ts = getCurrentLayerTiles();
 		for(size_t i = 0; i < ts.tiles.size(); ++i)
 		{
 			const TileData& t = ts.tiles[i];
 			if(t.isVisible() && t.x >= p1.x && t.y >= p1.y && t.x <= p2.x && t.y <= p2.y)
+			{
 				selectedTiles.push_back(i);
+			}
 		}
+
+		if(size_t N = selectedTiles.size())
+			ts.select(&selectedTiles[0], N);
 	}
 }
 
@@ -1762,9 +1807,12 @@ void SceneEditor::action(int id, int state, int source, InputDevice device)
 	{
 		if (state)
 		{
+
 			if (!multiSelecting)
+			{
+				multiSelecting = true;
 				clearSelection();
-			multiSelecting = true;
+			}
 			multiSelectPoint = dsq->getGameCursorPosition();
 		}
 		else
@@ -2431,16 +2479,16 @@ void SceneEditor::update(float dt)
 			if (state == ES_SELECTING && !ismulti)
 			{
 				sel = this->getTileAtCursor();
-				//if(sel < 0 || (selectedTiles.size() == 1 && selectedTiles[0] != (size_t)sel))
+				if(selectedTiles.empty() || (selectedTiles.size() == 1 && selectedTiles[0] != sel))
 				{
-					selectedTiles.clear();
-					getCurrentLayerTiles().clearSelection();
-				}
-				if(sel >= 0)
-				{
-					selectedTiles.push_back(sel);
-					const size_t idx = sel;
-					getCurrentLayerTiles().select(&idx, 1);
+					if(!selectedTiles.empty())
+						clearSelection();
+					if(sel >= 0)
+					{
+						selectedTiles.push_back(sel);
+						const size_t idx = sel;
+						getCurrentLayerTiles().select(&idx, 1);
+					}
 				}
 			}
 
@@ -2679,60 +2727,46 @@ void SceneEditor::update(float dt)
 
 					repeatScale = core->getKeyState(KEY_X);
 					if(repeatScale)
-						add *= 0.1f;
+						add *= 0.3f;
 				}
 				if (!selectedTiles.empty())
 				{
 					if (!core->getCtrlState())
 					{
-						multi->scale=oldScale + add;
-						if (multi->scale.x < MIN_SIZE)
-							multi->scale.x = MIN_SIZE;
-						if (multi->scale.y < MIN_SIZE)
-							multi->scale.y = MIN_SIZE;
-					}
-				}
-				// FIXME: scaling
-				/*else if (editingElement)
-				{
-					Vector& editVec = repeatScale ? editingElement->repeatToFillScale : editingElement->scale;
-					if (core->getCtrlState())
-					{
-						editVec = Vector(1,1);
-					}
-					else
-					{
-
-						editVec = (repeatScale ? oldRepeatScale : oldScale) + add;
-						if (!uni && !repeatScale)
+						if(repeatScale)
 						{
-							if (!middle)
+							if(selectedTiles.size() == 1)
+								multi->changeRepeatScale(oldRepeatScale + add);
+						}
+						else
+						{
+							multi->scale=oldScale + add;
+							if (multi->scale.x < MIN_SIZE)
+								multi->scale.x = MIN_SIZE;
+							if (multi->scale.y < MIN_SIZE)
+								multi->scale.y = MIN_SIZE;
+
+							if(!middle && !uni && selectedTiles.size() == 1)
 							{
-								Vector offsetChange = (add*Vector(editingElement->getWidth(), editingElement->getHeight()))*0.5f;
+								Vector offsetChange = (add*Vector(multi->getWidth(), multi->getHeight()))*0.5f;
 								if (add.y == 0)
 								{
 									if (right)
-										editingElement->beforeScaleOffset = offsetChange;
+										multi->offset = offsetChange;
 									else
-										editingElement->beforeScaleOffset = -offsetChange;
+										multi->offset = -offsetChange;
 								}
 								else
 								{
 									if (down)
-										editingElement->beforeScaleOffset = offsetChange;
+										multi->offset = offsetChange;
 									else
-										editingElement->beforeScaleOffset = -offsetChange;
+										multi->offset = -offsetChange;
 								}
 							}
 						}
-						if (editVec.x < MIN_SIZE)
-							editVec.x  = MIN_SIZE;
-						if (editVec.y < MIN_SIZE)
-							editVec.y  = MIN_SIZE;
 					}
-
-					editingElement->refreshRepeatTextureToFill();
-				}*/
+				}
 			}
 			break;
 			case ES_MAX:

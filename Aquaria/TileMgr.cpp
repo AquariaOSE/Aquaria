@@ -274,7 +274,7 @@ TileDef::TileDef(unsigned lr, const TileData& t)
 	, sx(t.scalex), sy(t.scaley)
 	, rsx(1), rsy(1)
 {
-	if(t.flags & TILEFLAG_REPEAT)
+	if(t.flags & TILEFLAG_REPEAT && t.rep)
 	{
 		rsx = t.rep->texscaleX;
 		rsy = t.rep->texscaleY;

@@ -77,18 +77,21 @@ public:
 	void setRepeatOffset(const Vector& repoffs);
 	inline const Vector& getRepeatOffset() const { return texOff; }
 	void setStripPoints(bool vert, const Vector *points, size_t n);
+
 	DynamicRenderGrid *getGrid() { return grid; }
 	const DynamicRenderGrid *getGrid() const { return grid; }
+
+	void setOverrideTexCoords(const TexCoordBox& tc);
+	void clearOverrideTexCoords();
 
 	void reloadDevice() OVERRIDE;
 
 	void deleteGrid();
 
-	TexCoordBox texcoords;
-
 	// TODO: this should be a bitmask
 
 	bool renderQuad, renderCenter, renderBorder;
+	bool texcoordOverride; // urgh
 
 	float borderAlpha;
 	Vector renderBorderColor;
@@ -96,6 +99,7 @@ public:
 protected:
 	void updateTexCoords();
 
+	TexCoordBox texcoords;
 	Vector repeatToFillScale;
 	Vector texOff;
 	DynamicRenderGrid *grid;
