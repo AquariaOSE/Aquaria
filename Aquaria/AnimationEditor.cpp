@@ -209,6 +209,18 @@ void AnimationEditor::resetScaleOrSave()
 
 	if (core->getCtrlState())
 		saveFile();
+	else if(core->getAltState() && editingBone)
+	{
+		Vector scale(1,1);
+		Bone *b = editingBone;
+		do
+			scale *= b->scale;
+		while( (b = dynamic_cast<Bone*>(b->getParent())) ); // don't want to get entity scale; that's what the anim editor uses for zooming
+		std::ostringstream os;
+		os << scale.x;
+		if(!SDL_SetClipboardText(os.str().c_str()))
+			dsq->screenMessage("Scale copied to clipboard");
+	}
 	else
 		editSprite->scale = Vector(1,1);
 }
