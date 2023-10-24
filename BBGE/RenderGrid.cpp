@@ -132,8 +132,11 @@ void RenderGrid::setDrawOrder(GridDrawOrder ord, bool force)
 
 void RenderGrid::setTexCoords(const TexCoordBox& tc)
 {
-	this->tc = tc;
-	needVBOUpdate = true;
+	if(this->tc != tc)
+	{
+		this->tc = tc;
+		needVBOUpdate = true;
+	}
 }
 
 

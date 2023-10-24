@@ -31,6 +31,15 @@ struct TexCoordBox
 
 	bool isStandard() const;
 	void setStandard();
+
+	bool operator==(const TexCoordBox& o) const
+	{
+		return u1 == o.u1 && v1 == o.v1 && u2 == o.u2 && v2 == o.v2;
+	}
+	inline bool operator!=(const TexCoordBox& o) const
+	{
+		return !(*this == o);
+	}
 };
 
 enum TextureLoadResult
