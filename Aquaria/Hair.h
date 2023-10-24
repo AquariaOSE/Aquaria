@@ -25,14 +25,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 struct HairNode
 {
-	HairNode() : percent(0), problem(false), angleDiff(0)
+	HairNode() : percent(0)
 	{}
 	float percent; // percent of how much force is affected on this node
 	Vector position; // position of the hair node
 	Vector defaultPosition; // default position of the hair node
-	Vector originalPosition;
-	bool problem;
-	float angleDiff;
 };
 
 class Hair : public RenderObject
@@ -41,8 +38,10 @@ public:
 	Hair(int nodes=40, float segmentLength=3, float width=18);
 
 	void exertForce(const Vector &force, float dt, int usePerc=0);
+	void exertNodeForce(size_t idx, const Vector &force, float dt, int usePerc=0);
 	void updatePositions();
 	void returnToDefaultPositions(float dt);
+	void setTextureFlip(bool flip) { _hairfh = flip; }
 
 	float hairWidth;
 
@@ -55,8 +54,8 @@ public:
 	HairNode *getHairNode(int idx);
 protected:
 	float segmentLength;
-	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
+	bool _hairfh;
 };
 
 #endif

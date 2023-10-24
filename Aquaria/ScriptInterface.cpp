@@ -8351,6 +8351,34 @@ luaFunc(entity_exertHairForce)
 	luaReturnNil();
 }
 
+// entity idx x y dt
+luaFunc(entity_exertHairSegmentForce)
+{
+	ScriptedEntity *se = scriptedEntity(L);
+	if (se)
+	{
+		if (se->hair)
+			se->hair->exertNodeForce(lua_tointeger(L, 2), Vector(lua_tonumber(L, 3), lua_tonumber(L, 4)), lua_tonumber(L, 5), lua_tonumber(L, 6));
+	}
+	luaReturnNil();
+}
+
+luaFunc(entity_setHairTextureFlip)
+{
+	ScriptedEntity *se = scriptedEntity(L);
+	if (se && se->hair)
+		se->hair->setTextureFlip(getBool(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(entity_setHairWidth)
+{
+	ScriptedEntity *se = scriptedEntity(L);
+	if (se && se->hair)
+		se->hair->hairWidth = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
 luaFunc(entity_initPart)
 {
 	std::string partName(getString(L, 2));
@@ -10721,6 +10749,9 @@ static const struct {
 	luaRegister(entity_setHairHeadPosition),
 	luaRegister(entity_updateHair),
 	luaRegister(entity_exertHairForce),
+	luaRegister(entity_exertHairSegmentForce),
+	luaRegister(entity_setHairTextureFlip),
+	luaRegister(entity_setHairWidth),
 
 	luaRegister(entity_setName),
 
