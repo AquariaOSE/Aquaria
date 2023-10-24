@@ -6,19 +6,11 @@
 #include "RenderBase.h"
 
 
-namespace WaterSurfaceRenderStuff
-{
-	Vector baseColor = Vector(0.4f,0.9f,1.0f);
-}
-
-using namespace WaterSurfaceRenderStuff;
 
 WaterSurfaceRender::WaterSurfaceRender() : Quad()
 {
-	color = baseColor;
 	cull = false;
-
-	alpha = 0.75;
+	this->texcoordOverride = true;
 
 	if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
 	{
@@ -119,12 +111,24 @@ void WaterSurfaceRender::onUpdate(float dt)
 		const float v0 = 1 + reflectOffset - (reflectPos * core->globalScale.x) / coordDiv;
 		const float v1 = v0 + (reflectSize * core->globalScale.x) / coordDiv;
 
-		/*upperLeftTextureCoordinates.y = v0 * core->frameBuffer.getHeightP();
-		lowerRightTextureCoordinates.y = v1 * core->frameBuffer.getHeightP();
+		texcoords.u1 = 0;
+		texcoords.u2 = core->frameBuffer.getWidthP();
 
-		upperLeftTextureCoordinates.x = 0;
-		lowerRightTextureCoordinates.x = core->frameBuffer.getWidthP();*/
+		const float hperc = core->frameBuffer.getHeightP();
+		texcoords.v1 = v0 * hperc;
+		texcoords.v2 = v1 * hperc;
+
+		color = Vector(0.4f,0.9f,1.0f);
+		alpha = 0.75f;
 	}
+	else
+	{
+		texcoords.setStandard();
+		color = Vector(0.4f, 0.7f, 0.8f);
+		alpha = 0.2f;
+	}
+
+	grid->setTexCoords(texcoords);
 }
 
 void WaterSurfaceRender::render(const RenderState& rs) const
@@ -143,7 +147,6 @@ void WaterSurfaceRender::onRender(const RenderState& rs) const
 	else
 	{
 		glBindTexture(GL_TEXTURE_2D, 0);
-		glColor4f(0.4f, 0.7f, 0.8f, 0.2f);
 	}
 
 	Quad::onRender(rs);
