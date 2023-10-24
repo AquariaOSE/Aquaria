@@ -223,13 +223,14 @@ protected:
 	void mouseButtonLeft();
 	void mouseButtonRight();
 
-	void setActiveLayer(unsigned bglayer);
+	void setActiveLayer(unsigned bglayer, bool force = false);
 	TileStorage& getCurrentLayerTiles();
 	void clearSelection();
+	void unselectTileLayer();
 	MultiTileHelper *createMultiTileHelperFromSelection();
 	void destroyMultiTileHelper();
 
-	size_t curElement;
+	size_t curElementId;
 
 	Quad *placer;
 	MultiTileHelper *multi;

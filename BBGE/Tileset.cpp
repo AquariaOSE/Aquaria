@@ -14,6 +14,11 @@ Tileset::~Tileset()
 	clear();
 }
 
+static bool _etsort(const ElementTemplate *a, const ElementTemplate *b)
+{
+	return a->idx < b->idx;
+}
+
 bool Tileset::loadFile(const char *fn, const unsigned char *usedIdx, size_t usedIdxLen)
 {
 	clear();
@@ -50,7 +55,7 @@ bool Tileset::loadFile(const char *fn, const unsigned char *usedIdx, size_t used
 	if(warn)
 		errorLog("Tileset indices of 1024 and above are reserved; ignored during load");
 
-	std::sort(elementTemplates.begin(), elementTemplates.end());
+	std::sort(elementTemplates.begin(), elementTemplates.end(), _etsort);
 
 	// begin preloading textures
 
@@ -126,7 +131,7 @@ void Tileset::clear()
 	elementTemplates.clear();
 }
 
-const ElementTemplate *Tileset::getByIdx(size_t idx)
+const ElementTemplate * Tileset::getIfExists(size_t idx)
 {
 	for (size_t i = 0; i < elementTemplates.size(); i++)
 	{
@@ -137,6 +142,13 @@ const ElementTemplate *Tileset::getByIdx(size_t idx)
 			return et;
 		}
 	}
+	return NULL;
+}
+
+const ElementTemplate *Tileset::getByIdx(size_t idx)
+{
+	if(const ElementTemplate *existing = getIfExists(idx))
+		return existing;
 
 	// a tile that gets an ET attached must remember its tileset id even if the entry is not present
 	// in the tileset. since the tile does not store the idx as an integer, we need to return a dummy element.
@@ -161,9 +173,9 @@ const ElementTemplate *Tileset::getByIdx(size_t idx)
 	return dummy;
 }
 
-const ElementTemplate* Tileset::getAdjacent(size_t idx, int direction, bool wraparound)
+const ElementTemplate* Tileset::getAdjacent(size_t idx, int direction, bool wraparound, size_t maxidx)
 {
-	ElementTemplate *et = _getAdjacent(idx, direction, wraparound);
+	ElementTemplate *et = _getAdjacent(idx, direction, wraparound, maxidx);
 	if(et)
 		et->finalize(); // load just in case
 	return et;
@@ -207,10 +219,17 @@ void ElementTemplate::finalize()
 	}
 }
 
-ElementTemplate * Tileset::_getAdjacent(size_t idx, int direction, bool wraparound)
+ElementTemplate * Tileset::_getAdjacent(size_t idx, int direction, bool wraparound, size_t maxidx)
 {
 	assert(direction == 1 || direction == -1);
+
 	const size_t maxn = elementTemplates.size();
+	if(!maxn)
+		return NULL;
+
+	if(idx >= maxidx)
+		return NULL;
+
 	size_t closest = 0;
 	int mindiff = 0;
 	for (size_t i = 0; i < maxn; i++)
@@ -220,14 +239,16 @@ ElementTemplate * Tileset::_getAdjacent(size_t idx, int direction, bool wraparou
 			if(wraparound)
 			{
 				if(!i && direction < 0)
-					return elementTemplates.back();
-				if(i + direction >= maxn)
+					for(size_t k = maxn; k --> 0; )
+						if(elementTemplates[k]->idx < maxidx)
+							return elementTemplates[k];
+				if(i + direction >= maxn || elementTemplates[i+direction]->idx >= maxidx)
 					return elementTemplates[0];
 			}
-			else
+
 
 			i += direction; // may underflow
-			return i < maxn ? elementTemplates[i] : NULL;
+			return i < maxn && elementTemplates[i]->idx < maxidx ? elementTemplates[i] : NULL;
 		}
 		int diff = labs((int)elementTemplates[i]->idx - (int)idx);
 		if(diff < mindiff || !mindiff)
@@ -247,11 +268,13 @@ ElementTemplate * Tileset::_getAdjacent(size_t idx, int direction, bool wraparou
 	else if(wraparound)
 	{
 		if(!closest && direction < 0)
-			return elementTemplates.back();
-		if(closest + direction >= maxn)
+			for(size_t k = maxn; k --> 0; )
+				if(elementTemplates[k]->idx < maxidx)
+					return elementTemplates[k];
+		if(closest + direction >= maxn || elementTemplates[closest+direction]->idx >= maxidx)
 			return elementTemplates[0];
 	}
 
 	size_t i = closest + direction;
-	return i < maxn ? elementTemplates[i] : NULL;
+	return i < maxn && elementTemplates[i]->idx < maxidx ? elementTemplates[i] : NULL;
 }

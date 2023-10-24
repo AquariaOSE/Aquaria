@@ -774,14 +774,18 @@ void SceneEditor::init()
 	placer = new Quad;
 	game->addRenderObject(placer, LR_HUD);
 	placer->alpha = 0;
-	curElement = 0;
+	curElementId = 0;
 	selectedEntity.clear();
 	nextElement();
 
+	const ElementTemplate *et = dsq->tilemgr.tileset.getIfExists(0);
+	if(!et)
+		dsq->tilemgr.tileset.getAdjacent(0, 1, false, 1024);
 
-	if (curElement < dsq->tilemgr.tileset.elementTemplates.size())
+
+	if (et)
 	{
-		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement]->gfx);
+		placer->setTexture(et->gfx);
 		placer->scale = Vector(1,1);
 	}
 	else
@@ -962,11 +966,11 @@ void SceneEditor::clearSelection()
 
 void SceneEditor::editModeElements()
 {
-	clearSelection();
+	setActiveLayer(bgLayer, editType != ET_ELEMENTS);
 	editType = ET_ELEMENTS;
-	if (curElement < dsq->tilemgr.tileset.elementTemplates.size())
+	if (const ElementTemplate *et = dsq->tilemgr.tileset.getIfExists(curElementId))
 	{
-		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement]->gfx);
+		placer->setTexture(et->gfx);
 		placer->scale = Vector(1,1);
 	}
 	placer->alpha = 0.5;
@@ -977,6 +981,7 @@ void SceneEditor::editModeElements()
 
 void SceneEditor::editModeEntities()
 {
+	unselectTileLayer();
 	clearSelection();
 	editType = ET_ENTITIES;
 	placer->setTexture(selectedEntity.prevGfx);
@@ -986,6 +991,7 @@ void SceneEditor::editModeEntities()
 
 void SceneEditor::editModePaths()
 {
+	unselectTileLayer();
 	clearSelection();
 	editType = ET_PATHS;
 	placer->alpha = 0;
@@ -1731,14 +1737,18 @@ void SceneEditor::updateMultiSelect()
 	}
 }
 
-void SceneEditor::setActiveLayer(unsigned bglayer)
+void SceneEditor::unselectTileLayer()
 {
-	if(this->bgLayer == bglayer)
-		return;
-
 	for(size_t i = 0; i < MAX_TILE_LAYERS; ++i)
 		dsq->tileRenders[i]->renderBorders = false;
+}
 
+void SceneEditor::setActiveLayer(unsigned bglayer, bool force)
+{
+	if(this->bgLayer == bglayer && !force)
+		return;
+
+	unselectTileLayer();
 	dsq->tileRenders[bglayer]->renderBorders = true;
 
 	destroyMultiTileHelper();
@@ -2078,7 +2088,7 @@ void SceneEditor::cycleSelectedTiles(int direction)
 	for(size_t i = 0; i < n; ++i)
 	{
 		TileData& t = ts.tiles[selectedTiles[i]];
-		const ElementTemplate *adj = dsq->tilemgr.tileset.getAdjacent(t.et->idx, direction, true);
+		const ElementTemplate *adj = dsq->tilemgr.tileset.getAdjacent(t.et->idx, direction, true, 1024);
 		if(adj)
 			t.et = adj;
 	}
@@ -2158,17 +2168,12 @@ void SceneEditor::prevElement()
 
 void SceneEditor::cyclePlacer(int direction)
 {
-	const int maxn = (int)dsq->tilemgr.tileset.elementTemplates.size();
-	int nextidx = (int)curElement + direction;
-	if(nextidx < 0)
-		nextidx += maxn;
-	if(nextidx >= maxn)
-		nextidx -= maxn;
+	const ElementTemplate *next = dsq->tilemgr.tileset.getAdjacent(curElementId, direction, true, 1024);
 
-	if (maxn && dsq->tilemgr.tileset.elementTemplates[curElement]->idx < 1024)
+	if (next)
 	{
-		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement]->gfx);
-		curElement = nextidx;
+		placer->setTexture(next->gfx);
+		curElementId = next->idx;
 	}
 }
 
@@ -2178,9 +2183,9 @@ void SceneEditor::selectZero()
 
 	if (editType == ET_ELEMENTS)
 	{
-		if (dsq->tilemgr.tileset.elementTemplates.empty()) return;
-		curElement = 0;
-		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement]->gfx);
+		curElementId = 0;
+		const ElementTemplate *et = dsq->tilemgr.tileset.getIfExists(0);
+		placer->setTexture(et ? et->gfx : "missingimage");
 	}
 }
 
@@ -2189,19 +2194,12 @@ void SceneEditor::selectEnd()
 	if (state != ES_SELECTING) return;
 	if (editType == ET_ELEMENTS)
 	{
-		if (dsq->tilemgr.tileset.elementTemplates.empty()) return;
-
-		size_t largest = 0;
-		for (size_t i = 0; i < dsq->tilemgr.tileset.elementTemplates.size(); i++)
+		const ElementTemplate *next = dsq->tilemgr.tileset.getAdjacent(0, -1, true, 1024);
+		if(next)
 		{
-			ElementTemplate *et = dsq->tilemgr.tileset.elementTemplates[i];
-			if (et->idx < 1024 && i > largest)
-			{
-				largest = i;
-			}
+			curElementId = next->idx;
+			placer->setTexture(next->gfx);
 		}
-		curElement = largest;
-		placer->setTexture(dsq->tilemgr.tileset.elementTemplates[curElement]->gfx);
 	}
 }
 
@@ -2211,8 +2209,7 @@ void SceneEditor::placeElement()
 	{
 		if (!core->getShiftState() && !core->getKeyState(KEY_LALT))
 		{
-			unsigned tilesetID = dsq->tilemgr.tileset.elementTemplates[curElement]->idx;
-			dsq->tilemgr.createOneTile(tilesetID, bgLayer, placer->position.x, placer->position.y);
+			dsq->tilemgr.createOneTile(curElementId, bgLayer, placer->position.x, placer->position.y);
 			// FIXME: need to update grid or no?
 			updateText();
 		}
@@ -2413,6 +2410,13 @@ void SceneEditor::updateText()
 			os << " tag: " << t.tag;
 			os << " gfx: " << t.et->gfx;
 			os << " F:" << ((t.flags & TILEFLAG_FH) ? "H" : "") << ((t.flags & TILEFLAG_FV) ? "V" : "");
+		}
+		else
+		{
+			os << " // id: " << curElementId;
+			const ElementTemplate *et = dsq->tilemgr.tileset.getIfExists(curElementId);
+			if(et)
+				os << " gfx: " << et->gfx;
 		}
 	break;
 	case ET_ENTITIES:

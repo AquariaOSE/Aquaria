@@ -13,7 +13,6 @@ class ElementTemplate
 public:
 	ElementTemplate() { w=0; h=0; idx=-1; tc.setStandard(); grid = NULL; }
 	~ElementTemplate();
-	inline bool operator<(const ElementTemplate& o) const { return idx < o.idx; }
 
 	void finalize(); // call after settings params
 
@@ -46,14 +45,16 @@ public:
 	// return valid ET if found, or creates a dummy if not. never returns NULL.
 	const ElementTemplate *getByIdx(size_t idx);
 
+	const ElementTemplate *getIfExists(size_t idx);
+
 	// search for non-dummy ET in a given direction. used to cycle through ETs.
 	// never returns dummy ET. May return NULL.
-	const ElementTemplate *getAdjacent(size_t idx, int direction, bool wraparound);
+	const ElementTemplate *getAdjacent(size_t idx, int direction, bool wraparound, size_t maxidx);
 
 	std::vector<ElementTemplate*> elementTemplates;
 
 private:
-	ElementTemplate *_getAdjacent(size_t idx, int direction, bool wraparound);
+	ElementTemplate *_getAdjacent(size_t idx, int direction, bool wraparound, size_t maxidx);
 
 	std::vector<ElementTemplate*> dummies;
 };
