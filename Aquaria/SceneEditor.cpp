@@ -102,9 +102,9 @@ std::string getMapTemplateFilename()
 static void tileToQuad(Quad *q, const TileData& t)
 {
 	q->position = Vector(t.x, t.y);
-	q->setWidthHeight(t.et->w, t.et->h);
-	q->scale = Vector(t.scalex, t.scaley);
 	q->setTexturePointer(t.et->tex);
+	q->setWidthHeight(t.et->w, t.et->h); // set AFTER texture
+	q->scale = Vector(t.scalex, t.scaley);
 	q->fhTo(!!(t.flags & TILEFLAG_FH));
 	q->rotation.z = t.rotation;
 	if(t.flags & TILEFLAG_REPEAT && t.rep)
