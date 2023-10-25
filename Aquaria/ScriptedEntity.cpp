@@ -688,7 +688,7 @@ void ScriptedEntity::entityDied(Entity *e)
 {
 	CollideEntity::entityDied(e);
 
-	if (script)
+	if (script && e != this && isv(EV_ENTITYDIED,1))
 	{
 		script->call("entityDied", this, e);
 	}

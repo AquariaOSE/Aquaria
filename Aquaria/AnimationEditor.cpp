@@ -209,6 +209,18 @@ void AnimationEditor::resetScaleOrSave()
 
 	if (core->getCtrlState())
 		saveFile();
+	else if(core->getAltState() && editingBone)
+	{
+		Vector scale(1,1);
+		Bone *b = editingBone;
+		do
+			scale *= b->scale;
+		while( (b = dynamic_cast<Bone*>(b->getParent())) ); // don't want to get entity scale; that's what the anim editor uses for zooming
+		std::ostringstream os;
+		os << scale.x;
+		if(!SDL_SetClipboardText(os.str().c_str()))
+			dsq->screenMessage("Scale copied to clipboard");
+	}
 	else
 		editSprite->scale = Vector(1,1);
 }
@@ -739,11 +751,17 @@ void AnimationEditor::update(float dt)
 	float spd = 1.0f;
 	if (core->mouse.scrollWheelChange < 0)
 	{
-		ctrlSprite->scale.x /= 1.12f;
+		if(splinegrid && core->getShiftState())
+			splinegrid->setPointScale(std::max(splinegrid->getPointScale() / 1.12f, 0.05f));
+		else
+			ctrlSprite->scale.x /= 1.12f;
 	}
 	else if (core->mouse.scrollWheelChange > 0)
 	{
-		ctrlSprite->scale.x *= 1.12f;
+		if(splinegrid && core->getShiftState())
+			splinegrid->setPointScale(splinegrid->getPointScale() * 1.12f);
+		else
+			ctrlSprite->scale.x *= 1.12f;
 	}
 	if (core->getKeyState(KEY_PGDN) && core->getShiftState())
 	{
@@ -768,6 +786,21 @@ void AnimationEditor::update(float dt)
 
 		}
 	}
+	if (editingBone)
+	{
+		float m = 0.2f;
+		if(core->getKeyState(KEY_NUMPADSLASH))
+		{
+			editingBone->originalScale /= (1 + m*dt);
+			editingBone->scale = editingBone->originalScale;
+		}
+		if(core->getKeyState(KEY_NUMPADSTAR))
+		{
+			editingBone->originalScale *= (1 + m*dt);
+			editingBone->scale = editingBone->originalScale;
+		}
+	}
+
 	if (editingBone && boneEdit == 1 && !splinegrid)
 	{
 		Vector add = core->mouse.change;

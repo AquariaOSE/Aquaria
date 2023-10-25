@@ -91,7 +91,7 @@ public:
 	float health;
 	float maxHealth;
 
-	bool setBoneLock(const BoneLock &boneLock);
+	bool setBoneLock(const BoneLock &boneLock, bool force = false);
 
 	void heal(float a, int type=0);
 
@@ -134,7 +134,6 @@ public:
 	Entity *ridingOnEntity;
 	Vector startPos;
 	void rotateToVec(Vector addVec, float time, float offsetAngle=0);
-	virtual void applyVariation(int variation){}
 
 	void popBubble();
 	void sound(const std::string &sound, float freq=1, float fadeOut=0);
@@ -167,7 +166,6 @@ public:
 		STATE_FOLLOW		=23,
 		STATE_TITLE			=24
 	};
-	virtual void onNotify(Entity *notify){}
 
 	float followPath(Path *p, float speed, int dir, bool deleteOnEnd = false);
 	bool touchAvatarDamage(int radius, float dmg, const Vector &override=Vector(-1,-1,-1), float speed=0, float pushTime = 0, Vector collidePos = Vector(0,0,0));
@@ -178,8 +176,8 @@ public:
 	void moveTowardsAngle(int angle, float dt, int spd);
 	void moveAroundAngle(int angle, float dt, int spd, int dir);
 
-	void moveTowardsTarget(float dt, int spd, int t=0);
-	void moveAroundTarget(float dt, int spd, int d, int t=0);
+	void moveTowardsTarget(float dt, int spd, size_t t=0);
+	void moveAroundTarget(float dt, int spd, int d, size_t t=0);
 	void moveAroundEntity(float dt, int spd, int d, Entity *e);
 	void moveTowardsGroupCenter(float dt, int spd);
 	void moveTowardsGroupHeading(float dt, int spd);
@@ -187,13 +185,12 @@ public:
 	void doSpellAvoidance(float dt, int range, float mod);
 	void doEntityAvoidance(float dt, int range, float mod, Entity *ignore =0);
 	void setMaxSpeed(float ms);
-	Entity *findTarget(int dist, int type, int t=0);
+	Entity *findTarget(int dist, int type, size_t t=0);
 
-	bool hasTarget(int t=0);
 	bool isTargetInRange(int range, size_t t=0);
 	void doGlint(const Vector &position, const Vector &scale=Vector(2,2), const std::string &tex="Glint", BlendType bt=BLEND_DEFAULT);
-	Entity *getTargetEntity(int t=0);
-	void setTargetEntity(Entity *e, int t=0);
+	Entity *getTargetEntity(size_t t=0) const;
+	void setTargetEntity(Entity *e, size_t t=0);
 
 	virtual void activate(Entity *by, int source){}
 
@@ -201,11 +198,10 @@ public:
 
 	void setEntityType(EntityType et);
 	EntityType getEntityType();
-	void flipToTarget(Vector pos);
+	void flipToPos(Vector pos);
 	bool isFollowingPath();
 	void stopFollowingPath();
 	void overideMaxSpeed(int ms, float time);
-	void disableOverideMaxSpeed();
 	int currentEntityTarget;
 	float moveToPos(Vector pos, float speed, int dieOnPathEnd=0, bool swim = false);
 	bool isHit();
@@ -220,7 +216,6 @@ public:
 	void idle();
 	void slowToStopPath(float t);
 	bool isSlowingToStopPath();
-	Vector lastMove;
 	float damageTime;
 
 	void setEntityProperty(EntityProperty ep, bool value=true);
@@ -286,7 +281,7 @@ public:
 	float getHealthPerc();
 	void setDeathScene(bool v);
 	bool isDeathScene() const { return deathScene; }
-	void generateCollisionMask(int ovrCollideRadius=0);
+	void generateCollisionMask(float ovrCollideRadius=0);
 	DamageData lastDamage;
 	bool checkSplash(const Vector &override=Vector(0,0,0));
 	EatData eatData;
@@ -329,8 +324,6 @@ public:
 	bool isGoingToBeEaten();
 	void setPoison(float m, float t);
 	inline float getPoison() const { return poison; }
-
-	virtual bool canSetBoneLock();
 
 	void initHair(int numSegments, float segmentLength, float width, const std::string &tex);
 	void updateHair(float dt);

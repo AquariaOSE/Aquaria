@@ -8,7 +8,11 @@ SplineGridCtrlPoint *SplineGridCtrlPoint::movingPoint;
 SplineGridCtrlPoint::SplineGridCtrlPoint()
 {
     setTexture("gui/open-menu");
-    setWidthHeight(16, 16);
+    setWidthHeight(8, 8);
+}
+
+SplineGridCtrlPoint::~SplineGridCtrlPoint()
+{
 }
 
 Vector SplineGridCtrlPoint::getSplinePosition() const
@@ -70,7 +74,7 @@ void SplineGridCtrlPoint::onUpdate(float dt)
 }
 
 SplineGrid::SplineGrid()
-    : wasModified(false), deg(0)
+    : wasModified(false), deg(0), pointscale(1)
 {
     setWidthHeight(128, 128);
     renderQuad = true;
@@ -165,6 +169,8 @@ SplineGridCtrlPoint* SplineGrid::createControlPoint(size_t x, size_t y)
     const Vector pos01(float(x) / float(cpx-1), float(y) / float(cpy-1));
     SplineGridCtrlPoint *cp = new SplineGridCtrlPoint();
     cp->position = (pos01 - Vector(0.5f, 0.5f)) * wh;
+    cp->scale.x = pointscale;
+    cp->scale.y = pointscale;
     this->addChild(cp, PM_POINTER);
     return cp;
 }
@@ -214,4 +220,12 @@ void SplineGrid::onRender(const RenderState& rs) const
     }
 }
 
-
+void SplineGrid::setPointScale(const float scale)
+{
+    pointscale = scale;
+    for(size_t i = 0; i < ctrlp.size(); ++i)
+    {
+        ctrlp[i]->scale.x = scale;
+        ctrlp[i]->scale.y = scale;
+    }
+}

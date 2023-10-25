@@ -1633,6 +1633,15 @@ luaFunc(obj_setRenderPass)
 	luaReturnNil();
 }
 
+luaFunc(obj_getRenderPass)
+{
+	RenderObject *r = robj(L);
+	int pass = 0;
+	if (r)
+		pass = r->getRenderPass();
+	luaReturnInt(pass);
+}
+
 luaFunc(obj_fh)
 {
 	RenderObject *r = robj(L);
@@ -2060,6 +2069,7 @@ luaFunc(quad_getBorderAlpha)
 	RO_FUNC(getter, prefix,  setUpdateCull	) \
 	RO_FUNC(getter, prefix,  getUpdateCull	) \
 	RO_FUNC(getter, prefix,  setRenderPass	) \
+	RO_FUNC(getter, prefix,  getRenderPass	) \
 	RO_FUNC(getter, prefix,  setPositionX	) \
 	RO_FUNC(getter, prefix,  setPositionY	) \
 	RO_FUNC(getter, prefix,  enableMotionBlur	) \
@@ -5993,7 +6003,7 @@ luaFunc(entity_flipToEntity)
 	Entity *e2 = entity(L, 2);
 	if (e && e2)
 	{
-		e->flipToTarget(e2->position);
+		e->flipToPos(e2->position);
 	}
 	luaReturnNil();
 }
@@ -6005,7 +6015,7 @@ luaFunc(entity_flipToNode)
 	PathNode *n = &p->nodes[0];
 	if (e && n)
 	{
-		e->flipToTarget(n->position);
+		e->flipToPos(n->position);
 	}
 	luaReturnNil();
 }
@@ -7416,22 +7426,20 @@ luaFunc(entity_setActivationType)
 luaFunc(entity_hasTarget)
 {
 	Entity *e = entity(L);
-	if (e)
-		luaReturnBool(e->hasTarget(e->currentEntityTarget));
-	else
-		luaReturnBool(false);
+	luaReturnBool(e && e->getTargetEntity(e->currentEntityTarget));
 }
 
 luaFunc(entity_hurtTarget)
 {
 	Entity *e = entity(L);
-	if (e && e->getTargetEntity())
-	{
-		DamageData d;
-		d.attacker = e;
-		d.damage = lua_tointeger(L, 2);
-		e->getTargetEntity(e->currentEntityTarget)->damage(d);
-	}
+	if (e)
+		if(Entity *t = e->getTargetEntity(e->currentEntityTarget))
+		{
+			DamageData d;
+			d.attacker = e;
+			d.damage = lua_tointeger(L, 2);
+			t->damage(d);
+		}
 
 	luaReturnNil();
 }
@@ -7665,12 +7673,32 @@ luaFunc(node_setElementsInLayerActive)
 
 static int pushTileData(lua_State *L, const TileData& t, unsigned layer)
 {
-	lua_pushinteger(L, t.et->idx);
-	lua_pushstring(L, t.et->tex->name.c_str());
-	lua_pushboolean(L, t.isVisible());
-	lua_pushinteger(L, layer);
-	lua_pushinteger(L, t.tag);
-	return 5;
+	/*  1 */ lua_pushinteger(L, t.et->idx);
+	/*  2 */ lua_pushstring(L, t.et->gfx.c_str());
+	/*  3 */ lua_pushboolean(L, t.isVisible());
+	/*  4 */ lua_pushinteger(L, layer);
+	/*  5 */ lua_pushinteger(L, t.tag);
+	/*  6 */ lua_pushnumber(L, t.x);
+	/*  7 */ lua_pushnumber(L, t.y);
+	/*  8 */ lua_pushnumber(L, t.scalex);
+	/*  9 */ lua_pushnumber(L, t.scaley);
+	/* 10 */ lua_pushnumber(L, t.rotation);
+	/* 11 */ lua_pushboolean(L, !!(t.flags & TILEFLAG_FH));
+	/* 12 */ lua_pushboolean(L, !!(t.flags & TILEFLAG_FV));
+
+	// 13, 14
+	if((t.flags & TILEFLAG_REPEAT) && t.rep)
+	{
+		lua_pushnumber(L, t.rep->texscaleX);
+		lua_pushnumber(L, t.rep->texscaleY);
+	}
+	else
+	{
+		lua_pushnil(L);
+		lua_pushnil(L);
+	}
+
+	return 14;
 }
 
 // (layer, func)
@@ -8346,6 +8374,34 @@ luaFunc(entity_exertHairForce)
 		if (se->hair)
 			se->hair->exertForce(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5));
 	}
+	luaReturnNil();
+}
+
+// entity idx x y dt
+luaFunc(entity_exertHairSegmentForce)
+{
+	ScriptedEntity *se = scriptedEntity(L);
+	if (se)
+	{
+		if (se->hair)
+			se->hair->exertNodeForce(lua_tointeger(L, 2), Vector(lua_tonumber(L, 3), lua_tonumber(L, 4)), lua_tonumber(L, 5), lua_tonumber(L, 6));
+	}
+	luaReturnNil();
+}
+
+luaFunc(entity_setHairTextureFlip)
+{
+	ScriptedEntity *se = scriptedEntity(L);
+	if (se && se->hair)
+		se->hair->setTextureFlip(getBool(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(entity_setHairWidth)
+{
+	ScriptedEntity *se = scriptedEntity(L);
+	if (se && se->hair)
+		se->hair->hairWidth = lua_tonumber(L, 2);
 	luaReturnNil();
 }
 
@@ -10719,6 +10775,9 @@ static const struct {
 	luaRegister(entity_setHairHeadPosition),
 	luaRegister(entity_updateHair),
 	luaRegister(entity_exertHairForce),
+	luaRegister(entity_exertHairSegmentForce),
+	luaRegister(entity_setHairTextureFlip),
+	luaRegister(entity_setHairWidth),
 
 	luaRegister(entity_setName),
 
@@ -11738,6 +11797,20 @@ static const struct {
 	luaConstant(PATHSHAPE_CIRCLE),
 };
 
+template<typename T>
+static void luaRegisterEnums(lua_State *L, T first, T last)
+{
+	assert(first <= last);
+	for(T i = first; i <= last; i = T(i + 1))
+	{
+		if(const char *name = EnumName(i))
+		{
+			lua_pushinteger(L, i);
+			lua_setglobal(L, name);
+		}
+	}
+}
+
 //============================================================================================
 // F U N C T I O N S
 //============================================================================================
@@ -11826,6 +11899,8 @@ lua_State *ScriptInterface::createLuaVM()
 		lua_pushnumber(state, luaConstantTable[i].value);
 		lua_setglobal(state, luaConstantTable[i].name);
 	}
+	luaRegisterEnums(state, LR_ZERO, LR_MAX);
+	luaRegisterEnums(state, ACTION_PRIMARY, ACTION_MAX);
 
 	// Add hooks to monitor global get/set operations if requested.
 	if (complainOnGlobalVar)

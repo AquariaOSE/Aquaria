@@ -2283,10 +2283,7 @@ void Game::entityDied(Entity *eDead)
 	FOR_ENTITIES(i)
 	{
 		e = *i;
-		if (e != eDead && e->isv(EV_ENTITYDIED,1))
-		{
-			e->entityDied(eDead);
-		}
+		e->entityDied(eDead);
 	}
 
 	dsq->continuity.entityDied(eDead);
