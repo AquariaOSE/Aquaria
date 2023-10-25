@@ -291,7 +291,7 @@ void SceneEditor::setBackgroundGradient()
 
 void SceneEditor::updateSelectedElementPosition(Vector dist)
 {
-	if (state == ES_MOVING)
+	if (state == ES_MOVING && multi)
 	{
 		// the actual tile position is updated when we release the mouse
 		multi->position = oldPosition + dist;
@@ -2621,7 +2621,10 @@ void SceneEditor::update(float dt)
 			}
 			break;
 			case ES_MOVING:
-				game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
+			{
+				if(Path *p = game->getPath(selectedIdx))
+					p->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
+			}
 			break;
 			case ES_ROTATING:
 			case ES_MAX:

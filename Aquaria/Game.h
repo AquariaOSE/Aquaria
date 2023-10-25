@@ -251,7 +251,7 @@ public:
 	void removePath(size_t idx);
 	void clearPaths();
 	size_t getNumPaths() const {return paths.size();}
-	Path *getPath(size_t idx) const {return paths[idx];}
+	Path *getPath(size_t idx) const {return idx < paths.size() ? paths[idx] : NULL;}
 	Path *getFirstPathOfType(PathType type) const {return firstPathOfType[type];}
 	Path *getPathByName(std::string name);
 	size_t getIndexOfPath(Path *p);
