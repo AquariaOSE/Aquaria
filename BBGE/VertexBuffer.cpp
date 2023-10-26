@@ -321,6 +321,7 @@ size_t DynamicGPUBuffer::initGridIndices_Triangles(size_t w, size_t h, bool inve
     const size_t quadsx = w - 1;
     const size_t quadsy = h - 1;
     const size_t quads = quadsx * quadsy;
+    assert(quads);
     const size_t border = 4; // for GL_LINE_LOOP
     do
     {

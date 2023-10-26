@@ -8334,7 +8334,7 @@ luaFunc(entity_getHairPosition)
 	int idx = lua_tointeger(L, 2);
 	if (se && se->hair)
 	{
-		HairNode *h = se->hair->getHairNode(idx);
+		const HairNode *h = se->hair->getHairNode(idx);
 		if (h)
 		{
 			x = h->position.x;

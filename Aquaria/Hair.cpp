@@ -18,14 +18,15 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#include "../BBGE/MathFunctions.h"
+#include "MathFunctions.h"
 
 #include "Hair.h"
 #include "DSQ.h"
 #include "RenderBase.h"
 
 
-Hair::Hair(int nodes, float segmentLength, float hairWidth) : RenderObject()
+Hair::Hair(int nodes, float segmentLength, float hairWidth)
+	: RenderObject(), vbo(GPUBUF_DYNAMIC | GPUBUF_VERTEXBUF), ibo(GPUBUF_STATIC | GPUBUF_INDEXBUF)
 {
 	this->segmentLength = segmentLength;
 	this->hairWidth = hairWidth;
@@ -35,17 +36,16 @@ Hair::Hair(int nodes, float segmentLength, float hairWidth) : RenderObject()
 
 	hairNodes.resize(nodes);
 
-
+	const float m = 1.0f / float(hairNodes.size());
 	for (size_t i = 0; i < hairNodes.size(); i++)
 	{
-		float perc = (float(i)/(float(hairNodes.size())));
-		if (perc < 0)
-			perc = 0;
+		const float perc = float(i) * m;
 		hairNodes[i].percent = 1.0f-perc;
 		Vector p(0, i*segmentLength, 0);
 		hairNodes[i].position = p;
-		hairNodes[i].defaultPosition = p;
 	}
+
+	trisToDraw = ibo.initGridIndices_Triangles(2, nodes, false, GPUACCESS_DEFAULT);
 }
 
 void Hair::setHeadPosition(const Vector &vec)
@@ -53,42 +53,55 @@ void Hair::setHeadPosition(const Vector &vec)
 	hairNodes[0].position = vec;
 }
 
-HairNode *Hair::getHairNode(int idx)
+const HairNode *Hair::getHairNode(size_t idx) const
 {
-	HairNode *h = 0;
-	int sz = hairNodes.size();
-	if (!(idx < 0 || idx >= sz))
-	{
-		h = &hairNodes[idx];
-	}
-	return h;
+	return idx < hairNodes.size() ? &hairNodes[idx] : NULL;
 }
 
-void Hair::onRender(const RenderState& rs) const
+void Hair::updateVBO()
 {
-	glBegin(GL_QUAD_STRIP);
 	const float texBits = 1.0f / (hairNodes.size()-1);
 	const Vector mul = !_hairfh ? Vector(1, 1) : Vector(-1, -1);
 
 	Vector pl, pr;
-	for (size_t i = 0; i < hairNodes.size(); i++)
+	do
 	{
-		if (i != hairNodes.size()-1)
+		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC, hairNodes.size() * 2 * (2*2) * sizeof(float), GPUACCESS_DEFAULT);
+		for (size_t i = 0; i < hairNodes.size(); i++)
 		{
-			Vector diffVec = hairNodes[i+1].position - hairNodes[i].position;
-			diffVec.setLength2D(hairWidth);
-			pl = diffVec.getPerpendicularLeft() * mul;
-			pr = diffVec.getPerpendicularRight() * mul;
+			const Vector pc = hairNodes[i].position;
+
+			if (i != hairNodes.size()-1)
+			{
+				Vector diffVec = hairNodes[i+1].position - hairNodes[i].position;
+				diffVec.setLength2D(hairWidth);
+				pl = diffVec.getPerpendicularLeft() * mul;
+				pr = diffVec.getPerpendicularRight() * mul;
+			}
+			*p++ = pc.x + pl.x;
+			*p++ = pc.y + pl.y;
+			*p++ = 0;
+			*p++ = texBits*i;
+
+			*p++ = pc.x + pr.x;
+			*p++ = pc.y + pr.y;
+			*p++ = 1;
+			*p++ = texBits*i;
 		}
-
-		Vector p = hairNodes[i].position;
-
-		glTexCoord2f(0, texBits*i);
-		glVertex3f(p.x + pl.x,  p.y + pl.y, 0);
-		glTexCoord2f(1, texBits*i);
-		glVertex3f(p.x + pr.x,  p.y + pr.y, 0);
 	}
-	glEnd();
+	while(!vbo.commitWrite());
+}
+
+void Hair::onUpdate(float dt)
+{
+	updateVBO();
+	RenderObject::onUpdate(dt);
+}
+
+void Hair::onRender(const RenderState& rs) const
+{
+	vbo.apply();
+	ibo.drawElements(GL_TRIANGLES, trisToDraw);
 }
 
 void Hair::updatePositions()
@@ -96,7 +109,6 @@ void Hair::updatePositions()
 	for (size_t i = 1; i < hairNodes.size(); i++)
 	{
 		Vector diff = hairNodes[i].position - hairNodes[i-1].position;
-
 
 
 		if (diff.getLength2D() < segmentLength)
@@ -110,25 +122,9 @@ void Hair::updatePositions()
 			diff.setLength2D(segmentLength);
 			hairNodes[i].position = hairNodes[i-1].position + diff;
 		}
-
 	}
 }
 
-void Hair::returnToDefaultPositions(float dt)
-{
-	for (size_t i = 0; i < hairNodes.size(); i++)
-	{
-		Vector mov = hairNodes[i].defaultPosition - hairNodes[i].position;
-		if (!mov.isLength2DIn(2))
-		{
-			if (mov.x != 0 || mov.y != 0)
-			{
-				mov *= dt;
-				hairNodes[i].position += mov;
-			}
-		}
-	}
-}
 
 void Hair::exertForce(const Vector &force, float dt, int usePerc)
 {
