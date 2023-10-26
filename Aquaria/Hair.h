@@ -57,7 +57,7 @@ protected:
 	size_t trisToDraw;
 	void updateVBO();
 
-	DynamicGPUBuffer vbo, ibo;
+	DynamicGPUBuffer ibo, vbo;
 };
 
 #endif

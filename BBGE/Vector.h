@@ -28,6 +28,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef float scalar_t;
 
+enum _NoInit { NoInit };
+
 class Vector
 {
 public:
@@ -37,6 +39,7 @@ public:
 
      Vector(scalar_t a = 0, scalar_t b = 0, scalar_t c = 0) : x(a), y(b), z(c) {}
      Vector(const Vector &vec) : x(vec.x), y(vec.y), z(vec.z) {}
+	 explicit inline Vector(_NoInit) {}
 
 
      float inline *getv(float *v) const

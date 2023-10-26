@@ -46,6 +46,7 @@ Hair::Hair(int nodes, float segmentLength, float hairWidth)
 	}
 
 	trisToDraw = ibo.initGridIndices_Triangles(2, nodes, false, GPUACCESS_DEFAULT);
+	updateVBO();
 }
 
 void Hair::setHeadPosition(const Vector &vec)
@@ -60,34 +61,55 @@ const HairNode *Hair::getHairNode(size_t idx) const
 
 void Hair::updateVBO()
 {
-	const float texBits = 1.0f / (hairNodes.size()-1);
+	const size_t N = hairNodes.size();
+	const float texBits = 1.0f / (N-1);
 	const Vector mul = !_hairfh ? Vector(1, 1) : Vector(-1, -1);
 
-	Vector pl, pr;
+	const float u0 = !_hairfh ? 0.0f : 1.0f;
+	const float u1 = 1.0f - u0;
+
+	Vector pl(NoInit), pr(NoInit);
 	do
 	{
-		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC, hairNodes.size() * 2 * (2*2) * sizeof(float), GPUACCESS_DEFAULT);
-		for (size_t i = 0; i < hairNodes.size(); i++)
+		// 2 verts per hair node, each vertex is float xy+uv
+
+		const size_t space = N * 2 * (2*2) * sizeof(float);
+		float * const begin = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC, space, GPUACCESS_DEFAULT);
+		float *p = begin;
+
+		for(size_t i = 0; i < N-1; ++i)
 		{
-			const Vector pc = hairNodes[i].position;
+			Vector cur = hairNodes[i].position;
+			Vector diffVec = hairNodes[i+1].position - cur;
+			diffVec.setLength2D(hairWidth);
+			pl = diffVec.getPerpendicularLeft();
+			pr = diffVec.getPerpendicularRight();
+			const float v = texBits * float(i);
 
-			if (i != hairNodes.size()-1)
-			{
-				Vector diffVec = hairNodes[i+1].position - hairNodes[i].position;
-				diffVec.setLength2D(hairWidth);
-				pl = diffVec.getPerpendicularLeft() * mul;
-				pr = diffVec.getPerpendicularRight() * mul;
-			}
-			*p++ = pc.x + pl.x;
-			*p++ = pc.y + pl.y;
-			*p++ = 0;
-			*p++ = texBits*i;
+			*p++ = cur.x + pl.x;
+			*p++ = cur.y + pl.y;
+			*p++ = u0;
+			*p++ = v;
 
-			*p++ = pc.x + pr.x;
-			*p++ = pc.y + pr.y;
-			*p++ = 1;
-			*p++ = texBits*i;
+			*p++ = cur.x + pr.x;
+			*p++ = cur.y + pr.y;
+			*p++ = u1;
+			*p++ = v;
 		}
+
+		// last segment doesn't have a diff vec, just re-use last perpendiculars
+		Vector cur = hairNodes[N-1].position;
+		*p++ = cur.x + pl.x;
+		*p++ = cur.y + pl.y;
+		*p++ = u0;
+		*p++ = 1;
+
+		*p++ = cur.x + pr.x;
+		*p++ = cur.y + pr.y;
+		*p++ = u1;
+		*p++ = 1;
+
+		assert(((char*)p - (char*)begin) == space);
 	}
 	while(!vbo.commitWrite());
 }
@@ -102,6 +124,15 @@ void Hair::onRender(const RenderState& rs) const
 {
 	vbo.apply();
 	ibo.drawElements(GL_TRIANGLES, trisToDraw);
+
+	if(RenderObject::renderCollisionShape)
+	{
+		glBindTexture(GL_TEXTURE_2D, 0);
+		RenderObject::lastTextureApplied = 0;
+		glPointSize(2);
+		glColor3f(1,0,1);
+		glDrawArrays(GL_POINTS, 0, vbo.size() / (sizeof(float) * 4));
+	}
 }
 
 void Hair::updatePositions()
@@ -109,22 +140,10 @@ void Hair::updatePositions()
 	for (size_t i = 1; i < hairNodes.size(); i++)
 	{
 		Vector diff = hairNodes[i].position - hairNodes[i-1].position;
-
-
-		if (diff.getLength2D() < segmentLength)
-		{
-			diff.setLength2D(segmentLength);
-			hairNodes[i].position = hairNodes[i-1].position + diff;
-		}
-		else if (diff.getLength2D() > segmentLength)
-		{
-
-			diff.setLength2D(segmentLength);
-			hairNodes[i].position = hairNodes[i-1].position + diff;
-		}
+		diff.setLength2D(segmentLength);
+		hairNodes[i].position = hairNodes[i-1].position + diff;
 	}
 }
-
 
 void Hair::exertForce(const Vector &force, float dt, int usePerc)
 {

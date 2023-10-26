@@ -167,6 +167,7 @@ struct BufPtrConfig
 
 void DynamicGPUBuffer::apply(BufDataType usetype) const
 {
+    assert(_datatype != BufDataType(-1)); // if this triggers, then the buffer was never filled with data
     if(!usetype)
         usetype = _datatype;
 
