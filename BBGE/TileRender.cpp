@@ -181,7 +181,7 @@ void TileRender::onRender(const RenderState& rs) const
 
 			rs.gpu.setBlend(BLEND_DEFAULT);
 
-			if(grid && RenderObject::renderCollisionShape)
+			if(grid != core->getDefaultQuadGrid() && RenderObject::renderCollisionShape)
 			{
 				grid->renderDebugPoints(rs);
 			}
