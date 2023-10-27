@@ -422,6 +422,7 @@ public:
 	void onContinuityReset();
 
 protected:
+	unsigned highestLoadedEntityID;
 
 	void toggleHelpScreen(bool on, const std::string &label="");
 	void onToggleHelpScreen();
