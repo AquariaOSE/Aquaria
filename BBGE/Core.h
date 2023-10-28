@@ -233,6 +233,8 @@ public:
 	// state functions
 
 	void setMousePosition(const Vector &p);
+	Vector pixelPosToVirtualCoords(int x, int y) const;
+	void virtualCoordsToPixelPos(int& x, int& y, const Vector& p);
 
 	void setFullscreen(bool full);
 
@@ -384,8 +386,8 @@ public:
 	int getDisplayIndex();
 	int getRefreshRate();
 
-	int getVirtualOffX();
-	int getVirtualOffY();
+	int getVirtualOffX() const;
+	int getVirtualOffY() const;
 
 	void centerMouse();
 
