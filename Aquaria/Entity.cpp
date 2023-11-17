@@ -2444,7 +2444,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, f
 	Vector accum;
 	int c = 0;
 	bool isInWaterBubble = false;
-	if (waterBubble && isUnderWater())
+	if (isUnderWater() && waterBubble) // isUnderWater() may set waterBubble
 	{
 		//debugLog("collision avoidance in bubble");
 		isInWaterBubble = true;
