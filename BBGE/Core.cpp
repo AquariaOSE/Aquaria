@@ -1287,7 +1287,7 @@ Vector Core::pixelPosToVirtualCoords(int x, int y) const
 	);
 }
 
-void Core::virtualCoordsToPixelPos(int& x, int& y, const Vector& p)
+void Core::virtualCoordsToPixelPos(int& x, int& y, const Vector& p) const
 {
 	const float px = p.x + getVirtualOffX();
 	const float py = p.y;

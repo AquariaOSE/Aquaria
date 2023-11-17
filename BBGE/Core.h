@@ -234,7 +234,7 @@ public:
 
 	void setMousePosition(const Vector &p);
 	Vector pixelPosToVirtualCoords(int x, int y) const;
-	void virtualCoordsToPixelPos(int& x, int& y, const Vector& p);
+	void virtualCoordsToPixelPos(int& x, int& y, const Vector& p) const;
 
 	void setFullscreen(bool full);
 
