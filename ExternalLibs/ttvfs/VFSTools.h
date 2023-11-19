@@ -65,7 +65,7 @@ template <typename T> void SkipSelfPath(T *& s)
 
 inline std::string joinPath(std::string base, const char *sub)
 {
-    if(!*sub)
+    if(!sub || !*sub)
         return base;
     if(*sub != '/' && base.length() && base[base.length()-1] != '/')
         base += '/';
