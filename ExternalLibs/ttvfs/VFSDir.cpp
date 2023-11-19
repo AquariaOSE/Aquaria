@@ -172,7 +172,7 @@ void DirBase::forEachDir(DirEnumCallback f, void *user /* = NULL */, bool safe /
 
 DirBase *DirBase::getDirByName(const char *dn, bool /* unused: lazyLoad = true */, bool useSubtrees /* = true */)
 {
-    if(!dn[0] || (dn[0] == '.' && !dn[1]))
+    if(!dn || !dn[0] || (dn[0] == '.' && !dn[1]))
         return this;
 
     Dirs::iterator it = _subdirs.find(dn);
@@ -312,7 +312,7 @@ DirBase *Dir::getDirByName(const char *dn, bool lazyLoad /* = true */, bool useS
         return NULL;
 
     // Fix for absolute paths: No dir should have '/' (or any other absolute dirs) as subdir.
-    if(fullnameLen() && dn[0] == '/')
+    if(fullnameLen() && (dn && dn[0] == '/'))
         return NULL;
 
     // Lazy-load file if it's not in the tree yet
