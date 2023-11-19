@@ -1264,7 +1264,7 @@ Path *Game::getWaterbubbleAt(const Vector& pos, float rad) const
 
 UnderWaterResult Game::isUnderWater(const Vector& pos, float rad) const
 {
-	UnderWaterResult ret { false, NULL };
+	UnderWaterResult ret = { false, NULL };
 	if (!game->useWaterLevel || game->waterLevel.x == 0
 		|| (useWaterLevel && waterLevel.x > 0 && pos.y-rad > waterLevel.x))
 	{

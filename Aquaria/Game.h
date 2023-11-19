@@ -90,6 +90,8 @@ class ObsRow
 public:
 	inline ObsRow(unsigned tx, unsigned ty, unsigned len)
 		: tx(tx), ty(ty), len(len) {}
+	inline ObsRow(const ObsRow& o)
+		: tx(o.tx), ty(o.ty), len(o.len) {}
 	const unsigned tx, ty, len;
 };
 
