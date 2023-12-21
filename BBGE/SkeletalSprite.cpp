@@ -137,51 +137,16 @@ void Bone::createStrip(bool vert, int num)
 }
 
 
-Quad* Bone::addFrame(const std::string &gfx)
+void Bone::addFrame(const std::string &gfx)
 {
-	renderQuad = false;
-	Quad *q = new Quad();
-	q->setTexture(gfx);
-	q->renderBeforeParent = 1;
-	addChild(q, PM_POINTER);
-	return q;
+	framegfx.push_back(gfx);
 }
 
 void Bone::showFrame(int idx)
 {
-
-	int c = 0;
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
-	{
-		RenderObject *r = (*i);
-		if (idx == c)
-		{
-			if (r->alpha == 0)
-			{
-				r->alpha = 1;
-
-				// add option to turn on alpha fading
-				//r->alpha.interpolateTo(1, t);
-			}
-			else
-			{
-				r->alpha = 1;
-			}
-		}
-		else
-		{
-			if (r->alpha == 1)
-			{
-				r->alpha = 0;
-				//r->alpha.interpolateTo(0, t*2);
-			}
-			else
-			{
-				r->alpha = 0;
-			}
-		}
-		c++;
-	}
+	size_t i = idx;
+	if(i < framegfx.size())
+		setTexture(framegfx[i]);
 }
 
 
@@ -391,6 +356,11 @@ bool BoneCommand::parse(Bone *b, SimpleIStringStream &is)
 	}
 	else if(type == "AC_RESET_PASS")
 		command = AC_RESET_PASS;
+	else if(type == "AC_SET_FH")
+	{
+		command = AC_SET_FH;
+		is >> slot;
+	}
 	else // fail
 	{
 		std::ostringstream os;
@@ -445,6 +415,19 @@ void BoneCommand::run()
 	case AC_RESET_PASS:
 		b->setRenderPass(b->originalRenderPass);
 	break;
+	case AC_SET_FH:
+	{
+		bool should = false;
+		switch(slot)
+		{
+			case 0: should = b->originalFH; break;
+			case 1: should = !b->originalFH; break;
+			case 2: should = true; break;
+			default: should = false; break;
+		}
+		b->fhTo(should);
+		break;
+	}
 	case AC_SEGS_START:
 	case AC_SEGS_STOP:
 		break;
@@ -605,7 +588,7 @@ void AnimationLayer::createTransitionAnimation(Animation& to, float time)
 
 void AnimationLayer::stopAnimation()
 {
-	if(s->loaded && getCurrentAnimation()->resetPassOnEnd)
+	if(s->loaded && getCurrentAnimation()->resetOnEnd)
 		resetPass();
 	animating = false;
 	if (!enqueuedAnimation.empty())
@@ -627,7 +610,7 @@ float AnimationLayer::getAnimationLength()
 }
 
 Animation::Animation()
-: resetPassOnEnd(false)
+: resetOnEnd(true)
 {
 }
 
@@ -980,7 +963,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		bone->SetAttribute("gfx", this->bones[i]->gfx.c_str());
 		bone->SetAttribute("pidx", this->bones[i]->pidx);
 		bone->SetAttribute("name", this->bones[i]->name.c_str());
-		bone->SetAttribute("fh", this->bones[i]->isfh());
+		bone->SetAttribute("fh", this->bones[i]->originalFH);
 		bone->SetAttribute("fv", this->bones[i]->isfv());
 		bone->SetAttribute("gc", this->bones[i]->generateCollisionMask);
 		bone->SetAttribute("cr", this->bones[i]->collideRadius);
@@ -1039,21 +1022,11 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		}
 
 
-		for (Children::iterator j = this->bones[i]->children.begin(); j != this->bones[i]->children.end(); j++)
+		for(size_t j = 0; j < this->bones[i]->framegfx.size(); ++j)
 		{
-			Bone *b = dynamic_cast<Bone*>(*j);
-			Quad *q = dynamic_cast<Quad*>(*j);
-			Particle *p = dynamic_cast<Particle*>(*j);
-			if (q && !b && !p)
-			{
-				XMLElement *frame = xml->NewElement("Frame");
-				frame->SetAttribute("gfx", q->texture->name.c_str());
-				if (q->getRenderPass() != 0)
-				{
-					frame->SetAttribute("pass", q->getRenderPass());
-				}
-				bone->InsertEndChild(frame);
-			}
+			XMLElement *frame = xml->NewElement("Frame");
+			frame->SetAttribute("gfx", this->bones[i]->framegfx[j].c_str());
+			bone->InsertEndChild(frame);
 		}
 		bones->InsertEndChild(bone);
 	}
@@ -1065,8 +1038,8 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		Animation *a = &this->animations[i];
 		XMLElement *animation = xml->NewElement("Animation");
 		animation->SetAttribute("name", a->name.c_str());
-		if(a->resetPassOnEnd)
-			animation->SetAttribute("resetPassOnEnd", a->resetPassOnEnd);
+		if(!a->resetOnEnd)
+			animation->SetAttribute("resetOnEnd", a->resetOnEnd);
 
 		for (size_t j = 0; j < a->interpolators.size(); ++j)
 		{
@@ -1206,6 +1179,7 @@ Bone *SkeletalSprite::initBone(int idx, std::string gfx, int pidx, bool rbp, std
 	b->pidx = pidx;
 	b->collideRadius = cr;
 	b->name = name;
+	b->originalFH = fh;
 
 	if (fh)
 		b->flipHorizontal();
@@ -1492,19 +1466,11 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			int frc=0;
 			while(fr)
 			{
-				Quad *q=0;
 				std::string gfx;
 				if (fr->Attribute("gfx"))
 				{
 					gfx = fr->Attribute("gfx");
-					q = newb->addFrame(gfx);
-				}
-				if (fr->Attribute("pass"))
-				{
-					if (q)
-					{
-						q->setRenderPass(atoi(fr->Attribute("pass")));
-					}
+					newb->addFrame(gfx);
 				}
 				fr = fr->NextSiblingElement("Frame");
 				frc++;
@@ -1698,7 +1664,8 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 		{
 			Animation newAnimation;
 			newAnimation.name = animation->Attribute("name");
-			newAnimation.resetPassOnEnd = animation->BoolAttribute("resetPassOnEnd");
+			if(animation->Attribute("resetOnEnd"))
+				newAnimation.resetOnEnd = animation->BoolAttribute("resetOnEnd");
 			stringToLower(newAnimation.name);
 
 			XMLElement *key = animation->FirstChildElement("Key");
@@ -1952,7 +1919,10 @@ void AnimationLayer::resetPass()
 	{
 		Bone *b = s->bones[i];
 		if (contains(b))
+		{
 			b->setRenderPass(b->originalRenderPass);
+			b->fhTo(b->originalFH);
+		}
 	}
 }
 

@@ -230,6 +230,7 @@ Game::Game() : StateObject()
 	doScreenTrans = false;
 	noSceneTransitionFadeout = false;
 	fullTilesetReload = false;
+	highestLoadedEntityID = 0;
 }
 
 Game::~Game()
@@ -908,7 +909,7 @@ EntitySaveData *Game::getEntitySaveDataForEntity(Entity *e)
 int Game::findUnusedEntityID(bool temporary) const
 {
 	const int inc = temporary ? -1 : 1;
-	int id = 0;
+	int id = temporary ? 0 : highestLoadedEntityID + 1; // never touch entity IDs that were in use in the map xml
 retry:
 	id += inc;
 	FOR_ENTITIES(i)
@@ -1228,7 +1229,7 @@ Path *Game::getWaterbubbleAt(const Vector& pos, float rad) const
 
 UnderWaterResult Game::isUnderWater(const Vector& pos, float rad) const
 {
-	UnderWaterResult ret { false, NULL };
+	UnderWaterResult ret = { false, NULL };
 	if (!game->useWaterLevel || game->waterLevel.x == 0
 		|| (useWaterLevel && waterLevel.x > 0 && pos.y-rad > waterLevel.x))
 	{
@@ -1795,9 +1796,11 @@ next_SE:
 void Game::spawnEntities(const EntitySaveData *sav, size_t n)
 {
 	std::vector<size_t> conflicting, usable;
+	int highest = 0;
 	for(size_t i = 0; i < n; ++i)
 	{
 		const EntitySaveData& es = sav[i];
+		highest = std::max(es.id, highest);
 
 		// check for ID conflicts
 		int id = es.id;
@@ -1820,6 +1823,8 @@ void Game::spawnEntities(const EntitySaveData *sav, size_t n)
 			conflicting.push_back(i);
 	}
 
+	highestLoadedEntityID = highest;
+
 	{
 		std::ostringstream os;
 		os << "Game::spawnEntities: Spawning " << usable.size() << " entities";
@@ -1838,7 +1843,7 @@ void Game::spawnEntities(const EntitySaveData *sav, size_t n)
 	}
 
 	// spawn and renumber the rest
-	int lastid = 0;
+	int lastid = highest;
 	for(size_t i = 0; i < conflicting.size(); ++i)
 	{
 		// find an unused ID

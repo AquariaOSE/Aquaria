@@ -1,5 +1,6 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6...3.20)
 PROJECT(Aquaria)
+SET(CMAKE_CXX_STANDARD 98)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
@@ -55,6 +56,9 @@ OPTION(AQUARIA_USE_GLM "Use GLM for matrix math" TRUE)
 
 OPTION(AQUARIA_DEBUG_SHOW_PATHS "Show important paths upon game start to aid in finding path problems" FALSE)
 mark_as_advanced(AQUARIA_DEBUG_SHOW_PATHS)
+
+#add_compile_options(-fsanitize=address)
+#add_link_options(-fsanitize=address)
 
 ################ Look for external libraries
 
@@ -137,14 +141,17 @@ ELSE(AQUARIA_DEMO_BUILD)
     ADD_DEFINITIONS(-DAQUARIA_BUILD_SCENEEDITOR=1)
 ENDIF(AQUARIA_DEMO_BUILD)
 
-IF(CMAKE_BUILD_TYPE STREQUAL "Release")
-    ADD_DEFINITIONS(-DNDEBUG) # MSVC defines this in release mode by default, gcc/mingw do not
-    message(STATUS "This is a release build.")
-ENDIF(CMAKE_BUILD_TYPE STREQUAL "Release")
-IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
-    ADD_DEFINITIONS(-D_DEBUG) # MSVC defines this in debug mode by default, gcc/mingw do not
-    message(STATUS "This is a debug build.")
-ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+IF(NOT MSVC)
+    # MSVC defines these in release mode by default, gcc/mingw do not
+    IF(CMAKE_BUILD_TYPE STREQUAL "Release")
+        ADD_DEFINITIONS(-DNDEBUG)
+        message(STATUS "This is a release build.")
+    ENDIF(CMAKE_BUILD_TYPE STREQUAL "Release")
+    IF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+        ADD_DEFINITIONS(-D_DEBUG)
+        message(STATUS "This is a debug build.")
+    ENDIF(CMAKE_BUILD_TYPE STREQUAL "Debug")
+ENDIF(NOT MSVC)
 
 # FIXME: These should go
 IF(UNIX)

@@ -90,7 +90,7 @@ void Precacher::doCache(ProgressCallback progress)
 		debugLog(os.str());
 		std::vector<Texture*> tmp(todo.size());
 		core->texmgr.loadBatch(&tmp[0], &todo[0], todo.size(), TextureMgr::KEEP,
-			progress ? texLoadProgressCallback : NULL, progress);
+			progress ? texLoadProgressCallback : NULL, (void*)progress);
 		todo.clear();
 		texkeep.reserve(texkeep.size() + tmp.size());
 		for(size_t i = 0; i < tmp.size(); ++i)

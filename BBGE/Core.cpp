@@ -970,17 +970,18 @@ void Core::resetTimer()
 
 void Core::setMousePosition(const Vector &p)
 {
-	float px = p.x + virtualOffX;
-	float py = p.y;
+	int ix, iy;
+	virtualCoordsToPixelPos(ix, iy, p);
 
 	SDL_Event ev = { sdlUserMouseEventID };
+	ev.motion.x = ix;
+	ev.motion.y = iy;
+	ev.motion.xrel = 0;
+	ev.motion.yrel = 0;
 	ev.motion.state = 0;
 	SDL_PushEvent(&ev);
 
-	window->warpMouse(
-		px * (float(width)/float(virtualWidth)),
-		py * (float(height)/float(virtualHeight))
-	);
+	window->warpMouse(ix, iy);
 
 	ev.motion.state = 1;
 	SDL_PushEvent(&ev);
@@ -1247,12 +1248,12 @@ void Core::setMouseConstraintCircle(const Vector& pos, float circle)
 
 
 
-int Core::getVirtualOffX()
+int Core::getVirtualOffX() const
 {
 	return virtualOffX;
 }
 
-int Core::getVirtualOffY()
+int Core::getVirtualOffY() const
 {
 	return virtualOffY;
 }
@@ -1279,12 +1280,39 @@ bool Core::doMouseConstraint()
 	return false;
 }
 
+Vector Core::pixelPosToVirtualCoords(int x, int y) const
+{
+	const float mx = float(virtualWidth)/float(getWindowWidth());
+	const float my = float(virtualHeight)/float(getWindowHeight());
+
+	return Vector(
+		(x * mx) - getVirtualOffX(),
+		 y * my
+	);
+}
+
+void Core::virtualCoordsToPixelPos(int& x, int& y, const Vector& p) const
+{
+	const float px = p.x + getVirtualOffX();
+	const float py = p.y;
+	x = px * (float(getWindowWidth())/float(virtualWidth));
+	y = py * (float(getWindowHeight())/float(virtualHeight));
+}
+
 void Core::onEvent(const SDL_Event& event)
 {
 	const bool focus = window->hasFocus();
 	if(event.type == sdlUserMouseEventID)
 	{
-		mouse._enableMotionEvents = event.motion.state;
+		mouse._enableMotionEvents = !!event.motion.state;
+		if(event.motion.state) // If 1, the generated mouse move is done and the rest is true mouse events
+		{
+			// We just set the position, so lets make sure that this mouse move isn't picked up
+			// as a relative change, ie. there was no actual user mouse move.
+			// There may be regular mouse move events after this one, which will be picked up normally.
+			mouse.lastPosition = pixelPosToVirtualCoords(event.motion.x, event.motion.y);
+			goto motion; // All the needed data are there, use this like a regular motion event
+		}
 		return;
 	}
 
@@ -1324,17 +1352,16 @@ void Core::onEvent(const SDL_Event& event)
 		}
 		break;
 
+		// This event is also sent when SDL sets the mouse position!
+		// Since there's no way to distinguish the generated event from a true "user moved the mouse" event,
+		// sdlUserMouseEventID (above) is used to guard a generated motion event.
 		case SDL_MOUSEMOTION:
 		{
-			if (focus)
+			if (focus && mouse._enableMotionEvents)
 			{
-				const float mx = float(virtualWidth)/float(getWindowWidth());
-				const float my = float(virtualHeight)/float(getWindowHeight());
-
-				mouse.position.x = ((event.motion.x) * mx) - getVirtualOffX();
-				mouse.position.y = event.motion.y * my;
-				if(mouse._enableMotionEvents)
-					mouse._wasMoved = true;
+motion:
+				mouse.position = pixelPosToVirtualCoords(event.motion.x, event.motion.y);
+				mouse._wasMoved = true;
 			}
 		}
 		break;
@@ -1438,10 +1465,7 @@ void Core::pollEvents(float dt)
 	if(mouse._wasMoved)
 	{
 		if(doMouseConstraint())
-		{
 			setMousePosition(mouse.position);
-			window->handleInput();
-		}
 		mouse.change = mouse.position - mouse.lastPosition;
 	}
 
