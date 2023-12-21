@@ -37,7 +37,8 @@ enum AnimationCommand
 	AC_SND_PLAY			,
 	AC_SEGS_STOP,
 	AC_SET_PASS,
-	AC_RESET_PASS
+	AC_RESET_PASS,
+	AC_SET_FH
 };
 
 class ParticleEffect;
@@ -58,7 +59,7 @@ public:
 		ANIM_ALL		= ANIM_POS | ANIM_ROT
 	};
 	void createStrip(bool vert, int num);
-	Quad* addFrame(const std::string &gfx);
+	void addFrame(const std::string &gfx);
 	void showFrame(int i);
 	void destroy() OVERRIDE;
 	std::string gfx;
@@ -93,6 +94,7 @@ public:
 	bool fileRenderQuad;
 	bool selectable;
 	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
+	bool originalFH;
 
 	void spawnParticlesFromCollisionMask(const char *p, unsigned intv, int layer, float rotz = 0);
 	Vector getCollisionMaskNormal(Vector pos, float dist) const;
@@ -107,6 +109,8 @@ public:
 	std::vector<Vector> collisionMask;
 	std::vector<Vector> transformedCollisionMask;
 	float collisionMaskRadius;
+	std::vector<std::string> framegfx;
+
 };
 
 class BoneCommand
@@ -181,7 +185,7 @@ public:
 	size_t getSkeletalKeyframeIndex(SkeletalKeyframe *skey);
 	size_t getNumKeyframes();
 	void reverse();
-	bool resetPassOnEnd;
+	bool resetOnEnd;
 
 	BoneGridInterpolator *getBoneGridInterpolator(size_t boneIdx);
 	typedef std::vector <BoneGridInterpolator> Interpolators;
