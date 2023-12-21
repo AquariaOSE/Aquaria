@@ -3207,6 +3207,10 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 			doAlphabetInputKey(KEY_MINUS, '-', (char*)&map, &text, '_');
 
 			doAlphabetInputKey(KEY_TILDE, '~', (char*)&map, &text, '~');
+			doAlphabetInputKey(KEY_EQUALS, '=', (char*)&map, &text);
+			doAlphabetInputKey(KEY_LBRACKET, '(', (char*)&map, &text);
+			doAlphabetInputKey(KEY_RBRACKET, ')', (char*)&map, &text);
+			doAlphabetInputKey(KEY_SEMICOLON, ';', (char*)&map, &text);
 		}
 
 		if (getKeyState(KEY_BACKSPACE))
