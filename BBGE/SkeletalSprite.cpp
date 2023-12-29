@@ -1460,24 +1460,6 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					e->load(pfile);
 				}
 			}
-			XMLElement *fr=0;
-			fr = bone->FirstChildElement("Frame");
-			int frc=0;
-			while(fr)
-			{
-				std::string gfx;
-				if (fr->Attribute("gfx"))
-				{
-					gfx = fr->Attribute("gfx");
-					newb->addFrame(gfx);
-				}
-				fr = fr->NextSiblingElement("Frame");
-				frc++;
-			}
-			if (frc)
-			{
-				newb->showFrame(0);
-			}
 			if (bone->Attribute("pass"))
 			{
 				int pass = atoi(bone->Attribute("pass"));
@@ -1586,6 +1568,26 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					int ord = atoi(gdo);
 					grid->drawOrder = (GridDrawOrder)ord;
 				}
+			}
+			if(XMLElement *fr = bone->FirstChildElement("Frame"))
+			{
+				int frc = 0;
+				while(fr)
+				{
+					std::string gfx;
+					if (fr->Attribute("gfx"))
+					{
+						gfx = fr->Attribute("gfx");
+						newb->addFrame(gfx);
+					}
+					fr = fr->NextSiblingElement("Frame");
+					frc++;
+				}
+				if (frc)
+				{
+					newb->showFrame(0);
+				}
+				newb->renderQuad = true;
 			}
 			bone = bone->NextSiblingElement("Bone");
 		}
