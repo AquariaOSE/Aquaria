@@ -162,6 +162,9 @@ static void dropAll(TileData& t)
 
 void TileStorage::deleteSome(const size_t* indices, size_t n)
 {
+	if(!n)
+		return;
+
 	std::vector<TileData> tmp;
 	tmp.swap(tiles);
 	tiles.reserve(tmp.size() - n);
