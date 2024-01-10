@@ -112,7 +112,7 @@ void DarkLayer::preRender()
 		if (useFrameBuffer)
 			frameBuffer.startCapture();
 
-		glClearColor(1,1,1,1);
+		glClearColor(1,1,1,0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
 		core->render(layer, layer, false);
