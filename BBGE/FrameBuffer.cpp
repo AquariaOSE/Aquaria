@@ -112,10 +112,9 @@ bool FrameBuffer::init(int width, int height, bool fitToScreen)
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR );
 	glTexParameteri( GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR );
 
-	// FIXME: check for GL_ARB_texture_float; otherwise stick with old format
-	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA16F_ARB,
+	glTexImage2D( GL_TEXTURE_2D, 0, GL_RGBA,
 				width, height,
-				0, GL_RGBA, GL_FLOAT, 0 );
+				0, GL_RGBA, GL_UNSIGNED_BYTE, 0 );
 
 
 	// Put together
