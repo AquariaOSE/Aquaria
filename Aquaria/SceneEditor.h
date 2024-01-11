@@ -217,7 +217,7 @@ protected:
 
 	void addMainMenuItem(const std::string &label, int bid);
 
-	void loadSceneByName();
+	bool loadSceneByName();
 	void reloadScene();
 
 	void mouseButtonLeft();

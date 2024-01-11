@@ -1846,7 +1846,7 @@ void SceneEditor::rotateElement2()
 		placer->rotation.z += 360;
 }
 
-void SceneEditor::loadSceneByName()
+bool SceneEditor::loadSceneByName()
 {
 	std::string s = dsq->getUserInputString("Enter Name of Map to Load");
 	if (!s.empty())
@@ -1854,7 +1854,9 @@ void SceneEditor::loadSceneByName()
 		game->noSceneTransitionFadeout = true;
 		game->fullTilesetReload = true;
 		game->transitionToScene(s);
+		return true;
 	}
+	return false;
 }
 
 void SceneEditor::reloadScene()
@@ -1869,22 +1871,27 @@ void SceneEditor::reloadScene()
 
 void SceneEditor::loadScene()
 {
+	bool reload;
 	if (core->getShiftState())
 	{
-		loadSceneByName();
+		reload = loadSceneByName();
 	}
 	else
 	{
 		reloadScene();
+		reload = true;
 	}
 
-	// HACK: reload stuff when (re-) loading a map this way
-	particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
-	Shot::loadShotBank(dsq->shotBank1, dsq->shotBank2);
-	game->loadEntityTypeList();
-	dsq->loadTileEffects();
-	dsq->continuity.loadSongBank();
-	dsq->loadStringBank();
+	if(reload)
+	{
+		// HACK: reload stuff when (re-) loading a map this way
+		particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
+		Shot::loadShotBank(dsq->shotBank1, dsq->shotBank2);
+		game->loadEntityTypeList();
+		dsq->loadTileEffects();
+		dsq->continuity.loadSongBank();
+		dsq->loadStringBank();
+	}
 }
 
 void SceneEditor::saveScene()
