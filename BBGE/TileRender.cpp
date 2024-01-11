@@ -5,6 +5,21 @@
 #include "RenderGrid.h"
 #include "RenderObject.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+struct StaticData
+{
+	glm::mat4 fh, fv;
+	StaticData()
+		: fh(glm::rotate(glm::mat4(), 180.0f, glm::vec3(0,1,0)))
+		, fv(glm::rotate(glm::mat4(), 180.0f, glm::vec3(1,0,0)))
+	{
+	}
+};
+
+static const StaticData staticdata;
+
 
 TileRender::TileRender(const TileStorage& tiles)
 	: storage(tiles), renderBorders(false)
@@ -57,6 +72,10 @@ void TileRender::onRender(const RenderState& rs) const
 		glLineWidth(2);
 
 	RenderState rx(rs);
+
+	// FIXME: this is such a hack. remove this once we pass matrices explicitly
+	glm::mat4 originalMat;
+	glGetFloatv(GL_MODELVIEW_MATRIX, &originalMat[0][0]);
 
 	// prepare. get parallax scroll factors
 	const RenderObjectLayer& rl = core->renderObjectLayers[this->layer];
@@ -131,8 +150,7 @@ void TileRender::onRender(const RenderState& rs) const
 			glColor4f(rs.color.x, rs.color.y, rs.color.z, alpha);
 		}
 
-		glPushMatrix();
-		glTranslatef(pos.x, pos.y, pos.z);
+		glm::mat4 m = glm::translate(originalMat, glm::vec3(pos.x, pos.y, pos.z));
 
 		// HACK: Due to a renderer bug in older versions, vertical flip is ignored
 		// when a grid-based tile effect is applied.
@@ -148,22 +166,25 @@ void TileRender::onRender(const RenderState& rs) const
 		if ((effflag & (TILEFLAG_FH | TILEFLAG_FV)) == (TILEFLAG_FH | TILEFLAG_FV))
 			effrot += 180;
 
-		glRotatef(effrot, 0, 0, 1);
+		m = glm::rotate(m, effrot, glm::vec3(0,0,1));
+
 
 		switch(effflag & (TILEFLAG_FH | TILEFLAG_FV))
 		{
 			case TILEFLAG_FH:
-				glRotatef(180, 0, 1, 0);
+				m *= staticdata.fh;
 				break;
 
 			case TILEFLAG_FV:
-				glRotatef(180, 1, 0, 0);
+				m *= staticdata.fv;
 				break;
 
 			default: ; // both or none set, nothing to do
 		}
 
-		glScalef(sw, sh, 1);
+		m = glm::scale(m, glm::vec3(sw, sh, 1));
+
+		glLoadMatrixf(&m[0][0]);
 
 
 		const RenderGrid *grid = tile.getGrid();
@@ -199,12 +220,9 @@ void TileRender::onRender(const RenderState& rs) const
 				glDrawArrays(GL_LINE_LOOP, 0, 4);
 			}
 		}
-
-		glPopMatrix();
 	}
 
-	glBindBufferARB(GL_ARRAY_BUFFER_ARB, 0);
-	glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, 0);
+	glLoadMatrixf(&originalMat[0][0]);
 
 	RenderObject::lastTextureApplied = lastTexId;
 }
