@@ -7,12 +7,13 @@ struct TexCoordBox;
 
 enum BufUsage
 {
-    // usage
-    GPUBUF_DYNAMIC    = 0x00,
-    GPUBUF_STATIC     = 0x01,
     // binding point
     GPUBUF_VERTEXBUF  = 0x00,
-    GPUBUF_INDEXBUF   = 0x02
+    GPUBUF_INDEXBUF   = 0x01,
+    GPUBUF_BINDING_MASK = 0x01,
+    // usage
+    GPUBUF_DYNAMIC    = 0x00,
+    GPUBUF_STATIC     = 0x10
 };
 
 enum BufDataType
@@ -87,12 +88,13 @@ private:
     bool _commitWrite(size_t used);
 
     unsigned _bufid;
-    unsigned _binding;
+    unsigned _gl_binding;
     size_t _size;
     size_t _h_cap;
     void *_h_data;
     size_t _d_cap;
     void *_d_map;
+    const unsigned _gl_usage;
     const unsigned _usage;
     BufDataType _datatype;
 

@@ -6,9 +6,8 @@
 
 bool DynamicGPUBuffer::_HasARB = false;
 
-static unsigned s_lastVertexBuffer = 0;
-static unsigned s_lastIndexBuffer = 0;
-static void *s_lastHostPtr = NULL;
+static unsigned s_lastBuffer[GPUBUF_BINDING_MASK + 1]; // index via (usage & GPUBUF_BINDING_MASK)
+static void *s_lastPtr = NULL;
 static BufDataType s_lastDataType = BufDataType(-1);
 static unsigned s_lastState = 0; // StateBits
 
@@ -33,13 +32,14 @@ void DynamicGPUBuffer::StaticInit()
 
 DynamicGPUBuffer::DynamicGPUBuffer(unsigned usage)
     : _bufid(0)
-    , _binding((usage & GPUBUF_INDEXBUF) ? GL_ELEMENT_ARRAY_BUFFER_ARB : GL_ARRAY_BUFFER_ARB)
+    , _gl_binding((usage & GPUBUF_INDEXBUF) ? GL_ELEMENT_ARRAY_BUFFER_ARB : GL_ARRAY_BUFFER_ARB)
     , _size(0)
     , _h_cap(0)
     , _h_data(NULL)
     , _d_cap(0)
     , _d_map(NULL)
-    , _usage(toGlUsage(usage))
+    , _gl_usage(toGlUsage(usage))
+    , _usage(usage)
     , _datatype(BufDataType(-1))
 {
 }
@@ -51,8 +51,8 @@ DynamicGPUBuffer::~DynamicGPUBuffer()
 
 void* DynamicGPUBuffer::_allocBytes(size_t bytes)
 {
-    if(s_lastHostPtr == _h_data)
-        s_lastHostPtr = NULL;
+    if(s_lastPtr == _h_data)
+        s_lastPtr = NULL;
 
     void *p = realloc(_h_data, bytes);
     if(p)
@@ -83,12 +83,18 @@ void* DynamicGPUBuffer::beginWrite(BufDataType type, size_t newsize, unsigned ac
 
     if(_HasARB)
     {
-        glBindBufferARB(_binding, _ensureDBuf());
+        const unsigned id = _ensureDBuf();
+        unsigned& last = s_lastBuffer[_usage & GPUBUF_BINDING_MASK];
+        if(id != last)
+        {
+            last = id;
+            glBindBufferARB(_gl_binding, id);
+        }
         if(!(access & GPUACCESS_HOSTCOPY))
         {
             _d_cap = newsize;
-            glBufferDataARB(_binding, newsize, NULL, _usage); // orphan buffer
-            void *p = glMapBufferARB(_binding, GL_WRITE_ONLY_ARB);
+            glBufferDataARB(_gl_binding, newsize, NULL, _gl_usage); // orphan buffer
+            void *p = glMapBufferARB(_gl_binding, GL_WRITE_ONLY_ARB);
             _d_map = p;
             if(p)
                 return p;
@@ -116,7 +122,7 @@ bool DynamicGPUBuffer::_commitWrite(size_t used)
         if(_d_map)
         {
             assert(used <= _d_cap);
-            bool ok = glUnmapBufferARB(_binding); // can fail
+            bool ok = glUnmapBufferARB(_gl_binding); // can fail
             if(ok)
                 _d_map = NULL;
             return ok;
@@ -126,11 +132,11 @@ bool DynamicGPUBuffer::_commitWrite(size_t used)
         assert(_h_data);
         assert(used <= _h_cap);
         if(used <= _d_cap)
-            glBufferSubDataARB(_binding, 0, used, _h_data); // update existing buffer
+            glBufferSubDataARB(_gl_binding, 0, used, _h_data); // update existing buffer
         else
         {
             _d_cap = used;
-            glBufferDataARB(_binding, used, _h_data, _usage); // alloc new buffer
+            glBufferDataARB(_gl_binding, used, _h_data, _gl_usage); // alloc new buffer
         }
     }
     // else nothing to do
@@ -145,8 +151,14 @@ void DynamicGPUBuffer::upload(BufDataType type, const void* data, size_t size)
 
     if(_HasARB)
     {
-        glBindBufferARB(_binding, _ensureDBuf());
-        glBufferDataARB(_binding, size, data, _usage);
+        const unsigned id = _ensureDBuf();
+        unsigned& last = s_lastBuffer[_usage & GPUBUF_BINDING_MASK];
+        if(id != last)
+        {
+            last = id;
+            glBindBufferARB(_gl_binding, id);
+        }
+        glBufferDataARB(_gl_binding, size, data, _gl_usage);
     }
     else
         memcpy(_ensureBytes(size), data, size);
@@ -173,30 +185,22 @@ void DynamicGPUBuffer::apply(BufDataType usetype) const
 
     const unsigned bufid = this->_bufid;
 
-    void *p;
-    if(bufid)
-    {
-        p = NULL;
-        //if(bufid != s_lastVertexBuffer)
-        //    glBindBufferARB(GL_ARRAY_BUFFER_ARB, bufid);
-    }
-    else
-    {
-        p = (void*)this->_h_data;
-        //assert(p != s_lastHostPtr); // check that it's no redundant state change
-        //if(p == s_lastHostPtr && usetype == s_lastDataType) // don't need to check for datatype since that's const for the buffer with that ptr
-        //    return;
-    }
+    void *p = bufid ? NULL : (void*)this->_h_data;
 
     assert(bufid || p);
 
-    glBindBufferARB(GL_ARRAY_BUFFER_ARB, bufid);
+    if(bufid != s_lastBuffer[GPUBUF_VERTEXBUF])
+    {
+        s_lastBuffer[GPUBUF_VERTEXBUF] = bufid;
+        glBindBufferARB(GL_ARRAY_BUFFER_ARB, bufid);
+    }
+    else if(p == s_lastPtr && usetype == s_lastDataType)
+        return;
 
-    //if(bufid == s_lastVertexBuffer && usetype == s_lastDataType && p == s_lastHostPtr)
-    //    return;
+    // --- something is different compared to last time, setup pointers ---
 
     s_lastDataType = usetype;
-    s_lastVertexBuffer = bufid;
+    s_lastPtr = p;
 
     unsigned u = usetype; // always want unsigned shifts
     assert((u & 0xf) < Countof(s_gltype));
@@ -242,16 +246,16 @@ unsigned DynamicGPUBuffer::_ensureDBuf()
 
 void DynamicGPUBuffer::dropBuffer()
 {
-    if(s_lastHostPtr == _h_data)
-        s_lastHostPtr = NULL;
+    if(s_lastPtr == _h_data)
+        s_lastPtr = NULL;
     free(_h_data);
     _h_data = NULL;
     if(_bufid)
     {
-        if(s_lastVertexBuffer == _bufid)
-            s_lastVertexBuffer = 0;
-        if(s_lastIndexBuffer == _bufid)
-            s_lastIndexBuffer = 0;
+        if(s_lastBuffer[GPUBUF_VERTEXBUF] == _bufid)
+            s_lastBuffer[GPUBUF_VERTEXBUF] = 0;
+        if(s_lastBuffer[GPUBUF_INDEXBUF] == _bufid)
+            s_lastBuffer[GPUBUF_INDEXBUF] = 0;
 
         glDeleteBuffersARB(1, &_bufid);
         _bufid = 0;
@@ -268,17 +272,17 @@ void DynamicGPUBuffer::dropBuffer()
 
 void DynamicGPUBuffer::drawElements(unsigned glmode, size_t n, size_t first) const
 {
-    assert(_binding == GL_ELEMENT_ARRAY_BUFFER_ARB);
+    assert(_gl_binding == GL_ELEMENT_ARRAY_BUFFER_ARB);
     assert(s_gltype[_datatype & 0xf] == GL_SHORT);
     //assert(getBoundBuffer(GL_ARRAY_BUFFER_BINDING)); // FIXME: this assert is wrong if indices are on the host
 
-    unsigned id = _bufid;
+    const unsigned id = _bufid;
 
-    //if(s_lastIndexBuffer != id)
-    //{
-    //    s_lastIndexBuffer = id;
+    if(s_lastBuffer[GPUBUF_INDEXBUF] != id)
+    {
+        s_lastBuffer[GPUBUF_INDEXBUF] = id;
         glBindBufferARB(GL_ELEMENT_ARRAY_BUFFER_ARB, id);
-    //}
+    }
 
     const unsigned short *p = (unsigned short*)(id ? NULL : _h_data);
     assert(p || id);
