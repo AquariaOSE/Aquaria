@@ -531,7 +531,6 @@ void RenderObject::debugRenderPaths() const
 		return;
 
 	glLineWidth(4);
-	glEnable(GL_BLEND);
 
 	glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
 	glBindTexture(GL_TEXTURE_2D, 0);

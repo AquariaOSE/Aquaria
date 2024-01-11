@@ -265,15 +265,14 @@ void Bone::renderCollision(const RenderState& rs) const
 {
 	if (!collisionMask.empty())
 	{
-		glPushAttrib(GL_ALL_ATTRIB_BITS);
 		glPushMatrix();
 		glBindTexture(GL_TEXTURE_2D, 0);
+		RenderObject::lastTextureApplied = 0;
 
 		glLoadIdentity();
 		core->setupRenderPositionAndScale();
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		rs.gpu.setBlend(BLEND_DEFAULT);
 
 		glColor4f(1,1,0,0.5);
 
@@ -290,10 +289,7 @@ void Bone::renderCollision(const RenderState& rs) const
 			glTranslatef(-collide.x, -collide.y, 0);
 		}
 
-
-		glDisable(GL_BLEND);
 		glPopMatrix();
-		glPopAttrib();
 	}
 	else
 		CollideQuad::renderCollision(rs);

@@ -24,6 +24,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Base.h"
 #include "FrameBuffer.h"
 
+struct RenderState;
+
 class DarkLayer
 {
 public:
@@ -32,7 +34,7 @@ public:
 	void toggle(bool on);
 	void setLayers(int layer, int renderLayer);
 	void preRender();
-	void render() const;
+	void render(const RenderState& rs) const;
 	int getLayer();
 	int getRenderLayer();
 	bool isUsed();
@@ -43,7 +45,6 @@ public:
 	bool useFrameBuffer;
 	FrameBuffer frameBuffer;
 protected:
-	float stretch;
 	int quality;
 	bool active;
 	int layer, renderLayer;

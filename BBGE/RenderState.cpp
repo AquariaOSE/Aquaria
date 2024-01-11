@@ -33,9 +33,9 @@ GPUState::GPUState()
 void GPUState::setBlend(BlendType bt)
 {
 	compile_assert(Countof(s_blendParams) == _BLEND_MAXSIZE);
-	// FIXME: comment this back in once ALL other occurances of glBlendFunc() have been removed
-	//if(_blendType == bt)
-	//	return;
+
+	if(_blendType == bt)
+		return;
 
 	_blendType = bt;
 	if (unsigned(bt) < _BLEND_MAXSIZE)
@@ -49,4 +49,9 @@ void GPUState::setBlend(BlendType bt)
 		glDisable(GL_BLEND);
 		glDisable(GL_ALPHA_TEST);
 	}
+}
+
+void GPUState::invalidateBlend()
+{
+	_blendType = _BLEND_MAXSIZE;
 }

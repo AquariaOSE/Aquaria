@@ -418,13 +418,11 @@ void CollideQuad::renderCollision(const RenderState& rs) const
 		glTranslatef(position.x+offset.x, position.y+offset.y, 0);
 
 		glTranslatef(internalOffset.x, internalOffset.y, 0);
-		glEnable(GL_BLEND);
 
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		rs.gpu.setBlend(BLEND_DEFAULT);
+
 		glColor4f(1,0,0,0.5);
 		drawCircle(collideRadius, 8);
-		glDisable(GL_BLEND);
-		glTranslatef(offset.x, offset.y,0);
 		glPopMatrix();
 	}
 }

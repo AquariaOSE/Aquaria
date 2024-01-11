@@ -1827,7 +1827,7 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 			if (i == darkLayer.getRenderLayer())
 			{
-				darkLayer.render();
+				darkLayer.render(rs);
 			}
 
 			if (i == darkLayer.getLayer() && startLayer != i)
@@ -2087,7 +2087,6 @@ unsigned char *Core::grabScreenshot(size_t x, size_t y, size_t w, size_t h)
 	unsigned char * const imageData = new unsigned char[size];
 
 	glPushAttrib(GL_ALL_ATTRIB_BITS);
-	glDisable(GL_BLEND);
 	glDisable(GL_ALPHA_TEST); glDisable(GL_BLEND);
 	glDisable(GL_DEPTH_TEST); glDisable(GL_DITHER); glDisable(GL_FOG);
 	glDisable(GL_LIGHTING); glDisable(GL_LOGIC_OP);

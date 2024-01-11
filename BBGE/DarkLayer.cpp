@@ -30,7 +30,6 @@ DarkLayer::DarkLayer()
 	renderLayer = -1;
 	texture = 0;
 
-	stretch = 4;
 	format = GL_RGB;			//FIXED?: used to be GL_LUMINANCE, that might have been causing problems
 	useFrameBuffer = true;		//BUG?: will do this even if frame buffer is off in usersettings...
 }
@@ -131,7 +130,7 @@ void DarkLayer::preRender()
 	}
 }
 
-void DarkLayer::render() const
+void DarkLayer::render(const RenderState& rs) const
 {
 	if (renderLayer != -1)
 	{
@@ -146,33 +145,15 @@ void DarkLayer::render() const
 		else
 			glBindTexture(GL_TEXTURE_2D,texture);
 
-
-
-		glEnable(GL_BLEND);
-
-
-
-		// subtractive blend! (using color)
-		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-
-		GLenum error = glGetError();
-		if (error == GL_INVALID_ENUM)
-		{
-			debugLog("darkLayer: invalid enum");
-		}
-		else if (error == GL_INVALID_OPERATION)
-		{
-			debugLog("darkLayer: invalid operation");
-		}
-
-
+		rs.gpu.setBlend(BLEND_MULT);
 
 		glColor4f(1,1,1,1);
 
-		float width  =  core->getWindowWidth();
-		float height =  core->getWindowHeight();
-		float offX   = -(core->getVirtualOffX() * width / core->getVirtualWidth());
-		float offY   = -(core->getVirtualOffY() * height / core->getVirtualHeight());
+		const float width  =  core->getWindowWidth();
+		const float height =  core->getWindowHeight();
+		const float offX   = -(core->getVirtualOffX() * width / core->getVirtualWidth());
+		const float offY   = -(core->getVirtualOffY() * height / core->getVirtualHeight());
+		const float stretch = 4;
 
 		glBegin(GL_QUADS);
 

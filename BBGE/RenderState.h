@@ -14,6 +14,7 @@ struct GPUState
     GPUState();
 
     void setBlend(BlendType bt);
+    void invalidateBlend();
 
 private:
     BlendType _blendType;

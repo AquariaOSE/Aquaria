@@ -138,11 +138,9 @@ void Web::onUpdate(float dt)
 void Web::onRender(const RenderState& rs) const
 {
 	glBindTexture(GL_TEXTURE_2D, 0);
-
+	RenderObject::lastTextureApplied = 0;
 
 	glLineWidth(4);
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	glBegin(GL_LINES);
 	if(points.size() > 0) {

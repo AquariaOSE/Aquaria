@@ -54,7 +54,6 @@ void Strand::onRender(const RenderState& rs) const
 	const int numSegments = segments.size();
 	if (numSegments == 0) return;
 
-	glEnable(GL_BLEND);
 	glTranslatef(-position.x, -position.y, 0);
 	glLineWidth(1);
 

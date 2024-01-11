@@ -152,8 +152,7 @@ void AfterEffectManager::render(const RenderState& rs) const
 
 	glPushMatrix();
 
-	glDisable (GL_ALPHA_TEST);
-	glDisable(GL_BLEND);
+	rs.gpu.setBlend(BLEND_DISABLED);
 
 	core->frameBuffer.endCapture();
 	glTranslatef(core->cameraPos.x, core->cameraPos.y, 0);

@@ -498,7 +498,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 		{
 			texWaterBit->apply();
 
-			glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+			rs.gpu.setBlend(BLEND_ADD);
 			glColor4f(0.1f, 0.2f, 0.9f, 0.4f*lightLevel);
 			bool curColorIsWater = true;
 
@@ -579,7 +579,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 					}
 				}
 			}
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			rs.gpu.setBlend(BLEND_DEFAULT);
 		}
 	}
 
@@ -661,7 +661,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 
 	texHealthBar->apply();
 
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	rs.gpu.setBlend(BLEND_DEFAULT);
 	glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, 0.6f);
 
 	glBegin(GL_QUADS);
@@ -682,7 +682,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 	glEnd();
 
 
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+	rs.gpu.setBlend(BLEND_ADD);
 
 	int jump = 0;
 
@@ -713,7 +713,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 	}
 	glEnd();
 
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	rs.gpu.setBlend(BLEND_DEFAULT);
 	glColor4f(1,1,1,1);
 
 	texMarker->apply();
@@ -731,10 +731,6 @@ void MiniMapRender::onRender(const RenderState& rs) const
 		glTexCoord2f(0, 0);
 		glVertex2f(x-healthMarkerSize, y-healthMarkerSize);
 	glEnd();
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glColor4f(1,1,1,1);
 }
 
 void MiniMapRender::renderIcon(const MinimapIcon *ico, const Vector& pos) const
