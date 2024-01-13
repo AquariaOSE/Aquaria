@@ -29,7 +29,8 @@ enum BufDataType
     GPUBUFTYPE_VEC2_TC        = 0x00081021,  // xyuv xyuv xyuv
     GPUBUFTYPE_VEC2_TC_RGBA   = 0x10082021,   // xyuvrgba xyuvrgba xyuvrgba
     //                            ccoossnt
-    GPUBUFTYPE_VEC2_TC_RGBA_BUT_NO_COLOR = GPUBUFTYPE_VEC2_TC_RGBA & 0xffffff
+    GPUBUFTYPE_VEC2_TC_RGBA_BUT_NO_COLOR = GPUBUFTYPE_VEC2_TC_RGBA & 0xffffff,
+    GPUBUFTYPE_UVEC2          = 0x00000420
 };
 
 enum AccessFlags

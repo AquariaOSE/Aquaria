@@ -22,39 +22,142 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Game.h"
 #include "RenderBase.h"
 
-GridRender::GridRender(ObsType obsType) : RenderObject()
+
+static void collectRows(std::vector<ObsRow>& rows, ObsType obs)
+{
+	const TileVector gs = game->getGridSize();
+	const size_t endX = std::min(gs.x, MAX_GRID);
+	const size_t endY = std::min(gs.y, MAX_GRID);
+
+	for(size_t y = 0; y < endY; ++y)
+	{
+		bool on = game->getGridRaw(TileVector(0, y)) == obs;
+		size_t startx = 0;
+		for(size_t x = 1; x < endX; ++x)
+		{
+			const ObsType ot = game->getGridRaw(TileVector(x, y));
+			if(ot == obs)
+			{
+				if(!on)
+				{
+					startx = x;
+					on = true;
+				}
+			}
+			else
+			{
+				if(on)
+				{
+					// previous tile is the last one, so -1
+					rows.push_back(ObsRow(startx, y, x - startx));
+					on = false;
+				}
+			}
+		}
+		if(on)
+			rows.push_back(ObsRow(startx, y, endX - startx));
+	}
+}
+
+GridRender::GridRender(ObsType obsType)
+	: RenderObject()
+	, vbo(GPUBUF_VERTEXBUF | GPUBUF_STATIC)
+	, primsToDraw(0)
+	, obsType(obsType)
+	//, ibo(GPUBUF_INDEXBUF | GPUBUF_STATIC)
+	, markedForRebuild(true)
 {
 	color = Vector(1, 0, 0);
 
 	position.z = 5;
 	cull = false;
 	alpha = 0.5f;
-	this->obsType = obsType;
+	this->scale.x = TILE_SIZE;
+	this->scale.y = TILE_SIZE;
 }
 
-void GridRender::onUpdate(float dt)
+void GridRender::rebuildBuffers()
 {
-	RenderObject::onUpdate(dt);
+	std::vector<ObsRow> rows;
+	collectRows(rows, obsType);
+	rebuildBuffers(rows);
 }
 
-inline static void doRenderGrid(int x, int startCol, int endCol)
+void GridRender::rebuildBuffers(const std::vector<ObsRow>& rows)
 {
-	const int drawx1 = x*TILE_SIZE;
-	const int drawx2 = (x+1)*TILE_SIZE;
-	const int drawy1 = startCol*TILE_SIZE;
-	const int drawy2 = (endCol+1)*TILE_SIZE;
+	markedForRebuild = false;
 
-	glBegin(GL_QUADS);
-	glVertex3i(drawx1, drawy2, 0.0f);
-	glVertex3i(drawx2, drawy2, 0.0f);
-	glVertex3i(drawx2, drawy1, 0.0f);
-	glVertex3i(drawx1, drawy1, 0.0f);
-	glEnd();
+	const size_t N = rows.size();
+	primsToDraw = N * 6;
+	if(!N)
+		return;
 
+	// 2 tris = 6 verts  per ObsRow, each vertex is 2x uint16, makes 24b per quad.
+	// We could use indexed rendering and use 2 verts less (16b),
+	// but the 6 indices would cost another 12b so it's definitely cheaper to send
+	// triangle soup to the gpu in this case, since each vertex is only 4 bytes.
+	const size_t szv = N * 6 * 2 * sizeof(unsigned short);
+
+	do
+	{
+		unsigned short *pxy =  (unsigned short*)vbo.beginWrite(GPUBUFTYPE_UVEC2, szv, GPUACCESS_DEFAULT);
+
+		for(size_t i = 0; i < N; ++i)
+		{
+			const ObsRow& row = rows[i];
+
+			// Don't bother to transform to float. The GPU can do that better.
+			// The scale factor of a GridRender is set to TILE_SIZE, that pre-bakes the
+			// required scaling multiplication into the object scale so we can get away
+			// with using raw, unscaled values here
+
+			const unsigned short x0 = row.tx;
+			const unsigned short x1 = row.tx + row.len;
+			const unsigned short y0 = row.ty;
+			const unsigned short y1 = row.ty + 1;
+
+			// top left triangle
+			*pxy++ = x0;
+			*pxy++ = y0;
+
+			*pxy++ = x1;
+			*pxy++ = y0;
+
+			*pxy++ = x0;
+			*pxy++ = y1;
+
+			// bottom right triangle
+			*pxy++ = x1;
+			*pxy++ = y0;
+
+			*pxy++ = x1;
+			*pxy++ = y1;
+
+			*pxy++ = x0;
+			*pxy++ = y1;
+		}
+	}
+	while(!vbo.commitWrite());
+}
+
+void GridRender::rebuildBuffersIfNecessary()
+{
+	if(markedForRebuild)
+		rebuildBuffers();
+}
+
+void GridRender::rebuildBuffersIfNecessary(const std::vector<ObsRow>& rows)
+{
+	if(markedForRebuild)
+		rebuildBuffers(rows);
 }
 
 void GridRender::onRender(const RenderState& rs) const
 {
+	if(!primsToDraw)
+		return;
+
+	/*
 	const signed char obsType = this->obsType;
 	Vector camPos = core->cameraPos;
 	camPos.x -= core->getVirtualOffX() * (core->invGlobalScale);
@@ -75,41 +178,13 @@ void GridRender::onRender(const RenderState& rs) const
 		endY = MAX_GRID-1;
 	if (startY > endY)
 		return;
-	for (int x = startX; x <= endX; ++x)
-	{
-		const unsigned char *gridColumn = game->getGridColumn(x);
-		int startCol = -1, y;
+	*/
 
-		// fast-forward to next drawable byte
-		if(const unsigned char *next = (const unsigned char*)memchr(gridColumn + startY, obsType, endY - startY + 1)) // find next byte with correct obs type
-		{
-			y = next - gridColumn; // will get incremented right away, which is okay, because we alrady set startCol
-			startCol = y;
-		}
-		else
-			continue; // nothing do draw in this column
+	// TODO: keep track of prim index at which a row starts
+	// then horizontally span only as much prims as are necessary?
 
-		for ( ; y < endY; ++y)
-		{
-			if (gridColumn[y] != obsType)
-			{
-				doRenderGrid(x, startCol, y - 1);
-
-				// fast-forward to next drawable byte
-				if(const unsigned char *next = (const unsigned char*)memchr(gridColumn + y, obsType, endY - y)) // find next byte with correct obs type
-				{
-					y = next - gridColumn; // will get incremented right away, which is okay, because we alrady set startCol
-					startCol = y;
-				}
-				else
-					break;
-			}
-		}
-		if (y == endY)
-		{
-			doRenderGrid(x, startCol, y);
-		}
-	}
+	vbo.apply();
+	glDrawArrays(GL_TRIANGLES, 0, primsToDraw);
 }
 
 SongLineRender::SongLineRender()

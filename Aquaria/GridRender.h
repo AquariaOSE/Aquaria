@@ -22,8 +22,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define GRIDRENDER_H
 
 #include "GameEnums.h"
+#include "GameStructs.h"
 #include "../BBGE/Quad.h"
 #include "ActionMapper.h"
+#include "VertexBuffer.h"
 
 class GemMover;
 struct MinimapIcon;
@@ -36,9 +38,18 @@ class GridRender : public RenderObject
 {
 public:
 	GridRender(ObsType obsType);
+	void rebuildBuffers();
+	void rebuildBuffers(const std::vector<ObsRow>& rows);
+	void rebuildBuffersIfNecessary();
+	void rebuildBuffersIfNecessary(const std::vector<ObsRow>& rows);
+	void markForRebuild() { markedForRebuild = true; }
+	ObsType getObs() const { return obsType; }
 protected:
-	ObsType obsType;
-	void onUpdate(float dt) OVERRIDE;
+	DynamicGPUBuffer vbo;
+	size_t primsToDraw;
+	const ObsType obsType;
+	bool markedForRebuild;
+
 	void onRender(const RenderState& rs) const OVERRIDE;
 };
 

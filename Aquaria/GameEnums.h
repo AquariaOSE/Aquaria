@@ -14,6 +14,7 @@ enum ObsType
 	OT_BLACK		= 0x01,
 	OT_BLACKINVIS	= 0x02,  // same as OT_BLACK, but not drawn
 	OT_MASK_BLACK	= OT_BLACK | OT_BLACKINVIS,
+	OT_MASK_NOTBLACK = ~OT_MASK_BLACK,
 
 	// set by tiles
 	OT_INVISIBLE	= 0x04,
@@ -31,7 +32,7 @@ enum ObsType
 	OT_USER2 = 0x80,
 	OT_USER_MASK = OT_USER1 | OT_USER2,
 
-	OT_OUTOFBOUNDS = 0xff
+	OT_OUTOFBOUNDS = 0xff, // all bits set
 };
 
 

@@ -18,6 +18,9 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
+#include "Game.h"
+#include <algorithm>
 #include "../BBGE/Gradient.h"
 #include "../BBGE/AfterEffect.h"
 #include "../BBGE/MathFunctions.h"
@@ -31,7 +34,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ReadXML.h"
 #include "RenderBase.h"
 
-#include "Game.h"
 #include "GridRender.h"
 #include "WaterSurfaceRender.h"
 #include "ScriptedEntity.h"
@@ -328,6 +330,8 @@ void Game::addObsRow(unsigned tx, unsigned ty, unsigned len)
 void Game::clearObsRows()
 {
 	obsRows.clear();
+	mapGridW = 0;
+	mapGridH = 0;
 }
 
 void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
@@ -539,6 +543,8 @@ void Game::reconstructEntityGrid()
 		Entity *e = *i;
 		e->fillGrid();
 	}
+
+	updateGridRender(OT_INVISIBLEENT);
 }
 
 void Game::reconstructGrid(bool force)
@@ -574,6 +580,9 @@ void Game::reconstructGrid(bool force)
 	}
 
 	trimGrid();
+
+	// This does intentionally not update black.
+	updateGridRender(OT_MASK_NOTBLACK);
 }
 
 void Game::trimGrid()
@@ -1887,25 +1896,36 @@ void Game::setMusicToPlay(const std::string &m)
 	stringToLower(musicToPlay);
 }
 
+TileVector Game::computeMapSizeFromObs() const
+{
+	TileVector ret;
+	const size_t N = obsRows.size();
+	for (size_t i = 0; i < N; i++)
+	{
+		const ObsRow *r = &obsRows[i];
+		ret.x = std::max<unsigned>(ret.x, r->tx + r->len);
+		ret.y = std::max<unsigned>(ret.y, r->ty);
+	}
+	return ret;
+}
+
 void Game::findMaxCameraValues()
 {
 	cameraMin.x = 20;
 	cameraMin.y = 20;
-	cameraMax.x = -1;
-	cameraMax.y = -1;
-	for (size_t i = 0; i < obsRows.size(); i++)
+	if(obsRows.size())
 	{
-		ObsRow *r = &obsRows[i];
-		TileVector t(r->tx + r->len, r->ty);
-		Vector v = t.worldVector();
-		if (v.x > cameraMax.x)
-		{
-			cameraMax.x = v.x;
-		}
-		if (v.y > cameraMax.y)
-		{
-			cameraMax.y = v.y;
-		}
+		TileVector wh = computeMapSizeFromObs();
+		mapGridW = wh.x;
+		mapGridH = wh.y;
+		cameraMax = wh.worldVector();
+	}
+	else
+	{
+		mapGridW = 0;
+		mapGridH = 0;
+		cameraMax.x = -1;
+		cameraMax.y = -1;
 	}
 }
 
@@ -2679,12 +2699,24 @@ void Game::applyState()
 
 	bindInput();
 
+	// loadScene() calls reconstructGrid(), which requires these to exist
+	blackRender = new GridRender(OT_BLACK);
+	gridRender = new GridRender(OT_INVISIBLE);
+	gridRender2 = new GridRender(OT_HURT);
+	gridRender3 = new GridRender(OT_INVISIBLEIN);
+	edgeRender = new GridRender(OT_BLACKINVIS);
+	gridRenderEnt = new GridRender(OT_INVISIBLEENT);
+	gridRenderUser1 = new GridRender(OT_USER1);
+	gridRenderUser2 = new GridRender(OT_USER2);
+
 	if (verbose) debugLog("Loading Scene");
 	if(!loadScene(sceneToLoad))
 	{
 		debugLog("Failed to load scene [" + sceneToLoad + "]");
 	}
 	if (verbose) debugLog("...Done");
+
+	// ----------------- SCENE IS LOADED BELOW HERE -------------------
 
 	dsq->continuity.worldMap.revealMap(sceneName);
 
@@ -2703,37 +2735,31 @@ void Game::applyState()
 	songLineRender = new SongLineRender();
 	addRenderObject(songLineRender, LR_HUD);
 
-	gridRender = new GridRender(OT_INVISIBLE);
+
 	gridRender->color = Vector(1, 0, 0);
 	addRenderObject(gridRender, LR_DEBUG_TEXT);
 	gridRender->alpha = 0;
 
-	gridRender2 = new GridRender(OT_HURT);
 	gridRender2->color = Vector(1, 1, 0);
 	addRenderObject(gridRender2, LR_DEBUG_TEXT);
 	gridRender2->alpha = 0;
 
-	gridRender3 = new GridRender(OT_INVISIBLEIN);
 	gridRender3->color = Vector(1, 0.5f, 0);
 	addRenderObject(gridRender3, LR_DEBUG_TEXT);
 	gridRender3->alpha = 0;
 
-	edgeRender = new GridRender(OT_BLACKINVIS);
 	edgeRender->color = Vector(0.3f, 0, 0.6f);
 	addRenderObject(edgeRender, LR_DEBUG_TEXT);
 	edgeRender->alpha = 0;
 
-	gridRenderEnt = new GridRender(OT_INVISIBLEENT);
 	gridRenderEnt->color = Vector(0, 1, 0.5);
 	addRenderObject(gridRenderEnt, LR_DEBUG_TEXT);
 	gridRenderEnt->alpha = 0;
 
-	gridRenderUser1 = new GridRender(OT_USER1);
 	addRenderObject(gridRenderUser1, LR_DEBUG_TEXT);
 	gridRenderUser1->color = Vector(1, 0, 1);
 	gridRenderUser1->alpha = 0;
 
-	gridRenderUser2 = new GridRender(OT_USER2);
 	addRenderObject(gridRenderUser2, LR_DEBUG_TEXT);
 	gridRenderUser2->color = Vector(1, 1, 1);
 	gridRenderUser2->alpha = 0;
@@ -2742,11 +2768,11 @@ void Game::applyState()
 	//waterSurfaceRender->setRenderPass(-1);
 	addRenderObject(waterSurfaceRender, LR_WATERSURFACE);
 
-	GridRender *blackRender = new GridRender(OT_BLACK);
 	blackRender->color = Vector(0, 0, 0);
 	//blackRender->alpha = 0;
 	blackRender->setBlendType(BLEND_DISABLED);
 	addRenderObject(blackRender, LR_ELEMENTS4);
+	blackRender->rebuildBuffers(this->obsRows);
 
 	miniMapRender = new MiniMapRender;
 	// position is set in minimaprender::onupdate
@@ -3986,7 +4012,16 @@ void Game::toggleGridRender()
 	float t = 0;
 	float a = 0;
 	if (gridRender->alpha == 0)
+	{
 		a = 0.5f;
+		gridRender->rebuildBuffersIfNecessary();
+		gridRender2->rebuildBuffersIfNecessary();
+		gridRender3->rebuildBuffersIfNecessary();
+		edgeRender->rebuildBuffersIfNecessary();
+		gridRenderEnt->rebuildBuffersIfNecessary();
+		gridRenderUser1->rebuildBuffersIfNecessary();
+		gridRenderUser2->rebuildBuffersIfNecessary();
+	}
 
 	gridRender->alpha.interpolateTo(a, t);
 	gridRender2->alpha.interpolateTo(a, t);
@@ -3995,6 +4030,30 @@ void Game::toggleGridRender()
 	gridRenderEnt->alpha.interpolateTo(a, t);
 	gridRenderUser1->alpha.interpolateTo(a, t);
 	gridRenderUser2->alpha.interpolateTo(a, t);
+}
+
+static void checkgridrender(GridRender *gr, ObsType obs)
+{
+	if(gr->getObs() & obs)
+		gr->markForRebuild();
+}
+
+void Game::updateGridRender(ObsType obs)
+{
+	// These are usually not visible. Delay rebuild until they are actually shown.
+	checkgridrender(gridRender, obs);
+	checkgridrender(gridRender2, obs);
+	checkgridrender(gridRender3, obs);
+	checkgridrender(edgeRender, obs);
+	checkgridrender(gridRenderEnt, obs);
+	checkgridrender(gridRenderUser1, obs);
+	checkgridrender(gridRenderUser2, obs);
+
+	// This is normally not necessary, because black is only changed by the editor.
+	// Keeping it here possibly for future mod compat.
+	// It's also always shown, so we can immediately rebuild it
+	if(obs & OT_BLACK)
+		blackRender->rebuildBuffers(this->obsRows);
 }
 
 Vector Game::getCameraPositionFor(const Vector &pos)
@@ -4721,6 +4780,7 @@ void Game::removeState()
 	controlHint_text = 0;
 
 	miniMapRender = 0;
+	blackRender = 0;
 	gridRender = 0;
 	gridRender2 = 0;
 	gridRender3 = 0;

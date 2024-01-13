@@ -85,22 +85,6 @@ struct MinimapIcon
 
 typedef std::list<Ingredient*> Ingredients;
 
-class ObsRow
-{
-public:
-	inline ObsRow(unsigned tx, unsigned ty, unsigned len)
-		: tx(tx), ty(ty), len(len) {}
-	inline ObsRow(const ObsRow& o)
-		: tx(o.tx), ty(o.ty), len(o.len) {}
-	const unsigned tx, ty, len;
-};
-
-enum FlagCheckType
-{
-	NO_TYPE	=-1,
-	AND		=0,
-	OR		=1
-};
 
 class EntityClass
 {
@@ -136,6 +120,7 @@ public:
 	Avatar *avatar;
 	Entity *li;
 
+	TileVector getGridSize() const; // available after calling findMaxCameraValues()
 	ObsType getGrid(const TileVector &tile) const;
 	ObsType getGridRaw(const TileVector &tile) const;
 	unsigned char *getGridColumn(int tileX);
@@ -381,8 +366,9 @@ public:
 	void createGradient();
 
 	std::string saveMusic;
-	GridRender *gridRender, *gridRender2, *gridRender3, *edgeRender, *gridRenderEnt, *gridRenderUser1, *gridRenderUser2;
+	GridRender *blackRender, *gridRender, *gridRender2, *gridRender3, *edgeRender, *gridRenderEnt, *gridRenderUser1, *gridRenderUser2;
 	void toggleGridRender();
+	void updateGridRender(ObsType obs);
 
 	bool invinciblity;
 
@@ -457,7 +443,9 @@ protected:
 	void createLi();
 	void createPets();
 	void findMaxCameraValues();
+	TileVector computeMapSizeFromObs() const;
 	std::vector<ObsRow> obsRows;
+	size_t mapGridW, mapGridH;
 
 
 	std::string musicToPlay;
@@ -501,6 +489,11 @@ ObsType Game::getGridRaw(const TileVector &tile) const
 	return (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID))
 		? ObsType(grid[tile.x][tile.y])
 		: OT_OUTOFBOUNDS;
+}
+
+inline TileVector Game::getGridSize() const
+{
+	return TileVector(int(this->mapGridW), int(this->mapGridH));
 }
 
 inline

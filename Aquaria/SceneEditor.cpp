@@ -1622,6 +1622,7 @@ void SceneEditor::generateLevel()
 		}
 
 		game->reconstructGrid(true);
+		game->updateGridRender(OT_MASK_BLACK);
 
 		maxX--;
 		maxY--;
