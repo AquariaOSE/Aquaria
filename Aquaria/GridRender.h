@@ -47,6 +47,7 @@ public:
 protected:
 	DynamicGPUBuffer vbo;
 	size_t primsToDraw;
+	std::vector<size_t> primIndexInLine;
 	const ObsType obsType;
 	bool markedForRebuild;
 

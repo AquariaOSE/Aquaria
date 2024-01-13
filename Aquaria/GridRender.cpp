@@ -64,7 +64,6 @@ GridRender::GridRender(ObsType obsType)
 	, vbo(GPUBUF_VERTEXBUF | GPUBUF_STATIC)
 	, primsToDraw(0)
 	, obsType(obsType)
-	//, ibo(GPUBUF_INDEXBUF | GPUBUF_STATIC)
 	, markedForRebuild(true)
 {
 	color = Vector(1, 0, 0);
@@ -72,7 +71,7 @@ GridRender::GridRender(ObsType obsType)
 	position.z = 5;
 	cull = false;
 	alpha = 0.5f;
-	this->scale.x = TILE_SIZE;
+	this->scale.x = TILE_SIZE; // See comment about value scaling below
 	this->scale.y = TILE_SIZE;
 }
 
@@ -91,6 +90,31 @@ void GridRender::rebuildBuffers(const std::vector<ObsRow>& rows)
 	primsToDraw = N * 6;
 	if(!N)
 		return;
+
+	// Construct lookup table so we know the vertex index to start drawing, for each line
+	{
+		const size_t H = game->getGridSize().y;
+		primIndexInLine.resize(H);
+
+		size_t lasty = 0;
+		size_t lastidx = 0;
+		for(size_t i = 0; i < N; ++i)
+		{
+			const ObsRow& row = rows[i];
+			assert(row.ty >= lasty); // rows must be sorted, lowest y first
+			if(row.ty > lasty)
+			{
+				// Handle this correctly even if there is no row on some lines
+				for(size_t y = lasty; y < row.ty; ++y)
+					primIndexInLine[y] = lastidx;
+				lasty = row.ty;
+				lastidx = i * 6;
+			}
+		}
+
+		// Don't bother filling the rest, anything beyond the end is eval'd as primsToDraw
+		primIndexInLine.resize(lasty);
+	}
 
 	// 2 tris = 6 verts  per ObsRow, each vertex is 2x uint16, makes 24b per quad.
 	// We could use indexed rendering and use 2 verts less (16b),
@@ -157,34 +181,32 @@ void GridRender::onRender(const RenderState& rs) const
 	if(!primsToDraw)
 		return;
 
-	/*
-	const signed char obsType = this->obsType;
-	Vector camPos = core->cameraPos;
-	camPos.x -= core->getVirtualOffX() * (core->invGlobalScale);
-	const TileVector ct(camPos);
+	const TileVector ct(core->cameraPos);
+	const int H = primIndexInLine.size();
+	int startY = ct.y;
 
-	const int width = int((core->getVirtualWidth() * (core->invGlobalScale))/TILE_SIZE) + 1;
+	// Note that it's possible that the scale factor is negative (mods can use this),
+	// so this might end up upside down. Still needs to render correctly.
 	const int height = int((600 * (core->invGlobalScale))/TILE_SIZE) + 1;
+	int endY = ct.y+height;
+	if(endY < startY)
+		std::swap(startY, endY);
 
-	int startX = ct.x-1, endX = ct.x+width+1;
-	int startY = ct.y-1, endY = ct.y+height+1;
-	if (startX < 0)
-		startX = 0;
-	if (endX >= MAX_GRID)
-		endX = MAX_GRID-1;
-	if (startY < 0)
-		startY = 0;
-	if (endY >= MAX_GRID)
-		endY = MAX_GRID-1;
-	if (startY > endY)
+	--startY;
+	++endY;
+
+	if(endY < 0 || startY >= H)
 		return;
-	*/
+	if(startY < 0)
+		startY = 0;
 
-	// TODO: keep track of prim index at which a row starts
-	// then horizontally span only as much prims as are necessary?
+	const size_t beginIdx = primIndexInLine[startY];
+	const size_t endIdx = endY < H ? primIndexInLine[endY] : primsToDraw;
+	if(beginIdx >= endIdx)
+		return;
 
 	vbo.apply();
-	glDrawArrays(GL_TRIANGLES, 0, primsToDraw);
+	glDrawArrays(GL_TRIANGLES, beginIdx, endIdx - beginIdx);
 }
 
 SongLineRender::SongLineRender()
