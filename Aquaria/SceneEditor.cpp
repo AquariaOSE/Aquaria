@@ -1152,7 +1152,9 @@ void SceneEditor::enterAnyStateHelper(EditorStates newstate)
 	else if (editType == ET_PATHS)
 	{
 		oldPosition = game->getPath(selectedIdx)->nodes[selectedNode].position;
-		cursorOffset = oldPosition - dsq->getGameCursorPosition();
+		cursorOffset = newstate == ES_SCALING
+			? dsq->getGameCursorPosition()
+			: oldPosition - dsq->getGameCursorPosition();
 		oldScale = Vector(editingPath->rect.x2-editingPath->rect.x1,
 			editingPath->rect.y2-editingPath->rect.y1);
 	}
@@ -2614,8 +2616,7 @@ void SceneEditor::update(float dt)
 				if (editingPath)
 				{
 					float factor = 1;
-					Vector add = Vector((dsq->getGameCursorPosition().x - cursorOffset.x)*factor,
-						(dsq->getGameCursorPosition().y - cursorOffset.y)*factor);
+					Vector add = (dsq->getGameCursorPosition() - cursorOffset)*factor;
 					Vector sz = oldScale + add;
 					if (sz.x < 32)
 						sz.x = 32;
