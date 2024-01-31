@@ -7,11 +7,11 @@
 static const unsigned s_tileFlags[] =
 {
 	/* EF_NONE   -> */ TILEFLAG_NONE,
-	/* EF_SOLID	 -> */ TILEFLAG_SOLID,
+	/* EF_SOLID	 -> */ TILEFLAG_SOLID | TILEFLAG_TRIM,
 	/* EF_MOVABLE-> */ TILEFLAG_NONE, /* unused */
 	/* EF_HURT   -> */ TILEFLAG_SOLID | TILEFLAG_HURT,
-	/* EF_SOLID2 -> */ TILEFLAG_SOLID | TILEFLAG_SOLID_THICK,
-	/* EF_SOLID3 -> */ TILEFLAG_SOLID | TILEFLAG_SOLID_THICK | TILEFLAG_SOLID_IN
+	/* EF_SOLID2 -> */ TILEFLAG_SOLID,
+	/* EF_SOLID3 -> */ TILEFLAG_SOLID | TILEFLAG_SOLID_IN
 };
 
 
@@ -33,7 +33,7 @@ ElementFlag TileMgr::GetElementFlag(TileFlags tf)
 			ef = EF_HURT;
 		else if(tf & TILEFLAG_SOLID_IN)
 			ef = EF_SOLID3;
-		else if(tf & TILEFLAG_SOLID_THICK)
+		else if(!(tf & TILEFLAG_TRIM))
 			ef = EF_SOLID2;
 		else
 			ef = EF_SOLID;
@@ -163,7 +163,7 @@ void TileMgr::exportGridFillers(std::vector<GridFiller>& fillers) const
 				gf.texture = t.et->tex.content();
 				gf.width = t.et->w;
 				gf.height = t.et->h;
-				gf.trim = !(t.flags & TILEFLAG_SOLID_THICK);
+				gf.trim = !!(t.flags & TILEFLAG_TRIM);
 				if(t.flags & TILEFLAG_HURT)
 					gf.obs = OT_HURT;
 				else if(t.flags & TILEFLAG_SOLID_IN)

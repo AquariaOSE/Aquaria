@@ -99,7 +99,7 @@ enum TileFlags
 	TILEFLAG_NONE        = 0,
 	TILEFLAG_REPEAT      = 0x01, // texture repeats and uses texscale for the repeat factor
 	TILEFLAG_SOLID       = 0x02, // generates OT_INVISIBLE
-	TILEFLAG_SOLID_THICK = 0x04, // generates more OT_INVISIBLE
+	TILEFLAG_TRIM        = 0x04, // trim generated OT_* to make it less thick
 	TILEFLAG_SOLID_IN    = 0x08, // instead of OT_INVISIBLE, generate OT_INVISIBLEIN
 	TILEFLAG_HURT        = 0x10, // always generate OT_HURT
 	TILEFLAG_FH          = 0x20, // flipped horizontally

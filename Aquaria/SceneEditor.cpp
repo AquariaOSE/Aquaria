@@ -1276,9 +1276,9 @@ void SceneEditor::toggleElementHurt()
 		const bool set = !(t0.flags & TILEFLAG_HURT);
 
 		if(set)
-			ts.changeFlags(TILEFLAG_SOLID | TILEFLAG_HURT, 0, &selectedTiles[0], n);
+			ts.changeFlags(TILEFLAG_SOLID | TILEFLAG_HURT, TILEFLAG_TRIM, &selectedTiles[0], n);
 		else
-			ts.changeFlags(0, TILEFLAG_SOLID | TILEFLAG_HURT | TILEFLAG_SOLID_IN | TILEFLAG_SOLID_THICK, &selectedTiles[0], n);
+			ts.changeFlags(0, TILEFLAG_SOLID | TILEFLAG_HURT | TILEFLAG_SOLID_IN | TILEFLAG_TRIM, &selectedTiles[0], n);
 
 		game->reconstructGrid(true);
 	}
