@@ -413,28 +413,27 @@ void TileEffectData::Wavy::update(float dt)
 
 		wavySave = wavy;
 		lerpIn = 0;
+		waving = true;
 	}
 
 	if (waving)
 	{
-		// TODO: set waving=false if magnitude==0 ?
-		float spd = PI*1.1f;
-		float magRedSpd = 48;
-		float lerpSpd = 5.0;
-		float wavySz = float(wavy.size());
+		const float spd = PI*1.1f;
+		const float magRedSpd = 48;
+		const float lerpSpd = 5.0;
+		const float wavySzInv = 1.0f / float(wavy.size());
 		for (size_t i = 0; i < wavy.size(); i++)
 		{
-			float weight = float(i)/wavySz;
+			const float m = float(i)*wavySzInv;
+			float weight = m;
 			if (flip)
 				weight = 1.0f-weight;
 			if (weight < 0.125f)
 				weight *= 0.5f;
-			wavy[i] = sinf(angleOffset + (float(i)/wavySz)*PI)*(magnitude*effectMult)*weight;
+			float val = sinf(angleOffset + m*PI)*(magnitude*effectMult)*weight;
 			if (!wavySave.empty())
-			{
-				if (lerpIn < 1)
-					wavy[i] = wavy[i] * lerpIn + (wavySave[i] * (1.0f-lerpIn));
-			}
+				val = val * lerpIn + (wavySave[i] * (1.0f-lerpIn));
+			wavy[i] = val;
 		}
 
 		if (lerpIn < 1)
@@ -448,15 +447,21 @@ void TileEffectData::Wavy::update(float dt)
 		{
 			magnitude -= magRedSpd*dt;
 			if (magnitude < 0)
-				magnitude = 0;
+				stop();
 		}
 		else
 		{
 			magnitude += magRedSpd*dt;
 			if (magnitude > 0)
-				magnitude = 0;
+				stop();
 		}
 	}
+}
+
+void TileEffectData::Wavy::stop()
+{
+	magnitude = 0;
+	waving = false;
 }
 
 void TileEffectData::update(float dt, const TileData *t)
@@ -464,10 +469,12 @@ void TileEffectData::update(float dt, const TileData *t)
 	switch(efxtype)
 	{
 		case EFX_WAVY:
+			if(!(wavy.waving || wavy.touching))
+				break;
 			wavy.update(dt);
 			if(const size_t N = wavy.wavy.size())
 				grid->setFromWavy(&wavy.wavy[0], N, t->et->w);
-		break;
+			// fall through
 
 		case EFX_SEGS:
 			grid->update(dt);

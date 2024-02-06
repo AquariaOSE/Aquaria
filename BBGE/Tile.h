@@ -137,6 +137,7 @@ struct TileEffectData
 		float hitPerc, effectMult;
 		bool waving, flip, touching;
 		void update(float dt);
+		void stop();
 	};
 	Wavy wavy;
 
