@@ -95,25 +95,27 @@ void GridRender::rebuildBuffers(const std::vector<ObsRow>& rows)
 	{
 		const size_t H = game->getGridSize().y;
 		primIndexInLine.resize(H);
-
-		size_t lasty = 0;
-		size_t lastidx = 0;
-		for(size_t i = 0; i < N; ++i)
+		if(H)
 		{
-			const ObsRow& row = rows[i];
-			assert(row.ty >= lasty); // rows must be sorted, lowest y first
-			if(row.ty > lasty)
+			size_t lasty = 0;
+			size_t lastidx = 0;
+			for(size_t i = 0; i < N; ++i)
 			{
-				// Handle this correctly even if there is no row on some lines
-				for(size_t y = lasty; y < row.ty; ++y)
-					primIndexInLine[y] = lastidx;
-				lasty = row.ty;
-				lastidx = i * 6;
+				const ObsRow& row = rows[i];
+				assert(row.ty >= lasty); // rows must be sorted, lowest y first
+				if(row.ty > lasty)
+				{
+					// Handle this correctly even if there is no row on some lines
+					for(size_t y = lasty; y < row.ty; ++y)
+						primIndexInLine[y] = lastidx;
+					lasty = row.ty;
+					lastidx = i * 6;
+				}
 			}
-		}
 
-		// Don't bother filling the rest, anything beyond the end is eval'd as primsToDraw
-		primIndexInLine.resize(lasty);
+			// Don't bother filling the rest, anything beyond the end is eval'd as primsToDraw
+			primIndexInLine.resize(lasty);
+		}
 	}
 
 	// 2 tris = 6 verts  per ObsRow, each vertex is 2x uint16, makes 24b per quad.
