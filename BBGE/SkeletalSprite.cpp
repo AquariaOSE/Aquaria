@@ -2056,7 +2056,7 @@ void AnimationLayer::updateBones()
 								DynamicRenderGrid::ResetWithAlpha(&bkey2->grid[0], grid->width(), grid->height(), 1.0f);
 							}
 
-							Vector *dst = grid->data();
+							Vector *dst = grid->dataRW();
 							for(size_t i = 0; i < N; ++i)
 							{
 								dst[i].x = lerp(bkey1->grid[i].x, bkey2->grid[i].x, dt, lerpType);
@@ -2196,6 +2196,8 @@ void BoneGridInterpolator::updateGridOnly(BoneKeyframe& bk, const Bone *bone)
 void BoneGridInterpolator::updateGridAndBone(BoneKeyframe& bk, Bone *bone)
 {
 	updateGridOnly(bk, bone);
-	Vector *dst = bone->getGrid()->data();
+	DynamicRenderGrid *g = bone->getGrid();
+	Vector *dst = g->dataRW();
 	std::copy(bk.grid.begin(), bk.grid.end(), dst);
+
 }

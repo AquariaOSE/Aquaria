@@ -91,6 +91,7 @@ DynamicRenderGrid *SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yr
     size_t oldcpy = bsp.ctrlY();
 
     DynamicRenderGrid *ret = this->createGrid(xres, yres);
+    ret->gridType = GRID_INTERP;
 
     std::vector<SplineGridCtrlPoint*> oldp;
     ctrlp.swap(oldp);
@@ -135,7 +136,7 @@ void SplineGrid::recalc()
     exportControlPoints(&bsp.controlpoints[0]);
     if(grid)
     {
-        bsp.recalc(grid->data(), grid->width(), grid->height());
+        bsp.recalc(grid->dataRW(), grid->width(), grid->height());
         wasModified = true;
     }
 }

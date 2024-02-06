@@ -51,7 +51,7 @@ public:
 	size_t height() const { return grid.height(); }
 	size_t linearsize() const { return grid.linearsize(); }
 	const Vector *data() const { return grid.data(); }
-	Vector *data() { return grid.data(); }
+	Vector *dataRW() { this->needVBOUpdate = true; return grid.data(); }
 	Array2d<Vector>& array2d() { return grid; }
 	const Array2d<Vector>& array2d() const { return grid; }
 	const DynamicGPUBuffer& getVBO() const { return vbo; }
