@@ -106,12 +106,17 @@ void Precacher::precacheList(const std::string &list, ProgressCallback progress)
 	std::string t;
 	while (std::getline(in, t))
 	{
-		while (!t.empty())
+		if(!t.empty())
 		{
-			if(t.back() == '\r' || t.back() == '\n') // linux doesn't like CRLF, make sure to trim that off
-				t.pop_back();
-			else
-				break;
+			size_t i = t.size();
+			for( ; i --> 0; )
+			{
+				const char bk = t[i];
+				if(!(bk == '\r' || bk == '\n' || bk == ' ' || bk == '\t')) // linux doesn't like CRLF, make sure to trim that off
+					break;
+			}
+			if(i+1 != t.size())
+				t.erase(i+1, std::string::npos);
 		}
 
 		if(!t.empty())

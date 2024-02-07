@@ -198,7 +198,7 @@ void TextureMgr::clearUnused()
     {
         if(it->second->refcount() <= 1)
         {
-            it = cache.erase(it);
+            cache.erase(it++);
             ++done;
         }
         else

@@ -75,7 +75,10 @@ size_t TileMgr::getNumTiles() const
 
 TileStorage::Sizes TileMgr::getStats() const
 {
-	TileStorage::Sizes tsz {};
+	TileStorage::Sizes tsz;
+	tsz.collide = 0;
+	tsz.tiles = 0;
+	tsz.update = 0;
 	for(size_t i = 0; i < Countof(tilestore); ++i)
 	{
 		TileStorage::Sizes sz = tilestore[i].stats();
