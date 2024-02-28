@@ -542,7 +542,10 @@ SoundManager::~SoundManager()
 		debugLog("unloading sound [" + snd + "]");
 #ifndef BBGE_DISABLE_SOUND_CACHE
 		FMOD::Sound *samp = (FMOD::Sound*)((*i).second);
-		samp->release();
+		if (samp)
+		{
+			samp->release();
+		}
 #else
 		SoundInfo *info = (SoundInfo*)((*i).second);
 		delete info;
