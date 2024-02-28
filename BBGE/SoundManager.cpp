@@ -1572,7 +1572,10 @@ void SoundManager::clearLocalSounds()
 		std::string snd = (*i);
 		debugLog("unloading sound [" + snd + "]");
 		FMOD::Sound *samp = (FMOD::Sound*)soundMap[snd];
-		samp->release();
+		if (samp)
+		{
+			samp->release();
+		}
 		soundMap[snd] = 0;
 	}
 	localSounds.clear();
