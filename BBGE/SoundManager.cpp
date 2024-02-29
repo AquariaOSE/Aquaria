@@ -542,7 +542,10 @@ SoundManager::~SoundManager()
 		debugLog("unloading sound [" + snd + "]");
 #ifndef BBGE_DISABLE_SOUND_CACHE
 		FMOD::Sound *samp = (FMOD::Sound*)((*i).second);
-		samp->release();
+		if (samp)
+		{
+			samp->release();
+		}
 #else
 		SoundInfo *info = (SoundInfo*)((*i).second);
 		delete info;
@@ -1569,7 +1572,10 @@ void SoundManager::clearLocalSounds()
 		std::string snd = (*i);
 		debugLog("unloading sound [" + snd + "]");
 		FMOD::Sound *samp = (FMOD::Sound*)soundMap[snd];
-		samp->release();
+		if (samp)
+		{
+			samp->release();
+		}
 		soundMap[snd] = 0;
 	}
 	localSounds.clear();

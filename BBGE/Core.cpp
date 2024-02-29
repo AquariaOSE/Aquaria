@@ -4500,7 +4500,9 @@ CountedPtr<Texture> Core::addTexture(const std::string &textureName, TextureLoad
 	else
 		texResult = doTextureAdd(texture, loadName, internalTextureName);
 
-	addTexture(texResult.first.content());
+	if (texResult.second != TEX_FAILED) {
+		addTexture(texResult.first.content());
+	}
 
 	if(debugLogTextures)
 	{
