@@ -164,7 +164,7 @@ public:
 	void addEvent(const EventPtr &eventPtr, float t);
 	void update(float dt);
 	void clear();
-	int getSize();
+	size_t getSize();
 
 private:
 	typedef std::list<EventTimer> EventTimers;

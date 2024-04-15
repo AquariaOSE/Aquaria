@@ -76,7 +76,7 @@ class StateManager
 public:
 	friend class StateObject;
 	StateManager();
-	~StateManager();
+	virtual ~StateManager();
 
 
 	void clearStateObjects();

@@ -1,7 +1,7 @@
 #ifndef BBGE_RENDERBASE_H
 #define BBGE_RENDERBASE_H
 
-#include "SDL.h"
+#include <SDL.h>
 
 // Define this before including GL headers to avoid pulling in windows.h
 #if defined(_WIN32) && !defined(APIENTRY)

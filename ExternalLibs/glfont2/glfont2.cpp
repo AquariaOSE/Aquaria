@@ -47,9 +47,6 @@ GLFont::~GLFont ()
 //*******************************************************************
 bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 {
-	ByteBuffer::uint32 num_chars, num_tex_bytes;
-	char *tex_bytes;
-
 	//Destroy the old font if there was one, just to be safe
 	Destroy();
 
@@ -80,7 +77,7 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	bb.skipRead(4); // skip chars field
 
 	//Allocate space for character array
-	num_chars = header.end_char - header.start_char + 1;
+	size_t num_chars = size_t(header.end_char) - header.start_char + 1;
 	if ((header.chars = new GLFontChar[num_chars]) == NULL)
 		return false;
 
@@ -96,8 +93,8 @@ bool GLFont::Create (const char *file_name, int tex, bool loadTexture)
 	}
 
 	//Read texture pixel data
-	num_tex_bytes = header.tex_width * header.tex_height * 2;
-	tex_bytes = new char[num_tex_bytes];
+	size_t num_tex_bytes = size_t(header.tex_width) * header.tex_height * 2;
+	char *tex_bytes = new char[num_tex_bytes];
 	// HACK: Aquaria uses override textures, so we can live with the truncation.
 	bb.read(tex_bytes, std::min(num_tex_bytes, bb.readable()));
 

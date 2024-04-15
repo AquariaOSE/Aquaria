@@ -162,7 +162,7 @@ void EventQueue::clear()
 	eventTimers.clear();
 }
 
-int EventQueue::getSize()
+size_t EventQueue::getSize()
 {
 	return eventTimers.size();
 }

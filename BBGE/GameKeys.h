@@ -1,7 +1,7 @@
 #ifndef BBGE_GAME_KEYS_H
 #define BBGE_GAME_KEYS_H
 
-#include <SDL_version.h>
+#include <SDL.h>
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 

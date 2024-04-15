@@ -140,7 +140,7 @@ void BitmapText::formatText()
 	text = this->text;
 	lines.clear();
 	std::string currentLine;
-	int lastSpace = -1;
+	size_t lastSpace = size_t(-1);
 	float currentWidth = 0;
 	alignWidth = 0;
 	maxW = 0;
@@ -157,7 +157,7 @@ void BitmapText::formatText()
 				lastSpace = i;
 			}
 			lines.push_back(text.substr(0, lastSpace));
-			int tsz = text.size();
+			size_t tsz = text.size();
 			text = text.substr(lastSpace+1, tsz);
 			i = 0;
 			alignWidth = currentWidth;

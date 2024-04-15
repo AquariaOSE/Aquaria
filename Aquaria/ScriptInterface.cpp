@@ -34,7 +34,7 @@ extern "C" {
 
 #include "luaalloc.h"
 
-#include "SDL.h"
+#include <SDL.h>
 #include "ScriptInterface.h"
 #include "ScriptObject.h"
 
@@ -5674,10 +5674,10 @@ luaFunc(entity_collideHairVsCircle)
 	bool col=false;
 	if (e && e2)
 	{
-		int num = lua_tointeger(L, 3);
+		size_t num = (size_t)lua_tointeger(L, 3);
 		// perc: percent of hairWidth to use as collide radius
 		float perc = lua_tonumber(L, 4);
-		int colSegment;
+		size_t colSegment;
 		col = game->collideHairVsCircle(e, num, e2->position, e2->collideRadius, perc, &colSegment);
 		if(col)
 		{

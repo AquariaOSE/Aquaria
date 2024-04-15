@@ -10,7 +10,7 @@ bool pngSaveRGBA(const char *filename, size_t width, size_t height, unsigned cha
 {
 	const int oldlevel = stbi_write_png_compression_level;
 	stbi_write_png_compression_level = compressLevel; // HACK: ugly API but what can you do
-	bool ok = !!stbi_write_png(filename, (int)width, (int)height, 4, data, width * 4);
+	bool ok = !!stbi_write_png(filename, (int)width, (int)height, 4, data, (int)(width * 4));
 	stbi_write_png_compression_level = oldlevel;
 	return ok;
 }
@@ -27,7 +27,7 @@ bool zgaSaveRGBA(const char *filename, size_t w, size_t h, unsigned char *data)
 	ByteBuffer::uint8 type ,mode,aux, pixelDepth = 32;
 	ByteBuffer::uint8 cGarbage = 0;
 	ByteBuffer::uint16 iGarbage = 0;
-	ByteBuffer::uint16 width = w, height = h;
+	ByteBuffer::uint16 width = (ByteBuffer::uint16)w, height = (ByteBuffer::uint16)h;
 
 	// open file and check for errors
 	FILE *file = fopen(filename, "wb");
@@ -131,7 +131,7 @@ ImageData imageLoadZGA(const char *filename)
 	if(buf)
 	{
 		int x = 0, y = 0, comp = 0;
-		stbi_uc *pix = stbi_load_from_memory((stbi_uc*)buf, size, &x, &y, &comp, 0);
+		stbi_uc *pix = stbi_load_from_memory((stbi_uc*)buf, (int)size, &x, &y, &comp, 0);
 		delete [] buf;
 		ret.pixels = pix;
 		ret.channels = comp;
@@ -149,7 +149,7 @@ ImageData imageLoadQOI(const char* filename, bool forceRGBA)
 	if(buf)
 	{
 		qoi_desc d;
-		stbi_uc *pix = (stbi_uc*)qoi_decode(buf, size, &d, forceRGBA ? 4 : 0);
+		stbi_uc *pix = (stbi_uc*)qoi_decode(buf, (int)size, &d, forceRGBA ? 4 : 0);
 		if(pix)
 		{
 			ret.w = d.width;

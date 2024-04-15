@@ -22,7 +22,7 @@ enum GridType
 	GRID_UNDEFINED = 0,
 	GRID_WAVY	= 1,
 	GRID_STRIP	= 2, // quad is in strip mode
-	GRID_INTERP = 3, // quad is in grid mode
+	GRID_INTERP = 3  // quad is in grid mode
 };
 
 // simple render grid, must be manually uploaded to GPU if changed

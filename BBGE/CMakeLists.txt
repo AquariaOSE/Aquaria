@@ -46,8 +46,6 @@ set(BBGE_SRCS
     Image.h
     Joystick.cpp
     Joystick.h
-    LensFlare.cpp
-    LensFlare.h
     Localization.cpp
     Localization.h
     MathFunctions.h

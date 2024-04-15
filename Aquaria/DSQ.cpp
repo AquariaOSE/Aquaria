@@ -1515,42 +1515,26 @@ void DSQ::setStory()
 	continuity.setFlag(flag, value);
 }
 
-Vector DSQ::getNoteVector(int note, float mag)
+static const Vector noteVectors[] =
 {
-	Vector vec;
-	switch(note)
-	{
-	case 0:
-		vec = Vector(0,1);
-	break;
-	case 1:
-		vec = Vector(0.5, 0.5);
-	break;
-	case 2:
-		vec = Vector(1, 0);
-	break;
-	case 3:
-		vec = Vector(0.5, -0.5);
-	break;
-	case 4:
-		vec = Vector(0, -1);
-	break;
-	case 5:
-		vec = Vector(-0.5, -0.5);
-	break;
-	case 6:
-		vec = Vector(-1, 0);
-	break;
-	case 7:
-		vec = Vector(-0.5, 0.5);
-	break;
-	}
-	return vec*mag;
+	Vector(0,1),
+	Vector(0.5f, 0.5f),
+	Vector(1, 0),
+	Vector(0.5f, -0.5f),
+	Vector(0, -1),
+	Vector(-0.5f, -0.5f),
+	Vector(-1, 0),
+	Vector(-0.5f, 0.5f),
+};
+
+Vector DSQ::getNoteVector(size_t note, float mag)
+{
+	return note < Countof(noteVectors) ? noteVectors[note] * mag : Vector();
 }
 
 int DSQ::getRandNote()
 {
-	static int lastRand = -1;
+	static int lastRand = -1; // FIXME: move to DSQ
 
 	int r = rand()%8;
 
@@ -1567,45 +1551,21 @@ int DSQ::getRandNote()
 	return r;
 }
 
-Vector DSQ::getNoteColor(int note)
+static const Vector noteColors[] =
 {
-	Vector noteColor;
-	switch(note)
-	{
-	case 0:
-		// light green
-		noteColor = Vector(0.5f, 1, 0.5f);
-	break;
-	case 1:
-		// blue/green
-		noteColor = Vector(0.5f, 1, 0.75f);
-	break;
-	case 2:
-		// blue
-		noteColor = Vector(0.5f, 0.5f, 1);
-	break;
-	case 3:
-		// purple
-		noteColor = Vector(1, 0.5f, 1);
-	break;
-	case 4:
-		// red
-		noteColor = Vector(1, 0.5f, 0.5f);
-	break;
-	case 5:
-		// red/orange
-		noteColor = Vector(1, 0.6f, 0.5f);
-	break;
-	case 6:
-		// orange
-		noteColor = Vector(1, 0.75f, 0.5f);
-	break;
-	case 7:
-		// orange
-		noteColor = Vector(1, 1, 0.5f);
-	break;
-	}
-	return noteColor;
+	Vector(0.5f, 1, 0.5f),   // light green
+	Vector(0.5f, 1, 0.75f),  // blue/green
+	Vector(0.5f, 0.5f, 1),   // blue
+	Vector(1, 0.5f, 1),      // purple
+	Vector(1, 0.5f, 0.5f),   // red
+	Vector(1, 0.6f, 0.5f),   // red/orange
+	Vector(1, 0.75f, 0.5f),  // orange
+	Vector(1, 1, 0.5f),      // yellow
+};
+
+Vector DSQ::getNoteColor(size_t note)
+{
+	return note < Countof(noteColors) ? noteColors[note] : Vector();
 }
 
 void DSQ::toggleVersionLabel(bool on)
@@ -1718,8 +1678,11 @@ void DSQ::LoadModsCallback(const std::string &filename, void *param)
 {
 	DSQ *self = (DSQ*)param;
 
-	int pos = filename.find_last_of('/')+1;
-	int pos2 = filename.find_last_of('.');
+	size_t pos = filename.find_last_of('/')+1;
+	size_t pos2 = filename.find_last_of('.');
+	if(pos2 < pos)
+		return;
+
 	std::string name = filename.substr(pos, pos2-pos);
 	ModEntry m;
 	m.path = name;
@@ -4134,12 +4097,7 @@ void DSQ::removeEntity(Entity *entity)
 
 void DSQ::clearEntities()
 {
-	const int size = entities.size();
-	int i;
-	for (i = 0; i < size; i++)
-	{
-		entities[i] = 0;
-	}
+	std::fill(entities.begin(), entities.end(), (Entity*)NULL);
 }
 
 

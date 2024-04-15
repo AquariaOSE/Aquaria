@@ -26,7 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 namespace RecipeMenuNamespace
 {
-	int pageSize = 4;
+	const size_t pageSize = 4;
 
 	std::string processFoodName(std::string name)
 	{
@@ -292,7 +292,7 @@ void RecipeMenu::goPrevPage()
 	currentPage--;
 
 	if (currentPage < 0)
-		currentPage = getNumPages();
+		currentPage = (int)getNumPages();
 
 	createPage(currentPage);
 }
@@ -307,7 +307,7 @@ void RecipeMenu::goNextPage()
 
 	currentPage++;
 
-	int pages = getNumPages();
+	int pages = (int)getNumPages();
 	if (currentPage > pages)
 	{
 		currentPage = 0;
@@ -383,12 +383,12 @@ void RecipeMenu::toggle(bool on, bool watch)
 	toggling = false;
 }
 
-void RecipeMenu::createPage(int p)
+void RecipeMenu::createPage(size_t p)
 {
-	int num = 0;
-	int startNum = p*pageSize;
-	int checkNum = 0;
-	for (int i = dsq->continuity.recipes.size()-1; i >=0 ; i--)
+	size_t num = 0;
+	size_t startNum = p*pageSize;
+	size_t checkNum = 0;
+	for (size_t i = dsq->continuity.recipes.size(); i --> 0; )
 	{
 		if (dsq->continuity.recipes[i].isKnown())
 		{
@@ -411,11 +411,6 @@ void RecipeMenu::createPage(int p)
 				checkNum++;
 			}
 		}
-	}
-
-	if (num == 0)
-	{
-
 	}
 
 	description = new BitmapText(dsq->smallFont);

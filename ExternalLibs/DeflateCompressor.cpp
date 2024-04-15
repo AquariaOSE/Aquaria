@@ -28,7 +28,7 @@ GzipCompressor::GzipCompressor()
     _forceCompress = true; // we want this for gzip
 }
 
-void DeflateCompressor::compress(void* dst, uint32 *dst_size, const void* src, uint32 src_size,
+void DeflateCompressor::compress(void* dst, size_t *dst_size, const void* src, size_t src_size,
                                  uint8 level, int wbits)
 {
     z_stream c_stream;
@@ -71,7 +71,7 @@ void DeflateCompressor::compress(void* dst, uint32 *dst_size, const void* src, u
     *dst_size = c_stream.total_out;
 }
 
-void DeflateCompressor::decompress(void *dst, uint32 *origsize, const void *src, uint32 size, int wbits)
+void DeflateCompressor::decompress(void *dst, size_t *origsize, const void *src, size_t size, int wbits)
 {
     z_stream stream;
     int err;
@@ -115,8 +115,8 @@ void DeflateCompressor::Compress(uint8 level)
     char *buf;
 
 
-    uint32 oldsize = size();
-    uint32 newsize = compressBound(oldsize) + 30; // for optional gzip header
+    size_t oldsize = size();
+    size_t newsize = size_t(compressBound(oldsize)) + 30; // for optional gzip header
 
     buf = new char[newsize];
 
@@ -150,8 +150,8 @@ void DeflateCompressor::Decompress(void)
     }
     else
     {
-        uint32 rs = (uint32)_real_size;
-        uint32 origsize = rs;
+        size_t rs = (size_t)_real_size;
+        size_t origsize = rs;
         uint8 *target = new uint8[rs];
         wpos(0);
         rpos(0);

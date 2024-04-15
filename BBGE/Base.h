@@ -33,9 +33,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define compile_assert(pred) switch(0){case 0:case (pred):;}
 
-// C++11's override specifier is too useful not to use it if we have it
-#if (__cplusplus >= 201103L) || (defined(_MSC_VER) && (_MSC_VER+0 >= 1900))
-#define OVERRIDE override
+// C++11's override specifier is too useful not to use it if we have it.
+// However, clang warns about it when -Wc++98-compat is active. Silence this here.
+/*#if defined(__GNUC__) && (__cplusplus >= 201103L)
+#  define DO_PRAGMA(X) _Pragma(#X)
+#  define OVERRIDE DO_PRAGMA(GCC diagnostic push) DO_PRAGMA(GCC diagnostic ignored "-Wc++98-compat") override DO_PRAGMA(GCC diagnostic pop)
+#endif*/
+
+
+#ifndef OVERRIDE
+#  if (__cplusplus >= 201103L) || (defined(_MSC_VER) && (_MSC_VER+0 >= 1900))
+#    define OVERRIDE override
+#  endif
 #endif
 
 #ifndef OVERRIDE
@@ -72,7 +81,7 @@ namespace internal
 #pragma warning(disable:26812) // unscoped enum
 //#pragma warning(disable:4706) // assignment within conditional expression
 
-//#pragma warning(disable:4389) // signed/unsigned mismatch
+#pragma warning(disable:4389) // signed/unsigned mismatch
 
 //#pragma warning(disable:4189) // UqqqqSEFUL: local variable is initialized but not referenced
 #endif

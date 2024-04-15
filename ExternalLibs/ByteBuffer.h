@@ -46,21 +46,21 @@ namespace ByteBufferTools
 		convert<sizeof(T)>((char *)(val));
 	}
 
-	inline void EndianConvertRT(char *p, unsigned int size)
+	inline void EndianConvertRT(char *p, size_t size)
 	{
 		std::reverse(p, p + size);
 	}
 
 #if BB_IS_BIG_ENDIAN
 	template<typename T> inline void ToLittleEndian(T& val) { EndianConvert<T>(&val); }
-	inline void ToLittleEndianRT(void *p, unsigned int size) { EndianConvertRT((char*)p, size); }
+	inline void ToLittleEndianRT(void *p, size_t size) { EndianConvertRT((char*)p, size); }
 	template<typename T> inline void ToBigEndian(T&) { }
-	inline void ToBigEndianRT(void *p, unsigned int size) { }
+	inline void ToBigEndianRT(void *p, size_t size) { }
 #else
 	template<typename T> inline void ToLittleEndian(T&) { }
-	inline void ToLittleEndianRT(void *p, unsigned int size) { }
+	inline void ToLittleEndianRT(void *p, size_t size) { }
 	template<typename T> inline void ToBigEndian(T& val) { EndianConvert<T>(&val); }
-	inline void ToBigEndianRT(void *p, unsigned int size) { EndianConvertRT((char*)p, size); }
+	inline void ToBigEndianRT(void *p, size_t size) { EndianConvertRT((char*)p, size); }
 #endif
 
 	template<typename T> void ToLittleEndian(T*);   // will generate link error
@@ -87,7 +87,7 @@ public:
 		COPY,  //- Make a copy of the buffer (default action).
 		REUSE,   //- Use the passed-in buffer as is.  Requires the pointer
 		//  to remain valid over the life of this object.
-		TAKE_OVER, //- Take over the passed-in buffer; it will be deleted on object destruction.
+		TAKE_OVER //- Take over the passed-in buffer; it will be deleted on object destruction.
 	};
 
 	typedef int64_t      int64;
@@ -102,7 +102,7 @@ public:
 	class Exception
 	{
 	public:
-		Exception(const ByteBuffer *bb, const char *act, uint32 sp = 0)
+		Exception(const ByteBuffer *bb, const char *act, size_t sp = 0)
 		{
 			action = act;
 			rpos = bb->rpos();
@@ -110,14 +110,14 @@ public:
 			sizeparam = sp;
 			cursize = bb->size();
 		}
-		uint32 rpos, wpos, sizeparam, cursize;
+		size_t rpos, wpos, sizeparam, cursize;
 		const char *action;
 	};
 
 #ifdef BYTEBUFFER_NO_EXCEPTIONS
 #define BYTEBUFFER_EXCEPT(bb, desc, sz) { Exception __e(bb, desc, sz); \
 	fprintf(stderr, "Exception in ByteBuffer: '%s', rpos: %u, wpos: %u, cursize: %u, sizeparam: %u", \
-	__e.action, __e.rpos, __e.wpos, __e.cursize, __e.sizeparam);  abort(); }
+	__e.action, (unsigned)__e.rpos, (unsigned)__e.wpos, (unsigned)__e.cursize, (unsigned)__e.sizeparam);  abort(); }
 #else
 #define BYTEBUFFER_EXCEPT(bb, desc, sz) throw Exception(bb, desc, sz)
 #endif
@@ -125,7 +125,7 @@ public:
 protected:
 
 	uint8 *_buf; // the ptr to the buffer that holds all the bytes
-	uint32 _rpos, // read position, [0 ... _size]
+	size_t _rpos, // read position, [0 ... _size]
 		_wpos, // write position, [0 ... _size]
 		_res,  // reserved buffer size, [0 ... _size ... _res]
 		_size; // used buffer size
@@ -142,27 +142,27 @@ public:
                 _allocfunc(NULL), _mybuf(false), _growable(true)
 	{
 	}
-	ByteBuffer(uint32 res)
+	ByteBuffer(size_t res)
                 : _buf(NULL), _rpos(0), _wpos(0), _res(0), _size(0), _delfunc(NULL),
                   _allocfunc(NULL), _mybuf(false), _growable(true)
 	{
 		_allocate(res);
 	}
-	ByteBuffer(ByteBuffer &buf, Mode mode = COPY, uint32 extra = 0)
+	ByteBuffer(ByteBuffer &buf, Mode mode = COPY, size_t extra = 0)
                 : _buf(NULL), _rpos(0), _wpos(0), _res(0), _size(0), _delfunc(NULL),
                   _allocfunc(NULL), _mybuf(false), _growable(true)
         {
 		init(buf, mode, extra);
 	}
 	// del param only used with TAKE_OVER, extra only used with COPY
-	ByteBuffer(void *buf, uint32 size, Mode mode = COPY, delete_func del = NULL, uint32 extra = 0)
+	ByteBuffer(void *buf, size_t size, Mode mode = COPY, delete_func del = NULL, size_t extra = 0)
                 : _buf(NULL), _rpos(0), _wpos(0), _res(0), _size(0), _delfunc(NULL),
                   _allocfunc(NULL), _mybuf(false), _growable(true)  // for mode == REUSE
 	{
 		init(buf, size, mode, del, extra);
 	}
 
-	void init(void *buf, uint32 size, Mode mode = COPY, delete_func del = NULL, uint32 extra = 0)
+	void init(void *buf, size_t size, Mode mode = COPY, delete_func del = NULL, size_t extra = 0)
 	{
 		_mybuf = false;
 		switch(mode)
@@ -181,7 +181,7 @@ public:
 		}
 	}
 
-	void init(ByteBuffer& bb, Mode mode = COPY, uint32 extra = 0)
+	void init(ByteBuffer& bb, Mode mode = COPY, size_t extra = 0)
 	{
 		_allocfunc = bb._allocfunc;
 
@@ -227,7 +227,7 @@ public:
 		_rpos = _wpos = _size = 0;
 	}
 
-	void resize(uint32 newsize)
+	void resize(size_t newsize)
 	{
 		reserve(newsize);
 		_rpos = 0;
@@ -235,7 +235,7 @@ public:
 		_size = newsize;
 	}
 
-	void reserve(uint32 newsize)
+	void reserve(size_t newsize)
 	{
 		if(_res < newsize)
 			_allocate(newsize);
@@ -275,7 +275,7 @@ public:
 	BB_MAKE_READ_OP(float);
 	BB_MAKE_READ_OP(double);
 
-	inline uint8 operator[](uint32 pos) const
+	inline uint8 operator[](size_t pos) const
 	{
 		if(pos >= size())
 			BYTEBUFFER_EXCEPT(this, "operator[]", 1);
@@ -293,15 +293,15 @@ public:
 
 	// --------------------------------------------------
 
-	uint32 rpos() const { return _rpos; }
-	uint32 rpos(uint32 rpos)
+	size_t rpos() const { return _rpos; }
+	size_t rpos(size_t rpos)
 	{
 		_rpos = rpos < size() ? rpos : size();
 		return _rpos;
 	}
 
-	uint32 wpos() const { return _wpos; }
-	uint32 wpos(uint32 wpos)
+	size_t wpos() const { return _wpos; }
+	size_t wpos(size_t wpos)
 	{
 		_wpos = wpos < size() ? wpos : size();
 		return _wpos;
@@ -309,12 +309,12 @@ public:
 
 	template <typename T> T read()
 	{
-		T r = read<T>(_rpos);
+		const size_t pos = _rpos;
 		_rpos += sizeof(T);
-		return r;
+		return read<T>(pos);
 	}
 
-	template <typename T> T read(uint32 pos) const
+	template <typename T> T read(size_t pos) const
 	{
 		if(pos + sizeof(T) > size())
 			BYTEBUFFER_EXCEPT(this, "read", sizeof(T));
@@ -331,13 +331,13 @@ public:
 		return 0;
 	}
 
-	void readT(void *dest, uint32 len)
+	void readT(void *dest, size_t len)
 	{
 		read(dest, len);
 		ByteBufferTools::ToLittleEndianRT(dest, len);
 	}
 
-	void read(void *dest, uint32 len)
+	void read(void *dest, size_t len)
 	{
 		if (_rpos + len <= size())
 			memcpy(dest, &_buf[_rpos], len);
@@ -346,7 +346,7 @@ public:
 		_rpos += len;
 	}
 
-	void skipRead(uint32 len)
+	void skipRead(size_t len)
 	{
 		_rpos += len;
 	}
@@ -357,15 +357,15 @@ public:
 	inline const void *ptr() const { return _buf; }
 	inline       void *ptr()       { return _buf; }
 
-	inline uint32 size() const { return _size; }
+	inline size_t size() const { return _size; }
 
-	inline uint32 bytes() const { return size(); }
-	inline uint32 bits() const { return bytes() * 8; }
+	inline size_t bytes() const { return size(); }
+	inline size_t bits() const { return bytes() * 8; }
 
-	inline uint32 capacity() const { return _res; }
+	inline size_t capacity() const { return _res; }
 
-	inline uint32 readable(void) const { return size() - rpos(); }
-	inline uint32 writable(void) const { return size() - wpos(); } // free space left before realloc will occur
+	inline size_t readable(void) const { return size() - rpos(); }
+	inline size_t writable(void) const { return size() - wpos(); } // free space left before realloc will occur
 
 	template <typename T> inline void append(T value)
 	{
@@ -386,13 +386,13 @@ public:
 	}
 
 	// GCC 2.95 fails with an internal error in the template function above
-	void appendT(const void *src, uint32 bytes)
+	void appendT(const void *src, size_t bytes)
 	{
 		append(src, bytes);
 		ByteBufferTools::ToLittleEndianRT(_buf + (_wpos - bytes), bytes);
 	}
 
-	void append(const void *src, uint32 bytes)
+	void append(const void *src, size_t bytes)
 	{
 		if (!bytes) return;
 		_enlargeIfReq(_wpos + bytes);
@@ -407,12 +407,12 @@ public:
 			append(buffer.contents(), buffer.size());
 	}
 
-	void put(uint32 pos, const void *src, uint32 bytes)
+	void put(size_t pos, const void *src, size_t bytes)
 	{
 		memcpy(_buf + pos, src, bytes);
 	}
 
-	template <typename T> void put(uint32 pos, const T& value)
+	template <typename T> void put(size_t pos, const T& value)
 	{
 		if(pos >= size())
 			BYTEBUFFER_EXCEPT(this, "put", sizeof(T));
@@ -441,12 +441,12 @@ public:
 		_delfunc = f;
 	}
 
-	void _setSize(uint32 s)
+	void _setSize(size_t s)
 	{
 		_size = s;
 	}
 
-	void _setReserved(uint32 s)
+	void _setReserved(size_t s)
 	{
 		_res = s;
 	}
@@ -467,7 +467,7 @@ protected:
 	}
 
 	// allocate larger buffer and copy contents. if we own the current buffer, delete old, otherwise, leave it as it is.
-	void _allocate(uint32 s)
+	void _allocate(size_t s)
 	{
 		if(!_growable && _buf) // only throw if we already have a buf
 			BYTEBUFFER_EXCEPT(this, "_alloc+locked", s);
@@ -487,11 +487,11 @@ protected:
 			_delfunc = NULL;
 	}
 
-	void _enlargeIfReq(uint32 minSize)
+	void _enlargeIfReq(size_t minSize)
 	{
 		if(_res < minSize)
 		{
-			uint32 a = _res * 2;
+			size_t a = _res * 2;
 			if(a < minSize) // fallback if doubling the space was not enough
 				a += minSize;
 			_allocate(a);

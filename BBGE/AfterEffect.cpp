@@ -175,10 +175,10 @@ void AfterEffectManager::renderGrid(const RenderState& rs) const
 		{
 			if(firstShader < 0)
 			{
-				firstShader = i;
+				firstShader = int(i);
 				activeShader = shaderPipeline[i];
 			}
-			lastShader = i;
+			lastShader = int(i);
 		}
 	}
 
@@ -219,10 +219,6 @@ void AfterEffectManager::renderGrid(const RenderState& rs) const
 		// We just outputted to the backup buffer...
 		const FrameBuffer *fbIn = &core->frameBuffer;
 		const FrameBuffer *fbOut = &backupBuffer;
-
-		const float percentX = (float)screenWidth/(float)textureWidth;
-		const float percentY = (float)screenHeight/(float)textureHeight;
-
 
 		for(int i = firstShader + 1; i <= lastShader; ++i)
 		{

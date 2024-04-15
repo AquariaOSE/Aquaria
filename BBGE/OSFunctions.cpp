@@ -48,8 +48,8 @@ static std::string _CFToStdString(CFStringRef cs)
 #include "ttvfs.h"
 #endif
 
-#include "SDL.h"
-#include "SDL_syswm.h"
+#include <SDL.h>
+#include <SDL_syswm.h>
 
 #ifdef BBGE_BUILD_WINDOWS
 static HICON icon_windows = 0;
@@ -269,7 +269,7 @@ void forEachFile(const std::string& inpath, std::string type, void callback(cons
 	TCHAR           szDir[MAX_PATH+1];
 	WIN32_FIND_DATA FileData;
 
-	int end = path.size()-1;
+	size_t end = path.size()-1;
 	if (path[end] != '/')
 		path[end] += '/';
 

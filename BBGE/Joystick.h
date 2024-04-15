@@ -2,8 +2,7 @@
 #define BBGE_JOYSTICK_H
 
 #include <string>
-#include <SDL_joystick.h>
-#include <SDL_version.h>
+#include <SDL.h>
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 #include <SDL_gamecontroller.h>

@@ -16,10 +16,18 @@
 #  endif
 #  include <winsock2.h>
 #  include <ws2tcpip.h>
-#  define EWOULDBLOCK WSAEWOULDBLOCK
-#  define ETIMEDOUT WSAETIMEDOUT
-#  define ECONNRESET WSAECONNRESET
-#  define ENOTCONN WSAENOTCONN
+#  ifndef EWOULDBLOCK
+#    define EWOULDBLOCK WSAEWOULDBLOCK
+#  endif
+#  ifndef ETIMEDOUT
+#    define ETIMEDOUT WSAETIMEDOUT
+#  endif
+#  ifndef ECONNRESET
+#   define ECONNRESET WSAECONNRESET
+#  endif
+#  ifndef ENOTCONN
+#    define ENOTCONN WSAENOTCONN
+#  endif
 #  include <io.h>
 #else
 #  include <sys/types.h>
@@ -506,7 +514,7 @@ bool TcpSocket::open(const char *host /* = NULL */, unsigned int port /* = 0 */)
     traceprint("TcpSocket::open(): host = [%s], port = %d\n", host, port);
 
     assert(!SOCKETVALID(_s));
-    
+
     _recvSize = 0;
 
     {
@@ -1071,7 +1079,7 @@ void HttpSocket::_ProcessChunk(void)
             return;
         }
         term += 2; // skip CRLF
-        
+
         // when we are here, the (next) chunk header was completely received.
         chunksize = strtoul(_readptr, NULL, 16);
         _remaining = chunksize + 2; // the http protocol specifies that each chunk has a trailing CRLF
@@ -1140,7 +1148,7 @@ bool HttpSocket::_HandleStatus()
 
     const char *encoding = Hdr("transfer-encoding");
     _chunkedTransfer = encoding && !STRNICMP(encoding, "chunked", 7);
-    
+
     const char *conn = Hdr("connection"); // if its not keep-alive, server will close it, so we can too
     _mustClose = !conn || STRNICMP(conn, "keep-alive", 10);
 

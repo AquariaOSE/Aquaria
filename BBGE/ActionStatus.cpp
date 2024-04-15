@@ -12,7 +12,7 @@ ActionButtonStatus::ActionButtonStatus()
 
 void ActionButtonStatus::import(const ActionSet& as)
 {
-	joystickID = as.joystickID;
+	joystickID = (int)as.joystickID;
 
 	unsigned char found[ACTION_BUTTON_ENUM_SIZE];
 	memset(found, 0, sizeof(found));
@@ -29,7 +29,7 @@ void ActionButtonStatus::import(const ActionSet& as)
 	found[JOY_STICK_RIGHT] = 1;
 	found[JOY_STICK_UP] = 1;
 	found[JOY_STICK_DOWN]= 1;
-	
+
 	toQuery.clear();
 	for(int k = 1; k < sizeof(found); ++k) // ignore [0]
 		if(found[k])

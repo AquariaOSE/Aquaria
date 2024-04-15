@@ -281,7 +281,7 @@ public:
         bool deleteWhenDone;
         // To be extended
     };
-    
+
     typedef std::map<TcpSocket*, SocketSetData> Store;
 
     Store _store;

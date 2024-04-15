@@ -15,8 +15,8 @@ public:
     bool Compressed(void) const { return _iscompressed; }
     void Compressed(bool b) { _iscompressed = b; }
     void SetForceCompression(bool f) { _forceCompress = f; }
-    uint32 RealSize(void) const { return _iscompressed ? _real_size : size(); }
-    void RealSize(uint32 realsize) { _real_size = realsize; }
+    size_t RealSize(void) const { return _iscompressed ? _real_size : size(); }
+    void RealSize(size_t realsize) { _real_size = realsize; }
     void clear(void) // not required to be strictly virtual; be careful not to mess up static types!
     {
         ByteBuffer::clear();
@@ -26,13 +26,13 @@ public:
 
 protected:
     int _windowBits; // read zlib docs to know what this means
-    unsigned int _real_size;
+    size_t _real_size;
     bool _forceCompress;
     bool _iscompressed;
 
 private:
-    static void decompress(void *dst, uint32 *origsize, const void *src, uint32 size, int wbits);
-    static void compress(void* dst, uint32 *dst_size, const void* src, uint32 src_size,
+    static void decompress(void *dst, size_t *origsize, const void *src, size_t size, int wbits);
+    static void compress(void* dst, size_t *dst_size, const void* src, size_t src_size,
         uint8 level, int wbits);
 
     int decompressBlockwise();

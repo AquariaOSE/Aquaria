@@ -46,7 +46,7 @@ struct RecipeMenu
 
 
 	void toggle(bool on, bool watch=false);
-	void createPage(int p);
+	void createPage(size_t p);
 	void slide(RenderObject *r, bool in, float t);
 	void destroyPage();
 	void goNextPage();
@@ -91,7 +91,7 @@ public:
 	virtual void action(int actionID, int state, int source, InputDevice device);
 
 	void refreshFoodSlots(bool effects);
-	
+
 	RecipeMenu recipeMenu;
 
 	float menuSelectDelay;

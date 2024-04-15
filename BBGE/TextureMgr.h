@@ -27,7 +27,7 @@ public:
     {
         KEEP,          // if already exists, keep unchanged
         KEEP_IF_SAME,  // load if we resolve to a different file than the texture that's already there, if any.
-        OVERWRITE,     // always overwrite
+        OVERWRITE      // always overwrite
     };
 
     size_t loadBatch(Texture *pdst[], const std::string texnames[], size_t n, LoadMode mode = KEEP, ProgressCallback cb = 0, void *cbUD = 0);

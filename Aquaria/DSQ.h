@@ -244,9 +244,9 @@ public:
 	void voiceOnce(const std::string &file);
 	void voiceInterupt(const std::string &file);
 	void stopVoice();
-	Vector getNoteColor(int note);
+	Vector getNoteColor(size_t note);
 	int getRandNote();
-	Vector getNoteVector(int note, float mag=1);
+	Vector getNoteVector(size_t note, float mag=1);
 	void toggleCursor(bool v, float t = -1);
 
 	bool isDeveloperKeys() const;

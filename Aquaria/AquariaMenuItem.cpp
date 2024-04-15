@@ -162,7 +162,7 @@ void AquariaGuiElement::UpdateGlobalFocus(float dt)
 Direction AquariaGuiElement::GetDirection()
 {
 	Direction dir = DIR_NONE;
-	
+
 	StateObject *obj = dsq->getTopStateObject(); // usually Game...
 	if (obj)
 	{
@@ -787,7 +787,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 		break;
 		case INPUTSET_JOY:
 		{
-			size_t ac = 0;
+			unsigned ac = 0;
 			bool clear = false;
 			bool abort = false;
 			if (core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
@@ -805,7 +805,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 				Joystick *j = core->getJoystick(as.joystickID);
 				if(j)
 				{
-					for (size_t i = 0; i < MAX_JOYSTICK_BTN; i++)
+					for (unsigned i = 0; i < MAX_JOYSTICK_BTN; i++)
 						if (j->getButton(i))
 						{
 							ac = JOY_BUTTON_0 + i;
@@ -815,7 +815,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 						}
 
 					if(!ac)
-						for(size_t i = 0; i < MAX_JOYSTICK_AXIS; ++i)
+						for(unsigned i = 0; i < MAX_JOYSTICK_AXIS; ++i)
 						{
 							float ax = j->getAxisUncalibrated(i);
 							if(fabsf(ax) > JOY_AXIS_THRESHOLD)
@@ -828,7 +828,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 						}
 
 					if(!ac)
-						for(size_t i = 0; i < MAX_JOYSTICK_HATS; ++i)
+						for(unsigned i = 0; i < MAX_JOYSTICK_HATS; ++i)
 						{
 							JoyHatDirection hd = j->getHat(i);
 							if(hd != JOY_HAT_DIR_CENTERED)

@@ -25,7 +25,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/AfterEffect.h"
 #include "../BBGE/MathFunctions.h"
 #include "../BBGE/DebugFont.h"
-#include "../BBGE/LensFlare.h"
 #include "../BBGE/RoundedRect.h"
 #include "../BBGE/SimpleIStringStream.h"
 #include "TileRender.h"
@@ -788,7 +787,7 @@ void Game::loadEntityTypeList()
 
 	InStream in2(fn.c_str());
 
-	int curGroup=0;
+	size_t curGroup=0;
 	while (std::getline(in2, line))
 	{
 		if (line.find("GROUP:")!=std::string::npos)
@@ -2980,8 +2979,8 @@ void Game::applyState()
 
 	if (verbose) debugLog("paths init");
 
-	int pathSz = getNumPaths();
-	for (int i = 0; i < pathSz; i++)
+	size_t pathSz = getNumPaths();
+	for (size_t i = 0; i < pathSz; i++)
 		getPath(i)->init();
 
 	debugLog("Updating bgSfxLoop");
@@ -3700,7 +3699,7 @@ bool Game::collideCircleVsCircle(Entity *a, Entity *b)
 	return (a->position - b->position).isLength2DIn(a->collideRadius + b->collideRadius);
 }
 
-bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc, int *colSegment)
+bool Game::collideHairVsCircle(Entity *a, size_t num, const Vector &pos2, float radius, float perc, size_t *colSegment)
 {
 	if (perc == 0)
 		perc = 1;
@@ -3710,7 +3709,7 @@ bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, float rad
 		if (num == 0)
 			num = a->hair->hairNodes.size();
 		// HACK: minus 2
-		for (int i = 0; i < num; i++)
+		for (size_t i = 0; i < num; i++)
 		{
 			// + a->hair->position
 			c = ((a->hair->hairNodes[i].position) - pos2).isLength2DIn(a->hair->hairWidth*perc + radius);

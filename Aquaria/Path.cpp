@@ -92,12 +92,7 @@ PathNode *Path::getPathNode(size_t idx)
 
 void Path::reverseNodes()
 {
-	std::vector<PathNode> copy = nodes;
-	nodes.clear();
-	for (int i = copy.size()-1; i >= 0; i--)
-	{
-		nodes.push_back(copy[i]);
-	}
+	std::reverse(nodes.begin(), nodes.end());
 }
 
 void Path::setActive(bool v)

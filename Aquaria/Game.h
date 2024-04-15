@@ -155,7 +155,7 @@ public:
 
 	bool collideCircleWithGrid(const Vector& position, float r);
 
-	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc=0, int *colSegment=0);
+	bool collideHairVsCircle(Entity *a, size_t num, const Vector &pos2, float radius, float perc=0, size_t *colSegment=0);
 
 	bool collideCircleVsCircle(Entity *a, Entity *b);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, CollideQuad *circle);

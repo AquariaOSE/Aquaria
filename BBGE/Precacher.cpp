@@ -77,7 +77,7 @@ void Precacher::_precacheTex(const std::string &tex)
 
 static void texLoadProgressCallback(size_t done, void *ud)
 {
-	Precacher::ProgressCallback cb = (Precacher::ProgressCallback)(ud);
+	Precacher::ProgressCallback cb = reinterpret_cast<Precacher::ProgressCallback>(ud);
 	cb();
 }
 
@@ -90,7 +90,7 @@ void Precacher::doCache(ProgressCallback progress)
 		debugLog(os.str());
 		std::vector<Texture*> tmp(todo.size());
 		core->texmgr.loadBatch(&tmp[0], &todo[0], todo.size(), TextureMgr::KEEP,
-			progress ? texLoadProgressCallback : NULL, (void*)progress);
+			progress ? texLoadProgressCallback : NULL, reinterpret_cast<void*>(progress));
 		todo.clear();
 		texkeep.reserve(texkeep.size() + tmp.size());
 		for(size_t i = 0; i < tmp.size(); ++i)
