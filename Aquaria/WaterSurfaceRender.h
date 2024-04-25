@@ -27,11 +27,14 @@ class WaterSurfaceRender : public Quad
 {
 public:
 	WaterSurfaceRender();
+	virtual ~WaterSurfaceRender();
 	void render(const RenderState& rs) const OVERRIDE;
+	void prepareRender();
 protected:
-	Quad *qSurface, *qLine, *qLine2;
+	virtual void onEndOfLife() OVERRIDE;
+	Quad *qSurface, *qLine;
 	void onRender(const RenderState& rs) const OVERRIDE;
-	void onUpdate(float dt) OVERRIDE;
+	bool fbEffectVisible;
 };
 
 #endif

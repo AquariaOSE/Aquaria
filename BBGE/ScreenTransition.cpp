@@ -81,11 +81,12 @@ void ScreenTransition::reloadDevice()
 void ScreenTransition::capture()
 {
 	assert(screen_texture);
-	core->render();
+	core->renderExternal();
 
 	if (screen_texture)
 	{
 		glBindTexture(GL_TEXTURE_2D,screen_texture);
+		glReadBuffer(GL_BACK);
 		glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, windowWidth, windowHeight);
 		glBindTexture(GL_TEXTURE_2D, 0);
 	}

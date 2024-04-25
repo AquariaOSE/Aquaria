@@ -398,6 +398,7 @@ public:
 	bool isIgnoreAction(AquariaActions ac) const;
 
 	void onContinuityReset();
+	void onPrepareRender();
 
 protected:
 	unsigned highestLoadedEntityID;

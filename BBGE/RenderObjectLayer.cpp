@@ -37,6 +37,8 @@ RenderObjectLayer::RenderObjectLayer()
 		renderObjects[i] = 0;
 	objectCount = 0;
 	firstFreeIdx = 0;
+	preRender = NULL;
+	postRender = NULL;
 }
 
 RenderObjectLayer::~RenderObjectLayer()
@@ -251,8 +253,10 @@ void RenderObjectLayer::render(const RenderState& rs) const
 	{
 		assert(rs.pass == RenderObject::RENDER_ALL);
 		const RenderObject * const * rlist = &toRender[0]; // known to have at least one element
-		while(const RenderObject *ro = *rlist++)
+		const RenderObject *ro = *rlist++;
+		do
 			ro->render(rs);
+		while( (ro = *rlist++) );
 		proc += toRender.size() - 1;
 	}
 	else

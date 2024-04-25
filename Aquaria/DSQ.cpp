@@ -201,7 +201,6 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	console = 0;
 	cmDebug = 0;
 	saveSlotMode = SSM_NONE;
-	afterEffectManagerLayer = LR_AFTER_EFFECTS; // LR_AFTER_EFFECTS
 	renderObjectLayers.resize(LR_MAX);
 
 	entities.resize(64, 0);
@@ -585,7 +584,7 @@ static void loadBit(int index, float perc = 1)
 
 	loading->setWidthHeight(loadingProgress*600, 23);
 
-	dsq->render();
+	dsq->renderExternal();
 	dsq->showBuffer();
 }
 
@@ -687,6 +686,45 @@ static bool sdlVideoModeOK(int disp, const int w, const int h, const int bpp)
 	return SDL_VideoModeOK(w, h, bpp, SDL_OPENGL | SDL_FULLSCREEN);
 #endif
 }
+
+static bool preRenderDarkLayer(const RenderState& rs)
+{
+	if(core->darkLayer.isUsed())
+		core->darkLayer.beginCapture();
+
+	return true;
+}
+
+static void postRenderDarkLayer(const RenderState& rs)
+{
+	if(core->darkLayer.isUsed())
+	{
+		core->darkLayer.endCapture();
+	}
+}
+
+static bool beginAfterEffectCapture(const RenderState& rs)
+{
+	if (core->afterEffectManager)
+		core->afterEffectManager->beginCapture();
+
+	return true;
+}
+
+static bool preRenderAfterEffectLayer(const RenderState& rs)
+{
+	if(core->darkLayer.isUsed())
+		core->darkLayer.render(rs);
+
+	if(core->afterEffectManager)
+	{
+		unsigned page = core->frameBuffer.popCapture();
+		core->afterEffectManager->render(rs, page);
+	}
+
+	return true;
+}
+
 
 void DSQ::init()
 {
@@ -911,12 +949,6 @@ void DSQ::init()
 	precacher.clear();
 
 
-
-	render();
-	showBuffer();
-
-
-
 	loadBit(LOAD_INITIAL);
 
 	debugLog("Loading Particle Bank...");
@@ -968,7 +1000,6 @@ void DSQ::init()
 
 	user.video.darkbuffersize = MAX(user.video.darkbuffersize,128);
 
-	darkLayer.setLayers(LR_ELEMENTS13, LR_AFTER_EFFECTS);
 	debugLog("dark layer init");
 	darkLayer.init(user.video.darkbuffersize, user.video.darkfbuffer);
 	debugLog("dark layer togle...");
@@ -1269,6 +1300,14 @@ void DSQ::init()
 	renderObjectLayerOrder[LR_ENTITIES_MINUS4] = -1;
 	renderObjectLayerOrder[LR_ENTITIES_MINUS3] = -1;
 	renderObjectLayerOrder[LR_ENTITIES_MINUS2] = -1;
+
+	renderObjectLayers[LR_ZERO].preRender = beginAfterEffectCapture;
+	renderObjectLayers[LR_AFTER_EFFECTS].preRender = preRenderAfterEffectLayer;
+
+	renderObjectLayers[LR_ELEMENTS13].preRender = preRenderDarkLayer;
+	renderObjectLayers[LR_ELEMENTS13].postRender = postRenderDarkLayer;
+	darkLayer.beginLayer = LR_ELEMENTS13;
+	darkLayer.lastLayer = LR_ELEMENTS13;
 
 
 
@@ -2717,8 +2756,8 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 
 		glPushAttrib(GL_VIEWPORT_BIT);
 		glViewport(0, 0, renderWidth, renderHeight);
-		clearBuffers();
-		render();
+		glClear(GL_COLOR_BUFFER_BIT);
+		renderExternal();
 		scrShotData = grabScreenshot(x, y, scrShotWidth, scrShotHeight);
 		glPopAttrib();
 		showBuffer();
@@ -3315,6 +3354,11 @@ void DSQ::prepScreen(bool screenshot)
 	}
 }
 
+void DSQ::onPrepareRender()
+{
+	game->onPrepareRender();
+}
+
 void DSQ::onRender()
 {
 	if (cursor)
@@ -3661,7 +3705,7 @@ void DSQ::onUpdate(float dt)
 				pollEvents(sec);
 				ActionMapper::onUpdate(sec);
 				SDL_Delay(int(sec*1000));
-				render();
+				renderExternal();
 				showBuffer();
 				resetTimer();
 
@@ -4162,17 +4206,18 @@ void AquariaScreenTransition::capture()
 	InterpolatedVector oldAlpha = dsq->cursor->alpha;
 	dsq->cursor->alpha.x = 0;
 	int width=0, height=0;
-	dsq->render();
+	dsq->renderExternal();
 
 	width = dsq->getWindowWidth();
 	height = dsq->getWindowHeight();
 
 	glBindTexture(GL_TEXTURE_2D,screen_texture);
+	glReadBuffer(GL_BACK);
 	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
 
 
 	dsq->cursor->alpha = oldAlpha;
-	dsq->render();
+	dsq->renderExternal();
 	dsq->showBuffer();
 
 	this->alpha = 1;

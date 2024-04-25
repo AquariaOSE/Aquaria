@@ -113,6 +113,9 @@ enum FollowCameraLock
 
 typedef std::vector <RenderObject*> RenderObjects;
 
+typedef bool (*PreRenderFunc)(const RenderState& rs);
+typedef void (*PostRenderFunc)(const RenderState& rs);
+
 class RenderObjectLayer
 {
 public:
@@ -170,6 +173,9 @@ public:
 
 	bool update;
 
+	PreRenderFunc preRender;
+	PostRenderFunc postRender;
+
 protected:
 	RenderObjects renderObjects;
 	std::vector<const RenderObject*> toRender;
@@ -206,8 +212,9 @@ public:
 
 	void applyState(const std::string &state);
 
-	void clearBuffers();
-	void render(int startLayer=-1, int endLayer=-1, bool useFrameBufferIfAvail=true);
+	void renderExternal();
+	void prepareRender();
+	void renderInternal(int startLayer, int endLayer, bool allowSkip);
 	void showBuffer();
 	void quit();
 	bool isShuttingDown();
@@ -465,7 +472,6 @@ protected:
 	virtual void onJoystickAdded(int deviceID);
 	virtual void onJoystickRemoved(int instanceID);
 
-	int afterEffectManagerLayer;
 	Vector cameraOffset;
 	std::vector<float> avgFPS;
 	virtual void modifyDt(float &dt){}
@@ -486,6 +492,7 @@ protected:
 
 	virtual void onUpdate(float dt);
 	virtual void onRender(){}
+	virtual void onPrepareRender(){}
 
 	void setupFileAccess();
 	std::string _extraDataDir;
@@ -498,6 +505,8 @@ protected:
 	DynamicGPUBuffer defautQuadBorder;
 
 public:
+	RenderGrid blitQuad;
+
 	// inclusive!
 	inline int getMaxActionStatusIndex() const { return int(actionStatus.size()) - 2; }
 	// pass -1 for is a sentinel that captures all input

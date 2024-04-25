@@ -23,32 +23,47 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Base.h"
 
+class FrameBufferCapture;
+struct RenderState;
+
 
 class FrameBuffer
 {
+	friend class FrameBufferCapture;
 public:
 	FrameBuffer();
 	~FrameBuffer();
-	bool init(int width, int height, bool fitToScreen=false);
+	bool init(int width, int height, unsigned pages);
 	bool isInited() const { return inited; }
-	void startCapture() const;
-	void endCapture() const;
-	void bindTexture() const;
+	unsigned getTextureID(unsigned page) const;
+	void bindTexture(unsigned page) const;
 	int getTexWidth() const { return texw; }
 	int getTexHeight() const { return texh; }
 	float getWidthP() const;
 	float getHeightP() const;
+	bool getCurrentPage() const;
 
 	void unloadDevice();
 	void reloadDevice();
 
+	// push/pop capture stack
+	void pushCapture(unsigned page) const;
+	unsigned popCapture() const; // returns page
+
+	// replace top of capture stack with this
+	void replaceCapture(unsigned page) const;
+
 protected:
+	void _bind(unsigned page) const;
+
+	unsigned _fbos[8];
+	unsigned _texs[8];
+
 	int _w, _h;
-	bool _fitToScreen;
-	unsigned g_frameBuffer;
-	unsigned g_depthRenderBuffer;
-	unsigned g_dynamicTextureID;
+	mutable unsigned _curpage; // 0 if not currently bound
+	unsigned _numpages, _numfbos;
 	int texw, texh;
+	int viewportW, viewportH;
 	bool inited;
 };
 

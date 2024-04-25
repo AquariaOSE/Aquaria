@@ -232,6 +232,7 @@ Game::Game() : StateObject()
 	noSceneTransitionFadeout = false;
 	fullTilesetReload = false;
 	highestLoadedEntityID = 0;
+	waterSurfaceRender = NULL;
 }
 
 Game::~Game()
@@ -2032,7 +2033,7 @@ bool Game::saveScene(std::string scene)
 		saveFile.InsertEndChild(pathXml);
 	}
 
-	for(size_t lr = 0; lr < MAX_TILE_LAYERS; ++lr)
+	for(unsigned lr = 0; lr < MAX_TILE_LAYERS; ++lr)
 	{
 		const TileStorage& ts = dsq->tilemgr.tilestore[lr];
 		std::ostringstream simpleElements;
@@ -2084,7 +2085,7 @@ bool Game::saveScene(std::string scene)
 		{
 			XMLElement *simpleElementsXML = saveFile.NewElement("SE");
 			simpleElementsXML->SetAttribute("k", s.c_str());
-			simpleElementsXML->SetAttribute("l", (unsigned)lr);
+			simpleElementsXML->SetAttribute("l", lr);
 			std::string str = simpleElements_repeatScale.str();
 			if(!str.empty())
 				simpleElementsXML->SetAttribute("repeatScale", str.c_str());
@@ -2436,6 +2437,7 @@ void Game::applyState()
 	inHelpScreen = false;
 	helpBG = 0;
 	helpBG2 = 0;
+	waterSurfaceRender = NULL;
 
 	dsq->returnToScene = "";
 
@@ -4788,6 +4790,7 @@ void Game::removeState()
 	gridRenderUser1 = 0;
 	gridRenderUser2 = 0;
 	worldMapRender = 0;
+	waterSurfaceRender = 0;
 
 	clearObsRows();
 
@@ -4986,4 +4989,10 @@ bool Game::isIgnoreAction(AquariaActions ac) const
 void Game::onContinuityReset()
 {
 	themenu->onContinuityReset();
+}
+
+void Game::onPrepareRender()
+{
+	if(waterSurfaceRender)
+		waterSurfaceRender->prepareRender();
 }

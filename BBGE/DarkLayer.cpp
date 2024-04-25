@@ -26,12 +26,11 @@ DarkLayer::DarkLayer()
 {
 	quality = 0;
 	active = false;
-	layer = -1;
-	renderLayer = -1;
 	texture = 0;
-
-	format = GL_RGB;			//FIXED?: used to be GL_LUMINANCE, that might have been causing problems
-	useFrameBuffer = true;		//BUG?: will do this even if frame buffer is off in usersettings...
+	useFrameBuffer = false;
+	layer = -1;
+	beginLayer = -1;
+	lastLayer = -1;
 }
 
 void DarkLayer::unloadDevice()
@@ -53,23 +52,16 @@ void DarkLayer::reloadDevice()
 		texture = generateEmptyTexture(quality);
 }
 
-int DarkLayer::getRenderLayer()
+bool DarkLayer::isUsed() const
 {
-	return renderLayer;
+	return active;
 }
 
-bool DarkLayer::isUsed()
+bool DarkLayer::shouldRenderLayer(int lr) const
 {
-	//HACK: disabling dark layer for temporary testing build
-	// MAKE SURE TO RESTORE THIS CODE TO THE WAY IT WAS
-	return layer > -1 && active;
-
-}
-
-void DarkLayer::setLayers(int layer, int rl)
-{
-	this->layer = layer;
-	this->renderLayer = rl;
+	if(!active)
+		return true;
+	return useFrameBuffer || (lr < beginLayer || lr > lastLayer);
 }
 
 void DarkLayer::init(int quality, bool useFrameBufferParam)
@@ -80,7 +72,7 @@ void DarkLayer::init(int quality, bool useFrameBufferParam)
 
 	if (useFrameBuffer)
 	{
-		if (!frameBuffer.init(quality, quality))
+		if (!frameBuffer.init(quality, quality, 1))
 			useFrameBuffer = false;
 		else
 			debugLog("Dark Layer: using framebuffer");
@@ -92,11 +84,6 @@ void DarkLayer::init(int quality, bool useFrameBufferParam)
 	}
 }
 
-int DarkLayer::getLayer()
-{
-	return layer;
-}
-
 void DarkLayer::toggle(bool on)
 {
 	this->active = on;
@@ -104,77 +91,77 @@ void DarkLayer::toggle(bool on)
 
 void DarkLayer::preRender()
 {
-	if (layer != -1)
+	if(!useFrameBuffer)
 	{
-		glViewport(0,0,quality,quality);
-
-		if (useFrameBuffer)
-			frameBuffer.startCapture();
-
+		glViewport(0, 0, quality, quality);
 		glClearColor(1,1,1,0);
 		glClear(GL_COLOR_BUFFER_BIT);
+		core->renderInternal(beginLayer, lastLayer, false);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glReadBuffer(GL_BACK);
+		glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, quality, quality, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
+	}
+}
 
-		core->render(layer, layer, false);
+void DarkLayer::beginCapture()
+{
+	if(useFrameBuffer)
+	{
+		frameBuffer.pushCapture(0);
+		glClearColor(1,1,1,0);
+		glClear(GL_COLOR_BUFFER_BIT);
+	}
+}
 
-		if (useFrameBuffer)
-			frameBuffer.endCapture();
-		else
-		{
-			glBindTexture(GL_TEXTURE_2D,texture);					// Bind To The Blur Texture
-			// Copy Our ViewPort To The Blur Texture (From 0,0 To q,q... No Border)
-			glCopyTexImage2D(GL_TEXTURE_2D, 0, format, 0, 0, quality, quality, 0);
-		}
-
-		glViewport(0, 0, core->width, core->height);
-		glClearColor(0,0,0,0);
+void DarkLayer::endCapture()
+{
+	if(useFrameBuffer)
+	{
+		frameBuffer.popCapture();
 	}
 }
 
 void DarkLayer::render(const RenderState& rs) const
 {
-	if (renderLayer != -1)
-	{
-		glPushMatrix();
-		glLoadIdentity();
+	glPushMatrix();
+	glLoadIdentity();
 
 
+	glEnable(GL_TEXTURE_2D);
+	if (useFrameBuffer)
+		frameBuffer.bindTexture(0);
+	else
+		glBindTexture(GL_TEXTURE_2D,texture);
 
-		glEnable(GL_TEXTURE_2D);
-		if (useFrameBuffer)
-			frameBuffer.bindTexture();
-		else
-			glBindTexture(GL_TEXTURE_2D,texture);
+	rs.gpu.setBlend(BLEND_MULT);
 
-		rs.gpu.setBlend(BLEND_MULT);
+	glColor4f(1,1,1,1);
 
-		glColor4f(1,1,1,1);
+	const float width  =  core->getWindowWidth();
+	const float height =  core->getWindowHeight();
+	const float offX   = -(core->getVirtualOffX() * width / core->getVirtualWidth());
+	const float offY   = -(core->getVirtualOffY() * height / core->getVirtualHeight());
+	const float stretch = 4;
 
-		const float width  =  core->getWindowWidth();
-		const float height =  core->getWindowHeight();
-		const float offX   = -(core->getVirtualOffX() * width / core->getVirtualWidth());
-		const float offY   = -(core->getVirtualOffY() * height / core->getVirtualHeight());
-		const float stretch = 4;
+	glBegin(GL_QUADS);
 
-		glBegin(GL_QUADS);
+		glTexCoord2f(0,1);
+		glVertex2f(offX-stretch, offY-stretch);
 
-			glTexCoord2f(0,1);
-			glVertex2f(offX-stretch, offY-stretch);
+		glTexCoord2f(0,0);
+		glVertex2f(offX-stretch, height+offY+stretch);
 
-			glTexCoord2f(0,0);
-			glVertex2f(offX-stretch, height+offY+stretch);
+		glTexCoord2f(1,0);
+		glVertex2f(width+offX+stretch, height+offY+stretch);
 
-			glTexCoord2f(1,0);
-			glVertex2f(width+offX+stretch, height+offY+stretch);
+		glTexCoord2f(1,1);
+		glVertex2f(width+offX+stretch, offY-stretch);
 
-			glTexCoord2f(1,1);
-			glVertex2f(width+offX+stretch, offY-stretch);
+	glEnd();
 
-		glEnd();
+	glPopMatrix();
 
-		glPopMatrix();
-
-		RenderObject::lastTextureApplied = 0;
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-	}
+	RenderObject::lastTextureApplied = 0;
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

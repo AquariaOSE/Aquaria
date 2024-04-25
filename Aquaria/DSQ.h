@@ -444,8 +444,9 @@ protected:
 	float shakeCameraTimer;
 	float shakeCameraMag;
 
-	void onUpdate(float dt);
-	void onRender();
+	void onUpdate(float dt) OVERRIDE;
+	void onRender() OVERRIDE;
+	void onPrepareRender() OVERRIDE;
 
 	void modifyDt(float &dt);
 

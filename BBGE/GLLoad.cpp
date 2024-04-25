@@ -98,22 +98,13 @@ PFNGLUNIFORM3IVARBPROC           glUniform3ivARB            = NULL;
 PFNGLUNIFORM4IVARBPROC           glUniform4ivARB            = NULL;
 
 // GL_ARB_shader_objects and related
-PFNGLISRENDERBUFFEREXTPROC glIsRenderbufferEXT = NULL;
-PFNGLBINDRENDERBUFFEREXTPROC glBindRenderbufferEXT = NULL;
-PFNGLDELETERENDERBUFFERSEXTPROC glDeleteRenderbuffersEXT = NULL;
-PFNGLGENRENDERBUFFERSEXTPROC glGenRenderbuffersEXT = NULL;
-PFNGLRENDERBUFFERSTORAGEEXTPROC glRenderbufferStorageEXT = NULL;
-PFNGLGETRENDERBUFFERPARAMETERIVEXTPROC glGetRenderbufferParameterivEXT = NULL;
 PFNGLISFRAMEBUFFEREXTPROC glIsFramebufferEXT = NULL;
 PFNGLBINDFRAMEBUFFEREXTPROC glBindFramebufferEXT = NULL;
 PFNGLDELETEFRAMEBUFFERSEXTPROC glDeleteFramebuffersEXT = NULL;
 PFNGLGENFRAMEBUFFERSEXTPROC glGenFramebuffersEXT = NULL;
 PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC glCheckFramebufferStatusEXT = NULL;
-PFNGLFRAMEBUFFERTEXTURE1DEXTPROC glFramebufferTexture1DEXT = NULL;
 PFNGLFRAMEBUFFERTEXTURE2DEXTPROC glFramebufferTexture2DEXT = NULL;
-PFNGLFRAMEBUFFERTEXTURE3DEXTPROC glFramebufferTexture3DEXT = NULL;
-PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT = NULL;
-PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT = NULL;
+PFNGLDRAWBUFFERSARBPROC glDrawBuffersARB = NULL;
 
 // ARB_vertex_buffer_object
 PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;
@@ -123,6 +114,8 @@ PFNGLBUFFERSUBDATAARBPROC glBufferSubDataARB = NULL;
 PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;
 PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL;
 PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
+
+PFNGLCOPYIMAGESUBDATAEXTPROC glCopyImageSubDataEXT = NULL;
 
 // extern
 unsigned g_dbg_numRenderCalls = 0;
@@ -182,22 +175,16 @@ bool lookup_all_glsyms()
 		debugLog(os.str());
 	}
 	// framebuffer
-	glIsRenderbufferEXT = (PFNGLISRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glIsRenderbufferEXT");
-	glBindRenderbufferEXT = (PFNGLBINDRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glBindRenderbufferEXT");
-	glDeleteRenderbuffersEXT = (PFNGLDELETERENDERBUFFERSEXTPROC)SDL_GL_GetProcAddress("glDeleteRenderbuffersEXT");
-	glGenRenderbuffersEXT = (PFNGLGENRENDERBUFFERSEXTPROC)SDL_GL_GetProcAddress("glGenRenderbuffersEXT");
-	glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC)SDL_GL_GetProcAddress("glRenderbufferStorageEXT");
-	glGetRenderbufferParameterivEXT = (PFNGLGETRENDERBUFFERPARAMETERIVEXTPROC)SDL_GL_GetProcAddress("glGetRenderbufferParameterivEXT");
 	glIsFramebufferEXT = (PFNGLISFRAMEBUFFEREXTPROC)SDL_GL_GetProcAddress("glIsFramebufferEXT");
 	glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)SDL_GL_GetProcAddress("glBindFramebufferEXT");
 	glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSEXTPROC)SDL_GL_GetProcAddress("glDeleteFramebuffersEXT");
 	glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)SDL_GL_GetProcAddress("glGenFramebuffersEXT");
 	glCheckFramebufferStatusEXT = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)SDL_GL_GetProcAddress("glCheckFramebufferStatusEXT");
-	glFramebufferTexture1DEXT = (PFNGLFRAMEBUFFERTEXTURE1DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture1DEXT");
 	glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture2DEXT");
-	glFramebufferTexture3DEXT = (PFNGLFRAMEBUFFERTEXTURE3DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture3DEXT");
-	glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glFramebufferRenderbufferEXT");
-	glGetFramebufferAttachmentParameterivEXT = (PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC)SDL_GL_GetProcAddress("glGetFramebufferAttachmentParameterivEXT");
+	glDrawBuffersARB          = NULL;//(PFNGLDRAWBUFFERSARBPROC)SDL_GL_GetProcAddress("glDrawBuffersARB");
+
+	// GL 4.3+, but maybe available as an extension
+	glCopyImageSubDataEXT     = (PFNGLCOPYIMAGESUBDATAEXTPROC)SDL_GL_GetProcAddress("glCopyImageSubDataEXT");
 
 	// shaders
 	glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
@@ -265,22 +252,13 @@ void unload_all_glsyms()
 
 	// set these back to NULL and reload them upon reinit, otherwise they
 	//  might point to a bogus address when the shared library is reloaded.
-	glIsRenderbufferEXT = NULL;
-	glBindRenderbufferEXT = NULL;
-	glDeleteRenderbuffersEXT = NULL;
-	glGenRenderbuffersEXT = NULL;
-	glRenderbufferStorageEXT = NULL;
-	glGetRenderbufferParameterivEXT = NULL;
 	glIsFramebufferEXT = NULL;
 	glBindFramebufferEXT = NULL;
 	glDeleteFramebuffersEXT = NULL;
 	glGenFramebuffersEXT = NULL;
 	glCheckFramebufferStatusEXT = NULL;
-	glFramebufferTexture1DEXT = NULL;
 	glFramebufferTexture2DEXT = NULL;
-	glFramebufferTexture3DEXT = NULL;
-	glFramebufferRenderbufferEXT = NULL;
-	glGetFramebufferAttachmentParameterivEXT = NULL;
+	glDrawBuffersARB = NULL;
 
 	glCreateProgramObjectARB  = NULL;
 	glDeleteObjectARB         = NULL;

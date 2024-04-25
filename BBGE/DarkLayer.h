@@ -32,24 +32,28 @@ public:
 	DarkLayer();
 	void init(int quality, bool useFrameBuffer=true);
 	void toggle(bool on);
-	void setLayers(int layer, int renderLayer);
-	void preRender();
+	void setSrcLayer(int layer);
+	void preRender(); // call before rendering anything else. this is for render-to-texture mode
+	void beginCapture(); // call this + endCapture() when rendering the layer where dark layer objects are located
+	void endCapture();
+
 	void render(const RenderState& rs) const;
-	int getLayer();
-	int getRenderLayer();
-	bool isUsed();
+	bool isUsed() const;
+	bool shouldRenderLayer(int lr) const;
 
 	void unloadDevice();
 	void reloadDevice();
 
+	int beginLayer;
+	int lastLayer; // inclusive
+
+protected:
 	bool useFrameBuffer;
 	FrameBuffer frameBuffer;
-protected:
 	int quality;
+	int layer;
 	bool active;
-	int layer, renderLayer;
 	unsigned texture;
-	unsigned format;
 };
 
 #endif

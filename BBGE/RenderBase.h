@@ -50,6 +50,10 @@ GLAPI GLuint APIENTRY glGetDebugMessageLogARB (GLuint count, GLsizei bufSize, GL
 #endif
 #endif /* GL_ARB_debug_output */
 
+#if !defined(GL_ARB_copy_image) && !defined(GL_VERSION_4_3)
+typedef void (APIENTRYP PFNGLCOPYIMAGESUBDATAEXTPROC) (GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth);
+#endif
+
 #ifdef _WINDOWS_
 #error windows.h was included! euuugh!
 #endif
@@ -86,22 +90,13 @@ extern PFNGLUNIFORM2IVARBPROC           glUniform2ivARB;
 extern PFNGLUNIFORM3IVARBPROC           glUniform3ivARB;
 extern PFNGLUNIFORM4IVARBPROC           glUniform4ivARB;
 
-extern PFNGLISRENDERBUFFEREXTPROC glIsRenderbufferEXT;
-extern PFNGLBINDRENDERBUFFEREXTPROC glBindRenderbufferEXT;
-extern PFNGLDELETERENDERBUFFERSEXTPROC glDeleteRenderbuffersEXT;
-extern PFNGLGENRENDERBUFFERSEXTPROC glGenRenderbuffersEXT;
-extern PFNGLRENDERBUFFERSTORAGEEXTPROC glRenderbufferStorageEXT;
-extern PFNGLGETRENDERBUFFERPARAMETERIVEXTPROC glGetRenderbufferParameterivEXT;
 extern PFNGLISFRAMEBUFFEREXTPROC glIsFramebufferEXT;
 extern PFNGLBINDFRAMEBUFFEREXTPROC glBindFramebufferEXT;
 extern PFNGLDELETEFRAMEBUFFERSEXTPROC glDeleteFramebuffersEXT;
 extern PFNGLGENFRAMEBUFFERSEXTPROC glGenFramebuffersEXT;
 extern PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC glCheckFramebufferStatusEXT;
-extern PFNGLFRAMEBUFFERTEXTURE1DEXTPROC glFramebufferTexture1DEXT;
 extern PFNGLFRAMEBUFFERTEXTURE2DEXTPROC glFramebufferTexture2DEXT;
-extern PFNGLFRAMEBUFFERTEXTURE3DEXTPROC glFramebufferTexture3DEXT;
-extern PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT;
-extern PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT;
+extern PFNGLDRAWBUFFERSARBPROC glDrawBuffersARB;
 
 extern PFNGLGENBUFFERSARBPROC glGenBuffersARB;
 extern PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB;
@@ -110,5 +105,7 @@ extern PFNGLBUFFERSUBDATAARBPROC glBufferSubDataARB;
 extern PFNGLBINDBUFFERARBPROC glBindBufferARB;
 extern PFNGLMAPBUFFERARBPROC glMapBufferARB;
 extern PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB;
+
+extern PFNGLCOPYIMAGESUBDATAEXTPROC glCopyImageSubDataEXT;
 
 #endif

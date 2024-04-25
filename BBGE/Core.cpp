@@ -151,7 +151,7 @@ void Core::setup_opengl()
 
 	setClearColor(clearColor);
 
-	frameBuffer.init(-1, -1, true);
+	frameBuffer.init(-1, -1, 2);
 	if(afterEffectManager)
 		afterEffectManager->updateDevice();
 
@@ -160,6 +160,32 @@ void Core::setup_opengl()
 	defaultQuadGrid.init(2, 2, defaultTC);
 
 	defautQuadBorder.initQuadVertices(defaultTC, GPUACCESS_DEFAULT);
+
+	int screenWidth = getWindowWidth();
+	int screenHeight = core->getWindowHeight();
+	int textureWidth, textureHeight;
+
+	if (core->frameBuffer.isInited())
+	{
+		textureWidth = core->frameBuffer.getTexWidth();
+		textureHeight = core->frameBuffer.getTexHeight();
+	}
+	else
+	{
+		textureWidth = screenWidth;
+		sizePowerOf2Texture(textureWidth);
+		textureHeight = screenHeight;
+		sizePowerOf2Texture(textureHeight);
+	}
+
+	const float percentX = (float)screenWidth/(float)textureWidth;
+	const float percentY = (float)screenHeight/(float)textureHeight;
+	TexCoordBox tc = { 0, percentY, percentX, 0 }; // Y is upside down
+	blitQuad.setTexCoords(tc);
+	blitQuad.init(2, 2);
+	blitQuad.reset01();
+	blitQuad.updateVBO(); // never changed afterwards
+
 }
 
 void Core::resizeWindow(int w, int h, int full, int bpp, int vsync, int display, int hz)
@@ -378,7 +404,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	baseCullRadius = 1;
 	width = height = 0;
 	_lastEnumeratedDisplayIndex = -1;
-	afterEffectManagerLayer = 0;
 	renderObjectLayers.resize(1);
 	invGlobalScale = 1.0;
 	invGlobalScaleSqr = 1.0;
@@ -740,7 +765,9 @@ void Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 	enumerateScreenModes(window->getDisplayIndex());
 
 	window->updateSize();
-	cacheRender(); // Clears the window bg to black early; prevents flickering
+	glClearColor(0,0,0,0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	showBuffer();
 	lib_graphics = true;
 }
 
@@ -1182,14 +1209,13 @@ void Core::run(float runTime)
 
 		if (settings.renderOn)
 		{
-			if (darkLayer.isUsed())
+			if(!minimized)
 			{
-				darkLayer.preRender();
+				prepareRender();
+				renderInternal(-1, -1, true);
+
+				showBuffer();
 			}
-
-			render();
-
-			showBuffer();
 
 			if (nestedMains == 1)
 				clearGarbage();
@@ -1219,11 +1245,6 @@ void Core::run(float runTime)
 	if (nestedMains==1)
 		clearGarbage();
 	nestedMains--;
-}
-
-void Core::clearBuffers()
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
 }
 
 void Core::setupRenderPositionAndScale()
@@ -1766,7 +1787,7 @@ void Core::print(int x, int y, const char *str, float sz)
 
 void Core::cacheRender()
 {
-	render();
+	renderExternal();
 	// what if the screen was full white? then you wouldn't want to clear buffers
 	//clearBuffers();
 	showBuffer();
@@ -1780,7 +1801,13 @@ void Core::updateCullData()
 	screenCenter = cullCenter = cameraPos + Vector(400.0f*invGlobalScale,300.0f*invGlobalScale);
 }
 
-void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
+void Core::renderExternal()
+{
+	prepareRender();
+	renderInternal(-1, -1, true);
+}
+
+void Core::prepareRender()
 {
 	renderObjectCount = 0;
 	processedRenderObjectCount = 0;
@@ -1788,12 +1815,9 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 	globalScaleChanged();
 
-	if (minimized) return;
-	onRender();
-
-	RenderObject::lastTextureApplied = 0;
-
 	updateCullData();
+
+	onPrepareRender();
 
 	// TODO: this could be done in parallel
 	for (size_t i = 0; i < renderObjectLayers.size(); ++i)
@@ -1802,19 +1826,31 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 			renderObjectLayers[i].prepareRender();
 	}
 
+	if (darkLayer.isUsed())
+	{
+		darkLayer.preRender();
+	}
+
+	glClearColor(0,0,0,0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glViewport(0, 0, core->width, core->height);
+}
+
+
+// Make sure to call prepareRender() before calling this!
+void Core::renderInternal(int startLayer, int endLayer, bool allowSkip)
+{
+	onRender();
+
+	RenderObject::lastTextureApplied = 0;
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glLoadIdentity();									// Reset The View
-	clearBuffers();
-
-	if (afterEffectManager && frameBuffer.isInited() && useFrameBufferIfAvail)
-	{
-		frameBuffer.startCapture();
-	}
 
 	setupRenderPositionAndScale();
 
 	CombinedRenderAndGPUState rs;
-
 
 	for (size_t c = 0; c < renderObjectLayerOrder.size(); c++)
 	{
@@ -1822,30 +1858,22 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 		if (i == -1) continue;
 		if ((startLayer != -1 && endLayer != -1) && (i < startLayer || i > endLayer)) continue;
 
-		if (darkLayer.isUsed() )
-		{
-
-			if (i == darkLayer.getRenderLayer())
-			{
-				darkLayer.render(rs);
-			}
-
-			if (i == darkLayer.getLayer() && startLayer != i)
-			{
-				continue;
-			}
-		}
-
-		if (afterEffectManager /*&& afterEffectManager->active*/ && i == afterEffectManagerLayer)
-		{
-			afterEffectManager->render(rs);
-		}
+		// don't render the layers that the dark layer takes as input
+		if(allowSkip && !darkLayer.shouldRenderLayer(i))
+			continue;
 
 		RenderObjectLayer *r = &renderObjectLayers[i];
 		if(!r->visible)
 			continue;
 
+		if(r->preRender)
+			if(!r->preRender(rs))
+				continue;
+
 		r->render(rs);
+
+		if(r->postRender)
+			r->postRender(rs);
 	}
 }
 
@@ -1949,6 +1977,7 @@ void Core::shutdown()
 
 	defaultQuadGrid.dropBuffers();
 	defautQuadBorder.dropBuffer();
+	blitQuad.dropBuffers();
 
 	debugLog("Shutdown Graphics Library...");
 		shutdownGraphicsLibrary();

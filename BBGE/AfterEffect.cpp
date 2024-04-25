@@ -72,6 +72,19 @@ void AfterEffectManager::deleteEffects()
 	openSpots.clear();
 }
 
+void AfterEffectManager::beginCapture()
+{
+	assert(core->frameBuffer.isInited());
+	core->frameBuffer.pushCapture(0);
+	glClearColor(0,0,0,0);
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void AfterEffectManager::endCapture()
+{
+	core->frameBuffer.popCapture();
+}
+
 void AfterEffectManager::deleteShaders()
 {
 	for(size_t i = 0; i < shaderPipeline.size(); ++i)
@@ -146,7 +159,7 @@ void AfterEffectManager::destroyEffect(int id)
 	openSpots.push_back(id);
 }
 
-void AfterEffectManager::render(const RenderState& rs) const
+void AfterEffectManager::render(const RenderState& rs, unsigned fboPageWithImage) const
 {
 	assert(core->frameBuffer.isInited());
 
@@ -154,48 +167,53 @@ void AfterEffectManager::render(const RenderState& rs) const
 
 	rs.gpu.setBlend(BLEND_DISABLED);
 
-	core->frameBuffer.endCapture();
 	glTranslatef(core->cameraPos.x, core->cameraPos.y, 0);
 	glScalef(core->invGlobalScale, core->invGlobalScale,0);
 
 	glColor4f(1,1,1,1);
-	renderGrid(rs);
+	renderGrid(rs, fboPageWithImage);
 
 	glPopMatrix();
 }
 
-void AfterEffectManager::renderGrid(const RenderState& rs) const
+void AfterEffectManager::renderGrid(const RenderState& rs, unsigned fbPage) const
 {
-	int firstShader = -1;
-	int lastShader = -1;
-	Shader *activeShader = 0;
+	size_t firstShader, lastShader;
+	Shader *activeShader = NULL;
 	for (size_t i = 0; i < shaderPipeline.size(); ++i)
 	{
 		if(shaderPipeline[i] && shaderPipeline[i]->isLoaded())
 		{
-			if(firstShader < 0)
+			if(!activeShader)
 			{
-				firstShader = int(i);
+				firstShader = i;
 				activeShader = shaderPipeline[i];
 			}
-			lastShader = int(i);
+			lastShader = i;
 		}
 	}
+
+	// Disable blending so we don't need to clear the framebuffers
+	rs.gpu.setBlend(BLEND_DISABLED);
 
 	int vw = core->getVirtualWidth();
 	int vh = core->getVirtualHeight();
 	int offx = -core->getVirtualOffX();
 	int offy = -core->getVirtualOffY();
 
-	core->frameBuffer.bindTexture();
+	const FrameBuffer * const fb = &core->frameBuffer;
+
+	// STARTING POINT: game image was just rendered into fb(0), use that as starting point
+	fb->bindTexture(fbPage);
 
 	if(activeShader)
 	{
-		activeShader->bind();
 		activeShader->setInt("tex", 0);
+		activeShader->bind();
 
+		// Unless this is the last pass, render to fb(1)
 		if(firstShader != lastShader)
-			backupBuffer.startCapture();
+			fb->pushCapture(1 - fbPage);
 	}
 
 	// verts are in 0..1, transform so that we cover the entire screen
@@ -208,39 +226,44 @@ void AfterEffectManager::renderGrid(const RenderState& rs) const
 		//renderGridPoints(rs);
 	}
 	else
-		blitQuad.render(rs);
+		core->blitQuad.render(rs);
 
 	if (activeShader)
+	{
 		activeShader->unbind();
 
-	if(firstShader != lastShader)
-	{
-		// From here on: secondary shader passes.
-		// We just outputted to the backup buffer...
-		const FrameBuffer *fbIn = &core->frameBuffer;
-		const FrameBuffer *fbOut = &backupBuffer;
-
-		for(int i = firstShader + 1; i <= lastShader; ++i)
+		if(firstShader != lastShader)
 		{
-			activeShader = shaderPipeline[i];
-			if(!(activeShader && activeShader->isLoaded()))
-				continue;
+			// From here on: secondary shader passes.
+			// We just outputted to the backup buffer...
 
-			// Swap and exchange framebuffers. The old output buffer serves as texture input for the other one
-			fbOut->endCapture();
-			std::swap(fbIn, fbOut);
-			fbIn->bindTexture();
+			unsigned pageOut = 1 - fbPage;
 
-			// If this is the last pass, do not render to a frame buffer again
-			if(i != lastShader)
-				fbOut->startCapture();
+			for(size_t i = firstShader + 1; i <= lastShader; ++i)
+			{
+				unsigned pageIn = 1 - pageOut;
+				activeShader = shaderPipeline[i];
+				if(!(activeShader && activeShader->isLoaded()))
+					continue;
 
-			activeShader->bind();
-			activeShader->setInt("tex", 0);
+				// Swap and exchange framebuffers. The old output buffer serves as texture input for the other one
+				pageOut = pageIn;
 
-			blitQuad.render(rs);
+				// If this is the last pass, do not render to a frame buffer again
+				if(i == lastShader)
+					fb->popCapture();
+				else
+					fb->replaceCapture(pageOut);
 
-			activeShader->unbind();
+				fb->bindTexture(pageIn);
+
+				activeShader->bind();
+				activeShader->setInt("tex", 0);
+
+				core->blitQuad.render(rs);
+
+				activeShader->unbind();
+			}
 		}
 	}
 
@@ -255,9 +278,7 @@ void AfterEffectManager::renderGridPoints(const RenderState& rs) const
 
 void AfterEffectManager::unloadDevice()
 {
-	backupBuffer.unloadDevice();
 	grid.dropBuffers();
-	blitQuad.dropBuffers();
 	unloadShaders();
 }
 
@@ -266,30 +287,12 @@ void AfterEffectManager::_updateScreenSize()
 	screenWidth = core->getWindowWidth();
 	screenHeight = core->getWindowHeight();
 
-	if (core->frameBuffer.isInited())
-	{
-		textureWidth = core->frameBuffer.getTexWidth();
-		textureHeight = core->frameBuffer.getTexHeight();
-	}
-	else
-	{
-		textureWidth = screenWidth;
-		sizePowerOf2Texture(textureWidth);
-		textureHeight = screenHeight;
-		sizePowerOf2Texture(textureHeight);
-	}
-
-	const float percentX = (float)screenWidth/(float)textureWidth;
-	const float percentY = (float)screenHeight/(float)textureHeight;
-	TexCoordBox tc = { 0, percentY, percentX, 0 }; // Y is upside down
-	grid.setTexCoords(tc);
-	blitQuad.setTexCoords(tc);
+	grid.setTexCoords(core->blitQuad.getTexCoords());
 }
 
 void AfterEffectManager::updateDevice()
 {
 	_updateScreenSize();
-	backupBuffer.init(-1, -1, true);
 	_initGrid();
 }
 
@@ -297,7 +300,6 @@ void AfterEffectManager::reloadDevice()
 {
 	_updateScreenSize();
 
-	backupBuffer.reloadDevice();
 	_initGrid();
 
 	for (size_t i = 0; i < loadedShaders.size(); ++i)
@@ -442,10 +444,6 @@ void AfterEffectManager::_initGrid()
 		grid.init(xDivs, yDivs);
 	else
 		grid.dropBuffers();
-
-	blitQuad.init(2, 2);
-	blitQuad.reset01();
-	blitQuad.updateVBO(); // never changed afterwards
 }
 
 void AfterEffectManager::deleteShader(int handle)

@@ -78,10 +78,13 @@ public:
 	void clear();
 	void deleteEffects();
 
+	void beginCapture();
+	void endCapture();
+
 	void resetGrid();
 
-	void render(const RenderState& rs) const;
-	void renderGrid(const RenderState& rs) const;
+	void render(const RenderState& rs, unsigned fboPageWithImage) const;
+	void renderGrid(const RenderState& rs, unsigned fbPage) const;
 	void renderGridPoints(const RenderState& rs) const;
 
 	void loadShaders();
@@ -105,17 +108,15 @@ protected:
 	int _insertShader(Shader *sh);
 	void _initGrid();
 
-	RenderGrid grid, blitQuad;
+	RenderGrid grid;
 	bool active;
 	int numEffects;
 	int xDivs, yDivs;
 	int screenWidth, screenHeight;
-	int textureWidth, textureHeight;
 	std::vector<Effect*> effects;
 	std::vector<int> openSpots;
 	std::vector<Shader*> shaderPipeline; // Shaders are applied in this order. Can contain the same pointer more than once.
 	std::vector<Shader*> loadedShaders;
-	FrameBuffer backupBuffer;
 
 };
 
