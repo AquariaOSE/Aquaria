@@ -181,7 +181,7 @@ bool lookup_all_glsyms()
 	glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)SDL_GL_GetProcAddress("glGenFramebuffersEXT");
 	glCheckFramebufferStatusEXT = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)SDL_GL_GetProcAddress("glCheckFramebufferStatusEXT");
 	glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture2DEXT");
-	glDrawBuffersARB          = NULL;//(PFNGLDRAWBUFFERSARBPROC)SDL_GL_GetProcAddress("glDrawBuffersARB");
+	glDrawBuffersARB          = (PFNGLDRAWBUFFERSARBPROC)SDL_GL_GetProcAddress("glDrawBuffersARB");
 
 	// GL 4.3+, but maybe available as an extension
 	glCopyImageSubDataEXT     = (PFNGLCOPYIMAGESUBDATAEXTPROC)SDL_GL_GetProcAddress("glCopyImageSubDataEXT");

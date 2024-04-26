@@ -33,6 +33,7 @@ struct FBOStack
 
 static FBOStack s_fbostack[4]; // first entry is always unused
 static size_t s_stackpos = 0;
+static unsigned s_lastFBO = 0;
 
 
 static bool isOnTop(const FrameBuffer *fbo)
@@ -192,6 +193,7 @@ void FrameBuffer::unloadDevice()
 
 	if (glDeleteFramebuffersEXT == NULL)
 	{
+		s_lastFBO = 0;
 		debugLog("Already shut down the GL, don't delete framebuffers");
 		return;
 	}
@@ -199,6 +201,8 @@ void FrameBuffer::unloadDevice()
 	for(size_t i = 0; i < Countof(_texs); ++i)
 		if (_fbos[i])
 		{
+			if(s_lastFBO == _fbos[i])
+				s_lastFBO = 0;
 			debugLog("frameBuffer handle present, deleting");
 			glDeleteFramebuffersEXT(1, &_fbos[i]);
 			_fbos[i] = 0;
@@ -220,6 +224,7 @@ void FrameBuffer::reloadDevice()
 {
 	if(!_numpages)
 		return;
+	s_lastFBO = 0;
 	debugLog("frameBuffer::reloadDevice");
 	init(_w, _h, _numpages);
 }
@@ -228,18 +233,18 @@ void FrameBuffer::_bind(unsigned page) const
 {
 	assert(page < _numpages);
 	_curpage = page + 1;
+	unsigned fbo = _numfbos == 1 ? _fbos[0] : _fbos[page];
+	assert(fbo);
+	if(fbo != s_lastFBO)
+	{
+		s_lastFBO = fbo;
+		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, fbo);
+	}
+
 	if(glDrawBuffersARB)
 	{
-		assert(_numfbos == 1);
-		if(!isOnTop(this))
-			glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, _fbos[0]);
 		GLenum buf = GL_COLOR_ATTACHMENT0_EXT + page;
 		glDrawBuffersARB(1, &buf);
-	}
-	else
-	{
-		assert(_fbos[page]);
-		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, _fbos[page]);
 	}
 
 	glViewport(0,0,viewportW,viewportH);
@@ -267,6 +272,7 @@ unsigned FrameBuffer::popCapture() const
 		prev.fbo->_bind(prev.page);
 	else
 	{
+		s_lastFBO = 0;
 		glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
 		if(glDrawBuffersARB)
 			glDrawBuffer(GL_BACK);
