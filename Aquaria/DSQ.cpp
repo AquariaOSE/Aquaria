@@ -1967,6 +1967,7 @@ void DSQ::shutdown()
 	particleManager->clearParticleBank();
 	Shot::clearShotBank();
 	SkeletalSprite::clearCache();
+	tilemgr.destroy();
 
 
 	cursor->setTexturePointer(0);
