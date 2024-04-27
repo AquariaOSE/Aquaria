@@ -620,14 +620,19 @@ bool Core::initSoundLibrary(const std::string &defaultDevice)
 	return sound != 0;
 }
 
-Vector Core::getGameCursorPosition()
+Vector Core::getGameCursorPosition() const
 {
 	return getGamePosition(mouse.position);
 }
 
-Vector Core::getGamePosition(const Vector &v)
+Vector Core::getGamePosition(const Vector &winpos) const
 {
-	return cameraPos + (v * invGlobalScale);
+	return cameraPos + (winpos * invGlobalScale);
+}
+
+Vector Core::getWindowPosition(const Vector &worldpos) const
+{
+	return (worldpos - cameraPos) * globalScale.x;
 }
 
 bool Core::getMouseButtonState(int m)

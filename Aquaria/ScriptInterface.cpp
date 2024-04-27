@@ -8651,15 +8651,16 @@ luaFunc(resetContinuity)
 
 luaFunc(toWindowFromWorld)
 {
-	float x = lua_tonumber(L, 1);
-	float y = lua_tonumber(L, 2);
-	x = x - core->screenCenter.x;
-	y = y - core->screenCenter.y;
-	x *= core->globalScale.x;
-	y *= core->globalScale.x;
-	x = 400+x;
-	y = 300+y;
-	luaReturnVec2(x, y);
+	Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	p = core->getWindowPosition(p);
+	luaReturnVec2(p.x, p.y);
+}
+
+luaFunc(toWorldFromWindow)
+{
+	Vector p(lua_tonumber(L, 1), lua_tonumber(L, 2));
+	p = core->getGamePosition(p);
+	luaReturnVec2(p.x, p.y);
 }
 
 luaFunc(setMousePos)
@@ -10463,6 +10464,7 @@ static const struct {
 	luaRegister(warpNaijaToSceneNode),
 
 	luaRegister(toWindowFromWorld),
+	luaRegister(toWorldFromWindow),
 
 	luaRegister(toggleDamageSprite),
 
