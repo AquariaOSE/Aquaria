@@ -17,7 +17,6 @@ WaterSurfaceRender::WaterSurfaceRender() : Quad()
 	}
 
 	this->renderBorder = false;
-	this->renderCenter = false;
 	this->borderAlpha = 1;
 
 	qLine = new Quad("water/water-line", Vector(0,0));
@@ -52,6 +51,8 @@ void WaterSurfaceRender::onEndOfLife()
 void WaterSurfaceRender::prepareRender()
 {
 	bool fbEffectVisible = false;
+	const float vw = core->getVirtualWidth();
+	const float vh = core->getVirtualHeight();
 	if (game->waterLevel.x > 0)
 	{
 		qLine->alpha = qSurface->alpha = 1;
@@ -59,12 +60,15 @@ void WaterSurfaceRender::prepareRender()
 		position.x = core->screenCenter.x;
 		position.y = game->waterLevel.x;
 
-		width = core->getVirtualWidth()*core->invGlobalScale;
-		height = 100;
+		width = vw * core->invGlobalScale;
+		height = vh * 0.4f; // how wide the water line gets in total
 
 
 		float dist = (core->screenCenter.y - position.y);
-		float maxdist = core->invGlobalScale * 250.0f;
+		// 0.5 makes it align right as the top of the water surface touches the top of the screen
+		// < 0.5 makes the surface line appear flat before it reaches the top of the screen
+		const float topAlignFactor = 0.48f;
+		float maxdist = core->invGlobalScale * vh * topAlignFactor;
 		if (dist > 0)
 		{
 			if (dist > maxdist)
@@ -73,16 +77,12 @@ void WaterSurfaceRender::prepareRender()
 				scale.y = 1.0f-(dist/maxdist);
 		}
 
-		offset.y = (height*scale.y);
+		offset.y = height*scale.y*0.5f; // top boundary of quad must touch water surface
 
-		offset.y -= 40*scale.y;
-
-
-		qLine->position = position + offset + Vector(0,42)*scale.y;
+		qLine->position = position + offset * 2; // water line is at bottom side of the quad
+		qLine->position.y -= qLine->height * 0.25f; // adjust to align with quad boundaries
 		qLine->alphaMod = 0.5f;
 		qLine->setWidth(width);
-
-
 
 		qSurface->position = position+offset;
 		qSurface->scale = scale.y;
@@ -108,20 +108,22 @@ void WaterSurfaceRender::prepareRender()
 
 	if (fbEffectVisible)
 	{
-		const float reflectSize = 123; //97;
-		const float reflectPos = (game->waterLevel.x - core->cameraPos.y)
-			+ (game->waterLevel.x - core->screenCenter.y) / 3;
-		const float reflectOffset = -0.124f;
-		const float coordMul = 1.0f / 768;
-		const float v0 = 1 + reflectOffset - (reflectPos * core->globalScale.x) * coordMul;
-		const float v1 = v0 + (reflectSize * core->globalScale.x) * coordMul;
+		const Vector effpos = Vector(0, game->waterLevel.x);
+		const Vector reflectSurface = core->getWindowPosition(effpos);
+		// Reflect from the water surface seam to xx game units, going up
+		const Vector reflectLimit = core->getWindowPosition(effpos - Vector(0, 250));
+
+		const float coordMul = 1.0f / vh;
+
+		const float v0 = 1 - (reflectSurface.y * coordMul);
+		const float v1 = 1 - (reflectLimit.y * coordMul);
 
 		texcoords.u1 = 0;
 		texcoords.u2 = core->frameBuffer.getWidthP();
 
 		const float hperc = core->frameBuffer.getHeightP();
 		texcoords.v1 = v0 * hperc;
-		texcoords.v2 = v1 * hperc;
+		texcoords.v2 = std::min(1.0f, v1) * hperc; // the min() here is not to let texcoords go out of bounds. this is st
 
 		color = Vector(0.4f,0.9f,1.0f);
 		alpha = 0.75f;
