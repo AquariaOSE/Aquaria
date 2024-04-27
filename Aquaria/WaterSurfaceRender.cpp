@@ -1,5 +1,5 @@
-
 #include "WaterSurfaceRender.h"
+#include <sstream>
 #include "DSQ.h"
 #include "Game.h"
 #include "Avatar.h"
@@ -64,12 +64,13 @@ void WaterSurfaceRender::prepareRender()
 
 
 		float dist = (core->screenCenter.y - position.y);
+		float maxdist = core->invGlobalScale * 250.0f;
 		if (dist > 0)
 		{
-			if (dist > 400)
+			if (dist > maxdist)
 				scale.y = 0;
 			else
-				scale.y = 1.0f-(dist/400.0f);
+				scale.y = 1.0f-(dist/maxdist);
 		}
 
 		offset.y = (height*scale.y);
@@ -78,7 +79,7 @@ void WaterSurfaceRender::prepareRender()
 
 
 		qLine->position = position + offset + Vector(0,42)*scale.y;
-		qLine->alphaMod = 0.5;
+		qLine->alphaMod = 0.5f;
 		qLine->setWidth(width);
 
 
@@ -107,10 +108,10 @@ void WaterSurfaceRender::prepareRender()
 
 	if (fbEffectVisible)
 	{
-		const float reflectSize = 97;
+		const float reflectSize = 123; //97;
 		const float reflectPos = (game->waterLevel.x - core->cameraPos.y)
 			+ (game->waterLevel.x - core->screenCenter.y) / 3;
-		const float reflectOffset = -0.03f;
+		const float reflectOffset = -0.124f;
 		const float coordMul = 1.0f / 768;
 		const float v0 = 1 + reflectOffset - (reflectPos * core->globalScale.x) * coordMul;
 		const float v1 = v0 + (reflectSize * core->globalScale.x) * coordMul;
