@@ -171,7 +171,7 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	_canSkipCutscene = false;
 	skippingCutscene = false;
 
-	bar_left = bar_right = bar_up = bar_down = barFade_left = barFade_right = 0;
+	bar_left = bar_right = barFade_left = barFade_right = 0;
 
 	watchQuitFlag = false;
 	watchForQuit = false;
@@ -1382,12 +1382,8 @@ void DSQ::recreateBlackBars()
 		abarFade_right = barFade_right->alpha;
 		removeRenderObject(barFade_right);
 	}
-	if (bar_up)
-		removeRenderObject(bar_up);
-	if (bar_down)
-		removeRenderObject(bar_down);
 
-	bar_left = bar_right = bar_up = bar_down = barFade_left = barFade_right = 0;
+	bar_left = bar_right = barFade_left = barFade_right = 0;
 
 	if (getVirtualWidth() > 800)
 	{
@@ -1450,31 +1446,6 @@ void DSQ::recreateBlackBars()
 			barFade_right->alpha = 0;
 			barFade_left->alpha = 0;
 		}
-	}
-
-	// top and bottom bars are not toggle-able, they will always be on if they are needed
-	if (getVirtualHeight() > 600)
-	{
-		int sz2 = (getVirtualHeight() - baseVirtualHeight)/2.0f;
-		bar_up = new Quad;
-		{
-			bar_up->position = Vector(400, -sz2);
-			bar_up->setWidthHeight(800, sz2*2);
-			bar_up->color = 0;
-			bar_up->followCamera = 1;
-			bar_up->cull = 0;
-		}
-		addRenderObject(bar_up, LR_BLACKBARS);
-
-		bar_down = new Quad;
-		{
-			bar_down->position = Vector(400, 600 + sz2);
-			bar_down->setWidthHeight(800, sz2*2);
-			bar_down->color = 0;
-			bar_down->followCamera = 1;
-			bar_down->cull = 0;
-		}
-		addRenderObject(bar_down, LR_BLACKBARS);
 	}
 }
 
@@ -2011,10 +1982,6 @@ void DSQ::shutdown()
 		removeRenderObject(barFade_left);
 	if (barFade_right)
 		removeRenderObject(barFade_right);
-	if (bar_up)
-		removeRenderObject(bar_up);
-	if (bar_down)
-		removeRenderObject(bar_down);
 
 	if (cutscene_bg)
 		removeRenderObject(cutscene_bg);
@@ -3746,7 +3713,7 @@ void DSQ::onUpdate(float dt)
 	// messy
 	if (versionLabel && versionLabel->alpha.x > 0)
 	{
-		versionLabel->position = Vector(10 - getVirtualOffX(), 575);
+		versionLabel->position = Vector(10 - getVirtualOffX(), 575 + getVirtualOffY());
 	}
 
 	if (noEffectTimer > 0)

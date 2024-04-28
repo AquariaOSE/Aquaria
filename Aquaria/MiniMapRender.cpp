@@ -249,7 +249,8 @@ void MiniMapRender::slide(int slide)
 		offset.interpolateTo(Vector(0, 0), 0.28f, 0, 0, 1);
 	break;
 	case 1:
-		offset.interpolateTo(Vector(0, getMiniMapHeight()+5-600), 0.28f, 0, 0, 1);
+		if(core->getVirtualOffX() < getMiniMapWidth() && core->getVirtualOffY() < getMiniMapHeight())
+			offset.interpolateTo(Vector(0, getMiniMapHeight()+5-600), 0.28f, 0, 0, 1);
 	break;
 	}
 }
@@ -294,7 +295,7 @@ void MiniMapRender::onUpdate(float dt)
 	RenderObject::onUpdate(dt);
 
 	position.x = core->getVirtualWidth() - core->getVirtualOffX() - getMiniMapWidth()*0.5f;
-	position.y = 600 - getMiniMapHeight()*0.5f;
+	position.y = 600 - getMiniMapHeight()*0.5f + core->getVirtualOffY();
 	position.z = 2.9f;
 
 	waterSin += dt * (bitSizeLookupPeriod / (2*PI));

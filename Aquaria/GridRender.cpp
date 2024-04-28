@@ -183,13 +183,19 @@ void GridRender::onRender(const RenderState& rs) const
 	if(!primsToDraw)
 		return;
 
-	const TileVector ct(core->cameraPos);
-	const int H = primIndexInLine.size();
+	const float vh = core->getVirtualHeight();
+	const float voy = core->getVirtualOffY();
+	const float vox = core->getVirtualOffX();
+
+	const Vector topleft = core->getTopLeftCornerInWorldCoords();
+	const TileVector ct(topleft);
+	const int H = (int)primIndexInLine.size();
 	int startY = ct.y;
 
 	// Note that it's possible that the scale factor is negative (mods can use this),
 	// so this might end up upside down. Still needs to render correctly.
-	const int height = int((600 * (core->invGlobalScale))/TILE_SIZE) + 1;
+
+	const int height = int((vh * (core->invGlobalScale))/TILE_SIZE) + 1;
 	int endY = ct.y+height;
 	if(endY < startY)
 		std::swap(startY, endY);

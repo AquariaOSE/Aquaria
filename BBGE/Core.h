@@ -274,6 +274,8 @@ public:
 	void updateWindowDrawSize(int w, int h);
 
 	Vector getGameCursorPosition() const;
+	Vector getTopLeftCornerInWorldCoords() const;
+	Vector getBottomRightCornerInWorldCoords() const;
 	Vector getGamePosition(const Vector &winpos) const;
 	Vector getWindowPosition(const Vector& worldpos) const;
 

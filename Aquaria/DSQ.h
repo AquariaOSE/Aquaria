@@ -148,7 +148,7 @@ public:
 	Quad *cursor, *cursorGlow, *cursorBlinker;
 	PauseQuad *overlay, *tfader, *overlay2, *overlay3, *overlayRed;
 	PauseQuad *sceneColorOverlay;
-	Quad *bar_left, *bar_right, *bar_up, *bar_down;
+	Quad *bar_left, *bar_right;
 	Quad *barFade_left, *barFade_right;
 
 	CountedPtr<Texture> texCursor, texCursorSwim, texCursorBurst, texCursorSing, texCursorLook;

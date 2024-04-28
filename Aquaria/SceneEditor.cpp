@@ -667,9 +667,9 @@ void SceneEditor::init()
 	text->setFontSize(6);
 
 	text->followCamera = 1;
-	text->position = Vector(125,20,4.5);
+	text->position = Vector(100,0);
+	btnMenu->addChild(text, PM_POINTER);
 
-	game->addRenderObject(text, LR_HUD);
 	text->alpha = 0;
 	on = false;
 
@@ -2395,6 +2395,8 @@ bool SceneEditor::isOn()
 void SceneEditor::updateText()
 {
 	// FIXME: make sure this isn't called while the editor isn't active
+
+	btnMenu->position = Vector(20, 20 - core->getVirtualOffY());
 
 	const Vector cursor = dsq->getGameCursorPosition();
 	TileVector tv(cursor);

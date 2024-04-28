@@ -38,7 +38,7 @@ void Gradient::onUpdate(float dt)
 
 	if (autoHeight == AUTO_VIRTUALHEIGHT)
 	{
-		scale.y = core->getVirtualWidth();
+		scale.y = core->getVirtualHeight();
 	}
 }
 

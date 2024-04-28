@@ -625,6 +625,16 @@ Vector Core::getGameCursorPosition() const
 	return getGamePosition(mouse.position);
 }
 
+Vector Core::getTopLeftCornerInWorldCoords() const
+{
+	return getGamePosition(Vector(-virtualOffX, -virtualOffY));
+}
+
+Vector Core::getBottomRightCornerInWorldCoords() const
+{
+	return getGamePosition(Vector(virtualOffX, virtualOffY));
+}
+
 Vector Core::getGamePosition(const Vector &winpos) const
 {
 	return cameraPos + (winpos * invGlobalScale);
