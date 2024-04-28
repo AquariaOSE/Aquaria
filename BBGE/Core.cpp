@@ -645,6 +645,32 @@ Vector Core::getWindowPosition(const Vector &worldpos) const
 	return (worldpos - cameraPos) * globalScale.x;
 }
 
+bool Core::isRectInWindowCoordsPartiallyOnScreen(const Vector& center, const Vector& wh) const
+{
+	const float xo = getVirtualOffX();
+	const float yo = getVirtualOffY();
+	const Vector topleft(-xo, -yo);
+	const Vector bottomright(800 + xo, 600 + yo);
+	const Vector half = wh * 0.5f;
+	const Vector a = topleft - half;
+	const Vector b = bottomright + half;
+	return center.x >= a.x && center.x <= b.x
+		&& center.y >= a.y && center.y <= b.y;
+}
+
+bool Core::isRectInWindowCoordsFullyOnScreen(const Vector& center, const Vector& wh) const
+{
+	const float xo = getVirtualOffX();
+	const float yo = getVirtualOffY();
+	const Vector topleft(-xo, -yo);
+	const Vector bottomright(800 + xo, 600 + yo);
+	const Vector half = wh * 0.5f;
+	const Vector a = topleft + half;
+	const Vector b = bottomright - half;
+	return center.x >= a.x && center.x <= b.x
+		&& center.y >= a.y && center.y <= b.y;
+}
+
 bool Core::getMouseButtonState(int m)
 {
 	int mcode=m;

@@ -35,6 +35,13 @@ bool	RenderObject::renderCollisionShape			= false;
 size_t	RenderObject::lastTextureApplied			= 0;
 bool	RenderObject::renderPaths					= false;
 
+
+MotionBlurData::MotionBlurData()
+	: transition(false), frameOffsetCounter(0), frameOffset(0), transitionTimer(0)
+{
+}
+
+
 void RenderObject::toggleAlpha(float t)
 {
 	if (alpha.x < 0.5f)
@@ -897,7 +904,52 @@ bool RenderObject::isCoordinateInRadius(const Vector &pos, float r) const
 	return (d.getSquaredLength2D() < r*r);
 }
 
-MotionBlurData::MotionBlurData()
-	: transition(false), frameOffsetCounter(0), frameOffset(0), transitionTimer(0)
+Vector RenderObject::getFollowCameraPosition(const Vector& v) const
 {
+	assert(layer != LR_NONE);
+	assert(!parent); // this makes no sense when we're not a root object
+	if(neverFollowCamera)
+		return v;
+	const RenderObjectLayer &rl = core->renderObjectLayers[layer];
+	Vector M = rl.followCameraMult;
+	float F = followCamera;
+	if(!F)
+		F = rl.followCamera;
+	if (F <= 0)
+		return v;
+
+	/* Originally, not accounting for parallax lock on an axis, this was:
+		pos = v - core->screenCenter;
+		pos *= F;
+		pos = core->screenCenter + pos;
+	*/
+
+	// uppercase are effectively constants that are not per-object
+	// lowercase are per-object
+
+	// more concise math:
+	//const Vector pos = (v - core->screenCenter) * F + core->screenCenter;
+	//return v * (Vector(1,1) - M) + (pos * M); // lerp
+
+	// optimized and rearranged
+	const Vector C = core->screenCenter;
+	const Vector M1 = Vector(1,1) - M;
+	const Vector T = C * (1 - F);
+
+	const Vector pos = T + (F * v);
+	return v * M1 + (pos * M); // lerp, used to select whether to use original v or parallax-corrected v
+}
+
+bool RenderObject::isRectPartiallyOnScreen() const
+{
+	Vector p = core->getWindowPosition(getFollowCameraPosition(position + offset));
+	Vector sz = Vector(width, height) * getRealScale();
+	return core->isRectInWindowCoordsPartiallyOnScreen(p, sz);
+}
+
+bool RenderObject::isRectFullyOnScreen() const
+{
+	Vector p = core->getWindowPosition(getFollowCameraPosition(position + offset));
+	Vector sz = Vector(width, height) * getRealScale();
+	return core->isRectInWindowCoordsFullyOnScreen(p, sz);
 }

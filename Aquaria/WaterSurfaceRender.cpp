@@ -98,7 +98,7 @@ void WaterSurfaceRender::prepareRender()
 		if (dsq->useFrameBuffer && dsq->frameBuffer.isInited())
 		{
 			qSurface->alphaMod = 0.5f;
-			fbEffectVisible = this->isOnScreen();
+			fbEffectVisible = this->isRectPartiallyOnScreen();
 		}
 	}
 	else
@@ -197,7 +197,7 @@ void WaterSurfaceRender::render(const RenderState& rs) const
 
 void WaterSurfaceRender::onRender(const RenderState& rs) const
 {
-	if (!fbEffectVisible || game->waterLevel == 0) return;
+	if (!fbEffectVisible || game->waterLevel.x == 0) return;
 
 
 	core->frameBuffer.bindTexture(core->frameBuffer.getCurrentPage() - 1);

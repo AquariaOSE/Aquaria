@@ -279,6 +279,9 @@ public:
 	Vector getGamePosition(const Vector &winpos) const;
 	Vector getWindowPosition(const Vector& worldpos) const;
 
+	bool isRectInWindowCoordsPartiallyOnScreen(const Vector& center, const Vector& wh) const;
+	bool isRectInWindowCoordsFullyOnScreen(const Vector& center, const Vector& wh) const;
+
 
 	Vector screenCenter;
 
