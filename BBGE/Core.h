@@ -282,6 +282,9 @@ public:
 	bool isRectInWindowCoordsPartiallyOnScreen(const Vector& center, const Vector& wh) const;
 	bool isRectInWindowCoordsFullyOnScreen(const Vector& center, const Vector& wh) const;
 
+	// positive margin makes the screen area narrower, negative margin makes it wider (accept slightly outside)
+	bool isPointInWindowCoordsOnScreenWithMargin(const Vector& center, const Vector& margin) const;
+
 
 	Vector screenCenter;
 

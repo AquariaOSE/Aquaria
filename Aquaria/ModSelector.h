@@ -62,6 +62,7 @@ public:
 	ModType modType;
 
 protected:
+	virtual void onUpdate(float dt);
 	virtual void onClick();
 };
 
@@ -158,6 +159,7 @@ public:
 	void moveUp();
 	void moveDown();
 	void move(int ud, bool instant = false);
+	bool isMoving() const;
 
 	std::vector<IconGridPanel*> panels;
 	MenuIcon *globeIcon, *modsIcon;

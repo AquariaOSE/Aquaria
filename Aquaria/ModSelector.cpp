@@ -100,6 +100,13 @@ void ModSelectorScreen::move(int ud, bool instant /* = false */)
 	}
 }
 
+bool ModSelectorScreen::isMoving() const
+{
+	const IconGridPanel *grid = panels[currentPanel];
+	const InterpolatedVector& v = grid->position;
+	return v.isInterpolating();
+}
+
 void ModSelectorScreen::onUpdate(float dt)
 {
 	Quad::onUpdate(dt);
@@ -431,23 +438,6 @@ void BasicIcon::onUpdate(float dt)
 {
 	AquariaMenuItem::onUpdate(dt);
 
-	// Autoscroll if selecting icon outside of screen
-	if(hasFocus() && dsq->modSelectorScr && !_isRecCall)
-	{
-		Vector pos = getRealPosition();
-		if(pos.y < 20 || pos.y > 580)
-		{
-			if(pos.y < 300)
-				dsq->modSelectorScr->move(5, true);
-			else
-				dsq->modSelectorScr->move(-5, true);
-			_isRecCall = true;
-			core->run(FRAME_TIME); // HACK: this is necessary to correctly position the mouse on the object after moving the panel
-			_isRecCall = false;
-			setFocus(true); // re-position mouse
-		}
-	}
-
 	if(!quad)
 		return;
 
@@ -504,6 +494,25 @@ void MenuIcon::onClick()
 
 ModIcon::ModIcon(): SubtitleIcon(), modId(-1)
 {
+}
+
+void ModIcon::onUpdate(float dt)
+{
+	SubtitleIcon::onUpdate(dt);
+
+	// Autoscroll if selecting icon outside of screen
+	if(hasFocus() && dsq->modSelectorScr && !_isRecCall && !dsq->modSelectorScr->isMoving() && !isCenterOnScreenWithMargin(Vector(0, 200)))
+	{
+		const Vector pos = getRealPosition();
+		if(pos.y < 300)
+			dsq->modSelectorScr->move(5);
+		else
+			dsq->modSelectorScr->move(-5);
+		_isRecCall = true;
+		core->run(FRAME_TIME); // HACK: this is necessary to correctly position the mouse on the object after moving the panel
+		_isRecCall = false;
+		setFocus(true); // re-position mouse
+	}
 }
 
 void ModIcon::onClick()

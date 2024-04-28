@@ -179,6 +179,7 @@ public:
 	inline bool isOnScreen() const;
 	bool isRectPartiallyOnScreen() const;
 	bool isRectFullyOnScreen() const;
+	bool isCenterOnScreenWithMargin(const Vector& margin) const;
 
 
 	bool isCoordinateInRadius(const Vector &pos, float r) const;
@@ -190,7 +191,8 @@ public:
 	Vector getWorldPosition() const;
 	Vector getWorldCollidePosition(const Vector &vec=Vector(0,0,0)) const;
 
-	RenderObject *getTopParent() const;
+	RenderObject *getTopParent();
+	const RenderObject *getTopParent() const;
 
 	virtual void onAnimationKeyPassed(int key){}
 

@@ -283,7 +283,7 @@ void Bone::renderCollision(const RenderState& rs) const
 
 
 			glTranslatef(collide.x, collide.y, 0);
-			RenderObject *parent = this->getTopParent();
+			const RenderObject *parent = this->getTopParent();
 			if (parent)
 				drawCircle(collideRadius*parent->scale.x, 45);
 			glTranslatef(-collide.x, -collide.y, 0);

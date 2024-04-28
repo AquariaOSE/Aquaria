@@ -647,26 +647,22 @@ Vector Core::getWindowPosition(const Vector &worldpos) const
 
 bool Core::isRectInWindowCoordsPartiallyOnScreen(const Vector& center, const Vector& wh) const
 {
-	const float xo = getVirtualOffX();
-	const float yo = getVirtualOffY();
-	const Vector topleft(-xo, -yo);
-	const Vector bottomright(800 + xo, 600 + yo);
-	const Vector half = wh * 0.5f;
-	const Vector a = topleft - half;
-	const Vector b = bottomright + half;
-	return center.x >= a.x && center.x <= b.x
-		&& center.y >= a.y && center.y <= b.y;
+	return isPointInWindowCoordsOnScreenWithMargin(center, wh * -0.5f);
 }
 
 bool Core::isRectInWindowCoordsFullyOnScreen(const Vector& center, const Vector& wh) const
+{
+	return isPointInWindowCoordsOnScreenWithMargin(center, wh * 0.5f);
+}
+
+bool Core::isPointInWindowCoordsOnScreenWithMargin(const Vector& center, const Vector& margin) const
 {
 	const float xo = getVirtualOffX();
 	const float yo = getVirtualOffY();
 	const Vector topleft(-xo, -yo);
 	const Vector bottomright(800 + xo, 600 + yo);
-	const Vector half = wh * 0.5f;
-	const Vector a = topleft + half;
-	const Vector b = bottomright - half;
+	const Vector a = topleft + margin;
+	const Vector b = bottomright - margin;
 	return center.x >= a.x && center.x <= b.x
 		&& center.y >= a.y && center.y <= b.y;
 }

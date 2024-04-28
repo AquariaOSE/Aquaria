@@ -117,15 +117,29 @@ Vector RenderObject::getWorldPosition() const
 	return getWorldCollidePosition();
 }
 
-RenderObject* RenderObject::getTopParent() const
+RenderObject* RenderObject::getTopParent()
 {
-	RenderObject *p = parent;
-	RenderObject *lastp=0;
-	while (p)
+	RenderObject *p = this;
+	RenderObject *lastp;
+	do
 	{
 		lastp = p;
 		p = p->parent;
 	}
+	while(p);
+	return lastp;
+}
+
+const RenderObject* RenderObject::getTopParent() const
+{
+	const RenderObject *p = this;
+	const RenderObject *lastp;
+	do
+	{
+		lastp = p;
+		p = p->parent;
+	}
+	while(p);
 	return lastp;
 }
 
@@ -942,14 +956,23 @@ Vector RenderObject::getFollowCameraPosition(const Vector& v) const
 
 bool RenderObject::isRectPartiallyOnScreen() const
 {
-	Vector p = core->getWindowPosition(getFollowCameraPosition(position + offset));
+	Vector p = getTopParent()->getFollowCameraPosition(getWorldPosition());
+	p = core->getWindowPosition(p);
 	Vector sz = Vector(width, height) * getRealScale();
 	return core->isRectInWindowCoordsPartiallyOnScreen(p, sz);
 }
 
 bool RenderObject::isRectFullyOnScreen() const
 {
-	Vector p = core->getWindowPosition(getFollowCameraPosition(position + offset));
+	Vector p = getTopParent()->getFollowCameraPosition(getWorldPosition());
+	p = core->getWindowPosition(p);
 	Vector sz = Vector(width, height) * getRealScale();
 	return core->isRectInWindowCoordsFullyOnScreen(p, sz);
+}
+
+bool RenderObject::isCenterOnScreenWithMargin(const Vector& margin) const
+{
+	Vector p = getTopParent()->getFollowCameraPosition(getWorldPosition());
+	p = core->getWindowPosition(p);
+	return core->isPointInWindowCoordsOnScreenWithMargin(p, margin);
 }
