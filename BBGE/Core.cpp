@@ -1323,14 +1323,14 @@ Vector Core::pixelPosToVirtualCoords(int x, int y) const
 
 	return Vector(
 		(x * mx) - getVirtualOffX(),
-		 y * my
+		(y * my) - getVirtualOffY()
 	);
 }
 
 void Core::virtualCoordsToPixelPos(int& x, int& y, const Vector& p) const
 {
 	const float px = p.x + getVirtualOffX();
-	const float py = p.y;
+	const float py = p.y + getVirtualOffY();;
 	x = px * (float(getWindowWidth())/float(virtualWidth));
 	y = py * (float(getWindowHeight())/float(virtualHeight));
 }

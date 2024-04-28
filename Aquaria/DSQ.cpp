@@ -1056,15 +1056,13 @@ void DSQ::init()
 	addRenderObject(subbox, LR_SUBTITLES);
 
 	subtext = new BitmapText(subsFont);
-
-	subtext->position = Vector(400,570);
+	subtext->position = Vector(0,-10);
 	subtext->followCamera = 1;
 	subtext->alpha = 0;
 	subtext->setFontSize(14);
 	subtext->setWidth(800);
 	subtext->setAlign(ALIGN_CENTER);
-
-	addRenderObject(subtext, LR_SUBTITLES);
+	subbox->addChild(subtext, PM_POINTER);
 
 	achievement_box = new Quad();
 	achievement_box->position = Vector(800,0);
@@ -1953,10 +1951,9 @@ void DSQ::shutdown()
 	console = 0;
 	removeRenderObject(cmDebug);
 	cmDebug = 0;
-	removeRenderObject(subtext);
-	subtext = 0;
 	removeRenderObject(subbox);
 	subbox = 0;
+	subtext = 0;
 
 	removeRenderObject(achievement_text);
 	achievement_text = 0;
@@ -3723,6 +3720,9 @@ void DSQ::onUpdate(float dt)
 			noEffectTimer = 0;
 	}
 
+	// Don't use go virtualOffY all the way, because then it's a bit too far down to be
+	// readable easily. Move it up a bit when we're in vertical mode.
+	subbox->position = Vector(400,580 + getVirtualOffY() * 0.8f);
 
 	subtitlePlayer.update(dt);
 
