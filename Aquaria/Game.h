@@ -400,6 +400,8 @@ public:
 	void onContinuityReset();
 	void onPrepareRender();
 
+	void handleEditorMapGridUpdate();
+
 protected:
 	unsigned highestLoadedEntityID;
 

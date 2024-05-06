@@ -556,7 +556,7 @@ void Game::reconstructGrid(bool force)
 	dsq->tilemgr.exportGridFillers(fillers);
 
 	std::ostringstream os;
-	os << "ReconstructGrid using " << fillers.size() << " tiles";
+	os << "ReconstructGrid using " << fillers.size() << " solid tiles";
 	debugLog(os.str());
 
 	for (size_t i = 0; i < fillers.size(); i++)
@@ -1800,6 +1800,14 @@ next_SE:
 	findMaxCameraValues();
 
 	return true;
+}
+
+
+void Game::handleEditorMapGridUpdate()
+{
+	reconstructGrid(true);
+	findMaxCameraValues();
+	updateGridRender(OT_MASK_BLACK);
 }
 
 void Game::spawnEntities(const EntitySaveData *sav, size_t n)
