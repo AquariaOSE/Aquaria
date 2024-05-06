@@ -1453,8 +1453,6 @@ void SceneEditor::skinLevel(int minX, int minY, int maxX, int maxY)
 		ts.deleteSome(&deleteTiles[0], deleteTiles.size());
 	}
 
-	int idx=1;
-	int idxCount = 0;
 	for (int x = minX; x < maxX-2; x++)
 	{
 		for (int y = minY; y < maxY; y++)
@@ -1515,43 +1513,52 @@ void SceneEditor::skinLevel(int minX, int minY, int maxX, int maxY)
 
 				if (!skip)
 				{
-					unsigned cantUse[4] = {0};
+					const float NEAR_DIST = sqr(120);
+					// count which tile are used nearby
+					size_t useCount[4] = {0}; // index 0 is never used
 					for (size_t i = 0; i < toAdd.size(); i++)
 					{
 						const TileDef& d = toAdd[i];
-						if ((p - Vector(d.x, d.y)).getSquaredLength2D() < sqr(120))
-						{
-							cantUse[d.idx]++;
-						}
+						if ((p - Vector(d.x, d.y)).getSquaredLength2D() < NEAR_DIST)
+							useCount[d.idx-1]++;
 					}
-					size_t useIdx = rand()%4+1;
-					for (size_t i = 0; i < 4; i++)
+
+					// try to place the one that appeared least often so far
+					size_t k = size_t(rand()) & 3; // tie breaker
+					size_t kend = k + 4;
+					size_t least = size_t(-1);
+					size_t idx = 0;
+					do
 					{
-						size_t check = i + idxCount;
-						if (check >= 4)
-							check -= 4;
-						if (!cantUse[check])
+						size_t i = k & 3;
+						if(useCount[i] <= least)
 						{
-							useIdx = check+1;
+							least = useCount[i];
+							idx = i;
 						}
+						++k;
 					}
-					idxCount = rand()%4;
+					while(k < kend);
 
 					TileDef d(LAYER);
 					d.x = p.x + offset.x;
 					d.y = p.y + offset.y;
-					d.idx = useIdx;
+					d.idx = idx + 1; // bring into range [1..4]
 					d.rot = rot;
 
 					toAdd.push_back(d);
-
-					idx++;
-					if(idx > 4)
-						idx = 1;
 				}
 			}
 		}
 	}
+
+	std::ostringstream os;
+	os << "skinlevel generated " << toAdd.size() << " tiles";
+	debugLog(os.str());
+
+	if(toAdd.size())
+		dsq->tilemgr.createTiles(&toAdd[0], toAdd.size());
+
 }
 
 SceneEditor::TileProperty SceneEditor::GetColorProperty(unsigned char r, unsigned char g, unsigned char b)
