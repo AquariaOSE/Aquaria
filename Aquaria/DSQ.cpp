@@ -561,7 +561,7 @@ void DSQ::takeScreenshotKey()
 		screenshot();
 }
 
-Quad *loading=0;
+static Quad *loading=0;
 
 float loadingProgress = 0;
 static const float loadingProgressTable[] = {

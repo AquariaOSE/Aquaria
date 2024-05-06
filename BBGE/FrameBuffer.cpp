@@ -134,7 +134,7 @@ bool FrameBuffer::init(int width, int height, unsigned pages)
 	glGenFramebuffersEXT(_numfbos, &_fbos[0]);
 	for(unsigned i = 0; i < _numfbos; ++i)
 		if(!_fbos[i])
-			return false;
+			goto out;
 
 	if(_numfbos == 1)
 		glBindFramebufferEXT( GL_FRAMEBUFFER_EXT, _fbos[0] );
@@ -177,13 +177,17 @@ bool FrameBuffer::init(int width, int height, unsigned pages)
 			debugLog("GL_FRAMEBUFFER_UNSUPPORTED_EXT!");
 		default:
 			unloadDevice();
-			return false;
+			goto out;
 		}
 	}
 
 	debugLog("Done");
 	inited = true;
-	return true;
+
+out:
+	glBindFramebufferEXT(GL_FRAMEBUFFER_EXT, 0);
+	return inited;
+
 }
 
 void FrameBuffer::unloadDevice()
