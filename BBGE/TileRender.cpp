@@ -36,7 +36,7 @@ TileRender::~TileRender()
 // shamelessly ripped from paint.net default palette
 static const Vector s_tagColors[] =
 {
-	/* 0 */ Vector(0.5f, 0.5f, 0.5f),
+	/* 0 */ Vector(1,1,1),
 	/* 1 */ Vector(1,0,0),
 	/* 2 */ Vector(1, 0.415686f, 0),
 	/* 3 */ Vector(1,0.847059f, 0),
@@ -209,10 +209,8 @@ void TileRender::onRender(const RenderState& rs) const
 
 			if(renderBorders)
 			{
-				float c = (tile.flags & TILEFLAG_SELECTED) ? 1.0f : 0.5f;
-				Vector color(c,c,c);
-				color *= getTagColor(tile.tag);
-
+				const float c = (tile.flags & TILEFLAG_SELECTED) ? 1.0f : 0.5f;
+				const Vector color = getTagColor(tile.tag) * c;
 				glColor4f(color.x, color.y, color.z, 1.0f);
 				core->getDefaultQuadBorderBuf()->apply();
 				glPointSize(16);
