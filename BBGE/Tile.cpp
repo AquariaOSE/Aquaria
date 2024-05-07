@@ -212,11 +212,16 @@ void TileStorage::setEffect(const TileEffectStorage& effstore, int idx, const si
 
 void TileStorage::changeFlags(unsigned flagsToSet, unsigned flagsToUnset, const size_t* indices, size_t n)
 {
+	assert(!(flagsToSet & flagsToUnset)); // don't set and unset flag at the same time
+	const unsigned unsetMask = ~flagsToUnset;
+	const unsigned setRep = flagsToSet & TILEFLAG_REPEAT;
 	for(size_t i = 0; i < n; ++i)
 	{
-		unsigned& f = tiles[indices[i]].flags;
-		unsigned tmp = f & ~flagsToUnset;
-		f = tmp | flagsToSet;
+		TileData& t = tiles[indices[i]];
+		unsigned tmp = t.flags & unsetMask;
+		t.flags = tmp | flagsToSet;
+		if(setRep && !t.rep) // setting the flag does not create the attached data, do that if necessary
+			t.setRepeatOn();
 	}
 }
 
@@ -715,6 +720,7 @@ void TileData::setRepeatOff()
 
 void TileData::refreshRepeat()
 {
+	assert(!(flags & TILEFLAG_REPEAT) || rep);
 	if(rep)
 	{
 		rep->refresh(*this);
@@ -729,6 +735,7 @@ bool TileData::hasStandardTexcoords() const
 
 const TexCoordBox& TileData::getTexcoords() const
 {
+	assert(!(flags & TILEFLAG_REPEAT) || rep);
 	return !(flags & TILEFLAG_REPEAT)
 		? et->tc
 		: rep->grid.getTexCoords();
