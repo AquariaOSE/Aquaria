@@ -715,8 +715,10 @@ static bool preRenderAfterEffectLayer(const RenderState& rs)
 {
 	if(core->darkLayer.isUsed()
 		// LR_DARK_LAYER is remapped to LR_ELEMENTS13 via renderLayerOrder,
-		// need to actually check LR_DARK_LAYER here
+		// need to actually check LR_DARK_LAYER here.
+		// HACK: For good measure let's check both
 		&& core->getRenderObjectLayer(LR_DARK_LAYER)->visible
+		&& core->getRenderObjectLayer(LR_ELEMENTS13)->visible
 		)
 	{
 		core->darkLayer.render(rs);
