@@ -120,7 +120,7 @@ size_t TileStorage::moveToOther(TileStorage& other, const size_t *indices, size_
 	tiles.reserve(tmp.size() - n);
 	for(size_t i = 0; i < tmp.size(); ++i)
 	{
-		for(size_t k = 0; k < n; ++i) // not particularly efficient, could be much better by sorting first but eh
+		for(size_t k = 0; k < n; ++k) // not particularly efficient, could be much better by sorting first but eh
 			if(indices[k] == i)
 				goto skip;
 
