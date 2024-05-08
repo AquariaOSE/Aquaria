@@ -713,8 +713,14 @@ static bool beginAfterEffectCapture(const RenderState& rs)
 
 static bool preRenderAfterEffectLayer(const RenderState& rs)
 {
-	if(core->darkLayer.isUsed())
+	if(core->darkLayer.isUsed()
+		// LR_DARK_LAYER is remapped to LR_ELEMENTS13 via renderLayerOrder,
+		// need to actually check LR_DARK_LAYER here
+		&& core->getRenderObjectLayer(LR_DARK_LAYER)->visible
+		)
+	{
 		core->darkLayer.render(rs);
+	}
 
 	if(core->afterEffectManager)
 	{
