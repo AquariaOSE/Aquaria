@@ -2400,8 +2400,6 @@ bool SceneEditor::isOn()
 
 void SceneEditor::updateText()
 {
-	// FIXME: make sure this isn't called while the editor isn't active
-
 	btnMenu->position = Vector(20, 20 - core->getVirtualOffY());
 
 	const Vector cursor = dsq->getGameCursorPosition();
@@ -2773,6 +2771,7 @@ void SceneEditor::update(float dt)
 							if(!middle && !uni && selectedTiles.size() == 1)
 							{
 								Vector offsetChange = (add*Vector(multi->getWidth(), multi->getHeight()))*0.5f;
+								offsetChange.rotate2D360(multi->rotation.z);
 								if (add.y == 0)
 								{
 									if (right)
