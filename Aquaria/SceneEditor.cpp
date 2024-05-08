@@ -1802,7 +1802,7 @@ void SceneEditor::action(int id, int state, int source, InputDevice device)
 
 					if (core->getShiftState())
 					{
-						if(newLayer < MAX_TILE_LAYERS)
+						if(newLayer < MAX_TILE_LAYERS && newLayer != bgLayer)
 						{
 							TileStorage& dst = dsq->tilemgr.tilestore[newLayer];
 							const size_t idx = ts.moveToOther(dst, &selectedTiles[0], N);
