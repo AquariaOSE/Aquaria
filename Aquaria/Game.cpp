@@ -2354,7 +2354,7 @@ void Game::updateParticlePause()
 
 int game_collideParticle(Vector pos)
 {
-	bool aboveWaterLine = (pos.y <= game->waterLevel.x+20);
+	bool aboveWaterLine = (pos.y <= game->waterLevel.x+10);
 	bool inWaterBubble = false;
 	if (!aboveWaterLine)
 	{
