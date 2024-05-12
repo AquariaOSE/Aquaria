@@ -4044,7 +4044,12 @@ void Game::toggleGridRender()
 static void checkgridrender(GridRender *gr, ObsType obs)
 {
 	if(gr->getObs() & obs)
-		gr->markForRebuild();
+	{
+		if(gr->alpha.x)
+			gr->rebuildBuffers();
+		else
+			gr->markForRebuild();
+	}
 }
 
 void Game::updateGridRender(ObsType obs)
