@@ -2337,7 +2337,6 @@ void SceneEditor::toggle(bool on)
 	if (on)
 	{
 		btnMenu->alpha = 1;
-		dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = true;
 		dsq->tileRenders[bgLayer]->renderBorders = true;
 
 		game->togglePause(on);
@@ -2351,11 +2350,6 @@ void SceneEditor::toggle(bool on)
 
 
 		dsq->darkLayer.toggle(false);
-
-		for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
-		{
-			dsq->getRenderObjectLayer(i)->update = true;
-		}
 
 		oldGlobalScale = core->globalScale;
 		const float cameraOffset = 1/oldGlobalScale.x - 1/zoom.x;
@@ -2375,7 +2369,6 @@ void SceneEditor::toggle(bool on)
 
 		movingEntity = 0;
 
-		dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = false;
 		dsq->tileRenders[bgLayer]->renderBorders = false;
 
 		game->togglePause(on);

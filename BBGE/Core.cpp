@@ -1059,9 +1059,6 @@ void Core::updateRenderObjects(float dt)
 
 		RenderObjectLayer *rl = &renderObjectLayers[c];
 
-		if (!rl->update)
-			continue;
-
 		for (RenderObject *r = rl->getFirst(); r; r = rl->getNext())
 		{
 			r->update(dt);

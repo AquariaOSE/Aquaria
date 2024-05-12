@@ -2558,8 +2558,6 @@ void Game::applyState()
 	useWaterLevel = false;
 	waterLevel = saveWaterLevel = 0;
 
-	dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = false;
-
 	grad = 0;
 	maxLookDistance = 600;
 	saveFile = 0;
@@ -4753,8 +4751,6 @@ void Game::removeState()
 	dsq->shakeCamera(0,0);
 	if (core->afterEffectManager)
 		core->afterEffectManager->clear();
-
-	dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = true;
 
 	if (saveFile)
 	{

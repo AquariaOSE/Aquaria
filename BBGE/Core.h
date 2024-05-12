@@ -171,8 +171,6 @@ public:
 	Vector followCameraMult; // calculated based on followCameraLock
 	int followCameraLock;
 
-	bool update;
-
 	PreRenderFunc preRender;
 	PostRenderFunc postRender;
 

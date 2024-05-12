@@ -30,7 +30,6 @@ RenderObjectLayer::RenderObjectLayer()
 	visible = true;
 	startPass = endPass = 0;
 	followCameraLock = FCL_NONE;
-	update = true;
 
 	const int size = renderObjects.size();
 	for (int i = 0; i < size; i++)
