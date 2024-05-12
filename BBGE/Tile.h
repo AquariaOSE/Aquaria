@@ -220,8 +220,9 @@ public:
 	TileStorage();
 	~TileStorage();
 
-	void moveToFront(const size_t *indices, size_t n);
-	void moveToBack(const size_t *indices, size_t n);
+	// Pass in old indices, updates indices where the tiles are afterwards
+	void moveToFront(size_t *indices, size_t n);
+	void moveToBack(size_t *indices, size_t n);
 
 	// returns starting index of new tiles. Since new tiles are always appended at the end,
 	// the new indices corresponding to the moved tiles are [retn .. retn+n)
@@ -254,14 +255,19 @@ public:
 	std::vector<TileData> tiles; // must call refreshAll() after changing this
 
 private:
+	enum MoveTarget
+	{
+		MV_BEGIN,
+		MV_END,
+	};
 
 	std::vector<size_t> indicesToUpdate;
 	std::vector<size_t> indicesToCollide;
 
 	void _refreshTile(const TileData& t);
-	void _moveToFront(const size_t *indices, size_t n);
-	void _moveToBack(const size_t *indices, size_t n);
-	void _moveToPos(size_t where, const size_t *indices, size_t n);
+	void _moveToFront(size_t *indices, size_t n);
+	void _moveToBack(size_t *indices, size_t n);
+	void _moveToPos(MoveTarget where, size_t *indices, size_t n);
 
 	TileStorage(const TileStorage&); // no-copy
 };

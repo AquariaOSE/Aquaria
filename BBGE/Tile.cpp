@@ -23,7 +23,7 @@ TileStorage::Sizes TileStorage::stats() const
 	return sz;
 }
 
-void TileStorage::moveToFront(const size_t *indices, size_t n)
+void TileStorage::moveToFront(size_t *indices, size_t n)
 {
 	if(n)
 	{
@@ -32,7 +32,7 @@ void TileStorage::moveToFront(const size_t *indices, size_t n)
 	}
 }
 
-void TileStorage::moveToBack(const size_t *indices, size_t n)
+void TileStorage::moveToBack(size_t *indices, size_t n)
 {
 	if(n)
 	{
@@ -60,7 +60,7 @@ void TileStorage::doInteraction(const Vector& pos, const Vector& vel, float mult
 	}
 }
 
-void TileStorage::_moveToFront(const size_t *indices, size_t n)
+void TileStorage::_moveToFront(size_t *indices, size_t n)
 {
 	// move tile to front -> move it to the back of the list, to be rendered last aka on top of everything else
 
@@ -68,14 +68,15 @@ void TileStorage::_moveToFront(const size_t *indices, size_t n)
 	{
 		TileData tile = tiles[*indices];
 		tiles.erase(tiles.begin() + *indices);
+		*indices = tiles.size();
 		tiles.push_back(tile);
 		return;
 	}
 
-	_moveToPos(size(), indices, n);
+	_moveToPos(MV_END, indices, n);
 }
 
-void TileStorage::_moveToBack(const size_t *indices, size_t n)
+void TileStorage::_moveToBack(size_t *indices, size_t n)
 {
 	// move tile to back -> move it to the front of the list, to be rendered first aka underneath everything else
 
@@ -84,28 +85,33 @@ void TileStorage::_moveToBack(const size_t *indices, size_t n)
 		TileData tile = tiles[*indices];
 		tiles.erase(tiles.begin() + *indices);
 		tiles.insert(tiles.begin(), tile);
+		*indices = 0;
 		return;
 	}
 
-	_moveToPos(0, indices, n);
+	_moveToPos(MV_BEGIN, indices, n);
 }
 
-void TileStorage::_moveToPos(size_t where, const size_t * indices, size_t n)
+void TileStorage::_moveToPos(MoveTarget where, size_t * indices, size_t n)
 {
 	std::vector<size_t> tmp(indices, indices + n);
-	std::sort(tmp.begin(), tmp.end());
-
 	std::vector<TileData> tt(n);
 
-	// sorted indices -> preserve relative order of tiles
+	// unsorted indices -> preserve relative order of tiles
 	for(size_t i = 0; i < n; ++i)
 		tt[i] = tiles[tmp[i]];
 
+	std::sort(tmp.begin(), tmp.end());
+
 	// SORTED indices, erasing from the BACK -> we don't get a destructive index shift
-	for(size_t i = tmp.size(); i --> 0; )
+	for(size_t i = n; i --> 0; )
 		tiles.erase(tiles.begin() + tmp[i]);
 
-	tiles.insert(tiles.begin() + where, tt.begin(), tt.end());
+	size_t offs = where == MV_BEGIN ? 0 : tiles.size();
+	tiles.insert(tiles.begin() + offs, tt.begin(), tt.end());
+
+	for(size_t i = 0; i < n; ++i)
+		indices[i] = i + offs;
 }
 
 size_t TileStorage::moveToOther(TileStorage& other, const size_t *indices, size_t n)
