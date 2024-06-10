@@ -206,18 +206,11 @@ if(NOT SDL_FOUND)
             set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE FILEPATH "Where the SDLmain library can be found" FORCE)
             set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL.lib" CACHE FILEPATH "Where the SDL library can be found" FORCE)
         endif(AQUARIA_USE_SDL2)
-        set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
-	elseif(WIN32_TRUE)
-        set(SDL_INCLUDE_DIR "${SDLDIR}/include" CACHE PATH "SDL include directory" FORCE)
-        message(STATUS "Using internal copy of SDL")
-        if(AQUARIA_USE_SDL2)
-            set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDL2main.lib" CACHE FILEPATH "Where the SDL2main library can be found" FORCE)
-            set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL2.lib" CACHE FILEPATH "Where the SDL2 library can be found" FORCE)
-        else(AQUARIA_USE_SDL2)
-            set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE FILEPATH "Where the SDLmain library can be found" FORCE)
-            set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL.lib" CACHE FILEPATH "Where the SDL library can be found" FORCE)
-        endif(AQUARIA_USE_SDL2)
-        set(SDL_LIBRARY -lmingw32 ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
+		if(MSYS)
+    	    set(SDL_LIBRARY -lmingw32 ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
+		else(MSYS)
+        	set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
+		endif(MSYS())
     else(MACOSX)
         message(SEND_ERROR "We don't have a prebuilt SDL for this platform.")
     endif(MACOSX)
@@ -379,7 +372,7 @@ IF(UNIX AND NOT HAIKU)
 ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCC)
-    ADD_DEFINITIONS(-pipe -fsigned-char)
+	#ADD_DEFINITIONS(-pipe -fsigned-char)
     #ADD_DEFINITIONS(-Wall)
 
     # See if -fno-stack-protector is available to us.
