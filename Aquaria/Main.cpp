@@ -67,7 +67,7 @@ static void CheckConfig(void)
 }
 
 
-#if defined(BBGE_BUILD_WINDOWS) && !defined(BBGE_BUILD_SDL)
+#if defined(BBGE_BUILD_WINDOWS) && !(defined(BBGE_BUILD_SDL) or defined(BBGE_BUILD_SDL2))
 	int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 						HINSTANCE	hPrevInstance,		// Previous Instance
 						LPSTR		lpCmdLine,			// Command Line Parameters
