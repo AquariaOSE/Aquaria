@@ -382,10 +382,18 @@ IF(CMAKE_COMPILER_IS_GNUCC)
         ADD_DEFINITIONS(-fno-stack-protector)
     ENDIF(AQUARIA_GCC_HAS_STACKPROT)
 
-    # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
-    # Exceptions are not used, excluding support for release builds adds less bulk as well.
-    set(CMAKE_C_FLAGS_RELEASE "-O2" CACHE STRING "Flags used for release builds" FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
+    CHECK_C_COMPILER_FLAG("-fno-stack-protector" AQUARIA_GCC_HAS_STACKPROT)
+    IF(AQUARIA_GCC_HAS_STACKPROT)
+        # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
+        # Exceptions are not used, excluding support for release builds adds less bulk as well.
+        set(CMAKE_C_FLAGS_RELEASE "-pipe -fsigned-char -fno-stack-protector -O2" CACHE STRING "Flags used for release builds" FORCE)
+        set(CMAKE_CXX_FLAGS_RELEASE "-pipe -fsigned-char -fno-stack-protector -O2 -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
+    ELSE(AQUARIA_GCC_HAS_STACKPROT)
+        # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
+        # Exceptions are not used, excluding support for release builds adds less bulk as well.
+        set(CMAKE_C_FLAGS_RELEASE "-pipe -fsigned-char -O2" CACHE STRING "Flags used for release builds" FORCE)
+        set(CMAKE_CXX_FLAGS_RELEASE "-pipe -fsigned-char -O2 -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
+    ENDIF(AQUARIA_GCC_HAS_STACKPROT)
 
     # !!! FIXME: probably not safe long-term.
     # CMake mailing list had this hack for getting rid of -rdynamic:
