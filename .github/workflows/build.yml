@@ -1,0 +1,101 @@
+# Github Actions script used to build aquaria.
+# LICENSE: MIT
+name: Aquaria build
+
+on: [push]
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event"
+      - run: echo "Checkout the branch ${{ github.ref }} of the repository ${{ github.repository }}..."
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: git submodule update --init --recursive
+      - run: echo "Checkout done."
+      - name: Installing MSYS2
+        uses: msys2/setup-msys2@v2
+        with:
+          msystem: MINGW32
+          update: true
+      - run: echo "Installing dependencies..."
+      - shell: msys2 {0}
+        run: |
+          pacman -Syu --noconfirm
+          pacman -Sy --noconfirm --needed base-devel mingw-w64-i686-toolchain
+          pacman -Sy --noconfirm mingw32/mingw-w64-i686-cmake
+      - run: echo "Compiling..."
+      - shell: msys2 {0}
+        run: |
+          mkdir build
+          cd build
+          /mingw32/bin/cmake -DOPENAL_LIBRARY=../ExternalLibs/AL/lib/win32 -DOPENAL_INCLUDE_DIR=../ExternalLibs/AL/inclue -DAQUARIA_USE_SDL2=1 -DCMAKE_BUILD_TYPE=Release -DWIN32_TRUE=1 -DMSYS=1 -G "Unix Makefiles" ..
+          make VERBOSE=1
+          cd ..
+      - run: echo "Compiling done."
+      - run: echo "Packaging..."
+      - shell: msys2 {0}
+        run: |
+          mkdir aquaria_release
+          cp -p build/aquaria.exe aquaria_release/
+          cp -rp files aquaria_release/override
+          cp ExternalLibs/SDL2/lib/win32/SDL2.dll aquaria_release/
+          cp -r ExternalLibs/AL/lib/win32/*.dll aquaria_release/
+      - name: 'Upload artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Release-Windows-artefact
+          path: aquaria_release
+          retention-days: 1
+  build-ubuntu:
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "The job was automatically triggered by a ${{ github.event_name }} event"
+      - run: echo "Checkout the branch ${{ github.ref }} of the repository ${{ github.repository }}..."
+      - name: Check out repository code
+        uses: actions/checkout@v4
+      - run: git submodule update --init
+      - run: echo "Checkout done."
+      - run: echo "Instaling development package..."
+      - run: sudo apt-get update
+      - run: sudo apt-get install build-essential cmake liblua5.1-0-dev libogg-dev libvorbis-dev libopenal-dev libsdl2-dev libfuse2
+      - run: echo "Developpement package installed..."
+      - run: echo "Compiling..."
+      - run: |
+          mkdir ${{ github.workspace }}/build
+          cd ${{ github.workspace }}/build
+          cmake -DAQUARIA_USE_SDL2=1 -DCMAKE_BUILD_TYPE=Release ..
+          make
+      - run: echo "Compiling done."
+      - run: echo "Build standard packaging."
+      - run: |
+          cd ${{ github.workspace }}
+          mkdir Releases
+          cp -p build/aquaria Releases/
+          cp -rp files Releases/override
+          cp usersettings.xml Releases/
+          cd Releases/
+          tar cfz aquaria_linux.tar.gz aquaria override usersettings.xml
+          rm usersettings.xml
+          rm aquaria
+          rm -rf override
+      - run: echo "Build appimage packaging."
+      - run: |
+          cd ${{ github.workspace }}/appimage
+          cp -p ${{ github.workspace }}/build/aquaria ./
+          wget https://github.com/linuxdeploy/linuxdeploy/releases/download/1-alpha-20240109-1/linuxdeploy-x86_64.AppImage
+          chmod +x linuxdeploy-x86_64.AppImage
+          wget https://github.com/AppImage/AppImageKit/releases/download/13/appimagetool-x86_64.AppImage
+          chmod +x appimagetool-x86_64.AppImage
+          ./linuxdeploy-x86_64.AppImage --executable aquaria --appdir AppDir --icon-file aquaria.png  --desktop-file aquaria.desktop
+          cp -rp ../files AppDir/usr/bin/override
+          cp -rp ../usersettings.xml AppDir/usr/bin/
+          ./appimagetool-x86_64.AppImage AppDir/
+          cp -p Aquaria-x86_64.AppImage ${{ github.workspace }}/Releases/
+      - name: 'Upload artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: Release-Linux-artefact
+          path: ${{ github.workspace }}/Releases
+          retention-days: 1
