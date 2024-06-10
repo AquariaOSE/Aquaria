@@ -25,6 +25,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <time.h>
 #include <iostream>
+#include <algorithm>
 
 #ifdef BBGE_BUILD_UNIX
 #include <limits.h>
@@ -90,7 +91,7 @@ void Core::initIcon()
 
 	HWND hwnd = wminfo.info.win.window;
 
-	::SetClassLong(hwnd, GCL_HICON, (LONG) icon_windows);
+	::SetClassLong(hwnd, GCLP_HICON, (LONG) icon_windows);
 #endif
 }
 
@@ -888,13 +889,14 @@ static bool checkWritable(const std::string& path, bool warn, bool critical)
 
 
 const float SORT_DELAY = 10;
-Core::Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
+Core::Core(const std::string &filesystem, const std::string& extraDataDir, const std::string& appImageDir, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
 : ActionMapper(), StateManager(), appName(appName)
 {
 	sound = NULL;
 	screenCapScale = Vector(1,1,1);
 	timeUpdateType = TIMEUPDATE_DYNAMIC;
 	_extraDataDir = extraDataDir;
+    _appImageDir = appImageDir;
 
 	fixedFPS = 60;
 
@@ -1174,39 +1176,127 @@ static int locateOneElement(char *buf)
 }
 #endif
 
+/**
+ * Callback used in locateOneDir. Used to locate a dirname in a directory
+ * @param aDirBase The directory that is being processed in a loop
+ * @param aUser A vector tha contain the dirname to search and that will contain the result if found.
+ */
+static void locateOneDirCallback(ttvfs::DirBase *aDirBase, void *aUser) {
+    std::vector<std::string> *aElements = (std::vector<std::string>*)aUser;
+    if (strcasecmp(aDirBase->name(), aElements->at(0).c_str()) == 0) {
+        aElements->emplace_back(aDirBase->name());
+    }
+}
 
-std::string Core::adjustFilenameCase(const char *_buf)
+/**
+ * Find the directory name (case sensitive) of a directory in another directory
+ * @param aDir The directory to search
+ * @param aElement the directory name to found
+ * @return The directory name that has been found (or aElement if none)
+ */
+static std::string locateOneDir(const std::string& aDir, std::string aElement) {
+    std::string lResult = aElement;
+    std::vector<std::string> aElements;
+    ttvfs::DirView view;
+    aElements.push_back(aElement);
+    if(vfs.FillDirView(aDir.c_str(), view)) {
+        view.forEachDir(locateOneDirCallback, &aElements);
+    }
+    if (aElements.size() > 1) {
+        lResult = aElements.at(1);
+    }
+    return lResult;
+}
+
+/**
+ * Callback used in locateOneFile. Used to locate a filename in a directory
+ * @param aFile The file that is being processed in a loop
+ * @param aUser A vector tha contain the filename to search and that will contain the result if found.
+ */
+static void locateOneFileCallback(ttvfs::File *aFile, void *aUser) {
+    std::vector<std::string> *aElements = (std::vector<std::string>*)aUser;
+    if (strcasecmp(aFile->name(), aElements->at(0).c_str())  == 0) {
+        aElements->emplace_back(aFile->name());
+    }
+}
+
+/**
+ * Find the filename (case sensitive) of a file in a directory
+ * @param aDir The directory to search
+ * @param aFilename the file to found
+ * @return The filename that has been found (or aFilename if none)
+ */
+static std::string locateOneFile(const std::string& aDir, std::string aFilename) {
+    std::string lResult = aFilename;
+    std::vector<std::string> aElements;
+    ttvfs::DirView view;
+    aElements.push_back(aFilename);
+    if(vfs.FillDirView(aDir.c_str(), view)) {
+        view.forEachFile(locateOneFileCallback, &aElements);
+    }
+    if (aElements.size() > 1) {
+        lResult = aElements.at(1);
+    }
+    return lResult;
+}
+
+/**
+ * Find the correct filename (case sensitive) in the project directory (or vfs if enabled)
+ * @param aFilename The filename to adjust
+ * @return A filename that can open a file that exist (or aFilename if none)
+ */
+std::string Core::adjustFilenameCase(const std::string& aFilename)
 {
 #ifdef BBGE_BUILD_UNIX  // any case is fine if not Linux.
-	int rc = 1;
-	char *buf = (char *) alloca(strlen(_buf) + 1);
-	strcpy(buf, _buf);
 
-	char *ptr = buf;
-	while ((ptr = strchr(ptr + 1, '/')) != 0)
-	{
-		*ptr = '\0';  // block this path section off
-		rc = locateOneElement(buf);
-		*ptr = '/'; // restore path separator
-		if (!rc)
-			break;  // missing element in path.
-	}
+#ifdef BBGE_BUILD_VFS
+    std::string lBaseDir;
+    ttvfs::File * lFile = vfs.GetFile(aFilename.c_str());
+    if (!!lFile) {
+        lBaseDir = aFilename;
+    } else {
+        std::size_t lPositionOld = 0;
 
-	// check final element...
-	if (rc)
-		rc = locateOneElement(buf);
+        std::string lElementFixed;
+        bool lIsFound = true;
+        while (lIsFound) {
+            std::size_t lPosition = aFilename.find("/", lPositionOld);
+            if (lPosition != std::string::npos) {
+                lElementFixed = locateOneDir(lBaseDir, aFilename.substr(lPositionOld, lPosition - lPositionOld));
+                lBaseDir.append(lElementFixed + "/");
+                lPositionOld = lPosition + 1;
+            } else {
+                lIsFound = false;
+            }
 
-	#if 0
-	if (strcmp(_buf, buf) != 0)
-	{
-		fprintf(stderr, "Corrected filename case: '%s' => '%s (%s)'\n",
-		        _buf, buf, rc ? "found" : "not found");
-	}
-	#endif
-
-	return std::string(buf);
+        }
+        lElementFixed = locateOneFile(lBaseDir, aFilename.substr(lPositionOld));
+        lBaseDir.append(lElementFixed);
+    }
+    return lBaseDir;
 #else
-	return std::string(_buf);
+    const char *_buf = aFilename.c_str();
+    int rc = 1;
+    char *buf = (char *) alloca(strlen(_buf) + 1);
+    strcpy(buf, _buf);
+
+    char *ptr = buf;
+    while ((ptr = strchr(ptr + 1, '/')) != 0)
+    {
+        *ptr = '\0';  // block this path section off
+        rc = locateOneElement(buf);
+        *ptr = '/'; // restore path separator
+        if (!rc)
+            break;  // missing element in path.
+    }
+
+    // check final element...
+    if (rc)
+        rc = locateOneElement(buf);
+    return std::string(buf);
+#endif
+#else
+	return aFilename;
 #endif
 }
 
@@ -5069,6 +5159,12 @@ void Core::setupFileAccess()
 
 	vfs.AddLoader(new ttvfs::DiskLoader);
 	vfs.AddArchiveLoader(new ttvfs::VFSZipArchiveLoader);
+
+    if(_appImageDir.length())
+    {
+        debugLog("Mounting app image dir: " + _appImageDir);
+        vfs.Mount(_appImageDir.c_str(), "");
+    }
 
 	vfs.Mount("override", "");
 

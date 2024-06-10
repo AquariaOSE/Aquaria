@@ -19,6 +19,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#include <filesystem>
 #include "DSQ.h"
 
 
@@ -85,6 +86,8 @@ static void CheckConfig(void)
 	{
 		std::string dsqParam = ""; // fileSystem
 		std::string extraDataDir = "";
+        std::string appImageExtraDir = "";
+        const char *appImageDir = 0;
 
 		const char *envPath = 0;
 #ifdef BBGE_BUILD_UNIX
@@ -93,6 +96,12 @@ static void CheckConfig(void)
 		{
 			dsqParam = envPath;
 		}
+        appImageDir = getenv("APPIMAGE");
+        if (appImageDir)
+        {
+            std::filesystem::path appImagePath = appImageDir;
+            appImageExtraDir = appImagePath.parent_path();
+        }
 #endif
 #ifdef AQUARIA_DEFAULT_DATA_DIR
 		if(!envPath)
@@ -107,7 +116,7 @@ static void CheckConfig(void)
         CheckConfig();
 
         {
-            DSQ dsql(dsqParam, extraDataDir);
+            DSQ dsql(dsqParam, extraDataDir, appImageExtraDir);
             dsql.init();
             dsql.main();
             dsql.shutdown();
