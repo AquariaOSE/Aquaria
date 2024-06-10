@@ -372,15 +372,6 @@ IF(UNIX AND NOT HAIKU)
 ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCC)
-	#ADD_DEFINITIONS(-pipe -fsigned-char)
-    #ADD_DEFINITIONS(-Wall)
-
-    # See if -fno-stack-protector is available to us.
-    # It doesn't seem to work well, and it adds bulk to the binary.
-    CHECK_C_COMPILER_FLAG("-fno-stack-protector" AQUARIA_GCC_HAS_STACKPROT)
-    IF(AQUARIA_GCC_HAS_STACKPROT)
-        ADD_DEFINITIONS(-fno-stack-protector)
-    ENDIF(AQUARIA_GCC_HAS_STACKPROT)
 
     CHECK_C_COMPILER_FLAG("-fno-stack-protector" AQUARIA_GCC_HAS_STACKPROT)
     IF(AQUARIA_GCC_HAS_STACKPROT)
