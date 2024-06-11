@@ -87,9 +87,9 @@ static void CheckConfig(void)
 		std::string dsqParam = ""; // fileSystem
 		std::string extraDataDir = "";
         std::string appImageExtraDir = "";
-        const char *appImageDir = 0;
+        const char *appImageDir = nullptr;
 
-		const char *envPath = 0;
+		const char *envPath = nullptr;
 #ifdef BBGE_BUILD_UNIX
 		envPath = getenv("AQUARIA_DATA_PATH");
 		if (envPath)

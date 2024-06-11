@@ -206,11 +206,7 @@ if(NOT SDL_FOUND)
             set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE FILEPATH "Where the SDLmain library can be found" FORCE)
             set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL.lib" CACHE FILEPATH "Where the SDL library can be found" FORCE)
         endif(AQUARIA_USE_SDL2)
-		if(MSYS)
-    	    set(SDL_LIBRARY -lmingw32 ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
-		else(MSYS)
-        	set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
-		endif(MSYS())
+        set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
     else(MACOSX)
         message(SEND_ERROR "We don't have a prebuilt SDL for this platform.")
     endif(MACOSX)
@@ -812,6 +808,10 @@ ADD_EXECUTABLE(aquaria ${EXETYPE}
     ${OPTIONAL_SRCS}
 )
 TARGET_LINK_LIBRARIES(aquaria ${OPTIONAL_LIBS})
+
+IF(WIN32_TRUE)
+    SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-static")
+ENDIF(WIN32_TRUE)
 
 # end of CMakeLists.txt ...
 
