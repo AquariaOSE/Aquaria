@@ -812,7 +812,7 @@ void DSQ::init()
 
 	voiceOversEnabled = true;
 
-	this->setExtraTexturePath(NULL);
+	this->setExtraTexturePath(NULL, false);
 
 
 

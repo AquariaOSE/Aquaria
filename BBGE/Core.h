@@ -318,7 +318,7 @@ public:
 
 	ParticleManager *particleManager;
 
-	void setExtraTexturePath(const char *dir); // pass NULL to disable secondary
+	void setExtraTexturePath(const char *dir, bool watch); // pass NULL to disable secondary
 	const char *getExtraTexturePath() const; // NULL when no secondary
 	const std::string& getBaseTexturePath() const;
 
@@ -527,6 +527,7 @@ public:
 private:
 	std::vector<Joystick*> joysticks;
 	unsigned sdlUserMouseEventID;
+	size_t _textureWatcherHandle;
 };
 
 extern Core *core;

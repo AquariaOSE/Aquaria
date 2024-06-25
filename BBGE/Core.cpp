@@ -53,6 +53,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #endif
 #include "ttvfs_stdio.h"
 
+#include "DirWatcher.h"
+
 Core *core = 0;
 
 static 	std::ofstream _logOut;
@@ -80,6 +82,22 @@ void CoreWindow::onQuit()
 void CoreWindow::onEvent(const SDL_Event& ev)
 {
 	core->onEvent(ev);
+}
+
+static void _TextureFileChanged(const std::string& fn, DirWatcher::Action act, void *ud)
+{
+	TextureMgr::ReloadResult res = core->texmgr.reloadFile(fn, TextureMgr::OVERWRITE);
+	switch(res)
+	{
+		case TextureMgr::RELOADED_OK:
+			break; // all good
+		case TextureMgr::FILE_ERROR:
+			debugLog("Texture [" + fn + "] is not loaded in-game, ignoring");
+			break;
+		case TextureMgr::NOT_LOADED:
+			debugLog("_TextureFileChanged(): There was an issue reloading " + fn);
+			break;
+	}
 }
 
 void Core::resetCamera()
@@ -315,6 +333,7 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	sound = NULL;
 	_extraDataDir = extraDataDir;
 	sdlUserMouseEventID = SDL_RegisterEvents(1);
+	_textureWatcherHandle = 0;
 
 	if (userDataSubFolder.empty())
 		userDataSubFolder = appName;
@@ -1125,6 +1144,8 @@ void Core::run(float runTime)
 
 	while((runTime == -1 && !loopDone) || (runTime >0))
 	{
+		DirWatcher::Pump();
+
 		nowTicks = SDL_GetTicks();
 		dt = (nowTicks-thenTicks)/1000.0;
 		thenTicks = nowTicks;
@@ -1949,10 +1970,10 @@ void Core::clearRenderObjects()
 void Core::shutdown()
 {
 	// pop all the states
-
-
 	debugLog("Core::shutdown");
 	shuttingDown = true;
+
+	DirWatcher::Shutdown();
 
 	debugLog("Shutdown Joystick Library...");
 		shutdownJoystickLibrary();
@@ -2072,21 +2093,34 @@ void Core::reloadResources()
 
 const std::string & Core::getBaseTexturePath() const
 {
-	return texmgr.loadFromPaths.back();
+	assert(texmgr.getNumLoadPaths());
+	return texmgr.getLoadPath(texmgr.getNumLoadPaths() - 1);
 }
 
-void Core::setExtraTexturePath(const char * dir)
+void Core::setExtraTexturePath(const char * dir, bool watch)
 {
-	texmgr.loadFromPaths.resize(size_t(1) + !!dir);
+	const char *paths[2];
 	size_t w = 0;
 	if(dir)
-		texmgr.loadFromPaths[w++] = dir;
-	texmgr.loadFromPaths[w] = "gfx/";
+		paths[w++] = dir;
+	paths[w++] = "gfx/";
+	texmgr.setLoadPaths(&paths[0], w);
+
+	if(_textureWatcherHandle)
+	{
+		DirWatcher::RemoveWatch(_textureWatcherHandle);
+		_textureWatcherHandle = 0;
+	}
+
+	if(dir && watch)
+	{
+		_textureWatcherHandle = DirWatcher::AddWatch(dir, DirWatcher::RECURSIVE, _TextureFileChanged, NULL);
+	}
 }
 
 const char *Core::getExtraTexturePath() const
 {
-	return texmgr.loadFromPaths.size() > 1 ? texmgr.loadFromPaths[0].c_str() : NULL;
+	return texmgr.getNumLoadPaths() > 1 ? texmgr.getLoadPath(0).c_str() : NULL;
 }
 
 void Core::removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag)

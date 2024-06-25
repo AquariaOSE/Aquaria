@@ -150,7 +150,7 @@ void Mod::load(const std::string &p)
 		}
 	}
 
-	dsq->setExtraTexturePath((path + "graphics/").c_str());
+	dsq->setExtraTexturePath((path + "graphics/").c_str(), dsq->isDeveloperKeys());
 
 	dsq->sound->audioPath2 = path + "audio/";
 	dsq->sound->setVoicePath2(path + "audio/");
@@ -283,7 +283,7 @@ void Mod::setActive(bool a)
 			mapRevealMethod = REVEAL_UNSPECIFIED;
 			setLocalisationModPath("");
 			name = path = "";
-			dsq->setExtraTexturePath(NULL);
+			dsq->setExtraTexturePath(NULL, false);
 			dsq->sound->audioPath2 = "";
 			dsq->sound->setVoicePath2("");
 			SkeletalSprite::secondaryAnimationPath = "";

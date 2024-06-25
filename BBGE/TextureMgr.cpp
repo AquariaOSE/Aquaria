@@ -75,6 +75,17 @@ static const ExtAndLoader s_extAndLoader[] =
     { NULL, NULL }
 };
 
+static const char *getExtension(const std::string& name)
+{
+    size_t lastdot = name.rfind('.');
+    size_t lastslash = name.rfind('/');
+    if(lastdot != std::string::npos && (lastslash == std::string::npos || lastslash < lastdot))
+    {
+        return name.c_str() + lastdot + 1;
+    }
+    return NULL;
+}
+
 static TexLoader getFullnameAndLoader(const std::string& name, const std::string& basedir)
 {
     // TODO: use localisePath()
@@ -83,17 +94,16 @@ static TexLoader getFullnameAndLoader(const std::string& name, const std::string
     if(exists(name))
     {
         // check first if name exists and has a known extension, if so, use correct loader
-        size_t lastdot = name.rfind('.');
-        size_t lastslash = name.rfind('/');
-        if(lastdot != std::string::npos && (lastslash == std::string::npos || lastslash < lastdot))
+        const char *ext = getExtension(name);
+        if(ext)
         {
-            std::string ext = name.substr(lastdot + 1);
+            const size_t extlen = strlen(ext);
             for(const ExtAndLoader *exl = &s_extAndLoader[0]; exl->func; ++exl)
             {
-                if(ext == exl->ext)
+                if(!strcmp(exl->ext, ext))
                 {
                     // remove basedir and extension
-                    std::string texname = name.substr(basedir.length(), name.length() - (basedir.length() + ext.length() + 1)); // strip extension
+                    std::string texname = name.substr(basedir.length(), name.length() - (basedir.length() + extlen + 1)); // strip extension
                     return TexLoader(exl->func, fixup(name), texname );
                 }
             }
@@ -161,6 +171,24 @@ TextureMgr::~TextureMgr()
         SDL_WaitThread((SDL_Thread*)threads[i], NULL);
 
     SDL_DestroySemaphore((SDL_sem*)sem);
+}
+
+void TextureMgr::setLoadPaths(const char* const* paths, size_t n)
+{
+    loadFromPaths.resize(n);
+    for(size_t i = 0; i < n; ++i)
+        loadFromPaths[i] = paths[i];
+}
+
+const std::string& TextureMgr::getLoadPath(size_t idx) const
+{
+    assert(idx < loadFromPaths.size());
+    return loadFromPaths[idx];
+}
+
+const size_t TextureMgr::getNumLoadPaths() const
+{
+    return loadFromPaths.size();
 }
 
 size_t TextureMgr::spawnThreads(size_t n)
@@ -370,4 +398,17 @@ void TextureMgr::reloadAll(LoadMode mode)
         loadBatch(NULL, &todo[0],todo.size(), mode);
 }
 
-
+TextureMgr::ReloadResult TextureMgr::reloadFile(const std::string& filename, LoadMode mode)
+{
+    for(TexCache::iterator it = cache.begin(); it != cache.end(); ++it)
+    {
+        if(it->second->filename == filename)
+        {
+            if(load(it->second->name, mode))
+                return RELOADED_OK;
+            else
+                return FILE_ERROR;
+        }
+    }
+    return NOT_LOADED;
+}

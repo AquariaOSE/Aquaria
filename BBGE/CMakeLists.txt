@@ -27,6 +27,8 @@ set(BBGE_SRCS
     DataStructures.h
     DebugFont.cpp
     DebugFont.h
+    DirWatcher.cpp
+    DirWatcher.h
     Emitter.cpp
     EngineEnums.h
     Event.cpp

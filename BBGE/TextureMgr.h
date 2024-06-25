@@ -16,7 +16,9 @@ public:
 
     typedef void (*ProgressCallback)(size_t done, void*);
 
-    std::vector<std::string> loadFromPaths;
+    void setLoadPaths(const char * const * paths, size_t n);
+    const std::string& getLoadPath(size_t idx) const;
+    const size_t getNumLoadPaths() const;
     size_t spawnThreads(size_t n);
     size_t getNumLoaded() const;
     Texture *getOrLoad(const std::string& name);
@@ -34,6 +36,16 @@ public:
     Texture *load(const std::string& texname, LoadMode mode);
     void reloadAll(LoadMode mode);
 
+    enum ReloadResult
+    {
+        FILE_ERROR,
+        RELOADED_OK,
+        NOT_LOADED,
+    };
+
+    // reload a file from disk. Pass in FILE NAME. The function figures out the texture name.
+    ReloadResult reloadFile(const std::string& fn, LoadMode mode);
+
 private:
     typedef std::map<std::string, CountedPtr<Texture> > TexCache;
     TexCache cache;
@@ -48,6 +60,8 @@ private:
 
     void th_loadFromFile(TexLoadTmp& tt) const;
     Texture *finalize(TexLoadTmp& tt);
+
+    std::vector<std::string> loadFromPaths;
 };
 
 #endif
