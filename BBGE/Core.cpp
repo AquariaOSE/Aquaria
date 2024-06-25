@@ -92,10 +92,10 @@ static void _TextureFileChanged(const std::string& fn, DirWatcher::Action act, v
 		case TextureMgr::RELOADED_OK:
 			break; // all good
 		case TextureMgr::FILE_ERROR:
-			debugLog("Texture [" + fn + "] is not loaded in-game, ignoring");
+			debugLog("_TextureFileChanged(): There was an issue reloading " + fn);
 			break;
 		case TextureMgr::NOT_LOADED:
-			debugLog("_TextureFileChanged(): There was an issue reloading " + fn);
+			debugLog("Texture [" + fn + "] is not loaded in-game, ignoring");
 			break;
 	}
 }
