@@ -69,6 +69,12 @@ void UserSettings::save()
 				xml_grabInp->SetAttribute("on", system.grabInput);
 			}
 			xml_system->InsertEndChild(xml_grabInp);
+
+			XMLElement *xml_hotreload = doc.NewElement("HotReloadModGraphics");
+			{
+				xml_hotreload->SetAttribute("on", system.hotreload);
+			}
+			xml_system->InsertEndChild(xml_hotreload);
 		}
 		doc.InsertEndChild(xml_system);
 
@@ -384,6 +390,12 @@ bool UserSettings::load(bool doApply, const std::string &overrideFile)
 		if (xml_grabInp)
 		{
 			system.grabInput = xml_grabInp->IntAttribute("on");
+		}
+
+		XMLElement *xml_hotreload = xml_system->FirstChildElement("HotReloadModGraphics");
+		if (xml_hotreload)
+		{
+			system.hotreload = xml_hotreload->IntAttribute("on");
 		}
 	}
 

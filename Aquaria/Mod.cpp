@@ -150,7 +150,8 @@ void Mod::load(const std::string &p)
 		}
 	}
 
-	dsq->setExtraTexturePath((path + "graphics/").c_str(), dsq->isDeveloperKeys());
+	bool hotReload = dsq->user.system.hotreload;
+	dsq->setExtraTexturePath((path + "graphics/").c_str(), hotReload);
 
 	dsq->sound->audioPath2 = path + "audio/";
 	dsq->sound->setVoicePath2(path + "audio/");

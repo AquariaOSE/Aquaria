@@ -37,7 +37,3 @@ static unsigned char * miniz_stbi_compress(unsigned char *data, int data_len, in
 #define QOI_IMPLEMENTATION
 #define QOI_NO_STDIO
 #include "qoi.h"
-
-#define DMON_IMPL
-#define DMON_SLEEP_INTERVAL 250
-#include "dmon.h"

@@ -138,6 +138,7 @@ void stringToLower(std::string &s);
 void stringToLowerUserData(std::string &s);
 float sqr(float x);
 bool exists(const std::string &f, bool makeFatal = false, bool skipVFS = false);
+bool dirExistsOnDisk(const std::string &f);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
 

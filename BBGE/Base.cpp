@@ -260,6 +260,25 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 	return e;
 }
 
+bool dirExistsOnDisk(const std::string &f)
+{
+#ifdef BBGE_BUILD_VFS
+	return ttvfs::IsDirectory(f.c_str());
+#elif _WIN32
+    DWORD dwFileAttr = GetFileAttributesA(s);
+    if(dwFileAttr == INVALID_FILE_ATTRIBUTES)
+        return false;
+    return !!(dwFileAttr & FILE_ATTRIBUTE_DIRECTORY);
+#else
+    if (!access(s, 0))
+    {
+        struct stat status;
+        stat( s, &status );
+        return status.st_mode & S_IFDIR;
+    }
+    return false;
+#endif
+}
 
 
 std::string getPathInfoStr()

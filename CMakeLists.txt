@@ -82,6 +82,8 @@ OPTION(AQUARIA_USE_GLM "Use GLM for matrix math" TRUE)
 OPTION(AQUARIA_DEBUG_SHOW_PATHS "Show important paths upon game start to aid in finding path problems" FALSE)
 mark_as_advanced(AQUARIA_DEBUG_SHOW_PATHS)
 
+OPTION(AQUARIA_ENABLE_DIR_WATCH "Enable directory watcher component to hot-reload textures in mods. Must be enabled in the game config to be active." TRUE)
+
 #add_compile_options(-fsanitize=address)
 #add_link_options(-fsanitize=address)
 
@@ -135,6 +137,10 @@ endif(NOT(AQUARIA_EXTRA_DATA_DIR STREQUAL ""))
 if(AQUARIA_DEBUG_SHOW_PATHS)
     ADD_DEFINITIONS(-DAQUARIA_DEBUG_SHOW_PATHS)
 endif(AQUARIA_DEBUG_SHOW_PATHS)
+
+if(AQUARIA_ENABLE_DIR_WATCH)
+    ADD_DEFINITIONS(-DAQUARIA_ENABLE_DIR_WATCH)
+endif(AQUARIA_ENABLE_DIR_WATCH)
 
 # Without #define VFS_ENABLE_C_API this is just stubbed out
 include_directories(ttvfs_cfileapi)

@@ -1,15 +1,27 @@
+
+
 #include "DirWatcher.h"
 #include <string>
 #include <assert.h>
 #include <sstream>
 
+#ifdef AQUARIA_ENABLE_DIR_WATCH
+
 #include <SDL_mutex.h>
+
+#define DMON_IMPL
+#define DMON_SLEEP_INTERVAL 250
+#define DMON_LOG_DEBUG(s) debugLog(s)
+#define DMON_LOG_ERROR(s) debugLog(s) // no, dmon, you're not allowed to abort() when a directory doesn't exist. grrr.
 #include "dmon.h"
+
+#endif
+
 
 namespace DirWatcher {
 
 
-
+#ifdef AQUARIA_ENABLE_DIR_WATCH
 
 struct WatchEntry
 {
@@ -32,15 +44,25 @@ static std::vector<WatchEntry> s_watches;
 static std::vector<Pending> s_pending, s_processing;
 static SDL_mutex *s_mtx;
 
+#endif
+
 bool Init()
 {
+#ifdef AQUARIA_ENABLE_DIR_WATCH
+	debugLog("DirWatcher: Init");
+	assert(!s_mtx);
 	s_mtx = SDL_CreateMutex();
 	dmon_init();
 	return true;
+#else
+	debugLog("DirWatcher: Not enabled at compile time. Function not available.");
+	return false;
+#endif
 }
 
 void Shutdown()
 {
+#ifdef AQUARIA_ENABLE_DIR_WATCH
 	if(!s_mtx)
 		return;
 	for(size_t i = 0; i < s_watches.size(); ++i)
@@ -51,10 +73,12 @@ void Shutdown()
 	dmon_deinit();
 	SDL_DestroyMutex(s_mtx);
 	s_mtx = NULL;
+#endif
 }
 
 void Pump()
 {
+#ifdef AQUARIA_ENABLE_DIR_WATCH
 	if(!s_mtx)
 		return;
 
@@ -103,6 +127,7 @@ void Pump()
 	s_processing.clear();
 
 	debugLog("... callbacks done.");
+#endif
 }
 
 static void _watch_cb(dmon_watch_id watch_id, dmon_action action,
@@ -135,6 +160,13 @@ static void _watch_cb(dmon_watch_id watch_id, dmon_action action,
 
 size_t AddWatch(const char* path, Flags flags, Callback cb, void* ud)
 {
+#ifdef AQUARIA_ENABLE_DIR_WATCH
+	if(!dirExistsOnDisk(path))
+	{
+		debugLog(std::string("DirWatcher: Path does not exist, ignoring: ") + path);
+		return 0;
+	}
+
 	const size_t N = s_watches.size();
 	if(!N && !s_mtx)
 		if(!Init())
@@ -160,6 +192,8 @@ size_t AddWatch(const char* path, Flags flags, Callback cb, void* ud)
 	if(flags & RECURSIVE)
 		flg = DMON_WATCHFLAGS_RECURSIVE;
 
+	debugLog(std::string("DirWatcher: Add watch: ") + path);
+
 	s_watches[idx].watch = dmon_watch(path, _watch_cb, (dmon_watch_flags_t)flg, (void*)(uintptr_t)idx);
 	if(!s_watches[idx].watch.id)
 	{
@@ -170,17 +204,22 @@ size_t AddWatch(const char* path, Flags flags, Callback cb, void* ud)
 	}
 	s_watches[idx].valid = true;
 	return idx + 1;
+#endif
 }
 
 void RemoveWatch(size_t idx)
 {
+#ifdef AQUARIA_ENABLE_DIR_WATCH
 	if(!idx)
 		return;
 	--idx;
 
 	assert(s_watches[idx].valid);
+	debugLog("DirWatcher: Remove watch: " + s_watches[idx].path);
+
 	dmon_unwatch(s_watches[idx].watch);
 	s_watches[idx].valid = false;
+#endif
 }
 
 
