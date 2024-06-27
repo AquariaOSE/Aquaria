@@ -764,6 +764,9 @@ bool TcpSocket::update(void)
         switch(err)
         {
         case EWOULDBLOCK:
+#ifdef WSAEWOULDBLOCK
+        case WSAEWOULDBLOCK:
+#endif
 #if defined(EAGAIN) && (EWOULDBLOCK != EAGAIN)
         case EAGAIN: // linux man pages say this can also happen instead of EWOULDBLOCK
 #endif

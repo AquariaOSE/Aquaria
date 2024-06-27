@@ -82,8 +82,9 @@ protected:
 				data->fail = true;
 			}
 		}
+		const unsigned httpstatus = GetStatusCode();
 		data->_th_finished = true;
-		data->_th_aborted = (GetStatusCode() != minihttp::HTTP_OK);
+		data->_th_aborted = (httpstatus != minihttp::HTTP_OK);
 		notifyRequests.push(RequestDataHolder(data));
 	}
 
