@@ -46,10 +46,8 @@ void PathRender::onRender(const RenderState& rs) const
 
 		if (selidx == i)
 			glColor4f(1, 1, 1, 0.75f);
-		else if(p->hasScript())
-			glColor4f(0.5f, 0.8f, 0.5f, 0.75f);
 		else
-			glColor4f(1, 0.5f, 0.5f, 0.75f);
+			glColor4f(p->editorColor.x, p->editorColor.y, p->editorColor.z, 0.75f);
 
 		glBegin(GL_LINES);
 		for (size_t n = 0; n < p->nodes.size()-1; n++)
@@ -61,8 +59,7 @@ void PathRender::onRender(const RenderState& rs) const
 		}
 		glEnd();
 	}
-
-	glLineWidth(1);
+		glLineWidth(1);
 
 	for (size_t i = 0; i < pathcount; i++)
 	{
@@ -104,7 +101,7 @@ void PathRender::onRender(const RenderState& rs) const
 				}
 			}
 
-			Vector color = p->hasScript() ? Vector(0.5f, 0.8f, 0.5f) : Vector(1, 0.5f, 0.5f);
+			Vector color = p->editorColor;
 			float a = 0.75f;
 			if (!p->active)
 			{

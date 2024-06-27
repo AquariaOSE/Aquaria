@@ -113,6 +113,7 @@ public:
 	void refreshScript();
 	MinimapIcon *ensureMinimapIcon();
 
+	Vector editorColor;
 	bool updateFunction;
 	bool activateFunction;
 	bool cursorActivation;

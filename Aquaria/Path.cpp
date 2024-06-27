@@ -21,6 +21,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Game.h"
 #include "Avatar.h"
 
+static const Vector DEFAULT_NODE_COLOR (1, 0.5f, 0.5f);
+static const Vector SCRIPTED_NODE_COLOR(0.5f, 0.8f, 0.5f);
+static const Vector BUILTIN_NODE_COLOR (1, 0.3f, 1);
+
+
 Path::Path()
 {
 	addType(SCO_PATH);
@@ -54,6 +59,7 @@ Path::Path()
 	pauseFreeze = true;
 	activationRange = 800;
 	minimapIcon = 0;
+	editorColor = DEFAULT_NODE_COLOR;
 }
 
 void Path::clampPosition(Vector *pos, float radius)
@@ -273,6 +279,9 @@ void Path::refreshScript()
 	amount = 0;
 	content.clear();
 	label.clear();
+	editorColor = DEFAULT_NODE_COLOR;
+	pathType = PATH_NONE;
+	bool builtin = false;
 
 	destroy();
 
@@ -412,6 +421,7 @@ void Path::refreshScript()
 		is >> dummy >> vox >> re;
 		if (!re.empty())
 			replayVox = true;
+		builtin = true;
 	}
 	else if (label == "warp")
 	{
@@ -437,6 +447,7 @@ void Path::refreshScript()
 		spawnEnemyDistance = 0;
 		is >> dummy >> spawnEnemyName >> spawnEnemyDistance >> spawnEnemyNumber;
 		neverSpawned = true;
+		builtin = true;
 
 	}
 	else if (label == "pe")
@@ -444,11 +455,14 @@ void Path::refreshScript()
 		std::string dummy, particleEffect;
 		SimpleIStringStream is(name);
 		is >> dummy >> particleEffect;
-
-
-
 		setEmitter(particleEffect);
+		builtin = true;
 	}
+
+	if(script)
+		editorColor = SCRIPTED_NODE_COLOR;
+	else if(pathType != PATH_NONE || builtin)
+		editorColor = BUILTIN_NODE_COLOR;
 }
 
 void Path::setEmitter(const std::string& name)
