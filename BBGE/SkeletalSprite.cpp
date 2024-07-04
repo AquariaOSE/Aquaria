@@ -1660,7 +1660,9 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 		XMLElement *animation = animations->FirstChildElement("Animation");
 		while(animation)
 		{
-			Animation newAnimation;
+			this->animations.push_back(Animation());
+			Animation& newAnimation = this->animations.back();
+
 			newAnimation.name = animation->Attribute("name");
 			if(animation->Attribute("resetOnEnd"))
 				newAnimation.resetOnEnd = animation->BoolAttribute("resetOnEnd");
@@ -1786,8 +1788,15 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			}
 
 			// <Interpolator bone="name or idx" type="TYPE config and params" data="controlpoints; aded by editor" />
+			size_t numInterp = 0;
 			XMLElement *interp = animation->FirstChildElement("Interpolator");
 			for( ; interp; interp = interp->NextSiblingElement("Interpolator"))
+				++numInterp;
+
+			newAnimation.interpolators.resize(numInterp);
+
+			interp = animation->FirstChildElement("Interpolator");
+			for(numInterp = 0 ; interp; interp = interp->NextSiblingElement("Interpolator"), ++numInterp)
 			{
 				Bone *bi = NULL;
 				const char *sbone = interp->Attribute("bone");
@@ -1817,17 +1826,16 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					continue;
 				}
 
-				SplineType spline = SPLINE_BSPLINE;
+				SplineType spline = INTERPOLATOR_BSPLINE;
 				unsigned cx = 3, cy = 3, degx = 3, degy = 3;
 				if(const char *stype = interp->Attribute("type"))
 				{
 					SimpleIStringStream is(stype, SimpleIStringStream::REUSE);
 					std::string ty;
 					is >> ty;
-					BoneGridInterpolator bgip;
 					if(ty == "bspline")
 					{
-						spline = SPLINE_BSPLINE;
+						spline = INTERPOLATOR_BSPLINE;
 						if(!(is >> cx >> cy >> degx >> degy))
 						{
 							if(!degx)
@@ -1851,9 +1859,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				// bone grid should have been created via <Bone grid=... /> earlier
 
 				const char *idata = interp->Attribute("data");
-				newAnimation.interpolators.push_back(BoneGridInterpolator());
-				BoneGridInterpolator& bgip = newAnimation.interpolators.back();
-				//bgip.type = spline;
+				BoneGridInterpolator& bgip = newAnimation.interpolators[numInterp];
 				bgip.idx = bi->boneIdx;
 				bgip.storeBoneByIdx = boneByIdx;
 
@@ -1895,7 +1901,6 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			}
 
 			animation = animation->NextSiblingElement("Animation");
-			this->animations.push_back(newAnimation);
 		}
 	}
 }

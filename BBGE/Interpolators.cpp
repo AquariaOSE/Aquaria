@@ -1,6 +1,5 @@
 #include "Interpolators.h"
 #include <math.h>
-#include "tbsp.hh"
 
 // usually one would expect that a bspline goes from t=0 to t=1.
 // here, splines eval between these -0.5 .. +0.5.
@@ -79,7 +78,24 @@ tail:
 }
 
 BSpline2D::BSpline2D()
-    : _cpx(0), _cpy(0), _degx(0), _degy(0), _tmin(0), _tmax(0)
+    : _cpx(0), _cpy(0), _degx(0), _degy(0), _tmin(0), _tmax(0), _ext(NULL)
+{
+}
+
+BSpline2D::~BSpline2D()
+{
+    if(_ext)
+    {
+        _ext->~Extended();
+        free(_ext);
+    }
+}
+
+BSpline2D::BSpline2D(const BSpline2D& o)
+    : _cpx(o._cpx), _cpy(o._cpy), _degx(o._degx), _degy(o._degy)
+    , _tmin(o._tmin), _tmax(o._tmax)
+    , knotsX(o.knotsX), knotsY(o.knotsY)
+    , _ext(NULL) // VERY important
 {
 }
 
@@ -97,13 +113,83 @@ void BSpline2D::resize(size_t cx, size_t cy, unsigned degx, unsigned degy)
     _degy = degy;
     _tmin = tmin;
     _tmax = tmax;
+
+
+    const size_t maxCp = std::max(cx, cy);
+
+    const size_t interpStorageSizeX = tbsp__getInterpolatorStorageSize(cx, cx);
+    const size_t interpStorageSizeY = tbsp__getInterpolatorStorageSize(cy, cy);
+    const size_t interpInitTempSize = tbsp__getInterpolatorInitTempSize(maxCp, maxCp);
+    const size_t interpStorageNeeded = interpStorageSizeX + interpStorageSizeY;
+
+    if(_ext && _ext->capacity < interpStorageNeeded)
+    {
+        free(_ext);
+        _ext = NULL;
+    }
+
+    if(!_ext)
+    {
+        void *extmem = malloc(sizeof(Extended) + sizeof(float) * interpStorageNeeded);
+        Extended *ext = new (extmem) Extended;
+        ext->capacity = interpStorageNeeded;
+        _ext = ext;
+    }
+
+    if(_ext)
+    {
+        // Some extra temp memory is required during init, but can be discarded right afterward
+        std::vector<float> interptmp(interpInitTempSize);
+
+        float *mx = _ext->floats();
+        float *my = mx + interpStorageSizeX;
+
+        _ext->interp.x = tbsp::initInterpolator(mx, &interptmp[0], degx, cx, cx, &knotsX[0]);
+        _ext->interp.y = tbsp::initInterpolator(my, &interptmp[0], degy, cy, cy, &knotsY[0]);
+        _ext->tmp2d.init(cx, cy);
+    }
 }
 
 void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres, const Vector *controlpoints)
 {
+    if(_ext)
+    {
+        const size_t maxCp = std::max(_cpx, _cpy);
+
+        Array2d<Vector>& tmp2d = _ext->tmp2d;
+        std::vector<Vector> tmpcp(maxCp), tmpin(maxCp);
+
+        // FIXME: should have in/out stride in the generator function
+
+        // y direction first
+        for(size_t x = 0; x < _cpx; ++x)
+        {
+            const Vector *src = &controlpoints[x];
+            for(size_t i = 0; i < _cpy; ++i, src += _cpx)
+                tmpin[i] = *src;
+
+            tbsp::generateControlPoints<Vector>(&tmpcp[0], NULL, _ext->interp.y, &tmpin[0]);
+
+            for(size_t y = 0; y < _cpy; ++y)
+                tmp2d(x, y) = tmpcp[y];
+        }
+
+        // x direction
+        for(size_t y = 0; y < _cpy; ++y)
+        {
+            Vector *row = tmp2d.row(y);
+            memcpy(&tmpin[0], row, sizeof(Vector) * _cpx);
+            tbsp::generateControlPoints<Vector>(row, NULL, _ext->interp.x, &tmpin[0]);
+        }
+
+        controlpoints = tmp2d.data();
+    }
+
+
+    const unsigned maxDeg = std::max(_degx, _degy);
+
     std::vector<Vector> tmpv;
-    size_t degn = std::max(_degx, _degy);
-    size_t tmpn = (yres * _cpx) + degn;
+    size_t tmpn = (yres * _cpx) + maxDeg;
     size_t tmpsz = tmpn * sizeof(Vector);
     Vector *tmp;
     if(tmpsz < 17*1024)
@@ -113,7 +199,7 @@ void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres, const Vector *cont
         tmpv.resize(tmpn);
         tmp = &tmpv[0];
     }
-    Vector *work = tmp + (tmpn - degn);
+    Vector *work = tmp + (tmpn - maxDeg);
 
     // Each column -> Y-axis interpolation
     for(size_t x = 0; x < _cpx; ++x)

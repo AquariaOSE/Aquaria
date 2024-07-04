@@ -4,6 +4,15 @@
 #include <algorithm> // std::pair
 #include <vector>
 #include "Vector.h"
+#include "tbsp.hh"
+#include "DataStructures.h"
+
+enum SplineType
+{
+	INTERPOLATOR_BSPLINE,
+	INTERPOLATOR_COSINE,
+	INTERPOLATOR_BSPLINE_EXT
+};
 
 class CosineInterpolator
 {
@@ -23,6 +32,9 @@ class BSpline2D
 {
 public:
     BSpline2D();
+    BSpline2D(const BSpline2D&);
+    ~BSpline2D();
+
 
     // # of control points on each axis
     void resize(size_t cx, size_t cy, unsigned degx, unsigned degy);
@@ -37,10 +49,26 @@ public:
     inline unsigned degY() const { return _degy; }
 
 private:
+
     size_t _cpx, _cpy; // # of control points
     unsigned _degx, _degy;
     float _tmin, _tmax;
     std::vector<float> knotsX, knotsY;
+
+    // always allocated on heap, with extra space at the end
+    struct Extended
+    {
+        Array2d<Vector> tmp2d;
+        struct
+        {
+            tbsp::Interpolator<float> x, y;
+        } interp;
+        size_t capacity;
+        float *floats() { return reinterpret_cast<float*>(this + 1); }
+        // space for n floats follows
+    };
+
+    Extended *_ext;
 };
 
 

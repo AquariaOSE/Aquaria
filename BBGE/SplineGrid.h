@@ -7,11 +7,6 @@
 #include "Quad.h"
 #include "Interpolators.h"
 
-enum SplineType
-{
-	SPLINE_BSPLINE,
-	SPLINE_COSINE,
-};
 
 class SplineGridCtrlPoint : public Quad
 {
