@@ -81,8 +81,6 @@
 //      1.3.0       Fixing bugs and proper watch/unwatch handles with freelists. Lower memory consumption, especially on Windows backend
 //      1.3.1       Fix in MacOS event grouping
 
-#include <stdbool.h>
-#include <stdint.h>
 
 #ifndef DMON_API_DECL
 #   define DMON_API_DECL
@@ -92,7 +90,7 @@
 #   define DMON_API_IMPL
 #endif
 
-typedef struct { uint32_t id; } dmon_watch_id;
+typedef struct { unsigned id; } dmon_watch_id;
 
 // Pass these flags to `dmon_watch`
 typedef enum dmon_watch_flags_t {
@@ -121,7 +119,7 @@ DMON_API_DECL  dmon_watch_id dmon_watch(const char* rootdir,
                          void (*watch_cb)(dmon_watch_id watch_id, dmon_action action,
                                           const char* rootdir, const char* filepath,
                                           const char* oldfilepath, void* user),
-                         uint32_t flags, void* user_data);
+                         unsigned flags, void* user_data);
 DMON_API_DECL void dmon_unwatch(dmon_watch_id id);
 
 #ifdef __cplusplus
@@ -129,6 +127,10 @@ DMON_API_DECL void dmon_unwatch(dmon_watch_id id);
 #endif
 
 #ifdef DMON_IMPL
+
+#ifndef __cplusplus
+#include <stdbool.h>
+#endif
 
 #define DMON_OS_WINDOWS 0
 #define DMON_OS_MACOS 0
@@ -268,7 +270,7 @@ DMON_API_DECL void dmon_unwatch(dmon_watch_id id);
 
 _DMON_PRIVATE bool _dmon_isrange(char ch, char from, char to)
 {
-    return (uint8_t)(ch - from) <= (uint8_t)(to - from);
+    return (unsigned char)(ch - from) <= (unsigned char)(to - from);
 }
 
 _DMON_PRIVATE bool _dmon_isupperchar(char ch)
@@ -625,7 +627,7 @@ DMON_API_IMPL dmon_watch_id dmon_watch(const char* rootdir,
                                        void (*watch_cb)(dmon_watch_id watch_id, dmon_action action,
                                                         const char* dirname, const char* filename,
                                                         const char* oldname, void* user),
-                                       uint32_t flags, void* user_data)
+                                       unsigned flags, void* user_data)
 {
 	DMON_ASSERT(_dmon_init);
     DMON_ASSERT(watch_cb);
