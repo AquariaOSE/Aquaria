@@ -17,7 +17,7 @@ Requirements:
 
 Design notes:
 - C++98 compatible. Stand-alone.
-- No memory allocation; all memory is caller-controlled.
+- No memory allocation; all memory is caller-controlled and caller-owned.
   In cases where this is needed, the caller needs to pass appropriately-sized working memory.
 
 
@@ -298,6 +298,8 @@ namespace detail {
 struct Size2d
 {
     size_t w, h;
+
+    inline bool operator==(const Size2d& o) const { return w == o.w && h == o.h; }
 };
 
 // Wrap any pointer to access it like a vector (with proper bounds checking)
@@ -460,19 +462,28 @@ struct Cholesky
 
     // Initializes a solver in the given memory.
     // On success, bumps ptr forward by the memory it needs;
-    // on failure, returns NULL. Note that this may also fail if A is not well-formed.
+    // on failure, returns NULL.
     // Memory needed: (sizeof(T) * ((A.size.w + 1) * A.size.h))
-    T *init(T *mem, const Mat& A)
+    T *init(T *mem, Size2d size)
     {
-        T * const pdiag = mem + (A.size.w * A.size.h);
-        T * const myend = pdiag + A.size.w;
-
-        TBSP_ASSERT(A.size.w >= A.size.h);
-        const size_t n = A.size.w;
-        idiag = pdiag; // T[n]
+        T * const pdiag = mem + (size.w * size.h);
+        T * const myend = pdiag + size.w;
 
         L.p = mem;
-        L.size = A.size;
+        L.size = size;
+        idiag = pdiag; // T[n]
+        return myend;
+    }
+
+    // Sets the matrix A used for solving later. The solver is preconditioned
+    // for that matrix so that in (A * x + b)  b is the only variable.
+    // May fail if A is not well formed.
+    bool refresh(const Mat& A)
+    {
+        TBSP_ASSERT(A.size == L.size);
+        TBSP_ASSERT(A.size.w >= A.size.h);
+
+        const size_t n = L.size.w;
 
         // Fill the lower left triangle, storing the diagonal separately
         for(size_t y = 0; y < n; ++y)
@@ -491,7 +502,7 @@ struct Cholesky
                 else
                 {
                     TBSP_ASSERT(0 && "Cholesky decomposition failed");
-                    return NULL;
+                    return false;
                 }
             }
         }
@@ -505,7 +516,7 @@ struct Cholesky
                 row[x] = zero;
         }
 
-        return myend;
+        return true;
     }
 
     // Solves x for A * x + b. Both b and x must have length n.
@@ -545,21 +556,28 @@ struct LUDecomp
 
     // Initializes a solver in the given memory.
     // On success, bumps ptr forward by the memory it needs;
-    // on failure, returns NULL. Note that this may also fail if A is not well-formed.
+    // on failure, returns NULL.
     // Memory needed: (sizeof(T) * ((A.size.w + 1) * A.size.h))
-    T *init(T *mem, const Mat& A)
+    T *init(T *mem, Size2d size)
     {
-        T * const pdiag = mem + (A.size.w * A.size.h);
-        T * const myend = pdiag + A.size.w;
+        T * const pdiag = mem + (size.w * size.h);
+        T * const myend = pdiag + size.w;
 
-        TBSP_ASSERT(A.size.w == A.size.h);
+        TBSP_ASSERT(size.w == size.h);
 
-        MatrixAcc<T> LU;
         LU.p = mem;
+        LU.size = size;
         idiag = pdiag;
-        LU.size = A.size;
+        return myend;
+    }
 
-        const size_t n = A.size.w;
+    // Sets the matrix A used for solving later. The solver is preconditioned
+    // for that matrix so that in (A * x + b)  b is the only variable.
+    void refresh(const Mat& A)
+    {
+        TBSP_ASSERT(A.size == LU.size);
+
+        const size_t n = LU.size.w;
 
         // Note: This doesn't do pivoting.
         for (size_t y = 0; y < n; ++y)
@@ -581,9 +599,6 @@ struct LUDecomp
                 LU(y, x) = idiagval * e;
             }
         }
-        this->LU = LU;
-
-        return myend;
     }
 
     // Solves x for A * x + b. Both b and x must have length n.
@@ -670,14 +685,20 @@ void computeCoeffVector(T * TBSP_RESTRICT Nrow, size_t numcp, T t01, const T * T
     }
 }
 
-
 template<typename T>
-T* computeCoeffMatrix(MatrixAcc<T>& N, T *mem, const T *knots, size_t nump, size_t numcp, size_t degree)
+T *allocateCoeffMatrix(MatrixAcc<T>& N, T *mem, size_t nump, size_t numcp)
 {
     N.size.w = numcp;
     N.size.h = nump;
     N.p = mem;
-    T * const pend = N.p + (nump * numcp);
+    return mem + (nump * numcp);
+}
+
+template<typename T>
+void computeCoeffMatrix(MatrixAcc<T>& N, const T *knots, size_t degree)
+{
+    const size_t numcp = N.size.w;
+    const size_t nump = N.size.h;
 
     const T invsz = T(1) / T(nump - 1);
 
@@ -689,27 +710,61 @@ T* computeCoeffMatrix(MatrixAcc<T>& N, T *mem, const T *knots, size_t nump, size
         typename MatrixAcc<T>::RowAcc row = N.row(i);
         computeCoeffVector(&row[0], numcp, t01, knots, degree); // row 0 stores all coefficients for _t[0], etc
     }
+}
 
-    return pend;
+template<typename T>
+Size2d getLeastSquaresSize(const MatrixAcc<T>& N)
+{
+    Size2d sz;
+    sz.w = N.size.w - 2;
+    sz.h = N.size.w - 2; // (h = w) is intended, M is a square matrix!
+    return sz;
 }
 
 // Generate least-squares approximator for spline approximation
 template<typename T>
-T* generateLeastSquares(MatrixAcc<T>& M, T *mem, const MatrixAcc<T>& N)
+MatrixAcc<T> generateLeastSquares(T *mem, const MatrixAcc<T>& N)
 {
+    MatrixAcc<T> M;
     M.p = mem;
-    M.size.w = N.size.w - 2;
-    M.size.h = N.size.w - 2; // (h = w) is intended, M is a square matrix!
+    M.size == getLeastSquaresSize(N);
 
     T * const pend = M.p + (M.size.w * M.size.h);
 
     matMultCenterCutTransposeWithSelf(M, N);
 
-    return pend;
+    return M;
 }
 
 } // end namespace detail
 // --------------------------------------------------
+
+// Calculate how many elements of type T are needed as storage for the interpolator
+// These should ideally be constexpr, but we want C++98 compatibility.
+
+// For Interpolator::init()
+#define tbsp__getInterpolatorStorageSize(numControlPoints, numPoints)         \
+    ( ((numControlPoints) == (numControlPoints))                              \
+        ? (((numControlPoints)+1) * (numPoints)) /* solver(N) */              \
+        : (                                                                   \
+            ((numControlPoints) * (numPoints)) /* N */                        \
+          + (((numControlPoints)-1) * ((numControlPoints)-2)) /* solver(M) */ \
+          )                                                                   \
+    )
+
+// For Interpolator::refresh()
+#define tbsp__getInterpolatorRefreshTempSize(numControlPoints, numPoints)        \
+    ( (numControlPoints) == (numControlPoints)                                \
+        ? ((numControlPoints) * (numPoints)) /* N */                          \
+        : (((numControlPoints)-2) * ((numControlPoints)-2)) /* M */           \
+    )
+
+// For Interpolator::generateControlPoints()
+#define tbsp_getInterpolatorWorkTempSize(numControlPoints, numPoints) \
+    ( ((numControlPoints) == (numPoints)) ? 0 : ((numControlPoints) - 2) )
+
+// --------------------------------------------------
+
 
 // One interpolator is precomputed for a specific number of input points and output control points
 template<typename T>
@@ -717,6 +772,33 @@ struct Interpolator
 {
     inline Interpolator() : numcp(0), nump(0) {}
 
+    // Inits an Interpolator in the passed mem[]. This memory must outlive the Interpolator
+    // and be at least tbsp__getInterpolatorStorageSize() elements.
+    // You may move or copy the memory elsewhere and then call init() again to update internal
+    // pointers to point to the new location.
+    // This does not access mem at all, it only stores pointers.
+    // When the number of points or control points change, the memory requirements change too;
+    // in this case you must re-init(), generate a new knot vector, and refresh().
+    T *init(T *mem, size_t nump, size_t numcp);
+
+    // When the knot vector or degree changes, call this to update the internal matrix solver.
+    // Must be called before generateControlPoints() can be used.
+    // tmp[] must have space for at least tbsp__getInterpolatorRefreshTempSize() elements
+    // and can be discarded after the call returns.
+    bool refresh(T * TBSP_RESTRICT const tmp, const T * TBSP_RESTRICT knots, unsigned degree);
+
+    // Given a set of points P[nump], generate set of control points cp[numcp].
+    // nump, numcp are defined by the numbers passed to init().
+    // workmem can be NULL if only interpolation is used (#controlpoints == #points).
+    // Approximation (#controlpoints < #points) needs extra working memory though,
+    // so you must pass at least tbsp_getInterpolatorWorkTempSize() elements of P.
+    // Returns how many control points were generated, for convenience.
+    // The working memory can be discarded after the call returns.
+    template<typename P>
+    size_t generateControlPoints(P * cp, P * TBSP_RESTRICT workmem, const P *points) const;
+
+    // ------------------------
+protected:
     size_t numcp, nump;
     union
     {
@@ -733,120 +815,116 @@ struct Interpolator
 #endif
 };
 
-// Calculate how many elements of type T are needed as storage for the interpolator
-// This should ideally be constexpr, but we want C++98 compatibility.
-#define tbsp__getInterpolatorStorageSize(numControlPoints, numPoints)         \
-    ( ((numControlPoints) == (numControlPoints))                              \
-        ? (((numControlPoints)+1) * (numPoints)) /* solver(N) */              \
-        : (                                                                   \
-            ((numControlPoints) * (numPoints)) /* N */                        \
-          + (((numControlPoints)-1) * ((numControlPoints)-2)) /* solver(M) */ \
-          )                                                                   \
-    )
 
-#define tbsp__getInterpolatorInitTempSize(numControlPoints, numPoints)        \
-    ( (numControlPoints) == (numControlPoints)                                \
-        ? ((numControlPoints) * (numPoints)) /* N */                          \
-        : (((numControlPoints)-2) * ((numControlPoints)-2)) /* M */           \
-    )
 
 template<typename T>
-Interpolator<T> initInterpolator(T * TBSP_RESTRICT const mem, T * TBSP_RESTRICT const tmp, size_t degree, size_t nump, size_t numcp, const T * TBSP_RESTRICT knots)
+T *Interpolator<T>::init(T * TBSP_RESTRICT const mem, size_t nump, size_t numcp)
 {
-    Interpolator<T> interp;
+    TBSP_ASSERT(mem);
 
     // Calling this with 2 points is pointless, < 2 is mathematically impossible
-    if(nump < 2 || numcp < 2)
-        return interp;
+    if(nump < 2 || numcp < 2 || !mem)
+        return false;
 
     // Can only generate less or equal control points than points
     TBSP_ASSERT(numcp <= nump);
     if(!(numcp <= nump))
-        return interp;
+        return false;
 
-    // Need storage memory
-    TBSP_ASSERT(mem && tmp);
-
-    T *p = numcp == nump ? tmp : mem;
-    p = detail::computeCoeffMatrix(interp.N, p, knots, nump, numcp, degree);
-    if(!p)
-        return interp;
-    TBSP_ASSERT(p <= tmp + tbsp__getInterpolatorInitTempSize(numcp, nump));
+    T *p = mem;
 
     if(nump == numcp)
     {
-        // N allocated in tmp, solver(N) in mem
-
-        // N is point-symmetric, ie. NOT diagonally symmetric.
-        // This means we can't use Cholesky decomposition, but LU decomposition is fine.
-        // Note: Cholesky decomposition will at first appear to work,
-        // but the solutions calculated with it are wrong. Don't use this here.
-        p = interp.solver.ludecomp.init(mem, interp.N);
-
-        // N is no longer needed
-        // solver(N) stays
-        interp.N.p = NULL;
-        interp.N.size.w = interp.N.size.h = 0;
+        detail::allocateCoeffMatrix<T>(N, NULL, nump, numcp); // just to get the size
+        p = solver.ludecomp.init(p, N.size);
     }
     else
     {
-        // N allocated in mem, solver(M) in mem, M in tmp
-
-        // This calculates M = T(N') x N', where N' is N with its borders removed.
-        // A nice property is that M is diagonally symmetric,
-        // means it can be efficiently solved via cholesky decomposition.
-        detail::MatrixAcc<T> M;
-        p = detail::generateLeastSquares(M, tmp, interp.N);
-        if(!p)
-            return interp;
-        TBSP_ASSERT(p <= tmp + tbsp__getInterpolatorInitTempSize(numcp, nump));
-
-        p = interp.solver.cholesky.init(mem, M);
-
-        // M is no longer needed
-        // solver(M) stays
-        // N stays
+        p = detail::allocateCoeffMatrix<T>(N, p, nump, numcp);
+        p = solver.cholesky.init(p, detail::getLeastSquaresSize(N));
     }
 
     if(p)
     {
         TBSP_ASSERT(p <= mem + tbsp__getInterpolatorStorageSize(numcp, nump));
 
-        interp.numcp = numcp;
-        interp.nump = nump;
+        this->numcp = numcp;
+        this->nump = nump;
     }
 
-    return interp;
+    return p;
 }
 
-#define tbsp_getInterpolatorWorkSize(numControlPoints, numPoints) \
-    ( ((numControlPoints) == (numPoints)) ? 0 : ((numControlPoints) - 2) )
-
-// Pass workmem[] with at least tbsp_getInterpolatorWorkSize() elements;
-// workmem can be NULL if only interpolation is used (#controlpoints == #points).
-// Approximation (#controlpoints < #points) needs extra working memory though.
-// Returns how many control points were generated, for convenience.
-template<typename P, typename T>
-size_t generateControlPoints(P * cp, P * TBSP_RESTRICT workmem, const Interpolator<T>& interp, const P *points)
+template<typename T>
+bool Interpolator<T>::refresh(T * TBSP_RESTRICT const tmp, const T * TBSP_RESTRICT knots, unsigned degree)
 {
-    const size_t numcp = interp.numcp;
-    if(numcp == interp.nump)
+    // Need temporary memory
+    TBSP_ASSERT(tmp);
+
+    const size_t numcp = N.size.w;
+    const size_t nump = N.size.h;
+    TBSP_ASSERT(numcp && nump);
+
+    bool ret = false;
+
+    if(nump == numcp)
+    {
+        // N allocated in tmp, solver(N) in mem
+        T *p = detail::allocateCoeffMatrix(N, tmp, nump, numcp);
+        TBSP_ASSERT(p <= tmp + tbsp__getInterpolatorRefreshTempSize(numcp, nump));
+        detail::computeCoeffMatrix(N, knots, degree);
+
+        // N is point-symmetric, ie. NOT diagonally symmetric.
+        // This means we can't use Cholesky decomposition, but LU decomposition is fine.
+        // Note: Cholesky decomposition will at first appear to work,
+        // but the solutions calculated with it are wrong. Don't use this here.
+        solver.ludecomp.refresh(N);
+
+        // N is no longer needed
+        // solver(N) stays
+        N.p = NULL;
+        ret = true;
+    }
+    else
+    {
+        // N allocated in mem, solver(M) in mem, M in tmp
+        detail::computeCoeffMatrix(N, knots, degree);
+
+        // This calculates M = T(N') x N', where N' is N with its borders removed.
+        // A nice property is that M is diagonally symmetric,
+        // means it can be efficiently solved via cholesky decomposition.
+        const detail::MatrixAcc<T> M = detail::generateLeastSquares(tmp, N);
+        TBSP_ASSERT(M.p + (M.size.w * M.size.h) <= tmp + tbsp__getInterpolatorRefreshTempSize(numcp, nump));
+
+        ret = solver.cholesky.refresh(M);
+
+        // M is no longer needed
+        // solver(M) stays
+        // N stays
+    }
+
+    return ret;
+}
+
+template<typename T> template<typename P>
+size_t Interpolator<T>::generateControlPoints(P * cp, P * TBSP_RESTRICT workmem, const P *points) const
+{
+    if(numcp == nump)
     {
         // This does not need extra working memory
-        interp.solver.ludecomp.solve(cp, points);
+        solver.ludecomp.solve(cp, points);
     }
     else
     {
         // Approximate points with less control points, this is more costly
         TBSP_ASSERT(workmem); // ... and needs extra memory
         const size_t h = numcp - 1;
-        const size_t n = interp.nump - 1;
+        const size_t n = nump - 1;
         const P p0 = points[0];
         const P pn = points[n];
 
         // Wrap the least squares estimator somehow together with the points to approximate...
         // Unfortunately I forgot how this works, so no explanation of mathemagics here, sorry :<
-        const detail::MatrixAcc<T> N = interp.N;
         const P initial = points[1] - (p0 * N(0,1)) - (pn * N(h,1));
         for(size_t i = 1; i < h; ++i)
         {
@@ -864,8 +942,8 @@ size_t generateControlPoints(P * cp, P * TBSP_RESTRICT workmem, const Interpolat
         cp[h] = pn;
 
         // Solve for all points that are not endpoints
-        TBSP_ASSERT(interp.solver.cholesky.L.size.w == h - 1);
-        interp.solver.cholesky.solve(cp + 1, workmem);
+        TBSP_ASSERT(solver.cholesky.L.size.w == h - 1);
+        solver.cholesky.solve(cp + 1, workmem);
     }
     return numcp;
 }

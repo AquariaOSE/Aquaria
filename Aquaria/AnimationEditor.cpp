@@ -1006,6 +1006,7 @@ void AnimationEditor::editStripKey()
 
 				BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 				assert(bk->controlpoints.size() == interp->bsp.ctrlX() * interp->bsp.ctrlY());
+				assert(!splinegrid);
 
 				splinegrid = new SplineGrid;
 				DynamicRenderGrid *rgrid = splinegrid->resize(interp->bsp.ctrlX(), interp->bsp.ctrlY(), grid->width(), grid->height(), interp->bsp.degX(), interp->bsp.degY());

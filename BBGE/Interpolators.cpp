@@ -119,11 +119,12 @@ void BSpline2D::resize(size_t cx, size_t cy, unsigned degx, unsigned degy)
 
     const size_t interpStorageSizeX = tbsp__getInterpolatorStorageSize(cx, cx);
     const size_t interpStorageSizeY = tbsp__getInterpolatorStorageSize(cy, cy);
-    const size_t interpInitTempSize = tbsp__getInterpolatorInitTempSize(maxCp, maxCp);
+    const size_t interpRefreshTempSize = tbsp__getInterpolatorRefreshTempSize(maxCp, maxCp);
     const size_t interpStorageNeeded = interpStorageSizeX + interpStorageSizeY;
 
     if(_ext && _ext->capacity < interpStorageNeeded)
     {
+        _ext->~Extended();
         free(_ext);
         _ext = NULL;
     }
@@ -139,13 +140,17 @@ void BSpline2D::resize(size_t cx, size_t cy, unsigned degx, unsigned degy)
     if(_ext)
     {
         // Some extra temp memory is required during init, but can be discarded right afterward
-        std::vector<float> interptmp(interpInitTempSize);
+        std::vector<float> interptmp(interpRefreshTempSize);
 
         float *mx = _ext->floats();
         float *my = mx + interpStorageSizeX;
 
-        _ext->interp.x = tbsp::initInterpolator(mx, &interptmp[0], degx, cx, cx, &knotsX[0]);
-        _ext->interp.y = tbsp::initInterpolator(my, &interptmp[0], degy, cy, cy, &knotsY[0]);
+        _ext->interp.x.init(mx,  cx, cx);
+        _ext->interp.x.refresh(&interptmp[0], &knotsX[0], degx);
+
+        _ext->interp.y.init(my,  cy, cy);
+        _ext->interp.y.refresh(&interptmp[0], &knotsY[0], degy);
+
         _ext->tmp2d.init(cx, cy);
     }
 }
@@ -168,7 +173,7 @@ void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres, const Vector *cont
             for(size_t i = 0; i < _cpy; ++i, src += _cpx)
                 tmpin[i] = *src;
 
-            tbsp::generateControlPoints<Vector>(&tmpcp[0], NULL, _ext->interp.y, &tmpin[0]);
+            _ext->interp.y.generateControlPoints<Vector>(&tmpcp[0], NULL, &tmpin[0]);
 
             for(size_t y = 0; y < _cpy; ++y)
                 tmp2d(x, y) = tmpcp[y];
@@ -179,7 +184,7 @@ void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres, const Vector *cont
         {
             Vector *row = tmp2d.row(y);
             memcpy(&tmpin[0], row, sizeof(Vector) * _cpx);
-            tbsp::generateControlPoints<Vector>(row, NULL, _ext->interp.x, &tmpin[0]);
+            _ext->interp.x.generateControlPoints<Vector>(row, NULL, &tmpin[0]);
         }
 
         controlpoints = tmp2d.data();
