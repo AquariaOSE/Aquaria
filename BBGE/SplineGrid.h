@@ -7,11 +7,8 @@
 #include "Quad.h"
 #include "Interpolators.h"
 
-enum SplineType
-{
-	SPLINE_BSPLINE,
-	SPLINE_COSINE,
-};
+
+class BoneKeyframe;
 
 class SplineGridCtrlPoint : public Quad
 {
@@ -36,12 +33,21 @@ public:
 	// # of control points on each axis
 	DynamicRenderGrid *resize(size_t w, size_t h, size_t xres, size_t yres, unsigned degx, unsigned degy);
 	void recalc();
-	void exportControlPoints(Vector *controlpoints);
-	void importControlPoints(const Vector *controlpoints);
+
+	// Export/import grid points; depending on the mode these either correspond directly to control points
+	// or to spline points from which the control points need to be calculated first (using cpgen)
+	void exportGridPoints(Vector *pdst) const;
+	void importGridPoints(const Vector *psrc);
+
+	void importKeyframe(const BoneKeyframe *bk);
+	void exportKeyframe(BoneKeyframe *bk) const;
+
 	void resetControlPoints();
 
 	void setPointScale(const float scale);
 	float getPointScale() const { return pointscale; }
+
+	void setAssist(bool on);
 
 
 	virtual void onRender(const RenderState& rs) const OVERRIDE;
@@ -53,6 +59,7 @@ public:
 	bool wasModified; // to be checked/reset by external code
 
 private:
+	void _generateControlPointsFromDesignPoints();
 
 	SplineGridCtrlPoint *createControlPoint(size_t x, size_t y);
 
@@ -60,6 +67,9 @@ private:
 	unsigned deg;
 	BSpline2DWithPoints bsp;
 	float pointscale;
+
+	BSpline2DControlPointGeneratorWithPoints cpgen;
+	bool _assistMode;
 };
 
 
