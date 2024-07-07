@@ -32,9 +32,6 @@ class BSpline2D
 {
 public:
     BSpline2D();
-    BSpline2D(const BSpline2D&);
-    ~BSpline2D();
-
 
     // # of control points on each axis
     void resize(size_t cx, size_t cy, unsigned degx, unsigned degy);
@@ -48,34 +45,20 @@ public:
     inline unsigned degX() const { return _degx; }
     inline unsigned degY() const { return _degy; }
 
+    inline const float *getKnotsX() const { return &knotsX[0]; }
+    inline const float *getKnotsY() const { return &knotsY[0]; }
+
 private:
 
     size_t _cpx, _cpy; // # of control points
     unsigned _degx, _degy;
     float _tmin, _tmax;
     std::vector<float> knotsX, knotsY;
-
-    // always allocated on heap, with extra space at the end
-    struct Extended
-    {
-        Array2d<Vector> tmp2d;
-        struct
-        {
-            tbsp::Interpolator<float> x, y;
-        } interp;
-        size_t capacity;
-        float *floats() { return reinterpret_cast<float*>(this + 1); }
-        // space for n floats follows
-    };
-
-    Extended *_ext;
 };
-
 
 class BSpline2DWithPoints : public BSpline2D
 {
 public:
-
     void resize(size_t cx, size_t cy, unsigned degx, unsigned degy);
     void recalc(Vector *dst, size_t xres, size_t yres);
 
@@ -87,6 +70,33 @@ public:
     {
         return controlpoints[y * ctrlX() + x];
     }
+};
+
+class BSpline2DControlPointGenerator
+{
+public:
+    BSpline2DControlPointGenerator(size_t cx, size_t cy);
+
+    void refresh(const float *knotsx, const float *knotsy, unsigned degx, unsigned degy);
+
+    Vector *generateControlPoints(const Vector *points2d);
+
+private:
+    Array2d<Vector> cp2d;
+    struct
+    {
+        tbsp::Interpolator<float> x, y;
+    } interp;
+    std::vector<float> floats;
+    std::vector<Vector> vectmp;
+};
+
+class BSpline2DControlPointGeneratorWithPoints : public BSpline2DControlPointGenerator
+{
+public:
+    BSpline2DControlPointGeneratorWithPoints(size_t cx, size_t cy);
+    Vector *generateControlPoints();
+    std::vector<Vector> designpoints;
 };
 
 #endif

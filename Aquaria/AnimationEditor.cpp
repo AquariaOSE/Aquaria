@@ -1015,7 +1015,7 @@ void AnimationEditor::editStripKey()
 				splinegrid->setWidthHeight(editingBone->width, editingBone->height);
 				splinegrid->position = Vector(400, 300);
 				//splinegrid->followCamera = 1;
-				splinegrid->importControlPoints(&bk->controlpoints[0]);
+				splinegrid->importKeyframe(bk);
 				//editSprite->addChild(splinegrid, PM_STATIC, RBP_OFF, CHILD_FRONT);
 				//editSprite->alphaMod = 0.5f;
 				addRenderObject(splinegrid, LR_PARTICLES_TOP);
@@ -1637,9 +1637,9 @@ void AnimationEditor::applyBoneToSplineGrid()
 	{
 		Animation *a = editSprite->getCurrentAnimation();
 		BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-		assert(bk->controlpoints.size() == splinegrid->getSpline().ctrlX() * splinegrid->getSpline().ctrlY());
+
 		assert(bk->grid.size() == editingBone->getGrid()->linearsize());
-		splinegrid->importControlPoints(&bk->controlpoints[0]);
+		splinegrid->importKeyframe(bk);
 	}
 }
 
@@ -1649,9 +1649,8 @@ void AnimationEditor::applySplineGridToBone()
 	{
 		Animation *a = editSprite->getCurrentAnimation();
 		BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-		assert(bk->controlpoints.size() == splinegrid->getSpline().ctrlX() * splinegrid->getSpline().ctrlY());
 		assert(bk->grid.size() == editingBone->getGrid()->linearsize());
-		splinegrid->exportControlPoints(&bk->controlpoints[0]);
+		splinegrid->exportKeyframe(bk);
 		BoneGridInterpolator *interp = a->getBoneGridInterpolator(editingBone->boneIdx);
 		interp->updateGridAndBone(*bk, editingBone);
 	}

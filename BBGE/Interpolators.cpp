@@ -78,24 +78,7 @@ tail:
 }
 
 BSpline2D::BSpline2D()
-    : _cpx(0), _cpy(0), _degx(0), _degy(0), _tmin(0), _tmax(0), _ext(NULL)
-{
-}
-
-BSpline2D::~BSpline2D()
-{
-    if(_ext)
-    {
-        _ext->~Extended();
-        free(_ext);
-    }
-}
-
-BSpline2D::BSpline2D(const BSpline2D& o)
-    : _cpx(o._cpx), _cpy(o._cpy), _degx(o._degx), _degy(o._degy)
-    , _tmin(o._tmin), _tmax(o._tmax)
-    , knotsX(o.knotsX), knotsY(o.knotsY)
-    , _ext(NULL) // VERY important
+    : _cpx(0), _cpy(0), _degx(0), _degy(0), _tmin(0), _tmax(0)
 {
 }
 
@@ -113,84 +96,10 @@ void BSpline2D::resize(size_t cx, size_t cy, unsigned degx, unsigned degy)
     _degy = degy;
     _tmin = tmin;
     _tmax = tmax;
-
-
-    const size_t maxCp = std::max(cx, cy);
-
-    const size_t interpStorageSizeX = tbsp__getInterpolatorStorageSize(cx, cx);
-    const size_t interpStorageSizeY = tbsp__getInterpolatorStorageSize(cy, cy);
-    const size_t interpRefreshTempSize = tbsp__getInterpolatorRefreshTempSize(maxCp, maxCp);
-    const size_t interpStorageNeeded = interpStorageSizeX + interpStorageSizeY;
-
-    if(_ext && _ext->capacity < interpStorageNeeded)
-    {
-        _ext->~Extended();
-        free(_ext);
-        _ext = NULL;
-    }
-
-    if(!_ext)
-    {
-        void *extmem = malloc(sizeof(Extended) + sizeof(float) * interpStorageNeeded);
-        Extended *ext = new (extmem) Extended;
-        ext->capacity = interpStorageNeeded;
-        _ext = ext;
-    }
-
-    if(_ext)
-    {
-        // Some extra temp memory is required during init, but can be discarded right afterward
-        std::vector<float> interptmp(interpRefreshTempSize);
-
-        float *mx = _ext->floats();
-        float *my = mx + interpStorageSizeX;
-
-        _ext->interp.x.init(mx,  cx, cx);
-        _ext->interp.x.refresh(&interptmp[0], &knotsX[0], degx);
-
-        _ext->interp.y.init(my,  cy, cy);
-        _ext->interp.y.refresh(&interptmp[0], &knotsY[0], degy);
-
-        _ext->tmp2d.init(cx, cy);
-    }
 }
 
 void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres, const Vector *controlpoints)
 {
-    if(_ext)
-    {
-        const size_t maxCp = std::max(_cpx, _cpy);
-
-        Array2d<Vector>& tmp2d = _ext->tmp2d;
-        std::vector<Vector> tmpcp(maxCp), tmpin(maxCp);
-
-        // FIXME: should have in/out stride in the generator function
-
-        // y direction first
-        for(size_t x = 0; x < _cpx; ++x)
-        {
-            const Vector *src = &controlpoints[x];
-            for(size_t i = 0; i < _cpy; ++i, src += _cpx)
-                tmpin[i] = *src;
-
-            _ext->interp.y.generateControlPoints<Vector>(&tmpcp[0], NULL, &tmpin[0]);
-
-            for(size_t y = 0; y < _cpy; ++y)
-                tmp2d(x, y) = tmpcp[y];
-        }
-
-        // x direction
-        for(size_t y = 0; y < _cpy; ++y)
-        {
-            Vector *row = tmp2d.row(y);
-            memcpy(&tmpin[0], row, sizeof(Vector) * _cpx);
-            _ext->interp.x.generateControlPoints<Vector>(row, NULL, &tmpin[0]);
-        }
-
-        controlpoints = tmp2d.data();
-    }
-
-
     const unsigned maxDeg = std::max(_degx, _degy);
 
     std::vector<Vector> tmpv;
@@ -204,6 +113,8 @@ void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres, const Vector *cont
         tmpv.resize(tmpn);
         tmp = &tmpv[0];
     }
+    // tmp[] layout: leftmost part: entries to hold the matrix as it's being built;
+    //               rightmost part: maxDeg entries as workmem for the deBoor eval
     Vector *work = tmp + (tmpn - maxDeg);
 
     // Each column -> Y-axis interpolation
@@ -252,4 +163,80 @@ void BSpline2DWithPoints::recalc(Vector* dst, size_t xres, size_t yres)
 void BSpline2DWithPoints::reset()
 {
     BSpline2D::reset(&controlpoints[0]);
+}
+
+BSpline2DControlPointGenerator::BSpline2DControlPointGenerator(size_t cx, size_t cy)
+{
+    const size_t interpStorageSizeX = tbsp__getInterpolatorStorageSize(cx, cx);
+    const size_t interpStorageSizeY = tbsp__getInterpolatorStorageSize(cy, cy);
+    const size_t interpStorageNeeded = interpStorageSizeX + interpStorageSizeY;
+    floats.resize(interpStorageNeeded);
+
+    interp.x.init(&floats[0], cx, cx);
+    interp.y.init(&floats[interpStorageSizeX], cy, cy);
+    cp2d.init(cx, cy);
+
+    const size_t maxcp = std::max(cx, cy);
+    vectmp.resize(maxcp);
+}
+
+void BSpline2DControlPointGenerator::refresh(const float* knotsx, const float* knotsy, unsigned degx, unsigned degy)
+{
+    const size_t maxcp = vectmp.size();
+    const size_t tmpn = tbsp__getInterpolatorRefreshTempSize(maxcp, maxcp);
+    const size_t tmpsz = tmpn * sizeof(float);
+    float *tmp;
+    std::vector<float> tmpv;
+    if(tmpsz < 17*1024)
+        tmp = (float*)alloca(tmpsz);
+    else
+    {
+        tmpv.resize(tmpn);
+        tmp = &tmpv[0];
+    }
+
+    interp.x.refresh(tmp, knotsx, degx);
+    interp.y.refresh(tmp, knotsy, degy);
+}
+
+Vector* BSpline2DControlPointGenerator::generateControlPoints(const Vector *points2d)
+{
+    const size_t cpx = interp.x.getNumInputPoints();
+    const size_t cpy = interp.x.getNumInputPoints();
+
+    // y direction first
+    for(size_t x = 0; x < cpx; ++x)
+    {
+        const Vector *src = &points2d[x];
+        for(size_t y = 0; y < cpy; ++y, src += cpx)
+            vectmp[y] = *src;
+
+        // solve in-place
+        interp.y.generateControlPoints<Vector>(&vectmp[0], NULL, &vectmp[0]);
+
+        for(size_t y = 0; y < cpy; ++y)
+            cp2d(x, y) = vectmp[y];
+    }
+
+    // x direction
+    for(size_t y = 0; y < cpy; ++y)
+    {
+        Vector *row = cp2d.row(y);
+        // solve in-place
+        interp.x.generateControlPoints<Vector>(row, NULL, row);
+    }
+
+    return cp2d.data();
+}
+
+
+BSpline2DControlPointGeneratorWithPoints::BSpline2DControlPointGeneratorWithPoints(size_t cx, size_t cy)
+    : BSpline2DControlPointGenerator(cx, cy)
+    , designpoints(cx * cy)
+{
+}
+
+Vector* BSpline2DControlPointGeneratorWithPoints::generateControlPoints()
+{
+    return BSpline2DControlPointGenerator::generateControlPoints(&designpoints[0]);
 }

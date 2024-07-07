@@ -1858,7 +1858,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				grid->gridType = GRID_INTERP;
 				// bone grid should have been created via <Bone grid=... /> earlier
 
-				const char *idata = interp->Attribute("data");
+
 				BoneGridInterpolator& bgip = newAnimation.interpolators[numInterp];
 				bgip.idx = bi->boneIdx;
 				bgip.storeBoneByIdx = boneByIdx;
@@ -1870,32 +1870,35 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				const size_t numcp = size_t(cx) * size_t(cy);
 				const size_t numgridp = grid->linearsize();
 
-				// data format: "W H [x y x y ... (W*H times)] W H x y x y ..."
-				//               ^- start of 1st keyframe  ^- 2nd keyframe
-				SimpleIStringStream is(idata ? idata : "",  SimpleIStringStream::REUSE);
-
-				// fixup keyframes and recalc spline points
-				for(size_t k = 0; k < newAnimation.keyframes.size(); ++k)
+				if(const char *idata = interp->Attribute("data"))
 				{
-					SkeletalKeyframe& kf = newAnimation.keyframes[k];
-					BoneKeyframe *bk = kf.getBoneKeyframe(bgip.idx);
+					// data format: "W H [x y x y ... (W*H times)] W H x y x y ..."
+					//               ^- start of 1st keyframe  ^- 2nd keyframe
+					SimpleIStringStream is(idata,  SimpleIStringStream::REUSE);
 
-					bk->controlpoints.resize(numcp);
-					bgip.bsp.reset(&bk->controlpoints[0]);
+					// fixup keyframes and recalc spline points
+					for(size_t k = 0; k < newAnimation.keyframes.size(); ++k)
+					{
+						SkeletalKeyframe& kf = newAnimation.keyframes[k];
+						BoneKeyframe *bk = kf.getBoneKeyframe(bgip.idx);
 
-					unsigned w = 0, h = 0;
-					Vector cp;
-					cp.z = 1; // we want all grid points at full alpha
+						bk->controlpoints.resize(numcp);
+						bgip.bsp.reset(&bk->controlpoints[0]);
 
-					if((is >> w >> h))
-						for(unsigned y = 0; y < h; ++y)
-							for(unsigned x = 0; x < w; ++x)
-								if((is >> cp.x >> cp.y))
-									if(x < cx && y < cy)
-										bk->controlpoints[y*size_t(cx) + x] = cp;
+						unsigned w = 0, h = 0;
+						Vector cp;
+						cp.z = 1; // we want all grid points at full alpha
 
-					bk->grid.resize(numgridp);
-					bgip.updateGridOnly(*bk, bi);
+						if((is >> w >> h))
+							for(unsigned y = 0; y < h; ++y)
+								for(unsigned x = 0; x < w; ++x)
+									if((is >> cp.x >> cp.y))
+										if(x < cx && y < cy)
+											bk->controlpoints[y*size_t(cx) + x] = cp;
+
+						bk->grid.resize(numgridp);
+						bgip.updateGridOnly(*bk, bi);
+					}
 				}
 				// ---- end bspline -----
 			}
