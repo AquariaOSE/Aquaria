@@ -1005,7 +1005,9 @@ void AnimationEditor::editStripKey()
 				bgGrad->makeVertical(Vector(0.4f, 0.6f, 0.4f), Vector(0.8f, 1, 0.8f));
 
 				BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-				assert(bk->controlpoints.size() == interp->bsp.ctrlX() * interp->bsp.ctrlY());
+				const size_t totalcp = interp->bsp.ctrlX() * interp->bsp.ctrlY();
+				const bool reset = bk->controlpoints.empty();
+				bk->controlpoints.resize(totalcp);
 				assert(!splinegrid);
 
 				splinegrid = new SplineGrid;
@@ -1014,10 +1016,12 @@ void AnimationEditor::editStripKey()
 				splinegrid->setTexture(editingBone->texture->name);
 				splinegrid->setWidthHeight(editingBone->width, editingBone->height);
 				splinegrid->position = Vector(400, 300);
-				//splinegrid->followCamera = 1;
-				splinegrid->importKeyframe(bk);
-				//editSprite->addChild(splinegrid, PM_STATIC, RBP_OFF, CHILD_FRONT);
-				//editSprite->alphaMod = 0.5f;
+
+				if(reset)
+					splinegrid->resetControlPoints();
+				else
+					splinegrid->importKeyframe(bk);
+
 				addRenderObject(splinegrid, LR_PARTICLES_TOP);
 			}
 			else

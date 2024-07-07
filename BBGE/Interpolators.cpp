@@ -202,7 +202,7 @@ void BSpline2DControlPointGenerator::refresh(const float* knotsx, const float* k
 Vector* BSpline2DControlPointGenerator::generateControlPoints(const Vector *points2d)
 {
     const size_t cpx = interp.x.getNumInputPoints();
-    const size_t cpy = interp.x.getNumInputPoints();
+    const size_t cpy = interp.y.getNumInputPoints();
 
     // y direction first
     for(size_t x = 0; x < cpx; ++x)
