@@ -288,9 +288,6 @@ void SplineGrid::onRender(const RenderState& rs) const
         glEnd();
     }
 
-    const Vector *psrc = _assistMode
-        ? &bsp.controlpoints[0]
-        : &cpgen.designpoints[0];
 
     if(RenderObject::renderCollisionShape)
     {
@@ -298,6 +295,10 @@ void SplineGrid::onRender(const RenderState& rs) const
         glColor4f(1.0f, 0.3f, 0.3f, 0.7f);
         glPushMatrix();
         glScalef(width, height, 1);
+
+        const Vector *psrc = _assistMode
+            ? &bsp.controlpoints[0]
+            : &cpgen.designpoints[0];
 
         // X axis
         for(size_t y = 0; y < cpy; ++y)
