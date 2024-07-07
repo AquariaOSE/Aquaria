@@ -79,28 +79,25 @@ void SplineGridCtrlPoint::onUpdate(float dt)
 }
 
 SplineGrid::SplineGrid()
-    : wasModified(false), deg(0), pointscale(1), cpgen(NULL)
+    : wasModified(false), deg(0), pointscale(1), _assistMode(true)
 {
     setWidthHeight(128, 128);
     renderQuad = true;
     renderBorder = true;
+    renderBorderColor = Vector(0.5f, 0.5f, 0.5f);
 }
 
 SplineGrid::~SplineGrid()
 {
-    delete cpgen;
 }
 
 DynamicRenderGrid *SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yres, unsigned degx, unsigned degy)
 {
+    if(!cpgen.resize(w, h))
+        return NULL;
+
     size_t oldcpx = bsp.ctrlX();
     size_t oldcpy = bsp.ctrlY();
-
-    if(cpgen && (oldcpx != w || oldcpy != h))
-    {
-        delete cpgen;
-        cpgen = NULL;
-    }
 
     DynamicRenderGrid *ret = this->createGrid(xres, yres);
     ret->gridType = GRID_INTERP;
@@ -138,7 +135,8 @@ DynamicRenderGrid *SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yr
                 ref = createControlPoint(x, y);
         }
 
-    _initCpgen();
+    if(!cpgen.refresh(bsp.getKnotsX(), bsp.getKnotsY(), bsp.degX(), bsp.degY()))
+        return NULL;
 
     recalc();
 
@@ -147,14 +145,15 @@ DynamicRenderGrid *SplineGrid::resize(size_t w, size_t h, size_t xres, size_t yr
 
 void SplineGrid::recalc()
 {
-    if(cpgen)
+    if(_assistMode)
     {
-        exportGridPoints(&cpgen->designpoints[0]);
+        exportGridPoints(&cpgen.designpoints[0]);
         _generateControlPointsFromDesignPoints();
     }
     else
     {
         exportGridPoints(&bsp.controlpoints[0]);
+        bsp.recalc(&cpgen.designpoints[0], bsp.ctrlX(), bsp.ctrlY());
     }
 
     if(grid)
@@ -183,11 +182,11 @@ void SplineGrid::importKeyframe(const BoneKeyframe* bk)
 
     bsp.controlpoints = bk->controlpoints;
 
-    if(cpgen)
+    if(_assistMode)
     {
         // given control points, generate spline points (which are later caculated back into control points)
-        bsp.recalc(&cpgen->designpoints[0], bsp.ctrlX(), bsp.ctrlY());
-        importGridPoints(&cpgen->designpoints[0]);
+        bsp.recalc(&cpgen.designpoints[0], bsp.ctrlX(), bsp.ctrlY());
+        importGridPoints(&cpgen.designpoints[0]);
     }
     else
         importGridPoints(&bk->controlpoints[0]);
@@ -212,9 +211,9 @@ void SplineGrid::resetControlPoints()
     // This pushes the bspline controlpoints outwards so that all spline points line up as one would expect.
     // If this weren't done, the tile's texture would be pulled inwards (more with increasing dimension);
     // as if the tile was a piece of plastic foil that's seen too much heat.
-    if(cpgen)
+    //if(_assistMode) // ALWAYS DO THIS!!
     {
-        cpgen->designpoints = bsp.controlpoints;
+        cpgen.designpoints = bsp.controlpoints;
         _generateControlPointsFromDesignPoints();
     }
 
@@ -223,15 +222,8 @@ void SplineGrid::resetControlPoints()
 
 void SplineGrid::_generateControlPointsFromDesignPoints()
 {
-    const Vector *cp = cpgen->generateControlPoints();
+    const Vector *cp = cpgen.generateControlPoints();
     memcpy(&bsp.controlpoints[0], cp, bsp.controlpoints.size() * sizeof(*cp));
-}
-
-void SplineGrid::_initCpgen()
-{
-    assert(!cpgen);
-    cpgen = new BSpline2DControlPointGeneratorWithPoints(bsp.ctrlX(), bsp.ctrlY());
-    cpgen->refresh(bsp.getKnotsX(), bsp.getKnotsY(), bsp.degX(), bsp.degY());
 }
 
 SplineGridCtrlPoint* SplineGrid::createControlPoint(size_t x, size_t y)
@@ -263,7 +255,10 @@ void SplineGrid::onRender(const RenderState& rs) const
     const Vector wh2(width * 0.5f, height * 0.5f);
 
     glLineWidth(2);
-    glColor4f(0.0f, 0.3f, 1.0f, 0.3f);
+    if(_assistMode)
+        glColor4f(0.0f, 0.3f, 1.0f, 0.4f);
+    else
+        glColor4f(0.0f, 0.0f, 0.0f, 0.4f);
 
     const size_t cpx = bsp.ctrlX();
     const size_t cpy = bsp.ctrlY();
@@ -293,9 +288,14 @@ void SplineGrid::onRender(const RenderState& rs) const
         glEnd();
     }
 
-    if(RenderObject::renderCollisionShape && cpgen)
+    const Vector *psrc = _assistMode
+        ? &bsp.controlpoints[0]
+        : &cpgen.designpoints[0];
+
+    if(RenderObject::renderCollisionShape)
     {
-        glColor4f(1.0f, 0.4f, 0.4f, 0.7f);
+        glLineWidth(1);
+        glColor4f(1.0f, 0.3f, 0.3f, 0.7f);
         glPushMatrix();
         glScalef(width, height, 1);
 
@@ -303,7 +303,7 @@ void SplineGrid::onRender(const RenderState& rs) const
         for(size_t y = 0; y < cpy; ++y)
         {
             glBegin(GL_LINE_STRIP);
-            const Vector *row = &bsp.controlpoints[y * cpx];
+            const Vector *row = &psrc[y * cpx];
             for(size_t x = 0; x < cpx; ++x)
             {
                 const Vector p = row[x];
@@ -318,7 +318,7 @@ void SplineGrid::onRender(const RenderState& rs) const
             glBegin(GL_LINE_STRIP);
             for(size_t y = 0; y < cpy; ++y)
             {
-                const Vector p = bsp.controlpoints[y * cpx + x];
+                const Vector p = psrc[y * cpx + x];
                 glVertex2f(p.x, p.y);
             }
             glEnd();
@@ -336,4 +336,18 @@ void SplineGrid::setPointScale(const float scale)
         ctrlp[i]->scale.x = scale;
         ctrlp[i]->scale.y = scale;
     }
+}
+
+void SplineGrid::setAssist(bool on)
+{
+    if(on == _assistMode)
+        return;
+
+    if(on)
+        importGridPoints(&cpgen.designpoints[0]);
+    else
+        importGridPoints(&bsp.controlpoints[0]);
+
+    _assistMode = on;
+    recalc();
 }

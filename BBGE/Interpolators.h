@@ -75,9 +75,9 @@ public:
 class BSpline2DControlPointGenerator
 {
 public:
-    BSpline2DControlPointGenerator(size_t cx, size_t cy);
+    bool resize(size_t cx, size_t cy);
 
-    void refresh(const float *knotsx, const float *knotsy, unsigned degx, unsigned degy);
+    bool refresh(const float *knotsx, const float *knotsy, unsigned degx, unsigned degy);
 
     Vector *generateControlPoints(const Vector *points2d);
 
@@ -94,7 +94,7 @@ private:
 class BSpline2DControlPointGeneratorWithPoints : public BSpline2DControlPointGenerator
 {
 public:
-    BSpline2DControlPointGeneratorWithPoints(size_t cx, size_t cy);
+    bool resize(size_t cx, size_t cy);
     Vector *generateControlPoints();
     std::vector<Vector> designpoints;
 };

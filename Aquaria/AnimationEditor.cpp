@@ -240,6 +240,7 @@ void AnimationEditor::applyState()
 	editingBone = 0;
 	currentKey = 0;
 	splinegrid = 0;
+	assistedSplineEdit = true;
 
 	editSprite = new SkeletalSprite();
 	editSprite->cull = false;
@@ -301,6 +302,8 @@ void AnimationEditor::applyState()
 	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineUnit), KEY_I, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, decrTimelineGrid), KEY_O, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineGrid), KEY_P, 0);
+
+	addAction(MakeFunctionEvent(AnimationEditor, toggleSplineMode), KEY_W, 0);
 
 
 
@@ -462,6 +465,12 @@ void AnimationEditor::applyState()
 	reverseAnim->event.set(MakeFunctionEvent(AnimationEditor, reverseAnim));
 	addRenderObject(reverseAnim, LR_MENU);
 
+	DebugButton *bAssist = new DebugButton(0, 0, 150);
+	bAssist->position = Vector(10, 510);
+	bAssist->event.set(MakeFunctionEvent(AnimationEditor, toggleSplineMode));
+	addRenderObject(bAssist, LR_MENU);
+	bSplineAssist = bAssist;
+
 
 	OutlineRect *rect = new OutlineRect;
 	rect->setWidthHeight(400,400);
@@ -494,6 +503,7 @@ void AnimationEditor::applyState()
 
 	updateTimelineGrid();
 	updateTimelineUnit();
+	updateButtonLabels();
 }
 
 void AnimationEditor::clearUndoHistory()
@@ -1010,12 +1020,13 @@ void AnimationEditor::editStripKey()
 				bk->controlpoints.resize(totalcp);
 				assert(!splinegrid);
 
-				splinegrid = new SplineGrid;
+				splinegrid = new SplineGrid();
 				DynamicRenderGrid *rgrid = splinegrid->resize(interp->bsp.ctrlX(), interp->bsp.ctrlY(), grid->width(), grid->height(), interp->bsp.degX(), interp->bsp.degY());
 				rgrid->setDrawOrder(grid->getDrawOrder());
 				splinegrid->setTexture(editingBone->texture->name);
 				splinegrid->setWidthHeight(editingBone->width, editingBone->height);
 				splinegrid->position = Vector(400, 300);
+				splinegrid->setAssist(assistedSplineEdit);
 
 				if(reset)
 					splinegrid->resetControlPoints();
@@ -1621,6 +1632,23 @@ void AnimationEditor::decrTimelineGrid()
 	updateTimelineGrid();
 }
 
+void AnimationEditor::toggleSplineMode()
+{
+	assistedSplineEdit = !assistedSplineEdit;
+	updateButtonLabels();
+	if(splinegrid)
+		splinegrid->setAssist(assistedSplineEdit);
+}
+
+void AnimationEditor::updateButtonLabels()
+{
+	{
+		std::ostringstream os;
+		os << "S.Assist (W)(" << (assistedSplineEdit ? "on" : "off") << ")";
+		bSplineAssist->label->setText(os.str());
+	}
+}
+
 void AnimationEditor::updateTimelineGrid()
 {
 	std::ostringstream os;
@@ -1659,3 +1687,4 @@ void AnimationEditor::applySplineGridToBone()
 		interp->updateGridAndBone(*bk, editingBone);
 	}
 }
+

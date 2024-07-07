@@ -47,6 +47,8 @@ public:
 	void setPointScale(const float scale);
 	float getPointScale() const { return pointscale; }
 
+	void setAssist(bool on);
+
 
 	virtual void onRender(const RenderState& rs) const OVERRIDE;
 	virtual void onUpdate(float dt) OVERRIDE;
@@ -58,7 +60,6 @@ public:
 
 private:
 	void _generateControlPointsFromDesignPoints();
-	void _initCpgen();
 
 	SplineGridCtrlPoint *createControlPoint(size_t x, size_t y);
 
@@ -67,7 +68,8 @@ private:
 	BSpline2DWithPoints bsp;
 	float pointscale;
 
-	BSpline2DControlPointGeneratorWithPoints *cpgen;
+	BSpline2DControlPointGeneratorWithPoints cpgen;
+	bool _assistMode;
 };
 
 

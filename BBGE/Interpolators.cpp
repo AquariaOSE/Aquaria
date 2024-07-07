@@ -165,22 +165,23 @@ void BSpline2DWithPoints::reset()
     BSpline2D::reset(&controlpoints[0]);
 }
 
-BSpline2DControlPointGenerator::BSpline2DControlPointGenerator(size_t cx, size_t cy)
+bool BSpline2DControlPointGenerator::resize(size_t cx, size_t cy)
 {
     const size_t interpStorageSizeX = tbsp__getInterpolatorStorageSize(cx, cx);
     const size_t interpStorageSizeY = tbsp__getInterpolatorStorageSize(cy, cy);
     const size_t interpStorageNeeded = interpStorageSizeX + interpStorageSizeY;
     floats.resize(interpStorageNeeded);
 
-    interp.x.init(&floats[0], cx, cx);
-    interp.y.init(&floats[interpStorageSizeX], cy, cy);
     cp2d.init(cx, cy);
 
     const size_t maxcp = std::max(cx, cy);
     vectmp.resize(maxcp);
+
+    return interp.x.init(&floats[0], cx, cx)
+        && interp.y.init(&floats[interpStorageSizeX], cy, cy);
 }
 
-void BSpline2DControlPointGenerator::refresh(const float* knotsx, const float* knotsy, unsigned degx, unsigned degy)
+bool BSpline2DControlPointGenerator::refresh(const float* knotsx, const float* knotsy, unsigned degx, unsigned degy)
 {
     const size_t maxcp = vectmp.size();
     const size_t tmpn = tbsp__getInterpolatorRefreshTempSize(maxcp, maxcp);
@@ -195,8 +196,8 @@ void BSpline2DControlPointGenerator::refresh(const float* knotsx, const float* k
         tmp = &tmpv[0];
     }
 
-    interp.x.refresh(tmp, knotsx, degx);
-    interp.y.refresh(tmp, knotsy, degy);
+    return interp.x.refresh(tmp, knotsx, degx)
+        && interp.y.refresh(tmp, knotsy, degy);
 }
 
 Vector* BSpline2DControlPointGenerator::generateControlPoints(const Vector *points2d)
@@ -230,10 +231,10 @@ Vector* BSpline2DControlPointGenerator::generateControlPoints(const Vector *poin
 }
 
 
-BSpline2DControlPointGeneratorWithPoints::BSpline2DControlPointGeneratorWithPoints(size_t cx, size_t cy)
-    : BSpline2DControlPointGenerator(cx, cy)
-    , designpoints(cx * cy)
+bool BSpline2DControlPointGeneratorWithPoints::resize(size_t cx, size_t cy)
 {
+    designpoints.resize(cx * cy);
+    return BSpline2DControlPointGenerator::resize(cx, cy);
 }
 
 Vector* BSpline2DControlPointGeneratorWithPoints::generateControlPoints()

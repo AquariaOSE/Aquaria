@@ -8,6 +8,7 @@
 class DebugFont;
 class BitmapText;
 class SplineGrid;
+class DebugButton;
 
 class KeyframeWidget : public Quad
 {
@@ -133,6 +134,7 @@ public:
 	SkeletalKeyframe buffer;
 
 	bool editingStrip;
+	bool assistedSplineEdit;
 	size_t selectedStripPoint;
 
 	void reverseAnim();
@@ -162,6 +164,10 @@ public:
 	SplineGrid *splinegrid;
 	void applySplineGridToBone();
 	void applyBoneToSplineGrid();
+
+	void toggleSplineMode();
+	DebugButton *bSplineAssist;
+	void updateButtonLabels();
 };
 
 

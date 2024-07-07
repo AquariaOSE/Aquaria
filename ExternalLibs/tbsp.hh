@@ -835,12 +835,12 @@ T *Interpolator<T>::init(T * TBSP_RESTRICT const mem, size_t nump, size_t numcp)
 
     // Calling this with 2 points is pointless, < 2 is mathematically impossible
     if(nump < 2 || numcp < 2 || !mem)
-        return false;
+        return NULL;
 
     // Can only generate less or equal control points than points
     TBSP_ASSERT(numcp <= nump);
     if(!(numcp <= nump))
-        return false;
+        return NULL;
 
     T *p = mem;
 
