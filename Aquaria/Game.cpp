@@ -1795,9 +1795,9 @@ next_SE:
 	if(toSpawn.size())
 		spawnEntities(&toSpawn[0], toSpawn.size());
 
-	this->reconstructGrid(true);
-
 	findMaxCameraValues();
+
+	this->reconstructGrid(true);
 
 	return true;
 }
