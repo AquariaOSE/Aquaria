@@ -281,10 +281,16 @@ static void evalRange(P * TBSP_RESTRICT dst, size_t numdst, P * TBSP_RESTRICT wo
     }
 
     // right out-of-bounds
-    for( ; i < numdst; ++i)
+    if(i < numdst)
     {
-        *dst = controlpoints[numcp - 1];
-        dst += outputStride;
+        const P p = controlpoints[(numcp - 1) * inputStride];
+        do
+        {
+            *dst = p;
+            dst += outputStride;
+            ++i;
+        }
+        while(i < numdst);
     }
 }
 
@@ -520,8 +526,9 @@ struct Cholesky
     }
 
     // Solves x for A * x + b. Both b and x must have length n.
+    // Can solve in-place, ie. you may pass xv == bv.
     template<typename P>
-    void solve(P * TBSP_RESTRICT const xv, const P * TBSP_RESTRICT const bv) const
+    void solve(P * const xv, const P * const bv) const
     {
         const size_t n = L.size.w;
 
@@ -602,8 +609,9 @@ struct LUDecomp
     }
 
     // Solves x for A * x + b. Both b and x must have length n.
+    // Can solve in-place, ie. you may pass xv == bv.
     template<typename P>
-    void solve(P * TBSP_RESTRICT const xv, const P * TBSP_RESTRICT const bv) const
+    void solve(P * const xv, const P * const bv) const
     {
         const size_t n = LU.size.w;
 
@@ -796,6 +804,9 @@ struct Interpolator
     // The working memory can be discarded after the call returns.
     template<typename P>
     size_t generateControlPoints(P * cp, P * TBSP_RESTRICT workmem, const P *points) const;
+
+    inline size_t getNumGeneratedControlPoints() { return numcp; }
+    inline size_t getNumInputPoints() { return nump; }
 
     // ------------------------
 protected:
