@@ -33,6 +33,7 @@ enum ObsType
 	OT_USER_MASK = OT_USER1 | OT_USER2,
 
 	OT_OUTOFBOUNDS = 0xff, // all bits set
+	OT_MASK_ALL = 0xff
 };
 
 

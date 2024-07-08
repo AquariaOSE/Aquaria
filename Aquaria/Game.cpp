@@ -547,6 +547,9 @@ void Game::reconstructEntityGrid()
 	updateGridRender(OT_INVISIBLEENT);
 }
 
+// TODO: ideally this would be split into two functions, one that reconstructs blackness
+// and is called on map load or by the editor, and another one that just reconstructs
+// the dynamic parts of the grid.
 void Game::reconstructGrid(bool force)
 {
 	if (!force && isSceneEditorActive()) return;
@@ -581,8 +584,8 @@ void Game::reconstructGrid(bool force)
 
 	trimGrid();
 
-	// This does intentionally not update black.
-	updateGridRender(OT_MASK_NOTBLACK);
+	// Must update OT_BLACK after trimGrid()
+	updateGridRender(OT_MASK_ALL);
 }
 
 void Game::trimGrid()
