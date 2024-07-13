@@ -133,24 +133,31 @@ static void quadToTile(TileData& t, const Quad *q)
 class MultiTileHelper : public Quad
 {
 	TileStorage& _ts;
-	std::vector<size_t> _indices;
 	std::vector<Quad*> _quads;
 	Vector lastScale;
 
-	MultiTileHelper(TileStorage& ts, const size_t *indices, size_t n)
+	// This NEEDS to be a reference. The tile bulk-manipulation functions that take an array of indices
+	// as parameters and also update those parameters shall modify only a single source of truth,
+	// and that's SceneEditor::selectedTiles.
+	// Otherwise it could happen that indices change in that vector while a previously made copy
+	// carries around outdated indices, possibly leading to modification of unrelated tiles.
+	const std::vector<size_t> & _indices;
+
+	MultiTileHelper(TileStorage& ts, const std::vector<size_t>& indices)
 		: Quad()
-		, _ts(ts), _indices(indices, indices + n)
+		, _ts(ts), _indices(indices)
 	{
-		_quads.reserve(n);
+		_quads.reserve(indices.size());
 		this->cull = false;
 	}
 
 public:
-	static MultiTileHelper *New(unsigned bgLayer, const size_t *indices, size_t n)
+	static MultiTileHelper *New(unsigned bgLayer,  const std::vector<size_t>& indices)
 	{
+		const size_t n = indices.size();
 		assert(n);
 		TileStorage& ts = dsq->tilemgr.tilestore[bgLayer];
-		MultiTileHelper *th = new MultiTileHelper(ts, indices, n);
+		MultiTileHelper *th = new MultiTileHelper(ts, indices);
 
 		if(n == 1)
 		{
@@ -241,7 +248,7 @@ public:
 
 	void finish()
 	{
-		size_t n = _indices.size();
+		const size_t n = _indices.size();
 		if(n == 1)
 		{
 			TileData& t = _ts.tiles[_indices[0]];
@@ -250,6 +257,7 @@ public:
 		}
 		else
 		{
+			assert(n == _quads.size());
 			for(size_t i = 0; i < n; ++i)
 			{
 				TileData& t = _ts.tiles[_indices[i]];
@@ -2894,7 +2902,7 @@ MultiTileHelper * SceneEditor::createMultiTileHelperFromSelection()
 	assert(!multi);
 	if(selectedTiles.empty())
 		return NULL;
-	return (multi = MultiTileHelper::New(bgLayer, &selectedTiles[0], selectedTiles.size()));
+	return (multi = MultiTileHelper::New(bgLayer, selectedTiles));
 }
 
 void SceneEditor::destroyMultiTileHelper()
