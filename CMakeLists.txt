@@ -11,9 +11,11 @@ INCLUDE(CheckCXXCompilerFlag)
 INCLUDE(CheckFunctionExists)
 
 # if no build type was provided, set a default one
-IF(NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
-ENDIF(NOT CMAKE_BUILD_TYPE)
+IF(NOT MSVC)
+    IF(NOT CMAKE_BUILD_TYPE)
+        SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
+    ENDIF(NOT CMAKE_BUILD_TYPE)
+ENDIF(NOT MSVC)
 
 # System fixups
 IF(CMAKE_SYSTEM_NAME STREQUAL "Haiku")
