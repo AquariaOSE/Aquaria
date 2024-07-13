@@ -94,21 +94,29 @@ void TileStorage::_moveToBack(size_t *indices, size_t n)
 
 void TileStorage::_moveToPos(MoveTarget where, size_t * indices, size_t n)
 {
-	std::vector<size_t> tmp(indices, indices + n);
-	std::vector<TileData> tt(n);
+	const size_t N = tiles.size();
+	std::vector<TileData> tt;
+	tt.reserve(N);
+	std::vector<unsigned char> used(N, 0);
 
-	// unsorted indices -> preserve relative order of tiles
 	for(size_t i = 0; i < n; ++i)
-		tt[i] = tiles[tmp[i]];
+		used[indices[i]] = 1;
 
-	std::sort(tmp.begin(), tmp.end());
+	if(where == MV_BEGIN)
+		for(size_t i = 0; i < n; ++i)
+			tt.push_back(tiles[indices[i]]);
 
-	// SORTED indices, erasing from the BACK -> we don't get a destructive index shift
-	for(size_t i = n; i --> 0; )
-		tiles.erase(tiles.begin() + tmp[i]);
+	for(size_t i = 0; i < N; ++i)
+		if(!used[i])
+			tt.push_back(tiles[i]);
 
-	size_t offs = where == MV_BEGIN ? 0 : tiles.size();
-	tiles.insert(tiles.begin() + offs, tt.begin(), tt.end());
+	if(where == MV_END)
+		for(size_t i = 0; i < n; ++i)
+			tt.push_back(tiles[indices[i]]);
+
+	tiles.swap(tt);
+
+	size_t offs = where == MV_BEGIN ? 0 : tiles.size() - n;
 
 	for(size_t i = 0; i < n; ++i)
 		indices[i] = i + offs;
