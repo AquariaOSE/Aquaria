@@ -749,40 +749,43 @@ void RenderObject::onUpdate(float dt)
 	internalOffset.update(dt);
 	rotationOffset.update(dt);
 
-	bool hasChildrenToDelete = false;
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	if(!children.empty())
 	{
-		if (shareAlphaWithChildren)
-			(*i)->alpha.x = this->alpha.x;
-		if (shareColorWithChildren)
-			(*i)->color = this->color;
-
-		if ((*i)->pm != PM_NONE)
+		bool hasChildrenToDelete = false;
+		for (Children::iterator i = children.begin(); i != children.end(); i++)
 		{
-			(*i)->update(dt);
-		}
-		hasChildrenToDelete |= (*i)->_markedForDelete;
+			if (shareAlphaWithChildren)
+				(*i)->alpha.x = this->alpha.x;
+			if (shareColorWithChildren)
+				(*i)->color = this->color;
 
-	}
-
-	if (hasChildrenToDelete)
-	{
-		size_t w = 0;
-		const size_t N = children.size();
-		for (size_t i = 0; i < N; ++i)
-		{
-			RenderObject *ro = children[i];
-			if(ro->_markedForDelete)
+			if ((*i)->pm != PM_NONE)
 			{
-				ro->parent = NULL;
-				ro->destroy();
-				if(ro->pm == PM_POINTER)
-					delete ro;
+				(*i)->update(dt);
 			}
-			else
-				children[w++] = ro;
+			hasChildrenToDelete |= (*i)->_markedForDelete;
+
 		}
-		children.resize(w);
+
+		if (hasChildrenToDelete)
+		{
+			size_t w = 0;
+			const size_t N = children.size();
+			for (size_t i = 0; i < N; ++i)
+			{
+				RenderObject *ro = children[i];
+				if(ro->_markedForDelete)
+				{
+					ro->parent = NULL;
+					ro->destroy();
+					if(ro->pm == PM_POINTER)
+						delete ro;
+				}
+				else
+					children[w++] = ro;
+			}
+			children.resize(w);
+		}
 	}
 
 	if (MotionBlurData *mb = this->motionBlur)
