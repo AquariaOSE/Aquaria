@@ -2659,7 +2659,10 @@ void SceneEditor::update(float dt)
 			{
 				if (editingEntity)
 				{
-					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
+					float cx = dsq->getGameCursorPosition().x;
+					float ex = editingEntity->position.x;
+					float dx = cx + cursorOffset.x - ex;
+					float add = dx/2.4f;
 					if (core->getCtrlState())
 					{
 						int a = (oldRotation + add)/45;
