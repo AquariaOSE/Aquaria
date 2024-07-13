@@ -260,13 +260,12 @@ DMON_API_DECL void dmon_unwatch(dmon_watch_id id);
         } while (0)
 #endif
 
-#ifndef _dmon_make_id
-#   ifdef __cplusplus
-#       define _dmon_make_id(id)    {id}
-#   else
-#       define _dmon_make_id(id)    (dmon_watch_id) {id}
-#   endif
-#endif  // _dmon_make_id
+_DMON_PRIVATE inline dmon_watch_id _dmon_make_id(unsigned id)
+{
+    dmon_watch_id w;
+    w.id = id;
+    return w;
+}
 
 _DMON_PRIVATE bool _dmon_isrange(char ch, char from, char to)
 {
@@ -1346,7 +1345,6 @@ typedef struct dmon__state {
    	int freelist[DMON_MAX_WATCHES];
     dmon__fsevent_event* events;
     int num_watches;
-    volatile int modify_watches;
     pthread_t thread_handle;
     dispatch_semaphore_t thread_sem;
     pthread_mutex_t mutex;
@@ -1486,14 +1484,14 @@ _DMON_PRIVATE void* _dmon_thread(void* arg)
 
     while (!_dmon.quit) {
         int i;
-        if (_dmon.modify_watches || pthread_mutex_trylock(&_dmon.mutex) != 0) {
+        if (pthread_mutex_trylock(&_dmon.mutex) != 0) {
             nanosleep(&req, &rem);
             continue;
         }
 
         if (_dmon.num_watches == 0) {
-            nanosleep(&req, &rem);
             pthread_mutex_unlock(&_dmon.mutex);
+            nanosleep(&req, &rem);
             continue;
         }
 
@@ -1635,7 +1633,6 @@ DMON_API_IMPL dmon_watch_id dmon_watch(const char* rootdir,
     DMON_ASSERT(watch_cb);
     DMON_ASSERT(rootdir && rootdir[0]);
 
-    __sync_lock_test_and_set(&_dmon.modify_watches, 1);
     pthread_mutex_lock(&_dmon.mutex);
 
     DMON_ASSERT(_dmon.num_watches < DMON_MAX_WATCHES);
@@ -1675,7 +1672,6 @@ DMON_API_IMPL dmon_watch_id dmon_watch(const char* rootdir,
         (root_st.st_mode & S_IRUSR) != S_IRUSR) {
         _DMON_LOG_ERRORF("Could not open/read directory: %s", rootdir);
         pthread_mutex_unlock(&_dmon.mutex);
-        __sync_lock_test_and_set(&_dmon.modify_watches, 0);
         return _dmon_make_id(0);
     }
 
@@ -1690,7 +1686,6 @@ DMON_API_IMPL dmon_watch_id dmon_watch(const char* rootdir,
         } else {
             _DMON_LOG_ERRORF("symlinks are unsupported: %s. use DMON_WATCHFLAGS_FOLLOW_SYMLINKS", rootdir);
             pthread_mutex_unlock(&_dmon.mutex);
-            __sync_lock_test_and_set(&_dmon.modify_watches, 0);
             return _dmon_make_id(0);
         }
     } else {
@@ -1735,7 +1730,6 @@ DMON_API_IMPL dmon_watch_id dmon_watch(const char* rootdir,
     CFRelease(cf_dir);
 
     pthread_mutex_unlock(&_dmon.mutex);
-    __sync_lock_test_and_set(&_dmon.modify_watches, 0);
     return _dmon_make_id(id);
 }
 
@@ -1745,12 +1739,13 @@ DMON_API_IMPL void dmon_unwatch(dmon_watch_id id)
     DMON_ASSERT(id.id > 0);
     int index = id.id - 1;
     DMON_ASSERT(index < DMON_MAX_WATCHES);
+
+    pthread_mutex_lock(&_dmon.mutex);
+
     DMON_ASSERT(_dmon.watches[index]);
     DMON_ASSERT(_dmon.num_watches > 0);
 
     if (_dmon.watches[index]) {
-        __sync_lock_test_and_set(&_dmon.modify_watches, 1);
-        pthread_mutex_lock(&_dmon.mutex);
 
         _dmon_unwatch(_dmon.watches[index]);
         DMON_FREE(_dmon.watches[index]);
@@ -1759,10 +1754,9 @@ DMON_API_IMPL void dmon_unwatch(dmon_watch_id id)
         --_dmon.num_watches;
         int num_freelist = DMON_MAX_WATCHES - _dmon.num_watches;
         _dmon.freelist[num_freelist - 1] = index;
-
-        pthread_mutex_unlock(&_dmon.mutex);
-        __sync_lock_test_and_set(&_dmon.modify_watches, 0);
     }
+
+    pthread_mutex_unlock(&_dmon.mutex);
 }
 
 #endif
