@@ -7,7 +7,7 @@
 // File    : glm/core/type_half.inl
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 // Copyright:
-// This half implementation is based on OpenEXR which is Copyright (c) 2002, 
+// This half implementation is based on OpenEXR which is Copyright (c) 2002,
 // Industrial Light & Magic, a division of Lucas Digital Ltd. LLC
 ///////////////////////////////////////////////////////////////////////////////////////////////////
 
@@ -20,7 +20,7 @@ namespace detail
 	{
 		volatile float f = 1e10;
 
-		for(int i = 0; i < 10; ++i)	
+		for(int i = 0; i < 10; ++i)
 			f *= f;             // this will overflow before
 								// the for­loop terminates
 		return f;
@@ -116,9 +116,9 @@ namespace detail
 		// of float and half (127 versus 15).
 		//
 
-		register int s =  (i >> 16) & 0x00008000;
-		register int e = ((i >> 23) & 0x000000ff) - (127 - 15);
-		register int m =   i        & 0x007fffff;
+		int s =  (i >> 16) & 0x00008000;
+		int e = ((i >> 23) & 0x000000ff) - (127 - 15);
+		int m =   i        & 0x007fffff;
 
 		//
 		// Now reassemble s, e and m into a half:
@@ -144,7 +144,7 @@ namespace detail
 			// whose magnitude is less than __half_NRM_MIN.
 			//
 			// We convert f to a denormalized _halfGTX.
-			// 
+			//
 
 			m = (m | 0x00800000) >> (1 - e);
 
@@ -155,9 +155,9 @@ namespace detail
 			// our number normalized.  Because of the way a half's bits
 			// are laid out, we don't have to treat this case separately;
 			// the code below will handle it correctly.
-			// 
+			//
 
-			if(m & 0x00001000) 
+			if(m & 0x00001000)
 				m += 0x00002000;
 
 			//
@@ -183,7 +183,7 @@ namespace detail
 				// F is a NAN; we produce a half NAN that preserves
 				// the sign bit and the 10 leftmost bits of the
 				// significand of f, with one exception: If the 10
-				// leftmost bits are all zero, the NAN would turn 
+				// leftmost bits are all zero, the NAN would turn
 				// into an infinity, so we have to set at least one
 				// bit in the significand.
 				//
@@ -254,7 +254,7 @@ namespace detail
 	//	return toFloat();
 	//}
 
-	GLM_FUNC_QUALIFIER thalf::operator float() const 
+	GLM_FUNC_QUALIFIER thalf::operator float() const
 	{
 		return toFloat32(this->data);
 	}
@@ -290,7 +290,7 @@ namespace detail
 
 	GLM_FUNC_QUALIFIER thalf& thalf::operator*=(thalf const & s)
 	{
-		data = toFloat16(toFloat32(data) * toFloat32(s.data));		
+		data = toFloat16(toFloat32(data) * toFloat32(s.data));
 		return *this;
 	}
 

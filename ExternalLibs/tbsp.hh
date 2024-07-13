@@ -365,7 +365,7 @@ public:
         const size_t n = this->n;
         tbsp__ASSERT(n == o.n);
         for(size_t i = 0; i < n; ++i)
-            s += a.p[i] * b.p[i];
+            s += p[i] * o.p[i];
         return s;
     }
 
@@ -410,7 +410,9 @@ struct MatrixAcc
         // and because math is backwards:
         // (h x w) * (H x W) -> (h x W)
         TBSP_ASSERT(size.w == o.size.h);
-        Size2d wh { o.size.w, size.h };
+        Size2d wh;
+        wh.w = o.size.w;
+        wh.h = size.h;
         return wh;
     }
 
@@ -735,7 +737,7 @@ MatrixAcc<T> generateLeastSquares(T *mem, const MatrixAcc<T>& N)
 {
     MatrixAcc<T> M;
     M.p = mem;
-    M.size == getLeastSquaresSize(N);
+    M.size = getLeastSquaresSize(N);
 
     T * const pend = M.p + (M.size.w * M.size.h);
 
@@ -974,7 +976,7 @@ void chordal(T *parm, const P *points, size_t n)
     {
         const T dist = distance(points[i-1], points[i]);
         totaldist += dist;
-        parm[i] = totaldist
+        parm[i] = totaldist;
     }
 
     // Normalize to 0..1

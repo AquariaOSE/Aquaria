@@ -2,6 +2,7 @@
 #define TTVFS_DEBUG_H
 
 #include "VFSDefines.h"
+#include <stddef.h>
 #include <iosfwd>
 
 VFS_NAMESPACE_START
