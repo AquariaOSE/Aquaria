@@ -66,7 +66,6 @@ if(AQUARIA_INTERNAL_FREETYPE)
         
         ADD_DEFINITIONS(-DFT_CONFIG_CONFIG_H="${FREETYPE2DIR}/include/freetype/config/ftconfig.h")
         ADD_DEFINITIONS(-DFT_CONFIG_MODULES_H="${FREETYPE2DIR}/include/freetype/config/ftmodule.h")
-        ADD_DEFINITIONS(-Wno-extended-offsetof)
     ENDIF(NOT MSVC)
 
     add_library(freetype ${FREETYPE2_SRCS})
