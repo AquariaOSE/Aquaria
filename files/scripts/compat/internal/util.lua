@@ -3,6 +3,11 @@
 ----------------------------------------------------
 
 local warnLog = (isDeveloperKeys() and errorLog) or debugLog
+local STUBS = rawget(_G, ".._compat_util_stubs")
+if not STUBS then
+    STUBS = {}
+    rawset(_G, ".._compat_util_stubs", STUBS)
+end
 
 -- generate function that warns when called and returns nil
 local function warndummy(name)
@@ -34,11 +39,12 @@ end
 
 local function makestubs(tab, gen)
     for name, param in pairs(tab) do
-        if rawget(_G, name) then
+        if not STUBS[name] and rawget(_G, name) then
             errorLog("WARNING: oldfunctions.lua: function " .. name .. " already exists")
         else
             local f = gen(name, param)
             rawset(_G, name, f)
+            STUBS[name] = f
         end
     end
 end
