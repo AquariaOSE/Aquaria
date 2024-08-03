@@ -127,7 +127,7 @@ Dir *DiskLoader::LoadDir(const char *fn, const char * /*ignored*/)
         fn = &t[0];
 #endif
 
-    assert(getRoot()->_getDirEx(fn, fn, false, false, false).first == NULL); // makes no sense to fire up the loader if it's already in the tree
+   // assert(getRoot()->_getDirEx(fn, fn, false, false, false).first == NULL); // makes no sense to fire up the loader if it's already in the tree
 
     ret = safecastNonNull<DiskDir*>(getRoot()->_createAndInsertSubtree(fn));
 
