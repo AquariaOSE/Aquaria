@@ -2513,7 +2513,7 @@ void SceneEditor::update(float dt)
 				}
 			}
 
-			if (sel >= 0 || ismulti)
+			if (sel >= 0 || ismulti || state != ES_SELECTING)
 				placer->alpha = 0;
 			else
 				placer->alpha = 0.5;
