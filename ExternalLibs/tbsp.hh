@@ -93,10 +93,11 @@ tbsp::evalRange(p, NP, tmp, knots, cp, NCP, DEGREE, 0.2f, 0.5f);
 #  define TBSP_ASSERT(x)
 #endif
 
+// Optional, if it doesn't compile, replce with empty macro
 #define TBSP_RESTRICT __restrict
 
 #ifndef TBSP_HAS_CPP11
-#  if (__cplusplus > 201103L) || (defined(_MSC_VER) && ((_MSC_VER+0) >= 1900))
+#  if (__cplusplus >= 201103L) || (defined(_MSC_VER) && ((_MSC_VER+0) >= 1900))
 #    define TBSP_HAS_CPP11 1
 #  else
 #    define TBSP_HAS_CPP11 0
