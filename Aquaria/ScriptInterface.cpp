@@ -3347,7 +3347,7 @@ luaFunc(errorLog)
 
 luaFunc(reconstructGrid)
 {
-	game->reconstructGrid(true);
+	game->reconstructGrid(true, true);
 	luaReturnNil();
 }
 

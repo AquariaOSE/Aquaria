@@ -455,7 +455,7 @@ void SceneEditor::executeButtonID(int bid)
 	break;
 	case 103:
 		// regen collision
-		game->reconstructGrid(true);
+		game->reconstructGrid(true, true);
 	break;
 	case 104:
 		generateLevel();
@@ -1067,7 +1067,7 @@ void SceneEditor::deleteSelected()
 			TileStorage& ts = getCurrentLayerTiles();
 			ts.deleteSome(&selectedTiles[0], n);
 			selectedTiles.clear();
-			game->reconstructGrid();
+			game->reconstructGrid(true, true);
 		}
 	}
 	else if (editType == ET_ENTITIES)
@@ -1116,7 +1116,7 @@ void SceneEditor::checkForRebuild()
 		{
 			if(ts.tiles[i].flags & TILEFLAG_SOLID)
 			{
-				game->reconstructGrid();
+				game->reconstructGrid(true, true);
 				break;
 			}
 		}
@@ -1271,7 +1271,7 @@ void SceneEditor::toggleElementSolid()
 			TileData& t = ts.tiles[selectedTiles[i]];
 			t.flags = TileMgr::GetTileFlags(nextSolidEF(TileMgr::GetElementFlag((TileFlags)t.flags)));
 		}
-		game->reconstructGrid(true);
+		game->reconstructGrid(true, true);
 	}
 }
 
@@ -1288,7 +1288,7 @@ void SceneEditor::toggleElementHurt()
 		else
 			ts.changeFlags(0, TILEFLAG_SOLID | TILEFLAG_HURT | TILEFLAG_SOLID_IN | TILEFLAG_TRIM, &selectedTiles[0], n);
 
-		game->reconstructGrid(true);
+		game->reconstructGrid(true, true);
 	}
 }
 
@@ -1361,6 +1361,7 @@ void SceneEditor::mouseButtonLeft()
 void SceneEditor::mouseButtonRight()
 {
 	if (multiSelecting || state != ES_SELECTING || core->mouse.buttons.left) return;
+
 	if (editType == ET_ENTITIES)
 	{
 		if (editingEntity)
@@ -2135,7 +2136,7 @@ void SceneEditor::nextElement()
 	if (core->getAltState())
 	{
 		debugLog("rebuilding level!");
-		game->reconstructGrid(true);
+		game->reconstructGrid(true, true);
 		return;
 	}
 
@@ -2293,7 +2294,7 @@ void SceneEditor::cloneSelectedElement()
 			}
 
 			if(allflags & TILEFLAG_SOLID)
-				game->reconstructGrid(true);
+				game->reconstructGrid(true, true);
 		}
 	}
 	else if (editType == ET_ENTITIES)

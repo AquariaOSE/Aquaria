@@ -323,8 +323,11 @@ void Game::transitionToScene(std::string scene)
 
 void Game::addObsRow(unsigned tx, unsigned ty, unsigned len)
 {
-	ObsRow obsRow(tx, ty, len);
-	obsRows.push_back(obsRow);
+	if(len)
+	{
+		ObsRow obsRow(tx, ty, len);
+		obsRows.push_back(obsRow);
+	}
 }
 
 void Game::clearObsRows()
@@ -550,7 +553,7 @@ void Game::reconstructEntityGrid()
 // TODO: ideally this would be split into two functions, one that reconstructs blackness
 // and is called on map load or by the editor, and another one that just reconstructs
 // the dynamic parts of the grid.
-void Game::reconstructGrid(bool force)
+void Game::reconstructGrid(bool force, bool updateDraw)
 {
 	if (!force && isSceneEditorActive()) return;
 
@@ -584,8 +587,11 @@ void Game::reconstructGrid(bool force)
 
 	trimGrid();
 
-	// Must update OT_BLACK after trimGrid()
-	updateGridRender(OT_MASK_ALL);
+	if(updateDraw)
+	{
+		// Must update OT_BLACK after trimGrid()
+		updateGridRender(OT_MASK_ALL);
+	}
 }
 
 void Game::trimGrid()
@@ -1771,7 +1777,7 @@ next_SE:
 	if(!tilesDefs.empty())
 		dsq->tilemgr.createTiles(&tilesDefs[0], tilesDefs.size());
 
-	this->reconstructGrid(true);
+	this->reconstructGrid(true, false);
 
 	std::vector<EntitySaveData> toSpawn;
 
@@ -1800,7 +1806,7 @@ next_SE:
 
 	findMaxCameraValues();
 
-	this->reconstructGrid(true);
+	this->reconstructGrid(true, true);
 
 	return true;
 }
@@ -1808,9 +1814,8 @@ next_SE:
 
 void Game::handleEditorMapGridUpdate()
 {
-	reconstructGrid(true);
 	findMaxCameraValues();
-	updateGridRender(OT_MASK_BLACK);
+	reconstructGrid(true, true);
 }
 
 void Game::spawnEntities(const EntitySaveData *sav, size_t n)
@@ -4068,7 +4073,11 @@ void Game::updateGridRender(ObsType obs)
 	// Keeping it here possibly for future mod compat.
 	// It's also always shown, so we can immediately rebuild it
 	if(obs & OT_BLACK)
-		blackRender->rebuildBuffers(this->obsRows);
+	{
+		// Don't pass this->obsRows here (which is the raw data)!
+		// Need the changes done by trimGrid() -> need to collect rows anew.
+		blackRender->rebuildBuffers();
+	}
 }
 
 Vector Game::getCameraPositionFor(const Vector &pos)

@@ -49,13 +49,19 @@ static void collectRows(std::vector<ObsRow>& rows, ObsType obs)
 				if(on)
 				{
 					// previous tile is the last one, so -1
-					rows.push_back(ObsRow(startx, y, x - startx));
+					size_t len = x - startx;
+					assert(len);
+					rows.push_back(ObsRow(startx, y, len));
 					on = false;
 				}
 			}
 		}
 		if(on)
-			rows.push_back(ObsRow(startx, y, endX - startx));
+		{
+			size_t len = endX - startx;
+			assert(len);
+			rows.push_back(ObsRow(startx, y, len));
+		}
 	}
 }
 
@@ -131,6 +137,7 @@ void GridRender::rebuildBuffers(const std::vector<ObsRow>& rows)
 		for(size_t i = 0; i < N; ++i)
 		{
 			const ObsRow& row = rows[i];
+			assert(row.len);
 
 			// Don't bother to transform to float. The GPU can do that better.
 			// The scale factor of a GridRender is set to TILE_SIZE, that pre-bakes the
@@ -183,13 +190,17 @@ void GridRender::onRender(const RenderState& rs) const
 	if(!primsToDraw)
 		return;
 
+	const int H = (int)primIndexInLine.size();
+	if(!H)
+		return;
+
 	const float vh = core->getVirtualHeight();
 	const float voy = core->getVirtualOffY();
 	const float vox = core->getVirtualOffX();
 
 	const Vector topleft = core->getTopLeftCornerInWorldCoords();
 	const TileVector ct(topleft);
-	const int H = (int)primIndexInLine.size();
+
 	int startY = ct.y;
 
 	// Note that it's possible that the scale factor is negative (mods can use this),

@@ -148,7 +148,7 @@ public:
 
 	void updateParticlePause();
 
-	void reconstructGrid(bool force=false);
+	void reconstructGrid(bool force, bool updateDraw);
 	void reconstructEntityGrid();
 
 	void registerSporeDrop(const Vector &pos, int t);
