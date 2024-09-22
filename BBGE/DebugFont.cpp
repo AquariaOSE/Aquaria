@@ -89,7 +89,7 @@ void DebugFont::formatText()
 	text = this->text;
 	lines.clear();
 	std::string currentLine;
-	size_t lastSpace = size_t(-1);
+	size_t lastSpace = std::string::npos;
 	float currentWidth = 0;
 	maxW = 0;
 	for (size_t i = 0; i < text.size(); i++)
