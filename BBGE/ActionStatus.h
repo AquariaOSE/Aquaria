@@ -11,7 +11,12 @@ const unsigned mouseExtraButtons = 8;
 // *_END is non-inclusive!
 enum ActionButtonType
 {
-	MOUSE_BUTTON_LEFT	=  KEY_MAXARRAY + 1,
+	// Only concerns real mouse buttons, not whatever is mapped to "left mouse"
+	MOUSE_BUTTON_REAL_LEFT		=  KEY_MAXARRAY + 1,
+	MOUSE_BUTTON_REAL_RIGHT,
+	MOUSE_BUTTON_REAL_MIDDLE,
+
+	MOUSE_BUTTON_LEFT,
 	MOUSE_BUTTON_RIGHT,
 	MOUSE_BUTTON_MIDDLE,
 	MOUSE_BUTTON_EXTRA_START,

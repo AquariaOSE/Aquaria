@@ -691,10 +691,10 @@ void SceneEditor::init()
 	addAction(MakeFunctionEvent(SceneEditor, editModeEntities), KEY_F6, 0);
 	addAction(MakeFunctionEvent(SceneEditor, editModePaths), KEY_F7, 0);
 
-	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeft), MOUSE_BUTTON_LEFT, 1);
-	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRight), MOUSE_BUTTON_RIGHT, 1);
-	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeftUp), MOUSE_BUTTON_LEFT, 0);
-	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRightUp), MOUSE_BUTTON_RIGHT, 0);
+	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeft), MOUSE_BUTTON_REAL_LEFT, 1);
+	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRight), MOUSE_BUTTON_REAL_RIGHT, 1);
+	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeftUp), MOUSE_BUTTON_REAL_LEFT, 0);
+	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRightUp), MOUSE_BUTTON_REAL_RIGHT, 0);
 
 	addAction(MakeFunctionEvent(SceneEditor, placeElement), KEY_SPACE, 1);
 

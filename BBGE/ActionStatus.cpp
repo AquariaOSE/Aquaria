@@ -94,6 +94,15 @@ bool ActionButtonStatus::_queryStatus(int k) const
 	if (k >= MOUSE_BUTTON_EXTRA_START && k < MOUSE_BUTTON_EXTRA_END)
 		return core->mouse.buttons.extra[k - MOUSE_BUTTON_EXTRA_START];
 
+	if (k == MOUSE_BUTTON_REAL_LEFT)
+		return core->mouse.pure_buttons.left == DOWN;
+
+	if (k == MOUSE_BUTTON_REAL_RIGHT)
+		return core->mouse.pure_buttons.right == DOWN;
+
+	if (k == MOUSE_BUTTON_REAL_MIDDLE)
+		return core->mouse.pure_buttons.middle == DOWN;
+
 	// --- joystick from here ---
 
 	Joystick *j = core->getJoystick(joystickID);
