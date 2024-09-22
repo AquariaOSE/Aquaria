@@ -338,7 +338,6 @@ TileEffectData::TileEffectData(const TileEffectConfig& cfg, const TileData *t)
 			wavy.hitPerc = 0;
 			wavy.effectMult = 0;
 			wavy.waving = false;
-			wavy.flip = false;
 			wavy.touching = false;
 		}
 		break;
