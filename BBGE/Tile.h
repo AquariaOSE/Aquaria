@@ -108,6 +108,8 @@ enum TileFlags
 	TILEFLAG_SELECTED    = 0x100, // ephemeral: selected in editor
 	TILEFLAG_EDITOR_HIDDEN = 0x200, // tile is hidden for editor reasons. temporarily set when multi-selecting and moving. doesn't count as hidden externally and is only for rendering.
 	TILEFLAG_FV          = 0x400, // flipped vertically
+
+	TILEFLAG_MASK_SOLID = TILEFLAG_SOLID | TILEFLAG_SOLID_IN | TILEFLAG_TRIM | TILEFLAG_HURT
 };
 
 struct TileEffectData

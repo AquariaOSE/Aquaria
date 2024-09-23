@@ -1269,7 +1269,12 @@ void SceneEditor::toggleElementSolid()
 		for(size_t i = 0; i < n; ++i)
 		{
 			TileData& t = ts.tiles[selectedTiles[i]];
-			t.flags = TileMgr::GetTileFlags(nextSolidEF(TileMgr::GetElementFlag((TileFlags)t.flags)));
+			// cycle to next flag combination
+			ElementFlag ef = TileMgr::GetElementFlag((TileFlags)t.flags);
+			ef = nextSolidEF(ef);
+			TileFlags newflags = TileMgr::GetTileFlags(ef);
+			// keep old flags that have nothing to do with tile solidness
+			t.flags = (t.flags & ~TILEFLAG_MASK_SOLID) | (newflags & TILEFLAG_MASK_SOLID);
 		}
 		game->reconstructGrid(true, true);
 	}
@@ -1284,9 +1289,9 @@ void SceneEditor::toggleElementHurt()
 		const bool set = !(t0.flags & TILEFLAG_HURT);
 
 		if(set)
-			ts.changeFlags(TILEFLAG_SOLID | TILEFLAG_HURT, TILEFLAG_TRIM, &selectedTiles[0], n);
+			ts.changeFlags(TILEFLAG_SOLID | TILEFLAG_HURT, TILEFLAG_TRIM, &selectedTiles[0], n); // solid, hurting
 		else
-			ts.changeFlags(0, TILEFLAG_SOLID | TILEFLAG_HURT | TILEFLAG_SOLID_IN | TILEFLAG_TRIM, &selectedTiles[0], n);
+			ts.changeFlags(0, TILEFLAG_MASK_SOLID, &selectedTiles[0], n); // not solid, not hurting
 
 		game->reconstructGrid(true, true);
 	}
@@ -1685,9 +1690,16 @@ void SceneEditor::flipElementHorz()
 
 	if (n)
 	{
+		unsigned allflags = 0;
 		TileStorage& ts = getCurrentLayerTiles();
 		for(size_t i = 0; i < n; ++i)
-			ts.tiles[selectedTiles[i]].flags ^= TILEFLAG_FH; // toggle bit
+		{
+			TileData& t = ts.tiles[selectedTiles[i]];
+			allflags |= t.flags;
+			t.flags ^= TILEFLAG_FH; // toggle bit
+		}
+		if(allflags & TILEFLAG_MASK_SOLID) // there was a solid tile among them, regen grid
+			game->reconstructGrid(true, true);
 	}
 	else
 		this->placer->flipHorizontal();
@@ -1700,9 +1712,16 @@ void SceneEditor::flipElementVert()
 
 	if (size_t n = selectedTiles.size())
 	{
+		//unsigned allflags = 0; // FIXME? Vertical flip was ignored by tile collision generation (bug-compatibility)
 		TileStorage& ts = getCurrentLayerTiles();
 		for(size_t i = 0; i < n; ++i)
+		{
+			TileData& t = ts.tiles[selectedTiles[i]];
+			//allflags |= t.flags;
 			ts.tiles[selectedTiles[i]].flags ^= TILEFLAG_FV; // toggle bit
+		}
+		//if(allflags & TILEFLAG_MASK_SOLID)
+		//	game->reconstructGrid(true, true);
 	}
 	else
 		this->placer->flipVertical();
