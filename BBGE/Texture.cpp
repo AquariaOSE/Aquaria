@@ -51,6 +51,7 @@ Texture::Texture()
 	ow = oh = -1;
 	_mipmap = false;
 	success = false;
+	_pixbuf = NULL;
 }
 
 Texture::~Texture()
@@ -81,6 +82,12 @@ void Texture::writeRGBA(int tx, int ty, int w, int h, const unsigned char *pixel
 					);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	if(_pixbuf)
+	{
+		free(_pixbuf);
+		_pixbuf = NULL; // will re-fetch when needed
+	}
 }
 
 void Texture::unload()
@@ -93,6 +100,16 @@ void Texture::unload()
 		glDeleteTextures(1, &gltexid);
 		gltexid = 0;
 	}
+	if(_pixbuf)
+	{
+		free(_pixbuf);
+		_pixbuf = NULL;
+	}
+}
+
+size_t Texture::sizeBytes() const
+{
+	return size_t(width) * size_t(height) * 4;
 }
 
 void Texture::apply() const
@@ -209,18 +226,23 @@ bool Texture::upload(const ImageData& img, bool mipmap)
 	return true;
 }
 
-unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, size_t *sizeparam) const
+const unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, size_t *sizeparam) const
 {
-	const size_t bytes = size_t(width) * size_t(height) * 4;
-	unsigned char *data = (unsigned char*)malloc(bytes);
-	if (!data)
+	unsigned char *data = _pixbuf;
+	const size_t bytes = sizeBytes();
+	if(!_pixbuf)
 	{
-		std::ostringstream os;
-		os << "Game::getBufferAndSize allocation failure, bytes = " << bytes;
-		errorLog(os.str());
-		return NULL;
+		data = (unsigned char*)malloc(bytes);
+		if (!data)
+		{
+			std::ostringstream os;
+			os << "Game::getBufferAndSize allocation failure, bytes = " << bytes;
+			errorLog(os.str());
+			return NULL;
+		}
+		this->readRGBA(data);
+		_pixbuf = data;
 	}
-	this->readRGBA(data);
 
 	*wparam = width;
 	*hparam = height;

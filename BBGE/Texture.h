@@ -65,7 +65,8 @@ public:
 	void writeRGBA(int tx, int ty, int w, int h, const unsigned char *pixels);
 	void readRGBA(unsigned char *pixels) const;
 
-	unsigned char *getBufferAndSize(int *w, int *h, size_t *size) const; // returned memory must be free()'d
+	const unsigned char *getBufferAndSize(int *w, int *h, size_t *size) const; // returned memory is owned by the Texture
+	size_t sizeBytes() const;
 
 	std::string name, filename;
 	bool upload(const ImageData& img, bool mipmap);
@@ -76,6 +77,7 @@ protected:
 
 	int ow, oh;
 	bool _mipmap;
+	mutable unsigned char *_pixbuf; // retrieved when needed
 };
 
 #define UNREFTEX(x) {x = NULL;}

@@ -369,7 +369,7 @@ void Game::fillGrid(const GridFiller& gf)
 
 		int w = 0, h = 0;
 		size_t size = 0;
-		unsigned char *data = gf.texture->getBufferAndSize(&w, &h, &size);
+		const unsigned char *data = gf.texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
 			debugLog("Failed to get buffer in Game::fillGridFromQuad()");
@@ -418,8 +418,6 @@ void Game::fillGrid(const GridFiller& gf)
 				}
 			}
 		}
-
-		free(data);
 
 		if (gf.trim)
 		{
@@ -1057,7 +1055,7 @@ void Game::generateCollisionMask(Bone *q, float overrideCollideRadius /* = 0 */)
 
 		int w = 0, h = 0;
 		size_t size = 0;
-		unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
+		const unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
 			debugLog("Failed to get buffer in Game::generateCollisionMask()");
@@ -1107,8 +1105,6 @@ void Game::generateCollisionMask(Bone *q, float overrideCollideRadius /* = 0 */)
 		}
 
 		q->collisionMaskRadius = 512;
-
-		free(data);
 	}
 }
 
