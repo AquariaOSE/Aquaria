@@ -60,6 +60,13 @@ enum CoreLayers
 	LR_NONE		= -1
 };
 
+enum TextInputEvent
+{
+	TEXTINP_TEXT,
+	TEXTINP_BACKSPACE,
+};
+
+
 class AfterEffectManager;
 
 class Texture;
@@ -462,6 +469,11 @@ protected:
 	Vector mouseConstraintCenter;
 
 	bool doMouseConstraint();
+
+	virtual void onTextInput(TextInputEvent ti, const char *text) {}
+	void beginTextInput();
+	void endTextInput();
+	int textInputOpenCount;
 
 	virtual void onMouseInput(){}
 	bool doScreenshot;

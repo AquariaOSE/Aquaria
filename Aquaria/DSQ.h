@@ -423,6 +423,10 @@ protected:
 	void onPlayVoice();
 	void onStopVoice();
 
+	virtual void onTextInput(TextInputEvent ti, const char *text) OVERRIDE;
+	typedef void (*InputTextHandler)(TextInputEvent ti, const char *text);
+	InputTextHandler pTextInputHandler;
+
 	Entity **iter;
 	PauseQuad *blackout;
 	void updatepecue(float dt);

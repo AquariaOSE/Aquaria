@@ -209,6 +209,8 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	avgFPS.resize(user.video.fpsSmoothing);
 
 	cursor = cursorGlow = 0;
+
+	pTextInputHandler = 0;
 }
 
 DSQ::~DSQ()
@@ -2816,24 +2818,6 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 
 }
 
-void doAlphabetInputKey(int d, char c, char map[], std::string *text, char upper=0)
-{
-	if (core->getKeyState(d) && !map[d])
-	{
-		char usec = c;
-		if (upper != 0 && (core->getKeyState(KEY_LSHIFT) || core->getKeyState(KEY_RSHIFT)))
-		{
-			usec = upper;
-		}
-		*text += usec;
-		map[d] = 1;
-	}
-	else if (!core->getKeyState(d) && map[d])
-	{
-		map[d] = 0;
-	}
-}
-
 void DSQ::onConfirmYes()
 {
 	confirmDone = 1;
@@ -2988,9 +2972,32 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 	return ret;
 }
 
+
+static std::string s_inputText;
+
+static void enterTextInput(TextInputEvent ti, const char *text)
+{
+	switch(ti)
+	{
+		case TEXTINP_TEXT:
+			if(*text)
+				s_inputText += text;
+			break;
+
+		case TEXTINP_BACKSPACE:
+			if(!s_inputText.empty())
+				s_inputText.pop_back(); // FIXME: do proper utf-8 erase?
+			break;
+	}
+}
+
 std::string DSQ::getUserInputString(std::string labelText, std::string t, bool allowNonLowerCase)
 {
+	const std::string originalt = t;
 	float trans = 0.1f;
+	t.swap(s_inputText); // store original text in case of recursive opening
+	const InputTextHandler oldInputHandler = pTextInputHandler;
+	pTextInputHandler = &enterTextInput;
 
 	bool pauseState = game->isPaused();
 
@@ -3017,16 +3024,15 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 	inputText->position = Vector(-400 + 20,8+8);
 	bg->addChild(inputText, PM_POINTER);
 
+	this->beginTextInput();
+
 
 	bg->show();
 	run(trans);
 
 
-	std::string text = t;
-	char map[256];
-	for (int i = 0; i < 256; i++)
-		map[i] = 0;
-	bool delDown = false;
+	s_inputText = t;
+
 	bool escDown = false;
 
 	float dt = 1.0f/60.0f;
@@ -3035,89 +3041,12 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 
 	while (1)
 	{
-		if (blink)
-		{
-			text.resize(text.size()-1);
-			inputText->setText(text);
-		}
-		if (inputText->getActualWidth() < 800-60)
-		{
-			doAlphabetInputKey(KEY_A, 'a', (char*)&map, &text, 'A');
-			doAlphabetInputKey(KEY_B, 'b', (char*)&map, &text, 'B');
-			doAlphabetInputKey(KEY_C, 'c', (char*)&map, &text, 'C');
-			doAlphabetInputKey(KEY_D, 'd', (char*)&map, &text, 'D');
-			doAlphabetInputKey(KEY_E, 'e', (char*)&map, &text, 'E');
-			doAlphabetInputKey(KEY_F, 'f', (char*)&map, &text, 'F');
-			doAlphabetInputKey(KEY_G, 'g', (char*)&map, &text, 'G');
-			doAlphabetInputKey(KEY_H, 'h', (char*)&map, &text, 'H');
-			doAlphabetInputKey(KEY_I, 'i', (char*)&map, &text, 'I');
-			doAlphabetInputKey(KEY_J, 'j', (char*)&map, &text, 'J');
-			doAlphabetInputKey(KEY_K, 'k', (char*)&map, &text, 'K');
-			doAlphabetInputKey(KEY_L, 'l', (char*)&map, &text, 'L');
-			doAlphabetInputKey(KEY_M, 'm', (char*)&map, &text, 'M');
-			doAlphabetInputKey(KEY_N, 'n', (char*)&map, &text, 'N');
-			doAlphabetInputKey(KEY_O, 'o', (char*)&map, &text, 'O');
-			doAlphabetInputKey(KEY_P, 'p', (char*)&map, &text, 'P');
-			doAlphabetInputKey(KEY_Q, 'q', (char*)&map, &text, 'Q');
-			doAlphabetInputKey(KEY_R, 'r', (char*)&map, &text, 'R');
-			doAlphabetInputKey(KEY_S, 's', (char*)&map, &text, 'S');
-			doAlphabetInputKey(KEY_T, 't', (char*)&map, &text, 'T');
-			doAlphabetInputKey(KEY_U, 'u', (char*)&map, &text, 'U');
-			doAlphabetInputKey(KEY_V, 'v', (char*)&map, &text, 'V');
-			doAlphabetInputKey(KEY_W, 'w', (char*)&map, &text, 'W');
-			doAlphabetInputKey(KEY_X, 'x', (char*)&map, &text, 'X');
-			doAlphabetInputKey(KEY_Y, 'y', (char*)&map, &text, 'Y');
-			doAlphabetInputKey(KEY_Z, 'z', (char*)&map, &text, 'Z');
-			doAlphabetInputKey(KEY_1, '1', (char*)&map, &text);
-			doAlphabetInputKey(KEY_2, '2', (char*)&map, &text);
-			doAlphabetInputKey(KEY_3, '3', (char*)&map, &text);
-			doAlphabetInputKey(KEY_4, '4', (char*)&map, &text);
-			doAlphabetInputKey(KEY_5, '5', (char*)&map, &text);
-			doAlphabetInputKey(KEY_6, '6', (char*)&map, &text);
-			doAlphabetInputKey(KEY_7, '7', (char*)&map, &text);
-			doAlphabetInputKey(KEY_8, '8', (char*)&map, &text);
-			doAlphabetInputKey(KEY_9, '9', (char*)&map, &text);
-			doAlphabetInputKey(KEY_0, '0', (char*)&map, &text);
-
-			doAlphabetInputKey(KEY_PERIOD, '.', (char*)&map, &text);
-			doAlphabetInputKey(KEY_SPACE, ' ', (char*)&map, &text);
-			doAlphabetInputKey(KEY_MINUS, '-', (char*)&map, &text, '_');
-
-			doAlphabetInputKey(KEY_TILDE, '~', (char*)&map, &text, '~');
-			doAlphabetInputKey(KEY_EQUALS, '=', (char*)&map, &text);
-			doAlphabetInputKey(KEY_LBRACKET, '(', (char*)&map, &text);
-			doAlphabetInputKey(KEY_RBRACKET, ')', (char*)&map, &text);
-			doAlphabetInputKey(KEY_SEMICOLON, ';', (char*)&map, &text);
-		}
-
-		if (getKeyState(KEY_BACKSPACE))
-		{
-			if (!delDown)
-			{
-				if (!text.empty())
-				{
-					text.resize(text.size()-1);
-				}
-			}
-			delDown = true;
-		}
-		else
-		{
-			delDown = false;
-		}
-
 		blinkTimer += dt;
 		if (blinkTimer > 0.2f)
 		{
 			blink = !blink;
 			blinkTimer = 0;
 		}
-
-		if (blink)
-		{
-			text += "|";
-		}
-
 
 
 		if (getKeyState(KEY_RETURN))
@@ -3128,15 +3057,12 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 		else if (escDown && !getKeyState(KEY_ESCAPE))
 		{
 			escDown = false;
-			text = t;
+			s_inputText = originalt;
 			break;
 		}
-		inputText->setText(text);
+		inputText->setText(blink ? s_inputText : s_inputText+"|");
 		run(dt);
 	}
-
-	if (blink && !text.empty() && (text[text.size()-1] == '|'))
-		text.resize(text.size()-1);
 
 	sound->playSfx("Menu-Close");
 
@@ -3155,11 +3081,16 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 	game->togglePause(pauseState);
 
 	if (!allowNonLowerCase)
-		stringToLower(text);
+		stringToLower(s_inputText);
 
-	debugLog("getUserInputString returned: " + text);
+	debugLog("getUserInputString returned: " + s_inputText);
 
-	return text;
+	this->endTextInput();
+
+	t.swap(s_inputText); // put original text back
+	pTextInputHandler = oldInputHandler;
+
+	return t;
 }
 
 void DSQ::stopVoice()
@@ -4384,4 +4315,10 @@ bool DSQ::useMouseInput() const
 bool DSQ::useJoystickInput() const
 {
 	return lastInputMode == INPUT_JOYSTICK;
+}
+
+void DSQ::onTextInput(TextInputEvent ti, const char *text)
+{
+	if(pTextInputHandler)
+		pTextInputHandler(ti, text);
 }

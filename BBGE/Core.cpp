@@ -449,6 +449,8 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	initPlatform(filesystem);
 
 	texmgr.spawnThreads(3);
+
+	textInputOpenCount = 0;
 }
 
 void Core::initPlatform(const std::string &filesystem)
@@ -1356,6 +1358,30 @@ bool Core::doMouseConstraint()
 	return false;
 }
 
+void Core::beginTextInput()
+{
+	if(!textInputOpenCount)
+	{
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+		SDL_StartTextInput();
+#endif
+	}
+
+	++textInputOpenCount;
+}
+
+void Core::endTextInput()
+{
+	assert(textInputOpenCount > 0);
+	--textInputOpenCount;
+	if(!textInputOpenCount)
+	{
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+		SDL_StopTextInput();
+#endif
+	}
+}
+
 Vector Core::pixelPosToVirtualCoords(int x, int y) const
 {
 	const float mx = float(virtualWidth)/float(getWindowWidth());
@@ -1374,6 +1400,62 @@ void Core::virtualCoordsToPixelPos(int& x, int& y, const Vector& p) const
 	x = px * (float(getWindowWidth())/float(virtualWidth));
 	y = py * (float(getWindowHeight())/float(virtualHeight));
 }
+
+struct TextInputMapping
+{
+	unsigned key;
+	char lower;
+	char upper;
+};
+
+// This is only used for SDL1, that doesn't have text input functionality
+static const TextInputMapping textInputMap[]
+{
+	{ KEY_A,           'a', 'A' },
+	{ KEY_B,           'b', 'B' },
+	{ KEY_C,           'c', 'C' },
+	{ KEY_D,           'd', 'D' },
+	{ KEY_E,           'e', 'E' },
+	{ KEY_F,           'f', 'F' },
+	{ KEY_G,           'g', 'G' },
+	{ KEY_H,           'h', 'H' },
+	{ KEY_I,           'i', 'I' },
+	{ KEY_J,           'j', 'J' },
+	{ KEY_K,           'k', 'K' },
+	{ KEY_L,           'l', 'L' },
+	{ KEY_M,           'm', 'M' },
+	{ KEY_N,           'n', 'N' },
+	{ KEY_O,           'o', 'O' },
+	{ KEY_P,           'p', 'P' },
+	{ KEY_Q,           'q', 'Q' },
+	{ KEY_R,           'r', 'R' },
+	{ KEY_S,           's', 'S' },
+	{ KEY_T,           't', 'T' },
+	{ KEY_U,           'u', 'U' },
+	{ KEY_V,           'v', 'V' },
+	{ KEY_W,           'w', 'W' },
+	{ KEY_X,           'x', 'X' },
+	{ KEY_Y,           'y', 'Y' },
+	{ KEY_Z,           'z', 'Z' },
+	{ KEY_1,           '1',   0 },
+	{ KEY_2,           '2',   0 },
+	{ KEY_3,           '3',   0 },
+	{ KEY_4,           '4',   0 },
+	{ KEY_5,           '5',   0 },
+	{ KEY_6,           '6',   0 },
+	{ KEY_7,           '7',   0 },
+	{ KEY_8,           '8',   0 },
+	{ KEY_9,           '9',   0 },
+	{ KEY_0,           '0',   0 },
+	{ KEY_PERIOD,      '.',   0 },
+	{ KEY_SPACE,       ' ',   0 },
+	{ KEY_MINUS,       '-', '_' },
+	{ KEY_TILDE,       '~',   0 },
+	{ KEY_EQUALS,      '=',   0 },
+	{ KEY_LBRACKET,    '(',   0 },
+	{ KEY_RBRACKET,    ')',   0 },
+	{ KEY_SEMICOLON,   ';',   0 }
+};
 
 void Core::onEvent(const SDL_Event& event)
 {
@@ -1409,6 +1491,28 @@ void Core::onEvent(const SDL_Event& event)
 #endif
 				if(kidx < KEY_MAXARRAY)
 					keys[kidx] = 1;
+
+				if(kidx == KEY_BACKSPACE && textInputOpenCount)
+					onTextInput(TEXTINP_BACKSPACE, NULL);
+
+#if !SDL_VERSION_ATLEAST(2,0,0)
+				char c = 0;
+				for(size_t i = 0; i < Countof(textInputMap); ++i)
+				{
+					if(textInputMap[i].key == kidx)
+					{
+						if((event.key.keysym.mod & KMOD_SHIFT) && textInputMap[i].upper)
+							c = textInputMap[i].upper;
+						else
+							c = textInputMap[i].lower;
+					}
+				}
+				if(c)
+				{
+					const char buf[2] = { c, 0 };
+					onTextInput(TEXTINP_TEXT, &buf[0]);
+				}
+#endif
 			}
 		}
 		break;
@@ -1496,6 +1600,15 @@ motion:
 					break;
 				}
 			}
+		}
+		break;
+#endif
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+		case SDL_TEXTINPUT:
+		{
+			if(textInputOpenCount)
+				onTextInput(TEXTINP_TEXT, event.text.text);
 		}
 		break;
 #endif
