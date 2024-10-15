@@ -1977,6 +1977,23 @@ luaFunc(quad_getBorderAlpha)
 	luaReturnNum(b ? b->borderAlpha : 0.0f);
 }
 
+luaFunc(quad_borderColor)
+{
+	Quad *b = getQuad(L);
+	if (b)
+		b->renderBorderColor = Vector(lua_tonumber(L, 2), lua_tonumber(L, 3), lua_tonumber(L, 4));
+	luaReturnNil();
+}
+
+luaFunc(quad_getBorderColor)
+{
+	Quad *b = getQuad(L);
+	Vector c;
+	if(b)
+		c = b->renderBorderColor;
+	luaReturnVec3(c.x, c.y, c.z);
+}
+
 
 // --- standard set/get functions for each type, wrapping RenderObject functions ---
 
@@ -2102,6 +2119,8 @@ luaFunc(quad_getBorderAlpha)
 	Q_FUNC(getter, prefix,  isRenderCenter	) \
 	Q_FUNC(getter, prefix,  borderAlpha		) \
 	Q_FUNC(getter, prefix,  getBorderAlpha	) \
+	Q_FUNC(getter, prefix,  borderColor		) \
+	Q_FUNC(getter, prefix,  getBorderColor	) \
 	Q_FUNC(getter, prefix,  setTexOffset	) \
 	Q_FUNC(getter, prefix,  getTexOffset	)
 
