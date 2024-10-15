@@ -1501,16 +1501,14 @@ void Core::onEvent(const SDL_Event& event)
 				{
 					if(textInputMap[i].key == kidx)
 					{
-						if((event.key.keysym.mod & KMOD_SHIFT) && textInputMap[i].upper)
+						if((event.key.keysym.mod & KMOD_SHIFT))
 							c = textInputMap[i].upper;
-						else
+						if(!c)
 							c = textInputMap[i].lower;
+						const char buf[2] = { c, 0 };
+						onTextInput(TEXTINP_TEXT, &buf[0]);
+						break;
 					}
-				}
-				if(c)
-				{
-					const char buf[2] = { c, 0 };
-					onTextInput(TEXTINP_TEXT, &buf[0]);
 				}
 #endif
 			}
