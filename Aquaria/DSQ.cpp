@@ -3030,9 +3030,6 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 	bg->show();
 	run(trans);
 
-
-	s_inputText = t;
-
 	bool escDown = false;
 
 	float dt = 1.0f/60.0f;
