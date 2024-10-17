@@ -568,6 +568,24 @@ bool getBool(lua_State *L, int slot = 1)
 }
 
 static inline
+int getBoolOrInt(lua_State *L, int slot = 1)
+{
+	if (lua_isnumber(L, slot))
+	{
+		return lua_tointeger(L, slot);
+	}
+	else if (lua_islightuserdata(L, slot))
+	{
+		return (lua_touserdata(L, slot) != NULL);
+	}
+	else if (lua_isboolean(L, slot))
+	{
+		return !!lua_toboolean(L, slot);
+	}
+	return 0;
+}
+
+static inline
 Entity *entity(lua_State *L, int slot = 1)
 {
 	Entity *ent = (Entity*)lua_touserdata(L, slot);
@@ -777,7 +795,7 @@ static void safePath(lua_State *L, const std::string& path)
 //----------------------------------//
 
 #define luaFunc(func)		static int l_##func(lua_State *L)
-#define luaReturnBool(bool)	do {lua_pushboolean(L, (bool)); return 1;} while(0)
+#define luaReturnBool(b)	do {lua_pushboolean(L, (b)); return 1;} while(0)
 #define luaReturnInt(num)	do {lua_pushinteger(L, (num)); return 1;} while(0)
 #define luaReturnNum(num)	do {lua_pushnumber(L, (num)); return 1;} while(0)
 #define luaReturnPtr(ptr)	do {luaPushPointer(L, (ptr)); return 1;} while(0)
@@ -3561,10 +3579,10 @@ luaFunc(node_setPauseFreeze)
 luaFunc(entity_setFillGrid)
 {
 	Entity *e = entity(L);
-	bool b = getBool(L,2);
 	if (e)
 	{
-		e->fillGridFromQuad = b;
+		e->fillGridFromQuad = getBoolOrInt(L, 2);
+		e->fillGridFromSkel = getBoolOrInt(L, 3);
 	}
 	luaReturnNil();
 }
@@ -3572,7 +3590,12 @@ luaFunc(entity_setFillGrid)
 luaFunc(entity_isFillGrid)
 {
 	Entity *e = entity(L);
-	luaReturnBool(e ? e->fillGridFromQuad : false);
+	if(!e)
+		return 0;
+
+	lua_pushboolean(L, e->fillGridFromQuad);
+	lua_pushboolean(L, e->fillGridFromSkel);
+	return 2;
 }
 
 luaFunc(entity_getAimVector)

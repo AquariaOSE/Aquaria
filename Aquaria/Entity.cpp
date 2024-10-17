@@ -191,6 +191,7 @@ Entity::Entity()
 	hair = 0;
 	maxSpeedLerp = 1;
 	fillGridFromQuad = false;
+	fillGridFromSkel = false;
 	dropChance = 0;
 	inCurrent = false;
 	for (size_t i = 0; i < EP_MAX; i++)
@@ -2422,7 +2423,17 @@ void Entity::fillGrid()
 {
 	if (fillGridFromQuad)
 	{
-		game->fillGridFromQuad(this, OT_INVISIBLEENT);
+		game->fillGridFromQuad(this, OT_INVISIBLEENT, fillGridFromQuad == 1);
+	}
+	if (fillGridFromSkel)
+	{
+		bool trim = fillGridFromSkel == 1;
+		for(size_t i = 0; i < skeletalSprite.bones.size(); ++i)
+		{
+			Bone *b = skeletalSprite.bones[i];
+			if(b->generateCollisionMask && b->renderQuad)
+				game->fillGridFromQuad(b, OT_INVISIBLEENT, trim);
+		}
 	}
 }
 

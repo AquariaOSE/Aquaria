@@ -439,7 +439,8 @@ protected:
 	bool canBeTargetedByAvatar;
 	bool stopSoundsOnDeath;
 public:
-	bool fillGridFromQuad;
+	unsigned char fillGridFromQuad;
+	unsigned char fillGridFromSkel;
 	bool beautyFlip;
 };
 

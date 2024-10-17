@@ -342,10 +342,12 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 	GridFiller f;
 	f.obs = obsType;
 	f.trim = trim;
-	f.fh = q->isfh();
-	f.position = q->position;
-	f.rotation = q->rotation.z;
-	f.scale = q->scale;
+	f.fh = q->isfhr();
+	Vector posrot = q->getWorldPositionAndRotation();
+	f.position.x = posrot.x;
+	f.position.y = posrot.y;
+	f.rotation = posrot.z;
+	f.scale = q->getRealScale();
 	f.texture = q->texture.content();
 	f.width = q->width;
 	f.height = q->height;
