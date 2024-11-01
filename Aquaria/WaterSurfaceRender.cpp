@@ -181,13 +181,14 @@ void WaterSurfaceRender::render(const RenderState& rs) const
 
 			core->frameBuffer.replaceCapture(curpage + 1);
 
-			if(glCopyImageSubDataEXT)
+			// This appears to have problems with some intel drivers; the fallback path is good enough
+			/*if(glCopyImageSubDataEXT)
 				glCopyImageSubDataEXT(
 					oldtex, GL_TEXTURE_2D, 0, 0, 0, 0,
 					newtex, GL_TEXTURE_2D, 0, 0, 0, 0,
 					core->width, core->height, 1
 				);
-			else
+			else*/
 				quadBlit(rs, oldtex);
 		}
 
