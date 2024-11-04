@@ -2722,6 +2722,27 @@ void Game::applyState()
 	gridRenderUser1 = new GridRender(OT_USER1);
 	gridRenderUser2 = new GridRender(OT_USER2);
 
+	blackRender->alpha = 1;
+	blackRender->color = Vector(0, 0, 0);
+	blackRender->setBlendType(BLEND_DISABLED);
+
+	gridRender->color = Vector(1, 0, 0);
+	gridRender2->color = Vector(1, 1, 0);
+	gridRender3->color = Vector(1, 0.5f, 0);
+	edgeRender->color = Vector(0.3f, 0, 0.6f);
+	gridRenderEnt->color = Vector(0, 1, 0.5);
+	gridRenderUser1->color = Vector(1, 0, 1);
+	gridRenderUser2->color = Vector(1, 1, 1);
+
+	addRenderObject(blackRender, LR_ELEMENTS4);
+	addRenderObject(gridRender, LR_DEBUG_TEXT);
+	addRenderObject(gridRender2, LR_DEBUG_TEXT);
+	addRenderObject(gridRender3, LR_DEBUG_TEXT);
+	addRenderObject(edgeRender, LR_DEBUG_TEXT);
+	addRenderObject(gridRenderEnt, LR_DEBUG_TEXT);
+	addRenderObject(gridRenderUser1, LR_DEBUG_TEXT);
+	addRenderObject(gridRenderUser2, LR_DEBUG_TEXT);
+
 	if (verbose) debugLog("Loading Scene");
 	if(!loadScene(sceneToLoad))
 	{
@@ -2748,44 +2769,9 @@ void Game::applyState()
 	songLineRender = new SongLineRender();
 	addRenderObject(songLineRender, LR_HUD);
 
-
-	gridRender->color = Vector(1, 0, 0);
-	addRenderObject(gridRender, LR_DEBUG_TEXT);
-	gridRender->alpha = 0;
-
-	gridRender2->color = Vector(1, 1, 0);
-	addRenderObject(gridRender2, LR_DEBUG_TEXT);
-	gridRender2->alpha = 0;
-
-	gridRender3->color = Vector(1, 0.5f, 0);
-	addRenderObject(gridRender3, LR_DEBUG_TEXT);
-	gridRender3->alpha = 0;
-
-	edgeRender->color = Vector(0.3f, 0, 0.6f);
-	addRenderObject(edgeRender, LR_DEBUG_TEXT);
-	edgeRender->alpha = 0;
-
-	gridRenderEnt->color = Vector(0, 1, 0.5);
-	addRenderObject(gridRenderEnt, LR_DEBUG_TEXT);
-	gridRenderEnt->alpha = 0;
-
-	addRenderObject(gridRenderUser1, LR_DEBUG_TEXT);
-	gridRenderUser1->color = Vector(1, 0, 1);
-	gridRenderUser1->alpha = 0;
-
-	addRenderObject(gridRenderUser2, LR_DEBUG_TEXT);
-	gridRenderUser2->color = Vector(1, 1, 1);
-	gridRenderUser2->alpha = 0;
-
 	waterSurfaceRender = new WaterSurfaceRender();
 	//waterSurfaceRender->setRenderPass(-1);
 	addRenderObject(waterSurfaceRender, LR_WATERSURFACE);
-
-	blackRender->color = Vector(0, 0, 0);
-	//blackRender->alpha = 0;
-	blackRender->setBlendType(BLEND_DISABLED);
-	addRenderObject(blackRender, LR_ELEMENTS4);
-	blackRender->rebuildBuffers(this->obsRows);
 
 	miniMapRender = new MiniMapRender;
 	// position is set in minimaprender::onupdate
@@ -4058,24 +4044,19 @@ static void checkgridrender(GridRender *gr, ObsType obs)
 
 void Game::updateGridRender(ObsType obs)
 {
-	// These are usually not visible. Delay rebuild until they are actually shown.
-	checkgridrender(gridRender, obs);
-	checkgridrender(gridRender2, obs);
-	checkgridrender(gridRender3, obs);
-	checkgridrender(edgeRender, obs);
-	checkgridrender(gridRenderEnt, obs);
-	checkgridrender(gridRenderUser1, obs);
-	checkgridrender(gridRenderUser2, obs);
-
 	// This is normally not necessary, because black is only changed by the editor.
 	// Keeping it here possibly for future mod compat.
 	// It's also always shown, so we can immediately rebuild it
-	if(obs & OT_BLACK)
-	{
-		// Don't pass this->obsRows here (which is the raw data)!
-		// Need the changes done by trimGrid() -> need to collect rows anew.
-		blackRender->rebuildBuffers();
-	}
+	checkgridrender(blackRender, obs);
+
+	// These are usually not visible. Delay rebuild until they are actually shown.
+	checkgridrender(edgeRender, obs);
+	checkgridrender(gridRender, obs);
+	checkgridrender(gridRender2, obs);
+	checkgridrender(gridRender3, obs);
+	checkgridrender(gridRenderEnt, obs);
+	checkgridrender(gridRenderUser1, obs);
+	checkgridrender(gridRenderUser2, obs);
 }
 
 Vector Game::getCameraPositionFor(const Vector &pos)

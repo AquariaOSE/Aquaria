@@ -76,7 +76,7 @@ GridRender::GridRender(ObsType obsType)
 
 	position.z = 5;
 	cull = false;
-	alpha = 0.5f;
+	alpha = 0.0f;
 	this->scale.x = TILE_SIZE; // See comment about value scaling below
 	this->scale.y = TILE_SIZE;
 }
