@@ -527,7 +527,7 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 		if(!dsq->modIsKnown(localname))
 		{
 			// yay, got something new!
-			DSQ::LoadModsCallback(archiveFile, dsq); // does not end in ".xml" but thats no problem here
+			dsq->loadModByName(localname); // FIXME: This assumes that the aqmod file, the contained directory, and it's accompanying xml file all have the same base name
 			if(dsq->modSelectorScr)
 				dsq->modSelectorScr->initModAndPatchPanel(); // HACK
 		}

@@ -1692,19 +1692,11 @@ int DSQ::getEntityTypeIndexByName(std::string s)
 	return -1;
 }
 
-void DSQ::LoadModsCallback(const std::string &filename, void *param)
+bool DSQ::loadModByName(const std::string &name)
 {
-	DSQ *self = (DSQ*)param;
-
-	size_t pos = filename.find_last_of('/')+1;
-	size_t pos2 = filename.find_last_of('.');
-	if(pos2 < pos)
-		return;
-
-	std::string name = filename.substr(pos, pos2-pos);
 	ModEntry m;
 	m.path = name;
-	m.id = self->modEntries.size();
+	m.id = modEntries.size();
 
 	XMLDocument d;
 	if(!Mod::loadModXML(&d, name))
@@ -1713,20 +1705,57 @@ void DSQ::LoadModsCallback(const std::string &filename, void *param)
 		if(!err)
 			err = "<unknown error>";
 		std::ostringstream os;
-		os << "Failed to load mod xml: " << filename << " -- Error: " << err;
+		os << "Failed to load mod xml: " << name << " -- Error: " << err;
 		debugLog(os.str());
-		return;
+		return false;
 	}
 
 	m.type = Mod::getTypeFromXML(d.FirstChildElement("AquariaMod"));
 
-	self->modEntries.push_back(m);
+	modEntries.push_back(m);
 
 	std::ostringstream ss;
 	ss << "Loaded ModEntry [" << m.path << "] -> " << m.id << "  | type " << m.type;
 
 	debugLog(ss.str());
+	return true;
 }
+
+
+// _mods/themod.xml
+static void EnumerateOuterModXMLCallback(const std::string &filename, void *param)
+{
+	std::vector<std::string> *pNames = (std::vector<std::string>*)param;
+
+	size_t pos = filename.find_last_of('/')+1;
+	size_t pos2 = filename.find_last_of('.');
+	if(pos2 < pos)
+		return;
+
+	std::string name = filename.substr(pos, pos2-pos);
+	pNames->push_back(name);
+}
+
+// _mods/themod/mod-info.xml
+static void EnumerateInnerModXMLCallback(const std::string &filename, void *param)
+{
+	std::vector<std::string> *pNames = (std::vector<std::string>*)param;
+
+	std::string fn = filename;
+	if(fn.empty())
+		return;
+
+	assert(!(fn.back() == '/' || fn.back() == '\''));
+
+	fn += "/mod-info.xml";
+	if(!exists(fn))
+		return;
+
+	size_t pos = filename.find_last_of('/')+1;
+	std::string name = filename.substr(pos);
+	pNames->push_back(name);
+}
+
 
 void DSQ::LoadModPackagesCallback(const std::string &filename, void *param)
 {
@@ -1772,7 +1801,17 @@ void DSQ::loadMods()
 	forEachFile(modpath, ".aqmod", LoadModPackagesCallback, this);
 #endif
 
-	forEachFile(modpath, ".xml", LoadModsCallback, this);
+	std::vector<std::string> modnames;
+
+	forEachFile(modpath, ".xml", EnumerateOuterModXMLCallback, &modnames);
+	forEachDir(modpath,EnumerateInnerModXMLCallback, &modnames);
+
+	std::sort(modnames.begin(), modnames.end());
+	modnames.erase(std::unique(modnames.begin(), modnames.end()), modnames.end());
+
+	for(size_t i = 0; i < modnames.size(); ++i)
+		loadModByName(modnames[i]);
+
 	selectedMod = 0;
 
 	std::ostringstream os;

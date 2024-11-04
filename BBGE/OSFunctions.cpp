@@ -202,9 +202,15 @@ void forEachFile_vfscallback(VFILE *vf, void *user)
 	d->callback(*(d->path) + vf->name(), d->param);
 }
 
+void forEachDir_vfscallback(ttvfs::DirBase *dir, void *user)
+{
+	vfscallback_s *d = (vfscallback_s*)user;
+	d->callback(*(d->path) + dir->name(), d->param);
+}
+
 #endif
 
-void forEachFile(const std::string& inpath, std::string type, void callback(const std::string &filename, void *param), void *param)
+void forEachFile(const std::string& inpath, std::string type, FileIterationCallback callback, void *param)
 {
 	if (inpath.empty()) return;
 
@@ -324,6 +330,152 @@ void forEachFile(const std::string& inpath, std::string type, void callback(cons
 
 				fFinished = TRUE;
 			}
+		}
+	}
+
+	FindClose(hList);
+#endif
+}
+
+#if defined(BBGE_BUILD_UNIX)
+
+template<typename T> struct Has_d_type
+{
+	struct Fallback { int d_type; };
+	struct Derived : T, Fallback { };
+	template<typename C, C> struct ChT;
+	template<typename C> static char (&f(ChT<int Fallback::*, &C::d_type>*))[1];
+	template<typename C> static char (&f(...))[2];
+	static bool const value = sizeof(f<Derived>(0)) == 2;
+};
+
+static bool _unixIsDirectory(const std::string& base, const char *name)
+{
+	std::string full = base;
+	if(full.back() != '/')
+		full += '/';
+	full += name;
+	struct stat st;
+	int err = ::stat(full.c_str(), &st, 0);
+	if(err == -1)
+		return false;
+	return S_ISDIR(st.st_mode);
+}
+
+template<bool has_d_type>
+struct Unix_IsDir
+{
+	inline static bool Get(const std::string& base struct dirent *dp)
+	{
+		return _unixIsDirectory(base, dp->d_name);
+	}
+};
+
+template<>
+struct Unix_IsDir<true>
+{
+	inline static bool Get(const std::string& base, struct dirent *dp)
+	{
+		switch(dp->d_type)
+		{
+			case DT_DIR:
+				return true;
+			case DT_LNK: // dirent doesn't resolve links, gotta do this manually
+			case DT_UNKNOWN: // file system isn't sure or doesn't support d_type, try this the hard way
+				return _unixIsDirectory(base, dp->d_name);
+			default: ; // avoid warnings
+		}
+		return false;
+	}
+};
+
+static inline tio_FileType unixIsDirectory(const std::string& base, struct dirent *dp)
+{
+	return Unix_IsDir<Has_d_type<dirent>::value>::Get(pathfd, dp);
+}
+
+// skip if "." or ".."
+static inline bool dirlistSkip(const char* fn)
+{
+    return fn[0] == '.' && (!fn[1] || (fn[1] == '.' && !fn[2]));
+}
+
+#endif
+
+
+void forEachDir(const std::string& inpath, FileIterationCallback callback, void *param)
+{
+	if (inpath.empty()) return;
+
+#ifdef BBGE_BUILD_VFS
+	ttvfs::DirView view;
+	if(!vfs.FillDirView(inpath.c_str(), view))
+	{
+		debugLog("Path '" + inpath + "' does not exist");
+		return;
+	}
+	vfscallback_s dat;
+	dat.path = &inpath;
+	dat.ext = NULL;
+	dat.param = param;
+	dat.callback = callback;
+	view.forEachDir(forEachDir_vfscallback, &dat, true);
+
+	return;
+	// -------------------------------------
+#endif
+
+	std::string path = adjustFilenameCase(inpath.c_str());
+	debugLog("forEachDir - path: " + path);
+
+#if defined(BBGE_BUILD_UNIX)
+	struct dirent * dp;
+	DIR *dir=0;
+	dir = opendir(path.c_str());
+	if (dir)
+	{
+		struct dirent * dp;
+		while ( (dp=readdir(dir)) != NULL )
+		{
+			if(!dirlistSkip(dp->d_name))
+				if(unixIsDirectory(inpath, dp))
+					callback(path + std::string(file->d_name), param);
+		}
+		closedir(dir);
+	}
+	else
+	{
+		debugLog("FAILED TO OPEN DIR");
+	}
+#endif
+
+#ifdef BBGE_BUILD_WINDOWS
+	BOOL            fFinished;
+	HANDLE          hList;
+	TCHAR           szDir[MAX_PATH+1];
+	WIN32_FIND_DATA FileData;
+
+	size_t end = path.size()-1;
+	if (path[end] != '/')
+		path[end] += '/';
+
+	// Get the proper directory path
+	// \\ %s\\*
+
+	sprintf(szDir, "%s\\*", path.c_str());
+
+	// Get the first file
+	hList = FindFirstFile(szDir, &FileData);
+	if (hList != INVALID_HANDLE_VALUE)
+	{
+		// Traverse through the directory structure
+		for(;;)
+		{
+			if(FileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY)
+				callback(path + FileData.cFileName, param);
+
+			if (!FindNextFile(hList, &FileData))
+				break;
 		}
 	}
 

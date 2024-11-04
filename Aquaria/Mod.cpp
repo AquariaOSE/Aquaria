@@ -87,7 +87,10 @@ bool Mod::isEditorBlocked() const
 
 bool Mod::loadModXML(XMLDocument *d, std::string modName)
 {
-	return readXML((baseModPath + modName + ".xml").c_str(), *d) == XML_SUCCESS;
+	bool ok = readXML((baseModPath + modName + "/mod-info.xml").c_str(), *d) == XML_SUCCESS;
+	if(!ok)
+		ok = readXML((baseModPath + modName + ".xml").c_str(), *d) == XML_SUCCESS;
+	return ok;
 
 }
 

@@ -305,7 +305,7 @@ public:
 	bool mountModPackage(const std::string&);
 	bool modIsKnown(const std::string& name);
 	void unloadMods();
-	static void LoadModsCallback(const std::string &filename, void *param);
+	bool loadModByName(const std::string &filename);
 	static void LoadModPackagesCallback(const std::string &filename, void *param);
 
 	AquariaSaveSlot *selectedSaveSlot;
