@@ -421,37 +421,47 @@ void Game::fillGrid(const GridFiller& gf)
 			}
 		}
 
+		if(!obs.size()) // no obs -> nothing else to do here
+			return;
+
 		if (gf.trim)
 		{
-			std::vector<TileVector> obsCopy;
-			obsCopy.swap(obs);
-			// obs now empty
-
-			int sides = 0;
-			for (size_t i = 0; i < obsCopy.size(); i++)
+			int minx = INT_MAX, maxx = 0, miny = INT_MAX, maxy = 0;
+			for(size_t i = 0; i < obs.size(); ++i)
 			{
-				sides = 0;
-				for (size_t j = 0; j < obsCopy.size(); j++)
+				const TileVector& tv = obs[i];
+				minx = std::min(minx, tv.x);
+				maxx = std::max(maxx, tv.x);
+				miny = std::min(miny, tv.y);
+				maxy = std::max(maxy, tv.y);
+			}
+			if(minx == maxx || miny == maxy)
+				return; // would get trimmed completely -> get out early
+
+			Array2d<unsigned char> gr(size_t(maxx - minx) + 1, size_t(maxy - miny) + 1, 0);
+
+			for(size_t i = 0; i < obs.size(); ++i)
+			{
+				const TileVector& tv = obs[i];
+				gr(size_t(tv.x - minx), size_t(tv.y - miny)) = 1;
+			}
+
+			const size_t nx = gr.width() - 1;
+			const size_t ny = gr.height() - 1;
+			size_t idx = 0;
+			for(size_t y = 1; y < ny; ++y)
+			{
+				const unsigned char * const row = gr.row(y);
+				for(size_t x = 1; x < nx; ++x)
 				{
-					if (i != j)
+					if(row[x])
 					{
-						if (
-							(obsCopy[j].x == obsCopy[i].x-1 && obsCopy[j].y == obsCopy[i].y)
-						||	(obsCopy[j].x == obsCopy[i].x+1 && obsCopy[j].y == obsCopy[i].y)
-						||	(obsCopy[j].y == obsCopy[i].y-1 && obsCopy[j].x == obsCopy[i].x)
-						||	(obsCopy[j].y == obsCopy[i].y+1 && obsCopy[j].x == obsCopy[i].x)
-						)
-						{
-							sides++;
-						}
-						if (sides>=4)
-						{
-							obs.push_back(obsCopy[i]);
-							break;
-						}
+						if(row[x-1] && row[x+1] && gr(x, y-1) && gr(x, y+1))
+							obs[idx++] = TileVector(int(x) + minx, int(y) + miny);
 					}
 				}
 			}
+			obs.resize(idx);
 		}
 
 

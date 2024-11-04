@@ -16,6 +16,7 @@ protected:
 public:
     Array2d() : _w(0), _h(0) {}
     Array2d(size_t w, size_t h) : _w(w), _h(h), _v(w*h) {}
+    Array2d(size_t w, size_t h, const T& def) : _w(w), _h(h), _v(w*h, def) {}
 
     size_t width() const {return _w;}
     size_t height() const {return _h;}
@@ -24,6 +25,12 @@ public:
         _w = w;
         _h = h;
         _v.resize(w*h);
+    }
+    void init(size_t w, size_t h, const T& def)
+    {
+        _w = w;
+        _h = h;
+        _v.resize(w*h, def);
     }
 
     void clear()
