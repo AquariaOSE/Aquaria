@@ -24,6 +24,33 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 bool AquariaSaveSlot::closed = false;
 
+static std::string getSavePreviewBaseName(unsigned slot)
+{
+	const char *pre="./";
+#ifndef BBGE_BUILD_WINDOWS
+		pre = "";
+#endif
+	std::ostringstream os;
+	os << pre << dsq->getSaveDirectory() << "/screen-" << numToZeroString(slot, 4);
+	return os.str();
+}
+
+
+static std::string getSavePreviewImageName(unsigned slot)
+{
+	std::string base = getSavePreviewBaseName(slot);
+	std::string fn = base + ".png";
+	if(exists(fn))
+		return fn;
+	fn = base + ".zga";
+	if(exists(fn))
+		return fn;
+	fn = base + ".tga";
+	if(exists(fn))
+		return fn;
+	return base; // whatev
+}
+
 AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 {
 	done = false;
@@ -86,21 +113,8 @@ AquariaSaveSlot::AquariaSaveSlot(int slot) : AquariaGuiQuad()
 
 	if (dsq->user.video.saveSlotScreens)
 	{
-		std::ostringstream os,os2;
-		std::string tex, tex2;
-		std::string pre="./";
-#ifndef BBGE_BUILD_WINDOWS
-		pre = "";
-#endif
-		os << pre << dsq->getSaveDirectory() << "/screen-" << numToZeroString(slot, 4) << ".tga";
-		os2 << pre << dsq->getSaveDirectory() <<  "/screen-" << numToZeroString(slot, 4) << ".zga";
-		tex = os.str();
-		tex2 = os2.str();
-
-		if (exists(tex2))
-			screen->setTexture(tex2);
-		else
-			screen->setTexture(tex);
+		std::string tex = getSavePreviewImageName(slot);
+		screen->setTexture(tex);
 	}
 	else
 	{

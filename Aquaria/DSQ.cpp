@@ -2822,16 +2822,18 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 			if (user.video.saveSlotScreens && scrShotData != 0)
 			{
 				std::ostringstream os;
-				os << getSaveDirectory() << "/screen-" << numToZeroString(selectedSaveSlot->getSlotIndex(), 4) << ".zga";
+				os << getSaveDirectory() << "/screen-" << numToZeroString(selectedSaveSlot->getSlotIndex(), 4) << ".png";
 
 				// Cut off top and bottom to get a 4:3 aspect ratio.
-				/*int adjHeight = (scrShotWidth * 3.0f) / 4.0f;
+				int adjHeight = (scrShotWidth * 3.0f) / 4.0f;
 				int imageDataSize = scrShotWidth * scrShotHeight * 4;
 				int adjImageSize = scrShotWidth * adjHeight * 4;
 				int adjOffset = scrShotWidth * ((scrShotHeight-adjHeight)/2) * 4;
 				memmove(scrShotData, scrShotData + adjOffset, adjImageSize);
-				memset(scrShotData + adjImageSize, 0, imageDataSize - adjImageSize);*/
-				zgaSaveRGBA(os.str().c_str(), scrShotWidth, scrShotHeight, scrShotData);
+				memset(scrShotData + adjImageSize, 0, imageDataSize - adjImageSize);
+
+				//zgaSaveRGBA(os.str().c_str(), scrShotWidth, scrShotHeight, scrShotData);
+				pngSaveRGBA(os.str().c_str(), scrShotWidth, adjHeight, scrShotData, 3);
 			}
 
 			PlaySfx sfx;

@@ -21,6 +21,8 @@ bool tgaSaveRGBA(const char *filename, size_t width, size_t height, unsigned cha
 }
 
 
+#if 0
+// No longer used -- kept for reference
 // Aquaria special: zlib-compressed TGA
 bool zgaSaveRGBA(const char *filename, size_t w, size_t h, unsigned char *data)
 {
@@ -75,7 +77,7 @@ bool zgaSaveRGBA(const char *filename, size_t w, size_t h, unsigned char *data)
 
 	return ok;
 }
-
+#endif
 
 static VFILE *imageLoadOpenFile(const char *filename)
 {
