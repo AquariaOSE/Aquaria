@@ -147,12 +147,6 @@ void UserSettings::save()
 				xml_saveSlotScreens->SetAttribute("on", video.saveSlotScreens);
 			}
 			xml_video->InsertEndChild(xml_saveSlotScreens);
-
-			XMLElement *xml_worldMap = doc.NewElement("WorldMap");
-			{
-				xml_worldMap->SetAttribute("revealMethod", video.worldMapRevealMethod);
-			}
-			xml_video->InsertEndChild(xml_worldMap);
 		}
 		doc.InsertEndChild(xml_video);
 
@@ -450,8 +444,6 @@ bool UserSettings::load(bool doApply, const std::string &overrideFile)
 		}
 
 		readInt(xml_video, "SaveSlotScreens", "on", &video.saveSlotScreens);
-
-		readInt(xml_video, "WorldMap", "revealMethod", &video.worldMapRevealMethod);
 	}
 
 	XMLElement *xml_control = doc.FirstChildElement("Control");

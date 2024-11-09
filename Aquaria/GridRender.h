@@ -113,8 +113,6 @@ public:
 	void onToggleHelpScreen();
 	bool isCursorOffHud();
 
-	static void setRevealMethod(WorldMapRevealMethod m);
-
 protected:
 	Quad *addHintQuad1, *addHintQuad2;
 	AquariaMenuItem *helpButton;

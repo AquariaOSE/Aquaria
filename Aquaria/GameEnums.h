@@ -36,14 +36,6 @@ enum ObsType
 	OT_MASK_ALL = 0xff
 };
 
-
-enum WorldMapRevealMethod
-{
-	REVEAL_UNSPECIFIED = -1,
-	REVEAL_DEFAULT	= 0,
-	REVEAL_PARTIAL	= 1  // Not visited areas have zero alpha (invisible)
-};
-
 enum CursorType
 {
 	CURSOR_NONE		= -1,

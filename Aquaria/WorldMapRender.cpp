@@ -33,8 +33,8 @@ namespace WorldMapRenderNamespace
 {
 	const float WORLDMAP_UNDERLAY_ALPHA = 0.8f;
 
-	float baseMapSegAlpha		= 0.4f;
-	float visibleMapSegAlpha	= 0.8f;
+	const float baseMapSegAlpha		= 0.0f;
+	const float visibleMapSegAlpha	= 0.8f;
 
 	const float blinkPeriod		= 0.2f;
 
@@ -50,8 +50,6 @@ namespace WorldMapRenderNamespace
 	};
 
 	const VisMethod visMethod = VIS_VERTEX;
-	WorldMapRevealMethod revMethod = REVEAL_DEFAULT;
-
 
 	Quad *activeQuad=0;
 
@@ -71,7 +69,6 @@ namespace WorldMapRenderNamespace
 
 using namespace WorldMapRenderNamespace;
 
-
 class GemMover;
 
 GemMover *mover=0;
@@ -79,22 +76,6 @@ GemMover *mover=0;
 WorldMapTile *activeTile=0;
 
 const float beaconSpawnBitTime = 0.05f;
-
-
-void WorldMapRender::setRevealMethod(WorldMapRevealMethod m)
-{
-	switch(m)
-	{
-		case REVEAL_PARTIAL:
-			revMethod = REVEAL_PARTIAL;
-			baseMapSegAlpha = 0;
-			break;
-
-		default:
-			revMethod = REVEAL_DEFAULT;
-			baseMapSegAlpha = 0.4f;
-	}
-}
 
 
 class WorldMapBoundQuad : public Quad
@@ -903,9 +884,6 @@ void WorldMapRender::onUpdate(float dt)
 							{
 								debugLog("selectedTile: " + selectedTile->name);
 
-								if(revMethod == REVEAL_DEFAULT)
-									clearVis(activeTile);
-
 								activeTile = selectedTile;
 								activeQuad = activeTile->q;
 
@@ -1370,16 +1348,8 @@ void WorldMapRender::toggle(bool turnON)
 
 		if (originalActiveTile && activeTile)
 		{
-			if (activeTile != originalActiveTile)
-			{
-				if(revMethod == REVEAL_DEFAULT)
-				{
-					clearVis(activeTile);
-					setVis(originalActiveTile);
-				}
-				activeTile = originalActiveTile;
-				activeQuad = activeTile->q;
-			}
+			activeTile = originalActiveTile;
+			activeQuad = activeTile->q;
 		}
 
 		int num = dsq->continuity.worldMap.getNumWorldMapTiles();

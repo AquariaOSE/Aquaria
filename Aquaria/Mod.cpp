@@ -66,7 +66,6 @@ void Mod::clear()
 	debugMenu = false;
 	hasMap = false;
 	blockEditor = false;
-	mapRevealMethod = REVEAL_UNSPECIFIED;
 	compatScript = "";
 }
 
@@ -141,9 +140,6 @@ void Mod::load(const std::string &p)
 
 			if (props->BoolAttribute("runBG"))
 				core->settings.runInBackground = true;
-
-			if (props->Attribute("worldMapRevealMethod"))
-				mapRevealMethod = (WorldMapRevealMethod) props->IntAttribute("worldMapRevealMethod");
 		}
 		XMLElement *compat = mod->FirstChildElement("Compatibility");
 		if(compat)
@@ -284,7 +280,6 @@ void Mod::setActive(bool a)
 			dsq->unloadMods();
 			compatScript = "";
 
-			mapRevealMethod = REVEAL_UNSPECIFIED;
 			setLocalisationModPath("");
 			name = path = "";
 			dsq->setExtraTexturePath(NULL, false);
