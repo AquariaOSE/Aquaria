@@ -119,7 +119,6 @@ protected:
 	Quad *addHintQuad1, *addHintQuad2;
 	AquariaMenuItem *helpButton;
 	float doubleClickTimer;
-	Vector restoreVel;
 	float inputDelay;
 	BitmapText *areaLabel, *areaLabel2, *areaLabel3;
 	WorldMapTile *originalActiveTile;
@@ -127,7 +126,6 @@ protected:
 	void clearVis(WorldMapTile *tile);
 	bool on;
 	void onUpdate(float dt);
-	Quad *bg;
 	unsigned char *savedTexData;
 	bool mb;
 	Vector lastMousePosition; // See FIXME in WorldMapRender.cpp  --achurch

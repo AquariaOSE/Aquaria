@@ -52,11 +52,8 @@ namespace WorldMapRenderNamespace
 	const VisMethod visMethod = VIS_VERTEX;
 	WorldMapRevealMethod revMethod = REVEAL_DEFAULT;
 
-	std::vector<Quad *> tiles;
 
-	Quad *activeQuad=0, *lastActiveQuad=0, *originalActiveQuad=0;
-	Quad *lastVisQuad=0, *visQuad=0;
-	WorldMapTile *lastVisTile=0;
+	Quad *activeQuad=0;
 
 	float xMin, yMin, xMax, yMax;
 
@@ -74,7 +71,6 @@ namespace WorldMapRenderNamespace
 
 using namespace WorldMapRenderNamespace;
 
-std::vector <Quad*> grid;
 
 class GemMover;
 
@@ -414,7 +410,7 @@ protected:
 typedef std::list <GemMover*> GemMovers;
 GemMovers gemMovers;
 
-typedef std::list <BeaconRender*> BeaconRenders;
+typedef std::vector<BeaconRender*> BeaconRenders;
 BeaconRenders beaconRenders;
 
 std::vector<Quad*> quads;
@@ -425,11 +421,7 @@ void WorldMapRender::setProperTileColor(WorldMapTile *tile)
 	{
 		if (tile->q)
 		{
-			if (!tile->revealed)
-				tile->q->alphaMod = 0;
-
-			if (tile->revealed)
-				tile->q->alphaMod = 0.5f;
+			tile->q->alphaMod = tile->revealed ? 0.5f : 0.0f;
 
 			if (activeTile && (tile->layer != activeTile->layer || (tile->layer > 0 && activeTile != tile)))
 				tile->q->alphaMod *= 0.5f;
@@ -573,11 +565,9 @@ void WorldMapRender::setVis(WorldMapTile *tile)
 	}
 	else if (visMethod == VIS_WRITE)
 	{
+		assert(!savedTexData);
 		savedTexData = tileDataToAlpha(tile);
 	}
-
-	lastVisQuad = tile->q;
-	lastVisTile = tile;
 }
 
 void WorldMapRender::clearVis(WorldMapTile *tile)
@@ -607,11 +597,6 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	editorActive=false;
 	mb = false;
 	activeQuad=0;
-	lastActiveQuad=0;
-	originalActiveQuad=0;
-	lastVisQuad=0;
-	visQuad=0;
-	lastVisTile=0;
 
 	originalActiveTile = activeTile = 0;
 
@@ -629,8 +614,6 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	activeQuad = 0;
 
 	lastMousePosition = core->mouse.position;
-
-	bg = 0;
 
 	savedTexData = 0;
 
@@ -652,8 +635,6 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			textodo[i] = "gui/worldmap/" + tile->name;
 		}
 	}
-
-	tiles.clear();
 
 	if(num)
 		dsq->texmgr.loadBatch(&texs[0], &textodo[0], num);
@@ -678,10 +659,7 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			if (tile == activeTile)
 				activeQuad = q;
 
-			if (revMethod == REVEAL_PARTIAL || activeQuad == q)
-			{
-				setVis(tile);
-			}
+			setVis(tile);
 
 			setProperTileColor(tile);
 
@@ -692,8 +670,6 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 			}
 
 			addChild(q, PM_POINTER);
-
-			tiles.push_back(q);
 		}
 	}
 	shareAlphaWithChildren = 1;
@@ -1320,9 +1296,6 @@ void WorldMapRender::toggle(bool turnON)
 	this->on = turnON;
 	if (on)
 	{
-		restoreVel = game->avatar->vel;
-		game->avatar->vel = Vector(0,0,0);
-
 		game->togglePause(true);
 
 		core->sound->playSfx("menu-open");
@@ -1364,9 +1337,6 @@ void WorldMapRender::toggle(bool turnON)
 					yMax = tile->gridPos.y + height/2;
 			}
 		}
-
-		if (bg)
-			bg->alpha.interpolateTo(1, 0.2f);
 
 		alpha.interpolateTo(1, 0.2f);
 
@@ -1434,9 +1404,6 @@ void WorldMapRender::toggle(bool turnON)
 
 		core->sound->playSfx("Menu-Close");
 
-		if (bg)
-			bg->alpha.interpolateTo(0, 0.2f);
-
 		alpha.interpolateTo(0, 0.2f);
 
 		game->togglePause(false);
@@ -1460,8 +1427,6 @@ void WorldMapRender::toggle(bool turnON)
 			(*i)->safeKill();
 		}
 		beaconRenders.clear();
-
-		game->avatar->vel = restoreVel;
 	}
 }
 
