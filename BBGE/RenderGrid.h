@@ -12,7 +12,6 @@ enum GridDrawOrder
 {
 	GRID_DRAW_LRTB = 0, // the default. ignores grid.z
 	GRID_DRAW_LRBT = 1, // Y axis inverted
-	GRID_DRAW_WORLDMAP = 2, // LRTB order, uses grid.z as alpha
 
 	GRID_DRAW_DEFAULT = GRID_DRAW_LRTB
 };
@@ -37,7 +36,6 @@ public:
 	void init(size_t w, size_t h, const TexCoordBox& tc);
 	void reset01();
 	void reset();
-	void resetWithAlpha(float a);
 	void render(const RenderState& rs) const;
 	void renderDebugPoints(const RenderState& rs) const;
 	void setAlpha(size_t x, size_t y, float a);
@@ -65,9 +63,6 @@ protected:
 	size_t trisToDraw;
 	Array2d<Vector> grid;
 	TexCoordBox tc;
-
-	void render_Indexed(const RenderState& rs) const;
-	void render_WithAlpha(const RenderState& rs) const;
 
 public:
 	bool needVBOUpdate;

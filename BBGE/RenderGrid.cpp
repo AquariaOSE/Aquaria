@@ -109,12 +109,6 @@ void RenderGrid::reset()
 	needVBOUpdate = true;
 }
 
-void RenderGrid::resetWithAlpha(float a)
-{
-	ResetWithAlpha(grid.data(), grid.width(), grid.height(), a);
-	needVBOUpdate = true;
-}
-
 void RenderGrid::setAlpha(size_t x, size_t y, float a)
 {
 	if (x < grid.width() && y < grid.height())
@@ -142,20 +136,9 @@ void RenderGrid::setTexCoords(const TexCoordBox& tc)
 
 void RenderGrid::render(const RenderState& rs) const
 {
-	switch(drawOrder)
-	{
-		case GRID_DRAW_WORLDMAP:
-			if(rs.alpha != 1 || rs.color != Vector(1,1,1))
-			{
-				render_WithAlpha(rs);
-				break;
-			}
-			// else fall through
-
-		default:
-			render_Indexed(rs);
-
-	}
+	(void)rs;
+	vbo.apply();
+	indexbuf.drawElements(GL_TRIANGLES, trisToDraw);
 }
 
 void RenderGrid::renderDebugPoints(const RenderState& rs) const
@@ -164,7 +147,7 @@ void RenderGrid::renderDebugPoints(const RenderState& rs) const
 	glPointSize(2);
 	glColor3f(1,0,0);
 	vbo.apply();
-	glDrawArrays(GL_POINTS, 0, grid.linearsize());
+	glDrawArrays(GL_POINTS, 0, (GLsizei)grid.linearsize());
 }
 
 void RenderGrid::updateVBO()
@@ -191,7 +174,6 @@ void RenderGrid::updateVBO()
 
 		float v = baseY;
 		for (size_t y = 0; y < H; y++, v += incY)
-		//for (size_t y = H; y --> 0; v += incY)
 		{
 			float u = baseX;
 			const Vector *row = grid.row(y);
@@ -214,80 +196,6 @@ void RenderGrid::updateVBOIfNecessary()
 {
 	if(needVBOUpdate)
 		updateVBO();
-}
-
-void RenderGrid::render_Indexed(const RenderState& rs) const
-{
-	(void)rs;
-	// can't render this here when color/alpha is modulated AND we have colors as part of the vertex data;
-	// old opengl simply doesn't support this
-	assert(drawOrder != GRID_DRAW_WORLDMAP || (rs.color == Vector(1,1,1) && rs.alpha == 1));
-	vbo.apply();
-	indexbuf.drawElements(GL_TRIANGLES, trisToDraw);
-}
-
-void RenderGrid::render_WithAlpha(const RenderState& rs) const
-{
-	const float percentX = fabsf(tc.u2 - tc.u1);
-	const float percentY = fabsf(tc.v1 - tc.v2);
-
-	const float baseX =
-		(tc.u2 < tc.u1)
-		? tc.u2 : tc.u1;
-	const float baseY =
-		(tc.v2 < tc.v1)
-		? tc.v2 : tc.v1;
-
-	const size_t NX = grid.width()-1;
-	const size_t NY = grid.height()-1;
-
-	// NOTE: These are used to avoid repeated expensive divide operations,
-	// but they may cause rounding error of around 1 part per million,
-	// which could in theory cause minor graphical glitches with broken
-	// OpenGL implementations.  --achurch
-	const float incX = percentX / float(NX);
-	const float incY = percentY / float(NY);
-
-	const Vector c = rs.color;
-	const float alpha = rs.alpha;
-
-	glBegin(GL_QUADS);
-	float v0 = 1 - percentY + baseY;
-	float v1 = v0 + incY;
-	for (size_t y = 0; y < NY; y++, v0 = v1, v1 += incY)
-	{
-		float u0 = baseX;
-		float u1 = u0 + incX;
-		const Vector *row0 = grid.row(y);
-		const Vector *row1 = grid.row(y+1);
-		for (size_t x = 0; x < NX; x++, u0 = u1, u1 += incX)
-		{
-			const Vector dg00 = row0[x];
-			const Vector dg01 = row1[x];
-			const Vector dg10 = row0[x+1];
-			const Vector dg11 = row1[x+1];
-
-			if (dg00.z != 0 || dg01.z != 0 || dg10.z != 0 || dg11.z != 0)
-			{
-				glColor4f(c.x, c.y, c.z, alpha*dg00.z);
-				glTexCoord2f(u0, v0);
-				glVertex2f(dg00.x, dg00.y);
-
-				glColor4f(c.x, c.y, c.z, alpha*dg01.z);
-				glTexCoord2f(u0, v1);
-				glVertex2f(dg01.x, dg01.y);
-
-				glColor4f(c.x, c.y, c.z, alpha*dg11.z);
-				glTexCoord2f(u1, v1);
-				glVertex2f(dg11.x, dg11.y);
-
-				glColor4f(c.x, c.y, c.z, alpha*dg10.z);
-				glTexCoord2f(u1, v0);
-				glVertex2f(dg10.x, dg10.y);
-			}
-		}
-	}
-	glEnd();
 }
 
 
