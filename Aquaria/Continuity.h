@@ -162,8 +162,10 @@ public:
 	typedef std::list<BeaconData> Beacons;
 	Beacons beacons;
 
-	GemData *pickupGem(std::string name, bool effects = true);
+	GemData *pickupGem(const std::string& name, bool effects = true);
 	void removeGemData(GemData *gemData);
+
+	void setCurrentMap(const std::string& mapname);
 
 
 	typedef std::vector<std::string> VoiceOversPlayed;

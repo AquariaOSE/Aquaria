@@ -2357,7 +2357,7 @@ void SceneEditor::toggle(bool on)
 	if (core->getNestedMains() > 1) return;
 	if (game->isInGameMenu()) return;
 	if (!on && editType == ET_SELECTENTITY) return;
-	if (game->worldMapRender && game->worldMapRender->isOn()) return;
+	if (game->isOnWorldMap()) return;
 	this->on = on;
 	autoSaveTimer = 0;
 

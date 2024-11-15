@@ -439,10 +439,10 @@ void StatsAndAchievements::EvaluateAchievement( Achievement &achievement )
 		{
 			// check world map data somehow
 			bool hasAllMap = true;
-			for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+			for (size_t i = 0; i < dsq->continuity.worldMap.worldMapTiles.size(); i++)
 			{
-				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-				if (!tile->revealed && (nocasecmp(tile->name, "thirteenlair") != 0)) {
+				const WorldMapTile& tile = dsq->continuity.worldMap.worldMapTiles[i];
+				if (!tile.revealed && (nocasecmp(tile.name, "thirteenlair") != 0)) {
 
 					hasAllMap = false;
 					break;

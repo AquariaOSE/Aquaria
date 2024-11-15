@@ -100,16 +100,32 @@ void Texture::unload()
 		glDeleteTextures(1, &gltexid);
 		gltexid = 0;
 	}
-	if(_pixbuf)
-	{
-		free(_pixbuf);
-		_pixbuf = NULL;
-	}
+	_freePixbuf();
 }
 
 size_t Texture::sizeBytes() const
 {
 	return size_t(width) * size_t(height) * 4;
+}
+
+bool Texture::uploadAndKeep(ImageData& img, bool mipmap)
+{
+	bool ok = upload(img, mipmap); // this also clears pixbuf
+	if(ok)
+	{
+		_pixbuf = img.pixels;
+		img.pixels = NULL;
+	}
+	return ok;
+}
+
+void Texture::_freePixbuf()
+{
+	if(_pixbuf)
+	{
+		free(_pixbuf);
+		_pixbuf = NULL;
+	}
 }
 
 void Texture::apply() const
@@ -223,6 +239,8 @@ bool Texture::upload(const ImageData& img, bool mipmap)
 
 	width = img.w;
 	height = img.h;
+	_mipmap = mipmap;
+	_freePixbuf();
 	return true;
 }
 

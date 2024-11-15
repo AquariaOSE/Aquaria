@@ -320,6 +320,7 @@ public:
 
 	void setSeeMapMode(SeeMapMode mode) { _seeMapMode = mode; }
 	SeeMapMode getSeeMapMode() const { return _seeMapMode; }
+	Vector getPositionForMap() const; // same as position, but special when inside a local warp
 
 	int leaches;
 	float shieldPoints;

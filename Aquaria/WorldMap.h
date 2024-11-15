@@ -4,6 +4,10 @@
 #include <string>
 #include "Vector.h"
 #include "GameEnums.h"
+#include "Image.h"
+#include "Refcounted.h"
+#include "Texture.h"
+#include "SimpleIStringStream.h"
 
 #define MAPVIS_SUBDIV 64
 
@@ -15,21 +19,23 @@ struct WorldMapTile
 	~WorldMapTile();
 
 	void markVisited(int left, int top, int right, int bottom);
-	void dataToString(std::ostringstream &os);
-	void stringToData(std::istringstream &is);
-	const unsigned char *getData() const {return data;}
+	void dataToString(std::ostringstream &os) const;
+	void stringToData(SimpleIStringStream &is);
+
+	ImageData generateAlphaImage(size_t w, size_t h); // free() data when no longer needed
+	bool updateDiscoveredTex();
 
 	std::string name;
 	Vector gridPos;
 	float scale, scale2;
-	bool revealed, prerevealed;
+	bool revealed, prerevealed, dirty;
 	int layer, index;
 	int stringIndex;
 
-	Quad *q;
 
-protected:
-	unsigned char *data;
+	Array2d<unsigned char> visited;
+
+	CountedPtr<Texture> originalTex, generatedTex;
 };
 
 struct WorldMap
@@ -37,12 +43,8 @@ struct WorldMap
 	WorldMap();
 	void load();
 	void save();
-	void hideMap();
 	void revealMap(const std::string &name);
 	WorldMapTile *getWorldMapTile(const std::string &name);
-	size_t getNumWorldMapTiles();
-	WorldMapTile *getWorldMapTile(size_t index);
-
 	WorldMapTile *getWorldMapTileByIndex(int index);
 	void revealMapIndex(int index);
 

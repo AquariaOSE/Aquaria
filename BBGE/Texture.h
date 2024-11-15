@@ -70,10 +70,12 @@ public:
 
 	std::string name, filename;
 	bool upload(const ImageData& img, bool mipmap);
+	bool uploadAndKeep(ImageData& img, bool mipmap);
 
 	bool success;
 
 protected:
+	void _freePixbuf();
 
 	int ow, oh;
 	bool _mipmap;

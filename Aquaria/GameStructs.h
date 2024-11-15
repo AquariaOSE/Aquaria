@@ -21,13 +21,15 @@ struct EmoteData
 
 struct GemData
 {
-	GemData() { canMove=false; blink = false; }
+	GemData() { canMove=false; blink = false; global = false; isplayer = false; }
 	std::string name;
 	std::string userString;
 	std::string mapName;
 	Vector pos;
 	bool canMove;
 	bool blink; // not saved
+	bool global; // local gems use their parent container's coordinate system, global gems are placed directly on the map screen
+	bool isplayer;
 };
 
 struct BeaconData

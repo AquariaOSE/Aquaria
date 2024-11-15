@@ -105,6 +105,7 @@ SET(AQUARIA_SRCS
     Web.h
     WorldMap.h
     WorldMapRender.cpp
+    WorldMapRender.h
     WorldMapTiles.cpp
 )
 

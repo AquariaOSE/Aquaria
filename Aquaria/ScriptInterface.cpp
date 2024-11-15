@@ -61,6 +61,7 @@ extern "C" {
 #include "Shader.h"
 #include "ActionMapper.h"
 #include "QuadGrid.h"
+#include "WorldMapRender.h"
 
 
 #include "MathFunctions.h"
@@ -8855,16 +8856,15 @@ luaFunc(setGemPosition)
 	Vector pos(lua_tonumber(L, 2), lua_tonumber(L, 3));
 	bool result = false;
 
-	WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(mapname);
-	if(tile)
+	WorldMapTileContainer *tc = game->worldMapRender->getTileByName(mapname.c_str());
+	if(tc)
 	{
-		pos = game->worldMapRender->getWorldToTile(tile, pos, true, true);
 		if(gemId < dsq->continuity.gems.size())
 		{
 			Continuity::Gems::iterator it = dsq->continuity.gems.begin();
 			std::advance(it, gemId);
 			GemData& gem = *it;
-			gem.pos = pos;
+			gem.pos = gem.global ? tc->worldPosToMapPos(pos) : tc->worldPosToTilePos(pos);
 			gem.mapName = mapname;
 			result = true;
 		}
@@ -8925,9 +8925,7 @@ luaFunc(removeGem)
 	{
 		Continuity::Gems::iterator it = dsq->continuity.gems.begin();
 		std::advance(it, gemId);
-		dsq->continuity.removeGemData(&(*it));
-		if(game->worldMapRender->isOn())
-			game->worldMapRender->fixGems();
+		game->worldMapRender->removeGem(&(*it));
 	}
 	luaReturnNil();
 }

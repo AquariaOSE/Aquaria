@@ -5012,6 +5012,11 @@ void Avatar::setCollisionAvoidanceData(int range, float mod)
 	_collisionAvoidMod = mod;
 }
 
+Vector Avatar::getPositionForMap() const
+{
+	return warpInLocal.isZero() ? position : warpInLocal;
+}
+
 bool Avatar::canQuickSong()
 {
 	return !isSinging() && !isEntityDead() && isInputEnabled() && quickSongCastDelay <= 0;

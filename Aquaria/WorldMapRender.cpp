@@ -18,6 +18,7 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+#include "WorldMapRender.h"
 #include "DSQ.h"
 #include "Game.h"
 #include "Avatar.h"
@@ -43,28 +44,19 @@ namespace WorldMapRenderNamespace
 	// overlook things on the edge of the screen while moving.)
 	const float visitedFraction	= 0.8f;
 
-	enum VisMethod
-	{
-		VIS_VERTEX		= 0, // Uses the RenderObject tile grid (RenderObject::setSegs()) to display visited areas
-		VIS_WRITE		= 1  // Uses render-to-texture instead
-	};
-
-	const VisMethod visMethod = VIS_VERTEX;
-
-	Quad *activeQuad=0;
-
 	float xMin, yMin, xMax, yMax;
 
-	float zoomMin = 0.2f;
-	float zoomMax = 3.0f;
-	const float exteriorZoomMax = 3.0f;
-	const float interiorZoomMax = 3.0f;
+	const float zoomMin = 0.2f;
+	const float zoomMax = 3.0f;
+
+	// Where does this come from?
+	// This has been always there, the map data were made with it, and it needs to be there
+	// to make everything look right.
+	// The scale factor recorded in the world map data is just off by a factor of 4,
+	// this fixes it and also documents the places where this factor needs to be used.
+	const float tileScaleFactor = 0.25f;
 
 	bool editorActive=false;
-
-	Quad *tophud=0;
-
-	Gradient *underlay = 0;
 }
 
 using namespace WorldMapRenderNamespace;
@@ -72,8 +64,6 @@ using namespace WorldMapRenderNamespace;
 class GemMover;
 
 GemMover *mover=0;
-
-WorldMapTile *activeTile=0;
 
 const float beaconSpawnBitTime = 0.05f;
 
@@ -243,33 +233,30 @@ class GemMover : public Quad
 public:
 	GemMover(GemData *gemData) : Quad(), gemData(gemData)
 	{
-		setTexture("Gems/" + gemData->name);
-		position = gemData->pos;
 		followCamera = 1;
-		blink = false;
 		blinkTimer = 0;
 		alphaMod = 0.66f;
-		canMove = gemData->canMove;
-
-
-
-		std::string useString = gemData->userString;
-
-
 
 		text = new TTFText(&dsq->fontArialSmall);
 		text->offset = Vector(0, 4);
-		text->setText(useString);
 		text->setAlign(ALIGN_CENTER);
 
 		textBG = new RoundedRect();
-		textBG->setWidthHeight(text->getActualWidth() + 20, 25, 10);
 		textBG->alpha = 0;
 		textBG->followCamera = 1;
 		game->addRenderObject(textBG, LR_WORLDMAPHUD);
 
 		textBG->addChild(text, PM_POINTER);
 
+		refresh();
+	}
+
+	void refresh()
+	{
+		setTexture("gems/" + gemData->name);
+		position = gemData->pos;
+		text->setText(gemData->userString);
+		textBG->setWidthHeight(text->getActualWidth() + 20, 25, 10);
 	}
 
 	void destroy()
@@ -284,18 +271,10 @@ public:
 
 	GemData *getGemData() { return gemData; }
 
-	void setBlink(bool blink)
-	{
-		this->blink = blink;
-
-
-
-	}
-	bool canMove;
+	inline bool canMove() const { return gemData->canMove; }
 protected:
 
 	float blinkTimer;
-	bool blink;
 	GemData *gemData;
 
 	TTFText *text;
@@ -323,7 +302,7 @@ protected:
 
 		Vector wp = getWorldPosition();
 
-		if (blink)
+		if (gemData->blink)
 		{
 			blinkTimer += dt;
 			if (blinkTimer > blinkPeriod)
@@ -337,7 +316,7 @@ protected:
 			}
 		}
 
-		if (canMove)
+		if (canMove())
 		{
 			if (mover == 0)
 			{
@@ -345,9 +324,6 @@ protected:
 				{
 					core->sound->playSfx("Gem-Move");
 					mover = this;
-
-
-
 				}
 			}
 			else if (mover == this)
@@ -358,9 +334,6 @@ protected:
 				{
 					mover = 0;
 					core->sound->playSfx("Gem-Place");
-
-
-
 					gemData->pos = position;
 				}
 			}
@@ -370,220 +343,59 @@ protected:
 		if (textBG)
 		{
 			textBG->position = getWorldPosition() + Vector(0, -20);
-		}
 
-		if ((core->mouse.position - wp).isLength2DIn(GEM_GRAB))
-		{
-
-
-			if (!gemData->userString.empty())
-				textBG->show();
-		}
-		else
-		{
-
-			if (textBG->alpha == 1)
-				textBG->hide();
+			if ((core->mouse.position - wp).isLength2DIn(GEM_GRAB))
+			{
+				if (!gemData->userString.empty())
+					textBG->show();
+			}
+			else
+			{
+				if (textBG->alpha == 1)
+					textBG->hide();
+			}
 		}
 	}
 };
 
-typedef std::list <GemMover*> GemMovers;
+typedef std::vector <GemMover*> GemMovers;
 GemMovers gemMovers;
 
 typedef std::vector<BeaconRender*> BeaconRenders;
 BeaconRenders beaconRenders;
 
-std::vector<Quad*> quads;
-
-void WorldMapRender::setProperTileColor(WorldMapTile *tile)
+void WorldMapRender::setProperTileColor(WorldMapTileContainer& wt)
 {
-	if (tile)
+	const WorldMapTile& t = wt.tile;
+	if(selectedTile != &wt)
 	{
-		if (tile->q)
-		{
-			tile->q->alphaMod = tile->revealed ? 0.5f : 0.0f;
+		wt.q.alphaMod = (t.revealed || t.prerevealed) ? 0.5f : 0.0f;
 
-			if (activeTile && (tile->layer != activeTile->layer || (tile->layer > 0 && activeTile != tile)))
-				tile->q->alphaMod *= 0.5f;
+		if (selectedTile && t.layer != selectedTile->tile.layer)
+			wt.q.alphaMod *= 0.5f;
 
-			tile->q->color = Vector(0.7f, 0.8f, 1);
-		}
-		else
-		{
-			debugLog("no Q!");
-		}
-	}
-}
-
-
-static void tileDataToVis(WorldMapTile *tile, Array2d<Vector>& vis)
-{
-	const unsigned char *data = tile->getData();
-
-	if (data != 0)
-	{
-		const float a = tile->prerevealed ? 0.4f :  baseMapSegAlpha;
-		const size_t rowSize = MAPVIS_SUBDIV/8;
-		for (size_t y = 0; y < MAPVIS_SUBDIV; y++, data += rowSize)
-		{
-			for (size_t x = 0; x < MAPVIS_SUBDIV; x += 8)
-			{
-				unsigned char dataByte = data[x/8];
-				for (size_t x2 = 0; x2 < 8; x2++)
-				{
-					vis(x+x2,y).z = (dataByte & (1 << x2)) ? visibleMapSegAlpha : a;
-				}
-			}
-		}
+		wt.q.color = Vector(0.7f, 0.8f, 1);
 	}
 	else
 	{
-		const float a = tile->prerevealed ? 0.4f :  baseMapSegAlpha;
-		Vector *gp = vis.data();
-		const size_t n = vis.linearsize();
-		for(size_t i = 0; i < n; ++i)
-			gp[i].z = a;
+		wt.q.color = Vector(1,1,1);
+		wt.q.alphaMod = 1;
 	}
 }
 
-// Returns a copy of the original texture data.
-static unsigned char *tileDataToAlpha(WorldMapTile *tile)
-{
-	const unsigned char *data = tile->getData();
-	const unsigned int ab = int(baseMapSegAlpha * (1<<8) + 0.5f);
-	const unsigned int av = int(visibleMapSegAlpha * (1<<8) + 0.5f);
-
-	const unsigned int texWidth = tile->q->texture->width;
-	const unsigned int texHeight = tile->q->texture->height;
-	if (texWidth % MAPVIS_SUBDIV != 0 || texHeight % MAPVIS_SUBDIV != 0)
-	{
-		std::ostringstream os;
-		os << "Texture size " << texWidth << "x" << texHeight
-		   << " not a multiple of MAPVIS_SUBDIV " << MAPVIS_SUBDIV
-		   << ", can't edit";
-		debugLog(os.str());
-		return 0;
-	}
-	const unsigned int scaleX = texWidth / MAPVIS_SUBDIV;
-	const unsigned int scaleY = texHeight / MAPVIS_SUBDIV;
-
-	unsigned char *savedTexData = new unsigned char[texWidth * texHeight * 4];
-	tile->q->texture->readRGBA(savedTexData);
-
-	unsigned char *texData = new unsigned char[texWidth * texHeight * 4];
-	memcpy(texData, savedTexData, texWidth * texHeight * 4);
-
-	if (data != 0)
-	{
-		const unsigned int rowSize = MAPVIS_SUBDIV/8;
-		for (unsigned int y = 0; y < MAPVIS_SUBDIV; y++, data += rowSize)
-		{
-			unsigned char *texOut = &texData[(y*scaleY) * texWidth * 4];
-			for (unsigned int x = 0; x < MAPVIS_SUBDIV; x += 8)
-			{
-				unsigned char dataByte = data[x/8];
-				for (unsigned int x2 = 0; x2 < 8; x2++, texOut += scaleX*4)
-				{
-					const bool visited = (dataByte & (1 << x2)) != 0;
-					const unsigned int alphaMod = visited ? av : ab;
-					for (unsigned int pixelY = 0; pixelY < scaleY; pixelY++)
-					{
-						unsigned char *ptr = &texOut[pixelY * texWidth * 4];
-						for (unsigned int pixelX = 0; pixelX < scaleX; pixelX++, ptr += 4)
-						{
-							if (ptr[3] == 0)
-								continue;
-							ptr[3] = (ptr[3] * alphaMod + 128) >> 8;
-						}
-					}
-				}
-			}
-		}
-	}
-	else
-	{
-		unsigned char *texOut = texData;
-		for (unsigned int y = 0; y < texHeight; y++)
-		{
-			for (unsigned int x = 0; x < texWidth; x++, texOut += 4)
-			{
-				texOut[3] = (texOut[3] * ab + 128) >> 8;
-			}
-		}
-	}
-
-	tile->q->texture->writeRGBA(0, 0, texWidth, texHeight, texData);
-	delete[] texData;
-
-	return savedTexData;
-}
-
-static void resetTileAlpha(WorldMapTile *tile, const unsigned char *savedTexData)
-{
-	tile->q->texture->writeRGBA(0, 0, tile->q->texture->width, tile->q->texture->height, savedTexData);
-}
-
-
-
-void WorldMapRender::setVis(WorldMapTile *tile)
-{
-	if (!tile) return;
-
-
-	tile->q->color = Vector(1,1,1);
-	tile->q->alphaMod = 1;
-
-	if (visMethod == VIS_VERTEX)
-	{
-		DynamicRenderGrid *g = tile->q->setSegs(MAPVIS_SUBDIV, MAPVIS_SUBDIV, 0, 0, 0, 0, 2.0, 1);
-		if(g)
-		{
-			g->gridType = GRID_UNDEFINED;
-			g->setDrawOrder(GRID_DRAW_WORLDMAP);
-			tileDataToVis(tile, g->array2d());
-		}
-	}
-	else if (visMethod == VIS_WRITE)
-	{
-		assert(!savedTexData);
-		savedTexData = tileDataToAlpha(tile);
-	}
-}
-
-void WorldMapRender::clearVis(WorldMapTile *tile)
-{
-	if (!tile) return;
-	if (visMethod == VIS_VERTEX)
-	{
-		if (tile->q)
-			tile->q->deleteGrid();
-	}
-	else if (visMethod == VIS_WRITE)
-	{
-		if (savedTexData)
-		{
-			resetTileAlpha(tile, savedTexData);
-			delete[] savedTexData;
-			savedTexData = 0;
-		}
-	}
-}
-
-
-WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
+WorldMapRender::WorldMapRender(WorldMap& wm) : RenderObject(), ActionMapper()
+	, worldmap(wm)
 {
 	doubleClickTimer = 0;
 	inputDelay = 0;
 	editorActive=false;
 	mb = false;
-	activeQuad=0;
-
-	originalActiveTile = activeTile = 0;
-
+	playerTile = NULL;
+	selectedTile = NULL;
 	areaLabel = 0;
 
 	on = false;
+	wasEditorSaveDown = false;
 	alpha = 0;
 
 	scale = Vector(1, 1);
@@ -591,68 +403,8 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	cull = false;
 	position = Vector(400,300);
 
-	activeTile = 0;
-	activeQuad = 0;
-
 	lastMousePosition = core->mouse.position;
 
-	savedTexData = 0;
-
-
-
-	const size_t num = dsq->continuity.worldMap.getNumWorldMapTiles();
-	std::string n = game->sceneName;
-	stringToUpper(n);
-	std::vector<std::string> textodo(num);
-	std::vector<Texture*> texs(num, NULL);
-	textodo.reserve(num);
-	for (size_t i = 0; i < num; i++)
-	{
-		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-		if (tile)
-		{
-			if (tile->name == n)
-				activeTile = tile;
-			textodo[i] = "gui/worldmap/" + tile->name;
-		}
-	}
-
-	if(num)
-		dsq->texmgr.loadBatch(&texs[0], &textodo[0], num);
-
-	for (size_t i = 0; i < num; i++)
-	{
-		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-		if (tile)
-		{
-			Vector pos(tile->gridPos.x, tile->gridPos.y);
-
-			Quad *q = new Quad;
-			q->setTexturePointer(texs[i]);
-			q->position = pos;
-			q->alphaMod = 0;
-
-			tile->q = q;
-
-			q->setWidthHeight(q->getWidth()*tile->scale, q->getHeight()*tile->scale);
-			q->scale = Vector(0.25f*tile->scale2, 0.25f*tile->scale2);
-
-			if (tile == activeTile)
-				activeQuad = q;
-
-			setVis(tile);
-
-			setProperTileColor(tile);
-
-			if(activeQuad == q)
-			{
-				activeTile->q->color = Vector(1,1,1);
-				activeTile->q->alphaMod = 1;
-			}
-
-			addChild(q, PM_POINTER);
-		}
-	}
 	shareAlphaWithChildren = 1;
 
 	bindInput();
@@ -696,13 +448,6 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	areaLabel3->alpha = 0;
 	game->addRenderObject(areaLabel3, LR_WORLDMAPHUD);
 
-	if (activeTile)
-	{
-		areaLabel2->setText(stringbank.get(activeTile->stringIndex));
-	}
-
-	originalActiveTile = activeTile;
-
 	bindInput();
 
 	underlay = new Gradient;
@@ -736,6 +481,54 @@ WorldMapRender::WorldMapRender() : RenderObject(), ActionMapper()
 	game->addRenderObject(helpButton, LR_WORLDMAPHUD);
 }
 
+WorldMapRender::~WorldMapRender()
+{
+}
+
+void WorldMapRender::init()
+{
+	debugLog("WorldMapRender: init...");
+	for(size_t i = 0; i < tiles.size(); ++i)
+	{
+		tiles[i]->destroy();
+		delete tiles[i];
+	}
+	tiles.clear();
+
+	const size_t num = worldmap.worldMapTiles.size();
+
+	std::vector<std::string> textodo(num);
+	std::vector<Texture*> texs(num, NULL);
+	textodo.reserve(num);
+	tiles.reserve(num);
+	for (size_t i = 0; i < num; i++)
+	{
+		WorldMapTile& tile = worldmap.worldMapTiles[i];
+		textodo[i] = "gui/worldmap/" + tile.name;
+		WorldMapTileContainer *tc = new WorldMapTileContainer(tile);
+		tiles.push_back(tc);
+		addChild(tc, PM_POINTER);
+	}
+
+	if(num)
+		dsq->texmgr.loadBatch(&texs[0], &textodo[0], num);
+
+	for (size_t i = 0; i < num; i++)
+	{
+		WorldMapTileContainer& tc = *tiles[i];
+		WorldMapTile& t = tc.tile;
+
+		tc.position = t.gridPos;
+		t.originalTex = texs[i];
+
+		t.dirty = true; // force refresh to init texture, width, height
+		tc.refresh();
+
+		setProperTileColor(tc);
+	}
+	debugLog("WorldMapRender: init done");
+}
+
 void WorldMapRender::onToggleHelpScreen()
 {
 	game->toggleHelpScreen();
@@ -763,26 +556,43 @@ void WorldMapRender::bindInput()
 	}
 }
 
-void WorldMapRender::destroy()
-{
-
-	for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
-	{
-		WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-		clearVis(tile);
-	}
-
-	RenderObject::destroy();
-	delete[] savedTexData;
-}
-
 bool WorldMapRender::isCursorOffHud()
 {
-	if (helpButton && helpButton->isCursorInMenuItem())
+	if (helpButton->isCursorInMenuItem())
 	{
 		return false;
 	}
 	return true;
+}
+
+void WorldMapRender::updateAllTilesColor()
+{
+	for (size_t i = 0; i < tiles.size(); i++)
+		setProperTileColor(*tiles[i]);
+}
+
+bool WorldMapRender::getWorldToPlayerTile(Vector& dst, const Vector& pos, bool global) const
+{
+	if(!playerTile)
+		return false;
+
+	dst = global
+		? playerTile->worldPosToMapPos(pos)
+		: playerTile->worldPosToTilePos(pos);
+	return true;
+}
+
+WorldMapTileContainer* WorldMapRender::getTileByName(const char* name) const
+{
+	for(size_t i = 0; i < tiles.size(); ++i)
+		if(!nocasecmp(tiles[i]->tile.name.c_str(), name))
+			return tiles[i];
+	return NULL;
+}
+
+WorldMapTileContainer *WorldMapRender::setCurrentMap(const char* mapname)
+{
+	return ((playerTile = getTileByName(mapname)));
 }
 
 void WorldMapRender::onUpdate(float dt)
@@ -792,38 +602,20 @@ void WorldMapRender::onUpdate(float dt)
 	RenderObject::onUpdate(dt);
 	ActionMapper::onUpdate(dt);
 
-	if (areaLabel)
-		areaLabel->alpha.x = this->alpha.x;
-
-	if (areaLabel2)
-		areaLabel2->alpha.x = this->alpha.x;
-
-	if (areaLabel3)
-		areaLabel3->alpha.x = this->alpha.x;
-
-	if (tophud)
-		tophud->alpha.x = this->alpha.x;
+	areaLabel->alpha.x = this->alpha.x;
+	areaLabel2->alpha.x = this->alpha.x;
+	areaLabel3->alpha.x = this->alpha.x;
+	tophud->alpha.x = this->alpha.x;
 
 	const float mmWidth  = game->miniMapRender->getMiniMapWidth();
 	const float mmHeight = game->miniMapRender->getMiniMapHeight();
-	if (addHintQuad1)
-		addHintQuad1->position = game->miniMapRender->position + Vector(-mmWidth*3/22, -mmHeight/2-10);
 
-	if (addHintQuad2)
-		addHintQuad2->position = game->miniMapRender->position + Vector(mmWidth*3/22, -mmHeight/2-10);
+	addHintQuad1->position = game->miniMapRender->position + Vector(-mmWidth*3/22, -mmHeight/2-10);
+	addHintQuad2->position = game->miniMapRender->position + Vector(mmWidth*3/22, -mmHeight/2-10);
 
-	int offset = 26;
-	if (helpButton)
-		helpButton->position = Vector(core->getVirtualWidth()-core->getVirtualOffX()-offset, offset);
+	const int offset = 26;
+	helpButton->position = Vector(core->getVirtualWidth()-core->getVirtualOffX()-offset, offset);
 
-	if (alpha.x > 0)
-	{
-
-		if (originalActiveTile && !gemMovers.empty())
-		{
-			gemMovers.back()->position = getAvatarWorldMapPosition();
-		}
-	}
 
 	if (doubleClickTimer > 0)
 	{
@@ -832,8 +624,31 @@ void WorldMapRender::onUpdate(float dt)
 			doubleClickTimer = 0;
 	}
 
+	for(size_t i = 0; i < tiles.size(); ++i)
+		tiles[i]->q.alpha.x = alpha.x;
+
 	if (isOn())
 	{
+		if(!selectedTile)
+			selectedTile = playerTile;
+
+		if(playerTile && !gemMovers.empty())
+		{
+			Vector playerPos = game->avatar->getPositionForMap();
+			Vector playerMapPos = playerTile->worldPosToTilePos(playerPos);
+			for (GemMovers::iterator i = gemMovers.begin(); i != gemMovers.end(); i++)
+			{
+				GemMover *gm = *i;
+				GemData *g = gm->getGemData();
+				if(g->isplayer)
+				{
+					assert(!g->global);
+					g->pos = playerMapPos;
+					gm->position = playerMapPos;
+				}
+			}
+		}
+
 		if (inputDelay > 0)
 		{
 			inputDelay -= dt;
@@ -841,24 +656,23 @@ void WorldMapRender::onUpdate(float dt)
 		}
 		else
 		{
-			WorldMapTile *selectedTile = 0;
+			WorldMapTileContainer *hoverTile = 0;
 			float sd=-1,d=0;
-			for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+			for (size_t i = 0; i < tiles.size(); i++)
 			{
-				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-				if (tile && tile != activeTile)
+				WorldMapTileContainer *tc = tiles[i];
+				if (tc != selectedTile)
 				{
-					if (tile->revealed || tile->prerevealed)
+					if (tc->tile.revealed || tc->tile.prerevealed)
 					{
-						Quad *q = tile->q;
-						if (q)
+						if(tc->q.isCoordinateInsideWorld(core->mouse.position))
 						{
-							d = (q->getWorldPosition() - core->mouse.position).getSquaredLength2D();
+							d = (tc->getWorldPosition() - core->mouse.position).getSquaredLength2D();
 
-							if (q->isCoordinateInsideWorld(core->mouse.position) && (sd < 0 || d < sd))
+							if (sd < 0 || d < sd)
 							{
 								sd = d;
-								selectedTile = tile;
+								hoverTile = tc;
 							}
 						}
 					}
@@ -867,42 +681,27 @@ void WorldMapRender::onUpdate(float dt)
 
 			if (!editorActive)
 			{
-				if (activeTile)
+				if (hoverTile)
 				{
-					areaLabel3->setText(stringbank.get(activeTile->stringIndex));
-				}
+					areaLabel->setText(stringbank.get(hoverTile->tile.stringIndex));
 
-				if (selectedTile)
-				{
-					areaLabel->setText(stringbank.get(selectedTile->stringIndex));
-
-					if (activeTile && !mover && !dsq->isNested() && isCursorOffHud())
+					if (selectedTile && !mover && !dsq->isNested() && isCursorOffHud())
 					{
 						if (!core->mouse.buttons.left && mb)
 						{
-							if ((activeTile != selectedTile) && selectedTile->q)
+							if (selectedTile != hoverTile)
 							{
-								debugLog("selectedTile: " + selectedTile->name);
+								debugLog("selectedTile: " + hoverTile->tile.name);
 
-								activeTile = selectedTile;
-								activeQuad = activeTile->q;
+								selectedTile = hoverTile;
 
-								if (activeQuad)
-								{
-									dsq->clickRingEffect(activeQuad->getWorldPosition(), 0);
 
-									dsq->sound->playSfx("bubble-lid");
-									dsq->sound->playSfx("menuselect");
-								}
+								dsq->clickRingEffect(hoverTile->getWorldPosition(), 0);
 
-								int num = dsq->continuity.worldMap.getNumWorldMapTiles();
-								for (int i = 0; i < num; i++)
-								{
-									WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-									setProperTileColor(tile);
-								}
+								dsq->sound->playSfx("bubble-lid");
+								dsq->sound->playSfx("menuselect");
 
-								setVis(selectedTile);
+								updateAllTilesColor();
 							}
 
 							mb = false;
@@ -920,6 +719,11 @@ void WorldMapRender::onUpdate(float dt)
 				else
 				{
 					areaLabel->setText("");
+				}
+
+				if (selectedTile)
+				{
+					areaLabel3->setText(stringbank.get(selectedTile->tile.stringIndex));
 				}
 			}
 		}
@@ -1013,15 +817,6 @@ void WorldMapRender::onUpdate(float dt)
 			}
 		}
 
-		if (activeTile && activeTile->layer == 1)
-		{
-			zoomMax = interiorZoomMax;
-		}
-		else
-		{
-			zoomMax = exteriorZoomMax;
-		}
-
 		float scrollAmount = 0.2f;
 
 		if (core->mouse.scrollWheelChange)
@@ -1059,8 +854,9 @@ void WorldMapRender::onUpdate(float dt)
 		{
 			if (editorActive)
 			{
-				if (activeTile && activeQuad)
+				if (selectedTile)
 				{
+					WorldMapTile& t = selectedTile->tile;
 					float amt = dt*4;
 					float a2 = dt*0.1f;
 
@@ -1069,18 +865,18 @@ void WorldMapRender::onUpdate(float dt)
 						if (core->getCtrlState())
 							a2 *= 10.0f;
 						if (core->getKeyState(KEY_UP))
-							activeTile->scale2 += -a2;
+							t.scale2 += -a2;
 						if (core->getKeyState(KEY_DOWN))
-							activeTile->scale2 += a2;
+							t.scale2 += a2;
 					}
 					else if (core->getAltState())
 					{
 						if (core->getCtrlState())
 							a2 *= 10.0f;
 						if (core->getKeyState(KEY_UP))
-							activeTile->scale += -a2;
+							t.scale += -a2;
 						if (core->getKeyState(KEY_DOWN))
-							activeTile->scale += a2;
+							t.scale += a2;
 					}
 					else
 					{
@@ -1089,25 +885,27 @@ void WorldMapRender::onUpdate(float dt)
 							amt *= 50;
 						}
 						if (core->getKeyState(KEY_LEFT))
-							activeTile->gridPos += Vector(-amt, 0);
+							t.gridPos += Vector(-amt, 0);
 						if (core->getKeyState(KEY_RIGHT))
-							activeTile->gridPos += Vector(amt, 0);
+							t.gridPos += Vector(amt, 0);
 						if (core->getKeyState(KEY_UP))
-							activeTile->gridPos += Vector(0, -amt);
+							t.gridPos += Vector(0, -amt);
 						if (core->getKeyState(KEY_DOWN))
-							activeTile->gridPos += Vector(0, amt);
+							t.gridPos += Vector(0, amt);
 					}
 
-					if (core->getKeyState(KEY_F2))
+					bool isf2 = core->getKeyState(KEY_F2);
+					if (isf2 && !wasEditorSaveDown)
 					{
 						dsq->continuity.worldMap.save();
 					}
+					wasEditorSaveDown = isf2;
 
-					activeQuad->position = activeTile->gridPos;
-					activeQuad->scale = Vector(0.25f*activeTile->scale2, 0.25f*activeTile->scale2);
-					if(activeQuad->texture)
+					//selectedTile->position = t.gridPos;
+					//activeQuad->scale = Vector(0.25f*activeTile->scale2, 0.25f*activeTile->scale2);
+					/*if(activeQuad->texture)
 						activeQuad->setWidthHeight(activeQuad->texture->width*activeTile->scale, // FG: HACK force resize proper
-												   activeQuad->texture->height*activeTile->scale);
+												   activeQuad->texture->height*activeTile->scale);*/
 				}
 				updateEditor();
 			}
@@ -1115,9 +913,7 @@ void WorldMapRender::onUpdate(float dt)
 	}
 	else
 	{
-		if (!dsq->isInCutscene() && game->avatar && activeTile
-			&& !game->sceneEditor.isOn()
-			)
+		if (!dsq->isInCutscene() && game->avatar && playerTile && !game->sceneEditor.isOn())
 		{
 			const float screenWidth  = core->getVirtualWidth()  * core->invGlobalScale;
 			const float screenHeight = core->getVirtualHeight() * core->invGlobalScale;
@@ -1135,62 +931,11 @@ void WorldMapRender::onUpdate(float dt)
 			const int y0 = int(tl.y * MAPVIS_SUBDIV);
 			const int x1 = int(br.x * MAPVIS_SUBDIV);
 			const int y1 = int(br.y * MAPVIS_SUBDIV);
-			activeTile->markVisited(x0, y0, x1, y1);
-			if (activeQuad)
-			{
-				if (visMethod == VIS_VERTEX)
-				{
-					for (int x = x0; x <= x1; x++)
-					{
-						for (int y = y0; y <= y1; y++)
-						{
-							activeQuad->setDrawGridAlpha(x, y, visibleMapSegAlpha);
-						}
-					}
-				}
-				else if (visMethod == VIS_WRITE)
-				{
-					// Do nothing -- we regenerate the tile on opening the map.
-				}
-			}
+			playerTile->tile.markVisited(x0, y0, x1, y1);
 		}
 	}
 
 	lastMousePosition = core->mouse.position;
-}
-
-Vector WorldMapRender::getAvatarWorldMapPosition()
-{
-	Vector p;
-	if (originalActiveTile && game && game->avatar)
-	{
-		Vector p = game->avatar->position;
-		if (!game->avatar->warpInLocal.isZero())
-		{
-			p = game->avatar->warpInLocal;
-		}
-		return getWorldToTile(originalActiveTile, p, true, true);
-	}
-	return p;
-}
-
-Vector WorldMapRender::getWorldToTile(WorldMapTile *tile, Vector position, bool fromCenter, bool tilePos)
-{
-	if(!tile->q)
-		return Vector();
-	const float sizew = (float)tile->q->texture->width;
-	const float halfw = sizew / 2.0f;
-	const float sizeh = (float)tile->q->texture->height;
-	const float halfh = sizeh / 2.0f;
-	Vector p;
-	p = Vector((position.x/TILE_SIZE) / (sizew*tile->scale), (position.y/TILE_SIZE) / (sizeh*tile->scale));
-	p.x *= sizew*tile->scale*0.25f*tile->scale2;
-	p.y *= sizeh*tile->scale*0.25f*tile->scale2;
-	if (fromCenter)
-		p -= Vector((halfw*tile->scale)*(0.25f*tile->scale2), (halfh*tile->scale)*(0.25f*tile->scale2));
-	if (tilePos)
-		p += tile->gridPos;
-	return p;
 }
 
 bool WorldMapRender::isOn()
@@ -1201,42 +946,87 @@ bool WorldMapRender::isOn()
 GemMover *WorldMapRender::addGem(GemData *gemData)
 {
 	GemMover *g = new GemMover(gemData);
-	addChild(g, PM_POINTER);
+	WorldMapTileContainer *tc = NULL;
+	if(!gemData->global && !gemData->mapName.empty())
+		tc = getTileByName(gemData->mapName.c_str());
+
+	// tile-local gems also get added as a child to their tile
+	if(tc)
+		tc->addGem(g);
+	else
+		addChild(g, PM_POINTER);
 	gemMovers.push_back(g);
 	g->update(0);
 	return g;
 }
 
+void WorldMapRender::updateGem(const GemData* gemData)
+{
+	GemMover *m = getGem(gemData);
+	if(!m)
+		return;
+
+	if(!gemData->global)
+	{
+		WorldMapTileContainer *src = getTileWithGem(gemData);
+		if(src)
+		{
+			if(nocasecmp(gemData->mapName, src->tile.name))
+			{
+				WorldMapTileContainer *dst = getTileByName(gemData->mapName.c_str());
+				if(dst)
+				{
+					GemMover *gm = src->removeGem(gemData);
+					if(gm)
+						dst->addGem(gm);
+				}
+			}
+		}
+	}
+
+	m->refresh();
+}
+
 void WorldMapRender::removeGem(GemMover *gem)
 {
 	dsq->continuity.removeGemData(gem->getGemData());
-	fixGems();
+	for(size_t i = 0; i < gemMovers.size(); ++i)
+		if(gemMovers[i] == gem)
+		{
+			gemMovers[i] = gemMovers.back();
+			gemMovers.pop_back();
+			break;
+		}
+	WorldMapTileContainer *tc = getTileWithGem(gem->getGemData());
+	if(tc)
+		tc->removeGem(gem);
+	gem->safeKill();
 }
 
-void WorldMapRender::fixGems()
+void WorldMapRender::removeGem(const GemData* gemData)
 {
-	for (GemMovers::iterator i = gemMovers.begin(); i != gemMovers.end(); i++)
-	{
-		removeChild(*i);
-		(*i)->destroy();
-		delete *i;
-	}
-	gemMovers.clear();
-	addAllGems();
+	if(GemMover *gm = getGem(gemData))
+		removeGem(gm);
 }
 
-void WorldMapRender::addAllGems()
+GemMover* WorldMapRender::getGem(const GemData* gemData) const
 {
-	size_t c = 0;
-	for (Continuity::Gems::reverse_iterator i = dsq->continuity.gems.rbegin(); i != dsq->continuity.gems.rend(); i++)
+	for(size_t i = 0; i < gemMovers.size(); ++i)
+		if(gemMovers[i]->getGemData() == gemData)
+			return gemMovers[i];
+	return NULL;
+}
+
+WorldMapTileContainer* WorldMapRender::getTileWithGem(const GemData* gemData) const
+{
+	WorldMapTileContainer *src = NULL;
+	for(size_t i = 0; i < tiles.size(); ++i)
 	{
-		GemMover *g = addGem(&(*i));
-		if (c == dsq->continuity.gems.size()-1 || i->blink)
-			g->setBlink(true);
-		else
-			g->setBlink(false);
-		c++;
+		WorldMapTileContainer *tc = tiles[i];
+		if(tc->getGem(gemData))
+			return tc;
 	}
+	return NULL;
 }
 
 void WorldMapRender::toggle(bool turnON)
@@ -1278,43 +1068,49 @@ void WorldMapRender::toggle(bool turnON)
 
 		core->sound->playSfx("menu-open");
 
-		originalActiveTile = activeTile;
-
-		if (activeTile)
+		if (playerTile)
 		{
-			internalOffset = -activeTile->gridPos;
-			if (activeTile->layer == 1)
+			selectedTile = playerTile;
+
+			areaLabel2->setText(stringbank.get(playerTile->tile.stringIndex)); // FIXME: and if playerTile == NULL?
+
+			internalOffset = -playerTile->tile.gridPos;
+			if (playerTile->layer == 1)
 				scale = Vector(1.5,1.5);
 			else
 				scale = Vector(1,1);
-			if (visMethod == VIS_WRITE)
-			{
-				// Texture isn't updated while moving, so force an update here
-				clearVis(activeTile);
-				setVis(activeTile);
-			}
 		}
+
+		for(size_t i = 0; i < tiles.size(); ++i)
+			tiles[i]->refresh();
 
 		xMin = xMax = -internalOffset.x;
 		yMin = yMax = -internalOffset.y;
-		for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+		for (size_t i = 0; i < tiles.size(); ++i)
 		{
-			WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-			if (tile && (tile->revealed || tile->prerevealed) && tile->q)
+			WorldMapTileContainer *tc = tiles[i];
+			const WorldMapTile& t = tc->tile;
+			if (t.revealed || t.prerevealed)
 			{
-				Quad *q = tile->q;
-				const float width = q->getWidth() * q->scale.x;
-				const float height = q->getHeight() * q->scale.y;
-				if (xMin > tile->gridPos.x - width/2)
-					xMin = tile->gridPos.x - width/2;
-				if (xMax < tile->gridPos.x + width/2)
-					xMax = tile->gridPos.x + width/2;
-				if (yMin > tile->gridPos.y - height/2)
-					yMin = tile->gridPos.y - height/2;
-				if (yMax < tile->gridPos.y + height/2)
-					yMax = tile->gridPos.y + height/2;
+				Quad& q = tc->q;
+				const float width = q.getWidth() * q.scale.x;
+				const float height = q.getHeight() * q.scale.y;
+				const float tx = t.gridPos.x;
+				const float ty = t.gridPos.y;
+				const float w2 = width * 0.5f;
+				const float h2 = height * 0.5f;
+				if (xMin > tx - w2)
+					xMin = tx - w2;
+				if (xMax < tx + w2)
+					xMax = tx + w2;
+				if (yMin > ty - h2)
+					yMin = ty - h2;
+				if (yMax < ty + h2)
+					yMax = ty + h2;
 			}
 		}
+
+		updateAllTilesColor();
 
 		alpha.interpolateTo(1, 0.2f);
 
@@ -1326,7 +1122,9 @@ void WorldMapRender::toggle(bool turnON)
 		addHintQuad2->alpha.interpolateTo(1.0f, 0.2f);
 		helpButton->alpha.interpolateTo(1.0f, 0.2f);
 
-		addAllGems();
+		assert(gemMovers.empty());
+		for (Continuity::Gems::iterator i = dsq->continuity.gems.begin(); i != dsq->continuity.gems.end(); i++)
+			addGem(&(*i));
 
 		for (Continuity::Beacons::reverse_iterator i = dsq->continuity.beacons.rbegin(); i != dsq->continuity.beacons.rend(); i++)
 		{
@@ -1346,31 +1144,8 @@ void WorldMapRender::toggle(bool turnON)
 	{
 		inputDelay = 0.5;
 
-		if (originalActiveTile && activeTile)
-		{
-			activeTile = originalActiveTile;
-			activeQuad = activeTile->q;
-		}
-
-		int num = dsq->continuity.worldMap.getNumWorldMapTiles();
-		for (int i = 0; i < num; i++)
-		{
-			WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-			setProperTileColor(tile);
-		}
-
-		// again to set the correct color
-		// lame, don't do that
-		//setVis(activeTile);
-
-		// just set the color
-		if (activeTile && activeTile->q)
-		{
-			activeTile->q->color = Vector(1,1,1);
-			activeTile->q->alphaMod = 1;
-		}
-
-
+		for (size_t i = 0; i < tiles.size(); i++)
+			tiles[i]->gems.clear();
 
 		core->sound->playSfx("Menu-Close");
 
@@ -1402,16 +1177,25 @@ void WorldMapRender::toggle(bool turnON)
 
 void WorldMapRender::createGemHint(const std::string &gfx)
 {
+	if(!playerTile)
+	{
+		sound->playSfx("denied");
+		debugLog("WorldMapRender::createGemHint can't create gem, no player tile");
+		return;
+	}
 	std::string useString = dsq->getUserInputString(stringbank.get(860), "", true);
 	if (!useString.empty())
 	{
 		doubleClickTimer = 0;
 		GemData *g = dsq->continuity.pickupGem(gfx, false);
-		g->canMove = 1;
-		g->pos = getAvatarWorldMapPosition();
-		g->userString = useString;
-		addGem(g);
-		fixGems();
+		if(g)
+		{
+			g->canMove = 1;
+			g->global = true;
+			g->pos = playerTile->worldPosToMapPos(game->avatar->getPositionForMap());
+			g->userString = useString;
+			addGem(g);
+		}
 	}
 }
 
@@ -1419,11 +1203,12 @@ void WorldMapRender::updateEditor()
 {
 	std::ostringstream os;
 	os << "EDITING...";
-	if(activeTile)
+	if(selectedTile)
 	{
-		os << " (" << activeTile->name << ")" << std::endl;
-		os << "x=" << activeTile->gridPos.x << "; y=" << activeTile->gridPos.y << std::endl;
-		os << "scale=" << activeTile->scale << "; scale2=" << activeTile->scale2;
+		const WorldMapTile& t = selectedTile->tile;
+		os << " (" << t.name << ")" << std::endl;
+		os << "x=" << t.gridPos.x << "; y=" << t.gridPos.y << std::endl;
+		os << "scale=" << t.scale << "; scale2=" << t.scale2;
 	}
 	areaLabel->setText(os.str());
 }
@@ -1446,6 +1231,9 @@ void WorldMapRender::action (int id, int state, int source, InputDevice device)
 				{
 					updateEditor();
 				}
+
+				for(size_t i = 0; i < tiles.size(); ++i)
+					tiles[i]->q.renderBorder = editorActive;
 			}
 		}
 
@@ -1467,16 +1255,141 @@ void WorldMapRender::action (int id, int state, int source, InputDevice device)
 			{
 				for (GemMovers::iterator i = gemMovers.begin(); i != gemMovers.end(); i++)
 				{
-					if ((*i)->canMove && (core->mouse.position - (*i)->getWorldPosition()).isLength2DIn(GEM_GRAB))
+					if ((*i)->canMove() && (core->mouse.position - (*i)->getWorldPosition()).isLength2DIn(GEM_GRAB))
 					{
 						removeGem(*i);
 						break;
 					}
 				}
 			}
-
 		}
-
-
 	}
+}
+
+
+
+
+WorldMapTileContainer::WorldMapTileContainer(WorldMapTile& tile)
+	: tile(tile)
+{
+	addChild(&q, PM_STATIC);
+	q.borderAlpha = 0.7f;
+	q.renderBorderColor = Vector(1, 0.5f, 0.5f);
+	assert(tile.generatedTex);
+	q.setTexturePointer(tile.generatedTex);
+}
+
+WorldMapTileContainer::~WorldMapTileContainer()
+{
+}
+
+void WorldMapTileContainer::refresh()
+{
+	if(tile.dirty)
+	{
+		bool usegen = !tile.prerevealed && tile.updateDiscoveredTex();
+		q.setTexturePointer(usegen ? tile.generatedTex : tile.originalTex); // updates width, height
+		tile.dirty = false;
+	}
+}
+
+void WorldMapTileContainer::removeGems()
+{
+	for(size_t i = 0; i < gems.size(); ++i)
+		removeChild(gems[i]);
+	gems.clear();
+}
+
+void WorldMapTileContainer::addGem(GemMover* gem)
+{
+	addChild(gem, PM_POINTER);
+	gems.push_back(gem);
+}
+
+bool WorldMapTileContainer::removeGem(GemMover* gem)
+{
+	for(size_t i = 0; i < gems.size(); ++i)
+		if(gems[i] == gem)
+		{
+			gems[i] = gems.back();
+			gems.pop_back();
+			removeChild(gem);
+			return true;
+		}
+	return false;
+}
+
+GemMover *WorldMapTileContainer::removeGem(const GemData* gem)
+{
+	for(size_t i = 0; i < gems.size(); ++i)
+	{
+		GemMover *gm = gems[i];
+		if(gm->getGemData() == gem)
+		{
+			gems[i] = gems.back();
+			gems.pop_back();
+			removeChild(gm);
+			return gm;
+		}
+	}
+	return NULL;
+}
+
+GemMover* WorldMapTileContainer::getGem(const GemData* gemData) const
+{
+	for(size_t i = 0; i < gems.size(); ++i)
+		if(gems[i]->getGemData() == gemData)
+			return gems[i];
+	return NULL;
+}
+
+void WorldMapTileContainer::updateGems()
+{
+	const float invscale = 1.0f / this->scale.x;
+	for(size_t i = 0; i < gems.size(); ++i)
+	{
+		Quad *q = gems[i];
+		// Make sure the gems always have the same size no matter the container's scale
+		q->scale.x = invscale;
+		q->scale.y = invscale;
+	}
+}
+
+
+
+Vector WorldMapTileContainer::worldPosToTilePos(const Vector& position) const
+{
+	// Notes: TILE_SIZE in the world is 1 pixel in the map template png.
+	// scale is intended to adjust for a texture with a lower resolution than the map template,
+	// eg. if a 1024x1024 png was resized to 512x512 the scale is used to compensate;
+	// and scale2 is used to scale the entirety of the map tile with gems and everything on it
+	const float sizew = (float)q.texture->width;
+	const float sizeh = (float)q.texture->height;
+	const float invsz = 1.0f / TILE_SIZE;
+
+	const float f = tileScaleFactor * tile.scale2; // scale2 is off the same way as scale
+	const float g = f * tile.scale * 0.5f; // half the texture size
+	Vector p = position * invsz * f;
+	p -= Vector(sizew*g, sizeh*g);
+	return p;
+}
+
+Vector WorldMapTileContainer::worldPosToMapPos(const Vector& p) const
+{
+	return worldPosToTilePos(p) + tile.gridPos;
+}
+
+void WorldMapTileContainer::onUpdate(float dt)
+{
+	position = tile.gridPos;
+	scale.x =  tile.scale2;
+	scale.y =  tile.scale2;
+
+	q.scale.x = tile.scale * tileScaleFactor;
+	q.scale.y = tile.scale * tileScaleFactor;
+	q.renderQuad = tile.revealed || tile.prerevealed;
+
+	updateGems();
+
+	RenderObject::onUpdate(dt);
 }

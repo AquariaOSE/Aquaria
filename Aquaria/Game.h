@@ -65,6 +65,7 @@ class ToolTip;
 class Ingredient;
 class ManaBall;
 class Beam;
+class WorldMapTileContainer;
 
 #include "Path.h"
 
@@ -136,8 +137,6 @@ public:
 
 	void clearGrid(int v = 0);
 	void clearDynamicGrid(unsigned char maskbyte = OT_MASK_BLACK);
-
-	void toggleWorldMap();
 
 	void action(int id, int state, int source, InputDevice device);
 
@@ -254,7 +253,10 @@ public:
 	SceneEditor sceneEditor;
 	bool isSceneEditorActive() {return sceneEditor.isOn();}
 
-	bool isInGameMenu();
+	bool isInGameMenu() const;
+	bool isOnWorldMap() const;
+	void toggleWorldMap(bool on);
+	void toggleWorldMap(); // on or off
 
 	typedef std::vector<EntityClass> EntityTypeList;
 	EntityTypeList entityTypeList;
@@ -313,6 +315,7 @@ public:
 	int getNumberOfEntitiesNamed(const std::string &name);
 	MiniMapRender *miniMapRender;
 	WorldMapRender *worldMapRender;
+	WorldMapTileContainer *getCurrentWorldMapTile() const;
 
 	bool loadingScene;
 	bool doScreenTrans;

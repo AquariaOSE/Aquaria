@@ -23,14 +23,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "GameEnums.h"
 #include "GameStructs.h"
-#include "../BBGE/Quad.h"
+#include "Quad.h"
 #include "ActionMapper.h"
 #include "VertexBuffer.h"
 
-class GemMover;
+
 struct MinimapIcon;
-struct WorldMapTile;
-struct GemData;
 class AquariaMenuItem;
 class BitmapText;
 
@@ -91,43 +89,6 @@ public:
 	static bool setAvatarTex(const std::string& name);
 	static bool setHealthBarTex(const std::string& name);
 	static bool setMaxHealthMarkerTex(const std::string& name);
-};
-
-class WorldMapRender : public RenderObject, public ActionMapper
-{
-public:
-	WorldMapRender();
-	void destroy();
-	void toggle(bool on);
-	bool isOn();
-	Vector getAvatarWorldMapPosition();
-	Vector getWorldToTile(WorldMapTile *tile, Vector position, bool fromCenter, bool tilePos);
-	void setProperTileColor(WorldMapTile *tile);
-	void action(int id, int state, int source, InputDevice device);
-	GemMover* addGem(GemData *gemData);
-	void bindInput();
-	void createGemHint(const std::string &gfx);
-	void addAllGems();
-	void fixGems();
-	void removeGem(GemMover *gemMover);
-	void onToggleHelpScreen();
-	bool isCursorOffHud();
-
-protected:
-	Quad *addHintQuad1, *addHintQuad2;
-	AquariaMenuItem *helpButton;
-	float doubleClickTimer;
-	float inputDelay;
-	BitmapText *areaLabel, *areaLabel2, *areaLabel3;
-	WorldMapTile *originalActiveTile;
-	void setVis(WorldMapTile *tile);
-	void clearVis(WorldMapTile *tile);
-	bool on;
-	void onUpdate(float dt);
-	unsigned char *savedTexData;
-	bool mb;
-	Vector lastMousePosition; // See FIXME in WorldMapRender.cpp  --achurch
-	void updateEditor();
 };
 
 class PathRender : public RenderObject

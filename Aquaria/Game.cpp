@@ -48,6 +48,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Ingredient.h"
 #include "Beam.h"
 #include "Hair.h"
+#include "WorldMapRender.h"
 
 
 #ifdef BBGE_USE_GLM
@@ -2183,9 +2184,26 @@ void Game::createGradient()
 	}
 }
 
-bool Game::isInGameMenu()
+bool Game::isInGameMenu() const
 {
 	return themenu->isInGameMenu();
+}
+
+bool Game::isOnWorldMap() const
+{
+	return worldMapRender->isOn();
+}
+
+void Game::toggleWorldMap(bool on)
+{
+	if (dsq->continuity.gems.empty())
+		dsq->continuity.pickupGem("Naija-Token", false);
+	worldMapRender->toggle(on);
+}
+
+void Game::toggleWorldMap()
+{
+	toggleWorldMap(!isOnWorldMap());
 }
 
 bool Game::isValidTarget(Entity *e, Entity *me)
@@ -2440,14 +2458,6 @@ void Game::action(int id, int state, int source, InputDevice device)
 	if (dsq->isDeveloperKeys() || isSceneEditorActive())
 	{
 		if (id == ACTION_TOGGLEGRID && !state)			toggleGridRender();
-	}
-}
-
-void Game::toggleWorldMap()
-{
-	if (worldMapRender)
-	{
-		worldMapRender->toggle(!worldMapRender->isOn());
 	}
 }
 
@@ -2762,7 +2772,7 @@ void Game::applyState()
 
 	// ----------------- SCENE IS LOADED BELOW HERE -------------------
 
-	dsq->continuity.worldMap.revealMap(sceneName);
+	dsq->continuity.setCurrentMap(sceneName);
 
 	if (verbose) debugLog("Adding Avatar");
 	addRenderObject(avatar, LR_ENTITIES);
@@ -2794,9 +2804,9 @@ void Game::applyState()
 	timerText->followCamera = 1;
 	addRenderObject(timerText, LR_MINIMAP);
 
-	worldMapRender = 0;
-
-	worldMapRender = new WorldMapRender;
+	worldMapRender = new WorldMapRender(dsq->continuity.worldMap);
+	worldMapRender->init();
+	worldMapRender->setCurrentMap(sceneName.c_str());
 	addRenderObject(worldMapRender, LR_WORLDMAP);
 
 	sceneToLoad="";
@@ -4249,6 +4259,11 @@ void Game::constrainCamera()
 bool Game::isControlHint()
 {
 	return controlHint_bg->alpha.x != 0;
+}
+
+WorldMapTileContainer* Game::getCurrentWorldMapTile() const
+{
+	return worldMapRender ? worldMapRender->getCurrentTile() : NULL;
 }
 
 bool Game::trace(Vector start, Vector target)

@@ -376,7 +376,7 @@ void MiniMapRender::onUpdate(float dt)
 	_isCursorIn = false;
 	if (alpha.x == 1)
 	{
-		if (!game->isInGameMenu() && (!game->isPaused() || (game->isPaused() && game->worldMapRender->isOn())))
+		if (!game->isInGameMenu() && (!game->isPaused() || (game->isPaused() && game->isOnWorldMap())))
 		{
 			if (isCursorInButtons())
 			{
@@ -397,7 +397,7 @@ void MiniMapRender::onUpdate(float dt)
 
 					bool btn=false;
 
-					if (!game->worldMapRender->isOn())
+					if (!game->isOnWorldMap())
 					{
 						for (size_t i = 0; i < buttons.size(); i++)
 						{
@@ -421,20 +421,16 @@ void MiniMapRender::onUpdate(float dt)
 
 					if (!btn && !radarHide && (!dsq->mod.isActive() || dsq->mod.hasWorldMap()))
 					{
-						if (game->worldMapRender->isOn())
+						if (game->isOnWorldMap())
 						{
-							game->worldMapRender->toggle(false);
+							game->toggleWorldMap(false);
 							clickEffect(1);
 						}
 						else
 						{
 							if (doubleClickDelay > 0 && !core->isStateJumpPending())
 							{
-
-								if (dsq->continuity.gems.empty())
-									dsq->continuity.pickupGem("Naija-Token");
-
-								game->worldMapRender->toggle(true);
+								game->toggleWorldMap(true);
 
 								clickEffect(0);
 

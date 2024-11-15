@@ -27,6 +27,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ttvfs_stdio.h"
 #include "ReadXML.h"
 #include "Web.h"
+#include "WorldMap.h"
+#include "WorldMapRender.h"
 
 #include <tinyxml2.h>
 using namespace tinyxml2;
@@ -2368,33 +2370,33 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 	}
 	doc.InsertEndChild(gems);
 
-	XMLElement *worldMap = doc.NewElement("WorldMap");
+	XMLElement *wmap = doc.NewElement("WorldMap");
 	{
 		std::ostringstream os;
-		for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+		for (size_t i = 0; i < worldMap.worldMapTiles.size(); i++)
 		{
-			WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-			if (tile->revealed)
+			const WorldMapTile& tile = worldMap.worldMapTiles[i];
+			if (tile.revealed)
 			{
-				os << tile->index << " ";
+				os << tile.index << " ";
 			}
 		}
-		worldMap->SetAttribute("b", os.str().c_str());
+		wmap->SetAttribute("b", os.str().c_str());
 
 		if (game->worldMapRender)
 		{
 			std::ostringstream os;
-			for (size_t i = 0; i < dsq->continuity.worldMap.getNumWorldMapTiles(); i++)
+			for (size_t i = 0; i < worldMap.worldMapTiles.size(); i++)
 			{
-				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(i);
-				os << tile->index << " ";
-				tile->dataToString(os);
+				const WorldMapTile& tile = worldMap.worldMapTiles[i];
+				os << tile.index << " ";
+				tile.dataToString(os);
 				os << " ";
 			}
-			worldMap->SetAttribute("va", os.str().c_str());
+			wmap->SetAttribute("va", os.str().c_str());
 		}
 	}
-	doc.InsertEndChild(worldMap);
+	doc.InsertEndChild(wmap);
 
 	XMLElement *vox = doc.NewElement("VO");
 	{
@@ -2895,24 +2897,24 @@ bool Continuity::loadFile(int slot)
 		}
 	}
 
-	XMLElement *worldMap = doc.FirstChildElement("WorldMap");
-	if (worldMap)
+	XMLElement *wmap = doc.FirstChildElement("WorldMap");
+	if (wmap)
 	{
-		if (worldMap->Attribute("b"))
+		if (wmap->Attribute("b"))
 		{
-			std::string s = worldMap->Attribute("b");
+			std::string s = wmap->Attribute("b");
 			std::istringstream is(s);
 			int idx;
 			while (is >> idx)
 			{
-				dsq->continuity.worldMap.revealMapIndex(idx);
+				worldMap.revealMapIndex(idx);
 			}
 		}
 
 
-		if (worldMap->Attribute("va") && dsq->continuity.worldMap.getNumWorldMapTiles())
+		if (const char *va = wmap->Attribute("va"))
 		{
-			std::istringstream is(worldMap->Attribute("va"));
+			SimpleIStringStream is(va, SimpleIStringStream::REUSE);
 
 			WorldMapTile dummy;
 
@@ -2922,7 +2924,7 @@ bool Continuity::loadFile(int slot)
 
 			while (is >> idx)
 			{
-				WorldMapTile *tile = dsq->continuity.worldMap.getWorldMapTile(idx);
+				WorldMapTile *tile = worldMap.getWorldMapTileByIndex(idx);
 
 				if (!tile)
 				{
@@ -3343,24 +3345,28 @@ void Continuity::removeGemData(GemData *gemData)
 	}
 }
 
-GemData *Continuity::pickupGem(std::string name, bool effects)
+
+
+GemData *Continuity::pickupGem(const std::string& name, bool effects)
 {
 	GemData g;
 	g.name = name;
 	g.mapName = game->sceneName;
-	int sz = gems.size();
 
-	//HACK: (hacky) using effects to determine the starting position of the gem
-	if (!effects)
+	// HACK: First gem silently picked up ever with this texture needs special treatment
+	bool isPlayerGem = !effects && gems.empty() && !nocasecmp(name, "Naija-Token");
+	if(isPlayerGem)
 	{
-		g.pos = game->worldMapRender->getAvatarWorldMapPosition() + Vector(sz*16-64, -64);
+		g.global = false; // the player is always on a map
+		g.blink = true;
 	}
-	else
+	g.isplayer = isPlayerGem;
+
+	Vector avatarPos = game->avatar->getPositionForMap();
+	if(!game->worldMapRender->getWorldToPlayerTile(g.pos, avatarPos, g.global))
 	{
-		if (!gems.empty())
-			g.pos = game->worldMapRender->getAvatarWorldMapPosition();
-		else
-			g.pos = Vector(0,0);
+		debugLog("pickupgem failed, no worldmap tile for current map");
+		return NULL;
 	}
 
 	gems.push_back(g);
@@ -3372,19 +3378,30 @@ GemData *Continuity::pickupGem(std::string name, bool effects)
 		GemGet *gg = new GemGet(g.name);
 		game->addRenderObject(gg, LR_MINIMAP);
 
-
-
 		if (!getFlag("tokenHint"))
 		{
 			setFlag("tokenHint", 1);
 			game->setControlHint(stringbank.get(4), false, false, false, 8);
 		}
-
-
 	}
 
 	// return the last one
 	return &gems.back();
+}
+
+void Continuity::setCurrentMap(const std::string& mapname)
+{
+	worldMap.revealMap(mapname);
+
+	for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
+	{
+		GemData& g = *i;
+		if(g.isplayer)
+		{
+			g.mapName = mapname;
+			game->worldMapRender->updateGem(&g);
+		}
+	}
 }
 
 void Continuity::entityDied(Entity *eDead)
