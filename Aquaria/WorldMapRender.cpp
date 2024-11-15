@@ -236,6 +236,9 @@ public:
 		followCamera = 1;
 		blinkTimer = 0;
 		alphaMod = 0.66f;
+		clickDelay = 0;
+		lmbdown = false;
+		isEnteringText = false;
 
 		text = new TTFText(&dsq->fontArialSmall);
 		text->offset = Vector(0, 4);
@@ -272,9 +275,13 @@ public:
 	GemData *getGemData() { return gemData; }
 
 	inline bool canMove() const { return gemData->canMove; }
+	inline bool canRemove() const { return canMove() && !isEnteringText; }
 protected:
 
 	float blinkTimer;
+	float clickDelay;
+	bool lmbdown;
+	bool isEnteringText;
 	GemData *gemData;
 
 	TTFText *text;
@@ -316,6 +323,8 @@ protected:
 			}
 		}
 
+		clickDelay = std::max(clickDelay - dt, 0.0f);
+
 		if (canMove())
 		{
 			if (mover == 0)
@@ -324,6 +333,25 @@ protected:
 				{
 					core->sound->playSfx("Gem-Move");
 					mover = this;
+					if(!lmbdown)
+					{
+						lmbdown = true;
+						if(clickDelay > 0 && !isEnteringText)
+						{
+							// double click!
+							isEnteringText = true;
+							std::string useString = dsq->getUserInputString(stringbank.get(860), gemData->userString, true);
+							if (!useString.empty())
+							{
+								gemData->userString = useString;
+								refresh();
+							}
+							isEnteringText = false;
+						}
+						else
+							clickDelay = 0.5f;
+
+					}
 				}
 			}
 			else if (mover == this)
@@ -335,6 +363,7 @@ protected:
 					mover = 0;
 					core->sound->playSfx("Gem-Place");
 					gemData->pos = position;
+					lmbdown = false;
 				}
 			}
 		}
@@ -407,7 +436,6 @@ static HintGemQuad *addHintGem(const char *tex)
 WorldMapRender::WorldMapRender(WorldMap& wm) : RenderObject(), ActionMapper()
 	, worldmap(wm)
 {
-	doubleClickTimer = 0;
 	inputDelay = 0;
 	editorActive=false;
 	mb = false;
@@ -626,14 +654,6 @@ void WorldMapRender::onUpdate(float dt)
 	const int offset = 26;
 	helpButton->position = Vector(core->getVirtualWidth()-core->getVirtualOffX()-offset, offset);
 
-
-	if (doubleClickTimer > 0)
-	{
-		doubleClickTimer -= dt;
-		if (doubleClickTimer < 0)
-			doubleClickTimer = 0;
-	}
-
 	for(size_t i = 0; i < tiles.size(); ++i)
 		tiles[i]->q.alpha.x = alpha.x;
 
@@ -776,38 +796,41 @@ void WorldMapRender::onUpdate(float dt)
 
 		if(!editorActive)
 		{
-			float scrollSpeed = 2.0f;
-			float amt = (400*dt)/scale.x;
-			if (isActing(ACTION_SWIMLEFT, -1))
+			if(!dsq->isNested()) // Don't move the worldmap around on key presses if a text input box is open and we're actually just entering text
 			{
-				internalOffset += Vector(amt, 0);
-			}
-			if (isActing(ACTION_SWIMRIGHT, -1))
-			{
-				internalOffset += Vector(-amt, 0);
-			}
-			if (isActing(ACTION_SWIMDOWN, -1))
-			{
-				if (core->getShiftState())
+				float scrollSpeed = 2.0f;
+				float amt = (400*dt)/scale.x;
+				if (isActing(ACTION_SWIMLEFT, -1))
 				{
-					scale.stop();
-					scale -= Vector(scrollSpeed*dt, scrollSpeed*dt);
+					internalOffset += Vector(amt, 0);
 				}
-				else
+				if (isActing(ACTION_SWIMRIGHT, -1))
 				{
-					internalOffset += Vector(0, -amt);
+					internalOffset += Vector(-amt, 0);
 				}
-			}
-			if (isActing(ACTION_SWIMUP, -1))
-			{
-				if (core->getShiftState())
+				if (isActing(ACTION_SWIMDOWN, -1))
 				{
-					scale.stop();
-					scale += Vector(scrollSpeed*dt, scrollSpeed*dt);
+					if (core->getShiftState())
+					{
+						scale.stop();
+						scale -= Vector(scrollSpeed*dt, scrollSpeed*dt);
+					}
+					else
+					{
+						internalOffset += Vector(0, -amt);
+					}
 				}
-				else
+				if (isActing(ACTION_SWIMUP, -1))
 				{
-					internalOffset += Vector(0, amt);
+					if (core->getShiftState())
+					{
+						scale.stop();
+						scale += Vector(scrollSpeed*dt, scrollSpeed*dt);
+					}
+					else
+					{
+						internalOffset += Vector(0, amt);
+					}
 				}
 			}
 
@@ -1218,7 +1241,6 @@ void WorldMapRender::createGemHint(const std::string &gfx)
 	std::string useString = dsq->getUserInputString(stringbank.get(860), "", true);
 	if (!useString.empty())
 	{
-		doubleClickTimer = 0;
 		GemData *g = dsq->continuity.pickupGem(gfx, false);
 		if(g)
 		{
@@ -1282,7 +1304,7 @@ void WorldMapRender::action (int id, int state, int source, InputDevice device)
 			{
 				for (GemMovers::iterator i = gemMovers.begin(); i != gemMovers.end(); i++)
 				{
-					if ((*i)->canMove() && (core->mouse.position - (*i)->getWorldPosition()).isLength2DIn(GEM_GRAB))
+					if ((*i)->canRemove() && (core->mouse.position - (*i)->getWorldPosition()).isLength2DIn(GEM_GRAB))
 					{
 						removeGem(*i);
 						break;

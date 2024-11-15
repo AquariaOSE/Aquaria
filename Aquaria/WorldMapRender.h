@@ -71,7 +71,6 @@ public:
 protected:
 	HintGemQuad *addHintQuads[5];
 	AquariaMenuItem *helpButton;
-	float doubleClickTimer;
 	float inputDelay;
 	BitmapText *areaLabel, *areaLabel2, *areaLabel3;
 	WorldMapTileContainer *playerTile; // tile where the player is located
