@@ -12,6 +12,8 @@ class AquariaMenuItem;
 struct WorldMap;
 class Gradient;
 
+class HintGemQuad;
+
 
 // This is used for properly positioning the tile and gems on top of it.
 // Affected by scale2 -- gems also move with scale2.
@@ -67,7 +69,7 @@ public:
 	WorldMapTileContainer * setCurrentMap(const char *mapname);
 
 protected:
-	Quad *addHintQuad1, *addHintQuad2;
+	HintGemQuad *addHintQuads[5];
 	AquariaMenuItem *helpButton;
 	float doubleClickTimer;
 	float inputDelay;

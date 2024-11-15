@@ -358,6 +358,18 @@ protected:
 	}
 };
 
+class HintGemQuad : public Quad
+{
+public:
+	HintGemQuad(const std::string& gemtex, const Vector& pos)
+		: Quad("gems/" + gemtex, pos), gemTex(gemtex)
+	{
+	}
+	virtual ~HintGemQuad() {}
+	inline const std::string& getGemTex() const { return gemTex; }
+	const std::string gemTex;
+};
+
 typedef std::vector <GemMover*> GemMovers;
 GemMovers gemMovers;
 
@@ -381,6 +393,15 @@ void WorldMapRender::setProperTileColor(WorldMapTileContainer& wt)
 		wt.q.color = Vector(1,1,1);
 		wt.q.alphaMod = 1;
 	}
+}
+
+static HintGemQuad *addHintGem(const char *tex)
+{
+	HintGemQuad *q = new HintGemQuad(tex, Vector(0,0));
+	q->followCamera = 1;
+	q->alpha = 0;
+	game->addRenderObject(q, LR_WORLDMAPHUD);
+	return q;
 }
 
 WorldMapRender::WorldMapRender(WorldMap& wm) : RenderObject(), ActionMapper()
@@ -460,16 +481,11 @@ WorldMapRender::WorldMapRender(WorldMap& wm) : RenderObject(), ActionMapper()
 	underlay->alpha = 0;
 	game->addRenderObject(underlay, LR_HUDUNDERLAY);
 
-	addHintQuad1 = new Quad("gems/pyramidyellow", Vector(0,0));
-	addHintQuad1->followCamera = 1;
-	addHintQuad1->alpha = 0;
-	game->addRenderObject(addHintQuad1, LR_WORLDMAPHUD);
-
-	addHintQuad2 = new Quad("gems/pyramidpurple", Vector(0,0));
-	addHintQuad2->followCamera = 1;
-	addHintQuad2->alpha = 0;
-	game->addRenderObject(addHintQuad2, LR_WORLDMAPHUD);
-
+	addHintQuads[0] = addHintGem("pyramidyellow");
+	addHintQuads[1] = addHintGem("pyramidpurple");
+	addHintQuads[2] = addHintGem("pyramidgreen");
+	addHintQuads[3] = addHintGem("pyramidred");
+	addHintQuads[4] = addHintGem("pyramidblue");
 
 	helpButton = new AquariaMenuItem;
 	helpButton->event.setActionMapperCallback(this, ACTION_TOGGLEHELPSCREEN, 0);
@@ -607,12 +623,6 @@ void WorldMapRender::onUpdate(float dt)
 	areaLabel3->alpha.x = this->alpha.x;
 	tophud->alpha.x = this->alpha.x;
 
-	const float mmWidth  = game->miniMapRender->getMiniMapWidth();
-	const float mmHeight = game->miniMapRender->getMiniMapHeight();
-
-	addHintQuad1->position = game->miniMapRender->position + Vector(-mmWidth*3/22, -mmHeight/2-10);
-	addHintQuad2->position = game->miniMapRender->position + Vector(mmWidth*3/22, -mmHeight/2-10);
-
 	const int offset = 26;
 	helpButton->position = Vector(core->getVirtualWidth()-core->getVirtualOffX()-offset, offset);
 
@@ -629,6 +639,28 @@ void WorldMapRender::onUpdate(float dt)
 
 	if (isOn())
 	{
+		// minimap marker gem placers
+		{
+			const float mmWidth  = game->miniMapRender->getMiniMapWidth();
+			const float mmHeight = game->miniMapRender->getMiniMapHeight();
+			const Vector mmpos = game->miniMapRender->position;
+
+			float yoffs = -mmHeight/2-32;
+			addHintQuads[0]->position = mmpos + Vector(-mmWidth*3/22, yoffs);
+			addHintQuads[1]->position = mmpos + Vector(mmWidth*3/22, yoffs);
+
+			yoffs = -mmHeight/2-12;
+			addHintQuads[2]->position = mmpos + Vector(-mmWidth*6/22, yoffs);
+			addHintQuads[3]->position = mmpos + Vector(0, yoffs);
+			addHintQuads[4]->position = mmpos + Vector(mmWidth*6/22, yoffs);
+
+			for(size_t i = 0; i < Countof(addHintQuads); ++i)
+			{
+				float s = addHintQuads[i]->isCoordinateInRadius(core->mouse.position, 10) ? 1.33f : 1.0f;
+				addHintQuads[i]->scale.interpolateTo(Vector(s, s), 0.1f);
+			}
+		}
+
 		if(!selectedTile)
 			selectedTile = playerTile;
 
@@ -1115,12 +1147,11 @@ void WorldMapRender::toggle(bool turnON)
 		alpha.interpolateTo(1, 0.2f);
 
 
-
 		underlay->alpha.interpolateTo(WORLDMAP_UNDERLAY_ALPHA, 0.2f);
-
-		addHintQuad1->alpha.interpolateTo(1.0f, 0.2f);
-		addHintQuad2->alpha.interpolateTo(1.0f, 0.2f);
 		helpButton->alpha.interpolateTo(1.0f, 0.2f);
+
+		for(size_t i = 0; i < Countof(addHintQuads); ++i)
+			addHintQuads[i]->alpha.interpolateTo(1.0f, 0.2f);
 
 		assert(gemMovers.empty());
 		for (Continuity::Gems::iterator i = dsq->continuity.gems.begin(); i != dsq->continuity.gems.end(); i++)
@@ -1154,9 +1185,10 @@ void WorldMapRender::toggle(bool turnON)
 		game->togglePause(false);
 
 		underlay->alpha.interpolateTo(0, 0.2f);
-		addHintQuad1->alpha.interpolateTo(0, 0.2f);
-		addHintQuad2->alpha.interpolateTo(0, 0.2f);
 		helpButton->alpha.interpolateTo(0, 0.2f);
+
+		for(size_t i = 0; i < Countof(addHintQuads); ++i)
+			addHintQuads[i]->alpha.interpolateTo(0, 0.2f);
 
 
 		for (GemMovers::iterator i = gemMovers.begin(); i != gemMovers.end(); i++)
@@ -1239,14 +1271,9 @@ void WorldMapRender::action (int id, int state, int source, InputDevice device)
 
 		if (id == ACTION_PRIMARY && state)
 		{
-			if (addHintQuad1->isCoordinateInRadius(core->mouse.position, 10))
-			{
-				createGemHint("pyramidyellow");
-			}
-			if (addHintQuad2->isCoordinateInRadius(core->mouse.position, 10))
-			{
-				createGemHint("pyramidpurple");
-			}
+			for(size_t i = 0; i < Countof(addHintQuads); ++i)
+				if(addHintQuads[i]->isCoordinateInRadius(core->mouse.position, 10))
+					createGemHint(addHintQuads[i]->getGemTex());
 		}
 
 		if (id == ACTION_SECONDARY && !state)
