@@ -10,6 +10,7 @@
 #include "SimpleIStringStream.h"
 
 #define MAPVIS_SUBDIV 64
+#define WORLDMAP_REVEALED_BUT_UNEXPLORED_ALPHA 0x60
 
 class Quad;
 

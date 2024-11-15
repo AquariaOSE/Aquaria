@@ -410,11 +410,15 @@ void WorldMapRender::setProperTileColor(WorldMapTileContainer& wt)
 	const WorldMapTile& t = wt.tile;
 	if(selectedTile != &wt)
 	{
-		wt.q.alphaMod = (t.revealed || t.prerevealed) ? 0.5f : 0.0f;
+		float amod = (t.revealed || t.prerevealed) ? 0.5f : 0.0f;
+
+		if(!t.revealed)
+			amod *= float(WORLDMAP_REVEALED_BUT_UNEXPLORED_ALPHA) / float(0xff);
 
 		if (selectedTile && t.layer != selectedTile->tile.layer)
-			wt.q.alphaMod *= 0.5f;
+			amod *= 0.5f;
 
+		wt.q.alphaMod = amod;
 		wt.q.color = Vector(0.7f, 0.8f, 1);
 	}
 	else
@@ -564,9 +568,9 @@ void WorldMapRender::init()
 
 		tc.position = t.gridPos;
 		t.originalTex = texs[i];
+		tc.setTexturePointer(texs[i]); // to init width, height
 
-		t.dirty = true; // force refresh to init texture, width, height
-		tc.refresh();
+		tc.refreshMapTile(); // may or may not set texture to the generated one
 
 		setProperTileColor(tc);
 	}
@@ -1136,8 +1140,9 @@ void WorldMapRender::toggle(bool turnON)
 				scale = Vector(1,1);
 		}
 
+		// Opening the map. Some tiles may need refreshing in case some new visited areas were uncovered in the meantime
 		for(size_t i = 0; i < tiles.size(); ++i)
-			tiles[i]->refresh();
+			tiles[i]->refreshMapTile();
 
 		xMin = xMax = -internalOffset.x;
 		yMin = yMax = -internalOffset.y;
@@ -1324,22 +1329,26 @@ WorldMapTileContainer::WorldMapTileContainer(WorldMapTile& tile)
 	addChild(&q, PM_STATIC);
 	q.borderAlpha = 0.7f;
 	q.renderBorderColor = Vector(1, 0.5f, 0.5f);
-	assert(tile.generatedTex);
-	q.setTexturePointer(tile.generatedTex);
 }
 
 WorldMapTileContainer::~WorldMapTileContainer()
 {
 }
 
-void WorldMapTileContainer::refresh()
+void WorldMapTileContainer::refreshMapTile()
 {
-	if(tile.dirty)
+	Texture *usetex = tile.originalTex.content();
+	if(tile.revealed)
 	{
-		bool usegen = !tile.prerevealed && tile.updateDiscoveredTex();
-		q.setTexturePointer(usegen ? tile.generatedTex : tile.originalTex); // updates width, height
-		tile.dirty = false;
+		if(tile.dirty)
+		{
+			tile.updateDiscoveredTex();
+			tile.dirty = false; // keep it dirty when undiscovered
+		}
+		if(tile.generatedTex)
+			usetex = tile.generatedTex.content();
 	}
+	q.setTexturePointer(usetex); // updates width, height
 }
 
 void WorldMapTileContainer::removeGems()

@@ -42,7 +42,6 @@ WorldMapTile::WorldMapTile()
 	index = -1;
 	stringIndex = 0;
 	dirty = true;
-	generatedTex = new Texture;
 }
 
 WorldMapTile::~WorldMapTile()
@@ -256,7 +255,10 @@ ImageData WorldMapTile::generateAlphaImage(size_t w, size_t h)
 	if(visited.empty())
 		return ret;
 
-	// stbir can't deal with 1-bit images, so let's make a 1-channel black or white image first
+	const unsigned char exploredAlpha = 0xff;
+	const unsigned char unexploredAlpha = prerevealed ? WORLDMAP_REVEALED_BUT_UNEXPLORED_ALPHA : 0;
+
+	// convert visited data to a proper 1-channel image
 	Array2d<unsigned char> tmp(MAPVIS_SUBDIV, MAPVIS_SUBDIV);
 	unsigned char *dst = tmp.data();
 	for(size_t y = 0; y < MAPVIS_SUBDIV; ++y)
@@ -266,7 +268,7 @@ ImageData WorldMapTile::generateAlphaImage(size_t w, size_t h)
 		{
 			unsigned c = src[x/8];
 			for(size_t bit = 0; bit < 8; ++bit)
-				*dst++ = (c & (1 << bit)) ? 0xff : 0;
+				*dst++ = (c & (1 << bit)) ? exploredAlpha : unexploredAlpha;
 		}
 	}
 
@@ -322,7 +324,11 @@ bool WorldMapTile::updateDiscoveredTex()
 	up.w = w;
 	up.h = h;
 
-	generatedTex->upload(up, true);
+	Texture *tex = generatedTex.content();
+	if(!tex)
+		generatedTex = tex = new Texture();
+
+	tex->upload(up, true);
 	return true;
 }
 

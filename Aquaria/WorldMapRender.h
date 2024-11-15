@@ -25,7 +25,7 @@ public:
 
 	virtual void onUpdate(float dt) OVERRIDE;
 
-	void refresh(); // Called whenever we need to prepare for rendering
+	void refreshMapTile(); // Called whenever we need to prepare for rendering
 
 	void removeGems();
 	void addGem(GemMover *gem);
