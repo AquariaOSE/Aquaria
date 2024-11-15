@@ -408,24 +408,26 @@ BeaconRenders beaconRenders;
 void WorldMapRender::setProperTileColor(WorldMapTileContainer& wt)
 {
 	const WorldMapTile& t = wt.tile;
+	float amod;
 	if(selectedTile != &wt)
 	{
-		float amod = (t.revealed || t.prerevealed) ? 0.5f : 0.0f;
-
-		if(!t.revealed)
-			amod *= float(WORLDMAP_REVEALED_BUT_UNEXPLORED_ALPHA) / float(0xff);
+		amod = (t.revealed || t.prerevealed) ? 0.5f : 0.0f;
 
 		if (selectedTile && t.layer != selectedTile->tile.layer)
 			amod *= 0.5f;
 
-		wt.q.alphaMod = amod;
 		wt.q.color = Vector(0.7f, 0.8f, 1);
 	}
 	else
 	{
 		wt.q.color = Vector(1,1,1);
-		wt.q.alphaMod = 1;
+		amod = 1;
 	}
+
+	if(!t.revealed)
+		amod *= float(WORLDMAP_REVEALED_BUT_UNEXPLORED_ALPHA) / float(0xff);
+
+	wt.q.alphaMod = amod;
 }
 
 static HintGemQuad *addHintGem(const char *tex)

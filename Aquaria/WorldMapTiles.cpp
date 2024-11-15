@@ -360,7 +360,6 @@ void WorldMap::_load(const std::string &file)
 		WorldMapTile t;
 		std::istringstream is(line);
 		is >> t.index >> t.stringIndex >> t.name >> t.layer >> t.scale >> t.gridPos.x >> t.gridPos.y >> t.prerevealed >> t.scale2;
-		t.revealed = t.prerevealed;
 		stringToUpper(t.name);
 		worldMapTiles.push_back(t);
 	}
