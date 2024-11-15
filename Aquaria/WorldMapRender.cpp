@@ -290,23 +290,6 @@ protected:
 	{
 		Quad::onUpdate(dt);
 
-		Vector sz = parent->scale;
-
-		if (sz.x < zoomMin)
-			sz.x = sz.y = zoomMin;
-		if (sz.x > zoomMax)
-			sz.x = sz.y = zoomMax;
-
-		if (sz.x > 1.0f)
-		{
-			scale.x = (1.0f/sz.x);
-			scale.y = (1.0f/sz.y);
-		}
-		else
-		{
-			scale = Vector(1,1);
-		}
-
 		Vector wp = getWorldPosition();
 
 		if (gemData->blink)
@@ -961,12 +944,6 @@ void WorldMapRender::onUpdate(float dt)
 						dsq->continuity.worldMap.save();
 					}
 					wasEditorSaveDown = isf2;
-
-					//selectedTile->position = t.gridPos;
-					//activeQuad->scale = Vector(0.25f*activeTile->scale2, 0.25f*activeTile->scale2);
-					/*if(activeQuad->texture)
-						activeQuad->setWidthHeight(activeQuad->texture->width*activeTile->scale, // FG: HACK force resize proper
-												   activeQuad->texture->height*activeTile->scale);*/
 				}
 				updateEditor();
 			}
@@ -1405,13 +1382,23 @@ GemMover* WorldMapTileContainer::getGem(const GemData* gemData) const
 
 void WorldMapTileContainer::updateGems()
 {
-	const float invscale = 1.0f / this->scale.x;
+	// Make sure the gems always have the same size no matter the container's scale
+	// -> bypass this, go directly to parent
+	float sz = parent->scale.x;
+
+	if (sz < zoomMin)
+		sz = zoomMin;
+	if (sz > zoomMax)
+		sz = zoomMax;
+
+	sz = sz < 1.0f ? 1.0f : 1.0f / sz;
+
 	for(size_t i = 0; i < gems.size(); ++i)
 	{
 		Quad *q = gems[i];
-		// Make sure the gems always have the same size no matter the container's scale
-		q->scale.x = invscale;
-		q->scale.y = invscale;
+
+		q->scale.x = sz;
+		q->scale.y = sz;
 	}
 }
 
