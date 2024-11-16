@@ -262,8 +262,6 @@ public:
 		position = tc ? tc->worldPosToTilePos(gemData->pos) : gemData->pos;
 		text->setText(gemData->userString);
 		textBG->setWidthHeight(text->getActualWidth() + 20, 25, 10);
-
-		this->update(0);
 	}
 
 	void destroy()
@@ -293,6 +291,29 @@ protected:
 	void onUpdate(float dt)
 	{
 		Quad::onUpdate(dt);
+
+		// Make sure ALL gems always have the same size no matter the container's scale.
+		// This is a bit nasty because some gems have the world map surface as parent (where gemData->global),
+		// while the map-local gems have their map tile as parent.
+		// So for scaling them properly, make sure the tile scale factor cancels out while normalizing the scale.
+
+		float invparent = gemData->global ? 1.0f : 1.0f / parent->scale.x; // factor used to cancel out parent tile scaling, if the parent is a tile.
+		float sz = parent->getRealScale().x;
+
+		sz *= invparent;
+
+		if (sz < zoomMin)
+			sz = zoomMin;
+		if (sz > zoomMax)
+			sz = zoomMax;
+
+		sz = sz < 1.0f ? 1.0f : 1.0f / sz;
+
+		sz *= invparent;
+
+		scale.x = sz;
+		scale.y = sz;
+
 
 		Vector wp = getWorldPosition();
 
@@ -1154,7 +1175,10 @@ void WorldMapRender::toggle(bool turnON)
 			addHintQuads[i]->alpha.interpolateTo(1.0f, 0.2f);
 
 		assert(gemMovers.empty());
-		for (Continuity::Gems::iterator i = dsq->continuity.gems.begin(); i != dsq->continuity.gems.end(); i++)
+
+		// I'm not sure why this is all backwards but i'm thinking that it's because the naija gem should always be on top,
+		// and since it's the very first one in the list that adds it last, ie. on top of everything else.
+		for (Continuity::Gems::reverse_iterator i = dsq->continuity.gems.rbegin(); i != dsq->continuity.gems.rend(); i++)
 			addGem(&(*i));
 
 		for (Continuity::Beacons::reverse_iterator i = dsq->continuity.beacons.rbegin(); i != dsq->continuity.beacons.rend(); i++)
@@ -1373,30 +1397,6 @@ GemMover* WorldMapTileContainer::getGem(const GemData* gemData) const
 	return NULL;
 }
 
-void WorldMapTileContainer::updateGems()
-{
-	// Make sure the gems always have the same size no matter the container's scale
-	// -> bypass this, go directly to parent
-	float sz = parent->scale.x;
-
-	if (sz < zoomMin)
-		sz = zoomMin;
-	if (sz > zoomMax)
-		sz = zoomMax;
-
-	sz = sz < 1.0f ? 1.0f : 1.0f / sz;
-
-	for(size_t i = 0; i < gems.size(); ++i)
-	{
-		Quad *q = gems[i];
-
-		q->scale.x = sz;
-		q->scale.y = sz;
-	}
-}
-
-
-
 Vector WorldMapTileContainer::worldPosToTilePos(const Vector& position) const
 {
 	// Notes: TILE_SIZE in the world is 1 pixel in the map template png.
@@ -1428,8 +1428,6 @@ void WorldMapTileContainer::onUpdate(float dt)
 	q.scale.x = tile.scale * tileScaleFactor;
 	q.scale.y = tile.scale * tileScaleFactor;
 	q.renderQuad = tile.revealed || tile.prerevealed;
-
-	updateGems();
 
 	RenderObject::onUpdate(dt);
 }

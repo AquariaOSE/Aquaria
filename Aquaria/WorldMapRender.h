@@ -32,7 +32,6 @@ public:
 	bool removeGem(GemMover *gem);
 	GemMover *removeGem(const GemData *gem);
 	GemMover *getGem(const GemData *gemData) const;
-	void updateGems();
 
 	Vector worldPosToTilePos(const Vector& p) const;
 	Vector worldPosToMapPos(const Vector& p) const;
