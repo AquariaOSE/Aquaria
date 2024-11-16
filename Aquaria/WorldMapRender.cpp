@@ -257,9 +257,13 @@ public:
 	void refresh()
 	{
 		setTexture("gems/" + gemData->name);
-		position = gemData->pos;
+
+		WorldMapTileContainer *tc = dynamic_cast<WorldMapTileContainer*>(parent);
+		position = tc ? tc->worldPosToTilePos(gemData->pos) : gemData->pos;
 		text->setText(gemData->userString);
 		textBG->setWidthHeight(text->getActualWidth() + 20, 25, 10);
+
+		this->update(0);
 	}
 
 	void destroy()
@@ -604,17 +608,6 @@ void WorldMapRender::updateAllTilesColor()
 		setProperTileColor(*tiles[i]);
 }
 
-bool WorldMapRender::getWorldToPlayerTile(Vector& dst, const Vector& pos, bool global) const
-{
-	if(!playerTile)
-		return false;
-
-	dst = global
-		? playerTile->worldPosToMapPos(pos)
-		: playerTile->worldPosToTilePos(pos);
-	return true;
-}
-
 WorldMapTileContainer* WorldMapRender::getTileByName(const char* name) const
 {
 	for(size_t i = 0; i < tiles.size(); ++i)
@@ -676,16 +669,16 @@ void WorldMapRender::onUpdate(float dt)
 		if(playerTile && !gemMovers.empty())
 		{
 			Vector playerPos = game->avatar->getPositionForMap();
-			Vector playerMapPos = playerTile->worldPosToTilePos(playerPos);
+			Vector playerTilePos = playerTile->worldPosToTilePos(playerPos);
 			for (GemMovers::iterator i = gemMovers.begin(); i != gemMovers.end(); i++)
 			{
 				GemMover *gm = *i;
 				GemData *g = gm->getGemData();
-				if(g->isplayer)
+				if(g->isPlayer) // Don't want to call refresh() every frame, so just update position here
 				{
 					assert(!g->global);
-					g->pos = playerMapPos;
-					gm->position = playerMapPos;
+					g->pos = playerPos;
+					gm->position = playerTilePos;
 				}
 			}
 		}
@@ -994,11 +987,11 @@ GemMover *WorldMapRender::addGem(GemData *gemData)
 	else
 		addChild(g, PM_POINTER);
 	gemMovers.push_back(g);
-	g->update(0);
+	g->refresh();
 	return g;
 }
 
-void WorldMapRender::updateGem(const GemData* gemData)
+void WorldMapRender::refreshGem(const GemData* gemData)
 {
 	GemMover *m = getGem(gemData);
 	if(!m)

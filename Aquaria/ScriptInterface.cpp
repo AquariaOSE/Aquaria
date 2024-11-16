@@ -8864,8 +8864,9 @@ luaFunc(setGemPosition)
 			Continuity::Gems::iterator it = dsq->continuity.gems.begin();
 			std::advance(it, gemId);
 			GemData& gem = *it;
-			gem.pos = gem.global ? tc->worldPosToMapPos(pos) : tc->worldPosToTilePos(pos);
+			gem.pos = gem.global ? tc->worldPosToMapPos(pos) : pos;
 			gem.mapName = mapname;
+			game->worldMapRender->refreshGem(&gem);
 			result = true;
 		}
 		else
@@ -8891,6 +8892,7 @@ luaFunc(setGemName)
 		std::advance(it, gemId);
 		GemData& gem = *it;
 		gem.name = getString(L, 2);
+		game->worldMapRender->refreshGem(&gem);
 		result = true;
 	}
 	else

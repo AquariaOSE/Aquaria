@@ -53,7 +53,7 @@ public:
 	void setProperTileColor(WorldMapTileContainer& wt);
 	void action(int id, int state, int source, InputDevice device);
 	GemMover* addGem(GemData *gemData);
-	void updateGem(const GemData *gemData);
+	void refreshGem(const GemData *gemData);
 	void removeGem(GemMover *gemMover);
 	void removeGem(const GemData *gemData);
 	GemMover *getGem(const GemData *gemData) const;
@@ -64,7 +64,6 @@ public:
 	bool isCursorOffHud();
 	void updateAllTilesColor();
 	WorldMapTileContainer *getCurrentTile() { return playerTile; }
-	bool getWorldToPlayerTile(Vector& dst, const Vector& pos, bool global) const;
 	WorldMapTileContainer *getTileByName(const char *name) const;
 	WorldMapTileContainer * setCurrentMap(const char *mapname);
 

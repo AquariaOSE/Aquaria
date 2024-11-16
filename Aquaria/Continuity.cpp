@@ -2275,6 +2275,19 @@ void Continuity::upgradeHealth()
 	a->heal(maxHealth - a->health);
 }
 
+static Vector gemGlobalPos(const GemData& g)
+{
+	if(g.global || g.mapName.empty())
+		return g.pos;
+
+	// Legacy gem storage stores global position only, so tile-local coords need conversion
+	const WorldMapTileContainer *tc = game->worldMapRender->getTileByName(g.mapName.c_str());
+	if(!tc)
+		return g.pos;
+
+	return tc->worldPosToMapPos(g.pos);
+}
+
 void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData, int scrShotWidth, int scrShotHeight)
 {
 	refreshAvatarData(game->avatar);
@@ -2326,7 +2339,8 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			os << this->gems.size() << " ";
 			for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
 			{
-				os << (*i).name << " " << (*i).pos.x << " " << (*i).pos.y << " ";
+				Vector gpos = gemGlobalPos(*i);
+				os << (*i).name << " " << gpos.x << " " << gpos.y << " ";
 				os << (*i).canMove << " ";
 
 				hasUserString = !(*i).userString.empty();
@@ -2345,13 +2359,15 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			os << this->gems.size() << " ";
 			for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
 			{
+				Vector gpos = gemGlobalPos(*i);
+
 				os << (*i).name << " ";
 				bool hasMapName = !(*i).mapName.empty();
 				os << hasMapName << " ";
 				if(hasMapName)
 					os << (*i).mapName << " "; // warning: this will fail to load if the map name contains whitespace
 
-				os << (*i).pos.x << " " << (*i).pos.y << " ";
+				os << gpos.x << " " << gpos.y << " ";
 				os << (*i).canMove << " ";
 
 				bool hasUserString = !(*i).userString.empty();
@@ -2362,9 +2378,29 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			gems->SetAttribute("d", os.str().c_str());
 		}
 
-		// newest format; is aware if tile-relative position
+		// newest format; is aware of tile-relative position
+		for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
 		{
+			const GemData& g = *i;
+			XMLElement *gx = doc.NewElement("Gem");
+			gems->InsertEndChild(gx);
 
+			gx->SetAttribute("name", g.name.c_str());
+			gx->SetAttribute("x", g.pos.x); // always store position as-is
+			gx->SetAttribute("y", g.pos.y);
+			gx->SetAttribute("id", g.id);
+			gx->SetAttribute("global", (unsigned)g.global);
+
+			if(g.blink)
+				gx->SetAttribute("blink", (unsigned)g.blink);
+			if(g.canMove)
+				gx->SetAttribute("canMove", (unsigned)g.canMove);
+			if(!g.mapName.empty())
+				gx->SetAttribute("mapName", g.mapName.c_str());
+			if(!g.userString.empty())
+				gx->SetAttribute("userString", g.userString.c_str());
+			if(g.isPlayer)
+				gx->SetAttribute("isPlayer", (unsigned)g.isPlayer);
 		}
 
 	}
@@ -2768,10 +2804,49 @@ bool Continuity::loadFile(int slot)
 	XMLElement *gems = doc.FirstChildElement("Gems");
 	if (gems)
 	{
-		if (gems->Attribute("a"))
+		bool needGemFix = true;
+		// New gem storage. All other stores are ignored if a <Gem ...> tag is present,
+		// since the old format is stored as well for backwards compat.
+		// Old versions will not load this and instead use one of the fallbacks below
+		XMLElement *gem = gems->FirstChildElement("Gem");
+		if(gem)
 		{
-			std::string s = gems->Attribute("a");
-			std::istringstream is(s);
+			needGemFix = false;
+			do
+			{
+				GemData g;
+				g.blink = gem->IntAttribute("blink");
+				g.canMove = gem->IntAttribute("canMove");
+				g.global = true;
+				if(const char *mapname = gem->Attribute("mapName"))
+				{
+					g.mapName = mapname;
+					g.global = false;
+				}
+				if(gem->Attribute("global"))
+					g.global = gem->IntAttribute("global");
+				g.isPlayer = gem->IntAttribute("isPlayer");
+				if(const char *name = gem->Attribute("name"))
+					g.name = name;
+				g.pos.x = gem->FloatAttribute("x");
+				g.pos.y = gem->FloatAttribute("y");
+				if(const char *user = gem->Attribute("userString"))
+					g.userString = user;
+				if(gem->Attribute("id"))
+					g.id = gem->IntAttribute("id");
+
+				this->gems.push_back(g);
+
+				gem = gem->NextSiblingElement("Gem");
+			}
+			while(gem);
+
+		}
+		// ---- Legacy formats -----
+		// [name x y]...
+		else if (const char *attr = gems->Attribute("a"))
+		{
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
 			GemData g;
 			while (is >> g.name)
 			{
@@ -2779,10 +2854,10 @@ bool Continuity::loadFile(int slot)
 				this->gems.push_back(g);
 			}
 		}
-		else if (gems->Attribute("b"))
+		// [name x y canMove hasUserString (userString)]...
+		else if (const char *attr = gems->Attribute("b"))
 		{
-			std::string s = gems->Attribute("b");
-			std::istringstream is(s);
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
 			GemData g;
 			bool hasUserString = false;
 			while (is >> g.name)
@@ -2804,22 +2879,17 @@ bool Continuity::loadFile(int slot)
 				this->gems.push_back(g);
 			}
 		}
-		// num [name mapX mapY canMove hasUserString (userString)]
-		else if (gems->Attribute("c"))
+		// This is the format used by the original PC release
+		// num [name mapX mapY canMove hasUserString (userString)]...
+		else if (const char *attr = gems->Attribute("c"))
 		{
-			std::string s = gems->Attribute("c");
-			std::istringstream is(s);
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
 
 			int num = 0;
 			is >> num;
 
 			bool hasUserString = false;
 			GemData g;
-
-			std::ostringstream os;
-			os << "continuity num: [" << num << "]" << std::endl;
-			os << "data: [" << s << "]" << std::endl;
-			debugLog(os.str());
 
 			for (int i = 0; i < num; i++)
 			{
@@ -2847,11 +2917,11 @@ bool Continuity::loadFile(int slot)
 				debugLog(os.str());
 			}
 		}
+		// This is the format used by the android version
 		// num [name hasMapName (mapName) mapX mapY canMove hasUserString (userString)]
-		else if (gems->Attribute("d"))
+		else if (const char *attr = gems->Attribute("d"))
 		{
-			std::string s = gems->Attribute("d");
-			std::istringstream is(s);
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
 
 			int num = 0;
 			is >> num;
@@ -2859,11 +2929,6 @@ bool Continuity::loadFile(int slot)
 			bool hasUserString = false;
 			bool hasMapName = false;
 			GemData g;
-
-			std::ostringstream os;
-			os << "continuity num: [" << num << "]" << std::endl;
-			os << "data: [" << s << "]" << std::endl;
-			debugLog(os.str());
 
 			for (int i = 0; i < num; i++)
 			{
@@ -2880,7 +2945,7 @@ bool Continuity::loadFile(int slot)
 				if(hasMapName)
 					is >> g.mapName;
 
-				is >> g.pos.x >> g.pos.y;
+				is >> g.pos.x >> g.pos.y; // FIXME: check whether this is local coords or global coords
 				is >> g.canMove;
 				is >> hasUserString;
 
@@ -2893,6 +2958,25 @@ bool Continuity::loadFile(int slot)
 				std::ostringstream os;
 				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
 				debugLog(os.str());
+			}
+		}
+
+		// Slightly shoddy fix because we need to figure out which gem is the player gem but we don't know
+		if(needGemFix)
+		{
+			debugLog("Apply legacy gem fix");
+			bool doPlayerGem = true;
+			for(Gems::iterator it = this->gems.begin(); it != this->gems.end(); ++it)
+			{
+				GemData& g = *it;
+				g.global = g.mapName.empty();
+				if(doPlayerGem && !nocasecmp(g.name.c_str(), "Naija-Token")) // First gem with the special texture name is the player gem
+				{
+					g.isPlayer = true;
+					g.blink = true;
+					g.global = false;
+					//g.mapName =  ... // Don't need to set this now, it'll be set once map name is applied
+				}
 			}
 		}
 	}
@@ -2917,10 +3001,7 @@ bool Continuity::loadFile(int slot)
 			SimpleIStringStream is(va, SimpleIStringStream::REUSE);
 
 			WorldMapTile dummy;
-
 			int idx;
-
-
 
 			while (is >> idx)
 			{
@@ -3357,17 +3438,12 @@ GemData *Continuity::pickupGem(const std::string& name, bool effects)
 	bool isPlayerGem = !effects && gems.empty() && !nocasecmp(name, "Naija-Token");
 	if(isPlayerGem)
 	{
-		g.global = false; // the player is always on a map
 		g.blink = true;
+		g.isPlayer = true;
 	}
-	g.isplayer = isPlayerGem;
 
-	Vector avatarPos = game->avatar->getPositionForMap();
-	if(!game->worldMapRender->getWorldToPlayerTile(g.pos, avatarPos, g.global))
-	{
-		debugLog("pickupgem failed, no worldmap tile for current map");
-		return NULL;
-	}
+	// local gem, use position directly
+	g.pos = game->avatar->getPositionForMap();
 
 	gems.push_back(g);
 
@@ -3396,10 +3472,10 @@ void Continuity::setCurrentMap(const std::string& mapname)
 	for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
 	{
 		GemData& g = *i;
-		if(g.isplayer)
+		if(g.isPlayer)
 		{
 			g.mapName = mapname;
-			game->worldMapRender->updateGem(&g);
+			game->worldMapRender->refreshGem(&g);
 		}
 	}
 }
