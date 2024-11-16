@@ -2843,80 +2843,6 @@ bool Continuity::loadFile(int slot)
 
 		}
 		// ---- Legacy formats -----
-		// [name x y]...
-		else if (const char *attr = gems->Attribute("a"))
-		{
-			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			GemData g;
-			while (is >> g.name)
-			{
-				is >> g.pos.x >> g.pos.y;
-				this->gems.push_back(g);
-			}
-		}
-		// [name x y canMove hasUserString (userString)]...
-		else if (const char *attr = gems->Attribute("b"))
-		{
-			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			GemData g;
-			bool hasUserString = false;
-			while (is >> g.name)
-			{
-				hasUserString=false;
-
-				is >> g.pos.x >> g.pos.y;
-				is >> g.canMove;
-				is >> hasUserString;
-
-				if (hasUserString)
-					is >> g.userString;
-
-				std::ostringstream os;
-				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
-				debugLog(os.str());
-
-				g.userString = underscoresToSpaces(g.userString);
-				this->gems.push_back(g);
-			}
-		}
-		// This is the format used by the original PC release
-		// num [name mapX mapY canMove hasUserString (userString)]...
-		else if (const char *attr = gems->Attribute("c"))
-		{
-			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-
-			int num = 0;
-			is >> num;
-
-			bool hasUserString = false;
-			GemData g;
-
-			for (int i = 0; i < num; i++)
-			{
-				g.pos = Vector(0,0,0);
-				g.canMove = false;
-				g.userString = "";
-
-				hasUserString=false;
-
-				is >> g.name;
-				is >> g.pos.x >> g.pos.y;
-				is >> g.canMove;
-				is >> hasUserString;
-
-				if (hasUserString)
-					is >> g.userString;
-				else
-					g.userString = "";
-
-				g.userString = underscoresToSpaces(g.userString);
-				this->gems.push_back(g);
-
-				std::ostringstream os;
-				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
-				debugLog(os.str());
-			}
-		}
 		// This is the format used by the android version
 		// num [name hasMapName (mapName) mapX mapY canMove hasUserString (userString)]
 		else if (const char *attr = gems->Attribute("d"))
@@ -2960,6 +2886,83 @@ bool Continuity::loadFile(int slot)
 				debugLog(os.str());
 			}
 		}
+		// This is the format used by the original PC release
+		// num [name mapX mapY canMove hasUserString (userString)]...
+		else if (const char *attr = gems->Attribute("c"))
+		{
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+
+			int num = 0;
+			is >> num;
+
+			bool hasUserString = false;
+			GemData g;
+
+			for (int i = 0; i < num; i++)
+			{
+				g.pos = Vector(0,0,0);
+				g.canMove = false;
+				g.userString = "";
+
+				hasUserString=false;
+
+				is >> g.name;
+				is >> g.pos.x >> g.pos.y;
+				is >> g.canMove;
+				is >> hasUserString;
+
+				if (hasUserString)
+					is >> g.userString;
+				else
+					g.userString = "";
+
+				g.userString = underscoresToSpaces(g.userString);
+				this->gems.push_back(g);
+
+				std::ostringstream os;
+				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
+				debugLog(os.str());
+			}
+		}
+		// Haven't seen this used anywhere
+		// [name x y canMove hasUserString (userString)]...
+		else if (const char *attr = gems->Attribute("b"))
+		{
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			GemData g;
+			bool hasUserString = false;
+			while (is >> g.name)
+			{
+				hasUserString=false;
+
+				is >> g.pos.x >> g.pos.y;
+				is >> g.canMove;
+				is >> hasUserString;
+
+				if (hasUserString)
+					is >> g.userString;
+
+				std::ostringstream os;
+				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
+				debugLog(os.str());
+
+				g.userString = underscoresToSpaces(g.userString);
+				this->gems.push_back(g);
+			}
+		}
+		/// Haven't seen this used anywhere, either
+		// [name x y]...
+		else if (const char *attr = gems->Attribute("a"))
+		{
+			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
+			GemData g;
+			while (is >> g.name)
+			{
+				is >> g.pos.x >> g.pos.y;
+				this->gems.push_back(g);
+			}
+		}
+
 
 		// Slightly shoddy fix because we need to figure out which gem is the player gem but we don't know
 		if(needGemFix)
