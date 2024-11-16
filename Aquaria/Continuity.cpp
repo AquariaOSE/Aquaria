@@ -2845,7 +2845,7 @@ bool Continuity::loadFile(int slot)
 		}
 		// ---- Legacy formats -----
 		// This is the format used by the android version
-		// num [name hasMapName (mapName) mapX mapY canMove hasUserString (userString)]
+		// num [name hasMapName (mapName) mapX mapY canMove hasUserString (userString)]...
 		else if (const char *attr = gems->Attribute("d"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
@@ -2853,26 +2853,21 @@ bool Continuity::loadFile(int slot)
 			int num = 0;
 			is >> num;
 
-			bool hasUserString = false;
-			bool hasMapName = false;
 			GemData g;
 
 			for (int i = 0; i < num; i++)
 			{
-				g.pos = Vector(0,0,0);
-				g.canMove = false;
-				g.userString = "";
-				g.mapName = "";
-
-				hasUserString=false;
-				hasMapName = false;
+				bool hasUserString=false;
+				bool hasMapName = false;
 
 				is >> g.name;
 				is >> hasMapName;
 				if(hasMapName)
 					is >> g.mapName;
+				else
+					g.mapName.clear();
 
-				is >> g.pos.x >> g.pos.y; // FIXME: check whether this is local coords or global coords
+				is >> g.pos.x >> g.pos.y; // This is in (global) worldmap coords!
 				is >> g.canMove;
 				is >> hasUserString;
 
@@ -2883,7 +2878,7 @@ bool Continuity::loadFile(int slot)
 				this->gems.push_back(g);
 
 				std::ostringstream os;
-				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
+				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")";
 				debugLog(os.str());
 			}
 		}
@@ -2896,32 +2891,27 @@ bool Continuity::loadFile(int slot)
 			int num = 0;
 			is >> num;
 
-			bool hasUserString = false;
 			GemData g;
 
 			for (int i = 0; i < num; i++)
 			{
-				g.pos = Vector(0,0,0);
-				g.canMove = false;
-				g.userString = "";
-
-				hasUserString=false;
+				bool hasUserString=false;
 
 				is >> g.name;
-				is >> g.pos.x >> g.pos.y;
+				is >> g.pos.x >> g.pos.y; // This is in (global) worldmap coords!
 				is >> g.canMove;
 				is >> hasUserString;
 
 				if (hasUserString)
 					is >> g.userString;
 				else
-					g.userString = "";
+					g.userString.clear();
 
 				g.userString = underscoresToSpaces(g.userString);
 				this->gems.push_back(g);
 
 				std::ostringstream os;
-				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
+				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")";
 				debugLog(os.str());
 			}
 		}
@@ -2936,15 +2926,17 @@ bool Continuity::loadFile(int slot)
 			{
 				hasUserString=false;
 
-				is >> g.pos.x >> g.pos.y;
+				is >> g.pos.x >> g.pos.y; // This is in (global) worldmap coords!
 				is >> g.canMove;
 				is >> hasUserString;
 
 				if (hasUserString)
 					is >> g.userString;
+				else
+					g.userString.clear();
 
 				std::ostringstream os;
-				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")\n";
+				os << "Loading a Gem called [" << g.name << "] with userString [" << g.userString << "] pos (" << g.pos.x << ", " << g.pos.y << ")";
 				debugLog(os.str());
 
 				g.userString = underscoresToSpaces(g.userString);
@@ -2973,9 +2965,10 @@ bool Continuity::loadFile(int slot)
 			for(Gems::iterator it = this->gems.begin(); it != this->gems.end(); ++it)
 			{
 				GemData& g = *it;
-				g.global = g.mapName.empty();
+				g.global = true; // ALL legacy map gems are stored in the global worldmap coordinate system (except the naija gem below)
 				if(doPlayerGem && !nocasecmp(g.name.c_str(), "Naija-Token")) // First gem with the special texture name is the player gem
 				{
+					doPlayerGem = false; // one is enough
 					g.isPlayer = true;
 					g.blink = true;
 					g.global = false;
