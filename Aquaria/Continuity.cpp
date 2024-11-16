@@ -2378,7 +2378,8 @@ void Continuity::saveFile(int slot, Vector position, unsigned char *scrShotData,
 			gems->SetAttribute("d", os.str().c_str());
 		}
 
-		// newest format; is aware of tile-relative position
+		// newest format; is aware of tile-relative position and no longer likely to turn into clusterfuck like the previous storage strings
+		// (I mean, this is xml, and these are simple structured data, why did this store data...in strings...inside of xml. Nobody will ever know.)
 		for (Gems::iterator i = this->gems.begin(); i != this->gems.end(); i++)
 		{
 			const GemData& g = *i;
