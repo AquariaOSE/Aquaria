@@ -784,7 +784,7 @@ void SceneEditor::init()
 	placer->alpha = 0;
 	curElementId = 0;
 	selectedEntity.clear();
-	nextElement();
+	cyclePlacer(1);
 
 	const ElementTemplate *et = dsq->tilemgr.tileset.getIfExists(0);
 	if(!et)
