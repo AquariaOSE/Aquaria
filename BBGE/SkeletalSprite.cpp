@@ -654,21 +654,14 @@ SkeletalKeyframe *Animation::getFirstKeyframe()
 	return 0;
 }
 
+inline static bool keyframeCmp(const SkeletalKeyframe& a, const SkeletalKeyframe& b)
+{
+	return a.t < b.t;
+}
+
 void Animation::reorderKeyframes()
 {
-
-	for (size_t i = 0; i < keyframes.size(); i++)
-	{
-		for (size_t j = 0; j < keyframes.size()-1; j++)
-		{
-			if (keyframes[j].t > keyframes[j+1].t)
-			{
-				SkeletalKeyframe temp = keyframes[j+1];
-				keyframes[j+1] = keyframes[j];
-				keyframes[j] = temp;
-			}
-		}
-	}
+	std::sort(keyframes.begin(), keyframes.end(), keyframeCmp);
 }
 
 void Animation::cloneKey(size_t key, float toffset)
