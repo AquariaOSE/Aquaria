@@ -35,8 +35,27 @@ float TIMELINE_UNIT			= 0.1f;
 float TIMELINE_UNIT_STEP	= 0.01f;
 const int KEYFRAME_POS_Y	= 570;
 
+class KeyframeWidget : public Quad
+{
+public:
+	KeyframeWidget(int key);
+	float t;
+	int key;
+	static KeyframeWidget *movingWidget;
+	BitmapText *b;
+
+	void shiftLeft();
+	void shiftRight();
+protected:
+	void onUpdate(float dt);
+};
+
 class TimelineRender : public RenderObject
 {
+	virtual ~TimelineRender()
+	{
+	}
+
 	void onRender(const RenderState& rs) const OVERRIDE
 	{
 		glLineWidth(1);
@@ -49,17 +68,53 @@ class TimelineRender : public RenderObject
 		}
 		glEnd();
 	}
+
+public:
+
+	void addKeyframe(KeyframeWidget *w)
+	{
+		addChild(w, PM_POINTER);
+		keyframes.push_back(w);
+	}
+
+	inline const std::vector<KeyframeWidget*>& getKeyframes() const { return keyframes; }
+
+	void clearKeyframes()
+	{
+		for(size_t i = 0; i < keyframes.size(); ++i)
+		{
+			// They need to survive at least one more frame since this may be called from inside the keyframe click handler.
+			keyframes[i]->setLife(0.03f); // ie. don't call ->safeKill() here
+			keyframes[i]->setDecayRate(1);
+		}
+
+		keyframes.clear();
+	}
+
+	void resizeKeyframes(size_t n)
+	{
+		while(keyframes.size() > n)
+		{
+			KeyframeWidget *k = keyframes.back();
+			k->setLife(0.03f);
+			k->setDecayRate(1);
+			keyframes.pop_back();
+		}
+
+		while(keyframes.size() < n)
+		{
+			KeyframeWidget *k = new KeyframeWidget(keyframes.size());
+			addKeyframe(k);
+		}
+	}
+
+private:
+	std::vector<KeyframeWidget*> keyframes;
 };
 
 AnimationEditor *ae = 0;
 
 KeyframeWidget *KeyframeWidget::movingWidget = 0;
-
-Gradient *bgGrad = 0;
-
-int keyframeOffset = 0;
-
-Bone *lastSelectedBone = 0;
 
 void AnimationEditor::constrainMouse()
 {
@@ -83,7 +138,6 @@ KeyframeWidget::KeyframeWidget(int key) : Quad()
 	b->setFontSize(12);
 	addChild(b, PM_POINTER);
 	this->key = key;
-	ae->keyframeWidgets.push_back(this);
 }
 
 void KeyframeWidget::shiftLeft()
@@ -162,7 +216,6 @@ void KeyframeWidget::onUpdate(float dt)
 		ae->reorderKeys();
 		return;
 	}
-	position.y = KEYFRAME_POS_Y;
 }
 
 void AnimationEditor::cycleLerpType()
@@ -200,7 +253,6 @@ void AnimationEditor::cycleLerpType()
 AnimationEditor::AnimationEditor() : StateObject()
 {
 	registerState(this, "AnimationEditor");
-
 }
 
 void AnimationEditor::resetScaleOrSave()
@@ -487,9 +539,9 @@ void AnimationEditor::applyState()
 	text2->setFontSize(6);
 	addRenderObject(text2, LR_HUD);
 
-	TimelineRender *tr = new TimelineRender();
-	tr->position = Vector(0, KEYFRAME_POS_Y);
-	addRenderObject(tr, LR_BLACKGROUND);
+	timeline = new TimelineRender();
+	timeline->position = Vector(0, KEYFRAME_POS_Y);
+	addRenderObject(timeline, LR_BLACKGROUND);
 
 	editSprite->setSelectedBone(0);
 
@@ -611,31 +663,13 @@ void AnimationEditor::reorderKeys()
 
 void AnimationEditor::rebuildKeyframeWidgets()
 {
-	int offx=0;
-	for (size_t i = 0; i < keyframeWidgets.size(); i++)
-	{
-		keyframeWidgets[i]->setLife(0.03f);
-		keyframeWidgets[i]->setDecayRate(1);
-		offx = keyframeWidgets[i]->offset.x;
-	}
-	keyframeWidgets.clear();
-	if (Animation *a = editSprite->getCurrentAnimation())
-	{
-		for (int i = 0; i < 1000; i++)
-		{
-			SkeletalKeyframe *key = a->getKeyframe(i);
-			if (!key) break;
-			KeyframeWidget *k = new KeyframeWidget(i);
-			k->offset.x = offx;
-			addRenderObject(k, LR_HUD);
-			keyframeWidgets.push_back(k);
-		}
-	}
+	size_t n = editSprite->getCurrentAnimation()->getNumKeyframes();
+	timeline->resizeKeyframes(n);
 }
 
 void AnimationEditor::removeState()
 {
-	keyframeWidgets.clear();
+	timeline->clearKeyframes();
 	StateObject::removeState();
 	core->cameraPos = Vector(0,0);
 }
@@ -891,6 +925,7 @@ void AnimationEditor::nextKey()
 	{
 		if (core->getCtrlState())
 		{
+			const std::vector<KeyframeWidget*>& keyframeWidgets = timeline->getKeyframes();
 			for (size_t i = 0; i < keyframeWidgets.size(); i++)
 			{
 				keyframeWidgets[i]->shiftLeft();
@@ -924,6 +959,7 @@ void AnimationEditor::prevKey()
 	{
 		if (core->getCtrlState())
 		{
+			const std::vector<KeyframeWidget*>& keyframeWidgets = timeline->getKeyframes();
 			for (size_t i = 0; i < keyframeWidgets.size(); i++)
 			{
 				keyframeWidgets[i]->shiftRight();
@@ -1392,7 +1428,6 @@ void AnimationEditor::saveFile()
 void AnimationEditor::loadFile()
 {
 	SkeletalSprite::clearCache();
-	lastSelectedBone = 0;
 	editingBone = 0;
 	clearUndoHistory();
 	editSprite->position = Vector(400,300);
@@ -1506,6 +1541,7 @@ void AnimationEditor::moveNextWidgets(float dt)
 
 	int s = 0;
 	KeyframeWidget *w=0;
+	const std::vector<KeyframeWidget*>& keyframeWidgets = timeline->getKeyframes();
 	for (size_t i = 0; i < keyframeWidgets.size(); i++)
 	{
 		w = keyframeWidgets[i];

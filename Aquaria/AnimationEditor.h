@@ -9,22 +9,11 @@ class DebugFont;
 class BitmapText;
 class SplineGrid;
 class DebugButton;
+class Gradient;
 
-class KeyframeWidget : public Quad
-{
-public:
-	KeyframeWidget(int key);
-	float t;
-	int key;
-	static KeyframeWidget *movingWidget;
-	BitmapText *b;
-
-	void shiftLeft();
-	void shiftRight();
-protected:
-	void onUpdate(float dt);
-};
-
+// internal
+class TimelineRender;
+class KeyframeWidget;
 
 class AnimationEditor : public StateObject
 {
@@ -114,8 +103,6 @@ public:
 
 	std::string editingFile;
 
-	std::vector<KeyframeWidget*> keyframeWidgets;
-
 	void action(int id, int state, int source, InputDevice device);
 
 	void rebuildKeyframeWidgets();
@@ -168,6 +155,9 @@ public:
 	void toggleSplineMode();
 	DebugButton *bSplineAssist;
 	void updateButtonLabels();
+
+	Gradient *bgGrad;
+	TimelineRender *timeline;
 };
 
 
