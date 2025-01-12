@@ -2154,6 +2154,9 @@ Bone* SkeletalSprite::getSelectedBone(bool mouseBased)
 
 void SkeletalSprite::updateSelectedBoneColor()
 {
+	if(!bones.size())
+		return;
+
 	for (size_t i = 0; i < bones.size(); i++)
 	{
 		bones[i]->color = Vector(1,1,1);

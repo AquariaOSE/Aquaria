@@ -345,6 +345,7 @@ void KeyframeWidget::onUpdate(float dt)
 void AnimationEditor::cycleLerpType()
 {
 	if (dsq->isNested()) return;
+	if (editMode != AE_SELECT) return;
 
 	Animation *a = getCurrentPageAnimation();
 
@@ -860,9 +861,9 @@ void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 	if (dsq->isNested()) return;
 
 	Bone *sel = editingBone;
-	if (editingBone)
+	if (sel)
 	{
-		BoneKeyframe *b = getCurrentPageAnimation()->getKeyframe(currentKey)->getBoneKeyframe(sel->boneIdx);
+		BoneKeyframe *b = editingBoneSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(sel->boneIdx);
 		if (b)
 		{
 			if (!sel->changeStrip.empty())
@@ -872,7 +873,9 @@ void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 					b->grid.resize(sel->changeStrip.size());
 				}
 
-				b->grid[selectedStripPoint] = sel->changeStrip[selectedStripPoint] += mov*0.006f;
+				Vector v = sel->changeStrip[selectedStripPoint] + mov*0.006f;
+				sel->changeStrip[selectedStripPoint] = v;
+				b->grid[selectedStripPoint] = v;
 			}
 		}
 	}
@@ -1108,8 +1111,6 @@ void AnimationEditor::update(float dt)
 					spr->setTime(t);
 				}
 			}
-			for(size_t i = 0; i < NumPages; ++i)
-				getPageSprite(i)->updateBones();
 		}
 	}
 
@@ -1118,6 +1119,9 @@ void AnimationEditor::update(float dt)
 		applySplineGridToBone();
 		splinegrid->wasModified = false;
 	}
+
+	for(size_t i = 0; i < NumPages; ++i)
+		getPageSprite(i)->updateBones();
 }
 
 void AnimationEditor::_copyKey()
@@ -1161,7 +1165,7 @@ void AnimationEditor::nextKey()
 	if (editMode == AE_STRIP)
 	{
 		selectedStripPoint++;
-		if (selectedStripPoint >= editSprite->getSelectedBone(false)->changeStrip.size()
+		if (selectedStripPoint >= editingBoneSprite->getSelectedBone(false)->changeStrip.size()
 				&& selectedStripPoint > 0)
 			selectedStripPoint --;
 	}
@@ -1276,7 +1280,7 @@ void AnimationEditor::editStripKey()
 		if(editingBone && editingBone->getGrid())
 		{
 			DynamicRenderGrid *grid = editingBone->getGrid();
-			Animation *a = getCurrentPageAnimation();
+			Animation *a = editingBoneSprite->getCurrentAnimation();
 			BoneGridInterpolator *interp = a->getBoneGridInterpolator(editingBone->boneIdx);
 
 			if(interp)
@@ -1314,12 +1318,12 @@ void AnimationEditor::editStripKey()
 		}
 		else if(editingBone)
 		{
-			debugLog("Bone has no grid, cannot edit grid");
+			notify("Bone has no grid, cannot edit grid");
 			dsq->sound->playSfx("denied");
 		}
 		else
 		{
-			debugLog("No bone selected for grid edit mode");
+			notify("No bone selected for grid edit mode");
 			dsq->sound->playSfx("denied");
 		}
 	}
@@ -1387,7 +1391,7 @@ void AnimationEditor::applyTranslation()
 {
 	if (editingBone)
 	{
-		Animation *a = getCurrentPageAnimation();
+		Animation *a = editingBoneSprite->getCurrentAnimation();
 		if (!core->getShiftState())
 		{
 			// one bone mode
@@ -1442,10 +1446,13 @@ void AnimationEditor::applyTranslation()
 
 void AnimationEditor::applyRotation()
 {
-	BoneKeyframe *b = getCurrentPageAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-	if (b)
+	if(editingBone)
 	{
-		b->rot = editingBone->rotation.z = 0;
+		BoneKeyframe *b = editingBoneSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+		if (b)
+		{
+			b->rot = editingBone->rotation.z = 0;
+		}
 	}
 }
 
@@ -1496,7 +1503,7 @@ void AnimationEditor::flipRot()
 	updateEditingBone();
 	if (editingBone)
 	{
-		Animation *a = getCurrentPageAnimation();
+		Animation *a = editingBoneSprite->getCurrentAnimation();
 		if (!core->getShiftState())
 		{
 			BoneKeyframe *b = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
@@ -1549,7 +1556,7 @@ void AnimationEditor::clearPos()
 	updateEditingBone();
 	if (editingBone)
 	{
-		BoneKeyframe *b = getCurrentPageAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+		BoneKeyframe *b = editingBoneSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 		if (b)
 		{
 			editingBone->position = Vector(0,0);
@@ -1578,7 +1585,7 @@ void AnimationEditor::rmbu()
 	editMode = AE_SELECT;
 	if (editingBone)
 	{
-		Animation *a = getCurrentPageAnimation();
+		Animation *a = editingBoneSprite->getCurrentAnimation();
 		if (!core->getShiftState())
 		{
 			// one bone mode
@@ -1637,7 +1644,7 @@ void AnimationEditor::cloneBoneAhead()
 	updateEditingBone();
 	if (editingBone && currentKey >= 0)
 	{
-		Animation *a = getCurrentPageAnimation();
+		Animation *a = editingBoneSprite->getCurrentAnimation();
 		SkeletalKeyframe *s1 = a->getKeyframe(currentKey);
 		BoneKeyframe *b1 = 0;
 		if (s1)
@@ -1748,9 +1755,9 @@ void AnimationEditor::quit()
 void AnimationEditor::nextAnim()
 {
 	if (dsq->isNested()) return;
-	if (editMode != AE_SELECT) return;
+	if (core->getShiftState()) return;
 
-	if (!core->getShiftState())
+	if(editMode == AE_SELECT)
 	{
 		getCurrentPageSprite()->nextAnimation();
 		currentKey = 0;
@@ -1761,9 +1768,9 @@ void AnimationEditor::nextAnim()
 void AnimationEditor::prevAnim()
 {
 	if (dsq->isNested()) return;
-	if (editMode != AE_SELECT) return;
+	if (core->getShiftState()) return;
 
-	if (!core->getShiftState())
+	if(editMode == AE_SELECT)
 	{
 		getCurrentPageSprite()->prevAnimation();
 		currentKey = 0;
@@ -1901,12 +1908,14 @@ void AnimationEditor::updateRenderBorders()
 // Pick the closest bone
 void AnimationEditor::updateEditingBone()
 {
-	assert(editMode == AE_SELECT);
+	if(editMode != AE_SELECT)
+		return;
 
 	if(!mouseSelection)
 	{
 		editingBoneSprite = getCurrentPageSprite();
-		editingBone =editingBoneSprite->getSelectedBone(false);
+		editingBone = editingBoneSprite->getSelectedBone(false);
+		editingBonePage = curPage;
 		return;
 	}
 
@@ -2104,7 +2113,7 @@ void AnimationEditor::applyBoneToSplineGrid()
 {
 	if(splinegrid && editingBone)
 	{
-		Animation *a = getCurrentPageAnimation();
+		Animation *a = editingBoneSprite->getCurrentAnimation();
 		BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 
 		assert(bk->grid.size() == editingBone->getGrid()->linearsize());
@@ -2116,7 +2125,7 @@ void AnimationEditor::applySplineGridToBone()
 {
 	if(splinegrid && editingBone)
 	{
-		Animation *a = getCurrentPageAnimation();
+		Animation *a = editingBoneSprite->getCurrentAnimation();
 		BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 		assert(bk->grid.size() == editingBone->getGrid()->linearsize());
 		splinegrid->exportKeyframe(bk);
