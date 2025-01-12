@@ -2092,7 +2092,7 @@ void SkeletalSprite::setFreeze(bool f)
 
 void SkeletalSprite::updateBones()
 {
-	if (!frozen && isLoaded())
+	if (!frozen)
 	{
 		for (size_t i = 0; i < animLayers.size(); i++)
 		{

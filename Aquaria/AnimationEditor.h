@@ -158,8 +158,10 @@ public:
 	void updateButtonLabels();
 	void toggleGradient();
 	float getMouseTimelineTime() const; // <0 when not in timeline area
+	bool isMouseInRect() const;
 
 	Gradient *bgGrad;
+	Quad *rect;
 
 	Animation *getPageAnimation(size_t page) const;
 	Animation *getCurrentPageAnimation() const;

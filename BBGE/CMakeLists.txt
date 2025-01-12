@@ -77,7 +77,6 @@ set(BBGE_SRCS
     RenderObject.h
     RenderObject_inline.h
     RenderObjectLayer.cpp
-    RenderRect.cpp
     RenderState.cpp
     RenderState.h
     RoundedRect.cpp

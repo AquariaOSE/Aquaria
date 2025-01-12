@@ -24,20 +24,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderObject.h"
 #include "DataStructures.h"
 
-class OutlineRect : public RenderObject
-{
-public:
-	OutlineRect();
-	void setWidthHeight(int w, int h);
-	void setLineSize(int ls);
-
-protected:
-
-	int w, h, w2, h2;
-	int lineSize;
-
-	void onRender(const RenderState& rs) const OVERRIDE;
-};
 
 class DynamicRenderGrid;
 

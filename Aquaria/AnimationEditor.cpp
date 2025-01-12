@@ -76,7 +76,11 @@ class TimelineTickRender : public RenderObject
 {
 public:
 	TimelineTickRender()
+		: bg("black", Vector(400, 0))
 	{
+		addChild(&bg, PM_STATIC, RBP_ON);
+		bg.setWidthHeight(800, TIMELINE_HEIGHT);
+		bg.alphaMod = 0.2f;
 	}
 
 	virtual ~TimelineTickRender()
@@ -84,6 +88,7 @@ public:
 	}
 
 private:
+	Quad bg;
 	void onRender(const RenderState& rs) const OVERRIDE
 	{
 		glLineWidth(1);
@@ -247,15 +252,32 @@ struct AnimationEditorPage
 	}
 };
 
+bool AnimationEditor::isMouseInRect() const
+{
+	Vector mp=core->mouse.position;
+	const float w2 = rect->width * 0.5f;
+	const float h2 = rect->height * 0.5f;
+	const float left = rect->position.x - w2;
+	const float right = rect->position.x + w2;
+	const float top = rect->position.y - h2;
+	const float btm = rect->position.y + h2;
+	return mp.x >= left && mp.x <= right && mp.y >= top && mp.y <= btm;
+}
 
 void AnimationEditor::constrainMouse()
 {
 	Vector mp=core->mouse.position;
+	const float w2 = rect->width * 0.5f;
+	const float h2 = rect->height * 0.5f;
+	const float left = rect->position.x - w2;
+	const float right = rect->position.x + w2;
+	const float top = rect->position.y - h2;
+	const float btm = rect->position.y + h2;
 	bool doit = false;
-	if (mp.x < 200)	{ mp.x = 200; doit = true; } // FIXME: actually check box coords
-	if (mp.x > 600)	{ mp.x = 600; doit = true; }
-	if (mp.y < 100)	{ mp.y = 100; doit = true; }
-	if (mp.y > 500)	{ mp.y = 500; doit = true; }
+	if (mp.x < left )	{ mp.x = left; doit = true; }
+	if (mp.x > right)	{ mp.x = right; doit = true; }
+	if (mp.y < top  )	{ mp.y = top; doit = true; }
+	if (mp.y > btm  )	{ mp.y = btm; doit = true; }
 
 	if(doit)
 		core->setMousePosition(mp);
@@ -685,10 +707,13 @@ void AnimationEditor::applyState()
 	addRenderObject(bAssist, LR_MENU);
 	bSplineAssist = bAssist;
 
-
-	OutlineRect *rect = new OutlineRect;
+	rect = new Quad("black", Vector(400,300+yoffs));
+	rect->alphaMod = 0.2f;
+	rect->renderBorder = true;
+	rect->renderCenter = false;
+	rect->borderAlpha = 5; // HACK to compensate alphaMod
+	rect->renderBorderColor = Vector(1,1,1);
 	rect->setWidthHeight(400,400);
-	rect->position = Vector(400,300+yoffs);
 	addRenderObject(rect, LR_MENU);
 
 	text = new DebugFont();
@@ -831,7 +856,8 @@ void AnimationEditor::reorderKeys()
 
 void AnimationEditor::rebuildKeyframeWidgets()
 {
-	size_t n = getCurrentPageAnimation()->getNumKeyframes();
+	Animation *a = getCurrentPageAnimation();
+	size_t n = a ? a->getNumKeyframes() : 0;
 	pages[curPage].timeline->resizeKeyframes(n);
 }
 
@@ -1074,6 +1100,8 @@ void AnimationEditor::update(float dt)
 			constrainMouse();
 		}
 	}
+
+	bool doUpdateBones = false;
 	if (editMode == AE_SELECT)
 	{
 		float t = 0;
@@ -1106,11 +1134,13 @@ void AnimationEditor::update(float dt)
 				if(Animation *a = spr->getCurrentAnimationOrNull())
 				{
 					float len = a->getAnimationLength();
+					float tt = t;
 					if(len && mod)
-						t = fmodf(t, len);
-					spr->setTime(t);
+						tt = fmodf(tt, len);
+					spr->setTime(tt);
 				}
 			}
+			doUpdateBones = true;
 		}
 	}
 
@@ -1120,8 +1150,16 @@ void AnimationEditor::update(float dt)
 		splinegrid->wasModified = false;
 	}
 
-	for(size_t i = 0; i < NumPages; ++i)
-		getPageSprite(i)->updateBones();
+	if(doUpdateBones)
+	{
+		for(size_t i = 0; i < NumPages; ++i)
+		{
+			SkeletalSprite *spr = getPageSprite(i);
+			if(spr->isLoaded() && !spr->isAnimating())
+				spr->updateBones();
+		}
+	}
+
 }
 
 void AnimationEditor::_copyKey()
@@ -1179,10 +1217,10 @@ void AnimationEditor::nextKey()
 				keyframeWidgets[i]->shiftLeft();
 			}
 		}
-		else
+		else if(Animation *a = editSprite->getCurrentAnimation())
 		{
 			currentKey++;
-			SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
+			SkeletalKeyframe *k = a->getKeyframe(currentKey);
 			if (k)
 				editSprite->setTime(k->t);
 			else
@@ -1214,12 +1252,12 @@ void AnimationEditor::prevKey()
 				keyframeWidgets[i]->shiftRight();
 			}
 		}
-		else
+		else if(Animation *a = editSprite->getCurrentAnimation())
 		{
 			if (currentKey > 0)
 			{
 				currentKey --;
-				SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
+				SkeletalKeyframe *k = a->getKeyframe(currentKey);
 				if (k)
 					editSprite->setTime(k->t);
 
@@ -1375,11 +1413,7 @@ void AnimationEditor::lmbd()
 	{
 		pushUndo();
 		updateEditingBone();
-		if (editingBone
-
-			&& core->mouse.position.x > 400-200 && core->mouse.position.x < 400+200
-			&& core->mouse.position.y > 300-200 && core->mouse.position.y < 300+200
-			)
+		if (editingBone && isMouseInRect() && !editingBoneSprite->isAnimating())
 		{
 			cursorOffset = editingBone->getWorldPosition() - core->mouse.position;
 			editMode = AE_EDITING_MOVE;
@@ -1425,12 +1459,11 @@ void AnimationEditor::applyTranslation()
 				else
 				{
 					// all bones in all anims mode
-					SkeletalSprite *editSprite = getCurrentPageSprite();
-					for (size_t a = 0; a < editSprite->animations.size(); ++a)
+					for (size_t a = 0; a < editingBoneSprite->animations.size(); ++a)
 					{
-						for (size_t i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+						for (size_t i = 0; i < editingBoneSprite->animations[a].getNumKeyframes(); ++i)
 						{
-							BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							BoneKeyframe *b = editingBoneSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 							if (b)
 							{
 								b->x += xdiff;
@@ -1470,7 +1503,7 @@ void AnimationEditor::rmbd()
 	if(editMode == AE_SELECT)
 	{
 		updateEditingBone();
-		if (editingBone)
+		if (editingBone && !editingBoneSprite->isAnimating())
 		{
 			pushUndo();
 			cursorOffset = core->mouse.position;
@@ -1531,12 +1564,11 @@ void AnimationEditor::flipRot()
 				else
 				{
 					// all bones in all anims mode
-					SkeletalSprite *editSprite = getCurrentPageSprite();
-					for (size_t a = 0; a < editSprite->animations.size(); ++a)
+					for (size_t a = 0; a < editingBoneSprite->animations.size(); ++a)
 					{
-						for (size_t i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+						for (size_t i = 0; i < editingBoneSprite->animations[a].getNumKeyframes(); ++i)
 						{
-							BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							BoneKeyframe *b = editingBoneSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 							if (b)
 							{
 								b->rot = -b->rot;
@@ -1615,12 +1647,11 @@ void AnimationEditor::rmbu()
 				else
 				{
 					// all bones in all anims mode
-					SkeletalSprite *editSprite = getCurrentPageSprite();
-					for (size_t a = 0; a < editSprite->animations.size(); ++a)
+					for (size_t a = 0; a < editingBoneSprite->animations.size(); ++a)
 					{
-						for (size_t i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+						for (size_t i = 0; i < editingBoneSprite->animations[a].getNumKeyframes(); ++i)
 						{
-							BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							BoneKeyframe *b = editingBoneSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 							if (b)
 							{
 								b->rot += rotdiff;
