@@ -55,7 +55,7 @@ public:
 	void reorderKeys();
 
 	void saveFile();
-	void loadFile(const char *fn);
+	void loadFile(size_t pg, const char *fn);
 	void reloadFile();
 
 	void nextAnim();
@@ -101,7 +101,7 @@ public:
 	SkeletalSprite *editingBoneSprite; // updated together with editingBone
 	int editingBonePage;
 	EditMode editMode;
-	DebugFont *text, *text2, *toptext;
+	DebugFont *text, *text2, *toptext, *btmtext;
 
 	void goToTitle();
 
@@ -157,6 +157,7 @@ public:
 	DebugButton *bSplineAssist;
 	void updateButtonLabels();
 	void toggleGradient();
+	float getMouseTimelineTime() const; // <0 when not in timeline area
 
 	Gradient *bgGrad;
 
@@ -186,6 +187,11 @@ private:
 	void selectPage8() { selectPage(8); }
 
 	void _stopExtraEditModes();
+
+	void saveAll();
+	void reloadAll();
+	bool savePage(size_t pg);
+	void reloadPage(size_t pg);
 };
 
 

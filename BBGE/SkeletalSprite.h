@@ -214,7 +214,7 @@ public:
 	void enqueueAnimation(const std::string& anim, int loop);
 	float transitionAnimate(std::string anim, float time, int loop);
 	void setTimeMultiplier(float t);
-	bool isAnimating();
+	bool isAnimating() const;
 	bool contains(const Bone *b) const;
 	void resetPass();
 
@@ -270,7 +270,7 @@ public:
 
 	float transitionAnimate(const std::string& anim, float time, int loop=0, int layer=0);
 
-	bool isAnimating(int layer=0);
+	bool isAnimating(size_t layer=0) const;
 
 	void setTimeMultiplier(float t, int layer=0);
 

@@ -230,7 +230,7 @@ public:
 	void spawnAllIngredients(const Vector &position);
 
 	int getEntityTypeIndexByName(std::string s);
-	void screenMessage(const std::string &msg);
+	void screenMessage(const std::string &msg, const Vector& pos = Vector(16,300));
 	void _debugLog(const std::string &s) OVERRIDE;
 	void toggleConsole();
 	void toggleEffects();

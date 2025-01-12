@@ -602,7 +602,7 @@ void AnimationLayer::stopAnimation()
 	}
 }
 
-bool AnimationLayer::isAnimating()
+bool AnimationLayer::isAnimating() const
 {
 	return animating;
 }
@@ -2103,9 +2103,9 @@ void SkeletalSprite::updateBones()
 
 }
 
-bool SkeletalSprite::isAnimating(int layer)
+bool SkeletalSprite::isAnimating(size_t layer) const
 {
-	return animLayers[layer].animating;
+	return layer < animLayers.size() && animLayers[layer].animating;
 }
 
 void SkeletalSprite::setTimeMultiplier(float t, int layer)

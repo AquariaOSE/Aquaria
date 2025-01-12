@@ -2288,12 +2288,12 @@ void DSQ::clearMenu(float t)
 	menu.clear();
 }
 
-void DSQ::screenMessage(const std::string &msg)
+void DSQ::screenMessage(const std::string &msg, const Vector& pos)
 {
 	debugLog(msg);
 
 	DebugFont *b = new DebugFont();
-	b->position = Vector(16,300);
+	b->position = pos;
 	b->setFontSize(10);
 	b->setText(msg);
 	b->alpha = 0;

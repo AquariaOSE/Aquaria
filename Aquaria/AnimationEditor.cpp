@@ -42,6 +42,8 @@ const float TIMELINE_CENTER_Y = 535;
 
 enum { NumPages = 9 }; // one for each number key 1-9
 
+const Vector ScreenMsgPos(210, 55);
+
 
 class TimelineRender;
 
@@ -64,6 +66,11 @@ protected:
 AnimationEditor *ae = 0;
 
 KeyframeWidget *KeyframeWidget::movingWidget = 0;
+
+static void notify(const std::string& s)
+{
+	dsq->screenMessage(s, ScreenMsgPos);
+}
 
 class TimelineTickRender : public RenderObject
 {
@@ -154,9 +161,9 @@ private:
 			return;
 
 		if(ae->curPage == page)
-			glColor4f(0.8, 0.8, 1, 0.5f);
+			glColor4f(0.6f, 0.8f, 1, 0.5f);
 		else
-			glColor4f(0.5, 0.3, 0.3, 0.5f);
+			glColor4f(0.5f, 0.3f, 0.3f, 0.5f);
 
 		const float h2 = height * 0.5f;
 		glPushMatrix();
@@ -353,7 +360,7 @@ void AnimationEditor::cycleLerpType()
 			{
 				k2->copyAllButTime(k1);
 			}
-			dsq->screenMessage("Copied Loop Key");
+			notify("Copied Loop Key");
 
 		}
 	}
@@ -388,7 +395,7 @@ void AnimationEditor::resetScaleOrSave()
 		std::ostringstream os;
 		os << scale.x;
 		if(!SDL_SetClipboardText(os.str().c_str()))
-			dsq->screenMessage("Scale copied to clipboard");
+			notify("Scale copied to clipboard");
 	}
 	else
 		getCurrentPageSprite()->scale = Vector(1,1);
@@ -503,6 +510,8 @@ void AnimationEditor::applyState()
 	addAction(ACTION_SWIMDOWN,	KEY_DOWN, -1);
 
 	const float yoffs = -55;
+	const float smallw = 50;
+	const float gap = 5;
 
 	Quad *back = new Quad;
 	{
@@ -639,17 +648,29 @@ void AnimationEditor::applyState()
 	gridup->event.set(MakeFunctionEvent(AnimationEditor, incrTimelineGrid));
 	addRenderObject(gridup, LR_MENU);
 
-	DebugButton *save = new DebugButton(0, 0, 150);
+	DebugButton *save = new DebugButton(0, 0, 150 - smallw - gap);
 	save->label->setText("Save");
 	save->position = Vector(640, 100+yoffs);
 	save->event.set(MakeFunctionEvent(AnimationEditor, saveFile));
 	addRenderObject(save, LR_MENU);
 
-	DebugButton *load = new DebugButton(0, 0, 150);
+	DebugButton *saveall = new DebugButton(0, 0, smallw);
+	saveall->label->setText("All");
+	saveall->position = save->position + 150/2 + smallw/2 + gap;
+	saveall->event.set(MakeFunctionEvent(AnimationEditor, saveAll));
+	addRenderObject(saveall, LR_MENU);
+
+	DebugButton *load = new DebugButton(0, 0, 150 - smallw - gap);
 	load->label->setText("Reload");
 	load->position = Vector(640, 70+yoffs);
 	load->event.set(MakeFunctionEvent(AnimationEditor, reloadFile));
 	addRenderObject(load, LR_MENU);
+
+	DebugButton *loadall = new DebugButton(0, 0, smallw);
+	loadall->label->setText("All");
+	loadall->position = load->position + 150/2 + smallw/2 + gap;
+	loadall->event.set(MakeFunctionEvent(AnimationEditor, reloadAll));
+	addRenderObject(loadall, LR_MENU);
 
 	DebugButton *reverseAnim = new DebugButton(0, 0, 150);
 	reverseAnim->label->setText("reverseAnim");
@@ -675,7 +696,7 @@ void AnimationEditor::applyState()
 	addRenderObject(text, LR_HUD);
 
 	text2 = new DebugFont();
-	text2->position = Vector(200,510+yoffs);
+	text2->position = Vector(200,505+yoffs);
 	text2->setFontSize(6);
 	addRenderObject(text2, LR_HUD);
 
@@ -683,6 +704,11 @@ void AnimationEditor::applyState()
 	toptext->position = Vector(200,90-20+yoffs);
 	toptext->setFontSize(6);
 	addRenderObject(toptext, LR_HUD);
+
+	btmtext = new DebugFont();
+	btmtext->position = Vector(200,515+yoffs);
+	btmtext->setFontSize(6);
+	addRenderObject(btmtext, LR_HUD);
 
 	dsq->overlay->alpha.interpolateTo(0, 0.5f);
 
@@ -878,6 +904,8 @@ void AnimationEditor::update(float dt)
 
 	SkeletalSprite *editSprite = getCurrentPageSprite();
 
+	const float tltime = getMouseTimelineTime();
+
 	{
 		{
 			std::ostringstream os;
@@ -930,6 +958,14 @@ void AnimationEditor::update(float dt)
 		char t2buf[128];
 		sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f  strip: %u pass: %d (%d)", ebdata.x, ebdata.y, ebdata.z, (unsigned)selectedStripPoint, pass, origpass);
 		text2->setText(t2buf);
+
+
+		const float t = getAnimTime();
+		if(tltime >= 0)
+			sprintf(t2buf, "t: %.4f, mouse at %.4f", t, tltime);
+		else
+			sprintf(t2buf, "t: %.4f", t);
+		btmtext->setText(t2buf);
 	}
 
 	if (editMode == AE_STRIP)
@@ -1037,17 +1073,43 @@ void AnimationEditor::update(float dt)
 	}
 	if (editMode == AE_SELECT)
 	{
-		if (!isAnimating())
+		float t = 0;
+		bool hastime = false;
+		bool mod = false;
+		if(core->mouse.buttons.right)
+		{
+			t = tltime;
+			hastime = t >= 0;
+			mod = true;
+		}
+		if (!hastime && !isAnimating())
 		{
 			if(Animation *a = editSprite->getCurrentAnimationOrNull())
 			{
 				SkeletalKeyframe *k = a->getKeyframe(currentKey);
 				if (k)
-					for(size_t i = 0; i < NumPages; ++i)
-						getPageSprite(i)->setTime(k->t);
-				for(size_t i = 0; i < NumPages; ++i)
-					getPageSprite(i)->updateBones();
+				{
+					t = k->t;
+					hastime = true;
+				}
 			}
+		}
+
+		if(hastime)
+		{
+			for(size_t i = 0; i < NumPages; ++i)
+			{
+				SkeletalSprite *spr = getPageSprite(i);
+				if(Animation *a = spr->getCurrentAnimationOrNull())
+				{
+					float len = a->getAnimationLength();
+					if(len && mod)
+						t = fmodf(t, len);
+					spr->setTime(t);
+				}
+			}
+			for(size_t i = 0; i < NumPages; ++i)
+				getPageSprite(i)->updateBones();
 		}
 	}
 
@@ -1406,7 +1468,7 @@ void AnimationEditor::rmbd()
 			pushUndo();
 			cursorOffset = core->mouse.position;
 			rotOffset = editingBone->rotation.z;
-			editMode == AE_EDITING_ROT;
+			editMode = AE_EDITING_ROT;
 		}
 	}
 }
@@ -1596,22 +1658,55 @@ void AnimationEditor::cloneBoneAhead()
 	}
 }
 
-void AnimationEditor::saveFile()
+bool AnimationEditor::savePage(size_t pg)
 {
-	const std::string& editingFile = pages[curPage].editingFile;
-	if(getCurrentPageSprite()->saveSkeletal(editingFile))
-		dsq->screenMessage("Saved anim: " + editingFile);
-	else
-		dsq->screenMessage("FAILED TO SAVE: " + editingFile);
+	return getPageSprite(pg)->saveSkeletal(pages[pg].editingFile);
 }
 
-void AnimationEditor::loadFile(const char* fn)
+void AnimationEditor::saveFile()
+{
+	if(!getPageSprite(curPage)->isLoaded())
+	{
+		notify("Nothing to save");
+		return;
+	}
+
+	if(savePage(curPage))
+		notify("Saved anim: " + pages[curPage].editingFile);
+	else
+		notify("FAILED TO SAVE: " + pages[curPage].editingFile);
+}
+
+void AnimationEditor::saveAll()
+{
+	bool ok = true;
+	std::ostringstream os;
+	for(size_t i = 0; i < NumPages; ++i)
+		if(getPageSprite(i)->isLoaded())
+			if(!savePage(i))
+			{
+				ok = false;
+				os << pages[i].editingFile << " ";
+			}
+
+	if(ok)
+		notify("All saved");
+	else
+		notify("Failed to save: " + os.str());
+}
+
+void AnimationEditor::reloadPage(size_t pg)
+{
+	loadFile(pg, pages[pg].editingFile.c_str());
+}
+
+void AnimationEditor::loadFile(size_t pg, const char* fn)
 {
 	SkeletalSprite::clearCache();
 	editingBone = 0;
-	pages[curPage].clearUndoHistory();
+	pages[pg].clearUndoHistory();
 	//editSprite->position = Vector(0,0);
-	pages[curPage].load(fn);
+	pages[pg].load(fn);
 	currentKey = 0;
 	rebuildKeyframeWidgets();
 
@@ -1623,11 +1718,16 @@ void AnimationEditor::loadFile(const char* fn)
 
 void AnimationEditor::reloadFile()
 {
-	const std::string& fn = pages[curPage].editingFile;
-	if(fn.empty())
-		load();
+	if(getPageSprite(curPage)->isLoaded())
+		reloadPage(curPage);
 	else
-		loadFile(fn.c_str());
+		load(); // prompt what to load here
+}
+
+void AnimationEditor::reloadAll()
+{
+	for(size_t i = 0; i < NumPages; ++i)
+		reloadPage(i);
 }
 
 void AnimationEditor::goToTitle()
@@ -1685,7 +1785,7 @@ void AnimationEditor::selectAnim()
 		rebuildKeyframeWidgets();
 	}
 	else
-		dsq->screenMessage("No such anim name");
+		notify("No such anim name");
 }
 
 void AnimationEditor::reverseAnim()
@@ -1707,7 +1807,7 @@ void AnimationEditor::load()
 
 	std::string file = dsq->getUserInputString("Enter anim file to load:");
 	if (file.empty())		return;
-	loadFile(file.c_str());
+	loadFile(curPage, file.c_str());
 }
 
 void AnimationEditor::loadSkin()
@@ -1914,6 +2014,19 @@ void AnimationEditor::toggleGradient()
 	bgGrad->alpha.x = float(bgGrad->alpha.x <= 0);
 }
 
+float AnimationEditor::getMouseTimelineTime() const
+{
+	Vector m = core->mouse.position;
+	if(m.x > 0 && m.x < 800 && m.y > TIMELINE_CENTER_Y-TIMELINE_HEIGHT/2 && m.y < TIMELINE_CENTER_Y+TIMELINE_HEIGHT/2)
+	{
+		float t = (m.x - TIMELINE_X_OFFS) * TIMELINE_UNIT / TIMELINE_GRIDSIZE;
+		t = std::max(t, 0.0f);
+		return t;
+	}
+
+	return -1;
+}
+
 Animation* AnimationEditor::getPageAnimation(size_t page) const
 {
 	return pages[page].editSprite.getCurrentAnimation();
@@ -1951,7 +2064,7 @@ float AnimationEditor::getAnimTime() const
 	for(size_t i = 0; i < NumPages; ++i)
 	{
 		SkeletalSprite *spr = getPageSprite(i);
-		if(spr->isAnimating())
+		if(spr->isLoaded() && spr->isAnimating())
 			return spr->getAnimationLayer(0)->timer;
 	}
 
