@@ -12,11 +12,23 @@ class DebugButton;
 class Gradient;
 
 // internal
-class TimelineRender;
-class KeyframeWidget;
+struct AnimationEditorPage;
+class TimelineTickRender;
 
 class AnimationEditor : public StateObject
 {
+	void _copyKey();
+	void _pasteKey();
+
+	enum EditMode
+	{
+		AE_SELECT,   // moving mouse selects nearest bone
+		AE_EDITING_MOVE,  // moving mouse moves editingBone
+		AE_EDITING_ROT,  // moving mouse rotates editingBone
+		AE_STRIP,    // in strip edit mode for editingBone
+		AE_SPLINE,   // in spline edit mode for editingBone
+	};
+
 public:
 	AnimationEditor();
 	void applyState();
@@ -43,10 +55,8 @@ public:
 	void reorderKeys();
 
 	void saveFile();
-	void loadFile();
-
-	void copyKey();
-	void pasteKey();
+	void loadFile(const char *fn);
+	void reloadFile();
 
 	void nextAnim();
 	void prevAnim();
@@ -77,31 +87,25 @@ public:
 	void undo();
 	void redo();
 	void pushUndo();
-	void clearUndoHistory();
 
 	void applyTranslation();
 	void applyRotation();
 
 	void moveNextWidgets(float dt);
 
-	std::deque<SkeletalSprite> undoHistory;
-
-	size_t undoEntry;
-
 	int currentKey;
 
 	int rotOffset;
 
-	SkeletalSprite *editSprite;
-	Bone *editingBone;
-	int boneEdit;
-	DebugFont *text, *text2;
+	Bone *editingBone; // only changed when editMode == AE_SELECT
+	SkeletalSprite *editingBoneSprite; // updated together with editingBone
+	int editingBonePage;
+	EditMode editMode;
+	DebugFont *text, *text2, *toptext;
 
 	void goToTitle();
 
 	SkeletalKeyframe copyBuffer;
-
-	std::string editingFile;
 
 	void action(int id, int state, int source, InputDevice device);
 
@@ -118,9 +122,6 @@ public:
 
 	bool mouseSelection;
 
-	SkeletalKeyframe buffer;
-
-	bool editingStrip;
 	bool assistedSplineEdit;
 	size_t selectedStripPoint;
 
@@ -155,9 +156,36 @@ public:
 	void toggleSplineMode();
 	DebugButton *bSplineAssist;
 	void updateButtonLabels();
+	void toggleGradient();
 
 	Gradient *bgGrad;
-	TimelineRender *timeline;
+
+	Animation *getPageAnimation(size_t page) const;
+	Animation *getCurrentPageAnimation() const;
+	SkeletalSprite *getPageSprite(size_t page) const;
+	SkeletalSprite *getCurrentPageSprite() const;
+	bool isAnimating() const;
+	float getAnimTime() const;
+
+	AnimationEditorPage *pages;
+	Quad *spriteRoot;
+	TimelineTickRender *timelineTicks;
+
+	void selectPage(unsigned page);
+	int curPage;
+
+private:
+	void selectPage0() { selectPage(0); }
+	void selectPage1() { selectPage(1); }
+	void selectPage2() { selectPage(2); }
+	void selectPage3() { selectPage(3); }
+	void selectPage4() { selectPage(4); }
+	void selectPage5() { selectPage(5); }
+	void selectPage6() { selectPage(6); }
+	void selectPage7() { selectPage(7); }
+	void selectPage8() { selectPage(8); }
+
+	void _stopExtraEditModes();
 };
 
 

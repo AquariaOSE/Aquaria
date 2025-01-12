@@ -555,6 +555,13 @@ Animation* AnimationLayer::getCurrentAnimation()
 	return &s->animations[currentAnimation];
 }
 
+Animation* AnimationLayer::getCurrentAnimationOrNull()
+{
+	if (currentAnimation == -1)
+		return &blendAnimation;
+	return currentAnimation < s->animations.size() ? &s->animations[currentAnimation] : NULL;
+}
+
 void AnimationLayer::createTransitionAnimation(Animation& to, float time)
 {
 	blendAnimation.keyframes.clear();
@@ -1354,6 +1361,8 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 	stopAnimation();
 	animLayers.clear();
 	deleteBones();
+	if(fn.empty())
+		return;
 
 
 	filenameLoaded = fn;
@@ -1906,6 +1915,11 @@ Animation *SkeletalSprite::getCurrentAnimation(size_t layer)
 	return layer < animLayers.size() ? animLayers[layer].getCurrentAnimation() : NULL;
 }
 
+Animation *SkeletalSprite::getCurrentAnimationOrNull(size_t layer)
+{
+	return layer < animLayers.size() ? animLayers[layer].getCurrentAnimationOrNull() : NULL;
+}
+
 void SkeletalSprite::setTime(float time, size_t layer)
 {
 	if(layer < animLayers.size())
@@ -2078,7 +2092,7 @@ void SkeletalSprite::setFreeze(bool f)
 
 void SkeletalSprite::updateBones()
 {
-	if (!frozen)
+	if (!frozen && isLoaded())
 	{
 		for (size_t i = 0; i < animLayers.size(); i++)
 		{

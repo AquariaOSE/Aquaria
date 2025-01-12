@@ -202,6 +202,7 @@ public:
 	AnimationLayer();
 	void setSkeletalSprite(SkeletalSprite *s);
 	Animation *getCurrentAnimation();
+	Animation *getCurrentAnimationOrNull();
 	void animate(const std::string &animation, int loop);
 	void update(float dt);
 	void updateBones();
@@ -275,6 +276,7 @@ public:
 
 	Bone* getSelectedBone(bool mouseBased = true);
 	Animation *getCurrentAnimation(size_t layer=0);
+	Animation *getCurrentAnimationOrNull(size_t layer=0);
 
 
 	void nextAnimation();
