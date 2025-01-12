@@ -149,7 +149,7 @@ protected:
 	bool updateScript;
 
 private:
-	unsigned int shotIdx;
+	size_t shotIdx;
 };
 
 #endif

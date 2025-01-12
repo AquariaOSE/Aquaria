@@ -230,7 +230,7 @@ void VectorPath::splice(const VectorPath &path, int sz)
 	}
 }
 
-void VectorPath::removeNodes(unsigned int startInclusive, unsigned int endInclusive)
+void VectorPath::removeNodes(size_t startInclusive, size_t endInclusive)
 {
 	// end iterator is exclusive, so max. end + 1
 	pathNodes.erase(pathNodes.begin() + startInclusive, pathNodes.begin() + std::min<size_t>(pathNodes.size(), endInclusive+1));

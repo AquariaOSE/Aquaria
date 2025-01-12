@@ -29,11 +29,11 @@ class Web : public RenderObject
 {
 public:
 	Web();
-	int addPoint(const Vector &point = Vector(0,0));
+	size_t addPoint(const Vector &point = Vector(0,0));
 	void setPoint(size_t pt, const Vector &v);
 	Vector getPoint(size_t pt) const;
 	void setParentEntity(Entity *e);
-	int getNumPoints();
+	size_t getNumPoints() const;
 	typedef std::list<Web*> Webs;
 	static Webs webs;
 	static void killAllWebs();

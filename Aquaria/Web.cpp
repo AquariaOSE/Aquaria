@@ -61,7 +61,7 @@ void Web::setExistence(float t)
 	existence = t;
 }
 
-int Web::addPoint(const Vector &point)
+size_t Web::addPoint(const Vector &point)
 {
 	points.push_back(point);
 	return points.size()-1;
@@ -81,7 +81,7 @@ Vector Web::getPoint(size_t pt) const
 	return v;
 }
 
-int Web::getNumPoints()
+size_t Web::getNumPoints() const
 {
 	return points.size();
 }

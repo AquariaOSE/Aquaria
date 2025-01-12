@@ -391,7 +391,7 @@ public:
 	void calculatePercentages();
 	float getLength();
 	void realPercentageCalc();
-	void removeNodes(unsigned int startInclusive, unsigned int endInclusive);
+	void removeNodes(size_t startInclusive, size_t endInclusive);
 	float getSubSectionLength(int startIncl, int endIncl);
 protected:
 	std::vector <VectorPathNode> pathNodes;

@@ -148,7 +148,7 @@ void Hair::updatePositions()
 void Hair::exertForce(const Vector &force, float dt, int usePerc)
 {
 	const Vector f = force * dt;
-	for (int i = hairNodes.size()-1; i >= 1; i--)
+	for (size_t i = hairNodes.size(); i --> 1; )
 	{
 		switch (usePerc)
 		{

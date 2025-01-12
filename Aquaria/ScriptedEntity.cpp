@@ -46,7 +46,6 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	layer = LR_ENTITIES;
 	surfaceMoveDir = 1;
 	this->position = position;
-	numSegments = 0;
 	reverseSegments = false;
 	manaBallAmount = 1;
 	this->name = scriptName;
@@ -189,7 +188,6 @@ void ScriptedEntity::registerNewPart(RenderObject *r, const std::string &name)
 void ScriptedEntity::initSegments(int numSegments, int minDist, int maxDist, std::string bodyTex, std::string tailTex, int w, int h, float taper, bool reverseSegments)
 {
 	this->reverseSegments = reverseSegments;
-	this->numSegments = numSegments;
 	this->minDist = minDist;
 	this->maxDist = maxDist;
 	segments.resize(numSegments);
@@ -502,7 +500,7 @@ void ScriptedEntity::onUpdate(float dt)
 			debugLog(name + " : update : " + script->getLastError());
 	}
 
-	if (numSegments > 0)
+	if (!segments.empty())
 	{
 		updateSegments(position, reverseSegments);
 		updateAlpha(alpha.x);

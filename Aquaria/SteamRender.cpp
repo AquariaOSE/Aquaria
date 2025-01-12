@@ -44,12 +44,12 @@ void SteamRender::onRender(const RenderState& rs) const
 		if (p->active)
 		{
 
-			int w2 = p->rect.getWidth()/2;
+			const float w2 = p->rect.getWidth()/2;
 
 			if (true)
 			{
-				const int sz = p->nodes.size()-1;
-				for (int n = 0; n < sz; n++)
+				const size_t sz = p->nodes.size()-1;
+				for (size_t n = 0; n < sz; n++)
 				{
 					const PathNode *n1 = &p->nodes[n];
 					const PathNode *n2 = &p->nodes[n+1];

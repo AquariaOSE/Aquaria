@@ -51,7 +51,7 @@ void Strand::onUpdate(float dt)
 
 void Strand::onRender(const RenderState& rs) const
 {
-	const int numSegments = segments.size();
+	const size_t numSegments = segments.size();
 	if (numSegments == 0) return;
 
 	glTranslatef(-position.x, -position.y, 0);
@@ -71,8 +71,8 @@ void Strand::onRender(const RenderState& rs) const
 	glColor4ub(r>>8, g>>8, b>>8, a>>8);
 	glVertex2f(position.x, position.y);
 	glVertex2f(segments[0]->position.x, segments[0]->position.y);
-	const int colorLimit = numSegments<50 ? numSegments : 50;
-	int i;
+	const size_t colorLimit = numSegments<50 ? numSegments : 50;
+	size_t i;
 	for (i = 1; i < colorLimit; i++)
 	{
 		r -= dr;

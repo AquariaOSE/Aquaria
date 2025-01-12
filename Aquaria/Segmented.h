@@ -40,7 +40,6 @@ protected:
 	void updateSegment(int i, const Vector &diff);
 	void destroySegments(float life = 0.01f);
 	std::vector<Vector> lastPositions;
-	int numSegments;
 	std::vector<RenderObject *> segments;
 };
 

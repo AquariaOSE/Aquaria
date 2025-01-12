@@ -309,7 +309,7 @@ void loadShotCallback(const std::string &filename, void *param)
 	ShotData shotData;
 
 	std::string ident;
-	int first = filename.find_last_of('/')+1;
+	size_t first = filename.find_last_of('/')+1;
 	ident = filename.substr(first, filename.find_last_of('.')-first);
 	stringToLower(ident);
 	debugLog(ident);
@@ -385,7 +385,7 @@ void Shot::applyShotData(const ShotData& shotData)
 	if (shotData.numSegs > 0)
 	{
 		segments.resize(shotData.numSegs);
-		for (int i = segments.size()-1; i >=0 ; i--)
+		for (size_t i = segments.size(); i --> 0; )
 		{
 			Quad *flame = new Quad;
 			flame->setTexture(shotData.segTexture);
@@ -669,7 +669,7 @@ void Shot::hitEntity(Entity *e, Bone *b)
 
 void Shot::noSegs()
 {
-	if (numSegments > 0)
+	if (!segments.empty())
 	{
 		destroySegments();
 	}
