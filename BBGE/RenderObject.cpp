@@ -227,7 +227,7 @@ Vector RenderObject::getWorldCollidePosition(const Vector &vec) const
 
 void RenderObject::fhTo(bool fh)
 {
-	if ((fh && !_fh) || (!fh && _fh))
+	if (fh != _fh)
 	{
 		flipHorizontal();
 	}
@@ -235,14 +235,8 @@ void RenderObject::fhTo(bool fh)
 
 void RenderObject::flipHorizontal()
 {
-	bool wasFlippedHorizontal = _fh;
-
 	_fh = !_fh;
-
-	if (wasFlippedHorizontal != _fh)
-	{
-		onFH();
-	}
+	onFH();
 
 }
 

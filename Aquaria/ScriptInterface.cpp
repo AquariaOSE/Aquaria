@@ -1672,7 +1672,7 @@ luaFunc(obj_fh)
 luaFunc(obj_fhTo)
 {
 	RenderObject *r = robj(L);
-	bool b = getBool(L);
+	bool b = getBool(L, 2);
 	if (r)
 		r->fhTo(b);
 	luaReturnNil();
