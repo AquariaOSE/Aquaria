@@ -436,6 +436,8 @@ void AnimationEditor::applyState()
 	editMode = AE_SELECT;
 	editingBone = 0;
 	editingBoneSprite = 0;
+	editingBonePage = -1;
+	editingBoneIdx = -1;
 	currentKey = 0;
 	splinegrid = 0;
 	assistedSplineEdit = true;
@@ -874,10 +876,9 @@ void AnimationEditor::toggleMouseSelection()
 {
 	if (dsq->isNested()) return;
 
-	if (mouseSelection)
+	if (editingBone)
 	{
-		for(size_t i = 0; i < NumPages; ++i)
-			getPageSprite(i)->updateSelectedBoneColor();
+		editingBone->color = Vector(1,1,1);
 	}
 
 	mouseSelection = !mouseSelection;
@@ -905,26 +906,6 @@ void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 				b->grid[selectedStripPoint] = v;
 			}
 		}
-	}
-}
-
-void AnimationEditor::selectPrevBone()
-{
-	if (dsq->isNested()) return;
-
-	if (editMode == AE_SELECT)
-	{
-		getCurrentPageSprite()->selectPrevBone();
-	}
-}
-
-void AnimationEditor::selectNextBone()
-{
-	if (dsq->isNested()) return;
-
-	if (editMode == AE_SELECT)
-	{
-		getCurrentPageSprite()->selectNextBone();
 	}
 }
 
@@ -1199,17 +1180,17 @@ void AnimationEditor::nextKey()
 {
 	if (dsq->isNested()) return;
 
-	SkeletalSprite *editSprite = getCurrentPageSprite();
-
 	if (editMode == AE_STRIP)
 	{
 		selectedStripPoint++;
-		if (selectedStripPoint >= editingBoneSprite->getSelectedBone(false)->changeStrip.size()
+		if (selectedStripPoint >= editingBone->changeStrip.size()
 				&& selectedStripPoint > 0)
 			selectedStripPoint --;
 	}
 	else
 	{
+		SkeletalSprite *editSprite = getCurrentPageSprite();
+
 		if (core->getCtrlState())
 		{
 			const std::vector<KeyframeWidget*>& keyframeWidgets = pages[curPage].timeline->getKeyframes();
@@ -1236,8 +1217,6 @@ void AnimationEditor::prevKey()
 {
 	if (dsq->isNested()) return;
 
-	SkeletalSprite *editSprite = getCurrentPageSprite();
-
 	if (editMode == AE_STRIP)
 	{
 		if(selectedStripPoint > 0)
@@ -1245,6 +1224,8 @@ void AnimationEditor::prevKey()
 	}
 	else
 	{
+		SkeletalSprite *editSprite = getCurrentPageSprite();
+
 		if (core->getCtrlState())
 		{
 			const std::vector<KeyframeWidget*>& keyframeWidgets = pages[curPage].timeline->getKeyframes();
@@ -1743,6 +1724,7 @@ void AnimationEditor::loadFile(size_t pg, const char* fn)
 {
 	SkeletalSprite::clearCache();
 	editingBone = 0;
+	editingBoneIdx = -1;
 	pages[pg].clearUndoHistory();
 	//editSprite->position = Vector(0,0);
 	pages[pg].load(fn);
@@ -1958,9 +1940,14 @@ void AnimationEditor::updateEditingBone()
 
 	if(!mouseSelection)
 	{
-		editingBoneSprite = getCurrentPageSprite();
-		editingBone = editingBoneSprite->getSelectedBone(false);
+		if(!editingBoneSprite)
+			editingBoneSprite = getCurrentPageSprite();
 		editingBonePage = curPage;
+		Bone *b = (size_t)editingBoneIdx < editingBoneSprite->bones.size() ? editingBoneSprite->bones[editingBoneIdx] : NULL; // this uses underflow at -1
+		if(b && b->selectable)
+			_selectBone(b);
+		else
+			selectNextBone();
 		return;
 	}
 
@@ -1968,30 +1955,34 @@ void AnimationEditor::updateEditingBone()
 	float mind;
 	Bone *nearest = NULL;
 	SkeletalSprite *nearestSpr = NULL;
-	const Vector p = core->mouse.position;
-	int page = -1;
+	const Vector& p = core->mouse.position;
+	int page = -1, idx = -1;
 	for(size_t i = 0; i < NumPages; ++i)
 	{
 		SkeletalSprite& spr = pages[i].editSprite;
 		if(spr.isLoaded())
 		{
-			if(Bone *b = spr.getSelectedBone(true))
+			int k = spr.findSelectableBoneIdxClosestTo(p, true);
+			if(k >= 0)
 			{
-				const float d = (b->position - p).getSquaredLength2D();
+				Bone *b = spr.bones[k];
+				const float d = (b->getWorldPosition() - p).getSquaredLength2D();
 				if(!nearest || d < mind)
 				{
 					mind = d;
 					nearest = b;
 					nearestSpr = &spr;
 					page = i;
+					idx = k;
 				}
 			}
 		}
 	}
 
-	editingBone = nearest;
 	editingBoneSprite = nearestSpr;
 	editingBonePage = page;
+	editingBoneIdx = idx;
+	_selectBone(nearest);
 }
 
 void AnimationEditor::showAllBones()
@@ -2065,6 +2056,8 @@ void AnimationEditor::updateButtonLabels()
 
 void AnimationEditor::toggleGradient()
 {
+	if (dsq->isNested()) return;
+
 	bgGrad->alpha.x = float(bgGrad->alpha.x <= 0);
 }
 
@@ -2137,6 +2130,12 @@ void AnimationEditor::selectPage(unsigned page)
 	if(editMode != AE_SELECT)
 		return;
 
+	if(!mouseSelection)
+	{
+		editingBoneSprite = &pages[page].editSprite;
+		updateEditingBone();
+	}
+
 	curPage = page;
 }
 
@@ -2179,3 +2178,79 @@ void AnimationEditor::applySplineGridToBone()
 	}
 }
 
+void AnimationEditor::_selectBone(Bone *b)
+{
+	if(editingBone)
+		editingBone->color = Vector(1,1,1);
+
+	if (b)
+		b->color = mouseSelection ? Vector(1,0,0) : Vector(0.5,0.5,1);
+	else
+	{
+		editingBonePage = -1;
+		editingBoneSprite = NULL;
+		editingBoneIdx = -1;
+	}
+
+	editingBone = b;
+}
+
+void AnimationEditor::selectPrevBone()
+{
+	if (dsq->isNested() || mouseSelection || editMode != AE_SELECT)
+		return;
+
+	SkeletalSprite *spr = editingBoneSprite ? editingBoneSprite : getCurrentPageSprite();
+	if(spr->bones.empty())
+		return;
+
+	size_t idx = editingBoneIdx;
+	Bone *b = NULL;
+	do
+	{
+		idx++;
+		if(idx == editingBoneIdx)
+		{
+			idx = -1;
+			break;
+		}
+		if (idx >= spr->bones.size())
+			idx  = 0;
+		b = spr->bones[idx];
+	}
+	while (!b->selectable);
+	editingBoneIdx = idx;
+	editingBonePage = curPage;
+	editingBoneSprite = spr;
+	_selectBone(b);
+}
+
+void AnimationEditor::selectNextBone()
+{
+	if (dsq->isNested() || mouseSelection || editMode != AE_SELECT)
+		return;
+
+	SkeletalSprite *spr = editingBoneSprite ? editingBoneSprite : getCurrentPageSprite();
+	if(spr->bones.empty())
+		return;
+
+	size_t idx = editingBoneIdx;
+	Bone *b = NULL;
+	do
+	{
+		idx--;
+		if(idx == editingBoneIdx)
+		{
+			idx = -1;
+			break;
+		}
+		if (idx >= spr->bones.size())
+			idx = spr->bones.size()-1;
+		b = spr->bones[idx];
+	}
+	while (!b->selectable);
+	editingBoneIdx = idx;
+	editingBonePage = curPage;
+	editingBoneSprite = spr;
+	_selectBone(b);
+}

@@ -274,7 +274,7 @@ public:
 
 	void setTimeMultiplier(float t, int layer=0);
 
-	Bone* getSelectedBone(bool mouseBased = true);
+	int findSelectableBoneIdxClosestTo(const Vector& pos, bool mustBeInBox = true) const; // -1 if none found, otherwise bones[idx] to get the bone
 	Animation *getCurrentAnimation(size_t layer=0);
 	Animation *getCurrentAnimationOrNull(size_t layer=0);
 
@@ -284,22 +284,14 @@ public:
 	void lastAnimation();
 	void firstAnimation();
 	bool selectAnimation(const char *name);
-	void updateSelectedBoneColor();
 
 
 	void setFreeze(bool f);
-
-
 
 	Animation *getAnimation(const std::string& anim);
 
 	std::vector<Animation> animations;
 	std::vector<Bone*> bones;
-
-	inline size_t getSelectedBoneIdx(void) { return selectedBone; }
-	void setSelectedBone(int b);
-	void selectPrevBone();
-	void selectNextBone();
 
 	bool isLoaded();
 	size_t getNumAnimLayers() const { return animLayers.size(); }
@@ -319,7 +311,6 @@ protected:
 	bool frozen;
 	RenderObject *animKeyNotify;
 	bool loaded;
-	size_t selectedBone;
 	friend class AnimationLayer;
 	std::vector<AnimationLayer> animLayers;
 	Bone* initBone(int idx, std::string gfx, int pidx, bool rbp=false, std::string name="", float cr=0, bool fh=false, bool fv=false);

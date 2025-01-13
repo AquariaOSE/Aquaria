@@ -775,7 +775,6 @@ SkeletalSprite::SkeletalSprite() : RenderObject()
 	animLayers.resize(10);
 	for (size_t i = 0; i < animLayers.size(); i++)
 		animLayers[i].setSkeletalSprite(this);
-	selectedBone = -1;
 }
 
 SkeletalSprite::~SkeletalSprite()
@@ -2113,94 +2112,28 @@ void SkeletalSprite::setTimeMultiplier(float t, int layer)
 	animLayers[layer].timeMultiplier = t;
 }
 
-Bone* SkeletalSprite::getSelectedBone(bool mouseBased)
+int SkeletalSprite::findSelectableBoneIdxClosestTo(const Vector& pos, bool mustBeInBox) const
 {
-	if (!loaded) return 0;
-	if (mouseBased)
-	{
-		float closestDist = HUGE_VALF;
-		Bone *b = 0;
-		Vector p = core->mouse.position;
-		for (size_t i = 0; i < bones.size(); i++)
-		{
-			if (bones[i]->renderQuad || core->getShiftState())
-			{
-				bones[i]->color = Vector(1,1,1);
-				if (bones[i]->selectable && bones[i]->renderQuad && bones[i]->isCoordinateInsideWorld(p))
-				{
-					float dist = (bones[i]->getWorldPosition() - p).getSquaredLength2D();
-					if (dist <= closestDist)
-					{
-						closestDist = dist;
-						b = bones[i];
-						selectedBone = i;
-					}
-				}
-			}
-		}
-		if (b)
-		{
-			b->color = Vector(1,0,0);
-		}
-		return b;
-	}
-	// else
-	if (!bones.empty() && selectedBone < bones.size())
-		return bones[selectedBone];
-
-	return 0;
-}
-
-
-void SkeletalSprite::updateSelectedBoneColor()
-{
-	if(!bones.size())
-		return;
-
+	float closestDist = HUGE_VALF;
+	int idx = -1;
 	for (size_t i = 0; i < bones.size(); i++)
 	{
-		bones[i]->color = Vector(1,1,1);
+		Bone *b = bones[i];
+		if (b->selectable && b->renderQuad && (!mustBeInBox || b->isCoordinateInsideWorld(pos)))
+		{
+			float dist = (b->getWorldPosition() - pos).getSquaredLength2D();
+			if (dist <= closestDist)
+			{
+				closestDist = dist;
+				idx = (int)i;
+			}
+		}
 	}
-	Bone *b = bones[selectedBone];
-	if (b)
-		b->color = Vector(0.5,0.5,1);
+	return idx;
 }
 
-void SkeletalSprite::setSelectedBone(int b)
-{
-	selectedBone = b;
-	updateSelectedBoneColor();
-}
 
-void SkeletalSprite::selectPrevBone()
-{
-	const size_t oldsel = selectedBone;
-	do
-	{
-		selectedBone++;
-		if(selectedBone == oldsel)
-			break;
-		if (selectedBone >= bones.size())
-			selectedBone = 0;
-	}
-	while (!bones[selectedBone]->selectable);
-	updateSelectedBoneColor();
-}
 
-void SkeletalSprite::selectNextBone()
-{
-	const size_t oldsel = selectedBone;
-	do
-	{
-		selectedBone--;
-		if(selectedBone == oldsel)
-			break;
-		if (selectedBone >= bones.size())
-			selectedBone = bones.size()-1;
-	}
-	while (!bones[selectedBone]->selectable);
-	updateSelectedBoneColor();
-}
 
 void BoneGridInterpolator::updateGridOnly(BoneKeyframe& bk, const Bone *bone)
 {

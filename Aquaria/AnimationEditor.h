@@ -100,6 +100,7 @@ public:
 	Bone *editingBone; // only changed when editMode == AE_SELECT
 	SkeletalSprite *editingBoneSprite; // updated together with editingBone
 	int editingBonePage;
+	int editingBoneIdx;  // editingBoneSprite->bones[editingBoneIdx] == editingBone
 	EditMode editMode;
 	DebugFont *text, *text2, *toptext, *btmtext;
 
@@ -195,6 +196,8 @@ private:
 	void reloadAll();
 	bool savePage(size_t pg);
 	void reloadPage(size_t pg);
+
+	void _selectBone(Bone *b); // NULL to unselect
 };
 
 
