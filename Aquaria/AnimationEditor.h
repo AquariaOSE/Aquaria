@@ -168,7 +168,8 @@ public:
 	Animation *getPageAnimation(size_t page) const;
 	Animation *getCurrentPageAnimation() const;
 	SkeletalSprite *getPageSprite(size_t page) const;
-	SkeletalSprite *getCurrentPageSprite() const;
+	SkeletalSprite *getCurrentPageSprite() const; // sprite on active page
+	SkeletalSprite *getSelectedPageSprite() const; //sprite that belong to selected bone, alternatively sprite on active page
 	bool isAnimating() const;
 	float getAnimTime() const;
 

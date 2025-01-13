@@ -421,7 +421,7 @@ void AnimationEditor::resetScaleOrSave()
 			notify("Scale copied to clipboard");
 	}
 	else
-		getCurrentPageSprite()->scale = Vector(1,1);
+		getSelectedPageSprite()->scale = Vector(1,1);
 }
 
 void AnimationEditor::applyState()
@@ -510,10 +510,10 @@ void AnimationEditor::applyState()
 	addAction(MakeFunctionEvent(AnimationEditor, showAllBones), KEY_A, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, toggleGradient), KEY_G, 0);
 
-	addAction(MakeFunctionEvent(AnimationEditor, decrTimelineUnit), KEY_U, 0);
+	/*addAction(MakeFunctionEvent(AnimationEditor, decrTimelineUnit), KEY_U, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineUnit), KEY_I, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, decrTimelineGrid), KEY_O, 0);
-	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineGrid), KEY_P, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineGrid), KEY_P, 0);*/
 
 	addAction(MakeFunctionEvent(AnimationEditor, toggleSplineMode), KEY_W, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, flipH), KEY_F, 0);
@@ -913,8 +913,6 @@ void AnimationEditor::update(float dt)
 {
 	StateObject::update(dt);
 
-	SkeletalSprite *editSprite = getCurrentPageSprite();
-
 	const float tltime = getMouseTimelineTime();
 
 	{
@@ -1001,7 +999,7 @@ void AnimationEditor::update(float dt)
 	if(splinegrid)
 		ctrlSprite = splinegrid;
 	else
-		ctrlSprite = ctrlPressed ? (RenderObject*)getCurrentPageSprite() : (RenderObject*)spriteRoot;
+		ctrlSprite = ctrlPressed ? (RenderObject*)getSelectedPageSprite() : (RenderObject*)spriteRoot;
 
 	if (core->mouse.buttons.middle)
 	{
@@ -1097,6 +1095,7 @@ void AnimationEditor::update(float dt)
 		}
 		if (!hastime && !isAnimating())
 		{
+			SkeletalSprite *editSprite = getCurrentPageSprite();
 			if(Animation *a = editSprite->getCurrentAnimationOrNull())
 			{
 				SkeletalKeyframe *k = a->getKeyframe(currentKey);
@@ -1826,7 +1825,7 @@ void AnimationEditor::flipH()
 {
 	if (dsq->isNested()) return;
 
-	RenderObject *ro = core->getCtrlState() ? (RenderObject*)getCurrentPageSprite() : (RenderObject*)spriteRoot;
+	RenderObject *ro = core->getCtrlState() ? (RenderObject*)getSelectedPageSprite() : (RenderObject*)spriteRoot;
 	ro->flipHorizontal();
 
 	const Vector red(1,0,0), white(1,1,1);
@@ -1989,7 +1988,7 @@ void AnimationEditor::showAllBones()
 {
 	if (dsq->isNested()) return;
 
-	SkeletalSprite *spr = getCurrentPageSprite();
+	SkeletalSprite *spr = getSelectedPageSprite();
 	for (size_t i = 0; i < spr->bones.size(); ++i)
 		spr->bones[i]->renderQuad = true;
 }
@@ -2039,6 +2038,8 @@ void AnimationEditor::decrTimelineGrid()
 
 void AnimationEditor::toggleSplineMode()
 {
+	if (dsq->isNested()) return;
+
 	assistedSplineEdit = !assistedSplineEdit;
 	updateButtonLabels();
 	if(splinegrid)
@@ -2092,6 +2093,11 @@ SkeletalSprite* AnimationEditor::getPageSprite(size_t page) const
 SkeletalSprite* AnimationEditor::getCurrentPageSprite() const
 {
 	return getPageSprite(curPage);
+}
+
+SkeletalSprite * AnimationEditor::getSelectedPageSprite() const
+{
+	return editingBoneSprite ? editingBoneSprite : getCurrentPageSprite();
 }
 
 bool AnimationEditor::isAnimating() const
