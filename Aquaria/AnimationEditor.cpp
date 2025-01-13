@@ -514,6 +514,7 @@ void AnimationEditor::applyState()
 	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineGrid), KEY_P, 0);
 
 	addAction(MakeFunctionEvent(AnimationEditor, toggleSplineMode), KEY_W, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, flipH), KEY_F, 0);
 
 	addAction(MakeFunctionEvent(AnimationEditor, selectPage0), KEY_1, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, selectPage1), KEY_2, 0);
@@ -1837,6 +1838,19 @@ void AnimationEditor::reverseAnim()
 		a->reverse();
 		rebuildKeyframeWidgets();
 	}
+}
+
+void AnimationEditor::flipH()
+{
+	if (dsq->isNested()) return;
+
+	RenderObject *ro = core->getCtrlState() ? (RenderObject*)getCurrentPageSprite() : (RenderObject*)spriteRoot;
+	ro->flipHorizontal();
+
+	const Vector red(1,0,0), white(1,1,1);
+	toptext->color = spriteRoot->isfh() ? red : white;
+	for(size_t i = 0; i < NumPages; ++i)
+		pages[i].timeline->label.color = pages[i].editSprite.isfhr() ? red : white;
 }
 
 void AnimationEditor::load()

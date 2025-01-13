@@ -126,6 +126,7 @@ public:
 	size_t selectedStripPoint;
 
 	void reverseAnim();
+	void flipH();
 
 	void toggleRenderBorders();
 	void updateRenderBorders();
