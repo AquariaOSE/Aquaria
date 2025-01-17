@@ -176,14 +176,14 @@ public:
 	SkeletalKeyframe *getKeyframe(size_t key);
 	SkeletalKeyframe *getLastKeyframe();
 	SkeletalKeyframe *getFirstKeyframe();
-	SkeletalKeyframe *getPrevKeyframe(float t);
-	SkeletalKeyframe *getNextKeyframe(float t);
+	size_t getKeyframeIndexBefore(float t) const; // last anim that's <= t
+
 	void cloneKey(size_t key, float toffset);
 	void deleteKey(size_t key);
 	void reorderKeyframes();
 	float getAnimationLength();
 	size_t getSkeletalKeyframeIndex(SkeletalKeyframe *skey);
-	size_t getNumKeyframes();
+	size_t getNumKeyframes() const;
 	void reverse();
 	bool resetOnEnd;
 
@@ -206,6 +206,7 @@ public:
 	void animate(const std::string &animation, int loop);
 	void update(float dt);
 	void updateBones();
+	void keyframeReached(SkeletalKeyframe *k, size_t idx);
 	void stopAnimation();
 	float getAnimationLength();
 	void createTransitionAnimation(Animation& to, float time);
@@ -217,6 +218,8 @@ public:
 	bool isAnimating() const;
 	bool contains(const Bone *b) const;
 	void resetPass();
+	void setTimer(float t, bool runKeyframes);
+
 
 	//----
 	float fallThru;
@@ -226,7 +229,7 @@ public:
 	std::vector<int> includeBones;
 	SkeletalSprite *s;
 
-	SkeletalKeyframe *lastNewKey;
+	int lastKeyframeIndex;
 
 	float timer;
 	int loop;

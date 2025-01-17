@@ -4804,7 +4804,9 @@ luaFunc(entity_setAnimationTime)
 		AnimationLayer *a = skel->getAnimationLayer(layer);
 		if(a)
 		{
-			a->timer = lua_tonumber(L, 2);
+			float t = lua_tonumber(L, 2);
+			bool runkeyframes = getBool(L, 3);
+			a->setTimer(t, runkeyframes);
 		}
 	}
 	luaReturnNil();

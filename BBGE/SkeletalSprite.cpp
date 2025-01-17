@@ -31,6 +31,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <tinyxml2.h>
 using namespace tinyxml2;
 
+
+enum
+{
+	RESET_KEYFRAME_IDX = -2,
+	INITIAL_KEYFRAME_IDX = -1,
+};
+
 std::string SkeletalSprite::animationPath				= "data/animations/";
 std::string SkeletalSprite::skinPath					= "skins/";
 
@@ -433,7 +440,7 @@ void BoneCommand::run()
 
 AnimationLayer::AnimationLayer()
 {
-	lastNewKey = 0;
+	lastKeyframeIndex = INITIAL_KEYFRAME_IDX;
 	fallThru= 0;
 
 	timer = 0;
@@ -482,12 +489,19 @@ void AnimationLayer::animate(const std::string &a, int loop)
 
 void AnimationLayer::playAnimation(int idx, int loop)
 {
+	// When just looping, keep the last keyframe as-is.
+	// This way, wrapping the timer around to 0 will correctly proceed to process the last (yet unreached) keyframe
+	// before immediately wrapping around and hitting the first keyframe
+	if(idx != currentAnimation || !loop)
+		lastKeyframeIndex = INITIAL_KEYFRAME_IDX;
+
 	if (!(&s->animLayers[0] == this))
 	{
 		fallThru = 1;
 		fallThruSpeed = 10;
 	}
 	timeMultiplier = 1;
+
 
 	currentAnimation = idx;
 	timer = 0;
@@ -496,7 +510,6 @@ void AnimationLayer::playAnimation(int idx, int loop)
 	this->loop = loop;
 
 	animationLength = getCurrentAnimation()->getAnimationLength();
-
 }
 
 void AnimationLayer::enqueueAnimation(const std::string& anim, int loop)
@@ -586,6 +599,7 @@ void AnimationLayer::createTransitionAnimation(Animation& to, float time)
 	blendAnimation.keyframes.push_back(k2);
 
 	blendAnimation.name = to.name;
+	blendAnimation.resetOnEnd = false;
 }
 
 
@@ -594,6 +608,7 @@ void AnimationLayer::stopAnimation()
 	if(s->loaded && getCurrentAnimation()->resetOnEnd)
 		resetPass();
 	animating = false;
+	lastKeyframeIndex = INITIAL_KEYFRAME_IDX;
 	if (!enqueuedAnimation.empty())
 	{
 		animate(enqueuedAnimation, enqueuedAnimationLoop);
@@ -617,15 +632,14 @@ Animation::Animation()
 {
 }
 
-size_t Animation::getNumKeyframes()
+size_t Animation::getNumKeyframes() const
 {
 	return keyframes.size();
 }
 
 SkeletalKeyframe *Animation::getKeyframe(size_t key)
 {
-	if (key >= keyframes.size()) return 0;
-	return &keyframes[key];
+	return key < keyframes.size() ? &keyframes[key] : NULL;
 }
 
 void Animation::reverse()
@@ -650,7 +664,7 @@ float Animation::getAnimationLength()
 SkeletalKeyframe *Animation::getLastKeyframe()
 {
 	if (!keyframes.empty())
-		return &keyframes[keyframes.size()-1];
+		return &keyframes.back();
 	return 0;
 }
 
@@ -670,6 +684,16 @@ void Animation::reorderKeyframes()
 {
 	std::sort(keyframes.begin(), keyframes.end(), keyframeCmp);
 }
+
+size_t Animation::getKeyframeIndexBefore(float t) const
+{
+	const size_t n = getNumKeyframes();
+	for(size_t i = 1; i < n; ++i)
+		if(keyframes[i].t > t)
+			return i - 1;
+	return 0;
+}
+
 
 void Animation::cloneKey(size_t key, float toffset)
 {
@@ -728,43 +752,6 @@ BoneKeyframe *SkeletalKeyframe::getBoneKeyframe(size_t idx)
 		}
 	}
 	return 0;
-}
-
-SkeletalKeyframe *Animation::getPrevKeyframe(float t)
-{
-	size_t kf = -1;
-	for (size_t i = keyframes.size(); i-- > 0; )
-	{
-		if (t >= keyframes[i].t)
-		{
-			kf = i;
-			break;
-		}
-	}
-	if (kf == -1)
-		return 0;
-	if (kf >= keyframes.size())
-		kf = keyframes.size()-1;
-	return &keyframes[kf];
-}
-
-SkeletalKeyframe *Animation::getNextKeyframe(float t)
-{
-	size_t kf = -1;
-	for (size_t i = 0; i < keyframes.size(); i++)
-	{
-		if (t <= keyframes[i].t)
-		{
-			kf = i;
-			break;
-		}
-	}
-
-	if (kf == -1)
-		return 0;
-	if (kf >= keyframes.size())
-		kf = keyframes.size()-1;
-	return &keyframes[kf];
 }
 
 SkeletalSprite::SkeletalSprite() : RenderObject()
@@ -1938,6 +1925,15 @@ void AnimationLayer::resetPass()
 	}
 }
 
+void AnimationLayer::setTimer(float t, bool runKeyframes)
+{
+	timer = t;
+	if(!runKeyframes)
+	{
+		lastKeyframeIndex = RESET_KEYFRAME_IDX;
+	}
+}
+
 bool AnimationLayer::contains(const Bone *b) const
 {
 	const int idx = b->boneIdx;
@@ -1958,44 +1954,81 @@ bool AnimationLayer::contains(const Bone *b) const
 	return true;
 }
 
+
+
+void AnimationLayer::keyframeReached(SkeletalKeyframe * k, size_t idx)
+{
+	if (!k->sound.empty())
+	{
+		core->sound->playSfx(k->sound);
+	}
+	if (!k->commands.empty())
+	{
+		for (size_t i = 0; i < k->commands.size(); i++)
+		{
+			k->commands[i].run();
+		}
+	}
+	if (s->animKeyNotify)
+	{
+		s->animKeyNotify->onAnimationKeyPassed(idx);
+	}
+}
+
 void AnimationLayer::updateBones()
 {
 	if (!animating && !(&s->animLayers[0] == this) && fallThru == 0) return;
 
-	SkeletalKeyframe *key1 = getCurrentAnimation()->getPrevKeyframe(timer);
-	SkeletalKeyframe *key2 = getCurrentAnimation()->getNextKeyframe(timer);
-	if (!key1 || !key2) return;
-	float t1 = key1->t;
-	float t2 = key2->t;
+	Animation *a = getCurrentAnimation();
+	SkeletalKeyframe *key1; // .t <= timer
+	SkeletalKeyframe *key2; // .t >= timer
+
+	{
+		int last = lastKeyframeIndex;
+		if(last == RESET_KEYFRAME_IDX) // Requested to skip keyframes?
+			last = a->getKeyframeIndexBefore(timer);
+
+		const unsigned maxidx = (unsigned)a->keyframes.size() - 1;
+		unsigned curidx = std::max(0, last); // signed min() is intentional, this covers the special case of -1 to start at 0 regardless
+
+		// Assume a big timer step that would potentially step over multiple keyframes (which we don't want!)
+		// So we step keyframes until we catch up to the timer, so that (key1->t <= timer <= key2->t).
+		for(unsigned i = 0; i <= maxidx; ++i)
+		{
+			key1 = &a->keyframes[curidx];
+
+			if((int)curidx != last)
+			{
+				keyframeReached(key1, curidx);
+				last = (int)curidx;
+			}
+
+			unsigned nextidx = curidx + 1;
+			if(nextidx > maxidx)
+				nextidx = 0;
+			key2 = &a->keyframes[nextidx];
+
+			if((key1->t <= timer && timer <= key2->t) || !maxidx)
+				break;
+
+			curidx = nextidx;
+		}
+
+		lastKeyframeIndex = last;
+	}
+
+	const float t1 = key1->t;
+	const float t2 = key2->t;
+	assert(t1 <= t2);
 
 
 
-	float diff = t2-t1;
+	const float diff = t2-t1;
 	float dt;
 	if (diff != 0)
 		dt = (timer - t1)/(t2-t1);
 	else
 		dt = 0;
-
-	if (lastNewKey != key2)
-	{
-		if (!key2->sound.empty())
-		{
-			core->sound->playSfx(key2->sound);
-		}
-		if (!key2->commands.empty())
-		{
-			for (size_t i = 0; i < key2->commands.size(); i++)
-			{
-				key2->commands[i].run();
-			}
-		}
-		if (s->animKeyNotify)
-		{
-			s->animKeyNotify->onAnimationKeyPassed(getCurrentAnimation()->getSkeletalKeyframeIndex(lastNewKey));
-		}
-	}
-	lastNewKey = key2;
 
 	for (size_t i = 0; i < s->bones.size(); i++)
 	{
