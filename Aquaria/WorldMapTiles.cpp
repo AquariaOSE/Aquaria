@@ -391,22 +391,36 @@ void WorldMap::save()
 	}
 }
 
-void WorldMap::revealMap(const std::string &name)
+bool WorldMap::revealMap(const std::string &name)
 {
 	WorldMapTile *t = getWorldMapTile(name);
 	if (t)
 	{
 		t->revealed = true;
 	}
+	return !!t;
 }
 
-void WorldMap::revealMapIndex(int index)
+bool WorldMap::revealMapIndex(int index)
 {
 	WorldMapTile *t = getWorldMapTileByIndex(index);
 	if (t)
 	{
 		t->revealed = true;
 	}
+	return !!t;
+}
+
+bool WorldMap::forgetMap(const std::string &name)
+{
+	WorldMapTile *t = getWorldMapTile(name);
+	if (t)
+	{
+		t->revealed = false;
+		t->visited.clear();
+		t->dirty = true;
+	}
+	return !!t;
 }
 
 WorldMapTile *WorldMap::getWorldMapTile(const std::string &name)

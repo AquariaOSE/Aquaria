@@ -44,10 +44,11 @@ struct WorldMap
 	WorldMap();
 	void load();
 	void save();
-	void revealMap(const std::string &name);
 	WorldMapTile *getWorldMapTile(const std::string &name);
 	WorldMapTile *getWorldMapTileByIndex(int index);
-	void revealMapIndex(int index);
+	bool revealMap(const std::string &name);
+	bool revealMapIndex(int index);
+	bool forgetMap(const std::string &name);
 
 	int gw, gh;
 	typedef std::vector<WorldMapTile> WorldMapTiles;

@@ -10045,6 +10045,13 @@ luaFunc(loadXMLTable)
 	return 1;
 }
 
+luaFunc(worldmap_forgetMap)
+{
+	const std::string s = getString(L);
+	bool ok = dsq->continuity.worldMap.forgetMap(s);
+	luaReturnBool(ok);
+}
+
 //--------------------------------------------------------------------------------------------
 
 #define luaRegister(func)	{#func, l_##func}
@@ -11122,6 +11129,8 @@ static const struct {
 	luaRegister(quadgrid_getPauseLevel),
 	luaRegister(quadgrid_resetUV),
 	luaRegister(quadgrid_resetPos),
+
+	luaRegister(worldmap_forgetMap),
 
 #undef MK_FUNC
 #undef MK_ALIAS
