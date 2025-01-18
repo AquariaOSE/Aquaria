@@ -999,7 +999,7 @@ void AnimationEditor::update(float dt)
 	if(splinegrid)
 		ctrlSprite = splinegrid;
 	else
-		ctrlSprite = ctrlPressed ? (RenderObject*)getSelectedPageSprite() : (RenderObject*)spriteRoot;
+		ctrlSprite = ctrlPressed ? (RenderObject*)getCurrentPageSprite() : (RenderObject*)spriteRoot;
 
 	if (core->mouse.buttons.middle)
 	{
