@@ -533,7 +533,7 @@ float AnimationLayer::transitionAnimate(std::string anim, float time, int loop)
 		{
 			createTransitionAnimation(*a, time);
 			timeMultiplier = 1;
-
+			lastKeyframeIndex = INITIAL_KEYFRAME_IDX;
 			currentAnimation = -1;
 			this->loop = 0;
 			timer = 0;
