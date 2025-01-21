@@ -2005,7 +2005,14 @@ void AnimationLayer::updateBones()
 
 			unsigned nextidx = curidx + 1;
 			if(nextidx > maxidx)
+			{
+				if(key1->t < timer) // past the last keyframe? just stay there (unless the timer wraps too)
+				{
+					key2 = key1;
+					break;
+				}
 				nextidx = 0;
+			}
 			key2 = &a->keyframes[nextidx];
 
 			if((key1->t <= timer && timer <= key2->t) || !maxidx)
@@ -2020,8 +2027,6 @@ void AnimationLayer::updateBones()
 	const float t1 = key1->t;
 	const float t2 = key2->t;
 	assert(t1 <= t2);
-
-
 
 	const float diff = t2-t1;
 	float dt;
