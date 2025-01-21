@@ -516,7 +516,7 @@ void AnimationEditor::applyState()
 	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineGrid), KEY_P, 0);*/
 
 	addAction(MakeFunctionEvent(AnimationEditor, toggleSplineMode), KEY_W, 0);
-	addAction(MakeFunctionEvent(AnimationEditor, flipH), KEY_F, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, flipH), KEY_T, 0);
 
 	addAction(MakeFunctionEvent(AnimationEditor, selectPage0), KEY_1, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, selectPage1), KEY_2, 0);
@@ -2133,6 +2133,8 @@ float AnimationEditor::getAnimTime() const
 
 void AnimationEditor::selectPage(unsigned page)
 {
+	if (dsq->isNested()) return;
+
 	if(editMode != AE_SELECT)
 		return;
 
