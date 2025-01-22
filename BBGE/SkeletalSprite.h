@@ -93,8 +93,10 @@ public:
 	bool stripVert;
 	bool fileRenderQuad;
 	bool selectable;
-	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
 	bool originalFH;
+	bool inheritPass;
+
+	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
 
 	void spawnParticlesFromCollisionMask(const char *p, unsigned intv, int layer, float rotz = 0);
 	Vector getCollisionMaskNormal(Vector pos, float dist) const;
@@ -105,6 +107,7 @@ protected:
 	std::vector<ParticleEffect*> emitters;
 	int minDist, maxDist, reverse;
 	std::vector<Bone*> segments;
+	void onUpdate(float dt);
 public:
 	std::vector<Vector> collisionMask;
 	std::vector<Vector> transformedCollisionMask;

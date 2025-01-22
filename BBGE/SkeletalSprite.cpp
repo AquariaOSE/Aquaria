@@ -94,6 +94,7 @@ Bone::Bone() : CollideQuad()
 	selectable = true;
 	originalRenderPass = 0;
 	stripVert = false;
+	inheritPass = false;
 }
 
 Bone::~Bone()
@@ -313,6 +314,29 @@ Vector Bone::getCollisionMaskNormal(Vector pos, float dist) const
 	}
 	sum.normalize2D();
 	return sum;
+}
+
+void Bone::onUpdate(float dt)
+{
+	if (!collisionMask.empty())
+	{
+		if (collisionMask.size() != transformedCollisionMask.size())
+		{
+			transformedCollisionMask.resize(collisionMask.size());
+		}
+		for (size_t i = 0; i < collisionMask.size(); i++)
+		{
+			transformedCollisionMask[i] = getWorldCollidePosition(collisionMask[i]);
+		}
+	}
+
+	// Do this BEFORE updating children
+	if(inheritPass)
+	{
+		setRenderPass(parent->getRenderPass());
+	}
+
+	CollideQuad::onUpdate(dt);
 }
 
 
@@ -818,30 +842,11 @@ void SkeletalSprite::onUpdate(float dt)
 	if (frozen) return;
 	RenderObject::onUpdate(dt);
 
-	size_t i = 0;
 
-	for (i = 0; i < bones.size(); i++)
-	{
-		Bone *b = bones[i];
-		if (b && !b->collisionMask.empty())
-		{
-			if (b->collisionMask.size() != b->transformedCollisionMask.size())
-			{
-				b->transformedCollisionMask.resize(b->collisionMask.size());
-			}
-			for (size_t i = 0; i < b->collisionMask.size(); i++)
-			{
-				b->transformedCollisionMask[i] = b->getWorldCollidePosition(b->collisionMask[i]);
-			}
-		}
-	}
-
-
-	for (i = 0; i < animLayers.size(); i++)
+	for (size_t i = 0; i < animLayers.size(); i++)
 	{
 		animLayers[i].update(dt);
 	}
-
 }
 
 void AnimationLayer::update(float dt)
@@ -1002,6 +1007,9 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 		{
 			bone->SetAttribute("gridDrawOrder", (int)grid->getDrawOrder());
 		}
+
+		if(this->bones[i]->inheritPass)
+			bone->SetAttribute("ihp", 1);
 
 
 		for(size_t j = 0; j < this->bones[i]->framegfx.size(); ++j)
@@ -1554,6 +1562,9 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					grid->setDrawOrder((GridDrawOrder)ord);
 				}
 			}
+			if(bone->Attribute("ihp"))
+				newb->inheritPass = bone->BoolAttribute("ihp");
+
 			if(XMLElement *fr = bone->FirstChildElement("Frame"))
 			{
 				int frc = 0;

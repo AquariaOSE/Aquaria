@@ -952,6 +952,7 @@ void AnimationEditor::update(float dt)
 		Vector ebdata;
 		int pass = 0;
 		int origpass = 0;
+		bool ihp = false;
 
 		if (editingBone)
 		{
@@ -961,12 +962,23 @@ void AnimationEditor::update(float dt)
 			ebdata.z = editingBone->rotation.z;
 			pass = editingBone->getRenderPass();
 			origpass = editingBone->originalRenderPass;
+			ihp = editingBone->inheritPass;
 		}
 		text->setText(os.str());
 
 		char t2buf[128];
-		sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f  strip: %u pass: %d (%d)", ebdata.x, ebdata.y, ebdata.z, (unsigned)selectedStripPoint, pass, origpass);
-		text2->setText(t2buf);
+		sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f pass: %d", ebdata.x, ebdata.y, ebdata.z, pass);
+		std::ostringstream os2;
+		os2 << t2buf;
+		if(ihp)
+			os2 << " (from bone " << editingBone->pidx << ")";
+		else
+			os2 << " (" << origpass << ")";
+
+		if(editMode == AE_STRIP)
+			os2 << " strip: " << selectedStripPoint;
+
+		text2->setText(os2.str());
 
 
 		const float t = getAnimTime();
