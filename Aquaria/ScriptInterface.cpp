@@ -2197,11 +2197,7 @@ luaFunc(randRange)
 {
 	int n1 = lua_tointeger(L, 1);
 	int n2 = lua_tointeger(L, 2);
-	int spread = n2-n1;
-
-	int r = rand()%spread;
-	r += n1;
-
+	int r = randRange(n1, n2);
 	luaReturnNum(r);
 }
 
