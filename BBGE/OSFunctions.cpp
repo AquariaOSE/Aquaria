@@ -450,7 +450,6 @@ void forEachDir(const std::string& inpath, FileIterationCallback callback, void 
 #endif
 
 #ifdef BBGE_BUILD_WINDOWS
-	BOOL            fFinished;
 	HANDLE          hList;
 	TCHAR           szDir[MAX_PATH+1];
 	WIN32_FIND_DATA FileData;
