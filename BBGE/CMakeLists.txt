@@ -96,7 +96,6 @@ set(BBGE_SRCS
     Slider.h
     SoundManager.cpp
     SoundManager.h
-    SpawnParticleData.cpp
     SplineGrid.cpp
     SplineGrid.h
     StateMachine.cpp

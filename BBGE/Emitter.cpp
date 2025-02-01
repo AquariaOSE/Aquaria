@@ -21,6 +21,46 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Particles.h"
 #include "RenderBase.h"
 
+
+SpawnParticleData::SpawnParticleData()
+{
+	suckIndex = -1;
+	suckStr = 0;
+
+	randomScale1 = 1;
+	randomScale2 = 1;
+	randomAlphaMod1 = 1;
+	randomAlphaMod2 = 1;
+	influenced = 0;
+	spawnLocal = false;
+	life = 1;
+	blendType = BLEND_DEFAULT;
+	scale = Vector(1,1,1);
+	width = 64;
+	height = 64;
+	color = Vector(1,1,1);
+	alpha = 1;
+	randomSpawnRadius = 0;
+	lastDTDifference = 0;
+
+	randomRotationRange = 0;
+	number = 1;
+
+	randomSpawnRadiusRange = 0;
+	randomSpawnMod = Vector(1,1);
+
+	randomVelocityMagnitude = 0;
+
+	copyParentRotation = 0;
+	justOne = didOne = false;
+	flipH = flipV = 0;
+	spawnTimeOffset = 0;
+	pauseLevel = 0;
+	copyParentFlip = 0;
+	inheritColor = false;
+	inheritAlpha = false;
+}
+
 Emitter::Emitter(ParticleEffect *pe) : Quad(), pe(pe)
 {
 	//HACK:
@@ -63,52 +103,32 @@ void Emitter::spawnParticle(float perc)
 
 	p->pos = lastSpawn + ((currentSpawn - lastSpawn) * perc);
 
-	int finalRadius = data.randomSpawnRadius;
-	if (data.randomSpawnRadiusRange > 0)
-		finalRadius += rand()%data.randomSpawnRadiusRange;
+	float finalRadius = data.randomSpawnRadius + rng.f01() * data.randomSpawnRadiusRange;
 
-	switch (data.spawnArea)
 	{
-	case SpawnParticleData::SPAWN_CIRCLE:
-	{
-		float a = rand()%360;
+		float a = randAngle();
 		p->pos += Vector(sinf(a)*finalRadius * data.randomSpawnMod.x, cosf(a)*finalRadius * data.randomSpawnMod.y);
 	}
-	break;
-	case SpawnParticleData::SPAWN_LINE:
-	{
-		if (rand()%2 == 0)
-			p->pos.x += finalRadius;
-		else
-			p->pos.x -= finalRadius;
-	}
-	break;
-	}
 
-	if (data.randomScale1 == 1 && data.randomScale1 == data.randomScale2)
+	if (!(data.randomScale1 == 1 && data.randomScale1 == data.randomScale2))
 	{
-
-	}
-	else
-	{
-		int r = rand()%(int(data.randomScale2*100) - int(data.randomScale1*100));
-		float sz = data.randomScale1 + float(r)/100.0f;
+		// Legacy codepath -- breaks animated scaling
+		float sz = lerp(data.randomScale1, data.randomScale2, rng.f01());
 		p->scale = Vector(sz,sz);
 	}
 
 
 	if (data.randomRotationRange > 0)
 	{
-		p->rot.z = rand()%int(data.randomRotationRange);
-		p->rot.ensureData();
-		p->rot.data->target.z += p->rot.z;
+		p->rot.z = rng.f01() * data.randomRotationRange;
+		p->rot.ensureData()->target.z += p->rot.z;
 	}
 
 
 
 	if (data.randomVelocityMagnitude > 0)
 	{
-		float a = rand()%data.randomVelocityRange;
+		float a = randAngle();
 		Vector v = Vector(sinf(a)*data.randomVelocityMagnitude, cosf(a)*data.randomVelocityMagnitude);
 		p->vel += v;
 	}
@@ -117,6 +137,11 @@ void Emitter::spawnParticle(float perc)
 	{
 		p->rot.z = getAbsoluteRotation().z;
 	}
+}
+
+float Emitter::randAngle()
+{
+	return 2 * PI * rng.f01();
 }
 
 Vector Emitter::getSpawnPosition()
@@ -130,70 +155,56 @@ void Emitter::onUpdate(float dt)
 {
 	Quad::onUpdate(dt);
 
+	if(!(pe->isRunning() && core->particlesPaused <= data.pauseLevel))
+		return;
 
 
-	if (pe->isRunning() && core->particlesPaused <= data.pauseLevel)
+	if (data.spawnTimeOffset > 0)
 	{
+		data.spawnTimeOffset -= dt;
 		if (data.spawnTimeOffset > 0)
-		{
-			data.spawnTimeOffset -= dt;
-			if (data.spawnTimeOffset > 0)
-				return;
-		}
-
-		int spawnCount;
-		float spawnPerc;
-		if (data.justOne)
-		{
-			if (data.didOne)
-				spawnCount = 0;
-			else
-				spawnCount = data.justOne;
-			spawnPerc = 1;
-			data.didOne = 1;
-		}
-		else if (data.useSpawnRate)
-		{
-			spawnCount = 0;
-			spawnPerc = 1;
-			data.counter += dt;
-			while (data.counter > data.spawnRate.x)  // Faster than division
-			{
-				data.counter -= data.spawnRate.x;
-				spawnCount++;
-			}
-		}
-		else
-		{
-			float num = data.number.x * dt;
-			num += data.lastDTDifference;
-			spawnCount = int(num);
-			data.lastDTDifference = num - float(spawnCount);
-			if (spawnCount > 0)
-				spawnPerc = 1.0f / float(spawnCount);
-		}
-
-		if (spawnCount > 0)
-		{
-			// Avoid calling this until we know we actually need it for
-			// generating a particle (it has to apply the matrix chain,
-			// which is slow).
-			currentSpawn = getSpawnPosition();
-			if (lastSpawn.isZero())
-				lastSpawn = currentSpawn;
-
-			for (; spawnCount > 0; spawnCount--)
-			{
-				spawnParticle(spawnPerc);
-			}
-
-			lastSpawn = currentSpawn;
-		}
-
-		data.number.update(dt);
-		data.velocityMagnitude.update(dt);
-		data.spawnOffset.update(dt);
+			return;
 	}
+
+	int spawnCount;
+	float spawnPerc;
+	if (data.justOne)
+	{
+		if (data.didOne)
+			spawnCount = 0;
+		else
+			spawnCount = data.justOne;
+		spawnPerc = 1;
+		data.didOne = 1;
+	}
+	else
+	{
+		float num = data.number.x * dt;
+		num += data.lastDTDifference;
+		spawnCount = int(num);
+		data.lastDTDifference = num - float(spawnCount);
+		if (spawnCount > 0)
+			spawnPerc = 1.0f / float(spawnCount);
+	}
+
+	if (spawnCount > 0)
+	{
+		// Avoid calling this until we know we actually need it for
+		// generating a particle (it has to apply the matrix chain,
+		// which is slow).
+		currentSpawn = getSpawnPosition();
+		if (lastSpawn.isZero())
+			lastSpawn = currentSpawn;
+
+		for (; spawnCount > 0; spawnCount--)
+		{
+			spawnParticle(spawnPerc);
+		}
+
+		lastSpawn = currentSpawn;
+	}
+
+	data.number.update(dt);
 }
 
 void Emitter::start()

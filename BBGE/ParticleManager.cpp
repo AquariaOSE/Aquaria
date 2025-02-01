@@ -27,17 +27,19 @@ ParticleBank particleBank;
 
 std::string ParticleManager::particleBankPath = "";
 
+static int dummy_collideParticle(Vector pos)
+{
+	return 0;
+}
+
 ParticleManager::ParticleManager(int size)
 {
 	particleManager = this;
 	particles.resize(size);
 	used = 0;
 	free = 0;
-	oldFree = 0;
 
-
-	collideFunction = 0;
-	specialFunction = 0;
+	collideFunction = dummy_collideParticle;
 
 	numActive = 0;
 
@@ -61,9 +63,8 @@ void ParticleManager::setSize(size_t size)
 	particles.resize(size);
 
 	this->size = size;
-	this->halfSize = size*0.5f;
 
-	free = oldFree = 0;
+	free = 0;
 }
 
 void ParticleManager::setNumSuckPositions(size_t num)
@@ -104,31 +105,14 @@ void ParticleManager::updateParticle(Particle *p, float dt)
 		{
 			ParticleInfluence *pinf=0;
 
-			if (collideFunction)
+			if (collideFunction(p->pos))
 			{
-				if (collideFunction(p->pos))
-				{
-					const bool bounce = false;
-					if (bounce)
-					{
-						p->pos = p->lpos;
-						p->vel = -p->vel;
-					}
-					else
-					{
-						// fade out
-						p->vel = 0;
-						endParticle(p);
-						return;
-					}
-				}
+				// fade out
+				p->vel = 0;
+				endParticle(p);
+				return;
 			}
 
-			if (specialFunction)
-			{
-				specialFunction(p);
-			}
-			p->lpos = p->pos;
 			Influences::iterator i = influences.begin();
 			for (; i != influences.end(); i++)
 			{
@@ -166,9 +150,6 @@ void ParticleManager::updateParticle(Particle *p, float dt)
 			p->emitter->hasRot = true;
 	}
 
-	p->lpos = p->pos;
-
-
 	if (p->life <= 0)
 	{
 		endParticle(p);
@@ -205,14 +186,6 @@ void ParticleManager::nextFree(size_t jump)
 		free -= size;
 }
 
-void ParticleManager::setFree(size_t free)
-{
-	if (free != -1)
-	{
-		this->free = free;
-	}
-}
-
 static const size_t spread = 8;
 static const size_t spreadCheck = 128;
 
@@ -220,9 +193,7 @@ static const size_t spreadCheck = 128;
 Particle *ParticleManager::stomp()
 {
 	int c = 0, idx = -1;
-	//int bFree = free;
 	Particle *p = 0;
-	bool exceed = false;
 
 
 	nextFree();
@@ -230,7 +201,6 @@ Particle *ParticleManager::stomp()
 	{
 		if (c >= spreadCheck)
 		{
-			exceed = true;
 			break;
 		}
 
@@ -240,13 +210,6 @@ Particle *ParticleManager::stomp()
 		c++;
 	}
 	while (p->active);
-
-
-
-	if (exceed)
-	{
-
-	}
 
 	endParticle(p);
 	p->index = idx;

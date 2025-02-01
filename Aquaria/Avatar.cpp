@@ -209,10 +209,9 @@ void Avatar::onAnimationKeyPassed(int key)
 	Entity::onAnimationKeyPassed(key);
 }
 
-Vector randCirclePos(Vector position, int radius)
+static Vector randCirclePos(const Vector& position, float radius)
 {
-	float a = ((rand()%360)*(2*PI))/360.0f;
-	return position + Vector(sinf(a), cosf(a))*radius;
+	return position + randVector(radius);
 }
 
 SongIconParticle::SongIconParticle(Vector color, Vector pos, size_t note)
@@ -224,7 +223,7 @@ SongIconParticle::SongIconParticle(Vector color, Vector pos, size_t note)
 
 	setWidthHeight(32);
 
-	float life = 1.0;
+	const float life = 1;
 
 	toIcon = 0;
 	this->color = color;

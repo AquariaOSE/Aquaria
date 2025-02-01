@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Core.h"
 #include "Quad.h"
+#include "Randomness.h"
 
 class Emitter;
 class ParticleEffect;
@@ -32,24 +33,14 @@ struct SpawnParticleData
 	SpawnParticleData();
 
 	float randomScale1, randomScale2;
-	float randomAlphaMod1, randomAlphaMod2;
-	enum { NO_SPAWN = 999 };
-
-	enum SpawnArea { SPAWN_CIRCLE=0, SPAWN_LINE };
+	float randomAlphaMod1, randomAlphaMod2; // both unused
 
 	int pauseLevel;
 	int flipH, flipV;
-	SpawnArea spawnArea;
-
-	float updateMultiplier;
-
-	InterpolatedVector velocityMagnitude;
-	int randomParticleAngleRange;
-	int randomVelocityRange;
 
 	float randomVelocityMagnitude;
 	int randomRotationRange;
-	InterpolatedVector initialVelocity, number, gravity;
+	Vector initialVelocity, gravity;
 	float randomSpawnRadius;
 	Vector randomSpawnMod;
 	int randomSpawnRadiusRange;
@@ -57,16 +48,11 @@ struct SpawnParticleData
 	int justOne;
 
 	int copyParentRotation, copyParentFlip;
-	bool useSpawnRate;
-	bool calculateVelocityToCenter;
-	bool fadeAlphaWithLife, addAsChild;
 	int width, height;
-	InterpolatedVector scale, rotation, color, alpha, spawnOffset;
+	InterpolatedVector number, scale, rotation, color, alpha;
 	float life;
-	InterpolatedVector spawnRate;
 	std::string texture;
 	BlendType blendType;
-	float counter;
 	float spawnTimeOffset;
 	bool spawnLocal;
 	bool inheritColor;
@@ -97,7 +83,6 @@ struct Particle
 		pos = Vector(0,0);
 		vel = Vector(0,0);
 		gvy = Vector(0,0);
-		lpos = Vector(0,0);
 		color = Vector(1,1,1);
 		alpha = 1;
 		scale = Vector(1,1);
@@ -107,7 +92,7 @@ struct Particle
 	}
 	float life;
 	bool active;
-	Vector pos, vel, gvy, lpos;
+	Vector pos, vel, gvy;
 	InterpolatedVector color, alpha, scale, rot;
 	Emitter *emitter;
 	int index;
@@ -139,11 +124,13 @@ protected:
 	void onRender(const RenderState& rs) const OVERRIDE;
 	void spawnParticle(float perc=1);
 	void onUpdate(float dt) OVERRIDE;
+	float randAngle();
 
 	ParticleEffect *pe;
 
 	typedef std::list<Particle*> Particles;
 	Particles particles;
+	FastRand rng;
 };
 
 class ParticleEffect : public RenderObject
@@ -206,11 +193,8 @@ public:
 	void clearInfluences();
 	void addInfluence(ParticleInfluence inf);
 	int (*collideFunction)(Vector pos);
-	void (*specialFunction)(Particle *me);
 
 	void endParticle(Particle *p);
-
-	void setFree(size_t free);
 
 	size_t getFree() { return free; }
 	size_t getNumActive() { return numActive; }
@@ -224,20 +208,16 @@ public:
 
 protected:
 
-
-
 	std::vector<Vector> suckPositions;
 	size_t numActive;
 	Particle* stomp();
 
 	void nextFree(size_t f=1);
 
-	size_t oldFree;
-
 	typedef std::vector<ParticleInfluence> Influences;
 	Influences influences;
 
-	size_t size, used, free, halfSize;
+	size_t size, used, free;
 	Particles particles;
 
 
