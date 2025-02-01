@@ -1968,9 +1968,14 @@ void AnimationEditor::updateEditingBone()
 	SkeletalSprite *nearestSpr = NULL;
 	const Vector& p = core->mouse.position;
 	int page = -1, idx = -1;
-	for(size_t i = 0; i < NumPages; ++i)
+	// DON'T make this a loop going over all pages. Only use the current page.
+	// Causes problems when editing bones on a foreign sprite since we can't assign a keyframe cleanly.
+	// (Because that sprite may not have enough keyframes, or there is no keyframe at the time we're trying to edit.
+	// The former just crashes; the latter causes weirdness and accidental edits to unrelated/unintended keyframes)
+	//for(size_t i = 0; i < NumPages; ++i)
 	{
-		SkeletalSprite& spr = pages[i].editSprite;
+		//SkeletalSprite& spr = pages[i].editSprite;
+		SkeletalSprite& spr = *getCurrentPageSprite();
 		if(spr.isLoaded())
 		{
 			int k = spr.findSelectableBoneIdxClosestTo(p, true);
@@ -1983,7 +1988,8 @@ void AnimationEditor::updateEditingBone()
 					mind = d;
 					nearest = b;
 					nearestSpr = &spr;
-					page = i;
+					//page = i;
+					page = curPage;
 					idx = k;
 				}
 			}
