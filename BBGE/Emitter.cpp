@@ -110,21 +110,19 @@ void Emitter::spawnParticle(float perc)
 		p->pos += Vector(sinf(a)*finalRadius * data.randomSpawnMod.x, cosf(a)*finalRadius * data.randomSpawnMod.y);
 	}
 
-	if (!(data.randomScale1 == 1 && data.randomScale1 == data.randomScale2))
 	{
-		// Legacy codepath -- breaks animated scaling
 		float sz = lerp(data.randomScale1, data.randomScale2, rng.f01());
-		p->scale = Vector(sz,sz);
+		p->scale *= sz;
+		if(p->scale.data)
+			p->scale.data->target *= sz;
 	}
-
 
 	if (data.randomRotationRange > 0)
 	{
 		p->rot.z = rng.f01() * data.randomRotationRange;
-		p->rot.ensureData()->target.z += p->rot.z;
+		if(p->rot.data)
+			p->rot.data->target.z += p->rot.z;
 	}
-
-
 
 	if (data.randomVelocityMagnitude > 0)
 	{
