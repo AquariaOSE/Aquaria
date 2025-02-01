@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "DSQ.h"
 #include <SDL.h>
 #include <SDL_main.h>
+#include "Randomness.h"
 
 
 extern "C" int main(int argc,char *argv[])
@@ -44,6 +45,13 @@ extern "C" int main(int argc,char *argv[])
 #ifdef AQUARIA_EXTRA_DATA_DIR
 	extraDataDir = AQUARIA_EXTRA_DATA_DIR;
 #endif
+
+	// Couple pointers to help enhance entropy, suppported by the system's ASLR if available
+	{
+		void *p = malloc(1);
+		Randomness::init((uintptr_t)argv, (uintptr_t)&dsqParam, (uintptr_t)&(malloc), (uintptr_t)&p);
+		free(p);
+	}
 
 	{
 		DSQ dsql(dsqParam, extraDataDir);

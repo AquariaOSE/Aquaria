@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "GLLoad.h"
 #include "RenderBase.h"
 #include "Window.h"
+#include "Randomness.h"
 
 #include <time.h>
 #include <iostream>
@@ -1152,6 +1153,15 @@ void Core::run(float runTime)
 		dt = (nowTicks-thenTicks)/1000.0;
 		thenTicks = nowTicks;
 
+		uint64_t entropy = nowTicks;
+		entropy <<= 3;
+		entropy ^= frames;
+		entropy <<= 3;
+		entropy += (mouse.buttons.left << 1) | (mouse.buttons.middle << 2) | (mouse.buttons.right << 3);
+		entropy ^= lastEventTimestamp;
+		Randomness::addEntropy(entropy);
+
+
 		if (!avgFPS.empty())
 		{
 
@@ -1459,6 +1469,8 @@ static const TextInputMapping textInputMap[]
 
 void Core::onEvent(const SDL_Event& event)
 {
+	lastEventTimestamp = event.common.timestamp;
+
 	const bool focus = window->hasFocus();
 	if(event.type == sdlUserMouseEventID)
 	{

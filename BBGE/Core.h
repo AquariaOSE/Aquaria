@@ -320,6 +320,7 @@ public:
 	bool loopDone;
 
 	Mouse mouse;
+	unsigned lastEventTimestamp;
 
 	AfterEffectManager *afterEffectManager;
 

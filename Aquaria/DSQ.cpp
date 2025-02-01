@@ -1362,6 +1362,9 @@ void DSQ::init()
 		title(false);
 	else
 		enqueueJumpState("BitBlotLogo");
+
+	// Use the time needed to load everything as an extra source of entropy
+	Randomness::addEntropy(SDL_GetTicks());
 }
 
 void DSQ::recreateBlackBars()

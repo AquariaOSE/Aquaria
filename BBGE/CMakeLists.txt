@@ -65,6 +65,8 @@ set(BBGE_SRCS
     Quad.h
     QuadGrid.cpp
     QuadGrid.h
+    Randomness.cpp
+    Randomness.h
     ReadXML.cpp
     ReadXML.h
     Rect.h
