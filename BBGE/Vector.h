@@ -526,6 +526,11 @@ public:
 
 Vector getRotatedVector(const Vector &vec, float rot);
 
+inline Vector lerp(const Vector &v1, const Vector &v2, float t)
+{
+	return (v2-v1)*t+v1;
+}
+
 Vector lerp(const Vector &v1, const Vector &v2, float dt, int lerpType);
 
 #endif // BBGE_VECTOR_H

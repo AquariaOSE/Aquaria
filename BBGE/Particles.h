@@ -44,7 +44,6 @@ struct SpawnParticleData
 	float randomSpawnRadius;
 	Vector randomSpawnMod;
 	int randomSpawnRadiusRange;
-	bool didOne;
 	int justOne;
 
 	int copyParentRotation, copyParentFlip;
@@ -58,7 +57,6 @@ struct SpawnParticleData
 	bool inheritColor;
 	bool inheritAlpha;
 
-	float lastDTDifference;
 	int influenced;
 	std::string deathPrt;
 
@@ -120,9 +118,11 @@ public:
 
 	bool hasRot; // FIXME: this should be removed eventually
 protected:
-	Vector currentSpawn, lastSpawn;
+	Vector lastSpawn;
+	float lastDTDifference;
+	bool didOne;
 	void onRender(const RenderState& rs) const OVERRIDE;
-	void spawnParticle(float perc=1);
+	Particle *spawnParticle(const Vector& spawnpos);
 	void onUpdate(float dt) OVERRIDE;
 	float randAngle();
 

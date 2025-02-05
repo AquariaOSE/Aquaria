@@ -41,7 +41,6 @@ SpawnParticleData::SpawnParticleData()
 	color = Vector(1,1,1);
 	alpha = 1;
 	randomSpawnRadius = 0;
-	lastDTDifference = 0;
 
 	randomRotationRange = 0;
 	number = 1;
@@ -52,7 +51,7 @@ SpawnParticleData::SpawnParticleData()
 	randomVelocityMagnitude = 0;
 
 	copyParentRotation = 0;
-	justOne = didOne = false;
+	justOne = false;
 	flipH = flipV = 0;
 	spawnTimeOffset = 0;
 	pauseLevel = 0;
@@ -80,7 +79,7 @@ void Emitter::destroy()
 
 }
 
-void Emitter::spawnParticle(float perc)
+Particle *Emitter::spawnParticle(const Vector& spawnpos)
 {
 	Particle *p = particleManager->getFreeParticle(this);
 
@@ -101,7 +100,7 @@ void Emitter::spawnParticle(float perc)
 
 	p->rot = data.rotation;
 
-	p->pos = lastSpawn + ((currentSpawn - lastSpawn) * perc);
+	p->pos = spawnpos;
 
 	float finalRadius = data.randomSpawnRadius + rng.f01() * data.randomSpawnRadiusRange;
 
@@ -135,6 +134,8 @@ void Emitter::spawnParticle(float perc)
 	{
 		p->rot.z = getAbsoluteRotation().z;
 	}
+
+	return p;
 }
 
 float Emitter::randAngle()
@@ -162,27 +163,26 @@ void Emitter::onUpdate(float dt)
 		data.spawnTimeOffset -= dt;
 		if (data.spawnTimeOffset > 0)
 			return;
+		lastSpawn = getSpawnPosition();
 	}
 
-	int spawnCount;
+	int spawnCount = 0;
 	float spawnPerc;
 	if (data.justOne)
 	{
-		if (data.didOne)
-			spawnCount = 0;
-		else
+		if (!didOne)
 			spawnCount = data.justOne;
-		spawnPerc = 1;
-		data.didOne = 1;
+		spawnPerc = 0; // Spawn all of them in the same spot
+		didOne = true;
 	}
 	else
 	{
 		float num = data.number.x * dt;
-		num += data.lastDTDifference;
+		num += lastDTDifference;
 		spawnCount = int(num);
-		data.lastDTDifference = num - float(spawnCount);
+		lastDTDifference = num - float(spawnCount);
 		if (spawnCount > 0)
-			spawnPerc = 1.0f / float(spawnCount);
+			spawnPerc = 1.0f / num;
 	}
 
 	if (spawnCount > 0)
@@ -190,16 +190,23 @@ void Emitter::onUpdate(float dt)
 		// Avoid calling this until we know we actually need it for
 		// generating a particle (it has to apply the matrix chain,
 		// which is slow).
-		currentSpawn = getSpawnPosition();
-		if (lastSpawn.isZero())
-			lastSpawn = currentSpawn;
+		const Vector currentSpawn = getSpawnPosition();
 
-		for (; spawnCount > 0; spawnCount--)
+		// Given the last spawn position and the new spawn position, interpolate as many particles
+		// along the line between both positions. Start at current and move back to prev.
+		// For convenience, 0 is the current pos and 1 is the prev. pos.
+		float percAccu = 0;
+		for(int i = 0; i < spawnCount; ++i)
 		{
-			spawnParticle(spawnPerc);
+			spawnParticle(lerp(currentSpawn, lastSpawn, percAccu));
+			// This is unlikely to reach 1 perfectly, which is good since what is currently 1
+			// was 0 in the previous iteration, and that is known to be hit perfectly.
+			// This way we usually don't end up placing 2 particles in the same spot.
+			percAccu += spawnPerc;
 		}
 
 		lastSpawn = currentSpawn;
+
 	}
 
 	data.number.update(dt);
@@ -207,7 +214,8 @@ void Emitter::onUpdate(float dt)
 
 void Emitter::start()
 {
-	data.didOne = 0;
+	didOne = false;
+	lastDTDifference = 0;
 	lastSpawn = getSpawnPosition();
 }
 
