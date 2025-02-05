@@ -116,7 +116,6 @@ public:
 
 	Vector getSpawnPosition();
 
-	bool hasRot; // FIXME: this should be removed eventually
 protected:
 	Vector lastSpawn;
 	float lastDTDifference;

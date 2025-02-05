@@ -64,7 +64,6 @@ Emitter::Emitter(ParticleEffect *pe) : Quad(), pe(pe)
 {
 	//HACK:
 	cull = false;
-	hasRot = false;
 }
 
 void Emitter::destroy()
@@ -250,115 +249,40 @@ void Emitter::onRender(const RenderState& rs) const
 		core->setupRenderPositionAndScale();
 	}
 
-	float w2 = width*0.5f;
-	float h2 = height*0.5f;
-
 	if (texture)
 		texture->apply();
 
+	Vector colorMult = rs.color;
+	if(data.inheritColor)
+		colorMult *= pe->color;
+	float alphaMult = rs.alpha;
+	if(data.inheritAlpha)
+		alphaMult *= pe->alpha.x;
 
+	const RenderGrid * const rquad = core->getDefaultQuadGrid();
 	const bool flip = data.flipH != (data.copyParentFlip && pe->isfhr());
-	if (flip || hasRot)
+
+	for (Particles::const_iterator i = particles.begin(); i != particles.end(); i++)
 	{
-		Vector colorMult = data.inheritColor ? pe->color : Vector(1, 1, 1);
-		float alphaMult = data.inheritAlpha ? pe->alpha.x : 1;
-
-		for (Particles::const_iterator i = particles.begin(); i != particles.end(); i++)
+		Particle *p = *i;
+		if (p->active)
 		{
-			Particle *p = *i;
-			if (p->active)
-			{
-				const float dx = w2 * p->scale.x;
-				const float dy = h2 * p->scale.y;
+			const Vector col = p->color * colorMult;
+			glColor4f(col.x, col.y, col.z, p->alpha.x * alphaMult);
 
-				Vector col = p->color * colorMult;
-				glColor4f(col.x, col.y, col.z, p->alpha.x * alphaMult);
+			glPushMatrix();
 
+				glTranslatef(p->pos.x, p->pos.y,0);
+				glScalef(width * p->scale.x, height * p->scale.y, 0);
 
-				if (flip || p->rot.z != 0 || p->rot.isInterpolating())
-				{
-					glPushMatrix();
+				glRotatef(p->rot.z, 0, 0, 1);
 
-						glTranslatef(p->pos.x, p->pos.y,0);
+				if (flip)
+					glRotatef(180, 0, 1, 0);
 
-						glRotatef(p->rot.z, 0, 0, 1);
+				rquad->render(rs);
 
-						if (flip)
-						{
-							glRotatef(180, 0, 1, 0);
-						}
-
-
-
-						glBegin(GL_QUADS);
-							glTexCoord2f(0,1);
-							glVertex2f(-dx, +dy);
-
-							glTexCoord2f(1,1);
-							glVertex2f(+dx, +dy);
-
-							glTexCoord2f(1,0);
-							glVertex2f(+dx, -dy);
-
-							glTexCoord2f(0,0);
-							glVertex2f(-dx, -dy);
-						glEnd();
-
-					glPopMatrix();
-				}
-				else
-				{
-					const float x = p->pos.x;
-					const float y = p->pos.y;
-
-					glBegin(GL_QUADS);
-						glTexCoord2f(0,1);
-						glVertex2f(x-dx, y+dy);
-
-						glTexCoord2f(1,1);
-						glVertex2f(x+dx, y+dy);
-
-						glTexCoord2f(1,0);
-						glVertex2f(x+dx, y-dy);
-
-						glTexCoord2f(0,0);
-						glVertex2f(x-dx, y-dy);
-					glEnd();
-				}
-			}
+			glPopMatrix();
 		}
 	}
-	else
-	{
-		glBegin(GL_QUADS);
-		for (Particles::const_iterator i = particles.begin(); i != particles.end(); i++)
-		{
-			Particle *p = *i;
-			if (p->active)
-			{
-				const float x = p->pos.x;
-				const float y = p->pos.y;
-				const float dx = w2 * p->scale.x;
-				const float dy = h2 * p->scale.y;
-
-				glColor4f(p->color.x, p->color.y, p->color.z, p->alpha.x);
-
-				glTexCoord2f(0,1);
-				glVertex2f(x-dx, y+dy);
-
-				glTexCoord2f(1,1);
-				glVertex2f(x+dx, y+dy);
-
-				glTexCoord2f(1,0);
-				glVertex2f(x+dx, y-dy);
-
-				glTexCoord2f(0,0);
-				glVertex2f(x-dx, y-dy);
-			}
-		}
-		glEnd();
-	}
-
-
-
 }

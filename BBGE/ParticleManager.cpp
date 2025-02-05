@@ -146,8 +146,6 @@ void ParticleManager::updateParticle(Particle *p, float dt)
 				p->vel += dir * dt;
 			}
 		}
-		if (p->rot.z != 0 || p->rot.isInterpolating())
-			p->emitter->hasRot = true;
 	}
 
 	if (p->life <= 0)
