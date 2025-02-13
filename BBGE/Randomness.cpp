@@ -5,7 +5,7 @@
 #include "Randomness.h"
 #include <stdlib.h>
 #include <time.h>
-#include "SDLwrap.h"
+#include <SDL.h>
 
 
 static SlowRand s_sysrand;
