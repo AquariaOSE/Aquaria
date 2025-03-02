@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define SEGMENTED_H
 
 #include "../BBGE/Quad.h"
+#include "VertexBuffer.h"
 
 class Segmented
 {
@@ -51,6 +52,8 @@ public:
 protected:
 	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
+
+	DynamicGPUBuffer gpubuf;
 };
 
 #endif

@@ -21,12 +21,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Segmented.h"
 #include "RenderBase.h"
 
-Strand::Strand(const Vector &position, size_t segs, size_t dist) : RenderObject(), Segmented(dist, dist)
+Strand::Strand(const Vector &position, size_t segs, size_t dist)
+	: RenderObject(), Segmented(dist, dist)
+	, gpubuf(GPUBUF_DYNAMIC | GPUBUF_VERTEXBUF)
 {
+	assert(segs);
 	cull = false;
 	segments.resize(segs);
 	for (size_t i = 0; i < segments.size(); i++)
 	{
+		// FIXME: This is super costly to waste an entire RenderObject just to store a position.
 		segments[i] = new RenderObject;
 	}
 	initSegments(position);
@@ -47,46 +51,69 @@ void Strand::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
 	updateSegments(position);
+
+	const size_t numSegments = segments.size();
+
+	do
+	{
+		const size_t bytes = (numSegments+1) * 6 * sizeof(float);
+		float *p = (float*)gpubuf.beginWrite(GPUBUFTYPE_VEC2_RGBA, bytes, GPUACCESS_DEFAULT);
+
+		// Note: We're rewriting all of the vertex data here.
+		// Ideally we'd only rewrite position data since vertex colors never change,
+		// but currently this is to keep buffer layouts simple.
+
+		const float factor = 1.0f / 50.0f;
+		const size_t colorLimit = numSegments<50 ? numSegments : 50;
+		const Vector falloff = color * factor;
+		const float falloffAlpha = 1.0f / float(numSegments);
+		float a = 1.0f;
+		Vector c = color;
+
+		// initial vertex (this is the +1)
+		*p++ = position.x;
+		*p++ = position.y;
+
+		*p++ = c.x;
+		*p++ = c.y;
+		*p++ = c.z;
+		*p++ = a;
+
+		size_t i;
+		for(i = 0; i < colorLimit; ++i)
+		{
+			*p++ = segments[i]->position.x;
+			*p++ = segments[i]->position.y;
+
+			*p++ = c.x;
+			*p++ = c.y;
+			*p++ = c.z;
+			*p++ = a;
+
+			c -= falloff;
+			a -= falloffAlpha;
+		}
+		for( ; i < numSegments; ++i)
+		{
+			*p++ = segments[i]->position.x;
+			*p++ = segments[i]->position.y;
+
+			*p++ = 0.0f;
+			*p++ = 0.0f;
+			*p++ = 0.0f;
+			*p++ = a;
+
+			a -= falloffAlpha;
+		}
+	}
+	while(!gpubuf.commitWrite());
 }
 
 void Strand::onRender(const RenderState& rs) const
 {
-	const size_t numSegments = segments.size();
-	if (numSegments == 0) return;
-
 	glTranslatef(-position.x, -position.y, 0);
 	glLineWidth(1);
 
-	glBegin(GL_LINE_STRIP);
-
-
-	unsigned int r = (unsigned int)(color.x * (255<<8));
-	unsigned int g = (unsigned int)(color.y * (255<<8));
-	unsigned int b = (unsigned int)(color.z * (255<<8));
-	unsigned int a = (255<<8);
-	unsigned int dr = r/50;
-	unsigned int dg = g/50;
-	unsigned int db = b/50;
-	unsigned int da = a/numSegments;
-	glColor4ub(r>>8, g>>8, b>>8, a>>8);
-	glVertex2f(position.x, position.y);
-	glVertex2f(segments[0]->position.x, segments[0]->position.y);
-	const size_t colorLimit = numSegments<50 ? numSegments : 50;
-	size_t i;
-	for (i = 1; i < colorLimit; i++)
-	{
-		r -= dr;
-		g -= dg;
-		b -= db;
-		a -= da;
-		glColor4ub(r>>8, g>>8, b>>8, a>>8);
-		glVertex2f(segments[i]->position.x, segments[i]->position.y);
-	}
-	for (; i < numSegments; i++)
-	{
-		a -= da;
-		glColor4ub(0, 0, 0, a>>8);
-		glVertex2f(segments[i]->position.x, segments[i]->position.y);
-	}
-	glEnd();
+	gpubuf.apply();
+	glDrawArrays(GL_LINE_STRIP, 0, GLsizei(segments.size() + 1));
 }

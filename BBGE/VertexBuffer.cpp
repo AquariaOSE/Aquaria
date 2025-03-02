@@ -13,7 +13,8 @@ static unsigned s_lastState = 0; // StateBits
 
 enum StateBits
 {
-    SB_COLOR_FROM_BUFFER = 0x01
+    SB_TC_FROM_BUFFER = 0x01,
+    SB_COLOR_FROM_BUFFER = 0x02
 };
 
 static unsigned toGlUsage(unsigned usage)
@@ -115,6 +116,14 @@ bool DynamicGPUBuffer::commitWrite(size_t used)
     return _commitWrite(used);
 }
 
+bool DynamicGPUBuffer::commitWriteExact(const void * p)
+{
+    const void *origin = _d_map ? _d_map : _h_data;
+    ptrdiff_t d = (const char*)p - (const char*)origin;
+    assert(d == _size);
+    return commitWrite();
+}
+
 bool DynamicGPUBuffer::_commitWrite(size_t used)
 {
     if(_HasARB)
@@ -210,12 +219,15 @@ void DynamicGPUBuffer::apply(BufDataType usetype) const
     const unsigned tcoffset = (u >> 16u) & 0xff;
     const unsigned coloroffset = u >> 24u;
 
-    // vertex and texcoords are always enabled
+    // vertices are always enabled
     glVertexPointer(scalars, gltype, stride, p);
-    if(tcoffset)
-        glTexCoordPointer(2, gltype, stride, (void*)((uintptr_t)p + tcoffset));
 
     unsigned wantedstate = 0;
+    if(tcoffset)
+    {
+        wantedstate |= SB_TC_FROM_BUFFER;
+        glTexCoordPointer(2, gltype, stride, (void*)((uintptr_t)p + tcoffset));
+    }
     if(coloroffset)
     {
         wantedstate |= SB_COLOR_FROM_BUFFER;
@@ -225,6 +237,13 @@ void DynamicGPUBuffer::apply(BufDataType usetype) const
     unsigned wrongbits = wantedstate ^ s_lastState;
     if(wrongbits)
     {
+        if(wrongbits & SB_TC_FROM_BUFFER)
+        {
+            if(wantedstate & SB_TC_FROM_BUFFER)
+                glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+            else
+                glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+        }
         if(wrongbits & SB_COLOR_FROM_BUFFER)
         {
             if(wantedstate & SB_COLOR_FROM_BUFFER)

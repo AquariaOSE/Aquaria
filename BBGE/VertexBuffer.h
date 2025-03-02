@@ -27,9 +27,9 @@ enum BufDataType
                                   ^^-- offset of colors, if present */
     GPUBUFTYPE_U16            = 0x00000010,  // densely packed u16, for indexing
     GPUBUFTYPE_VEC2_TC        = 0x00081021,  // xyuv xyuv xyuv
-    GPUBUFTYPE_VEC2_TC_RGBA   = 0x10082021,   // xyuvrgba xyuvrgba xyuvrgba
+    GPUBUFTYPE_VEC2_TC_RGBA   = 0x10082021,  // xyuvrgba xyuvrgba xyuvrgba
+    GPUBUFTYPE_VEC2_RGBA      = 0x08001821,  // xyrgba xyrgba xyrgba
     //                            ccoossnt
-    GPUBUFTYPE_VEC2_TC_RGBA_BUT_NO_COLOR = GPUBUFTYPE_VEC2_TC_RGBA & 0xffffff,
     GPUBUFTYPE_UVEC2          = 0x00000420
 };
 
@@ -59,6 +59,7 @@ public:
     void *beginWrite(BufDataType type, size_t newsize, unsigned access); // AccessFlags
     bool commitWrite(); // used same size as passed to beginWrite()
     bool commitWrite(size_t used); // explicitly specify used size (may be less than initially requested)
+    bool commitWriteExact(const void *p); // asserts that as many bytes as allocated were written
 
     void upload(BufDataType type, const void *data, size_t size);
 
