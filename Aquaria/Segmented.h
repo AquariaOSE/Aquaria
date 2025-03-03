@@ -22,7 +22,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define SEGMENTED_H
 
 #include "../BBGE/Quad.h"
-#include "VertexBuffer.h"
 
 class Segmented
 {
@@ -44,16 +43,5 @@ protected:
 	std::vector<RenderObject *> segments;
 };
 
-class Strand : public RenderObject, public Segmented
-{
-public:
-	Strand(const Vector &position, size_t segs, size_t dist=32);
-	void destroy() OVERRIDE;
-protected:
-	void onUpdate(float dt) OVERRIDE;
-	void onRender(const RenderState& rs) const OVERRIDE;
-
-	DynamicGPUBuffer gpubuf;
-};
 
 #endif

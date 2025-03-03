@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "CollideEntity.h"
 #include "Segmented.h"
+#include "Strand.h"
 #include "Particles.h"
 #include "Scriptable.h"
 

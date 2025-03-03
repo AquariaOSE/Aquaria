@@ -89,6 +89,7 @@ SET(AQUARIA_SRCS
     StatsAndAchievements.h
     SteamRender.cpp
     Strand.cpp
+    Strand.h
     StringBank_gen.h
     SubtitlePlayer.cpp
     SubtitlePlayer.h

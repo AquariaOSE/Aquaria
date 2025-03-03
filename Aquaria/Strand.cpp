@@ -18,45 +18,53 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#include "Segmented.h"
+#include "Strand.h"
 #include "RenderBase.h"
 
-Strand::Strand(const Vector &position, size_t segs, size_t dist)
-	: RenderObject(), Segmented(dist, dist)
+Strand::Strand(const Vector &position, size_t segs, float dist)
+	: RenderObject()
+	, points(segs)
 	, gpubuf(GPUBUF_DYNAMIC | GPUBUF_VERTEXBUF)
+	, dist(dist)
 {
 	assert(segs);
 	cull = false;
-	segments.resize(segs);
-	for (size_t i = 0; i < segments.size(); i++)
-	{
-		// FIXME: This is super costly to waste an entire RenderObject just to store a position.
-		segments[i] = new RenderObject;
-	}
-	initSegments(position);
+	for (size_t i = 0; i < segs; i++)
+		points[i] = position;
 }
 
-void Strand::destroy()
+void Strand::updatePoints()
 {
-	RenderObject::destroy();
-	for (size_t i = 0; i < segments.size(); i++)
+	Vector last = position;
+	const float distsq = sqr(dist);
+	const size_t N = points.size();
+	for(size_t i = 0; i < N; ++i)
 	{
-		segments[i]->destroy();
-		delete segments[i];
+		Vector pt = points[i];
+		const Vector diff = last - pt;
+		last = pt;
+		const float sqrLength = diff.getSquaredLength2D();
+
+		if (sqrLength < distsq)
+			continue;
+
+		Vector useDiff = diff;
+		useDiff.setLength2D(dist);
+		Vector reallyUseDiff = diff - useDiff;
+		points[i] = pt + reallyUseDiff;
 	}
-	segments.clear();
 }
 
 void Strand::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
-	updateSegments(position);
+	updatePoints();
 
-	const size_t numSegments = segments.size();
+	const size_t N = points.size();
 
 	do
 	{
-		const size_t bytes = (numSegments+1) * 6 * sizeof(float);
+		const size_t bytes = (N+1) * 6 * sizeof(float); // +1 for the initial origin vertex
 		float *p = (float*)gpubuf.beginWrite(GPUBUFTYPE_VEC2_RGBA, bytes, GPUACCESS_DEFAULT);
 
 		// Note: We're rewriting all of the vertex data here.
@@ -64,9 +72,9 @@ void Strand::onUpdate(float dt)
 		// but currently this is to keep buffer layouts simple.
 
 		const float factor = 1.0f / 50.0f;
-		const size_t colorLimit = numSegments<50 ? numSegments : 50;
+		const size_t colorLimit = N<50 ? N : 50;
 		const Vector falloff = color * factor;
-		const float falloffAlpha = 1.0f / float(numSegments);
+		const float falloffAlpha = 1.0f / float(N);
 		float a = 1.0f;
 		Vector c = color;
 
@@ -82,8 +90,8 @@ void Strand::onUpdate(float dt)
 		size_t i;
 		for(i = 0; i < colorLimit; ++i)
 		{
-			*p++ = segments[i]->position.x;
-			*p++ = segments[i]->position.y;
+			*p++ = points[i].x;
+			*p++ = points[i].y;
 
 			*p++ = c.x;
 			*p++ = c.y;
@@ -93,10 +101,10 @@ void Strand::onUpdate(float dt)
 			c -= falloff;
 			a -= falloffAlpha;
 		}
-		for( ; i < numSegments; ++i)
+		for( ; i < N; ++i)
 		{
-			*p++ = segments[i]->position.x;
-			*p++ = segments[i]->position.y;
+			*p++ = points[i].x;
+			*p++ = points[i].y;
 
 			*p++ = 0.0f;
 			*p++ = 0.0f;
@@ -115,5 +123,5 @@ void Strand::onRender(const RenderState& rs) const
 	glLineWidth(1);
 
 	gpubuf.apply();
-	glDrawArrays(GL_LINE_STRIP, 0, GLsizei(segments.size() + 1));
+	glDrawArrays(GL_LINE_STRIP, 0, GLsizei(points.size() + 1));
 }
