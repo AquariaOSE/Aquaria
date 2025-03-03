@@ -102,6 +102,8 @@ set(BBGE_SRCS
     StateMachine.h
     StateManager.cpp
     StateManager.h
+    Strand.cpp
+    Strand.h
     StringBank.cpp
     StringBank.h
     Texture.cpp
