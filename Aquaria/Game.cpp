@@ -2927,8 +2927,6 @@ void Game::applyState()
 
 	themenu->reset();
 
-	core->cacheRender();
-
 	cameraInterp.stop();
 
 	core->globalScale = dsq->continuity.zoom;
