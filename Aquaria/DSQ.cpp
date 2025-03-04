@@ -2771,12 +2771,11 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 		int x = renderWidth/2  - scrShotWidth/2;
 		int y = renderHeight/2 - scrShotHeight/2;
 
-		glPushAttrib(GL_VIEWPORT_BIT);
 		glViewport(0, 0, renderWidth, renderHeight);
 		glClear(GL_COLOR_BUFFER_BIT);
 		renderExternal();
 		scrShotData = grabScreenshot(x, y, scrShotWidth, scrShotHeight);
-		glPopAttrib();
+		glViewport(0, 0, width, height);
 		showBuffer();
 
 		prepScreen(0);

@@ -162,7 +162,6 @@ void Core::setup_opengl()
 	SDL_ShowCursor(SDL_DISABLE);
 
 	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
-	glClearDepth(1.0);								// Depth Buffer Setup
 	glDisable(GL_CULL_FACE);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnableClientState(GL_VERTEX_ARRAY);
@@ -2044,6 +2043,15 @@ void Core::renderInternal(int startLayer, int endLayer, bool allowSkip)
 		if(!r->visible)
 			continue;
 
+		if(glDebugMessageInsertARB)
+		{
+			char msg[64];
+			sprintf(msg, "Render layer %u -> %d", (unsigned)c, i);
+			glDebugMessageInsertARB(GL_DEBUG_SOURCE_APPLICATION_ARB, GL_DEBUG_TYPE_OTHER_ARB, 0, GL_DEBUG_SEVERITY_LOW_ARB, -1, msg);
+
+		}
+
+
 		if(r->preRender)
 			if(!r->preRender(rs))
 				continue;
@@ -2306,19 +2314,7 @@ unsigned char *Core::grabScreenshot(size_t x, size_t y, size_t w, size_t h)
 	const size_t size = sizeof(unsigned char) * N * 4;
 	unsigned char * const imageData = new unsigned char[size];
 
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
-	glDisable(GL_ALPHA_TEST); glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST); glDisable(GL_DITHER); glDisable(GL_FOG);
-	glDisable(GL_LIGHTING); glDisable(GL_LOGIC_OP);
-	glDisable(GL_STENCIL_TEST); glDisable(GL_TEXTURE_1D);
-	glDisable(GL_TEXTURE_2D); glPixelTransferi(GL_MAP_COLOR, GL_FALSE);
-	glPixelTransferi(GL_RED_SCALE, 1); glPixelTransferi(GL_RED_BIAS, 0);
-	glPixelTransferi(GL_GREEN_SCALE, 1); glPixelTransferi(GL_GREEN_BIAS, 0);
-	glPixelTransferi(GL_BLUE_SCALE, 1); glPixelTransferi(GL_BLUE_BIAS, 0);
-	glPixelTransferi(GL_ALPHA_SCALE, 1); glPixelTransferi(GL_ALPHA_BIAS, 0);
-	glRasterPos2i(0, 0);
 	glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
-	glPopAttrib();
 
 	// Force all alpha values to 255.
 	unsigned char *c = imageData;
