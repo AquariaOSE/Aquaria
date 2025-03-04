@@ -267,7 +267,11 @@ void TTFText::onRender(const RenderState& rs) const
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	RenderObject::lastTextureApplied = 0;
+
+#ifndef AQUARIA_INTERNAL_FTGL
+	// External FTGL may or may not change blending parameters;
+	// see https://github.com/frankheckenbach/ftgl/blob/master/README-LegacyOpenGLState
+	// The internal FTGL is patched and doesn't have this problem.
 	rs.gpu.invalidateBlend();
-
-
+#endif
 }
