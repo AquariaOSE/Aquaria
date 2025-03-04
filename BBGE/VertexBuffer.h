@@ -82,6 +82,10 @@ public:
     // Pass invert==true to draw from bottom to top.
     size_t initGridIndices_Triangles(size_t w, size_t h, bool invert, unsigned access);
 
+
+    // For debugging only
+    inline unsigned _glBufferId() const { return _bufid; }
+
 private:
 
     void* _allocBytes(size_t bytes);

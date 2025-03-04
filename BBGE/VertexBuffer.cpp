@@ -93,8 +93,11 @@ void* DynamicGPUBuffer::beginWrite(BufDataType type, size_t newsize, unsigned ac
         }
         if(!(access & GPUACCESS_HOSTCOPY))
         {
-            _d_cap = newsize;
-            glBufferDataARB(_gl_binding, newsize, NULL, _gl_usage); // orphan buffer
+            if(_d_cap != newsize)
+            {
+                _d_cap = newsize;
+                glBufferDataARB(_gl_binding, newsize, NULL, _gl_usage); // orphan buffer
+            }
             void *p = glMapBufferARB(_gl_binding, GL_WRITE_ONLY_ARB);
             _d_map = p;
             if(p)
@@ -131,10 +134,8 @@ bool DynamicGPUBuffer::_commitWrite(size_t used)
         if(_d_map)
         {
             assert(used <= _d_cap);
-            bool ok = glUnmapBufferARB(_gl_binding); // can fail
-            if(ok)
-                _d_map = NULL;
-            return ok;
+            _d_map = NULL;
+            return glUnmapBufferARB(_gl_binding); // can fail
         }
         // otherwise, the prev. call to glMapBufferARB failed (or GPUACCESS_HOSTCOPY was set).
         // -> didn't map, but wrote to host memory. upload it.
