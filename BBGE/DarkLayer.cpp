@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderBase.h"
 
 DarkLayer::DarkLayer()
+	: vbo(GPUBUF_STATIC | GPUBUF_VERTEXBUF)
 {
 	quality = 0;
 	active = false;
@@ -50,6 +51,37 @@ void DarkLayer::reloadDevice()
 		frameBuffer.reloadDevice();
 	else
 		texture = generateEmptyTexture(quality);
+
+	// Update VBO
+	const float width  =  core->getWindowWidth();
+	const float height =  core->getWindowHeight();
+	const float offX   = -(core->getVirtualOffX() * width / core->getVirtualWidth());
+	const float offY   = -(core->getVirtualOffY() * height / core->getVirtualHeight());
+	const float stretch = 4;
+
+	const float x0 = offX-stretch;
+	const float y0 = offY-stretch;
+	const float x1 = width+offX+stretch;
+	const float y1 = height+offY+stretch;
+
+	const size_t bytes = 4 * 4 * sizeof(float);
+	do
+	{
+		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC, bytes, GPUACCESS_DEFAULT);
+
+		*p++ = x0; *p++ = y1;
+		*p++ = 0; *p++ = 0;
+
+		*p++ = x1; *p++ = y1;
+		*p++ = 1; *p++ = 0;
+
+		*p++ = x0; *p++ = y0;
+		*p++ = 0; *p++ = 1;
+
+		*p++ = x1; *p++ = y0;
+		*p++ = 1; *p++ = 1;
+	}
+	while(!vbo.commitWrite());
 }
 
 bool DarkLayer::isUsed() const
@@ -137,28 +169,8 @@ void DarkLayer::render(const RenderState& rs) const
 	rs.gpu.setBlend(BLEND_MULT);
 
 	glColor4f(1,1,1,1);
-
-	const float width  =  core->getWindowWidth();
-	const float height =  core->getWindowHeight();
-	const float offX   = -(core->getVirtualOffX() * width / core->getVirtualWidth());
-	const float offY   = -(core->getVirtualOffY() * height / core->getVirtualHeight());
-	const float stretch = 4;
-
-	glBegin(GL_QUADS);
-
-		glTexCoord2f(0,1);
-		glVertex2f(offX-stretch, offY-stretch);
-
-		glTexCoord2f(0,0);
-		glVertex2f(offX-stretch, height+offY+stretch);
-
-		glTexCoord2f(1,0);
-		glVertex2f(width+offX+stretch, height+offY+stretch);
-
-		glTexCoord2f(1,1);
-		glVertex2f(width+offX+stretch, offY-stretch);
-
-	glEnd();
+	vbo.apply();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 	glPopMatrix();
 

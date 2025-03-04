@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Base.h"
 #include "FrameBuffer.h"
+#include "VertexBuffer.h"
 
 struct RenderState;
 
@@ -54,6 +55,7 @@ protected:
 	int layer;
 	bool active;
 	unsigned texture;
+	DynamicGPUBuffer vbo;
 };
 
 #endif
