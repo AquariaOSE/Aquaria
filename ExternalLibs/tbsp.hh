@@ -360,7 +360,7 @@ public:
     {
         T s = 0;
         const size_t n = this->n;
-        tbsp__ASSERT(n == o.n);
+        TBSP_ASSERT(n == o.n);
         for(size_t i = 0; i < n; ++i)
             s += p[i] * o.p[i];
         return s;
