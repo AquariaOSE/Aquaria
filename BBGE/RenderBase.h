@@ -52,6 +52,7 @@ GLAPI GLuint APIENTRY glGetDebugMessageLogARB (GLuint count, GLsizei bufSize, GL
 
 #if !defined(GL_ARB_copy_image) && !defined(GL_VERSION_4_3)
 typedef void (APIENTRYP PFNGLCOPYIMAGESUBDATAEXTPROC) (GLuint srcName, GLenum srcTarget, GLint srcLevel, GLint srcX, GLint srcY, GLint srcZ, GLuint dstName, GLenum dstTarget, GLint dstLevel, GLint dstX, GLint dstY, GLint dstZ, GLsizei srcWidth, GLsizei srcHeight, GLsizei srcDepth);
+typedef void (APIENTRYP PFNGLOBJECTLABELPROC) (GLenum identifier, GLuint name, GLsizei length, const GLchar *label);
 #endif
 
 #ifdef _WINDOWS_
@@ -107,5 +108,9 @@ extern PFNGLMAPBUFFERARBPROC glMapBufferARB;
 extern PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB;
 
 extern PFNGLCOPYIMAGESUBDATAEXTPROC glCopyImageSubDataEXT;
+
+extern PFNGLDEBUGMESSAGEINSERTARBPROC glDebugMessageInsertARB;
+
+extern PFNGLOBJECTLABELPROC glObjectLabel;
 
 #endif
