@@ -53,6 +53,7 @@ public:
 	Array2d<Vector>& array2d() { return grid; }
 	const Array2d<Vector>& array2d() const { return grid; }
 	const DynamicGPUBuffer& getVBO() const { return vbo; }
+	const DynamicGPUBuffer& getIndexBuf() const { return indexbuf; }
 	void updateVBO();
 	void updateVBOIfNecessary();
 
