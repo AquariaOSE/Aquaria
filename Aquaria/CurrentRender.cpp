@@ -25,167 +25,145 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "../BBGE/AfterEffect.h"
 
-CurrentRender::CurrentRender() : RenderObject()
+CurrentRender::CurrentRender()
+	: RenderObject()
+	, vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	cull = false;
 
 	setTexture("Particles/Current");
 	repeatTexture = true;
 	rippleDelay = 2;
+	_verticesToRender = 0;
 }
 
 void CurrentRender::onRender(const RenderState& rs) const
 {
-	// note: Leave cull_face disabled!?
-	//glDisable(GL_CULL_FACE);
-	//int qs = 0;
-	for (Path *p = game->getFirstPathOfType(PATH_CURRENT); p; p = p->nextOfType)
+	if(const size_t N = _verticesToRender)
 	{
-		if (p->active)
+		vbo.apply();
+		for(size_t i = 0; i < N; i += 8)
 		{
-
-
-
-			int w2 = p->rect.getWidth()/2;
-
-
-
-			if (true)
-			{
-				int sz = p->nodes.size()-1;
-				for (int n = 0; n < sz; n++)
-				{
-					PathNode *n1 = &p->nodes[n];
-					PathNode *n2 = &p->nodes[n+1];
-					Vector p1 = n1->position;
-					Vector p2 = n2->position;
-					Vector diff = p2-p1;
-					Vector d = diff;
-					d.setLength2D(p->rect.getWidth());
-					p1 -= d*0.75f;
-					p2 += d*0.75f;
-					diff = p2 - p1;
-
-
-
-					if (!diff.isZero())
-					{
-						Vector pl = diff.getPerpendicularLeft();
-						Vector pr = diff.getPerpendicularRight();
-						pl.setLength2D(w2);
-						pr.setLength2D(w2);
-
-						Vector p15 = p1 + diff * 0.25f;
-						Vector p25 = p2 - diff * 0.25f;
-						Vector r1 = p1+pl;
-						Vector r2 = p1+pr;
-						Vector r3 = p15+pl;
-						Vector r4 = p15+pr;
-						Vector r5 = p25+pl;
-						Vector r6 = p25+pr;
-						Vector r7 = p2+pl;
-						Vector r8 = p2+pr;
-						float len = diff.getLength2D();
-						float texScale = len/256.0f;
-
-
-
-						if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius+p->rect.getWidth()/2.0f))
-						{
-
-
-							glBegin(GL_QUAD_STRIP);
-								glColor4f(1,1,1,0);
-								glTexCoord2f((0)*texScale+p->animOffset, 0);
-								glVertex2f(r1.x, r1.y);
-
-								glTexCoord2f((0)*texScale+p->animOffset, 1);
-								glVertex2f(r2.x, r2.y);
-
-								glColor4f(1,1,1,p->amount);
-								glTexCoord2f((0+0.25f)*texScale+p->animOffset, 0);
-								glVertex2f(r3.x, r3.y);
-
-								glTexCoord2f((0+0.25f)*texScale+p->animOffset, 1);
-								glVertex2f(r4.x, r4.y);
-
-								glColor4f(1,1,1,p->amount);
-								glTexCoord2f((1-0.25f)*texScale+p->animOffset, 0);
-								glVertex2f(r5.x, r5.y);
-
-								glTexCoord2f((1-0.25f)*texScale+p->animOffset, 1);
-								glVertex2f(r6.x, r6.y);
-
-								glColor4f(1,1,1,0);
-								glTexCoord2f((1)*texScale+p->animOffset, 0);
-								glVertex2f(r7.x, r7.y);
-
-								glTexCoord2f((1)*texScale+p->animOffset, 1);
-								glVertex2f(r8.x, r8.y);
-							glEnd();
-						}
-					}
-				}
-			}
-			else
-			{
-				int sz = p->nodes.size()-1;
-				for (int n = 0; n < sz; n++)
-				{
-					PathNode *n1 = &p->nodes[n];
-					PathNode *n2 = &p->nodes[n+1];
-					Vector p1 = n1->position;
-					Vector p2 = n2->position;
-					Vector diff = p2-p1;
-					Vector pl = diff.getPerpendicularLeft();
-					Vector pr = diff.getPerpendicularRight();
-					pl.setLength2D(w2);
-					pr.setLength2D(w2);
-					Vector r1 = p1+pl;
-					Vector r2 = p2+pl;
-					Vector r3 = p2+pr;
-					Vector r4 = p1+pr;
-					float len = diff.getLength2D();
-					float texScale = len/256.0f;
-
-					if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius))
-					{
-
-						glBegin(GL_QUADS);
-							if (n==0)
-								glColor4f(1,1,1,0);
-							else
-								glColor4f(1,1,1,alpha.x);
-							glTexCoord2f((0+p->animOffset)*texScale, 0);
-							glVertex2f(r1.x, r1.y);
-
-							if (n==sz-1)
-								glColor4f(1,1,1,0);
-							else
-								glColor4f(1,1,1,alpha.x);
-
-							glTexCoord2f((1+p->animOffset)*texScale, 0);
-							glVertex2f(r2.x, r2.y);
-
-							glTexCoord2f((1+p->animOffset)*texScale, 1);
-							glVertex2f(r3.x, r3.y);
-
-							if (n==0)
-								glColor4f(1,1,1,0);
-							else
-								glColor4f(1,1,1,alpha.x);
-							glTexCoord2f((0+p->animOffset)*texScale, 1);
-							glVertex2f(r4.x, r4.y);
-						glEnd();
-					}
-				}
-			}
+			glDrawArrays(GL_TRIANGLE_STRIP, i, 8);
 		}
+	}
+}
 
+void CurrentRender::onUpdate(float dt)
+{
+	// Ideally we wouldn't have to update this per-frame.
+	// With a specialized shader and a uniform texcoordOffset variable the actual vertex data
+	// could be map-static and this would all be so much simpler...
 
+	size_t num = 0;
+	for (const Path *P = game->getFirstPathOfType(PATH_CURRENT); P; P = P->nextOfType)
+	{
+		if (!P->active)
+			continue;
+
+		num += P->nodes.size() - 1;
+	}
+	size_t verts = 0;
+	if(num)
+	{
+		size_t bytes = num * 8 * 8 * sizeof(float); // num * 8 verts<xyuvrgba>
+		size_t usedsize;
+		do
+		{
+			float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC_RGBA, bytes, GPUACCESS_DEFAULT);
+			verts = writeVBOData(p);
+			usedsize = verts * 8 * sizeof(float);
+		}
+		while(!vbo.commitWrite(usedsize));
 	}
 
+	_verticesToRender = verts;
+}
 
+size_t CurrentRender::writeVBOData(float *p)
+{
+	size_t ret = 0;
 
+	for (const Path *P = game->getFirstPathOfType(PATH_CURRENT); P; P = P->nextOfType)
+	{
+		if (!P->active)
+			continue;
+
+		const float w = P->rect.getWidth();
+		const float w2 = w * 0.5f;
+
+		size_t sz = P->nodes.size()-1;
+		for (size_t n = 0; n < sz; n++)
+		{
+			const PathNode *n1 = &P->nodes[n];
+			const PathNode *n2 = &P->nodes[n+1];
+			Vector p1 = n1->position;
+			Vector p2 = n2->position;
+			Vector diff = p2-p1;
+			Vector d = diff;
+			d.setLength2D(w);
+			p1 -= d*0.75f;
+			p2 += d*0.75f;
+			diff = p2 - p1;
+
+			if (diff.isZero())
+				continue;
+
+			float len = diff.getLength2D();
+			float texScale = len/256.0f;
+
+			if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius+w2))
+			{
+				Vector pl = diff.getPerpendicularLeft();
+				Vector pr = diff.getPerpendicularRight();
+				pl.setLength2D(w2);
+				pr.setLength2D(w2);
+
+				Vector p15 = p1 + diff * 0.25f;
+				Vector p25 = p2 - diff * 0.25f;
+				Vector r1 = p1+pl;
+				Vector r2 = p1+pr;
+				Vector r3 = p15+pl;
+				Vector r4 = p15+pr;
+				Vector r5 = p25+pl;
+				Vector r6 = p25+pr;
+				Vector r7 = p2+pl;
+				Vector r8 = p2+pr;
+
+				const float ao = P->animOffset;
+				const float a = P->amount;
+
+				/* This builds a structure like this:
+				a = 0 alpha
+				A = set alpha
+				<---25%-->                    <---25%-->
+				a        A                    A        a
+				+--------+--------------------+--------+
+				|        |                    |        |
+				|        |                    |        |
+				+--------+--------------------+--------+
+				where each path point is roughly at A,
+				and the fading overlaps patch over the gaps.
+				*/
+
+#define VERTEX(X, Y, TX, TY, A) do { \
+*p++ = X; *p++ = Y; *p++ = TX; *p++ = TY; \
+*p++ = 1; *p++ = 1; *p++ = 1; *p++ = A; } while(0)
+
+				// These 8 verts form a triangle strip
+				ret += 8;
+				VERTEX(r1.x, r1.y, (0      )*texScale+ao, 0,    0);
+				VERTEX(r2.x, r2.y, (0      )*texScale+ao, 1,    0);
+				VERTEX(r3.x, r3.y, (0+0.25f)*texScale+ao, 0,    a);
+				VERTEX(r4.x, r4.y, (0+0.25f)*texScale+ao, 1,    a);
+				VERTEX(r5.x, r5.y, (1-0.25f)*texScale+ao, 0,    a);
+				VERTEX(r6.x, r6.y, (1-0.25f)*texScale+ao, 1,    a);
+				VERTEX(r7.x, r7.y, (1      )*texScale+ao, 0,    0);
+				VERTEX(r8.x, r8.y, (1      )*texScale+ao, 1,    0);
+			}
+		}
+	}
+
+	return ret;
 }
 
