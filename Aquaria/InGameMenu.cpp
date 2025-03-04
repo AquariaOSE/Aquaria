@@ -1991,10 +1991,8 @@ void InGameMenu::create()
 
 #define SB(x) stringbank.get(x)
 
-	keyConfigBg = new RoundedRect();
+	keyConfigBg = new RoundedRect(580, 455, 10);
 	keyConfigBg->position = Vector(400,276 - 10 - 40);
-	keyConfigBg->setWidthHeight(580, 455, 10);
-	keyConfigBg->followCamera = 1;
 	keyConfigBg->alpha = 0;
 	keyConfigBg->shareAlphaWithChildren = 1;
 	keyConfigBg->setHidden(true);

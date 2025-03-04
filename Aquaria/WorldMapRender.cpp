@@ -213,7 +213,7 @@ public:
 		text->offset = Vector(0, 4);
 		text->setAlign(ALIGN_CENTER);
 
-		textBG = new RoundedRect();
+		textBG = new RoundedRect(100, 25, 10);
 		textBG->alpha = 0;
 		textBG->followCamera = 1;
 		game->addRenderObject(textBG, LR_WORLDMAPHUD);

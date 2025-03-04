@@ -26,6 +26,7 @@ enum BufDataType
                                     ^^-- offset of texcoords, in bytes, if present
                                   ^^-- offset of colors, if present */
     GPUBUFTYPE_U16            = 0x00000010,  // densely packed u16, for indexing
+    GPUBUFTYPE_VEC2           = 0x00000821,  // xy xy xy
     GPUBUFTYPE_VEC2_TC        = 0x00081021,  // xyuv xyuv xyuv
     GPUBUFTYPE_VEC2_TC_RGBA   = 0x10082021,  // xyuvrgba xyuvrgba xyuvrgba
     GPUBUFTYPE_VEC2_RGBA      = 0x08001821,  // xyrgba xyrgba xyrgba

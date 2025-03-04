@@ -3048,8 +3048,7 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 
 	sound->playSfx("Menu-Open");
 
-	RoundedRect *bg = new RoundedRect;
-	bg->setWidthHeight(790, 64, 10);
+	RoundedRect *bg = new RoundedRect(790, 64, 10);
 	bg->position = Vector(400,300);
 	bg->followCamera = 1;
 	bg->alpha = 0;

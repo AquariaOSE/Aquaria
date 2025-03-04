@@ -25,24 +25,32 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include <assert.h>
 
-RoundedRect *RoundedRect::moving=0;
+enum
+{
+	RR_STEPS = 10,
 
-RoundedRect::RoundedRect() : RenderObject()
+	// center, sides, four corners
+	RR_NUM_QUADS = 1 + 2 + 4*RR_STEPS,
+
+	RR_NUM_VERTS = 4 * RR_NUM_QUADS,
+	RR_NUM_INDICES = 6 * RR_NUM_QUADS
+};
+
+
+RoundedRect::RoundedRect(int w, int h, int radius)
+	: RenderObject()
+	, vbo(GPUBUF_STATIC | GPUBUF_VERTEXBUF)
+	, ibo(GPUBUF_STATIC | GPUBUF_INDEXBUF)
+
 {
 	alphaMod = 0.75;
 	color = 0;
 
-	width = 100;
-	height = 100;
-
-	radius = 20;
-
 	cull = false;
 
-	canMove = false;
-	moving = 0;
-
 	followCamera = 1;
+
+	setWidthHeight(w, h, radius);
 }
 
 void RoundedRect::setWidthHeight(int w, int h, int radius)
@@ -50,125 +58,8 @@ void RoundedRect::setWidthHeight(int w, int h, int radius)
 	this->radius = radius;
 	width = w-radius*2;
 	height = h-radius*2;
-}
 
-void RoundedRect::setCanMove(bool on)
-{
-	canMove = on;
-}
-
-void RoundedRect::onUpdate(float dt)
-{
-	RenderObject::onUpdate(dt);
-	if (canMove)
-	{
-		if (core->mouse.buttons.left)
-		{
-			if (moving == this)
-			{
-				position = core->mouse.position + d;
-
-				if (position.x + ((width/2)+radius) > (core->getVirtualWidth() - core->getVirtualOffX()))
-					position.x = (core->getVirtualWidth()- core->getVirtualOffX()) - ((width/2)+radius);
-				if (position.y + ((height/2)+radius) > core->getVirtualHeight())
-					position.y = core->getVirtualHeight() - ((height/2)+radius);
-				if (position.x - ((width/2)+radius) < 0 - core->getVirtualOffX())
-					position.x = -core->getVirtualOffX() + ((width/2)+radius);
-				if (position.y - ((height/2)+radius) < 0 - core->getVirtualOffY())
-					position.y = -core->getVirtualOffY() + ((height/2)+radius);
-			}
-			else if (moving == 0)
-			{
-				Vector p = core->mouse.position;
-				if ((p.x >= (position.x - (width/2 + radius))) && (p.y >= (position.y - (height/2 + radius)))
-					&& (p.x <= (position.x + (width/2 + radius)) && (p.y <= (position.y - height/2))))
-				{
-					d = position - core->mouse.position;
-					moving = this;
-				}
-			}
-		}
-		else
-		{
-			if (moving == this)
-			{
-
-
-				moving = 0;
-			}
-
-		}
-	}
-}
-
-void RoundedRect::onRender(const RenderState& rs) const
-{
-
-	int w2 = width/2;
-	int h2 = height/2;
-
-	float iter = 0.1f;
-
-	glBegin(GL_QUADS);
-	for (float angle = 0; angle < PI_HALF - iter; angle+=iter)
-	{
-		// top right
-		{
-			float x1 = sinf(angle)*radius, y1 = -cosf(angle)*radius;
-			float x2 = sinf(angle+iter)*radius, y2 = -cosf(angle+iter)*radius;
-			glVertex3f(w2 + x1, -h2 + y1, 0);
-			glVertex3f(w2 + x2, -h2 + y2, 0);
-			glVertex3f(w2 + x2, -h2 + 0, 0);
-			glVertex3f(w2 + x1, -h2 + 0, 0);
-		}
-		// top left
-		{
-			float x1 = -sinf(angle)*radius, y1 = -cosf(angle)*radius;
-			float x2 = -sinf(angle+iter)*radius, y2 = -cosf(angle+iter)*radius;
-			glVertex3f(-w2 + x1, -h2 + y1, 0);
-			glVertex3f(-w2 + x2, -h2 + y2, 0);
-			glVertex3f(-w2 + x2, -h2 + 0, 0);
-			glVertex3f(-w2 + x1, -h2 + 0, 0);
-		}
-		{
-			float x1 = sinf(angle)*radius, y1 = cosf(angle)*radius;
-			float x2 = sinf(angle+iter)*radius, y2 = cosf(angle+iter)*radius;
-			glVertex3f(w2 + x1, h2 + y1, 0);
-			glVertex3f(w2 + x2, h2 + y2, 0);
-			glVertex3f(w2 + x2, h2 + 0, 0);
-			glVertex3f(w2 + x1, h2 + 0, 0);
-		}
-		{
-			float x1 = -sinf(angle)*radius, y1 = cosf(angle)*radius;
-			float x2 = -sinf(angle+iter)*radius, y2 = cosf(angle+iter)*radius;
-			glVertex3f(-w2 + x1, h2 + y1, 0);
-			glVertex3f(-w2 + x2, h2 + y2, 0);
-			glVertex3f(-w2 + x2, h2 + 0, 0);
-			glVertex3f(-w2 + x1, h2 + 0, 0);
-		}
-	}
-
-	//middle, top, btm
-	glVertex3f(-w2, -h2 - radius, 0);
-	glVertex3f(w2, -h2 - radius, 0);
-	glVertex3f(w2, h2 + radius, 0);
-	glVertex3f(-w2, h2 + radius, 0);
-
-	// left
-	glVertex3f(-w2 - radius, -h2, 0);
-	glVertex3f(-w2, -h2, 0);
-	glVertex3f(-w2, h2, 0);
-	glVertex3f(-w2 - radius, h2, 0);
-
-	// right
-	glVertex3f(w2 + radius, -h2, 0);
-	glVertex3f(w2, -h2, 0);
-	glVertex3f(w2, h2, 0);
-	glVertex3f(w2 + radius, h2, 0);
-
-	glEnd();
-
-
+	updateVBO();
 }
 
 void RoundedRect::show()
@@ -192,99 +83,159 @@ void RoundedRect::hide()
 	scale.interpolateTo(Vector(0.5f,0.5f), t);
 }
 
-
-
-RoundButton::RoundButton(const std::string &labelText, TTFFont *font) : RenderObject()
+void RoundedRect::onRender(const RenderState& rs) const
 {
-
-	label = new TTFText(font);
-	label->setAlign(ALIGN_CENTER);
-	label->offset += Vector(0, 3);
-	label->setText(labelText);
-	addChild(label, PM_POINTER);
-	width = 80;
-	height = 20;
-
-	mbd = false;
-
-	noNested = true;
+	vbo.apply();
+	ibo.drawElements(GL_TRIANGLES, RR_NUM_INDICES);
 }
 
-void RoundButton::setWidthHeight(int w, int h, int radius)
+struct V2
 {
-	width = w;
-	height = h;
-}
-
-void RoundButton::onUpdate(float dt)
+	float x, y;
+};
+struct SQuad
 {
-	if (noNested && core->isNested()) return;
+	V2 v[4];
+};
 
-	RenderObject::onUpdate(dt);
-
-	RenderObject *top = getTopParent();
-	if (alpha.x == 1 && top->alpha.x == 1)
+struct QuadAdder
+{
+	float *p;
+	unsigned short *i;
+	unsigned idx;
+	QuadAdder(float *p, unsigned short *i) : p(p), i(i), idx(0) {}
+	void add(const SQuad& q)
 	{
-		Vector p = core->mouse.position;
-		Vector c = getWorldPosition();
-		int w2 = width/2;
-		int h2 = height/2;
-		if ((p.x > (c.x - w2)) && (p.x < (c.x + w2)) && (p.y > (c.y - h2)) && (p.y < (c.y + h2)))
+		for(size_t k = 0; k < 4; ++k)
 		{
-			if (core->mouse.buttons.left && !mbd)
+			*p++ = q.v[k].x;
+			*p++ = q.v[k].y;
+		}
+
+		*i++ = idx;
+		*i++ = idx + 1;
+		*i++ = idx + 2;
+
+		*i++ = idx + 1;
+		*i++ = idx + 2;
+		*i++ = idx + 3;
+
+		idx += 4;
+	}
+};
+
+void RoundedRect::updateVBO()
+{
+	const size_t vbytes = RR_NUM_VERTS * 2 * sizeof(float);
+	const size_t ibytes = RR_NUM_INDICES * sizeof(unsigned short);
+
+	const float w2 = width * 0.5f;
+	const float h2 = height * 0.5f;
+
+	const float iter = PI_HALF / RR_STEPS;
+
+	bool ok;
+	do
+	{
+		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2, vbytes, GPUACCESS_DEFAULT);
+		unsigned short *idxs = (unsigned short*)ibo.beginWrite(GPUBUFTYPE_U16, ibytes, GPUACCESS_DEFAULT);
+		QuadAdder qa(p, idxs);
+
+		float angle = 0;
+
+
+		for (unsigned i = 0; i < RR_STEPS; ++i, angle+=iter)
+		{
+			// top right
 			{
-				mbd = true;
+				float x1 = sinf(angle)*radius, y1 = -cosf(angle)*radius;
+				float x2 = sinf(angle+iter)*radius, y2 = -cosf(angle+iter)*radius;
+				SQuad q =
+				{{
+					{ w2 + x1, -h2 + 0 },
+					{ w2 + x2, -h2 + 0 },
+					{ w2 + x1, -h2 + y1 },
+					{ w2 + x2, -h2 + y2 }
+				}};
+				qa.add(q);
 			}
-			else if (!core->mouse.buttons.left && mbd)
+			// top left
 			{
-				mbd = false;
-
-				event.call();
+				float x1 = -sinf(angle)*radius, y1 = -cosf(angle)*radius;
+				float x2 = -sinf(angle+iter)*radius, y2 = -cosf(angle+iter)*radius;
+				SQuad q =
+				{{
+					{ -w2 + x1, -h2 + 0 },
+					{ -w2 + x2, -h2 + 0 },
+					{ -w2 + x1, -h2 + y1 },
+					{ -w2 + x2, -h2 + y2 }
+				}};
+				qa.add(q);
+			}
+			{
+				float x1 = sinf(angle)*radius, y1 = cosf(angle)*radius;
+				float x2 = sinf(angle+iter)*radius, y2 = cosf(angle+iter)*radius;
+				SQuad q =
+				{{
+					{ w2 + x1, h2 + 0 },
+					{ w2 + x2, h2 + 0 },
+					{ w2 + x1, h2 + y1 },
+					{ w2 + x2, h2 + y2 }
+				}};
+				qa.add(q);
+			}
+			{
+				float x1 = -sinf(angle)*radius, y1 = cosf(angle)*radius;
+				float x2 = -sinf(angle+iter)*radius, y2 = cosf(angle+iter)*radius;
+				SQuad q =
+				{{
+					{ -w2 + x1, h2 + 0 },
+					{ -w2 + x2, h2 + 0 },
+					{ -w2 + x1, h2 + y1 },
+					{ -w2 + x2, h2 + y2 }
+				}};
+				qa.add(q);
 			}
 		}
-		else
+
+		//middle, top, btm
 		{
-			mbd = false;
+			SQuad q =
+			{{
+				{ w2, h2 + radius },
+				{ -w2, h2 + radius },
+				{ w2, -h2 - radius },
+				{ -w2, -h2 - radius }
+
+			}};
+			qa.add(q);
 		}
-		if (!core->mouse.buttons.left && mbd)
+
+		// left
 		{
-			mbd = false;
+			SQuad q =
+			{{
+				{ -w2 - radius, h2 },
+				{ -w2, h2 },
+				{ -w2 - radius, -h2 },
+				{ -w2, -h2 }
+			}};
+			qa.add(q);
 		}
+
+		// right
+		{
+			SQuad q =
+			{{
+				{ w2 + radius, h2 },
+				{ w2, h2 },
+				{ w2 + radius, -h2 },
+				{ w2, -h2 },
+			}};
+			qa.add(q);
+		}
+
+		ok = vbo.commitWriteExact(qa.p) && ibo.commitWriteExact(qa.i);
 	}
-	else
-	{
-		mbd = false;
-	}
+	while(!ok);
 }
-
-void RoundButton::onRender(const RenderState& rs) const
-{
-	int w2 = width/2, h2 = height/2;
-	glLineWidth(1);
-
-	glBegin(GL_LINES);
-	glVertex3f(-w2, -h2, 0);
-	glVertex3f(w2, -h2, 0);
-
-	glVertex3f(w2, -h2, 0);
-	glVertex3f(w2, h2, 0);
-
-	glVertex3f(w2, h2, 0);
-	glVertex3f(-w2, h2, 0);
-
-	glVertex3f(-w2, h2, 0);
-	glVertex3f(-w2, -h2, 0);
-	glEnd();
-
-	if (mbd)
-	{
-		glColor4f(1,1,1,0.5);
-		glBegin(GL_QUADS);
-		glVertex3f(-w2, h2, 0);
-		glVertex3f(w2, h2, 0);
-		glVertex3f(w2, -h2, 0);
-		glVertex3f(-w2, -h2, 0);
-		glEnd();
-	}
-}
-
