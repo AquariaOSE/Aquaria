@@ -66,9 +66,7 @@ void Window::_open(unsigned w, unsigned h, bool full, unsigned bpp, bool vsync, 
 #  endif
 	SDL_GL_SetAttribute(SDL_GL_SHARE_WITH_CURRENT_CONTEXT, 1);
 	SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2 );
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1 );
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, 0 );
+
 	SDL_SetHint("SDL_VIDEO_HIGHDPI_DISABLED", "1");
 
 	Uint32 flags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE;
@@ -93,12 +91,16 @@ void Window::_open(unsigned w, unsigned h, bool full, unsigned bpp, bool vsync, 
 		}
 	}
 
-#ifdef _DEBUG
-	//SDL_GL_SetAttribute(SDL_GL_CONTEXT_FLAGS, SDL_GL_CONTEXT_DEBUG_FLAG);
-#endif
+	int pos = full
+		? SDL_WINDOWPOS_UNDEFINED_DISPLAY(display)
+		: SDL_WINDOWPOS_CENTERED_DISPLAY(display);
 
-	int pos = SDL_WINDOWPOS_CENTERED_DISPLAY(display);
 	WIN = SDL_CreateWindow("", pos, pos, usew, useh, flags);
+	if(!WIN) // This may fail on handhelds; maybe plain and dumb fixed-size-fullscreen will work?
+	{
+		full = true;
+		WIN = SDL_CreateWindow("", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, usew, useh, SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN | SDL_WINDOW_FULLSCREEN);
+	}
 	if(!WIN)
 		exit_error("Failed to create window");
 
