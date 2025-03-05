@@ -2035,16 +2035,17 @@ void AnimationLayer::updateBones()
 		lastKeyframeIndex = last;
 	}
 
-	const float t1 = key1->t;
-	const float t2 = key2->t;
-	assert(t1 <= t2);
+	float diff, dt;
+	{
+		const float t1 = key1->t;
+		const float t2 = key2->t;
 
-	const float diff = t2-t1;
-	float dt;
-	if (diff != 0)
-		dt = (timer - t1)/(t2-t1);
-	else
-		dt = 0;
+		const float diff = t2-t1;
+		if (diff != 0)
+			dt = (timer - t1)/fabsf(diff);
+		else
+			dt = 0;
+	}
 
 	for (size_t i = 0; i < s->bones.size(); i++)
 	{
