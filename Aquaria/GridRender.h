@@ -135,7 +135,9 @@ public:
 	void clear();
 protected:
 	void onRender(const RenderState& rs) const OVERRIDE;
+	void updateVBO();
 	std::vector<SongLinePoint> pts;
+	DynamicGPUBuffer vbo;
 };
 
 #endif

@@ -229,6 +229,7 @@ void GridRender::onRender(const RenderState& rs) const
 }
 
 SongLineRender::SongLineRender()
+	: vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	followCamera = 1;
 	cull = false;
@@ -254,33 +255,55 @@ void SongLineRender::newPoint(const Vector &pt, const Vector &color)
 		pts[pts.size()-1].color = color;
 		pts[pts.size()-1].pt = pt;
 	}
+	updateVBO();
 }
 
 void SongLineRender::clear()
 {
 	pts.clear();
+	vbo.dropBuffer();
+}
+
+void SongLineRender::updateVBO()
+{
+	const size_t N = pts.size();
+	if(!N)
+		return;
+
+	const size_t bytes = pts.size() * 6 * sizeof(float);
+	const size_t alphaLine = (pts.size() * 9) / 10;
+	const float alphaLineInv = 1.0f / float(alphaLine);
+	do
+	{
+		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_RGBA, bytes, GPUACCESS_DEFAULT);
+		for (size_t i = 0; i < pts.size(); i++)
+		{
+			*p++ = pts[i].pt.x;
+			*p++ = pts[i].pt.y;
+
+			*p++ = pts[i].color.x;
+			*p++ = pts[i].color.y;
+			*p++ = pts[i].color.z;
+			*p++ = i < alphaLine ? float(i)*alphaLineInv : 1;
+		}
+	}
+	while(!vbo.commitWrite());
 }
 
 void SongLineRender::onRender(const RenderState& rs) const
 {
+	const size_t N = pts.size();
+	if(!N)
+		return;
+
 	int w=core->getWindowWidth();
 
 	int ls = (4*w)/1024.0f;
 	if (ls < 0)
 		ls = 1;
 	glLineWidth(ls);
-	const unsigned int alphaLine = pts.size()*(0.9f);
-	float a = 1;
-	glBegin(GL_LINE_STRIP);
-	for (size_t i = 0; i < pts.size(); i++)
-	{
-		if (i < alphaLine)
-			a = float(i)/float(alphaLine);
-		else
-			a = 1;
-		glColor4f(pts[i].color.x, pts[i].color.y, pts[i].color.z, a);
-		glVertex2f(pts[i].pt.x, pts[i].pt.y);
-	}
-	glEnd();
+
+	vbo.apply();
+	glDrawArrays(GL_LINE_STRIP, 0, N);
 }
 
