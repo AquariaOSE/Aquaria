@@ -356,7 +356,7 @@ static bool _unixIsDirectory(const std::string& base, const char *name)
 		full += '/';
 	full += name;
 	struct stat st;
-	int err = ::stat(full.c_str(), &st, 0);
+	int err = ::stat(full.c_str(), &st);
 	if(err == -1)
 		return false;
 	return S_ISDIR(st.st_mode);
@@ -365,7 +365,7 @@ static bool _unixIsDirectory(const std::string& base, const char *name)
 template<bool has_d_type>
 struct Unix_IsDir
 {
-	inline static bool Get(const std::string& base struct dirent *dp)
+	inline static bool Get(const std::string& base, struct dirent *dp)
 	{
 		return _unixIsDirectory(base, dp->d_name);
 	}
@@ -389,9 +389,9 @@ struct Unix_IsDir<true>
 	}
 };
 
-static inline tio_FileType unixIsDirectory(const std::string& base, struct dirent *dp)
+static inline bool unixIsDirectory(const std::string& base, struct dirent *dp)
 {
-	return Unix_IsDir<Has_d_type<dirent>::value>::Get(pathfd, dp);
+	return Unix_IsDir<Has_d_type<dirent>::value>::Get(base, dp);
 }
 
 // skip if "." or ".."
@@ -439,7 +439,7 @@ void forEachDir(const std::string& inpath, FileIterationCallback callback, void 
 		{
 			if(!dirlistSkip(dp->d_name))
 				if(unixIsDirectory(inpath, dp))
-					callback(path + std::string(file->d_name), param);
+					callback(path + std::string(dp->d_name), param);
 		}
 		closedir(dir);
 	}
