@@ -21,7 +21,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef AQ_WEB_H
 #define AQ_WEB_H
 
-#include "../BBGE/Quad.h"
+#include "RenderObject.h"
+#include "VertexBuffer.h"
 
 class Entity;
 
@@ -45,6 +46,9 @@ protected:
 	std::vector<Vector> points;
 	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
+	void updateVBO();
+	bool dirtyvbo;
+	DynamicGPUBuffer vbo;
 };
 
 #endif
