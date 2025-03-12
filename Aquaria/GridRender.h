@@ -97,6 +97,19 @@ public:
 	PathRender();
 protected:
 	void onRender(const RenderState& rs) const OVERRIDE;
+	void onUpdate(float dt) OVERRIDE;
+	void updateVBO();
+	DynamicGPUBuffer vbo;
+	struct DrawCallParams
+	{
+		unsigned mode; // GL_TRIANGLES, ...
+		unsigned first;
+		unsigned count;
+		float linewidth;
+		Vector color;
+		float alpha;
+	};
+	std::vector<DrawCallParams> drawcalls;
 };
 
 class CurrentRender : public RenderObject

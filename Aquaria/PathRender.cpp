@@ -22,101 +22,161 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderBase.h"
 #include "Game.h"
 
-PathRender::PathRender() : RenderObject()
+PathRender::PathRender()
+	: RenderObject()
+	, vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
-
 	position.z = 5;
 	cull = false;
 	alpha = 0.5f;
 }
 
-void PathRender::onRender(const RenderState& rs) const
+enum { BIG_CIRCLE_VERTS = 50, SMALL_CIRCLE_VERTS = 24 };
+
+void PathRender::onUpdate(float dt)
 {
+	if(alpha.x <= 0.0f)
+		return;
+
+	drawcalls.clear();
+
 	const size_t pathcount = game->getNumPaths();
 	if (pathcount == 0)
 		return;
 
-	glLineWidth(4);
-
 	const size_t selidx = game->sceneEditor.selectedIdx;
 
+	size_t verts = 0;
 	for (size_t i = 0; i < pathcount; i++)
 	{
 		const Path *p = game->getPath(i);
-
-		if (selidx == i)
-			glColor4f(1, 1, 1, 0.75f);
-		else
-			glColor4f(p->editorColor.x, p->editorColor.y, p->editorColor.z, 0.75f);
-
-		glBegin(GL_LINES);
-		for (size_t n = 0; n < p->nodes.size()-1; n++)
+		switch(p->pathShape)
 		{
-			const PathNode *nd = &p->nodes[n];
-			const PathNode *nd2 = &p->nodes[n+1];
-			glVertex3f(nd->position.x, nd->position.y, 0);
-			glVertex3f(nd2->position.x, nd2->position.y, 0);
+			case PATHSHAPE_RECT:
+				verts += 4; // outline rect, GL_LINE_LOOP, 4 verts. re-used for overlay rect.
+				break;
+			case PATHSHAPE_CIRCLE:
+				verts += BIG_CIRCLE_VERTS;
+				break;
 		}
-		glEnd();
+		const size_t n = p->nodes.size();
+		assert(n);
+		if(n > 1)
+			verts += n; // connecting line through each path point
+		verts += SMALL_CIRCLE_VERTS * n; // path point circles
 	}
-		glLineWidth(1);
 
-	for (size_t i = 0; i < pathcount; i++)
+	size_t bytes = verts * 2 * sizeof(float);
+
+	float *p;
+	do
 	{
-		const Path *p = game->getPath(i);
-		for (size_t n = 0; n < p->nodes.size(); n++)
+		p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2, bytes, GPUACCESS_DEFAULT);
+		const float * const origin = (const float*)p;
+#define INDEXOF(p) (((p) - origin) / 2u)
+
+		for (size_t i = 0; i < pathcount; i++)
 		{
-			const PathNode *nd = &p->nodes[n];
+			const Path *P = game->getPath(i);
+			DrawCallParams dc;
+			const PathNode * const c = &P->nodes[0];
 
-			if (n == 0)
+			dc.color = selidx == i ? Vector(1,1,1) : P->editorColor;
+			dc.alpha = 0.75f;
+
+			const size_t n = P->nodes.size();
+			if(n > 1)
 			{
-				if (p->pathShape == PATHSHAPE_RECT)
+				dc.first = INDEXOF(p);
+				dc.count = n;
+				dc.mode = GL_LINE_STRIP;
+				dc.linewidth = 4;
+				for(size_t k = 0; k < n; ++k)
 				{
-					glColor4f(0.5f, 0.5f, 1, 0.2f);
-					glBegin(GL_QUADS);
-						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y2);
-						glVertex2f(nd->position.x+p->rect.x2, nd->position.y+p->rect.y2);
-						glVertex2f(nd->position.x+p->rect.x2, nd->position.y+p->rect.y1);
-						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y1);
-					glEnd();
-
-					glColor4f(1, 1, 1, 0.3f);
-					glBegin(GL_LINES);
-						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y1);
-						glVertex2f(nd->position.x+p->rect.x2, nd->position.y+p->rect.y1);
-						glVertex2f(nd->position.x+p->rect.x2, nd->position.y+p->rect.y1);
-						glVertex2f(nd->position.x+p->rect.x2, nd->position.y+p->rect.y2);
-						glVertex2f(nd->position.x+p->rect.x2, nd->position.y+p->rect.y2);
-						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y2);
-						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y2);
-						glVertex2f(nd->position.x+p->rect.x1, nd->position.y+p->rect.y1);
-					glEnd();
+					const PathNode *nd = &P->nodes[k];
+					*p++ = nd->position.x;
+					*p++ = nd->position.y;
 				}
-				else
-				{
-					glColor4f(0.5f, 0.5f, 1, 0.4f);
-					glTranslatef(nd->position.x, nd->position.y, 0);
-					drawCircle(p->rect.getWidth()*0.5f, 16);
-					glTranslatef(-nd->position.x, -nd->position.y, 0);
-				}
+				drawcalls.push_back(dc);
 			}
 
-			Vector color = p->editorColor;
-			float a = 0.75f;
-			if (!p->active)
+			dc.count = SMALL_CIRCLE_VERTS;
+			dc.mode = GL_TRIANGLE_FAN;
+			if (!P->active)
 			{
-				a = 0.3f;
-				color *= 0.5f;
+				dc.alpha = 0.3f;
+				dc.color *= 0.5f;
+			}
+			for(size_t k = 0; k < n; ++k)
+			{
+				dc.first = INDEXOF(p);
+				p = drawCircle(p, 32, SMALL_CIRCLE_VERTS, P->nodes[k].position);
+				drawcalls.push_back(dc);
 			}
 
-			if (selidx == i)
-				color.x = color.y = color.z = 1;
+			dc.first = INDEXOF(p);
 
-			glColor4f(color.x, color.y, color.z, a);
-			glPushMatrix();
-			glTranslatef(nd->position.x, nd->position.y, 0);
-			drawCircle(32);
-			glPopMatrix();
+			switch(P->pathShape)
+			{
+				case PATHSHAPE_RECT:
+					*p++ = c->position.x + P->rect.x1;
+					*p++ = c->position.y + P->rect.y2;
+					*p++ = c->position.x + P->rect.x2;
+					*p++ = c->position.y + P->rect.y2;
+					*p++ = c->position.x + P->rect.x2;
+					*p++ = c->position.y + P->rect.y1;
+					*p++ = c->position.x + P->rect.x1;
+					*p++ = c->position.y + P->rect.y1;
+
+					dc.mode = GL_TRIANGLE_FAN;
+					dc.color = Vector(0.5f, 0.5f, 1);
+					dc.alpha = 0.2f;
+					dc.count = 4;
+					drawcalls.push_back(dc);
+
+					dc.mode = GL_LINE_LOOP;
+					dc.color = Vector(1, 1, 1);
+					dc.alpha = 0.3f;
+					dc.linewidth = 1;
+					// count is still 4
+					drawcalls.push_back(dc);
+					break;
+
+				case PATHSHAPE_CIRCLE:
+					p = drawCircle(p, P->rect.getWidth()*0.5f, BIG_CIRCLE_VERTS, c->position);
+					dc.mode = GL_TRIANGLE_FAN;
+					dc.color = Vector(0.5f, 0.5f, 1);
+					dc.alpha = 0.4f;
+					dc.count = BIG_CIRCLE_VERTS;
+					drawcalls.push_back(dc);
+					break;
+			}
 		}
+	}
+	while(!vbo.commitWriteExact(p));
+}
+
+void PathRender::onRender(const RenderState& rs) const
+{
+	const size_t n = drawcalls.size();
+	if(!n)
+		return;
+
+	vbo.apply();
+	for(size_t i = 0; i < n; ++i)
+	{
+		const DrawCallParams& dc = drawcalls[i];
+		switch(dc.mode)
+		{
+			case GL_LINE_LOOP:
+			case GL_LINE_STRIP:
+			case GL_LINES:
+				glLineWidth(dc.linewidth);
+			default:
+				break;
+		}
+
+		glColor4f(dc.color.x, dc.color.y, dc.color.z, dc.alpha);
+		glDrawArrays(dc.mode, dc.first, dc.count);
 	}
 }
