@@ -4161,6 +4161,7 @@ void AquariaScreenTransition::capture()
 	glReadBuffer(GL_BACK);
 	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
 
+	updateVBO();
 
 	dsq->cursor->alpha = oldAlpha;
 	dsq->renderExternal();

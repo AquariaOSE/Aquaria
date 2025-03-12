@@ -24,6 +24,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderBase.h"
 
 ScreenTransition::ScreenTransition() : RenderObject()
+	, vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	screen_texture = 0;
 	cull = false;
@@ -55,6 +56,8 @@ void ScreenTransition::createTexture()
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_MAG_FILTER, GL_LINEAR);		//GL_NEAREST);		//GL_NEAREST);
 	glTexImage2D(GL_TEXTURE_2D,0,GL_RGB, textureWidth, textureHeight, 0 , GL_RGB, GL_UNSIGNED_BYTE, NULL);
 	glBindTexture(GL_TEXTURE_2D,0);
+
+	updateVBO();
 }
 
 void ScreenTransition::destroyTexture()
@@ -64,6 +67,35 @@ void ScreenTransition::destroyTexture()
 		glDeleteTextures(1, &screen_texture);
 		screen_texture = 0;
 	}
+}
+
+void ScreenTransition::updateVBO()
+{
+	const float width2 = float(width)/2;
+	const float height2 = float(height)/2;
+
+	const float pw = float(windowWidth)/float(textureWidth);
+	const float ph = float(windowHeight)/float(textureHeight);
+
+	size_t bytes = 4 * (2+2) * sizeof(float);
+	do
+	{
+		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC, bytes, GPUACCESS_DEFAULT);
+
+		*p++ = width2;  *p++ = height2;
+		*p++ = pw; *p++ = 0;
+
+		*p++ = -width2; *p++ = height2;
+		*p++ = 0; *p++ = 0;
+
+		*p++ = width2;  *p++ = -height2;
+		*p++ = pw; *p++ = ph;
+
+		*p++ = -width2; *p++ = -height2;
+		*p++ = 0; *p++ = ph;
+
+	}
+	while(!vbo.commitWrite());
 }
 
 void ScreenTransition::unloadDevice()
@@ -116,24 +148,10 @@ void ScreenTransition::onRender(const RenderState& rs) const
 {
 	if (alpha.x == 0) return;
 
-	float width2 = float(width)/2;
-	float height2 = float(height)/2;
-
-	const float pw = float(windowWidth)/float(textureWidth);
-	const float ph = float(windowHeight)/float(textureHeight);
-
 	glBindTexture(GL_TEXTURE_2D, screen_texture);
 
-	glBegin(GL_QUADS);
-		glTexCoord2f(0, 0);
-		glVertex3f(-width2, height2,  0.0);
-		glTexCoord2f(pw, 0);
-		glVertex3f( width2, height2,  0.0);
-		glTexCoord2f(pw, ph);
-		glVertex3f( width2,  -height2,  0.0);
-		glTexCoord2f(0, ph);
-		glVertex3f(-width2,  -height2,  0.0);
-	glEnd();
+	vbo.apply();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 
