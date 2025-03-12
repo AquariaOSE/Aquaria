@@ -141,12 +141,15 @@ bool DynamicGPUBuffer::_commitWrite(size_t used)
         // -> didn't map, but wrote to host memory. upload it.
         assert(_h_data);
         assert(used <= _h_cap);
-        if(used <= _d_cap)
-            glBufferSubDataARB(_gl_binding, 0, used, _h_data); // update existing buffer
-        else
+        if(used)
         {
-            _d_cap = used;
-            glBufferDataARB(_gl_binding, used, _h_data, _gl_usage); // alloc new buffer
+            if(used <= _d_cap)
+                glBufferSubDataARB(_gl_binding, 0, used, _h_data); // update existing buffer
+            else
+            {
+                _d_cap = used;
+                glBufferDataARB(_gl_binding, used, _h_data, _gl_usage); // alloc new buffer
+            }
         }
     }
     // else nothing to do
@@ -168,6 +171,7 @@ void DynamicGPUBuffer::upload(BufDataType type, const void* data, size_t size)
             last = id;
             glBindBufferARB(_gl_binding, id);
         }
+        _d_cap = size;
         glBufferDataARB(_gl_binding, size, data, _gl_usage);
     }
     else

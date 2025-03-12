@@ -70,7 +70,11 @@ void CurrentRender::onUpdate(float dt)
 		size_t usedsize;
 		do
 		{
-			float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC_RGBA, bytes, GPUACCESS_DEFAULT);
+			// Usually we write much less data than maximally possible to the GPU,
+			// because most segments are off-screen and not visible.
+			// The hostcopy flag accumulates the used data in the host heap
+			// and only uploads what is necessary in the end
+			float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC_RGBA, bytes, GPUACCESS_HOSTCOPY);
 			verts = writeVBOData(p);
 			usedsize = verts * 8 * sizeof(float);
 		}
@@ -109,9 +113,6 @@ size_t CurrentRender::writeVBOData(float *p)
 			if (diff.isZero())
 				continue;
 
-			float len = diff.getLength2D();
-			float texScale = len/256.0f;
-
 			if (isTouchingLine(p1, p2, dsq->screenCenter, dsq->cullRadius+w2))
 			{
 				Vector pl = diff.getPerpendicularLeft();
@@ -132,6 +133,8 @@ size_t CurrentRender::writeVBOData(float *p)
 
 				const float ao = P->animOffset;
 				const float a = P->amount;
+				const float len = diff.getLength2D();
+				const float texScale = len/256.0f;
 
 				/* This builds a structure like this:
 				a = 0 alpha
