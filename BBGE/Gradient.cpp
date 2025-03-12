@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderBase.h"
 
 Gradient::Gradient() : RenderObject()
+	, vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	autoWidth = autoHeight = 0;
 }
@@ -48,6 +49,7 @@ void Gradient::makeVertical(Vector c1, Vector c2)
 	ulc1 = c1;
 	ulc2 = c2;
 	ulc3 = c2;
+	updateVBO();
 }
 
 void Gradient::makeHorizontal(Vector c1, Vector c2)
@@ -56,30 +58,41 @@ void Gradient::makeHorizontal(Vector c1, Vector c2)
 	ulc1 = c2;
 	ulc2 = c2;
 	ulc3 = c1;
+	updateVBO();
+}
+
+void Gradient::updateVBO()
+{
+	const size_t bytes = 4 * 6 * sizeof(float);
+	do
+	{
+		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_RGBA, bytes, GPUACCESS_DEFAULT);
+		Vector c = _NoInit();
+
+		*p++ = 0.5f; *p++ = 0.5f;
+		c = ulc3;
+		*p++ = c.x; *p++ = c.y; *p++ = c.z; *p++ = alpha.x;
+
+		*p++ = -0.5f; *p++ = 0.5f;
+		c = ulc2;
+		*p++ = c.x; *p++ = c.y; *p++ = c.z; *p++ = alpha.x;
+
+		*p++ = 0.5f; *p++ = -0.5f;
+		c = ulc0;
+		*p++ = c.x; *p++ = c.y; *p++ = c.z; *p++ = alpha.x;
+
+		*p++ = -0.5f; *p++ = -0.5f;
+		c = ulc1;
+		*p++ = c.x; *p++ = c.y; *p++ = c.z; *p++ = alpha.x;
+
+	}
+	while(!vbo.commitWrite());
+
 }
 
 void Gradient::onRender(const RenderState& rs) const
 {
-
-
-	glBegin(GL_QUADS);
-
-
-		glColor4f(ulc2.x*color.x, ulc2.y*color.y, ulc2.z*color.z, alpha.x);
-		glVertex3f(-0.5, 0.5,  0.0f);
-
-
-		glColor4f(ulc3.x*color.x, ulc3.y*color.y, ulc3.z*color.z, alpha.x);
-		glVertex3f( 0.5, 0.5,  0.0f);
-
-
-		glColor4f(ulc0.x*color.x, ulc0.y*color.y, ulc0.z*color.z, alpha.x);
-		glVertex3f( 0.5,  -0.5,  0.0f);
-
-
-		glColor4f(ulc1.x*color.x, ulc1.y*color.y, ulc1.z*color.z, alpha.x);
-		glVertex3f(-0.5,  -0.5,  0.0f);
-
-	glEnd();
+	vbo.apply();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 }
 

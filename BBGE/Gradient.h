@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define GRADIENT_H
 
 #include "RenderObject.h"
+#include "VertexBuffer.h"
 
 
 class Gradient : public RenderObject
@@ -36,7 +37,9 @@ public:
 	int autoWidth, autoHeight;
 protected:
 	void onRender(const RenderState& rs) const OVERRIDE;
+	void updateVBO();
 	Vector ulc0, ulc1, ulc2, ulc3;
+	DynamicGPUBuffer vbo;
 };
 
 #endif
