@@ -96,7 +96,7 @@ namespace internal
 #include "OSFunctions.h"
 
 // --- Defined in RenderBase.cpp -- Declared here to avoid pulling in gl.h via RenderBase.h --
-void drawCircle(float radius, int stepSize);
+float *drawCircle(float *p, float radius, size_t vertices, const Vector& center = Vector(0, 0));
 unsigned generateEmptyTexture(int res);
 void sizePowerOf2Texture(int &v);
 // ----------------------
@@ -162,8 +162,6 @@ int nocasecmp(const std::string &s1, const std::string &s2);
 bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius=1, Vector* closest=0);
 
 
-void drawCircle(float radius, int steps=1);
-
 std::string getPathInfoStr();
 void exit_error(const std::string &message);
 
@@ -180,6 +178,7 @@ Vector randVector(float magnitude);
 std::string splitCamelCase(const std::string &input);
 std::string removeSpaces(const std::string &input);
 int randRange(int r1, int r2); // from..to inclusive
+
 
 enum LerpType
 {

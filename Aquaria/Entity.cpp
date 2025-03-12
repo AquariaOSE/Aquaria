@@ -1566,7 +1566,7 @@ void Entity::onUpdate(float dt)
 		}
 	}
 
-	Quad::onUpdate(dt);
+	CollideQuad::onUpdate(dt);
 
 	Vector v = position - lastPos;
 	if (position.isFollowingPath() && swimPath)

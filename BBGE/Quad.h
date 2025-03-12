@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "RenderObject.h"
 #include "DataStructures.h"
+#include "VertexBuffer.h"
 
 
 class DynamicRenderGrid;
@@ -124,8 +125,13 @@ public:
 	CollideQuad();
 	virtual ~CollideQuad();
 	virtual void renderCollision(const RenderState& rs) const OVERRIDE;
+	virtual void onUpdate(float dt) OVERRIDE;
 
 	float collideRadius;
+
+private:
+	float prevCollideRadius;
+	DynamicGPUBuffer cvbo;
 };
 
 #endif

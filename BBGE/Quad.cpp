@@ -398,7 +398,8 @@ void PauseQuad::setPositionSnapTo(InterpolatedVector *positionSnapTo)
 }
 
 CollideQuad::CollideQuad()
-	: collideRadius(0)
+	: collideRadius(0), prevCollideRadius(0)
+	, cvbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	addType(SCO_COLLIDE_QUAD);
 }
@@ -407,22 +408,47 @@ CollideQuad::~CollideQuad()
 {
 }
 
+enum { CIRCLE_VERTS = 20 };
+
+void CollideQuad::onUpdate(float dt)
+{
+	// FIXME: This should be moved to onDebugUpdate() or something
+	if(RenderObject::renderCollisionShape)
+	{
+		if(prevCollideRadius != collideRadius)
+		{
+			prevCollideRadius = collideRadius;
+			if(collideRadius > 0)
+			{
+				const size_t bytes = CIRCLE_VERTS * 2 * sizeof(float);
+				do
+				{
+					float *p = (float*)cvbo.beginWrite(GPUBUFTYPE_VEC2, bytes, GPUACCESS_DEFAULT);
+					drawCircle(p, collideRadius, CIRCLE_VERTS);
+				}
+				while(!cvbo.commitWrite());
+			}
+		}
+	}
+
+	Quad::onUpdate(dt);
+}
+
 void CollideQuad::renderCollision(const RenderState& rs) const
 {
-	if (collideRadius > 0)
+	if (collideRadius > 0 && cvbo.size())
 	{
 		glPushMatrix();
 		glLoadIdentity();
 		core->setupRenderPositionAndScale();
 		glBindTexture(GL_TEXTURE_2D, 0);
-		glTranslatef(position.x+offset.x, position.y+offset.y, 0);
-
-		glTranslatef(internalOffset.x, internalOffset.y, 0);
+		glTranslatef(position.x+offset.x+internalOffset.x, position.y+offset.y+internalOffset.y, 0);
 
 		rs.gpu.setBlend(BLEND_DEFAULT);
 
-		glColor4f(1,0,0,0.5);
-		drawCircle(collideRadius, 8);
+		glColor4f(1,0,0,0.5f);
+		cvbo.apply();
+		glDrawArrays(GL_TRIANGLE_FAN, 0, CIRCLE_VERTS);
 		glPopMatrix();
 	}
 }

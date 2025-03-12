@@ -108,6 +108,7 @@ protected:
 	int minDist, maxDist, reverse;
 	std::vector<Bone*> segments;
 	void onUpdate(float dt);
+	DynamicGPUBuffer cmvbo; // for collision mask debug render only
 public:
 	std::vector<Vector> collisionMask;
 	std::vector<Vector> transformedCollisionMask;

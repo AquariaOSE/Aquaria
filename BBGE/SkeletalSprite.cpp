@@ -76,6 +76,7 @@ void SkeletalKeyframe::copyAllButTime(SkeletalKeyframe *copy)
 }
 
 Bone::Bone() : CollideQuad()
+	, cmvbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	addType(SCO_BONE);
 	fileRenderQuad = true;
@@ -269,9 +270,11 @@ void Bone::spawnParticlesFromCollisionMask(const char *p, unsigned intv, int lay
 	}
 }
 
+enum { TINY_CIRCLE_VERTS = 12 };
+
 void Bone::renderCollision(const RenderState& rs) const
 {
-	if (!collisionMask.empty())
+	if (!collisionMask.empty() && cmvbo.size())
 	{
 		glPushMatrix();
 		glBindTexture(GL_TEXTURE_2D, 0);
@@ -284,17 +287,13 @@ void Bone::renderCollision(const RenderState& rs) const
 
 		glColor4f(1,1,0,0.5);
 
+		cmvbo.apply();
+
+		int first = 0;
 		for (size_t i = 0; i < transformedCollisionMask.size(); i++)
 		{
-			Vector collide = this->transformedCollisionMask[i];
-
-
-
-			glTranslatef(collide.x, collide.y, 0);
-			const RenderObject *parent = this->getTopParent();
-			if (parent)
-				drawCircle(collideRadius*parent->scale.x, 45);
-			glTranslatef(-collide.x, -collide.y, 0);
+			glDrawArrays(GL_TRIANGLE_FAN, first, TINY_CIRCLE_VERTS);
+			first += TINY_CIRCLE_VERTS;
 		}
 
 		glPopMatrix();
@@ -327,6 +326,27 @@ void Bone::onUpdate(float dt)
 		for (size_t i = 0; i < collisionMask.size(); i++)
 		{
 			transformedCollisionMask[i] = getWorldCollidePosition(collisionMask[i]);
+		}
+
+		// FIXME: This should be moved to onDebugUpdate() or something
+		if(RenderObject::renderCollisionShape)
+		{
+			const size_t bytes = transformedCollisionMask.size() * TINY_CIRCLE_VERTS * 2 * sizeof(float);
+			float *p;
+			do
+			{
+				p = (float*)cmvbo.beginWrite(GPUBUFTYPE_VEC2, bytes, GPUACCESS_DEFAULT);
+				const RenderObject *parent = this->getTopParent();
+				float s = collideRadius;
+				if (parent)
+					s *= parent->scale.x;
+				for(size_t i = 0; i < transformedCollisionMask.size(); ++i)
+				{
+					Vector collide = this->transformedCollisionMask[i];
+					p = drawCircle(p, s, TINY_CIRCLE_VERTS, collide);
+				}
+			}
+			while(!cmvbo.commitWriteExact(p));
 		}
 	}
 
