@@ -22,6 +22,12 @@ ELSE(WIN32)
     SET(WIN32_TRUE FALSE)
 ENDIF(WIN32)
 
+IF(MSYS)
+    SET(WIN32_TRUE TRUE)
+    ADD_DEFINITIONS(-DBBGE_BUILD_WINDOWS=1)
+    SET(EXETYPE WIN32)
+ENDIF(MSYS)
+
 # if no build type was provided, set a default one
 IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
@@ -200,7 +206,11 @@ if(NOT SDL_FOUND)
             set(SDLMAIN_LIBRARY "${SDLDIR}/lib/win32/SDLmain.lib" CACHE FILEPATH "Where the SDLmain library can be found" FORCE)
             set(SDL_LIBRARY "${SDLDIR}/lib/win32/SDL.lib" CACHE FILEPATH "Where the SDL library can be found" FORCE)
         endif(AQUARIA_USE_SDL2)
-        set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
+        if(MSYS)
+            set(SDL_LIBRARY -lmingw32 ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
+        elseif(MSYS)
+            set(SDL_LIBRARY ${SDLMAIN_LIBRARY} ${SDL_LIBRARY}) # not seen by user
+        endif(MSYS)
     else(MACOSX)
         message(SEND_ERROR "We don't have a prebuilt SDL for this platform.")
     endif(MACOSX)
@@ -213,14 +223,14 @@ if(NOT AQUARIA_INTERNAL_OPENAL)
     find_package(OpenAL)
 endif(NOT AQUARIA_INTERNAL_OPENAL)
 if (NOT OPENAL_FOUND)
-    if(WIN32)
+	if(WIN32_TRUE)
         set(OPENALDIR "${EXTLIBDIR}/AL")
         set(OPENAL_INCLUDE_DIR "${OPENALDIR}/include" CACHE PATH "OpenAL include directory" FORCE)
         message(STATUS "Using internal copy of OpenAL")
         set(OPENAL_LIBRARY "${OPENALDIR}/lib/win32/OpenAL32.lib" CACHE FILEPATH "Where the OpenAL library can be found" FORCE)
-    else(WIN32)
+	else(WIN32_TRUE)
         message(SEND_ERROR "We don't have a prebuilt OpenAL for this platform.")
-    endif(WIN32)
+	endif(WIN32_TRUE)
 endif (NOT OPENAL_FOUND)
 
 ### TinyXML2
@@ -362,20 +372,19 @@ IF(UNIX AND NOT HAIKU)
 ENDIF()
 
 IF(CMAKE_COMPILER_IS_GNUCC)
-    ADD_DEFINITIONS(-pipe -fsigned-char)
-    #ADD_DEFINITIONS(-Wall)
 
-    # See if -fno-stack-protector is available to us.
-    # It doesn't seem to work well, and it adds bulk to the binary.
     CHECK_C_COMPILER_FLAG("-fno-stack-protector" AQUARIA_GCC_HAS_STACKPROT)
     IF(AQUARIA_GCC_HAS_STACKPROT)
-        ADD_DEFINITIONS(-fno-stack-protector)
+        # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
+        # Exceptions are not used, excluding support for release builds adds less bulk as well.
+        set(CMAKE_C_FLAGS_RELEASE "-pipe -fsigned-char -fno-stack-protector -O2" CACHE STRING "Flags used for release builds" FORCE)
+        set(CMAKE_CXX_FLAGS_RELEASE "-pipe -fsigned-char -fno-stack-protector -O2 -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
+    ELSE(AQUARIA_GCC_HAS_STACKPROT)
+        # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
+        # Exceptions are not used, excluding support for release builds adds less bulk as well.
+        set(CMAKE_C_FLAGS_RELEASE "-pipe -fsigned-char -O2" CACHE STRING "Flags used for release builds" FORCE)
+        set(CMAKE_CXX_FLAGS_RELEASE "-pipe -fsigned-char -O2 -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
     ENDIF(AQUARIA_GCC_HAS_STACKPROT)
-
-    # -O3 breaks on some GCC/MinGW versions, make sure CMake does not set this as default.
-    # Exceptions are not used, excluding support for release builds adds less bulk as well.
-    set(CMAKE_C_FLAGS_RELEASE "-O2" CACHE STRING "Flags used for release builds" FORCE)
-    set(CMAKE_CXX_FLAGS_RELEASE "-O2 -fno-exceptions" CACHE STRING "Flags used for release builds" FORCE)
 
     # !!! FIXME: probably not safe long-term.
     # CMake mailing list had this hack for getting rid of -rdynamic:
@@ -803,6 +812,10 @@ ADD_EXECUTABLE(aquaria ${EXETYPE}
     ${OPTIONAL_SRCS}
 )
 TARGET_LINK_LIBRARIES(aquaria ${OPTIONAL_LIBS})
+
+IF(WIN32_TRUE)
+    SET(CMAKE_EXE_LINKER_FLAGS ${CMAKE_EXE_LINKER_FLAGS} "-static")
+ENDIF(WIN32_TRUE)
 
 # end of CMakeLists.txt ...
 
