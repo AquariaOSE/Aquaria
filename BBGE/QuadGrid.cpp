@@ -5,15 +5,19 @@
 
 QuadGrid::QuadGrid(size_t w, size_t h)
     : pauseLevel(0), _w(w+1), _h(h+1)
+    , dirty(true)
+    , vbo(GPUBUF_DYNAMIC | GPUBUF_VERTEXBUF)
+    , ibo(GPUBUF_STATIC | GPUBUF_INDEXBUF)
+    , _points((w+1) * (h+1))
 {
     addType(SCO_QUAD_GRID);
-    _points.resize((w+1) * (h+1));
     resetUV();
     resetPos(1, 1);
     this->width = 2;
     this->height = 2;
     this->cull = false;
     this->repeatTexture = true;
+    _numtris = ibo.initGridIndices_Triangles(w+1, h+1, false, GPUACCESS_DEFAULT);
 }
 
 QuadGrid* QuadGrid::New(size_t w, size_t h)
@@ -46,6 +50,8 @@ void QuadGrid::resetUV(float xmul, float ymul)
         }
         v += incY;
     }
+
+    dirty = true;
 }
 
 void QuadGrid::resetPos(float w, float h, float xoffs, float yoffs)
@@ -66,50 +72,29 @@ void QuadGrid::resetPos(float w, float h, float xoffs, float yoffs)
             row[x].y = yy;
         }
     }
-}
 
-static inline void drawOnePoint(const QuadGrid::Point& p, float ox, float oy)
-{
-    glTexCoord2f(p.u + ox, p.v + oy);
-    glVertex2f(p.x, p.y);
+    dirty = true;
 }
-
 
 void QuadGrid::onRender(const RenderState& rs) const
 {
     glColor4f(color.x, color.y, color.z, alpha.x * alphaMod);
 
-    const float ox = texOffset.x;
-    const float oy = texOffset.y;
-    const size_t NX = pointsX();
-
-    // go over grids
-    const size_t W = quadsX();
-    const size_t H = quadsY();
-    for(size_t y = 0; y < H; ++y)
-    {
-        const Point * const row0 = &_points[y * NX];
-        const Point * const row1 = row0 + NX;
-        for(size_t x = 0; x < W; ++x)
-        {
-            glBegin(GL_QUADS);
-            drawOnePoint(row0[x],   ox, oy);
-            drawOnePoint(row0[x+1], ox, oy);
-            drawOnePoint(row1[x+1], ox, oy);
-            drawOnePoint(row1[x],   ox, oy);
-            glEnd();
-        }
-    }
+    vbo.apply();
+    ibo.drawElements(GL_TRIANGLES, _numtris);
 }
 
 void QuadGrid::onUpdate(float dt)
 {
-    if(pauseLevel < core->particlesPaused)
-        return;
+    const bool interp = texOffset.isInterpolating();
+    if(!(pauseLevel < core->particlesPaused))
+    {
+        texOffset.update(dt);
+        RenderObject::onUpdate(dt);
+    }
 
-    texOffset.update(dt);
-
-    RenderObject::onUpdate(dt);
+    if(dirty || interp)
+        updateVBO();
 }
 
 void QuadGrid::onSetTexture() // same as Quad::setTexture()
@@ -124,4 +109,25 @@ void QuadGrid::onSetTexture() // same as Quad::setTexture()
         width = 64;
         height = 64;
     }
+}
+
+void QuadGrid::updateVBO()
+{
+    const size_t bytes = _points.size() * sizeof(Point);
+
+    do
+    {
+        const Point *s = &_points[0];
+        Point *p = (Point*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC, bytes, GPUACCESS_DEFAULT);
+
+        for(size_t i = 0; i < _points.size(); ++i, ++p, ++s)
+        {
+            p->x = s->x;
+            p->y = s->y;
+            p->u = s->u + texOffset.x;
+            p->v = s->v + texOffset.y;
+        }
+    }
+    while(!vbo.commitWrite());
+    dirty = false;
 }

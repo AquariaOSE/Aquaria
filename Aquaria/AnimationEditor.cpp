@@ -77,34 +77,73 @@ class TimelineTickRender : public RenderObject
 public:
 	TimelineTickRender()
 		: bg("black", Vector(400, 0))
+		, vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 	{
 		addChild(&bg, PM_STATIC, RBP_ON);
 		bg.setWidthHeight(800, TIMELINE_HEIGHT);
 		bg.alphaMod = 0.2f;
+		updateVBO();
 	}
 
 	virtual ~TimelineTickRender()
 	{
 	}
 
+	virtual void onUpdate(float dt) OVERRIDE
+	{
+		const float h2 = TIMELINE_HEIGHT * 0.5f;
+		const float tx = ae->getAnimTime() * (TIMELINE_GRIDSIZE / TIMELINE_UNIT);
+		// Update data for last 2 vertices (last line)
+		const float linedata[] =
+		{
+			tx + TIMELINE_X_OFFS, -h2,
+			tx + TIMELINE_X_OFFS,  h2
+		};
+		vbo.updatePartial((verts * 2 * sizeof(float)) - sizeof(linedata), &linedata[0], sizeof(linedata));
+
+		RenderObject::onUpdate(dt);
+	}
+
+	void updateVBO()
+	{
+		const size_t lines = (size_t(800) / TIMELINE_GRIDSIZE) + 1;
+		verts = lines * 2;
+		const size_t bytes = verts * 2 * sizeof(float);
+		const float h2 = TIMELINE_HEIGHT * 0.5f;
+		float *p;
+		do
+		{
+			p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2, bytes, GPUACCESS_DEFAULT);
+
+			for (int x = 0; x < 800; x += TIMELINE_GRIDSIZE)
+			{
+				*p++ = x + TIMELINE_X_OFFS; *p++ = -h2;
+				*p++ = x + TIMELINE_X_OFFS; *p++ = h2;
+			}
+
+			// Last 2 vertices -- colored differently
+			const float tx = ae->getAnimTime() * (TIMELINE_GRIDSIZE / TIMELINE_UNIT);
+			*p++ = tx + TIMELINE_X_OFFS; *p++ = -h2;
+			*p++ = tx + TIMELINE_X_OFFS; *p++ = h2;
+
+		}
+		while(!vbo.commitWriteExact(p));
+	}
+
 private:
 	Quad bg;
+	DynamicGPUBuffer vbo;
+	size_t verts;
 	void onRender(const RenderState& rs) const OVERRIDE
 	{
 		glLineWidth(1);
-		glBegin(GL_LINES);
+		vbo.apply();
+
 		glColor4f(1, 1, 1, 1);
-		const float h2 = TIMELINE_HEIGHT * 0.5f;
-		for (int x = 0; x < 800; x += TIMELINE_GRIDSIZE)
-		{
-			glVertex3f(x + TIMELINE_X_OFFS, -h2, 0);
-			glVertex3f(x + TIMELINE_X_OFFS, h2, 0);
-		}
+		glDrawArrays(GL_LINES, 0, verts-2);
+
 		glColor4f(0, 1, 0, 1);
-		float tx = ae->getAnimTime() * (TIMELINE_GRIDSIZE / TIMELINE_UNIT);
-		glVertex3f(tx + TIMELINE_X_OFFS, -h2, 0);
-		glVertex3f(tx + TIMELINE_X_OFFS, h2, 0);
-		glEnd();
+		glDrawArrays(GL_LINES, verts-2, 2);
 	}
 };
 
@@ -115,7 +154,7 @@ public:
 	DebugFont label;
 
 	TimelineRender(int page)
-		: page(page), label(6)
+		: page(page), label(6), vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 	{
 		setWidthHeight(800, 10);
 		addChild(&label, PM_STATIC);
@@ -159,6 +198,30 @@ public:
 
 private:
 
+	DynamicGPUBuffer vbo;
+
+	void updateVBO()
+	{
+		SkeletalSprite *spr = ae->getPageSprite(page);
+		if(!spr->isLoaded())
+			return;
+
+		const float h2 = height * 0.5f;
+		const float tx = spr->getAnimationLayer(0)->timer * (TIMELINE_GRIDSIZE / TIMELINE_UNIT);
+		const float linedata[] =
+		{
+			tx + TIMELINE_X_OFFS, h2 - 5,
+			tx + TIMELINE_X_OFFS, h2 + 5
+		};
+		vbo.upload(GPUBUFTYPE_VEC2, &linedata[0], sizeof(linedata));
+	}
+
+	virtual void onUpdate(float dt) OVERRIDE
+	{
+		updateVBO();
+		Quad::onUpdate(dt);
+	}
+
 	void onRender(const RenderState& rs) const OVERRIDE
 	{
 		SkeletalSprite *spr = ae->getPageSprite(page);
@@ -176,13 +239,13 @@ private:
 		Quad::onRender(rs);
 		glPopMatrix();
 
-		glColor4f(0, 1, 0, 1);
-		glLineWidth(3);
-		glBegin(GL_LINES);
-			float tx = spr->getAnimationLayer(0)->timer * (TIMELINE_GRIDSIZE / TIMELINE_UNIT);
-			glVertex3f(tx + TIMELINE_X_OFFS, h2 - 5, 0);
-			glVertex3f(tx + TIMELINE_X_OFFS, h2 + 5, 0);
-		glEnd();
+		if(vbo.size())
+		{
+			glColor4f(0, 1, 0, 1);
+			glLineWidth(3);
+			vbo.apply();
+			glDrawArrays(GL_LINES, 0, 2);
+		}
 	}
 
 	std::vector<KeyframeWidget*> keyframes;
@@ -2167,6 +2230,7 @@ void AnimationEditor::selectPage(unsigned page)
 
 void AnimationEditor::updateTimelineGrid()
 {
+	timelineTicks->updateVBO();
 	std::ostringstream os;
 	os << "Grid: " << TIMELINE_GRIDSIZE;
 	gridsize->setText(os.str());

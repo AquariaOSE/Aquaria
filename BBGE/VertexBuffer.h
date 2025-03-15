@@ -63,6 +63,7 @@ public:
     bool commitWriteExact(const void *p); // asserts that as many bytes as allocated were written
 
     void upload(BufDataType type, const void *data, size_t size);
+    void updatePartial(size_t offset, const void *data, size_t size);
 
     // uses own data for indexing and prev. applied buffer for the data to draw
     void drawElements(unsigned glmode, size_t n, size_t first = 0) const;
@@ -93,6 +94,8 @@ private:
     void* _ensureBytes(size_t bytes);
     unsigned _ensureDBuf();
     bool _commitWrite(size_t used);
+    void _uploadFromHost(const void *data, size_t size);
+    static unsigned _Bind(unsigned id, unsigned binding, unsigned usage);
 
     unsigned _bufid;
     unsigned _gl_binding;

@@ -141,16 +141,7 @@ bool DynamicGPUBuffer::_commitWrite(size_t used)
         // -> didn't map, but wrote to host memory. upload it.
         assert(_h_data);
         assert(used <= _h_cap);
-        if(used)
-        {
-            if(used <= _d_cap)
-                glBufferSubDataARB(_gl_binding, 0, used, _h_data); // update existing buffer
-            else
-            {
-                _d_cap = used;
-                glBufferDataARB(_gl_binding, used, _h_data, _gl_usage); // alloc new buffer
-            }
-        }
+        _uploadFromHost(_h_data, used);
     }
     // else nothing to do
 
@@ -161,21 +152,63 @@ bool DynamicGPUBuffer::_commitWrite(size_t used)
 void DynamicGPUBuffer::upload(BufDataType type, const void* data, size_t size)
 {
     _datatype = type;
+    _size = size;
 
     if(_HasARB)
     {
-        const unsigned id = _ensureDBuf();
-        unsigned& last = s_lastBuffer[_usage & GPUBUF_BINDING_MASK];
-        if(id != last)
-        {
-            last = id;
-            glBindBufferARB(_gl_binding, id);
-        }
-        _d_cap = size;
-        glBufferDataARB(_gl_binding, size, data, _gl_usage);
+        const unsigned id = _Bind(_ensureDBuf(), _gl_binding, _usage);
+        _uploadFromHost(data, size);
     }
     else
-        memcpy(_ensureBytes(size), data, size);
+    {
+        void *dst = _ensureBytes(size);
+        if(data)
+            memcpy(dst, data, size);
+    }
+}
+
+unsigned DynamicGPUBuffer::_Bind(unsigned id, unsigned binding, unsigned usage)
+{
+    unsigned& last = s_lastBuffer[usage & GPUBUF_BINDING_MASK];
+    if(id != last)
+    {
+        last = id;
+        glBindBufferARB(binding, id);
+    }
+    return id;
+}
+
+// Assumes buffer is already bound
+void DynamicGPUBuffer::_uploadFromHost(const void * data, size_t size)
+{
+    assert(_HasARB);
+    if(size)
+    {
+        if(size <= _d_cap)
+            glBufferSubDataARB(_gl_binding, 0, size, data); // update existing buffer
+        else
+        {
+            _d_cap = size;
+            glBufferDataARB(_gl_binding, size, data, _gl_usage); // alloc new buffer
+        }
+    }
+}
+
+void DynamicGPUBuffer::updatePartial(size_t offset, const void * data, size_t size)
+{
+    if(_HasARB)
+    {
+        assert(_bufid); // Must have been previously allocated
+        assert(offset + size <= _d_cap);
+        _Bind(_bufid, _gl_binding, _usage);
+        glBufferSubDataARB(_gl_binding, offset, size, data);
+    }
+
+    if(_h_data)
+    {
+        assert(offset + size <= _h_cap);
+        memcpy((char*)_h_data + offset, data, size); 
+    }
 }
 
 static const unsigned s_gltype[] =
