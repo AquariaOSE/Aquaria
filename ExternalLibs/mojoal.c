@@ -11,7 +11,10 @@
 #include <math.h>
 #include <float.h>
 
-#ifdef _WIN32
+/* Unless compiling statically into another app, we want the public API
+   to export on Windows. Define these before including al.h, so we override
+   its attempt to mark these as `dllimport`. */
+#if defined(_WIN32) && !defined(AL_LIBTYPE_STATIC)
   #define AL_API __declspec(dllexport)
   #define ALC_API __declspec(dllexport)
 #endif
@@ -24,7 +27,18 @@
 #include "alc.h"
 #include "SDL.h"
 
-#ifdef __SSE__  /* if you are on x86 or x86-64, we assume you have SSE1 by now. */
+/* This is for debugging and/or pulling the fire alarm. */
+#define FORCE_SCALAR_FALLBACK 0
+#if FORCE_SCALAR_FALLBACK
+#  ifdef __SSE__
+#    undef __SSE__
+#  endif
+#  ifdef __ARM_NEON__
+#    undef __ARM_NEON__
+#  endif
+#endif
+
+#if defined(__SSE__)  /* if you are on x86 or x86-64, we assume you have SSE1 by now. */
 #define NEED_SCALAR_FALLBACK 0
 #elif (defined(__ARM_ARCH) && (__ARM_ARCH >= 8))  /* ARMv8 always has NEON. */
 #define NEED_SCALAR_FALLBACK 0
@@ -38,7 +52,7 @@
 
 /* Some platforms fail to define __ARM_NEON__, others need it or arm_neon.h will fail. */
 #if (defined(__ARM_ARCH) || defined(_M_ARM))
-#  if !NEED_SCALAR_FALLBACK && !defined(__ARM_NEON__)
+#  if !NEED_SCALAR_FALLBACK && !FORCE_SCALAR_FALLBACK && !defined(__ARM_NEON__)
 #    define __ARM_NEON__ 1
 #  endif
 #endif
@@ -470,6 +484,7 @@ SIMDALIGNEDSTRUCT ALsource
     ALfloat cone_outer_gain;
     ALbuffer *buffer;
     SDL_AudioStream *stream;  /* for resampling. */
+    SDL_atomic_t total_queued_buffers;   /* everything queued, playing and processed. AL_BUFFERS_QUEUED value. */
     BufferQueue buffer_queue;
     BufferQueue buffer_queue_processed;
     ALsizei offset;  /* offset in bytes for converted stream! */
@@ -1194,11 +1209,11 @@ static void pitch_fft(float *fftBuffer, int fftFrameSize, int sign)
     for (k = 0, le = 2; k < endval; k++) {
         le <<= 1;
         le2 = le>>1;
-        ur = 1.0;
-        ui = 0.0;
-        arg = M_PI / (le2>>1);
-        wr = SDL_cos(arg);
-        wi = sign*SDL_sin(arg);
+        ur = 1.0f;
+        ui = 0.0f;
+        arg = (float) (M_PI / (le2>>1));
+        wr = SDL_cosf(arg);
+        wi = sign*SDL_sinf(arg);
         for (j = 0; j < le2; j += 2) {
             p1r = fftBuffer+j; p1i = p1r+1;
             p2r = p1r+le2; p2i = p2r+1;
@@ -1250,8 +1265,8 @@ static void pitch_shift(ALsource *src, const ALbuffer *buffer, int numSampsToPro
             /* do windowing and re,im interleave */
             for (k = 0; k < pitch_framesize;k++) {
                 window = -.5*SDL_cos(2.*M_PI*(double)k/(double)pitch_framesize)+.5;
-                state->workspace[2*k] = state->infifo[k] * window;
-                state->workspace[2*k+1] = 0.;
+                state->workspace[2*k] = (ALfloat) (state->infifo[k] * window);
+                state->workspace[2*k+1] = 0.0f;
             }
 
 
@@ -1272,13 +1287,13 @@ static void pitch_shift(ALsource *src, const ALbuffer *buffer, int numSampsToPro
 
                 /* compute phase difference */
                 tmp = phase - state->lastphase[k];
-                state->lastphase[k] = phase;
+                state->lastphase[k] = (ALfloat) phase;
 
                 /* subtract expected phase difference */
                 tmp -= (double)k*expct;
 
                 /* map delta phase into +/- Pi interval */
-                qpd = tmp/M_PI;
+                qpd = (int) (tmp/M_PI);
                 if (qpd >= 0) qpd += qpd&1;
                 else qpd -= qpd&1;
                 tmp -= M_PI*(double)qpd;
@@ -1290,8 +1305,8 @@ static void pitch_shift(ALsource *src, const ALbuffer *buffer, int numSampsToPro
                 tmp = (double)k*freqPerBin + tmp*freqPerBin;
 
                 /* store magnitude and true frequency in analysis arrays */
-                state->workspace[2*k] = magn;
-                state->workspace[2*k+1] = tmp;
+                state->workspace[2*k] = (ALfloat) magn;
+                state->workspace[2*k+1] = (ALfloat) tmp;
 
             }
 
@@ -1299,7 +1314,7 @@ static void pitch_shift(ALsource *src, const ALbuffer *buffer, int numSampsToPro
             /* this does the actual pitch shifting */
             SDL_memset(state->synmagn, '\0', sizeof (state->synmagn));
             for (k = 0; k <= pitch_framesize2; k++) {
-                index = k*pitchShift;
+                index = (int) (k*pitchShift);
                 if (index <= pitch_framesize2) { 
                     state->synmagn[index] += state->workspace[2*k];
                     state->synfreq[index] = state->workspace[2*k+1] * pitchShift;
@@ -1327,12 +1342,12 @@ static void pitch_shift(ALsource *src, const ALbuffer *buffer, int numSampsToPro
                 tmp += (double)k*expct;
 
                 /* accumulate delta phase to get bin phase */
-                state->sumphase[k] += tmp;
+                state->sumphase[k] += (ALfloat) tmp;
                 phase = state->sumphase[k];
 
                 /* get real and imag part and re-interleave */
-                state->workspace[2*k] = magn*SDL_cos(phase);
-                state->workspace[2*k+1] = magn*SDL_sin(phase);
+                state->workspace[2*k] = (ALfloat) (magn*SDL_cos(phase));
+                state->workspace[2*k+1] = (ALfloat) (magn*SDL_sin(phase));
             } 
 
             /* zero negative frequencies */
@@ -1344,7 +1359,7 @@ static void pitch_shift(ALsource *src, const ALbuffer *buffer, int numSampsToPro
             /* do windowing and add to output accumulator */ 
             for(k=0; k < pitch_framesize; k++) {
                 window = -.5*SDL_cos(2.*M_PI*(double)k/(double)pitch_framesize)+.5;
-                state->outputaccum[k] += 2.*window*state->workspace[2*k]/(pitch_framesize2*osamp);
+                state->outputaccum[k] += (ALfloat) (2.*window*state->workspace[2*k]/(pitch_framesize2*osamp));
             }
             for (k = 0; k < stepSize; k++) state->outfifo[k] = state->outputaccum[k];
 
@@ -1417,12 +1432,15 @@ static ALboolean mix_source_buffer(ALCcontext *ctx, ALsource *src, BufferQueueIt
         if (src->stream) {  /* resampling? */
             int mixframes, mixlen, remainingmixframes;
             while ( (((mixlen = SDL_AudioStreamAvailable(src->stream)) / bufferframesize) < framesneeded) && (src->offset < buffer->len) ) {
-                const int framesput = (buffer->len - src->offset) / bufferframesize;
-                const int bytesput = SDL_min(framesput, 1024) * bufferframesize;
+                const int bytesleft = (buffer->len - src->offset);
+                /* workaround in case remains are less than bufferframesize */
+                const int framesput = (bytesleft + (bufferframesize - 1)) / bufferframesize;
+                const int bytesput = SDL_min(SDL_min(framesput, 1024) * bufferframesize, bytesleft);
                 FIXME("dynamically adjust frames here?");  /* we hardcode 1024 samples when opening the audio device, too. */
                 SDL_AudioStreamPut(src->stream, data, bytesput);
                 src->offset += bytesput;
-                data += bytesput / sizeof (float);
+                /* workaround in case remains are not evenly divided by sizeof (float) */
+                data += (bytesput + (sizeof (float) - 1)) / sizeof (float);
             }
 
             mixframes = SDL_min(mixlen / bufferframesize, framesneeded);
@@ -1733,12 +1751,13 @@ static void calculate_channel_gains(const ALCcontext *ctx, const ALsource *src, 
 
     {
     #if NEED_SCALAR_FALLBACK
-    SDL_memcpy(position, src->position, sizeof (position));
     /* if values aren't source-relative, then convert it to be so. */
     if (!src->source_relative) {
-        position[0] -= ctx->listener.position[0];
-        position[1] -= ctx->listener.position[1];
-        position[2] -= ctx->listener.position[2];
+        SDL_memcpy(position, src->position, sizeof (position));
+    } else {
+        position[0] = src->position[0] - ctx->listener.position[0];
+        position[1] = src->position[1] - ctx->listener.position[1];
+        position[2] = src->position[2] - ctx->listener.position[2];
     }
     distance = magnitude(position);
     #endif
@@ -1779,39 +1798,34 @@ static void calculate_channel_gains(const ALCcontext *ctx, const ALsource *src, 
 
        https://dsp.stackexchange.com/questions/21691/algorithm-to-pan-audio
 
-       Naturally, we'll need to know the angle between where our listener
-       is facing and where the source is to make that work...
-
-       https://www.youtube.com/watch?v=S_568VZWFJo
-
-       ...but to do that, we need to rotate so we have the correct side of
-       the listener, which isn't just a point in space, but has a definite
-       direction it is facing. More or less, this is what gluLookAt deals
-       with...
-
-       http://www.songho.ca/opengl/gl_camera.html
-
-       ...although I messed with the algorithm until it did what I wanted.
-
        XYZZY!! https://en.wikipedia.org/wiki/Cross_product#Mnemonic
     */
 
     #ifdef __SSE__ /* (the math is explained in the scalar version.) */
     if (has_sse) {
         const __m128 at_sse = _mm_load_ps(at);
-        const __m128 U_sse = normalize_sse(xyzzy_sse(at_sse, _mm_load_ps(up)));
-        const __m128 V_sse = xyzzy_sse(at_sse, U_sse);
-        const __m128 N_sse = normalize_sse(at_sse);
-        const __m128 rotated_sse = {
-            dotproduct_sse(position_sse, U_sse),
-            -dotproduct_sse(position_sse, V_sse),
-            -dotproduct_sse(position_sse, N_sse),
-            0.0f
-        };
+        const __m128 up_sse = _mm_load_ps(up);
+        __m128 V_sse;
+        __m128 R_sse;
+        ALfloat cosangle;
+        ALfloat mags;
+        ALfloat a;
 
-        const ALfloat mags = magnitude_sse(at_sse) * magnitude_sse(rotated_sse);
-        radians = (mags == 0.0f) ? 0.0f : SDL_acosf(dotproduct_sse(at_sse, rotated_sse) / mags);
-        if (_mm_comilt_ss(rotated_sse, _mm_setzero_ps())) {
+        a = dotproduct_sse(position_sse, up_sse);
+        V_sse = _mm_sub_ps(position_sse, _mm_mul_ps(_mm_set1_ps(a), up_sse));
+
+        mags = magnitude_sse(at_sse) * magnitude_sse(V_sse);
+        if (mags == 0.0f) {
+            radians = 0.0f;
+        } else {
+            cosangle = dotproduct_sse(at_sse, V_sse) / mags;
+            cosangle = SDL_clamp(cosangle, -1.0f, 1.0f);
+            radians = SDL_acosf(cosangle);   
+        }
+
+        R_sse = xyzzy_sse(at_sse, up_sse);
+
+        if (dotproduct_sse(R_sse, V_sse) < 0.0f) {
             radians = -radians;
         }
     } else
@@ -1820,64 +1834,63 @@ static void calculate_channel_gains(const ALCcontext *ctx, const ALsource *src, 
     #ifdef __ARM_NEON__  /* (the math is explained in the scalar version.) */
     if (has_neon) {
         const float32x4_t at_neon = vld1q_f32(at);
-        const float32x4_t U_neon = normalize_neon(xyzzy_neon(at_neon, vld1q_f32(up)));
-        const float32x4_t V_neon = xyzzy_neon(at_neon, U_neon);
-        const float32x4_t N_neon = normalize_neon(at_neon);
-        const float32x4_t rotated_neon = {
-            dotproduct_neon(position_neon, U_neon),
-            -dotproduct_neon(position_neon, V_neon),
-            -dotproduct_neon(position_neon, N_neon),
-            0.0f
-        };
+        const float32x4_t up_neon = vld1q_f32(up);
+        float32x4_t V_neon;
+        float32x4_t R_neon;
+        ALfloat cosangle;
+        ALfloat mags;
+        ALfloat a;
 
-        const ALfloat mags = magnitude_neon(at_neon) * magnitude_neon(rotated_neon);
-        radians = (mags == 0.0f) ? 0.0f : SDL_acosf(dotproduct_neon(at_neon, rotated_neon) / mags);
-        if (rotated_neon[0] < 0.0f) {
+        a = dotproduct_neon(position_neon, up_neon);
+        V_neon = vsubq_f32(position_neon, vmulq_f32(vdupq_n_f32(a), up_neon));
+
+        mags = magnitude_neon(at_neon) * magnitude_neon(V_neon);
+        if (mags == 0.0f) {
+            radians = 0.0f;
+        } else {
+            cosangle = dotproduct_neon(at_neon, V_neon) / mags;
+            cosangle = SDL_clamp(cosangle, -1.0f, 1.0f);
+            radians = SDL_acosf(cosangle);
+        }
+
+        R_neon = xyzzy_neon(at_neon, up_neon);
+
+        if (dotproduct_neon(R_neon, V_neon) < 0.0f) {
             radians = -radians;
         }
+
     } else
     #endif
 
     {
     #if NEED_SCALAR_FALLBACK
-        ALfloat U[3];
         ALfloat V[3];
-        ALfloat N[3];
-        ALfloat rotated[3];
+        ALfloat R[3];
         ALfloat mags;
+        ALfloat cosangle;
+        ALfloat a;
 
-        xyzzy(U, at, up);
-        normalize(U);
-        xyzzy(V, at, U);
-        SDL_memcpy(N, at, sizeof (N));
-        normalize(N);
+        /* Remove upwards component so it lies completely within the horizontal plane. */
+        a = dotproduct(position, up);
+        V[0] = position[0] - (a * up[0]);
+        V[1] = position[1] - (a * up[1]);
+        V[2] = position[2] - (a * up[2]);
 
-        /* we don't need the bottom row of the gluLookAt matrix, since we don't
-           translate. (Matrix * Vector) is just filling in each element of the
-           output vector with the dot product of a row of the matrix and the
-           vector. I made some of these negative to make it work for my purposes,
-           but that's not what GLU does here.
+        /* Calculate angle */
+        mags = magnitude(at) * magnitude(V);
+        if (mags == 0.0f) {
+            radians = 0.0f;
+        } else {
+            cosangle = dotproduct(at, V) / mags;
+            cosangle = SDL_clamp(cosangle, -1.0f, 1.0f);
+            radians = SDL_acosf(cosangle);
+        }
 
-           (This says gluLookAt is left-handed, so maybe that's part of it?)
-            https://stackoverflow.com/questions/25933581/how-u-v-n-camera-coordinate-system-explained-with-opengl
-         */
-        rotated[0] = dotproduct(position, U);
-        rotated[1] = -dotproduct(position, V);
-        rotated[2] = -dotproduct(position, N);
-
-        /* At this point, we have rotated vector and we can calculate the angle
-           from 0 (directly in front of where the listener is facing) to 180
-           degrees (directly behind) ... */
-
-        mags = magnitude(at) * magnitude(rotated);
-        radians = (mags == 0.0f) ? 0.0f : SDL_acosf(dotproduct(at, rotated) / mags);
-        /* and we already have what we need to decide if those degrees are on the
-           listener's left or right...
-           https://gamedev.stackexchange.com/questions/43897/determining-if-something-is-on-the-right-or-left-side-of-an-object
-           ...we already did this dot product: it's in rotated[0]. */
+        /* Get "right" vector */
+        xyzzy(R, at, up);
 
         /* make it negative to the left, positive to the right. */
-        if (rotated[0] < 0.0f) {
+        if (dotproduct(R, V) < 0.0f) {
             radians = -radians;
         }
     #endif
@@ -2569,6 +2582,16 @@ static void _alcGetIntegerv(ALCdevice *device, const ALCenum param, const ALCsiz
             *values = OPENAL_VERSION_MINOR;
             return;
 
+        case ALC_FREQUENCY:
+            if (!device) {
+                *values = 0;
+                set_alc_error(device, ALC_INVALID_DEVICE);
+                return;
+            }
+
+            *values = device->frequency;
+            return;
+
         default: break;
     }
 
@@ -2754,7 +2777,7 @@ static ALsource *get_source(ALCcontext *ctx, const ALuint name, SourceBlock **_b
         set_al_error(ctx, AL_INVALID_OPERATION);
         if (_block) *_block = NULL;
         return NULL;
-    } else if ((name == 0) || (blockidx >= ctx->num_source_blocks)) {
+    } else if ((name == 0) || (blockidx < 0) || (blockidx >= ctx->num_source_blocks)) {
         set_al_error(ctx, AL_INVALID_NAME);
         if (_block) *_block = NULL;
         return NULL;
@@ -2786,7 +2809,7 @@ static ALbuffer *get_buffer(ALCcontext *ctx, const ALuint name, BufferBlock **_b
         set_al_error(ctx, AL_INVALID_OPERATION);
         if (_block) *_block = NULL;
         return NULL;
-    } else if ((name == 0) || (blockidx >= ctx->device->playback.num_buffer_blocks)) {
+    } else if ((name == 0) || (blockidx < 0) || (blockidx >= ctx->device->playback.num_buffer_blocks)) {
         set_al_error(ctx, AL_INVALID_NAME);
         if (_block) *_block = NULL;
         return NULL;
@@ -2921,7 +2944,7 @@ static const ALchar *_alGetString(const ALenum param)
 
     return NULL;
 }
-ENTRYPOINT(const ALchar *,alGetString,(const ALenum param),(param))
+ENTRYPOINT(const ALchar *,alGetString,(ALenum param),(param))
 
 static void _alGetBooleanv(const ALenum param, ALboolean *values)
 {
@@ -3478,9 +3501,14 @@ static void _alGenSources(const ALsizei n, ALuint *names)
     ALsizei blocki;
     ALsizei i;
 
-    if (!ctx) {
+    if (n < 0) {
+        set_al_error(ctx, AL_INVALID_VALUE);
+        return;
+    } else if (!ctx) {
         set_al_error(ctx, AL_INVALID_OPERATION);
         return;
+    } else if (n == 0) {
+        return;  /* not an error, but nothing to do. */
     }
 
     if (n <= SDL_arraysize(stackobjs)) {
@@ -3589,6 +3617,7 @@ static void _alGenSources(const ALsizei n, ALuint *names)
 
         SDL_zerop(src);
         SDL_AtomicSet(&src->state, AL_INITIAL);
+        SDL_AtomicSet(&src->total_queued_buffers, 0);
         src->name = names[i];
         src->type = AL_UNDETERMINED;
         src->recalc = AL_TRUE;
@@ -3614,7 +3643,10 @@ static void _alDeleteSources(const ALsizei n, const ALuint *names)
     ALCcontext *ctx = get_current_context();
     ALsizei i;
 
-    if (!ctx) {
+    if (n < 0) {
+        set_al_error(ctx, AL_INVALID_VALUE);
+        return;
+    } else if (!ctx) {
         set_al_error(ctx, AL_INVALID_OPERATION);
         return;
     }
@@ -3906,7 +3938,7 @@ static void _alGetSourcefv(const ALuint name, const ALenum param, ALfloat *value
         case AL_REFERENCE_DISTANCE: *values = src->reference_distance; break;
         case AL_ROLLOFF_FACTOR: *values = src->rolloff_factor; break;
         case AL_MAX_DISTANCE: *values = src->max_distance; break;
-        case AL_PITCH: source_set_pitch(ctx, src, *values); break;
+        case AL_PITCH: *values = src->pitch; break;
         case AL_CONE_INNER_ANGLE: *values = src->cone_inner_angle; break;
         case AL_CONE_OUTER_ANGLE: *values = src->cone_outer_angle; break;
         case AL_CONE_OUTER_GAIN:  *values = src->cone_outer_gain; break;
@@ -3973,8 +4005,7 @@ static void _alGetSourceiv(const ALuint name, const ALenum param, ALint *values)
         case AL_SOURCE_STATE: *values = (ALint) SDL_AtomicGet(&src->state); break;
         case AL_SOURCE_TYPE: *values = (ALint) src->type; break;
         case AL_BUFFER: *values = (ALint) (src->buffer ? src->buffer->name : 0); break;
-        /* !!! FIXME: AL_BUFFERS_QUEUED is the total number of buffers pending, playing, and processed, so this is wrong. It might also have to be 1 if there's a static buffer, but I'm not sure. */
-        case AL_BUFFERS_QUEUED: *values = (ALint) SDL_AtomicGet(&src->buffer_queue.num_items); break;
+        case AL_BUFFERS_QUEUED: *values = (ALint) SDL_AtomicGet(&src->total_queued_buffers); break;
         case AL_BUFFERS_PROCESSED: *values = (ALint) SDL_AtomicGet(&src->buffer_queue_processed.num_items); break;
         case AL_SOURCE_RELATIVE: *values = (ALint) src->source_relative; break;
         case AL_LOOPING: *values = (ALint) src->looping; break;
@@ -4050,7 +4081,7 @@ static void source_play(ALCcontext *ctx, const ALsizei n, const ALuint *names)
     void *ptr;
     ALsizei i;
 
-    if (n == 0) {
+    if (n <= 0) {
         return;
     } else if (!ctx) {
         set_al_error(ctx, AL_INVALID_OPERATION);
@@ -4162,6 +4193,9 @@ static void source_stop(ALCcontext *ctx, const ALuint name)
             }
             SDL_AtomicSet(&src->state, AL_STOPPED);
             source_mark_all_buffers_processed(src);
+            if (src->stream) {
+                SDL_AudioStreamClear(src->stream);
+            }
             if (must_lock) {
                 SDL_UnlockMutex(ctx->source_lock);
             }
@@ -4228,9 +4262,10 @@ static void source_set_offset(ALsource *src, ALenum param, ALfloat value)
     if (!ctx) {
         set_al_error(ctx, AL_INVALID_OPERATION);
         return;
-    }
-
-    if (src->type == AL_STREAMING) {
+    } else if (src->type == AL_UNDETERMINED) {  /* no buffer to seek in */
+        set_al_error(ctx, AL_INVALID_OPERATION);
+        return;
+    } else if (src->type == AL_STREAMING) {
         FIXME("set_offset for streaming sources not implemented");
         return;
     }
@@ -4242,14 +4277,18 @@ static void source_set_offset(ALsource *src, ALenum param, ALfloat value)
 
     switch (param) {
         case AL_SAMPLE_OFFSET:
-            offset = value * framesize;
+            offset = ((int) value) * framesize;
             break;
         case AL_SEC_OFFSET:
-            offset = value * freq * framesize;
+            offset = ((int) value) * freq * framesize;
             break;
         case AL_BYTE_OFFSET:
-            offset = ((int)value / framesize) * framesize;
+            offset = (((int) value) / framesize) * framesize;
             break;
+        default:
+            SDL_assert(!"Unexpected source offset type!");
+            set_al_error(ctx, AL_INVALID_ENUM);  /* this is a MojoAL bug, not an app bug, but we'll try to recover. */
+            return;
     }
 
     if ((offset < 0) || (offset > bufflen)) {
@@ -4267,6 +4306,10 @@ static void source_set_offset(ALsource *src, ALenum param, ALfloat value)
         src->offset = offset;
         SDL_UnlockMutex(ctx->source_lock);
     }
+
+    if (SDL_AtomicGet(&src->state) != AL_PLAYING) {
+        src->offset_latched = SDL_TRUE;
+    }
 }
 
 /* deal with alSourcePlay and alSourcePlayv (etc) boiler plate... */
@@ -4274,7 +4317,9 @@ static void source_set_offset(ALsource *src, ALenum param, ALfloat value)
     void alSource##alfn(ALuint name) { source_##fn(get_current_context(), name); } \
     void alSource##alfn##v(ALsizei n, const ALuint *sources) { \
         ALCcontext *ctx = get_current_context(); \
-        if (!ctx) { \
+        if (n < 0) { \
+            set_al_error(ctx, AL_INVALID_VALUE); \
+        } else if (!ctx) { \
             set_al_error(ctx, AL_INVALID_OPERATION); \
         } else { \
             ALsizei i; \
@@ -4318,8 +4363,11 @@ static void _alSourceQueueBuffers(const ALuint name, const ALsizei nb, const ALu
         return;
     }
 
-    if (nb == 0) {
-        return;  /* nothing to do. */
+    if (nb < 0) {
+        set_al_error(ctx, AL_INVALID_VALUE);
+        return;
+    } else if (nb == 0) {
+        return;  /* not an error, but nothing to do. */
     }
 
     for (i = nb; i > 0; i--) {  /* build list in reverse */
@@ -4446,6 +4494,7 @@ static void _alSourceQueueBuffers(const ALuint name, const ALsizei nb, const ALu
         SDL_AtomicSetPtr(&queueend->next, ptr);
     } while (!SDL_AtomicCASPtr(&src->buffer_queue.just_queued, ptr, queue));
 
+    SDL_AtomicAdd(&src->total_queued_buffers, (int) nb);
     SDL_AtomicAdd(&src->buffer_queue.num_items, (int) nb);
 }
 ENTRYPOINTVOID(alSourceQueueBuffers,(ALuint name, ALsizei nb, const ALuint *bufnames),(name,nb,bufnames))
@@ -4467,8 +4516,11 @@ static void _alSourceUnqueueBuffers(const ALuint name, const ALsizei nb, ALuint 
         return;
     }
 
-    if (nb == 0) {
-        return;  /* nothing to do. */
+    if (nb < 0) {
+        set_al_error(ctx, AL_INVALID_VALUE);
+        return;
+    } else if (nb == 0) {
+        return;  /* not an error, but nothing to do. */
     }
 
     if (((ALsizei) SDL_AtomicGet(&src->buffer_queue_processed.num_items)) < nb) {
@@ -4477,6 +4529,7 @@ static void _alSourceUnqueueBuffers(const ALuint name, const ALsizei nb, ALuint 
     }
 
     SDL_AtomicAdd(&src->buffer_queue_processed.num_items, -((int) nb));
+    SDL_AtomicAdd(&src->total_queued_buffers, -((int) nb));
 
     obtain_newly_queued_buffers(&src->buffer_queue_processed);
 
@@ -4521,9 +4574,14 @@ static void _alGenBuffers(const ALsizei n, ALuint *names)
     ALsizei blocki;
     ALsizei i;
 
-    if (!ctx) {
+    if (n < 0) {
+        set_al_error(ctx, AL_INVALID_VALUE);
+        return;
+    } else if (!ctx) {
         set_al_error(ctx, AL_INVALID_OPERATION);
         return;
+    } else if (n == 0) {
+        return;  /* not an error, but nothing to do. */
     }
 
     if (n <= SDL_arraysize(stackobjs)) {
@@ -4635,9 +4693,14 @@ static void _alDeleteBuffers(const ALsizei n, const ALuint *names)
     ALCcontext *ctx = get_current_context();
     ALsizei i;
 
-    if (!ctx) {
+    if (n < 0) {
+        set_al_error(ctx, AL_INVALID_VALUE);
+        return;
+    } else if (!ctx) {
         set_al_error(ctx, AL_INVALID_OPERATION);
         return;
+    } else if (n == 0) {
+        return;  /* not an error, but nothing to do. */
     }
 
     for (i = 0; i < n; i++) {
@@ -4693,6 +4756,13 @@ static void _alBufferData(const ALuint name, const ALenum alfmt, const ALvoid *d
     int prevrefcount;
 
     if (!buffer) return;
+
+    if (size < 0) {
+        set_al_error(ctx, AL_INVALID_VALUE);
+        return;
+    } else if (freq < 0) {
+        return;  /* not an error, but nothing to do. */
+    }
 
     if (!alcfmt_to_sdlfmt(alfmt, &sdlfmt, &channels, &framesize)) {
         set_al_error(ctx, AL_INVALID_VALUE);

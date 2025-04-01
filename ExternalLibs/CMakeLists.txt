@@ -44,6 +44,7 @@ if(AQUARIA_USE_SDL2 AND SDL2_FOUND)
 endif()
 
 if(AQUARIA_USE_MOJOAL)
+    add_definitions(-DAL_LIBTYPE_STATIC=1)
     set(xsrc ${xsrc} mojoal.c)
     set(OPENAL_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/AL" CACHE PATH "OpenAL include directory" FORCE)
 else()
