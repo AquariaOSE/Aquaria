@@ -578,7 +578,7 @@ void Path::update(float dt)
 
 		if (active && pathType == PATH_STEAM && !game->isWorldPaused())
 		{
-			animOffset -= 1000*0.00002f;
+			animOffset -= dt*1.2f;
 
 
 			if (nodes.size() >= 2)
