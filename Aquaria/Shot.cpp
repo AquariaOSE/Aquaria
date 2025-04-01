@@ -741,8 +741,6 @@ bool Shot::isObstructed(float dt) const
 
 void Shot::onUpdate(float dt)
 {
-	CollideQuad::onUpdate(dt);
-
 	if (game->isPaused()) return;
 	if (game->isWorldPaused()) return;
 	if (!shotData) return;
@@ -801,7 +799,7 @@ void Shot::onUpdate(float dt)
 			target = 0;
 		}
 	}
-
+	CollideQuad::onUpdate(dt);
 	updateSegments(position);
 	if (!dead)
 	{
