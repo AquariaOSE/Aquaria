@@ -933,3 +933,25 @@ void Shot::rotateToVec(Vector addVec, float time, int offsetAngle)
 	}
 }
 
+void Shot::luaDebugMsg(const std::string &func, const std::string &msg)
+{
+	debugLog(std::string("luaScriptError: Shot [") + this->getName() + "]: " + func + " : " + msg);
+}
+
+int Shot::callVariadic(const char* func, lua_State* L, int nparams)
+{
+	if (script)
+	{
+		int res = script->callVariadic(func, L, nparams, this);
+		if (res < 0)
+			luaDebugMsg(func, script->getLastError());
+		else
+			return res;
+	}
+	return 0;
+}
+
+int Shot::messageVariadic(lua_State * L, int nparams)
+{
+	return callVariadic("msg", L, nparams);
+}

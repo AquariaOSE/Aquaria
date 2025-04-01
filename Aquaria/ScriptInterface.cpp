@@ -5915,6 +5915,19 @@ luaFunc(node_msg)
 	luaReturnNil();
 }
 
+luaFunc(shot_msg)
+{
+	Shot *s = getShot(L);
+	if (s)
+	{
+		// pass everything on the stack except the entity pointer
+		int res = s->messageVariadic(L, lua_gettop(L) - 1);
+		if (res >= 0)
+			return res;
+	}
+	luaReturnNil();
+}
+
 luaFunc(entity_updateCurrents)
 {
 	Entity *e = entity(L);
@@ -10366,6 +10379,7 @@ static const struct {
 	luaRegister(entity_getPushDamage),
 	luaRegister(entity_msg),
 	luaRegister(node_msg),
+	luaRegister(shot_msg),
 	luaRegister(entity_updateMovement),
 	luaRegister(entity_updateCurrents),
 	luaRegister(entity_updateLocalWarpAreas),

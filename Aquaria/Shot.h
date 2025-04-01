@@ -124,6 +124,10 @@ public:
 	inline bool isActive() const { return !dead; }
 	inline const char *getName() const { return shotData ? shotData->name.c_str() : ""; }
 
+	int callVariadic(const char *func, lua_State *L, int nparams);
+	int messageVariadic(lua_State *L, int nparams);
+	void luaDebugMsg(const std::string &func, const std::string &msg);
+
 	float extraDamage;
 	float homingness;
 	float lifeTime;
