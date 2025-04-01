@@ -88,10 +88,6 @@ BitmapText::BitmapText(const BmpFont& bmpFont)
 
 }
 
-void BitmapText::autoKern()
-{
-}
-
 int BitmapText::getWidthOnScreen()
 {
 	return text.size()*(fontDrawSize/2);
@@ -102,7 +98,7 @@ void BitmapText::setAlign(Align align)
 	this->align = align;
 }
 
-std::string BitmapText::getText()
+const std::string& BitmapText::getText()
 {
 	return this->text;
 }
@@ -179,23 +175,6 @@ void BitmapText::formatText()
 	{
 		lines.push_back(text);
 	}
-	colorIndices.clear();
-}
-
-void BitmapText::updateWordColoring()
-{
-	colorIndices.resize(lines.size());
-	for (size_t i = 0; i < colorIndices.size(); i++)
-	{
-		colorIndices[i].resize(lines[i].size());
-		for (size_t j = 0; j < colorIndices[i].size(); j++)
-		{
-			colorIndices[i][j] = Vector(1,1,1);
-		}
-	}
-
-
-
 }
 
 bool BitmapText::isEmpty()
@@ -255,22 +234,10 @@ void BitmapText::onUpdate(float dt)
 	}
 }
 
-Vector BitmapText::getColorIndex(size_t i, size_t j)
-{
-	Vector c(1,1,1);
-	if ( i < colorIndices.size() && j < colorIndices[i].size())
-	{
-		c = colorIndices[i][j];
-	}
-	return c;
-}
-
 void BitmapText::onRender(const RenderState& rs) const
 {
-	const Vector top = bmpFont.fontTopColor;
-	const Vector btm = bmpFont.fontBtmColor;
-	float top_color[3] = {top.x*color.x, top.y*color.y, top.z*color.z};
-	float bottom_color[3] = {btm.x*color.x, btm.y*color.y, btm.z*color.z};
+	const Vector top = bmpFont.fontTopColor * color;
+	const Vector btm = bmpFont.fontBtmColor * color;
 
 	glEnable(GL_TEXTURE_2D);
 
@@ -304,7 +271,7 @@ void BitmapText::onRender(const RenderState& rs) const
 			float la = 1.0f-(scrollDelay/scrollSpeed);
 
 
-			font->DrawString(theLine, scale, x, y, top_color, bottom_color, alpha.x, la);
+			font->DrawString(theLine, scale, x, y, &top.x, &btm.x, alpha.x, la);
 			y += adj;
 		}
 	}
@@ -319,7 +286,7 @@ void BitmapText::onRender(const RenderState& rs) const
 				font->GetStringSize(lines[i], &sz);
 				x = -sz.first*0.5f*scale;
 			}
-			font->DrawString(lines[i], scale, x, y, top_color, bottom_color, alpha.x, 1);
+			font->DrawString(lines[i], scale, x, y, &top.x, &btm.x, alpha.x, 1);
 			y += adj;
 		}
 	}
