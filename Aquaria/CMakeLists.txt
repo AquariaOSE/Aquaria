@@ -17,7 +17,6 @@ SET(AQUARIA_SRCS
     Continuity.cpp
     Continuity.h
     Credits.cpp
-    CurrentRender.cpp
     custom-fields.h
     Damage.h
     DSQ.cpp
@@ -64,6 +63,8 @@ SET(AQUARIA_SRCS
     PathFinding.cpp
     PathFinding.h
     PathRender.cpp
+    QuadSegmentRender.cpp
+    QuadSegmentRender.h
     RecipeMenuEntry.cpp
     RecipeMenuEntry.h
     SceneEditor.cpp
@@ -87,7 +88,6 @@ SET(AQUARIA_SRCS
     States.h
     StatsAndAchievements.cpp
     StatsAndAchievements.h
-    SteamRender.cpp
     StringBank_gen.h
     SubtitlePlayer.cpp
     SubtitlePlayer.h

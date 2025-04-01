@@ -387,6 +387,8 @@ void Path::refreshScript()
 		is >> v;
 		if (v != 0)
 			currentMod = v;
+
+		amount = 1; // Used to modulate alpha when rendering -> always visible
 	}
 	else if (label == "warpnode")
 	{

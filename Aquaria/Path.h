@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "../BBGE/ScriptObject.h"
 #include "Rect.h"
 #include "Scriptable.h"
+#include "GameEnums.h"
 
 #undef PATH_MAX  // May be set by a system header.
 
@@ -38,39 +39,6 @@ public:
 	PathNode() { maxSpeed = -1;}
 	Vector position;
 	int maxSpeed;
-};
-
-enum PathType
-{
-	PATH_NONE			= 0,
-	PATH_CURRENT		= 1,
-	PATH_STEAM			= 2,
-	PATH_LI				= 3,
-	PATH_SAVEPOINT		= 4,
-	PATH_WARP			= 5,
-	PATH_SPIRITPORTAL	= 6,
-	PATH_BGSFXLOOP		= 7,
-	PATH_RADARHIDE		= 8,
-	PATH_COOK			= 9,
-	PATH_WATERBUBBLE	= 10,
-	PATH_GEM			= 11,
-	PATH_SETING			= 12,
-	PATH_SETENT			= 13,
-	PATH_ZOOM			= 14,
-	PATH_MAX
-};
-
-enum LocalWarpType
-{
-	LOCALWARP_NONE		= 0,
-	LOCALWARP_IN		= 1,
-	LOCALWARP_OUT		= 2
-};
-
-enum PathShape
-{
-	PATHSHAPE_RECT		= 0,
-	PATHSHAPE_CIRCLE	= 1
 };
 
 class Path : public ScriptObject, public Scriptable

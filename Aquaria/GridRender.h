@@ -112,28 +112,6 @@ protected:
 	std::vector<DrawCallParams> drawcalls;
 };
 
-class CurrentRender : public RenderObject
-{
-public:
-	CurrentRender();
-protected:
-	float rippleDelay;
-	void onRender(const RenderState& rs) const OVERRIDE;
-	void onUpdate(float dt) OVERRIDE;
-	size_t writeVBOData(float *p);
-	DynamicGPUBuffer vbo;
-	size_t _verticesToRender;
-};
-
-class SteamRender : public RenderObject
-{
-public:
-	SteamRender();
-protected:
-	float rippleDelay;
-	void onRender(const RenderState& rs) const OVERRIDE;
-};
-
 struct SongLinePoint
 {
 	Vector color;

@@ -207,7 +207,7 @@ void DynamicGPUBuffer::updatePartial(size_t offset, const void * data, size_t si
     if(_h_data)
     {
         assert(offset + size <= _h_cap);
-        memcpy((char*)_h_data + offset, data, size); 
+        memcpy((char*)_h_data + offset, data, size);
     }
 }
 

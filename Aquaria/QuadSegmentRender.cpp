@@ -18,26 +18,51 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
-#include "GridRender.h"
+
+#include "QuadSegmentRender.h"
 #include "RenderBase.h"
-#include "Path.h"
 #include "Game.h"
 
-#include "../BBGE/AfterEffect.h"
 
 CurrentRender::CurrentRender()
-	: RenderObject()
-	, vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
+	: QuadSegmentRender(PATH_CURRENT, true)
 {
-	cull = false;
-
-	setTexture("Particles/Current");
-	repeatTexture = true;
-	rippleDelay = 2;
-	_verticesToRender = 0;
+	setTexture("particles/current");
 }
 
-void CurrentRender::onRender(const RenderState& rs) const
+CurrentRender::~CurrentRender()
+{
+}
+
+SteamRender::SteamRender()
+	: QuadSegmentRender(PATH_STEAM, false)
+{
+	setTexture("particles/steam");
+	alpha = 0.7f;
+	setBlendType(BLEND_ADD);
+}
+
+SteamRender::~SteamRender()
+{
+}
+
+QuadSegmentRender::QuadSegmentRender(PathType pt, bool shortenSegs)
+	: RenderObject()
+	, vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
+	, _verticesToRender(0)
+	, pathtype(pt)
+	, _shortenSegs(shortenSegs)
+{
+	cull = false;
+	repeatTexture = true;
+}
+
+QuadSegmentRender::~QuadSegmentRender()
+{
+}
+
+
+void QuadSegmentRender::onRender(const RenderState& rs) const
 {
 	if(const size_t N = _verticesToRender)
 	{
@@ -49,14 +74,14 @@ void CurrentRender::onRender(const RenderState& rs) const
 	}
 }
 
-void CurrentRender::onUpdate(float dt)
+void QuadSegmentRender::onUpdate(float dt)
 {
 	// Ideally we wouldn't have to update this per-frame.
 	// With a specialized shader and a uniform texcoordOffset variable the actual vertex data
 	// could be map-static and this would all be so much simpler...
 
 	size_t num = 0;
-	for (const Path *P = game->getFirstPathOfType(PATH_CURRENT); P; P = P->nextOfType)
+	for (const Path *P = game->getFirstPathOfType(pathtype); P; P = P->nextOfType)
 	{
 		if (!P->active)
 			continue;
@@ -84,17 +109,20 @@ void CurrentRender::onUpdate(float dt)
 	_verticesToRender = verts;
 }
 
-size_t CurrentRender::writeVBOData(float *p)
+size_t QuadSegmentRender::writeVBOData(float *p)
 {
 	size_t ret = 0;
+	const bool shorten = _shortenSegs;
 
-	for (const Path *P = game->getFirstPathOfType(PATH_CURRENT); P; P = P->nextOfType)
+	for (const Path *P = game->getFirstPathOfType(pathtype); P; P = P->nextOfType)
 	{
 		if (!P->active)
 			continue;
 
 		const float w = P->rect.getWidth();
 		const float w2 = w * 0.5f;
+		const float ao = P->animOffset;
+		const float a = P->amount * alpha.x;
 
 		size_t sz = P->nodes.size()-1;
 		for (size_t n = 0; n < sz; n++)
@@ -104,10 +132,13 @@ size_t CurrentRender::writeVBOData(float *p)
 			Vector p1 = n1->position;
 			Vector p2 = n2->position;
 			Vector diff = p2-p1;
-			Vector d = diff;
-			d.setLength2D(w);
-			p1 -= d*0.75f;
-			p2 += d*0.75f;
+			if(shorten)
+			{
+				Vector d = diff;
+				d.setLength2D(w);
+				p1 -= d*0.75f;
+				p2 += d*0.75f;
+			}
 			diff = p2 - p1;
 
 			if (diff.isZero())
@@ -131,8 +162,6 @@ size_t CurrentRender::writeVBOData(float *p)
 				Vector r7 = p2+pl;
 				Vector r8 = p2+pr;
 
-				const float ao = P->animOffset;
-				const float a = P->amount;
 				const float len = diff.getLength2D();
 				const float texScale = len/256.0f;
 
