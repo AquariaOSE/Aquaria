@@ -273,12 +273,13 @@ void Emitter::onRender(const RenderState& rs) const
 			glPushMatrix();
 
 				glTranslatef(p->pos.x, p->pos.y,0);
-				glScalef(width * p->scale.x, height * p->scale.y, 0);
 
 				glRotatef(p->rot.z, 0, 0, 1);
 
 				if (flip)
 					glRotatef(180, 0, 1, 0);
+
+				glScalef(width * p->scale.x, height * p->scale.y, 0);
 
 				rquad->render(rs);
 
