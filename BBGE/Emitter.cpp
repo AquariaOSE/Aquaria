@@ -64,6 +64,7 @@ Emitter::Emitter(ParticleEffect *pe) : Quad(), pe(pe)
 {
 	//HACK:
 	cull = false;
+	lastDTDifference = 0;
 }
 
 void Emitter::destroy()
@@ -214,7 +215,6 @@ void Emitter::onUpdate(float dt)
 void Emitter::start()
 {
 	didOne = false;
-	lastDTDifference = 0;
 	lastSpawn = getSpawnPosition();
 }
 
