@@ -99,7 +99,7 @@ public:
 		for (i = 0; i < sz; i++)
 		{
 			//Make sure character is in range
-			unsigned int c = (unsigned char)text[i];
+			unsigned int c = (unsigned int)text[i];
 			if (c < header.start_char || c > header.end_char)
 				continue;
 
