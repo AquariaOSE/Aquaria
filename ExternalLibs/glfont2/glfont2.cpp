@@ -25,10 +25,12 @@ using namespace std;
 #include "glfont2.h"
 using namespace glfont;
 
+
 //*******************************************************************
 //GLFont Class Implementation
 //*******************************************************************
 GLFont::GLFont ()
+	: vbo(GPUBUF_STREAM | GPUBUF_VERTEXBUF)
 {
 	//Initialize header to safe state
 	header.tex = -1;

@@ -13,7 +13,8 @@ enum BufUsage
     GPUBUF_BINDING_MASK = 0x01,
     // usage
     GPUBUF_DYNAMIC    = 0x00,
-    GPUBUF_STATIC     = 0x10
+    GPUBUF_STATIC     = 0x10,
+    GPUBUF_STREAM     = 0x20,
 };
 
 enum BufDataType

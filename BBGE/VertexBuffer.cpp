@@ -21,6 +21,8 @@ static unsigned toGlUsage(unsigned usage)
 {
     if(usage & GPUBUF_STATIC)
         return GL_STATIC_DRAW_ARB;
+    if(usage & GPUBUF_STREAM)
+        return GL_STREAM_DRAW_ARB;
     return GL_DYNAMIC_DRAW;
 }
 

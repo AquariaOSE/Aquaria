@@ -10,6 +10,11 @@
 
 #include <assert.h>
 
+// HACK: use engine functions because i can't be bothered to
+// write pure opengl functions anymore until this all gets ripped
+// out anyway
+#include "../BBGE/VertexBuffer.h"
+
 //*******************************************************************
 //GLFont Interface
 //*******************************************************************
@@ -41,6 +46,8 @@ private:
 		unsigned int start_char, end_char;
 		GLFontChar *chars;
 	} header;
+
+	mutable DynamicGPUBuffer vbo;
 
 public:
 
@@ -85,54 +92,78 @@ public:
 		const std::basic_string<T> &text, float scalar, float x,
 		float y, const float *top_color, const float *bottom_color, float alpha, float lastAlpha) const
 	{
-		unsigned int i;
-		GLFontChar *glfont_char;
-		float width, height;
+		const size_t sz = text.size();
+		const size_t bytes = sz * 4 * (2+2+4) * sizeof(float);
 
-		//Begin rendering quads
-		glBegin(GL_QUADS);
+		const float tw = header.tex_width * scalar;
+		const float th = header.tex_height * scalar;
 
-		unsigned int sz = text.size();
-
-		float a = 0;
-		//Loop through characters
-		for (i = 0; i < sz; i++)
+		do
 		{
-			//Make sure character is in range
-			unsigned int c = (unsigned int)text[i];
-			if (c < header.start_char || c > header.end_char)
-				continue;
+			float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC_RGBA, bytes, GPUACCESS_DEFAULT);
 
-			//Get pointer to glFont character
-			glfont_char = &header.chars[c - header.start_char];
+			for(size_t i = 0; i < text.size(); ++i)
+			{
+				//Make sure character is in range
+				unsigned int c = (unsigned int)text[i];
+				if (c < header.start_char || c > header.end_char)
+					continue;
 
-			//Get width and height
-			width = (glfont_char->dx * header.tex_width) * scalar;
-			height = (glfont_char->dy * header.tex_height) * scalar;
+				const GLFontChar &fc = header.chars[c - header.start_char];
 
-			if (i == (sz-1))
-				a = alpha*lastAlpha;
-			else
-				a = alpha;
+				const float width = fc.dx * tw;
+				const float height = fc.dy * th;
 
-			//Specify colors, vertices, and texture coordinates
-			glColor4f(top_color[0], top_color[1], top_color[2], a);
-			glTexCoord2f(glfont_char->tx1, glfont_char->ty1);
-			glVertex3f(x, y, 0.0F);
-			glTexCoord2f(glfont_char->tx2, glfont_char->ty1);
-			glVertex3f(x + width, y, 0.0F);
-			glColor4f(bottom_color[0], bottom_color[1], bottom_color[2], a);
-			glTexCoord2f(glfont_char->tx2, glfont_char->ty2);
-			glVertex3f(x + width, y + height, 0.0F);
-			glTexCoord2f(glfont_char->tx1, glfont_char->ty2);
-			glVertex3f(x, y + height, 0.0F);
+				float a = alpha;
+				if (i == (sz-1))
+					a *= lastAlpha;
 
-			//Move to next character
-			x += width;
+				*p++ = x; // x
+				*p++ = y; // y
+				*p++ = fc.tx1; // u
+				*p++ = fc.ty1; // v
+				*p++ = top_color[0];
+				*p++ = top_color[1];
+				*p++ = top_color[2];
+				*p++ = a;
+
+				*p++ = x + width; // x
+				*p++ = y; // y
+				*p++ = fc.tx2; // u
+				*p++ = fc.ty1; // v
+				*p++ = top_color[0];
+				*p++ = top_color[1];
+				*p++ = top_color[2];
+				*p++ = a;
+
+				*p++ = x + width; // x
+				*p++ = y + height; // y
+				*p++ = fc.tx2; // u
+				*p++ = fc.ty2; // v
+				*p++ = bottom_color[0];
+				*p++ = bottom_color[1];
+				*p++ = bottom_color[2];
+				*p++ = a;
+
+				*p++ = x; // x
+				*p++ = y + height; // y
+				*p++ = fc.tx1; // u
+				*p++ = fc.ty2; // v
+				*p++ = bottom_color[0];
+				*p++ = bottom_color[1];
+				*p++ = bottom_color[2];
+				*p++ = a;
+
+				x += width;
+			}
 		}
+		while(!vbo.commitWrite());
 
-		//Stop rendering quads
-		glEnd();
+		vbo.apply();
+
+		size_t last = sz * 4;
+		for(size_t i = 0; i < last; i += 4)
+			glDrawArrays(GL_TRIANGLE_FAN, i, 4);
 	}
 };
 
