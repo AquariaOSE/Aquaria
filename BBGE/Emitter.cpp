@@ -102,25 +102,35 @@ Particle *Emitter::spawnParticle(const Vector& spawnpos)
 
 	p->pos = spawnpos;
 
-	float finalRadius = data.randomSpawnRadius + rng.f01() * data.randomSpawnRadiusRange;
-
 	{
-		float a = randAngle();
+		const float finalRadius = data.randomSpawnRadius + rng.f01() * data.randomSpawnRadiusRange;
+		const float a = randAngle();
 		p->pos += Vector(sinf(a)*finalRadius * data.randomSpawnMod.x, cosf(a)*finalRadius * data.randomSpawnMod.y);
 	}
 
 	{
-		float sz = lerp(data.randomScale1, data.randomScale2, rng.f01());
+		const float sz = lerp(data.randomScale1, data.randomScale2, rng.f01());
 		p->scale *= sz;
-		if(p->scale.data)
-			p->scale.data->target *= sz;
+		if(InterpolatedVectorData *d = p->scale.data)
+		{
+			d->from *= sz;
+			d->target *= sz;
+			for(size_t i = 0; i < d->path.getNumPathNodes(); ++i)
+				d->path[i].value *= sz;
+		}
 	}
 
 	if (data.randomRotationRange > 0)
 	{
-		p->rot.z = rng.f01() * data.randomRotationRange;
-		if(p->rot.data)
-			p->rot.data->target.z += p->rot.z;
+		const float r = rng.f01() * data.randomRotationRange;
+		p->rot.z = r;
+		if(InterpolatedVectorData *d = p->scale.data)
+		{
+			d->target.z += r;
+			d->from.z += r;
+			for(size_t i = 0; i < d->path.getNumPathNodes(); ++i)
+				d->path[i].value.z += r;
+		}
 	}
 
 	if (data.randomVelocityMagnitude > 0)
