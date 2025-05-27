@@ -209,7 +209,7 @@ public:
 	Animation *getCurrentAnimationOrNull();
 	void animate(const std::string &animation, int loop);
 	void update(float dt);
-	void updateBones();
+	void updateBones(bool animLooped);
 	void keyframeReached(SkeletalKeyframe *k, size_t idx);
 	void stopAnimation();
 	float getAnimationLength();
@@ -246,6 +246,9 @@ public:
 	float animationLength;
 	size_t currentAnimation;
 	bool animating;
+
+private:
+	void _interpolateKeyframes(SkeletalKeyframe *key1, SkeletalKeyframe *key2, float t01);
 
 
 };

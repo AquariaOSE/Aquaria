@@ -539,6 +539,7 @@ void AnimationLayer::playAnimation(int idx, int loop)
 	if(idx != currentAnimation || !loop)
 		lastKeyframeIndex = INITIAL_KEYFRAME_IDX;
 
+	// Any animlayer except the base layer interpolate between anims
 	if (!(&s->animLayers[0] == this))
 	{
 		fallThru = 1;
@@ -874,6 +875,7 @@ void AnimationLayer::update(float dt)
 	timeMultiplier.update(dt);
 	if (animating)
 	{
+		bool didLoop = false;
 		timer += dt*timeMultiplier.x;
 
 		if (timer >= animationLength)
@@ -890,13 +892,14 @@ void AnimationLayer::update(float dt)
 				if (loop > 0)
 					loop --;
 				timer = leftover;
+				didLoop = true;
 			}
 			else
 			{
 				stopAnimation();
 			}
 		}
-		updateBones();
+		updateBones(didLoop);
 	}
 	else if (!animating)
 	{
@@ -905,7 +908,7 @@ void AnimationLayer::update(float dt)
 			fallThru -= dt * fallThruSpeed;
 			if (fallThru < 0)
 				fallThru = 0;
-			updateBones();
+			updateBones(false);
 		}
 	}
 }
@@ -1989,6 +1992,10 @@ bool AnimationLayer::contains(const Bone *b) const
 
 void AnimationLayer::keyframeReached(SkeletalKeyframe * k, size_t idx)
 {
+	/*std::ostringstream os;
+	os << "Reached keyframe " << idx;
+	debugLog(os.str());*/
+
 	if (!k->sound.empty())
 	{
 		core->sound->playSfx(k->sound);
@@ -2006,7 +2013,7 @@ void AnimationLayer::keyframeReached(SkeletalKeyframe * k, size_t idx)
 	}
 }
 
-void AnimationLayer::updateBones()
+void AnimationLayer::updateBones(bool animLooped)
 {
 	if (!animating && !(&s->animLayers[0] == this) && fallThru == 0) return;
 
@@ -2014,19 +2021,39 @@ void AnimationLayer::updateBones()
 	SkeletalKeyframe *key1; // .t <= timer
 	SkeletalKeyframe *key2; // .t >= timer
 
+	const unsigned maxidx = (unsigned)a->keyframes.size() - 1;
+	if(!maxidx)
+	{
+		key1 = key2 = &a->keyframes[0];
+		if(lastKeyframeIndex)
+		{
+			keyframeReached(key1, 0);
+			lastKeyframeIndex = 0;
+		}
+	}
+	else
 	{
 		int last = lastKeyframeIndex;
 		if(last == RESET_KEYFRAME_IDX) // Requested to skip keyframes?
 			last = a->getKeyframeIndexBefore(timer);
 
-		const unsigned maxidx = (unsigned)a->keyframes.size() - 1;
-		unsigned curidx = std::max(0, last); // signed min() is intentional, this covers the special case of -1 to start at 0 regardless
+		// If looping around, go to the end first
+		float mytime = timer;
+		if(animLooped)
+			mytime += a->getLastKeyframe()->t; // Overshoot; will be clamped
+
+		unsigned curidx = std::max(0, last); // signed max() is intentional, this covers the special case of -1 to start at 0 regardless
+
+		// This is mainly for the anim editor -- when going back in time, find the corresponding keyframe
+		key1 = &a->keyframes[curidx];
+		if(mytime < key1->t)
+			curidx = a->getKeyframeIndexBefore(mytime);
 
 		// Assume a big timer step that would potentially step over multiple keyframes (which we don't want!)
 		// So we step keyframes until we catch up to the timer, so that (key1->t <= timer <= key2->t).
-		for(unsigned i = 0; i <= maxidx; ++i)
+		for(;;)
 		{
-			key1 = &a->keyframes[curidx];
+			key2 = key1 = &a->keyframes[curidx];
 
 			if((int)curidx != last)
 			{
@@ -2034,28 +2061,35 @@ void AnimationLayer::updateBones()
 				last = (int)curidx;
 			}
 
-			unsigned nextidx = curidx + 1;
-			if(nextidx > maxidx)
+			while(curidx != maxidx) // Definitely get out when looping around fully once
 			{
-				if(key1->t < timer) // past the last keyframe? just stay there (unless the timer wraps too)
-				{
-					key2 = key1;
-					break;
-				}
-				nextidx = 0;
-			}
-			key2 = &a->keyframes[nextidx];
+				key1 = &a->keyframes[curidx];
+				++curidx;
+				key2 = &a->keyframes[curidx];
 
-			if((key1->t <= timer && timer <= key2->t) || !maxidx)
+				if(mytime < key2->t) // Target keyframe not yet reached?
+					goto proceed;
+
+				if((int)curidx != last)
+				{
+					keyframeReached(key2, curidx);
+					last = (int)curidx;
+				}
+			}
+
+			if(!animLooped)
 				break;
 
-			curidx = nextidx;
+			// Restart running anim from the beginning
+			animLooped = false;
+			mytime = timer;
+			curidx = 0;
 		}
-
+proceed:
 		lastKeyframeIndex = last;
 	}
 
-	float diff, dt;
+	float dt;
 	{
 		const float t1 = key1->t;
 		const float t2 = key2->t;
@@ -2067,6 +2101,12 @@ void AnimationLayer::updateBones()
 			dt = 0;
 	}
 
+	_interpolateKeyframes(key1, key2, dt);
+}
+
+void AnimationLayer::_interpolateKeyframes(SkeletalKeyframe* key1, SkeletalKeyframe* key2, float t01)
+{
+	const float dt = t01; // no it's not a difftime here
 	for (size_t i = 0; i < s->bones.size(); i++)
 	{
 		Bone *b = s->bones[i];
@@ -2165,7 +2205,7 @@ void SkeletalSprite::updateBones()
 	{
 		for (size_t i = 0; i < animLayers.size(); i++)
 		{
-			animLayers[i].updateBones();
+			animLayers[i].updateBones(false);
 		}
 	}
 
