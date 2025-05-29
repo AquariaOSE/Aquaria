@@ -61,6 +61,12 @@ Texture::~Texture()
 
 void Texture::readRGBA(unsigned char *pixels) const
 {
+	if(!gltexid)
+	{
+		memset(pixels, 0xff, sizeBytes());
+		return;
+	}
+
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glBindTexture(GL_TEXTURE_2D, gltexid);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
