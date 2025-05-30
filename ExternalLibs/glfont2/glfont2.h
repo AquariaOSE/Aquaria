@@ -93,6 +93,9 @@ public:
 		float y, const float *top_color, const float *bottom_color, float alpha, float lastAlpha) const
 	{
 		const size_t sz = text.size();
+		if(!sz)
+			return;
+
 		const size_t bytes = sz * 4 * (2+2+4) * sizeof(float);
 
 		const float tw = header.tex_width * scalar;

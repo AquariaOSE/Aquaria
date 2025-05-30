@@ -84,6 +84,9 @@ void* DynamicGPUBuffer::beginWrite(BufDataType type, size_t newsize, unsigned ac
     _size = newsize;
     _datatype = type;
 
+    if(!newsize)
+        return NULL;
+
     if(_HasARB)
     {
         const unsigned id = _ensureDBuf();
