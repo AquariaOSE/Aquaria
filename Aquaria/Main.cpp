@@ -49,7 +49,7 @@ extern "C" int main(int argc,char *argv[])
 	// Couple pointers to help enhance entropy, suppported by the system's ASLR if available
 	{
 		void *p = malloc(1);
-		Randomness::init((uintptr_t)argv, (uintptr_t)&dsqParam, (uintptr_t)&(malloc), (uintptr_t)&p);
+		Randomness::init((uintptr_t)argv, (uintptr_t)&dsqParam, (uintptr_t)&(malloc), (uintptr_t)p);
 		free(p);
 	}
 
