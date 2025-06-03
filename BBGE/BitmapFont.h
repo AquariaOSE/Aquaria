@@ -37,6 +37,7 @@ struct BmpFont
 	glfont::GLFont * const font;
 	float scale;
 	bool loaded;
+	unsigned gltexid;
 
 	Vector fontTopColor;
 	Vector fontBtmColor;

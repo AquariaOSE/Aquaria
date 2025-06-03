@@ -148,6 +148,7 @@ void GLFont::Destroy (void)
 		delete[] header.chars;
 		header.chars = NULL;
 	}
+	vbo.dropBuffer();
 }
 //*******************************************************************
 void GLFont::GetTexSize (std::pair<int, int> *size) const

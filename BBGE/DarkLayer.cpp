@@ -38,11 +38,14 @@ void DarkLayer::unloadDevice()
 {
 	if (useFrameBuffer)
 		frameBuffer.unloadDevice();
-	else
+
+	if (texture)
 	{
-		if (texture)
-			glDeleteTextures(1, &texture);
+		glDeleteTextures(1, &texture);
+		texture = 0;
 	}
+
+	vbo.dropBuffer();
 }
 
 void DarkLayer::reloadDevice()

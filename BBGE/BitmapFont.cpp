@@ -31,6 +31,7 @@ BmpFont::BmpFont()
 {
 	scale = 1;
 	loaded = false;
+	gltexid = 0;
 	overrideTexture = 0;
 	fontTopColor = Vector(1,1,1);
 	fontBtmColor = Vector(1,1,1);
@@ -38,12 +39,17 @@ BmpFont::BmpFont()
 
 BmpFont::~BmpFont()
 {
-	delete font;
 	destroy();
+	delete font;
 }
 
 void BmpFont::destroy()
 {
+	if(gltexid)
+	{
+		glDeleteTextures(1, &gltexid);
+		gltexid = 0;
+	}
 	if (loaded)
 	{
 		font->Destroy();
@@ -55,17 +61,14 @@ void BmpFont::destroy()
 
 void BmpFont::load(const std::string &file, float scale, bool loadTexture)
 {
-	if (loaded)
-		font->Destroy();
+	destroy();
 
 	this->scale = scale;
 
-	GLuint id=0;
-	glGenTextures(1, &id);
+	glGenTextures(1, &gltexid);
 
-	if (!font->Create(file.c_str(), id, loadTexture))
+	if (!font->Create(file.c_str(), gltexid, loadTexture))
 		return;
-
 
 	loaded = true;
 }
