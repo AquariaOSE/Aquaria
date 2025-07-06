@@ -2079,7 +2079,11 @@ void DSQ::loadModsCallback(const std::string &filename, intptr_t param)
 	if(!Mod::loadModXML(&d, name))
 	{
 		std::ostringstream os;
+#if TINYXML2_MAJOR_VERSION < 6
 		os << "Failed to load mod xml: " << filename << " -- Error: " << d.GetErrorStr1();
+#else
+		os << "Failed to load mod xml: " << filename << " -- Error: " << d.ErrorStr();
+#endif
 		dsq->debugLog(os.str());
 		return;
 	}
