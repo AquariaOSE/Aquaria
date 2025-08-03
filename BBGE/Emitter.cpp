@@ -124,7 +124,7 @@ Particle *Emitter::spawnParticle(const Vector& spawnpos)
 	{
 		const float r = rng.f01() * data.randomRotationRange;
 		p->rot.z = r;
-		if(InterpolatedVectorData *d = p->scale.data)
+		if(InterpolatedVectorData *d = p->rot.data)
 		{
 			d->target.z += r;
 			d->from.z += r;
