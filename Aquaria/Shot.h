@@ -114,11 +114,9 @@ public:
 	void setTarget(Entity *target);
 	void setTargetPoint(int pt);
 	float getDamage() const;
-	int getCollideRadius() const;
 	DamageType getDamageType() const;
 	const ShotData *shotData;
 	void updatePosition();
-	bool isHitEnts() const;
 	bool canHit(Entity *e, Bone *b);
 	bool isObstructed(float dt) const;
 	inline bool isActive() const { return !dead; }
@@ -134,6 +132,8 @@ public:
 	DamageType damageType;
 	bool checkDamageTarget;
 	bool alwaysMaxSpeed;
+	bool hitWalls;
+	bool hitEnts;
 
 protected:
 

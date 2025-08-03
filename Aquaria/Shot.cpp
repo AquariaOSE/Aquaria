@@ -302,6 +302,8 @@ Shot::Shot() : CollideQuad(), Segmented(0,0)
 	shotIdx = shots.size();
 	shots.push_back(this);
 	updateScript = false;
+	hitWalls = true;
+	hitEnts = true;
 }
 
 void loadShotCallback(const std::string &filename, void *param)
@@ -377,6 +379,8 @@ void Shot::applyShotData(const ShotData& shotData)
 	this->damageType = shotData.damageType;
 	this->checkDamageTarget = shotData.checkDamageTarget;
 	this->alwaysMaxSpeed = shotData.alwaysMaxSpeed;
+	this->hitWalls = shotData.hitWalls;
+	this->hitEnts = shotData.hitEnts;
 	if (!shotData.trailPrt.empty())
 	{
 		setParticleEffect(shotData.trailPrt);
@@ -564,15 +568,6 @@ void Shot::targetDied(Entity *target)
 	}
 }
 
-bool Shot::isHitEnts() const
-{
-	if (!shotData || shotData->hitEnts)
-	{
-		return true;
-	}
-	return false;
-}
-
 bool Shot::canHit(Entity *e, Bone *b)
 {
 	// isHitEnts() is already checked on a much higher level
@@ -675,12 +670,6 @@ void Shot::noSegs()
 	}
 }
 
-int Shot::getCollideRadius() const
-{
-	if (shotData)
-		return shotData->collideRadius;
-	return 0;
-}
 
 float Shot::getDamage() const
 {
@@ -826,7 +815,7 @@ void Shot::onUpdate(float dt)
 		if (target)
 			diff = target->getTargetPoint(targetPt) - this->position;
 		diff.z = 0;
-		if (shotData->hitWalls)
+		if (hitWalls)
 		{
 			if (isObstructed(dt))
 			{

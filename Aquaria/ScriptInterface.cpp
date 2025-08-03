@@ -2679,6 +2679,34 @@ luaFunc(shot_canHitEntity)
 	luaReturnBool(hit);
 }
 
+luaFunc(shot_setHitEnts)
+{
+	Shot *shot = getShot(L);
+	if(shot)
+		shot->hitEnts = getBool(L);
+	luaReturnNil();
+}
+
+luaFunc(shot_getHitEnts)
+{
+	Shot *shot = getShot(L);
+	luaReturnBool(shot && shot->hitEnts);
+}
+
+luaFunc(shot_setHitWalls)
+{
+	Shot *shot = getShot(L);
+	if(shot)
+		shot->hitWalls = getBool(L);
+	luaReturnNil();
+}
+
+luaFunc(shot_getHitWalls)
+{
+	Shot *shot = getShot(L);
+	luaReturnBool(shot && shot->hitWalls);
+}
+
 luaFunc(shot_setAlwaysMaxSpeed)
 {
 	if(Shot *shot = getShot(L))
@@ -10800,6 +10828,11 @@ static const struct {
 	luaRegister(shot_canHitEntity),
 	luaRegister(shot_setAlwaysMaxSpeed),
 	luaRegister(shot_isAlwaysMaxSpeed),
+	luaRegister(shot_setHitEnts),
+	luaRegister(shot_getHitEnts),
+	luaRegister(shot_setHitWalls),
+	luaRegister(shot_getHitWalls),
+
 	luaRegister(filterNearestShots),
 	luaRegister(filterNearestShotsAdd),
 	luaRegister(getNextFilteredShot),

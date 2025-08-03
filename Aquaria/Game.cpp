@@ -3884,7 +3884,7 @@ void Game::registerSporeDrop(const Vector &pos, int t)
 
 bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 {
-	if (!shot->isHitEnts() || shot->firer == e)
+	if (!shot->hitEnts || shot->firer == e)
 	{
 		return false;
 	}
