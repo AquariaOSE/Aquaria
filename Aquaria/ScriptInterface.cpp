@@ -12522,6 +12522,19 @@ bool Script::call(const char *name, void *param1, void *param2, bool *ret1)
 	return true;
 }
 
+bool Script::call(const char* name, void* param1, void* param2, void* param3, bool* ret1)
+{
+	lookupFunc(name);
+	luaPushPointer(L, param1);
+	luaPushPointer(L, param2);
+	luaPushPointer(L, param3);
+	if (!doCall(3, 1))
+		return false;
+	*ret1 = lua_toboolean(L, -1);
+	lua_pop(L, 1);
+	return true;
+}
+
 
 bool Script::call(const char *name, const char *param, bool *ret)
 {
