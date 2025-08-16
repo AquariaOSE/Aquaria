@@ -2683,7 +2683,7 @@ luaFunc(shot_setHitEnts)
 {
 	Shot *shot = getShot(L);
 	if(shot)
-		shot->hitEnts = getBool(L);
+		shot->hitEnts = getBool(L, 2);
 	luaReturnNil();
 }
 
@@ -2697,7 +2697,7 @@ luaFunc(shot_setHitWalls)
 {
 	Shot *shot = getShot(L);
 	if(shot)
-		shot->hitWalls = getBool(L);
+		shot->hitWalls = getBool(L, 2);
 	luaReturnNil();
 }
 
