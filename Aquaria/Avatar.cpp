@@ -5174,7 +5174,7 @@ void Avatar::updateLookAt(float dt)
 					didRotationFix = true;
 					float oldRot = bone_head->rotation.z;
 
-					skeletalSprite.updateBones();
+					skeletalSprite.updateBones(dt);
 
 					bone_head->rotationOffset.z = oldRot - bone_head->rotation.z;
 					bone_head->rotationOffset.interpolateTo(Vector(0,0,0), t);

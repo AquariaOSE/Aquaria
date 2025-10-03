@@ -81,14 +81,15 @@ public:
 
 	int segmentChain;
 
-	void updateSegments();
-	void updateSegment(Bone *b, const Vector &diff);
+	void updateSegments(float dt);
+	void updateSegment(float dt, Bone *b, const Vector &diff);
 
 	SkeletalSprite *skeleton;
 
 
 	void setSegmentProps(int minDist, int maxDist, bool reverse);
 	Vector segmentOffset;
+	float segmentRotInterpTime;
 
 	bool stripVert;
 	bool fileRenderQuad;
@@ -273,7 +274,8 @@ public:
 
 	void setTime(float time, size_t layer=0);
 
-	void updateBones();
+	void updateBones(float dt);
+	void updateAllSegments(float dt);
 	void playCurrentAnimation(int loop=0, int layer=0);
 	void stopAnimation(int layer=0);
 	void stopAllAnimations();

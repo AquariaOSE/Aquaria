@@ -1212,7 +1212,7 @@ void AnimationEditor::update(float dt)
 		{
 			SkeletalSprite *spr = getPageSprite(i);
 			if(spr->isLoaded() && !spr->isAnimating())
-				spr->updateBones();
+				spr->updateBones(dt);
 		}
 	}
 

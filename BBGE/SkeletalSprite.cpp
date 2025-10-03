@@ -96,6 +96,7 @@ Bone::Bone() : CollideQuad()
 	originalRenderPass = 0;
 	stripVert = false;
 	inheritPass = false;
+	segmentRotInterpTime = 0.2f;
 }
 
 Bone::~Bone()
@@ -174,12 +175,12 @@ void Bone::setSegmentProps(int minDist, int maxDist, bool reverse)
 	this->reverse = reverse;
 }
 
-void Bone::updateSegment(Bone *b, const Vector &diff)
+void Bone::updateSegment(float dt, Bone *b, const Vector &diff)
 {
-
+	const float lensq = diff.getSquaredLength2D();
 
 	float angle = -1;
-	if (diff.getSquaredLength2D() > sqr(maxDist))
+	if (lensq > sqr(maxDist))
 	{
 		Vector useDiff = diff;
 		useDiff.setLength2D(maxDist);
@@ -188,9 +189,9 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
 	}
-	else if (diff.getSquaredLength2D() > sqr(minDist))
+	else if (lensq > sqr(minDist))
 	{
-		b->position += diff*0.05f;
+		b->position += diff*dt*3;
 
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
 
@@ -213,12 +214,12 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 		}
 
 
-		b->rotation.interpolateTo(Vector(0,0,angle),0.2f);
+		b->rotation.interpolateTo(Vector(0,0,angle), b->segmentRotInterpTime);
 	}
 
 }
 
-void Bone::updateSegments()
+void Bone::updateSegments(float dt)
 {
 	if (segmentChain>0 && !segments.empty())
 	{
@@ -238,7 +239,7 @@ void Bone::updateSegments()
 				else
 					diff = segments[i-1]->getWorldPosition() - segments[i]->getWorldPosition();
 
-				updateSegment(segments[i], diff);
+				updateSegment(dt, segments[i], diff);
 			}
 		}
 		else
@@ -255,7 +256,7 @@ void Bone::updateSegments()
 				else
 					diff = segments[i+1]->getWorldPosition() - segments[i]->getWorldPosition();
 
-				updateSegment(segments[i], diff);
+				updateSegment(dt, segments[i], diff);
 			}
 		}
 	}
@@ -868,6 +869,8 @@ void SkeletalSprite::onUpdate(float dt)
 	{
 		animLayers[i].update(dt);
 	}
+
+	updateAllSegments(dt);
 }
 
 void AnimationLayer::update(float dt)
@@ -2111,10 +2114,6 @@ void AnimationLayer::_interpolateKeyframes(SkeletalKeyframe* key1, SkeletalKeyfr
 	{
 		Bone *b = s->bones[i];
 
-		if (b->segmentChain == 1)
-		{
-			b->updateSegments();
-		}
 		if (b->segmentChain < 2)
 		{
 			if (b->animated != Bone::ANIM_NONE && contains(b))
@@ -2199,7 +2198,7 @@ void SkeletalSprite::setFreeze(bool f)
 	frozen = f;
 }
 
-void SkeletalSprite::updateBones()
+void SkeletalSprite::updateBones(float dt)
 {
 	if (!frozen)
 	{
@@ -2207,9 +2206,22 @@ void SkeletalSprite::updateBones()
 		{
 			animLayers[i].updateBones(false);
 		}
+
+		updateAllSegments(dt);
 	}
+}
 
+void SkeletalSprite::updateAllSegments(float dt)
+{
+	for (size_t i = 0; i < bones.size(); i++)
+	{
+		Bone *b = bones[i];
 
+		if (b->segmentChain == 1)
+		{
+			b->updateSegments(dt);
+		}
+	}
 }
 
 bool SkeletalSprite::isAnimating(size_t layer) const

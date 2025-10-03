@@ -4155,6 +4155,16 @@ luaFunc(bone_setSegmentProps)
 	luaReturnNil();
 }
 
+luaFunc(bone_setSegmentRotationInterpolationTime)
+{
+	Bone *b = bone(L);
+	if (b)
+	{
+		b->segmentRotInterpTime = lua_tonumber(L, 2);
+	}
+	luaReturnNil();
+}
+
 luaFunc(bone_setSegmentChainHead)
 {
 	Bone *b = bone(L);
@@ -10290,6 +10300,7 @@ static const struct {
 	luaRegister(bone_setSegmentOffset),
 	luaRegister(bone_setSegmentProps),
 	luaRegister(bone_setSegmentChainHead),
+	luaRegister(bone_setSegmentRotationInterpolationTime),
 	luaRegister(bone_setAnimated),
 	luaRegister(bone_showFrame),
 
