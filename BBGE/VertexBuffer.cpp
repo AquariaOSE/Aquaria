@@ -134,6 +134,11 @@ bool DynamicGPUBuffer::commitWriteExact(const void * p)
 
 bool DynamicGPUBuffer::_commitWrite(size_t used)
 {
+    // This forces a glVertexPointer() & related refresh by invalidating the cache.
+    // Apparently OpenGL implementations don't like it if buffer's data store is replaced
+    // while the underlying storage is still associated to glVertexPointer().
+    s_lastDataType = BufDataType(-1);
+
     if(_HasARB)
     {
         if(_d_map)
