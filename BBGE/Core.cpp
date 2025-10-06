@@ -1149,7 +1149,7 @@ void Core::run(float runTime)
 		DirWatcher::Pump();
 
 		nowTicks = SDL_GetTicks();
-		dt = (nowTicks-thenTicks)/1000.0;
+		dt = (nowTicks-thenTicks)/1000.0f;
 		thenTicks = nowTicks;
 
 		uint64_t entropy = nowTicks;
@@ -1965,8 +1965,6 @@ void Core::print(int x, int y, const char *str, float sz)
 void Core::cacheRender()
 {
 	renderExternal();
-	// what if the screen was full white? then you wouldn't want to clear buffers
-	//clearBuffers();
 	showBuffer();
 	resetTimer();
 }

@@ -1111,7 +1111,6 @@ void DSQ::init()
 	addRenderObject(cutscene_text, LR_SUBTITLES);
 
 	cutscene_text2 = new BitmapText(smallFont);
-	cutscene_text2->setText(stringbank.get(2005));
 	cutscene_text2->position = Vector(400,300+10);
 	cutscene_text2->alpha.x = 0;
 	cutscene_text2->followCamera = 1;
@@ -3642,17 +3641,40 @@ void DSQ::onUpdate(float dt)
 		if (isCutscenePaused())
 		{
 			sound->pause();
-			float sec = 1.0f/60.0f;
+			const float sec = 1.0f/60.0f;
+			float skipCutsceneHoldTime = 0;
 			while (isCutscenePaused())
 			{
+				const unsigned beginTicks = nowTicks;
 				pollEvents(sec);
 				ActionMapper::onUpdate(sec);
 				SDL_Delay(int(sec*1000));
-				renderExternal();
-				showBuffer();
-				resetTimer();
+				cacheRender(); // This updates nowTicks
+				const float dt = (nowTicks-beginTicks)/1000.0f;
 
-				if (_canSkipCutscene && getKeyState(KEY_S))
+				bool skip = false;
+				if(_canSkipCutscene && isActing(ACTION_ESC, -1))
+				{
+					skipCutsceneHoldTime += dt;
+					if(skipCutsceneHoldTime >= 2)
+						skip = true;
+					int dots = int(10 * skipCutsceneHoldTime);
+					std::ostringstream os;
+					os << stringbank.get(2035) << "\n";
+					for(int i = 0; i < dots; ++i)
+						os << ".";
+					os << stringbank.get(2036);
+					for(int i = 0; i < dots; ++i)
+						os << ".";
+					cutscene_text2->setText(os.str());
+				}
+				else
+				{
+					cutscene_text2->setText(stringbank.get(2035));
+					skipCutsceneHoldTime = 0;
+				}
+
+				if (skip)
 				{
 					skippingCutscene = true;
 					settings.renderOn = false;
@@ -3663,6 +3685,7 @@ void DSQ::onUpdate(float dt)
 					return;
 				}
 			}
+			cutscene_text2->setText(std::string());
 			resetTimer();
 			sound->resume();
 		}
