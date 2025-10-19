@@ -2689,6 +2689,12 @@ luaFunc(shot_setHitEnts)
 
 luaFunc(shot_getHitEnts)
 {
+	if (lua_isstring(L, 1))
+	{
+		ShotData *data = Shot::getShotData(lua_tostring(L, 1));
+		luaReturnBool(data ? data->hitEnts : false);
+	}
+
 	Shot *shot = getShot(L);
 	luaReturnBool(shot && shot->hitEnts);
 }
@@ -2703,6 +2709,12 @@ luaFunc(shot_setHitWalls)
 
 luaFunc(shot_getHitWalls)
 {
+	if (lua_isstring(L, 1))
+	{
+		ShotData *data = Shot::getShotData(lua_tostring(L, 1));
+		luaReturnBool(data ? data->hitWalls : false);
+	}
+
 	Shot *shot = getShot(L);
 	luaReturnBool(shot && shot->hitWalls);
 }
