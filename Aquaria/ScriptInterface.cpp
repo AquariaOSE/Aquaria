@@ -9800,6 +9800,15 @@ luaFunc(pe_isRunning)
 	luaReturnBool(pe && pe->isRunning());
 }
 
+luaFunc(pe_getName)
+{
+	ParticleEffect *pe = getParticle(L);
+	if(pe)
+		luaReturnStr(pe->name.c_str());
+	luaReturnNil();
+}
+
+
 luaFunc(getPerformanceCounter)
 {
 #if SDL_VERSION_ATLEAST(2,0,0)
@@ -11144,6 +11153,8 @@ static const struct {
 	luaRegister(pe_start),
 	luaRegister(pe_stop),
 	luaRegister(pe_isRunning),
+	luaRegister(pe_getName),
+
 
 	luaRegister(isQuad),
 	luaRegister(isNode),
