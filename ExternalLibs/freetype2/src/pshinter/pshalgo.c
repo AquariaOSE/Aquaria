@@ -1690,7 +1690,10 @@
     /* process secondary hints to `selected' points */
     if ( num_masks > 1 && glyph->num_points > 0 )
     {
-      first = mask->end_point;
+      /* the `endchar' op can reduce the number of points */
+      first = mask->end_point > glyph->num_points
+                ? glyph->num_points
+                : mask->end_point;
       mask++;
       for ( ; num_masks > 1; num_masks--, mask++ )
       {
@@ -1698,7 +1701,9 @@
         FT_Int   count;
 
 
-        next  = mask->end_point;
+        next  = mask->end_point > glyph->num_points
+                  ? glyph->num_points
+                  : mask->end_point;
         count = next - first;
         if ( count > 0 )
         {
