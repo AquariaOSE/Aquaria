@@ -19,6 +19,7 @@ along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
 
+#include <filesystem>
 #include "DSQ.h"
 
 
@@ -66,7 +67,7 @@ static void CheckConfig(void)
 }
 
 
-#if defined(BBGE_BUILD_WINDOWS) && !defined(BBGE_BUILD_SDL)
+#if defined(BBGE_BUILD_WINDOWS) && !(defined(BBGE_BUILD_SDL) or defined(BBGE_BUILD_SDL2))
 	int WINAPI WinMain(	HINSTANCE	hInstance,			// Instance
 						HINSTANCE	hPrevInstance,		// Previous Instance
 						LPSTR		lpCmdLine,			// Command Line Parameters
@@ -85,14 +86,22 @@ static void CheckConfig(void)
 	{
 		std::string dsqParam = ""; // fileSystem
 		std::string extraDataDir = "";
+        std::string appImageExtraDir = "";
+        const char *appImageDir = nullptr;
 
-		const char *envPath = 0;
+		const char *envPath = nullptr;
 #ifdef BBGE_BUILD_UNIX
 		envPath = getenv("AQUARIA_DATA_PATH");
 		if (envPath)
 		{
 			dsqParam = envPath;
 		}
+        appImageDir = getenv("APPIMAGE");
+        if (appImageDir)
+        {
+            std::filesystem::path appImagePath = appImageDir;
+            appImageExtraDir = appImagePath.parent_path();
+        }
 #endif
 #ifdef AQUARIA_DEFAULT_DATA_DIR
 		if(!envPath)
@@ -107,7 +116,7 @@ static void CheckConfig(void)
         CheckConfig();
 
         {
-            DSQ dsql(dsqParam, extraDataDir);
+            DSQ dsql(dsqParam, extraDataDir, appImageExtraDir);
             dsql.init();
             dsql.main();
             dsql.shutdown();
