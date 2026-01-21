@@ -2737,7 +2737,11 @@ void Continuity::loadFileData(int slot, XMLDocument &doc)
 		}
 		if (doc.Parse(buf, size) != XML_SUCCESS)
 		{
+#if TINYXML2_MAJOR_VERSION < 6
 			errorLog("Failed to load save data: " + teh_file + " -- Error: " + doc.GetErrorStr1());
+#else
+			errorLog("Failed to load save data: " + teh_file + " -- Error: " + doc.ErrorStr());
+#endif
 			return;
 		}
 	}
