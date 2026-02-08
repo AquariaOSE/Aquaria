@@ -4,11 +4,12 @@ PROJECT(Aquaria)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+# Check compilers
 INCLUDE(CheckCCompilerFlag)
 INCLUDE(CheckCXXCompilerFlag)
 INCLUDE(CheckFunctionExists)
 
-# if no build type was provided, set a default one
+# If no build type was provided, set a default one
 IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
@@ -20,6 +21,28 @@ ENDIF()
 
 IF(APPLE)
     SET(MACOSX TRUE)
+    
+    # Apple Silicon (arm64) configuration
+    if(CMAKE_OSX_ARCHITECTURES MATCHES "arm64")
+        message(STATUS ">>> Configuring for Apple Silicon (ARM64)")
+        
+        # SDL2 is required on Apple Silicon, as the included SDL1.2 and SDL2 does not support it. Attempt to find it first.
+        find_package(SDL2)
+
+        # If not found, prompt user to install via homebrew
+        if(NOT SDL2_FOUND)
+            message(FATAL_ERROR 
+                "\n"
+                "----------------------------------------------------------------------- \n"
+                " ERROR: SDL2 NOT FOUND \n"
+                "----------------------------------------------------------------------- \n"
+                " For Apple Silicon builds (ARM64), SDL2 must be compiled separately or\n"
+                " installed via Homebrew.\n\n"
+                " Recommended fix: Run 'brew install sdl2'\n"
+                "-----------------------------------------------------------------------\n"
+            )
+        endif()
+    endif()
 ENDIF(APPLE)
 
 # Recommended compiler flags that cmake doesn't set automatically
@@ -40,19 +63,22 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
     set(AQUARIA_EXTRA_COMPILE_FLAGS "-ffast-math" CACHE STRING "Extra compiler flags for GCC/Clang")
 else()
     set(AQUARIA_EXTRA_COMPILE_FLAGS "" CACHE STRING "Extra compiler flags")
-endif()
+endif(MSVC)
 
 if(AQUARIA_EXTRA_COMPILE_FLAGS)
       set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${AQUARIA_EXTRA_COMPILE_FLAGS}")
       set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AQUARIA_EXTRA_COMPILE_FLAGS}")
-endif()
-
+endif(AQUARIA_EXTRA_COMPILE_FLAGS)
 
 OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
 OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional features." TRUE)
 
 OPTION(AQUARIA_USE_SDL2 "Use SDL2" TRUE)
 OPTION(AQUARIA_USE_GLM "Use GLM for matrix math" TRUE)
+
+OPTION(AQUARIA_INTERNAL_FTGL "Always use included FTGL library" TRUE)
+OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" TRUE)
+#OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" TRUE)
 
 OPTION(AQUARIA_DEBUG_SHOW_PATHS "Show important paths upon game start to aid in finding path problems" FALSE)
 mark_as_advanced(AQUARIA_DEBUG_SHOW_PATHS)
@@ -61,6 +87,9 @@ mark_as_advanced(AQUARIA_DEBUG_SHOW_PATHS)
 #add_link_options(-fsanitize=address)
 
 ################ Look for external libraries
+
+SET(BBGEDIR ${CMAKE_CURRENT_SOURCE_DIR}/BBGE)
+SET(EXTLIBDIR ${CMAKE_CURRENT_SOURCE_DIR}/ExternalLibs)
 
 ### Pick one: SDL 1.2 or SDL2
 
@@ -71,12 +100,9 @@ if(AQUARIA_USE_SDL2)
         set(SDL_INCLUDE_DIR ${SDL2_INCLUDE_DIR})
         set(SDL_LIBRARY ${SDL2_LIBRARY})
     endif(SDL2_FOUND)
-else()
+else(AQUARIA_USE_SDL2)
     find_package(SDL REQUIRED)
-endif()
-
-SET(BBGEDIR ${CMAKE_CURRENT_SOURCE_DIR}/BBGE)
-SET(EXTLIBDIR ${CMAKE_CURRENT_SOURCE_DIR}/ExternalLibs)
+endif(AQUARIA_USE_SDL2)
 
 ################ End of external libraries
 
@@ -199,6 +225,8 @@ add_subdirectory(ExternalLibs)
 INCLUDE_DIRECTORIES(${BBGEDIR})
 message(STATUS "FTGL_INCLUDE_DIRS: ${FTGL_INCLUDE_DIRS}")
 INCLUDE_DIRECTORIES(${FTGL_INCLUDE_DIRS})
+message(STATUS "FREETYPE_INCLUDE_DIRS: ${FREETYPE_INCLUDE_DIRS}")
+INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
 message(STATUS "LUA_INCLUDE_DIR: ${LUA_INCLUDE_DIR}")
 INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
 message(STATUS "OGGVORBIS_INCLUDE_DIRS: ${OGGVORBIS_INCLUDE_DIRS}")
