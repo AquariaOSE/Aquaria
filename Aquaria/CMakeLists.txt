@@ -129,6 +129,40 @@ ADD_EXECUTABLE(aquaria ${EXETYPE}
 
 target_link_libraries(aquaria BBGE lua51)
 
+if(APPLE)
+    # Stage macOS binary to /build/macOS
+    set(AQUARIA_RUNTIME_STAGE_DIR "${CMAKE_BINARY_DIR}/macOS")
+    add_custom_command(TARGET aquaria POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E make_directory "${AQUARIA_RUNTIME_STAGE_DIR}"
+        COMMAND ${CMAKE_COMMAND} -E copy_if_different "$<TARGET_FILE:aquaria>" "${AQUARIA_RUNTIME_STAGE_DIR}/aquaria"
+        VERBATIM
+    )
+
+    # If SDL2 is being used, stage the SDL2 dylib alongside the binary
+    if(AQUARIA_USE_SDL2 AND SDL2_FOUND)
+        set(AQUARIA_SDL2_DYLIB "")
+        foreach(_aquaria_sdl2_item IN LISTS SDL2_LIBRARY)
+            if(_aquaria_sdl2_item MATCHES "libSDL2[^/]*\\.dylib$")
+                set(AQUARIA_SDL2_DYLIB "${_aquaria_sdl2_item}")
+                break()
+            endif()
+        endforeach()
+
+        if(NOT AQUARIA_SDL2_DYLIB)
+            message(WARNING "SDL2 dylib was not detected from SDL2_LIBRARY, staging will skip SDL2 copy.")
+        else()
+            get_filename_component(AQUARIA_SDL2_DYLIB_REAL "${AQUARIA_SDL2_DYLIB}" REALPATH)
+            get_filename_component(AQUARIA_SDL2_DYLIB_NAME "${AQUARIA_SDL2_DYLIB_REAL}" NAME)
+
+            add_custom_command(TARGET aquaria POST_BUILD
+                COMMAND ${CMAKE_COMMAND} -E copy_if_different "${AQUARIA_SDL2_DYLIB_REAL}" "${AQUARIA_RUNTIME_STAGE_DIR}/${AQUARIA_SDL2_DYLIB_NAME}"
+                COMMAND /bin/sh -c "set -e; old_path=`otool -L \"${AQUARIA_RUNTIME_STAGE_DIR}/aquaria\" | awk '/SDL2.*dylib/{print \\$1; exit}'`; [ -n \"$old_path\" ] && install_name_tool -change \"$old_path\" \"@executable_path/../Frameworks/${AQUARIA_SDL2_DYLIB_NAME}\" \"${AQUARIA_RUNTIME_STAGE_DIR}/aquaria\""
+                VERBATIM
+            )
+        endif()
+    endif()
+endif()
+
 IF(WIN32)
     SET(RC_DEFINES "" FORCE)
     SET(RC_INCLUDES "" FORCE)
