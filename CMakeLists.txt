@@ -4,11 +4,12 @@ PROJECT(Aquaria)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
 
+# Check compilers
 INCLUDE(CheckCCompilerFlag)
 INCLUDE(CheckCXXCompilerFlag)
 INCLUDE(CheckFunctionExists)
 
-# if no build type was provided, set a default one
+# If no build type was provided, set a default one
 IF(NOT CMAKE_BUILD_TYPE)
     SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
 ENDIF(NOT CMAKE_BUILD_TYPE)
@@ -20,6 +21,22 @@ ENDIF()
 
 IF(APPLE)
     SET(MACOSX TRUE)
+    set(AQUARIA_MAC_ARCHS "arm64" CACHE STRING
+        "macOS architectures to build (examples: arm64, x86_64, arm64;x86_64, i386)")
+
+    if(NOT CMAKE_OSX_ARCHITECTURES)
+        set(CMAKE_OSX_ARCHITECTURES "${AQUARIA_MAC_ARCHS}" CACHE STRING "Build architectures for macOS" FORCE)
+    endif()
+
+    message(STATUS ">>> macOS architectures: ${CMAKE_OSX_ARCHITECTURES}")
+    if(CMAKE_OSX_DEPLOYMENT_TARGET)
+        message(STATUS ">>> macOS deployment target: ${CMAKE_OSX_DEPLOYMENT_TARGET}")
+    else()
+        message(STATUS ">>> macOS deployment target: default")
+    endif()
+    if(CMAKE_OSX_ARCHITECTURES MATCHES "(^|;)i386($|;)")
+        message(WARNING "i386 was requested. 32-bit macOS builds are legacy/untested and may fail on modern toolchains.")
+    endif()
 ENDIF(APPLE)
 
 # Recommended compiler flags that cmake doesn't set automatically
@@ -40,19 +57,22 @@ elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
     set(AQUARIA_EXTRA_COMPILE_FLAGS "-ffast-math" CACHE STRING "Extra compiler flags for GCC/Clang")
 else()
     set(AQUARIA_EXTRA_COMPILE_FLAGS "" CACHE STRING "Extra compiler flags")
-endif()
+endif(MSVC)
 
 if(AQUARIA_EXTRA_COMPILE_FLAGS)
-      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${AQUARIA_EXTRA_COMPILE_FLAGS}")
-      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AQUARIA_EXTRA_COMPILE_FLAGS}")
-endif()
-
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${AQUARIA_EXTRA_COMPILE_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AQUARIA_EXTRA_COMPILE_FLAGS}")
+endif(AQUARIA_EXTRA_COMPILE_FLAGS)
 
 OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
 OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional features." TRUE)
 
 OPTION(AQUARIA_USE_SDL2 "Use SDL2" TRUE)
 OPTION(AQUARIA_USE_GLM "Use GLM for matrix math" TRUE)
+
+OPTION(AQUARIA_INTERNAL_FTGL "Always use included FTGL library" TRUE)
+OPTION(AQUARIA_INTERNAL_LUA "Always use included Lua library" TRUE)
+#OPTION(AQUARIA_INTERNAL_SDL "Always use included SDL library" TRUE)
 
 OPTION(AQUARIA_DEBUG_SHOW_PATHS "Show important paths upon game start to aid in finding path problems" FALSE)
 mark_as_advanced(AQUARIA_DEBUG_SHOW_PATHS)
@@ -62,21 +82,27 @@ mark_as_advanced(AQUARIA_DEBUG_SHOW_PATHS)
 
 ################ Look for external libraries
 
+SET(BBGEDIR ${CMAKE_CURRENT_SOURCE_DIR}/BBGE)
+SET(EXTLIBDIR ${CMAKE_CURRENT_SOURCE_DIR}/ExternalLibs)
+
 ### Pick one: SDL 1.2 or SDL2
 
 if(AQUARIA_USE_SDL2)
-    find_package(SDL2 REQUIRED)
+    find_package(SDL2)
+
     if(SDL2_FOUND)
         set(SDL_FOUND TRUE)
         set(SDL_INCLUDE_DIR ${SDL2_INCLUDE_DIR})
         set(SDL_LIBRARY ${SDL2_LIBRARY})
-    endif(SDL2_FOUND)
-else()
+    elseif(NOT SDL2_FOUND AND APPLE AND (CMAKE_OSX_ARCHITECTURES MATCHES "(^|;)arm64($|;)" OR CMAKE_SYSTEM_PROCESSOR MATCHES "^(arm64|aarch64)$"))
+        message(FATAL_ERROR "SDL2 is required for arm64 macOS builds. Install it first (e.g. 'brew install sdl2').")
+    else()
+        message(WARNING "SDL2 was not found; falling back to SDL 1.2 for this target.")
+        find_package(SDL REQUIRED)
+    endif()
+else(AQUARIA_USE_SDL2)
     find_package(SDL REQUIRED)
-endif()
-
-SET(BBGEDIR ${CMAKE_CURRENT_SOURCE_DIR}/BBGE)
-SET(EXTLIBDIR ${CMAKE_CURRENT_SOURCE_DIR}/ExternalLibs)
+endif(AQUARIA_USE_SDL2)
 
 ################ End of external libraries
 
@@ -84,14 +110,14 @@ SET(EXTLIBDIR ${CMAKE_CURRENT_SOURCE_DIR}/ExternalLibs)
 SET(AQUARIA_CUSTOM_BUILD_ID "" CACHE STRING
     "Text to append to the Aquaria version ID on the title screen.")
 if (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
-  ADD_DEFINITIONS("-DAQUARIA_CUSTOM_BUILD_ID=\"${AQUARIA_CUSTOM_BUILD_ID}\"")
+ADD_DEFINITIONS("-DAQUARIA_CUSTOM_BUILD_ID=\"${AQUARIA_CUSTOM_BUILD_ID}\"")
 endif (NOT(AQUARIA_CUSTOM_BUILD_ID STREQUAL ""))
 
 # Custom version string override (displayed as-is instead of "Aquaria vx.x.x ..." on the title screen
 SET(AQUARIA_OVERRIDE_VERSION_STRING "" CACHE STRING
     "Text to display instead of the Aquaria version ID on the title screen. (Overrides AQUARIA_CUSTOM_BUILD_ID as well)")
 if (NOT(AQUARIA_OVERRIDE_VERSION_STRING STREQUAL ""))
-  ADD_DEFINITIONS("-DAQUARIA_OVERRIDE_VERSION_STRING=\"${AQUARIA_OVERRIDE_VERSION_STRING}\"")
+ADD_DEFINITIONS("-DAQUARIA_OVERRIDE_VERSION_STRING=\"${AQUARIA_OVERRIDE_VERSION_STRING}\"")
 endif (NOT(AQUARIA_OVERRIDE_VERSION_STRING STREQUAL ""))
 
 # Custom data directories
@@ -199,6 +225,8 @@ add_subdirectory(ExternalLibs)
 INCLUDE_DIRECTORIES(${BBGEDIR})
 message(STATUS "FTGL_INCLUDE_DIRS: ${FTGL_INCLUDE_DIRS}")
 INCLUDE_DIRECTORIES(${FTGL_INCLUDE_DIRS})
+message(STATUS "FREETYPE_INCLUDE_DIRS: ${FREETYPE_INCLUDE_DIRS}")
+INCLUDE_DIRECTORIES(${FREETYPE_INCLUDE_DIRS})
 message(STATUS "LUA_INCLUDE_DIR: ${LUA_INCLUDE_DIR}")
 INCLUDE_DIRECTORIES(${LUA_INCLUDE_DIR})
 message(STATUS "OGGVORBIS_INCLUDE_DIRS: ${OGGVORBIS_INCLUDE_DIRS}")
