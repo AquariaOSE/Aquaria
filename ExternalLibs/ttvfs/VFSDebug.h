@@ -3,6 +3,7 @@
 
 #include "VFSDefines.h"
 #include <iosfwd>
+#include <cstddef>
 
 VFS_NAMESPACE_START
 class Root;
