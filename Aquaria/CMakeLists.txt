@@ -156,7 +156,7 @@ if(APPLE)
 
             add_custom_command(TARGET aquaria POST_BUILD
                 COMMAND ${CMAKE_COMMAND} -E copy_if_different "${AQUARIA_SDL2_DYLIB_REAL}" "${AQUARIA_RUNTIME_STAGE_DIR}/${AQUARIA_SDL2_DYLIB_NAME}"
-                COMMAND /bin/sh -c "set -e; old_path=`otool -L \"${AQUARIA_RUNTIME_STAGE_DIR}/aquaria\" | awk '/SDL2.*dylib/{print \\$1; exit}'`; [ -n \"$old_path\" ] && install_name_tool -change \"$old_path\" \"@executable_path/../Frameworks/${AQUARIA_SDL2_DYLIB_NAME}\" \"${AQUARIA_RUNTIME_STAGE_DIR}/aquaria\""
+                COMMAND /bin/sh -c "set -e; old_path=`otool -L \"${AQUARIA_RUNTIME_STAGE_DIR}/aquaria\" | awk '/SDL2.*dylib/{print \\$1; exit}'`; [ -n \"$old_path\" ] && install_name_tool -change \"$old_path\" \"@executable_path/${AQUARIA_SDL2_DYLIB_NAME}\" \"${AQUARIA_RUNTIME_STAGE_DIR}/aquaria\""
                 VERBATIM
             )
         endif()
