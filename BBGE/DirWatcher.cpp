@@ -130,6 +130,7 @@ void Pump()
 #endif
 }
 
+#ifdef AQUARIA_ENABLE_DIR_WATCH
 static void _watch_cb(dmon_watch_id watch_id, dmon_action action,
 	const char* rootdir, const char* filepath,
 	const char* oldfilepath, void* user)
@@ -157,6 +158,7 @@ static void _watch_cb(dmon_watch_id watch_id, dmon_action action,
 	s_pending.push_back(p);
 	SDL_UnlockMutex(s_mtx);
 }
+#endif
 
 size_t AddWatch(const char* path, Flags flags, Callback cb, void* ud)
 {
@@ -205,6 +207,8 @@ size_t AddWatch(const char* path, Flags flags, Callback cb, void* ud)
 	s_watches[idx].valid = true;
 	return idx + 1;
 #endif
+
+	return 0;
 }
 
 void RemoveWatch(size_t idx)
