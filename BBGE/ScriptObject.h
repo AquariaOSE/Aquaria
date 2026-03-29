@@ -44,6 +44,7 @@ enum ScriptObjectType
 	SCO_PARTICLE_EFFECT   = 0x4000,
 	SCO_QUAD_GRID         = 0x8000,
 	SCO_COLLIDE_QUAD      = 0x10000,
+	SCO_HAIR              = 0x20000,
 
 	SCO_FORCE_32BIT = 0xFFFFFFFF
 };

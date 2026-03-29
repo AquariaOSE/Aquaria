@@ -43,6 +43,7 @@ public:
 	void setTextureFlip(bool flip) { _hairfh = flip; }
 
 	float hairWidth;
+	float segmentMinLength, segmentMaxLength;
 
 	std::vector<HairNode> hairNodes;
 
@@ -50,7 +51,6 @@ public:
 
 	const HairNode *getHairNode(size_t idx) const;
 protected:
-	float segmentLength;
 	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
 	bool _hairfh;

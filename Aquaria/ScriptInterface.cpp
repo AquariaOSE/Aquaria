@@ -630,6 +630,18 @@ Bone *bone(lua_State *L, int slot = 1)
 }
 
 static inline
+Hair *hair(lua_State *L, int slot = 1)
+{
+	Hair *h = (Hair*)lua_touserdata(L, slot);
+	ENSURE_TYPE(h, SCO_HAIR);
+	if (!h)
+	{
+		scriptDebug(L, "Hair Invalid Pointer");
+	}
+	return h;
+}
+
+static inline
 BlendType getBlendType(lua_State *L, int slot = 1)
 {
 	int bt = lua_tointeger(L, slot);
@@ -9602,6 +9614,108 @@ luaFunc(setBGGradient)
 	luaReturnNil();
 }
 
+luaFunc(createHair)
+{
+
+	Hair *h = new Hair(lua_tointeger(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
+	h->setTexture(getString(L, 4));
+	int layer = lua_tointeger(L, 5);
+	if(!layer)
+		layer = LR_ENTITIES;
+	if(layer > 0)
+		game->addRenderObject(h, layer);
+	luaReturnPtr(h);
+}
+
+luaFunc(hair_getHairPosition)
+{
+	Hair *h = hair(L);
+	float x=0;
+	float y=0;
+	int idx = lua_tointeger(L, 2);
+	if (h)
+	{
+		const HairNode *n = h->getHairNode(idx);
+		if (n)
+		{
+			x = n->position.x;
+			y = n->position.y;
+		}
+	}
+	luaReturnVec2(x, y);
+}
+
+// hair x y z
+luaFunc(hair_setHeadPosition)
+{
+	Hair *h = hair(L);
+	if (h)
+	{
+		h->setHeadPosition(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)));
+	}
+	luaReturnNil();
+}
+
+// hair dt
+luaFunc(hair_update)
+{
+	Hair *h = hair(L);
+	if (h)
+	{
+		h->updatePositions();
+	}
+	luaReturnNil();
+}
+
+// hair x y dt
+luaFunc(hair_exertForce)
+{
+	Hair *h = hair(L);
+	if (h)
+	{
+		h->exertForce(Vector(lua_tonumber(L, 2), lua_tonumber(L, 3)), lua_tonumber(L, 4), lua_tonumber(L, 5));
+	}
+	luaReturnNil();
+}
+
+// hair idx x y dt
+luaFunc(hair_exertSegmentForce)
+{
+	Hair *h = hair(L);
+	if (h)
+	{
+		h->exertNodeForce(lua_tointeger(L, 2), Vector(lua_tonumber(L, 3), lua_tonumber(L, 4)), lua_tonumber(L, 5), lua_tonumber(L, 6));
+	}
+	luaReturnNil();
+}
+
+luaFunc(hair_setTextureFlip)
+{
+	Hair *h = hair(L);
+	if (h)
+		h->setTextureFlip(getBool(L, 2));
+	luaReturnNil();
+}
+
+luaFunc(hair_setWidth)
+{
+	Hair *h = hair(L);
+	if (h)
+		h->hairWidth = lua_tonumber(L, 2);
+	luaReturnNil();
+}
+
+luaFunc(hair_setSegmentLength)
+{
+	Hair *h = hair(L);
+	if (h)
+	{
+		h->segmentMinLength = lua_tonumber(L, 2);
+		h->segmentMaxLength = std::max(h->segmentMinLength, (float)lua_tonumber(L, 2));
+	}
+	luaReturnNil();
+}
+
 luaFunc(createDebugText)
 {
 	DebugFont *txt = new DebugFont(lua_tointeger(L, 2), getString(L, 1));
@@ -11112,6 +11226,16 @@ static const struct {
 	luaRegister(isMiniMapCursorOkay),
 	luaRegister(isShuttingDownGameState),
 	luaRegister(setBGGradient),
+
+	luaRegister(createHair),
+	luaRegister(hair_getHairPosition),
+	luaRegister(hair_setHeadPosition),
+	luaRegister(hair_update),
+	luaRegister(hair_exertForce),
+	luaRegister(hair_exertSegmentForce),
+	luaRegister(hair_setTextureFlip),
+	luaRegister(hair_setWidth),
+	luaRegister(hair_setSegmentLength),
 
 	luaRegister(inv_isFull),
 	luaRegister(inv_getMaxAmount),

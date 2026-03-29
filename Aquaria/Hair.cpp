@@ -28,7 +28,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 Hair::Hair(int nodes, float segmentLength, float hairWidth)
 	: RenderObject(), vbo(GPUBUF_DYNAMIC | GPUBUF_VERTEXBUF), ibo(GPUBUF_STATIC | GPUBUF_INDEXBUF)
 {
-	this->segmentLength = segmentLength;
+	addType(SCO_HAIR);
+	this->segmentMinLength = segmentLength;
+	this->segmentMaxLength = segmentLength;
 	this->hairWidth = hairWidth;
 	this->_hairfh = false;
 
@@ -68,6 +70,8 @@ void Hair::updateVBO()
 	const float u0 = !_hairfh ? 0.0f : 1.0f;
 	const float u1 = 1.0f - u0;
 
+	const Vector wp = this->getWorldPositionAndRotation();
+
 	Vector pl(NoInit), pr(NoInit);
 	do
 	{
@@ -79,8 +83,10 @@ void Hair::updateVBO()
 
 		for(size_t i = 0; i < N-1; ++i)
 		{
-			Vector cur = hairNodes[i].position;
-			Vector diffVec = hairNodes[i+1].position - cur;
+			Vector p0 = hairNodes[i].position;
+			Vector p1 = hairNodes[i+1].position;
+			Vector cur = p0;
+			Vector diffVec = p1 - p0;
 			diffVec.setLength2D(hairWidth);
 			pl = diffVec.getPerpendicularLeft();
 			pr = diffVec.getPerpendicularRight();
@@ -122,6 +128,18 @@ void Hair::onUpdate(float dt)
 
 void Hair::onRender(const RenderState& rs) const
 {
+	if(parent)
+	{
+		// Hair is always drawn in the world coordinate system.
+		// The base game never attaches hair as a child object to something else,
+		// and the Hair object is always technically located at (0, 0) -- just the hair nodes are moved.
+		// However, if a parent is set, this Hair would be drawn relative to the parent,
+		// which is incorrect.
+		// Note: This is for hairs added as children to other objects which ONLY mods do!
+		glPushMatrix();
+		glLoadIdentity();
+		core->setupRenderPositionAndScale();
+	}
 	vbo.apply();
 	ibo.drawElements(GL_TRIANGLES, trisToDraw);
 
@@ -133,6 +151,11 @@ void Hair::onRender(const RenderState& rs) const
 		glColor3f(1,0,1);
 		glDrawArrays(GL_POINTS, 0, vbo.size() / (sizeof(float) * 4));
 	}
+
+	if(parent)
+	{
+		glPopMatrix();
+	}
 }
 
 void Hair::updatePositions()
@@ -140,7 +163,9 @@ void Hair::updatePositions()
 	for (size_t i = 1; i < hairNodes.size(); i++)
 	{
 		Vector diff = hairNodes[i].position - hairNodes[i-1].position;
-		diff.setLength2D(segmentLength);
+		float len = diff.getLength2D();
+		len = std::min(segmentMaxLength, std::max(segmentMinLength, len));
+		diff.setLength2D(len);
 		hairNodes[i].position = hairNodes[i-1].position + diff;
 	}
 }
