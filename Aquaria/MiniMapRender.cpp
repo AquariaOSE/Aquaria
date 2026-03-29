@@ -477,7 +477,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 
 	if (alphaValue > 0)
 	{
-		texMinimapBtm->apply();
+		texMinimapBtm->apply(TEX_BORDER_CLAMP);
 
 		glBegin(GL_QUADS);
 			glColor4f(lightLevel, lightLevel, lightLevel, 1);
@@ -493,7 +493,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 
 		if (lightLevel > 0)
 		{
-			texWaterBit->apply();
+			texWaterBit->apply(TEX_BORDER_CLAMP);
 
 			rs.gpu.setBlend(BLEND_ADD);
 			glColor4f(0.1f, 0.2f, 0.9f, 0.4f*lightLevel);
@@ -615,7 +615,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 	glColor4f(1,1,1, alphaValue);
 
 	const int hsz = 20;
-	texNaija->apply();
+	texNaija->apply(TEX_BORDER_CLAMP);
 
 	glBegin(GL_QUADS);
 		glTexCoord2f(0, 1);
@@ -630,7 +630,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 
 	glColor4f(1,1,1,1);
 
-	texMinimapTop->apply();
+	texMinimapTop->apply(TEX_BORDER_CLAMP);
 	glBegin(GL_QUADS);
 		glTexCoord2f(0, 1);
 		glVertex2f(-miniMapGuiSize, miniMapGuiSize);
@@ -656,7 +656,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 		healthBarColor.normalize2D();
 	}
 
-	texHealthBar->apply();
+	texHealthBar->apply(TEX_BORDER_CLAMP);
 
 	rs.gpu.setBlend(BLEND_DEFAULT);
 	glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, 0.6f);
@@ -713,7 +713,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 	rs.gpu.setBlend(BLEND_DEFAULT);
 	glColor4f(1,1,1,1);
 
-	texMarker->apply();
+	texMarker->apply(TEX_BORDER_CLAMP);
 
 	const float x = healthLookupX[maxHealthSteps];
 	const float y = healthLookupY[maxHealthSteps];
@@ -751,7 +751,7 @@ void MiniMapRender::renderIcon(const MinimapIcon *ico, const Vector& pos) const
 	 	}
 	}
 
-	ico->tex->apply();
+	ico->tex->apply(TEX_BORDER_CLAMP);
 	const Vector c = ico->color;
 	const float a = ico->alpha.x * this->alpha.x;
 	glColor4f(c.x, c.y, c.z, a);

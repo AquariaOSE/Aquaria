@@ -260,7 +260,7 @@ void Emitter::onRender(const RenderState& rs) const
 	}
 
 	if (texture)
-		texture->apply();
+		texture->apply(TEX_BORDER_CLAMP);
 
 	Vector colorMult = rs.color;
 	if(data.inheritColor)

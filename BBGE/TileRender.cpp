@@ -124,7 +124,7 @@ void TileRender::onRender(const RenderState& rs) const
 			if(texid != lastTexId)
 			{
 				lastTexId = texid;
-				tex->apply();
+				tex->apply((tile.flags & TILEFLAG_REPEAT) ? TEX_BORDER_WRAP : TEX_BORDER_CLAMP);
 			}
 		}
 		else

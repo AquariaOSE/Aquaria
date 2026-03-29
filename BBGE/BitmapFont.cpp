@@ -248,7 +248,7 @@ void BitmapText::onRender(const RenderState& rs) const
 	const glfont::GLFont * const font = bmpFont.font;
 	font->Begin();
 
-	if (bmpFont.overrideTexture) bmpFont.overrideTexture->apply();
+	if (bmpFont.overrideTexture) bmpFont.overrideTexture->apply(TEX_BORDER_CLAMP);
 
 	const float scale = bmpFont.scale;
 	float y=0;

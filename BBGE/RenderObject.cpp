@@ -493,7 +493,7 @@ nofollow:
 		{
 			if (texture->gltexid != lastTextureApplied)
 			{
-				texture->apply();
+				texture->apply(repeatTexture ? TEX_BORDER_WRAP : TEX_BORDER_CLAMP);
 				lastTextureApplied = texture->gltexid;
 			}
 		}

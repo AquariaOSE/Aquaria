@@ -47,6 +47,7 @@ Texture::Texture()
 {
 	gltexid = 0;
 	width = height = 0;
+	_bordermode = TEX_BORDER_CLAMP;
 
 	ow = oh = -1;
 	_mipmap = false;
@@ -134,9 +135,24 @@ void Texture::_freePixbuf()
 	}
 }
 
-void Texture::apply() const
+void Texture::apply(TexBorderMode border) const
 {
 	glBindTexture(GL_TEXTURE_2D, gltexid);
+	if(_bordermode != border)
+	{
+		_bordermode = border;
+		int mode = GL_CLAMP;
+		switch(border)
+		{
+		case TEX_BORDER_CLAMP:
+			break; // already this value
+		case TEX_BORDER_WRAP:
+			mode = GL_REPEAT;
+			break;
+		}
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode);
+	}
 }
 
 struct GlTexFormat
@@ -169,8 +185,8 @@ bool Texture::upload(const ImageData& img, bool mipmap)
 	if(!gltexid)
 		glGenTextures(1, &gltexid);
 	glBindTexture(GL_TEXTURE_2D, gltexid);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_CLAMP);
 
 	const GlTexFormat& f = formatLUT[img.channels - 1];
 

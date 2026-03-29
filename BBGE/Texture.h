@@ -48,6 +48,12 @@ enum TextureLoadResult
 	TEX_SUCCESS
 };
 
+enum TexBorderMode
+{
+	TEX_BORDER_CLAMP,
+	TEX_BORDER_WRAP
+};
+
 struct ImageData;
 
 class Texture : public Refcounted
@@ -56,7 +62,7 @@ public:
 	Texture();
 	~Texture();
 
-	void apply() const;
+	void apply(TexBorderMode border) const;
 	void unload();
 
 	unsigned gltexid;
@@ -78,6 +84,7 @@ protected:
 	void _freePixbuf();
 
 	int ow, oh;
+	mutable TexBorderMode _bordermode;
 	bool _mipmap;
 	mutable unsigned char *_pixbuf; // retrieved when needed
 };
