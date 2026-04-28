@@ -270,13 +270,13 @@ void SongLineRender::updateVBO()
 	if(!N)
 		return;
 
-	const size_t bytes = pts.size() * 6 * sizeof(float);
-	const size_t alphaLine = (pts.size() * 9) / 10;
+	const size_t bytes = N * 6 * sizeof(float);
+	const size_t alphaLine = (N * 9) / 10;
 	const float alphaLineInv = 1.0f / float(alphaLine);
 	do
 	{
 		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_RGBA, bytes, GPUACCESS_DEFAULT);
-		for (size_t i = 0; i < pts.size(); i++)
+		for (size_t i = 0; i < N; i++)
 		{
 			*p++ = pts[i].pt.x;
 			*p++ = pts[i].pt.y;
@@ -284,7 +284,7 @@ void SongLineRender::updateVBO()
 			*p++ = pts[i].color.x;
 			*p++ = pts[i].color.y;
 			*p++ = pts[i].color.z;
-			*p++ = i < alphaLine ? float(i)*alphaLineInv : 1;
+			*p++ = i < alphaLine ? float(i)*alphaLineInv : 1.0f;
 		}
 	}
 	while(!vbo.commitWrite());
@@ -298,7 +298,7 @@ void SongLineRender::onRender(const RenderState& rs) const
 
 	int w=core->getWindowWidth();
 
-	int ls = (4*w)/1024.0f;
+	float ls = (4*w)/1024.0f;
 	if (ls < 0)
 		ls = 1;
 	glLineWidth(ls);
