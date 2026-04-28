@@ -1221,6 +1221,8 @@ void SceneEditor::updateEntitySaveData(Entity *editingEntity)
 
 void SceneEditor::mouseButtonLeftUp()
 {
+	if(!core->mouse.buttons.right)
+		destroyMultiTileHelper();
 	if (multiSelecting || core->mouse.buttons.right) return;
 
 	if (editType == ET_ENTITIES)
@@ -1236,15 +1238,14 @@ void SceneEditor::mouseButtonLeftUp()
 
 void SceneEditor::mouseButtonRightUp()
 {
+	if(!core->mouse.buttons.left)
+		destroyMultiTileHelper();
 	if (multiSelecting || core->mouse.buttons.left) return;
 
 	if (editType == ET_ENTITIES)
 		updateEntitySaveData(editingEntity);
 	if (editType == ET_ELEMENTS)
-	{
-		destroyMultiTileHelper();
 		checkForRebuild();
-	}
 	state = ES_SELECTING;
 
 }
@@ -2775,7 +2776,7 @@ void SceneEditor::update(float dt)
 					if(repeatScale)
 						add *= 0.3f;
 				}
-				if (!selectedTiles.empty())
+				if (!selectedTiles.empty() && multi) // Multi should always be set if selectedTiles is not empty
 				{
 					if (!core->getCtrlState())
 					{
