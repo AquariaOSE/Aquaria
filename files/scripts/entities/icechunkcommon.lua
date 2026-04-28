@@ -120,7 +120,7 @@ function update(me, dt)
 	local rotSpeed = (entity_getVelLen(me)/300) + 1
 	if entity_velx(me) < 0 then v.dir = -1
 	else v.dir = 1 end
-	entity_rotateTo(me, entity_getRotation(me) + (rotSpeed * v.dir))
+	entity_rotateTo(me, entity_getRotation(me) + (rotSpeed * v.dir * dt * 50))
 	
 	-- IF LARGE
 	if v.chunkSize == 0 then
