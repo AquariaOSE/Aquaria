@@ -267,7 +267,7 @@ void SongLineRender::clear()
 void SongLineRender::updateVBO()
 {
 	const size_t N = pts.size();
-	if(!N)
+	if(N < 2)
 		return;
 
 	const size_t bytes = N * 6 * sizeof(float);
@@ -293,7 +293,7 @@ void SongLineRender::updateVBO()
 void SongLineRender::onRender(const RenderState& rs) const
 {
 	const size_t N = pts.size();
-	if(!N)
+	if(N < 2)
 		return;
 
 	int w=core->getWindowWidth();
