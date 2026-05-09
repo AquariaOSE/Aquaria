@@ -5344,7 +5344,7 @@ void Avatar::onUpdate(float dt)
 		//bool waterBubbleRect = (waterBubble && waterBubble->pathShape == PATHSHAPE_RECT);
 
 		//&& !waterBubbleRect
-		if (!riding && (!bursting && vel.isLength2DIn(fallOutSpeed)))
+		/*if (!riding && (!bursting && vel.isLength2DIn(fallOutSpeed)))
 		{
 
 			if (waterBubble)
@@ -5365,7 +5365,7 @@ void Avatar::onUpdate(float dt)
 				}
 			}
 		}
-		else
+		else*/
 		{
 			if (waterBubble)
 				lastJumpOutFromWaterBubble = true;
