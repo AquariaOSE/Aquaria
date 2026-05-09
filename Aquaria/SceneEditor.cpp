@@ -1833,14 +1833,28 @@ void SceneEditor::action(int id, int state, int source, InputDevice device)
 					{
 						if(newLayer < MAX_TILE_LAYERS && newLayer != bgLayer)
 						{
+							std::vector<size_t> selectedTmp = selectedTiles;
+							bool hasMulti = !!multi;
+
+							setActiveLayer(newLayer); // this clears selected tiles and destroys the selector helper
+							assert(selectedTiles.empty());
+
+							// Actually move tiles. they will be at the end of the tile list afterwards
 							TileStorage& dst = dsq->tilemgr.tilestore[newLayer];
-							const size_t idx = ts.moveToOther(dst, &selectedTiles[0], N);
-							setActiveLayer(newLayer); // this clears selected tiles
+							const size_t idx = ts.moveToOther(dst, &selectedTmp[0], N);
+
 							// update selected tiles so that when we switch to the layer they are still selected
 							assert(selectedTiles.empty());
 							for(size_t i = 0; i < N; ++i)
 								selectedTiles.push_back(idx + i);
-							//ts.changeFlags(TILEFLAG_SELECTED, 0, &selectedTiles[0], N); // they still have that flag
+
+							// they may not have that flag anymore, make sure it's set
+							if(size_t N = selectedTiles.size())
+								dst.select(&selectedTiles[0], N);
+
+							if(hasMulti)
+								createMultiTileHelperFromSelection();
+
 							change = false;
 						}
 					}
