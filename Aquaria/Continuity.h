@@ -275,6 +275,8 @@ public:
 
 	StatsAndAchievements *statsAndAchievements;
 
+	size_t maxEats;
+
 protected:
 	std::vector<EatData> eats;
 	std::vector<float> speedTypes;

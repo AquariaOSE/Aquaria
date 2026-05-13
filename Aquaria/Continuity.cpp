@@ -33,8 +33,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <tinyxml2.h>
 using namespace tinyxml2;
 
-#define MAX_EATS			8
-
 const float webBitTime		= 2;
 const float defenseTime		= 15;
 const float speedTime		= 30;
@@ -53,6 +51,7 @@ Continuity::Continuity()
 	poisonBitTimeAvatar = 2;
 
 	statsAndAchievements = 0;
+	maxEats = 8;
 }
 
 bool Continuity::isIngredientFull(IngredientData *data)
@@ -2058,7 +2057,7 @@ void Continuity::eatBeast(const EatData &eatData)
 	{
 		for (int i = 0; i < eatData.getUnits; i++)
 		{
-			if (naijaEats.size() < MAX_EATS)
+			if (naijaEats.size() < maxEats)
 			{
 				if (!eatData.shot.empty())
 					naijaEats.push_back(eatData);

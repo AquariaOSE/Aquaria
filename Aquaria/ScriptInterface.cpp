@@ -3977,6 +3977,13 @@ luaFunc(avatar_getSpeedMult2)
 	luaReturnNum(dsq->continuity.speedMult2);
 }
 
+luaFunc(avatar_setMaxBeastEats)
+{
+	size_t oldeats = dsq->continuity.maxEats;
+	dsq->continuity.maxEats = lua_tointeger(L, 1);
+	luaReturnInt(oldeats);
+}
+
 luaFunc(jumpState)
 {
 	dsq->enqueueJumpState(getString(L, 1), getBool(L, 2));
@@ -10388,6 +10395,8 @@ static const struct {
 	luaRegister(avatar_setCanCollideWithShots),
 	luaRegister(avatar_canCollideWithShots),
 	luaRegister(avatar_setCollisionAvoidanceData),
+
+	luaRegister(avatar_setMaxBeastEats),
 
 	luaRegister(avatar_clampPosition),
 	luaRegister(avatar_updatePosition),
