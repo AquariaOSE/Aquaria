@@ -96,6 +96,8 @@ set(BBGE_SRCS
     Slider.h
     SoundManager.cpp
     SoundManager.h
+    SpineQuad.cpp
+    SpineQuad.h
     SplineGrid.cpp
     SplineGrid.h
     StateMachine.cpp

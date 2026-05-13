@@ -3721,12 +3721,13 @@ bool Game::collideHairVsCircle(Entity *a, size_t num, const Vector &pos2, float 
 	if (a && a->hair)
 	{
 		if (num == 0)
-			num = a->hair->hairNodes.size();
+			num = a->hair->points.size();
 		// HACK: minus 2
+		const float hairwidth = a->hair->getHairWidth();
 		for (size_t i = 0; i < num; i++)
 		{
 			// + a->hair->position
-			c = ((a->hair->hairNodes[i].position) - pos2).isLength2DIn(a->hair->hairWidth*perc + radius);
+			c = ((a->hair->points[i]) - pos2).isLength2DIn(hairwidth*perc + radius);
 			if (c)
 			{
 				if (colSegment)

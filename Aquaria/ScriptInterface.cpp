@@ -8452,19 +8452,16 @@ luaFunc(entity_clearHair)
 luaFunc(entity_getHairPosition)
 {
 	Entity *se = entity(L);
-	float x=0;
-	float y=0;
-	int idx = lua_tointeger(L, 2);
+	Vector p;
+	size_t idx = lua_tointeger(L, 2);
 	if (se && se->hair)
 	{
-		const HairNode *h = se->hair->getHairNode(idx);
-		if (h)
+		if(idx < se->hair->points.size())
 		{
-			x = h->position.x;
-			y = h->position.y;
+			p = se->hair->points[idx];
 		}
 	}
-	luaReturnVec2(x, y);
+	luaReturnVec2(p.x, p.y);
 }
 
 // entity x y z
@@ -8524,7 +8521,7 @@ luaFunc(entity_setHairWidth)
 {
 	ScriptedEntity *se = scriptedEntity(L);
 	if (se && se->hair)
-		se->hair->hairWidth = lua_tonumber(L, 2);
+		se->hair->setHairWidth(lua_tonumber(L, 2));
 	luaReturnNil();
 }
 
@@ -9637,19 +9634,16 @@ luaFunc(createHair)
 luaFunc(hair_getHairPosition)
 {
 	Hair *h = hair(L);
-	float x=0;
-	float y=0;
-	int idx = lua_tointeger(L, 2);
+	Vector p;
+	size_t idx = lua_tointeger(L, 2);
 	if (h)
 	{
-		const HairNode *n = h->getHairNode(idx);
-		if (n)
+		if(idx < h->points.size())
 		{
-			x = n->position.x;
-			y = n->position.y;
+			p = h->points[idx];
 		}
 	}
-	luaReturnVec2(x, y);
+	luaReturnVec2(p.x, p.y);
 }
 
 // hair x y z
@@ -9708,7 +9702,7 @@ luaFunc(hair_setWidth)
 {
 	Hair *h = hair(L);
 	if (h)
-		h->hairWidth = lua_tonumber(L, 2);
+		h->setHairWidth(lua_tonumber(L, 2));
 	luaReturnNil();
 }
 

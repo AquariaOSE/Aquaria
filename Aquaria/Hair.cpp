@@ -25,105 +25,48 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderBase.h"
 
 
-Hair::Hair(int nodes, float segmentLength, float hairWidth)
-	: RenderObject(), vbo(GPUBUF_DYNAMIC | GPUBUF_VERTEXBUF), ibo(GPUBUF_STATIC | GPUBUF_INDEXBUF)
+Hair::Hair(size_t nodes, float segmentLength, float hairWidth)
+	: SpineQuad(nodes, hairWidth * 2, 0.5f)
 {
 	addType(SCO_HAIR);
 	this->segmentMinLength = segmentLength;
 	this->segmentMaxLength = segmentLength;
-	this->hairWidth = hairWidth;
-	this->_hairfh = false;
 
 	cull = false;
 
-	hairNodes.resize(nodes);
+	percs.resize(nodes, 0);
 
-	const float m = 1.0f / float(hairNodes.size());
-	for (size_t i = 0; i < hairNodes.size(); i++)
+	const float m = 1.0f / float(nodes);
+	for (size_t i = 0; i < nodes; i++)
 	{
 		const float perc = float(i) * m;
-		hairNodes[i].percent = 1.0f-perc;
+		percs[i] = 1.0f-perc;
 		Vector p(0, i*segmentLength, 0);
-		hairNodes[i].position = p;
+		points[i] = p;
 	}
 
-	trisToDraw = ibo.initGridIndices_Triangles(2, nodes, false, GPUACCESS_DEFAULT);
 	updateVBO();
+}
+
+float Hair::getHairWidth() const
+{
+	return this->defaultWidth * 0.5f;
+}
+
+void Hair::setHairWidth(float w)
+{
+	this->defaultWidth = w * 2;
 }
 
 void Hair::setHeadPosition(const Vector &vec)
 {
-	hairNodes[0].position = vec;
-}
-
-const HairNode *Hair::getHairNode(size_t idx) const
-{
-	return idx < hairNodes.size() ? &hairNodes[idx] : NULL;
-}
-
-void Hair::updateVBO()
-{
-	const size_t N = hairNodes.size();
-	const float texBits = 1.0f / (N-1);
-	const Vector mul = !_hairfh ? Vector(1, 1) : Vector(-1, -1);
-
-	const float u0 = !_hairfh ? 0.0f : 1.0f;
-	const float u1 = 1.0f - u0;
-
-	const Vector wp = this->getWorldPositionAndRotation();
-
-	Vector pl(NoInit), pr(NoInit);
-	do
-	{
-		// 2 verts per hair node, each vertex is float xy+uv
-
-		const size_t space = N * 2 * (2*2) * sizeof(float);
-		float * const begin = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC, space, GPUACCESS_DEFAULT);
-		float *p = begin;
-
-		for(size_t i = 0; i < N-1; ++i)
-		{
-			Vector p0 = hairNodes[i].position;
-			Vector p1 = hairNodes[i+1].position;
-			Vector cur = p0;
-			Vector diffVec = p1 - p0;
-			diffVec.setLength2D(hairWidth);
-			pl = diffVec.getPerpendicularLeft();
-			pr = diffVec.getPerpendicularRight();
-			const float v = texBits * float(i);
-
-			*p++ = cur.x + pl.x;
-			*p++ = cur.y + pl.y;
-			*p++ = u0;
-			*p++ = v;
-
-			*p++ = cur.x + pr.x;
-			*p++ = cur.y + pr.y;
-			*p++ = u1;
-			*p++ = v;
-		}
-
-		// last segment doesn't have a diff vec, just re-use last perpendiculars
-		Vector cur = hairNodes[N-1].position;
-		*p++ = cur.x + pl.x;
-		*p++ = cur.y + pl.y;
-		*p++ = u0;
-		*p++ = 1;
-
-		*p++ = cur.x + pr.x;
-		*p++ = cur.y + pr.y;
-		*p++ = u1;
-		*p++ = 1;
-
-		assert(((char*)p - (char*)begin) == space);
-	}
-	while(!vbo.commitWrite());
+	points[0] = vec;
 }
 
 void Hair::onUpdate(float dt)
 {
 	updateVBO();
-	RenderObject::onUpdate(dt);
+	SpineQuad::onUpdate(dt);
 }
 
 void Hair::onRender(const RenderState& rs) const
@@ -140,17 +83,8 @@ void Hair::onRender(const RenderState& rs) const
 		glLoadIdentity();
 		core->setupRenderPositionAndScale();
 	}
-	vbo.apply();
-	ibo.drawElements(GL_TRIANGLES, trisToDraw);
 
-	if(RenderObject::renderCollisionShape)
-	{
-		glBindTexture(GL_TEXTURE_2D, 0);
-		RenderObject::lastTextureApplied = 0;
-		glPointSize(2);
-		glColor3f(1,0,1);
-		glDrawArrays(GL_POINTS, 0, vbo.size() / (sizeof(float) * 4));
-	}
+	SpineQuad::onRender(rs);
 
 	if(parent)
 	{
@@ -160,32 +94,32 @@ void Hair::onRender(const RenderState& rs) const
 
 void Hair::updatePositions()
 {
-	for (size_t i = 1; i < hairNodes.size(); i++)
+	for (size_t i = 1; i < points.size(); i++)
 	{
-		Vector diff = hairNodes[i].position - hairNodes[i-1].position;
+		Vector diff = points[i] - points[i-1];
 		float len = diff.getLength2D();
 		len = std::min(segmentMaxLength, std::max(segmentMinLength, len));
 		diff.setLength2D(len);
-		hairNodes[i].position = hairNodes[i-1].position + diff;
+		points[i] = points[i-1] + diff;
 	}
 }
 
 void Hair::exertForce(const Vector &force, float dt, int usePerc)
 {
 	const Vector f = force * dt;
-	for (size_t i = hairNodes.size(); i --> 1; )
+	for (size_t i = points.size(); i --> 1; )
 	{
 		switch (usePerc)
 		{
 		case 0:
-			hairNodes[i].position += f * hairNodes[i].percent;
+			points[i] += f * percs[i];
 		break;
 		case 1:
-			hairNodes[i].position += f * (1.0f-hairNodes[i].percent);
+			points[i] += f * (1.0f-percs[i]);
 		break;
 		case 2:
 		default:
-			hairNodes[i].position += f;
+			points[i] += f;
 		break;
 		}
 
@@ -195,20 +129,20 @@ void Hair::exertForce(const Vector &force, float dt, int usePerc)
 void Hair::exertNodeForce(size_t i, const Vector& force, float dt, int usePerc)
 {
 	const Vector f = force * dt;
-	if(i >= hairNodes.size())
+	if(i >= points.size())
 		return;
 
 	switch (usePerc)
 	{
 	case 0:
-		hairNodes[i].position += f * hairNodes[i].percent;
+		points[i] += f * percs[i];
 	break;
 	case 1:
-		hairNodes[i].position += f * (1.0f-hairNodes[i].percent);
+		points[i] += f * (1.0f-percs[i]);
 	break;
 	case 2:
 	default:
-		hairNodes[i].position += f;
+		points[i] += f;
 	break;
 	}
 }

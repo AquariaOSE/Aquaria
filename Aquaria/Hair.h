@@ -23,41 +23,30 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "RenderObject.h"
 #include "RenderGrid.h"
+#include "SpineQuad.h"
 
-struct HairNode
-{
-	HairNode() : percent(0)
-	{}
-	float percent; // percent of how much force is affected on this node
-	Vector position; // position of the hair node
-};
 
-class Hair : public RenderObject
+class Hair : public SpineQuad
 {
 public:
-	Hair(int nodes=40, float segmentLength=3, float width=18);
+	Hair(size_t nodes=40, float segmentLength=3, float width=18);
 
 	void exertForce(const Vector &force, float dt, int usePerc=0);
 	void exertNodeForce(size_t idx, const Vector &force, float dt, int usePerc=0);
 	void updatePositions();
-	void setTextureFlip(bool flip) { _hairfh = flip; }
+	float getHairWidth() const;
+	void setHairWidth(float w);
 
-	float hairWidth;
+	void onUpdate(float dt) OVERRIDE;
+	void onRender(const RenderState& rs) const OVERRIDE;
+
 	float segmentMinLength, segmentMaxLength;
-
-	std::vector<HairNode> hairNodes;
 
 	void setHeadPosition(const Vector &pos);
 
-	const HairNode *getHairNode(size_t idx) const;
 protected:
-	void onUpdate(float dt) OVERRIDE;
-	void onRender(const RenderState& rs) const OVERRIDE;
-	bool _hairfh;
-	size_t trisToDraw;
-	void updateVBO();
+	std::vector<float> percs; // percent of how much force is affected on this node
 
-	DynamicGPUBuffer ibo, vbo;
 };
 
 #endif
