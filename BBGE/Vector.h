@@ -193,12 +193,12 @@ public:
           return Vector(y*vec.z - z*vec.y, z*vec.x - x*vec.z, x*vec.y - y*vec.x);
      }
 
-	 inline Vector getPerpendicularLeft()
+	 inline Vector getPerpendicularLeft() const
 	 {
 		 return Vector(-y, x);
 	 }
 
-	 inline Vector getPerpendicularRight()
+	 inline Vector getPerpendicularRight() const
 	 {
 		 return Vector(y, -x);
 	 }

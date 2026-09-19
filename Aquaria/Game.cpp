@@ -3708,6 +3708,49 @@ void Game::playBurstSound(bool wallJump)
 	}
 }
 
+bool Game::collideLineSegmentVsLineSegment(const Vector& p0, const Vector& d0, const Vector& p1, const Vector& d1, Vector *vout)
+{
+    const Vector astart = p0;
+    const Vector aend = p0 + d0;
+    const Vector bstart = p1;
+    const Vector bend = p1 + d1;
+
+    const float denom = ((bend.y - bstart.y)*(aend.x - astart.x)) -
+        ((bend.x - bstart.x)*(aend.y - astart.y));
+
+    const float nume_a = ((bend.x - bstart.x)*(astart.y - bstart.y)) -
+        ((bend.y - bstart.y)*(astart.x - bstart.x));
+
+    const float nume_b = ((aend.x - astart.x)*(astart.y - bstart.y)) -
+        ((aend.y - astart.y)*(astart.x - bstart.x));
+
+    if(denom == 0.0f)
+    {
+        if(nume_a == 0.0f && nume_b == 0.0f)
+        {
+            if(vout)
+                *vout = astart + (aend * 0.5);
+            return true; // coincident
+        }
+        return false; // parallel
+    }
+
+    const float ua = nume_a / denom;
+    const float ub = nume_b / denom;
+
+    if(ua >= 0.0f && ua <= 1.0f && ub >= 0.0f && ub <= 1.0f)
+    {
+        if(vout)
+        {
+            *vout = astart + ua*(aend - astart);
+        }
+
+        return true; // intersecting
+    }
+
+    return false;
+}
+
 bool Game::collideCircleVsCircle(Entity *a, Entity *b)
 {
 	return (a->position - b->position).isLength2DIn(a->collideRadius + b->collideRadius);
@@ -3721,13 +3764,13 @@ bool Game::collideHairVsCircle(Entity *a, size_t num, const Vector &pos2, float 
 	if (a && a->hair)
 	{
 		if (num == 0)
-			num = a->hair->points.size();
+			num = a->hair->_points.size();
 		// HACK: minus 2
 		const float hairwidth = a->hair->getHairWidth();
 		for (size_t i = 0; i < num; i++)
 		{
 			// + a->hair->position
-			c = ((a->hair->points[i]) - pos2).isLength2DIn(hairwidth*perc + radius);
+			c = ((a->hair->_points[i]) - pos2).isLength2DIn(hairwidth*perc + radius);
 			if (c)
 			{
 				if (colSegment)

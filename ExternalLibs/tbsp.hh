@@ -93,7 +93,7 @@ tbsp::evalRange(p, NP, tmp, knots, cp, NCP, DEGREE, 0.2f, 0.5f);
 #  define TBSP_ASSERT(x)
 #endif
 
-// Optional, if it doesn't compile, replce with empty macro
+// Optional, if it doesn't compile, replace with empty macro
 #define TBSP_RESTRICT __restrict
 
 #ifndef TBSP_HAS_CPP11
@@ -184,7 +184,7 @@ static P deBoor(P * TBSP_RESTRICT work, const P * TBSP_RESTRICT src, const T * T
 //--------------------------------------
 
 template<typename T>
-static size_t fillKnotVector(T *knots, size_t numcp, size_t degree, T mink, T maxk)
+static void fillKnotVector(T *knots, size_t numcp, size_t degree, T mink, T maxk)
 {
     TBSP_ASSERT(mink < maxk);
 
@@ -207,11 +207,10 @@ static size_t fillKnotVector(T *knots, size_t numcp, size_t degree, T mink, T ma
     // endpoint interpolation, end
     for(size_t i = 0; i < ep; ++i)
         *knots++ = maxk;
-
-    return degree;
 }
 
 // evaluate single point at t
+// work[] must fit degree elements
 template<typename T, typename P>
 static P evalOne(P * TBSP_RESTRICT work, const T * TBSP_RESTRICT knots, const P * TBSP_RESTRICT controlpoints, size_t numcp, size_t degree, T t, size_t inputStride = 1)
 {
@@ -238,6 +237,7 @@ static P evalOne(P * TBSP_RESTRICT work, const T * TBSP_RESTRICT knots, const P 
 }
 
 // evaluate numdst points in range [tmin..tmax], equally spaced
+// work[] must fit degree elements
 template<typename T, typename P>
 static void evalRange(P * TBSP_RESTRICT dst, size_t numdst, P * TBSP_RESTRICT work, const T * TBSP_RESTRICT knots, const P * TBSP_RESTRICT controlpoints, size_t numcp, size_t degree, T tmin, T tmax, size_t inputStride = 1, size_t outputStride = 1)
 {
@@ -767,7 +767,7 @@ MatrixAcc<T> generateLeastSquares(T *mem, const MatrixAcc<T>& N)
     )
 
 // For Interpolator::generateControlPoints()
-#define tbsp_getInterpolatorWorkTempSize(numControlPoints, numPoints) \
+#define tbsp__getInterpolatorWorkTempSize(numControlPoints, numPoints) \
     ( ((numControlPoints) == (numPoints)) ? 0 : ((numControlPoints) - 2) )
 
 // --------------------------------------------------

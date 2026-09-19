@@ -38,7 +38,6 @@ public:
 	void setHairWidth(float w);
 
 	void onUpdate(float dt) OVERRIDE;
-	void onRender(const RenderState& rs) const OVERRIDE;
 
 	float segmentMinLength, segmentMaxLength;
 

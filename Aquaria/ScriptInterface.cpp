@@ -62,6 +62,7 @@ extern "C" {
 #include "ActionMapper.h"
 #include "QuadGrid.h"
 #include "WorldMapRender.h"
+#include "SplineQuad.h"
 
 
 #include "MathFunctions.h"
@@ -637,6 +638,18 @@ Hair *hair(lua_State *L, int slot = 1)
 	if (!h)
 	{
 		scriptDebug(L, "Hair Invalid Pointer");
+	}
+	return h;
+}
+
+static inline
+SplineQuad *splineq(lua_State *L, int slot = 1)
+{
+	SplineQuad *h = (SplineQuad*)lua_touserdata(L, slot);
+	ENSURE_TYPE(h, SCO_SPLINEQUAD);
+	if (!h)
+	{
+		scriptDebug(L, "SplineQuad Invalid Pointer");
 	}
 	return h;
 }
@@ -8456,9 +8469,9 @@ luaFunc(entity_getHairPosition)
 	size_t idx = lua_tointeger(L, 2);
 	if (se && se->hair)
 	{
-		if(idx < se->hair->points.size())
+		if(idx < se->hair->_points.size())
 		{
-			p = se->hair->points[idx];
+			p = se->hair->_points[idx];
 		}
 	}
 	luaReturnVec2(p.x, p.y);
@@ -9620,7 +9633,6 @@ luaFunc(setBGGradient)
 
 luaFunc(createHair)
 {
-
 	Hair *h = new Hair(lua_tointeger(L, 1), lua_tonumber(L, 2), lua_tonumber(L, 3));
 	h->setTexture(getString(L, 4));
 	int layer = lua_tointeger(L, 5);
@@ -9638,9 +9650,9 @@ luaFunc(hair_getHairPosition)
 	size_t idx = lua_tointeger(L, 2);
 	if (h)
 	{
-		if(idx < h->points.size())
+		if(idx < h->_points.size())
 		{
-			p = h->points[idx];
+			p = h->_points[idx];
 		}
 	}
 	luaReturnVec2(p.x, p.y);
@@ -9713,6 +9725,26 @@ luaFunc(hair_setSegmentLength)
 	{
 		h->segmentMinLength = lua_tonumber(L, 2);
 		h->segmentMaxLength = std::max(h->segmentMinLength, (float)lua_tonumber(L, 2));
+	}
+	luaReturnNil();
+}
+
+luaFunc(hair_getNumNodes)
+{
+	Hair *h = hair(L);
+	size_t n = h ? h->_points.size() : 0;
+	luaReturnInt(n);
+}
+
+luaFunc(hair_setNodeWidthMult)
+{
+	Hair *h = hair(L);
+	float m = lua_tonumber(L, 3);
+	size_t idx = lua_tointeger(L, 2);
+	if (h)
+	{
+		if(idx < h->_points.size())
+			h->_points[idx].z = m;
 	}
 	luaReturnNil();
 }
@@ -10041,6 +10073,46 @@ luaFunc(quadgrid_resetPos)
 		q->resetPos(w, h, xoffs, yoffs);
 	}
 	luaReturnNil();
+}
+
+// ------------------------------------
+
+luaFunc(createSplineQuad)
+{
+	size_t nodes = lua_tointeger(L, 1);
+	float width = lua_tonumber(L, 2);
+	float off = lua_tonumber(L, 3);
+	off = off * 0.5f + 0.5f; // Transform [-1 .. 0 .. 1] into [0 .. 0.5 .. 1]
+	SplineQuad *q = new SplineQuad(nodes, width, off);
+	q->setTexture(getString(L, 4));
+	int layer = lua_tointeger(L, 5);
+	if(!layer)
+		layer = LR_ENTITIES;
+	if(layer > 0)
+		game->addRenderObject(q, layer);
+	luaReturnPtr(q);
+}
+
+luaFunc(splinequad_setInterpolation)
+{
+	SplineQuad *q = splineq(L);
+	size_t ctrlp = lua_tointeger(L, 1);
+	int deg = lua_tointeger(L, 2);
+	bool interpolate = getBool(L, 3);
+	bool ok = q->init(ctrlp, interpolate, deg);
+	luaReturnBool(ok);
+}
+
+luaFunc(splinequad_setControlPoint)
+{
+	SplineQuad *q = splineq(L);
+	size_t idx = lua_tointeger(L, 2);
+	float x = lua_tonumber(L, 3);
+	float y = lua_tonumber(L, 4);
+	float w = lua_tonumber(L, 4);
+	if(idx < q->numcp())
+		(*q)(idx) = Vector(x, y, w);
+
 }
 
 // ---------- Minimap related ------------------

@@ -7,12 +7,13 @@ SpineQuad::SpineQuad(size_t nodes, float width, float offsPerc)
 	, defaultWidth(width)
 	, spineOffsPerc(offsPerc)
 	, _texfh(false)
+	, pointsAreInWorldCoordSystem(false)
 	, trisToDraw(0)
 	, vbo(GPUBUF_DYNAMIC | GPUBUF_VERTEXBUF)
 	, ibo(GPUBUF_STATIC | GPUBUF_INDEXBUF)
 
 {
-	points.resize(nodes);
+	_points.resize(nodes);
 	updateIBO();
 }
 
@@ -22,6 +23,15 @@ SpineQuad::~SpineQuad()
 
 void SpineQuad::onRender(const RenderState& rs) const
 {
+	const bool fixcoord = parent && pointsAreInWorldCoordSystem;
+
+	if(fixcoord)
+	{
+		glPushMatrix();
+		glLoadIdentity();
+		core->setupRenderPositionAndScale();
+	}
+
 	vbo.apply();
 	ibo.drawElements(GL_TRIANGLE_STRIP, trisToDraw);
 
@@ -35,11 +45,16 @@ void SpineQuad::onRender(const RenderState& rs) const
 
 		//ibo.drawElements(GL_LINE_STRIP, ibo.size() / sizeof(unsigned short)); // strips wireframe
 	}
+
+	if(fixcoord)
+	{
+		glPopMatrix();
+	}
 }
 
 void SpineQuad::updateIBO()
 {
-	const size_t N = points.size();
+	const size_t N = _points.size();
 	const size_t space = (4 + (4 * N)) * sizeof(short);
 
 	do
@@ -80,8 +95,13 @@ void SpineQuad::updateIBO()
 
 void SpineQuad::updateVBO()
 {
+	if(size_t n = _points.size())
+		updateVBO(&_points[0], n);
+}
+
+void SpineQuad::updateVBO(const Vector* points, size_t N)
+{
 	bool fh = _fh;
-	const size_t N = points.size();
 	const float texBits = 1.0f / (N-1);
 	const Vector mul = !fh ? Vector(1, 1) : Vector(-1, -1);
 
@@ -167,14 +187,14 @@ void SpineQuad::updateVBO()
 		o---...    <- n+2  */
 		for(size_t i = 1; i < N; ++i)
 		{
-			Vector p0 = points[i-1];
-			Vector p1 = points[i];
+			const Vector p0 = points[i-1];
+			const Vector p1 = points[i];
 
-			Vector diffVec = p1 - p0;
+			const Vector diffVec = p1 - p0;
 			Vector pl = diffVec.getPerpendicularLeft();
-			pl.setLength2D(lenleft);
 			Vector pr = diffVec.getPerpendicularRight();
-			pr.setLength2D(lenright);
+			pl.setLength2D(lenleft * p0.z);
+			pr.setLength2D(lenright * p0.z);
 			const float v = texBits * float(i);
 			const float vhalf = texBits * (float(i) - 0.5f);
 

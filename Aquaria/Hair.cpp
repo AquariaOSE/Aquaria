@@ -32,6 +32,14 @@ Hair::Hair(size_t nodes, float segmentLength, float hairWidth)
 	this->segmentMinLength = segmentLength;
 	this->segmentMaxLength = segmentLength;
 
+	// Hair is always drawn in the world coordinate system.
+	// The base game never attaches hair as a child object to something else,
+	// and the Hair object is always technically located at (0, 0) -- just the hair nodes are moved.
+	// However, if a parent is set, this Hair would be drawn relative to the parent,
+	// which is incorrect.
+	// Note: This is for hairs added as children to other objects which ONLY mods do!
+	this->pointsAreInWorldCoordSystem = true;
+
 	cull = false;
 
 	percs.resize(nodes, 0);
@@ -41,8 +49,8 @@ Hair::Hair(size_t nodes, float segmentLength, float hairWidth)
 	{
 		const float perc = float(i) * m;
 		percs[i] = 1.0f-perc;
-		Vector p(0, i*segmentLength, 0);
-		points[i] = p;
+		Vector p(0, i*segmentLength, 1);
+		_points[i] = p;
 	}
 
 	updateVBO();
@@ -60,7 +68,8 @@ void Hair::setHairWidth(float w)
 
 void Hair::setHeadPosition(const Vector &vec)
 {
-	points[0] = vec;
+	_points[0].x = vec.x;
+	_points[0].y = vec.y;
 }
 
 void Hair::onUpdate(float dt)
@@ -69,81 +78,61 @@ void Hair::onUpdate(float dt)
 	SpineQuad::onUpdate(dt);
 }
 
-void Hair::onRender(const RenderState& rs) const
-{
-	if(parent)
-	{
-		// Hair is always drawn in the world coordinate system.
-		// The base game never attaches hair as a child object to something else,
-		// and the Hair object is always technically located at (0, 0) -- just the hair nodes are moved.
-		// However, if a parent is set, this Hair would be drawn relative to the parent,
-		// which is incorrect.
-		// Note: This is for hairs added as children to other objects which ONLY mods do!
-		glPushMatrix();
-		glLoadIdentity();
-		core->setupRenderPositionAndScale();
-	}
-
-	SpineQuad::onRender(rs);
-
-	if(parent)
-	{
-		glPopMatrix();
-	}
-}
-
 void Hair::updatePositions()
 {
-	for (size_t i = 1; i < points.size(); i++)
+	for (size_t i = 1; i < _points.size(); i++)
 	{
-		Vector diff = points[i] - points[i-1];
+		Vector diff = _points[i] - _points[i-1];
+		diff.z = 0;
 		float len = diff.getLength2D();
 		len = std::min(segmentMaxLength, std::max(segmentMinLength, len));
 		diff.setLength2D(len);
-		points[i] = points[i-1] + diff;
+		_points[i] = _points[i-1] + diff;
 	}
 }
 
 void Hair::exertForce(const Vector &force, float dt, int usePerc)
 {
-	const Vector f = force * dt;
-	for (size_t i = points.size(); i --> 1; )
+	Vector fbase = force * dt;
+	for (size_t i = _points.size(); i --> 1; )
 	{
+		Vector f = fbase;
 		switch (usePerc)
 		{
 		case 0:
-			points[i] += f * percs[i];
+			f *= percs[i];
 		break;
 		case 1:
-			points[i] += f * (1.0f-percs[i]);
+			f *= (1.0f-percs[i]);
 		break;
-		case 2:
 		default:
-			points[i] += f;
-		break;
+		break; // Do nothinhg, use f as-is
 		}
-
+		_points[i].x += f.x;
+		_points[i].y += f.y;
 	}
 }
 
 void Hair::exertNodeForce(size_t i, const Vector& force, float dt, int usePerc)
 {
-	const Vector f = force * dt;
-	if(i >= points.size())
+	if(i >= _points.size())
 		return;
+
+	Vector f = force * dt;
 
 	switch (usePerc)
 	{
 	case 0:
-		points[i] += f * percs[i];
+		 f *= percs[i];
 	break;
 	case 1:
-		points[i] += f * (1.0f-percs[i]);
+		f *= (1.0f-percs[i]);
 	break;
-	case 2:
 	default:
-		points[i] += f;
-	break;
+	break; // Do nothinhg, use f as-is
 	}
+
+	_points[i].x += f.x;
+	_points[i].y += f.y;
 }
 

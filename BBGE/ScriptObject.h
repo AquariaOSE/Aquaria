@@ -45,6 +45,7 @@ enum ScriptObjectType
 	SCO_QUAD_GRID         = 0x8000,
 	SCO_COLLIDE_QUAD      = 0x10000,
 	SCO_HAIR              = 0x20000,
+	SCO_SPLINEQUAD        = 0x40000,
 
 	SCO_FORCE_32BIT = 0xFFFFFFFF
 };

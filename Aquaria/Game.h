@@ -156,6 +156,7 @@ public:
 
 	bool collideHairVsCircle(Entity *a, size_t num, const Vector &pos2, float radius, float perc=0, size_t *colSegment=0);
 
+	bool collideLineSegmentVsLineSegment(const Vector& p0, const Vector& d0, const Vector& p1, const Vector& d1, Vector *vout = NULL);
 	bool collideCircleVsCircle(Entity *a, Entity *b);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, CollideQuad *circle);
 	Bone *collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius);

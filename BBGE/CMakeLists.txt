@@ -100,6 +100,8 @@ set(BBGE_SRCS
     SpineQuad.h
     SplineGrid.cpp
     SplineGrid.h
+    SplineQuad.cpp
+    SplineQuad.h
     StateMachine.cpp
     StateMachine.h
     StateManager.cpp
