@@ -187,6 +187,7 @@ bool Texture::upload(const ImageData& img, bool mipmap)
 	glBindTexture(GL_TEXTURE_2D, gltexid);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_CLAMP);
 	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_CLAMP);
+	_bordermode = TEX_BORDER_CLAMP;
 
 	const GlTexFormat& f = formatLUT[img.channels - 1];
 
