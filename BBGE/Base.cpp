@@ -313,11 +313,8 @@ void exit_error(const std::string &message)
 
 bool chance(int perc)
 {
-	if (perc == 100) return true;
-	if (perc == 0) return false;
-
-	unsigned r = Randomness::getBits32();
-	return ((r%100) <= perc);
+	int r = Randomness::getBits32()%100;
+	return r < perc;
 }
 
 void errorLog(const std::string &s)

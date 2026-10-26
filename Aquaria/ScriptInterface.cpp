@@ -6369,9 +6369,7 @@ luaFunc(screenMessage)
 /// chance(int percent) -> bool!
 luaFunc(chance)
 {
-	int r = Randomness::getBits32()%100;
-	int c = lua_tointeger(L, 1);
-	luaReturnBool(r < c);
+	luaReturnBool(chance(lua_tointeger(L, 1)));
 }
 
 /// entity_handleShotCollisions(Entity e)
