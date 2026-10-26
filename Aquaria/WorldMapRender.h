@@ -53,8 +53,8 @@ public:
 	void action(int id, int state, int source, InputDevice device);
 	GemMover* addGem(GemData *gemData);
 	void refreshGem(const GemData *gemData);
-	void removeGem(GemMover *gemMover);
-	void removeGem(const GemData *gemData);
+	bool removeGem(GemMover *gemMover);
+	bool removeGem(const GemData *gemData);
 	GemMover *getGem(const GemData *gemData) const;
 	WorldMapTileContainer *getTileWithGem(const GemData *gemData) const;
 	void bindInput();

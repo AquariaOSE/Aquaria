@@ -304,7 +304,7 @@ public:
 
 	float cameraLerpDelay;
 	Vector gradTop, gradBtm;
-	bool isValidTarget(Entity *e, Entity *me);
+	static bool isValidTarget(Entity *e);
 	Gradient *grad;
 	std::string bgSfxLoop, airSfxLoop;
 	void constrainCamera();

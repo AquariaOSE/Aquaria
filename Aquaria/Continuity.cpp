@@ -1981,7 +1981,7 @@ void Continuity::shiftWorlds()
 		Entity *e = *i;
 		e->shiftWorlds(lastWorld, worldType);
 	}
-	applyWorldEffects(worldType, 1, 1);
+	applyWorldEffects(worldType, true);
 	if (worldType == WT_SPIRIT)
 		core->sound->playSfx("Spirit-Enter");
 	else if (worldType == WT_NORMAL)
@@ -2026,7 +2026,7 @@ void Continuity::setBeacon(int index, bool on, Vector pos, Vector color)
 	}
 }
 
-void Continuity::applyWorldEffects(WorldType type, bool transition, bool affectMusic)
+void Continuity::applyWorldEffects(WorldType type, bool transition)
 {
 	float time = 1;
 	if (!transition) time = 0;

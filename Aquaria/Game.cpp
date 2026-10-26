@@ -2207,9 +2207,9 @@ void Game::toggleWorldMap()
 	toggleWorldMap(!isOnWorldMap());
 }
 
-bool Game::isValidTarget(Entity *e, Entity *me)
+bool Game::isValidTarget(Entity *e)
 {
-	return (e != me && e->isNormalLayer() && e->isPresent() && e->getEntityType() == ET_ENEMY && e->isAvatarAttackTarget());
+	return (e && e->isNormalLayer() && e->isPresent() && e->getEntityType() == ET_ENEMY && e->isAvatarAttackTarget());
 }
 
 void Game::createPets()
@@ -2978,7 +2978,7 @@ void Game::applyState()
 	}
 
 	if (dsq->continuity.getWorldType() != WT_NORMAL)
-		dsq->continuity.applyWorldEffects(dsq->continuity.getWorldType(), 0, musicchanged);
+		dsq->continuity.applyWorldEffects(dsq->continuity.getWorldType(), false);
 
 
 	if (verbose) debugLog("initAvatar");
@@ -3763,14 +3763,14 @@ bool Game::collideHairVsCircle(Entity *a, size_t num, const Vector &pos2, float 
 	bool c = false;
 	if (a && a->hair)
 	{
-		if (num == 0)
-			num = a->hair->_points.size();
-		// HACK: minus 2
+		const std::vector<Vector>& pts = a->hair->_points;
+		if (num == 0 || num > pts.size())
+			num = pts.size();
+
 		const float hairwidth = a->hair->getHairWidth();
 		for (size_t i = 0; i < num; i++)
 		{
-			// + a->hair->position
-			c = ((a->hair->_points[i]) - pos2).isLength2DIn(hairwidth*perc + radius);
+			c = ((pts[i]) - pos2).isLength2DIn(hairwidth*perc + radius);
 			if (c)
 			{
 				if (colSegment)
@@ -4664,12 +4664,15 @@ void Game::update(float dt)
 
 void Game::setElementLayerVisible(int bgLayer, bool v)
 {
-	core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer)->visible = v;
+	RenderObjectLayer *rl = core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer);
+	if(rl)
+		rl->visible = v;
 }
 
 bool Game::isElementLayerVisible(int bgLayer)
 {
-	return core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer)->visible;
+	RenderObjectLayer *rl = core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer);
+	return rl && rl->visible;
 }
 
 Shot *Game::fireShot(const std::string &bankShot, Entity *firer, Entity *target, const Vector &pos, const Vector &aim, bool playSfx)

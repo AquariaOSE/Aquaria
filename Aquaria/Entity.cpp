@@ -403,7 +403,7 @@ void Entity::setName(const std::string &name)
 	this->name = name;
 }
 
-float Entity::followPath(Path *p, float speed, int dir, bool deleteOnEnd)
+float Entity::followPath(Path *p, float speed, bool reverse, bool deleteOnEnd)
 {
 	if(!speed)
 		speed = getMaxSpeed();
@@ -412,20 +412,22 @@ float Entity::followPath(Path *p, float speed, int dir, bool deleteOnEnd)
 	position.stopPath();
 	position.ensureData();
 	position.data->path.clear();
-	if (dir)
+	const size_t n = p->nodes.size();
+	const float f = 1.0f / float(n);
+	if (reverse)
 	{
-		for (int i = p->nodes.size()-1; i >=0; i--)
+		for (size_t i = n; i --> 0; )
 		{
-			PathNode pn = p->nodes[i];
-			position.data->path.addPathNode(pn.position, 1.0f-(float(i/float(p->nodes.size()))));
+			const PathNode& pn = p->nodes[i];
+			position.data->path.addPathNode(pn.position, 1.0f-(float(i) * f));
 		}
 	}
 	else
 	{
 		for (size_t i = 0; i < p->nodes.size(); i++)
 		{
-			PathNode pn = p->nodes[i];
-			position.data->path.addPathNode(pn.position, float(i/float(p->nodes.size())));
+			const PathNode& pn = p->nodes[i];
+			position.data->path.addPathNode(pn.position, float(i) * f);
 		}
 	}
 	//debugLog("Calculating Time");
@@ -436,7 +438,7 @@ float Entity::followPath(Path *p, float speed, int dir, bool deleteOnEnd)
 	return time;
 }
 
-float Entity::moveToPos(Vector dest, float speed, int dieOnPathEnd, bool swim)
+float Entity::moveToPos(Vector dest, float speed, bool dieOnPathEnd, bool swim)
 {
 	if(!speed)
 		speed = getMaxSpeed();
@@ -1154,7 +1156,7 @@ void Entity::onPathEnd()
 				skeletalSprite.animate("idle", -1);
 			}
 			position.ensureData();
-			int num = position.data->path.getNumPathNodes();
+			size_t num = position.data->path.getNumPathNodes();
 			if (num >= 2)
 			{
 				Vector v2 = position.data->path.getPathNode(num-1)->value;
@@ -1753,7 +1755,7 @@ void Entity::addTargetPoint(const Vector &point)
 	targetPoints.push_back(point);
 }
 
-int Entity::getNumTargetPoints()
+size_t Entity::getNumTargetPoints() const
 {
 	return targetPoints.size();
 }
@@ -1769,7 +1771,7 @@ int Entity::getRandomTargetPoint()
 {
 	if (targetPoints.empty())
 		return 0;
-	return rand()%targetPoints.size();
+	return Randomness::getBits32() % targetPoints.size();
 }
 
 bool Entity::isUnderWater()
@@ -1812,7 +1814,7 @@ void Entity::setMaxSpeed(float ms)
 	maxSpeed = ms;
 }
 
-int Entity::getMaxSpeed()
+float Entity::getMaxSpeed() const
 {
 	return maxSpeed;
 }
@@ -1836,7 +1838,7 @@ Vector Entity::getEnergyShotTargetPosition()
 	return getWorldPosition();
 }
 
-bool Entity::isTargetInRange(int range, size_t t)
+bool Entity::isTargetInRange(float range, size_t t)
 {
 	if (t >= targets.size())
 	{
@@ -1863,7 +1865,7 @@ EntityType Entity::getEntityType()
 	return entityType;
 }
 
-Entity *Entity::findTarget(int dist, int type, size_t t)
+Entity *Entity::findTarget(float dist, int type, size_t t)
 {
 	Entity *target = NULL;
 
@@ -1897,14 +1899,14 @@ Entity *Entity::findTarget(int dist, int type, size_t t)
 	return target;
 }
 
-void Entity::moveTowards(Vector p, float dt, int spd)
+void Entity::moveTowards(Vector p, float dt, float spd)
 {
 	Vector d = p - this->position;
 	d.setLength2D(spd*dt);
 	vel += d;
 }
 
-void Entity::moveAround(Vector p, float dt, int spd, int dir)
+void Entity::moveAround(Vector p, float dt, float spd, int dir)
 {
 	Vector d = p - this->position;
 	if (!dir)
@@ -1915,25 +1917,27 @@ void Entity::moveAround(Vector p, float dt, int spd, int dir)
 	vel += d;
 }
 
-void Entity::moveTowardsAngle(int angle, float dt, int spd)
+void Entity::moveTowardsAngle(float angle, float dt, float spd)
 {
-	Vector p(sinf(MathFunctions::toRadians(angle))*16+position.x, cosf(MathFunctions::toRadians(angle))*16+position.y);
+	const float ra = MathFunctions::toRadians(angle);
+	Vector p(sinf(ra)*16+position.x, cosf(ra)*16+position.y);
 	moveTowards(p, dt, spd);
 }
 
-void Entity::moveAroundAngle(int angle, float dt, int spd, int dir)
+void Entity::moveAroundAngle(float angle, float dt, float spd, int dir)
 {
-	Vector p(sinf(MathFunctions::toRadians(angle))*16+position.x, cosf(MathFunctions::toRadians(angle))*16+position.y);
+	const float ra = MathFunctions::toRadians(angle);
+	Vector p(sinf(ra)*16+position.x, cosf(ra)*16+position.y);
 	moveAround(p, dt, spd, dir);
 }
 
-void Entity::moveTowardsTarget(float dt, int spd, size_t t)
+void Entity::moveTowardsTarget(float dt, float spd, size_t t)
 {
 	if (t >= targets.size() || !targets[t]) return;
 	moveTowards(targets[t]->position, dt, spd);
 }
 
-void Entity::moveAroundTarget(float dt, int spd, int dir, size_t t)
+void Entity::moveAroundTarget(float dt, float spd, int dir, size_t t)
 {
 	if (t >= targets.size() || !targets[t]) return;
 	moveAround(targets[t]->position, dt, spd, dir);
@@ -1947,7 +1951,7 @@ Vector Entity::getLookAtPoint()
 }
 
 
-void Entity::moveAroundEntity(float dt, int spd, int dir, Entity *e)
+void Entity::moveAroundEntity(float dt, float spd, int dir, Entity *e)
 {
 	Vector d = e->position - this->position;
 	if (!dir)
@@ -2292,7 +2296,7 @@ void Entity::clampToHit()
 
 
 
-void Entity::doEntityAvoidance(float dt, int range, float mod, Entity *ignore)
+void Entity::doEntityAvoidance(float dt, float range, float mod, Entity *ignore)
 {
 	Vector accum;
 	int c = 0;
@@ -2384,7 +2388,7 @@ void Entity::addIgnoreShotDamageType(DamageType dt)
 	ignoreShotDamageTypes.push_back(dt);
 }
 
-void Entity::doSpellAvoidance(float dt, int range, float mod)
+void Entity::doSpellAvoidance(float dt, float range, float mod)
 {
 	Vector accum;
 
@@ -2487,7 +2491,7 @@ bool Entity::doCollisionAvoidance(float dt, int search, float mod, Vector *vp, f
 	TileVector useTile;
 	const int blockObs = ~ignoreObs;
 
-	float totalDist = sqrtf(float(sqr((search*2)*TILE_SIZE)+sqr((search*2)*TILE_SIZE)));
+	float totalDist = search * 2 * TILE_SIZE * 1.4142135623731f; // sqrtf(2), to cover the diagonal range of a map square
 	for (int x = -search; x <= search; x++)
 	{
 		for (int y = -search; y <= search; y++)

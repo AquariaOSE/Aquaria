@@ -1008,7 +1008,7 @@ void WorldMapRender::refreshGem(const GemData* gemData)
 	m->refresh();
 }
 
-void WorldMapRender::removeGem(GemMover *gem)
+bool WorldMapRender::removeGem(GemMover *gem)
 {
 	dsq->continuity.removeGemData(gem->getGemData());
 	for(size_t i = 0; i < gemMovers.size(); ++i)
@@ -1019,15 +1019,18 @@ void WorldMapRender::removeGem(GemMover *gem)
 			break;
 		}
 	WorldMapTileContainer *tc = getTileWithGem(gem->getGemData());
+	bool rm = false;
 	if(tc)
-		tc->removeGem(gem);
+		rm = tc->removeGem(gem);
 	gem->safeKill();
+	return rm;
 }
 
-void WorldMapRender::removeGem(const GemData* gemData)
+bool WorldMapRender::removeGem(const GemData* gemData)
 {
 	if(GemMover *gm = getGem(gemData))
-		removeGem(gm);
+		return removeGem(gm);
+	return false;
 }
 
 GemMover* WorldMapRender::getGem(const GemData* gemData) const

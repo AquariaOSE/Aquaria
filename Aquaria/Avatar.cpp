@@ -1842,7 +1842,7 @@ Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, E
 		*/
 
 		//e &&
-		if (e != this && e->targetPriority >= highestPriority && this->pullTarget != e && e->isDamageTarget(dt) && game->isValidTarget(e, this))
+		if (e != this && e->targetPriority >= highestPriority && this->pullTarget != e && e->isDamageTarget(dt) && game->isValidTarget(e))
 		{
 
 
@@ -1930,10 +1930,11 @@ void Avatar::updateTargets(float dt, bool override)
 	DamageType damageType = DT_AVATAR_ENERGYBLAST;
 	for (size_t i = 0; i < targets.size(); i++)
 	{
-		if (!targets[i].e
-		|| !targets[i].e->isPresent()
-		|| targets[i].e->getState() == STATE_DEATHSCENE
-		|| !game->isValidTarget(targets[i].e, this))
+		Entity *e = targets[i].e;
+		if (!e
+		|| !e->isPresent()
+		|| e->getState() == STATE_DEATHSCENE
+		|| !(e != this && game->isValidTarget(e)))
 		{
 			targets.clear();
 			break;
@@ -2015,7 +2016,7 @@ void Avatar::updateTargets(float dt, bool override)
 			Entity *e = targets[i].e;
 			if (e)
 			{
-				if (!(position - e->position).isLength2DIn(e->getTargetRange() + TARGET_RANGE + TARGET_GRACE_RANGE) || !game->isValidTarget(e, this) || !e->isDamageTarget(damageType))
+				if (!(position - e->position).isLength2DIn(e->getTargetRange() + TARGET_RANGE + TARGET_GRACE_RANGE) || !(e != this && game->isValidTarget(e)) || !e->isDamageTarget(damageType))
 				{
 					lostTarget(i, targets[i].e);
 					targets[i].e = 0;

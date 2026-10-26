@@ -322,7 +322,7 @@ public:
 	SeeMapMode getSeeMapMode() const { return _seeMapMode; }
 	Vector getPositionForMap() const; // same as position, but special when inside a local warp
 
-	int leaches;
+	int leaches; // intentionally signed
 	float shieldPoints;
 	float elementEffectMult;
 

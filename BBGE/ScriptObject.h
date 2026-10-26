@@ -40,7 +40,7 @@ enum ScriptObjectType
 	SCO_QUAD              = 0x0400,
 	SCO_TEXT              = 0x0800,
 	SCO_PAUSEQUAD         = 0x1000,
-	SCO_SHADER            = 0x2000,
+	//SCO_SHADER            = 0x2000, // unused
 	SCO_PARTICLE_EFFECT   = 0x4000,
 	SCO_QUAD_GRID         = 0x8000,
 	SCO_COLLIDE_QUAD      = 0x10000,

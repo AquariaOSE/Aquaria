@@ -109,7 +109,7 @@ public:
 
 	WorldType getWorldType() { return worldType; }
 	void shiftWorlds();
-	void applyWorldEffects(WorldType type, bool transition, bool affectMusic);
+	void applyWorldEffects(WorldType type, bool transition);
 
 
 	//void setActivePet(int flag);

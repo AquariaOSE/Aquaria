@@ -131,7 +131,7 @@ public:
 
 	ActivationType activationType;
 	float activationRange;
-	Entity *ridingOnEntity;
+	Entity *ridingOnEntity; // Misnamed; this is when a wall-attached entity crawls onto a rock (stationary via ET_BLOCKER and OT_ENTITY) and the rock is pulled; the rock then becomes ridingOnEntity.
 	Vector startPos;
 	void rotateToVec(Vector addVec, float time, float offsetAngle=0);
 
@@ -167,27 +167,27 @@ public:
 		STATE_TITLE			=24
 	};
 
-	float followPath(Path *p, float speed, int dir, bool deleteOnEnd = false);
+	float followPath(Path *p, float speed, bool reverse, bool deleteOnEnd = false);
 	bool touchAvatarDamage(int radius, float dmg, const Vector &override=Vector(-1,-1,-1), float speed=0, float pushTime = 0, Vector collidePos = Vector(0,0,0));
 
-	void moveTowards(Vector p, float dt, int spd);
-	void moveAround(Vector p, float dt, int spd, int d);
+	void moveTowards(Vector p, float dt, float spd);
+	void moveAround(Vector p, float dt, float spd, int d);
 
-	void moveTowardsAngle(int angle, float dt, int spd);
-	void moveAroundAngle(int angle, float dt, int spd, int dir);
+	void moveTowardsAngle(float angle, float dt, float spd);
+	void moveAroundAngle(float angle, float dt, float spd, int dir);
 
-	void moveTowardsTarget(float dt, int spd, size_t t=0);
-	void moveAroundTarget(float dt, int spd, int d, size_t t=0);
-	void moveAroundEntity(float dt, int spd, int d, Entity *e);
-	void moveTowardsGroupCenter(float dt, int spd);
-	void moveTowardsGroupHeading(float dt, int spd);
+	void moveTowardsTarget(float dt, float spd, size_t t=0);
+	void moveAroundTarget(float dt, float spd, int d, size_t t=0);
+	void moveAroundEntity(float dt, float spd, int d, Entity *e);
+	void moveTowardsGroupCenter(float dt, float spd);
+	void moveTowardsGroupHeading(float dt, float spd);
 	bool doCollisionAvoidance(float dt, int search, float mod, Vector *v = 0, float overrideMaxSpeed=0, int ignoreObs=0, bool onlyVP=false);
-	void doSpellAvoidance(float dt, int range, float mod);
-	void doEntityAvoidance(float dt, int range, float mod, Entity *ignore =0);
+	void doSpellAvoidance(float dt, float range, float mod);
+	void doEntityAvoidance(float dt, float range, float mod, Entity *ignore =0);
 	void setMaxSpeed(float ms);
-	Entity *findTarget(int dist, int type, size_t t=0);
+	Entity *findTarget(float dist, int type, size_t t=0);
 
-	bool isTargetInRange(int range, size_t t=0);
+	bool isTargetInRange(float range, size_t t=0);
 	void doGlint(const Vector &position, const Vector &scale=Vector(2,2), const std::string &tex="Glint", BlendType bt=BLEND_DEFAULT);
 	Entity *getTargetEntity(size_t t=0) const;
 	void setTargetEntity(Entity *e, size_t t=0);
@@ -201,9 +201,9 @@ public:
 	void flipToPos(Vector pos);
 	bool isFollowingPath();
 	void stopFollowingPath();
-	void overideMaxSpeed(int ms, float time);
+	void overideMaxSpeed(float ms, float time);
 	int currentEntityTarget;
-	float moveToPos(Vector pos, float speed, int dieOnPathEnd=0, bool swim = false);
+	float moveToPos(Vector pos, float speed, bool dieOnPathEnd=false, bool swim = false);
 	bool isHit();
 	bool pathBurst(bool wallJump = false);
 	Timer burstTimer;
@@ -239,7 +239,7 @@ public:
 	Hair *hair;
 
 	int entityID;
-	int getMaxSpeed();
+	float getMaxSpeed() const;
 	std::string deathSound;
 	virtual std::string getIdleAnimName();
 
@@ -249,8 +249,8 @@ public:
 
 	typedef std::vector<DamageType> DisabledDamageTypes;
 
-	int targetRange;
-	int getTargetRange() { return targetRange; }
+	float targetRange;
+	float getTargetRange() { return targetRange; }
 
 	Vector getEnergyShotTargetPosition();
 	int getRandomTargetPoint();
@@ -263,7 +263,7 @@ public:
 	bool isInCurrent() { return inCurrent; }
 	void clearTargetPoints();
 	void addTargetPoint(const Vector &point);
-	int getNumTargetPoints();
+	size_t getNumTargetPoints() const;
 	Vector getTargetPoint(size_t i);
 	int targetPriority;
 	virtual void shiftWorlds(WorldType lastWorld, WorldType worldType){}
@@ -354,7 +354,7 @@ protected:
 	BoneLock boneLock;
 	virtual void onDieNormal() {}
 	virtual void onDieEaten() {}
-	IngredientData *ingredientData;
+	IngredientData *ingredientData; // deprecated, probably no longer needed
 	int vs[EV_MAX];
 	void onEndOfLife() OVERRIDE;
 

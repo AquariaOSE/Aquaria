@@ -168,6 +168,7 @@ public:
 
 	void addChild(RenderObject *r, ParentManaged pm, RenderBeforeParent rbp = RBP_NONE, ChildOrder order = CHILD_BACK);
 	void removeChild(RenderObject *r);
+	void clearParent() { parent = NULL; }
 
 	Vector getRealPosition() const;
 	Vector getRealScale() const;
