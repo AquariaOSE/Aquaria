@@ -53,7 +53,6 @@ void Precacher::_Callback(const std::string &file, void *param)
 // e.g. naija/*.png
 void Precacher::_precacheTex(const std::string &tex)
 {
-	assert(!basedir.empty());
 	if (tex.empty()) return;
 
 	if (tex.find('*')!=std::string::npos)
