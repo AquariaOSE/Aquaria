@@ -2037,7 +2037,7 @@ void Entity::freeze(float time)
 		bubble->alpha.data->path.addPathNode(0.5f, 0.75f);
 		bubble->alpha.data->path.addPathNode(0, 1);
 		bubble->alpha.startPath(time+time*0.25f);
-		core->getTopStateData()->addRenderObject(bubble, LR_PARTICLES);
+		core->getTopStateObject()->addRenderObject(bubble, LR_PARTICLES);
 
 	}
 }
@@ -2380,7 +2380,7 @@ void Entity::doGlint(const Vector &position, const Vector &scale, const std::str
 	glint->rotation.z = this->rotation.z;
 	glint->setLife(glintTime);
 	glint->setDecayRate(1);
-	core->getTopStateData()->addRenderObject(glint, LR_PARTICLES);
+	core->getTopStateObject()->addRenderObject(glint, LR_PARTICLES);
 }
 
 void Entity::addIgnoreShotDamageType(DamageType dt)

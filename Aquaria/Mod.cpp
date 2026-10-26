@@ -220,7 +220,7 @@ void Mod::applyStart()
 {
 	enqueueModStart = 0;
 
-	core->popAllStates();
+	core->leaveState();
 	core->clearGarbage();
 	recache();
 	dsq->continuity.reset();

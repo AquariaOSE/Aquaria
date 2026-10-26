@@ -287,7 +287,7 @@ void DSQ::centerMessage(const std::string &text, float y, int type)
 	t->setDecayRate(1);
 	t->setText(text);
 	t->offset.interpolateTo(Vector(0, -40), 2, 0, 0, 1);
-	getTopStateData()->addRenderObject(t, LR_OVERLAY);
+	getTopStateObject()->addRenderObject(t, LR_OVERLAY);
 }
 
 void DSQ::centerText(const std::string &text)
@@ -309,7 +309,7 @@ void DSQ::centerText(const std::string &text)
 	s->alpha.data->path.addPathNode(1, 0.8f);
 	s->alpha.data->path.addPathNode(0, 1);
 	s->alpha.startPath(time);
-	getTopStateData()->addRenderObject(s, LR_HUD);
+	getTopStateObject()->addRenderObject(s, LR_HUD);
 
 
 	BitmapText *t = new BitmapText(font);
@@ -328,7 +328,7 @@ void DSQ::centerText(const std::string &text)
 	t->setDecayRate(1);
 
 	t->setText(text);
-	getTopStateData()->addRenderObject(t, LR_HUD);
+	getTopStateObject()->addRenderObject(t, LR_HUD);
 }
 
 void DSQ::destroyFonts()
@@ -801,15 +801,16 @@ void DSQ::init()
 	createDir(getUserDataFolder() + "/_mods");
 	createDir(getUserDataFolder() + "/screenshots");
 
-	addStateInstance(game = new Game);
-	addStateInstance(new GameOver);
-	addStateInstance(new AnimationEditor);
-	addStateInstance(new Intro2);
-	addStateInstance(new BitBlotLogo);
-	addStateInstance(new ParticleEditor);
-	addStateInstance(new Credits);
-	addStateInstance(new Intro);
-	addStateInstance(new Nag);
+	// These register themselves into StateManager, which owns them and deletes them later
+	game = new Game;
+	new GameOver;
+	new AnimationEditor;
+	new Intro2;
+	new BitBlotLogo;
+	new ParticleEditor;
+	new Credits;
+	new Intro;
+	new Nag;
 
 
 	voiceOversEnabled = true;
@@ -2140,7 +2141,7 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->setLife(t);
 
-			getTopStateData()->addRenderObject(q, LR_WORLDMAPHUD);
+			getTopStateObject()->addRenderObject(q, LR_WORLDMAPHUD);
 		}
 		break;
 	case 1:
@@ -2170,7 +2171,7 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->setLife(t);
 
-			getTopStateData()->addRenderObject(q, LR_WORLDMAPHUD);
+			getTopStateObject()->addRenderObject(q, LR_WORLDMAPHUD);
 		}
 		break;
 	}
@@ -2303,7 +2304,7 @@ void DSQ::screenMessage(const std::string &msg, const Vector& pos)
 	b->followCamera= 1;
 	b->setLife(2);
 	b->setDecayRate(1);
-	getTopStateData()->addRenderObject(b, LR_DEBUG_TEXT);
+	getTopStateObject()->addRenderObject(b, LR_DEBUG_TEXT);
 
 
 }

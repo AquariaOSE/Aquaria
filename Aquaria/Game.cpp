@@ -4709,7 +4709,7 @@ Shot *Game::fireShot(const std::string &bankShot, Entity *firer, Entity *target,
 		s->fire(playSfx);
 
 
-		core->getTopStateData()->addRenderObject(s, LR_PROJECTILES);
+		core->getTopStateObject()->addRenderObject(s, LR_PROJECTILES);
 		s->init();
 	}
 
@@ -5008,17 +5008,18 @@ bool Game::collideCircleWithGrid(const Vector& position, float r)
 
 void Game::learnedRecipe(Recipe *r, bool effects)
 {
-	if (nocasecmp(dsq->getTopStateData()->name,"Game")==0 && !applyingState)
+	// Don't show notifications while loading a save
+	if(applyingState || dsq->getTopStateObject() != this)
+		return;
+
+	std::ostringstream os;
+	os << stringbank.get(23) << " "  << r->resultDisplayName << " " << stringbank.get(24);
+	IngredientData *data = dsq->continuity.getIngredientDataByName(r->result);
+	if (data)
 	{
-		std::ostringstream os;
-		os << stringbank.get(23) << " "  << r->resultDisplayName << " " << stringbank.get(24);
-		IngredientData *data = dsq->continuity.getIngredientDataByName(r->result);
-		if (data)
+		if (effects)
 		{
-			if (effects)
-			{
-				setControlHint(os.str(), 0, 0, 0, 3, "ingredients/" + data->gfx);
-			}
+			setControlHint(os.str(), 0, 0, 0, 3, "ingredients/" + data->gfx);
 		}
 	}
 }

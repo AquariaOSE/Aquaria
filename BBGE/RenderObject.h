@@ -36,8 +36,8 @@ class Texture;
 enum RenderObjectFlags
 {
 	RO_CLEAR			= 0x00,
-	RO_RENDERBORDERS	= 0x01,
-	RO_NEXT				= 0x02,
+	RO_TEMPORARY        = 0x01,  // Object is deleted when game state is changed
+	RO_RENDERBORDERS	= 0x02,
 	RO_MOTIONBLUR		= 0x04
 };
 
@@ -67,6 +67,7 @@ enum RenderBeforeParent
 	RBP_ON					= 1
 };
 
+
 struct MotionBlurFrame
 {
 	Vector position;
@@ -88,6 +89,7 @@ class RenderObject : public ScriptObject
 {
 public:
 	friend class Core;
+	friend class RenderObjectLayer;
 	RenderObject();
 	virtual ~RenderObject();
 	virtual void render(const RenderState& rs) const;
@@ -98,7 +100,6 @@ public:
 		onSetTexture();
 	}
 
-	void setStateDataObject(StateData *state);
 	bool setTexture(const std::string &name);
 
 	void toggleAlpha(float t = 0.2f);
@@ -173,8 +174,6 @@ public:
 	Vector getRealPosition() const;
 	Vector getRealScale() const;
 
-	StateData *getStateData() const;
-
 	// HACK: This is defined in RenderObject_inline.h because it needs
 	// the class Core definition.  --achurch
 	inline bool isOnScreen() const;
@@ -233,6 +232,7 @@ public:
 	//--------------------------
 
 	// fields ordered by hotness
+	unsigned roflags;
 
 	// TODO: this should be a bitmask
 	bool fadeAlphaWithLife;
@@ -318,7 +318,6 @@ protected:
 	RenderObjectList deathNotifications;
 
 	size_t idx; // index in layer
-	StateData *stateData;
 	MotionBlurData *motionBlur;
 
 private:

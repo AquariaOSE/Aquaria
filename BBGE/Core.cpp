@@ -114,7 +114,7 @@ ParticleEffect* Core::createParticleEffect(const std::string &name, const Vector
 	e->start();
 	e->setDie(true);
 	e->rotation.z = rotz;
-	getTopStateData()->addRenderObject(e, layer);
+	getTopStateObject()->addRenderObject(e, layer);
 	return e;
 }
 
@@ -939,17 +939,42 @@ void Core::shutdownGraphicsLibrary()
 
 void Core::quit()
 {
-	enqueueJumpState("STATE_QUIT");
+	enqueueJumpState("state_quit");
 }
 
 void Core::applyState(const std::string &state)
 {
-	if (nocasecmp(state, "state_quit")==0)
+	if (state == "state_quit")
 	{
 		loopDone = true;
 	}
+
 	StateManager::applyState(state);
 }
+
+void Core::removeState(const std::string &state)
+{
+	debugLog("Core::removeState: " + state);
+	clearTemporaryRenderObjects();
+	clearGarbage();
+}
+
+void Core::clearTemporaryRenderObjects()
+{
+	const size_t n = renderObjectLayers.size();
+	size_t removed = 0;
+	for(size_t i = 0; i < n; ++i)
+	{
+		RenderObjectLayer& rl = renderObjectLayers[i];
+		removed += rl.clearTemporaryObjects();
+	}
+
+	std::ostringstream os;
+	os << "Deleting " << removed << " temporary RenderObjects";
+	debugLog(os.str());
+}
+
+
 
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 {
@@ -2110,14 +2135,6 @@ void Core::shutdown()
 
 	debugLog("Shutdown Input Library...");
 		shutdownInputLibrary();
-	debugLog("OK");
-
-	debugLog("Shutdown All States...");
-		popAllStates();
-	debugLog("OK");
-
-	debugLog("Clear State Instances...");
-		clearStateInstances();
 	debugLog("OK");
 
 	debugLog("Clear All Remaining RenderObjects...");

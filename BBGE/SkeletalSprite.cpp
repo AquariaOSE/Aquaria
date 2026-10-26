@@ -134,7 +134,7 @@ void Bone::addSegment(Bone *b)
 
 	skeleton->removeChild(b);
 
-	core->getTopStateData()->addRenderObject(b, skeleton->getTopLayer());
+	core->getTopStateObject()->addRenderObject(b, skeleton->getTopLayer());
 	b->position = this->getWorldPosition();
 }
 

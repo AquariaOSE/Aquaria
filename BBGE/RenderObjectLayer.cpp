@@ -275,3 +275,30 @@ void RenderObjectLayer::render(const RenderState& rs) const
 	}
 	core->processedRenderObjectCount += proc;
 }
+
+size_t RenderObjectLayer::clearTemporaryObjects()
+{
+	size_t n = renderObjects.size();
+	size_t removed = 0;
+	for(size_t i = 0; i < n; ++i)
+	{
+		if(RenderObject *ro = renderObjects[i])
+		{
+			if(ro->roflags & RO_TEMPORARY)
+			{
+				core->enqueueRenderObjectDeletion(ro);
+				ro->layer = LR_NONE; // Don't try to remove from RenderObjectLayer again
+				ro->setIdx(-1);
+				renderObjects[i] = NULL;
+				if(!removed)
+					firstFreeIdx = i;
+				++removed;
+			}
+		}
+	}
+
+	assert(objectCount >= removed);
+	objectCount -= removed;
+	assert(!renderObjects[firstFreeIdx]);
+	return removed;
+}

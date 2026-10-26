@@ -3731,16 +3731,16 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	auraHitEmitter.load("AuraShieldHit");
 
 	chargingEmitter = new ParticleEffect;
-	dsq->getTopStateData()->addRenderObject(chargingEmitter, LR_PARTICLES);
+	dsq->getTopStateObject()->addRenderObject(chargingEmitter, LR_PARTICLES);
 
 	chargeEmitter = new ParticleEffect;
-	dsq->getTopStateData()->addRenderObject(chargeEmitter, LR_PARTICLES_TOP);
+	dsq->getTopStateObject()->addRenderObject(chargeEmitter, LR_PARTICLES_TOP);
 
 	leftHandEmitter = new ParticleEffect;
-	dsq->getTopStateData()->addRenderObject(leftHandEmitter, LR_PARTICLES);
+	dsq->getTopStateObject()->addRenderObject(leftHandEmitter, LR_PARTICLES);
 
 	rightHandEmitter = new ParticleEffect;
-	dsq->getTopStateData()->addRenderObject(rightHandEmitter, LR_PARTICLES);
+	dsq->getTopStateObject()->addRenderObject(rightHandEmitter, LR_PARTICLES);
 
 	addChild(&biteLeftEmitter, PM_STATIC);
 	biteLeftEmitter.load("BiteLeft");

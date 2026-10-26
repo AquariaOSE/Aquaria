@@ -75,6 +75,7 @@ RenderObject::RenderObject()
 	_fh = false;
 	_markedForDelete = false;
 	updateCull = -1;
+	roflags = 0;
 
 	layer = LR_NONE;
 	cull = true;
@@ -96,7 +97,6 @@ RenderObject::RenderObject()
 	_blendType = BLEND_DEFAULT;
 
 	followCamera = 0;
-	stateData = 0;
 	parent = 0;
 
 	renderBeforeParent = false;
@@ -286,12 +286,6 @@ Vector RenderObject::getRealScale() const
 	}
 	return scale;
 }
-
-void RenderObject::setStateDataObject(StateData *state)
-{
-	stateData = state;
-}
-
 
 void RenderObject::toggleCull(bool value)
 {
@@ -685,10 +679,7 @@ void RenderObject::safeKill()
 	}
 	else
 	{
-		if (stateData)
-			stateData->removeRenderObject(this);
-		else
-			core->enqueueRenderObjectDeletion(this);
+		core->enqueueRenderObjectDeletion(this);
 	}
 }
 
@@ -891,16 +882,6 @@ void RenderObject::addChild(RenderObject *r, ParentManaged pm, RenderBeforeParen
 		r->renderBeforeParent = 1;
 
 	r->parent = this;
-}
-
-StateData *RenderObject::getStateData() const
-{
-	if (parent)
-	{
-		return parent->getStateData();
-	}
-	else
-		return stateData;
 }
 
 void RenderObject::setOverrideCullRadius(float ovr)

@@ -31,44 +31,27 @@ class RenderObject;
 
 class StateObject;
 
-class StateData
-{
-public:
-	StateData();
-	~StateData();
-	std::vector <RenderObject*> renderObjects;
-	std::vector <EventPtr> events;
-	std::vector <RenderObject*> garbage;
-
-	StateObject *stateObject;
-
-	void clearGarbage();
-	void addRenderObject(RenderObject *renderObject, unsigned layer);
-	void eraseRenderObjects();
-	void removeRenderObject(RenderObject *renderObject);
-	void removeRenderObjectFromList(RenderObject *renderObject);
-
-	std::string name;
-};
 
 class StateObject : public ActionMapper
 {
+	friend class StateManager;
 public:
 	StateObject();
 	virtual ~StateObject();
 
-	virtual void applyState(){}
+	virtual void applyState() {}
 	virtual void removeState();
 	virtual void update(float dt);
 
-	void addRenderObject(RenderObject *renderObject, unsigned layer);
-	void removeRenderObject(RenderObject *renderObject);
-	std::string name;
+	static void addRenderObject(RenderObject *renderObject, unsigned layer);
 
 	virtual void action(int actionID, int state, int source, InputDevice device) {}
 
 protected:
 	void registerState(StateObject *sb, const std::string &name);
+
+private:
+	std::string _statename;
 };
 
 class StateManager
@@ -77,48 +60,30 @@ public:
 	friend class StateObject;
 	StateManager();
 	virtual ~StateManager();
-
-
 	void clearStateObjects();
 
+	void leaveState();
+
 	virtual void applyState (const std::string &state) {}
-	virtual void removeState (std::string state);
+	virtual void removeState (const std::string& state) {}
 
 
 	void enqueueJumpState (const std::string &state, bool force = false, bool staged = false);
 	bool isStateJumpPending();
-	void pushState(const std::string &state);
-	void popState();
-	void popAllStates();
 
 
-	StateData *getState(const std::string &state);
-	StateData *getTopStateData();
-	StateObject *getTopStateObject();
+	StateObject *getStateObject(const std::string &state);
+	inline StateObject *getTopStateObject() const { return currentState; }
 
-	virtual bool canChangeState()=0;
-
-	StateObject *addStateInstance(StateObject *s);
-	void clearStateInstances();
-
-	typedef std::vector<StateObject*> StateInstances;
-	StateInstances stateInstances;
+	virtual bool canChangeState() { return true; }
 protected:
-	int enqueuedStateStage;
-	std::string enqueuedJumpState;
-	bool stateChangeFlag;
-	std::string getNameFromDerivedClassTypeName(const std::string &typeidName);
-	void registerStateObject(StateObject *stateObject, const std::string &name="");
+	void registerStateObject(StateObject *stateObject, const std::string &name);
 	virtual void onUpdate(float dt);
+	std::string enqueuedJumpState;
 
-	// std::stack is horrendously overweight, so we use a simple stack
-	// implementation instead.
-	#define STATE_STACK_SIZE 64
-	StateData *states[STATE_STACK_SIZE];
-	int statesTopIndex;
-	bool states_empty()     {return statesTopIndex == -1;}
-	bool states_full()      {return statesTopIndex == STATE_STACK_SIZE-1;}
-	StateData *states_top() {return statesTopIndex >= 0 ? states[statesTopIndex] : 0;}
+private:
+	StateObject *currentState;
+	std::string currentStateName;
 
 	typedef std::map<std::string, StateObject*> StateObjectMap;
 	StateObjectMap stateObjects;
@@ -126,8 +91,8 @@ protected:
 
 private:
 	void jumpState (const std::string &state); // call enqueueJumpState
+	void enterState(const std::string &state);
 };
 
-extern StateManager *stateManager;
 
 #endif

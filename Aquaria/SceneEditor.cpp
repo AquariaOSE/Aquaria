@@ -654,7 +654,7 @@ void SceneEditor::init()
 	skinMinX = skinMinY = skinMaxX = skinMaxY = -1;
 	editingEntity = 0;
 	pathRender = new PathRender();
-	core->getTopStateData()->addRenderObject(pathRender, LR_DEBUG_TEXT);
+	core->getTopStateObject()->addRenderObject(pathRender, LR_DEBUG_TEXT);
 	pathRender->alpha = 0;
 
 	editType = ET_ELEMENTS;

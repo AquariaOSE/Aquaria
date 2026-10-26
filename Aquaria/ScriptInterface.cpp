@@ -1483,8 +1483,6 @@ luaFunc(obj_addChild)
 		{
 			// HACK: this is ugly, but necessary to prevent double-deletion
 			// anyways, dangerous; addChild() may fail, causing a small memory leak (and an error message)
-			dsq->getState(game->name)->removeRenderObjectFromList(which);
-			which->setStateDataObject(NULL);
 			core->removeRenderObject(which, Core::DO_NOT_DESTROY_RENDER_OBJECT);
 			r->addChild(which, PM_POINTER, RBP_NONE, front ? CHILD_FRONT : CHILD_BACK);
 		}
@@ -1538,7 +1536,6 @@ luaFunc(obj_removeAllChildren)
 		{
 			// When not deleting, reparent the child objects to the current game state as toplevel objects
 			// FIXME: Untested whether this works as intended
-			StateData* sd = dsq->getState(game->name);
 			for(RenderObject::Children::iterator it = r->children.begin(); it != r->children.end(); ++it)
 			{
 				RenderObject *ch = *it;
@@ -1547,7 +1544,7 @@ luaFunc(obj_removeAllChildren)
 				ch->position.y = world.y;
 				ch->rotation.z = world.z;
 				ch->clearParent();
-				sd->addRenderObject(ch, r->getTopLayer()); // Use layer of parent
+				core->getTopStateObject()->addRenderObject(ch, r->getTopLayer()); // Use layer of parent
 			}
 		}
 
@@ -6511,7 +6508,7 @@ luaFunc(entity_debugText)
 		BitmapText *f = new BitmapText(dsq->smallFont);
 		f->setText(txt);
 		f->position = e->position;
-		core->getTopStateData()->addRenderObject(f, LR_DEBUG_TEXT);
+		core->getTopStateObject()->addRenderObject(f, LR_DEBUG_TEXT);
 		f->setLife(5);
 		f->setDecayRate(1);
 		f->fadeAlphaWithLife=1;
@@ -9621,7 +9618,7 @@ luaFunc(entity_fireGas)
 		float poisonTime = lua_tonumber(L, 11);
 
 		GasCloud *c = new GasCloud(e, e->position + Vector(offx, offy), gfx, Vector(colorx, colory, colorz), radius, life, damage, false, poisonTime);
-		core->getTopStateData()->addRenderObject(c, LR_PARTICLES);
+		core->getTopStateObject()->addRenderObject(c, LR_PARTICLES);
 	}
 	luaReturnNil();
 }

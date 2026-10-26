@@ -138,6 +138,8 @@ public:
 	void prepareRender();
 	void render(const RenderState& rs) const;
 
+	size_t clearTemporaryObjects();
+
 	inline bool empty()
 	{
 		return objectCount == 0;
@@ -215,7 +217,8 @@ public:
 
 	void initRenderObjectLayers(int num);
 
-	void applyState(const std::string &state);
+	void applyState(const std::string &state) OVERRIDE;
+	void removeState(const std::string &state) OVERRIDE;
 
 	void renderExternal();
 	void prepareRender();
@@ -330,7 +333,7 @@ public:
 	const char *getExtraTexturePath() const; // NULL when no secondary
 	const std::string& getBaseTexturePath() const;
 
-	virtual bool canChangeState();
+	virtual bool canChangeState() OVERRIDE;
 	void resetTimer();
 
 	inline int getVirtualWidth()
@@ -521,6 +524,7 @@ protected:
 	std::vector<ActionButtonStatus*> actionStatus; // contains at least 1 element (the sentinel)
 	virtual void updateActionButtons();
 	void clearActionButtons();
+	void clearTemporaryRenderObjects();
 
 	RenderGrid defaultQuadGrid;
 	DynamicGPUBuffer defautQuadBorder;
