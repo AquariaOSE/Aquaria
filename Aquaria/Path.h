@@ -38,7 +38,7 @@ class PathNode
 public:
 	PathNode() { maxSpeed = -1;}
 	Vector position;
-	int maxSpeed;
+	int maxSpeed; // FIXME: This can go
 };
 
 class Path : public ScriptObject, public Scriptable
@@ -55,7 +55,7 @@ public:
 	bool hasScript() const;
 	std::string name; // full node string
 	std::string label; // first part only (the actual node name)
-	std::vector<PathNode>nodes;
+	std::vector<PathNode>nodes; // This always contains at least 1 entry
 	void removeNode(size_t idx);
 	void addNode(size_t idx);
 	void update(float dt);

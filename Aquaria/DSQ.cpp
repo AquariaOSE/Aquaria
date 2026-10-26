@@ -4125,7 +4125,7 @@ ParticleEffect *DSQ::spawnParticleEffect(const std::string &name, Vector positio
 		return NULL;
 	if (t!=0)
 	{
-		PECue p(name, position, rotz, t);
+		PECue p(name, position, rotz, t, layer, follow);
 		pecue.push_back(p);
 		return NULL;
 	}
@@ -4144,8 +4144,7 @@ void DSQ::updatepecue(float dt)
 {
 	if (!particlesPaused)
 	{
-
-		int nz = 0;
+		size_t nz = 0;
 		for (size_t i = 0; i < pecue.size(); i++)
 		{
 			PECue *p = &pecue[i];
@@ -4155,7 +4154,7 @@ void DSQ::updatepecue(float dt)
 				if (p->t < 0)
 				{
 					p->t = 0;
-					spawnParticleEffect(p->name, p->pos, p->rot, 0);
+					spawnParticleEffect(p->name, p->pos, p->rot, 0, p->layer, p->follow);
 				}
 				nz ++;
 			}

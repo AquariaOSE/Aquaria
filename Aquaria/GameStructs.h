@@ -76,12 +76,14 @@ struct EatData
 
 struct PECue
 {
-	PECue(std::string name, Vector pos, float rot, float t)
-		: name(name), pos(pos), rot(rot), t(t) {}
+	PECue(std::string name, Vector pos, float rot, float t, int layer, float follow)
+		: name(name), pos(pos), rot(rot), t(t), layer(layer), follow(follow) {}
 	std::string name;
 	Vector pos;
 	float rot;
 	float t;
+	int layer;
+	float follow;
 };
 
 struct RecipeType
