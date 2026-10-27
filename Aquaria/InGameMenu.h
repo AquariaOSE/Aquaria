@@ -57,6 +57,7 @@ struct RecipeMenu
 	int currentPage;
 
 	bool on;
+	bool toggling;
 
 	std::vector<RecipeMenuEntry*> recipeMenuEntries;
 };

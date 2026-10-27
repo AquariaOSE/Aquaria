@@ -233,6 +233,7 @@ void RecipeMenuEntry::onUpdate(float dt)
 RecipeMenu::RecipeMenu()
 {
 	on = false;
+	toggling = false;
 	currentPage = 0;
 	description = 0;
 }
@@ -319,8 +320,6 @@ void RecipeMenu::goNextPage()
 void RecipeMenu::toggle(bool on, bool watch)
 {
 	if (dsq->isNested()) return;
-
-	static bool toggling = false;
 
 	if (toggling) return;
 

@@ -53,7 +53,6 @@ const float fireDelayTime = 0.2f;
 const int maxShieldPoints = 8;
 const int minMouse = 60;
 int SongIcon::notesOpen = 0;
-Avatar *avatar = 0;
 const Vector BLIND_COLOR = Vector(0.1f, 0.1f, 0.1f);
 const float ANIM_TRANSITION	= 0.2f;
 //const float MANA_RECHARGE_RATE = 1.0;
@@ -214,7 +213,7 @@ static Vector randCirclePos(const Vector& position, float radius)
 	return position + randVector(radius);
 }
 
-SongIconParticle::SongIconParticle(Vector color, Vector pos, size_t note)
+SongIconParticle::SongIconParticle(Vector color, Vector pos, size_t note, const std::vector<SongIcon*>& icons)
 								:  note(note)
 {
 	cull = false;
@@ -250,16 +249,16 @@ SongIconParticle::SongIconParticle(Vector color, Vector pos, size_t note)
 
 	float smallestDist = HUGE_VALF;
 	SongIcon *closest = 0;
-	for (size_t i = 0; i < avatar->songIcons.size(); i++)
+	for (size_t i = 0; i < icons.size(); i++)
 	{
 		if (i != note)
 		{
-			Vector diff = (position - avatar->songIcons[i]->position);
+			Vector diff = (position - icons[i]->position);
 			float dist = diff.getSquaredLength2D();
 			if (dist < smallestDist)
 			{
 				smallestDist = dist;
-				closest = avatar->songIcons[i];
+				closest = icons[i];
 			}
 		}
 	}
@@ -283,7 +282,7 @@ void SongIconParticle::onUpdate(float dt)
 	}
 }
 
-SongIcon::SongIcon(size_t note) : Quad(), note(note)
+SongIcon::SongIcon(size_t note, Avatar *owner) : Quad(), note(note), owner(owner)
 {
 	open = false;
 	alphaMod = 0.9f;
@@ -340,7 +339,7 @@ void SongIcon::spawnParticles(float dt)
 	while (ptimer > intv)
 	{
 		ptimer -= intv;
-		SongIconParticle *s = new SongIconParticle(noteColor, randCirclePos(position, 16), note);
+		SongIconParticle *s = new SongIconParticle(noteColor, randCirclePos(position, 16), note, owner->songIcons);
 		s->followCamera = true;
 		game->addRenderObject(s, LR_HUD);
 	}
@@ -350,7 +349,7 @@ void SongIcon::onUpdate(float dt)
 {
 	Quad::onUpdate(dt);
 
-	if (!avatar->singing)
+	if (!owner->singing)
 		return;
 
 	if (alpha.x == 0 && !alpha.isInterpolating())
@@ -380,7 +379,7 @@ void SongIcon::onUpdate(float dt)
 	if (open)
 	{
 		len += dt;
-		avatar->setHeadTexture("Singing", 0.1f);
+		owner->setHeadTexture("Singing", 0.1f);
 	}
 	if (alpha.x == 1)
 	{
@@ -473,7 +472,7 @@ void SongIcon::openNote()
 	internalOffset = Vector(-5, 0);
 	internalOffset.interpolateTo(Vector(5, 0), 0.08f, -1, 1);
 
-	avatar->singNote(this->note);
+	owner->singNote(this->note);
 
 	// this should never get called:
 	if (channel != BBGE_AUDIO_NOCHANNEL)
@@ -532,7 +531,7 @@ void SongIcon::openNote()
 	q->setDecayRate(1/(glowLife+0.1f));
 	}
 
-	avatar->songInterfaceTimer = 1.0f;
+	owner->songInterfaceTimer = 1.0f;
 
 	notesOpen++;
 	/*
@@ -626,7 +625,7 @@ void SongIcon::closeNote()
 	{
 		notesOpen = 0;
 		if (dsq->continuity.form == FORM_NORMAL)
-			avatar->setHeadTexture("");
+			owner->setHeadTexture("");
 	}
 }
 
@@ -679,7 +678,6 @@ bool Avatar::isSinging()
 
 void Avatar::applyWorldEffects(WorldType type)
 {
-	static bool oldfh=false;
 
 	if (type == WT_SPIRIT)
 	{
@@ -869,7 +867,6 @@ void Avatar::updatePosition()
 
 void Avatar::updateHair(float dt)
 {
-	static float hairTimer = 0;
 	Bone *b = skeletalSprite.getBoneByIdx(0);
 	if (hair && b)
 	{
@@ -1154,7 +1151,6 @@ void Avatar::onDamage(DamageData &d)
 void Avatar::playHitSound()
 {
 	int hitSound = (rand()%8)+1;
-	static int lastHitSound = 0;
 	if (lastHitSound == hitSound)
 	{
 		hitSound ++;
@@ -1578,7 +1574,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 		/*
 		dsq->overlay->color = Vector(1,1,1);
 		dsq->overlay->alpha.interpolateTo(1.0, 0.2);
-		avatar->disableInput();
+		disableInput();
 		setv(EV_NOINPUTNOVEL, 0);
 		core->main(0.2);
 		setv(EV_NOINPUTNOVEL, 1);
@@ -1706,7 +1702,7 @@ void Avatar::changeForm(FormType form, bool effects, bool onInit, FormType lastF
 	}
 	setHeadTexture("");
 	if (effects)
-		avatar->enableInput();
+		enableInput();
 
 	//if (onInit) {
 		//idle();//skeletalSprite.animate("idle", -1, 0);
@@ -1923,8 +1919,6 @@ Target Avatar::getNearestTarget(const Vector &checkPos, const Vector &distPos, E
 	return t;
 }
 
-float maxTargetDelay = 0.5;
-bool wasDown = false;
 void Avatar::updateTargets(float dt, bool override)
 {
 	DamageType damageType = DT_AVATAR_ENERGYBLAST;
@@ -1940,9 +1934,9 @@ void Avatar::updateTargets(float dt, bool override)
 			break;
 		}
 	}
-	if ((dsq->getInputMode() == INPUT_MOUSE || dsq->getInputMode() == INPUT_KEYBOARD) && !(wasDown && core->mouse.buttons.right))
+	if ((dsq->getInputMode() == INPUT_MOUSE || dsq->getInputMode() == INPUT_KEYBOARD) && !(targetWasDown && core->mouse.buttons.right))
 	{
-		wasDown = false;
+		targetWasDown = false;
 		float mod = 1;
 		if (isCharging())
 			mod = maxTargetDelay*10;
@@ -1982,7 +1976,7 @@ void Avatar::updateTargets(float dt, bool override)
 							maxTargetDelay = 90;
 
 							dsq->spawnParticleEffect("TargetAquired", t.pos);
-							wasDown = true;
+							targetWasDown = true;
 						}
 					}
 				}
@@ -2021,7 +2015,7 @@ void Avatar::updateTargets(float dt, bool override)
 					lostTarget(i, targets[i].e);
 					targets[i].e = 0;
 					targetUpdateDelay = maxTargetDelay;
-					wasDown = false;
+					targetWasDown = false;
 				}
 			}
 		}
@@ -2041,7 +2035,6 @@ void Avatar::updateTargetQuads(float dt)
 	}
 	*/
 
-	static Entity *lastTargetE = 0;
 	const float tt = 0.02f;
 	for (size_t i = 0; i < targets.size(); i++)
 	{
@@ -3620,7 +3613,6 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	burst = 1;
 	burstDelay = 0;
 	splashDelay = 0;
-	avatar = this;
 
 	swimming = false;
 
@@ -3663,7 +3655,7 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	size_t i = 0;
 	for (i = 0; i < songIcons.size(); i++)
 	{
-		songIcons[i] = new SongIcon(i);
+		songIcons[i] = new SongIcon(i, this);
 		songIcons[i]->alpha = 0;
 		songIcons[i]->followCamera = 1;
 		game->addRenderObject(songIcons[i], LR_HUD);
@@ -3806,6 +3798,19 @@ Avatar::Avatar() : Entity(), ActionMapper()
 	elementEffectMult = 1;
 	_lastActionSourceID = 9999;
 	_lastActionInputDevice = INPUT_NODEVICE;
+
+	oldfh = false;
+	hairTimer = 0;
+	lastHitSound = 0;
+	lastTargetE = 0;
+	maxTargetDelay = 0.5f;
+	targetWasDown = false;
+	lfgTimer = 0;
+	tripCount = 0;
+	revertButtonsAreDown = false;
+	fishPoisonTimer = 0;
+	lastSwimExtra = -1;
+	didRotationFix = true;
 }
 
 void Avatar::revert()
@@ -3921,7 +3926,6 @@ void Avatar::destroy()
 		dsq->loops.current = BBGE_AUDIO_NOCHANNEL;
 	}
 
-	avatar = 0;
 }
 
 void Avatar::startBackFlip()
@@ -4443,7 +4447,7 @@ void Avatar::splash(bool down)
 	// FIXME: This is broken for waterfalls/bubbles (e.g. the waterfalls
 	// in the Turtle Cave).  Not sure how best to fix it in the current
 	// code.  --achurch
-	Vector hsplash = avatar->getHeadPosition();
+	Vector hsplash = getHeadPosition();
 	hsplash.y = game->waterLevel.x;
 	core->createParticleEffect("HeadSplash", hsplash, LR_PARTICLES);
 
@@ -4678,7 +4682,6 @@ void Avatar::updateFormVisualEffects(float dt)
 		//lightFormGlowCone->rotation.interpolateTo(Vector(0,0,angle), 0.1);
 		lightFormGlowCone->rotation = Vector(0,0,angle);
 
-		static float lfgTimer = 0;
 		lfgTimer += dt;
 		if (lfgTimer > 0.5f)
 		{
@@ -5069,7 +5072,6 @@ void Avatar::endOfGameState()
 	setInvincible(true);
 }
 
-bool didRotationFix = true;
 
 void timerEffectStart(Timer *timer, ParticleEffect *effect)
 {
@@ -5214,8 +5216,6 @@ Vector Avatar::getHeadPosition()
 		return bone_head->getWorldPosition();
 	return position;
 }
-
-bool lastCursorKeyboard = false;
 
 void Avatar::onUpdate(float dt)
 {
@@ -5558,7 +5558,6 @@ void Avatar::onUpdate(float dt)
 
 	if (dsq->continuity.tripTimer.isActive())
 	{
-		static int tripCount = 0;
 		tripDelay -= dt;
 		if (tripDelay < 0)
 		{
@@ -5671,7 +5670,6 @@ void Avatar::onUpdate(float dt)
 
 	// revert stuff
 	float revertGrace = 0.4f;
-	static bool revertButtonsAreDown = false;
 	if (inputEnabled && (dsq->getInputMode() == INPUT_KEYBOARD || dsq->getInputMode() == INPUT_MOUSE) && (!pathToActivate && !entityToActivate))
 	{
 		if (dsq->continuity.form != FORM_NORMAL && (core->mouse.pure_buttons.left && core->mouse.pure_buttons.right) && getVectorToCursor(true).isLength2DIn(minMouse))
@@ -5942,11 +5940,10 @@ void Avatar::onUpdate(float dt)
 		{
 			if (!vel.isLength2DIn(16))
 			{
-				static float fishPoison = 0;
-				fishPoison += dt;
-				if (fishPoison > 0.2f)
+				fishPoisonTimer += dt;
+				if (fishPoisonTimer > 0.2f)
 				{
-					fishPoison = 0;
+					fishPoisonTimer = 0;
 					game->fireShot("FishPoison", this, 0, position);
 				}
 			}
@@ -6025,7 +6022,6 @@ void Avatar::onUpdate(float dt)
 
 					if (isMouse)
 					{
-						static Vector lastAddVec;
 						if (!isActing(ACTION_PRIMARY, -1) && bursting)
 						{
 							addVec = lastAddVec;
@@ -6370,7 +6366,6 @@ void Avatar::onUpdate(float dt)
 				if (state.swimTimer > 5)
 				{
 					state.swimTimer = 0 - rand()%3;
-					static int lastSwimExtra = -1;
 					int maxAnim = 4;
 					int anim = rand()%maxAnim;
 					if (anim == lastSwimExtra)
@@ -6426,7 +6421,7 @@ void Avatar::onUpdate(float dt)
 		}
 		else
 		{
-			if (game->waterLevel.x > 0 && fabsf(avatar->position.y - game->waterLevel.x) < 800)
+			if (game->waterLevel.x > 0 && fabsf(position.y - game->waterLevel.x) < 800)
 			{
 				float time = 0.5f;
 				if (!myZoom.isInterpolating() || ((!core->globalScale.data || core->globalScale.data->target != zoomSurface) && myZoom.data->timePeriod != time))
@@ -6434,7 +6429,7 @@ void Avatar::onUpdate(float dt)
 					myZoom.interpolateTo(zoomSurface, time, 0, 0, 1);
 				}
 			}
-			else if (avatar->looking == 2)
+			else if (looking == 2)
 			{
 				float time = 1.0f;
 				if (!myZoom.isInterpolating() || ((!core->globalScale.data || core->globalScale.data->target != zoomNaija) && myZoom.data->timePeriod != time))
@@ -6447,10 +6442,10 @@ void Avatar::onUpdate(float dt)
 					myZoom.interpolateTo(zoomNaija, time, 0, 0, 1);
 				}
 			}
-			else if ((cheatLen > sqr(250) && cheatLen < sqr(1000)) || avatar->looking==1)
+			else if ((cheatLen > sqr(250) && cheatLen < sqr(1000)) || looking==1)
 			{
 				float time = 3;
-				if (avatar->looking)
+				if (looking)
 				{
 					time = 1.0f;
 				}
@@ -6771,7 +6766,7 @@ void Avatar::checkNearWall()
 
 void Avatar::onWarp()
 {
-	avatar->setv(EV_NOINPUTNOVEL, 0);
+	setv(EV_NOINPUTNOVEL, 0);
 	closeSingingInterface();
 }
 
@@ -6827,16 +6822,16 @@ bool Avatar::checkWarpAreas()
 				}
 				if (warp)
 				{
-					if (avatar->canWarp)
+					if (canWarp)
 						game->warpToSceneFromNode(p);
 					else
 					{
-						avatar->position = backPos;
+						position = backPos;
 						//avatar->vel = -avatar->vel * 0.5f;
 						Vector n = p->getEnterNormal();
-						n.setLength2D(avatar->vel.getLength2D());
-						avatar->vel += n;
-						avatar->vel *= 0.5f;
+						n.setLength2D(vel.getLength2D());
+						vel += n;
+						vel *= 0.5f;
 					}
 					return true;
 				}

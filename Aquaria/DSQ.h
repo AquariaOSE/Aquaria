@@ -268,6 +268,7 @@ public:
 	InterpolatedVector gameSpeed;
 
 private:
+	int lastRandNote;
 	InputDevice lastInputMode; // really don't want to expose this one
 	std::vector<InputDevice> _inputModes; // index: FIXME ADD INFO
 public:

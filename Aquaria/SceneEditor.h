@@ -236,6 +236,7 @@ protected:
 	MultiTileHelper *multi;
 	DebugFont *text;
 	bool on;
+	bool inCreateAquarian;
 	InterpolatedVector oldGlobalScale;
 	PathRender *pathRender;
 };

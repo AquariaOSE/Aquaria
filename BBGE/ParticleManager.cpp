@@ -23,7 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 ParticleManager *particleManager = 0;
 
 typedef std::map<std::string, ParticleEffect*> ParticleBank;
-ParticleBank particleBank;
+static ParticleBank particleBank;
 
 std::string ParticleManager::particleBankPath = "";
 

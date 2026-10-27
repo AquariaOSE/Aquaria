@@ -30,9 +30,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderGrid.h"
 
 
-int TIMELINE_GRIDSIZE		= 10;
-float TIMELINE_UNIT			= 0.1f;
-float TIMELINE_UNIT_STEP	= 0.01f;
+static int TIMELINE_GRIDSIZE		= 10;
+static float TIMELINE_UNIT			= 0.1f;
+static float TIMELINE_UNIT_STEP	= 0.01f;
 const float TIMELINE_HEIGHT = 120;
 const int KEYFRAME_POS_Y	= 480;
 const int KEYFRAME_HEIGHT_Y	= 12;
@@ -63,7 +63,7 @@ protected:
 	void onUpdate(float dt);
 };
 
-AnimationEditor *ae = 0;
+static AnimationEditor *ae = 0;
 
 KeyframeWidget *KeyframeWidget::movingWidget = 0;
 

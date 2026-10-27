@@ -79,18 +79,18 @@ extern "C" {
 // If true, send all sort of script errors to errorLog instead of debugLog.
 // On win32/OSX, this pops up message boxes which help to locate errors easily,
 // but can be annoying for regular gameplay.
-bool loudScriptErrors = false;
+static bool loudScriptErrors = false;
 
 // Set this to true to complain whenever a script tries to
 // get or set a global variable.
-bool complainOnGlobalVar = false;
+static bool complainOnGlobalVar = false;
 
 // Set this to true to complain whenever a script tries to get an undefined
 // thread-local variable.
-bool complainOnUndefLocal = false;
+static bool complainOnUndefLocal = false;
 
 // Set to true to make 'os' and 'io' Lua tables accessible
-bool allowUnsafeFunctions = false;
+static bool allowUnsafeFunctions = false;
 
 
 // List of all interface functions called by C++ code, terminated by NULL.

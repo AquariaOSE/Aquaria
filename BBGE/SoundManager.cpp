@@ -30,11 +30,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 SoundManager *sound = 0;
 
-std::string soundPath = "sfx/cache/";
-std::string localSoundPath = "sfx/local/";
-std::string musicPath = "mus/";
-std::string voicePath = "vox/";
-std::string fileType = ".ogg";
+static std::string soundPath = "sfx/cache/";
+static std::string localSoundPath = "sfx/local/";
+static std::string musicPath = "mus/";
+static std::string voicePath = "vox/";
+static std::string fileType = ".ogg";
 
 namespace SoundCore
 {

@@ -63,7 +63,7 @@ using namespace WorldMapRenderNamespace;
 
 class GemMover;
 
-GemMover *mover=0;
+static GemMover *mover=0;
 
 const float beaconSpawnBitTime = 0.05f;
 
@@ -377,10 +377,10 @@ public:
 };
 
 typedef std::vector <GemMover*> GemMovers;
-GemMovers gemMovers;
+static GemMovers gemMovers;
 
 typedef std::vector<BeaconRender*> BeaconRenders;
-BeaconRenders beaconRenders;
+static BeaconRenders beaconRenders;
 
 void WorldMapRender::setProperTileColor(WorldMapTileContainer& wt)
 {

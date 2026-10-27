@@ -100,22 +100,15 @@ Vector lerp(const Vector &v1, const Vector &v2, float dt, int lerpType)
 
 /*************************************************************************/
 
+#if 0
 float Bias( float x, float biasAmt )
 {
-	// WARNING: not thread safe
-	static float lastAmt = -1;
-	static float lastExponent = 0;
-	if( lastAmt != biasAmt )
-	{
-		lastExponent = logf( biasAmt ) * -1.4427f;
-	}
-	return powf( x, lastExponent );
+	return powf( x, logf( biasAmt ) * -1.4427f );
 }
 
 
 float Gain( float x, float biasAmt )
 {
-	// WARNING: not thread safe
 	if( x < 0.5f )
 		return 0.5f * Bias(2*x, 1-biasAmt);
 	else
@@ -153,7 +146,7 @@ float SimpleSpline( float value )
 	// Nice little ease-in, ease-out spline-like curve
 	return (3 * valueSquared - 2 * valueSquared * value);
 }
-
+#endif
 
 void VectorPath::addPathNode(Vector v, float p)
 {

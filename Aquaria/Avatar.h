@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 class TileVector;
 class SongIcon;
+class Avatar;
 class Web;
 class Hair;
 
@@ -74,7 +75,7 @@ enum SeeMapMode
 class SongIconParticle : public Quad
 {
 public:
-	SongIconParticle(Vector color, Vector pos, size_t note);
+	SongIconParticle(Vector color, Vector pos, size_t note, const std::vector<SongIcon*>& icons);
 	int note;
 	SongIcon *toIcon;
 protected:
@@ -84,7 +85,7 @@ protected:
 class SongIcon : public Quad
 {
 public:
-	SongIcon(size_t note);
+	SongIcon(size_t note, Avatar *owner);
 	void destroy();
 	size_t note;
 	void openNote();
@@ -96,6 +97,7 @@ public:
 	bool open;
 
 protected:
+	Avatar * const owner;
 	Quad *glow;
 	float rippleTimer;
 	float len;
@@ -467,6 +469,19 @@ protected:
 	int _lastActionSourceID;
 	InputDevice _lastActionInputDevice;
 
+	bool oldfh;
+	float hairTimer;
+	int lastHitSound;
+	const Entity *lastTargetE;
+	float maxTargetDelay;
+	bool targetWasDown;
+	float lfgTimer;
+	int tripCount;
+	bool revertButtonsAreDown;
+	float fishPoisonTimer;
+	Vector lastAddVec;
+	int lastSwimExtra;
+	bool didRotationFix;
 };
 
 #endif

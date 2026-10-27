@@ -132,7 +132,7 @@ static void Linux_CopyTree(const char *src, const char *dst)
 
 
 const size_t saveSlotPageSize = 4;
-size_t maxPages = 15;
+static size_t maxPages = 15;
 const int MAX_CONSOLELINES	= 18;
 
 DSQ *dsq = 0;
@@ -165,6 +165,8 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	cutscene_bg = 0;
 	cutscene_text = 0;
 	cutscene_text2 = 0;
+
+	lastRandNote = -1;
 
 	cutscenePaused = false;
 	inCutscene = false;
@@ -565,7 +567,7 @@ void DSQ::takeScreenshotKey()
 
 static Quad *loading=0;
 
-float loadingProgress = 0;
+static float loadingProgress = 0;
 static const float loadingProgressTable[] = {
 	#define LOAD_INITIAL	0  // Initial display (just so it's not empty)
 	#define LOAD_PARTICLES	1  // After loading particles and shots
@@ -1555,18 +1557,16 @@ Vector DSQ::getNoteVector(size_t note, float mag)
 
 int DSQ::getRandNote()
 {
-	static int lastRand = -1; // FIXME: move to DSQ
-
 	int r = rand()%8;
 
 	int c = 0;
-	while (r == lastRand)
+	while (r == lastRandNote)
 	{
 		r = rand()%8;
 		c++;
 		if (c > 8) break;
 	}
-	lastRand = r;
+	lastRandNote = r;
 
 
 	return r;

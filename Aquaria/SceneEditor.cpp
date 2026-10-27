@@ -273,7 +273,7 @@ public:
 };
 
 
-SceneEditor::SceneEditor() : ActionMapper(), on(false)
+SceneEditor::SceneEditor() : ActionMapper(), on(false), inCreateAquarian(false)
 {
 	autoSaveFile = 0;
 	selectedIdx = -1;
@@ -306,7 +306,7 @@ void SceneEditor::updateSelectedElementPosition(Vector dist)
 	}
 }
 
-bool se_changedEntityType = false;
+static bool se_changedEntityType = false;
 class SEQuad : public Quad
 {
 public:
@@ -409,12 +409,12 @@ public:
 
 
 
-std::vector<DebugButton*> mainMenu;
-int execID = 0;
-bool inMainMenu = false;
+static std::vector<DebugButton*> mainMenu;
+static int execID = 0;
+static bool inMainMenu = false;
 
-std::vector<SEQuad*> qs;
-DebugFont *se_label=0;
+static std::vector<SEQuad*> qs;
+static DebugFont *se_label=0;
 
 
 
@@ -806,11 +806,9 @@ void SceneEditor::init()
 
 void SceneEditor::createAquarian()
 {
+	if (inCreateAquarian) return;
 
-	static bool inCreateAqurian = false;
-	if (inCreateAqurian) return;
-
-	inCreateAqurian = true;
+	inCreateAquarian = true;
 	std::string t = dsq->getUserInputString("Enter Aquarian:", "");
 	if(!t.empty())
 	{
@@ -839,7 +837,7 @@ void SceneEditor::createAquarian()
 		if(size_t n = defs.size())
 			dsq->tilemgr.createTiles(&defs[0], n);
 	}
-	inCreateAqurian = false;
+	inCreateAquarian = false;
 }
 
 Path *SceneEditor::getSelectedPath()
@@ -1955,7 +1953,7 @@ void SceneEditor::saveScene()
 }
 
 
-Quad *se_grad = 0;
+static Quad *se_grad = 0;
 
 void destroyEntityPage()
 {

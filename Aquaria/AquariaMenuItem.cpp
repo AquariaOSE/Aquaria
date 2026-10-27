@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 using namespace tinyxml2;
 
 const float moveDelay = 0.2f;
+static bool s_keyConfigInLoop = false;
 
 float AquariaGuiElement::guiMoveTimer = 0;
 AquariaGuiElement::GuiElements AquariaGuiElement::guiElements;
@@ -517,9 +518,7 @@ void AquariaKeyConfig::toggleEnterKey(int on)
 
 void AquariaKeyConfig::onUpdate(float dt)
 {
-	static bool inLoop = false;
-
-	if (inLoop) return;
+	if (s_keyConfigInLoop) return;
 
 
 
@@ -535,7 +534,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 	ActionSet& as = dsq->user.control.actionSets[actionSetIndex];
 
-	inLoop = true;
+	s_keyConfigInLoop = true;
 
 	unsigned int *k = 0;
 
@@ -915,7 +914,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 		keyDown = false;
 	}
 
-	inLoop = false;
+	s_keyConfigInLoop = false;
 }
 
 void AquariaKeyConfig::setActionSetIndex(size_t idx)
