@@ -133,7 +133,10 @@ public:
 	void moveToFront(RenderObject *r);
 	void moveToBack(RenderObject *r);
 
+	void unloadDevice();
 	void reloadDevice();
+
+	void updateObjects(float dt) const;
 
 	void prepareRender();
 	void render(const RenderState& rs) const;
@@ -145,33 +148,26 @@ public:
 		return objectCount == 0;
 	}
 
-	inline RenderObject *getFirst()
+	// Skips holes, iteration is done once this returns NULL
+	class Iterator
 	{
-		iter = 0;
-		return getNext();
-	}
-
-	RenderObject *getNext()
-	{
-		const size_t size = renderObjects.size();
-		size_t i;
-		for (i = iter; i < size; i++)
+	public:
+		inline Iterator(const RenderObjectLayer& layer) : _objs(layer.renderObjects), _pos(0) {}
+		inline RenderObject *next()
 		{
-			if (renderObjects[i] != 0)
-				break;
+			RenderObject *ro = NULL;
+			const size_t sz = _objs.size();
+			size_t i = _pos;
+			while(i < sz)
+				if( (ro = _objs[i++]) )
+					break;
+			_pos = i;
+			return ro;
 		}
-		if (i < size)
-		{
-			iter = i+1;
-			return renderObjects[i];
-		}
-		else
-		{
-			iter = i;
-			return 0;
-		}
-		return 0;
-	}
+	private:
+		const RenderObjects& _objs;
+		size_t _pos;
+	};
 
 	//inclusive
 	int startPass, endPass;
@@ -188,7 +184,6 @@ protected:
 	std::vector<const RenderObject*> toRender;
 	size_t objectCount;
 	size_t firstFreeIdx;
-	size_t iter;
 };
 
 class CoreWindow : public Window

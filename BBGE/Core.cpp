@@ -121,15 +121,8 @@ ParticleEffect* Core::createParticleEffect(const std::string &name, const Vector
 void Core::unloadDevice()
 {
 	for (size_t i = 0; i < renderObjectLayers.size(); i++)
-	{
-		RenderObjectLayer *r = &renderObjectLayers[i];
-		RenderObject *robj = r->getFirst();
-		while (robj)
-		{
-			robj->unloadDevice();
-			robj = r->getNext();
-		}
-	}
+		renderObjectLayers[i].unloadDevice();
+
 	frameBuffer.unloadDevice();
 
 	if (afterEffectManager)
@@ -139,16 +132,8 @@ void Core::unloadDevice()
 void Core::reloadDevice()
 {
 	for (size_t i = 0; i < renderObjectLayers.size(); i++)
-	{
-		RenderObjectLayer *r = &renderObjectLayers[i];
-		r->reloadDevice();
-		RenderObject *robj = r->getFirst();
-		while (robj)
-		{
-			robj->reloadDevice();
-			robj = r->getNext();
-		}
-	}
+		renderObjectLayers[i].reloadDevice();
+
 	frameBuffer.reloadDevice();
 
 	if (afterEffectManager)
@@ -1101,18 +1086,7 @@ void Core::setMousePosition(const Vector &p)
 void Core::updateRenderObjects(float dt)
 {
 	for (size_t c = 0; c < renderObjectLayers.size(); c++)
-	{
-
-		RenderObjectLayer *rl = &renderObjectLayers[c];
-
-		for (RenderObject *r = rl->getFirst(); r; r = rl->getNext())
-		{
-			r->update(dt);
-		}
-	}
-
-	if (loopDone)
-		return;
+		renderObjectLayers[c].updateObjects(dt);
 }
 
 std::string Core::getEnqueuedJumpState()
@@ -2108,16 +2082,9 @@ void Core::clearRenderObjects()
 {
 	for (size_t i = 0; i < renderObjectLayers.size(); i++)
 	{
-
-		RenderObject *r = renderObjectLayers[i].getFirst();
-		while (r)
-		{
-			if (r)
-			{
-				removeRenderObject(r, DESTROY_RENDER_OBJECT);
-			}
-			r = renderObjectLayers[i].getNext();
-		}
+		RenderObjectLayer::Iterator it(renderObjectLayers[i]);
+		while (RenderObject *r = it.next())
+			removeRenderObject(r, DESTROY_RENDER_OBJECT);
 	}
 }
 

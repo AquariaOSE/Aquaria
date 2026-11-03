@@ -10276,16 +10276,13 @@ luaFunc(clearHelp)
 {
 	float t = 0.4f;
 
-	RenderObjectLayer *rl = &core->renderObjectLayers[LR_HELP];
-	RenderObject *ro = rl->getFirst();
-	while (ro)
+	RenderObjectLayer::Iterator it(core->renderObjectLayers[LR_HELP]);
+	while (RenderObject *ro = it.next())
 	{
 		ro->setLife(t);
 		ro->setDecayRate(1);
 		ro->alpha.stopPath();
 		ro->alpha.interpolateTo(0,t-0.01f);
-
-		ro = rl->getNext();
 	}
 
 	luaReturnNil();

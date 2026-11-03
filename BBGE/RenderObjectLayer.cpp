@@ -211,21 +211,44 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 	}
 }
 
+void RenderObjectLayer::unloadDevice()
+{
+	const size_t sz = renderObjects.size();
+	for(size_t i = 0; i < sz; ++i)
+		if(RenderObject *ro = renderObjects[i])
+			ro->unloadDevice();
+}
+
 void RenderObjectLayer::reloadDevice()
 {
+	const size_t sz = renderObjects.size();
+	for(size_t i = 0; i < sz; ++i)
+		if(RenderObject *ro = renderObjects[i])
+			ro->reloadDevice();
 }
+
+void RenderObjectLayer::updateObjects(float dt) const
+{
+	const size_t sz = renderObjects.size();
+	for(size_t i = 0; i < sz; ++i)
+		if(RenderObject *ro = renderObjects[i])
+			ro->update(dt);
+}
+
 
 void RenderObjectLayer::prepareRender()
 {
 	toRender.clear();
 
-	size_t n = 0;
-	for (const RenderObject *robj = getFirst(); robj; robj = getNext())
-	{
-		++n;
-		if(robj->shouldTryToRender())
-			toRender.push_back(robj);
-	}
+	size_t n = 0, sz = renderObjects.size();
+	for(size_t i = 0; i < sz; ++i)
+		if(const RenderObject *ro = renderObjects[i])
+		{
+			++n;
+			if(ro->shouldTryToRender())
+				toRender.push_back(ro);
+		}
+
 	core->renderObjectCount += toRender.size();
 	toRender.push_back(NULL); // terminate
 	core->totalRenderObjectCount += n;
