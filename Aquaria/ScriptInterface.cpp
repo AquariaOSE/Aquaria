@@ -8683,7 +8683,7 @@ static int pushTileData(lua_State *L, const TileData& t, unsigned layer)
 	return 14;
 }
 
-/// refreshElementsOnLayerCallback(int layer, function callback) -> int
+/// refreshElementsOnLayerCallback(int layer, function<int, string, bool, int, int, float, float, float, float, float, bool, bool, float?, float?; bool> callback) -> int
 /// Calls callback(idx, gfx, visible, layer, tag, x, y, scalex, scaley, rotation, fh, fv, texscalex?, texscaley?) returns the new visibility; result = number of tiles visited
 luaFunc(refreshElementsOnLayerCallback)
 {
@@ -8711,7 +8711,7 @@ luaFunc(refreshElementsOnLayerCallback)
 	luaReturnInt(done);
 }
 
-/// refreshElementsWithTagCallback(int tag, function callback) -> int
+/// refreshElementsWithTagCallback(int tag, function<int, string, bool, int, int, float, float, float, float, float, bool, bool, float?, float?; bool> callback) -> int
 /// Callback as in refreshElementsOnLayerCallback; result = number of tiles visited
 luaFunc(refreshElementsWithTagCallback)
 {
