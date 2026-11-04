@@ -424,7 +424,7 @@ BasicIcon::BasicIcon()
 
 bool BasicIcon::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0.1f && alphaMod > 0.1f && (!parent || parent->alpha.x == 1);
+	return alpha.x > 0.1f && alphaMod > 0.1f && (!parent || parent->alpha.x == 1);
 }
 
 bool BasicIcon::isCursorInMenuItem()
@@ -511,7 +511,7 @@ void ModIcon::onUpdate(float dt)
 		_isRecCall = true;
 		core->run(FRAME_TIME); // HACK: this is necessary to correctly position the mouse on the object after moving the panel
 		_isRecCall = false;
-		setFocus(true); // re-position mouse
+		focusByNavigation(); // re-position mouse
 	}
 }
 

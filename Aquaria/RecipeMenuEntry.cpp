@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RecipeMenuEntry.h"
 #include "Game.h"
 #include "InGameMenu.h"
+#include "AquariaMenuItem.h"
 
 
 namespace RecipeMenuNamespace
@@ -236,6 +237,66 @@ RecipeMenu::RecipeMenu()
 	toggling = false;
 	currentPage = 0;
 	description = 0;
+	root = 0;
+	scroll = scrollEnd = 0;
+	header = page = 0;
+	nextPage = prevPage = 0;
+}
+
+void RecipeMenu::create()
+{
+	// The objects of the previous menu were deleted with the previous game state
+	recipeMenuEntries.clear();
+	description = 0;
+	on = false;
+	toggling = false;
+
+	root = new RenderObject;
+	root->followCamera = 1;
+	root->cull = false;
+	game->addRenderObject(root, LR_RECIPES);
+
+	const float scrollx = 555;
+
+	scroll = new Quad("gui/recipe-scroll", Vector(scrollx, 200));
+	scroll->alpha = 0;
+	root->addChild(scroll, PM_POINTER);
+
+	scrollEnd = new Quad("gui/recipe-scroll-end", Vector(scrollx, 400));
+	scrollEnd->alpha = 0;
+	root->addChild(scrollEnd, PM_POINTER);
+
+	header = new BitmapText(dsq->font);
+	header->color = 0;
+	header->setText(stringbank.get(2007));
+	header->alpha = 0;
+	header->position = Vector(scrollx, 5);
+	root->addChild(header, PM_POINTER);
+
+	page = new BitmapText(dsq->smallFont);
+	page->color = 0;
+	page->position = Vector(scrollx, 400);
+	page->setText(stringbank.get(2006));
+	page->alpha = 0;
+	root->addChild(page, PM_POINTER);
+
+	prevPage = new AquariaMenuItem;
+	prevPage->useQuad("Gui/arrow-left");
+	prevPage->useSound("click");
+	prevPage->useGlow("particles/glow", 64, 32);
+	prevPage->position = Vector(scrollx - 150, 410);
+	prevPage->alpha = 0;
+	prevPage->scale = Vector(0.8f, 0.8f);
+	root->addChild(prevPage, PM_POINTER);
+
+	nextPage = new AquariaMenuItem;
+	nextPage->useQuad("Gui/arrow-right");
+	nextPage->useSound("click");
+	nextPage->useGlow("particles/glow", 64, 32);
+	nextPage->position = Vector(scrollx + 150, 410);
+	nextPage->alpha = 0;
+	nextPage->scale = Vector(0.8f, 0.8f);
+	root->addChild(nextPage, PM_POINTER);
 }
 
 void RecipeMenu::slide(RenderObject *r, bool in, float t)
@@ -399,7 +460,7 @@ void RecipeMenu::createPage(size_t p)
 					recipeMenuEntries.push_back(r);
 
 					r->position = Vector(500-5, 65 + num * 70);
-					game->addRenderObject(r, scroll->layer);
+					root->addChild(r, PM_POINTER);
 					num++;
 				}
 				else
@@ -421,7 +482,7 @@ void RecipeMenu::createPage(size_t p)
 	description->setText("");
 	description->setWidth(500); // 1000??
 
-	game->addRenderObject(description, scroll->layer);
+	root->addChild(description, PM_POINTER);
 
 	std::ostringstream os2;
 	os2 << stringbank.get(2006) << " " << currentPage+1 << "/" << getNumPages()+1;

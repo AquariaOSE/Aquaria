@@ -275,7 +275,7 @@ struct AnimationEditorPage
 	void showCenter(bool on)
 	{
 		if(center)
-			center->setHidden(!on);
+			center->alpha = on ? 1.0f : 0.0f;
 	}
 
 	bool load(const char *fn) // pass NULL to unload

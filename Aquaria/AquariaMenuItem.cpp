@@ -90,7 +90,7 @@ void AquariaGuiElement::setFocus(bool v)
 	if (v)
 	{
 		currentFocus = this;
-		if (dsq->getInputMode() == INPUT_JOYSTICK || dsq->getInputMode() == INPUT_KEYBOARD)
+		if (dsq->getInputMode() == INPUT_JOYSTICK)
 			core->setMousePosition(getGuiPosition());
 
 		AquariaGuiElement *gui=0, *guiThis = (AquariaGuiElement*)this;
@@ -105,6 +105,13 @@ void AquariaGuiElement::setFocus(bool v)
 	}
 	else if(this == currentFocus)
 		currentFocus = 0;
+}
+
+void AquariaGuiElement::focusByNavigation()
+{
+	setFocus(true);
+	if (dsq->getInputMode() == INPUT_KEYBOARD)
+		core->setMousePosition(getGuiPosition());
 }
 
 void AquariaGuiElement::updateMovement(float dt)
@@ -125,7 +132,7 @@ void AquariaGuiElement::updateMovement(float dt)
 					gui = FindClosestTo(this, getGuiPosition(), dir);
 				if (gui)
 				{
-					gui->setFocus(true);
+					gui->focusByNavigation();
 					guiMoveTimer = moveDelay;
 				}
 			}
@@ -140,7 +147,7 @@ AquariaGuiElement *AquariaGuiElement::FocusClosestToMouse(Direction dir)
 		AquariaGuiElement *gui = FindClosestTo(NULL, core->mouse.position, dir);
 		if (gui)
 		{
-			gui->setFocus(true);
+			gui->focusByNavigation();
 			guiMoveTimer = moveDelay;
 			return gui;
 		}
@@ -287,7 +294,7 @@ Vector AquariaGuiQuad::getGuiPosition()
 
 bool AquariaGuiQuad::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0 && alphaMod > 0 && renderQuad;
+	return renderQuad && isVisibleInHierarchy() && isInputEnabledInHierarchy();
 }
 
 void AquariaGuiQuad::update(float dt)
@@ -393,7 +400,7 @@ Vector AquariaSlider::getGuiPosition()
 
 bool AquariaSlider::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0 && alphaMod > 0;
+	return isVisibleInHierarchy() && isInputEnabledInHierarchy();
 }
 
 AquariaCheckBox::AquariaCheckBox()
@@ -427,7 +434,7 @@ Vector AquariaCheckBox::getGuiPosition()
 
 bool AquariaCheckBox::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0 && alphaMod > 0;
+	return isVisibleInHierarchy() && isInputEnabledInHierarchy();
 }
 
 
@@ -493,7 +500,7 @@ Vector AquariaKeyConfig::getGuiPosition()
 
 bool AquariaKeyConfig::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0 && alphaMod > 0;
+	return isVisibleInHierarchy() && isInputEnabledInHierarchy();
 }
 
 void AquariaKeyConfig::toggleEnterKey(int on)
@@ -977,7 +984,7 @@ Vector AquariaMenuItem::getGuiPosition()
 
 bool AquariaMenuItem::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0 && alphaMod > 0;
+	return isVisibleInHierarchy() && isInputEnabledInHierarchy();
 }
 
 void AquariaMenuItem::useSound(const std::string &tex)

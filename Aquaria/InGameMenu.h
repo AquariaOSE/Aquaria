@@ -25,6 +25,7 @@ class RoundedRect;
 class DebugButton;
 class TTFText;
 class AquariaButton;
+class Panel;
 
 
 enum MenuPage
@@ -33,12 +34,18 @@ enum MenuPage
 	MENUPAGE_SONGS		= 0,
 	MENUPAGE_FOOD		= 1,
 	MENUPAGE_TREASURES	= 2,
-	MENUPAGE_PETS		= 3
+	MENUPAGE_PETS		= 3,
+
+	MENUPAGE_MAX
 };
 
 struct RecipeMenu
 {
 	RecipeMenu();
+	void create();
+
+	// Separate root object in front of the menu, so it keeps animating regardless of the menu page
+	RenderObject *root;
 	Quad *scroll;
 	Quad *scrollEnd;
 	BitmapText *header, *page, *description;
@@ -133,7 +140,15 @@ private:
 	ToolTip *treasureDescription;
 	Quad *treasureCloseUp;
 
+	// menuBg (scaled background, root)
+	//   options: optionsMain, keyConfigPanel, apply/cancel buttons
+	//   menuPages: widgets shared by all pages, pages[MENUPAGE_*]
+	// options and menuPages use screen coordinates
 	Quad *menuBg, *menuBg2;
+	Panel *options, *optionsMain, *keyConfigPanel;
+	Panel *menuPages;
+	Panel *pages[MENUPAGE_MAX];
+	Panel *foodSlotsPanel;
 
 	AquariaMenuItem *eYes, *eNo, *cook, *recipes, *nextFood, *prevFood, *nextTreasure, *prevTreasure, *use, *keyConfigButton;
 	AquariaMenuItem *opt_cancel, *opt_save, *foodSort;
@@ -208,16 +223,15 @@ private:
 	AquariaComboBox *resBox;
 	Quad *songBubbles, *energyIdol, *liCrystal;
 
-	RenderObject *group_keyConfig[NUM_KEY_CONFIG_PAGES];
+	Panel *group_keyConfig[NUM_KEY_CONFIG_PAGES];
 	RoundedRect *keyConfigBg;
 	std::vector<AquariaButton*> keyCategoryButtons;
 	std::vector<AquariaKeyConfig*> keyConfigs;
-	RenderObject *createBasicKeyConfig();
+	Panel *createBasicKeyConfig();
 	void switchToKeyConfigPage(int page);
 	void switchToKeyConfigPage1();
 	void switchToKeyConfigPage2();
 	void switchToKeyConfigPage3();
-	Quad *options;
 	AquariaComboBox *actionSetBox;
 	AquariaCheckBox *actionSetCheck;
 	int selectedActionSetIdx;
@@ -236,7 +250,6 @@ private:
 
 	BitmapText *circlePageNum;
 
-	std::vector<ToolTip*> foodTips, songTips, petTips, treasureTips;
 
 	Quad *eAre;
 	int inGameMenuExitState;

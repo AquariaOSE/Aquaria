@@ -10,6 +10,7 @@
 #include "GridRender.h"
 #include "DebugFont.h"
 #include "ActionSet.h"
+#include "Panel.h"
 
 static InGameMenu *themenu = 0;
 
@@ -23,7 +24,8 @@ static std::vector<PetSlot*>		petSlots;
 // ---------------- Constants ----------------------------
 
 static const float MENUPAGETRANSTIME		= 0.2f;
-const Vector menuBgScale(800.0f/1024.0f, 800.0f/1024.0f);
+static const float MENUBG_SCALE = 800.0f/1024.0f;
+const Vector menuBgScale(MENUBG_SCALE, MENUBG_SCALE);
 const size_t foodPageSize = 16;
 const size_t treasurePageSize = 16;
 const size_t numTreasures = 16*2;
@@ -33,6 +35,33 @@ const Vector opt_save_original = Vector(350, 350), opt_cancel_original = Vector(
 
 static const int KEYCONFIG_FIRST_COL_DISTANCE = 170;
 static const int KEYCONFIG_COL_DISTANCE = 105;
+
+// Some objects are laid out relative to the center of the scaled background
+static Vector bgToScreen(const Vector& p)
+{
+	return Vector(400, 300) + p * MENUBG_SCALE;
+}
+
+static Vector bgScale(float s)
+{
+	return Vector(s, s) * MENUBG_SCALE;
+}
+
+static Panel *addPanel(RenderObject *parent)
+{
+	Panel *p = new Panel;
+	parent->addChild(p, PM_POINTER);
+	return p;
+}
+
+// Undoes menuBg's transform (at rest), so that its children use screen coordinates
+static Panel *addScreenPanel(Quad *menuBg)
+{
+	Panel *p = addPanel(menuBg);
+	p->position = Vector(-400, -300) / MENUBG_SCALE;
+	p->scale = Vector(1, 1) / MENUBG_SCALE;
+	return p;
+}
 
 
 // --------- Private class defs, not used outside ---------------
@@ -44,7 +73,6 @@ public:
 
 	void refresh(bool effects);
 	int slot;
-	void toggle(bool f);
 	static int foodSlotIndex;
 
 	IngredientData *getIngredient() { return ingredient; }
@@ -80,9 +108,10 @@ int FoodSlot::foodSlotIndex = -1;
 class PetSlot : public AquariaGuiQuad
 {
 public:
-	PetSlot(int pet);
+	PetSlot(int pet, float scaleFactor);
 	int petFlag;
 protected:
+	float scaleFactor;
 	bool wasSlot;
 	int petidx;
 	bool mouseDown;
@@ -144,7 +173,7 @@ protected:
 // ------------- Private class impls -------------------
 
 
-PetSlot::PetSlot(int pet) : AquariaGuiQuad()
+PetSlot::PetSlot(int pet, float scaleFactor) : AquariaGuiQuad(), scaleFactor(scaleFactor)
 {
 	PetData *p = dsq->continuity.getPetData(pet);
 	if (p)
@@ -152,7 +181,7 @@ PetSlot::PetSlot(int pet) : AquariaGuiQuad()
 		std::string fn = "collectibles/egg-" + p->namePart;
 		setTexture(fn);
 	}
-	scale = Vector(0.9f, 0.9f);
+	scale = Vector(0.9f, 0.9f)*scaleFactor;
 	petidx = pet;
 	mouseDown = false;
 	petFlag = FLAG_PET_NAMESTART + petidx;
@@ -201,7 +230,7 @@ void PetSlot::onUpdate(float dt)
 
 	if ((core->mouse.position - getWorldPosition()).isLength2DIn(32))
 	{
-		scale.interpolateTo(Vector(1.2f, 1.2f), 0.1f);
+		scale.interpolateTo(Vector(1.2f, 1.2f)*scaleFactor, 0.1f);
 
 		if (core->mouse.buttons.left && !mouseDown)
 		{
@@ -227,7 +256,7 @@ void PetSlot::onUpdate(float dt)
 	else
 	{
 		mouseDown = false;
-		scale.interpolateTo(Vector(0.9f, 0.9f), 0.1f);
+		scale.interpolateTo(Vector(0.9f, 0.9f)*scaleFactor, 0.1f);
 	}
 }
 
@@ -414,22 +443,6 @@ FoodSlot::FoodSlot(int slot) : AquariaGuiQuad(), slot(slot)
 void FoodSlot::setOriginalPosition(const Vector &op)
 {
 	originalPosition = op;
-}
-
-void FoodSlot::toggle(bool f)
-{
-	if (f)
-	{
-		alpha = 1;
-		alphaMod = 1;
-		label->alpha = 1;
-	}
-	else
-	{
-		alpha = 0;
-		alphaMod = 0;
-		label->alpha = 0;
-	}
 }
 
 void FoodSlot::refresh(bool effects)
@@ -1203,6 +1216,8 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		if (game->avatar->isEntityDead()) return;
 
 		toggleOptionsMenu(false);
+		options->setVisible(false);
+		menuPages->setVisible(!optionsOnly);
 		dsq->overlay->alpha.interpolateTo(0, 0.1f);
 		float t = 0.3f;
 
@@ -1260,45 +1275,6 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 		menuBg->scale = menuBgScale*0.5f;
 		menuBg->scale.interpolateTo(menuBgScale, t);
 		menuBg->alpha.interpolateTo(1, t*0.5f);
-		menuBg->setHidden(false);
-
-		// FIXME: This gets a little verbose because of all the
-		// individual non-child objects.  Is there a reason they
-		// can't all be children of menuBg?  --achurch
-		opt_save->setHidden(false);
-		opt_cancel->setHidden(false);
-		options->setHidden(false);
-		keyConfigButton->setHidden(false);
-		keyConfigBg->setHidden(false);
-		cook->setHidden(false);
-		foodSort->setHidden(false);
-		recipes->setHidden(false);
-		use->setHidden(false);
-		prevFood->setHidden(false);
-		nextFood->setHidden(false);
-		prevTreasure->setHidden(false);
-		nextTreasure->setHidden(false);
-		circlePageNum->setHidden(false);
-		previewRecipe->setHidden(false);
-		showRecipe->setHidden(false);
-		recipeMenu.scroll->setHidden(false);
-		recipeMenu.scrollEnd->setHidden(false);
-		recipeMenu.header->setHidden(false);
-		recipeMenu.page->setHidden(false);
-		recipeMenu.prevPage->setHidden(false);
-		recipeMenu.nextPage->setHidden(false);
-		menuDescription->setHidden(false);
-		eAre->setHidden(false);
-		eYes->setHidden(false);
-		eNo->setHidden(false);
-		menuIconGlow->setHidden(false);
-		for (size_t i = 0; i < menu.size(); i++)
-			menu[i]->setHidden(false);
-		for (size_t i = 0; i < treasureSlots.size(); i++)
-			treasureSlots[i]->setHidden(false);
-		treasureDescription->setHidden(false);
-		for (size_t i = 0; i < foodSlots.size(); i++)
-			foodSlots[i]->setHidden(false);
 
 
 		if (game->miniMapRender)
@@ -1347,11 +1323,8 @@ void InGameMenu::show(bool ignoreInput, bool optionsOnly, MenuPage menuPage)
 				}
 				else
 				{
-					float t = 0.1f;
-
 					toggleMainMenu(true);
 
-					songBubbles->alpha.interpolateTo(1, t);
 					for (size_t i = 0; i < menu.size(); i++)
 					{
 						menu[i]->scale = Vector(0,0);
@@ -1437,7 +1410,6 @@ void InGameMenu::hide(bool effects, bool cancel)
 		}
 		for (size_t i = 0; i < songSlots.size(); i++)
 			songSlots[i]->alpha.interpolateTo(0, t);
-		songBubbles->alpha.interpolateTo(0, t);
 
 		if (game->miniMapRender)
 			game->miniMapRender->slide(0);
@@ -1470,9 +1442,6 @@ void InGameMenu::hide(bool effects, bool cancel)
 
 		inGameMenu = false;
 
-		for (size_t i = 0; i < songTips.size(); i++)
-			songTips[i]->alpha = 0;
-
 		for (size_t i = 0; i < dropIngrNames.size(); i++)
 		{
 			game->spawnIngredient(dropIngrNames[i], game->avatar->position + Vector(0,-96), 1, 1);
@@ -1483,41 +1452,8 @@ void InGameMenu::hide(bool effects, bool cancel)
 			dsq->quitNestedMain();
 	}
 
-	menuBg->setHidden(true);
-	opt_save->setHidden(true);
-	opt_cancel->setHidden(true);
-	options->setHidden(true);
-	keyConfigButton->setHidden(true);
-	keyConfigBg->setHidden(true);
-	cook->setHidden(true);
-	foodSort->setHidden(true);
-	recipes->setHidden(true);
-	use->setHidden(true);
-	prevFood->setHidden(true);
-	nextFood->setHidden(true);
-	prevTreasure->setHidden(true);
-	nextTreasure->setHidden(true);
-	circlePageNum->setHidden(true);
-	previewRecipe->setHidden(true);
-	showRecipe->setHidden(true);
-	recipeMenu.scroll->setHidden(true);
-	recipeMenu.scrollEnd->setHidden(true);
-	recipeMenu.header->setHidden(true);
-	recipeMenu.page->setHidden(true);
-	recipeMenu.prevPage->setHidden(true);
-	recipeMenu.nextPage->setHidden(true);
-	menuDescription->setHidden(true);
-	eAre->setHidden(true);
-	eYes->setHidden(true);
-	eNo->setHidden(true);
-	menuIconGlow->setHidden(true);
-	for (size_t i = 0; i < menu.size(); i++)
-		menu[i]->setHidden(true);
-	for (size_t i = 0; i < treasureSlots.size(); i++)
-		treasureSlots[i]->setHidden(true);
-	treasureDescription->setHidden(true);
-	for (size_t i = 0; i < foodSlots.size(); i++)
-		foodSlots[i]->setHidden(true);
+	options->setVisible(false);
+	menuPages->setVisible(false);
 }
 
 
@@ -1670,16 +1606,10 @@ void InGameMenu::sortFood()
 	}
 }
 
-RenderObject *InGameMenu::createBasicKeyConfig()
+Panel *InGameMenu::createBasicKeyConfig()
 {
-	RenderObject *keyConfig = new RenderObject;
-
-	keyConfigBg->addChild(keyConfig, PM_POINTER);
-
-	keyConfig->shareAlphaWithChildren = 1;
-	keyConfig->followCamera = 1;
+	Panel *keyConfig = addPanel(keyConfigBg);
 	keyConfig->position = Vector(0, -40);
-
 	return keyConfig;
 }
 
@@ -1713,66 +1643,34 @@ void InGameMenu::create()
 
 	menuBg = new Quad;
 	menuBg->setTexture("menu");
-	//menuBg->setWidthHeight(800);
-	//menuBg->scale = Vector(800.0f/1024.0f, 800.0f/1024.0f);
 	menuBg->position = Vector(400,300,menuz);
 	menuBg->followCamera = 1;
-	//menuBg->shareAlphaWithChildren=true;
 	game->addRenderObject(menuBg, LR_MENU);
 
+	liCrystal = new Quad("gui/li-crystal", Vector(0,0));
+	menuBg->addChild(liCrystal, PM_POINTER);
 
-	menuBg2 = new Quad;
-	menuBg2->setTexture("menu2");
-	menuBg2->position = Vector(0, 240);
-	menuBg->addChild(menuBg2, PM_POINTER);
+	// ---------- OPTIONS
 
-	float scale = menuBg->scale.x;
-	/*
-	songDescription = new BitmapText(dsq->font);
-	songDescription->position = Vector(0,100);
-	songDescription->parentManagedPointer = 1;
-	menuBg->addChild(songDescription);
-	*/
+	options = addScreenPanel(menuBg);
+	options->setVisible(false);
 
-	options = new Quad;
-
-	options->renderQuad = false;
+	optionsMain = addPanel(options);
 
 	int sliderx = 250, slidery = 160, sliderd = 26;
 	int checkx=660, checky = 160, checkd = 26;
 
 	Quad *audio = new Quad("gui/audiovisual", Vector(200, 125));
-	options->addChild(audio, PM_POINTER);
+	optionsMain->addChild(audio, PM_POINTER);
 
 	Quad *controls = new Quad("gui/controls", Vector(600, 125));
-	options->addChild(controls, PM_POINTER);
-
-	/*
-	Quad *visual = new Quad("gui/visual", Vector(170, 300));
-	visual->parentManagedPointer = 1;
-	options->addChild(visual);
-	*/
-
-	/*
-	Quad *blurEffectsLabel = new Quad("gui/blurEffectsLabel.png", visual->position + Vector(-20,40));
-	blurEffectsLabel->parentManagedPointer = 1;
-	options->addChild(blurEffectsLabel);
-	*/
-
-	/*
-	blurEffectsCheck = new AquariaCheckBox();
-	blurEffectsCheck->position = visual->position + Vector(60, 40);
-	blurEffectsCheck->parentManagedPointer = 1;
-	options->addChild(blurEffectsCheck);
-	*/
+	optionsMain->addChild(controls, PM_POINTER);
 
 	Quad *controllabels = new Quad("gui/controllabels", Vector(0,0,0));
 	int w = controllabels->getWidth();
 	int h = controllabels->getHeight();
 	controllabels->position = Vector(checkx-16-w/2.0f, checky + h/2.0f - 14);
-	options->addChild(controllabels, PM_POINTER);
-
-
+	optionsMain->addChild(controllabels, PM_POINTER);
 
 	int scheckx=270;
 	int schecky=315;
@@ -1783,25 +1681,25 @@ void InGameMenu::create()
 	sw = subtitleslabel->getWidth();
 	sh = subtitleslabel->getHeight();
 	subtitleslabel->position = Vector(scheckx-16-sw*0.5f, schecky + sh/2.0f - 14);
-	options->addChild(subtitleslabel, PM_POINTER);
+	optionsMain->addChild(subtitleslabel, PM_POINTER);
 
 	subtitlesCheck = new AquariaCheckBox();
 	subtitlesCheck->setValue(dsq->user.audio.subtitles);
 	subtitlesCheck->position = Vector(scheckx,schecky);
-	options->addChild(subtitlesCheck, PM_POINTER);
+	optionsMain->addChild(subtitlesCheck, PM_POINTER);
 
 	Quad *fullscreenLabel = new Quad("gui/fullscreen", Vector(0,0,0));
 	fullscreenLabel->position = Vector(scheckx-16-sw*0.5f, schecky + voptoffy + sh/2.0f - 14);
-	options->addChild(fullscreenLabel, PM_POINTER);
+	optionsMain->addChild(fullscreenLabel, PM_POINTER);
 
 	fullscreenCheck = new AquariaCheckBox();
 	fullscreenCheck->setValue(dsq->isFullscreen());
 	fullscreenCheck->position = Vector(scheckx,schecky + voptoffy);
-	options->addChild(fullscreenCheck, PM_POINTER);
+	optionsMain->addChild(fullscreenCheck, PM_POINTER);
 
 	Quad *resolutionLabel = new Quad("gui/resolution", Vector(0,0,0));
 	resolutionLabel->position = Vector(160, 260);
-	options->addChild(resolutionLabel, PM_POINTER);
+	optionsMain->addChild(resolutionLabel, PM_POINTER);
 
 	resBox = new AquariaComboBox(Vector(0.7f, 1.0f));
 	resBox->position = Vector(196, 285);
@@ -1815,188 +1713,81 @@ void InGameMenu::create()
 			resBox->enqueueSelectItem(i);
 		}
 	}
-	options->addChild(resBox, PM_POINTER);
+	optionsMain->addChild(resBox, PM_POINTER);
 
 	Quad *audiolabels = new Quad("gui/audiolabels", Vector(0,0,0));
 	w = audiolabels->getWidth();
 	h = audiolabels->getHeight();
 	audiolabels->position = Vector(sliderx-64-w/2.0f, slidery + h/2.0f - 14);
-	options->addChild(audiolabels, PM_POINTER);
+	optionsMain->addChild(audiolabels, PM_POINTER);
 
 	musslider = new AquariaSlider();
 	musslider->setValue(dsq->user.audio.musvol);
 	musslider->position = Vector(sliderx,slidery+1*sliderd);
-	options->addChild(musslider, PM_POINTER);
+	optionsMain->addChild(musslider, PM_POINTER);
 
 	sfxslider = new AquariaSlider();
 	sfxslider->setValue(dsq->user.audio.sfxvol);
 	sfxslider->position = Vector(sliderx,slidery);
-	options->addChild(sfxslider, PM_POINTER);
+	optionsMain->addChild(sfxslider, PM_POINTER);
 
 	voxslider = new AquariaSlider();
 	voxslider->setValue(dsq->user.audio.voxvol);
 	voxslider->position = Vector(sliderx,slidery+2*sliderd);
-	options->addChild(voxslider, PM_POINTER);
-
+	optionsMain->addChild(voxslider, PM_POINTER);
 
 	flipInputButtonsCheck = new AquariaCheckBox();
 	flipInputButtonsCheck->setValue(dsq->user.control.flipInputButtons);
 	flipInputButtonsCheck->position = Vector(checkx,checky);
-	options->addChild(flipInputButtonsCheck, PM_POINTER);
+	optionsMain->addChild(flipInputButtonsCheck, PM_POINTER);
 
 	toolTipsCheck = new AquariaCheckBox();
 	toolTipsCheck->setValue(dsq->user.control.toolTipsOn);
 	toolTipsCheck->position = Vector(checkx,checky+1*checkd);
-	options->addChild(toolTipsCheck, PM_POINTER);
+	optionsMain->addChild(toolTipsCheck, PM_POINTER);
 
 	autoAimCheck = new AquariaCheckBox();
 	autoAimCheck->setValue(dsq->user.control.autoAim);
 	autoAimCheck->position = Vector(checkx,checky+2*checkd);
-	options->addChild(autoAimCheck, PM_POINTER);
+	optionsMain->addChild(autoAimCheck, PM_POINTER);
 
 	targetingCheck = new AquariaCheckBox();
 	targetingCheck->setValue(dsq->user.control.targeting);
 	targetingCheck->position = Vector(checkx,checky+3*checkd);
-	options->addChild(targetingCheck, PM_POINTER);
+	optionsMain->addChild(targetingCheck, PM_POINTER);
 
-
+	keyConfigButton = new AquariaMenuItem;
+	keyConfigButton->useQuad("gui/keyconfig-button");
+	keyConfigButton->useGlow("particles/glow", 128, 40);
+	keyConfigButton->position = worldRightCenter + Vector(0, 80);
+	keyConfigButton->scale = Vector(0.8f, 0.8f);
+	keyConfigButton->event.set(MakeFunctionEvent(InGameMenu, onKeyConfig));
+	optionsMain->addChild(keyConfigButton, PM_POINTER);
 
 	opt_save = new AquariaMenuItem;
 	opt_save->useQuad("gui/Apply");
 	opt_save->useGlow("particles/glow", 100, 50);
 	opt_save->event.set(MakeFunctionEvent(InGameMenu, onOptionsSave));
 	opt_save->position = opt_save_original;
-	opt_save->alpha = 0;
-	game->addRenderObject(opt_save, LR_MENU);
+	options->addChild(opt_save, PM_POINTER);
 
 	opt_cancel = new AquariaMenuItem;
 	opt_cancel->useQuad("gui/Cancel");
 	opt_cancel->useGlow("particles/glow", 100, 50);
 	opt_cancel->event.set(MakeFunctionEvent(InGameMenu, onOptionsCancel));
 	opt_cancel->position = opt_cancel_original;
-	opt_cancel->alpha = 0;
-	game->addRenderObject(opt_cancel, LR_MENU);
+	options->addChild(opt_cancel, PM_POINTER);
 
-	options->shareAlphaWithChildren = 1;
-	options->alpha = 0;
-	options->followCamera = 1;
-	game->addRenderObject(options, LR_MENU);
-
-	scale = 1;
-	songSlots.clear();
-	//songSlots.resize(3);
-	songSlots.resize(10);
-	// rewrite this: so you can hide / ignore certain songs, etc
-	//songSlots.resize(dsq->continuity.getSongBankSize());
-	//Vector center(-235, -50);
-	Vector center(-230, -50), rightCenter(230, -50);
-
-	energyIdol = new Quad("formupgrades/energyidol-charged", Vector(40,0));
-	menuBg->addChild(energyIdol, PM_POINTER);
-
-	liCrystal = new Quad("gui/li-crystal", Vector(0,0));
-	menuBg->addChild(liCrystal, PM_POINTER);
-
-	songBubbles = new Quad("gui/SongBubbles", Vector(-center.x, center.y));
-	menuBg->addChild(songBubbles, PM_POINTER);
-
-
-	// Vector(575,250);
-
-
-	songLabel = new BitmapText(dsq->smallFont);
-	{
-		songLabel->alpha = 0;
-		songLabel->setAlign(ALIGN_CENTER);
-		songLabel->followCamera = 1;
-		songLabel->setFontSize(20);
-		songLabel->position = Vector(-center.x, center.y) + Vector(0, -15); //+ Vector(10, -10);
-		songLabel->scale = Vector(1.2f, 1.2f);
-	}
-	menuBg->addChild(songLabel, PM_POINTER);
-
-
-
-	ToolTip *tip = 0;
-
-	foodTips.clear();
-	songTips.clear();
-	petTips.clear();
-	treasureTips.clear();
-
-	tip = new ToolTip;
-	tip->alpha = 0;
-	tip->setCircularAreaFromCenter(worldLeftCenter, 240);
-	tip->setText(stringbank.get(0), Vector(200,450), 350);
-	game->addRenderObject(tip, LR_HUD);
-	foodTips.push_back(tip);
-
-
-	tip = new ToolTip;
-	tip->alpha = 0;
-	tip->setCircularAreaFromCenter(worldRightCenter, 240);
-	tip->setText(stringbank.get(1), Vector(600,450), 350);
-	game->addRenderObject(tip, LR_HUD);
-	foodTips.push_back(tip);
-
-
-
-	tip = new ToolTip;
-	tip->alpha = 0;
-	tip->setCircularAreaFromCenter(worldLeftCenter, 240);
-	tip->setText(stringbank.get(14), Vector(200,450), 350);
-	game->addRenderObject(tip, LR_HUD);
-	songTips.push_back(tip);
-
-
-	/*
-	tip = new ToolTip;
-	tip->alpha = 0;
-	tip->setAreaFromCenter(Vector(400,300), 800, 600);
-	tip->setText(stringbank.get(16), Vector(400,300), 400);
-	game->addRenderObject(tip, LR_HUD);
-	petTips.push_back(tip);
-	*/
-
-	tip = new ToolTip;
-	tip->alpha = 0;
-	tip->setCircularAreaFromCenter(worldLeftCenter, 240);
-	tip->setText(stringbank.get(17), Vector(200,450), 350);
-	game->addRenderObject(tip, LR_HUD);
-	petTips.push_back(tip);
-
-	tip = new ToolTip;
-	tip->alpha = 0;
-	tip->setAreaFromCenter(Vector(400,350), 150, 50);
-	tip->setText(stringbank.get(15), Vector(400,450), 450);
-	game->addRenderObject(tip, LR_HUD);
-	songTips.push_back(tip);
-	foodTips.push_back(tip);
-	petTips.push_back(tip);
-	treasureTips.push_back(tip);
-
-	int radius = 118;
-	int food = 0;
-
-	keyConfigButton = new AquariaMenuItem;
-	keyConfigButton->useQuad("gui/keyconfig-button");
-	keyConfigButton->useGlow("particles/glow", 128, 40);
-	keyConfigButton->position = worldRightCenter + Vector(0, 80);
-	keyConfigButton->alpha = 0;
-	keyConfigButton->scale = Vector(0.8f, 0.8f);
-	keyConfigButton->event.set(MakeFunctionEvent(InGameMenu, onKeyConfig));
-	//keyConfigButton->setCanDirMove(false);
-	game->addRenderObject(keyConfigButton, LR_MENU);
-
+	// ---------- KEY CONFIG
 
 #define SB(x) stringbank.get(x)
 
+	keyConfigPanel = addPanel(options);
+	keyConfigPanel->setVisible(false);
+
 	keyConfigBg = new RoundedRect(580, 455, 10);
 	keyConfigBg->position = Vector(400,276 - 10 - 40);
-	keyConfigBg->alpha = 0;
-	keyConfigBg->shareAlphaWithChildren = 1;
-	keyConfigBg->setHidden(true);
-	game->addRenderObject(keyConfigBg, LR_OVERLAY);
+	keyConfigPanel->addChild(keyConfigBg, PM_POINTER);
 
 	float offy = 30 - keyConfigBg->position.y;
 	const float offx = 140 - keyConfigBg->position.x;
@@ -2138,7 +1929,7 @@ void InGameMenu::create()
 
 	// PART 1
 	{
-		RenderObject *kk = createBasicKeyConfig();
+		Panel *kk = createBasicKeyConfig();
 		group_keyConfig[0] = kk;
 
 		int y = offy;
@@ -2175,7 +1966,7 @@ void InGameMenu::create()
 
 	// PART 2
 	{
-		RenderObject *kk = createBasicKeyConfig();
+		Panel *kk = createBasicKeyConfig();
 		group_keyConfig[1] = kk;
 
 		int y = offy;
@@ -2190,9 +1981,9 @@ void InGameMenu::create()
 		addKeyConfigLine(kk, SB(2126), "FoodDrop",		offx, y+=yi);
 	}
 
-	// PART 2
+	// PART 3
 	{
-		RenderObject *kk = createBasicKeyConfig();
+		Panel *kk = createBasicKeyConfig();
 		group_keyConfig[2] = kk;
 
 		int y = offy;
@@ -2211,234 +2002,39 @@ void InGameMenu::create()
 	if(actionSetBox)
 		actionSetBox->moveToFront();
 
-
 #undef SB
 
-	cook = new AquariaMenuItem;
-	cook->useQuad("Gui/cook-button");
-	cook->useGlow("particles/glow", 128, 40);
-	cook->position = worldRightCenter + Vector(0, -120);
-	cook->alpha = 0;
-	cook->scale = Vector(0.8f, 0.8f);
-	cook->event.set(MakeFunctionEvent(InGameMenu, onCook));
-	cook->setCanDirMove(false);
-	game->addRenderObject(cook, LR_MENU);
+	// ---------- MENU PAGES: shared widgets
 
-	foodSort = new AquariaMenuItem;
-	foodSort->useQuad("gui/sort");
-	foodSort->useSound("click");
-	foodSort->useGlow("particles/glow", 32,32);
-	foodSort->position = worldLeftCenter + Vector(-100, -100);
-	foodSort->event.set(MakeFunctionEvent(InGameMenu, sortFood));
-	foodSort->alpha = 0;
-	game->addRenderObject(foodSort, LR_MENU);
+	menuPages = addScreenPanel(menuBg);
+	menuPages->setVisible(false);
 
-	recipes = new AquariaMenuItem;
-	recipes->useQuad("Gui/recipes-button");
-	recipes->useGlow("particles/glow", 128, 32);
-	recipes->position = worldLeftCenter + Vector(-40, 140);
-	recipes->alpha = 0;
-	recipes->scale = Vector(0.8f, 0.8f);
-	recipes->event.set(MakeFunctionEvent(InGameMenu, onRecipes));
-	game->addRenderObject(recipes, LR_MENU);
-
-	use = new AquariaMenuItem;
-	use->useQuad("Gui/use-button");
-	use->useGlow("particles/glow", 128, 64);
-	use->position = worldRightCenter + Vector(0, -120);
-	use->alpha = 0;
-	use->scale = Vector(0.8f, 0.8f);
-	use->event.set(MakeFunctionEvent(InGameMenu, onUseTreasure));
-	game->addRenderObject(use, LR_MENU);
-
-	prevFood = new AquariaMenuItem;
-	prevFood->useQuad("Gui/arrow-left");
-	prevFood->useSound("click");
-	prevFood->useGlow("particles/glow", 64, 32);
-	prevFood->position = worldLeftCenter + Vector(-50, -130);
-	prevFood->alpha = 0;
-	prevFood->event.set(MakeFunctionEvent(InGameMenu, onPrevFoodPage));
-	prevFood->scale = Vector(0.6f, 0.6f);
-	prevFood->setCanDirMove(false);
-	game->addRenderObject(prevFood, LR_MENU);
-
-	nextFood = new AquariaMenuItem;
-	nextFood->useQuad("Gui/arrow-right");
-	nextFood->useSound("click");
-	nextFood->useGlow("particles/glow", 64, 32);
-	nextFood->position = worldLeftCenter + Vector(50, -130);
-	nextFood->alpha = 0;
-	nextFood->setCanDirMove(false);
-	nextFood->event.set(MakeFunctionEvent(InGameMenu, onNextFoodPage));
-	nextFood->scale = Vector(0.6f, 0.6f);
-	game->addRenderObject(nextFood, LR_MENU);
-
-	prevTreasure = new AquariaMenuItem;
-	prevTreasure->useQuad("Gui/arrow-left");
-	prevTreasure->useSound("click");
-	prevTreasure->useGlow("particles/glow", 64, 32);
-	prevTreasure->position = worldLeftCenter + Vector(-50, -130);
-	prevTreasure->alpha = 0;
-	prevTreasure->setCanDirMove(false);
-	prevTreasure->scale = Vector(0.6f, 0.6f);
-	prevTreasure->event.set(MakeFunctionEvent(InGameMenu, onPrevTreasurePage));
-	prevTreasure->setCanDirMove(false);
-	game->addRenderObject(prevTreasure, LR_MENU);
-
-	nextTreasure = new AquariaMenuItem;
-	nextTreasure->useQuad("Gui/arrow-right");
-	nextTreasure->useSound("click");
-	nextTreasure->useGlow("particles/glow", 64, 32);
-	nextTreasure->position = worldLeftCenter + Vector(50, -130);
-	nextTreasure->alpha = 0;
-	nextTreasure->scale = Vector(0.6f, 0.6f);
-	nextTreasure->event.set(MakeFunctionEvent(InGameMenu, onNextTreasurePage));
-	nextTreasure->setCanDirMove(false);
-	game->addRenderObject(nextTreasure, LR_MENU);
+	menuBg2 = new Quad;
+	menuBg2->setTexture("menu2");
+	menuBg2->position = bgToScreen(Vector(0, 240));
+	menuBg2->scale = bgScale(1);
+	menuPages->addChild(menuBg2, PM_POINTER);
 
 	circlePageNum = new BitmapText(dsq->smallFont);
 	circlePageNum->color = Vector(0,0,0);
 	circlePageNum->position = worldLeftCenter + Vector(0, -142);
 	circlePageNum->alpha = 0;
-	circlePageNum->followCamera = 1;
-	game->addRenderObject(circlePageNum, LR_MENU);
-
-	foodHolders.resize(3);
-	int holders=0;
-	for (size_t i = 0; i < foodHolders.size(); i++)
-	{
-		foodHolders[i] = new FoodHolder(i);
-		foodHolders[i]->toggleValid(false);
-
-		float angle = (float(holders)/float(foodHolders.size()))*PI*2;
-		foodHolders[i]->position = rightCenter + Vector(sinf(angle), cosf(angle))*radius;
-		holders ++;
-
-		menuBg->addChild(foodHolders[i], PM_POINTER);
-	}
-
-	previewRecipe = new Quad;
-	previewRecipe->alphaMod = 0.75;
-	previewRecipe->followCamera = 1;
-	previewRecipe->alpha = 0;
-	previewRecipe->scale = Vector(0.7f, 0.7f);
-	previewRecipe->scale.interpolateTo(Vector(0.9f, 0.9f), 0.5f, -1, 1, 1);
-	previewRecipe->position = worldRightCenter;
-	game->addRenderObject(previewRecipe, LR_MENU);
-
-	showRecipe = new Quad();
-	showRecipe->followCamera = 1;
-	showRecipe->position = Vector(575,250);
-	game->addRenderObject(showRecipe, LR_MENU);
-
-	float scrollx = 555;
-	recipeMenu.scroll = new Quad("gui/recipe-scroll", Vector(scrollx, 200));
-	recipeMenu.scroll->followCamera = 1;
-	recipeMenu.scroll->alpha = 0;
-	game->addRenderObject(recipeMenu.scroll, LR_RECIPES); // LR_HUD3
-
-	recipeMenu.scrollEnd = new Quad("gui/recipe-scroll-end", Vector(scrollx, 400));
-	recipeMenu.scrollEnd->followCamera = 1;
-	recipeMenu.scrollEnd->alpha = 0;
-	game->addRenderObject(recipeMenu.scrollEnd, LR_RECIPES);
-
-	recipeMenu.header = new BitmapText(dsq->font);
-	recipeMenu.header->color = 0;
-	recipeMenu.header->followCamera = 1;
-	recipeMenu.header->setText(stringbank.get(2007));
-	recipeMenu.header->alpha = 0;
-	recipeMenu.header->position = Vector(scrollx, 5); //10
-	game->addRenderObject(recipeMenu.header, LR_RECIPES);
-
-	recipeMenu.page = new BitmapText(dsq->smallFont);
-	recipeMenu.page->color = 0;
-	recipeMenu.page->followCamera = 1;
-	recipeMenu.page->position = Vector(scrollx, 400);
-	recipeMenu.page->setText(stringbank.get(2006));
-	recipeMenu.page->alpha = 0;
-	game->addRenderObject(recipeMenu.page, LR_RECIPES);
-
-	recipeMenu.prevPage = new AquariaMenuItem;
-	recipeMenu.prevPage->useQuad("Gui/arrow-left");
-	recipeMenu.prevPage->useSound("click");
-	recipeMenu.prevPage->useGlow("particles/glow", 64, 32);
-	recipeMenu.prevPage->position = Vector(scrollx - 150, 410);
-	recipeMenu.prevPage->alpha = 0;
-	recipeMenu.prevPage->event.set(MakeFunctionEvent(InGameMenu, onPrevRecipePage));
-	recipeMenu.prevPage->scale = Vector(0.8f, 0.8f);
-	game->addRenderObject(recipeMenu.prevPage, LR_RECIPES);
-
-	recipeMenu.nextPage = new AquariaMenuItem;
-	recipeMenu.nextPage->useQuad("Gui/arrow-right");
-	recipeMenu.nextPage->useSound("click");
-	recipeMenu.nextPage->useGlow("particles/glow", 64, 32);
-	recipeMenu.nextPage->position = Vector(scrollx + 150, 410);
-	recipeMenu.nextPage->alpha = 0;
-	recipeMenu.nextPage->event.set(MakeFunctionEvent(InGameMenu, onNextRecipePage));
-	recipeMenu.nextPage->scale = Vector(0.8f, 0.8f);
-	game->addRenderObject(recipeMenu.nextPage, LR_RECIPES);
-
-
-	petSlots.resize(dsq->continuity.petData.size());
-	for (size_t i = 0; i < petSlots.size(); i++)
-	{
-		PetData *p = dsq->continuity.getPetData(i);
-		if (p)
-		{
-			petSlots[i] = new PetSlot(i);
-			petSlots[i]->alpha = 0;
-			float angle = (float(i)/float(petSlots.size()))*PI*2;
-			petSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*(radius*0.9f);
-			menuBg->addChild(petSlots[i], PM_POINTER);
-		}
-	}
-
-	foodHolders.resize(4);
-	foodHolders[3] = new FoodHolder(-1, true);
-	foodHolders[3]->toggleValid(false);
-	foodHolders[3]->position = rightCenter + Vector(96, 150);
-	menuBg->addChild(foodHolders[3], PM_POINTER);
-
-
-
-	int outer = 0;
-	int inner = 0;
-	for (size_t i = 0; i < songSlots.size(); i++)
-	{
-		songSlots[i] = new SongSlot(i);
-		float angle = 0;
-		SongType s = (SongType)dsq->continuity.getSongTypeBySlot(i);
-		if (dsq->continuity.isSongTypeForm(s))
-		{
-			angle = (float(outer)/float(numForms))*PI*2;
-			songSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*radius;
-			outer ++;
-		}
-		else
-		{
-			angle = (float(inner)/float(songSlots.size()-numForms))*PI*2 + PI;
-			songSlots[i]->position = center + Vector(sinf(angle), cosf(angle))*radius*0.4f;
-			inner ++;
-		}
-		menuBg->addChild(songSlots[i], PM_POINTER);
-	}
+	menuPages->addChild(circlePageNum, PM_POINTER);
 
 	menuDescription = new BitmapText(dsq->smallFont);
 	menuDescription->setFontSize(14);
 	menuDescription->position = Vector(400, 450);
 	menuDescription->setAlign(ALIGN_CENTER);
 	menuDescription->setWidth(400);
-	menuDescription->followCamera = 1;
 	menuDescription->alpha = 0;
-	game->addRenderObject(menuDescription, LR_MENU);
+	menuPages->addChild(menuDescription, PM_POINTER);
 
 	int areYouShim = -25;
 	eAre = new Quad;
 	eAre->position = Vector(400,448+areYouShim);
 	eAre->setTexture("AreYouSure");
 	eAre->alpha = 0;
-	eAre->followCamera = 1;
-	game->addRenderObject(eAre, LR_MENU);
+	menuPages->addChild(eAre, PM_POINTER);
 
 	eYes = new AquariaMenuItem;
 	eYes->position = Vector(400-100,516+areYouShim);
@@ -2447,7 +2043,7 @@ void InGameMenu::create()
 	eYes->event.set(MakeFunctionEvent(InGameMenu, onExitCheckYes));
 	eYes->alpha = 0;
 	eYes->shareAlpha = 1;
-	game->addRenderObject(eYes, LR_MENU);
+	menuPages->addChild(eYes, PM_POINTER);
 
 	eNo = new AquariaMenuItem;
 	eNo->position = Vector(400+100,516+areYouShim);
@@ -2456,29 +2052,22 @@ void InGameMenu::create()
 	eNo->event.set(MakeFunctionEvent(InGameMenu, onExitCheckNo));
 	eNo->alpha = 0;
 	eNo->shareAlpha = 1;
-	game->addRenderObject(eNo, LR_MENU);
+	menuPages->addChild(eNo, PM_POINTER);
 
 	eNo->setDirMove(DIR_LEFT, eYes);
 	eYes->setDirMove(DIR_RIGHT, eNo);
-
-
 
 	menu.resize(10);
 	for (size_t i = 0; i < menu.size(); i++)
 		menu[i] = new AquariaMenuItem;
 
 	int ty = 530;
-	//menu[0]->setLabel("Continue");
 	menu[0]->event.set(MakeFunctionEvent(InGameMenu, onInGameMenuContinue));
 	menu[0]->useGlow("particles/glow", 200, 100);
-	//menu[0]->position = Vector(150, 550);
 	menu[0]->position = Vector(150-30, ty-10);
 
-	//menu[1]->setLabel("Exit");
 	menu[1]->useGlow("particles/glow", 200, 100);
 	menu[1]->event.set(MakeFunctionEvent(InGameMenu, onInGameMenuExit));
-	//menu[1]->position = Vector(800-150, 550);
-	//menu[1]->position = Vector(800-150+30, ty);
 	menu[1]->position = Vector(800-150+20, ty-10);
 
 	menu[2]->setLabel("DebugSave");
@@ -2489,7 +2078,6 @@ void InGameMenu::create()
 	menu[2]->setCanDirMove(false);
 
 	menu[3]->useGlow("particles/glow", 64, 64);
-	//menu[0]->position = Vector(150, 550);
 	menu[3]->position = Vector(400, 195);
 	menu[3]->setCanDirMove(false);
 
@@ -2513,8 +2101,7 @@ void InGameMenu::create()
 	menuIconGlow->alpha = 0;
 	menuIconGlow->setWidthHeight(80, 80);
 	menuIconGlow->setBlendType(BLEND_ADD);
-	menuIconGlow->followCamera = 1;
-	game->addRenderObject(menuIconGlow, LR_MENU);
+	menuPages->addChild(menuIconGlow, PM_POINTER);
 
 	menu[6]->event.set(MakeFunctionEvent(InGameMenu, switchToFoodMenu));
 	menu[6]->useQuad("gui/icon-food");
@@ -2540,134 +2127,299 @@ void InGameMenu::create()
 	menu[9]->useSound("Click");
 	menu[9]->position = Vector(400+60*3, 410);
 
-	/*
-	menu[9]->event.set(MakeFunctionEvent(Game, sortFood));
-	menu[9]->setLabel("sort food");
-	menu[9]->position = Vector(100,100);
-	*/
-
 	for (size_t i = 0; i < menu.size(); i++)
 	{
-		game->addRenderObject(menu[i], LR_MENU);
+		menuPages->addChild(menu[i], PM_POINTER);
 		menu[i]->alpha = 0;
 	}
 
-	((AquariaMenuItem*)menu[5])->setDirMove(DIR_DOWN, ((AquariaMenuItem*)menu[0]));
-	((AquariaMenuItem*)menu[6])->setDirMove(DIR_DOWN, ((AquariaMenuItem*)menu[4]));
-	((AquariaMenuItem*)menu[7])->setDirMove(DIR_DOWN, ((AquariaMenuItem*)menu[4]));
-	((AquariaMenuItem*)menu[8])->setDirMove(DIR_DOWN, ((AquariaMenuItem*)menu[1]));
+	menu[5]->setDirMove(DIR_DOWN, menu[0]);
+	menu[6]->setDirMove(DIR_DOWN, menu[4]);
+	menu[7]->setDirMove(DIR_DOWN, menu[4]);
+	menu[8]->setDirMove(DIR_DOWN, menu[1]);
 
-	((AquariaMenuItem*)menu[0])->setDirMove(DIR_UP, ((AquariaMenuItem*)menu[5]));
-	((AquariaMenuItem*)menu[1])->setDirMove(DIR_UP, ((AquariaMenuItem*)menu[8]));
+	menu[0]->setDirMove(DIR_UP, menu[5]);
+	menu[1]->setDirMove(DIR_UP, menu[8]);
 
-	((AquariaMenuItem*)menu[4])->setDirMove(DIR_UP, ((AquariaMenuItem*)menu[6]));
+	menu[4]->setDirMove(DIR_UP, menu[6]);
 
+	for (int i = 0; i < MENUPAGE_MAX; ++i)
+	{
+		pages[i] = addPanel(menuPages);
+		pages[i]->setVisible(false);
+	}
 
+	ToolTip *tip = new ToolTip;
+	tip->setAreaFromCenter(Vector(400,350), 150, 50);
+	tip->setText(stringbank.get(15), Vector(400,450), 450);
+	menuPages->addChild(tip, PM_POINTER);
 
-	// ---------- FOOD MENU
+	// Background coordinates
+	const Vector center(-230, -50), rightCenter(230, -50);
+	const int radius = 118;
+
+	// Screen coordinates
+	const Vector worldCenter(222, 252);
+
+	// ---------- SONGS
+
+	Panel *songsPage = pages[MENUPAGE_SONGS];
+
+	energyIdol = new Quad("formupgrades/energyidol-charged", bgToScreen(Vector(40,0)));
+	energyIdol->scale = bgScale(1);
+	songsPage->addChild(energyIdol, PM_POINTER);
+
+	songBubbles = new Quad("gui/SongBubbles", bgToScreen(Vector(-center.x, center.y)));
+	songBubbles->scale = bgScale(1);
+	songsPage->addChild(songBubbles, PM_POINTER);
+
+	songLabel = new BitmapText(dsq->smallFont);
+	songLabel->alpha = 0;
+	songLabel->setAlign(ALIGN_CENTER);
+	songLabel->setFontSize(20);
+	songLabel->position = bgToScreen(Vector(-center.x, center.y) + Vector(0, -15));
+	songLabel->scale = bgScale(1.2f);
+	songsPage->addChild(songLabel, PM_POINTER);
+
+	songSlots.clear();
+	songSlots.resize(10);
+	int outer = 0;
+	int inner = 0;
+	for (size_t i = 0; i < songSlots.size(); i++)
+	{
+		songSlots[i] = new SongSlot(i);
+		float angle = 0;
+		Vector pos;
+		SongType s = (SongType)dsq->continuity.getSongTypeBySlot(i);
+		if (dsq->continuity.isSongTypeForm(s))
+		{
+			angle = (float(outer)/float(numForms))*PI*2;
+			pos = center + Vector(sinf(angle), cosf(angle))*radius;
+			outer ++;
+		}
+		else
+		{
+			angle = (float(inner)/float(songSlots.size()-numForms))*PI*2 + PI;
+			pos = center + Vector(sinf(angle), cosf(angle))*radius*0.4f;
+			inner ++;
+		}
+		songSlots[i]->position = bgToScreen(pos);
+		songSlots[i]->scale = songSlots[i]->scale * MENUBG_SCALE;
+		songsPage->addChild(songSlots[i], PM_POINTER);
+	}
+
+	tip = new ToolTip;
+	tip->setCircularAreaFromCenter(worldLeftCenter, 240);
+	tip->setText(stringbank.get(14), Vector(200,450), 350);
+	songsPage->addChild(tip, PM_POINTER);
+
+	// ---------- FOOD
+
+	Panel *foodPage = pages[MENUPAGE_FOOD];
+
+	foodHolders.resize(4);
+	for (size_t i = 0; i < 3; i++)
+	{
+		foodHolders[i] = new FoodHolder(i);
+		float angle = (float(i)/3.0f)*PI*2;
+		foodHolders[i]->position = bgToScreen(rightCenter + Vector(sinf(angle), cosf(angle))*radius);
+	}
+	foodHolders[3] = new FoodHolder(-1, true);
+	foodHolders[3]->position = bgToScreen(rightCenter + Vector(96, 150));
+	for (size_t i = 0; i < foodHolders.size(); i++)
+	{
+		foodHolders[i]->toggleValid(false);
+		foodHolders[i]->scale = bgScale(1);
+		foodPage->addChild(foodHolders[i], PM_POINTER);
+	}
+
+	foodLabel = new BitmapText(dsq->smallFont);
+	foodLabel->alpha = 0;
+	foodLabel->setAlign(ALIGN_CENTER);
+	foodLabel->setFontSize(20);
+	foodLabel->position = bgToScreen(center - Vector(0, 16) + Vector(0,-32));
+	foodLabel->scale = bgScale(1);
+	foodPage->addChild(foodLabel, PM_POINTER);
+
+	foodDescription = new BitmapText(dsq->smallFont);
+	foodDescription->alpha = 0;
+	foodDescription->setAlign(ALIGN_CENTER);
+	foodDescription->position = bgToScreen(center + Vector(0, 8) + Vector(0,-32));
+	foodDescription->scale = bgScale(0.8f);
+	foodDescription->setWidth(240);
+	foodPage->addChild(foodDescription, PM_POINTER);
+
+	cook = new AquariaMenuItem;
+	cook->useQuad("Gui/cook-button");
+	cook->useGlow("particles/glow", 128, 40);
+	cook->position = worldRightCenter + Vector(0, -120);
+	cook->scale = Vector(0.8f, 0.8f);
+	cook->event.set(MakeFunctionEvent(InGameMenu, onCook));
+	cook->setCanDirMove(false);
+	foodPage->addChild(cook, PM_POINTER);
+
+	foodSort = new AquariaMenuItem;
+	foodSort->useQuad("gui/sort");
+	foodSort->useSound("click");
+	foodSort->useGlow("particles/glow", 32,32);
+	foodSort->position = worldLeftCenter + Vector(-100, -100);
+	foodSort->event.set(MakeFunctionEvent(InGameMenu, sortFood));
+	foodPage->addChild(foodSort, PM_POINTER);
+
+	recipes = new AquariaMenuItem;
+	recipes->useQuad("Gui/recipes-button");
+	recipes->useGlow("particles/glow", 128, 32);
+	recipes->position = worldLeftCenter + Vector(-40, 140);
+	recipes->scale = Vector(0.8f, 0.8f);
+	recipes->event.set(MakeFunctionEvent(InGameMenu, onRecipes));
+	foodPage->addChild(recipes, PM_POINTER);
+
+	prevFood = new AquariaMenuItem;
+	prevFood->useQuad("Gui/arrow-left");
+	prevFood->useSound("click");
+	prevFood->useGlow("particles/glow", 64, 32);
+	prevFood->position = worldLeftCenter + Vector(-50, -130);
+	prevFood->event.set(MakeFunctionEvent(InGameMenu, onPrevFoodPage));
+	prevFood->scale = Vector(0.6f, 0.6f);
+	prevFood->setCanDirMove(false);
+	foodPage->addChild(prevFood, PM_POINTER);
+
+	nextFood = new AquariaMenuItem;
+	nextFood->useQuad("Gui/arrow-right");
+	nextFood->useSound("click");
+	nextFood->useGlow("particles/glow", 64, 32);
+	nextFood->position = worldLeftCenter + Vector(50, -130);
+	nextFood->setCanDirMove(false);
+	nextFood->event.set(MakeFunctionEvent(InGameMenu, onNextFoodPage));
+	nextFood->scale = Vector(0.6f, 0.6f);
+	foodPage->addChild(nextFood, PM_POINTER);
+
+	previewRecipe = new Quad;
+	previewRecipe->alphaMod = 0.75;
+	previewRecipe->alpha = 0;
+	previewRecipe->scale = Vector(0.7f, 0.7f);
+	previewRecipe->scale.interpolateTo(Vector(0.9f, 0.9f), 0.5f, -1, 1, 1);
+	previewRecipe->position = worldRightCenter;
+	foodPage->addChild(previewRecipe, PM_POINTER);
+
+	showRecipe = new Quad();
+	showRecipe->position = Vector(575,250);
+	foodPage->addChild(showRecipe, PM_POINTER);
+
+	tip = new ToolTip;
+	tip->setCircularAreaFromCenter(worldLeftCenter, 240);
+	tip->setText(stringbank.get(0), Vector(200,450), 350);
+	foodPage->addChild(tip, PM_POINTER);
+
+	tip = new ToolTip;
+	tip->setCircularAreaFromCenter(worldRightCenter, 240);
+	tip->setText(stringbank.get(1), Vector(600,450), 350);
+	foodPage->addChild(tip, PM_POINTER);
+
+	foodSlotsPanel = addPanel(foodPage);
 
 	foodSlots.resize(foodPageSize);
-
-	Vector worldCenter(222, 252);
-
 	int foodSlotRadius = 96;
 	for (size_t i = 0; i < foodSlots.size(); i++)
 	{
 		foodSlots[i] = new FoodSlot(i);
 
-		float angle = (float(food)/float(foodSlots.size()))*PI*2;
+		float angle = (float(i)/float(foodSlots.size()))*PI*2;
 		foodSlots[i]->position = worldCenter + Vector(sinf(angle), cosf(angle))*foodSlotRadius;
-
 		foodSlots[i]->setOriginalPosition(foodSlots[i]->position);
-
-		food ++;
-
-		foodSlots[i]->alphaMod = 0;
-
-		foodSlots[i]->followCamera = 1;
-
 		foodSlots[i]->scaleFactor = 0.75;
 
-		//foodSlots[i]->parentManagedPointer = 1;
-		//menuBg->addChild(foodSlots[i]);
-		//foodSlots[i]->position = menuBg->getWorldCollidePosition(foodSlots[i]->position);
-		game->addRenderObject(foodSlots[i], LR_HUD2);
+		foodSlotsPanel->addChild(foodSlots[i], PM_POINTER);
 	}
 
+	// ---------- PETS
 
-	foodLabel = new BitmapText(dsq->smallFont);
+	Panel *petsPage = pages[MENUPAGE_PETS];
+
+	petSlots.resize(dsq->continuity.petData.size());
+	for (size_t i = 0; i < petSlots.size(); i++)
 	{
-		foodLabel->alpha = 0;
-		foodLabel->setAlign(ALIGN_CENTER);
-		foodLabel->followCamera = 1;
-		foodLabel->setFontSize(20);
-		foodLabel->position = center - Vector(0, 16) + Vector(0,-32);
-		foodLabel->scale = Vector(1, 1);
+		PetData *p = dsq->continuity.getPetData(i);
+		if (p)
+		{
+			petSlots[i] = new PetSlot(i, MENUBG_SCALE);
+			float angle = (float(i)/float(petSlots.size()))*PI*2;
+			petSlots[i]->position = bgToScreen(center + Vector(sinf(angle), cosf(angle))*(radius*0.9f));
+			petsPage->addChild(petSlots[i], PM_POINTER);
+		}
 	}
-	menuBg->addChild(foodLabel, PM_POINTER);
 
-	foodDescription = new BitmapText(dsq->smallFont);
-	{
-		foodDescription->alpha = 0;
-		foodDescription->setAlign(ALIGN_CENTER);
-		foodDescription->followCamera = 1;
-		foodDescription->position = center + Vector(0, 8) + Vector(0,-32);
-		foodDescription->scale = Vector(0.8f, 0.8f);
-
-		foodDescription->setWidth(240);
-	}
-	menuBg->addChild(foodDescription, PM_POINTER);
-
+	tip = new ToolTip;
+	tip->setCircularAreaFromCenter(worldLeftCenter, 240);
+	tip->setText(stringbank.get(17), Vector(200,450), 350);
+	petsPage->addChild(tip, PM_POINTER);
 
 	// ---------- TREASURES
 
+	Panel *treasuresPage = pages[MENUPAGE_TREASURES];
+
+	treasureLabel = new BitmapText(dsq->smallFont);
+	treasureLabel->alpha = 0;
+	treasureLabel->setAlign(ALIGN_CENTER);
+	treasureLabel->setFontSize(20);
+	treasureLabel->position = bgToScreen(center - Vector(0, 16));
+	treasureLabel->scale = bgScale(1);
+	treasuresPage->addChild(treasureLabel, PM_POINTER);
+
+	treasureCloseUp = new Quad();
+	treasureCloseUp->position = bgToScreen(rightCenter);
+	treasureCloseUp->scale = bgScale(1);
+	treasureCloseUp->alpha = 0;
+	treasuresPage->addChild(treasureCloseUp, PM_POINTER);
+
+	use = new AquariaMenuItem;
+	use->useQuad("Gui/use-button");
+	use->useGlow("particles/glow", 128, 64);
+	use->position = worldRightCenter + Vector(0, -120);
+	use->alpha = 0;
+	use->scale = Vector(0.8f, 0.8f);
+	use->event.set(MakeFunctionEvent(InGameMenu, onUseTreasure));
+	treasuresPage->addChild(use, PM_POINTER);
+
+	prevTreasure = new AquariaMenuItem;
+	prevTreasure->useQuad("Gui/arrow-left");
+	prevTreasure->useSound("click");
+	prevTreasure->useGlow("particles/glow", 64, 32);
+	prevTreasure->position = worldLeftCenter + Vector(-50, -130);
+	prevTreasure->scale = Vector(0.6f, 0.6f);
+	prevTreasure->event.set(MakeFunctionEvent(InGameMenu, onPrevTreasurePage));
+	prevTreasure->setCanDirMove(false);
+	treasuresPage->addChild(prevTreasure, PM_POINTER);
+
+	nextTreasure = new AquariaMenuItem;
+	nextTreasure->useQuad("Gui/arrow-right");
+	nextTreasure->useSound("click");
+	nextTreasure->useGlow("particles/glow", 64, 32);
+	nextTreasure->position = worldLeftCenter + Vector(50, -130);
+	nextTreasure->scale = Vector(0.6f, 0.6f);
+	nextTreasure->event.set(MakeFunctionEvent(InGameMenu, onNextTreasurePage));
+	nextTreasure->setCanDirMove(false);
+	treasuresPage->addChild(nextTreasure, PM_POINTER);
 
 	int treasureSlotRadius = 96;
-
 	treasureSlots.resize(treasurePageSize);
-
 	for (size_t i = 0; i < treasureSlots.size(); i++)
 	{
 		treasureSlots[i] = new TreasureSlot(i);
-
-
 		float angle = (float(i)/float(treasureSlots.size()))*PI*2;
 		treasureSlots[i]->position = worldCenter + Vector(sinf(angle), cosf(angle))*treasureSlotRadius;
-
-		treasureSlots[i]->alphaMod = 0;
-
-		treasureSlots[i]->followCamera = 1;
-
-		//treasureSlots[i]->scaleFactor = 0.75;
-
-		game->addRenderObject(treasureSlots[i], LR_MENU);
+		treasuresPage->addChild(treasureSlots[i], PM_POINTER);
 	}
-
-	treasureLabel = new BitmapText(dsq->smallFont);
-	{
-		treasureLabel->alpha = 0;
-		treasureLabel->setAlign(ALIGN_CENTER);
-		treasureLabel->followCamera = 1;
-		treasureLabel->setFontSize(20);
-		treasureLabel->position = center - Vector(0, 16);
-		treasureLabel->scale = Vector(1, 1);
-	}
-	menuBg->addChild(treasureLabel, PM_POINTER);
 
 	treasureDescription = new ToolTip();
 	treasureDescription->alpha = 0;
 	treasureDescription->setAreaFromCenter(Vector(400,200), 800, 400);
 	treasureDescription->required = true;
-	game->addRenderObject(treasureDescription, LR_HUD);
+	treasuresPage->addChild(treasureDescription, PM_POINTER);
 
-	foodTips.push_back(tip);
-
-	treasureCloseUp = new Quad();
-	treasureCloseUp->position = rightCenter;
-	treasureCloseUp->alpha = 0;
-	menuBg->addChild(treasureCloseUp, PM_POINTER);
-
-
+	recipeMenu.create();
+	recipeMenu.prevPage->event.set(MakeFunctionEvent(InGameMenu, onPrevRecipePage));
+	recipeMenu.nextPage->event.set(MakeFunctionEvent(InGameMenu, onNextRecipePage));
 
 	menuBg->alpha = 0;
 }
@@ -3397,12 +3149,6 @@ void InGameMenu::togglePetMenu(bool f)
 
 		toggleMainMenu(false);
 
-		bool hasPet = false;
-		for (size_t i = 0; i < petSlots.size(); i++)
-		{
-			petSlots[i]->alpha = 1;
-			hasPet = dsq->continuity.getFlag(petSlots[i]->petFlag) || hasPet;
-		}
 		// act as if they're all active for now...
 		if (petSlots.size() == 4)
 		{
@@ -3430,46 +3176,27 @@ void InGameMenu::togglePetMenu(bool f)
 			petSlots[3]->setDirMove(DIR_DOWN, petSlots[0]);
 		}
 
-
-		for (size_t i = 0; i < petTips.size(); i++)
-			petTips[i]->alpha = 1;
-
 		liCrystal->alpha = 1;
-
 
 		menu[7]->setFocus(true);
 
-
 		doMenuSectionHighlight(2);
-
 	}
 	else if (!f && petMenu)
 	{
-		for (size_t i = 0; i < petSlots.size(); i++)
-		{
-			petSlots[i]->alpha = 0;
-		}
-
-		for (size_t i = 0; i < petTips.size(); i++)
-		{
-			petTips[i]->alpha = 0;
-		}
-
 		liCrystal->alpha = 0;
-
 
 		menu[5]->setDirMove(DIR_LEFT, 0);
 		menu[5]->setDirMove(DIR_UP, 0);
 		menu[0]->setDirMove(DIR_UP, 0);
 	}
 
+	pages[MENUPAGE_PETS]->setVisible(f);
 	petMenu = f;
 }
 
 void InGameMenu::toggleTreasureMenu(bool f)
 {
-	//debugLog("toggle treasure menu!");
-
 	if (optionsMenu)
 		toggleOptionsMenu(false);
 
@@ -3486,9 +3213,6 @@ void InGameMenu::toggleTreasureMenu(bool f)
 		toggleMainMenu(false);
 
 		refreshTreasureSlots();
-
-		for (size_t i = 0; i < treasureTips.size(); i++)
-			treasureTips[i]->alpha = 1;
 
 		if (treasureSlots.size() > 8)
 		{
@@ -3513,9 +3237,6 @@ void InGameMenu::toggleTreasureMenu(bool f)
 	{
 		treasureMenu = false;
 
-		for (size_t i = 0; i < treasureTips.size(); i++)
-			treasureTips[i]->alpha = 0;
-
 		menu[0]->setDirMove(DIR_UP, 0);
 		menu[5]->setDirMove(DIR_LEFT, 0);
 
@@ -3524,34 +3245,12 @@ void InGameMenu::toggleTreasureMenu(bool f)
 		circlePageNum->alpha = 0;
 	}
 
-	for (size_t i = 0; i < treasureSlots.size(); i++)
-	{
-		if (f)
-			treasureSlots[i]->alpha = 1;
-		else
-			treasureSlots[i]->alpha = 0;
-	}
+	pages[MENUPAGE_TREASURES]->setVisible(f);
 
-	if (f)
-	{
-		nextTreasure->alpha = 1;
-		prevTreasure->alpha = 1;
-		use->alpha = 0;
-
-		treasureLabel->alpha = 0;
-		treasureDescription->alpha = 0;
-		treasureCloseUp->alpha = 0;
-	}
-	else
-	{
-		nextTreasure->alpha = 0;
-		prevTreasure->alpha = 0;
-		use->alpha = 0;
-
-		treasureLabel->alpha = 0;
-		treasureDescription->alpha = 0;
-		treasureCloseUp->alpha = 0;
-	}
+	use->alpha = 0;
+	treasureLabel->alpha = 0;
+	treasureDescription->alpha = 0;
+	treasureCloseUp->alpha = 0;
 }
 
 void InGameMenu::toggleRecipeList(bool on)
@@ -3600,19 +3299,6 @@ void InGameMenu::toggleFoodMenu(bool f)
 
 		refreshFoodSlots(false);
 
-		cook->alpha = 1;
-		recipes->alpha = 1;
-
-		prevFood->alpha = 1;
-		nextFood->alpha = 1;
-		foodLabel->alphaMod = 1;
-		foodDescription->alphaMod = 1;
-
-		foodSort->alpha = 1;
-
-		for (size_t i = 0; i < foodTips.size(); i++)
-			foodTips[i]->alpha = 1;
-
 		if (foodSlots.size() >= 16)
 		{
 			foodSlots[2]->setDirMove(DIR_RIGHT, menu[5]);
@@ -3650,20 +3336,11 @@ void InGameMenu::toggleFoodMenu(bool f)
 		recipeMenu.toggle(false);
 		foodMenu = false;
 
-		cook->alpha = 0;
-		recipes->alpha = 0;
-		prevFood->alpha = 0;
-		nextFood->alpha = 0;
-		foodLabel->alphaMod = 0;
 		foodLabel->alpha = 0;
 		foodDescription->alpha = 0;
-		foodSort->alpha = 0;
 		showRecipe->alpha = 0;
 
 		liCrystal->alpha = 0;
-
-		for (size_t i = 0; i < foodTips.size(); i++)
-			foodTips[i]->alpha = 0;
 
 		menu[5]->setDirMove(DIR_LEFT, 0);
 
@@ -3672,17 +3349,14 @@ void InGameMenu::toggleFoodMenu(bool f)
 		previewRecipe->alpha = 0;
 	}
 
-	for (size_t i = 0; i < foodSlots.size(); i++)
-	{
-		foodSlots[i]->toggle(f);
-	}
+	pages[MENUPAGE_FOOD]->setVisible(f);
 }
 
 void InGameMenu::doMenuSectionHighlight(int section)
 {
 	for (int i = 0; i < 4; i++)
-		((AquariaMenuItem*)menu[(5+i)])->quad->alphaMod = 0.8f;
-	((AquariaMenuItem*)menu[(5+section)])->quad->alphaMod = 1.0f;
+		menu[5+i]->quad->alphaMod = 0.8f;
+	menu[5+section]->quad->alphaMod = 1.0f;
 	menuIconGlow->position = menu[5+section]->position;
 }
 
@@ -3692,17 +3366,7 @@ void InGameMenu::toggleMainMenu(bool f)
 	if (f)
 	{
 		currentMenuPage = MENUPAGE_SONGS;
-		for (size_t i = 0; i < songSlots.size(); i++)
-		{
-			songSlots[i]->alphaMod = 1;
-		}
-		songBubbles->alpha.interpolateTo(1,t);
-		energyIdol->alpha.interpolateTo(1,t);
 		liCrystal->alpha.interpolateTo(1, t);
-		for (size_t i = 0; i < songTips.size(); i++)
-			songTips[i]->alpha = 1;
-		menuBg2->alpha.interpolateTo(1, t);
-
 
 		int sm=-900;
 		SongSlot *ss=0;
@@ -3721,61 +3385,42 @@ void InGameMenu::toggleMainMenu(bool f)
 
 		if (ss)
 		{
-			ss->setDirMove(DIR_RIGHT, (AquariaMenuItem*)menu[5]);
+			ss->setDirMove(DIR_RIGHT, menu[5]);
 		}
-		((AquariaMenuItem*)menu[5])->setDirMove(DIR_LEFT, ss);
+		menu[5]->setDirMove(DIR_LEFT, ss);
 
 		doMenuSectionHighlight(0);
 	}
 	else
 	{
-		((AquariaMenuItem*)menu[5])->setDirMove(DIR_LEFT, 0);
+		menu[5]->setDirMove(DIR_LEFT, 0);
 
-		for (size_t i = 0; i < songSlots.size(); i++)
-		{
-			songSlots[i]->alphaMod = 0;
-		}
-
-		for (size_t i = 0; i < songTips.size(); i++)
-			songTips[i]->alpha = 0;
-
-		songBubbles->alpha.interpolateTo(0, t);
-		energyIdol->alpha.interpolateTo(0,t);
 		liCrystal->alpha.interpolateTo(0, t);
 	}
+
+	pages[MENUPAGE_SONGS]->setVisible(f);
 }
 
 void InGameMenu::toggleKeyConfigMenu(bool f)
 {
-	const float t = 0;
 	playingSongInMenu = -1;
-
 
 	if (f && !keyConfigMenu)
 	{
 		toggleOptionsMenu(false, false, true);
 
-		for (int i = 0; i <= 1; i++)
-			menu[i]->alpha.interpolateTo(0, t);
-		for (int i = 4; i <= 8; i++)
-			menu[i]->alpha.interpolateTo(0, t);
-
 		toggleMainMenu(false);
-
-		menuBg2->alpha.interpolateTo(0, t);
 
 		keyConfigMenu = true;
 
-		keyConfigBg->setHidden(false);
-		keyConfigBg->alpha = 1;
+		menuPages->setVisible(false);
+		options->setVisible(true);
+		optionsMain->setVisible(false);
+		keyConfigPanel->setVisible(true);
 
 		switchToKeyConfigPage(0);
 
 		dsq->user_bcontrol = dsq->user;
-
-		opt_cancel->alpha = 1;
-		opt_save->alpha = 1;
-
 
 		opt_save->position = opt_save_original + Vector(0, 120);
 		opt_cancel->position = opt_cancel_original + Vector(0, 120);
@@ -3783,38 +3428,29 @@ void InGameMenu::toggleKeyConfigMenu(bool f)
 		opt_cancel->setDirMove(DIR_UP, NULL);
 		opt_save->setDirMove(DIR_UP, NULL);
 		opt_cancel->setFocus(true);
-
-		menuIconGlow->alpha = 0;
 	}
 	else if (!f)
 	{
 		keyConfigMenu = false;
 
-		keyConfigBg->setHidden(true);
-		keyConfigBg->alpha = 0;
-
-		opt_cancel->alpha = 0;
-		opt_save->alpha = 0;
+		options->setVisible(optionsMenu);
+		optionsMain->setVisible(true);
+		keyConfigPanel->setVisible(false);
 
 		opt_save->position = opt_save_original;
 		opt_cancel->position = opt_cancel_original;
-
-		menuIconGlow->alpha = 1;
 	}
 }
 
 void InGameMenu::switchToKeyConfigPage(int page)
 {
 	assert(page < NUM_KEY_CONFIG_PAGES);
-	for(unsigned i = 0; i < NUM_KEY_CONFIG_PAGES; ++i)
+	for(int i = 0; i < NUM_KEY_CONFIG_PAGES; ++i)
 	{
-		group_keyConfig[i]->setHidden(true);
-		group_keyConfig[i]->alpha = 0;
+		group_keyConfig[i]->setVisible(i == page);
 		keyCategoryButtons[i]->goUp();
 	}
 	keyCategoryButtons[page]->goDown();
-	group_keyConfig[page]->setHidden(false);
-	group_keyConfig[page]->alpha = 1;
 }
 
 void InGameMenu::switchToKeyConfigPage1()
@@ -3832,7 +3468,6 @@ void InGameMenu::switchToKeyConfigPage3()
 
 void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 {
-	const float t = 0;
 	playingSongInMenu = -1;
 
 	if (f && !optionsMenu)
@@ -3888,44 +3523,22 @@ void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 		if (!skipBackup)
 			dsq->user_backup = dsq->user;
 
-
-		options->alpha.interpolateTo(1, t);
-
-		for (int i = 0; i <= 1; i++)
-			menu[i]->alpha.interpolateTo(0, t);
-		for (int i = 4; i <= 9; i++)
-			menu[i]->alpha.interpolateTo(0, t);
-
 		toggleMainMenu(false);
 
-		keyConfigButton->alpha = 1;
+		menuPages->setVisible(false);
+		options->setVisible(true);
+		optionsMain->setVisible(true);
+		keyConfigPanel->setVisible(false);
 
-		menuBg2->alpha.interpolateTo(0, t);
-
-		opt_cancel->alpha = 1;
-		opt_save->alpha = 1;
 		opt_cancel->setFocus(true);
 
-		lips->alpha = 0;
-
 		liCrystal->alpha = 1;
-
-		optionsMenu = true;
-
-		menuIconGlow->alpha = 0;
 	}
 	else if (!f && optionsMenu)
 	{
 		AquariaMenuItem::currentGuiInputLevel = 0;
 
-		lips->alpha = 0;
-
-		keyConfigButton->alpha = 0;
-
-		options->alpha.interpolateTo(0, t);
-
-		opt_cancel->alpha = 0;
-		opt_save->alpha = 0;
+		options->setVisible(false);
 
 		liCrystal->alpha = 0;
 
@@ -3933,43 +3546,32 @@ void InGameMenu::toggleOptionsMenu(bool f, bool skipBackup, bool isKeyConfig)
 
 		if (!optionsOnly)
 		{
-			for (int i = 0; i <= 1; i++)
-				menu[i]->alpha.interpolateTo(1, t);
-			for (int i = 4; i <= 8; i++)
-			{
-				menu[i]->alpha.interpolateTo(1, t);
-			}
+			menuPages->setVisible(true);
 
 			if (!isKeyConfig)
 			{
-				menu[9]->alpha.interpolateTo(1, t);
-
 				switch(lastOptionsMenuPage)
 				{
 				case MENUPAGE_FOOD:
 					toggleFoodMenu(true);
-					((AquariaMenuItem*)menu[6])->setFocus(true);
+					menu[6]->setFocus(true);
 					break;
 				case MENUPAGE_TREASURES:
 					toggleTreasureMenu(true);
-					((AquariaMenuItem*)menu[8])->setFocus(true);
+					menu[8]->setFocus(true);
 					break;
 				case MENUPAGE_PETS:
 					togglePetMenu(true);
-					((AquariaMenuItem*)menu[7])->setFocus(true);
+					menu[7]->setFocus(true);
 					break;
 				case MENUPAGE_SONGS:
 				default:
 					toggleMainMenu(true);
-					((AquariaMenuItem*)menu[5])->setFocus(true);
+					menu[5]->setFocus(true);
 					break;
 				}
 			}
-
-			menuBg2->alpha.interpolateTo(1, t);
 		}
-
-		menuIconGlow->alpha = 1;
 	}
 }
 

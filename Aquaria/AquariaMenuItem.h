@@ -38,7 +38,7 @@ public:
 	void clean();
 	void setDirMove(int dir, AquariaGuiElement *item);
 	void setCanDirMove(bool on);
-	virtual void setFocus(bool v);
+	virtual void setFocus(bool v); // moves the cursor onto the element only with joystick input to prevent focus stealing
 	virtual Vector getGuiPosition()=0;
 	virtual bool isGuiVisible()=0;
 	static bool canDirMoveGlobal;
@@ -52,6 +52,7 @@ protected:
 	static GuiElements guiElements;
 	static float guiMoveTimer;
 	void updateMovement(float dt);
+	void focusByNavigation(); // setFocus(true), also moves the cursor with keyboard input
 	bool hasFocus() const;
 	bool canDirMove;
 	AquariaGuiElement *dirMove[DIR_MAX];

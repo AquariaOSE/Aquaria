@@ -106,15 +106,14 @@ public:
 
 	virtual void update(float dt);
 	bool isDead() const {return _dead;}
-	bool isHidden() const {return _hidden || (parent && parent->isHidden());}
+
+	// This object and all its parents are rendered (not hidden, alpha and alphaMod > 0)
+	bool isVisibleInHierarchy() const;
+	// No parent blocks input to its children (see Panel::canReceiveInput())
+	bool isInputEnabledInHierarchy() const;
 
 	bool shouldTryToRender() const; // somewhat expensive
 	bool isVisibleInPass(int pass) const;
-
-	// Set whether the object is hidden.  If hidden, no updates (except
-	// lifetime checks) or render operations will be performed, and no
-	// child objects will be updated or rendered.
-	void setHidden(bool hidden) {_hidden = hidden;}
 
 	void setLife(float newlife)
 	{
@@ -244,7 +243,6 @@ public:
 	bool useOldDT;
 	bool repeatTexture;
 	bool _dead;
-	bool _hidden;
 	bool _fv, _fh;
 	bool _markedForDelete;
 	bool neverFollowCamera;
@@ -304,6 +302,7 @@ protected:
 	virtual void onUpdate(float dt);
 	virtual void deathNotify(RenderObject *r);
 	virtual void onEndOfLife() {}
+	virtual bool childrenCanReceiveInput() const { return true; }
 
 	bool updateLife(float dt);
 

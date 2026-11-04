@@ -92,7 +92,6 @@ RenderObject::RenderObject()
 	life = maxLife = 1;
 	decayRate = 0;
 	_dead = false;
-	_hidden = false;
 	fadeAlphaWithLife = false;
 	_blendType = BLEND_DEFAULT;
 
@@ -381,9 +380,25 @@ bool RenderObject::hasRenderPass(const int pass) const
 
 bool RenderObject::shouldTryToRender() const
 {
-	return !parent && !_hidden
+	return !parent
 		&& alpha.x > 0
 		&& (!cull || isOnScreen());
+}
+
+bool RenderObject::isVisibleInHierarchy() const
+{
+	for (const RenderObject *ro = this; ro; ro = ro->parent)
+		if (ro->alpha.x <= 0 || ro->alphaMod <= 0)
+			return false;
+	return true;
+}
+
+bool RenderObject::isInputEnabledInHierarchy() const
+{
+	for (const RenderObject *ro = parent; ro; ro = ro->parent)
+		if (!ro->childrenCanReceiveInput())
+			return false;
+	return true;
 }
 
 bool RenderObject::isVisibleInPass(int pass) const
@@ -397,9 +412,6 @@ bool RenderObject::isVisibleInPass(int pass) const
 void RenderObject::render(const RenderState& rs) const
 {
 	assert(parent || layer != LR_NONE);
-
-	if(_hidden)
-		return;
 
 	/// new (breaks anything?)
 	if (alpha.x == 0 || alphaMod == 0) return;
@@ -717,10 +729,6 @@ void RenderObject::onUpdate(float dt)
 	if(!updateLife(dt))
 		return;
 
-	// FIXME: We might not need to do lifetime checks either; I just
-	// left that above for safety since I'm not certain.  --achurch
-	if (isHidden()) return;
-
 	position += velocity * dt;
 	velocity += gravity * dt;
 	position.update(dt);
@@ -737,19 +745,19 @@ void RenderObject::onUpdate(float dt)
 	if(!children.empty())
 	{
 		bool hasChildrenToDelete = false;
-		for (Children::iterator i = children.begin(); i != children.end(); i++)
+		for (size_t i = 0; i < children.size(); i++)
 		{
+			RenderObject *ch = children[i];
 			if (shareAlphaWithChildren)
-				(*i)->alpha.x = this->alpha.x;
+				ch->alpha.x = this->alpha.x;
 			if (shareColorWithChildren)
-				(*i)->color = this->color;
+				ch->color = this->color;
 
-			if ((*i)->pm != PM_NONE)
+			if (ch->pm != PM_NONE)
 			{
-				(*i)->update(dt);
+				ch->update(dt);
 			}
-			hasChildrenToDelete |= (*i)->_markedForDelete;
-
+			hasChildrenToDelete |= ch->_markedForDelete;
 		}
 
 		if (hasChildrenToDelete)
