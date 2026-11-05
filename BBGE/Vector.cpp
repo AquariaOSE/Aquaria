@@ -24,10 +24,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <float.h>
 #include <algorithm>
 
-#ifdef BBGE_USE_GLM
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
-#endif
 
 /*************************************************************************/
 
@@ -43,35 +41,11 @@ void Vector::rotate2DRad(float rad)
 	y = sinf(rad)*ox + cosf(rad)*oy;
 }
 
-#include "RenderBase.h"
-
 Vector getRotatedVector(const Vector &vec, float rot)
 {
-#ifdef BBGE_USE_GLM
 	glm::mat4 m = glm::rotate(glm::mat4(1), rot, glm::vec3(0, 0, 1));
 	glm::vec4 v = m * glm::vec4(vec.x, vec.y, vec.z, 1.0f);
 	return Vector(v.x, v.y, v.z);
-#else
-	glPushMatrix();
-	glLoadIdentity();
-
-	glRotatef(rot, 0, 0, 1);
-
-	if (vec.x != 0 || vec.y != 0)
-	{
-		//glRotatef(this->rotation.z, 0,0,1,this->rotation.z);
-		glTranslatef(vec.x, vec.y, 0);
-	}
-
-	float m[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, m);
-	float x = m[12];
-	float y = m[13];
-	float z = m[14];
-
-	glPopMatrix();
-	return Vector(x,y,z);
-#endif
 }
 
 // note update this from float lerp
