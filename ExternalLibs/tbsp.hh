@@ -434,7 +434,7 @@ struct MatrixAcc
 //     ( cf )
 // R must be already the correct size, ie. (A.size.w - 2, A.size.w - 2)!
 template<typename T>
-static void matMultCenterCutTransposeWithSelf(MatrixAcc<T>& TBSP_RESTRICT R, const MatrixAcc<T>& TBSP_RESTRICT A)
+static void matMultCenterCutTransposeWithSelf(MatrixAcc<T>& R, const MatrixAcc<T>& A)
 {
     TBSP_ASSERT(A.size.w > 2 && A.size.h > 2);
 

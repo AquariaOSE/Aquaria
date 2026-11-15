@@ -2028,7 +2028,7 @@ void AnimationEditor::updateEditingBone()
 	}
 
 	// When selecting with the mouse, pick the closest bone to the cursor, no matter the skeleton it belongs to
-	float mind;
+	float mind = HUGE_VALF;
 	Bone *nearest = NULL;
 	SkeletalSprite *nearestSpr = NULL;
 	const Vector& p = core->mouse.position;

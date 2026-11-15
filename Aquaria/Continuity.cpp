@@ -3255,7 +3255,7 @@ bool Continuity::loadFile(int slot)
 		{
 			std::istringstream is(startData->Attribute("web"));
 			float wbit = 0.0f;
-			int nump = 0;
+			size_t nump = 0;
 			is >> wbit >> nump;
 			// 2 web points are added in setWeb() by default, so we exclude them from the calculation
 			float remainTime = webTime - (0.5 * (nump - 2)); // Avatar::webBitTimer ticks every 0.5 secs
@@ -3264,7 +3264,7 @@ bool Continuity::loadFile(int slot)
 				if(!game->avatar->web)
 					game->avatar->createWeb();
 				Web *w = game->avatar->web;
-				for(int i = 0; i < nump; ++i)
+				for(size_t i = 0; i < nump; ++i)
 				{
 					Vector v;
 					is >> v.x >> v.y;
