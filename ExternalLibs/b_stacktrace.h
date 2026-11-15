@@ -353,7 +353,7 @@ char* b_stacktrace_to_string(b_stacktrace_handle h) {
     return out.buf;
 }
 
-#elif defined(__linux__)
+#elif defined(__linux__) && defined(__GLIBC__)
 
 #include <execinfo.h>
 #include <ucontext.h>
@@ -432,9 +432,19 @@ char* b_stacktrace_to_string(b_stacktrace_handle h) {
 
 #else
 /* noop implementation */
-char* b_stacktrace_get_string(void) {
+b_stacktrace_handle b_stacktrace_get(void) {
+    return NULL;
+}
+
+int b_stacktrace_depth(b_stacktrace_handle h) {
+    (void)h;
+    return 0;
+}
+
+char* b_stacktrace_to_string(b_stacktrace_handle h) {
+    (void)h;
     print_buf out = buf_init();
-    buf_printf("b_stacktrace: unsupported platform\n");
+    buf_printf(&out, "b_stacktrace: unsupported platform\n");
     return out.buf;
 }
 #endif /* platform */

@@ -75,6 +75,7 @@ static LONG WINAPI UnhandledExceptionHandler(EXCEPTION_POINTERS* ep)
 }
 #else
 #include <signal.h>
+#include <unistd.h>
 static void signalHandler(int signal, siginfo_t* info, void* context)
 {
 	onCrash();
@@ -89,7 +90,7 @@ void setupCrashHandler()
 	SetUnhandledExceptionFilter(UnhandledExceptionHandler);
 #else
 	struct sigaction sa;
-	sa.sa_sigaction = my_handler;
+	sa.sa_sigaction = signalHandler;
 	sigemptyset(&sa.sa_mask);
 	sa.sa_flags = SA_RESTART | SA_SIGINFO;
 	sigaction(SIGSEGV, &sa, NULL);
@@ -101,7 +102,7 @@ void setupCrashHandler()
 }
 
 
-extern "C" int main(int argc,char *argv[])
+int main(int argc,char *argv[])
 {
 	setupCrashHandler();
 

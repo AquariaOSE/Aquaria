@@ -28,6 +28,7 @@
 #include <pwd.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <signal.h>
 #endif
 
 #if defined(BBGE_BUILD_MACOSX)

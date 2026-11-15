@@ -234,7 +234,7 @@ bool lookup_all_glsyms()
 
 	PFNGLDEBUGMESSAGECONTROLARBPROC glDebugMessageControlARB = (PFNGLDEBUGMESSAGECONTROLARBPROC)SDL_GL_GetProcAddress("glDebugMessageControlARB");
 	if(glDebugMessageControlARB)
-		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, NULL, 0, GL_TRUE);
+		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
 
 	glDebugMessageInsertARB = (PFNGLDEBUGMESSAGEINSERTARBPROC)SDL_GL_GetProcAddress("glDebugMessageInsertARB");
 	if(glDebugMessageInsertARB)

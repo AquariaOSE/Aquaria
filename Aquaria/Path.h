@@ -28,8 +28,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Scriptable.h"
 #include "GameEnums.h"
 
-#undef PATH_MAX  // May be set by a system header.
-
 struct MinimapIcon;
 class Entity;
 

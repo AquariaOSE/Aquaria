@@ -478,6 +478,7 @@ enum BounceType
 	BOUNCE_REAL		= 1
 };
 
+#undef PATH_MAX  // May be set by a system header.
 enum PathType
 {
 	PATH_NONE			= 0,

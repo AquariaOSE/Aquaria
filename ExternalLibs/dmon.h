@@ -693,10 +693,12 @@ DMON_API_IMPL dmon_watch_id dmon_watch(const char* rootdir,
 
     _dmon_strcpy(watch->rootdir, sizeof(watch->rootdir) - 1, rootdir);
     _dmon_unixpath(watch->rootdir, sizeof(watch->rootdir), rootdir);
-    size_t rootdir_len = strlen(watch->rootdir);
-    if (watch->rootdir[rootdir_len - 1] != '/') {
-        watch->rootdir[rootdir_len] = '/';
-        watch->rootdir[rootdir_len + 1] = '\0';
+    {
+        size_t rootdir_len = strlen(watch->rootdir);
+        if (watch->rootdir[rootdir_len - 1] != '/') {
+            watch->rootdir[rootdir_len] = '/';
+            watch->rootdir[rootdir_len + 1] = '\0';
+        }
     }
 
     if (!_dmon_refresh_watch(watch)) {
