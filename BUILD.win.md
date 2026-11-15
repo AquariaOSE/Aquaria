@@ -2,6 +2,9 @@
 
 Note that this tries to be a HOWTO for dummies. If you know your way with C++ and CMake then this guide is not for you.
 
+**Easiest way:** use the Zig build instead. It needs only Zig installed and builds SDL2 automatically.
+See [BUILD.zig.md](BUILD.zig.md).
+
 ## With CMake
 
 ### Prerequisites
