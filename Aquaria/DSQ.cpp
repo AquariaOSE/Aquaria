@@ -40,6 +40,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "GLLoad.h"
 #include "RenderBase.h"
 #include "Image.h"
+#include "TileRender.h"
 
 #include <sys/stat.h>
 
@@ -131,7 +132,7 @@ static void Linux_CopyTree(const char *src, const char *dst)
 
 
 const size_t saveSlotPageSize = 4;
-size_t maxPages = 15;
+static size_t maxPages = 15;
 const int MAX_CONSOLELINES	= 18;
 
 DSQ *dsq = 0;
@@ -165,12 +166,14 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	cutscene_text = 0;
 	cutscene_text2 = 0;
 
+	lastRandNote = -1;
+
 	cutscenePaused = false;
 	inCutscene = false;
 	_canSkipCutscene = false;
 	skippingCutscene = false;
 
-	bar_left = bar_right = bar_up = bar_down = barFade_left = barFade_right = 0;
+	bar_left = bar_right = barFade_left = barFade_right = 0;
 
 	watchQuitFlag = false;
 	watchForQuit = false;
@@ -200,7 +203,6 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 	console = 0;
 	cmDebug = 0;
 	saveSlotMode = SSM_NONE;
-	afterEffectManagerLayer = LR_AFTER_EFFECTS; // LR_AFTER_EFFECTS
 	renderObjectLayers.resize(LR_MAX);
 
 	entities.resize(64, 0);
@@ -210,8 +212,7 @@ DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
 
 	cursor = cursorGlow = 0;
 
-	for (int i = 0; i < 16; i++)
-		firstElementOnLayer[i] = 0;
+	pTextInputHandler = 0;
 }
 
 DSQ::~DSQ()
@@ -267,82 +268,6 @@ void DSQ::newGame()
 	game->transitionToScene("NaijaCave");
 }
 
-void DSQ::loadElementEffects()
-{
-	bool found = false;
-	std::string fn;
-	if (mod.isActive())
-	{
-		fn = mod.getPath() + "elementeffects.txt";
-		if(exists(fn))
-			found = true;
-	}
-	if(!found)
-		fn = "data/elementeffects.txt";
-
-	InStream inFile(fn.c_str());
-	elementEffects.clear();
-	std::string line;
-	while (std::getline(inFile, line))
-	{
-		debugLog("Line: " + line);
-		std::istringstream is(line);
-		ElementEffect e;
-		int efxType = EFX_NONE;
-		int idx;
-		std::string type;
-		is >> idx >> type;
-		if (type == "EFX_SEGS")
-		{
-			efxType = EFX_SEGS;
-			is >> e.segsx >> e.segsy >> e.segs_dgox >> e.segs_dgoy >> e.segs_dgmx >> e.segs_dgmy >> e.segs_dgtm >> e.segs_dgo;
-		}
-		else if (type == "EFX_WAVY")
-		{
-			debugLog("loading wavy");
-			efxType = EFX_WAVY;
-			is >> e.segsy >> e.wavy_radius >> e.wavy_flip;
-
-		}
-		else if (type == "EFX_ALPHA")
-		{
-			efxType = EFX_ALPHA;
-			float to_x, time, loop, pingPong, ease;
-			int blend;
-			is >> blend >> e.alpha.x >> to_x >> time >> loop >> pingPong >> ease;
-			e.alpha.interpolateTo(to_x, time, loop, pingPong, ease);
-			e.blendType = blend < _BLEND_MAXSIZE ? (BlendType)blend : BLEND_DISABLED;
-		}
-		e.type = efxType;
-		elementEffects.push_back(e);
-	}
-	inFile.close();
-}
-
-ElementEffect DSQ::getElementEffectByIndex(size_t e)
-{
-	if (e < elementEffects.size())
-	{
-		return elementEffects[e];
-	}
-
-	ElementEffect empty;
-	empty.type = EFX_NONE;
-	empty.alpha = 0;
-	empty.blendType = BLEND_DEFAULT;
-	empty.color = 0;
-	empty.segsx = empty.segsy = 0;
-	empty.segs_dgmx = empty.segs_dgmy = 0;
-	empty.segs_dgo = 0;
-	empty.segs_dgox = empty.segs_dgoy = 0;
-	empty.segs_dgtm = 0;
-	empty.wavy_flip = false;
-	empty.wavy_max = empty.wavy_min = 0;
-	empty.wavy_radius = 0;
-
-	return empty;
-}
-
 void DSQ::centerMessage(const std::string &text, float y, int type)
 {
 	Vector pos(400,y);
@@ -364,7 +289,7 @@ void DSQ::centerMessage(const std::string &text, float y, int type)
 	t->setDecayRate(1);
 	t->setText(text);
 	t->offset.interpolateTo(Vector(0, -40), 2, 0, 0, 1);
-	getTopStateData()->addRenderObject(t, LR_OVERLAY);
+	getTopStateObject()->addRenderObject(t, LR_OVERLAY);
 }
 
 void DSQ::centerText(const std::string &text)
@@ -386,7 +311,7 @@ void DSQ::centerText(const std::string &text)
 	s->alpha.data->path.addPathNode(1, 0.8f);
 	s->alpha.data->path.addPathNode(0, 1);
 	s->alpha.startPath(time);
-	getTopStateData()->addRenderObject(s, LR_HUD);
+	getTopStateObject()->addRenderObject(s, LR_HUD);
 
 
 	BitmapText *t = new BitmapText(font);
@@ -405,7 +330,7 @@ void DSQ::centerText(const std::string &text)
 	t->setDecayRate(1);
 
 	t->setText(text);
-	getTopStateData()->addRenderObject(t, LR_HUD);
+	getTopStateObject()->addRenderObject(t, LR_HUD);
 }
 
 void DSQ::destroyFonts()
@@ -640,9 +565,9 @@ void DSQ::takeScreenshotKey()
 		screenshot();
 }
 
-Quad *loading=0;
+static Quad *loading=0;
 
-float loadingProgress = 0;
+static float loadingProgress = 0;
 static const float loadingProgressTable[] = {
 	#define LOAD_INITIAL	0  // Initial display (just so it's not empty)
 	#define LOAD_PARTICLES	1  // After loading particles and shots
@@ -663,7 +588,7 @@ static void loadBit(int index, float perc = 1)
 
 	loading->setWidthHeight(loadingProgress*600, 23);
 
-	dsq->render();
+	dsq->renderExternal();
 	dsq->showBuffer();
 }
 
@@ -766,6 +691,53 @@ static bool sdlVideoModeOK(int disp, const int w, const int h, const int bpp)
 #endif
 }
 
+static bool preRenderDarkLayer(const RenderState& rs)
+{
+	if(core->darkLayer.isUsed())
+		core->darkLayer.beginCapture();
+
+	return true;
+}
+
+static void postRenderDarkLayer(const RenderState& rs)
+{
+	if(core->darkLayer.isUsed())
+	{
+		core->darkLayer.endCapture();
+	}
+}
+
+static bool beginAfterEffectCapture(const RenderState& rs)
+{
+	if (core->afterEffectManager)
+		core->afterEffectManager->beginCapture();
+
+	return true;
+}
+
+static bool preRenderAfterEffectLayer(const RenderState& rs)
+{
+	if(core->darkLayer.isUsed()
+		// LR_DARK_LAYER is remapped to LR_ELEMENTS13 via renderLayerOrder,
+		// need to actually check LR_DARK_LAYER here.
+		// HACK: For good measure let's check both
+		&& core->getRenderObjectLayer(LR_DARK_LAYER)->visible
+		&& core->getRenderObjectLayer(LR_ELEMENTS13)->visible
+		)
+	{
+		core->darkLayer.render(rs);
+	}
+
+	if(core->afterEffectManager)
+	{
+		unsigned page = core->frameBuffer.popCapture();
+		core->afterEffectManager->render(rs, page);
+	}
+
+	return true;
+}
+
+
 void DSQ::init()
 {
 #define PSIZEOF(x) { std::ostringstream os_; os_ << ("sizeof(" #x ") = ") << sizeof(x); debugLog(os_.str()); }
@@ -773,7 +745,7 @@ void DSQ::init()
 	PSIZEOF(RenderObject);
 	PSIZEOF(Quad);
 	PSIZEOF(CollideQuad);
-	PSIZEOF(Element);
+	PSIZEOF(TileData);
 	PSIZEOF(Shot);
 	PSIZEOF(Bone);
 	PSIZEOF(PauseQuad);
@@ -831,20 +803,21 @@ void DSQ::init()
 	createDir(getUserDataFolder() + "/_mods");
 	createDir(getUserDataFolder() + "/screenshots");
 
-	addStateInstance(game = new Game);
-	addStateInstance(new GameOver);
-	addStateInstance(new AnimationEditor);
-	addStateInstance(new Intro2);
-	addStateInstance(new BitBlotLogo);
-	addStateInstance(new ParticleEditor);
-	addStateInstance(new Credits);
-	addStateInstance(new Intro);
-	addStateInstance(new Nag);
+	// These register themselves into StateManager, which owns them and deletes them later
+	game = new Game;
+	new GameOver;
+	new AnimationEditor;
+	new Intro2;
+	new BitBlotLogo;
+	new ParticleEditor;
+	new Credits;
+	new Intro;
+	new Nag;
 
 
 	voiceOversEnabled = true;
 
-	this->setExtraTexturePath(NULL);
+	this->setExtraTexturePath(NULL, false);
 
 
 
@@ -939,7 +912,8 @@ void DSQ::init()
 	precacher.setBaseDir(this->getBaseTexturePath());
 	precacher.precacheTex("loading/*.png");
 
-	Quad *loadbg = new Quad;
+	PauseQuad *loadbg = new PauseQuad;
+	loadbg->pauseLevel = 99;
 	loadbg->position = Vector(400,300);
 	loadbg->color = Vector(0.06f, 0.06f, 0.08f);
 	loadbg->followCamera = 1;
@@ -986,12 +960,6 @@ void DSQ::init()
 	addRenderObject(sider, LR_HUD);
 
 	precacher.clear();
-
-
-
-	render();
-	showBuffer();
-
 
 
 	loadBit(LOAD_INITIAL);
@@ -1045,7 +1013,6 @@ void DSQ::init()
 
 	user.video.darkbuffersize = MAX(user.video.darkbuffersize,128);
 
-	darkLayer.setLayers(LR_ELEMENTS13, LR_AFTER_EFFECTS);
 	debugLog("dark layer init");
 	darkLayer.init(user.video.darkbuffersize, user.video.darkfbuffer);
 	debugLog("dark layer togle...");
@@ -1090,7 +1057,8 @@ void DSQ::init()
 	addRenderObject(versionLabel, LR_REGISTER_TEXT);
 
 
-	subbox = new Quad();
+	subbox = new PauseQuad();
+	subbox->pauseLevel = 99;
 	subbox->position = Vector(400,580);
 	subbox->alpha = 0;
 	subbox->alphaMod = 0.7f;
@@ -1101,15 +1069,13 @@ void DSQ::init()
 	addRenderObject(subbox, LR_SUBTITLES);
 
 	subtext = new BitmapText(subsFont);
-
-	subtext->position = Vector(400,570);
+	subtext->position = Vector(0,-10);
 	subtext->followCamera = 1;
 	subtext->alpha = 0;
 	subtext->setFontSize(14);
 	subtext->setWidth(800);
 	subtext->setAlign(ALIGN_CENTER);
-
-	addRenderObject(subtext, LR_SUBTITLES);
+	subbox->addChild(subtext, PM_POINTER);
 
 	achievement_box = new Quad();
 	achievement_box->position = Vector(800,0);
@@ -1129,7 +1095,8 @@ void DSQ::init()
 	achievement_text->setAlign(ALIGN_LEFT);
 	addRenderObject(achievement_text, LR_SUBTITLES);
 
-	cutscene_bg = new Quad();
+	cutscene_bg = new PauseQuad();
+	cutscene_bg->pauseLevel = 99;
 	cutscene_bg->autoWidth = AUTO_VIRTUALWIDTH;
 	cutscene_bg->color = 0;
 	cutscene_bg->alphaMod = 0.75;
@@ -1147,7 +1114,6 @@ void DSQ::init()
 	addRenderObject(cutscene_text, LR_SUBTITLES);
 
 	cutscene_text2 = new BitmapText(smallFont);
-	cutscene_text2->setText(stringbank.get(2005));
 	cutscene_text2->position = Vector(400,300+10);
 	cutscene_text2->alpha.x = 0;
 	cutscene_text2->followCamera = 1;
@@ -1186,8 +1152,9 @@ void DSQ::init()
 
 	debugLog("6");
 
-	overlay = new Quad;
+	overlay = new PauseQuad;
 	{
+		overlay->pauseLevel = 99;
 		overlay->position = Vector(400,300,3);
 		overlay->color = 0;
 		overlay->autoWidth = AUTO_VIRTUALWIDTH;
@@ -1197,8 +1164,9 @@ void DSQ::init()
 	}
 	addRenderObject(overlay, LR_OVERLAY);
 
-	overlay2 = new Quad;
+	overlay2 = new PauseQuad;
 	{
+		overlay2->pauseLevel = 99;
 		overlay2->position = Vector(400,300);
 		overlay2->color = 0;
 		overlay2->autoWidth = AUTO_VIRTUALWIDTH;
@@ -1208,8 +1176,9 @@ void DSQ::init()
 	}
 	addRenderObject(overlay2, LR_OVERLAY);
 
-	overlay3 = new Quad;
+	overlay3 = new PauseQuad;
 	{
+		overlay3->pauseLevel = 99;
 		overlay3->position = Vector(400,300);
 		overlay3->color = 0;
 		overlay3->autoWidth = AUTO_VIRTUALWIDTH;
@@ -1219,8 +1188,9 @@ void DSQ::init()
 	}
 	addRenderObject(overlay3, LR_OVERLAY);
 
-	overlayRed = new Quad;
+	overlayRed = new PauseQuad;
 	{
+		overlayRed->pauseLevel = 99;
 		overlayRed->position = Vector(400,300);
 		overlayRed->color = Vector(1,0,0);
 		overlayRed->alphaMod = 0.5;
@@ -1231,8 +1201,9 @@ void DSQ::init()
 	}
 	addRenderObject(overlayRed, LR_OVERLAY);
 
-	sceneColorOverlay = new Quad;
+	sceneColorOverlay = new PauseQuad;
 	{
+		sceneColorOverlay->pauseLevel = 99;
 		sceneColorOverlay->position = Vector(400,300);
 		sceneColorOverlay->color = Vector(1,1,1);
 		sceneColorOverlay->alpha = 1;
@@ -1243,8 +1214,9 @@ void DSQ::init()
 	}
 	addRenderObject(sceneColorOverlay, LR_SCENE_COLOR);
 
-	tfader = new Quad;
+	tfader = new PauseQuad;
 	{
+		tfader->pauseLevel = 99;
 		tfader->position = Vector(400,300,3);
 		tfader->color = 0;
 		tfader->autoWidth = AUTO_VIRTUALWIDTH;
@@ -1253,6 +1225,19 @@ void DSQ::init()
 		tfader->followCamera = 1;
 	}
 	addRenderObject(tfader, LR_TRANSITION);
+
+	blackout = new PauseQuad;
+	{
+		blackout->pauseLevel = 99;
+		blackout->color = 0;
+		blackout->autoWidth = AUTO_VIRTUALWIDTH;
+		blackout->autoHeight = AUTO_VIRTUALHEIGHT;
+		blackout->followCamera = 1;
+		blackout->position = Vector(400,300);
+		blackout->alphaMod = 0.75f;
+		blackout->alpha = 0;
+	}
+	addRenderObject(blackout, LR_MENU);
 
 	screenTransition = new AquariaScreenTransition();
 	{
@@ -1326,6 +1311,14 @@ void DSQ::init()
 	renderObjectLayerOrder[LR_ENTITIES_MINUS3] = -1;
 	renderObjectLayerOrder[LR_ENTITIES_MINUS2] = -1;
 
+	renderObjectLayers[LR_ZERO].preRender = beginAfterEffectCapture;
+	renderObjectLayers[LR_AFTER_EFFECTS].preRender = preRenderAfterEffectLayer;
+
+	renderObjectLayers[LR_ELEMENTS13].preRender = preRenderDarkLayer;
+	renderObjectLayers[LR_ELEMENTS13].postRender = postRenderDarkLayer;
+	darkLayer.beginLayer = LR_ELEMENTS13;
+	darkLayer.lastLayer = LR_ELEMENTS13;
+
 
 
 	setMousePosition(center);
@@ -1371,6 +1364,9 @@ void DSQ::init()
 		title(false);
 	else
 		enqueueJumpState("BitBlotLogo");
+
+	// Use the time needed to load everything as an extra source of entropy
+	Randomness::addEntropy(SDL_GetTicks());
 }
 
 void DSQ::recreateBlackBars()
@@ -1399,12 +1395,8 @@ void DSQ::recreateBlackBars()
 		abarFade_right = barFade_right->alpha;
 		removeRenderObject(barFade_right);
 	}
-	if (bar_up)
-		removeRenderObject(bar_up);
-	if (bar_down)
-		removeRenderObject(bar_down);
 
-	bar_left = bar_right = bar_up = bar_down = barFade_left = barFade_right = 0;
+	bar_left = bar_right = barFade_left = barFade_right = 0;
 
 	if (getVirtualWidth() > 800)
 	{
@@ -1467,31 +1459,6 @@ void DSQ::recreateBlackBars()
 			barFade_right->alpha = 0;
 			barFade_left->alpha = 0;
 		}
-	}
-
-	// top and bottom bars are not toggle-able, they will always be on if they are needed
-	if (getVirtualHeight() > 600)
-	{
-		int sz2 = (getVirtualHeight() - baseVirtualHeight)/2.0f;
-		bar_up = new Quad;
-		{
-			bar_up->position = Vector(400, -sz2);
-			bar_up->setWidthHeight(800, sz2*2);
-			bar_up->color = 0;
-			bar_up->followCamera = 1;
-			bar_up->cull = 0;
-		}
-		addRenderObject(bar_up, LR_BLACKBARS);
-
-		bar_down = new Quad;
-		{
-			bar_down->position = Vector(400, 600 + sz2);
-			bar_down->setWidthHeight(800, sz2*2);
-			bar_down->color = 0;
-			bar_down->followCamera = 1;
-			bar_down->cull = 0;
-		}
-		addRenderObject(bar_down, LR_BLACKBARS);
 	}
 }
 
@@ -1571,97 +1538,55 @@ void DSQ::setStory()
 	continuity.setFlag(flag, value);
 }
 
-Vector DSQ::getNoteVector(int note, float mag)
+static const Vector noteVectors[] =
 {
-	Vector vec;
-	switch(note)
-	{
-	case 0:
-		vec = Vector(0,1);
-	break;
-	case 1:
-		vec = Vector(0.5, 0.5);
-	break;
-	case 2:
-		vec = Vector(1, 0);
-	break;
-	case 3:
-		vec = Vector(0.5, -0.5);
-	break;
-	case 4:
-		vec = Vector(0, -1);
-	break;
-	case 5:
-		vec = Vector(-0.5, -0.5);
-	break;
-	case 6:
-		vec = Vector(-1, 0);
-	break;
-	case 7:
-		vec = Vector(-0.5, 0.5);
-	break;
-	}
-	return vec*mag;
+	Vector(0,1),
+	Vector(0.5f, 0.5f),
+	Vector(1, 0),
+	Vector(0.5f, -0.5f),
+	Vector(0, -1),
+	Vector(-0.5f, -0.5f),
+	Vector(-1, 0),
+	Vector(-0.5f, 0.5f),
+};
+
+Vector DSQ::getNoteVector(size_t note, float mag)
+{
+	return note < Countof(noteVectors) ? noteVectors[note] * mag : Vector();
 }
 
 int DSQ::getRandNote()
 {
-	static int lastRand = -1;
-
 	int r = rand()%8;
 
 	int c = 0;
-	while (r == lastRand)
+	while (r == lastRandNote)
 	{
 		r = rand()%8;
 		c++;
 		if (c > 8) break;
 	}
-	lastRand = r;
+	lastRandNote = r;
 
 
 	return r;
 }
 
-Vector DSQ::getNoteColor(int note)
+static const Vector noteColors[] =
 {
-	Vector noteColor;
-	switch(note)
-	{
-	case 0:
-		// light green
-		noteColor = Vector(0.5f, 1, 0.5f);
-	break;
-	case 1:
-		// blue/green
-		noteColor = Vector(0.5f, 1, 0.75f);
-	break;
-	case 2:
-		// blue
-		noteColor = Vector(0.5f, 0.5f, 1);
-	break;
-	case 3:
-		// purple
-		noteColor = Vector(1, 0.5f, 1);
-	break;
-	case 4:
-		// red
-		noteColor = Vector(1, 0.5f, 0.5f);
-	break;
-	case 5:
-		// red/orange
-		noteColor = Vector(1, 0.6f, 0.5f);
-	break;
-	case 6:
-		// orange
-		noteColor = Vector(1, 0.75f, 0.5f);
-	break;
-	case 7:
-		// orange
-		noteColor = Vector(1, 1, 0.5f);
-	break;
-	}
-	return noteColor;
+	Vector(0.5f, 1, 0.5f),   // light green
+	Vector(0.5f, 1, 0.75f),  // blue/green
+	Vector(0.5f, 0.5f, 1),   // blue
+	Vector(1, 0.5f, 1),      // purple
+	Vector(1, 0.5f, 0.5f),   // red
+	Vector(1, 0.6f, 0.5f),   // red/orange
+	Vector(1, 0.75f, 0.5f),  // orange
+	Vector(1, 1, 0.5f),      // yellow
+};
+
+Vector DSQ::getNoteColor(size_t note)
+{
+	return note < Countof(noteColors) ? noteColors[note] : Vector();
 }
 
 void DSQ::toggleVersionLabel(bool on)
@@ -1770,16 +1695,11 @@ int DSQ::getEntityTypeIndexByName(std::string s)
 	return -1;
 }
 
-void DSQ::LoadModsCallback(const std::string &filename, void *param)
+bool DSQ::loadModByName(const std::string &name)
 {
-	DSQ *self = (DSQ*)param;
-
-	int pos = filename.find_last_of('/')+1;
-	int pos2 = filename.find_last_of('.');
-	std::string name = filename.substr(pos, pos2-pos);
 	ModEntry m;
 	m.path = name;
-	m.id = self->modEntries.size();
+	m.id = modEntries.size();
 
 	XMLDocument d;
 	if(!Mod::loadModXML(&d, name))
@@ -1788,20 +1708,57 @@ void DSQ::LoadModsCallback(const std::string &filename, void *param)
 		if(!err)
 			err = "<unknown error>";
 		std::ostringstream os;
-		os << "Failed to load mod xml: " << filename << " -- Error: " << err;
+		os << "Failed to load mod xml: " << name << " -- Error: " << err;
 		debugLog(os.str());
-		return;
+		return false;
 	}
 
 	m.type = Mod::getTypeFromXML(d.FirstChildElement("AquariaMod"));
 
-	self->modEntries.push_back(m);
+	modEntries.push_back(m);
 
 	std::ostringstream ss;
 	ss << "Loaded ModEntry [" << m.path << "] -> " << m.id << "  | type " << m.type;
 
 	debugLog(ss.str());
+	return true;
 }
+
+
+// _mods/themod.xml
+static void EnumerateOuterModXMLCallback(const std::string &filename, void *param)
+{
+	std::vector<std::string> *pNames = (std::vector<std::string>*)param;
+
+	size_t pos = filename.find_last_of('/')+1;
+	size_t pos2 = filename.find_last_of('.');
+	if(pos2 < pos)
+		return;
+
+	std::string name = filename.substr(pos, pos2-pos);
+	pNames->push_back(name);
+}
+
+// _mods/themod/mod-info.xml
+static void EnumerateInnerModXMLCallback(const std::string &filename, void *param)
+{
+	std::vector<std::string> *pNames = (std::vector<std::string>*)param;
+
+	std::string fn = filename;
+	if(fn.empty())
+		return;
+
+	assert(!(fn.back() == '/' || fn.back() == '\''));
+
+	fn += "/mod-info.xml";
+	if(!exists(fn))
+		return;
+
+	size_t pos = filename.find_last_of('/')+1;
+	std::string name = filename.substr(pos);
+	pNames->push_back(name);
+}
+
 
 void DSQ::LoadModPackagesCallback(const std::string &filename, void *param)
 {
@@ -1847,7 +1804,17 @@ void DSQ::loadMods()
 	forEachFile(modpath, ".aqmod", LoadModPackagesCallback, this);
 #endif
 
-	forEachFile(modpath, ".xml", LoadModsCallback, this);
+	std::vector<std::string> modnames;
+
+	forEachFile(modpath, ".xml", EnumerateOuterModXMLCallback, &modnames);
+	forEachDir(modpath,EnumerateInnerModXMLCallback, &modnames);
+
+	std::sort(modnames.begin(), modnames.end());
+	modnames.erase(std::unique(modnames.begin(), modnames.end()), modnames.end());
+
+	for(size_t i = 0; i < modnames.size(); ++i)
+		loadModByName(modnames[i]);
+
 	selectedMod = 0;
 
 	std::ostringstream os;
@@ -2021,6 +1988,7 @@ void DSQ::shutdown()
 	particleManager->clearParticleBank();
 	Shot::clearShotBank();
 	SkeletalSprite::clearCache();
+	tilemgr.destroy();
 
 
 	cursor->setTexturePointer(0);
@@ -2035,10 +2003,9 @@ void DSQ::shutdown()
 	console = 0;
 	removeRenderObject(cmDebug);
 	cmDebug = 0;
-	removeRenderObject(subtext);
-	subtext = 0;
 	removeRenderObject(subbox);
 	subbox = 0;
+	subtext = 0;
 
 	removeRenderObject(achievement_text);
 	achievement_text = 0;
@@ -2064,10 +2031,6 @@ void DSQ::shutdown()
 		removeRenderObject(barFade_left);
 	if (barFade_right)
 		removeRenderObject(barFade_right);
-	if (bar_up)
-		removeRenderObject(bar_up);
-	if (bar_down)
-		removeRenderObject(bar_down);
 
 	if (cutscene_bg)
 		removeRenderObject(cutscene_bg);
@@ -2178,7 +2141,7 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->setLife(t);
 
-			getTopStateData()->addRenderObject(q, LR_WORLDMAPHUD);
+			getTopStateObject()->addRenderObject(q, LR_WORLDMAPHUD);
 		}
 		break;
 	case 1:
@@ -2208,7 +2171,7 @@ void DSQ::clickRingEffect(Vector pos, int type, Vector color, float ut)
 
 			q->setLife(t);
 
-			getTopStateData()->addRenderObject(q, LR_WORLDMAPHUD);
+			getTopStateObject()->addRenderObject(q, LR_WORLDMAPHUD);
 		}
 		break;
 	}
@@ -2328,12 +2291,12 @@ void DSQ::clearMenu(float t)
 	menu.clear();
 }
 
-void DSQ::screenMessage(const std::string &msg)
+void DSQ::screenMessage(const std::string &msg, const Vector& pos)
 {
 	debugLog(msg);
 
 	DebugFont *b = new DebugFont();
-	b->position = Vector(16,300);
+	b->position = pos;
 	b->setFontSize(10);
 	b->setText(msg);
 	b->alpha = 0;
@@ -2341,7 +2304,7 @@ void DSQ::screenMessage(const std::string &msg)
 	b->followCamera= 1;
 	b->setLife(2);
 	b->setDecayRate(1);
-	getTopStateData()->addRenderObject(b, LR_DEBUG_TEXT);
+	getTopStateObject()->addRenderObject(b, LR_DEBUG_TEXT);
 
 
 }
@@ -2434,16 +2397,7 @@ void DSQ::doModSelect()
 
 void DSQ::createModSelector()
 {
-	blackout = new Quad;
-	blackout->color = 0;
-	blackout->autoWidth = AUTO_VIRTUALWIDTH;
-	blackout->autoHeight = AUTO_VIRTUALHEIGHT;
-	blackout->followCamera = 1;
-	blackout->position = Vector(400,300);
-	blackout->alphaMod = 0.75f;
-	blackout->alpha = 0;
 	blackout->alpha.interpolateTo(1, 0.2f);
-	addRenderObject(blackout, LR_MENU);
 
 	modSelectorScr = new ModSelectorScreen();
 	modSelectorScr->position = Vector(400,300);
@@ -2512,13 +2466,7 @@ void DSQ::unloadMods()
 
 void DSQ::clearModSelector()
 {
-	if (blackout)
-	{
-		blackout->setLife(1);
-		blackout->setDecayRate(2);
-		blackout->fadeAlphaWithLife = 1;
-		blackout = 0;
-	}
+	blackout->alpha.interpolateTo(0, 0.5f);
 
 	if(modSelectorScr)
 	{
@@ -2559,18 +2507,7 @@ void DSQ::createSaveSlots(SaveSlotMode ssm)
 
 	float t = 0.3f;
 
-
-	blackout = new Quad;
-	blackout->color = 0;
-	blackout->autoWidth = AUTO_VIRTUALWIDTH;
-	blackout->autoHeight = AUTO_VIRTUALHEIGHT;
-	blackout->followCamera = 1;
-	blackout->position = Vector(400,300);
-	blackout->alphaMod = 0.75f;
-	blackout->alpha = 0;
 	blackout->alpha.interpolateTo(1, 0.5f);
-	addRenderObject(blackout, LR_MENU);
-
 
 	menu[1] = new Quad("gui/save-menu", Vector(400,300));
 	menu[1]->alpha = 0;
@@ -2737,8 +2674,7 @@ void DSQ::hideSaveSlotCrap()
 {
 	clearMenu();
 
-	if (blackout)
-		blackout->alpha = 0;
+	blackout->alpha = 0;
 
 	if (saveSlotPageCount)
 		saveSlotPageCount->alpha = 0;
@@ -2751,23 +2687,8 @@ void DSQ::clearSaveSlots(bool trans)
 		sound->playSfx("menu-close");
 	}
 	float t = 0.3f;
-	if (blackout)
-	{
-		if (!trans)
-		{
-			blackout->setLife(1);
-			blackout->setDecayRate(10);
-			if (blackout->alpha.x > 0)
-				blackout->fadeAlphaWithLife = 1;
-		}
-		else
-		{
-			blackout->setLife(1);
-			blackout->setDecayRate(1);
-			if (blackout->alpha.x > 0)
-				blackout->fadeAlphaWithLife = 1;
-		}
-	}
+	blackout->alpha.interpolateTo(0, trans ? 1.0f : 0.1f);
+
 	if (saveSlotPageCount)
 	{
 		saveSlotPageCount->setLife(1);
@@ -2850,12 +2771,11 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 		int x = renderWidth/2  - scrShotWidth/2;
 		int y = renderHeight/2 - scrShotHeight/2;
 
-		glPushAttrib(GL_VIEWPORT_BIT);
 		glViewport(0, 0, renderWidth, renderHeight);
-		clearBuffers();
-		render();
+		glClear(GL_COLOR_BUFFER_BIT);
+		renderExternal();
 		scrShotData = grabScreenshot(x, y, scrShotWidth, scrShotHeight);
-		glPopAttrib();
+		glViewport(0, 0, width, height);
 		showBuffer();
 
 		prepScreen(0);
@@ -2904,16 +2824,18 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 			if (user.video.saveSlotScreens && scrShotData != 0)
 			{
 				std::ostringstream os;
-				os << getSaveDirectory() << "/screen-" << numToZeroString(selectedSaveSlot->getSlotIndex(), 4) << ".zga";
+				os << getSaveDirectory() << "/screen-" << numToZeroString(selectedSaveSlot->getSlotIndex(), 4) << ".png";
 
 				// Cut off top and bottom to get a 4:3 aspect ratio.
-				/*int adjHeight = (scrShotWidth * 3.0f) / 4.0f;
+				int adjHeight = (scrShotWidth * 3.0f) / 4.0f;
 				int imageDataSize = scrShotWidth * scrShotHeight * 4;
 				int adjImageSize = scrShotWidth * adjHeight * 4;
 				int adjOffset = scrShotWidth * ((scrShotHeight-adjHeight)/2) * 4;
 				memmove(scrShotData, scrShotData + adjOffset, adjImageSize);
-				memset(scrShotData + adjImageSize, 0, imageDataSize - adjImageSize);*/
-				zgaSaveRGBA(os.str().c_str(), scrShotWidth, scrShotHeight, scrShotData);
+				memset(scrShotData + adjImageSize, 0, imageDataSize - adjImageSize);
+
+				//zgaSaveRGBA(os.str().c_str(), scrShotWidth, scrShotHeight, scrShotData);
+				pngSaveRGBA(os.str().c_str(), scrShotWidth, adjHeight, scrShotData, 3);
 			}
 
 			PlaySfx sfx;
@@ -2937,24 +2859,6 @@ void DSQ::doSaveSlotMenu(SaveSlotMode ssm, const Vector &position)
 	delete[] scrShotData;
 	saveSlotMode = SSM_NONE;
 
-}
-
-void doAlphabetInputKey(int d, char c, char map[], std::string *text, char upper=0)
-{
-	if (core->getKeyState(d) && !map[d])
-	{
-		char usec = c;
-		if (upper != 0 && (core->getKeyState(KEY_LSHIFT) || core->getKeyState(KEY_RSHIFT)))
-		{
-			usec = upper;
-		}
-		*text += usec;
-		map[d] = 1;
-	}
-	else if (!core->getKeyState(d) && map[d])
-	{
-		map[d] = 0;
-	}
 }
 
 void DSQ::onConfirmYes()
@@ -3111,9 +3015,32 @@ bool DSQ::confirm(const std::string &text, const std::string &image, bool ok, fl
 	return ret;
 }
 
+
+static std::string s_inputText;
+
+static void enterTextInput(TextInputEvent ti, const char *text)
+{
+	switch(ti)
+	{
+		case TEXTINP_TEXT:
+			if(*text)
+				s_inputText += text;
+			break;
+
+		case TEXTINP_BACKSPACE:
+			if(!s_inputText.empty())
+				s_inputText.pop_back(); // FIXME: do proper utf-8 erase?
+			break;
+	}
+}
+
 std::string DSQ::getUserInputString(std::string labelText, std::string t, bool allowNonLowerCase)
 {
+	const std::string originalt = t;
 	float trans = 0.1f;
+	t.swap(s_inputText); // store original text in case of recursive opening
+	const InputTextHandler oldInputHandler = pTextInputHandler;
+	pTextInputHandler = &enterTextInput;
 
 	bool pauseState = game->isPaused();
 
@@ -3121,8 +3048,7 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 
 	sound->playSfx("Menu-Open");
 
-	RoundedRect *bg = new RoundedRect;
-	bg->setWidthHeight(790, 64, 10);
+	RoundedRect *bg = new RoundedRect(790, 64, 10);
 	bg->position = Vector(400,300);
 	bg->followCamera = 1;
 	bg->alpha = 0;
@@ -3140,16 +3066,12 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 	inputText->position = Vector(-400 + 20,8+8);
 	bg->addChild(inputText, PM_POINTER);
 
+	this->beginTextInput();
+
 
 	bg->show();
 	run(trans);
 
-
-	std::string text = t;
-	char map[256];
-	for (int i = 0; i < 256; i++)
-		map[i] = 0;
-	bool delDown = false;
 	bool escDown = false;
 
 	float dt = 1.0f/60.0f;
@@ -3158,89 +3080,12 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 
 	while (1)
 	{
-		if (blink)
-		{
-			text.resize(text.size()-1);
-			inputText->setText(text);
-		}
-		if (inputText->getActualWidth() < 800-60)
-		{
-			doAlphabetInputKey(KEY_A, 'a', (char*)&map, &text, 'A');
-			doAlphabetInputKey(KEY_B, 'b', (char*)&map, &text, 'B');
-			doAlphabetInputKey(KEY_C, 'c', (char*)&map, &text, 'C');
-			doAlphabetInputKey(KEY_D, 'd', (char*)&map, &text, 'D');
-			doAlphabetInputKey(KEY_E, 'e', (char*)&map, &text, 'E');
-			doAlphabetInputKey(KEY_F, 'f', (char*)&map, &text, 'F');
-			doAlphabetInputKey(KEY_G, 'g', (char*)&map, &text, 'G');
-			doAlphabetInputKey(KEY_H, 'h', (char*)&map, &text, 'H');
-			doAlphabetInputKey(KEY_I, 'i', (char*)&map, &text, 'I');
-			doAlphabetInputKey(KEY_J, 'j', (char*)&map, &text, 'J');
-			doAlphabetInputKey(KEY_K, 'k', (char*)&map, &text, 'K');
-			doAlphabetInputKey(KEY_L, 'l', (char*)&map, &text, 'L');
-			doAlphabetInputKey(KEY_M, 'm', (char*)&map, &text, 'M');
-			doAlphabetInputKey(KEY_N, 'n', (char*)&map, &text, 'N');
-			doAlphabetInputKey(KEY_O, 'o', (char*)&map, &text, 'O');
-			doAlphabetInputKey(KEY_P, 'p', (char*)&map, &text, 'P');
-			doAlphabetInputKey(KEY_Q, 'q', (char*)&map, &text, 'Q');
-			doAlphabetInputKey(KEY_R, 'r', (char*)&map, &text, 'R');
-			doAlphabetInputKey(KEY_S, 's', (char*)&map, &text, 'S');
-			doAlphabetInputKey(KEY_T, 't', (char*)&map, &text, 'T');
-			doAlphabetInputKey(KEY_U, 'u', (char*)&map, &text, 'U');
-			doAlphabetInputKey(KEY_V, 'v', (char*)&map, &text, 'V');
-			doAlphabetInputKey(KEY_W, 'w', (char*)&map, &text, 'W');
-			doAlphabetInputKey(KEY_X, 'x', (char*)&map, &text, 'X');
-			doAlphabetInputKey(KEY_Y, 'y', (char*)&map, &text, 'Y');
-			doAlphabetInputKey(KEY_Z, 'z', (char*)&map, &text, 'Z');
-			doAlphabetInputKey(KEY_1, '1', (char*)&map, &text);
-			doAlphabetInputKey(KEY_2, '2', (char*)&map, &text);
-			doAlphabetInputKey(KEY_3, '3', (char*)&map, &text);
-			doAlphabetInputKey(KEY_4, '4', (char*)&map, &text);
-			doAlphabetInputKey(KEY_5, '5', (char*)&map, &text);
-			doAlphabetInputKey(KEY_6, '6', (char*)&map, &text);
-			doAlphabetInputKey(KEY_7, '7', (char*)&map, &text);
-			doAlphabetInputKey(KEY_8, '8', (char*)&map, &text);
-			doAlphabetInputKey(KEY_9, '9', (char*)&map, &text);
-			doAlphabetInputKey(KEY_0, '0', (char*)&map, &text);
-
-			doAlphabetInputKey(KEY_PERIOD, '.', (char*)&map, &text);
-			doAlphabetInputKey(KEY_SPACE, ' ', (char*)&map, &text);
-			doAlphabetInputKey(KEY_MINUS, '-', (char*)&map, &text, '_');
-
-			doAlphabetInputKey(KEY_TILDE, '~', (char*)&map, &text, '~');
-			doAlphabetInputKey(KEY_EQUALS, '=', (char*)&map, &text);
-			doAlphabetInputKey(KEY_LBRACKET, '(', (char*)&map, &text);
-			doAlphabetInputKey(KEY_RBRACKET, ')', (char*)&map, &text);
-			doAlphabetInputKey(KEY_SEMICOLON, ';', (char*)&map, &text);
-		}
-
-		if (getKeyState(KEY_BACKSPACE))
-		{
-			if (!delDown)
-			{
-				if (!text.empty())
-				{
-					text.resize(text.size()-1);
-				}
-			}
-			delDown = true;
-		}
-		else
-		{
-			delDown = false;
-		}
-
 		blinkTimer += dt;
 		if (blinkTimer > 0.2f)
 		{
 			blink = !blink;
 			blinkTimer = 0;
 		}
-
-		if (blink)
-		{
-			text += "|";
-		}
-
 
 
 		if (getKeyState(KEY_RETURN))
@@ -3251,15 +3096,12 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 		else if (escDown && !getKeyState(KEY_ESCAPE))
 		{
 			escDown = false;
-			text = t;
+			s_inputText = originalt;
 			break;
 		}
-		inputText->setText(text);
+		inputText->setText(blink ? s_inputText : s_inputText+"|");
 		run(dt);
 	}
-
-	if (blink && !text.empty() && (text[text.size()-1] == '|'))
-		text.resize(text.size()-1);
 
 	sound->playSfx("Menu-Close");
 
@@ -3278,11 +3120,16 @@ std::string DSQ::getUserInputString(std::string labelText, std::string t, bool a
 	game->togglePause(pauseState);
 
 	if (!allowNonLowerCase)
-		stringToLower(text);
+		stringToLower(s_inputText);
 
-	debugLog("getUserInputString returned: " + text);
+	debugLog("getUserInputString returned: " + s_inputText);
 
-	return text;
+	this->endTextInput();
+
+	t.swap(s_inputText); // put original text back
+	pTextInputHandler = oldInputHandler;
+
+	return t;
 }
 
 void DSQ::stopVoice()
@@ -3450,6 +3297,11 @@ void DSQ::prepScreen(bool screenshot)
 	}
 }
 
+void DSQ::onPrepareRender()
+{
+	game->onPrepareRender();
+}
+
 void DSQ::onRender()
 {
 	if (cursor)
@@ -3555,6 +3407,70 @@ bool DSQ::isDeveloperKeys() const
 bool DSQ::canOpenEditor() const
 {
 	return isDeveloperKeys() || (mod.isActive() && !mod.isEditorBlocked());
+}
+
+void DSQ::loadTileEffects()
+{
+	bool found = false;
+	std::string fn;
+	if (mod.isActive())
+	{
+		fn = mod.getPath() + "elementeffects.txt";
+		if(exists(fn))
+			found = true;
+	}
+	if(!found)
+		fn = "data/elementeffects.txt";
+
+	return tilemgr.loadTileEffects(fn.c_str());
+}
+
+bool DSQ::loadTileset(std::string pack, const unsigned char *usedIdx, size_t usedIdxLen)
+{
+	stringToLower(pack);
+
+	std::string fn;
+	if (mod.isActive())
+		fn = mod.getPath() + "tilesets/" + pack + ".txt";
+	else
+		fn = "data/tilesets/" + pack + ".txt";
+
+	if(!tilemgr.tileset.loadFile(fn.c_str(), usedIdx, usedIdxLen))
+	{
+		errorLog ("Could not load tileset [" + fn + "]");
+		return false;
+	}
+
+	// Aquarian alphabet letters
+	if(const CountedPtr<Texture> aqtex = getTexture("aquarian"))
+	{
+		const float cell = 64.0f/512.0f;
+		for (int i = 0; i < 27; i++)
+		{
+			ElementTemplate *et = new ElementTemplate;
+			et->idx = 1024+i;
+			et->tex = aqtex;
+			int x = i,y=0;
+			while (x >= 6)
+			{
+				x -= 6;
+				y++;
+			}
+
+			et->tc.u1 = x*cell;
+			et->tc.v1 = y*cell;
+			et->tc.u2 = et->tc.u1 + cell;
+			et->tc.v2 = et->tc.v1 + cell;
+
+			et->w = 512*cell;
+			et->h = 512*cell;
+
+			et->finalize();
+			tilemgr.tileset.elementTemplates.push_back(et);
+		}
+	}
+
+	return true;
 }
 
 bool DSQ::isQuitFlag()
@@ -3726,17 +3642,40 @@ void DSQ::onUpdate(float dt)
 		if (isCutscenePaused())
 		{
 			sound->pause();
-			float sec = 1.0f/60.0f;
+			const float sec = 1.0f/60.0f;
+			float skipCutsceneHoldTime = 0;
 			while (isCutscenePaused())
 			{
+				const unsigned beginTicks = nowTicks;
 				pollEvents(sec);
 				ActionMapper::onUpdate(sec);
 				SDL_Delay(int(sec*1000));
-				render();
-				showBuffer();
-				resetTimer();
+				cacheRender(); // This updates nowTicks
+				const float dt = (nowTicks-beginTicks)/1000.0f;
 
-				if (_canSkipCutscene && getKeyState(KEY_S))
+				bool skip = false;
+				if(_canSkipCutscene && isActing(ACTION_ESC, -1))
+				{
+					skipCutsceneHoldTime += dt;
+					if(skipCutsceneHoldTime >= 2)
+						skip = true;
+					int dots = int(10 * skipCutsceneHoldTime);
+					std::ostringstream os;
+					os << stringbank.get(2035) << "\n";
+					for(int i = 0; i < dots; ++i)
+						os << ".";
+					os << stringbank.get(2036);
+					for(int i = 0; i < dots; ++i)
+						os << ".";
+					cutscene_text2->setText(os.str());
+				}
+				else
+				{
+					cutscene_text2->setText(stringbank.get(2035));
+					skipCutsceneHoldTime = 0;
+				}
+
+				if (skip)
 				{
 					skippingCutscene = true;
 					settings.renderOn = false;
@@ -3747,6 +3686,7 @@ void DSQ::onUpdate(float dt)
 					return;
 				}
 			}
+			cutscene_text2->setText(std::string());
 			resetTimer();
 			sound->resume();
 		}
@@ -3754,6 +3694,8 @@ void DSQ::onUpdate(float dt)
 
 	// This queries pressed keys and updates ActionMapper
 	Core::onUpdate(dt);
+
+	tilemgr.update(dt);
 
 
 	mod.update(dt);
@@ -3770,7 +3712,7 @@ void DSQ::onUpdate(float dt)
 	// messy
 	if (versionLabel && versionLabel->alpha.x > 0)
 	{
-		versionLabel->position = Vector(10 - getVirtualOffX(), 575);
+		versionLabel->position = Vector(10 - getVirtualOffX(), 575 + getVirtualOffY());
 	}
 
 	if (noEffectTimer > 0)
@@ -3780,6 +3722,9 @@ void DSQ::onUpdate(float dt)
 			noEffectTimer = 0;
 	}
 
+	// Don't use go virtualOffY all the way, because then it's a bit too far down to be
+	// readable easily. Move it up a bit when we're in vertical mode.
+	subbox->position = Vector(400,580 + getVirtualOffY() * 0.8f);
 
 	subtitlePlayer.update(dt);
 
@@ -3916,7 +3861,8 @@ void DSQ::onUpdate(float dt)
 		os << sound->getVolumeString() << std::endl;
 		os << "runInBG: " << settings.runInBackground << " nested: " << getNestedMains() << std::endl;
 		os << globalResolutionScale.x << ", " << globalResolutionScale.y << std::endl;
-		os << "elemu: " << game->elementUpdateList.size() << " elemi: " << game->elementInteractionList.size() << std::endl;
+		TileStorage::Sizes tsz = tilemgr.getStats();
+		os << "Tiles: " << tsz.tiles << ", u: " << tsz.update << ", i: " << tsz.collide << std::endl;
 		os << "Lua mem: " << scriptInterface.gcGetStats() << " KB" << std::endl;
 
 		cmDebug->position = Vector(20 - virtualOffX,50);
@@ -4097,20 +4043,6 @@ void DSQ::playVisualEffect(int vfx, Vector position, Entity *target)
 	}
 }
 
-void DSQ::addElement(Element *e)
-{
-	elements.push_back(e);
-	if (e->bgLayer >= 0 && e->bgLayer < 16)
-	{
-		e->bgLayerNext = firstElementOnLayer[e->bgLayer];
-		firstElementOnLayer[e->bgLayer] = e;
-	}
-	else
-	{
-		e->bgLayerNext = 0;
-	}
-}
-
 void DSQ::modifyDt(float &dt)
 {
 	if (isDeveloperKeys())
@@ -4153,46 +4085,6 @@ void DSQ::modifyDt(float &dt)
 	dt *= gameSpeed.x;
 }
 
-void DSQ::removeElement(Element *element)
-{
-	for (size_t i = 0; i < elements.size(); i++)
-	{
-		if (elements[i] == element)
-		{
-			removeElement(i);
-			break;
-		}
-	}
-
-}
-// only happens in editor, no need to optimize
-void DSQ::removeElement(size_t idx)
-{
-	ElementContainer copy = elements;
-	clearElements();
-	size_t i = 0;
-	for (i = 0; i < idx; i++)
-	{
-		addElement(copy[i]);
-	}
-	for (i = idx+1; i < copy.size(); i++)
-	{
-		addElement(copy[i]);
-	}
-	copy.clear();
-
-	if (!game->elementUpdateList.empty())
-		game->rebuildElementUpdateList();
-}
-
-void DSQ::clearElements()
-{
-	elements.clear();
-	for (int i = 0; i < 16; i++)
-		firstElementOnLayer[i] = 0;
-}
-
-
 void DSQ::addEntity(Entity *entity)
 {
 	size_t i;
@@ -4219,12 +4111,7 @@ void DSQ::removeEntity(Entity *entity)
 
 void DSQ::clearEntities()
 {
-	const int size = entities.size();
-	int i;
-	for (i = 0; i < size; i++)
-	{
-		entities[i] = 0;
-	}
+	std::fill(entities.begin(), entities.end(), (Entity*)NULL);
 }
 
 
@@ -4239,7 +4126,7 @@ ParticleEffect *DSQ::spawnParticleEffect(const std::string &name, Vector positio
 		return NULL;
 	if (t!=0)
 	{
-		PECue p(name, position, rotz, t);
+		PECue p(name, position, rotz, t, layer, follow);
 		pecue.push_back(p);
 		return NULL;
 	}
@@ -4258,8 +4145,7 @@ void DSQ::updatepecue(float dt)
 {
 	if (!particlesPaused)
 	{
-
-		int nz = 0;
+		size_t nz = 0;
 		for (size_t i = 0; i < pecue.size(); i++)
 		{
 			PECue *p = &pecue[i];
@@ -4269,7 +4155,7 @@ void DSQ::updatepecue(float dt)
 				if (p->t < 0)
 				{
 					p->t = 0;
-					spawnParticleEffect(p->name, p->pos, p->rot, 0);
+					spawnParticleEffect(p->name, p->pos, p->rot, 0, p->layer, p->follow);
 				}
 				nz ++;
 			}
@@ -4289,17 +4175,19 @@ void AquariaScreenTransition::capture()
 	InterpolatedVector oldAlpha = dsq->cursor->alpha;
 	dsq->cursor->alpha.x = 0;
 	int width=0, height=0;
-	dsq->render();
+	dsq->renderExternal();
 
 	width = dsq->getWindowWidth();
 	height = dsq->getWindowHeight();
 
 	glBindTexture(GL_TEXTURE_2D,screen_texture);
+	glReadBuffer(GL_BACK);
 	glCopyTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, 0, 0, width, height);
 
+	updateVBO();
 
 	dsq->cursor->alpha = oldAlpha;
-	dsq->render();
+	dsq->renderExternal();
 	dsq->showBuffer();
 
 	this->alpha = 1;
@@ -4490,4 +4378,10 @@ bool DSQ::useMouseInput() const
 bool DSQ::useJoystickInput() const
 {
 	return lastInputMode == INPUT_JOYSTICK;
+}
+
+void DSQ::onTextInput(TextInputEvent ti, const char *text)
+{
+	if(pTextInputHandler)
+		pTextInputHandler(ti, text);
 }

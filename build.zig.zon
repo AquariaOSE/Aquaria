@@ -1,0 +1,26 @@
+.{
+    .name = .aquaria,
+    .version = "1.1.3",
+    .fingerprint = 0x1b84848cab18ed85,
+    .minimum_zig_version = "0.17.0",
+    .dependencies = .{
+        .sdl2 = .{
+            .url = "https://github.com/libsdl-org/SDL/releases/download/release-2.32.10/SDL2-2.32.10.tar.gz",
+            .hash = "N-V-__8AAOzcswSzy6zq7Ek2r4sBxXDDaaxStgOQfi-pqStj",
+        },
+        .sdl_linux_deps = .{
+            .url = "git+https://github.com/castholm/SDL_linux_deps#86b2445cce38b014efeebcb0f3752aff623602fc",
+            .hash = "sdl_linux_deps-0.0.0-SDL_lgR3hgAGRy-98ShWuT1PO5sRJRq1KX_kKeOOPnRj",
+            .lazy = true,
+        },
+    },
+    .paths = .{
+        "build.zig",
+        "build.zig.zon",
+        "zig",
+        "Aquaria",
+        "BBGE",
+        "ExternalLibs",
+        "COPYING.txt",
+    },
+}

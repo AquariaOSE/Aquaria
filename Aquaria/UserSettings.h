@@ -37,12 +37,13 @@ class UserSettings
 public:
 	struct System
 	{
-		System() { debugLogOn = 0; devModeOn = 0; allowDangerousScriptFunctions = 0; grabInput=1; }
+		System() { debugLogOn = 0; devModeOn = 0; allowDangerousScriptFunctions = 0; grabInput=1; hotreload=0; }
 		int debugLogOn;
 		std::string locale;
 		int devModeOn;
 		int allowDangerousScriptFunctions;
 		int grabInput;
+		int hotreload;
 	} system;
 
 	struct Audio
@@ -72,7 +73,6 @@ public:
 			bits = 32;
 			vsync = 1;
 			darkbuffersize = 256;
-			worldMapRevealMethod = 0;
 		}
 		int blur;
 		int noteEffects;
@@ -80,7 +80,6 @@ public:
 		int resx, resy, full, fbuffer, bits, vsync, darkfbuffer, darkbuffersize, hz, displayindex;
 		int saveSlotScreens;
 		int numParticles;
-		int worldMapRevealMethod;
 	} video;
 
 	struct Control

@@ -31,6 +31,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <tinyxml2.h>
 using namespace tinyxml2;
 
+
+enum
+{
+	RESET_KEYFRAME_IDX = -2,
+	INITIAL_KEYFRAME_IDX = -1,
+};
+
 std::string SkeletalSprite::animationPath				= "data/animations/";
 std::string SkeletalSprite::skinPath					= "skins/";
 
@@ -69,6 +76,7 @@ void SkeletalKeyframe::copyAllButTime(SkeletalKeyframe *copy)
 }
 
 Bone::Bone() : CollideQuad()
+	, cmvbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	addType(SCO_BONE);
 	fileRenderQuad = true;
@@ -87,6 +95,8 @@ Bone::Bone() : CollideQuad()
 	selectable = true;
 	originalRenderPass = 0;
 	stripVert = false;
+	inheritPass = false;
+	segmentRotInterpTime = 0.2f;
 }
 
 Bone::~Bone()
@@ -124,13 +134,13 @@ void Bone::addSegment(Bone *b)
 
 	skeleton->removeChild(b);
 
-	core->getTopStateData()->addRenderObject(b, skeleton->getTopLayer());
+	core->getTopStateObject()->addRenderObject(b, skeleton->getTopLayer());
 	b->position = this->getWorldPosition();
 }
 
 void Bone::createStrip(bool vert, int num)
 {
-	RenderGrid *grid = vert ? createGrid(2, num) : createGrid(num, 2);
+	DynamicRenderGrid *grid = vert ? createGrid(2, num) : createGrid(num, 2);
 	stripVert = vert;
 	grid->gridType = GRID_STRIP;
 	changeStrip.resize(num);
@@ -165,12 +175,12 @@ void Bone::setSegmentProps(int minDist, int maxDist, bool reverse)
 	this->reverse = reverse;
 }
 
-void Bone::updateSegment(Bone *b, const Vector &diff)
+void Bone::updateSegment(float dt, Bone *b, const Vector &diff)
 {
-
+	const float lensq = diff.getSquaredLength2D();
 
 	float angle = -1;
-	if (diff.getSquaredLength2D() > sqr(maxDist))
+	if (lensq > sqr(maxDist))
 	{
 		Vector useDiff = diff;
 		useDiff.setLength2D(maxDist);
@@ -179,9 +189,9 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
 	}
-	else if (diff.getSquaredLength2D() > sqr(minDist))
+	else if (lensq > sqr(minDist))
 	{
-		b->position += diff*0.05f;
+		b->position += diff*dt*3;
 
 		MathFunctions::calculateAngleBetweenVectorsInDegrees(Vector(0,0,0), diff, angle);
 
@@ -204,12 +214,12 @@ void Bone::updateSegment(Bone *b, const Vector &diff)
 		}
 
 
-		b->rotation.interpolateTo(Vector(0,0,angle),0.2f);
+		b->rotation.interpolateTo(Vector(0,0,angle), b->segmentRotInterpTime);
 	}
 
 }
 
-void Bone::updateSegments()
+void Bone::updateSegments(float dt)
 {
 	if (segmentChain>0 && !segments.empty())
 	{
@@ -229,7 +239,7 @@ void Bone::updateSegments()
 				else
 					diff = segments[i-1]->getWorldPosition() - segments[i]->getWorldPosition();
 
-				updateSegment(segments[i], diff);
+				updateSegment(dt, segments[i], diff);
 			}
 		}
 		else
@@ -246,7 +256,7 @@ void Bone::updateSegments()
 				else
 					diff = segments[i+1]->getWorldPosition() - segments[i]->getWorldPosition();
 
-				updateSegment(segments[i], diff);
+				updateSegment(dt, segments[i], diff);
 			}
 		}
 	}
@@ -261,39 +271,33 @@ void Bone::spawnParticlesFromCollisionMask(const char *p, unsigned intv, int lay
 	}
 }
 
+enum { TINY_CIRCLE_VERTS = 12 };
+
 void Bone::renderCollision(const RenderState& rs) const
 {
-	if (!collisionMask.empty())
+	if (!collisionMask.empty() && cmvbo.size())
 	{
-		glPushAttrib(GL_ALL_ATTRIB_BITS);
 		glPushMatrix();
 		glBindTexture(GL_TEXTURE_2D, 0);
+		RenderObject::lastTextureApplied = 0;
 
 		glLoadIdentity();
 		core->setupRenderPositionAndScale();
 
-		glEnable(GL_BLEND);
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+		rs.gpu.setBlend(BLEND_DEFAULT);
 
 		glColor4f(1,1,0,0.5);
 
+		cmvbo.apply();
+
+		int first = 0;
 		for (size_t i = 0; i < transformedCollisionMask.size(); i++)
 		{
-			Vector collide = this->transformedCollisionMask[i];
-
-
-
-			glTranslatef(collide.x, collide.y, 0);
-			RenderObject *parent = this->getTopParent();
-			if (parent)
-				drawCircle(collideRadius*parent->scale.x, 45);
-			glTranslatef(-collide.x, -collide.y, 0);
+			glDrawArrays(GL_TRIANGLE_FAN, first, TINY_CIRCLE_VERTS);
+			first += TINY_CIRCLE_VERTS;
 		}
 
-
-		glDisable(GL_BLEND);
 		glPopMatrix();
-		glPopAttrib();
 	}
 	else
 		CollideQuad::renderCollision(rs);
@@ -310,6 +314,50 @@ Vector Bone::getCollisionMaskNormal(Vector pos, float dist) const
 	}
 	sum.normalize2D();
 	return sum;
+}
+
+void Bone::onUpdate(float dt)
+{
+	if (!collisionMask.empty())
+	{
+		if (collisionMask.size() != transformedCollisionMask.size())
+		{
+			transformedCollisionMask.resize(collisionMask.size());
+		}
+		for (size_t i = 0; i < collisionMask.size(); i++)
+		{
+			transformedCollisionMask[i] = getWorldCollidePosition(collisionMask[i]);
+		}
+
+		// FIXME: This should be moved to onDebugUpdate() or something
+		if(RenderObject::renderCollisionShape)
+		{
+			const size_t bytes = transformedCollisionMask.size() * TINY_CIRCLE_VERTS * 2 * sizeof(float);
+			float *p;
+			do
+			{
+				p = (float*)cmvbo.beginWrite(GPUBUFTYPE_VEC2, bytes, GPUACCESS_DEFAULT);
+				const RenderObject *parent = this->getTopParent();
+				float s = collideRadius;
+				if (parent)
+					s *= parent->scale.x;
+				for(size_t i = 0; i < transformedCollisionMask.size(); ++i)
+				{
+					Vector collide = this->transformedCollisionMask[i];
+					p = drawCircle(p, s, TINY_CIRCLE_VERTS, collide);
+				}
+			}
+			while(!cmvbo.commitWriteExact(p));
+		}
+	}
+
+	// Do this BEFORE updating children
+	if(inheritPass)
+	{
+		setRenderPass(parent->getRenderPass());
+	}
+
+	CollideQuad::onUpdate(dt);
 }
 
 
@@ -437,7 +485,7 @@ void BoneCommand::run()
 
 AnimationLayer::AnimationLayer()
 {
-	lastNewKey = 0;
+	lastKeyframeIndex = INITIAL_KEYFRAME_IDX;
 	fallThru= 0;
 
 	timer = 0;
@@ -486,12 +534,20 @@ void AnimationLayer::animate(const std::string &a, int loop)
 
 void AnimationLayer::playAnimation(int idx, int loop)
 {
+	// When just looping, keep the last keyframe as-is.
+	// This way, wrapping the timer around to 0 will correctly proceed to process the last (yet unreached) keyframe
+	// before immediately wrapping around and hitting the first keyframe
+	if(idx != currentAnimation || !loop)
+		lastKeyframeIndex = INITIAL_KEYFRAME_IDX;
+
+	// Any animlayer except the base layer interpolate between anims
 	if (!(&s->animLayers[0] == this))
 	{
 		fallThru = 1;
 		fallThruSpeed = 10;
 	}
 	timeMultiplier = 1;
+
 
 	currentAnimation = idx;
 	timer = 0;
@@ -500,7 +556,6 @@ void AnimationLayer::playAnimation(int idx, int loop)
 	this->loop = loop;
 
 	animationLength = getCurrentAnimation()->getAnimationLength();
-
 }
 
 void AnimationLayer::enqueueAnimation(const std::string& anim, int loop)
@@ -524,7 +579,7 @@ float AnimationLayer::transitionAnimate(std::string anim, float time, int loop)
 		{
 			createTransitionAnimation(*a, time);
 			timeMultiplier = 1;
-
+			lastKeyframeIndex = INITIAL_KEYFRAME_IDX;
 			currentAnimation = -1;
 			this->loop = 0;
 			timer = 0;
@@ -559,6 +614,13 @@ Animation* AnimationLayer::getCurrentAnimation()
 	return &s->animations[currentAnimation];
 }
 
+Animation* AnimationLayer::getCurrentAnimationOrNull()
+{
+	if (currentAnimation == -1)
+		return &blendAnimation;
+	return currentAnimation < s->animations.size() ? &s->animations[currentAnimation] : NULL;
+}
+
 void AnimationLayer::createTransitionAnimation(Animation& to, float time)
 {
 	blendAnimation.keyframes.clear();
@@ -583,6 +645,7 @@ void AnimationLayer::createTransitionAnimation(Animation& to, float time)
 	blendAnimation.keyframes.push_back(k2);
 
 	blendAnimation.name = to.name;
+	blendAnimation.resetOnEnd = false;
 }
 
 
@@ -591,6 +654,7 @@ void AnimationLayer::stopAnimation()
 	if(s->loaded && getCurrentAnimation()->resetOnEnd)
 		resetPass();
 	animating = false;
+	lastKeyframeIndex = INITIAL_KEYFRAME_IDX;
 	if (!enqueuedAnimation.empty())
 	{
 		animate(enqueuedAnimation, enqueuedAnimationLoop);
@@ -599,7 +663,7 @@ void AnimationLayer::stopAnimation()
 	}
 }
 
-bool AnimationLayer::isAnimating()
+bool AnimationLayer::isAnimating() const
 {
 	return animating;
 }
@@ -614,15 +678,14 @@ Animation::Animation()
 {
 }
 
-size_t Animation::getNumKeyframes()
+size_t Animation::getNumKeyframes() const
 {
 	return keyframes.size();
 }
 
 SkeletalKeyframe *Animation::getKeyframe(size_t key)
 {
-	if (key >= keyframes.size()) return 0;
-	return &keyframes[key];
+	return key < keyframes.size() ? &keyframes[key] : NULL;
 }
 
 void Animation::reverse()
@@ -647,7 +710,7 @@ float Animation::getAnimationLength()
 SkeletalKeyframe *Animation::getLastKeyframe()
 {
 	if (!keyframes.empty())
-		return &keyframes[keyframes.size()-1];
+		return &keyframes.back();
 	return 0;
 }
 
@@ -658,22 +721,25 @@ SkeletalKeyframe *Animation::getFirstKeyframe()
 	return 0;
 }
 
+inline static bool keyframeCmp(const SkeletalKeyframe& a, const SkeletalKeyframe& b)
+{
+	return a.t < b.t;
+}
+
 void Animation::reorderKeyframes()
 {
-
-	for (size_t i = 0; i < keyframes.size(); i++)
-	{
-		for (size_t j = 0; j < keyframes.size()-1; j++)
-		{
-			if (keyframes[j].t > keyframes[j+1].t)
-			{
-				SkeletalKeyframe temp = keyframes[j+1];
-				keyframes[j+1] = keyframes[j];
-				keyframes[j] = temp;
-			}
-		}
-	}
+	std::sort(keyframes.begin(), keyframes.end(), keyframeCmp);
 }
+
+size_t Animation::getKeyframeIndexBefore(float t) const
+{
+	const size_t n = getNumKeyframes();
+	for(size_t i = 1; i < n; ++i)
+		if(keyframes[i].t > t)
+			return i - 1;
+	return 0;
+}
+
 
 void Animation::cloneKey(size_t key, float toffset)
 {
@@ -734,43 +800,6 @@ BoneKeyframe *SkeletalKeyframe::getBoneKeyframe(size_t idx)
 	return 0;
 }
 
-SkeletalKeyframe *Animation::getPrevKeyframe(float t)
-{
-	size_t kf = -1;
-	for (size_t i = keyframes.size(); i-- > 0; )
-	{
-		if (t >= keyframes[i].t)
-		{
-			kf = i;
-			break;
-		}
-	}
-	if (kf == -1)
-		return 0;
-	if (kf >= keyframes.size())
-		kf = keyframes.size()-1;
-	return &keyframes[kf];
-}
-
-SkeletalKeyframe *Animation::getNextKeyframe(float t)
-{
-	size_t kf = -1;
-	for (size_t i = 0; i < keyframes.size(); i++)
-	{
-		if (t <= keyframes[i].t)
-		{
-			kf = i;
-			break;
-		}
-	}
-
-	if (kf == -1)
-		return 0;
-	if (kf >= keyframes.size())
-		kf = keyframes.size()-1;
-	return &keyframes[kf];
-}
-
 SkeletalSprite::SkeletalSprite() : RenderObject()
 {
 	frozen = false;
@@ -779,7 +808,6 @@ SkeletalSprite::SkeletalSprite() : RenderObject()
 	animLayers.resize(10);
 	for (size_t i = 0; i < animLayers.size(); i++)
 		animLayers[i].setSkeletalSprite(this);
-	selectedBone = -1;
 }
 
 SkeletalSprite::~SkeletalSprite()
@@ -836,30 +864,13 @@ void SkeletalSprite::onUpdate(float dt)
 	if (frozen) return;
 	RenderObject::onUpdate(dt);
 
-	size_t i = 0;
 
-	for (i = 0; i < bones.size(); i++)
-	{
-		Bone *b = bones[i];
-		if (b && !b->collisionMask.empty())
-		{
-			if (b->collisionMask.size() != b->transformedCollisionMask.size())
-			{
-				b->transformedCollisionMask.resize(b->collisionMask.size());
-			}
-			for (size_t i = 0; i < b->collisionMask.size(); i++)
-			{
-				b->transformedCollisionMask[i] = b->getWorldCollidePosition(b->collisionMask[i]);
-			}
-		}
-	}
-
-
-	for (i = 0; i < animLayers.size(); i++)
+	for (size_t i = 0; i < animLayers.size(); i++)
 	{
 		animLayers[i].update(dt);
 	}
 
+	updateAllSegments(dt);
 }
 
 void AnimationLayer::update(float dt)
@@ -867,6 +878,7 @@ void AnimationLayer::update(float dt)
 	timeMultiplier.update(dt);
 	if (animating)
 	{
+		bool didLoop = false;
 		timer += dt*timeMultiplier.x;
 
 		if (timer >= animationLength)
@@ -883,13 +895,14 @@ void AnimationLayer::update(float dt)
 				if (loop > 0)
 					loop --;
 				timer = leftover;
+				didLoop = true;
 			}
 			else
 			{
 				stopAnimation();
 			}
 		}
-		updateBones();
+		updateBones(didLoop);
 	}
 	else if (!animating)
 	{
@@ -898,7 +911,7 @@ void AnimationLayer::update(float dt)
 			fallThru -= dt * fallThruSpeed;
 			if (fallThru < 0)
 				fallThru = 0;
-			updateBones();
+			updateBones(false);
 		}
 	}
 }
@@ -957,7 +970,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 	XMLElement *bones = xml->NewElement("Bones");
 	for (i = 0; i < this->bones.size(); i++)
 	{
-		const RenderGrid * const grid = this->bones[i]->getGrid();
+		const DynamicRenderGrid * const grid = this->bones[i]->getGrid();
 		XMLElement *bone = xml->NewElement("Bone");
 		bone->SetAttribute("idx", (unsigned int) this->bones[i]->boneIdx);
 		bone->SetAttribute("gfx", this->bones[i]->gfx.c_str());
@@ -1016,10 +1029,13 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			bone->SetAttribute("sz", os.str().c_str());
 		}
 
-		if(grid && grid->drawOrder != GRID_DRAW_DEFAULT)
+		if(grid && grid->getDrawOrder() != GRID_DRAW_DEFAULT)
 		{
-			bone->SetAttribute("gridDrawOrder", (int)grid->drawOrder);
+			bone->SetAttribute("gridDrawOrder", (int)grid->getDrawOrder());
 		}
+
+		if(this->bones[i]->inheritPass)
+			bone->SetAttribute("ihp", 1);
 
 
 		for(size_t j = 0; j < this->bones[i]->framegfx.size(); ++j)
@@ -1046,7 +1062,8 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 			const BoneGridInterpolator& bgip = a->interpolators[j];
 			XMLElement *interp = xml->NewElement("Interpolator");
 			Bone *bone = this->getBoneByIdx(bgip.idx);
-			assert(bone->grid->gridType == GRID_INTERP);
+			DynamicRenderGrid *grid = bone->getGrid();
+			assert(grid && grid->gridType == GRID_INTERP);
 			if(bgip.storeBoneByIdx)
 				interp->SetAttribute("bone", (int)bone->boneIdx);
 			else
@@ -1101,7 +1118,7 @@ bool SkeletalSprite::saveSkeletal(const std::string &fn)
 				Bone *bone = this->getBoneByIdx(b->idx);
 				if(bone)
 				{
-					const RenderGrid * const bgrid = bone->getGrid();
+					const DynamicRenderGrid * const bgrid = bone->getGrid();
 					os << b->idx << " " << b->x << " " << b->y << " " << b->rot << " ";
 					// don't want to store grid points if they can be regenerated automatically
 					size_t usedGridSize = (!bgrid || bgrid->gridType == GRID_INTERP) ? 0 : b->grid.size();
@@ -1364,6 +1381,8 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 	stopAnimation();
 	animLayers.clear();
 	deleteBones();
+	if(fn.empty())
+		return;
 
 
 	filenameLoaded = fn;
@@ -1549,7 +1568,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			}
 			if (bone->Attribute("grid"))
 			{
-				RenderGrid *grid = newb->getGrid();
+				DynamicRenderGrid *grid = newb->getGrid();
 				if(!grid)
 				{
 					SimpleIStringStream is(bone->Attribute("grid"), SimpleIStringStream::REUSE);
@@ -1566,9 +1585,12 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				if(const char *gdo = bone->Attribute("gridDrawOrder"))
 				{
 					int ord = atoi(gdo);
-					grid->drawOrder = (GridDrawOrder)ord;
+					grid->setDrawOrder((GridDrawOrder)ord);
 				}
 			}
+			if(bone->Attribute("ihp"))
+				newb->inheritPass = bone->BoolAttribute("ihp");
+
 			if(XMLElement *fr = bone->FirstChildElement("Frame"))
 			{
 				int frc = 0;
@@ -1663,7 +1685,9 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 		XMLElement *animation = animations->FirstChildElement("Animation");
 		while(animation)
 		{
-			Animation newAnimation;
+			this->animations.push_back(Animation());
+			Animation& newAnimation = this->animations.back();
+
 			newAnimation.name = animation->Attribute("name");
 			if(animation->Attribute("resetOnEnd"))
 				newAnimation.resetOnEnd = animation->BoolAttribute("resetOnEnd");
@@ -1789,8 +1813,15 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 			}
 
 			// <Interpolator bone="name or idx" type="TYPE config and params" data="controlpoints; aded by editor" />
+			size_t numInterp = 0;
 			XMLElement *interp = animation->FirstChildElement("Interpolator");
 			for( ; interp; interp = interp->NextSiblingElement("Interpolator"))
+				++numInterp;
+
+			newAnimation.interpolators.resize(numInterp);
+
+			interp = animation->FirstChildElement("Interpolator");
+			for(numInterp = 0 ; interp; interp = interp->NextSiblingElement("Interpolator"), ++numInterp)
 			{
 				Bone *bi = NULL;
 				const char *sbone = interp->Attribute("bone");
@@ -1811,7 +1842,7 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					debugLog(os.str());
 					continue;
 				}
-				RenderGrid *grid = bi->getGrid();
+				DynamicRenderGrid *grid = bi->getGrid();
 				if(!grid)
 				{
 					std::ostringstream os;
@@ -1820,17 +1851,16 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 					continue;
 				}
 
-				SplineType spline = SPLINE_BSPLINE;
+				SplineType spline = INTERPOLATOR_BSPLINE;
 				unsigned cx = 3, cy = 3, degx = 3, degy = 3;
 				if(const char *stype = interp->Attribute("type"))
 				{
 					SimpleIStringStream is(stype, SimpleIStringStream::REUSE);
 					std::string ty;
 					is >> ty;
-					BoneGridInterpolator bgip;
 					if(ty == "bspline")
 					{
-						spline = SPLINE_BSPLINE;
+						spline = INTERPOLATOR_BSPLINE;
 						if(!(is >> cx >> cy >> degx >> degy))
 						{
 							if(!degx)
@@ -1853,10 +1883,8 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				grid->gridType = GRID_INTERP;
 				// bone grid should have been created via <Bone grid=... /> earlier
 
-				const char *idata = interp->Attribute("data");
-				newAnimation.interpolators.push_back(BoneGridInterpolator());
-				BoneGridInterpolator& bgip = newAnimation.interpolators.back();
-				//bgip.type = spline;
+
+				BoneGridInterpolator& bgip = newAnimation.interpolators[numInterp];
 				bgip.idx = bi->boneIdx;
 				bgip.storeBoneByIdx = boneByIdx;
 
@@ -1867,38 +1895,40 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 				const size_t numcp = size_t(cx) * size_t(cy);
 				const size_t numgridp = grid->linearsize();
 
-				// data format: "W H [x y x y ... (W*H times)] W H x y x y ..."
-				//               ^- start of 1st keyframe  ^- 2nd keyframe
-				SimpleIStringStream is(idata ? idata : "",  SimpleIStringStream::REUSE);
-
-				// fixup keyframes and recalc spline points
-				for(size_t k = 0; k < newAnimation.keyframes.size(); ++k)
+				if(const char *idata = interp->Attribute("data"))
 				{
-					SkeletalKeyframe& kf = newAnimation.keyframes[k];
-					BoneKeyframe *bk = kf.getBoneKeyframe(bgip.idx);
+					// data format: "W H [x y x y ... (W*H times)] W H x y x y ..."
+					//               ^- start of 1st keyframe  ^- 2nd keyframe
+					SimpleIStringStream is(idata,  SimpleIStringStream::REUSE);
 
-					bk->controlpoints.resize(numcp);
-					bgip.bsp.reset(&bk->controlpoints[0]);
+					// fixup keyframes and recalc spline points
+					for(size_t k = 0; k < newAnimation.keyframes.size(); ++k)
+					{
+						SkeletalKeyframe& kf = newAnimation.keyframes[k];
+						BoneKeyframe *bk = kf.getBoneKeyframe(bgip.idx);
 
-					unsigned w = 0, h = 0;
-					Vector cp;
-					cp.z = 1; // we want all grid points at full alpha
+						bk->controlpoints.resize(numcp);
+						bgip.bsp.reset(&bk->controlpoints[0]);
 
-					if((is >> w >> h))
-						for(unsigned y = 0; y < h; ++y)
-							for(unsigned x = 0; x < w; ++x)
-								if((is >> cp.x >> cp.y))
-									if(x < cx && y < cy)
-										bk->controlpoints[y*size_t(cx) + x] = cp;
+						unsigned w = 0, h = 0;
+						Vector cp;
+						cp.z = 1; // we want all grid points at full alpha
 
-					bk->grid.resize(numgridp);
-					bgip.updateGridOnly(*bk, bi);
+						if((is >> w >> h))
+							for(unsigned y = 0; y < h; ++y)
+								for(unsigned x = 0; x < w; ++x)
+									if((is >> cp.x >> cp.y))
+										if(x < cx && y < cy)
+											bk->controlpoints[y*size_t(cx) + x] = cp;
+
+						bk->grid.resize(numgridp);
+						bgip.updateGridOnly(*bk, bi);
+					}
 				}
 				// ---- end bspline -----
 			}
 
 			animation = animation->NextSiblingElement("Animation");
-			this->animations.push_back(newAnimation);
 		}
 	}
 }
@@ -1906,6 +1936,11 @@ void SkeletalSprite::loadSkeletal(const std::string &fn)
 Animation *SkeletalSprite::getCurrentAnimation(size_t layer)
 {
 	return layer < animLayers.size() ? animLayers[layer].getCurrentAnimation() : NULL;
+}
+
+Animation *SkeletalSprite::getCurrentAnimationOrNull(size_t layer)
+{
+	return layer < animLayers.size() ? animLayers[layer].getCurrentAnimationOrNull() : NULL;
 }
 
 void SkeletalSprite::setTime(float time, size_t layer)
@@ -1924,6 +1959,15 @@ void AnimationLayer::resetPass()
 			b->setRenderPass(b->originalRenderPass);
 			b->fhTo(b->originalFH);
 		}
+	}
+}
+
+void AnimationLayer::setTimer(float t, bool runKeyframes)
+{
+	timer = t;
+	if(!runKeyframes)
+	{
+		lastKeyframeIndex = RESET_KEYFRAME_IDX;
 	}
 }
 
@@ -1947,53 +1991,129 @@ bool AnimationLayer::contains(const Bone *b) const
 	return true;
 }
 
-void AnimationLayer::updateBones()
+
+
+void AnimationLayer::keyframeReached(SkeletalKeyframe * k, size_t idx)
+{
+	/*std::ostringstream os;
+	os << "Reached keyframe " << idx;
+	debugLog(os.str());*/
+
+	if (!k->sound.empty())
+	{
+		core->sound->playSfx(k->sound);
+	}
+	if (!k->commands.empty())
+	{
+		for (size_t i = 0; i < k->commands.size(); i++)
+		{
+			k->commands[i].run();
+		}
+	}
+	if (s->animKeyNotify)
+	{
+		s->animKeyNotify->onAnimationKeyPassed(idx);
+	}
+}
+
+void AnimationLayer::updateBones(bool animLooped)
 {
 	if (!animating && !(&s->animLayers[0] == this) && fallThru == 0) return;
 
-	SkeletalKeyframe *key1 = getCurrentAnimation()->getPrevKeyframe(timer);
-	SkeletalKeyframe *key2 = getCurrentAnimation()->getNextKeyframe(timer);
-	if (!key1 || !key2) return;
-	float t1 = key1->t;
-	float t2 = key2->t;
+	Animation *a = getCurrentAnimation();
+	SkeletalKeyframe *key1; // .t <= timer
+	SkeletalKeyframe *key2; // .t >= timer
 
-
-
-	float diff = t2-t1;
-	float dt;
-	if (diff != 0)
-		dt = (timer - t1)/(t2-t1);
-	else
-		dt = 0;
-
-	if (lastNewKey != key2)
+	const unsigned maxidx = (unsigned)a->keyframes.size() - 1;
+	if(!maxidx)
 	{
-		if (!key2->sound.empty())
+		key1 = key2 = &a->keyframes[0];
+		if(lastKeyframeIndex)
 		{
-			core->sound->playSfx(key2->sound);
-		}
-		if (!key2->commands.empty())
-		{
-			for (size_t i = 0; i < key2->commands.size(); i++)
-			{
-				key2->commands[i].run();
-			}
-		}
-		if (s->animKeyNotify)
-		{
-			s->animKeyNotify->onAnimationKeyPassed(getCurrentAnimation()->getSkeletalKeyframeIndex(lastNewKey));
+			keyframeReached(key1, 0);
+			lastKeyframeIndex = 0;
 		}
 	}
-	lastNewKey = key2;
+	else
+	{
+		int last = lastKeyframeIndex;
+		if(last == RESET_KEYFRAME_IDX) // Requested to skip keyframes?
+			last = a->getKeyframeIndexBefore(timer);
 
+		// If looping around, go to the end first
+		float mytime = timer;
+		if(animLooped)
+			mytime += a->getLastKeyframe()->t; // Overshoot; will be clamped
+
+		unsigned curidx = std::max(0, last); // signed max() is intentional, this covers the special case of -1 to start at 0 regardless
+
+		// This is mainly for the anim editor -- when going back in time, find the corresponding keyframe
+		key1 = &a->keyframes[curidx];
+		if(mytime < key1->t)
+			curidx = a->getKeyframeIndexBefore(mytime);
+
+		// Assume a big timer step that would potentially step over multiple keyframes (which we don't want!)
+		// So we step keyframes until we catch up to the timer, so that (key1->t <= timer <= key2->t).
+		for(;;)
+		{
+			key2 = key1 = &a->keyframes[curidx];
+
+			if((int)curidx != last)
+			{
+				keyframeReached(key1, curidx);
+				last = (int)curidx;
+			}
+
+			while(curidx != maxidx) // Definitely get out when looping around fully once
+			{
+				key1 = &a->keyframes[curidx];
+				++curidx;
+				key2 = &a->keyframes[curidx];
+
+				if(mytime < key2->t) // Target keyframe not yet reached?
+					goto proceed;
+
+				if((int)curidx != last)
+				{
+					keyframeReached(key2, curidx);
+					last = (int)curidx;
+				}
+			}
+
+			if(!animLooped)
+				break;
+
+			// Restart running anim from the beginning
+			animLooped = false;
+			mytime = timer;
+			curidx = 0;
+		}
+proceed:
+		lastKeyframeIndex = last;
+	}
+
+	float dt;
+	{
+		const float t1 = key1->t;
+		const float t2 = key2->t;
+
+		const float diff = t2-t1;
+		if (diff != 0)
+			dt = (timer - t1)/fabsf(diff);
+		else
+			dt = 0;
+	}
+
+	_interpolateKeyframes(key1, key2, dt);
+}
+
+void AnimationLayer::_interpolateKeyframes(SkeletalKeyframe* key1, SkeletalKeyframe* key2, float t01)
+{
+	const float dt = t01; // no it's not a difftime here
 	for (size_t i = 0; i < s->bones.size(); i++)
 	{
 		Bone *b = s->bones[i];
 
-		if (b->segmentChain == 1)
-		{
-			b->updateSegments();
-		}
 		if (b->segmentChain < 2)
 		{
 			if (b->animated != Bone::ANIM_NONE && contains(b))
@@ -2032,7 +2152,7 @@ void AnimationLayer::updateBones()
 							b->scale.x = lerp(bkey1->sx, bkey2->sx, dt, lerpType);
 							b->scale.y = lerp(bkey1->sy, bkey2->sy, dt, lerpType);
 						}
-						RenderGrid *grid = b->getGrid();
+						DynamicRenderGrid *grid = b->getGrid();
 						if (grid && b->animated==Bone::ANIM_ALL && !b->changeStrip.empty() &&  grid->gridType == GRID_STRIP)
 						{
 							if (bkey2->grid.size() < b->changeStrip.size())
@@ -2051,15 +2171,15 @@ void AnimationLayer::updateBones()
 							if(bkey1->grid.size() < N)
 							{
 								bkey1->grid.resize(N);
-								RenderGrid::ResetWithAlpha(&bkey1->grid[0], grid->width(), grid->height(), 1.0f);
+								DynamicRenderGrid::ResetWithAlpha(&bkey1->grid[0], grid->width(), grid->height(), 1.0f);
 							}
 							if(bkey2->grid.size() < N)
 							{
 								bkey2->grid.resize(N);
-								RenderGrid::ResetWithAlpha(&bkey2->grid[0], grid->width(), grid->height(), 1.0f);
+								DynamicRenderGrid::ResetWithAlpha(&bkey2->grid[0], grid->width(), grid->height(), 1.0f);
 							}
 
-							Vector *dst = grid->data();
+							Vector *dst = grid->dataRW();
 							for(size_t i = 0; i < N; ++i)
 							{
 								dst[i].x = lerp(bkey1->grid[i].x, bkey2->grid[i].x, dt, lerpType);
@@ -2078,22 +2198,35 @@ void SkeletalSprite::setFreeze(bool f)
 	frozen = f;
 }
 
-void SkeletalSprite::updateBones()
+void SkeletalSprite::updateBones(float dt)
 {
 	if (!frozen)
 	{
 		for (size_t i = 0; i < animLayers.size(); i++)
 		{
-			animLayers[i].updateBones();
+			animLayers[i].updateBones(false);
 		}
+
+		updateAllSegments(dt);
 	}
-
-
 }
 
-bool SkeletalSprite::isAnimating(int layer)
+void SkeletalSprite::updateAllSegments(float dt)
 {
-	return animLayers[layer].animating;
+	for (size_t i = 0; i < bones.size(); i++)
+	{
+		Bone *b = bones[i];
+
+		if (b->segmentChain == 1)
+		{
+			b->updateSegments(dt);
+		}
+	}
+}
+
+bool SkeletalSprite::isAnimating(size_t layer) const
+{
+	return layer < animLayers.size() && animLayers[layer].animating;
 }
 
 void SkeletalSprite::setTimeMultiplier(float t, int layer)
@@ -2101,95 +2234,32 @@ void SkeletalSprite::setTimeMultiplier(float t, int layer)
 	animLayers[layer].timeMultiplier = t;
 }
 
-Bone* SkeletalSprite::getSelectedBone(bool mouseBased)
+int SkeletalSprite::findSelectableBoneIdxClosestTo(const Vector& pos, bool mustBeInBox) const
 {
-	if (!loaded) return 0;
-	if (mouseBased)
-	{
-		float closestDist = HUGE_VALF;
-		Bone *b = 0;
-		Vector p = core->mouse.position;
-		for (size_t i = 0; i < bones.size(); i++)
-		{
-			if (bones[i]->renderQuad || core->getShiftState())
-			{
-				bones[i]->color = Vector(1,1,1);
-				if (bones[i]->selectable && bones[i]->renderQuad && bones[i]->isCoordinateInsideWorld(p))
-				{
-					float dist = (bones[i]->getWorldPosition() - p).getSquaredLength2D();
-					if (dist <= closestDist)
-					{
-						closestDist = dist;
-						b = bones[i];
-						selectedBone = i;
-					}
-				}
-			}
-		}
-		if (b)
-		{
-			b->color = Vector(1,0,0);
-		}
-		return b;
-	}
-	// else
-	if (!bones.empty() && selectedBone < bones.size())
-		return bones[selectedBone];
-
-	return 0;
-}
-
-
-void SkeletalSprite::updateSelectedBoneColor()
-{
+	float closestDist = HUGE_VALF;
+	int idx = -1;
 	for (size_t i = 0; i < bones.size(); i++)
 	{
-		bones[i]->color = Vector(1,1,1);
+		Bone *b = bones[i];
+		if (b->selectable && b->renderQuad && (!mustBeInBox || b->isCoordinateInsideWorld(pos)))
+		{
+			float dist = (b->getWorldPosition() - pos).getSquaredLength2D();
+			if (dist <= closestDist)
+			{
+				closestDist = dist;
+				idx = (int)i;
+			}
+		}
 	}
-	Bone *b = bones[selectedBone];
-	if (b)
-		b->color = Vector(0.5,0.5,1);
+	return idx;
 }
 
-void SkeletalSprite::setSelectedBone(int b)
-{
-	selectedBone = b;
-	updateSelectedBoneColor();
-}
 
-void SkeletalSprite::selectPrevBone()
-{
-	const size_t oldsel = selectedBone;
-	do
-	{
-		selectedBone++;
-		if(selectedBone == oldsel)
-			break;
-		if (selectedBone >= bones.size())
-			selectedBone = 0;
-	}
-	while (!bones[selectedBone]->selectable);
-	updateSelectedBoneColor();
-}
 
-void SkeletalSprite::selectNextBone()
-{
-	const size_t oldsel = selectedBone;
-	do
-	{
-		selectedBone--;
-		if(selectedBone == oldsel)
-			break;
-		if (selectedBone >= bones.size())
-			selectedBone = bones.size()-1;
-	}
-	while (!bones[selectedBone]->selectable);
-	updateSelectedBoneColor();
-}
 
 void BoneGridInterpolator::updateGridOnly(BoneKeyframe& bk, const Bone *bone)
 {
-	const RenderGrid *grid = bone->getGrid();
+	const DynamicRenderGrid *grid = bone->getGrid();
 	assert(bone->boneIdx == bk.idx);
 	assert(bk.grid.size() == grid->linearsize());
 	bsp.recalc(&bk.grid[0], grid->width(), grid->height(), &bk.controlpoints[0]);
@@ -2199,6 +2269,8 @@ void BoneGridInterpolator::updateGridOnly(BoneKeyframe& bk, const Bone *bone)
 void BoneGridInterpolator::updateGridAndBone(BoneKeyframe& bk, Bone *bone)
 {
 	updateGridOnly(bk, bone);
-	Vector *dst = bone->getGrid()->data();
+	DynamicRenderGrid *g = bone->getGrid();
+	Vector *dst = g->dataRW();
 	std::copy(bk.grid.begin(), bk.grid.end(), dst);
+
 }

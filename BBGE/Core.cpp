@@ -26,6 +26,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "GLLoad.h"
 #include "RenderBase.h"
 #include "Window.h"
+#include "Randomness.h"
 
 #include <time.h>
 #include <iostream>
@@ -52,6 +53,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ttvfs.h"
 #endif
 #include "ttvfs_stdio.h"
+
+#include "DirWatcher.h"
 
 Core *core = 0;
 
@@ -82,6 +85,22 @@ void CoreWindow::onEvent(const SDL_Event& ev)
 	core->onEvent(ev);
 }
 
+static void _TextureFileChanged(const std::string& fn, DirWatcher::Action act, void *ud)
+{
+	TextureMgr::ReloadResult res = core->texmgr.reloadFile(fn, TextureMgr::OVERWRITE);
+	switch(res)
+	{
+		case TextureMgr::RELOADED_OK:
+			break; // all good
+		case TextureMgr::FILE_ERROR:
+			debugLog("_TextureFileChanged(): There was an issue reloading " + fn);
+			break;
+		case TextureMgr::NOT_LOADED:
+			debugLog("Texture [" + fn + "] is not loaded in-game, ignoring");
+			break;
+	}
+}
+
 void Core::resetCamera()
 {
 	cameraPos = Vector(0,0);
@@ -95,22 +114,15 @@ ParticleEffect* Core::createParticleEffect(const std::string &name, const Vector
 	e->start();
 	e->setDie(true);
 	e->rotation.z = rotz;
-	getTopStateData()->addRenderObject(e, layer);
+	getTopStateObject()->addRenderObject(e, layer);
 	return e;
 }
 
 void Core::unloadDevice()
 {
 	for (size_t i = 0; i < renderObjectLayers.size(); i++)
-	{
-		RenderObjectLayer *r = &renderObjectLayers[i];
-		RenderObject *robj = r->getFirst();
-		while (robj)
-		{
-			robj->unloadDevice();
-			robj = r->getNext();
-		}
-	}
+		renderObjectLayers[i].unloadDevice();
+
 	frameBuffer.unloadDevice();
 
 	if (afterEffectManager)
@@ -120,16 +132,8 @@ void Core::unloadDevice()
 void Core::reloadDevice()
 {
 	for (size_t i = 0; i < renderObjectLayers.size(); i++)
-	{
-		RenderObjectLayer *r = &renderObjectLayers[i];
-		r->reloadDevice();
-		RenderObject *robj = r->getFirst();
-		while (robj)
-		{
-			robj->reloadDevice();
-			robj = r->getNext();
-		}
-	}
+		renderObjectLayers[i].reloadDevice();
+
 	frameBuffer.reloadDevice();
 
 	if (afterEffectManager)
@@ -143,16 +147,48 @@ void Core::setup_opengl()
 	SDL_ShowCursor(SDL_DISABLE);
 
 	glEnable(GL_TEXTURE_2D);							// Enable Texture Mapping
-	glClearDepth(1.0);								// Depth Buffer Setup
 	glDisable(GL_CULL_FACE);
-
+	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+	glEnableClientState(GL_VERTEX_ARRAY);
 	glLoadIdentity();
 
 	setClearColor(clearColor);
 
-	frameBuffer.init(-1, -1, true);
+	frameBuffer.init(-1, -1, 2);
 	if(afterEffectManager)
 		afterEffectManager->updateDevice();
+
+	TexCoordBox	defaultTC;
+	defaultTC.setStandard();
+	defaultQuadGrid.init(2, 2, defaultTC);
+
+	defautQuadBorder.initQuadVertices(defaultTC, GPUACCESS_DEFAULT);
+
+	int screenWidth = getWindowWidth();
+	int screenHeight = core->getWindowHeight();
+	int textureWidth, textureHeight;
+
+	if (core->frameBuffer.isInited())
+	{
+		textureWidth = core->frameBuffer.getTexWidth();
+		textureHeight = core->frameBuffer.getTexHeight();
+	}
+	else
+	{
+		textureWidth = screenWidth;
+		sizePowerOf2Texture(textureWidth);
+		textureHeight = screenHeight;
+		sizePowerOf2Texture(textureHeight);
+	}
+
+	const float percentX = (float)screenWidth/(float)textureWidth;
+	const float percentY = (float)screenHeight/(float)textureHeight;
+	TexCoordBox tc = { 0, percentY, percentX, 0 }; // Y is upside down
+	blitQuad.setTexCoords(tc);
+	blitQuad.init(2, 2);
+	blitQuad.reset01();
+	blitQuad.updateVBO(); // never changed afterwards
+
 }
 
 void Core::resizeWindow(int w, int h, int full, int bpp, int vsync, int display, int hz)
@@ -276,12 +312,13 @@ static bool checkWritable(const std::string& path, bool warn, bool critical)
 
 
 Core::Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName, int particleSize, std::string userDataSubFolder)
-: ActionMapper(), StateManager(), appName(appName)
+: ActionMapper(), StateManager(), appName(appName), defautQuadBorder(GPUBUF_STATIC | GPUBUF_VERTEXBUF)
 {
 	window = NULL;
 	sound = NULL;
 	_extraDataDir = extraDataDir;
 	sdlUserMouseEventID = SDL_RegisterEvents(1);
+	_textureWatcherHandle = 0;
 
 	if (userDataSubFolder.empty())
 		userDataSubFolder = appName;
@@ -371,7 +408,6 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	baseCullRadius = 1;
 	width = height = 0;
 	_lastEnumeratedDisplayIndex = -1;
-	afterEffectManagerLayer = 0;
 	renderObjectLayers.resize(1);
 	invGlobalScale = 1.0;
 	invGlobalScaleSqr = 1.0;
@@ -398,6 +434,8 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	initPlatform(filesystem);
 
 	texmgr.spawnThreads(3);
+
+	textInputOpenCount = 0;
 }
 
 void Core::initPlatform(const std::string &filesystem)
@@ -588,14 +626,51 @@ bool Core::initSoundLibrary(const std::string &defaultDevice)
 	return sound != 0;
 }
 
-Vector Core::getGameCursorPosition()
+Vector Core::getGameCursorPosition() const
 {
 	return getGamePosition(mouse.position);
 }
 
-Vector Core::getGamePosition(const Vector &v)
+Vector Core::getTopLeftCornerInWorldCoords() const
 {
-	return cameraPos + (v * invGlobalScale);
+	return getGamePosition(Vector(-virtualOffX, -virtualOffY));
+}
+
+Vector Core::getBottomRightCornerInWorldCoords() const
+{
+	return getGamePosition(Vector(virtualOffX, virtualOffY));
+}
+
+Vector Core::getGamePosition(const Vector &winpos) const
+{
+	return cameraPos + (winpos * invGlobalScale);
+}
+
+Vector Core::getWindowPosition(const Vector &worldpos) const
+{
+	return (worldpos - cameraPos) * globalScale.x;
+}
+
+bool Core::isRectInWindowCoordsPartiallyOnScreen(const Vector& center, const Vector& wh) const
+{
+	return isPointInWindowCoordsOnScreenWithMargin(center, wh * -0.5f);
+}
+
+bool Core::isRectInWindowCoordsFullyOnScreen(const Vector& center, const Vector& wh) const
+{
+	return isPointInWindowCoordsOnScreenWithMargin(center, wh * 0.5f);
+}
+
+bool Core::isPointInWindowCoordsOnScreenWithMargin(const Vector& center, const Vector& margin) const
+{
+	const float xo = getVirtualOffX();
+	const float yo = getVirtualOffY();
+	const Vector topleft(-xo, -yo);
+	const Vector bottomright(800 + xo, 600 + yo);
+	const Vector a = topleft + margin;
+	const Vector b = bottomright - margin;
+	return center.x >= a.x && center.x <= b.x
+		&& center.y >= a.y && center.y <= b.y;
 }
 
 bool Core::getMouseButtonState(int m)
@@ -728,10 +803,14 @@ void Core::initGraphicsLibrary(int width, int height, bool fullscreen, bool vsyn
 	debugLog((const char*)glGetString(GL_RENDERER));
 	debugLog((const char*)glGetString(GL_VERSION));
 
+	DynamicGPUBuffer::StaticInit();
+
 	enumerateScreenModes(window->getDisplayIndex());
 
 	window->updateSize();
-	cacheRender(); // Clears the window bg to black early; prevents flickering
+	glClearColor(0,0,0,0);
+	glClear(GL_COLOR_BUFFER_BIT);
+	showBuffer();
 	lib_graphics = true;
 }
 
@@ -845,17 +924,42 @@ void Core::shutdownGraphicsLibrary()
 
 void Core::quit()
 {
-	enqueueJumpState("STATE_QUIT");
+	enqueueJumpState("state_quit");
 }
 
 void Core::applyState(const std::string &state)
 {
-	if (nocasecmp(state, "state_quit")==0)
+	if (state == "state_quit")
 	{
 		loopDone = true;
 	}
+
 	StateManager::applyState(state);
 }
+
+void Core::removeState(const std::string &state)
+{
+	debugLog("Core::removeState: " + state);
+	clearTemporaryRenderObjects();
+	clearGarbage();
+}
+
+void Core::clearTemporaryRenderObjects()
+{
+	const size_t n = renderObjectLayers.size();
+	size_t removed = 0;
+	for(size_t i = 0; i < n; ++i)
+	{
+		RenderObjectLayer& rl = renderObjectLayers[i];
+		removed += rl.clearTemporaryObjects();
+	}
+
+	std::ostringstream os;
+	os << "Deleting " << removed << " temporary RenderObjects";
+	debugLog(os.str());
+}
+
+
 
 void Core::setPixelScale(int pixelScaleX, int pixelScaleY)
 {
@@ -982,21 +1086,7 @@ void Core::setMousePosition(const Vector &p)
 void Core::updateRenderObjects(float dt)
 {
 	for (size_t c = 0; c < renderObjectLayers.size(); c++)
-	{
-
-		RenderObjectLayer *rl = &renderObjectLayers[c];
-
-		if (!rl->update)
-			continue;
-
-		for (RenderObject *r = rl->getFirst(); r; r = rl->getNext())
-		{
-			r->update(dt);
-		}
-	}
-
-	if (loopDone)
-		return;
+		renderObjectLayers[c].updateObjects(dt);
 }
 
 std::string Core::getEnqueuedJumpState()
@@ -1055,9 +1145,20 @@ void Core::run(float runTime)
 
 	while((runTime == -1 && !loopDone) || (runTime >0))
 	{
+		DirWatcher::Pump();
+
 		nowTicks = SDL_GetTicks();
-		dt = (nowTicks-thenTicks)/1000.0;
+		dt = (nowTicks-thenTicks)/1000.0f;
 		thenTicks = nowTicks;
+
+		uint64_t entropy = nowTicks;
+		entropy <<= 3;
+		entropy ^= frames;
+		entropy <<= 3;
+		entropy += (mouse.buttons.left << 1) | (mouse.buttons.middle << 2) | (mouse.buttons.right << 3);
+		entropy ^= lastEventTimestamp;
+		Randomness::addEntropy(entropy);
+
 
 		if (!avgFPS.empty())
 		{
@@ -1173,14 +1274,13 @@ void Core::run(float runTime)
 
 		if (settings.renderOn)
 		{
-			if (darkLayer.isUsed())
+			if(!minimized)
 			{
-				darkLayer.preRender();
+				prepareRender();
+				renderInternal(-1, -1, true);
+
+				showBuffer();
 			}
-
-			render();
-
-			showBuffer();
 
 			if (nestedMains == 1)
 				clearGarbage();
@@ -1212,20 +1312,10 @@ void Core::run(float runTime)
 	nestedMains--;
 }
 
-void Core::clearBuffers()
-{
-	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);	// Clear The Screen And The Depth Buffer
-}
-
 void Core::setupRenderPositionAndScale()
 {
 	glScalef(globalScale.x*globalResolutionScale.x, globalScale.y*globalResolutionScale.y, globalScale.z*globalResolutionScale.z);
 	glTranslatef(-(cameraPos.x+cameraOffset.x), -(cameraPos.y+cameraOffset.y), -(cameraPos.z+cameraOffset.z));
-}
-
-void Core::setupGlobalResolutionScale()
-{
-	glScalef(globalResolutionScale.x, globalResolutionScale.y, globalResolutionScale.z);
 }
 
 void Core::setMouseConstraint(bool on)
@@ -1276,6 +1366,30 @@ bool Core::doMouseConstraint()
 	return false;
 }
 
+void Core::beginTextInput()
+{
+	if(!textInputOpenCount)
+	{
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+		SDL_StartTextInput();
+#endif
+	}
+
+	++textInputOpenCount;
+}
+
+void Core::endTextInput()
+{
+	assert(textInputOpenCount > 0);
+	--textInputOpenCount;
+	if(!textInputOpenCount)
+	{
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+		SDL_StopTextInput();
+#endif
+	}
+}
+
 Vector Core::pixelPosToVirtualCoords(int x, int y) const
 {
 	const float mx = float(virtualWidth)/float(getWindowWidth());
@@ -1283,20 +1397,78 @@ Vector Core::pixelPosToVirtualCoords(int x, int y) const
 
 	return Vector(
 		(x * mx) - getVirtualOffX(),
-		 y * my
+		(y * my) - getVirtualOffY()
 	);
 }
 
 void Core::virtualCoordsToPixelPos(int& x, int& y, const Vector& p) const
 {
 	const float px = p.x + getVirtualOffX();
-	const float py = p.y;
+	const float py = p.y + getVirtualOffY();;
 	x = px * (float(getWindowWidth())/float(virtualWidth));
 	y = py * (float(getWindowHeight())/float(virtualHeight));
 }
 
+struct TextInputMapping
+{
+	unsigned key;
+	char lower;
+	char upper;
+};
+
+// This is only used for SDL1, that doesn't have text input functionality
+static const TextInputMapping textInputMap[]
+{
+	{ KEY_A,           'a', 'A' },
+	{ KEY_B,           'b', 'B' },
+	{ KEY_C,           'c', 'C' },
+	{ KEY_D,           'd', 'D' },
+	{ KEY_E,           'e', 'E' },
+	{ KEY_F,           'f', 'F' },
+	{ KEY_G,           'g', 'G' },
+	{ KEY_H,           'h', 'H' },
+	{ KEY_I,           'i', 'I' },
+	{ KEY_J,           'j', 'J' },
+	{ KEY_K,           'k', 'K' },
+	{ KEY_L,           'l', 'L' },
+	{ KEY_M,           'm', 'M' },
+	{ KEY_N,           'n', 'N' },
+	{ KEY_O,           'o', 'O' },
+	{ KEY_P,           'p', 'P' },
+	{ KEY_Q,           'q', 'Q' },
+	{ KEY_R,           'r', 'R' },
+	{ KEY_S,           's', 'S' },
+	{ KEY_T,           't', 'T' },
+	{ KEY_U,           'u', 'U' },
+	{ KEY_V,           'v', 'V' },
+	{ KEY_W,           'w', 'W' },
+	{ KEY_X,           'x', 'X' },
+	{ KEY_Y,           'y', 'Y' },
+	{ KEY_Z,           'z', 'Z' },
+	{ KEY_1,           '1',   0 },
+	{ KEY_2,           '2',   0 },
+	{ KEY_3,           '3',   0 },
+	{ KEY_4,           '4',   0 },
+	{ KEY_5,           '5',   0 },
+	{ KEY_6,           '6',   0 },
+	{ KEY_7,           '7',   0 },
+	{ KEY_8,           '8',   0 },
+	{ KEY_9,           '9',   0 },
+	{ KEY_0,           '0',   0 },
+	{ KEY_PERIOD,      '.',   0 },
+	{ KEY_SPACE,       ' ',   0 },
+	{ KEY_MINUS,       '-', '_' },
+	{ KEY_TILDE,       '~',   0 },
+	{ KEY_EQUALS,      '=',   0 },
+	{ KEY_LBRACKET,    '(',   0 },
+	{ KEY_RBRACKET,    ')',   0 },
+	{ KEY_SEMICOLON,   ';',   0 }
+};
+
 void Core::onEvent(const SDL_Event& event)
 {
+	lastEventTimestamp = event.common.timestamp;
+
 	const bool focus = window->hasFocus();
 	if(event.type == sdlUserMouseEventID)
 	{
@@ -1329,6 +1501,26 @@ void Core::onEvent(const SDL_Event& event)
 #endif
 				if(kidx < KEY_MAXARRAY)
 					keys[kidx] = 1;
+
+				if(kidx == KEY_BACKSPACE && textInputOpenCount)
+					onTextInput(TEXTINP_BACKSPACE, NULL);
+
+#if !SDL_VERSION_ATLEAST(2,0,0)
+				char c = 0;
+				for(size_t i = 0; i < Countof(textInputMap); ++i)
+				{
+					if(textInputMap[i].key == kidx)
+					{
+						if((event.key.keysym.mod & KMOD_SHIFT))
+							c = textInputMap[i].upper;
+						if(!c)
+							c = textInputMap[i].lower;
+						const char buf[2] = { c, 0 };
+						onTextInput(TEXTINP_TEXT, &buf[0]);
+						break;
+					}
+				}
+#endif
 			}
 		}
 		break;
@@ -1416,6 +1608,15 @@ motion:
 					break;
 				}
 			}
+		}
+		break;
+#endif
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+		case SDL_TEXTINPUT:
+		{
+			if(textInputOpenCount)
+				onTextInput(TEXTINP_TEXT, event.text.text);
 		}
 		break;
 #endif
@@ -1762,9 +1963,7 @@ void Core::print(int x, int y, const char *str, float sz)
 
 void Core::cacheRender()
 {
-	render();
-	// what if the screen was full white? then you wouldn't want to clear buffers
-	//clearBuffers();
+	renderExternal();
 	showBuffer();
 	resetTimer();
 }
@@ -1776,7 +1975,13 @@ void Core::updateCullData()
 	screenCenter = cullCenter = cameraPos + Vector(400.0f*invGlobalScale,300.0f*invGlobalScale);
 }
 
-void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
+void Core::renderExternal()
+{
+	prepareRender();
+	renderInternal(-1, -1, true);
+}
+
+void Core::prepareRender()
 {
 	renderObjectCount = 0;
 	processedRenderObjectCount = 0;
@@ -1784,12 +1989,9 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 
 	globalScaleChanged();
 
-	if (minimized) return;
-	onRender();
-
-	RenderObject::lastTextureApplied = 0;
-
 	updateCullData();
+
+	onPrepareRender();
 
 	// TODO: this could be done in parallel
 	for (size_t i = 0; i < renderObjectLayers.size(); ++i)
@@ -1798,17 +2000,31 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 			renderObjectLayers[i].prepareRender();
 	}
 
+	if (darkLayer.isUsed())
+	{
+		darkLayer.preRender();
+	}
+
+	glClearColor(0,0,0,0);
+	glClear(GL_COLOR_BUFFER_BIT);
+
+	glViewport(0, 0, core->width, core->height);
+}
+
+
+// Make sure to call prepareRender() before calling this!
+void Core::renderInternal(int startLayer, int endLayer, bool allowSkip)
+{
+	onRender();
+
+	RenderObject::lastTextureApplied = 0;
+
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glLoadIdentity();									// Reset The View
-	clearBuffers();
-
-	if (afterEffectManager && frameBuffer.isInited() && useFrameBufferIfAvail)
-	{
-		frameBuffer.startCapture();
-	}
 
 	setupRenderPositionAndScale();
 
+	CombinedRenderAndGPUState rs;
 
 	for (size_t c = 0; c < renderObjectLayerOrder.size(); c++)
 	{
@@ -1816,30 +2032,31 @@ void Core::render(int startLayer, int endLayer, bool useFrameBufferIfAvail)
 		if (i == -1) continue;
 		if ((startLayer != -1 && endLayer != -1) && (i < startLayer || i > endLayer)) continue;
 
-		if (darkLayer.isUsed() )
-		{
-
-			if (i == darkLayer.getRenderLayer())
-			{
-				darkLayer.render();
-			}
-
-			if (i == darkLayer.getLayer() && startLayer != i)
-			{
-				continue;
-			}
-		}
-
-		if (afterEffectManager && afterEffectManager->active && i == afterEffectManagerLayer)
-		{
-			afterEffectManager->render();
-		}
+		// don't render the layers that the dark layer takes as input
+		if(allowSkip && !darkLayer.shouldRenderLayer(i))
+			continue;
 
 		RenderObjectLayer *r = &renderObjectLayers[i];
 		if(!r->visible)
 			continue;
 
-		r->render();
+		if(glDebugMessageInsertARB)
+		{
+			char msg[64];
+			sprintf(msg, "Render layer %u -> %d", (unsigned)c, i);
+			glDebugMessageInsertARB(GL_DEBUG_SOURCE_APPLICATION_ARB, GL_DEBUG_TYPE_OTHER_ARB, 0, GL_DEBUG_SEVERITY_LOW_ARB, -1, msg);
+
+		}
+
+
+		if(r->preRender)
+			if(!r->preRender(rs))
+				continue;
+
+		r->render(rs);
+
+		if(r->postRender)
+			r->postRender(rs);
 	}
 }
 
@@ -1865,26 +2082,19 @@ void Core::clearRenderObjects()
 {
 	for (size_t i = 0; i < renderObjectLayers.size(); i++)
 	{
-
-		RenderObject *r = renderObjectLayers[i].getFirst();
-		while (r)
-		{
-			if (r)
-			{
-				removeRenderObject(r, DESTROY_RENDER_OBJECT);
-			}
-			r = renderObjectLayers[i].getNext();
-		}
+		RenderObjectLayer::Iterator it(renderObjectLayers[i]);
+		while (RenderObject *r = it.next())
+			removeRenderObject(r, DESTROY_RENDER_OBJECT);
 	}
 }
 
 void Core::shutdown()
 {
 	// pop all the states
-
-
 	debugLog("Core::shutdown");
 	shuttingDown = true;
+
+	DirWatcher::Shutdown();
 
 	debugLog("Shutdown Joystick Library...");
 		shutdownJoystickLibrary();
@@ -1892,14 +2102,6 @@ void Core::shutdown()
 
 	debugLog("Shutdown Input Library...");
 		shutdownInputLibrary();
-	debugLog("OK");
-
-	debugLog("Shutdown All States...");
-		popAllStates();
-	debugLog("OK");
-
-	debugLog("Clear State Instances...");
-		clearStateInstances();
 	debugLog("OK");
 
 	debugLog("Clear All Remaining RenderObjects...");
@@ -1940,6 +2142,10 @@ void Core::shutdown()
 	debugLog("Core's framebuffer...");
 		frameBuffer.unloadDevice();
 	debugLog("OK");
+
+	defaultQuadGrid.dropBuffers();
+	defautQuadBorder.dropBuffer();
+	blitQuad.dropBuffers();
 
 	debugLog("Shutdown Graphics Library...");
 		shutdownGraphicsLibrary();
@@ -2000,21 +2206,34 @@ void Core::reloadResources()
 
 const std::string & Core::getBaseTexturePath() const
 {
-	return texmgr.loadFromPaths.back();
+	assert(texmgr.getNumLoadPaths());
+	return texmgr.getLoadPath(texmgr.getNumLoadPaths() - 1);
 }
 
-void Core::setExtraTexturePath(const char * dir)
+void Core::setExtraTexturePath(const char * dir, bool watch)
 {
-	texmgr.loadFromPaths.resize(size_t(1) + !!dir);
+	const char *paths[2];
 	size_t w = 0;
 	if(dir)
-		texmgr.loadFromPaths[w++] = dir;
-	texmgr.loadFromPaths[w] = "gfx/";
+		paths[w++] = dir;
+	paths[w++] = "gfx/";
+	texmgr.setLoadPaths(&paths[0], w);
+
+	if(_textureWatcherHandle)
+	{
+		DirWatcher::RemoveWatch(_textureWatcherHandle);
+		_textureWatcherHandle = 0;
+	}
+
+	if(dir && watch)
+	{
+		_textureWatcherHandle = DirWatcher::AddWatch(dir, DirWatcher::RECURSIVE, _TextureFileChanged, NULL);
+	}
 }
 
 const char *Core::getExtraTexturePath() const
 {
-	return texmgr.loadFromPaths.size() > 1 ? texmgr.loadFromPaths[0].c_str() : NULL;
+	return texmgr.getNumLoadPaths() > 1 ? texmgr.getLoadPath(0).c_str() : NULL;
 }
 
 void Core::removeRenderObject(RenderObject *r, RemoveRenderObjectFlag flag)
@@ -2077,20 +2296,7 @@ unsigned char *Core::grabScreenshot(size_t x, size_t y, size_t w, size_t h)
 	const size_t size = sizeof(unsigned char) * N * 4;
 	unsigned char * const imageData = new unsigned char[size];
 
-	glPushAttrib(GL_ALL_ATTRIB_BITS);
-	glDisable(GL_BLEND);
-	glDisable(GL_ALPHA_TEST); glDisable(GL_BLEND);
-	glDisable(GL_DEPTH_TEST); glDisable(GL_DITHER); glDisable(GL_FOG);
-	glDisable(GL_LIGHTING); glDisable(GL_LOGIC_OP);
-	glDisable(GL_STENCIL_TEST); glDisable(GL_TEXTURE_1D);
-	glDisable(GL_TEXTURE_2D); glPixelTransferi(GL_MAP_COLOR, GL_FALSE);
-	glPixelTransferi(GL_RED_SCALE, 1); glPixelTransferi(GL_RED_BIAS, 0);
-	glPixelTransferi(GL_GREEN_SCALE, 1); glPixelTransferi(GL_GREEN_BIAS, 0);
-	glPixelTransferi(GL_BLUE_SCALE, 1); glPixelTransferi(GL_BLUE_BIAS, 0);
-	glPixelTransferi(GL_ALPHA_SCALE, 1); glPixelTransferi(GL_ALPHA_BIAS, 0);
-	glRasterPos2i(0, 0);
 	glReadPixels(x, y, w, h, GL_RGBA, GL_UNSIGNED_BYTE, (GLvoid*)imageData);
-	glPopAttrib();
 
 	// Force all alpha values to 255.
 	unsigned char *c = imageData;

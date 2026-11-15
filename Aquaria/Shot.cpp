@@ -302,6 +302,8 @@ Shot::Shot() : CollideQuad(), Segmented(0,0)
 	shotIdx = shots.size();
 	shots.push_back(this);
 	updateScript = false;
+	hitWalls = true;
+	hitEnts = true;
 }
 
 void loadShotCallback(const std::string &filename, void *param)
@@ -309,7 +311,7 @@ void loadShotCallback(const std::string &filename, void *param)
 	ShotData shotData;
 
 	std::string ident;
-	int first = filename.find_last_of('/')+1;
+	size_t first = filename.find_last_of('/')+1;
 	ident = filename.substr(first, filename.find_last_of('.')-first);
 	stringToLower(ident);
 	debugLog(ident);
@@ -377,6 +379,8 @@ void Shot::applyShotData(const ShotData& shotData)
 	this->damageType = shotData.damageType;
 	this->checkDamageTarget = shotData.checkDamageTarget;
 	this->alwaysMaxSpeed = shotData.alwaysMaxSpeed;
+	this->hitWalls = shotData.hitWalls;
+	this->hitEnts = shotData.hitEnts;
 	if (!shotData.trailPrt.empty())
 	{
 		setParticleEffect(shotData.trailPrt);
@@ -385,7 +389,7 @@ void Shot::applyShotData(const ShotData& shotData)
 	if (shotData.numSegs > 0)
 	{
 		segments.resize(shotData.numSegs);
-		for (int i = segments.size()-1; i >=0 ; i--)
+		for (size_t i = segments.size(); i --> 0; )
 		{
 			Quad *flame = new Quad;
 			flame->setTexture(shotData.segTexture);
@@ -564,15 +568,6 @@ void Shot::targetDied(Entity *target)
 	}
 }
 
-bool Shot::isHitEnts() const
-{
-	if (!shotData || shotData->hitEnts)
-	{
-		return true;
-	}
-	return false;
-}
-
 bool Shot::canHit(Entity *e, Bone *b)
 {
 	// isHitEnts() is already checked on a much higher level
@@ -669,18 +664,12 @@ void Shot::hitEntity(Entity *e, Bone *b)
 
 void Shot::noSegs()
 {
-	if (numSegments > 0)
+	if (!segments.empty())
 	{
 		destroySegments();
 	}
 }
 
-int Shot::getCollideRadius() const
-{
-	if (shotData)
-		return shotData->collideRadius;
-	return 0;
-}
 
 float Shot::getDamage() const
 {
@@ -799,8 +788,7 @@ void Shot::onUpdate(float dt)
 			target = 0;
 		}
 	}
-
-	Quad::onUpdate(dt);
+	CollideQuad::onUpdate(dt);
 	updateSegments(position);
 	if (!dead)
 	{
@@ -827,7 +815,7 @@ void Shot::onUpdate(float dt)
 		if (target)
 			diff = target->getTargetPoint(targetPt) - this->position;
 		diff.z = 0;
-		if (shotData->hitWalls)
+		if (hitWalls)
 		{
 			if (isObstructed(dt))
 			{
@@ -932,3 +920,25 @@ void Shot::rotateToVec(Vector addVec, float time, int offsetAngle)
 	}
 }
 
+void Shot::luaDebugMsg(const std::string &func, const std::string &msg)
+{
+	debugLog(std::string("luaScriptError: Shot [") + this->getName() + "]: " + func + " : " + msg);
+}
+
+int Shot::callVariadic(const char* func, lua_State* L, int nparams)
+{
+	if (script)
+	{
+		int res = script->callVariadic(func, L, nparams, this);
+		if (res < 0)
+			luaDebugMsg(func, script->getLastError());
+		else
+			return res;
+	}
+	return 0;
+}
+
+int Shot::messageVariadic(lua_State * L, int nparams)
+{
+	return callVariadic("msg", L, nparams);
+}

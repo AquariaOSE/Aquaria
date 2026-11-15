@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define SCREENTRANSITION_H
 
 #include "RenderObject.h"
+#include "VertexBuffer.h"
 
 class ScreenTransition : public RenderObject
 {
@@ -36,6 +37,7 @@ public:
 protected:
 	void createTexture();
 	void destroyTexture();
+	void updateVBO();
 	int textureWidth, textureHeight;
 	int windowWidth, windowHeight;
 	void onRender(const RenderState& rs) const OVERRIDE;
@@ -43,6 +45,9 @@ protected:
 
 
 	unsigned screen_texture;
+
+private:
+	DynamicGPUBuffer vbo;
 };
 
 #endif

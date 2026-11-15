@@ -8,30 +8,32 @@
 class DebugFont;
 class BitmapText;
 class SplineGrid;
+class DebugButton;
+class Gradient;
 
-class KeyframeWidget : public Quad
-{
-public:
-	KeyframeWidget(int key);
-	float t;
-	int key;
-	static KeyframeWidget *movingWidget;
-	BitmapText *b;
-
-	void shiftLeft();
-	void shiftRight();
-protected:
-	void onUpdate(float dt);
-};
-
+// internal
+struct AnimationEditorPage;
+class TimelineTickRender;
 
 class AnimationEditor : public StateObject
 {
+	void _copyKey();
+	void _pasteKey();
+
+	enum EditMode
+	{
+		AE_SELECT,   // moving mouse selects nearest bone
+		AE_EDITING_MOVE,  // moving mouse moves editingBone
+		AE_EDITING_ROT,  // moving mouse rotates editingBone
+		AE_STRIP,    // in strip edit mode for editingBone
+		AE_SPLINE,   // in spline edit mode for editingBone
+	};
+
 public:
 	AnimationEditor();
-	void applyState();
-	void removeState();
-	void update(float dt);
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
+	void update(float dt) OVERRIDE;
 
 	void prevKey();
 	void nextKey();
@@ -53,10 +55,8 @@ public:
 	void reorderKeys();
 
 	void saveFile();
-	void loadFile();
-
-	void copyKey();
-	void pasteKey();
+	void loadFile(size_t pg, const char *fn);
+	void reloadFile();
 
 	void nextAnim();
 	void prevAnim();
@@ -87,35 +87,28 @@ public:
 	void undo();
 	void redo();
 	void pushUndo();
-	void clearUndoHistory();
 
 	void applyTranslation();
 	void applyRotation();
 
 	void moveNextWidgets(float dt);
 
-	std::deque<SkeletalSprite> undoHistory;
-
-	size_t undoEntry;
-
 	int currentKey;
 
 	int rotOffset;
 
-	SkeletalSprite *editSprite;
-	Bone *editingBone;
-	int boneEdit;
-	DebugFont *text, *text2;
+	Bone *editingBone; // only changed when editMode == AE_SELECT
+	SkeletalSprite *editingBoneSprite; // updated together with editingBone
+	int editingBonePage;
+	int editingBoneIdx;  // editingBoneSprite->bones[editingBoneIdx] == editingBone
+	EditMode editMode;
+	DebugFont *text, *text2, *toptext, *btmtext;
 
 	void goToTitle();
 
 	SkeletalKeyframe copyBuffer;
 
-	std::string editingFile;
-
-	std::vector<KeyframeWidget*> keyframeWidgets;
-
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDevice device) OVERRIDE;
 
 	void rebuildKeyframeWidgets();
 
@@ -130,12 +123,11 @@ public:
 
 	bool mouseSelection;
 
-	SkeletalKeyframe buffer;
-
-	bool editingStrip;
+	bool assistedSplineEdit;
 	size_t selectedStripPoint;
 
 	void reverseAnim();
+	void flipH();
 
 	void toggleRenderBorders();
 	void updateRenderBorders();
@@ -162,6 +154,51 @@ public:
 	SplineGrid *splinegrid;
 	void applySplineGridToBone();
 	void applyBoneToSplineGrid();
+
+	void toggleSplineMode();
+	DebugButton *bSplineAssist;
+	void updateButtonLabels();
+	void toggleGradient();
+	float getMouseTimelineTime() const; // <0 when not in timeline area
+	bool isMouseInRect() const;
+
+	Gradient *bgGrad;
+	Quad *rect;
+
+	Animation *getPageAnimation(size_t page) const;
+	Animation *getCurrentPageAnimation() const;
+	SkeletalSprite *getPageSprite(size_t page) const;
+	SkeletalSprite *getCurrentPageSprite() const; // sprite on active page
+	SkeletalSprite *getSelectedPageSprite() const; //sprite that belong to selected bone, alternatively sprite on active page
+	bool isAnimating() const;
+	float getAnimTime() const;
+
+	AnimationEditorPage *pages;
+	Quad *spriteRoot;
+	TimelineTickRender *timelineTicks;
+
+	void selectPage(unsigned page);
+	int curPage;
+
+private:
+	void selectPage0() { selectPage(0); }
+	void selectPage1() { selectPage(1); }
+	void selectPage2() { selectPage(2); }
+	void selectPage3() { selectPage(3); }
+	void selectPage4() { selectPage(4); }
+	void selectPage5() { selectPage(5); }
+	void selectPage6() { selectPage(6); }
+	void selectPage7() { selectPage(7); }
+	void selectPage8() { selectPage(8); }
+
+	void _stopExtraEditModes();
+
+	void saveAll();
+	void reloadAll();
+	bool savePage(size_t pg);
+	void reloadPage(size_t pg);
+
+	void _selectBone(Bone *b); // NULL to unselect
 };
 
 

@@ -24,10 +24,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <float.h>
 #include <algorithm>
 
-#ifdef BBGE_USE_GLM
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
-#endif
 
 /*************************************************************************/
 
@@ -43,35 +41,11 @@ void Vector::rotate2DRad(float rad)
 	y = sinf(rad)*ox + cosf(rad)*oy;
 }
 
-#include "RenderBase.h"
-
 Vector getRotatedVector(const Vector &vec, float rot)
 {
-#ifdef BBGE_USE_GLM
 	glm::mat4 m = glm::rotate(glm::mat4(1), rot, glm::vec3(0, 0, 1));
 	glm::vec4 v = m * glm::vec4(vec.x, vec.y, vec.z, 1.0f);
 	return Vector(v.x, v.y, v.z);
-#else
-	glPushMatrix();
-	glLoadIdentity();
-
-	glRotatef(rot, 0, 0, 1);
-
-	if (vec.x != 0 || vec.y != 0)
-	{
-		//glRotatef(this->rotation.z, 0,0,1,this->rotation.z);
-		glTranslatef(vec.x, vec.y, 0);
-	}
-
-	float m[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, m);
-	float x = m[12];
-	float y = m[13];
-	float z = m[14];
-
-	glPopMatrix();
-	return Vector(x,y,z);
-#endif
 }
 
 // note update this from float lerp
@@ -100,22 +74,15 @@ Vector lerp(const Vector &v1, const Vector &v2, float dt, int lerpType)
 
 /*************************************************************************/
 
+#if 0
 float Bias( float x, float biasAmt )
 {
-	// WARNING: not thread safe
-	static float lastAmt = -1;
-	static float lastExponent = 0;
-	if( lastAmt != biasAmt )
-	{
-		lastExponent = logf( biasAmt ) * -1.4427f;
-	}
-	return powf( x, lastExponent );
+	return powf( x, logf( biasAmt ) * -1.4427f );
 }
 
 
 float Gain( float x, float biasAmt )
 {
-	// WARNING: not thread safe
 	if( x < 0.5f )
 		return 0.5f * Bias(2*x, 1-biasAmt);
 	else
@@ -153,7 +120,7 @@ float SimpleSpline( float value )
 	// Nice little ease-in, ease-out spline-like curve
 	return (3 * valueSquared - 2 * valueSquared * value);
 }
-
+#endif
 
 void VectorPath::addPathNode(Vector v, float p)
 {
@@ -230,7 +197,7 @@ void VectorPath::splice(const VectorPath &path, int sz)
 	}
 }
 
-void VectorPath::removeNodes(unsigned int startInclusive, unsigned int endInclusive)
+void VectorPath::removeNodes(size_t startInclusive, size_t endInclusive)
 {
 	// end iterator is exclusive, so max. end + 1
 	pathNodes.erase(pathNodes.begin() + startInclusive, pathNodes.begin() + std::min<size_t>(pathNodes.size(), endInclusive+1));

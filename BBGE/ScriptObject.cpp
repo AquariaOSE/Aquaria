@@ -40,6 +40,10 @@ static const char *scriptObjTypeNames[] =
 	/* (1 <<12) */ "PauseQuad",
 	/* (1 <<13) */ "Shader",
 	/* (1 <<14) */ "ParticleEffect",
+	/* (1 <<15) */ "QuadGrid",
+	/* (1 <<16) */ "CollideQuad",
+	/* (1 <<17) */ "Hair",
+	/* (1 <<18) */ "SplineQuad",
 	NULL
 };
 

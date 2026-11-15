@@ -3,6 +3,7 @@
 
 #include "Quad.h"
 #include "Damage.h"
+#include "VertexBuffer.h"
 
 #include <list>
 
@@ -11,13 +12,14 @@ class Entity;
 class Beam : public Quad
 {
 public:
-	Beam(Vector pos, float angle);
+	Beam(Vector pos, float angle, unsigned maxrangeTiles=1000);
 	typedef std::list<Beam*> Beams;
 	static Beams beams;
 
 	static void killAllBeams();
 
 	float angle;
+	unsigned maxrange;
 	void trace();
 	Vector endPos;
 	DamageData damageData;
@@ -30,6 +32,8 @@ protected:
 	void onRender(const RenderState& rs) const OVERRIDE;
 	void onEndOfLife() OVERRIDE;
 	void onUpdate(float dt) OVERRIDE;
+
+	DynamicGPUBuffer gpubuf;
 };
 
 #endif

@@ -22,7 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ActionInput.h"
 #include "ActionMapper.h"
 #include "Core.h"
-#include "SDL.h"
+#include <SDL.h>
 #include "GameKeyNames.h"
 #include "StringBank.h"
 
@@ -64,7 +64,7 @@ static std::string inputcode2string(int k)
 		os << "AX:-" << (k - JOY_AXIS_0_NEG);
 		return os.str();
 	}
-	
+
 	if(k >= JOY_HAT_BEGIN && k < JOY_HAT_END)
 	{
 		if(k >= JOY_HAT_0_LEFT && k < JOY_HAT_END_LEFT)
@@ -113,13 +113,13 @@ static std::string inputcode2string(int k)
 	return std::string();
 }
 
-static const char *jaxisname(int joystickID, int axis)
+static const char *jaxisname(size_t joystickID, int axis)
 {
 	Joystick *j = core->getJoystick(joystickID);
 	return j ? j->getAxisName(axis) : NULL;
 }
 
-static const char *jbtnname(int joystickID, int btn)
+static const char *jbtnname(size_t joystickID, int btn)
 {
 	Joystick *j = core->getJoystick(joystickID);
 	return j ? j->getButtonName(btn) : NULL;

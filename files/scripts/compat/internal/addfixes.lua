@@ -3,7 +3,11 @@
 local BUILTIN = {}
 
 local function wouldcrash(fn)
-    errorLog("Old Aquaria would have crashed now. Calling function: " .. fn)
+    local notify = debugLog
+    if isDeveloperKeys() then
+        notify = errorLog
+    end
+    notify("Old Aquaria would have crashed now. Calling function: " .. fn)
 end
 
 local F =

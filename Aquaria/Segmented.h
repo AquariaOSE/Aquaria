@@ -40,18 +40,8 @@ protected:
 	void updateSegment(int i, const Vector &diff);
 	void destroySegments(float life = 0.01f);
 	std::vector<Vector> lastPositions;
-	int numSegments;
 	std::vector<RenderObject *> segments;
 };
 
-class Strand : public RenderObject, public Segmented
-{
-public:
-	Strand(const Vector &position, size_t segs, size_t dist=32);
-	void destroy() OVERRIDE;
-protected:
-	void onUpdate(float dt) OVERRIDE;
-	void onRender(const RenderState& rs) const OVERRIDE;
-};
 
 #endif

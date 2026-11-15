@@ -69,6 +69,12 @@ void UserSettings::save()
 				xml_grabInp->SetAttribute("on", system.grabInput);
 			}
 			xml_system->InsertEndChild(xml_grabInp);
+
+			XMLElement *xml_hotreload = doc.NewElement("HotReloadModGraphics");
+			{
+				xml_hotreload->SetAttribute("on", system.hotreload);
+			}
+			xml_system->InsertEndChild(xml_hotreload);
 		}
 		doc.InsertEndChild(xml_system);
 
@@ -141,12 +147,6 @@ void UserSettings::save()
 				xml_saveSlotScreens->SetAttribute("on", video.saveSlotScreens);
 			}
 			xml_video->InsertEndChild(xml_saveSlotScreens);
-
-			XMLElement *xml_worldMap = doc.NewElement("WorldMap");
-			{
-				xml_worldMap->SetAttribute("revealMethod", video.worldMapRevealMethod);
-			}
-			xml_video->InsertEndChild(xml_worldMap);
 		}
 		doc.InsertEndChild(xml_video);
 
@@ -385,6 +385,12 @@ bool UserSettings::load(bool doApply, const std::string &overrideFile)
 		{
 			system.grabInput = xml_grabInp->IntAttribute("on");
 		}
+
+		XMLElement *xml_hotreload = xml_system->FirstChildElement("HotReloadModGraphics");
+		if (xml_hotreload)
+		{
+			system.hotreload = xml_hotreload->IntAttribute("on");
+		}
 	}
 
 	XMLElement *xml_audio = doc.FirstChildElement("Audio");
@@ -438,8 +444,6 @@ bool UserSettings::load(bool doApply, const std::string &overrideFile)
 		}
 
 		readInt(xml_video, "SaveSlotScreens", "on", &video.saveSlotScreens);
-
-		readInt(xml_video, "WorldMap", "revealMethod", &video.worldMapRevealMethod);
 	}
 
 	XMLElement *xml_control = doc.FirstChildElement("Control");

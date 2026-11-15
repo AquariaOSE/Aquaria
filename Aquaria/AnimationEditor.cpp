@@ -30,60 +30,328 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderGrid.h"
 
 
-int TIMELINE_GRIDSIZE		= 10;
-float TIMELINE_UNIT			= 0.1f;
-float TIMELINE_UNIT_STEP	= 0.01f;
-const int KEYFRAME_POS_Y	= 570;
+static int TIMELINE_GRIDSIZE		= 10;
+static float TIMELINE_UNIT			= 0.1f;
+static float TIMELINE_UNIT_STEP	= 0.01f;
+const float TIMELINE_HEIGHT = 120;
+const int KEYFRAME_POS_Y	= 480;
+const int KEYFRAME_HEIGHT_Y	= 12;
+const float TIMELINE_X_OFFS = 5;
+const float TIMELINE_CENTER_Y = 535;
 
-class TimelineRender : public RenderObject
+
+enum { NumPages = 9 }; // one for each number key 1-9
+
+const Vector ScreenMsgPos(210, 55);
+
+
+class TimelineRender;
+
+
+class KeyframeWidget : public Quad
 {
-	void onRender(const RenderState& rs) const OVERRIDE
-	{
-		glLineWidth(1);
-		glBegin(GL_LINES);
-		glColor4f(1, 1, 1, 1);
-		for (int x = 0; x < 800; x += TIMELINE_GRIDSIZE)
-		{
-			glVertex3f(x, -5, 0);
-			glVertex3f(x, 5, 0);
-		}
-		glEnd();
-	}
+public:
+	KeyframeWidget(TimelineRender *tr, int key, int page);
+	float t;
+	int key, page;
+	static KeyframeWidget *movingWidget;
+	TimelineRender * const timeline;
+
+	void shiftLeft();
+	void shiftRight();
+protected:
+	void onUpdate(float dt) OVERRIDE;
 };
 
-AnimationEditor *ae = 0;
+static AnimationEditor *ae = 0;
 
 KeyframeWidget *KeyframeWidget::movingWidget = 0;
 
-Gradient *bgGrad = 0;
+static void notify(const std::string& s)
+{
+	dsq->screenMessage(s, ScreenMsgPos);
+}
 
-int keyframeOffset = 0;
+class TimelineTickRender : public RenderObject
+{
+public:
+	TimelineTickRender()
+		: bg("black", Vector(400, 0))
+		, vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
+	{
+		addChild(&bg, PM_STATIC, RBP_ON);
+		bg.setWidthHeight(800, TIMELINE_HEIGHT);
+		bg.alphaMod = 0.2f;
+		updateVBO();
+	}
 
-Bone *lastSelectedBone = 0;
+	virtual ~TimelineTickRender()
+	{
+	}
+
+	virtual void onUpdate(float dt) OVERRIDE
+	{
+		const float h2 = TIMELINE_HEIGHT * 0.5f;
+		const float tx = ae->getAnimTime() * (TIMELINE_GRIDSIZE / TIMELINE_UNIT);
+		// Update data for last 2 vertices (last line)
+		const float linedata[] =
+		{
+			tx + TIMELINE_X_OFFS, -h2,
+			tx + TIMELINE_X_OFFS,  h2
+		};
+		vbo.updatePartial((verts * 2 * sizeof(float)) - sizeof(linedata), &linedata[0], sizeof(linedata));
+
+		RenderObject::onUpdate(dt);
+	}
+
+	void updateVBO()
+	{
+		const size_t lines = (size_t(800) / TIMELINE_GRIDSIZE) + 1;
+		verts = lines * 2;
+		const size_t bytes = verts * 2 * sizeof(float);
+		const float h2 = TIMELINE_HEIGHT * 0.5f;
+		float *p;
+		do
+		{
+			p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2, bytes, GPUACCESS_DEFAULT);
+
+			for (int x = 0; x < 800; x += TIMELINE_GRIDSIZE)
+			{
+				*p++ = x + TIMELINE_X_OFFS; *p++ = -h2;
+				*p++ = x + TIMELINE_X_OFFS; *p++ = h2;
+			}
+
+			// Last 2 vertices -- colored differently
+			const float tx = ae->getAnimTime() * (TIMELINE_GRIDSIZE / TIMELINE_UNIT);
+			*p++ = tx + TIMELINE_X_OFFS; *p++ = -h2;
+			*p++ = tx + TIMELINE_X_OFFS; *p++ = h2;
+
+		}
+		while(!vbo.commitWriteExact(p));
+	}
+
+private:
+	Quad bg;
+	DynamicGPUBuffer vbo;
+	size_t verts;
+	void onRender(const RenderState& rs) const OVERRIDE
+	{
+		glLineWidth(1);
+		vbo.apply();
+
+		glColor4f(1, 1, 1, 1);
+		glDrawArrays(GL_LINES, 0, verts-2);
+
+		glColor4f(0, 1, 0, 1);
+		glDrawArrays(GL_LINES, verts-2, 2);
+	}
+};
+
+class TimelineRender : public Quad
+{
+public:
+	const int page;
+	DebugFont label;
+
+	TimelineRender(int page)
+		: page(page), label(6), vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
+	{
+		setWidthHeight(800, 10);
+		addChild(&label, PM_STATIC);
+		label.setAlign(ALIGN_LEFT);
+		label.offset = Vector(20, 0);
+	}
+
+	virtual ~TimelineRender()
+	{
+	}
+
+	void setLabel(const std::string& s)
+	{
+		label.setText(s);
+	}
+
+	KeyframeWidget *addKeyframe()
+	{
+		KeyframeWidget *w = new KeyframeWidget(this, keyframes.size(), page);
+		keyframes.push_back(w);
+		return w;
+	}
+
+	inline const std::vector<KeyframeWidget*>& getKeyframes() const { return keyframes; }
+
+	void resizeKeyframes(size_t n)
+	{
+		while(keyframes.size() > n)
+		{
+			KeyframeWidget *k = keyframes.back();
+			k->setLife(0.03f);
+			k->setDecayRate(1);
+			keyframes.pop_back();
+		}
+
+		while(keyframes.size() < n)
+		{
+			addKeyframe();
+		}
+	}
+
+private:
+
+	DynamicGPUBuffer vbo;
+
+	void updateVBO()
+	{
+		SkeletalSprite *spr = ae->getPageSprite(page);
+		if(!spr->isLoaded())
+			return;
+
+		const float h2 = height * 0.5f;
+		const float tx = spr->getAnimationLayer(0)->timer * (TIMELINE_GRIDSIZE / TIMELINE_UNIT);
+		const float linedata[] =
+		{
+			tx + TIMELINE_X_OFFS, h2 - 5,
+			tx + TIMELINE_X_OFFS, h2 + 5
+		};
+		vbo.upload(GPUBUFTYPE_VEC2, &linedata[0], sizeof(linedata));
+	}
+
+	virtual void onUpdate(float dt) OVERRIDE
+	{
+		updateVBO();
+		Quad::onUpdate(dt);
+	}
+
+	void onRender(const RenderState& rs) const OVERRIDE
+	{
+		SkeletalSprite *spr = ae->getPageSprite(page);
+		if(!spr->isLoaded())
+			return;
+
+		if(ae->curPage == page)
+			glColor4f(0.6f, 0.8f, 1, 0.5f);
+		else
+			glColor4f(0.5f, 0.3f, 0.3f, 0.5f);
+
+		const float h2 = height * 0.5f;
+		glPushMatrix();
+		glTranslatef(width * 0.5f, h2, 0);
+		Quad::onRender(rs);
+		glPopMatrix();
+
+		if(vbo.size())
+		{
+			glColor4f(0, 1, 0, 1);
+			glLineWidth(3);
+			vbo.apply();
+			glDrawArrays(GL_LINES, 0, 2);
+		}
+	}
+
+	std::vector<KeyframeWidget*> keyframes;
+};
+
+struct AnimationEditorPage
+{
+	SkeletalSprite editSprite;
+	Quad *center;
+	TimelineRender *timeline;
+	std::string editingFile;
+	std::deque<SkeletalSprite> undoHistory;
+	size_t undoEntry;
+
+	AnimationEditorPage()
+		: center(NULL), timeline(NULL), undoEntry(0)
+	{
+		editSprite.cull = false;
+	}
+
+	~AnimationEditorPage()
+	{
+		//timeline->safeKill(); // is registered to global state, not necessary
+		editSprite.destroy();
+	}
+
+	void showCenter(bool on)
+	{
+		if(center)
+			center->alpha = on ? 1.0f : 0.0f;
+	}
+
+	bool load(const char *fn) // pass NULL to unload
+	{
+		if(center)
+		{
+			center->safeKill();
+			center = NULL;
+		}
+		if(!fn)
+			fn = "";
+		clearUndoHistory();
+		editingFile = fn;
+		editSprite.loadSkeletal(editingFile);
+		timeline->setLabel(editingFile);
+		bool ok = editSprite.isLoaded();
+		if(ok)
+		{
+			center = new Quad("missingimage", Vector(0,0));
+			center->alpha.x = 0.2f;
+			center->scale = Vector(2,2);
+			editSprite.addChild(center, PM_POINTER);
+			center->moveToFront();
+		}
+		return ok;
+	}
+
+	void unload()
+	{
+		load(NULL);
+	}
+
+	void clearUndoHistory()
+	{
+		undoHistory.clear();
+		undoEntry = 0;
+	}
+};
+
+bool AnimationEditor::isMouseInRect() const
+{
+	Vector mp=core->mouse.position;
+	const float w2 = rect->width * 0.5f;
+	const float h2 = rect->height * 0.5f;
+	const float left = rect->position.x - w2;
+	const float right = rect->position.x + w2;
+	const float top = rect->position.y - h2;
+	const float btm = rect->position.y + h2;
+	return mp.x >= left && mp.x <= right && mp.y >= top && mp.y <= btm;
+}
 
 void AnimationEditor::constrainMouse()
 {
 	Vector mp=core->mouse.position;
+	const float w2 = rect->width * 0.5f;
+	const float h2 = rect->height * 0.5f;
+	const float left = rect->position.x - w2;
+	const float right = rect->position.x + w2;
+	const float top = rect->position.y - h2;
+	const float btm = rect->position.y + h2;
 	bool doit = false;
-	if (mp.x < 200)	{ mp.x = 200; doit = true; }
-	if (mp.x > 600)	{ mp.x = 600; doit = true; }
-	if (mp.y < 100)	{ mp.y = 100; doit = true; }
-	if (mp.y > 500)	{ mp.y = 500; doit = true; }
+	if (mp.x < left )	{ mp.x = left; doit = true; }
+	if (mp.x > right)	{ mp.x = right; doit = true; }
+	if (mp.y < top  )	{ mp.y = top; doit = true; }
+	if (mp.y > btm  )	{ mp.y = btm; doit = true; }
 
 	if(doit)
 		core->setMousePosition(mp);
 }
 
-KeyframeWidget::KeyframeWidget(int key) : Quad()
+KeyframeWidget::KeyframeWidget(TimelineRender *tr, int key, int page)
+	: Quad(), key(key), page(page), timeline(tr)
 {
 	setTexture("keyframe");
 	setWidthHeight(15, 30);
-	b = new BitmapText(dsq->smallFont);
-	b->position = Vector(1, -15);
-	b->setFontSize(12);
-	addChild(b, PM_POINTER);
-	this->key = key;
-	ae->keyframeWidgets.push_back(this);
+	tr->addChild(this, PM_POINTER);
 }
 
 void KeyframeWidget::shiftLeft()
@@ -100,10 +368,12 @@ void KeyframeWidget::shiftRight()
 
 void KeyframeWidget::onUpdate(float dt)
 {
-
 	Quad::onUpdate(dt);
-	if (life != 1 || ae->editSprite->isAnimating()) return;
-	switch(ae->editSprite->getCurrentAnimation()->getKeyframe(this->key)->lerpType)
+	if (life != 1 || ae->isAnimating()) return;
+
+	Animation *ani = ae->getPageAnimation(page);
+
+	switch(ani->getKeyframe(this->key)->lerpType)
 	{
 	case 1:
 			color = Vector(0,0,1);
@@ -119,33 +389,23 @@ void KeyframeWidget::onUpdate(float dt)
 	break;
 	}
 
-	if (!offset.isInterpolating())
-	{
-		if (this->key == ae->currentKey)
-			offset.y = -12;
-		else
-			offset.y = 0;
-	}
-
-	std::ostringstream os;
-	os << key;
-	b->setText(os.str());
+	scale.x = scale.y = 1; // Always do selection rectangle checking with full scale, otherwise they are too tiny to grab
 
 	if (!movingWidget && isCoordinateInside(core->mouse.position))
 	{
 		if (core->mouse.buttons.left)
 		{
-
 			movingWidget = this;
 			ae->currentKey = this->key;
+			ae->selectPage(this->page);
 		}
 	}
 	if (movingWidget == this)
 	{
-		float lastT = ae->editSprite->getCurrentAnimation()->getKeyframe(this->key)->t;
+		float lastT = ani->getKeyframe(this->key)->t;
 		this->position.x = int((core->mouse.position.x-offset.x)/TIMELINE_GRIDSIZE)*TIMELINE_GRIDSIZE+TIMELINE_GRIDSIZE/2;
 		float newT = int(this->position.x/TIMELINE_GRIDSIZE)*TIMELINE_UNIT;
-		ae->editSprite->getCurrentAnimation()->getKeyframe(this->key)->t = newT;
+		ani->getKeyframe(this->key)->t = newT;
 		if (core->getShiftState())
 		{
 			ae->moveNextWidgets(newT-lastT);
@@ -153,7 +413,7 @@ void KeyframeWidget::onUpdate(float dt)
 	}
 	else
 	{
-		this->position.x = ae->editSprite->getCurrentAnimation()->getKeyframe(this->key)->t*TIMELINE_GRIDSIZE*(1/TIMELINE_UNIT) + TIMELINE_GRIDSIZE/2;
+		this->position.x = ani->getKeyframe(this->key)->t*TIMELINE_GRIDSIZE*(1/TIMELINE_UNIT) + TIMELINE_GRIDSIZE/2;
 	}
 
 	if (movingWidget == this && !core->mouse.buttons.left)
@@ -162,17 +422,20 @@ void KeyframeWidget::onUpdate(float dt)
 		ae->reorderKeys();
 		return;
 	}
-	position.y = KEYFRAME_POS_Y;
+
+	if(!(this->key == ae->currentKey && this->page == ae->curPage))
+		scale.x = scale.y = 0.6f;
 }
 
 void AnimationEditor::cycleLerpType()
 {
 	if (dsq->isNested()) return;
+	if (editMode != AE_SELECT) return;
+
+	Animation *a = getCurrentPageAnimation();
 
 	if (core->getCtrlState())
 	{
-
-		Animation *a = ae->editSprite->getCurrentAnimation();
 		if (a->getNumKeyframes() >= 2)
 		{
 			pushUndo();
@@ -183,24 +446,23 @@ void AnimationEditor::cycleLerpType()
 			{
 				k2->copyAllButTime(k1);
 			}
-			dsq->screenMessage("Copied Loop Key");
+			notify("Copied Loop Key");
 
 		}
 	}
 	else
 	{
 		pushUndo();
-		int *lt = &ae->editSprite->getCurrentAnimation()->getKeyframe(this->currentKey)->lerpType;
-		(*lt)++;
-		if (*lt > 3)
-			*lt = 0;
+		int& lt = a->getKeyframe(this->currentKey)->lerpType;
+		lt++;
+		if (lt > 3)
+			lt = 0;
 	}
 }
 
 AnimationEditor::AnimationEditor() : StateObject()
 {
 	registerState(this, "AnimationEditor");
-
 }
 
 void AnimationEditor::resetScaleOrSave()
@@ -219,32 +481,45 @@ void AnimationEditor::resetScaleOrSave()
 		std::ostringstream os;
 		os << scale.x;
 		if(!SDL_SetClipboardText(os.str().c_str()))
-			dsq->screenMessage("Scale copied to clipboard");
+			notify("Scale copied to clipboard");
 	}
 	else
-		editSprite->scale = Vector(1,1);
+		getSelectedPageSprite()->scale = Vector(1,1);
 }
 
 void AnimationEditor::applyState()
 {
 	dsq->toggleCursor(true, 0.1f);
 	core->cameraPos = Vector(0,0);
-	editingStrip = false;
 	selectedStripPoint = 0;
 	mouseSelection = true;
-	editingFile = "Naija";
 	renderBorderMode = RENDER_BORDER_MINIMAL;
 	ae = this;
 	StateObject::applyState();
-	boneEdit = 0;
+	editMode = AE_SELECT;
 	editingBone = 0;
+	editingBoneSprite = 0;
+	editingBonePage = -1;
+	editingBoneIdx = -1;
 	currentKey = 0;
 	splinegrid = 0;
+	assistedSplineEdit = true;
+	curPage = 0;
 
-	editSprite = new SkeletalSprite();
-	editSprite->cull = false;
-	editSprite->loadSkeletal(editingFile);
-	editSprite->position = Vector(400,300);
+	spriteRoot = new Quad("missingimage", Vector(400, 300));
+	spriteRoot->renderQuad = false;
+	addRenderObject(spriteRoot, LR_ENTITIES);
+
+	pages = new AnimationEditorPage[NumPages];
+	for(size_t i = 0; i < NumPages; ++i)
+	{
+		TimelineRender *tr = new TimelineRender(i);
+		tr->position = Vector(0, KEYFRAME_POS_Y + i * KEYFRAME_HEIGHT_Y);
+		addRenderObject(tr, LR_BLACKGROUND);
+		spriteRoot->addChild(&pages[i].editSprite, PM_STATIC);
+		pages[i].timeline = tr;
+	}
+	pages[0].load("naija");
 
 
 	addAction(MakeFunctionEvent(AnimationEditor, lmbu), MOUSE_BUTTON_LEFT, 0);
@@ -274,8 +549,8 @@ void AnimationEditor::applyState()
 	addAction(MakeFunctionEvent(AnimationEditor, clearPos), KEY_P, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, flipRot), KEY_D, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, toggleHideBone), KEY_N, 0);
-	addAction(MakeFunctionEvent(AnimationEditor, copy), KEY_C, 0);
-	addAction(MakeFunctionEvent(AnimationEditor, paste), KEY_V, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, _copyKey), KEY_C, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, _pasteKey), KEY_V, 0);
 
 	addAction(MakeFunctionEvent(AnimationEditor, undo), KEY_Z, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, redo), KEY_Y, 0);
@@ -296,11 +571,25 @@ void AnimationEditor::applyState()
 	addAction(MakeFunctionEvent(AnimationEditor, toggleRenderBorders), KEY_B, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, toggleMouseSelection), KEY_M, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, showAllBones), KEY_A, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, toggleGradient), KEY_G, 0);
 
-	addAction(MakeFunctionEvent(AnimationEditor, decrTimelineUnit), KEY_U, 0);
+	/*addAction(MakeFunctionEvent(AnimationEditor, decrTimelineUnit), KEY_U, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineUnit), KEY_I, 0);
 	addAction(MakeFunctionEvent(AnimationEditor, decrTimelineGrid), KEY_O, 0);
-	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineGrid), KEY_P, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, incrTimelineGrid), KEY_P, 0);*/
+
+	addAction(MakeFunctionEvent(AnimationEditor, toggleSplineMode), KEY_W, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, flipH), KEY_T, 0);
+
+	addAction(MakeFunctionEvent(AnimationEditor, selectPage0), KEY_1, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, selectPage1), KEY_2, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, selectPage2), KEY_3, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, selectPage3), KEY_4, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, selectPage4), KEY_5, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, selectPage5), KEY_6, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, selectPage6), KEY_7, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, selectPage7), KEY_8, 0);
+	addAction(MakeFunctionEvent(AnimationEditor, selectPage8), KEY_9, 0);
 
 
 
@@ -309,9 +598,9 @@ void AnimationEditor::applyState()
 	addAction(ACTION_SWIMUP,	KEY_UP, -1);
 	addAction(ACTION_SWIMDOWN,	KEY_DOWN, -1);
 
-
-
-	addRenderObject(editSprite, LR_ENTITIES);
+	const float yoffs = -55;
+	const float smallw = 50;
+	const float gap = 5;
 
 	Quad *back = new Quad;
 	{
@@ -321,6 +610,10 @@ void AnimationEditor::applyState()
 	}
 	addRenderObject(back, LR_BACKDROP);
 
+	timelineTicks = new TimelineTickRender;
+	timelineTicks->position = Vector(0, TIMELINE_CENTER_Y);
+	addRenderObject(timelineTicks, LR_BACKGROUND);
+
 	bgGrad = new Gradient;
 	bgGrad->scale = Vector(800, 600);
 	bgGrad->position = Vector(400,300);
@@ -328,161 +621,186 @@ void AnimationEditor::applyState()
 	addRenderObject(bgGrad, LR_BACKDROP);
 
 	DebugButton *a = new DebugButton(0, 0, 150);
-	a->position = Vector(10, 60);
+	a->position = Vector(10, 70+yoffs);
 	a->label->setText("prevKey  (LEFT)");
 	a->event.set(MakeFunctionEvent(AnimationEditor, prevKey));
 	addRenderObject(a, LR_HUD);
 
 	DebugButton *a2 = new DebugButton(0, 0, 150);
-	a2->position = Vector(10, 90);
+	a2->position = Vector(10, 100+yoffs);
 	a2->label->setText("nextKey (RIGHT)");
 	a2->event.set(MakeFunctionEvent(AnimationEditor, nextKey));
 	addRenderObject(a2, LR_HUD);
 
 	DebugButton *a3 = new DebugButton(0, 0, 150);
-	a3->position = Vector(10, 120);
+	a3->position = Vector(10, 130+yoffs);
 	a3->label->setText("cloneKey");
 	a3->event.set(MakeFunctionEvent(AnimationEditor, newKey));
 	addRenderObject(a3, LR_HUD);
 
 	DebugButton *animate = new DebugButton(0, 0, 150);
-	animate->position = Vector(10, 200);
+	animate->position = Vector(10, 200+yoffs);
 	animate->label->setText("animate (ENTER)");
 	animate->event.set(MakeFunctionEvent(AnimationEditor, animate));
 	addRenderObject(animate, LR_HUD);
 
 	DebugButton *stop = new DebugButton(0, 0, 150);
-	stop->position = Vector(10, 230);
+	stop->position = Vector(10, 230+yoffs);
 	stop->label->setText("stop  (S-ENTER)");
 	stop->event.set(MakeFunctionEvent(AnimationEditor, stop));
 	addRenderObject(stop, LR_HUD);
 
 	DebugButton *prevAnimation = new DebugButton(0, 0, 150);
 	prevAnimation->label->setText("prevAnim (PGUP)");
-	prevAnimation->position = Vector(10, 330);
+	prevAnimation->position = Vector(10, 330+yoffs);
 	prevAnimation->event.set(MakeFunctionEvent(AnimationEditor, prevAnim));
 	addRenderObject(prevAnimation, LR_MENU);
 
 	DebugButton *nextAnimation = new DebugButton(0, 0, 150);
 	nextAnimation->label->setText("nextAnim (PGDN)");
-	nextAnimation->position = Vector(10, 360);
+	nextAnimation->position = Vector(10, 360+yoffs);
 	nextAnimation->event.set(MakeFunctionEvent(AnimationEditor, nextAnim));
 	addRenderObject(nextAnimation, LR_MENU);
 
 	DebugButton *copyKey = new DebugButton(0, 0, 150);
 	copyKey->label->setText("copyKey");
-	copyKey->position = Vector(10, 390);
-	copyKey->event.set(MakeFunctionEvent(AnimationEditor, copyKey));
+	copyKey->position = Vector(10, 390+yoffs);
+	copyKey->event.set(MakeFunctionEvent(AnimationEditor, copy));
 	addRenderObject(copyKey, LR_MENU);
 
 	DebugButton *pasteKey = new DebugButton(0, 0, 150);
 	pasteKey->label->setText("pasteKey");
-	pasteKey->position = Vector(10, 420);
-	pasteKey->event.set(MakeFunctionEvent(AnimationEditor, pasteKey));
+	pasteKey->position = Vector(10, 420+yoffs);
+	pasteKey->event.set(MakeFunctionEvent(AnimationEditor, paste));
 	addRenderObject(pasteKey, LR_MENU);
 
 
 	DebugButton *newAnim = new DebugButton(0, 0, 150);
 	newAnim->label->setText("NewAnim");
-	newAnim->position = Vector(640, 150);
+	newAnim->position = Vector(640, 150+yoffs);
 	newAnim->event.set(MakeFunctionEvent(AnimationEditor, newAnim));
 	addRenderObject(newAnim, LR_MENU);
 
 	DebugButton *tm = new DebugButton(0, 0, 150);
 	tm->label->setText("SelMode (M)");
-	tm->position = Vector(640, 210);
+	tm->position = Vector(640, 210+yoffs);
 	tm->event.set(MakeFunctionEvent(AnimationEditor, toggleMouseSelection));
 	addRenderObject(tm, LR_MENU);
 
 	DebugButton *rb = new DebugButton(0, 0, 150);
 	rb->label->setText("ShowJoints (B)");
-	rb->position = Vector(640, 240);
+	rb->position = Vector(640, 240+yoffs);
 	rb->event.set(MakeFunctionEvent(AnimationEditor, toggleRenderBorders));
 	addRenderObject(rb, LR_MENU);
 
 	DebugButton *sa = new DebugButton(0, 0, 150);
 	sa->label->setText("ShowAll (A)");
-	sa->position = Vector(640, 270);
+	sa->position = Vector(640, 270+yoffs);
 	sa->event.set(MakeFunctionEvent(AnimationEditor, showAllBones));
 	addRenderObject(sa, LR_MENU);
 
 	DebugButton *a4 = new DebugButton(0, 0, 150);
 	a4->label->setText("deleteKey");
-	a4->position = Vector(640, 340);
+	a4->position = Vector(640, 340+yoffs);
 	a4->event.set(MakeFunctionEvent(AnimationEditor, deleteKey));
 	addRenderObject(a4, LR_MENU);
 
 	unitsize = new DebugFont(10, "Unitsize");
-	unitsize->position = Vector(650, 400);
+	unitsize->position = Vector(650, 400+yoffs);
 	addRenderObject(unitsize, LR_MENU);
 
 	DebugButton *unitdown = new DebugButton(0, 0, 70);
 	unitdown->label->setText("Down");
-	unitdown->position = Vector(640, 420);
+	unitdown->position = Vector(640, 420+yoffs);
 	unitdown->event.set(MakeFunctionEvent(AnimationEditor, decrTimelineUnit));
 	addRenderObject(unitdown, LR_MENU);
 
 	DebugButton *unitup = new DebugButton(0, 0, 70);
 	unitup->label->setText("Up");
-	unitup->position = Vector(640+80, 420);
+	unitup->position = Vector(640+80, 420+yoffs);
 	unitup->event.set(MakeFunctionEvent(AnimationEditor, incrTimelineUnit));
 	addRenderObject(unitup, LR_MENU);
 
 	gridsize = new DebugFont(10, "Gridsize");
-	gridsize->position = Vector(650, 450);
+	gridsize->position = Vector(650, 450+yoffs);
 	addRenderObject(gridsize, LR_MENU);
 
 	DebugButton *griddown = new DebugButton(0, 0, 70);
 	griddown->label->setText("Down");
-	griddown->position = Vector(640, 470);
+	griddown->position = Vector(640, 470+yoffs);
 	griddown->event.set(MakeFunctionEvent(AnimationEditor, decrTimelineGrid));
 	addRenderObject(griddown, LR_MENU);
 
 	DebugButton *gridup = new DebugButton(0, 0, 70);
 	gridup->label->setText("Up");
-	gridup->position = Vector(640+80, 470);
+	gridup->position = Vector(640+80, 470+yoffs);
 	gridup->event.set(MakeFunctionEvent(AnimationEditor, incrTimelineGrid));
 	addRenderObject(gridup, LR_MENU);
 
-	DebugButton *save = new DebugButton(0, 0, 150);
+	DebugButton *save = new DebugButton(0, 0, 150 - smallw - gap);
 	save->label->setText("Save");
-	save->position = Vector(640, 100);
+	save->position = Vector(640, 100+yoffs);
 	save->event.set(MakeFunctionEvent(AnimationEditor, saveFile));
 	addRenderObject(save, LR_MENU);
 
-	DebugButton *load = new DebugButton(0, 0, 150);
+	DebugButton *saveall = new DebugButton(0, 0, smallw);
+	saveall->label->setText("All");
+	saveall->position = save->position + 150/2 + smallw/2 + gap;
+	saveall->event.set(MakeFunctionEvent(AnimationEditor, saveAll));
+	addRenderObject(saveall, LR_MENU);
+
+	DebugButton *load = new DebugButton(0, 0, 150 - smallw - gap);
 	load->label->setText("Reload");
-	load->position = Vector(640, 50);
-	load->event.set(MakeFunctionEvent(AnimationEditor, loadFile));
+	load->position = Vector(640, 70+yoffs);
+	load->event.set(MakeFunctionEvent(AnimationEditor, reloadFile));
 	addRenderObject(load, LR_MENU);
+
+	DebugButton *loadall = new DebugButton(0, 0, smallw);
+	loadall->label->setText("All");
+	loadall->position = load->position + 150/2 + smallw/2 + gap;
+	loadall->event.set(MakeFunctionEvent(AnimationEditor, reloadAll));
+	addRenderObject(loadall, LR_MENU);
 
 	DebugButton *reverseAnim = new DebugButton(0, 0, 150);
 	reverseAnim->label->setText("reverseAnim");
-	reverseAnim->position = Vector(10, 480);
+	reverseAnim->position = Vector(10, 480+yoffs);
 	reverseAnim->event.set(MakeFunctionEvent(AnimationEditor, reverseAnim));
 	addRenderObject(reverseAnim, LR_MENU);
 
+	DebugButton *bAssist = new DebugButton(0, 0, 150);
+	bAssist->position = Vector(10, 510+yoffs);
+	bAssist->event.set(MakeFunctionEvent(AnimationEditor, toggleSplineMode));
+	addRenderObject(bAssist, LR_MENU);
+	bSplineAssist = bAssist;
 
-	OutlineRect *rect = new OutlineRect;
+	rect = new Quad("black", Vector(400,300+yoffs));
+	rect->alphaMod = 0.2f;
+	rect->renderBorder = true;
+	rect->renderCenter = false;
+	rect->borderAlpha = 5; // HACK to compensate alphaMod
+	rect->renderBorderColor = Vector(1,1,1);
 	rect->setWidthHeight(400,400);
-	rect->position = Vector(400,300);
 	addRenderObject(rect, LR_MENU);
 
 	text = new DebugFont();
-	text->position = Vector(200,90);
+	text->position = Vector(200,90+yoffs);
 	text->setFontSize(6);
 	addRenderObject(text, LR_HUD);
 
 	text2 = new DebugFont();
-	text2->position = Vector(200,510);
+	text2->position = Vector(200,505+yoffs);
 	text2->setFontSize(6);
 	addRenderObject(text2, LR_HUD);
 
-	TimelineRender *tr = new TimelineRender();
-	tr->position = Vector(0, KEYFRAME_POS_Y);
-	addRenderObject(tr, LR_BLACKGROUND);
+	toptext = new DebugFont();
+	toptext->position = Vector(200,90-20+yoffs);
+	toptext->setFontSize(6);
+	addRenderObject(toptext, LR_HUD);
 
-	editSprite->setSelectedBone(0);
+	btmtext = new DebugFont();
+	btmtext->position = Vector(200,515+yoffs);
+	btmtext->setFontSize(6);
+	addRenderObject(btmtext, LR_HUD);
 
 	dsq->overlay->alpha.interpolateTo(0, 0.5f);
 
@@ -494,23 +812,21 @@ void AnimationEditor::applyState()
 
 	updateTimelineGrid();
 	updateTimelineUnit();
+	updateButtonLabels();
 }
 
-void AnimationEditor::clearUndoHistory()
-{
-	undoHistory.clear();
-}
+// FIXME: undo should be global?
 
 void AnimationEditor::pushUndo()
 {
-	SkeletalSprite sk;
-	sk.animations = editSprite->animations;
-	undoHistory.push_back(sk);
+	std::deque<SkeletalSprite>& undoHistory = pages[curPage].undoHistory;
+	undoHistory.push_back(SkeletalSprite());
+	undoHistory.back().animations = pages[curPage].editSprite.animations;
 
 	if(undoHistory.size() > 50)
 		undoHistory.pop_front();
 
-	undoEntry = undoHistory.size()-1;
+	pages[curPage].undoEntry = undoHistory.size()-1;
 }
 
 void AnimationEditor::undo()
@@ -519,9 +835,11 @@ void AnimationEditor::undo()
 
 	if (core->getCtrlState())
 	{
+		std::deque<SkeletalSprite>& undoHistory = pages[curPage].undoHistory;
+		size_t& undoEntry = pages[curPage].undoEntry;
 		if (undoEntry < undoHistory.size())
 		{
-			editSprite->animations = undoHistory[undoEntry].animations;
+			getCurrentPageSprite()->animations = undoHistory[undoEntry].animations;
 			if(undoEntry > 0) {
 				undoEntry--;
 			}
@@ -535,10 +853,13 @@ void AnimationEditor::redo()
 
 	if (core->getCtrlState())
 	{
+		std::deque<SkeletalSprite>& undoHistory = pages[curPage].undoHistory;
+		size_t& undoEntry = pages[curPage].undoEntry;
+
 		undoEntry++;
 		if (undoEntry < undoHistory.size())
 		{
-			editSprite->animations = undoHistory[undoEntry].animations;
+			getCurrentPageSprite()->animations = undoHistory[undoEntry].animations;
 		}
 		else
 		{
@@ -595,37 +916,21 @@ void AnimationEditor::zoomIn()
 
 void AnimationEditor::reorderKeys()
 {
-	editSprite->getCurrentAnimation()->reorderKeyframes();
+	getCurrentPageAnimation()->reorderKeyframes();
 	rebuildKeyframeWidgets();
 }
 
 void AnimationEditor::rebuildKeyframeWidgets()
 {
-	int offx=0;
-	for (size_t i = 0; i < keyframeWidgets.size(); i++)
-	{
-		keyframeWidgets[i]->setLife(0.03f);
-		keyframeWidgets[i]->setDecayRate(1);
-		offx = keyframeWidgets[i]->offset.x;
-	}
-	keyframeWidgets.clear();
-	if (Animation *a = editSprite->getCurrentAnimation())
-	{
-		for (int i = 0; i < 1000; i++)
-		{
-			SkeletalKeyframe *key = a->getKeyframe(i);
-			if (!key) break;
-			KeyframeWidget *k = new KeyframeWidget(i);
-			k->offset.x = offx;
-			addRenderObject(k, LR_HUD);
-			keyframeWidgets.push_back(k);
-		}
-	}
+	Animation *a = getCurrentPageAnimation();
+	size_t n = a ? a->getNumKeyframes() : 0;
+	pages[curPage].timeline->resizeKeyframes(n);
 }
 
 void AnimationEditor::removeState()
 {
-	keyframeWidgets.clear();
+	delete [] pages;
+	pages = NULL;
 	StateObject::removeState();
 	core->cameraPos = Vector(0,0);
 }
@@ -634,8 +939,10 @@ void AnimationEditor::toggleMouseSelection()
 {
 	if (dsq->isNested()) return;
 
-	if (editSprite && mouseSelection)
-		editSprite->updateSelectedBoneColor();
+	if (editingBone)
+	{
+		editingBone->color = Vector(1,1,1);
+	}
 
 	mouseSelection = !mouseSelection;
 }
@@ -644,10 +951,10 @@ void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 {
 	if (dsq->isNested()) return;
 
-	Bone *sel = editSprite->getSelectedBone(false);
+	Bone *sel = editingBone;
 	if (sel)
 	{
-		BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(sel->boneIdx);
+		BoneKeyframe *b = editingBoneSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(sel->boneIdx);
 		if (b)
 		{
 			if (!sel->changeStrip.empty())
@@ -657,86 +964,95 @@ void AnimationEditor::moveBoneStripPoint(const Vector &mov)
 					b->grid.resize(sel->changeStrip.size());
 				}
 
-				b->grid[selectedStripPoint] = sel->changeStrip[selectedStripPoint] += mov*0.006f;
+				Vector v = sel->changeStrip[selectedStripPoint] + mov*0.006f;
+				sel->changeStrip[selectedStripPoint] = v;
+				b->grid[selectedStripPoint] = v;
 			}
 		}
-	}
-}
-
-void AnimationEditor::selectPrevBone()
-{
-	if (dsq->isNested()) return;
-
-	if (editingStrip)
-	{
-
-	}
-	else
-	{
-		editSprite->selectPrevBone();
-	}
-}
-
-void AnimationEditor::selectNextBone()
-{
-	if (dsq->isNested()) return;
-
-	if (editingStrip)
-	{
-
-	}
-	else
-	{
-		editSprite->selectNextBone();
 	}
 }
 
 void AnimationEditor::update(float dt)
 {
 	StateObject::update(dt);
-	if(!editSprite->getCurrentAnimation())
-		return;
-	std::ostringstream os;
-	os << editingFile;
-	os << " anim[" << editSprite->getCurrentAnimation()->name << "] ";
-	os << "currentKey " << currentKey;
-	SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
-	if (k)
+
+	const float tltime = getMouseTimelineTime();
+
 	{
-		os << " keyTime: " << k->t;
+		{
+			std::ostringstream os;
+			for(int i = 0; i < NumPages; ++i)
+			{
+				if(curPage == i)
+					os << "[";
+				else
+					os << " ";
+				os << (i + 1);
+				if(curPage == i)
+					os << "]";
+				else
+					os << " ";
+			}
+			toptext->setText(os.str());
+		}
+
+
+		int pg = editingBonePage >= 0 ? editingBonePage : curPage;
+
+		std::ostringstream os;
+		os << "page " << (pg + 1) << " " << pages[pg].editingFile;
+		if(Animation *a = getPageSprite(pg)->getCurrentAnimationOrNull())
+		{
+			os << " anim[" << a->name << "] ";
+			os << "currentKey " << currentKey;
+			SkeletalKeyframe *k = a->getKeyframe(currentKey);
+			if (k)
+			{
+				os << " keyTime: " << k->t;
+			}
+		}
+
+		Vector ebdata;
+		int pass = 0;
+		int origpass = 0;
+		bool ihp = false;
+
+		if (editingBone)
+		{
+			os << " bone: " << editingBone->name << " [idx " << editingBone->boneIdx << "]";
+			ebdata.x = editingBone->position.x;
+			ebdata.y = editingBone->position.y;
+			ebdata.z = editingBone->rotation.z;
+			pass = editingBone->getRenderPass();
+			origpass = editingBone->originalRenderPass;
+			ihp = editingBone->inheritPass;
+		}
+		text->setText(os.str());
+
+		char t2buf[128];
+		sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f pass: %d", ebdata.x, ebdata.y, ebdata.z, pass);
+		std::ostringstream os2;
+		os2 << t2buf;
+		if(ihp)
+			os2 << " (from bone " << editingBone->pidx << ")";
+		else
+			os2 << " (" << origpass << ")";
+
+		if(editMode == AE_STRIP)
+			os2 << " strip: " << selectedStripPoint;
+
+		text2->setText(os2.str());
+
+
+		const float t = getAnimTime();
+		if(tltime >= 0)
+			sprintf(t2buf, "t: %.4f, mouse at %.4f", t, tltime);
+		else
+			sprintf(t2buf, "t: %.4f", t);
+		btmtext->setText(t2buf);
 	}
 
-	Vector ebdata;
-	int pass = 0;
-	int origpass = 0;
-
-	if (editingBone)
-	{
-		os << " bone: " << editingBone->name << " [idx " << editingBone->boneIdx << "]";
-		ebdata.x = editingBone->position.x;
-		ebdata.y = editingBone->position.y;
-		ebdata.z = editingBone->rotation.z;
-		pass = editingBone->getRenderPass();
-		origpass = editingBone->originalRenderPass;
-	}
-	text->setText(os.str());
-
-	char t2buf[128];
-	sprintf(t2buf, "Bone x: %.3f, y: %.3f, rot: %.3f  strip: %u pass: %d (%d)", ebdata.x, ebdata.y, ebdata.z, (unsigned)selectedStripPoint, pass, origpass);
-	text2->setText(t2buf);
-
-	RenderObject *ctrlSprite;
-	if(splinegrid)
-		ctrlSprite = splinegrid;
-	else
-		ctrlSprite = editSprite;
-
-	if (core->mouse.buttons.middle)
-	{
-		ctrlSprite->position += core->mouse.change;
-	}
-
-	if (editingStrip && !splinegrid)
+	if (editMode == AE_STRIP)
 	{
 		if (isActing(ACTION_SWIMLEFT, -1))
 			moveBoneStripPoint(Vector(-dt, 0));
@@ -748,6 +1064,23 @@ void AnimationEditor::update(float dt)
 		if (isActing(ACTION_SWIMDOWN, -1))
 			moveBoneStripPoint(Vector(0, dt));
 	}
+
+	const bool ctrlPressed = core->getCtrlState();
+
+	for(size_t i = 0; i < NumPages; ++i)
+		pages[i].showCenter(ctrlPressed);
+
+	RenderObject *ctrlSprite; // what moving the mouse is currently controlling
+	if(splinegrid)
+		ctrlSprite = splinegrid;
+	else
+		ctrlSprite = ctrlPressed ? (RenderObject*)getCurrentPageSprite() : (RenderObject*)spriteRoot;
+
+	if (core->mouse.buttons.middle)
+	{
+		ctrlSprite->position += core->mouse.change;
+	}
+
 	float spd = 1.0f;
 	if (core->mouse.scrollWheelChange < 0)
 	{
@@ -777,14 +1110,9 @@ void AnimationEditor::update(float dt)
 	}
 	ctrlSprite->scale.y = ctrlSprite->scale.x;
 
-	if (boneEdit == 0)
+	if (editMode == AE_SELECT)
 	{
-		if (editSprite)
-			updateEditingBone();
-		if (editingBone)
-		{
-
-		}
+		updateEditingBone();
 	}
 	if (editingBone)
 	{
@@ -799,58 +1127,114 @@ void AnimationEditor::update(float dt)
 			editingBone->originalScale *= (1 + m*dt);
 			editingBone->scale = editingBone->originalScale;
 		}
-	}
 
-	if (editingBone && boneEdit == 1 && !splinegrid)
-	{
-		Vector add = core->mouse.change;
-		// adjust relative mouse movement to absolute bone rotation
-		if (editingBone->getParent())
+		if (editMode == AE_EDITING_MOVE)
 		{
-			float rot = editingBone->getParent()->getAbsoluteRotation().z;
-			if (editingBone->getParent()->isfhr())
+			Vector add = core->mouse.change;
+			// adjust relative mouse movement to absolute bone rotation
+			if (editingBone->getParent())
 			{
-				add.x = -add.x;
-				add.rotate2D360(rot);
+				float rot = editingBone->getParent()->getAbsoluteRotation().z;
+				if (editingBone->getParent()->isfhr())
+				{
+					add.x = -add.x;
+					add.rotate2D360(rot);
+				}
+				else
+					add.rotate2D360(360 - rot);
 			}
-			else
-				add.rotate2D360(360 - rot);
+			editingBone->position += add;
+			constrainMouse();
 		}
-		editingBone->position += add;
-		constrainMouse();
-	}
-	if (editingBone && boneEdit == 2)
-	{
-		if (editingBone->getParent() && editingBone->getParent()->isfhr())
-			editingBone->rotation.z = rotOffset + (cursorOffset.x - core->mouse.position.x)/2;
-		else
-			editingBone->rotation.z = rotOffset + (core->mouse.position.x - cursorOffset.x)/2;
-		constrainMouse();
-	}
-	if (boneEdit == 0)
-	{
-		if (!editSprite->isAnimating())
+		else if (editMode == AE_EDITING_ROT)
 		{
-			SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
-			if (k)
-				editSprite->setTime(k->t);
-			editSprite->updateBones();
+			if (editingBone->getParent() && editingBone->getParent()->isfhr())
+				editingBone->rotation.z = rotOffset + (cursorOffset.x - core->mouse.position.x)/2;
+			else
+				editingBone->rotation.z = rotOffset + (core->mouse.position.x - cursorOffset.x)/2;
+			constrainMouse();
 		}
 	}
 
-	if(splinegrid && editingBone && editingStrip && splinegrid->wasModified)
+	bool doUpdateBones = false;
+	if (editMode == AE_SELECT)
+	{
+		float t = 0;
+		bool hastime = false;
+		bool mod = false;
+		if(core->mouse.buttons.right)
+		{
+			t = tltime;
+			hastime = t >= 0;
+			mod = true;
+		}
+		if (!hastime && !isAnimating())
+		{
+			SkeletalSprite *editSprite = getCurrentPageSprite();
+			if(Animation *a = editSprite->getCurrentAnimationOrNull())
+			{
+				SkeletalKeyframe *k = a->getKeyframe(currentKey);
+				if (k)
+				{
+					t = k->t;
+					hastime = true;
+				}
+			}
+		}
+
+		if(hastime)
+		{
+			for(size_t i = 0; i < NumPages; ++i)
+			{
+				SkeletalSprite *spr = getPageSprite(i);
+				if(Animation *a = spr->getCurrentAnimationOrNull())
+				{
+					float len = a->getAnimationLength();
+					float tt = t;
+					if(len && mod)
+						tt = fmodf(tt, len);
+					spr->setTime(tt);
+				}
+			}
+			doUpdateBones = true;
+		}
+	}
+
+	if(splinegrid && editingBone && editMode == AE_SPLINE && splinegrid->wasModified)
 	{
 		applySplineGridToBone();
 		splinegrid->wasModified = false;
 	}
+
+	if(doUpdateBones)
+	{
+		for(size_t i = 0; i < NumPages; ++i)
+		{
+			SkeletalSprite *spr = getPageSprite(i);
+			if(spr->isLoaded() && !spr->isAnimating())
+				spr->updateBones(dt);
+		}
+	}
+
+}
+
+void AnimationEditor::_copyKey()
+{
+	if (core->getCtrlState())
+		copy();
 }
 
 void AnimationEditor::copy()
 {
  	if (dsq->isNested()) return;
 
+	copyBuffer = *getCurrentPageAnimation()->getKeyframe(currentKey);
+}
+
+void AnimationEditor::_pasteKey()
+{
 	if (core->getCtrlState())
-		copyBuffer = *editSprite->getCurrentAnimation()->getKeyframe(currentKey);
+		paste();
 }
 
 void AnimationEditor::paste()
@@ -859,7 +1243,7 @@ void AnimationEditor::paste()
 
 	if (core->getCtrlState())
 	{
-		SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
+		SkeletalKeyframe *k = getCurrentPageAnimation()->getKeyframe(currentKey);
 		float time = k->t;
 		*k = copyBuffer;
 		k->t = time;
@@ -870,26 +1254,29 @@ void AnimationEditor::nextKey()
 {
 	if (dsq->isNested()) return;
 
-	if (editingStrip && !splinegrid)
+	if (editMode == AE_STRIP)
 	{
 		selectedStripPoint++;
-		if (selectedStripPoint >= editSprite->getSelectedBone(false)->changeStrip.size()
+		if (selectedStripPoint >= editingBone->changeStrip.size()
 				&& selectedStripPoint > 0)
 			selectedStripPoint --;
 	}
 	else
 	{
+		SkeletalSprite *editSprite = getCurrentPageSprite();
+
 		if (core->getCtrlState())
 		{
+			const std::vector<KeyframeWidget*>& keyframeWidgets = pages[curPage].timeline->getKeyframes();
 			for (size_t i = 0; i < keyframeWidgets.size(); i++)
 			{
 				keyframeWidgets[i]->shiftLeft();
 			}
 		}
-		else
+		else if(Animation *a = editSprite->getCurrentAnimation())
 		{
 			currentKey++;
-			SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
+			SkeletalKeyframe *k = a->getKeyframe(currentKey);
 			if (k)
 				editSprite->setTime(k->t);
 			else
@@ -904,27 +1291,29 @@ void AnimationEditor::prevKey()
 {
 	if (dsq->isNested()) return;
 
-	if (editingStrip && !splinegrid)
+	if (editMode == AE_STRIP)
 	{
-		if(selectedStripPoint > 0) {
+		if(selectedStripPoint > 0)
 			selectedStripPoint--;
-		}
 	}
 	else
 	{
+		SkeletalSprite *editSprite = getCurrentPageSprite();
+
 		if (core->getCtrlState())
 		{
+			const std::vector<KeyframeWidget*>& keyframeWidgets = pages[curPage].timeline->getKeyframes();
 			for (size_t i = 0; i < keyframeWidgets.size(); i++)
 			{
 				keyframeWidgets[i]->shiftRight();
 			}
 		}
-		else
+		else if(Animation *a = editSprite->getCurrentAnimation())
 		{
 			if (currentKey > 0)
 			{
 				currentKey --;
-				SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
+				SkeletalKeyframe *k = a->getKeyframe(currentKey);
 				if (k)
 					editSprite->setTime(k->t);
 
@@ -935,12 +1324,6 @@ void AnimationEditor::prevKey()
 }
 
 
-void AnimationEditor::copyKey()
-{
-	SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
-	buffer = *k;
-}
-
 void AnimationEditor::newAnim()
 {
 	if (dsq->isNested()) return;
@@ -948,91 +1331,93 @@ void AnimationEditor::newAnim()
 	std::string name = dsq->getUserInputString("NewAnimName", "");
 	if (!name.empty())
 	{
-		Animation anim = *editSprite->getCurrentAnimation();
+		Animation anim = *getCurrentPageAnimation();
 		anim.name = name;
-		editSprite->animations.push_back(anim);
-		editSprite->lastAnimation();
+		SkeletalSprite *spr = getCurrentPageSprite();
+		spr->animations.push_back(anim);
+		spr->lastAnimation();
 	}
-}
-
-void AnimationEditor::pasteKey()
-{
-	if (dsq->isNested()) return;
-
-	SkeletalKeyframe *k = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
-	(*k) = buffer;
 }
 
 void AnimationEditor::newKey()
 {
 	if (dsq->isNested()) return;
 
-	editSprite->getCurrentAnimation()->cloneKey(currentKey, TIMELINE_UNIT);
+	getCurrentPageAnimation()->cloneKey(currentKey, TIMELINE_UNIT);
 	currentKey++;
 	rebuildKeyframeWidgets();
+}
+
+void AnimationEditor::_stopExtraEditModes()
+{
+	selectedStripPoint = 0;
+	editMode = AE_SELECT;
+	bgGrad->makeVertical(Vector(0.4f, 0.4f, 0.4f), Vector(0.8f, 0.8f, 0.8f));
+
+	if(splinegrid)
+	{
+		splinegrid->safeKill();
+		splinegrid = NULL;
+	}
 }
 
 void AnimationEditor::editStripKey()
 {
 	if (dsq->isNested()) return;
 
-	if (editingStrip)
+	if (editMode == AE_SPLINE || editMode == AE_STRIP)
 	{
-		selectedStripPoint = 0;
-		editingStrip = false;
-		bgGrad->makeVertical(Vector(0.4f, 0.4f, 0.4f), Vector(0.8f, 0.8f, 0.8f));
-
-		if(splinegrid)
-		{
-			//editSprite->alphaMod = 1;
-			//editSprite->removeChild(splinegrid);
-			splinegrid->safeKill();
-			splinegrid = NULL;
-		}
+		_stopExtraEditModes();
 	}
 	else
 	{
 		if(editingBone && editingBone->getGrid())
 		{
-			RenderGrid *grid = editingBone->getGrid();
-			Animation *a = editSprite->getCurrentAnimation();
+			DynamicRenderGrid *grid = editingBone->getGrid();
+			Animation *a = editingBoneSprite->getCurrentAnimation();
 			BoneGridInterpolator *interp = a->getBoneGridInterpolator(editingBone->boneIdx);
-
-			editingStrip = true;
 
 			if(interp)
 			{
+				editMode = AE_SPLINE;
 				bgGrad->makeVertical(Vector(0.4f, 0.6f, 0.4f), Vector(0.8f, 1, 0.8f));
 
 				BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-				assert(bk->controlpoints.size() == interp->bsp.ctrlX() * interp->bsp.ctrlY());
+				const size_t totalcp = interp->bsp.ctrlX() * interp->bsp.ctrlY();
+				const bool reset = bk->controlpoints.empty();
+				bk->controlpoints.resize(totalcp);
+				assert(!splinegrid);
 
-				splinegrid = new SplineGrid;
-				RenderGrid *rgrid = splinegrid->resize(interp->bsp.ctrlX(), interp->bsp.ctrlY(), grid->width(), grid->height(), interp->bsp.degX(), interp->bsp.degY());
-				rgrid->drawOrder = grid->drawOrder;
+				splinegrid = new SplineGrid();
+				DynamicRenderGrid *rgrid = splinegrid->resize(interp->bsp.ctrlX(), interp->bsp.ctrlY(), grid->width(), grid->height(), interp->bsp.degX(), interp->bsp.degY());
+				rgrid->setDrawOrder(grid->getDrawOrder());
 				splinegrid->setTexture(editingBone->texture->name);
 				splinegrid->setWidthHeight(editingBone->width, editingBone->height);
 				splinegrid->position = Vector(400, 300);
-				//splinegrid->followCamera = 1;
-				splinegrid->importControlPoints(&bk->controlpoints[0]);
-				//editSprite->addChild(splinegrid, PM_STATIC, RBP_OFF, CHILD_FRONT);
-				//editSprite->alphaMod = 0.5f;
+				splinegrid->setAssist(assistedSplineEdit);
+
+				if(reset)
+					splinegrid->resetControlPoints();
+				else
+					splinegrid->importKeyframe(bk);
+
 				addRenderObject(splinegrid, LR_PARTICLES_TOP);
 			}
 			else
 			{
+				editMode = AE_STRIP;
 				bgGrad->makeVertical(Vector(0.4f, 0.4f, 0.6f), Vector(0.8f, 0.8f, 1));
 			}
 
 		}
 		else if(editingBone)
 		{
-			debugLog("Bone has no grid, cannot edit grid");
+			notify("Bone has no grid, cannot edit grid");
 			dsq->sound->playSfx("denied");
 		}
 		else
 		{
-			debugLog("No bone selected for grid edit mode");
+			notify("No bone selected for grid edit mode");
 			dsq->sound->playSfx("denied");
 		}
 	}
@@ -1044,7 +1429,7 @@ void AnimationEditor::deleteKey()
 
 	if (currentKey > 0)
 	{
-		editSprite->getCurrentAnimation()->deleteKey(currentKey);
+		getCurrentPageAnimation()->deleteKey(currentKey);
 		currentKey --;
 	}
 	rebuildKeyframeWidgets();
@@ -1054,14 +1439,18 @@ void AnimationEditor::animate()
 {
 	if (dsq->isNested()) return;
 
-	editSprite->playCurrentAnimation(-1);
+	for(size_t i = 0; i < NumPages; ++i)
+		if(pages[i].editSprite.isLoaded())
+			pages[i].editSprite.playCurrentAnimation(-1);
 }
 
 void AnimationEditor::stop()
 {
 	if (dsq->isNested()) return;
 
-	editSprite->stopAnimation();
+	for(size_t i = 0; i < NumPages; ++i)
+		if(pages[i].editSprite.isLoaded())
+			pages[i].editSprite.stopAnimation();
 }
 
 void AnimationEditor::animateOrStop()
@@ -1069,23 +1458,22 @@ void AnimationEditor::animateOrStop()
 	if (dsq->isNested()) return;
 
 	if (core->getShiftState())
-		editSprite->stopAnimation();
+		stop();
 	else
-		editSprite->playCurrentAnimation(-1);
+		animate();
 }
 
 void AnimationEditor::lmbd()
 {
-	pushUndo();
-	updateEditingBone();
-	if (editingBone
-
-		&& core->mouse.position.x > 400-200 && core->mouse.position.x < 400+200
-		&& core->mouse.position.y > 300-200 && core->mouse.position.y < 300+200
-		)
+	if(editMode == AE_SELECT)
 	{
-		cursorOffset = editingBone->position + editSprite->position - core->mouse.position;
-		boneEdit = 1;
+		pushUndo();
+		updateEditingBone();
+		if (editingBone && isMouseInRect() && !editingBoneSprite->isAnimating())
+		{
+			cursorOffset = editingBone->getWorldPosition() - core->mouse.position;
+			editMode = AE_EDITING_MOVE;
+		}
 	}
 }
 
@@ -1093,10 +1481,11 @@ void AnimationEditor::applyTranslation()
 {
 	if (editingBone)
 	{
+		Animation *a = editingBoneSprite->getCurrentAnimation();
 		if (!core->getShiftState())
 		{
 			// one bone mode
-			BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+			BoneKeyframe *b = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 			if (b)
 			{
 				b->x = editingBone->position.x;
@@ -1105,7 +1494,7 @@ void AnimationEditor::applyTranslation()
 		}
 		else
 		{
-			BoneKeyframe *bcur = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+			BoneKeyframe *bcur = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 			if (bcur)
 			{
 				int xdiff = editingBone->position.x - bcur->x;
@@ -1113,9 +1502,9 @@ void AnimationEditor::applyTranslation()
 				if(!core->getCtrlState())
 				{
 					// all bones in one anim mode
-					for (size_t i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+					for (size_t i = 0; i < a->getNumKeyframes(); ++i)
 					{
-						BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+						BoneKeyframe *b = a->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 						if (b)
 						{
 							b->x += xdiff;
@@ -1126,11 +1515,11 @@ void AnimationEditor::applyTranslation()
 				else
 				{
 					// all bones in all anims mode
-					for (size_t a = 0; a < editSprite->animations.size(); ++a)
+					for (size_t a = 0; a < editingBoneSprite->animations.size(); ++a)
 					{
-						for (size_t i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+						for (size_t i = 0; i < editingBoneSprite->animations[a].getNumKeyframes(); ++i)
 						{
-							BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							BoneKeyframe *b = editingBoneSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 							if (b)
 							{
 								b->x += xdiff;
@@ -1146,37 +1535,37 @@ void AnimationEditor::applyTranslation()
 
 void AnimationEditor::applyRotation()
 {
-	BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-	if (b)
+	if(editingBone)
 	{
-		b->rot = editingBone->rotation.z = 0;
+		BoneKeyframe *b = editingBoneSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+		if (b)
+		{
+			b->rot = editingBone->rotation.z = 0;
+		}
 	}
 }
 
 void AnimationEditor::lmbu()
 {
-	switch(boneEdit)
-	{
-	case 1:
+	if(editMode == AE_EDITING_MOVE)
 	{
 		applyTranslation();
+		editMode = AE_SELECT;
 	}
-	break;
-	}
-
-	boneEdit = 0;
 }
 
 void AnimationEditor::rmbd()
 {
-	pushUndo();
-	updateEditingBone();
-	if (editingBone)
+	if(editMode == AE_SELECT)
 	{
-
-		cursorOffset = core->mouse.position;
-		rotOffset = editingBone->rotation.z;
-		boneEdit = 2;
+		updateEditingBone();
+		if (editingBone && !editingBoneSprite->isAnimating())
+		{
+			pushUndo();
+			cursorOffset = core->mouse.position;
+			rotOffset = editingBone->rotation.z;
+			editMode = AE_EDITING_ROT;
+		}
 	}
 }
 
@@ -1203,9 +1592,10 @@ void AnimationEditor::flipRot()
 	updateEditingBone();
 	if (editingBone)
 	{
+		Animation *a = editingBoneSprite->getCurrentAnimation();
 		if (!core->getShiftState())
 		{
-			BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+			BoneKeyframe *b = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 			if (b)
 			{
 				b->rot = -b->rot;
@@ -1213,14 +1603,14 @@ void AnimationEditor::flipRot()
 		}
 		else
 		{
-			BoneKeyframe *bcur = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+			BoneKeyframe *bcur = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 			if (bcur)
 			{
 				if (!core->getCtrlState())
 				{
-					for (size_t i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+					for (size_t i = 0; i < a->getNumKeyframes(); ++i)
 					{
-						BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+						BoneKeyframe *b = a->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 						if (b)
 						{
 							b->rot = -b->rot;
@@ -1230,11 +1620,11 @@ void AnimationEditor::flipRot()
 				else
 				{
 					// all bones in all anims mode
-					for (size_t a = 0; a < editSprite->animations.size(); ++a)
+					for (size_t a = 0; a < editingBoneSprite->animations.size(); ++a)
 					{
-						for (size_t i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
+						for (size_t i = 0; i < editingBoneSprite->animations[a].getNumKeyframes(); ++i)
 						{
-							BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							BoneKeyframe *b = editingBoneSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 							if (b)
 							{
 								b->rot = -b->rot;
@@ -1254,7 +1644,7 @@ void AnimationEditor::clearPos()
 	updateEditingBone();
 	if (editingBone)
 	{
-		BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+		BoneKeyframe *b = editingBoneSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
 		if (b)
 		{
 			editingBone->position = Vector(0,0);
@@ -1277,50 +1667,50 @@ void AnimationEditor::toggleHideBone()
 
 void AnimationEditor::rmbu()
 {
-	switch(boneEdit)
+	if(editMode != AE_EDITING_ROT)
+		return;
+
+	editMode = AE_SELECT;
+	if (editingBone)
 	{
-	case 2:
-	{
-		if (editingBone)
+		Animation *a = editingBoneSprite->getCurrentAnimation();
+		if (!core->getShiftState())
 		{
-			if (!core->getShiftState())
+			// one bone mode
+			BoneKeyframe *b = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+			if (b)
 			{
-				// one bone mode
-				BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-				if (b)
-				{
-					b->rot = int(editingBone->rotation.z);
-				}
+				b->rot = int(editingBone->rotation.z);
 			}
-			else
+		}
+		else
+		{
+			BoneKeyframe *bcur = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
+			if (bcur)
 			{
-				BoneKeyframe *bcur = editSprite->getCurrentAnimation()->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-				if (bcur)
+				int rotdiff = editingBone->rotation.z - bcur->rot;
+				if (!core->getCtrlState())
 				{
-					int rotdiff = editingBone->rotation.z - bcur->rot;
-					if (!core->getCtrlState())
+					for (size_t i = 0; i < a->getNumKeyframes(); ++i)
 					{
-						for (size_t i = 0; i < editSprite->getCurrentAnimation()->getNumKeyframes(); ++i)
+						BoneKeyframe *b = a->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+						if (b)
 						{
-							BoneKeyframe *b = editSprite->getCurrentAnimation()->getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
+							b->rot += rotdiff;
+						}
+					}
+				}
+				else
+				{
+					// all bones in all anims mode
+					for (size_t a = 0; a < editingBoneSprite->animations.size(); ++a)
+					{
+						for (size_t i = 0; i < editingBoneSprite->animations[a].getNumKeyframes(); ++i)
+						{
+							BoneKeyframe *b = editingBoneSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
 							if (b)
 							{
 								b->rot += rotdiff;
-							}
-						}
-					}
-					else
-					{
-						// all bones in all anims mode
-						for (size_t a = 0; a < editSprite->animations.size(); ++a)
-						{
-							for (size_t i = 0; i < editSprite->animations[a].getNumKeyframes(); ++i)
-							{
-								BoneKeyframe *b = editSprite->animations[a].getKeyframe(i)->getBoneKeyframe(editingBone->boneIdx);
-								if (b)
-								{
-									b->rot += rotdiff;
-								}
 							}
 						}
 					}
@@ -1328,10 +1718,6 @@ void AnimationEditor::rmbu()
 			}
 		}
 	}
-	break;
-	}
-
-	boneEdit = 0;
 }
 
 void AnimationEditor::mmbd()
@@ -1345,12 +1731,13 @@ void AnimationEditor::cloneBoneAhead()
 	updateEditingBone();
 	if (editingBone && currentKey >= 0)
 	{
-		SkeletalKeyframe *s1 = editSprite->getCurrentAnimation()->getKeyframe(currentKey);
+		Animation *a = editingBoneSprite->getCurrentAnimation();
+		SkeletalKeyframe *s1 = a->getKeyframe(currentKey);
 		BoneKeyframe *b1 = 0;
 		if (s1)
 			b1 = s1->getBoneKeyframe(editingBone->boneIdx);
 
-		SkeletalKeyframe *s2 = editSprite->getCurrentAnimation()->getKeyframe(currentKey+1);
+		SkeletalKeyframe *s2 = a->getKeyframe(currentKey+1);
 		BoneKeyframe *b2 = 0;
 		if (s2)
 			b2 = s2->getBoneKeyframe(editingBone->boneIdx);
@@ -1365,30 +1752,77 @@ void AnimationEditor::cloneBoneAhead()
 	}
 }
 
-void AnimationEditor::saveFile()
+bool AnimationEditor::savePage(size_t pg)
 {
-	if(editSprite->saveSkeletal(editingFile))
-		dsq->screenMessage("Saved anim: " + editingFile);
-	else
-		dsq->screenMessage("FAILED TO SAVE: " + editingFile);
+	return getPageSprite(pg)->saveSkeletal(pages[pg].editingFile);
 }
 
-void AnimationEditor::loadFile()
+void AnimationEditor::saveFile()
+{
+	if(!getPageSprite(curPage)->isLoaded())
+	{
+		notify("Nothing to save");
+		return;
+	}
+
+	if(savePage(curPage))
+		notify("Saved anim: " + pages[curPage].editingFile);
+	else
+		notify("FAILED TO SAVE: " + pages[curPage].editingFile);
+}
+
+void AnimationEditor::saveAll()
+{
+	bool ok = true;
+	std::ostringstream os;
+	for(size_t i = 0; i < NumPages; ++i)
+		if(getPageSprite(i)->isLoaded())
+			if(!savePage(i))
+			{
+				ok = false;
+				os << pages[i].editingFile << " ";
+			}
+
+	if(ok)
+		notify("All saved");
+	else
+		notify("Failed to save: " + os.str());
+}
+
+void AnimationEditor::reloadPage(size_t pg)
+{
+	loadFile(pg, pages[pg].editingFile.c_str());
+}
+
+void AnimationEditor::loadFile(size_t pg, const char* fn)
 {
 	SkeletalSprite::clearCache();
-	lastSelectedBone = 0;
 	editingBone = 0;
-	clearUndoHistory();
-	editSprite->position = Vector(400,300);
-	editSprite->loadSkeletal(editingFile);
+	editingBoneIdx = -1;
+	pages[pg].clearUndoHistory();
+	//editSprite->position = Vector(0,0);
+	pages[pg].load(fn);
 	currentKey = 0;
 	rebuildKeyframeWidgets();
 
 	// disable strip edit mode if still active
-	if (editingStrip)
-		editStripKey();
+	_stopExtraEditModes();
 
 	onKeyframeChanged();
+}
+
+void AnimationEditor::reloadFile()
+{
+	if(getPageSprite(curPage)->isLoaded())
+		reloadPage(curPage);
+	else
+		load(); // prompt what to load here
+}
+
+void AnimationEditor::reloadAll()
+{
+	for(size_t i = 0; i < NumPages; ++i)
+		reloadPage(i);
 }
 
 void AnimationEditor::goToTitle()
@@ -1409,10 +1843,11 @@ void AnimationEditor::quit()
 void AnimationEditor::nextAnim()
 {
 	if (dsq->isNested()) return;
+	if (core->getShiftState()) return;
 
-	if (!core->getShiftState())
+	if(editMode == AE_SELECT)
 	{
-		editSprite->nextAnimation();
+		getCurrentPageSprite()->nextAnimation();
 		currentKey = 0;
 		rebuildKeyframeWidgets();
 	}
@@ -1421,11 +1856,11 @@ void AnimationEditor::nextAnim()
 void AnimationEditor::prevAnim()
 {
 	if (dsq->isNested()) return;
-	if (editingStrip) return;
+	if (core->getShiftState()) return;
 
-	if (!core->getShiftState())
+	if(editMode == AE_SELECT)
 	{
-		editSprite->prevAnimation();
+		getCurrentPageSprite()->prevAnimation();
 		currentKey = 0;
 		rebuildKeyframeWidgets();
 	}
@@ -1439,20 +1874,20 @@ void AnimationEditor::selectAnim()
 	if (name.empty())
 		return;
 
-	if(editSprite->selectAnimation(name.c_str()))
+	if(getCurrentPageSprite()->selectAnimation(name.c_str()))
 	{
 		currentKey = 0;
 		rebuildKeyframeWidgets();
 	}
 	else
-		dsq->screenMessage("No such anim name");
+		notify("No such anim name");
 }
 
 void AnimationEditor::reverseAnim()
 {
 	if (dsq->isNested()) return;
 
-	Animation *a = editSprite->getCurrentAnimation();
+	Animation *a = getCurrentPageAnimation();
 	if (a)
 	{
 		debugLog("calling reverse anim");
@@ -1461,15 +1896,26 @@ void AnimationEditor::reverseAnim()
 	}
 }
 
+void AnimationEditor::flipH()
+{
+	if (dsq->isNested()) return;
+
+	RenderObject *ro = core->getCtrlState() ? (RenderObject*)getSelectedPageSprite() : (RenderObject*)spriteRoot;
+	ro->flipHorizontal();
+
+	const Vector red(1,0,0), white(1,1,1);
+	toptext->color = spriteRoot->isfh() ? red : white;
+	for(size_t i = 0; i < NumPages; ++i)
+		pages[i].timeline->label.color = pages[i].editSprite.isfhr() ? red : white;
+}
+
 void AnimationEditor::load()
 {
 	if (dsq->isNested()) return;
 
 	std::string file = dsq->getUserInputString("Enter anim file to load:");
 	if (file.empty())		return;
-	this->editingFile = file;
-	SkeletalSprite::clearCache();
-	loadFile();
+	loadFile(curPage, file.c_str());
 }
 
 void AnimationEditor::loadSkin()
@@ -1481,25 +1927,26 @@ void AnimationEditor::loadSkin()
 
 
 	SkeletalSprite::clearCache();
-	editSprite->loadSkin(file);
+	getCurrentPageSprite()->loadSkin(file);
 }
 
 void AnimationEditor::moveNextWidgets(float dt)
 {
 	if (dsq->isNested()) return;
 
-	int s = 0;
-	KeyframeWidget *w=0;
+	bool move = false;
+	const std::vector<KeyframeWidget*>& keyframeWidgets = pages[curPage].timeline->getKeyframes();
+	Animation *a = getCurrentPageAnimation();
 	for (size_t i = 0; i < keyframeWidgets.size(); i++)
 	{
-		w = keyframeWidgets[i];
-		if (s)
+		KeyframeWidget *w = keyframeWidgets[i];
+		if (move)
 		{
-			editSprite->getCurrentAnimation()->getKeyframe(w->key)->t += dt;
+			a->getKeyframe(w->key)->t += dt;
 		}
-		else if (!s && KeyframeWidget::movingWidget == w)
+		else if (KeyframeWidget::movingWidget == w)
 		{
-			s = 1;
+			move = true;
 		}
 	}
 
@@ -1517,9 +1964,9 @@ void AnimationEditor::toggleRenderBorders()
 
 void AnimationEditor::updateRenderBorders()
 {
+	SkeletalSprite *editSprite = getCurrentPageSprite();
 	if (!editSprite)
 		return;
-
 
 	// reset
 	for (size_t i = 0; i < editSprite->bones.size(); ++i)
@@ -1559,18 +2006,72 @@ void AnimationEditor::updateRenderBorders()
 	}
 }
 
+// Pick the closest bone
 void AnimationEditor::updateEditingBone()
 {
-	if (!editingStrip)
-		editingBone = editSprite->getSelectedBone(mouseSelection);
+	if(editMode != AE_SELECT)
+		return;
+
+	if(!mouseSelection)
+	{
+		if(!editingBoneSprite)
+			editingBoneSprite = getCurrentPageSprite();
+		editingBonePage = curPage;
+		Bone *b = (size_t)editingBoneIdx < editingBoneSprite->bones.size() ? editingBoneSprite->bones[editingBoneIdx] : NULL; // this uses underflow at -1
+		if(b && b->selectable)
+			_selectBone(b);
+		else
+			selectNextBone();
+		return;
+	}
+
+	// When selecting with the mouse, pick the closest bone to the cursor, no matter the skeleton it belongs to
+	float mind;
+	Bone *nearest = NULL;
+	SkeletalSprite *nearestSpr = NULL;
+	const Vector& p = core->mouse.position;
+	int page = -1, idx = -1;
+	// DON'T make this a loop going over all pages. Only use the current page.
+	// Causes problems when editing bones on a foreign sprite since we can't assign a keyframe cleanly.
+	// (Because that sprite may not have enough keyframes, or there is no keyframe at the time we're trying to edit.
+	// The former just crashes; the latter causes weirdness and accidental edits to unrelated/unintended keyframes)
+	//for(size_t i = 0; i < NumPages; ++i)
+	{
+		//SkeletalSprite& spr = pages[i].editSprite;
+		SkeletalSprite& spr = *getCurrentPageSprite();
+		if(spr.isLoaded())
+		{
+			int k = spr.findSelectableBoneIdxClosestTo(p, true);
+			if(k >= 0)
+			{
+				Bone *b = spr.bones[k];
+				const float d = (b->getWorldPosition() - p).getSquaredLength2D();
+				if(!nearest || d < mind)
+				{
+					mind = d;
+					nearest = b;
+					nearestSpr = &spr;
+					//page = i;
+					page = curPage;
+					idx = k;
+				}
+			}
+		}
+	}
+
+	editingBoneSprite = nearestSpr;
+	editingBonePage = page;
+	editingBoneIdx = idx;
+	_selectBone(nearest);
 }
 
 void AnimationEditor::showAllBones()
 {
 	if (dsq->isNested()) return;
 
-	for (size_t i = 0; i < editSprite->bones.size(); ++i)
-		editSprite->bones[i]->renderQuad = true;
+	SkeletalSprite *spr = getSelectedPageSprite();
+	for (size_t i = 0; i < spr->bones.size(); ++i)
+		spr->bones[i]->renderQuad = true;
 }
 
 void AnimationEditor::incrTimelineUnit()
@@ -1616,8 +2117,120 @@ void AnimationEditor::decrTimelineGrid()
 	updateTimelineGrid();
 }
 
+void AnimationEditor::toggleSplineMode()
+{
+	if (dsq->isNested()) return;
+
+	assistedSplineEdit = !assistedSplineEdit;
+	updateButtonLabels();
+	if(splinegrid)
+		splinegrid->setAssist(assistedSplineEdit);
+}
+
+void AnimationEditor::updateButtonLabels()
+{
+	{
+		std::ostringstream os;
+		os << "S.Assist (W)(" << (assistedSplineEdit ? "on" : "off") << ")";
+		bSplineAssist->label->setText(os.str());
+	}
+}
+
+void AnimationEditor::toggleGradient()
+{
+	if (dsq->isNested()) return;
+
+	bgGrad->alpha.x = float(bgGrad->alpha.x <= 0);
+}
+
+float AnimationEditor::getMouseTimelineTime() const
+{
+	Vector m = core->mouse.position;
+	if(m.x > 0 && m.x < 800 && m.y > TIMELINE_CENTER_Y-TIMELINE_HEIGHT/2 && m.y < TIMELINE_CENTER_Y+TIMELINE_HEIGHT/2)
+	{
+		float t = (m.x - TIMELINE_X_OFFS) * TIMELINE_UNIT / TIMELINE_GRIDSIZE;
+		t = std::max(t, 0.0f);
+		return t;
+	}
+
+	return -1;
+}
+
+Animation* AnimationEditor::getPageAnimation(size_t page) const
+{
+	return pages[page].editSprite.getCurrentAnimation();
+}
+
+Animation* AnimationEditor::getCurrentPageAnimation() const
+{
+	return getPageAnimation(curPage);
+}
+
+SkeletalSprite* AnimationEditor::getPageSprite(size_t page) const
+{
+	return &pages[page].editSprite;
+}
+
+SkeletalSprite* AnimationEditor::getCurrentPageSprite() const
+{
+	return getPageSprite(curPage);
+}
+
+SkeletalSprite * AnimationEditor::getSelectedPageSprite() const
+{
+	return editingBoneSprite ? editingBoneSprite : getCurrentPageSprite();
+}
+
+bool AnimationEditor::isAnimating() const
+{
+	for(size_t i = 0; i < NumPages; ++i)
+		if(getPageSprite(i)->isAnimating())
+			return true;
+	return false;
+}
+
+float AnimationEditor::getAnimTime() const
+{
+	SkeletalSprite *cur = getCurrentPageSprite();
+	if(cur->isLoaded() && cur->isAnimating())
+		return cur->getAnimationLayer(0)->timer;
+
+	for(size_t i = 0; i < NumPages; ++i)
+	{
+		SkeletalSprite *spr = getPageSprite(i);
+		if(spr->isLoaded() && spr->isAnimating())
+			return spr->getAnimationLayer(0)->timer;
+	}
+
+	if(Animation *a = getCurrentPageSprite()->getCurrentAnimationOrNull())
+	{
+		SkeletalKeyframe *k = a->getKeyframe(currentKey);
+		if(k)
+			return k->t;
+	}
+
+	return 0;
+}
+
+void AnimationEditor::selectPage(unsigned page)
+{
+	if (dsq->isNested()) return;
+
+	if(editMode != AE_SELECT)
+		return;
+
+	if(!mouseSelection)
+	{
+		editingBoneSprite = &pages[page].editSprite;
+		updateEditingBone();
+	}
+
+	curPage = page;
+}
+
 void AnimationEditor::updateTimelineGrid()
 {
+	timelineTicks->updateVBO();
 	std::ostringstream os;
 	os << "Grid: " << TIMELINE_GRIDSIZE;
 	gridsize->setText(os.str());
@@ -1634,11 +2247,11 @@ void AnimationEditor::applyBoneToSplineGrid()
 {
 	if(splinegrid && editingBone)
 	{
-		Animation *a = editSprite->getCurrentAnimation();
+		Animation *a = editingBoneSprite->getCurrentAnimation();
 		BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-		assert(bk->controlpoints.size() == splinegrid->getSpline().ctrlX() * splinegrid->getSpline().ctrlY());
+
 		assert(bk->grid.size() == editingBone->getGrid()->linearsize());
-		splinegrid->importControlPoints(&bk->controlpoints[0]);
+		splinegrid->importKeyframe(bk);
 	}
 }
 
@@ -1646,12 +2259,88 @@ void AnimationEditor::applySplineGridToBone()
 {
 	if(splinegrid && editingBone)
 	{
-		Animation *a = editSprite->getCurrentAnimation();
+		Animation *a = editingBoneSprite->getCurrentAnimation();
 		BoneKeyframe *bk = a->getKeyframe(currentKey)->getBoneKeyframe(editingBone->boneIdx);
-		assert(bk->controlpoints.size() == splinegrid->getSpline().ctrlX() * splinegrid->getSpline().ctrlY());
 		assert(bk->grid.size() == editingBone->getGrid()->linearsize());
-		splinegrid->exportControlPoints(&bk->controlpoints[0]);
+		splinegrid->exportKeyframe(bk);
 		BoneGridInterpolator *interp = a->getBoneGridInterpolator(editingBone->boneIdx);
 		interp->updateGridAndBone(*bk, editingBone);
 	}
+}
+
+void AnimationEditor::_selectBone(Bone *b)
+{
+	if(editingBone)
+		editingBone->color = Vector(1,1,1);
+
+	if (b)
+		b->color = mouseSelection ? Vector(1,0,0) : Vector(0.5,0.5,1);
+	else
+	{
+		editingBonePage = -1;
+		editingBoneSprite = NULL;
+		editingBoneIdx = -1;
+	}
+
+	editingBone = b;
+}
+
+void AnimationEditor::selectPrevBone()
+{
+	if (dsq->isNested() || mouseSelection || editMode != AE_SELECT)
+		return;
+
+	SkeletalSprite *spr = editingBoneSprite ? editingBoneSprite : getCurrentPageSprite();
+	if(spr->bones.empty())
+		return;
+
+	size_t idx = editingBoneIdx;
+	Bone *b = NULL;
+	do
+	{
+		idx++;
+		if(idx == editingBoneIdx)
+		{
+			idx = -1;
+			break;
+		}
+		if (idx >= spr->bones.size())
+			idx  = 0;
+		b = spr->bones[idx];
+	}
+	while (!b->selectable);
+	editingBoneIdx = idx;
+	editingBonePage = curPage;
+	editingBoneSprite = spr;
+	_selectBone(b);
+}
+
+void AnimationEditor::selectNextBone()
+{
+	if (dsq->isNested() || mouseSelection || editMode != AE_SELECT)
+		return;
+
+	SkeletalSprite *spr = editingBoneSprite ? editingBoneSprite : getCurrentPageSprite();
+	if(spr->bones.empty())
+		return;
+
+	size_t idx = editingBoneIdx;
+	Bone *b = NULL;
+	do
+	{
+		idx--;
+		if(idx == editingBoneIdx)
+		{
+			idx = -1;
+			break;
+		}
+		if (idx >= spr->bones.size())
+			idx = spr->bones.size()-1;
+		b = spr->bones[idx];
+	}
+	while (!b->selectable);
+	editingBoneIdx = idx;
+	editingBonePage = curPage;
+	editingBoneSprite = spr;
+	_selectBone(b);
 }

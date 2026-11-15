@@ -30,7 +30,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Avatar.h"
 #include "GridRender.h"
 #include "Shot.h"
-
+#include "Tile.h"
+#include "TileRender.h"
 
 #ifdef BBGE_BUILD_WINDOWS
 	#define WIN32_LEAN_AND_MEAN
@@ -38,9 +39,14 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 	#include <shellapi.h>
 #endif
 
-const int minSelectionSize = 64;
-PathRender *pathRender;
+static const int minSelectionSize = 64;
 
+
+static TileStorage& tilesForLayer(unsigned layer)
+{
+	assert(layer < MAX_TILE_LAYERS);
+	return dsq->tilemgr.tilestore[layer];
+}
 
 SelectedEntity::SelectedEntity()
 {
@@ -93,10 +99,185 @@ std::string getMapTemplateFilename()
 	return "";
 }
 
-SceneEditor::SceneEditor() : ActionMapper(), on(false)
+static void tileToQuad(Quad *q, const TileData& t)
+{
+	q->position = Vector(t.x, t.y);
+	q->setTexturePointer(t.et->tex);
+	q->setWidthHeight(t.et->w, t.et->h); // set AFTER texture
+	q->scale = Vector(t.scalex, t.scaley);
+	q->fhTo(!!(t.flags & TILEFLAG_FH));
+	q->rotation.z = t.rotation;
+	if(t.flags & TILEFLAG_REPEAT && t.rep)
+	{
+		q->setRepeatScale(Vector(t.rep->texscaleX, t.rep->texscaleY));
+		q->repeatTextureToFill(true);
+		q->setOverrideTexCoords(t.getTexcoords());
+	}
+	q->renderBorder = true;
+	q->renderBorderColor = TileRender::GetTagColor(t.tag);
+	q->borderAlpha = 1.0f;
+	q->update(0); // to prevent 1 frame of lag when setting
+}
+
+static void quadToTile(TileData& t, const Quad *q)
+{
+	Vector posAndRot = q->getWorldPositionAndRotation();
+	t.x = posAndRot.x;
+	t.y = posAndRot.y;
+	t.rotation = posAndRot.z;
+	Vector scale = q->getRealScale();
+	t.scalex = scale.x;
+	t.scaley = scale.y;
+}
+
+class MultiTileHelper : public Quad
+{
+	TileStorage& _ts;
+	std::vector<Quad*> _quads;
+	Vector lastScale;
+
+	// This NEEDS to be a reference. The tile bulk-manipulation functions that take an array of indices
+	// as parameters and also update those parameters shall modify only a single source of truth,
+	// and that's SceneEditor::selectedTiles.
+	// Otherwise it could happen that indices change in that vector while a previously made copy
+	// carries around outdated indices, possibly leading to modification of unrelated tiles.
+	const std::vector<size_t> & _indices;
+
+	MultiTileHelper(TileStorage& ts, const std::vector<size_t>& indices)
+		: Quad()
+		, _ts(ts), _indices(indices)
+	{
+		_quads.reserve(indices.size());
+		this->cull = false;
+	}
+
+public:
+	static MultiTileHelper *New(unsigned bgLayer,  const std::vector<size_t>& indices)
+	{
+		const size_t n = indices.size();
+		assert(n);
+		TileStorage& ts = dsq->tilemgr.tilestore[bgLayer];
+		MultiTileHelper *th = new MultiTileHelper(ts, indices);
+
+		if(n == 1)
+		{
+			TileData& t = ts.tiles[indices[0]];
+			t.flags |= TILEFLAG_EDITOR_HIDDEN;
+			tileToQuad(th, t);
+		}
+		else
+		{
+			Vector center;
+			for(size_t i = 0; i < n; ++i)
+			{
+				TileData& t = ts.tiles[indices[i]];
+				center += Vector(t.x, t.y);
+				t.flags |= TILEFLAG_EDITOR_HIDDEN;
+
+				// clone tile to quad
+				Quad *q = new Quad;
+				tileToQuad(q, t);
+
+				th->addChild(q, PM_POINTER, RBP_ON);
+				th->_quads.push_back(q);
+			}
+
+			th->position = center / float(n);
+
+			// distribute quads around center
+			for(size_t i = 0; i < n; ++i)
+			{
+				Quad *q = th->_quads[i];
+				q->position -= th->position;
+			}
+		}
+
+		core->addRenderObject(th, LR_ELEMENTS1+bgLayer);
+		return th;
+	}
+
+	virtual ~MultiTileHelper()
+	{
+	}
+
+	void changeRepeatScale(const Vector& rs)
+	{
+		size_t n = _indices.size();
+		assert(n == 1);
+		TileData& t = _ts.tiles[_indices[0]];
+		if((t.flags & TILEFLAG_REPEAT) && t.rep)
+		{
+			this->setRepeatScale(rs);
+			t.rep->texscaleX = rs.x;
+			t.rep->texscaleY = rs.y;
+			t.refreshRepeat();
+			this->setOverrideTexCoords(t.getTexcoords());
+		}
+	}
+
+	virtual void onUpdate(float dt) OVERRIDE
+	{
+		if(scale != lastScale)
+		{
+			lastScale = scale;
+			if(_indices.size() == 1)
+			{
+				TileData& t = _ts.tiles[_indices[0]];
+				t.scalex = scale.x;
+				t.scaley = scale.y;
+				t.refreshRepeat();
+				this->setOverrideTexCoords(t.getTexcoords());
+			}
+			else
+			{
+				for(size_t i = 0; i < _quads.size(); ++i)
+				{
+					TileData& t = _ts.tiles[_indices[i]];
+					Quad *q = _quads[i];
+					Vector s = q->getRealScale();
+					t.scalex = s.x;
+					t.scaley = s.y;
+					t.refreshRepeat();
+					q->setOverrideTexCoords(t.getTexcoords());
+				}
+			}
+		}
+
+		Quad::onUpdate(dt);
+	}
+
+	void finish()
+	{
+		const size_t n = _indices.size();
+		if(n == 1)
+		{
+			TileData& t = _ts.tiles[_indices[0]];
+			t.flags &= ~TILEFLAG_EDITOR_HIDDEN;
+			quadToTile(t, this);
+		}
+		else
+		{
+			assert(n == _quads.size());
+			for(size_t i = 0; i < n; ++i)
+			{
+				TileData& t = _ts.tiles[_indices[i]];
+				Quad *q = _quads[i];
+				t.flags &= ~TILEFLAG_EDITOR_HIDDEN;
+				quadToTile(t, q);
+			}
+		}
+		alphaMod = 0;
+		this->safeKill(); // also deletes all children
+		_ts.refreshAll();
+	}
+};
+
+
+SceneEditor::SceneEditor() : ActionMapper(), on(false), inCreateAquarian(false)
 {
 	autoSaveFile = 0;
 	selectedIdx = -1;
+	multi = NULL;
 }
 
 void SceneEditor::setBackgroundGradient()
@@ -116,31 +297,16 @@ void SceneEditor::setBackgroundGradient()
 	}
 }
 
-void SceneEditor::changeDepth()
-{
-	if (editingElement)
-	{
-		editingElement->followCamera = 0.9f;
-		editingElement->cull = false;
-	}
-}
-
 void SceneEditor::updateSelectedElementPosition(Vector dist)
 {
-	if (state == ES_MOVING)
+	if (state == ES_MOVING && multi)
 	{
-		if (!selectedElements.empty())
-		{
-			dummy.position = oldPosition + dist;
-		}
-		else if (editingElement)
-		{
-			editingElement->position = oldPosition + dist;
-		}
+		// the actual tile position is updated when we release the mouse
+		multi->position = oldPosition + dist;
 	}
 }
 
-bool se_changedEntityType = false;
+static bool se_changedEntityType = false;
 class SEQuad : public Quad
 {
 public:
@@ -176,7 +342,7 @@ public:
 		selectedEntity.name = name;
 	}
 
-	void onUpdate(float dt)
+	void onUpdate(float dt) OVERRIDE
 	{
 		if (doubleClickTimer > 0)
 			doubleClickTimer -= dt;
@@ -242,12 +408,13 @@ public:
 };
 
 
-std::vector<DebugButton*> mainMenu;
-int execID = 0;
-bool inMainMenu = false;
 
-std::vector<SEQuad*> qs;
-DebugFont *se_label=0;
+static std::vector<DebugButton*> mainMenu;
+static int execID = 0;
+static bool inMainMenu = false;
+
+static std::vector<SEQuad*> qs;
+static DebugFont *se_label=0;
 
 
 
@@ -288,7 +455,7 @@ void SceneEditor::executeButtonID(int bid)
 	break;
 	case 103:
 		// regen collision
-		game->reconstructGrid(true);
+		game->reconstructGrid(true, true);
 	break;
 	case 104:
 		generateLevel();
@@ -482,13 +649,12 @@ void SceneEditor::init()
 {
 	entityPageNum = 0;
 	multiSelecting = false;
-	selectedElements.clear();
+	selectedTiles.clear();
 	autoSaveTimer = 0;
 	skinMinX = skinMinY = skinMaxX = skinMaxY = -1;
-	editingElement = 0;
 	editingEntity = 0;
 	pathRender = new PathRender();
-	core->getTopStateData()->addRenderObject(pathRender, LR_DEBUG_TEXT);
+	core->getTopStateObject()->addRenderObject(pathRender, LR_DEBUG_TEXT);
 	pathRender->alpha = 0;
 
 	editType = ET_ELEMENTS;
@@ -509,9 +675,9 @@ void SceneEditor::init()
 	text->setFontSize(6);
 
 	text->followCamera = 1;
-	text->position = Vector(125,20,4.5);
+	text->position = Vector(100,0);
+	btnMenu->addChild(text, PM_POINTER);
 
-	game->addRenderObject(text, LR_HUD);
 	text->alpha = 0;
 	on = false;
 
@@ -525,19 +691,16 @@ void SceneEditor::init()
 	addAction(MakeFunctionEvent(SceneEditor, editModeEntities), KEY_F6, 0);
 	addAction(MakeFunctionEvent(SceneEditor, editModePaths), KEY_F7, 0);
 
-	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeft), MOUSE_BUTTON_LEFT, 1);
-	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRight), MOUSE_BUTTON_RIGHT, 1);
-	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeftUp), MOUSE_BUTTON_LEFT, 0);
-	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRightUp), MOUSE_BUTTON_RIGHT, 0);
+	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeft), MOUSE_BUTTON_REAL_LEFT, 1);
+	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRight), MOUSE_BUTTON_REAL_RIGHT, 1);
+	addAction(MakeFunctionEvent(SceneEditor, mouseButtonLeftUp), MOUSE_BUTTON_REAL_LEFT, 0);
+	addAction(MakeFunctionEvent(SceneEditor, mouseButtonRightUp), MOUSE_BUTTON_REAL_RIGHT, 0);
 
 	addAction(MakeFunctionEvent(SceneEditor, placeElement), KEY_SPACE, 1);
 
 	addAction(MakeFunctionEvent(SceneEditor, enterName), KEY_N, 0);
 	addAction(MakeFunctionEvent(SceneEditor, changeShape), KEY_Y, 0);
 	addAction(MakeFunctionEvent(SceneEditor, reversePath), KEY_T, 0);
-
-
-	addAction(MakeFunctionEvent(SceneEditor, moveLayer), KEY_F10, 0);
 
 	addAction(MakeFunctionEvent(SceneEditor, nextElement), KEY_R, 1);
 	addAction(MakeFunctionEvent(SceneEditor, prevElement), KEY_E, 1);
@@ -619,14 +782,18 @@ void SceneEditor::init()
 	placer = new Quad;
 	game->addRenderObject(placer, LR_HUD);
 	placer->alpha = 0;
-	curElement = 0;
+	curElementId = 0;
 	selectedEntity.clear();
-	nextElement();
+	cyclePlacer(1);
+
+	const ElementTemplate *et = dsq->tilemgr.tileset.getIfExists(0);
+	if(!et)
+		dsq->tilemgr.tileset.getAdjacent(0, 1, false, 1024);
 
 
-	if (curElement < game->tileset.elementTemplates.size())
+	if (et)
 	{
-		placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
+		placer->setTexture(et->gfx);
 		placer->scale = Vector(1,1);
 	}
 	else
@@ -635,35 +802,42 @@ void SceneEditor::init()
 	}
 
 	updateText();
-
-	doPrevElement();
 }
 
 void SceneEditor::createAquarian()
 {
+	if (inCreateAquarian) return;
 
-	static bool inCreateAqurian = false;
-	if (inCreateAqurian) return;
-
-	inCreateAqurian = true;
+	inCreateAquarian = true;
 	std::string t = dsq->getUserInputString("Enter Aquarian:", "");
-	stringToUpper(t);
-	Vector startPos = dsq->getGameCursorPosition();
-	for (size_t i = 0; i < t.size(); i++)
+	if(!t.empty())
 	{
-		int v = 0;
-		if (t[i] >= 'A' && t[i] <= 'Z')
+		stringToUpper(t);
+		Vector startPos = dsq->getGameCursorPosition();
+		std::vector<TileDef> defs;
+		defs.reserve(t.size());
+		TileDef def(this->bgLayer);
+		def.y = startPos.y;
+		for (size_t i = 0; i < t.size(); i++)
 		{
-			v = 1024+int(t[i] - 'A');
-		}
-		if (t[i] == '.' || t[i] == ' ')
-		{
-			v = 1024+26;
-		}
+			if (t[i] >= 'A' && t[i] <= 'Z')
+			{
+				def.idx = 1024+int(t[i] - 'A');
+			}
+			else if (t[i] == '.' || t[i] == ' ')
+			{
+				def.idx = 1024+26;
+			}
+			else
+				continue;
 
-		game->createElement(v, startPos + Vector(64*i,0), this->bgLayer);
+			def.x = startPos.x + 64*i;
+			defs.push_back(def);
+		}
+		if(size_t n = defs.size())
+			dsq->tilemgr.createTiles(&defs[0], n);
 	}
-	inCreateAqurian = false;
+	inCreateAquarian = false;
 }
 
 Path *SceneEditor::getSelectedPath()
@@ -731,19 +905,13 @@ void SceneEditor::setGridPattern(int gi)
 	if(core->getCtrlState())
 	{
 		const int tag = gi + 1; // key 0 is tag 0... otherwise it's all off by one
-		if (selectedElements.size())
-			for (size_t i = 0; i < selectedElements.size(); ++i)
-				selectedElements[i]->setTag(tag);
-		else if (editingElement)
-			editingElement->setTag(tag);
+		if(size_t n = selectedTiles.size())
+			getCurrentLayerTiles().setTag(tag, &selectedTiles[0], n);
 	}
 	else
 	{
-		if (selectedElements.size())
-			for (size_t i = 0; i < selectedElements.size(); ++i)
-				selectedElements[i]->setElementEffectByIndex(gi);
-		else if (editingElement)
-			editingElement->setElementEffectByIndex(gi);
+		if(size_t n = selectedTiles.size())
+			getCurrentLayerTiles().setEffect(dsq->tilemgr.tileEffects, gi, &selectedTiles[0], n);
 	}
 }
 
@@ -779,49 +947,36 @@ void SceneEditor::setGridPattern9()
 
 void SceneEditor::moveToFront()
 {
-	if (editingElement && !core->getShiftState())
+	if (selectedTiles.size() && !core->getShiftState())
 	{
-		std::vector<Element*> copy = dsq->getElementsCopy();
-		dsq->clearElements();
-
-		//  move to the foreground ... this means that the editing element should be last in the list (Added last)
-		for (size_t i = 0; i < copy.size(); i++)
-		{
-			if (copy[i] != editingElement)
-				dsq->addElement(copy[i]);
-		}
-		dsq->addElement(editingElement);
-
-		editingElement->moveToFront();
+		getCurrentLayerTiles().moveToFront(&selectedTiles[0], selectedTiles.size());
 	}
 }
 
 void SceneEditor::moveToBack()
 {
-	if (editingElement && !core->getShiftState())
+	if(selectedTiles.size() && !core->getShiftState())
 	{
-		std::vector<Element*> copy = dsq->getElementsCopy();
-		dsq->clearElements();
-
-		//  move to the background ... this means that the editing element should be first in the list (Added first)
-		dsq->addElement(editingElement);
-		for (size_t i = 0; i < copy.size(); i++)
-		{
-			if (copy[i] != editingElement)
-				dsq->addElement(copy[i]);
-		}
-
-		editingElement->moveToBack();
+		getCurrentLayerTiles().moveToBack(&selectedTiles[0], selectedTiles.size());
 	}
+}
+
+void SceneEditor::clearSelection()
+{
+	getCurrentLayerTiles().clearSelection();
+	selectedTiles.clear();
+	editingEntity = NULL;
+	editingPath = NULL;
+	selectedIdx = -1;
 }
 
 void SceneEditor::editModeElements()
 {
-	selectedIdx = -1;
+	setActiveLayer(bgLayer, editType != ET_ELEMENTS);
 	editType = ET_ELEMENTS;
-	if (curElement < game->tileset.elementTemplates.size())
+	if (const ElementTemplate *et = dsq->tilemgr.tileset.getIfExists(curElementId))
 	{
-		placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
+		placer->setTexture(et->gfx);
 		placer->scale = Vector(1,1);
 	}
 	placer->alpha = 0.5;
@@ -832,47 +987,43 @@ void SceneEditor::editModeElements()
 
 void SceneEditor::editModeEntities()
 {
-	selectedIdx = -1;
-	//HACK: methinks target is useless now
-	//target->alpha.interpolateTo(0, 0.5);
+	unselectTileLayer();
+	clearSelection();
 	editType = ET_ENTITIES;
-
-
 	placer->setTexture(selectedEntity.prevGfx);
 	placer->alpha = 0.5;
 	pathRender->alpha = 0;
-	selectedElements.clear();
-	editingElement = NULL;
-	editingPath = NULL;
 }
 
 void SceneEditor::editModePaths()
 {
-	selectedIdx = -1;
+	unselectTileLayer();
+	clearSelection();
 	editType = ET_PATHS;
 	placer->alpha = 0;
 	pathRender->alpha = 0.5;
-	selectedElements.clear();
-	editingElement = NULL;
-	editingEntity = NULL;
 }
 
-Element *SceneEditor::getElementAtCursor()
+int SceneEditor::getTileAtCursor()
 {
-	int minDist = -1;
-	Element *selected = 0;
-	for (Element *e = dsq->getFirstElementOnLayer(this->bgLayer); e; e = e->bgLayerNext)
+	const TileStorage& ts = getCurrentLayerTiles();
+	float minDist = HUGE_VALF;
+	int selected = -1;
+	const size_t n = ts.tiles.size();
+	Vector cursor = dsq->getGameCursorPosition();
+	for(size_t i = 0; i < n; ++i)
 	{
-		if (e->life == 1)
+		const TileData& t = ts.tiles[i];
+		if (t.isVisible())
 		{
-			if (e->isCoordinateInside(dsq->getGameCursorPosition()))
+			if (t.isCoordinateInside(cursor.x, cursor.y))
 			{
-				Vector v = dsq->getGameCursorPosition() - e->position;
-				int dist = v.getSquaredLength2D();
-				if (dist < minDist || minDist == -1)
+				Vector v = cursor - Vector(t.x, t.y);
+				float dist = v.getSquaredLength2D();
+				if (dist < minDist || selected == -1)
 				{
 					minDist = dist;
-					selected = e;
+					selected = int(i);
 				}
 			}
 		}
@@ -909,22 +1060,12 @@ void SceneEditor::deleteSelected()
 	if (state != ES_SELECTING) return;
 	if (editType == ET_ELEMENTS)
 	{
-		if (selectedElements.size()>0)
+		if (size_t n = selectedTiles.size())
 		{
-			for (size_t i = 0; i < selectedElements.size(); i++)
-			{
-				selectedElements[i]->safeKill();
-				dsq->removeElement(selectedElements[i]);
-			}
-			selectedElements.clear();
-			game->reconstructGrid();
-		}
-		else if (editingElement)
-		{
-			editingElement->safeKill();
-			dsq->removeElement(editingElement);
-			editingElement = 0;
-			game->reconstructGrid();
+			TileStorage& ts = getCurrentLayerTiles();
+			ts.deleteSome(&selectedTiles[0], n);
+			selectedTiles.clear();
+			game->reconstructGrid(true, true);
 		}
 	}
 	else if (editType == ET_ENTITIES)
@@ -965,159 +1106,87 @@ void SceneEditor::deleteSelected()
 
 void SceneEditor::checkForRebuild()
 {
-	if (editType == ET_ELEMENTS && state != ES_SELECTING && !selectedElements.empty())
+	if (editType == ET_ELEMENTS && state != ES_SELECTING && !selectedTiles.empty())
 	{
-		bool rebuild = false;
-		for (size_t i = 0; i < selectedElements.size(); i++)
+		const TileStorage& ts = getCurrentLayerTiles();
+		const size_t n = ts.tiles.size();
+		for (size_t i = 0; i < n; i++)
 		{
-			if (selectedElements[i]->elementFlag == EF_SOLID || selectedElements[i]->elementFlag == EF_HURT)
+			if(ts.tiles[i].flags & TILEFLAG_SOLID)
 			{
-				rebuild = true;
+				game->reconstructGrid(true, true);
 				break;
 			}
 		}
-		if (rebuild)
-		{
-			game->reconstructGrid();
-		}
-	}
-	else if (editType == ET_ELEMENTS && state != ES_SELECTING && editingElement != 0 && (editingElement->elementFlag == EF_SOLID || editingElement->elementFlag == EF_HURT))
-	{
-		game->reconstructGrid();
 	}
 }
 
 void SceneEditor::exitMoveState()
 {
-	if (!selectedElements.empty())
-	{
-		for (size_t i = 0; i < selectedElements.size(); i++)
-		{
-			selectedElements[i]->position = selectedElements[i]->getWorldPosition();
-			dummy.removeChild(selectedElements[i]);
-		}
-		core->removeRenderObject(&dummy, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-	}
+	destroyMultiTileHelper();
 	checkForRebuild();
 	state = ES_SELECTING;
 }
 
-void SceneEditor::enterMoveState()
+void SceneEditor::enterAnyStateHelper(EditorStates newstate)
 {
-	if (state != ES_SELECTING) return;
-	state = ES_MOVING;
+	state = newstate;
 	if (editType == ET_ELEMENTS)
 	{
-		if (!selectedElements.empty())
+		oldRepeatScale = Vector(1, 1); // not handled for multi-selection
+
+		if(selectedTiles.size() == 1)
 		{
-			dummy.rotation = Vector(0,0,0);
-			cursorOffset = dsq->getGameCursorPosition();
-			groupCenter = getSelectedElementsCenter();
-			for (size_t i = 0; i < selectedElements.size(); i++)
-			{
-				selectedElements[i]->position -= groupCenter;
-				dummy.addChild(selectedElements[i], PM_NONE);
-			}
-			core->addRenderObject(&dummy, selectedElements[0]->layer);
-			dummy.cull = false;
-			dummy.position = groupCenter;
-			oldPosition = dummy.position;
-			dummy.scale = Vector(1,1,1);
+			const TileData& t = getCurrentLayerTiles().tiles[selectedTiles[0]];
+			if(t.flags & TILEFLAG_REPEAT && t.rep)
+				oldRepeatScale = Vector(t.rep->texscaleX, t.rep->texscaleY);
 		}
-		else if (editingElement)
-		{
-			oldPosition = editingElement->position;
-			cursorOffset = dsq->getGameCursorPosition();
-		}
+
+		MultiTileHelper *m = createMultiTileHelperFromSelection();
+		oldScale = m->scale;
+		oldPosition = m->position;
+		oldRotation = m->rotation.z;
+		cursorOffset = dsq->getGameCursorPosition();
 	}
 	else if (editType == ET_ENTITIES)
 	{
 		oldPosition = editingEntity->position;
+		oldRotation = editingEntity->rotation.z;
+		oldScale = editingEntity->scale;
 		cursorOffset = editingEntity->position - dsq->getGameCursorPosition();
 	}
 	else if (editType == ET_PATHS)
 	{
 		oldPosition = game->getPath(selectedIdx)->nodes[selectedNode].position;
-		cursorOffset = oldPosition - dsq->getGameCursorPosition();
+		cursorOffset = newstate == ES_SCALING
+			? dsq->getGameCursorPosition()
+			: oldPosition - dsq->getGameCursorPosition();
+		oldScale = Vector(editingPath->rect.x2-editingPath->rect.x1,
+			editingPath->rect.y2-editingPath->rect.y1);
 	}
+}
+
+void SceneEditor::enterMoveState()
+{
+	if (state != ES_SELECTING) return;
+	enterAnyStateHelper(ES_MOVING);
 }
 
 void SceneEditor::enterRotateState()
 {
 	if (state != ES_SELECTING) return;
-	if (editType == ET_ENTITIES)
+	if (editType == ET_ENTITIES || editType == ET_ELEMENTS) // can't rotate nodes
 	{
-		state = ES_ROTATING;
-		oldRotation = editingEntity->rotation;
-		oldPosition = editingEntity->position;
-		cursorOffset = dsq->getGameCursorPosition();
-	}
-	if (editType == ET_ELEMENTS)
-	{
-		if (!selectedElements.empty())
-		{
-			state = ES_ROTATING;
-			dummy.rotation = Vector(0,0,0);
-			oldRotation = dummy.rotation;
-			cursorOffset = dsq->getGameCursorPosition();
-			groupCenter = getSelectedElementsCenter();
-			for (size_t i = 0; i < selectedElements.size(); i++)
-			{
-				selectedElements[i]->position -= groupCenter;
-				dummy.addChild(selectedElements[i], PM_NONE);
-			}
-			core->addRenderObject(&dummy, selectedElements[0]->layer);
-			dummy.cull = false;
-			dummy.position = groupCenter;
-			dummy.scale = Vector(1,1,1);
-		}
-		else if (editingElement)
-		{
-			state = ES_ROTATING;
-			oldRotation = editingElement->rotation;
-			cursorOffset = dsq->getGameCursorPosition();
-		}
+		enterAnyStateHelper(ES_ROTATING);
 	}
 }
 
 void SceneEditor::enterScaleState()
 {
 	if (state != ES_SELECTING) return;
-	if (editType == ET_ELEMENTS)
+	if (editType == ET_ELEMENTS || editType == ET_PATHS) // can't scale entities
 	{
-		if (!selectedElements.empty())
-		{
-			state = ES_SCALING;
-			dummy.rotation = Vector(0,0,0);
-			dummy.scale = Vector(1,1,1);
-			oldScale = dummy.scale;
-			oldRepeatScale = Vector(1, 1); // not handled for multi-selection
-			cursorOffset = dsq->getGameCursorPosition();
-			groupCenter = getSelectedElementsCenter();
-			for (size_t i = 0; i < selectedElements.size(); i++)
-			{
-				selectedElements[i]->position -= groupCenter;
-				dummy.addChild(selectedElements[i], PM_NONE);
-			}
-			core->addRenderObject(&dummy, selectedElements[0]->layer);
-			dummy.cull = false;
-			dummy.position = groupCenter;
-		}
-		else if (editingElement)
-		{
-			oldPosition = editingElement->position;
-			state = ES_SCALING;
-			oldScale = editingElement->scale;
-			oldRepeatScale = editingElement->repeatToFillScale;
-			cursorOffset = dsq->getGameCursorPosition();
-		}
-	}
-	else if (editType == ET_PATHS)
-	{
-		state = ES_SCALING;
-		oldScale = Vector(editingPath->rect.x2-editingPath->rect.x1,
-			editingPath->rect.y2-editingPath->rect.y1);
-		cursorOffset = dsq->getGameCursorPosition();
+		enterAnyStateHelper(ES_SCALING);
 	}
 }
 
@@ -1150,6 +1219,8 @@ void SceneEditor::updateEntitySaveData(Entity *editingEntity)
 
 void SceneEditor::mouseButtonLeftUp()
 {
+	if(!core->mouse.buttons.right)
+		destroyMultiTileHelper();
 	if (multiSelecting || core->mouse.buttons.right) return;
 
 	if (editType == ET_ENTITIES)
@@ -1165,116 +1236,86 @@ void SceneEditor::mouseButtonLeftUp()
 
 void SceneEditor::mouseButtonRightUp()
 {
+	if(!core->mouse.buttons.left)
+		destroyMultiTileHelper();
 	if (multiSelecting || core->mouse.buttons.left) return;
 
 	if (editType == ET_ENTITIES)
 		updateEntitySaveData(editingEntity);
 	if (editType == ET_ELEMENTS)
-	{
-
-		if (state == ES_ROTATING)
-		{
-			if (!selectedElements.empty())
-			{
-				for (size_t i = 0; i < selectedElements.size(); i++)
-				{
-					selectedElements[i]->position = selectedElements[i]->getWorldPosition();
-					selectedElements[i]->rotation = selectedElements[i]->getAbsoluteRotation();
-					dummy.removeChild(selectedElements[i]);
-				}
-				core->removeRenderObject(&dummy, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-			}
-		}
-		else if (state == ES_SCALING)
-		{
-
-			if (!selectedElements.empty())
-			{
-				for (size_t i = 0; i < selectedElements.size(); i++)
-				{
-					selectedElements[i]->position = selectedElements[i]->getWorldPosition();
-					selectedElements[i]->scale = selectedElements[i]->scale * dummy.scale;
-					selectedElements[i]->rotation = selectedElements[i]->getAbsoluteRotation();
-					dummy.removeChild(selectedElements[i]);
-				}
-				core->removeRenderObject(&dummy, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-			}
-			else if (editingElement)
-			{
-				Vector add = editingElement->beforeScaleOffset;
-				Vector newScale = editingElement->scale;
-				editingElement->beforeScaleOffset = Vector(0,0,0);
-				editingElement->scale = Vector(1,1,1);
-				editingElement->position = editingElement->getWorldCollidePosition(add);
-				editingElement->scale = newScale;
-			}
-		}
 		checkForRebuild();
-	}
 	state = ES_SELECTING;
 
 }
 
+static ElementFlag nextSolidEF(ElementFlag ef)
+{
+	switch(ef)
+	{
+		case EF_NONE: return EF_SOLID;
+		case EF_SOLID: return EF_SOLID2;
+		case EF_SOLID2: return EF_SOLID3;
+		case EF_SOLID3: return EF_NONE;
+	}
+	return EF_NONE;
+}
 
 void SceneEditor::toggleElementSolid()
 {
-	if (editingElement)
+	TileStorage& ts = getCurrentLayerTiles();
+	if (size_t n = selectedTiles.size())
 	{
-		switch(editingElement->elementFlag)
+		for(size_t i = 0; i < n; ++i)
 		{
-		default:
-		case EF_NONE:
-		{
-			std::ostringstream os;
-			os << "elementFlag: " << editingElement->elementFlag;
-			debugLog(os.str());
-			debugLog("Solid");
-			editingElement->elementFlag = EF_SOLID;
+			TileData& t = ts.tiles[selectedTiles[i]];
+			// cycle to next flag combination
+			ElementFlag ef = TileMgr::GetElementFlag((TileFlags)t.flags);
+			ef = nextSolidEF(ef);
+			TileFlags newflags = TileMgr::GetTileFlags(ef);
+			// keep old flags that have nothing to do with tile solidness
+			t.flags = (t.flags & ~TILEFLAG_MASK_SOLID) | (newflags & TILEFLAG_MASK_SOLID);
 		}
-		break;
-		case EF_SOLID:
-			debugLog("Solid2");
-			editingElement->elementFlag = EF_SOLID2;
-		break;
-		case EF_SOLID2:
-			debugLog("Solid3");
-			editingElement->elementFlag = EF_SOLID3;
-		break;
-		case EF_SOLID3:
-			debugLog("None");
-			editingElement->elementFlag = EF_NONE;
-		break;
-		}
-		game->reconstructGrid(true);
+		game->reconstructGrid(true, true);
 	}
 }
 
 void SceneEditor::toggleElementHurt()
 {
-	if (editingElement)
+	TileStorage& ts = getCurrentLayerTiles();
+	if (size_t n = selectedTiles.size())
 	{
-		if (editingElement->elementFlag == EF_HURT)
-			editingElement->elementFlag = EF_NONE;
+		TileData& t0 = ts.tiles[selectedTiles[0]];
+		const bool set = !(t0.flags & TILEFLAG_HURT);
+
+		if(set)
+			ts.changeFlags(TILEFLAG_SOLID | TILEFLAG_HURT, TILEFLAG_TRIM, &selectedTiles[0], n); // solid, hurting
 		else
-			editingElement->elementFlag = EF_HURT;
-		game->reconstructGrid(true);
+			ts.changeFlags(0, TILEFLAG_MASK_SOLID, &selectedTiles[0], n); // not solid, not hurting
+
+		game->reconstructGrid(true, true);
 	}
 }
 
 void SceneEditor::toggleElementRepeat()
 {
-	if (editingElement)
+	TileStorage& ts = getCurrentLayerTiles();
+	if (size_t n = selectedTiles.size())
 	{
-		editingElement->repeatTextureToFill(!editingElement->isRepeatingTextureToFill());
+		TileData& t0 = ts.tiles[selectedTiles[0]];
+		const bool set = !(t0.flags & TILEFLAG_REPEAT);
+		if(set)
+			ts.changeFlags(TILEFLAG_REPEAT, 0, &selectedTiles[0], n);
+		else
+			ts.changeFlags(0, TILEFLAG_REPEAT, &selectedTiles[0], n);
 	}
 }
 
 void SceneEditor::mouseButtonLeft()
 {
-	if (multiSelecting || state != ES_SELECTING || !dummy.children.empty() || core->mouse.buttons.right) return;
+	if (multiSelecting || state != ES_SELECTING || core->mouse.buttons.right) return;
 	if (editType == ET_ELEMENTS)
 	{
-		if (selectedElements.empty() || editingElement)
+		if (!selectedTiles.empty())
 		{
 			if (core->getShiftState())
 			{
@@ -1323,7 +1364,8 @@ void SceneEditor::mouseButtonLeft()
 
 void SceneEditor::mouseButtonRight()
 {
-	if (multiSelecting || state != ES_SELECTING || !dummy.children.empty() || core->mouse.buttons.left) return;
+	if (multiSelecting || state != ES_SELECTING || core->mouse.buttons.left) return;
+
 	if (editType == ET_ENTITIES)
 	{
 		if (editingEntity)
@@ -1349,7 +1391,7 @@ void SceneEditor::mouseButtonRight()
 	}
 	if (editType == ET_ELEMENTS)
 	{
-		if (selectedElements.empty() || editingElement)
+		if (!selectedTiles.empty())
 		{
 			if (core->getShiftState())
 				enterScaleState();
@@ -1366,7 +1408,7 @@ void SceneEditor::up()
 {
 	if (editType == ET_ELEMENTS && state == ES_SELECTING)
 	{
-		if (editingElement || !selectedElements.empty())
+		if (!selectedTiles.empty())
 		{
 			enterMoveState();
 			updateSelectedElementPosition(Vector(0,-1));
@@ -1379,7 +1421,7 @@ void SceneEditor::down()
 {
 	if (editType == ET_ELEMENTS && state == ES_SELECTING)
 	{
-		if (editingElement || !selectedElements.empty())
+		if (!selectedTiles.empty())
 		{
 			enterMoveState();
 			updateSelectedElementPosition(Vector(0,1));
@@ -1407,25 +1449,23 @@ void SceneEditor::skinLevel()
 
 void SceneEditor::skinLevel(int minX, int minY, int maxX, int maxY)
 {
-	std::vector<Element*> deleteElements;
-	size_t i = 0;
-	for (i = 0; i < dsq->getNumElements(); i++)
+	const int LAYER = 4;
+	TileStorage& ts = tilesForLayer(LAYER);
+	std::vector<TileDef> toAdd;
+	toAdd.reserve(ts.tiles.size()); // assume the number of tiles isn't going to change much
 	{
-		Element *e = dsq->getElement(i);
-		if (e->bgLayer==4 && e->templateIdx >= 1 && e->templateIdx <= 4)
+		std::vector<size_t> deleteTiles;
+		deleteTiles.reserve(ts.tiles.size()); // pessimistically assume we have to delete everything
+		for (size_t i = 0; i < ts.tiles.size(); i++)
 		{
-			e->safeKill();
-			deleteElements.push_back(e);
+			const TileData& t = ts.tiles[i];
+			if (t.et->idx >= 1 && t.et->idx <= 4) // delete all tiles designated as wall rocks
+				deleteTiles.push_back(i);
 		}
-	}
-	for (i = 0; i < deleteElements.size(); i++)
-	{
-		dsq->removeElement(deleteElements[i]);
-	}
-	deleteElements.clear();
 
-	int idx=1;
-	int idxCount = 0;
+		ts.deleteSome(&deleteTiles[0], deleteTiles.size());
+	}
+
 	for (int x = minX; x < maxX-2; x++)
 	{
 		for (int y = minY; y < maxY; y++)
@@ -1470,75 +1510,68 @@ void SceneEditor::skinLevel(int minX, int minY, int maxX, int maxY)
 			{
 				TileVector t(x,y);
 				Vector p = t.worldVector();
-				Quad q;
-				q.rotation.z = rot;
 				p += Vector(TILE_SIZE/2, TILE_SIZE/2,0);
 				offset.z = 0;
 
 				bool skip = false;
-				for (size_t i = 0; i < dsq->getNumElements(); i++)
+				for (size_t i = 0; i < toAdd.size(); i++)
 				{
-					Element *e = dsq->getElement(i);
-					if (e->templateIdx <= 4 && e->templateIdx >= 1)
+					const TileDef& d = toAdd[i];
+					if ((p - Vector(d.x, d.y)).getSquaredLength2D() < (50*50))
 					{
-						if ((p - e->position).getSquaredLength2D() < sqr(50))
-						{
-							skip = true;
-							break;
-						}
+						skip = true;
+						break;
 					}
 				}
 
 				if (!skip)
 				{
-					std::vector<int> cantUse;
-					cantUse.resize(4);
-					size_t i = 0;
-					for (i = 0; i < dsq->getNumElements(); i++)
+					const float NEAR_DIST = sqr(120);
+					// count which tile are used nearby
+					size_t useCount[4] = {0}; // index 0 is never used
+					for (size_t i = 0; i < toAdd.size(); i++)
 					{
-						Element *e = dsq->getElement(i);
-						if (e->templateIdx <= 4 && e->templateIdx >= 1)
-						{
-							if ((p - e->position).getSquaredLength2D() < sqr(120))
-							{
-								cantUse[e->templateIdx-1]++;
-							}
-						}
+						const TileDef& d = toAdd[i];
+						if ((p - Vector(d.x, d.y)).getSquaredLength2D() < NEAR_DIST)
+							useCount[d.idx-1]++;
 					}
-					size_t useIdx = rand()%cantUse.size()+1;
-					for (i = 0; i < cantUse.size(); i++)
+
+					// try to place the one that appeared least often so far
+					size_t k = size_t(rand()) & 3; // tie breaker
+					size_t kend = k + 4;
+					size_t least = size_t(-1);
+					size_t idx = 0;
+					do
 					{
-						size_t check = i + idxCount;
-						if (check >= cantUse.size())
-							check -= cantUse.size();
-						if (cantUse[check]<=0)
+						size_t i = k & 3;
+						if(useCount[i] <= least)
 						{
-							useIdx = check+1;
+							least = useCount[i];
+							idx = i;
 						}
+						++k;
 					}
-					idxCount = rand()%cantUse.size();
+					while(k < kend);
 
-					Element *e = game->createElement(useIdx, p, 4, &q);
-					e->offset = offset;
+					TileDef d(LAYER);
+					d.x = p.x + offset.x;
+					d.y = p.y + offset.y;
+					d.idx = idx + 1; // bring into range [1..4]
+					d.rot = rot;
 
-
-
-					idx++;
-					if(idx > 4)
-						idx = 1;
+					toAdd.push_back(d);
 				}
 			}
 		}
-		for (size_t i = 0; i < dsq->getNumElements(); i++)
-		{
-			Element *e = dsq->getElement(i);
-			if (e->bgLayer == 4 && e->templateIdx >= 1 && e->templateIdx <= 4)
-			{
-				e->position += e->offset;
-				e->offset = Vector(0,0,0);
-			}
-		}
 	}
+
+	std::ostringstream os;
+	os << "skinlevel generated " << toAdd.size() << " tiles";
+	debugLog(os.str());
+
+	if(toAdd.size())
+		dsq->tilemgr.createTiles(&toAdd[0], toAdd.size());
+
 }
 
 SceneEditor::TileProperty SceneEditor::GetColorProperty(unsigned char r, unsigned char g, unsigned char b)
@@ -1610,7 +1643,7 @@ void SceneEditor::generateLevel()
 			}
 		}
 
-		game->reconstructGrid(true);
+		game->handleEditorMapGridUpdate();
 
 		maxX--;
 		maxY--;
@@ -1628,31 +1661,10 @@ void SceneEditor::generateLevel()
 	}
 }
 
-void SceneEditor::removeEntity()
-{
-	debugLog("remove entity at cursor");
-	game->removeEntityAtCursor();
-}
-
 void SceneEditor::placeAvatar()
 {
 	game->avatar->position = dsq->getGameCursorPosition();
 	game->action(ACTION_PLACE_AVATAR, 0, -1, INPUT_NODEVICE);
-}
-
-void SceneEditor::scaleElementUp()
-{
-	placer->scale += Vector(0.25, 0.25,0);
-}
-
-void SceneEditor::scaleElementDown()
-{
-	placer->scale -= Vector(0.25, 0.25,0);
-}
-
-void SceneEditor::scaleElement1()
-{
-	placer->scale = Vector(1,1,1);
 }
 
 void SceneEditor::flipElementHorz()
@@ -1660,25 +1672,34 @@ void SceneEditor::flipElementHorz()
 	if (editType != ET_ELEMENTS)
 		return;
 
+	const size_t n = selectedTiles.size();
+
 	if(core->getCtrlState())
 	{
-		if(!selectedElements.empty() || editingElement)
+		if (n)
 		{
 			std::string inp = dsq->getUserInputString("Enter tag (int):");
 			if(inp.empty())
 				return;
 			int tag = atoi(inp.c_str());
-			if(!selectedElements.empty())
-				for(size_t i = 0; i < selectedElements.size(); ++i)
-					selectedElements[i]->setTag(tag);
-			else
-				editingElement->setTag(tag);
+			getCurrentLayerTiles().setTag(tag, &selectedTiles[0], n);
 		}
 		return;
 	}
 
-	if (editingElement)
-		editingElement->flipHorizontal();
+	if (n)
+	{
+		unsigned allflags = 0;
+		TileStorage& ts = getCurrentLayerTiles();
+		for(size_t i = 0; i < n; ++i)
+		{
+			TileData& t = ts.tiles[selectedTiles[i]];
+			allflags |= t.flags;
+			t.flags ^= TILEFLAG_FH; // toggle bit
+		}
+		if(allflags & TILEFLAG_MASK_SOLID) // there was a solid tile among them, regen grid
+			game->reconstructGrid(true, true);
+	}
 	else
 		this->placer->flipHorizontal();
 }
@@ -1688,34 +1709,21 @@ void SceneEditor::flipElementVert()
 	if (editType != ET_ELEMENTS)
 		return;
 
-	if (editingElement)
-		editingElement->flipVertical();
+	if (size_t n = selectedTiles.size())
+	{
+		//unsigned allflags = 0; // FIXME? Vertical flip was ignored by tile collision generation (bug-compatibility)
+		TileStorage& ts = getCurrentLayerTiles();
+		for(size_t i = 0; i < n; ++i)
+		{
+			TileData& t = ts.tiles[selectedTiles[i]];
+			//allflags |= t.flags;
+			ts.tiles[selectedTiles[i]].flags ^= TILEFLAG_FV; // toggle bit
+		}
+		//if(allflags & TILEFLAG_MASK_SOLID)
+		//	game->reconstructGrid(true, true);
+	}
 	else
 		this->placer->flipVertical();
-}
-
-void SceneEditor::moveElementToLayer(Element *e, int bgLayer)
-{
-	if (!selectedElements.empty())
-	{
-		for (size_t i = 0; i < selectedElements.size(); i++)
-		{
-			Element *e = selectedElements[i];
-			core->removeRenderObject(e, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-			dsq->removeElement(e);
-			e->bgLayer = bgLayer;
-			dsq->addElement(e);
-			core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
-		}
-	}
-	else if (e)
-	{
-		core->removeRenderObject(e, Core::DO_NOT_DESTROY_RENDER_OBJECT);
-		dsq->removeElement(e);
-		e->bgLayer = bgLayer;
-		dsq->addElement(e);
-		core->addRenderObject(e, LR_ELEMENTS1+bgLayer);
-	}
 }
 
 void SceneEditor::updateMultiSelect()
@@ -1748,63 +1756,123 @@ void SceneEditor::updateMultiSelect()
 			p2.y = secondPoint.y;
 		}
 
-		selectedElements.clear();
+		clearSelection();
 
-		for (size_t i = 0; i < dsq->getNumElements(); i++)
+		TileStorage& ts = getCurrentLayerTiles();
+		for(size_t i = 0; i < ts.tiles.size(); ++i)
 		{
-			Element *e = dsq->getElement(i);
-			if (e->bgLayer == bgLayer && e->position.x >= p1.x && e->position.y >= p1.y && e->position.x <= p2.x && e->position.y <= p2.y)
+			const TileData& t = ts.tiles[i];
+			if(t.isVisible() && t.x >= p1.x && t.y >= p1.y && t.x <= p2.x && t.y <= p2.y)
 			{
-				selectedElements.push_back(e);
+				selectedTiles.push_back(i);
 			}
 		}
+
+		if(size_t N = selectedTiles.size())
+			ts.select(&selectedTiles[0], N);
 	}
+}
+
+void SceneEditor::unselectTileLayer()
+{
+	for(size_t i = 0; i < MAX_TILE_LAYERS; ++i)
+		dsq->tileRenders[i]->renderBorders = false;
+}
+
+void SceneEditor::setActiveLayer(unsigned bglayer, bool force)
+{
+	if(this->bgLayer == bglayer && !force)
+		return;
+
+	unselectTileLayer();
+	dsq->tileRenders[bglayer]->renderBorders = true;
+
+	destroyMultiTileHelper();
+	clearSelection();
+	this->bgLayer = bglayer;
 }
 
 void SceneEditor::action(int id, int state, int source, InputDevice device)
 {
-	if (core->getCtrlState() && editingElement)
+	if(id >= ACTION_BGLAYER1 && id < ACTION_BGLAYEREND && state)
 	{
-		if (id == ACTION_BGLAYEREND)
-		{
-			editingElement->setElementEffectByIndex(-1);
-		}
-		else if (id >= ACTION_BGLAYER1 && id < ACTION_BGLAYER10)
-		{
-			editingElement->setElementEffectByIndex(id - ACTION_BGLAYER1);
-		}
-	}
-	else if (editType == ET_ELEMENTS && state && id >= ACTION_BGLAYER1 && id < ACTION_BGLAYEREND)
-	{
-		int newLayer = id - ACTION_BGLAYER1;
+		const int newLayer = id - ACTION_BGLAYER1;
 
-		updateText();
-
-		if (core->getAltState())
+		if(core->getAltState())
 		{
 			game->setElementLayerVisible(newLayer, !game->isElementLayerVisible(newLayer));
 			return; // do not switch to the layer that was just hidden
 		}
-		else if (core->getShiftState() && (editingElement || !selectedElements.empty()))
-		{
-			moveElementToLayer(editingElement, newLayer);
-		}
-		else
-		{
-			selectedElements.clear();
-		}
 
-		this->bgLayer = newLayer;
+		if(editType == ET_ELEMENTS)
+		{
+			bool change = true;
+			if(size_t N = selectedTiles.size())
+			{
+				TileStorage& ts = getCurrentLayerTiles();
 
+				if (core->getCtrlState())
+				{
+					change = false;
+					if (id == ACTION_BGLAYEREND)
+					{
+						ts.setEffect(dsq->tilemgr.tileEffects, -1, &selectedTiles[0], N);
+					}
+					else if (id >= ACTION_BGLAYER1 && id < ACTION_BGLAYER10)
+					{
+						ts.setEffect(dsq->tilemgr.tileEffects, id - ACTION_BGLAYER1, &selectedTiles[0], N);
+					}
+				}
+				else
+				{
+					updateText();
+
+					if (core->getShiftState())
+					{
+						if(newLayer < MAX_TILE_LAYERS && newLayer != bgLayer)
+						{
+							std::vector<size_t> selectedTmp = selectedTiles;
+							bool hasMulti = !!multi;
+
+							setActiveLayer(newLayer); // this clears selected tiles and destroys the selector helper
+							assert(selectedTiles.empty());
+
+							// Actually move tiles. they will be at the end of the tile list afterwards
+							TileStorage& dst = dsq->tilemgr.tilestore[newLayer];
+							const size_t idx = ts.moveToOther(dst, &selectedTmp[0], N);
+
+							// update selected tiles so that when we switch to the layer they are still selected
+							assert(selectedTiles.empty());
+							for(size_t i = 0; i < N; ++i)
+								selectedTiles.push_back(idx + i);
+
+							// they may not have that flag anymore, make sure it's set
+							if(size_t N = selectedTiles.size())
+								dst.select(&selectedTiles[0], N);
+
+							if(hasMulti)
+								createMultiTileHelperFromSelection();
+
+							change = false;
+						}
+					}
+				}
+			}
+			if(change)
+				setActiveLayer(newLayer);
+		}
 	}
 
 	if (id == ACTION_MULTISELECT && this->state == ES_SELECTING)
 	{
 		if (state)
 		{
+
 			if (!multiSelecting)
-				selectedElements.clear();
-			multiSelecting = true;
+			{
+				multiSelecting = true;
+				clearSelection();
+			}
 			multiSelectPoint = dsq->getGameCursorPosition();
 		}
 		else
@@ -1828,7 +1896,7 @@ void SceneEditor::rotateElement2()
 		placer->rotation.z += 360;
 }
 
-void SceneEditor::loadSceneByName()
+bool SceneEditor::loadSceneByName()
 {
 	std::string s = dsq->getUserInputString("Enter Name of Map to Load");
 	if (!s.empty())
@@ -1836,7 +1904,9 @@ void SceneEditor::loadSceneByName()
 		game->noSceneTransitionFadeout = true;
 		game->fullTilesetReload = true;
 		game->transitionToScene(s);
+		return true;
 	}
+	return false;
 }
 
 void SceneEditor::reloadScene()
@@ -1851,22 +1921,27 @@ void SceneEditor::reloadScene()
 
 void SceneEditor::loadScene()
 {
+	bool reload;
 	if (core->getShiftState())
 	{
-		loadSceneByName();
+		reload = loadSceneByName();
 	}
 	else
 	{
 		reloadScene();
+		reload = true;
 	}
 
-	// HACK: reload stuff when (re-) loading a map this way
-	particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
-	Shot::loadShotBank(dsq->shotBank1, dsq->shotBank2);
-	game->loadEntityTypeList();
-	dsq->loadElementEffects();
-	dsq->continuity.loadSongBank();
-	dsq->loadStringBank();
+	if(reload)
+	{
+		// HACK: reload stuff when (re-) loading a map this way
+		particleManager->loadParticleBank(dsq->particleBank1, dsq->particleBank2);
+		Shot::loadShotBank(dsq->shotBank1, dsq->shotBank2);
+		game->loadEntityTypeList();
+		dsq->loadTileEffects();
+		dsq->continuity.loadSongBank();
+		dsq->loadStringBank();
+	}
 }
 
 void SceneEditor::saveScene()
@@ -1877,24 +1952,8 @@ void SceneEditor::saveScene()
 		dsq->screenMessage(game->sceneName + " FAILED to save!");
 }
 
-void SceneEditor::deleteSelectedElement()
-{
-	deleteElement(selectedIdx);
-	selectedIdx = -1;
-}
 
-void SceneEditor::deleteElement(int selectedIdx)
-{
-	if (selectedIdx == -1) return;
-	Element *e = dsq->getElement(selectedIdx);
-	e->setLife(0.5);
-	e->setDecayRate(1);
-	e->fadeAlphaWithLife = true;
-	dsq->removeElement(selectedIdx);
-	game->reconstructGrid();
-}
-
-Quad *se_grad = 0;
+static Quad *se_grad = 0;
 
 void destroyEntityPage()
 {
@@ -2074,55 +2133,25 @@ void SceneEditor::updateEntityPlacer()
 	placer->scale = Vector(selectedEntity.prevScale,selectedEntity.prevScale);
 }
 
-Element* SceneEditor::cycleElementNext(Element *e1)
+void SceneEditor::cycleSelectedTiles(int direction)
 {
-	size_t ce = e1->templateIdx;
-	int idx=0;
-	for (size_t i = 0; i < game->tileset.elementTemplates.size(); i++)
+	size_t n = selectedTiles.size();
+	if(!n)
+		return;
+	TileStorage& ts = getCurrentLayerTiles();
+	const int maxn = (int)dsq->tilemgr.tileset.elementTemplates.size();
+	if(!maxn)
+		return;
+	for(size_t i = 0; i < n; ++i)
 	{
-		if (game->tileset.elementTemplates[i].idx == ce)
-			idx = i;
+		TileData& t = ts.tiles[selectedTiles[i]];
+		const ElementTemplate *adj = dsq->tilemgr.tileset.getAdjacent(t.et->idx, direction, true, 1024);
+		if(adj)
+			t.et = adj;
 	}
-	ce = idx;
-	ce++;
-	if (ce >= game->tileset.elementTemplates.size())
-		ce = 0;
-	idx = game->tileset.elementTemplates[ce].idx;
-	if (idx < 1024)
-	{
-		Element *e = game->createElement(idx, e1->position, e1->bgLayer, e1);
-		e1->safeKill();
-		dsq->removeElement(e1);
-		return e;
-	}
-	return e1;
-}
 
-Element* SceneEditor::cycleElementPrev(Element *e1)
-{
-	size_t ce = e1->templateIdx;
-	size_t idx=0;
-	for (size_t i = 0; i < game->tileset.elementTemplates.size(); i++)
-	{
-		if (game->tileset.elementTemplates[i].idx == ce)
-		{
-			idx = i;
-			break;
-		}
-	}
-	ce = idx;
-	ce--;
-	if (ce == -1)
-		ce = game->tileset.elementTemplates.size()-1;
-	idx = game->tileset.elementTemplates[ce].idx;
-	if (idx < 1024)
-	{
-		Element *e = game->createElement(idx, e1->position, e1->bgLayer, e1);
-		e1->safeKill();
-		dsq->removeElement(e1);
-		return e;
-	}
-	return e1;
+	ts.refreshAll();
+	checkForRebuild();
 }
 
 void SceneEditor::nextElement()
@@ -2139,54 +2168,30 @@ void SceneEditor::nextElement()
 	if (core->getAltState())
 	{
 		debugLog("rebuilding level!");
-		game->reconstructGrid(true);
+		game->reconstructGrid(true, true);
 		return;
 	}
 
 	if (editType == ET_ELEMENTS)
 	{
-		if (game->tileset.elementTemplates.empty()) return;
 		if (core->getCtrlState())
 		{
-			if (!selectedElements.empty())
+			size_t n = selectedTiles.size();
+			TileStorage& ts = getCurrentLayerTiles();
+			for(size_t i = 0; i < n; ++i)
 			{
-				for (size_t i = 0; i < selectedElements.size(); i++)
-				{
-					selectedElements[i]->rotation.z = 0;
-				}
+				TileData& t = ts.tiles[selectedTiles[i]];
+				t.rotation = 0;
 			}
-			else if (editingElement)
-			{
-				editingElement->rotation.z = 0;
-			}
+			checkForRebuild();
 		}
-		else if (!selectedElements.empty())
+		else if (!selectedTiles.empty())
 		{
-			for (size_t i = 0; i < selectedElements.size(); i++)
-			{
-				selectedElements[i] = cycleElementNext(selectedElements[i]);
-			}
-		}
-		else if (editingElement)
-		{
-			cycleElementNext(editingElement);
-			editingElement = 0;
+			cycleSelectedTiles(1);
 		}
 		else
 		{
-			int oldCur = curElement;
-			curElement++;
-			if (curElement >= game->tileset.elementTemplates.size())
-				curElement = 0;
-
-			if (game->tileset.elementTemplates[curElement].idx < 1024)
-			{
-				placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
-			}
-			else
-			{
-				curElement = oldCur;
-			}
+			cyclePlacer(1);
 		}
 	}
 }
@@ -2207,70 +2212,25 @@ void SceneEditor::prevElement()
 
 	if (editType == ET_ELEMENTS)
 	{
-		if (game->tileset.elementTemplates.empty()) return;
-		if (!selectedElements.empty())
+		if (!selectedTiles.empty())
 		{
-			for (size_t i = 0; i < selectedElements.size(); i++)
-			{
-				selectedElements[i] = cycleElementPrev(selectedElements[i]);
-			}
-		}
-		else if (editingElement)
-		{
-			cycleElementPrev(editingElement);
-			editingElement = 0;
+			cycleSelectedTiles(-1);
 		}
 		else
 		{
-			doPrevElement();
+			cyclePlacer(-1);
 		}
 	}
 }
 
-void SceneEditor::doPrevElement()
+void SceneEditor::cyclePlacer(int direction)
 {
-	size_t oldCur = curElement;
-	size_t maxn = game->tileset.elementTemplates.size();
+	const ElementTemplate *next = dsq->tilemgr.tileset.getAdjacent(curElementId, direction, true, 1024);
 
-	if(curElement)
-		curElement--;
-	else if(maxn)
-		curElement = maxn-1;
-
-	if (maxn && curElement >= maxn)
-		curElement = maxn-1;
-
-	if (maxn && game->tileset.elementTemplates[curElement].idx < 1024)
+	if (next)
 	{
-		placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
-	}
-	else
-	{
-		curElement = oldCur;
-	}
-}
-
-void SceneEditor::moveLayer()
-{
-	std::string s = dsq->getUserInputString("Enter 'fromLayer toLayer' (space inbetween, ESC/m-ty to cancel)");
-	if (!s.empty())
-	{
-		std::istringstream is(s);
-		int fromLayer, toLayer;
-		is >> fromLayer >> toLayer;
-		toLayer--;
-		fromLayer--;
-		for (size_t i = 0; i < dsq->getNumElements(); i++)
-		{
-			Element *e = dsq->getElement(i);
-			if (e)
-			{
-				if (e->bgLayer == fromLayer)
-				{
-					moveElementToLayer(e, toLayer);
-				}
-			}
-		}
+		placer->setTexture(next->gfx);
+		curElementId = next->idx;
 	}
 }
 
@@ -2280,15 +2240,9 @@ void SceneEditor::selectZero()
 
 	if (editType == ET_ELEMENTS)
 	{
-		if (game->tileset.elementTemplates.empty()) return;
-		if (editingElement)
-		{
-		}
-		else
-		{
-			curElement = 0;
-			placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
-		}
+		curElementId = 0;
+		const ElementTemplate *et = dsq->tilemgr.tileset.getIfExists(0);
+		placer->setTexture(et ? et->gfx : "missingimage");
 	}
 }
 
@@ -2297,20 +2251,11 @@ void SceneEditor::selectEnd()
 	if (state != ES_SELECTING) return;
 	if (editType == ET_ELEMENTS)
 	{
-		if (game->tileset.elementTemplates.empty()) return;
-		if (!editingElement)
+		const ElementTemplate *next = dsq->tilemgr.tileset.getAdjacent(0, -1, true, 1024);
+		if(next)
 		{
-			size_t largest = 0;
-			for (size_t i = 0; i < game->tileset.elementTemplates.size(); i++)
-			{
-				ElementTemplate et = game->tileset.elementTemplates[i];
-				if (et.idx < 1024 && i > largest)
-				{
-					largest = i;
-				}
-			}
-			curElement = largest;
-			placer->setTexture(game->tileset.elementTemplates[curElement].gfx);
+			curElementId = next->idx;
+			placer->setTexture(next->gfx);
 		}
 	}
 }
@@ -2321,9 +2266,9 @@ void SceneEditor::placeElement()
 	{
 		if (!core->getShiftState() && !core->getKeyState(KEY_LALT))
 		{
-			game->createElement(game->tileset.elementTemplates[curElement].idx, placer->position, bgLayer, placer);
+			dsq->tilemgr.createOneTile(curElementId, bgLayer, placer->position.x, placer->position.y);
+			// FIXME: need to update grid or no?
 			updateText();
-			game->reconstructGrid();
 		}
 	}
 	else if (editType == ET_ENTITIES)
@@ -2360,42 +2305,33 @@ void SceneEditor::cloneSelectedElement()
 {
 	if (editType == ET_ELEMENTS)
 	{
-		if (!selectedElements.empty())
+		if (size_t n = selectedTiles.size())
 		{
-			std::vector<Element*>copy;
-			Vector groupCenter = this->getSelectedElementsCenter();
-			for (size_t i = 0; i < selectedElements.size(); i++)
-			{
-				Element *e1 = selectedElements[i];
-				Vector dist = e1->position - groupCenter;
-				Element *e = game->createElement(e1->templateIdx, placer->position + Vector(40,40) + dist, e1->bgLayer, e1);
-				e->elementFlag = e1->elementFlag;
-				e->setElementEffectByIndex(e1->getElementEffectIndex());
-				e->texOff = e1->texOff;
-				e->repeatToFillScale = e1->repeatToFillScale;
-				e->refreshRepeatTextureToFill();
-				copy.push_back(e);
-			}
-			selectedElements.clear();
-			selectedElements = copy;
-			copy.clear();
-		}
-		else if (editingElement)
-		{
-			Element *e1 = editingElement;
-			Element *e = game->createElement(e1->templateIdx, placer->position + Vector(40,40), e1->bgLayer, e1);
-			e->elementFlag = e1->elementFlag;
-			e->setElementEffectByIndex(e1->getElementEffectIndex());
-			e->texOff = e1->texOff;
-			e->repeatToFillScale = e1->repeatToFillScale;
-			e->refreshRepeatTextureToFill();
+			TileStorage& ts = getCurrentLayerTiles();
+			size_t newidx = ts.cloneSome(dsq->tilemgr.tileEffects, &selectedTiles[0], n);
 
+			assert(!multi);
+			unsigned allflags = 0;
+
+			// select the clones
+			clearSelection();
+			for(size_t i = 0; i < n; ++i)
+			{
+				selectedTiles.push_back(newidx + i);
+				TileData& t = ts.tiles[newidx + i];
+				allflags |= t.flags;
+				t.flags |= TILEFLAG_SELECTED;
+				t.x += 40;
+				t.y += 40;
+			}
+
+			if(allflags & TILEFLAG_SOLID)
+				game->reconstructGrid(true, true);
 		}
-		game->reconstructGrid();
 	}
 	else if (editType == ET_ENTITIES)
 	{
-
+		// TODO: make this work
 	}
 	else if (editType == ET_PATHS)
 	{
@@ -2434,7 +2370,7 @@ void SceneEditor::toggle(bool on)
 	if (core->getNestedMains() > 1) return;
 	if (game->isInGameMenu()) return;
 	if (!on && editType == ET_SELECTENTITY) return;
-	if (game->worldMapRender && game->worldMapRender->isOn()) return;
+	if (game->isOnWorldMap()) return;
 	this->on = on;
 	autoSaveTimer = 0;
 
@@ -2442,7 +2378,7 @@ void SceneEditor::toggle(bool on)
 	if (on)
 	{
 		btnMenu->alpha = 1;
-		dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = true;
+		dsq->tileRenders[bgLayer]->renderBorders = true;
 
 		game->togglePause(on);
 		if (game->avatar)
@@ -2456,13 +2392,6 @@ void SceneEditor::toggle(bool on)
 
 		dsq->darkLayer.toggle(false);
 
-		game->rebuildElementUpdateList();
-
-		for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
-		{
-			dsq->getRenderObjectLayer(i)->update = true;
-		}
-
 		oldGlobalScale = core->globalScale;
 		const float cameraOffset = 1/oldGlobalScale.x - 1/zoom.x;
 		core->cameraPos.x += cameraOffset * core->getVirtualWidth()/2;
@@ -2474,13 +2403,14 @@ void SceneEditor::toggle(bool on)
 	{
 		btnMenu->alpha = 0;
 
-		selectedElements.clear();
+		destroyMultiTileHelper();
+		clearSelection();
 		for (int i = 0; i < 9; i++)
 			dsq->getRenderObjectLayer(LR_ELEMENTS1+i)->visible = true;
 
 		movingEntity = 0;
 
-		dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = false;
+		dsq->tileRenders[bgLayer]->renderBorders = false;
 
 		game->togglePause(on);
 		if (game->avatar)
@@ -2489,8 +2419,6 @@ void SceneEditor::toggle(bool on)
 		placer->alpha.interpolateTo(0, 0.2f);
 
 		dsq->darkLayer.toggle(true);
-
-		game->rebuildElementUpdateList();
 
 		const float cameraOffset = 1/oldGlobalScale.x - 1/zoom.x;
 		core->cameraPos.x -= cameraOffset * core->getVirtualWidth()/2;
@@ -2506,6 +2434,8 @@ bool SceneEditor::isOn()
 
 void SceneEditor::updateText()
 {
+	btnMenu->position = Vector(20, 20 - core->getVirtualOffY());
+
 	const Vector cursor = dsq->getGameCursorPosition();
 	TileVector tv(cursor);
 
@@ -2517,27 +2447,26 @@ void SceneEditor::updateText()
 	switch(editType)
 	{
 	case ET_ELEMENTS:
-		os << "elements (" << dsq->getNumElements() << ")";
-		if (selectedElements.size() > 1)
+		os << "elements (" << dsq->tilemgr.getNumTiles() << ")";
+		if (selectedTiles.size() > 1)
 		{
-			os << " - " << selectedElements.size() << " selected";
+			os << " - " << selectedTiles.size() << " selected";
+		}
+		else if(selectedTiles.size() == 1)
+		{
+			const TileData& t = getCurrentLayerTiles().tiles[selectedTiles[0]];
+			os << " id: " << t.et->idx;
+			os << " efx: " << (t.eff ? (t.eff->efxidx + 1) : 0); // +1 so that it resembles the layout on numpad
+			os << " tag: " << t.tag;
+			os << " gfx: " << t.et->gfx;
+			os << " F:" << ((t.flags & TILEFLAG_FH) ? "H" : "") << ((t.flags & TILEFLAG_FV) ? "V" : "");
 		}
 		else
 		{
-			Element *e;
-			if (!selectedElements.empty())
-				e = selectedElements[0];
-			else
-				e = editingElement;
-			if (e)
-			{
-				os << " id: " << e->templateIdx;
-				os << " efx: " << (e->getElementEffectIndex() + 1); // +1 so that it resembles the layout on numpad
-				os << " tag: " << e->tag;
-				ElementTemplate *et = game->getElementTemplateByIdx(e->templateIdx);
-				if (et)
-					os << " gfx: " << et->gfx;
-			}
+			os << " // id: " << curElementId;
+			const ElementTemplate *et = dsq->tilemgr.tileset.getIfExists(curElementId);
+			if(et)
+				os << " gfx: " << et->gfx;
 		}
 	break;
 	case ET_ENTITIES:
@@ -2570,17 +2499,6 @@ void SceneEditor::updateText()
 	text->setText(os.str());
 }
 
-Vector SceneEditor::getSelectedElementsCenter()
-{
-	Vector c;
-	for (size_t i = 0; i < selectedElements.size(); i++)
-	{
-		c += selectedElements[i]->position;
-	}
-	c /= float(selectedElements.size());
-	return c;
-}
-
 void SceneEditor::update(float dt)
 {
 	if (on)
@@ -2609,21 +2527,32 @@ void SceneEditor::update(float dt)
 		switch (editType)
 		{
 		case ET_ELEMENTS:
-			editingEntity = 0;
-			if (isActing(ACTION_MULTISELECT, -1) || !selectedElements.empty())
+		{
+			bool ismulti = isActing(ACTION_MULTISELECT, -1);
+			int sel = -1;
+			if (state == ES_SELECTING && !ismulti)
 			{
-				editingElement = 0;
+				sel = this->getTileAtCursor();
+				if(selectedTiles.empty() || (selectedTiles.size() == 1 && selectedTiles[0] != sel))
+				{
+					if(!selectedTiles.empty())
+						clearSelection();
+					if(sel >= 0)
+					{
+						selectedTiles.push_back(sel);
+						const size_t idx = sel;
+						getCurrentLayerTiles().select(&idx, 1);
+					}
+				}
 			}
-			if (state == ES_SELECTING && !isActing(ACTION_MULTISELECT, -1))
-				editingElement = this->getElementAtCursor();
 
-			if (editingElement)
+			if (sel >= 0 || ismulti || state != ES_SELECTING)
 				placer->alpha = 0;
 			else
 				placer->alpha = 0.5;
+		}
 		break;
 		case ET_ENTITIES:
-			editingElement = 0;
 			if (state == ES_SELECTING)
 				editingEntity = this->getEntityAtCursor();
 			if (editingEntity)
@@ -2727,8 +2656,7 @@ void SceneEditor::update(float dt)
 				if (editingPath)
 				{
 					float factor = 1;
-					Vector add = Vector((dsq->getGameCursorPosition().x - cursorOffset.x)*factor,
-						(dsq->getGameCursorPosition().y - cursorOffset.y)*factor);
+					Vector add = (dsq->getGameCursorPosition() - cursorOffset)*factor;
 					Vector sz = oldScale + add;
 					if (sz.x < 32)
 						sz.x = 32;
@@ -2742,7 +2670,10 @@ void SceneEditor::update(float dt)
 			}
 			break;
 			case ES_MOVING:
-				game->getPath(selectedIdx)->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
+			{
+				if(Path *p = game->getPath(selectedIdx))
+					p->nodes[selectedNode].position = dsq->getGameCursorPosition() + cursorOffset;
+			}
 			break;
 			case ES_ROTATING:
 			case ES_MAX:
@@ -2761,16 +2692,19 @@ void SceneEditor::update(float dt)
 			{
 				if (editingEntity)
 				{
-					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
+					float cx = dsq->getGameCursorPosition().x;
+					float ex = editingEntity->position.x;
+					float dx = cx + cursorOffset.x - ex;
+					float add = dx/2.4f;
 					if (core->getCtrlState())
 					{
-						int a = (oldRotation.z + add)/45;
+						int a = (oldRotation + add)/45;
 						add = a * 45;
 						editingEntity->rotation.z = add;
 					}
 					else
 					{
-						editingEntity->rotation.z = oldRotation.z + add;
+						editingEntity->rotation.z = oldRotation + add;
 					}
 				}
 			}
@@ -2787,51 +2721,27 @@ void SceneEditor::update(float dt)
 			{
 			case ES_SELECTING:
 			{
-				float closest = sqr(800);
-				size_t i = 0;
-				for (i = 0; i < dsq->getNumElements(); i++)
-				{
-					Vector dist = dsq->getElement(i)->getFollowCameraPosition() - dsq->getGameCursorPosition();
-					float len = dist.getSquaredLength2D();
-					if (len < closest)
-					{
-						closest = len;
-					}
-				}
 			}
 			break;
 			case ES_MOVING:
+				// FIXME: this should be relative? check this
 				updateSelectedElementPosition(dsq->getGameCursorPosition() - cursorOffset);
 			break;
 			case ES_ROTATING:
 			{
-				if (!selectedElements.empty())
+				if (!selectedTiles.empty())
 				{
-
+					assert(multi);
 					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
 					if (core->getCtrlState())
 					{
-						int a = (oldRotation.z + add)/45;
+						int a = (oldRotation + add)/45;
 						add = a * 45;
-						dummy.rotation.z = add;
+						multi->rotation.z = add;
 					}
 					else
 					{
-						dummy.rotation.z = oldRotation.z + add;
-					}
-				}
-				else if (editingElement)
-				{
-					float add = (dsq->getGameCursorPosition().x - cursorOffset.x)/2.4f;
-					if (core->getCtrlState())
-					{
-						int a = (oldRotation.z + add)/45;
-						add = a * 45;
-						editingElement->rotation.z = add;
-					}
-					else
-					{
-						editingElement->rotation.z = oldRotation.z + add;
+						multi->rotation.z = oldRotation + add;
 					}
 				}
 			}
@@ -2856,90 +2766,66 @@ void SceneEditor::update(float dt)
 				Vector add = Vector((dsq->getGameCursorPosition().x - cursorOffset.x)/100.0f,
 					(dsq->getGameCursorPosition().y - cursorOffset.y)/100.0f);
 				{
-					if (!selectedElements.empty())
-						add.y = add.x;
+					if (core->getKeyState(KEY_C))
+					{
+						add.y = 0;
+						if (!right && !middle)
+							add.x *= -1;
+					}
+					else if (core->getKeyState(KEY_V))
+					{
+						add.x = 0;
+						if (!down && !middle)
+							add.y *= -1;
+					}
 					else
 					{
-						if (core->getKeyState(KEY_C))
+						add.y = add.x;
+						uni = true;
+					}
+
+					repeatScale = core->getKeyState(KEY_X);
+					if(repeatScale)
+						add *= 0.3f;
+				}
+				if (!selectedTiles.empty() && multi) // Multi should always be set if selectedTiles is not empty
+				{
+					if (!core->getCtrlState())
+					{
+						if(repeatScale)
 						{
-							add.y = 0;
-							if (!right && !middle)
-								add.x *= -1;
-						}
-						else if (core->getKeyState(KEY_V))
-						{
-							add.x = 0;
-							if (!down && !middle)
-								add.y *= -1;
+							if(selectedTiles.size() == 1)
+								multi->changeRepeatScale(oldRepeatScale + add);
 						}
 						else
 						{
-							add.y = add.x;
-							uni = true;
-						}
+							multi->scale=oldScale + add;
+							if (multi->scale.x < MIN_SIZE)
+								multi->scale.x = MIN_SIZE;
+							if (multi->scale.y < MIN_SIZE)
+								multi->scale.y = MIN_SIZE;
 
-						repeatScale = core->getKeyState(KEY_X);
-						if(repeatScale)
-							add *= 0.1f;
-					}
-				}
-				if (!selectedElements.empty())
-				{
-					if (core->getCtrlState())
-					{
-						dummy.scale = Vector(1,1);
-					}
-					else
-					{
-						dummy.scale=oldScale + add;
-						if (dummy.scale.x < MIN_SIZE)
-							dummy.scale.x  = MIN_SIZE;
-						if (dummy.scale.y < MIN_SIZE)
-							dummy.scale.y  = MIN_SIZE;
-					}
-
-					for (size_t i = 0; i < selectedElements.size(); i++)
-						selectedElements[i]->refreshRepeatTextureToFill();
-				}
-				else if (editingElement)
-				{
-					Vector& editVec = repeatScale ? editingElement->repeatToFillScale : editingElement->scale;
-					if (core->getCtrlState())
-					{
-						editVec = Vector(1,1);
-					}
-					else
-					{
-
-						editVec = (repeatScale ? oldRepeatScale : oldScale) + add;
-						if (!uni && !repeatScale)
-						{
-							if (!middle)
+							if(!middle && !uni && selectedTiles.size() == 1)
 							{
-								Vector offsetChange = (add*Vector(editingElement->getWidth(), editingElement->getHeight()))*0.5f;
+								Vector offsetChange = (add*Vector(multi->getWidth(), multi->getHeight()))*0.5f;
+								offsetChange.rotate2D360(multi->rotation.z);
 								if (add.y == 0)
 								{
 									if (right)
-										editingElement->beforeScaleOffset = offsetChange;
+										multi->offset = offsetChange;
 									else
-										editingElement->beforeScaleOffset = -offsetChange;
+										multi->offset = -offsetChange;
 								}
 								else
 								{
 									if (down)
-										editingElement->beforeScaleOffset = offsetChange;
+										multi->offset = offsetChange;
 									else
-										editingElement->beforeScaleOffset = -offsetChange;
+										multi->offset = -offsetChange;
 								}
 							}
 						}
-						if (editVec.x < MIN_SIZE)
-							editVec.x  = MIN_SIZE;
-						if (editVec.y < MIN_SIZE)
-							editVec.y  = MIN_SIZE;
 					}
-
-					editingElement->refreshRepeatTextureToFill();
 				}
 			}
 			break;
@@ -2954,7 +2840,7 @@ void SceneEditor::nextEntityType()
 {
 	if (editType == ET_ELEMENTS && state == ES_SELECTING)
 	{
-		if (editingElement || !selectedElements.empty())
+		if (!selectedTiles.empty())
 		{
 			enterMoveState();
 			updateSelectedElementPosition(Vector(1,0));
@@ -2971,7 +2857,7 @@ void SceneEditor::prevEntityType()
 {
 	if (editType == ET_ELEMENTS && state == ES_SELECTING)
 	{
-		if (editingElement || !selectedElements.empty())
+		if (!selectedTiles.empty())
 		{
 			enterMoveState();
 			updateSelectedElementPosition(Vector(-1,0));
@@ -3020,11 +2906,16 @@ void SceneEditor::moveEverythingBy(int dx, int dy)
 			p->nodes[ii].position += mv;
 	}
 
-	const size_t ne = dsq->getNumElements();
-	for(size_t i = 0; i < ne; ++i)
+	for(unsigned lr = 0; lr < MAX_TILE_LAYERS; ++lr)
 	{
-		Element *elem = dsq->getElement(i);
-		elem->position += mv;
+		TileStorage& ts = tilesForLayer(lr);
+		const size_t ne = ts.tiles.size();
+		for(size_t i = 0; i < ne; ++i)
+		{
+			TileData& t = ts.tiles[i];
+			t.x += mv.x;
+			t.y += mv.y;
+		}
 	}
 
 	tinyxml2::XMLElement *sf = game->saveFile->FirstChildElement("SchoolFish");
@@ -3034,5 +2925,27 @@ void SceneEditor::moveEverythingBy(int dx, int dy)
 		int sy = sf->IntAttribute("y");
 		sf->SetAttribute("x", sx + dx);
 		sf->SetAttribute("y", sy + dy);
+	}
+}
+
+TileStorage& SceneEditor::getCurrentLayerTiles()
+{
+	return tilesForLayer(this->bgLayer);
+}
+
+MultiTileHelper * SceneEditor::createMultiTileHelperFromSelection()
+{
+	assert(!multi);
+	if(selectedTiles.empty())
+		return NULL;
+	return (multi = MultiTileHelper::New(bgLayer, selectedTiles));
+}
+
+void SceneEditor::destroyMultiTileHelper()
+{
+	if(multi)
+	{
+		multi->finish();
+		multi = NULL;
 	}
 }

@@ -66,7 +66,6 @@ void Mod::clear()
 	debugMenu = false;
 	hasMap = false;
 	blockEditor = false;
-	mapRevealMethod = REVEAL_UNSPECIFIED;
 	compatScript = "";
 }
 
@@ -87,7 +86,10 @@ bool Mod::isEditorBlocked() const
 
 bool Mod::loadModXML(XMLDocument *d, std::string modName)
 {
-	return readXML((baseModPath + modName + ".xml").c_str(), *d) == XML_SUCCESS;
+	bool ok = readXML((baseModPath + modName + "/mod-info.xml").c_str(), *d) == XML_SUCCESS;
+	if(!ok)
+		ok = readXML((baseModPath + modName + ".xml").c_str(), *d) == XML_SUCCESS;
+	return ok;
 
 }
 
@@ -138,9 +140,6 @@ void Mod::load(const std::string &p)
 
 			if (props->BoolAttribute("runBG"))
 				core->settings.runInBackground = true;
-
-			if (props->Attribute("worldMapRevealMethod"))
-				mapRevealMethod = (WorldMapRevealMethod) props->IntAttribute("worldMapRevealMethod");
 		}
 		XMLElement *compat = mod->FirstChildElement("Compatibility");
 		if(compat)
@@ -150,7 +149,8 @@ void Mod::load(const std::string &p)
 		}
 	}
 
-	dsq->setExtraTexturePath((path + "graphics/").c_str());
+	bool hotReload = dsq->user.system.hotreload;
+	dsq->setExtraTexturePath((path + "graphics/").c_str(), hotReload);
 
 	dsq->sound->audioPath2 = path + "audio/";
 	dsq->sound->setVoicePath2(path + "audio/");
@@ -220,7 +220,7 @@ void Mod::applyStart()
 {
 	enqueueModStart = 0;
 
-	core->popAllStates();
+	core->leaveState();
 	core->clearGarbage();
 	recache();
 	dsq->continuity.reset();
@@ -280,10 +280,9 @@ void Mod::setActive(bool a)
 			dsq->unloadMods();
 			compatScript = "";
 
-			mapRevealMethod = REVEAL_UNSPECIFIED;
 			setLocalisationModPath("");
 			name = path = "";
-			dsq->setExtraTexturePath(NULL);
+			dsq->setExtraTexturePath(NULL, false);
 			dsq->sound->audioPath2 = "";
 			dsq->sound->setVoicePath2("");
 			SkeletalSprite::secondaryAnimationPath = "";

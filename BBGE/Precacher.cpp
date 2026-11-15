@@ -53,7 +53,6 @@ void Precacher::_Callback(const std::string &file, void *param)
 // e.g. naija/*.png
 void Precacher::_precacheTex(const std::string &tex)
 {
-	assert(!basedir.empty());
 	if (tex.empty()) return;
 
 	if (tex.find('*')!=std::string::npos)
@@ -77,7 +76,7 @@ void Precacher::_precacheTex(const std::string &tex)
 
 static void texLoadProgressCallback(size_t done, void *ud)
 {
-	Precacher::ProgressCallback cb = (Precacher::ProgressCallback)(ud);
+	Precacher::ProgressCallback cb = reinterpret_cast<Precacher::ProgressCallback>(ud);
 	cb();
 }
 
@@ -90,7 +89,7 @@ void Precacher::doCache(ProgressCallback progress)
 		debugLog(os.str());
 		std::vector<Texture*> tmp(todo.size());
 		core->texmgr.loadBatch(&tmp[0], &todo[0], todo.size(), TextureMgr::KEEP,
-			progress ? texLoadProgressCallback : NULL, (void*)progress);
+			progress ? texLoadProgressCallback : NULL, reinterpret_cast<void*>(progress));
 		todo.clear();
 		texkeep.reserve(texkeep.size() + tmp.size());
 		for(size_t i = 0; i < tmp.size(); ++i)
@@ -106,12 +105,17 @@ void Precacher::precacheList(const std::string &list, ProgressCallback progress)
 	std::string t;
 	while (std::getline(in, t))
 	{
-		while (!t.empty())
+		if(!t.empty())
 		{
-			if(t.back() == '\r' || t.back() == '\n') // linux doesn't like CRLF, make sure to trim that off
-				t.pop_back();
-			else
-				break;
+			size_t i = t.size();
+			for( ; i --> 0; )
+			{
+				const char bk = t[i];
+				if(!(bk == '\r' || bk == '\n' || bk == ' ' || bk == '\t')) // linux doesn't like CRLF, make sure to trim that off
+					break;
+			}
+			if(i+1 != t.size())
+				t.erase(i+1, std::string::npos);
 		}
 
 		if(!t.empty())

@@ -33,7 +33,7 @@ protected:
 	Quad slider;
 	Quad bg;
 	int grabRadius;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	float value;
 	bool inSlider;
 	float sliderLength;
@@ -51,6 +51,6 @@ protected:
 	bool wasDown;
 	int value, clickRadius;
 	Quad fg, bg;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 

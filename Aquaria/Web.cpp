@@ -26,13 +26,16 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 Web::Webs Web::webs;
 
-Web::Web() : RenderObject()
+Web::Web()
+	: RenderObject()
+	, vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	addType(SCO_WEB);
 	webs.push_back(this);
 	cull = false;
 	parentEntity = 0;
 	existence = 0;
+	dirtyvbo = false;
 }
 
 void Web::setParentEntity(Entity *e)
@@ -61,9 +64,10 @@ void Web::setExistence(float t)
 	existence = t;
 }
 
-int Web::addPoint(const Vector &point)
+size_t Web::addPoint(const Vector &point)
 {
 	points.push_back(point);
+	dirtyvbo = true;
 	return points.size()-1;
 }
 
@@ -71,6 +75,7 @@ void Web::setPoint(size_t pt, const Vector &v)
 {
 	if (pt >= points.size()) return;
 	points[pt] = v;
+	dirtyvbo = true;
 }
 
 Vector Web::getPoint(size_t pt) const
@@ -81,7 +86,7 @@ Vector Web::getPoint(size_t pt) const
 	return v;
 }
 
-int Web::getNumPoints()
+size_t Web::getNumPoints() const
 {
 	return points.size();
 }
@@ -89,6 +94,14 @@ int Web::getNumPoints()
 void Web::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
+
+	// Web is much more unpredictably updated than most other objects,
+	// so it's guarded behind a dirty flag instead of doing it on every change.
+	if(dirtyvbo)
+	{
+		dirtyvbo = false;
+		updateVBO();
+	}
 
 	if (!game->isPaused())
 	{
@@ -135,23 +148,38 @@ void Web::onUpdate(float dt)
 	}
 }
 
-void Web::onRender(const RenderState& rs) const
+void Web::updateVBO()
 {
-	glBindTexture(GL_TEXTURE_2D, 0);
+	const size_t N = points.size();
+	if(!N)
+		return;
+	const size_t bytes = N * 2 * sizeof(float);
 
+	do
+	{
+		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2, bytes, GPUACCESS_DEFAULT);
 
-	glLineWidth(4);
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glBegin(GL_LINES);
-	if(points.size() > 0) {
-		for (size_t i = 0; i < points.size()-1; i++) {
-			glColor4f(1, 1, 1, 0.5f*alpha.x);
-			glVertex3f(points[i].x, points[i].y, 0);
-			glColor4f(1, 1, 1, 0.5f*alpha.x);
-			glVertex3f(points[i+1].x, points[i+1].y, 0);
+		for (size_t i = 0; i < N; i++)
+		{
+			*p++ = points[i].x;
+			*p++ = points[i].y;
 		}
 	}
-	glEnd();
+	while(!vbo.commitWrite());
+}
+
+void Web::onRender(const RenderState& rs) const
+{
+	size_t N = points.size();
+	if(!N)
+		return;
+
+	glBindTexture(GL_TEXTURE_2D, 0);
+	RenderObject::lastTextureApplied = 0;
+
+	glLineWidth(4);
+	glColor4f(1, 1, 1, 0.5f*alpha.x);
+
+	vbo.apply();
+	glDrawArrays(GL_LINE_STRIP, 0, N);
 }

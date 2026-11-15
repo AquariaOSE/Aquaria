@@ -26,15 +26,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <assert.h>
 #include <algorithm>
 
-#ifdef BBGE_USE_GLM
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
-#endif
 
 bool	RenderObject::renderCollisionShape			= false;
 size_t	RenderObject::lastTextureApplied			= 0;
-bool	RenderObject::lastTextureRepeat				= false;
 bool	RenderObject::renderPaths					= false;
+
+
+MotionBlurData::MotionBlurData()
+	: transition(false), frameOffsetCounter(0), frameOffset(0), transitionTimer(0)
+{
+}
+
 
 void RenderObject::toggleAlpha(float t)
 {
@@ -69,6 +73,7 @@ RenderObject::RenderObject()
 	_fh = false;
 	_markedForDelete = false;
 	updateCull = -1;
+	roflags = 0;
 
 	layer = LR_NONE;
 	cull = true;
@@ -85,18 +90,17 @@ RenderObject::RenderObject()
 	life = maxLife = 1;
 	decayRate = 0;
 	_dead = false;
-	_hidden = false;
 	fadeAlphaWithLife = false;
 	_blendType = BLEND_DEFAULT;
 
 	followCamera = 0;
-	stateData = 0;
 	parent = 0;
 
 	renderBeforeParent = false;
 
 	shareAlphaWithChildren = false;
 	shareColorWithChildren = false;
+	neverFollowCamera = false;
 }
 
 RenderObject::~RenderObject()
@@ -110,32 +114,42 @@ Vector RenderObject::getWorldPosition() const
 	return getWorldCollidePosition();
 }
 
-RenderObject* RenderObject::getTopParent() const
+RenderObject* RenderObject::getTopParent()
 {
-	RenderObject *p = parent;
-	RenderObject *lastp=0;
-	while (p)
+	RenderObject *p = this;
+	RenderObject *lastp;
+	do
 	{
 		lastp = p;
 		p = p->parent;
 	}
+	while(p);
 	return lastp;
 }
 
-#ifdef BBGE_USE_GLM
+const RenderObject* RenderObject::getTopParent() const
+{
+	const RenderObject *p = this;
+	const RenderObject *lastp;
+	do
+	{
+		lastp = p;
+		p = p->parent;
+	}
+	while(p);
+	return lastp;
+}
+
 static glm::mat4 matrixChain(const RenderObject *ro)
 {
 	glm::mat4 tranformMatrix = glm::scale(
-		glm::translate(
-			glm::rotate(
-				glm::translate(
-					ro->getParent() ? matrixChain(ro->getParent()) : glm::mat4(1.0f),
-					glm::vec3(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0)
-				),
-				ro->rotation.z + ro->rotationOffset.z,
-				glm::vec3(0.0f, 0.0f, 1.0f)
+		glm::rotate(
+			glm::translate(
+				ro->getParent() ? matrixChain(ro->getParent()) : glm::mat4(1.0f),
+				glm::vec3(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0)
 			),
-			glm::vec3(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0.0f)
+			ro->rotation.z + ro->rotationOffset.z,
+			glm::vec3(0.0f, 0.0f, 1.0f)
 		),
 		glm::vec3(ro->scale.x, ro->scale.y, 0.0f)
 	);
@@ -146,24 +160,6 @@ static glm::mat4 matrixChain(const RenderObject *ro)
 	tranformMatrix *= glm::translate(glm::vec3(ro->internalOffset.x, ro->internalOffset.y, 0.0f));
 	return tranformMatrix;
 }
-#else
-static void matrixChain(RenderObject *ro)
-{
-	if (RenderObject *parent = ro->getParent())
-		matrixChain(parent);
-
-	glTranslatef(ro->position.x+ro->offset.x, ro->position.y+ro->offset.y, 0);
-	glRotatef(ro->rotation.z+ro->rotationOffset.z, 0, 0, 1);
-	glTranslatef(ro->beforeScaleOffset.x, ro->beforeScaleOffset.y, 0);
-	glScalef(ro->scale.x, ro->scale.y, 0);
-	if (ro->isfh())
-	{
-
-		glRotatef(180, 0, 1, 0);
-	}
-	glTranslatef(ro->internalOffset.x, ro->internalOffset.y, 0);
-}
-#endif
 
 float RenderObject::getWorldRotation() const
 {
@@ -184,33 +180,17 @@ Vector RenderObject::getWorldPositionAndRotation() const
 
 Vector RenderObject::getWorldCollidePosition(const Vector &vec) const
 {
-#ifdef BBGE_USE_GLM
 	glm::mat4 transformMatrix = glm::translate(
 		matrixChain(this),
 		glm::vec3(vec.x, vec.y, 0.0f)
 	);
 
 	return Vector(transformMatrix[3][0], transformMatrix[3][1], 0);
-#else
-	glPushMatrix();
-	glLoadIdentity();
-
-	matrixChain(this);
-	glTranslatef(vec.x, vec.y, 0);
-
-	float m[16];
-	glGetFloatv(GL_MODELVIEW_MATRIX, m);
-	float x = m[12];
-	float y = m[13];
-
-	glPopMatrix();
-	return Vector(x,y,0);
-#endif
 }
 
 void RenderObject::fhTo(bool fh)
 {
-	if ((fh && !_fh) || (!fh && _fh))
+	if (fh != _fh)
 	{
 		flipHorizontal();
 	}
@@ -218,14 +198,8 @@ void RenderObject::fhTo(bool fh)
 
 void RenderObject::flipHorizontal()
 {
-	bool wasFlippedHorizontal = _fh;
-
 	_fh = !_fh;
-
-	if (wasFlippedHorizontal != _fh)
-	{
-		onFH();
-	}
+	onFH();
 
 }
 
@@ -275,12 +249,6 @@ Vector RenderObject::getRealScale() const
 	}
 	return scale;
 }
-
-void RenderObject::setStateDataObject(StateData *state)
-{
-	stateData = state;
-}
-
 
 void RenderObject::toggleCull(bool value)
 {
@@ -376,9 +344,25 @@ bool RenderObject::hasRenderPass(const int pass) const
 
 bool RenderObject::shouldTryToRender() const
 {
-	return !parent && !_hidden
+	return !parent
 		&& alpha.x > 0
 		&& (!cull || isOnScreen());
+}
+
+bool RenderObject::isVisibleInHierarchy() const
+{
+	for (const RenderObject *ro = this; ro; ro = ro->parent)
+		if (ro->alpha.x <= 0 || ro->alphaMod <= 0)
+			return false;
+	return true;
+}
+
+bool RenderObject::isInputEnabledInHierarchy() const
+{
+	for (const RenderObject *ro = parent; ro; ro = ro->parent)
+		if (!ro->childrenCanReceiveInput())
+			return false;
+	return true;
 }
 
 bool RenderObject::isVisibleInPass(int pass) const
@@ -392,9 +376,6 @@ bool RenderObject::isVisibleInPass(int pass) const
 void RenderObject::render(const RenderState& rs) const
 {
 	assert(parent || layer != LR_NONE);
-
-	if(_hidden)
-		return;
 
 	/// new (breaks anything?)
 	if (alpha.x == 0 || alphaMod == 0) return;
@@ -465,7 +446,6 @@ nofollow:
 	if (isfh())
 		glRotatef(180, 0, 1, 0);
 
-	glTranslatef(beforeScaleOffset.x, beforeScaleOffset.y, beforeScaleOffset.z);
 	const Vector renderScale = scale * rs.scale;
 	glScalef(renderScale.x, renderScale.y, 1);
 	glTranslatef(internalOffset.x, internalOffset.y, internalOffset.z);
@@ -481,20 +461,18 @@ nofollow:
 	{
 		if (texture)
 		{
-			if (texture->gltexid != lastTextureApplied || repeatTexture != lastTextureRepeat)
+			if (texture->gltexid != lastTextureApplied)
 			{
-				texture->apply(repeatTexture);
-				lastTextureRepeat = repeatTexture;
+				texture->apply(repeatTexture ? TEX_BORDER_WRAP : TEX_BORDER_CLAMP);
 				lastTextureApplied = texture->gltexid;
 			}
 		}
 		else
 		{
-			if (lastTextureApplied != 0 || repeatTexture != lastTextureRepeat)
+			if (lastTextureApplied != 0)
 			{
 				glBindTexture(GL_TEXTURE_2D, 0);
 				lastTextureApplied = 0;
-				lastTextureRepeat = repeatTexture;
 			}
 		}
 
@@ -538,7 +516,6 @@ void RenderObject::debugRenderPaths() const
 		return;
 
 	glLineWidth(4);
-	glEnable(GL_BLEND);
 
 	glColor4f(1.0f, 1.0f, 1.0f, 0.5f);
 	glBindTexture(GL_TEXTURE_2D, 0);
@@ -678,10 +655,7 @@ void RenderObject::safeKill()
 	}
 	else
 	{
-		if (stateData)
-			stateData->removeRenderObject(this);
-		else
-			core->enqueueRenderObjectDeletion(this);
+		core->enqueueRenderObjectDeletion(this);
 	}
 }
 
@@ -719,10 +693,6 @@ void RenderObject::onUpdate(float dt)
 	if(!updateLife(dt))
 		return;
 
-	// FIXME: We might not need to do lifetime checks either; I just
-	// left that above for safety since I'm not certain.  --achurch
-	if (isHidden()) return;
-
 	position += velocity * dt;
 	velocity += gravity * dt;
 	position.update(dt);
@@ -734,43 +704,45 @@ void RenderObject::onUpdate(float dt)
 	alpha.update(dt);
 	offset.update(dt);
 	internalOffset.update(dt);
-	beforeScaleOffset.update(dt);
 	rotationOffset.update(dt);
 
-	bool hasChildrenToDelete = false;
-	for (Children::iterator i = children.begin(); i != children.end(); i++)
+	if(!children.empty())
 	{
-		if (shareAlphaWithChildren)
-			(*i)->alpha.x = this->alpha.x;
-		if (shareColorWithChildren)
-			(*i)->color = this->color;
-
-		if ((*i)->pm != PM_NONE)
+		bool hasChildrenToDelete = false;
+		for (size_t i = 0; i < children.size(); i++)
 		{
-			(*i)->update(dt);
-		}
-		hasChildrenToDelete |= (*i)->_markedForDelete;
+			RenderObject *ch = children[i];
+			if (shareAlphaWithChildren)
+				ch->alpha.x = this->alpha.x;
+			if (shareColorWithChildren)
+				ch->color = this->color;
 
-	}
-
-	if (hasChildrenToDelete)
-	{
-		size_t w = 0;
-		const size_t N = children.size();
-		for (size_t i = 0; i < N; ++i)
-		{
-			RenderObject *ro = children[i];
-			if(ro->_markedForDelete)
+			if (ch->pm != PM_NONE)
 			{
-				ro->parent = NULL;
-				ro->destroy();
-				if(ro->pm == PM_POINTER)
-					delete ro;
+				ch->update(dt);
 			}
-			else
-				children[w++] = ro;
+			hasChildrenToDelete |= ch->_markedForDelete;
 		}
-		children.resize(w);
+
+		if (hasChildrenToDelete)
+		{
+			size_t w = 0;
+			const size_t N = children.size();
+			for (size_t i = 0; i < N; ++i)
+			{
+				RenderObject *ro = children[i];
+				if(ro->_markedForDelete)
+				{
+					ro->parent = NULL;
+					ro->destroy();
+					if(ro->pm == PM_POINTER)
+						delete ro;
+				}
+				else
+					children[w++] = ro;
+			}
+			children.resize(w);
+		}
 	}
 
 	if (MotionBlurData *mb = this->motionBlur)
@@ -884,16 +856,6 @@ void RenderObject::addChild(RenderObject *r, ParentManaged pm, RenderBeforeParen
 	r->parent = this;
 }
 
-StateData *RenderObject::getStateData() const
-{
-	if (parent)
-	{
-		return parent->getStateData();
-	}
-	else
-		return stateData;
-}
-
 void RenderObject::setOverrideCullRadius(float ovr)
 {
 	overrideCullRadiusSqr = ovr * ovr;
@@ -906,7 +868,61 @@ bool RenderObject::isCoordinateInRadius(const Vector &pos, float r) const
 	return (d.getSquaredLength2D() < r*r);
 }
 
-MotionBlurData::MotionBlurData()
-	: transition(false), frameOffsetCounter(0), frameOffset(0), transitionTimer(0)
+Vector RenderObject::getFollowCameraPosition(const Vector& v) const
 {
+	assert(layer != LR_NONE);
+	assert(!parent); // this makes no sense when we're not a root object
+	if(neverFollowCamera)
+		return v;
+	const RenderObjectLayer &rl = core->renderObjectLayers[layer];
+	Vector M = rl.followCameraMult;
+	float F = followCamera;
+	if(!F)
+		F = rl.followCamera;
+	if (F <= 0)
+		return v;
+
+	/* Originally, not accounting for parallax lock on an axis, this was:
+		pos = v - core->screenCenter;
+		pos *= F;
+		pos = core->screenCenter + pos;
+	*/
+
+	// uppercase are effectively constants that are not per-object
+	// lowercase are per-object
+
+	// more concise math:
+	//const Vector pos = (v - core->screenCenter) * F + core->screenCenter;
+	//return v * (Vector(1,1) - M) + (pos * M); // lerp
+
+	// optimized and rearranged
+	const Vector C = core->screenCenter;
+	const Vector M1 = Vector(1,1) - M;
+	const Vector T = C * (1 - F);
+
+	const Vector pos = T + (F * v);
+	return v * M1 + (pos * M); // lerp, used to select whether to use original v or parallax-corrected v
+}
+
+bool RenderObject::isRectPartiallyOnScreen() const
+{
+	Vector p = getTopParent()->getFollowCameraPosition(getWorldPosition());
+	p = core->getWindowPosition(p);
+	Vector sz = Vector(width, height) * getRealScale();
+	return core->isRectInWindowCoordsPartiallyOnScreen(p, sz);
+}
+
+bool RenderObject::isRectFullyOnScreen() const
+{
+	Vector p = getTopParent()->getFollowCameraPosition(getWorldPosition());
+	p = core->getWindowPosition(p);
+	Vector sz = Vector(width, height) * getRealScale();
+	return core->isRectInWindowCoordsFullyOnScreen(p, sz);
+}
+
+bool RenderObject::isCenterOnScreenWithMargin(const Vector& margin) const
+{
+	Vector p = getTopParent()->getFollowCameraPosition(getWorldPosition());
+	p = core->getWindowPosition(p);
+	return core->isPointInWindowCoordsOnScreenWithMargin(p, margin);
 }

@@ -24,11 +24,34 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <string>
 #include "Refcounted.h"
 
+struct TexCoordBox
+{
+	float u1, v1; // upper left (x,y)
+	float u2, v2; // lower right (x,y)
+
+	bool isStandard() const;
+	void setStandard();
+
+	bool operator==(const TexCoordBox& o) const
+	{
+		return u1 == o.u1 && v1 == o.v1 && u2 == o.u2 && v2 == o.v2;
+	}
+	inline bool operator!=(const TexCoordBox& o) const
+	{
+		return !(*this == o);
+	}
+};
 
 enum TextureLoadResult
 {
 	TEX_FAILED,
 	TEX_SUCCESS
+};
+
+enum TexBorderMode
+{
+	TEX_BORDER_CLAMP,
+	TEX_BORDER_WRAP
 };
 
 struct ImageData;
@@ -39,28 +62,31 @@ public:
 	Texture();
 	~Texture();
 
-	void apply(bool repeat = false) const;
+	void apply(TexBorderMode border) const;
 	void unload();
 
 	unsigned gltexid;
 	int width, height;
 
 	void writeRGBA(int tx, int ty, int w, int h, const unsigned char *pixels);
-	void readRGBA(unsigned char *pixels);
+	void readRGBA(unsigned char *pixels) const;
 
-	unsigned char *getBufferAndSize(int *w, int *h, size_t *size); // returned memory must be free()'d
+	const unsigned char *getBufferAndSize(int *w, int *h, size_t *size) const; // returned memory is owned by the Texture
+	size_t sizeBytes() const;
 
 	std::string name, filename;
 	bool upload(const ImageData& img, bool mipmap);
+	bool uploadAndKeep(ImageData& img, bool mipmap);
 
 	bool success;
 
 protected:
+	void _freePixbuf();
 
 	int ow, oh;
+	mutable TexBorderMode _bordermode;
 	bool _mipmap;
-private:
-	mutable bool _repeating; // modified during rendering
+	mutable unsigned char *_pixbuf; // retrieved when needed
 };
 
 #define UNREFTEX(x) {x = NULL;}

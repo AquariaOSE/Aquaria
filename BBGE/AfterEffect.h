@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define __after_effect__
 
 #include "Core.h"
+#include "RenderGrid.h"
 
 class Shader;
 
@@ -31,7 +32,7 @@ public:
 	Effect();
 	virtual ~Effect(){}
 	virtual void go(){}
-	virtual void update(float dt, Vector ** drawGrid, int xDivs, int yDivs){}
+	virtual void update(float dt, Array2d<Vector>& grid, int xDivs, int yDivs){}
 	bool done;
 	Vector position;
 protected:
@@ -54,24 +55,15 @@ public:
 	}
 	float timeMultiplier;
 
-	void update(float dt, Vector ** drawGrid, int xDivs, int yDivs);
+	void update(float dt, Array2d<Vector>& grid, int xDivs, int yDivs) OVERRIDE;
 
 	float waveLength;
 	float amplitude;
 	float frequency;
 
-	Vector centerPoint;
 	Vector originalCenter;
 
 	float currentDistance;
-};
-
-class RippleEffect : public Effect
-{
-public:
-	RippleEffect();
-	void update(float dt, Vector ** drawGrid, int xDivs, int yDivs);
-	float time;
 };
 
 class AfterEffectManager
@@ -86,11 +78,14 @@ public:
 	void clear();
 	void deleteEffects();
 
+	void beginCapture();
+	void endCapture();
+
 	void resetGrid();
 
-	void render() const;
-	void renderGrid() const;
-	void renderGridPoints() const;
+	void render(const RenderState& rs, unsigned fboPageWithImage) const;
+	void renderGrid(const RenderState& rs, unsigned fbPage) const;
+	void renderGridPoints(const RenderState& rs) const;
 
 	void loadShaders();
 	void unloadShaders(); // unloads shaders but keeps code and data intact, so that they can be reloaded.
@@ -99,20 +94,6 @@ public:
 	void unloadDevice();
 	void reloadDevice();
 	void updateDevice();
-
-	std::vector<Effect*> effects;
-	std::vector<int> openSpots;
-
-	bool active;
-
-	bool bRenderGridPoints;
-
-	int numEffects;
-	int xDivs, yDivs;
-	int screenWidth, screenHeight;
-	int textureWidth, textureHeight;
-
-	Vector ** drawGrid; // TODO: make this + related code use RenderGrid
 
 	// returns handle > 0 on success
 	int loadShaderFile(const char *vert, const char *frag);
@@ -125,10 +106,17 @@ public:
 protected:
 	void _updateScreenSize();
 	int _insertShader(Shader *sh);
+	void _initGrid();
 
+	RenderGrid grid;
+	bool active;
+	int numEffects;
+	int xDivs, yDivs;
+	int screenWidth, screenHeight;
+	std::vector<Effect*> effects;
+	std::vector<int> openSpots;
 	std::vector<Shader*> shaderPipeline; // Shaders are applied in this order. Can contain the same pointer more than once.
 	std::vector<Shader*> loadedShaders;
-	FrameBuffer backupBuffer;
 
 };
 

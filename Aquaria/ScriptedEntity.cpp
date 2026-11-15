@@ -46,7 +46,6 @@ ScriptedEntity::ScriptedEntity(const std::string &scriptName, Vector position, E
 	layer = LR_ENTITIES;
 	surfaceMoveDir = 1;
 	this->position = position;
-	numSegments = 0;
 	reverseSegments = false;
 	manaBallAmount = 1;
 	this->name = scriptName;
@@ -189,7 +188,6 @@ void ScriptedEntity::registerNewPart(RenderObject *r, const std::string &name)
 void ScriptedEntity::initSegments(int numSegments, int minDist, int maxDist, std::string bodyTex, std::string tailTex, int w, int h, float taper, bool reverseSegments)
 {
 	this->reverseSegments = reverseSegments;
-	this->numSegments = numSegments;
 	this->minDist = minDist;
 	this->maxDist = maxDist;
 	segments.resize(numSegments);
@@ -223,10 +221,9 @@ void ScriptedEntity::setupEntity(const std::string &tex, int lcode)
 	this->layer = dsq->getEntityLayerToLayer(lcode);
 }
 
-void ScriptedEntity::setupBasicEntity(const std::string& texture, int health, int manaBall, int exp, int money, float collideRadius, int state, int w, int h, int expType, bool hitEntity, int updateCull, int layer)
+void ScriptedEntity::setupBasicEntity(const std::string& texture, float health, float manaBall, int expUNUSED, int moneyUNUSED, float collideRadius, int state, float w, float h, int expTypeUNUSED, bool hitEntityUNUSED, int updateCullUNUSED, int layer)
 {
-
-	updateCull = -1;
+	//updateCull = -1; // This used to set the passed-in updateCull, NOT this->updateCull
 
 	if (texture.empty())
 		renderQuad = false;
@@ -502,7 +499,7 @@ void ScriptedEntity::onUpdate(float dt)
 			debugLog(name + " : update : " + script->getLastError());
 	}
 
-	if (numSegments > 0)
+	if (!segments.empty())
 	{
 		updateSegments(position, reverseSegments);
 		updateAlpha(alpha.x);

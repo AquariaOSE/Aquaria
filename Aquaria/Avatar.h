@@ -27,6 +27,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 class TileVector;
 class SongIcon;
+class Avatar;
 class Web;
 class Hair;
 
@@ -74,18 +75,18 @@ enum SeeMapMode
 class SongIconParticle : public Quad
 {
 public:
-	SongIconParticle(Vector color, Vector pos, size_t note);
+	SongIconParticle(Vector color, Vector pos, size_t note, const std::vector<SongIcon*>& icons);
 	int note;
 	SongIcon *toIcon;
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 class SongIcon : public Quad
 {
 public:
-	SongIcon(size_t note);
-	void destroy();
+	SongIcon(size_t note, Avatar *owner);
+	void destroy() OVERRIDE;
 	size_t note;
 	void openNote();
 	void closeNote();
@@ -96,6 +97,7 @@ public:
 	bool open;
 
 protected:
+	Avatar * const owner;
 	Quad *glow;
 	float rippleTimer;
 	float len;
@@ -104,7 +106,7 @@ protected:
 	void *channel;
 	float delay, counter, minTime;
 	bool cursorIsIn;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 class AvatarState
@@ -320,8 +322,9 @@ public:
 
 	void setSeeMapMode(SeeMapMode mode) { _seeMapMode = mode; }
 	SeeMapMode getSeeMapMode() const { return _seeMapMode; }
+	Vector getPositionForMap() const; // same as position, but special when inside a local warp
 
-	int leaches;
+	int leaches; // intentionally signed
 	float shieldPoints;
 	float elementEffectMult;
 
@@ -417,7 +420,8 @@ protected:
 	void onEnterState(int action) OVERRIDE;
 	void onExitState(int action) OVERRIDE;
 	std::vector<ParticleEffect*>targetQuads;
-	Quad *blinder, *fader, *tripper;
+	PauseQuad *blinder, *tripper;
+	Quad *fader;
 	void applyBlindEffects();
 	void removeBlindEffects();
 
@@ -465,6 +469,19 @@ protected:
 	int _lastActionSourceID;
 	InputDevice _lastActionInputDevice;
 
+	bool oldfh;
+	float hairTimer;
+	int lastHitSound;
+	const Entity *lastTargetE;
+	float maxTargetDelay;
+	bool targetWasDown;
+	float lfgTimer;
+	int tripCount;
+	bool revertButtonsAreDown;
+	float fishPoisonTimer;
+	Vector lastAddVec;
+	int lastSwimExtra;
+	bool didRotationFix;
 };
 
 #endif

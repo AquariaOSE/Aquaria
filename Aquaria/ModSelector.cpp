@@ -41,13 +41,14 @@ static bool _modname_cmp(const ModIcon *a, const ModIcon *b)
 }
 
 ModSelectorScreen::ModSelectorScreen()
-	: Quad()
+	: PauseQuad()
 	, ActionMapper()
 	, dlText(dsq->smallFont)
 	, gotServerList(false)
 	, currentPanel(-1)
 	, subtext(dsq->subsFont)
 {
+	pauseLevel = 99;
 	followCamera = 1;
 	shareAlphaWithChildren = false;
 	alpha = 1;
@@ -97,6 +98,13 @@ void ModSelectorScreen::move(int ud, bool instant /* = false */)
 		else
 			grid->position.interpolateTo(v2, t, 0, false, true);
 	}
+}
+
+bool ModSelectorScreen::isMoving() const
+{
+	const IconGridPanel *grid = panels[currentPanel];
+	const InterpolatedVector& v = grid->position;
+	return v.isInterpolating();
 }
 
 void ModSelectorScreen::onUpdate(float dt)
@@ -178,12 +186,12 @@ static void _MenuIconClickCallback(int id, void *user)
 // can be called multiple times without causing trouble
 void ModSelectorScreen::init()
 {
-	leftbar.setBarWidth(100);
 	leftbar.height = height;
 	leftbar.alpha = 0;
 	leftbar.alpha.interpolateTo(1, 0.2f);
 	leftbar.position = Vector((leftbar.width - width) / 2, 0);
 	leftbar.followCamera = 1;
+	leftbar.setBarWidth(100);
 	if(!leftbar.getParent())
 	{
 		leftbar.init();
@@ -193,12 +201,12 @@ void ModSelectorScreen::init()
 		std::fill(panels.begin(), panels.end(), (IconGridPanel*)NULL);
 	}
 
-	rightbar.setBarWidth(100);
 	rightbar.height = height;
 	rightbar.alpha = 0;
 	rightbar.alpha.interpolateTo(1, 0.2f);
 	rightbar.position = Vector(((width - rightbar.width) / 2), 0);
 	rightbar.followCamera = 1;
+	rightbar.setBarWidth(100);
 	if(!rightbar.getParent())
 	{
 		rightbar.init();
@@ -260,6 +268,7 @@ void ModSelectorScreen::init()
 
 	showPanel(0);
 
+	subbox.pauseLevel = 99;
 	subbox.position = Vector(0,260);
 	subbox.alpha = 0;
 	subbox.alphaMod = 0.7f;
@@ -415,7 +424,7 @@ BasicIcon::BasicIcon()
 
 bool BasicIcon::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0.1f && alphaMod > 0.1f && (!parent || parent->alpha.x == 1);
+	return alpha.x > 0.1f && alphaMod > 0.1f && (!parent || parent->alpha.x == 1);
 }
 
 bool BasicIcon::isCursorInMenuItem()
@@ -428,23 +437,6 @@ bool BasicIcon::isCursorInMenuItem()
 void BasicIcon::onUpdate(float dt)
 {
 	AquariaMenuItem::onUpdate(dt);
-
-	// Autoscroll if selecting icon outside of screen
-	if(hasFocus() && dsq->modSelectorScr && !_isRecCall)
-	{
-		Vector pos = getRealPosition();
-		if(pos.y < 20 || pos.y > 580)
-		{
-			if(pos.y < 300)
-				dsq->modSelectorScr->move(5, true);
-			else
-				dsq->modSelectorScr->move(-5, true);
-			_isRecCall = true;
-			core->run(FRAME_TIME); // HACK: this is necessary to correctly position the mouse on the object after moving the panel
-			_isRecCall = false;
-			setFocus(true); // re-position mouse
-		}
-	}
 
 	if(!quad)
 		return;
@@ -502,6 +494,25 @@ void MenuIcon::onClick()
 
 ModIcon::ModIcon(): SubtitleIcon(), modId(-1)
 {
+}
+
+void ModIcon::onUpdate(float dt)
+{
+	SubtitleIcon::onUpdate(dt);
+
+	// Autoscroll if selecting icon outside of screen
+	if(hasFocus() && dsq->modSelectorScr && !_isRecCall && !dsq->modSelectorScr->isMoving() && !isCenterOnScreenWithMargin(Vector(0, 200)))
+	{
+		const Vector pos = getRealPosition();
+		if(pos.y < 300)
+			dsq->modSelectorScr->move(5);
+		else
+			dsq->modSelectorScr->move(-5);
+		_isRecCall = true;
+		core->run(FRAME_TIME); // HACK: this is necessary to correctly position the mouse on the object after moving the panel
+		_isRecCall = false;
+		focusByNavigation(); // re-position mouse
+	}
 }
 
 void ModIcon::onClick()
@@ -839,6 +850,8 @@ void MenuBasicBar::setBarWidth(float w)
 {
 	width = w;
 	repeatToFillScale.x = texture->width / w;
+	repeatToFillScale.y = repeatToFillScale.x;
+	updateTexCoords();
 }
 
 void MenuBasicBar::init()

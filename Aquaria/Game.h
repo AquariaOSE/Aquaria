@@ -28,7 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "ScriptedEntity.h"
 #include "TileVector.h"
 #include "SceneEditor.h"
-#include "Tileset.h"
+#include "TileMgr.h"
 
 #include <tinyxml2.h>
 using namespace tinyxml2;
@@ -65,6 +65,7 @@ class ToolTip;
 class Ingredient;
 class ManaBall;
 class Beam;
+class WorldMapTileContainer;
 
 #include "Path.h"
 
@@ -85,22 +86,6 @@ struct MinimapIcon
 
 typedef std::list<Ingredient*> Ingredients;
 
-class ObsRow
-{
-public:
-	inline ObsRow(unsigned tx, unsigned ty, unsigned len)
-		: tx(tx), ty(ty), len(len) {}
-	inline ObsRow(const ObsRow& o)
-		: tx(o.tx), ty(o.ty), len(o.len) {}
-	const unsigned tx, ty, len;
-};
-
-enum FlagCheckType
-{
-	NO_TYPE	=-1,
-	AND		=0,
-	OR		=1
-};
 
 class EntityClass
 {
@@ -113,8 +98,6 @@ public:
 	bool script;
 	int idx;
 };
-
-typedef std::vector<Element*> ElementUpdateList;
 
 struct EntitySaveData
 {
@@ -130,14 +113,15 @@ class Game : public StateObject
 public:
 	Game();
 	~Game();
-	void applyState();
-	void removeState();
-	void update(float dt);
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
+	void update(float dt) OVERRIDE;
 
 
 	Avatar *avatar;
 	Entity *li;
 
+	TileVector getGridSize() const; // available after calling findMaxCameraValues()
 	ObsType getGrid(const TileVector &tile) const;
 	ObsType getGridRaw(const TileVector &tile) const;
 	unsigned char *getGridColumn(int tileX);
@@ -154,28 +138,25 @@ public:
 	void clearGrid(int v = 0);
 	void clearDynamicGrid(unsigned char maskbyte = OT_MASK_BLACK);
 
-	void toggleWorldMap();
-
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDevice device) OVERRIDE;
 
 	InGameMenu *getInGameMenu() { return themenu; }
 
 	// pass usedIdx == NULL to preload all textures from tileset
 	// pass usedIdx != NULL to preload only textures where usedIdx[i] != 0
-	bool loadElementTemplates(std::string pack, const unsigned char *usedIdx, size_t usedIdxLen);
-	Element* createElement(size_t etidx, Vector position, size_t bgLayer=0, RenderObject *copy=0, ElementTemplate *et=0);
 
 	void updateParticlePause();
 
-	void reconstructGrid(bool force=false);
+	void reconstructGrid(bool force, bool updateDraw);
 	void reconstructEntityGrid();
 
 	void registerSporeDrop(const Vector &pos, int t);
 
 	bool collideCircleWithGrid(const Vector& position, float r);
 
-	bool collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc=0, int *colSegment=0);
+	bool collideHairVsCircle(Entity *a, size_t num, const Vector &pos2, float radius, float perc=0, size_t *colSegment=0);
 
+	bool collideLineSegmentVsLineSegment(const Vector& p0, const Vector& d0, const Vector& p1, const Vector& d1, Vector *vout = NULL);
 	bool collideCircleVsCircle(Entity *a, Entity *b);
 	Bone *collideSkeletalVsCircle(Entity *skeletal, CollideQuad *circle);
 	Bone *collideSkeletalVsLine(Entity *skeletal, Vector start, Vector end, float radius);
@@ -186,10 +167,7 @@ public:
 	void handleShotCollisionsSkeletal(Entity *e);
 	void handleShotCollisionsHair(Entity *e, int num = 0, float perc = 0);
 
-	Tileset tileset;
 	std::string sceneName, sceneDisplayName;
-
-	ElementTemplate *getElementTemplateByIdx(size_t idx);
 
 	bool saveScene(std::string scene);
 
@@ -260,7 +238,7 @@ public:
 	void removePath(size_t idx);
 	void clearPaths();
 	size_t getNumPaths() const {return paths.size();}
-	Path *getPath(size_t idx) const {return paths[idx];}
+	Path *getPath(size_t idx) const {return idx < paths.size() ? paths[idx] : NULL;}
 	Path *getFirstPathOfType(PathType type) const {return firstPathOfType[type];}
 	Path *getPathByName(std::string name);
 	size_t getIndexOfPath(Path *p);
@@ -276,7 +254,10 @@ public:
 	SceneEditor sceneEditor;
 	bool isSceneEditorActive() {return sceneEditor.isOn();}
 
-	bool isInGameMenu();
+	bool isInGameMenu() const;
+	bool isOnWorldMap() const;
+	void toggleWorldMap(bool on);
+	void toggleWorldMap(); // on or off
 
 	typedef std::vector<EntityClass> EntityTypeList;
 	EntityTypeList entityTypeList;
@@ -302,12 +283,13 @@ public:
 	void warpToSceneFromNode(Path *p);
 	Vector fromPosition;
 
-	Quad *damageSprite;
+	PauseQuad *damageSprite;
 
 	void toggleDamageSprite(bool on);
 
 	ObsType lastCollideTileType;
 
+	void fillGrid(const GridFiller& gf);
 	void fillGridFromQuad(Quad *q, ObsType ot=OT_INVISIBLEIN, bool trim=true);
 
 	bool isDamageTypeAvatar(DamageType dt);
@@ -322,7 +304,7 @@ public:
 
 	float cameraLerpDelay;
 	Vector gradTop, gradBtm;
-	bool isValidTarget(Entity *e, Entity *me);
+	static bool isValidTarget(Entity *e);
 	Gradient *grad;
 	std::string bgSfxLoop, airSfxLoop;
 	void constrainCamera();
@@ -334,6 +316,7 @@ public:
 	int getNumberOfEntitiesNamed(const std::string &name);
 	MiniMapRender *miniMapRender;
 	WorldMapRender *worldMapRender;
+	WorldMapTileContainer *getCurrentWorldMapTile() const;
 
 	bool loadingScene;
 	bool doScreenTrans;
@@ -372,8 +355,6 @@ public:
 
 	void ensureLimit(Entity *e, int num, int state=0);
 
-	void rebuildElementUpdateList();
-
 	float getTimer(float mod=1);
 	float getHalfTimer(float mod=1);
 
@@ -389,10 +370,9 @@ public:
 	void createGradient();
 
 	std::string saveMusic;
-	GridRender *gridRender, *gridRender2, *gridRender3, *edgeRender, *gridRenderEnt, *gridRenderUser1, *gridRenderUser2;
+	GridRender *blackRender, *gridRender, *gridRender2, *gridRender3, *edgeRender, *gridRenderEnt, *gridRenderUser1, *gridRenderUser2;
 	void toggleGridRender();
-	ElementUpdateList elementUpdateList;
-	ElementUpdateList elementInteractionList;
+	void updateGridRender(ObsType obs);
 
 	bool invinciblity;
 
@@ -422,6 +402,9 @@ public:
 	bool isIgnoreAction(AquariaActions ac) const;
 
 	void onContinuityReset();
+	void onPrepareRender();
+
+	void handleEditorMapGridUpdate();
 
 protected:
 	unsigned highestLoadedEntityID;
@@ -432,7 +415,7 @@ protected:
 	void onHelpUp();
 	void onHelpDown();
 	bool helpWasPaused;
-	Quad *helpBG, *helpBG2;
+	PauseQuad *helpBG, *helpBG2;
 	AquariaMenuItem *helpUp, *helpDown, *helpCancel;
 	TTFText *helpText;
 	bool inHelpScreen;
@@ -458,15 +441,18 @@ protected:
 
 	void updateCursor(float dt);
 
-	Quad *controlHint_mouseLeft, *controlHint_mouseRight, *controlHint_mouseBody, *controlHint_mouseMiddle, *controlHint_bg, *controlHint_image;
+	Quad *controlHint_mouseLeft, *controlHint_mouseRight, *controlHint_mouseBody, *controlHint_mouseMiddle, *controlHint_image;
 	Quad *controlHint_shine;
+	PauseQuad *controlHint_bg;
 	bool controlHint_ignoreClear;
 	BitmapText *controlHint_text;
 
 	void createLi();
 	void createPets();
 	void findMaxCameraValues();
+	TileVector computeMapSizeFromObs() const;
 	std::vector<ObsRow> obsRows;
+	size_t mapGridW, mapGridH;
 
 
 	std::string musicToPlay;
@@ -510,6 +496,11 @@ ObsType Game::getGridRaw(const TileVector &tile) const
 	return (unsigned(tile.x) < unsigned(MAX_GRID) && unsigned(tile.y) < unsigned(MAX_GRID))
 		? ObsType(grid[tile.x][tile.y])
 		: OT_OUTOFBOUNDS;
+}
+
+inline TileVector Game::getGridSize() const
+{
+	return TileVector(int(this->mapGridW), int(this->mapGridH));
 }
 
 inline

@@ -22,13 +22,13 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define GRIDRENDER_H
 
 #include "GameEnums.h"
-#include "../BBGE/Quad.h"
+#include "GameStructs.h"
+#include "Quad.h"
 #include "ActionMapper.h"
+#include "VertexBuffer.h"
 
-class GemMover;
+
 struct MinimapIcon;
-struct WorldMapTile;
-struct GemData;
 class AquariaMenuItem;
 class BitmapText;
 
@@ -36,9 +36,19 @@ class GridRender : public RenderObject
 {
 public:
 	GridRender(ObsType obsType);
+	void rebuildBuffers();
+	void rebuildBuffers(const std::vector<ObsRow>& rows);
+	void rebuildBuffersIfNecessary();
+	void rebuildBuffersIfNecessary(const std::vector<ObsRow>& rows);
+	void markForRebuild() { markedForRebuild = true; }
+	ObsType getObs() const { return obsType; }
 protected:
-	ObsType obsType;
-	void onUpdate(float dt) OVERRIDE;
+	DynamicGPUBuffer vbo;
+	size_t primsToDraw;
+	std::vector<size_t> primIndexInLine;
+	const ObsType obsType;
+	bool markedForRebuild;
+
 	void onRender(const RenderState& rs) const OVERRIDE;
 };
 
@@ -81,71 +91,25 @@ public:
 	static bool setMaxHealthMarkerTex(const std::string& name);
 };
 
-class WorldMapRender : public RenderObject, public ActionMapper
-{
-public:
-	WorldMapRender();
-	void destroy();
-	void toggle(bool on);
-	bool isOn();
-	Vector getAvatarWorldMapPosition();
-	Vector getWorldToTile(WorldMapTile *tile, Vector position, bool fromCenter, bool tilePos);
-	void setProperTileColor(WorldMapTile *tile);
-	void action(int id, int state, int source, InputDevice device);
-	GemMover* addGem(GemData *gemData);
-	void bindInput();
-	void createGemHint(const std::string &gfx);
-	void addAllGems();
-	void fixGems();
-	void removeGem(GemMover *gemMover);
-	void onToggleHelpScreen();
-	bool isCursorOffHud();
-
-	static void setRevealMethod(WorldMapRevealMethod m);
-
-protected:
-	Quad *addHintQuad1, *addHintQuad2;
-	AquariaMenuItem *helpButton;
-	float doubleClickTimer;
-	Vector restoreVel;
-	float inputDelay;
-	BitmapText *areaLabel, *areaLabel2, *areaLabel3;
-	WorldMapTile *originalActiveTile;
-	void setVis(WorldMapTile *tile);
-	void clearVis(WorldMapTile *tile);
-	bool on;
-	void onUpdate(float dt);
-	Quad *bg;
-	unsigned char *savedTexData;
-	bool mb;
-	Vector lastMousePosition; // See FIXME in WorldMapRender.cpp  --achurch
-	void updateEditor();
-};
-
 class PathRender : public RenderObject
 {
 public:
 	PathRender();
 protected:
 	void onRender(const RenderState& rs) const OVERRIDE;
-};
-
-class CurrentRender : public RenderObject
-{
-public:
-	CurrentRender();
-protected:
-	float rippleDelay;
-	void onRender(const RenderState& rs) const OVERRIDE;
-};
-
-class SteamRender : public RenderObject
-{
-public:
-	SteamRender();
-protected:
-	float rippleDelay;
-	void onRender(const RenderState& rs) const OVERRIDE;
+	void onUpdate(float dt) OVERRIDE;
+	void updateVBO();
+	DynamicGPUBuffer vbo;
+	struct DrawCallParams
+	{
+		unsigned mode; // GL_TRIANGLES, ...
+		unsigned first;
+		unsigned count;
+		float linewidth;
+		Vector color;
+		float alpha;
+	};
+	std::vector<DrawCallParams> drawcalls;
 };
 
 struct SongLinePoint
@@ -162,7 +126,9 @@ public:
 	void clear();
 protected:
 	void onRender(const RenderState& rs) const OVERRIDE;
+	void updateVBO();
 	std::vector<SongLinePoint> pts;
+	DynamicGPUBuffer vbo;
 };
 
 #endif

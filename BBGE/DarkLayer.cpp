@@ -23,27 +23,29 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "RenderBase.h"
 
 DarkLayer::DarkLayer()
+	: vbo(GPUBUF_STATIC | GPUBUF_VERTEXBUF)
 {
 	quality = 0;
 	active = false;
-	layer = -1;
-	renderLayer = -1;
 	texture = 0;
-
-	stretch = 4;
-	format = GL_RGB;			//FIXED?: used to be GL_LUMINANCE, that might have been causing problems
-	useFrameBuffer = true;		//BUG?: will do this even if frame buffer is off in usersettings...
+	useFrameBuffer = false;
+	layer = -1;
+	beginLayer = -1;
+	lastLayer = -1;
 }
 
 void DarkLayer::unloadDevice()
 {
 	if (useFrameBuffer)
 		frameBuffer.unloadDevice();
-	else
+
+	if (texture)
 	{
-		if (texture)
-			glDeleteTextures(1, &texture);
+		glDeleteTextures(1, &texture);
+		texture = 0;
 	}
+
+	vbo.dropBuffer();
 }
 
 void DarkLayer::reloadDevice()
@@ -52,25 +54,49 @@ void DarkLayer::reloadDevice()
 		frameBuffer.reloadDevice();
 	else
 		texture = generateEmptyTexture(quality);
+
+	// Update VBO
+	const float width  =  core->getWindowWidth();
+	const float height =  core->getWindowHeight();
+	const float offX   = -(core->getVirtualOffX() * width / core->getVirtualWidth());
+	const float offY   = -(core->getVirtualOffY() * height / core->getVirtualHeight());
+	const float stretch = 4;
+
+	const float x0 = offX-stretch;
+	const float y0 = offY-stretch;
+	const float x1 = width+offX+stretch;
+	const float y1 = height+offY+stretch;
+
+	const size_t bytes = 4 * 4 * sizeof(float);
+	do
+	{
+		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_TC, bytes, GPUACCESS_DEFAULT);
+
+		*p++ = x0; *p++ = y1;
+		*p++ = 0; *p++ = 0;
+
+		*p++ = x1; *p++ = y1;
+		*p++ = 1; *p++ = 0;
+
+		*p++ = x0; *p++ = y0;
+		*p++ = 0; *p++ = 1;
+
+		*p++ = x1; *p++ = y0;
+		*p++ = 1; *p++ = 1;
+	}
+	while(!vbo.commitWrite());
 }
 
-int DarkLayer::getRenderLayer()
+bool DarkLayer::isUsed() const
 {
-	return renderLayer;
+	return active;
 }
 
-bool DarkLayer::isUsed()
+bool DarkLayer::shouldRenderLayer(int lr) const
 {
-	//HACK: disabling dark layer for temporary testing build
-	// MAKE SURE TO RESTORE THIS CODE TO THE WAY IT WAS
-	return layer > -1 && active;
-
-}
-
-void DarkLayer::setLayers(int layer, int rl)
-{
-	this->layer = layer;
-	this->renderLayer = rl;
+	if(!active)
+		return true;
+	return useFrameBuffer || (lr < beginLayer || lr > lastLayer);
 }
 
 void DarkLayer::init(int quality, bool useFrameBufferParam)
@@ -81,7 +107,7 @@ void DarkLayer::init(int quality, bool useFrameBufferParam)
 
 	if (useFrameBuffer)
 	{
-		if (!frameBuffer.init(quality, quality))
+		if (!frameBuffer.init(quality, quality, 1))
 			useFrameBuffer = false;
 		else
 			debugLog("Dark Layer: using framebuffer");
@@ -93,11 +119,6 @@ void DarkLayer::init(int quality, bool useFrameBufferParam)
 	}
 }
 
-int DarkLayer::getLayer()
-{
-	return layer;
-}
-
 void DarkLayer::toggle(bool on)
 {
 	this->active = on;
@@ -105,95 +126,57 @@ void DarkLayer::toggle(bool on)
 
 void DarkLayer::preRender()
 {
-	if (layer != -1)
+	if(!useFrameBuffer)
 	{
-		glViewport(0,0,quality,quality);
-
-		if (useFrameBuffer)
-			frameBuffer.startCapture();
-
+		glViewport(0, 0, quality, quality);
 		glClearColor(1,1,1,0);
 		glClear(GL_COLOR_BUFFER_BIT);
-
-		core->render(layer, layer, false);
-
-		if (useFrameBuffer)
-			frameBuffer.endCapture();
-		else
-		{
-			glBindTexture(GL_TEXTURE_2D,texture);					// Bind To The Blur Texture
-			// Copy Our ViewPort To The Blur Texture (From 0,0 To q,q... No Border)
-			glCopyTexImage2D(GL_TEXTURE_2D, 0, format, 0, 0, quality, quality, 0);
-		}
-
-		glViewport(0, 0, core->width, core->height);
-		glClearColor(0,0,0,0);
+		core->renderInternal(beginLayer, lastLayer, false);
+		glBindTexture(GL_TEXTURE_2D, texture);
+		glReadBuffer(GL_BACK);
+		glCopyTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, 0, 0, quality, quality, 0);
+		glBindTexture(GL_TEXTURE_2D, 0);
 	}
 }
 
-void DarkLayer::render() const
+void DarkLayer::beginCapture()
 {
-	if (renderLayer != -1)
+	if(useFrameBuffer)
 	{
-		glPushMatrix();
-		glLoadIdentity();
-
-
-
-		glEnable(GL_TEXTURE_2D);
-		if (useFrameBuffer)
-			frameBuffer.bindTexture();
-		else
-			glBindTexture(GL_TEXTURE_2D,texture);
-
-
-
-		glEnable(GL_BLEND);
-
-
-
-		// subtractive blend! (using color)
-		glBlendFunc(GL_ZERO, GL_SRC_COLOR);
-
-		GLenum error = glGetError();
-		if (error == GL_INVALID_ENUM)
-		{
-			debugLog("darkLayer: invalid enum");
-		}
-		else if (error == GL_INVALID_OPERATION)
-		{
-			debugLog("darkLayer: invalid operation");
-		}
-
-
-
-		glColor4f(1,1,1,1);
-
-		float width  =  core->getWindowWidth();
-		float height =  core->getWindowHeight();
-		float offX   = -(core->getVirtualOffX() * width / core->getVirtualWidth());
-		float offY   = -(core->getVirtualOffY() * height / core->getVirtualHeight());
-
-		glBegin(GL_QUADS);
-
-			glTexCoord2f(0,1);
-			glVertex2f(offX-stretch, offY-stretch);
-
-			glTexCoord2f(0,0);
-			glVertex2f(offX-stretch, height+offY+stretch);
-
-			glTexCoord2f(1,0);
-			glVertex2f(width+offX+stretch, height+offY+stretch);
-
-			glTexCoord2f(1,1);
-			glVertex2f(width+offX+stretch, offY-stretch);
-
-		glEnd();
-
-		glPopMatrix();
-
-		RenderObject::lastTextureApplied = 0;
-		glBindTexture(GL_TEXTURE_2D, 0);
-
+		frameBuffer.pushCapture(0);
+		glClearColor(1,1,1,0);
+		glClear(GL_COLOR_BUFFER_BIT);
 	}
+}
+
+void DarkLayer::endCapture()
+{
+	if(useFrameBuffer)
+	{
+		frameBuffer.popCapture();
+	}
+}
+
+void DarkLayer::render(const RenderState& rs) const
+{
+	glPushMatrix();
+	glLoadIdentity();
+
+
+	glEnable(GL_TEXTURE_2D);
+	if (useFrameBuffer)
+		frameBuffer.bindTexture(0);
+	else
+		glBindTexture(GL_TEXTURE_2D,texture);
+
+	rs.gpu.setBlend(BLEND_MULT);
+
+	glColor4f(1,1,1,1);
+	vbo.apply();
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glPopMatrix();
+
+	RenderObject::lastTextureApplied = 0;
+	glBindTexture(GL_TEXTURE_2D, 0);
 }

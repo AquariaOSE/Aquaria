@@ -261,13 +261,17 @@ void TTFText::onRender(const RenderState& rs) const
 		glPushMatrix();
 		glScalef(1, -1, 0);
 		glTranslatef(-hw, 0 + (i*-lineHeight), 0);
-		font->font->Render(text[i].c_str());
+		font->font->Render(text[i].c_str()); // changes blend modes
 		glPopMatrix();
 	}
 
 	glBindTexture(GL_TEXTURE_2D, 0);
 	RenderObject::lastTextureApplied = 0;
 
-
-
+#ifndef AQUARIA_INTERNAL_FTGL
+	// External FTGL may or may not change blending parameters;
+	// see https://github.com/frankheckenbach/ftgl/blob/master/README-LegacyOpenGLState
+	// The internal FTGL is patched and doesn't have this problem.
+	rs.gpu.invalidateBlend();
+#endif
 }

@@ -22,97 +22,214 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Game.h"
 #include "RenderBase.h"
 
-GridRender::GridRender(ObsType obsType) : RenderObject()
+
+static void collectRows(std::vector<ObsRow>& rows, ObsType obs)
+{
+	const TileVector gs = game->getGridSize();
+	const size_t endX = std::min(gs.x, MAX_GRID);
+	const size_t endY = std::min(gs.y, MAX_GRID);
+
+	for(size_t y = 0; y < endY; ++y)
+	{
+		bool on = game->getGridRaw(TileVector(0, y)) == obs;
+		size_t startx = 0;
+		for(size_t x = 1; x < endX; ++x)
+		{
+			const ObsType ot = game->getGridRaw(TileVector(x, y));
+			if(ot == obs)
+			{
+				if(!on)
+				{
+					startx = x;
+					on = true;
+				}
+			}
+			else
+			{
+				if(on)
+				{
+					// previous tile is the last one, so -1
+					size_t len = x - startx;
+					assert(len);
+					rows.push_back(ObsRow(startx, y, len));
+					on = false;
+				}
+			}
+		}
+		if(on)
+		{
+			size_t len = endX - startx;
+			assert(len);
+			rows.push_back(ObsRow(startx, y, len));
+		}
+	}
+}
+
+GridRender::GridRender(ObsType obsType)
+	: RenderObject()
+	, vbo(GPUBUF_VERTEXBUF | GPUBUF_STATIC)
+	, primsToDraw(0)
+	, obsType(obsType)
+	, markedForRebuild(true)
 {
 	color = Vector(1, 0, 0);
 
 	position.z = 5;
 	cull = false;
-	alpha = 0.5f;
-	this->obsType = obsType;
+	alpha = 0.0f;
+	this->scale.x = TILE_SIZE; // See comment about value scaling below
+	this->scale.y = TILE_SIZE;
 }
 
-void GridRender::onUpdate(float dt)
+void GridRender::rebuildBuffers()
 {
-	RenderObject::onUpdate(dt);
+	std::vector<ObsRow> rows;
+	collectRows(rows, obsType);
+	rebuildBuffers(rows);
 }
 
-inline static void doRenderGrid(int x, int startCol, int endCol)
+void GridRender::rebuildBuffers(const std::vector<ObsRow>& rows)
 {
-	const int drawx1 = x*TILE_SIZE;
-	const int drawx2 = (x+1)*TILE_SIZE;
-	const int drawy1 = startCol*TILE_SIZE;
-	const int drawy2 = (endCol+1)*TILE_SIZE;
+	markedForRebuild = false;
 
-	glBegin(GL_QUADS);
-	glVertex3i(drawx1, drawy2, 0.0f);
-	glVertex3i(drawx2, drawy2, 0.0f);
-	glVertex3i(drawx2, drawy1, 0.0f);
-	glVertex3i(drawx1, drawy1, 0.0f);
-	glEnd();
+	const size_t N = rows.size();
+	primsToDraw = N * 6;
+	if(!N)
+		return;
 
+	// Construct lookup table so we know the vertex index to start drawing, for each line
+	{
+		const size_t H = game->getGridSize().y;
+		primIndexInLine.resize(H);
+		if(H)
+		{
+			size_t lasty = 0;
+			size_t lastidx = 0;
+			for(size_t i = 0; i < N; ++i)
+			{
+				const ObsRow& row = rows[i];
+				assert(row.ty >= lasty); // rows must be sorted, lowest y first
+				if(row.ty > lasty)
+				{
+					// Handle this correctly even if there is no row on some lines
+					for(size_t y = lasty; y < row.ty; ++y)
+						primIndexInLine[y] = lastidx;
+					lasty = row.ty;
+					lastidx = i * 6;
+				}
+			}
+
+			// Don't bother filling the rest, anything beyond the end is eval'd as primsToDraw
+			primIndexInLine.resize(lasty);
+		}
+	}
+
+	// 2 tris = 6 verts  per ObsRow, each vertex is 2x uint16, makes 24b per quad.
+	// We could use indexed rendering and use 2 verts less (16b),
+	// but the 6 indices would cost another 12b so it's definitely cheaper to send
+	// triangle soup to the gpu in this case, since each vertex is only 4 bytes.
+	const size_t szv = N * 6 * 2 * sizeof(unsigned short);
+
+	do
+	{
+		unsigned short *pxy =  (unsigned short*)vbo.beginWrite(GPUBUFTYPE_UVEC2, szv, GPUACCESS_DEFAULT);
+
+		for(size_t i = 0; i < N; ++i)
+		{
+			const ObsRow& row = rows[i];
+			assert(row.len);
+
+			// Don't bother to transform to float. The GPU can do that better.
+			// The scale factor of a GridRender is set to TILE_SIZE, that pre-bakes the
+			// required scaling multiplication into the object scale so we can get away
+			// with using raw, unscaled values here
+
+			const unsigned short x0 = row.tx;
+			const unsigned short x1 = row.tx + row.len;
+			const unsigned short y0 = row.ty;
+			const unsigned short y1 = row.ty + 1;
+
+			// top left triangle
+			*pxy++ = x0;
+			*pxy++ = y0;
+
+			*pxy++ = x1;
+			*pxy++ = y0;
+
+			*pxy++ = x0;
+			*pxy++ = y1;
+
+			// bottom right triangle
+			*pxy++ = x1;
+			*pxy++ = y0;
+
+			*pxy++ = x1;
+			*pxy++ = y1;
+
+			*pxy++ = x0;
+			*pxy++ = y1;
+		}
+	}
+	while(!vbo.commitWrite());
+}
+
+void GridRender::rebuildBuffersIfNecessary()
+{
+	if(markedForRebuild)
+		rebuildBuffers();
+}
+
+void GridRender::rebuildBuffersIfNecessary(const std::vector<ObsRow>& rows)
+{
+	if(markedForRebuild)
+		rebuildBuffers(rows);
 }
 
 void GridRender::onRender(const RenderState& rs) const
 {
-	const signed char obsType = this->obsType;
-	Vector camPos = core->cameraPos;
-	camPos.x -= core->getVirtualOffX() * (core->invGlobalScale);
-	const TileVector ct(camPos);
-
-	const int width = int((core->getVirtualWidth() * (core->invGlobalScale))/TILE_SIZE) + 1;
-	const int height = int((600 * (core->invGlobalScale))/TILE_SIZE) + 1;
-
-	int startX = ct.x-1, endX = ct.x+width+1;
-	int startY = ct.y-1, endY = ct.y+height+1;
-	if (startX < 0)
-		startX = 0;
-	if (endX >= MAX_GRID)
-		endX = MAX_GRID-1;
-	if (startY < 0)
-		startY = 0;
-	if (endY >= MAX_GRID)
-		endY = MAX_GRID-1;
-	if (startY > endY)
+	if(!primsToDraw)
 		return;
-	for (int x = startX; x <= endX; ++x)
-	{
-		const unsigned char *gridColumn = game->getGridColumn(x);
-		int startCol = -1, y;
 
-		// fast-forward to next drawable byte
-		if(const unsigned char *next = (const unsigned char*)memchr(gridColumn + startY, obsType, endY - startY + 1)) // find next byte with correct obs type
-		{
-			y = next - gridColumn; // will get incremented right away, which is okay, because we alrady set startCol
-			startCol = y;
-		}
-		else
-			continue; // nothing do draw in this column
+	const int H = (int)primIndexInLine.size();
+	if(!H)
+		return;
 
-		for ( ; y < endY; ++y)
-		{
-			if (gridColumn[y] != obsType)
-			{
-				doRenderGrid(x, startCol, y - 1);
+	const float vh = core->getVirtualHeight();
+	const float voy = core->getVirtualOffY();
+	const float vox = core->getVirtualOffX();
 
-				// fast-forward to next drawable byte
-				if(const unsigned char *next = (const unsigned char*)memchr(gridColumn + y, obsType, endY - y)) // find next byte with correct obs type
-				{
-					y = next - gridColumn; // will get incremented right away, which is okay, because we alrady set startCol
-					startCol = y;
-				}
-				else
-					break;
-			}
-		}
-		if (y == endY)
-		{
-			doRenderGrid(x, startCol, y);
-		}
-	}
+	const Vector topleft = core->getTopLeftCornerInWorldCoords();
+	const TileVector ct(topleft);
+
+	int startY = ct.y;
+
+	// Note that it's possible that the scale factor is negative (mods can use this),
+	// so this might end up upside down. Still needs to render correctly.
+
+	const int height = int((vh * (core->invGlobalScale))/TILE_SIZE) + 1;
+	int endY = ct.y+height;
+	if(endY < startY)
+		std::swap(startY, endY);
+
+	--startY;
+	++endY;
+
+	if(endY < 0 || startY >= H)
+		return;
+	if(startY < 0)
+		startY = 0;
+
+	const size_t beginIdx = primIndexInLine[startY];
+	const size_t endIdx = endY < H ? primIndexInLine[endY] : primsToDraw;
+	if(beginIdx >= endIdx)
+		return;
+
+	vbo.apply();
+	glDrawArrays(GL_TRIANGLES, beginIdx, endIdx - beginIdx);
 }
 
 SongLineRender::SongLineRender()
+	: vbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	followCamera = 1;
 	cull = false;
@@ -138,33 +255,55 @@ void SongLineRender::newPoint(const Vector &pt, const Vector &color)
 		pts[pts.size()-1].color = color;
 		pts[pts.size()-1].pt = pt;
 	}
+	updateVBO();
 }
 
 void SongLineRender::clear()
 {
 	pts.clear();
+	vbo.dropBuffer();
+}
+
+void SongLineRender::updateVBO()
+{
+	const size_t N = pts.size();
+	if(N < 2)
+		return;
+
+	const size_t bytes = N * 6 * sizeof(float);
+	const size_t alphaLine = (N * 9) / 10;
+	const float alphaLineInv = 1.0f / float(alphaLine);
+	do
+	{
+		float *p = (float*)vbo.beginWrite(GPUBUFTYPE_VEC2_RGBA, bytes, GPUACCESS_DEFAULT);
+		for (size_t i = 0; i < N; i++)
+		{
+			*p++ = pts[i].pt.x;
+			*p++ = pts[i].pt.y;
+
+			*p++ = pts[i].color.x;
+			*p++ = pts[i].color.y;
+			*p++ = pts[i].color.z;
+			*p++ = i < alphaLine ? float(i)*alphaLineInv : 1.0f;
+		}
+	}
+	while(!vbo.commitWrite());
 }
 
 void SongLineRender::onRender(const RenderState& rs) const
 {
+	const size_t N = pts.size();
+	if(N < 2)
+		return;
+
 	int w=core->getWindowWidth();
 
-	int ls = (4*w)/1024.0f;
+	float ls = (4*w)/1024.0f;
 	if (ls < 0)
 		ls = 1;
 	glLineWidth(ls);
-	const unsigned int alphaLine = pts.size()*(0.9f);
-	float a = 1;
-	glBegin(GL_LINE_STRIP);
-	for (size_t i = 0; i < pts.size(); i++)
-	{
-		if (i < alphaLine)
-			a = float(i)/float(alphaLine);
-		else
-			a = 1;
-		glColor4f(pts[i].color.x, pts[i].color.y, pts[i].color.z, a);
-		glVertex2f(pts[i].pt.x, pts[i].pt.y);
-	}
-	glEnd();
+
+	vbo.apply();
+	glDrawArrays(GL_LINE_STRIP, 0, N);
 }
 

@@ -22,12 +22,12 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define DSQ_H
 
 #include "AquariaCompileConfig.h"
-#include "../BBGE/Core.h"
-#include "../BBGE/Quad.h"
-#include "Element.h"
-#include "../BBGE/BitmapFont.h"
-#include "../BBGE/ScreenTransition.h"
-#include "../BBGE/Precacher.h"
+#include "Core.h"
+#include "Quad.h"
+#include "TileMgr.h"
+#include "BitmapFont.h"
+#include "ScreenTransition.h"
+#include "Precacher.h"
 #include "ScriptInterface.h"
 #include "GameEnums.h"
 #include "Mod.h"
@@ -76,7 +76,7 @@ const int VERSION_GM			= 6;
 class AquariaScreenTransition : public ScreenTransition
 {
 public:
-	void capture();
+	void capture() OVERRIDE;
 };
 
 struct SFXLoops
@@ -138,17 +138,17 @@ public:
 	DSQ(const std::string& fileSystem, const std::string& extraDataDir);
 	~DSQ();
 
-	void init();
-	void shutdown();
+	void init() OVERRIDE;
+	void shutdown() OVERRIDE;
 
 	void toggleBlackBars(bool on, float t=0);
 
 	void setCursor(CursorType type);
 
 	Quad *cursor, *cursorGlow, *cursorBlinker;
-	Quad *overlay, *tfader, *overlay2, *overlay3, *overlayRed;
-	Quad *sceneColorOverlay;
-	Quad *bar_left, *bar_right, *bar_up, *bar_down;
+	PauseQuad *overlay, *tfader, *overlay2, *overlay3, *overlayRed;
+	PauseQuad *sceneColorOverlay;
+	Quad *bar_left, *bar_right;
 	Quad *barFade_left, *barFade_right;
 
 	CountedPtr<Texture> texCursor, texCursorSwim, texCursorBurst, texCursorSing, texCursorLook;
@@ -163,7 +163,7 @@ public:
 
 	void nag(NagType type);
 
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDevice device) OVERRIDE;
 
 	void title(bool fadeMusic);
 
@@ -180,26 +180,11 @@ public:
 	SFXLoops loops;
 	SubtitlePlayer subtitlePlayer;
 
-	void onPlayedVoice(const std::string &name);
+	void onPlayedVoice(const std::string &name) OVERRIDE;
 
 	NagType nagType;
 
 	int getEntityLayerToLayer(int layer);
-
-	void addElement(Element *e);
-	size_t getNumElements() const {return elements.size();}
-	Element *getElement(size_t idx) const {return elements[idx];}
-	Element *getFirstElementOnLayer(size_t layer) const {return layer>15 ? 0 : firstElementOnLayer[layer];}
-	void clearElements();
-	// Used only by scene editor:
-	void removeElement(size_t idx);
-	void removeElement(Element *e);
-	ElementContainer getElementsCopy() const {return elements;}
-
-protected:  // These should never be accessed from outside (use the functions above).
-	ElementContainer elements;
-	Element *firstElementOnLayer[16];
-public:
 
 	void addEntity(Entity *entity);
 	void removeEntity(Entity *e);
@@ -245,7 +230,7 @@ public:
 	void spawnAllIngredients(const Vector &position);
 
 	int getEntityTypeIndexByName(std::string s);
-	void screenMessage(const std::string &msg);
+	void screenMessage(const std::string &msg, const Vector& pos = Vector(16,300));
 	void _debugLog(const std::string &s) OVERRIDE;
 	void toggleConsole();
 	void toggleEffects();
@@ -259,18 +244,17 @@ public:
 	void voiceOnce(const std::string &file);
 	void voiceInterupt(const std::string &file);
 	void stopVoice();
-	Vector getNoteColor(int note);
+	Vector getNoteColor(size_t note);
 	int getRandNote();
-	Vector getNoteVector(int note, float mag=1);
+	Vector getNoteVector(size_t note, float mag=1);
 	void toggleCursor(bool v, float t = -1);
 
 	bool isDeveloperKeys() const;
 	bool canOpenEditor() const;
 
-	void loadElementEffects();
-	ElementEffect getElementEffectByIndex(size_t e);
-	typedef std::vector<ElementEffect> ElementEffects;
-	ElementEffects elementEffects;
+	void loadTileEffects();
+	bool loadTileset(std::string pack, const unsigned char *usedIdx, size_t usedIdxLen);
+	TileMgr tilemgr;
 
 	bool playedVoice(const std::string &file);
 
@@ -284,6 +268,7 @@ public:
 	InterpolatedVector gameSpeed;
 
 private:
+	int lastRandNote;
 	InputDevice lastInputMode; // really don't want to expose this one
 	std::vector<InputDevice> _inputModes; // index: FIXME ADD INFO
 public:
@@ -303,7 +288,7 @@ public:
 
 	UserSettings user, user_backup, user_bcontrol;
 
-	void prepScreen(bool t);
+	void prepScreen(bool t) OVERRIDE;
 	SaveSlotMode saveSlotMode;
 	bool inModSelector;
 
@@ -321,7 +306,7 @@ public:
 	bool mountModPackage(const std::string&);
 	bool modIsKnown(const std::string& name);
 	void unloadMods();
-	static void LoadModsCallback(const std::string &filename, void *param);
+	bool loadModByName(const std::string &filename);
 	static void LoadModPackagesCallback(const std::string &filename, void *param);
 
 	AquariaSaveSlot *selectedSaveSlot;
@@ -360,7 +345,7 @@ public:
 	Quad *achievement_box;
 
 	BitmapText *subtext;
-	Quad *subbox;
+	PauseQuad *subbox;
 
 	BmpFont font, smallFont, subsFont, goldFont, smallFontRed;
 	TTFFont fontArialSmall, fontArialBig, fontArialSmallest;
@@ -399,14 +384,14 @@ public:
 	bool canSkipCutscene();
 	bool isSkippingCutscene();
 
-	virtual void onBackgroundUpdate();
+	virtual void onBackgroundUpdate() OVERRIDE;
 
 	void resetLayerPasses();
 	bool isMiniMapCursorOkay();
 
 protected:
 
-	Quad *cutscene_bg;
+	PauseQuad *cutscene_bg;
 	BitmapText *cutscene_text;
 	BitmapText *cutscene_text2;
 
@@ -428,23 +413,27 @@ protected:
 	float noEffectTimer;
 	void destroyFonts();
 
-	void onReloadResources();
+	void onReloadResources() OVERRIDE;
 
-	void unloadDevice();
-	void reloadDevice();
+	void unloadDevice() OVERRIDE;
+	void reloadDevice() OVERRIDE;
 
 	void onSwitchScreenMode();
-	virtual void onWindowResize(int w, int h);
+	virtual void onWindowResize(int w, int h) OVERRIDE;
 
 	void onPlayVoice();
 	void onStopVoice();
 
+	virtual void onTextInput(TextInputEvent ti, const char *text) OVERRIDE;
+	typedef void (*InputTextHandler)(TextInputEvent ti, const char *text);
+	InputTextHandler pTextInputHandler;
+
 	Entity **iter;
-	Quad *blackout;
+	PauseQuad *blackout;
 	void updatepecue(float dt);
 	std::vector<PECue> pecue;
 
-	void onMouseInput();
+	void onMouseInput() OVERRIDE;
 	std::vector<std::string> voxQueue;
 
 	std::vector<std::string> consoleLines;
@@ -460,20 +449,23 @@ protected:
 	float shakeCameraTimer;
 	float shakeCameraMag;
 
-	void onUpdate(float dt);
-	void onRender();
+	void onUpdate(float dt) OVERRIDE;
+	void onRender() OVERRIDE;
+	void onPrepareRender() OVERRIDE;
 
-	void modifyDt(float &dt);
+	void modifyDt(float &dt) OVERRIDE;
 
-	virtual void onJoystickAdded(int deviceID);
-	virtual void onJoystickRemoved(int instanceID);
+	virtual void onJoystickAdded(int deviceID) OVERRIDE;
+	virtual void onJoystickRemoved(int instanceID) OVERRIDE;
 
-	virtual void updateActionButtons();
+	virtual void updateActionButtons() OVERRIDE;
 
 public:
 	void fixupJoysticks();
 	void initActionButtons();
 	void importActionButtons();
+
+	TileRender *tileRenders[MAX_TILE_LAYERS];
 };
 
 extern DSQ *dsq;

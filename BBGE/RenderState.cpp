@@ -1,10 +1,11 @@
 #include "RenderState.h"
 #include "Base.h"
 #include "RenderBase.h"
+#include "RenderObject.h"
 
 
 RenderState::RenderState(GPUState &gpu)
-    : gpu(gpu), color(1,1,1), scale(1,1), alpha(1), pass(0)
+    : gpu(gpu), color(1,1,1), scale(1,1), alpha(1), pass(RenderObject::RENDER_ALL)
 	, forceRenderBorder(false), forceRenderCenter(false), renderBorderAlpha(1)
 {
 }
@@ -32,9 +33,9 @@ GPUState::GPUState()
 void GPUState::setBlend(BlendType bt)
 {
 	compile_assert(Countof(s_blendParams) == _BLEND_MAXSIZE);
-	// FIXME: comment this back in once ALL other occurances of glBlendFunc() have been removed
-	//if(_blendType == bt)
-	//	return;
+
+	if(_blendType == bt)
+		return;
 
 	_blendType = bt;
 	if (unsigned(bt) < _BLEND_MAXSIZE)
@@ -48,4 +49,9 @@ void GPUState::setBlend(BlendType bt)
 		glDisable(GL_BLEND);
 		glDisable(GL_ALPHA_TEST);
 	}
+}
+
+void GPUState::invalidateBlend()
+{
+	_blendType = _BLEND_MAXSIZE;
 }

@@ -30,16 +30,29 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "GLLoad.h"
 #include "stb_image_resize.h"
 
+bool TexCoordBox::isStandard() const
+{
+	return u1 == 0 && v1 == 0 && u2 == 1 && v2 == 1;
+}
+
+void TexCoordBox::setStandard()
+{
+	u1 = 0;
+	v1 = 0;
+	u2 = 1;
+	v2 = 1;
+}
 
 Texture::Texture()
 {
 	gltexid = 0;
 	width = height = 0;
+	_bordermode = TEX_BORDER_CLAMP;
 
-	_repeating = false;
 	ow = oh = -1;
 	_mipmap = false;
 	success = false;
+	_pixbuf = NULL;
 }
 
 Texture::~Texture()
@@ -47,8 +60,14 @@ Texture::~Texture()
 	unload();
 }
 
-void Texture::readRGBA(unsigned char *pixels)
+void Texture::readRGBA(unsigned char *pixels) const
 {
+	if(!gltexid)
+	{
+		memset(pixels, 0xff, sizeBytes());
+		return;
+	}
+
 	glPixelStorei(GL_PACK_ALIGNMENT, 1);
 	glBindTexture(GL_TEXTURE_2D, gltexid);
 	glGetTexImage(GL_TEXTURE_2D, 0, GL_RGBA, GL_UNSIGNED_BYTE, pixels);
@@ -70,6 +89,12 @@ void Texture::writeRGBA(int tx, int ty, int w, int h, const unsigned char *pixel
 					);
 
 	glBindTexture(GL_TEXTURE_2D, 0);
+
+	if(_pixbuf)
+	{
+		free(_pixbuf);
+		_pixbuf = NULL; // will re-fetch when needed
+	}
 }
 
 void Texture::unload()
@@ -82,18 +107,51 @@ void Texture::unload()
 		glDeleteTextures(1, &gltexid);
 		gltexid = 0;
 	}
+	_freePixbuf();
 }
 
-static const GLenum repeatLUT[] = { GL_CLAMP_TO_EDGE, GL_REPEAT };
-void Texture::apply(bool repeat) const
+size_t Texture::sizeBytes() const
+{
+	return size_t(width) * size_t(height) * 4;
+}
+
+bool Texture::uploadAndKeep(ImageData& img, bool mipmap)
+{
+	bool ok = upload(img, mipmap); // this also clears pixbuf
+	if(ok)
+	{
+		_pixbuf = img.pixels;
+		img.pixels = NULL;
+	}
+	return ok;
+}
+
+void Texture::_freePixbuf()
+{
+	if(_pixbuf)
+	{
+		free(_pixbuf);
+		_pixbuf = NULL;
+	}
+}
+
+void Texture::apply(TexBorderMode border) const
 {
 	glBindTexture(GL_TEXTURE_2D, gltexid);
-	if(repeat != _repeating)
+	if(_bordermode != border)
 	{
-		_repeating = repeat;
-		GLenum rep = repeatLUT[repeat];
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, rep);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, rep);
+		_bordermode = border;
+		int mode = GL_CLAMP;
+		switch(border)
+		{
+		case TEX_BORDER_CLAMP:
+			break; // already this value
+		case TEX_BORDER_WRAP:
+			mode = GL_REPEAT;
+			break;
+		}
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, mode);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, mode);
 	}
 }
 
@@ -127,9 +185,9 @@ bool Texture::upload(const ImageData& img, bool mipmap)
 	if(!gltexid)
 		glGenTextures(1, &gltexid);
 	glBindTexture(GL_TEXTURE_2D, gltexid);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	_repeating = false;
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(GL_TEXTURE_2D,GL_TEXTURE_WRAP_T, GL_CLAMP);
+	_bordermode = TEX_BORDER_CLAMP;
 
 	const GlTexFormat& f = formatLUT[img.channels - 1];
 
@@ -204,21 +262,28 @@ bool Texture::upload(const ImageData& img, bool mipmap)
 
 	width = img.w;
 	height = img.h;
+	_mipmap = mipmap;
+	_freePixbuf();
 	return true;
 }
 
-unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, size_t *sizeparam)
+const unsigned char * Texture::getBufferAndSize(int *wparam, int *hparam, size_t *sizeparam) const
 {
-	const size_t bytes = size_t(width) * size_t(height) * 4;
-	unsigned char *data = (unsigned char*)malloc(bytes);
-	if (!data)
+	unsigned char *data = _pixbuf;
+	const size_t bytes = sizeBytes();
+	if(!_pixbuf)
 	{
-		std::ostringstream os;
-		os << "Game::getBufferAndSize allocation failure, bytes = " << bytes;
-		errorLog(os.str());
-		return NULL;
+		data = (unsigned char*)malloc(bytes);
+		if (!data)
+		{
+			std::ostringstream os;
+			os << "Game::getBufferAndSize allocation failure, bytes = " << bytes;
+			errorLog(os.str());
+			return NULL;
+		}
+		this->readRGBA(data);
+		_pixbuf = data;
 	}
-	this->readRGBA(data);
 
 	*wparam = width;
 	*hparam = height;

@@ -64,7 +64,7 @@ class ModlistRequest : public Network::RequestData
 public:
 	ModlistRequest(bool chain) : allowChaining(chain), first(false) {}
 	virtual ~ModlistRequest() {}
-	virtual void notify(NetEvent ev, size_t recvd, size_t total)
+	virtual void notify(NetEvent ev, size_t recvd, size_t total) OVERRIDE
 	{
 		moddl.NotifyModlist(this, ev, recvd, total);
 		if(ev == NE_ABORT || ev == NE_FINISH)
@@ -78,7 +78,7 @@ class IconRequest : public Network::RequestData
 {
 public:
 	virtual ~IconRequest() {}
-	virtual void notify(NetEvent ev, size_t recvd, size_t total)
+	virtual void notify(NetEvent ev, size_t recvd, size_t total) OVERRIDE
 	{
 		moddl.NotifyIcon(this, ev, recvd, total);
 		if(ev == NE_ABORT || ev == NE_FINISH)
@@ -90,7 +90,7 @@ class ModRequest : public Network::RequestData
 {
 public:
 	virtual ~ModRequest() {}
-	virtual void notify(NetEvent ev, size_t recvd, size_t total)
+	virtual void notify(NetEvent ev, size_t recvd, size_t total) OVERRIDE
 	{
 		moddl.NotifyMod(this, ev, recvd, total);
 		if(ev == NE_ABORT || ev == NE_FINISH)
@@ -527,7 +527,7 @@ void ModDL::NotifyMod(ModRequest *rq, NetEvent ev, size_t recvd, size_t total)
 		if(!dsq->modIsKnown(localname))
 		{
 			// yay, got something new!
-			DSQ::LoadModsCallback(archiveFile, dsq); // does not end in ".xml" but thats no problem here
+			dsq->loadModByName(localname); // FIXME: This assumes that the aqmod file, the contained directory, and it's accompanying xml file all have the same base name
 			if(dsq->modSelectorScr)
 				dsq->modSelectorScr->initModAndPatchPanel(); // HACK
 		}

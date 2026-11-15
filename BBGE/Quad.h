@@ -23,23 +23,19 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "RenderObject.h"
 #include "DataStructures.h"
+#include "VertexBuffer.h"
 
-class OutlineRect : public RenderObject
+
+class DynamicRenderGrid;
+
+/*class QuadRepeatData
 {
-public:
-	OutlineRect();
-	void setWidthHeight(int w, int h);
-	void setLineSize(int ls);
+	DynamicRenderGrid grid; // need this here because a repeating tile WITH a grid-based tile effect is a special and annoying case to handle
 
-protected:
-
-	int w, h, w2, h2;
-	int lineSize;
-
-	void onRender(const RenderState& rs) const OVERRIDE;
-};
-
-class RenderGrid;
+	// set by user
+	float texscaleX, texscaleY;
+	float texOffX, texOffY;
+};*/
 
 class Quad : public RenderObject
 {
@@ -47,48 +43,53 @@ public:
 	Quad(const std::string &tex, const Vector &pos);
 	Quad();
 	virtual ~Quad();
-	RenderGrid *createGrid(int x, int y);
+	DynamicRenderGrid *createGrid(int x, int y);
 	void destroy() OVERRIDE;
 	bool isCoordinateInside(Vector coord, int minSize=0) const;
 	bool isCoordinateInsideWorld(const Vector &coord, int minSize=0) const;
 	bool isCoordinateInsideWorldRect(const Vector &coord, int w, int h) const;
 
-	void flipVertical() OVERRIDE;
-	void flipHorizontal() OVERRIDE;
 	void setWidthHeight(float w, float h=-1);
 	void setWidth(float w);
 	void setHeight(float h);
 	float getWidth() const {return width;}
 	float getHeight() const {return height;}
 
-	RenderGrid *setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
+	DynamicRenderGrid *setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo);
 	void setDrawGridAlpha(size_t x, size_t y, float alpha);
 	void repeatTextureToFill(bool on);
-	void refreshRepeatTextureToFill();
 	bool isRepeatingTextureToFill() const { return repeatTexture; }
+	void setRepeatScale(const Vector& repscale);
+	inline const Vector& getRepeatScale() const { return repeatToFillScale; }
+	void setRepeatOffset(const Vector& repoffs);
+	inline const Vector& getRepeatOffset() const { return texOff; }
 	void setStripPoints(bool vert, const Vector *points, size_t n);
-	RenderGrid *getGrid() { return grid; }
-	const RenderGrid *getGrid() const { return grid; }
+
+	DynamicRenderGrid *getGrid() { return grid; }
+	const DynamicRenderGrid *getGrid() const { return grid; }
+
+	void setOverrideTexCoords(const TexCoordBox& tc);
+	void clearOverrideTexCoords();
 
 	void reloadDevice() OVERRIDE;
 
 	void deleteGrid();
 
-	Vector upperLeftTextureCoordinates, lowerRightTextureCoordinates;
-
 	// TODO: this should be a bitmask
-	char autoWidth, autoHeight;
-	bool renderQuad, renderCenter, renderBorder;
 
-	Vector texOff;
+	bool renderQuad, renderCenter, renderBorder;
+	bool texcoordOverride; // urgh
 
 	float borderAlpha;
 	Vector renderBorderColor;
-	Vector repeatToFillScale;
 
 protected:
+	void updateTexCoords();
 
-	RenderGrid *grid;
+	TexCoordBox texcoords;
+	Vector repeatToFillScale;
+	Vector texOff;
+	DynamicRenderGrid *grid;
 
 
 	void resetGrid();
@@ -109,12 +110,13 @@ public:
 	PauseQuad();
 	virtual ~PauseQuad();
 	int pauseLevel;
+	char autoWidth, autoHeight;
 
 	void setPositionSnapTo(InterpolatedVector *positionSnapTo);
 protected:
 	InterpolatedVector *positionSnapTo;
 
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 class CollideQuad : public Quad
@@ -123,11 +125,14 @@ public:
 	CollideQuad();
 	virtual ~CollideQuad();
 	virtual void renderCollision(const RenderState& rs) const OVERRIDE;
+	virtual void onUpdate(float dt) OVERRIDE;
 
 	float collideRadius;
-};
 
-#define QUAD(x) Quad *x = new Quad; addRenderObject(x);
+private:
+	float prevCollideRadius;
+	DynamicGPUBuffer cvbo;
+};
 
 #endif
 

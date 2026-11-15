@@ -81,20 +81,23 @@ public:
 
 	int segmentChain;
 
-	void updateSegments();
-	void updateSegment(Bone *b, const Vector &diff);
+	void updateSegments(float dt);
+	void updateSegment(float dt, Bone *b, const Vector &diff);
 
 	SkeletalSprite *skeleton;
 
 
 	void setSegmentProps(int minDist, int maxDist, bool reverse);
 	Vector segmentOffset;
+	float segmentRotInterpTime;
 
 	bool stripVert;
 	bool fileRenderQuad;
 	bool selectable;
-	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
 	bool originalFH;
+	bool inheritPass;
+
+	int originalRenderPass; // stores the render pass originally set in the XML file. For AC_RESET_PASS.
 
 	void spawnParticlesFromCollisionMask(const char *p, unsigned intv, int layer, float rotz = 0);
 	Vector getCollisionMaskNormal(Vector pos, float dist) const;
@@ -105,6 +108,8 @@ protected:
 	std::vector<ParticleEffect*> emitters;
 	int minDist, maxDist, reverse;
 	std::vector<Bone*> segments;
+	void onUpdate(float dt) OVERRIDE;
+	DynamicGPUBuffer cmvbo; // for collision mask debug render only
 public:
 	std::vector<Vector> collisionMask;
 	std::vector<Vector> transformedCollisionMask;
@@ -176,14 +181,14 @@ public:
 	SkeletalKeyframe *getKeyframe(size_t key);
 	SkeletalKeyframe *getLastKeyframe();
 	SkeletalKeyframe *getFirstKeyframe();
-	SkeletalKeyframe *getPrevKeyframe(float t);
-	SkeletalKeyframe *getNextKeyframe(float t);
+	size_t getKeyframeIndexBefore(float t) const; // last anim that's <= t
+
 	void cloneKey(size_t key, float toffset);
 	void deleteKey(size_t key);
 	void reorderKeyframes();
 	float getAnimationLength();
 	size_t getSkeletalKeyframeIndex(SkeletalKeyframe *skey);
-	size_t getNumKeyframes();
+	size_t getNumKeyframes() const;
 	void reverse();
 	bool resetOnEnd;
 
@@ -202,9 +207,11 @@ public:
 	AnimationLayer();
 	void setSkeletalSprite(SkeletalSprite *s);
 	Animation *getCurrentAnimation();
+	Animation *getCurrentAnimationOrNull();
 	void animate(const std::string &animation, int loop);
 	void update(float dt);
-	void updateBones();
+	void updateBones(bool animLooped);
+	void keyframeReached(SkeletalKeyframe *k, size_t idx);
 	void stopAnimation();
 	float getAnimationLength();
 	void createTransitionAnimation(Animation& to, float time);
@@ -213,9 +220,11 @@ public:
 	void enqueueAnimation(const std::string& anim, int loop);
 	float transitionAnimate(std::string anim, float time, int loop);
 	void setTimeMultiplier(float t);
-	bool isAnimating();
+	bool isAnimating() const;
 	bool contains(const Bone *b) const;
 	void resetPass();
+	void setTimer(float t, bool runKeyframes);
+
 
 	//----
 	float fallThru;
@@ -225,7 +234,7 @@ public:
 	std::vector<int> includeBones;
 	SkeletalSprite *s;
 
-	SkeletalKeyframe *lastNewKey;
+	int lastKeyframeIndex;
 
 	float timer;
 	int loop;
@@ -239,6 +248,9 @@ public:
 	size_t currentAnimation;
 	bool animating;
 
+private:
+	void _interpolateKeyframes(SkeletalKeyframe *key1, SkeletalKeyframe *key2, float t01);
+
 
 };
 
@@ -248,7 +260,7 @@ public:
 
 	SkeletalSprite();
 	virtual ~SkeletalSprite();
-	virtual void destroy();
+	virtual void destroy() OVERRIDE;
 
 	void loadSkeletal(const std::string &fn);
 	bool saveSkeletal(const std::string &fn);
@@ -262,19 +274,21 @@ public:
 
 	void setTime(float time, size_t layer=0);
 
-	void updateBones();
+	void updateBones(float dt);
+	void updateAllSegments(float dt);
 	void playCurrentAnimation(int loop=0, int layer=0);
 	void stopAnimation(int layer=0);
 	void stopAllAnimations();
 
 	float transitionAnimate(const std::string& anim, float time, int loop=0, int layer=0);
 
-	bool isAnimating(int layer=0);
+	bool isAnimating(size_t layer=0) const;
 
 	void setTimeMultiplier(float t, int layer=0);
 
-	Bone* getSelectedBone(bool mouseBased = true);
+	int findSelectableBoneIdxClosestTo(const Vector& pos, bool mustBeInBox = true) const; // -1 if none found, otherwise bones[idx] to get the bone
 	Animation *getCurrentAnimation(size_t layer=0);
+	Animation *getCurrentAnimationOrNull(size_t layer=0);
 
 
 	void nextAnimation();
@@ -282,22 +296,14 @@ public:
 	void lastAnimation();
 	void firstAnimation();
 	bool selectAnimation(const char *name);
-	void updateSelectedBoneColor();
 
 
 	void setFreeze(bool f);
-
-
 
 	Animation *getAnimation(const std::string& anim);
 
 	std::vector<Animation> animations;
 	std::vector<Bone*> bones;
-
-	inline size_t getSelectedBoneIdx(void) { return selectedBone; }
-	void setSelectedBone(int b);
-	void selectPrevBone();
-	void selectNextBone();
 
 	bool isLoaded();
 	size_t getNumAnimLayers() const { return animLayers.size(); }
@@ -317,12 +323,11 @@ protected:
 	bool frozen;
 	RenderObject *animKeyNotify;
 	bool loaded;
-	size_t selectedBone;
 	friend class AnimationLayer;
 	std::vector<AnimationLayer> animLayers;
 	Bone* initBone(int idx, std::string gfx, int pidx, bool rbp=false, std::string name="", float cr=0, bool fh=false, bool fv=false);
 	void deleteBones();
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 #endif

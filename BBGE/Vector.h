@@ -28,6 +28,8 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 typedef float scalar_t;
 
+enum _NoInit { NoInit };
+
 class Vector
 {
 public:
@@ -37,6 +39,7 @@ public:
 
      Vector(scalar_t a = 0, scalar_t b = 0, scalar_t c = 0) : x(a), y(b), z(c) {}
      Vector(const Vector &vec) : x(vec.x), y(vec.y), z(vec.z) {}
+	 explicit inline Vector(_NoInit) {}
 
 
      float inline *getv(float *v) const
@@ -190,12 +193,12 @@ public:
           return Vector(y*vec.z - z*vec.y, z*vec.x - x*vec.z, x*vec.y - y*vec.x);
      }
 
-	 inline Vector getPerpendicularLeft()
+	 inline Vector getPerpendicularLeft() const
 	 {
 		 return Vector(-y, x);
 	 }
 
-	 inline Vector getPerpendicularRight()
+	 inline Vector getPerpendicularRight() const
 	 {
 		 return Vector(y, -x);
 	 }
@@ -388,7 +391,7 @@ public:
 	void calculatePercentages();
 	float getLength();
 	void realPercentageCalc();
-	void removeNodes(unsigned int startInclusive, unsigned int endInclusive);
+	void removeNodes(size_t startInclusive, size_t endInclusive);
 	float getSubSectionLength(int startIncl, int endIncl);
 protected:
 	std::vector <VectorPathNode> pathNodes;
@@ -522,6 +525,11 @@ public:
 };
 
 Vector getRotatedVector(const Vector &vec, float rot);
+
+inline Vector lerp(const Vector &v1, const Vector &v2, float t)
+{
+	return (v2-v1)*t+v1;
+}
 
 Vector lerp(const Vector &v1, const Vector &v2, float dt, int lerpType);
 

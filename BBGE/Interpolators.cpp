@@ -1,6 +1,5 @@
 #include "Interpolators.h"
 #include <math.h>
-#include "tbsp.hh"
 
 // usually one would expect that a bspline goes from t=0 to t=1.
 // here, splines eval between these -0.5 .. +0.5.
@@ -101,9 +100,10 @@ void BSpline2D::resize(size_t cx, size_t cy, unsigned degx, unsigned degy)
 
 void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres, const Vector *controlpoints)
 {
+    const unsigned maxDeg = std::max(_degx, _degy);
+
     std::vector<Vector> tmpv;
-    size_t degn = std::max(_degx, _degy);
-    size_t tmpn = (yres * _cpx) + degn;
+    size_t tmpn = (yres * _cpx) + maxDeg;
     size_t tmpsz = tmpn * sizeof(Vector);
     Vector *tmp;
     if(tmpsz < 17*1024)
@@ -113,7 +113,9 @@ void BSpline2D::recalc(Vector* dst, size_t xres, size_t yres, const Vector *cont
         tmpv.resize(tmpn);
         tmp = &tmpv[0];
     }
-    Vector *work = tmp + (tmpn - degn);
+    // tmp[] layout: leftmost part: entries to hold the matrix as it's being built;
+    //               rightmost part: maxDeg entries as workmem for the deBoor eval
+    Vector *work = tmp + (tmpn - maxDeg);
 
     // Each column -> Y-axis interpolation
     for(size_t x = 0; x < _cpx; ++x)
@@ -161,4 +163,81 @@ void BSpline2DWithPoints::recalc(Vector* dst, size_t xres, size_t yres)
 void BSpline2DWithPoints::reset()
 {
     BSpline2D::reset(&controlpoints[0]);
+}
+
+bool BSpline2DControlPointGenerator::resize(size_t cx, size_t cy)
+{
+    const size_t interpStorageSizeX = tbsp__getInterpolatorStorageSize(cx, cx);
+    const size_t interpStorageSizeY = tbsp__getInterpolatorStorageSize(cy, cy);
+    const size_t interpStorageNeeded = interpStorageSizeX + interpStorageSizeY;
+    floats.resize(interpStorageNeeded);
+
+    cp2d.init(cx, cy);
+
+    const size_t maxcp = std::max(cx, cy);
+    vectmp.resize(maxcp);
+
+    return interp.x.init(&floats[0], cx, cx)
+        && interp.y.init(&floats[interpStorageSizeX], cy, cy);
+}
+
+bool BSpline2DControlPointGenerator::refresh(const float* knotsx, const float* knotsy, unsigned degx, unsigned degy)
+{
+    const size_t maxcp = vectmp.size();
+    const size_t tmpn = tbsp__getInterpolatorRefreshTempSize(maxcp, maxcp);
+    const size_t tmpsz = tmpn * sizeof(float);
+    float *tmp;
+    std::vector<float> tmpv;
+    if(tmpsz < 17*1024)
+        tmp = (float*)alloca(tmpsz);
+    else
+    {
+        tmpv.resize(tmpn);
+        tmp = &tmpv[0];
+    }
+
+    return interp.x.refresh(tmp, knotsx, degx)
+        && interp.y.refresh(tmp, knotsy, degy);
+}
+
+Vector* BSpline2DControlPointGenerator::generateControlPoints(const Vector *points2d)
+{
+    const size_t cpx = interp.x.getNumInputPoints();
+    const size_t cpy = interp.y.getNumInputPoints();
+
+    // y direction first
+    for(size_t x = 0; x < cpx; ++x)
+    {
+        const Vector *src = &points2d[x];
+        for(size_t y = 0; y < cpy; ++y, src += cpx)
+            vectmp[y] = *src;
+
+        // solve in-place
+        interp.y.generateControlPoints<Vector>(&vectmp[0], NULL, &vectmp[0]);
+
+        for(size_t y = 0; y < cpy; ++y)
+            cp2d(x, y) = vectmp[y];
+    }
+
+    // x direction
+    for(size_t y = 0; y < cpy; ++y)
+    {
+        Vector *row = cp2d.row(y);
+        // solve in-place
+        interp.x.generateControlPoints<Vector>(row, NULL, row);
+    }
+
+    return cp2d.data();
+}
+
+
+bool BSpline2DControlPointGeneratorWithPoints::resize(size_t cx, size_t cy)
+{
+    designpoints.resize(cx * cy);
+    return BSpline2DControlPointGenerator::resize(cx, cy);
+}
+
+Vector* BSpline2DControlPointGeneratorWithPoints::generateControlPoints()
+{
+    return BSpline2DControlPointGenerator::generateControlPoints(&designpoints[0]);
 }

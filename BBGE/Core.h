@@ -29,9 +29,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Localization.h"
 #include "Window.h"
 #include "TextureMgr.h"
-
+#include "VertexBuffer.h"
 #include "DarkLayer.h"
-
+#include "RenderGrid.h"
 #include "GameKeys.h"
 
 class ParticleEffect;
@@ -59,6 +59,13 @@ enum CoreLayers
 {
 	LR_NONE		= -1
 };
+
+enum TextInputEvent
+{
+	TEXTINP_TEXT,
+	TEXTINP_BACKSPACE,
+};
+
 
 class AfterEffectManager;
 
@@ -113,6 +120,9 @@ enum FollowCameraLock
 
 typedef std::vector <RenderObject*> RenderObjects;
 
+typedef bool (*PreRenderFunc)(const RenderState& rs);
+typedef void (*PostRenderFunc)(const RenderState& rs);
+
 class RenderObjectLayer
 {
 public:
@@ -123,43 +133,41 @@ public:
 	void moveToFront(RenderObject *r);
 	void moveToBack(RenderObject *r);
 
+	void unloadDevice();
 	void reloadDevice();
 
+	void updateObjects(float dt) const;
+
 	void prepareRender();
-	void render() const;
+	void render(const RenderState& rs) const;
+
+	size_t clearTemporaryObjects();
 
 	inline bool empty()
 	{
 		return objectCount == 0;
 	}
 
-	inline RenderObject *getFirst()
+	// Skips holes, iteration is done once this returns NULL
+	class Iterator
 	{
-		iter = 0;
-		return getNext();
-	}
-
-	RenderObject *getNext()
-	{
-		const size_t size = renderObjects.size();
-		size_t i;
-		for (i = iter; i < size; i++)
+	public:
+		inline Iterator(const RenderObjectLayer& layer) : _objs(layer.renderObjects), _pos(0) {}
+		inline RenderObject *next()
 		{
-			if (renderObjects[i] != 0)
-				break;
+			RenderObject *ro = NULL;
+			const size_t sz = _objs.size();
+			size_t i = _pos;
+			while(i < sz)
+				if( (ro = _objs[i++]) )
+					break;
+			_pos = i;
+			return ro;
 		}
-		if (i < size)
-		{
-			iter = i+1;
-			return renderObjects[i];
-		}
-		else
-		{
-			iter = i;
-			return 0;
-		}
-		return 0;
-	}
+	private:
+		const RenderObjects& _objs;
+		size_t _pos;
+	};
 
 	//inclusive
 	int startPass, endPass;
@@ -168,14 +176,14 @@ public:
 	Vector followCameraMult; // calculated based on followCameraLock
 	int followCameraLock;
 
-	bool update;
+	PreRenderFunc preRender;
+	PostRenderFunc postRender;
 
 protected:
 	RenderObjects renderObjects;
 	std::vector<const RenderObject*> toRender;
 	size_t objectCount;
 	size_t firstFreeIdx;
-	size_t iter;
 };
 
 class CoreWindow : public Window
@@ -184,9 +192,9 @@ public:
 	virtual ~CoreWindow();
 
 protected:
-	virtual void onEvent(const SDL_Event& ev);
-	virtual void onResize(unsigned w, unsigned h);
-	virtual void onQuit();
+	virtual void onEvent(const SDL_Event& ev) OVERRIDE;
+	virtual void onResize(unsigned w, unsigned h) OVERRIDE;
+	virtual void onQuit() OVERRIDE;
 };
 
 
@@ -204,10 +212,12 @@ public:
 
 	void initRenderObjectLayers(int num);
 
-	void applyState(const std::string &state);
+	void applyState(const std::string &state) OVERRIDE;
+	void removeState(const std::string &state) OVERRIDE;
 
-	void clearBuffers();
-	void render(int startLayer=-1, int endLayer=-1, bool useFrameBufferIfAvail=true);
+	void renderExternal();
+	void prepareRender();
+	void renderInternal(int startLayer, int endLayer, bool allowSkip);
 	void showBuffer();
 	void quit();
 	bool isShuttingDown();
@@ -249,7 +259,7 @@ public:
 	void setMouseConstraint(bool on);
 	void setMouseConstraintCircle(const Vector& pos, float mouseCircle);
 
-	virtual void action(int id, int state, int source, InputDevice device){}
+	virtual void action(int id, int state, int source, InputDevice device) OVERRIDE {}
 
 	void enqueueRenderObjectDeletion(RenderObject *object);
 	void clearGarbage();
@@ -266,8 +276,18 @@ public:
 
 	void updateWindowDrawSize(int w, int h);
 
-	Vector getGameCursorPosition();
-	Vector getGamePosition(const Vector &v);
+	Vector getGameCursorPosition() const;
+	Vector getTopLeftCornerInWorldCoords() const;
+	Vector getBottomRightCornerInWorldCoords() const;
+	Vector getGamePosition(const Vector &winpos) const;
+	Vector getWindowPosition(const Vector& worldpos) const;
+
+	bool isRectInWindowCoordsPartiallyOnScreen(const Vector& center, const Vector& wh) const;
+	bool isRectInWindowCoordsFullyOnScreen(const Vector& center, const Vector& wh) const;
+
+	// positive margin makes the screen area narrower, negative margin makes it wider (accept slightly outside)
+	bool isPointInWindowCoordsOnScreenWithMargin(const Vector& center, const Vector& margin) const;
+
 
 	Vector screenCenter;
 
@@ -298,16 +318,17 @@ public:
 	bool loopDone;
 
 	Mouse mouse;
+	unsigned lastEventTimestamp;
 
 	AfterEffectManager *afterEffectManager;
 
 	ParticleManager *particleManager;
 
-	void setExtraTexturePath(const char *dir); // pass NULL to disable secondary
+	void setExtraTexturePath(const char *dir, bool watch); // pass NULL to disable secondary
 	const char *getExtraTexturePath() const; // NULL when no secondary
 	const std::string& getBaseTexturePath() const;
 
-	virtual bool canChangeState();
+	virtual bool canChangeState() OVERRIDE;
 	void resetTimer();
 
 	inline int getVirtualWidth()
@@ -354,7 +375,6 @@ public:
 	DarkLayer darkLayer;
 
 	void setupRenderPositionAndScale();
-	void setupGlobalResolutionScale();
 
 
 	int particlesPaused;
@@ -415,6 +435,9 @@ public:
 
 	TextureMgr texmgr;
 
+	inline const RenderGrid *getDefaultQuadGrid() const { return &defaultQuadGrid; }
+	inline const DynamicGPUBuffer *getDefaultQuadBorderBuf() const { return &defautQuadBorder; }
+
 protected:
 
 	CoreWindow *window;
@@ -446,6 +469,11 @@ protected:
 
 	bool doMouseConstraint();
 
+	virtual void onTextInput(TextInputEvent ti, const char *text) {}
+	void beginTextInput();
+	void endTextInput();
+	int textInputOpenCount;
+
 	virtual void onMouseInput(){}
 	bool doScreenshot;
 	float baseCullRadius;
@@ -463,7 +491,6 @@ protected:
 	virtual void onJoystickAdded(int deviceID);
 	virtual void onJoystickRemoved(int instanceID);
 
-	int afterEffectManagerLayer;
 	Vector cameraOffset;
 	std::vector<float> avgFPS;
 	virtual void modifyDt(float &dt){}
@@ -482,8 +509,9 @@ protected:
 
 	int _lastEnumeratedDisplayIndex;
 
-	virtual void onUpdate(float dt);
+	virtual void onUpdate(float dt) OVERRIDE;
 	virtual void onRender(){}
+	virtual void onPrepareRender(){}
 
 	void setupFileAccess();
 	std::string _extraDataDir;
@@ -491,8 +519,14 @@ protected:
 	std::vector<ActionButtonStatus*> actionStatus; // contains at least 1 element (the sentinel)
 	virtual void updateActionButtons();
 	void clearActionButtons();
+	void clearTemporaryRenderObjects();
+
+	RenderGrid defaultQuadGrid;
+	DynamicGPUBuffer defautQuadBorder;
 
 public:
+	RenderGrid blitQuad;
+
 	// inclusive!
 	inline int getMaxActionStatusIndex() const { return int(actionStatus.size()) - 2; }
 	// pass -1 for is a sentinel that captures all input
@@ -505,6 +539,7 @@ public:
 private:
 	std::vector<Joystick*> joysticks;
 	unsigned sdlUserMouseEventID;
+	size_t _textureWatcherHandle;
 };
 
 extern Core *core;

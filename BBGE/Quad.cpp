@@ -49,14 +49,12 @@ void Quad::initQuad()
 	borderAlpha = 0.5;
 	repeatToFillScale = Vector(1,1);
 
-	autoWidth = autoHeight = 0;
-
 	renderBorder = false;
 	renderCenter = true;
+	texcoordOverride = false;
 	width = 2; height = 2;
+	texcoords.setStandard();
 
-	upperLeftTextureCoordinates = Vector(0,0);
-	lowerRightTextureCoordinates = Vector(1,1);
 	renderQuad = true;
 	grid = NULL;
 }
@@ -75,20 +73,24 @@ void Quad::destroy()
 
 
 
-RenderGrid *Quad::setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo)
+DynamicRenderGrid *Quad::setSegs(int x, int y, float dgox, float dgoy, float dgmx, float dgmy, float dgtm, bool dgo)
 {
-	RenderGrid *g = createGrid(x, y);
+	DynamicRenderGrid *g = createGrid(x, y);
 	if(g)
 		g->setSegs(dgox, dgoy, dgmx, dgmy, dgtm, dgo);
 	return g;
 }
 
-RenderGrid *Quad::createGrid(int xd, int yd)
+DynamicRenderGrid *Quad::createGrid(int xd, int yd)
 {
 	delete grid;
-	return (grid = xd && yd
-		? new RenderGrid(xd, yd)
-		: NULL);
+	grid = NULL;
+	if(xd && yd)
+	{
+		grid = new DynamicRenderGrid();
+		grid->init(xd, yd, texcoords);
+	}
+	return grid;
 }
 
 void Quad::setDrawGridAlpha(size_t x, size_t y, float alpha)
@@ -113,29 +115,18 @@ void Quad::_renderBorder(const RenderState& rs, Vector color, float borderalpha)
 {
 	glBindTexture(GL_TEXTURE_2D, 0);
 
+	glColor4f(color.x, color.y, color.z, borderalpha*alpha.x*alphaMod);
+
+	core->getDefaultQuadBorderBuf()->apply();
+
 	if (rs.forceRenderCenter || renderCenter)
 	{
-		glColor4f(color.x, color.y, color.z, borderalpha*alpha.x*alphaMod);
 		glPointSize(16);
-		glBegin(GL_POINTS);
-			glVertex2f(0,0);
-		glEnd();
+		glDrawArrays(GL_POINTS, 4, 1);
 	}
 
-	glColor4f(color.x, color.y, color.z, alpha.x*alphaMod);
 	glLineWidth(2);
-	const float _w2 = width*0.5f;
-	const float _h2 = height*0.5f;
-	glBegin(GL_LINES);
-		glVertex2f(-_w2, _h2);
-		glVertex2f(_w2, _h2);
-		glVertex2f(_w2, -_h2);
-		glVertex2f(_w2, _h2);
-		glVertex2f(-_w2, -_h2);
-		glVertex2f(-_w2, _h2);
-		glVertex2f(-_w2, -_h2);
-		glVertex2f(_w2, -_h2);
-	glEnd();
+	glDrawArrays(GL_LINE_LOOP, 0, 4);
 	RenderObject::lastTextureApplied = 0;
 }
 
@@ -205,54 +196,54 @@ void Quad::renderGrid(const RenderState& rs) const
 	rx.color = rs.color * this->color;
 	rx.alpha = rs.alpha * this->alpha.x * this->alphaMod;
 
-	glPushMatrix();
-	glScalef(width, height, 1);
-
-	grid->render(rx, upperLeftTextureCoordinates, lowerRightTextureCoordinates);
+	grid->render(rx);
 
 	// debug points
 	if (RenderObject::renderCollisionShape)
 	{
 		glBindTexture(GL_TEXTURE_2D, 0);
-		grid->renderDebugPoints(rx);
+		grid->renderDebugPoints(rs);
 		RenderObject::lastTextureApplied = 0;
 	}
-
-	glPopMatrix();
 }
 
 
 void Quad::repeatTextureToFill(bool on)
 {
 	repeatTexture = on;
-	refreshRepeatTextureToFill();
+	updateTexCoords();
 
+}
+
+void Quad::setRepeatScale(const Vector& repscale)
+{
+	repeatToFillScale = repscale;
+	updateTexCoords();
+}
+
+void Quad::setRepeatOffset(const Vector& repoffs)
+{
+	texOff = repoffs;
+	updateTexCoords();
 }
 
 void Quad::onRender(const RenderState& rs) const
 {
 	if (!renderQuad) return;
 
-	const float _w2 = width*0.5f;
-	const float _h2 = height*0.5f;
+
+	// previously, vertical flip was implemented by texcoord inversion.
+	// ie. child objects were never affected. not sure if this is desirable behavior but it'll stay like
+	// this for now. should probably make it affect children as well.
+	glPushMatrix();
+	if(_fv)
+		glRotatef(180, 1, 0, 0);
+
+	glScalef(width, height, 1);
 
 	if (!grid)
 	{
-		glBegin(GL_QUADS);
-		{
-			glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-			glVertex2f(-_w2, +_h2);
-
-			glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-			glVertex2f(+_w2, +_h2);
-
-			glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-			glVertex2f(+_w2, -_h2);
-
-			glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-			glVertex2f(-_w2, -_h2);
-		}
-		glEnd();
+		core->getDefaultQuadGrid()->render(rs);
 	}
 	else
 	{
@@ -264,44 +255,48 @@ void Quad::onRender(const RenderState& rs) const
 	else if(rs.forceRenderBorder)
 		_renderBorder(rs, rs.renderBorderColor, rs.renderBorderAlpha);
 
-
+	glPopMatrix();
 }
 
-
-void Quad::flipHorizontal()
+void Quad::updateTexCoords()
 {
-	RenderObject::flipHorizontal();
-}
+	if(texcoordOverride)
+		goto setgrid;
 
-void Quad::flipVertical()
-{
-	if (!_fv)
-	{
-		lowerRightTextureCoordinates.y = 0;
-		upperLeftTextureCoordinates.y = 1;
-	}
-	else
-	{
-		lowerRightTextureCoordinates.y = 1;
-		upperLeftTextureCoordinates.y = 0;
-	}
-	RenderObject::flipVertical();
-}
-
-void Quad::refreshRepeatTextureToFill()
-{
 	if (repeatTexture && texture)
 	{
-		upperLeftTextureCoordinates.x = texOff.x;
-		upperLeftTextureCoordinates.y = texOff.y;
-		lowerRightTextureCoordinates.x = (width*scale.x*repeatToFillScale.x)/texture->width + texOff.x;
-		lowerRightTextureCoordinates.y = (height*scale.y*repeatToFillScale.y)/texture->height + texOff.y;
+		texcoords.u1 = texOff.x;
+		texcoords.v1 = texOff.y;
+		texcoords.u2 = (width*scale.x*repeatToFillScale.x)/texture->width + texOff.x;
+		texcoords.v2 = (height*scale.y*repeatToFillScale.y)/texture->height + texOff.y;
+
+setgrid:
+		if(!grid)
+		{
+			createGrid(2, 2)->gridType = GRID_UNDEFINED;
+		}
+		grid->setTexCoords(texcoords);
 	}
 	else
 	{
-		if (fabsf(lowerRightTextureCoordinates.x) > 1 || fabsf(lowerRightTextureCoordinates.y)>1)
-			lowerRightTextureCoordinates = Vector(1,1);
+		texcoords.setStandard();
+		// don't delete when a wavy effect is going on, for example
+		if(grid && grid->gridType == GRID_UNDEFINED)
+			deleteGrid();
 	}
+}
+
+void Quad::setOverrideTexCoords(const TexCoordBox & tc)
+{
+	texcoordOverride = true;
+	texcoords = tc;
+	updateTexCoords();
+}
+
+void Quad::clearOverrideTexCoords()
+{
+	texcoordOverride = false;
+	updateTexCoords();
 }
 
 void Quad::reloadDevice()
@@ -312,16 +307,6 @@ void Quad::reloadDevice()
 void Quad::onUpdate(float dt)
 {
 	RenderObject::onUpdate(dt);
-
-	if (autoWidth == AUTO_VIRTUALWIDTH)
-		width = core->getVirtualWidth();
-	else if (autoWidth == AUTO_VIRTUALHEIGHT)
-		width = core->getVirtualHeight();
-
-	if (autoHeight == AUTO_VIRTUALWIDTH)
-		height = core->getVirtualWidth();
-	else if (autoHeight == AUTO_VIRTUALHEIGHT)
-		height = core->getVirtualHeight();
 
 	if (grid && alpha.x > 0 && alphaMod > 0)
 	{
@@ -336,16 +321,19 @@ void Quad::setWidthHeight(float w, float h)
 	else
 		height = h;
 	width = w;
+	updateTexCoords();
 }
 
 void Quad::setWidth(float w)
 {
 	width = w;
+	updateTexCoords();
 }
 
 void Quad::setHeight(float h)
 {
 	height = h;
+	updateTexCoords();
 }
 
 void Quad::onSetTexture()
@@ -360,9 +348,10 @@ void Quad::onSetTexture()
 		width = 64;
 		height = 64;
 	}
+	updateTexCoords();
 }
 
-PauseQuad::PauseQuad() : Quad(), pauseLevel(0), positionSnapTo(0)
+PauseQuad::PauseQuad() : Quad(), pauseLevel(0), positionSnapTo(0), autoWidth(0), autoHeight(0)
 {
 	addType(SCO_PAUSEQUAD);
 }
@@ -373,6 +362,27 @@ PauseQuad::~PauseQuad()
 
 void PauseQuad::onUpdate(float dt)
 {
+	if(autoWidth || autoHeight)
+	{
+		float w = width, h = height;
+		if (autoWidth == AUTO_VIRTUALWIDTH)
+			w = core->getVirtualWidth();
+		else if (autoWidth == AUTO_VIRTUALHEIGHT)
+			w = core->getVirtualHeight();
+
+		if (autoHeight == AUTO_VIRTUALWIDTH)
+			h = core->getVirtualWidth();
+		else if (autoHeight == AUTO_VIRTUALHEIGHT)
+			h = core->getVirtualHeight();
+
+		if(w != width || h != height)
+		{
+			width = w;
+			height = h;
+			updateTexCoords();
+		}
+	}
+
 	if (positionSnapTo)
 		this->position = *positionSnapTo;
 
@@ -388,7 +398,8 @@ void PauseQuad::setPositionSnapTo(InterpolatedVector *positionSnapTo)
 }
 
 CollideQuad::CollideQuad()
-	: collideRadius(0)
+	: collideRadius(0), prevCollideRadius(0)
+	, cvbo(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	addType(SCO_COLLIDE_QUAD);
 }
@@ -397,24 +408,47 @@ CollideQuad::~CollideQuad()
 {
 }
 
+enum { CIRCLE_VERTS = 20 };
+
+void CollideQuad::onUpdate(float dt)
+{
+	// FIXME: This should be moved to onDebugUpdate() or something
+	if(RenderObject::renderCollisionShape)
+	{
+		if(prevCollideRadius != collideRadius)
+		{
+			prevCollideRadius = collideRadius;
+			if(collideRadius > 0)
+			{
+				const size_t bytes = CIRCLE_VERTS * 2 * sizeof(float);
+				do
+				{
+					float *p = (float*)cvbo.beginWrite(GPUBUFTYPE_VEC2, bytes, GPUACCESS_DEFAULT);
+					drawCircle(p, collideRadius, CIRCLE_VERTS);
+				}
+				while(!cvbo.commitWrite());
+			}
+		}
+	}
+
+	Quad::onUpdate(dt);
+}
+
 void CollideQuad::renderCollision(const RenderState& rs) const
 {
-	if (collideRadius > 0)
+	if (collideRadius > 0 && cvbo.size())
 	{
 		glPushMatrix();
 		glLoadIdentity();
 		core->setupRenderPositionAndScale();
 		glBindTexture(GL_TEXTURE_2D, 0);
-		glTranslatef(position.x+offset.x, position.y+offset.y, 0);
+		glTranslatef(position.x+offset.x+internalOffset.x, position.y+offset.y+internalOffset.y, 0);
 
-		glTranslatef(internalOffset.x, internalOffset.y, 0);
-		glEnable(GL_BLEND);
+		rs.gpu.setBlend(BLEND_DEFAULT);
 
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColor4f(1,0,0,0.5);
-		drawCircle(collideRadius, 8);
-		glDisable(GL_BLEND);
-		glTranslatef(offset.x, offset.y,0);
+		glColor4f(1,0,0,0.5f);
+		cvbo.apply();
+		glDrawArrays(GL_TRIANGLE_FAN, 0, CIRCLE_VERTS);
 		glPopMatrix();
 	}
 }

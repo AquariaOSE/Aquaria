@@ -104,7 +104,7 @@ int ActionSet::_whichJoystickForName()
 	if(!joystickGUID.length() && !joystickName.length())
 		for(size_t i = 0; i < core->getNumJoysticks(); ++i)
 			if(Joystick *j = core->getJoystick(i))
-				return i;
+				return int(i);
 
 	return ACTIONSET_REASSIGN_JOYSTICK;
 }

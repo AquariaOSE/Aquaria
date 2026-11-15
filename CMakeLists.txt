@@ -1,5 +1,7 @@
 CMAKE_MINIMUM_REQUIRED(VERSION 2.6...3.20)
 PROJECT(Aquaria)
+
+# We don't actually activate this, but the code itself should stay compatible with oldschool C++.
 #SET(CMAKE_CXX_STANDARD 98)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/")
@@ -9,9 +11,11 @@ INCLUDE(CheckCXXCompilerFlag)
 INCLUDE(CheckFunctionExists)
 
 # if no build type was provided, set a default one
-IF(NOT CMAKE_BUILD_TYPE)
-    SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
-ENDIF(NOT CMAKE_BUILD_TYPE)
+IF(NOT MSVC)
+    IF(NOT CMAKE_BUILD_TYPE)
+        SET(CMAKE_BUILD_TYPE Release CACHE STRING "Choose the type of build (Debug, RelWithDebInfo, Release)" FORCE)
+    ENDIF(NOT CMAKE_BUILD_TYPE)
+ENDIF(NOT MSVC)
 
 # System fixups
 IF(CMAKE_SYSTEM_NAME STREQUAL "Haiku")
@@ -22,6 +26,16 @@ IF(APPLE)
     SET(MACOSX TRUE)
 ENDIF(APPLE)
 
+if(CMAKE_COMPILER_IS_CLANG OR (CMAKE_CXX_COMPILER_ID STREQUAL "Clang"))
+    set(GCC TRUE)
+endif()
+
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_GNUC OR CMAKE_COMPILER_IS_GNUCXX OR (CMAKE_CXX_COMPILER_ID STREQUAL "GNU"))
+    set(GCC TRUE)
+endif()
+
+set(AQUARIA_WARNING_FLAGS "")
+
 # Recommended compiler flags that cmake doesn't set automatically
 if(MSVC)
     # /MP: parallel builds
@@ -29,17 +43,33 @@ if(MSVC)
     # /Oi: enable intrinsic functions
     # /fp:fast: -ffast-math
     set(AQUARIA_EXTRA_COMPILE_FLAGS "/MP /GS- /Oi /fp:fast" CACHE STRING "Extra compiler flags for MSVC")
-    
+
     option(AQUARIA_MSVC_DEBUG_EDIT_AND_CONTINUE "MSVC: Enable edit+continue for debug builds?" TRUE)
     if(AQUARIA_MSVC_DEBUG_EDIT_AND_CONTINUE)
         set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /ZI")
         set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /SAFESEH:NO")
         set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} /SAFESEH:NO")
+    else()
+        set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} /Zi")
     endif()
-elseif(CMAKE_COMPILER_IS_GNUCC OR CMAKE_COMPILER_IS_CLANG)
-    set(AQUARIA_EXTRA_COMPILE_FLAGS "-ffast-math" CACHE STRING "Extra compiler flags for GCC/Clang")
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} /DEBUG /OPT:REF /OPT:ICF")
+elseif(GCC OR CLANG)
+    set(_FNO_STACK_PROTECTOR "")
+    # See if -fno-stack-protector is available to us.
+    # It doesn't seem to work well, and it adds bulk to the binary.
+    CHECK_C_COMPILER_FLAG("-fno-stack-protector" AQUARIA_GCC_HAS_STACKPROT)
+    IF(AQUARIA_GCC_HAS_STACKPROT)
+        set(_FNO_STACK_PROTECTOR "-fno-stack-protector")
+    ENDIF(AQUARIA_GCC_HAS_STACKPROT)
+    #CHECK_C_COMPILER_FLAG("-Wc++98-compat" AQUARIA_GCC_HAS_WCPP98_COMPAT)
+    #if(AQUARIA_GCC_HAS_WCPP98_COMPAT)
+    #    set(_WCPP98_COMPAT "-Wc++98-compat")
+    #endif()
+
+    set(AQUARIA_EXTRA_COMPILE_FLAGS "-ffast-math -pipe -fsigned-char ${_FNO_STACK_PROTECTOR}" CACHE STRING "Extra compiler flags for GCC/Clang")
+    set(AQUARIA_WARNING_FLAGS "-Wall -Wextra ${_WCPP98_COMPAT} -Wno-unused-parameter -Wshadow -Wnon-virtual-dtor -Woverloaded-virtual -Wconversion -Wnull-dereference -Wdouble-promotion")
 else()
-    set(AQUARIA_EXTRA_COMPILE_FLAGS "" CACHE STRING "Extra compiler flags")
+    set(AQUARIA_EXTRA_COMPILE_FLAGS "" CACHE STRING "Extra compiler flags (unknown compiler)")
 endif()
 
 if(AQUARIA_EXTRA_COMPILE_FLAGS)
@@ -52,10 +82,11 @@ OPTION(AQUARIA_DEMO_BUILD "Demo Build?" FALSE)
 OPTION(AQUARIA_USE_VFS "Use Virtual File System? Required for some additional features." TRUE)
 
 OPTION(AQUARIA_USE_SDL2 "Use SDL2" TRUE)
-OPTION(AQUARIA_USE_GLM "Use GLM for matrix math" TRUE)
 
 OPTION(AQUARIA_DEBUG_SHOW_PATHS "Show important paths upon game start to aid in finding path problems" FALSE)
 mark_as_advanced(AQUARIA_DEBUG_SHOW_PATHS)
+
+OPTION(AQUARIA_ENABLE_DIR_WATCH "Enable directory watcher component to hot-reload textures in mods. Must be enabled in the game config to be active." TRUE)
 
 #add_compile_options(-fsanitize=address)
 #add_link_options(-fsanitize=address)
@@ -111,6 +142,10 @@ if(AQUARIA_DEBUG_SHOW_PATHS)
     ADD_DEFINITIONS(-DAQUARIA_DEBUG_SHOW_PATHS)
 endif(AQUARIA_DEBUG_SHOW_PATHS)
 
+if(AQUARIA_ENABLE_DIR_WATCH)
+    ADD_DEFINITIONS(-DAQUARIA_ENABLE_DIR_WATCH)
+endif(AQUARIA_ENABLE_DIR_WATCH)
+
 # Without #define VFS_ENABLE_C_API this is just stubbed out
 include_directories(ttvfs_cfileapi)
 if(AQUARIA_USE_VFS)
@@ -120,10 +155,6 @@ if(AQUARIA_USE_VFS)
     INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs_zip)
     INCLUDE_DIRECTORIES(${EXTLIBDIR}/ttvfs_cfileapi)
 ENDIF(AQUARIA_USE_VFS)
-
-IF(AQUARIA_USE_GLM)
-    ADD_DEFINITIONS(-DBBGE_USE_GLM=1)
-ENDIF(AQUARIA_USE_GLM)
 
 if(AQUARIA_INTERNAL_FTGL)
     ADD_DEFINITIONS(-DAQUARIA_INTERNAL_FTGL=1)
@@ -166,27 +197,6 @@ IF(WIN32)
     ADD_DEFINITIONS(-D_CRT_SECURE_NO_DEPRECATE)
 ENDIF(WIN32)
 
-IF(CMAKE_COMPILER_IS_GNUCC)
-    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -pedantic -pipe -fsigned-char")
-    set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -Wall -pedantic -pipe -fsigned-char -std=gnu99")
-
-    # See if -fno-stack-protector is available to us.
-    # It doesn't seem to work well, and it adds bulk to the binary.
-    CHECK_C_COMPILER_FLAG("-fno-stack-protector" AQUARIA_GCC_HAS_STACKPROT)
-    IF(AQUARIA_GCC_HAS_STACKPROT)
-        set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fno-stack-protector")
-        set(CMAKE_C_FLAGS   "${CMAKE_C_FLAGS}   -fno-stack-protector")
-    ENDIF(AQUARIA_GCC_HAS_STACKPROT)
-
-    # !!! FIXME: probably not safe long-term.
-    # CMake mailing list had this hack for getting rid of -rdynamic:
-    #   http://public.kitware.com/pipermail/cmake/2006-July/010404.html
-    IF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-        SET(CMAKE_SHARED_LIBRARY_LINK_C_FLAGS)
-        SET(CMAKE_SHARED_LIBRARY_LINK_CXX_FLAGS)
-    ENDIF(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-ENDIF(CMAKE_COMPILER_IS_GNUCC)
-
 CHECK_FUNCTION_EXISTS(strcasecmp HAVE_STRCASECMP)
 IF(HAVE_STRCASECMP)
     ADD_DEFINITIONS(-DHAVE_STRCASECMP)
@@ -211,6 +221,10 @@ message(STATUS "TINYXML2_INCLUDE_DIRS: ${TINYXML2_INCLUDE_DIRS}")
 INCLUDE_DIRECTORIES(${TINYXML2_INCLUDE_DIRS})
 INCLUDE_DIRECTORIES(${EXTLIBDIR})
 
+if(AQUARIA_WARNING_FLAGS)
+      set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${AQUARIA_WARNING_FLAGS}")
+      set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${AQUARIA_WARNING_FLAGS}")
+endif()
 
 add_subdirectory(Aquaria)
 add_subdirectory(BBGE)

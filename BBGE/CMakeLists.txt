@@ -27,6 +27,8 @@ set(BBGE_SRCS
     DataStructures.h
     DebugFont.cpp
     DebugFont.h
+    DirWatcher.cpp
+    DirWatcher.h
     Emitter.cpp
     EngineEnums.h
     Event.cpp
@@ -46,8 +48,6 @@ set(BBGE_SRCS
     Image.h
     Joystick.cpp
     Joystick.h
-    LensFlare.cpp
-    LensFlare.h
     Localization.cpp
     Localization.h
     MathFunctions.h
@@ -57,8 +57,9 @@ set(BBGE_SRCS
     OSFunctions.cpp
     OSFunctions.h
     ParticleEffect.cpp
+    Panel.cpp
+    Panel.h
     ParticleManager.cpp
-    Particles.cpp
     Particles.h
     Precacher.cpp
     Precacher.h
@@ -66,6 +67,8 @@ set(BBGE_SRCS
     Quad.h
     QuadGrid.cpp
     QuadGrid.h
+    Randomness.cpp
+    Randomness.h
     ReadXML.cpp
     ReadXML.h
     Rect.h
@@ -78,7 +81,6 @@ set(BBGE_SRCS
     RenderObject.h
     RenderObject_inline.h
     RenderObjectLayer.cpp
-    RenderRect.cpp
     RenderState.cpp
     RenderState.h
     RoundedRect.cpp
@@ -96,13 +98,18 @@ set(BBGE_SRCS
     Slider.h
     SoundManager.cpp
     SoundManager.h
-    SpawnParticleData.cpp
+    SpineQuad.cpp
+    SpineQuad.h
     SplineGrid.cpp
     SplineGrid.h
+    SplineQuad.cpp
+    SplineQuad.h
     StateMachine.cpp
     StateMachine.h
     StateManager.cpp
     StateManager.h
+    Strand.cpp
+    Strand.h
     StringBank.cpp
     StringBank.h
     Texture.cpp
@@ -117,6 +124,8 @@ set(BBGE_SRCS
     TileRender.h
     Tileset.cpp
     Tileset.h
+    VertexBuffer.cpp
+    VertexBuffer.h
     Vector.cpp
     Vector.h
     Window.cpp

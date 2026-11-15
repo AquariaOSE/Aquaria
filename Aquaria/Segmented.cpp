@@ -38,7 +38,6 @@ void Segmented::initSegments(const Vector &position)
 {
 	for (size_t i = 0; i < segments.size(); i++)
 		segments[i]->position = position;
-	numSegments = segments.size();
 }
 
 void Segmented::destroySegments(float life)

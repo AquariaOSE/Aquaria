@@ -25,3 +25,7 @@ bin/*
 
 !.gitignore
 !.travis.yml
+
+# zig build
+zig-out/
+zig-pkg/

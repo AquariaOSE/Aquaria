@@ -63,7 +63,7 @@ public:
 	Vector inactiveColor;
 
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	Quad *highlight;
 	bool md;
 	DebugButtonReceiver *receiver;

@@ -31,7 +31,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <signal.h>
 #endif
 
-#include "SDL.h"
+#include <SDL.h>
 
 #include "Base.h"
 #include "Core.h"
@@ -532,7 +532,7 @@ size_t OggDecoder::mem_read(void *ptr, size_t size, size_t nmemb, void *datasour
 {
     OggDecoder *this_ = (OggDecoder *)datasource;
 
-    long to_read = size * nmemb;
+    long to_read = (long)(size * nmemb);
     if (to_read > this_->data_size - this_->data_pos)
         to_read = this_->data_size - this_->data_pos;
     if (to_read < 0)
@@ -623,7 +623,7 @@ public:
     OpenALSound(ALuint _bid, const bool _looping); // ctor for raw samples already assigned an opanAL buffer ID
     VFILE *getFile() const { return fp; }
     const void *getData() const { return data; }
-    long getSize() const { return size; }
+    long getSize() const { return (long)size; }
     bool isLooping() const { return looping; }
     bool isRaw() const { return raw; }
     FMOD_RESULT release();

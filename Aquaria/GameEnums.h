@@ -14,6 +14,7 @@ enum ObsType
 	OT_BLACK		= 0x01,
 	OT_BLACKINVIS	= 0x02,  // same as OT_BLACK, but not drawn
 	OT_MASK_BLACK	= OT_BLACK | OT_BLACKINVIS,
+	OT_MASK_NOTBLACK = ~OT_MASK_BLACK,
 
 	// set by tiles
 	OT_INVISIBLE	= 0x04,
@@ -31,15 +32,8 @@ enum ObsType
 	OT_USER2 = 0x80,
 	OT_USER_MASK = OT_USER1 | OT_USER2,
 
-	OT_OUTOFBOUNDS = 0xff
-};
-
-
-enum WorldMapRevealMethod
-{
-	REVEAL_UNSPECIFIED = -1,
-	REVEAL_DEFAULT	= 0,
-	REVEAL_PARTIAL	= 1  // Not visited areas have zero alpha (invisible)
+	OT_OUTOFBOUNDS = 0xff, // all bits set
+	OT_MASK_ALL = 0xff
 };
 
 enum CursorType
@@ -482,6 +476,40 @@ enum BounceType
 	BOUNCE_NONE		= -1,
 	BOUNCE_SIMPLE	= 0,
 	BOUNCE_REAL		= 1
+};
+
+#undef PATH_MAX  // May be set by a system header.
+enum PathType
+{
+	PATH_NONE			= 0,
+	PATH_CURRENT		= 1,
+	PATH_STEAM			= 2,
+	PATH_LI				= 3,
+	PATH_SAVEPOINT		= 4,
+	PATH_WARP			= 5,
+	PATH_SPIRITPORTAL	= 6,
+	PATH_BGSFXLOOP		= 7,
+	PATH_RADARHIDE		= 8,
+	PATH_COOK			= 9,
+	PATH_WATERBUBBLE	= 10,
+	PATH_GEM			= 11,
+	PATH_SETING			= 12,
+	PATH_SETENT			= 13,
+	PATH_ZOOM			= 14,
+	PATH_MAX
+};
+
+enum LocalWarpType
+{
+	LOCALWARP_NONE		= 0,
+	LOCALWARP_IN		= 1,
+	LOCALWARP_OUT		= 2
+};
+
+enum PathShape
+{
+	PATHSHAPE_RECT		= 0,
+	PATHSHAPE_CIRCLE	= 1
 };
 
 

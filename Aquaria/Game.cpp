@@ -18,20 +18,23 @@ You should have received a copy of the GNU General Public License
 along with this program; if not, write to the Free Software
 Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 */
+
+#include "Game.h"
+#include <algorithm>
 #include "../BBGE/Gradient.h"
 #include "../BBGE/AfterEffect.h"
 #include "../BBGE/MathFunctions.h"
 #include "../BBGE/DebugFont.h"
-#include "../BBGE/LensFlare.h"
 #include "../BBGE/RoundedRect.h"
 #include "../BBGE/SimpleIStringStream.h"
+#include "TileRender.h"
 
 #include "ttvfs_stdio.h"
 #include "ReadXML.h"
 #include "RenderBase.h"
 
-#include "Game.h"
 #include "GridRender.h"
+#include "QuadSegmentRender.h"
 #include "WaterSurfaceRender.h"
 #include "ScriptedEntity.h"
 #include "FlockEntity.h"
@@ -46,11 +49,10 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Ingredient.h"
 #include "Beam.h"
 #include "Hair.h"
+#include "WorldMapRender.h"
 
-#ifdef BBGE_USE_GLM
 #include "glm/glm.hpp"
 #include "glm/gtx/transform.hpp"
-#endif
 
 
 static const float MENUPAGETRANSTIME		= 0.2f;
@@ -229,6 +231,7 @@ Game::Game() : StateObject()
 	noSceneTransitionFadeout = false;
 	fullTilesetReload = false;
 	highestLoadedEntityID = 0;
+	waterSurfaceRender = NULL;
 }
 
 Game::~Game()
@@ -317,82 +320,47 @@ void Game::transitionToScene(std::string scene)
 	core->enqueueJumpState("Game", false);
 }
 
-ElementTemplate *Game::getElementTemplateByIdx(size_t idx)
-{
-	return tileset.getByIdx(idx);
-}
-
-Element* Game::createElement(size_t idx, Vector position, size_t bgLayer, RenderObject *copy, ElementTemplate *et)
-{
-	if (idx == -1) return 0;
-
-	if (!et)
-		et = this->getElementTemplateByIdx(idx);
-
-	Element *element = new Element();
-	if (et)
-	{
-		element->setTexturePointer(et->getTexture());
-	}
-
-	element->position = position;
-	element->position.z = -0.05f;
-	element->templateIdx = idx;
-
-	element->bgLayer = bgLayer;
-
-	if (et)
-	{
-		if (et->w != -1 && et->h != -1)
-			element->setWidthHeight(et->w, et->h);
-	}
-	if (et)
-	{
-		if (et->tu1 != 0 || et->tu2 != 0 || et->tv1 != 0 || et->tv2 != 0)
-		{
-			element->upperLeftTextureCoordinates = Vector(et->tu1, et->tv1);
-			element->lowerRightTextureCoordinates = Vector(et->tu2, et->tv2);
-		}
-	}
-	if (copy)
-	{
-		element->scale = copy->scale;
-		if (copy->isfh())
-			element->flipHorizontal();
-		if (copy->isfv())
-			element->flipVertical();
-		element->rotation = copy->rotation;
-		Quad *q = dynamic_cast<Quad*>(copy);
-		if (q)
-		{
-			element->repeatTextureToFill(q->isRepeatingTextureToFill());
-		}
-	}
-	addRenderObject(element, LR_ELEMENTS1+bgLayer);
-	dsq->addElement(element);
-
-	return element;
-}
-
 void Game::addObsRow(unsigned tx, unsigned ty, unsigned len)
 {
-	ObsRow obsRow(tx, ty, len);
-	obsRows.push_back(obsRow);
+	if(len)
+	{
+		ObsRow obsRow(tx, ty, len);
+		obsRows.push_back(obsRow);
+	}
 }
 
 void Game::clearObsRows()
 {
 	obsRows.clear();
+	mapGridW = 0;
+	mapGridH = 0;
 }
 
 void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 {
-	if (q->texture)
+	GridFiller f;
+	f.obs = obsType;
+	f.trim = trim;
+	f.fh = q->isfhr();
+	Vector posrot = q->getWorldPositionAndRotation();
+	f.position.x = posrot.x;
+	f.position.y = posrot.y;
+	f.rotation = posrot.z;
+	f.scale = q->getRealScale();
+	f.texture = q->texture.content();
+	f.width = q->width;
+	f.height = q->height;
+	fillGrid(f);
+}
+
+void Game::fillGrid(const GridFiller& gf)
+{
+	if (gf.texture)
 	{
 		std::vector<TileVector> obs;
-		TileVector tpos(q->position);
-		int widthscale = q->getWidth()*q->scale.x;
-		int heightscale = q->getHeight()*q->scale.y;
+		TileVector tpos(gf.position);
+		int widthscale = int(gf.width*gf.scale.x);
+		int heightscale = int(gf.height*gf.scale.y);
 		int w2 = widthscale/2;
 		int h2 = heightscale/2;
 		w2/=TILE_SIZE;
@@ -402,15 +370,15 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 
 		int w = 0, h = 0;
 		size_t size = 0;
-		unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
+		const unsigned char *data = gf.texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
 			debugLog("Failed to get buffer in Game::fillGridFromQuad()");
 			return;
 		}
 
-		int szx = TILE_SIZE/q->scale.x;
-		int szy = TILE_SIZE/q->scale.y;
+		int szx = TILE_SIZE/gf.scale.x;
+		int szy = TILE_SIZE/gf.scale.y;
 		if (szx < 1) szx = 1;
 		if (szy < 1) szy = 1;
 
@@ -425,8 +393,8 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 					{
 						// starting position =
 						// tx / scale.x
-						unsigned int px = int(tx/q->scale.x) + x;
-						unsigned int py = int(ty/q->scale.y) + y;
+						unsigned int px = int(tx/gf.scale.x) + x;
+						unsigned int py = int(ty/gf.scale.y) + y;
 						if (px < unsigned(w) && py < unsigned(h))
 						{
 							unsigned int p = (py*unsigned(w)*4) + (px*4) + 3; // position of alpha component
@@ -452,49 +420,55 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 			}
 		}
 
-		free(data);
+		if(!obs.size()) // no obs -> nothing else to do here
+			return;
 
-		if (trim)
+		if (gf.trim)
 		{
-			std::vector<TileVector> obsCopy;
-			obsCopy.swap(obs);
-			// obs now empty
-
-			int sides = 0;
-			for (size_t i = 0; i < obsCopy.size(); i++)
+			int minx = INT_MAX, maxx = 0, miny = INT_MAX, maxy = 0;
+			for(size_t i = 0; i < obs.size(); ++i)
 			{
-				sides = 0;
-				for (size_t j = 0; j < obsCopy.size(); j++)
+				const TileVector& tv = obs[i];
+				minx = std::min(minx, tv.x);
+				maxx = std::max(maxx, tv.x);
+				miny = std::min(miny, tv.y);
+				maxy = std::max(maxy, tv.y);
+			}
+			if(minx == maxx || miny == maxy)
+				return; // would get trimmed completely -> get out early
+
+			Array2d<unsigned char> gr(size_t(maxx - minx) + 1, size_t(maxy - miny) + 1, 0);
+
+			for(size_t i = 0; i < obs.size(); ++i)
+			{
+				const TileVector& tv = obs[i];
+				gr(size_t(tv.x - minx), size_t(tv.y - miny)) = 1;
+			}
+
+			const size_t nx = gr.width() - 1;
+			const size_t ny = gr.height() - 1;
+			size_t idx = 0;
+			for(size_t y = 1; y < ny; ++y)
+			{
+				const unsigned char * const row = gr.row(y);
+				for(size_t x = 1; x < nx; ++x)
 				{
-					if (i != j)
+					if(row[x])
 					{
-						if (
-							(obsCopy[j].x == obsCopy[i].x-1 && obsCopy[j].y == obsCopy[i].y)
-						||	(obsCopy[j].x == obsCopy[i].x+1 && obsCopy[j].y == obsCopy[i].y)
-						||	(obsCopy[j].y == obsCopy[i].y-1 && obsCopy[j].x == obsCopy[i].x)
-						||	(obsCopy[j].y == obsCopy[i].y+1 && obsCopy[j].x == obsCopy[i].x)
-						)
-						{
-							sides++;
-						}
-						if (sides>=4)
-						{
-							obs.push_back(obsCopy[i]);
-							break;
-						}
+						if(row[x-1] && row[x+1] && gr(x, y-1) && gr(x, y+1))
+							obs[idx++] = TileVector(int(x) + minx, int(y) + miny);
 					}
 				}
 			}
+			obs.resize(idx);
 		}
 
-
-#ifdef BBGE_USE_GLM
 		const float w2f = float(w2);
 		const float h2f = float(h2);
 		for (size_t i = 0; i < obs.size(); i++)
 		{
-			glm::mat4 transformMatrix = glm::rotate(q->rotation.z, glm::vec3(0.0f, 0.0f, 1.0f));
-			if(q->isfh())
+			glm::mat4 transformMatrix = glm::rotate(gf.rotation, glm::vec3(0.0f, 0.0f, 1.0f));
+			if(gf.fh)
 				transformMatrix *= glm::rotate(180.0f, glm::vec3(0.0f, 1.0f, 0.0f));
 
 			transformMatrix *= glm::translate(float(obs[i].x)-w2f, float(obs[i].y)-h2f, 0.0f);
@@ -503,37 +477,8 @@ void Game::fillGridFromQuad(Quad *q, ObsType obsType, bool trim)
 
 			TileVector tvec(tpos.x+w2+x, tpos.y+h2+y);
 			if (!isObstructed(tvec))
-				addGrid(tvec, obsType);
+				addGrid(tvec, gf.obs);
 		}
-#else
-		glPushMatrix();
-
-		for (size_t i = 0; i < obs.size(); i++)
-		{
-			glLoadIdentity();
-
-			glRotatef(q->rotation.z, 0, 0, 1);
-			if (q->isfh())
-			{
-				glRotatef(180, 0, 1, 0);
-			}
-
-			//glTranslatef((obs[i].x-w2)*TILE_SIZE+TILE_SIZE/2, (obs[i].y-h2)*TILE_SIZE + TILE_SIZE/2, 0);
-			glTranslatef((obs[i].x-w2), (obs[i].y-h2), 0);
-
-			float m[16];
-			glGetFloatv(GL_MODELVIEW_MATRIX, m);
-			float x = m[12];
-			float y = m[13];
-
-			//setGrid(TileVector(tpos.x+(w2*TILE_SIZE)+(x/TILE_SIZE), tpos.y+(h2*TILE_SIZE)+(y/TILE_SIZE)), obsType);
-			TileVector tvec(tpos.x+w2+x, tpos.y+h2+y);
-			if (!isObstructed(tvec))
-				addGrid(tvec, obsType);
-
-		}
-		glPopMatrix();
-#endif
 	}
 }
 
@@ -579,23 +524,33 @@ void Game::reconstructEntityGrid()
 		Entity *e = *i;
 		e->fillGrid();
 	}
+
+	updateGridRender(OT_INVISIBLEENT);
 }
 
-void Game::reconstructGrid(bool force)
+// TODO: ideally this would be split into two functions, one that reconstructs blackness
+// and is called on map load or by the editor, and another one that just reconstructs
+// the dynamic parts of the grid.
+void Game::reconstructGrid(bool force, bool updateDraw)
 {
 	if (!force && isSceneEditorActive()) return;
 
 	clearGrid();
-	for (size_t i = 0; i < dsq->getNumElements(); i++)
+	std::vector<GridFiller> fillers;
+	dsq->tilemgr.exportGridFillers(fillers);
+
+	std::ostringstream os;
+	os << "ReconstructGrid using " << fillers.size() << " solid tiles";
+	debugLog(os.str());
+
+	for (size_t i = 0; i < fillers.size(); i++)
 	{
-		Element *e = dsq->getElement(i);
-		e->fillGrid();
+		fillGrid(fillers[i]);
 	}
 
-	ObsRow *o;
 	for (size_t i = 0; i < obsRows.size(); i++)
 	{
-		o = &obsRows[i];
+		const ObsRow *o = &obsRows[i];
 		for (unsigned tx = 0; tx < o->len; tx++)
 		{
 			setGrid(TileVector(o->tx + tx, o->ty), OT_BLACK);
@@ -609,6 +564,12 @@ void Game::reconstructGrid(bool force)
 	}
 
 	trimGrid();
+
+	if(updateDraw)
+	{
+		// Must update OT_BLACK after trimGrid()
+		updateGridRender(OT_MASK_ALL);
+	}
 }
 
 void Game::trimGrid()
@@ -814,7 +775,7 @@ void Game::loadEntityTypeList()
 
 	InStream in2(fn.c_str());
 
-	int curGroup=0;
+	size_t curGroup=0;
 	while (std::getline(in2, line))
 	{
 		if (line.find("GROUP:")!=std::string::npos)
@@ -1074,7 +1035,7 @@ void Game::generateCollisionMask(Bone *q, float overrideCollideRadius /* = 0 */)
 
 		int w = 0, h = 0;
 		size_t size = 0;
-		unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
+		const unsigned char *data = q->texture->getBufferAndSize(&w, &h, &size);
 		if (!data)
 		{
 			debugLog("Failed to get buffer in Game::generateCollisionMask()");
@@ -1124,8 +1085,6 @@ void Game::generateCollisionMask(Bone *q, float overrideCollideRadius /* = 0 */)
 		}
 
 		q->collisionMaskRadius = 512;
-
-		free(data);
 	}
 }
 
@@ -1613,109 +1572,107 @@ bool Game::loadSceneXML(std::string scene)
 		saveFile->InsertEndChild(newSF);
 	}
 
-	struct ElementDef
-	{
-		ElementDef(int lr)
-			: layer(lr), idx(0), x(0), y(0), rot(0), fh(0), fv(0), flags(0), efxIdx(-1), repeat(0)
-			, tag(0), sx(1), sy(1), rsx(1), rsy(1)
-		{}
 
-		int layer, idx, x, y, rot, fh, fv, flags, efxIdx, repeat, tag;
-		float sx, sy, rsx, rsy;
-	};
-	std::vector<ElementDef> elemsDefs;
-	elemsDefs.reserve(256);
+	std::vector<TileDef> tilesDefs;
+	tilesDefs.reserve(256);
 
 	XMLElement *simpleElements = doc.FirstChildElement("SE");
 	while (simpleElements)
 	{
-		const size_t defsBeginIdx = elemsDefs.size();
-		const int layer = atoi(simpleElements->Attribute("l"));
+		const size_t defsBeginIdx = tilesDefs.size();
 
 		if (const char *attr = simpleElements->Attribute("d"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(4); // legacy crap
+			TileDef d(4); // legacy crap
 			while (is >> d.idx)
 			{
 				is >> d.x >> d.y >> d.rot;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
+
+		const int layer = atoi(simpleElements->Attribute("l"));
+		if(layer < 0 || layer >= MAX_TILE_LAYERS)
+		{
+			errorLog("Save file specifies invalid layer in SE tag, ignoring (if you save the map now, you may lose data!)");
+			goto next_SE;
+		}
+
 		if (const char *attr = simpleElements->Attribute("e"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
 				is >> d.x >> d.y >> d.rot;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("f"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
 				is >> d.x >> d.y >> d.rot >> d.sx;
 				d.sy = d.sx;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("g"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
 				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv;
 				d.sy = d.sx;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("h"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
-				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.flags;
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.ef;
 				d.sy = d.sx;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("i"))
 		{
 
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
-				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.flags >> d.efxIdx;
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.ef >> d.efxIdx;
 				d.sy = d.sx;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("j"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
-				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.flags >> d.efxIdx >> d.repeat;
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.fh >> d.fv >> d.ef >> d.efxIdx >> d.repeat;
 				d.sy = d.sx;
-				elemsDefs.push_back(d);
+				tilesDefs.push_back(d);
 			}
 		}
 		if (const char *attr = simpleElements->Attribute("k"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			ElementDef d(layer);
+			TileDef d(layer);
 			while(is >> d.idx)
 			{
-				is >> d.x >> d.y >> d.rot >> d.sx >> d.sy >> d.fh >> d.fv >> d.flags >> d.efxIdx >> d.repeat;
-				elemsDefs.push_back(d);
+				is >> d.x >> d.y >> d.rot >> d.sx >> d.sy >> d.fh >> d.fv >> d.ef >> d.efxIdx >> d.repeat;
+				tilesDefs.push_back(d);
 			}
 		}
 
@@ -1724,9 +1681,9 @@ bool Game::loadSceneXML(std::string scene)
 		if (const char *attr = simpleElements->Attribute("repeatScale"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			for(size_t i = defsBeginIdx; i < elemsDefs.size(); ++i)
+			for(size_t i = defsBeginIdx; i < tilesDefs.size(); ++i)
 			{
-				ElementDef& d = elemsDefs[i];
+				TileDef& d = tilesDefs[i];
 				if(d.repeat)
 				{
 					if(!(is >> d.rsx >> d.rsy))
@@ -1737,78 +1694,66 @@ bool Game::loadSceneXML(std::string scene)
 		if (const char *attr = simpleElements->Attribute("tag"))
 		{
 			SimpleIStringStream is(attr, SimpleIStringStream::REUSE);
-			for(size_t i = defsBeginIdx; i < elemsDefs.size(); ++i)
+			for(size_t i = defsBeginIdx; i < tilesDefs.size(); ++i)
 			{
-				ElementDef& d = elemsDefs[i];
+				TileDef& d = tilesDefs[i];
 				if(!(is >> d.tag))
 					break;
 			}
 		}
+
+next_SE:
 		simpleElements = simpleElements->NextSiblingElement("SE");
 	}
+
+	dsq->tilemgr.clearTiles();
 
 	if(fullTilesetReload)
 	{
 		fullTilesetReload = false;
-		tileset.clear();
+		dsq->tilemgr.tileset.clear();
 		// used by SceneEditor
-		// no elements exist right now -> textures will be cleared and reloaded
+		// no tiles exist right now -> textures will be cleared and reloaded
 		dsq->texmgr.clearUnused();
 	}
 
 	// figure out which textures in the tileset are used and preload those that are actually used
 	{
 		std::ostringstream os;
-		os << "Scene has " << elemsDefs.size() << " elements";
+		os << "Scene has " << tilesDefs.size() << " static tiles";
 		debugLog(os.str());
 
 		unsigned char usedIdx[1024] = {0};
-		for(size_t i = 0; i < elemsDefs.size(); ++i)
+		for(size_t i = 0; i < tilesDefs.size(); ++i)
 		{
-			unsigned idx = elemsDefs[i].idx;
+			TileDef& d = tilesDefs[i];
+			unsigned idx = d.idx;
 			if(idx < Countof(usedIdx))
 				usedIdx[idx] = 1;
+
+
+			// HACK: due to a renderer bug in old versions, we need to fix the rotation
+			// for horizontally flipped tiles on parallax layers to make maps look correct.
+			// See commit 4b52730be253dbfce9bea6f604c772a87da104e3
+			// bgLayer IDs (which are NOT LR_* constants):
+			// 0..8 are normal layers (keys 1-9)
+			// 9,10,11; 13,14,15 are parallax ones, 15 is closest, 9 is furthest away
+			// 12 is the dark layer
+			if(d.fh && d.layer >= 9 && d.layer <= 15 && d.layer != 12
+				&& dsq->renderObjectLayers[LR_ELEMENTS1 + d.layer].followCamera != 0)
+			{
+				d.rot = -d.rot;
+			}
 		}
 
-		loadElementTemplates(tilesetToLoad, &usedIdx[0], Countof(usedIdx));
+		dsq->loadTileset(tilesetToLoad, &usedIdx[0], Countof(usedIdx));
 	}
 
 	// Now that all SE tags have been processed, spawn them
-	for(size_t i = 0; i < elemsDefs.size(); ++i)
-	{
-		const ElementDef& d = elemsDefs[i];
+	if(!tilesDefs.empty())
+		dsq->tilemgr.createTiles(&tilesDefs[0], tilesDefs.size());
 
-		Element *e = createElement(d.idx, Vector(d.x,d.y), d.layer);
-		e->elementFlag = (ElementFlag)d.flags;
-		if (d.fh)
-			e->flipHorizontal();
-		if (d.fv)
-			e->flipVertical();
-
-		e->scale = Vector(d.sx, d.sy);
-		e->rotation.z = d.rot;
-		e->repeatToFillScale.x = d.rsx;
-		e->repeatToFillScale.y = d.rsy;
-		e->setElementEffectByIndex(d.efxIdx);
-		if (d.repeat)
-			e->repeatTextureToFill(true); // also applies repeatToFillScale
-		e->setTag(d.tag);
-
-		// HACK: due to a renderer bug in old versions, we need to fix the rotation
-		// for horizontally flipped tiles on parallax layers to make maps look correct.
-		// See commit 4b52730be253dbfce9bea6f604c772a87da104e3
-		// bgLayer IDs (which are NOT LR_* constants):
-		// 0..8 are normal layers (keys 1-9)
-		// 9,10,11; 13,14,15 are parallax ones, 15 is closest, 9 is furthest away
-		// 12 is the dark layer
-		if(d.fh && d.layer >= 9 && d.layer <= 15 && d.layer != 12
-			&& dsq->renderObjectLayers[e->layer].followCamera != 0)
-		{
-			e->rotation.z = -e->rotation.z;
-		}
-	}
-
-	this->reconstructGrid(true);
+	this->reconstructGrid(true, false);
 
 	std::vector<EntitySaveData> toSpawn;
 
@@ -1835,12 +1780,18 @@ bool Game::loadSceneXML(std::string scene)
 	if(toSpawn.size())
 		spawnEntities(&toSpawn[0], toSpawn.size());
 
-	this->reconstructGrid(true);
-	rebuildElementUpdateList();
-
 	findMaxCameraValues();
 
+	this->reconstructGrid(true, true);
+
 	return true;
+}
+
+
+void Game::handleEditorMapGridUpdate()
+{
+	findMaxCameraValues();
+	reconstructGrid(true, true);
 }
 
 void Game::spawnEntities(const EntitySaveData *sav, size_t n)
@@ -1937,25 +1888,36 @@ void Game::setMusicToPlay(const std::string &m)
 	stringToLower(musicToPlay);
 }
 
+TileVector Game::computeMapSizeFromObs() const
+{
+	TileVector ret;
+	const size_t N = obsRows.size();
+	for (size_t i = 0; i < N; i++)
+	{
+		const ObsRow *r = &obsRows[i];
+		ret.x = std::max<unsigned>(ret.x, r->tx + r->len);
+		ret.y = std::max<unsigned>(ret.y, r->ty);
+	}
+	return ret;
+}
+
 void Game::findMaxCameraValues()
 {
 	cameraMin.x = 20;
 	cameraMin.y = 20;
-	cameraMax.x = -1;
-	cameraMax.y = -1;
-	for (size_t i = 0; i < obsRows.size(); i++)
+	if(obsRows.size())
 	{
-		ObsRow *r = &obsRows[i];
-		TileVector t(r->tx + r->len, r->ty);
-		Vector v = t.worldVector();
-		if (v.x > cameraMax.x)
-		{
-			cameraMax.x = v.x;
-		}
-		if (v.y > cameraMax.y)
-		{
-			cameraMax.y = v.y;
-		}
+		TileVector wh = computeMapSizeFromObs();
+		mapGridW = wh.x;
+		mapGridH = wh.y;
+		cameraMax = wh.worldVector();
+	}
+	else
+	{
+		mapGridW = 0;
+		mapGridH = 0;
+		cameraMax.x = -1;
+		cameraMax.y = -1;
 	}
 }
 
@@ -2063,49 +2025,71 @@ bool Game::saveScene(std::string scene)
 		saveFile.InsertEndChild(pathXml);
 	}
 
-	std::ostringstream simpleElements[LR_MAX];
-	std::ostringstream simpleElements_repeatScale[LR_MAX];
-	std::ostringstream simpleElements_tag[LR_MAX];
-	unsigned tagBitsUsed[LR_MAX] = { 0 };
-
-	for (size_t i = 0; i < dsq->getNumElements(); i++)
+	for(unsigned lr = 0; lr < MAX_TILE_LAYERS; ++lr)
 	{
-		Element *e = dsq->getElement(i);
+		const TileStorage& ts = dsq->tilemgr.tilestore[lr];
+		std::ostringstream simpleElements;
+		std::ostringstream simpleElements_repeatScale;
+		std::ostringstream simpleElements_tag;
+		unsigned tagBitsUsed = 0;
 
-		float rot = e->rotation.z;
+		const size_t N = ts.tiles.size();
+		const bool isParallax = lr >= 9 && lr <= 15 && lr != 12
+			&& dsq->renderObjectLayers[LR_ELEMENTS1 + lr].followCamera != 0;
 
-		// HACK: Intentionally store the wrong rotation for parallax layers,
-		// to make loading a scene and the same hack there result in the correct value.
-		// This is to ensure compatibility with older game versions that have the renderer bug.
-		// See commit 4b52730be253dbfce9bea6f604c772a87da104e3
-		if(e->isfh() && e->bgLayer >= 9 && e->bgLayer <= 15 && e->bgLayer != 12
-			&& dsq->renderObjectLayers[e->layer].followCamera != 0)
+		for (size_t i = 0; i < N; i++)
 		{
-			rot = -rot;
+			TileDef d(lr, ts.tiles[i]);
+
+			// HACK: Intentionally store the wrong rotation for parallax layers,
+			// to make loading a scene and the same hack there result in the correct value.
+			// This is to ensure compatibility with older game versions that have the renderer bug.
+			// See commit 4b52730be253dbfce9bea6f604c772a87da104e3
+			if(isParallax && d.fh)
+				d.rot = -d.rot;
+
+			simpleElements
+				<< d.idx << " "
+				<< int(d.x) << " "
+				<< int(d.y) << " "
+				<< int(d.rot) << " "
+				<< d.sx << " "
+				<< d.sy << " "
+				<< int(d.fh) << " "
+				<< int(d.fv) << " "
+				<< d.ef << " "
+				<< d.efxIdx << " "
+				<< d.repeat << " ";
+
+			if(d.repeat)
+			{
+				simpleElements_repeatScale
+					<< d.rsx << " "
+					<< d.rsy << " ";
+			}
+
+			simpleElements_tag << d.tag << " ";
+			tagBitsUsed |= d.tag;
 		}
 
-		std::ostringstream& SE = simpleElements[e->bgLayer];
-		SE << e->templateIdx << " "
-		   << int(e->position.x) << " "
-		   << int(e->position.y) << " "
-		   << int(rot) << " "
-		   << e->scale.x << " "
-		   << e->scale.y << " "
-		   << int(e->isfh()) << " "
-		   << int(e->isfv()) << " "
-		   << e->elementFlag << " "
-		   << e->getElementEffectIndex()<< " "
-		   << e->isRepeatingTextureToFill() << " ";
-
-		if(e->isRepeatingTextureToFill())
+		std::string s = simpleElements.str();
+		if (!s.empty())
 		{
-			std::ostringstream& SE_rs = simpleElements_repeatScale[e->bgLayer];
-			SE_rs << e->repeatToFillScale.x << " "
-			      << e->repeatToFillScale.y << " ";
-		}
+			XMLElement *simpleElementsXML = saveFile.NewElement("SE");
+			simpleElementsXML->SetAttribute("k", s.c_str());
+			simpleElementsXML->SetAttribute("l", lr);
+			std::string str = simpleElements_repeatScale.str();
+			if(!str.empty())
+				simpleElementsXML->SetAttribute("repeatScale", str.c_str());
+			if(tagBitsUsed) // skip writing tags on layers where it's all zero (mainly to avoid putting a long string of 0's for border elements)
+			{
+				str = simpleElements_tag.str();
+				if(!str.empty())
+					simpleElementsXML->SetAttribute("tag", str.c_str());
+			}
 
-		simpleElements_tag[e->bgLayer] << e->tag << " ";
-		tagBitsUsed[e->bgLayer] |= e->tag;
+			saveFile.InsertEndChild(simpleElementsXML);
+		}
 	}
 
 	if (entitySaveData.size() > 0)
@@ -2130,28 +2114,6 @@ bool Game::saveScene(std::string scene)
 		}
 		entitiesNode->SetAttribute("j", os.str().c_str());
 		saveFile.InsertEndChild(entitiesNode);
-	}
-
-	for (int i = 0; i < LR_MAX; i++)
-	{
-		std::string s = simpleElements[i].str();
-		if (!s.empty())
-		{
-			XMLElement *simpleElementsXML = saveFile.NewElement("SE");
-			simpleElementsXML->SetAttribute("k", s.c_str());
-			simpleElementsXML->SetAttribute("l", i);
-			std::string str = simpleElements_repeatScale[i].str();
-			if(!str.empty())
-				simpleElementsXML->SetAttribute("repeatScale", str.c_str());
-			if(tagBitsUsed[i]) // skip writing tags on layers where it's all zero (mainly to avoid putting a long string of 0's for border elements)
-			{
-				str = simpleElements_tag[i].str();
-				if(!str.empty())
-					simpleElementsXML->SetAttribute("tag", str.c_str());
-			}
-
-			saveFile.InsertEndChild(simpleElementsXML);
-		}
 	}
 
 	bool result =  saveFile.SaveFile(fn.c_str()) == XML_SUCCESS;
@@ -2189,14 +2151,31 @@ void Game::createGradient()
 	}
 }
 
-bool Game::isInGameMenu()
+bool Game::isInGameMenu() const
 {
 	return themenu->isInGameMenu();
 }
 
-bool Game::isValidTarget(Entity *e, Entity *me)
+bool Game::isOnWorldMap() const
 {
-	return (e != me && e->isNormalLayer() && e->isPresent() && e->getEntityType() == ET_ENEMY && e->isAvatarAttackTarget());
+	return worldMapRender->isOn();
+}
+
+void Game::toggleWorldMap(bool on)
+{
+	if (dsq->continuity.gems.empty())
+		dsq->continuity.pickupGem("Naija-Token", false);
+	worldMapRender->toggle(on);
+}
+
+void Game::toggleWorldMap()
+{
+	toggleWorldMap(!isOnWorldMap());
+}
+
+bool Game::isValidTarget(Entity *e)
+{
+	return (e && e->isNormalLayer() && e->isPresent() && e->getEntityType() == ET_ENEMY && e->isAvatarAttackTarget());
 }
 
 void Game::createPets()
@@ -2376,7 +2355,7 @@ void Game::updateParticlePause()
 
 int game_collideParticle(Vector pos)
 {
-	bool aboveWaterLine = (pos.y <= game->waterLevel.x+20);
+	bool aboveWaterLine = (pos.y <= game->waterLevel.x+10);
 	bool inWaterBubble = false;
 	if (!aboveWaterLine)
 	{
@@ -2389,25 +2368,6 @@ int game_collideParticle(Vector pos)
 
 	TileVector t(pos);
 	return game->isObstructed(t);
-}
-
-void Game::rebuildElementUpdateList()
-{
-	for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS8; i++)
-		dsq->getRenderObjectLayer(i)->update = false;
-
-	elementUpdateList.clear();
-	elementInteractionList.clear();
-	for (size_t i = 0; i < dsq->getNumElements(); i++)
-	{
-		Element *e = dsq->getElement(i);
-		const int eeidx = e->getElementEffectIndex();
-		if (eeidx != -1 && e->layer >= LR_ELEMENTS1 && e->layer <= LR_ELEMENTS8)
-			elementUpdateList.push_back(e);
-		ElementEffect ee = dsq->getElementEffectByIndex(eeidx);
-		if(ee.type == EFX_WAVY)
-			elementInteractionList.push_back(e);
-	}
 }
 
 float Game::getTimer(float mod)
@@ -2468,14 +2428,6 @@ void Game::action(int id, int state, int source, InputDevice device)
 	}
 }
 
-void Game::toggleWorldMap()
-{
-	if (worldMapRender)
-	{
-		worldMapRender->toggle(!worldMapRender->isOn());
-	}
-}
-
 void Game::applyState()
 {
 	bool verbose = true;
@@ -2486,6 +2438,7 @@ void Game::applyState()
 	inHelpScreen = false;
 	helpBG = 0;
 	helpBG2 = 0;
+	waterSurfaceRender = NULL;
 
 	dsq->returnToScene = "";
 
@@ -2558,6 +2511,12 @@ void Game::applyState()
 	dsq->overlay->alpha = 1;
 	dsq->overlay->color = 0;
 
+	for (unsigned i = 0; i < MAX_TILE_LAYERS; ++i)
+	{
+		TileRender *tr = new TileRender(dsq->tilemgr.tilestore[i]);
+		addRenderObject(tr, LR_ELEMENTS1 + i);
+		dsq->tileRenders[i] = tr;
+	}
 
 	for (int i = LR_ELEMENTS1; i <= LR_ELEMENTS12; i++) // LR_ELEMENTS13 is darkness, stop before that
 	{
@@ -2592,8 +2551,6 @@ void Game::applyState()
 	useWaterLevel = false;
 	waterLevel = saveWaterLevel = 0;
 
-	dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = false;
-
 	grad = 0;
 	maxLookDistance = 600;
 	saveFile = 0;
@@ -2609,10 +2566,11 @@ void Game::applyState()
 	StateObject::applyState();
 
 	dsq->clearEntities();
-	dsq->clearElements();
+	dsq->tilemgr.clearTiles();
 
-	damageSprite = new Quad;
+	damageSprite = new PauseQuad;
 	{
+		damageSprite->pauseLevel = 99;
 		damageSprite->setTexture("damage");
 		damageSprite->alpha = 0;
 		damageSprite->autoWidth = AUTO_VIRTUALWIDTH;
@@ -2625,8 +2583,9 @@ void Game::applyState()
 
 	Vector mousePos(400,490);
 
-	controlHint_bg = new Quad;
+	controlHint_bg = new PauseQuad;
 	{
+		controlHint_bg->pauseLevel = 99;
 		controlHint_bg->followCamera = 1;
 		controlHint_bg->position = Vector(400,500);
 		controlHint_bg->color = 0;
@@ -2740,6 +2699,37 @@ void Game::applyState()
 
 	bindInput();
 
+	// loadScene() calls reconstructGrid(), which requires these to exist
+	blackRender = new GridRender(OT_BLACK);
+	gridRender = new GridRender(OT_INVISIBLE);
+	gridRender2 = new GridRender(OT_HURT);
+	gridRender3 = new GridRender(OT_INVISIBLEIN);
+	edgeRender = new GridRender(OT_BLACKINVIS);
+	gridRenderEnt = new GridRender(OT_INVISIBLEENT);
+	gridRenderUser1 = new GridRender(OT_USER1);
+	gridRenderUser2 = new GridRender(OT_USER2);
+
+	blackRender->alpha = 1;
+	blackRender->color = Vector(0, 0, 0);
+	blackRender->setBlendType(BLEND_DISABLED);
+
+	gridRender->color = Vector(1, 0, 0);
+	gridRender2->color = Vector(1, 1, 0);
+	gridRender3->color = Vector(1, 0.5f, 0);
+	edgeRender->color = Vector(0.3f, 0, 0.6f);
+	gridRenderEnt->color = Vector(0, 1, 0.5);
+	gridRenderUser1->color = Vector(1, 0, 1);
+	gridRenderUser2->color = Vector(1, 1, 1);
+
+	addRenderObject(blackRender, LR_ELEMENTS4);
+	addRenderObject(gridRender, LR_DEBUG_TEXT);
+	addRenderObject(gridRender2, LR_DEBUG_TEXT);
+	addRenderObject(gridRender3, LR_DEBUG_TEXT);
+	addRenderObject(edgeRender, LR_DEBUG_TEXT);
+	addRenderObject(gridRenderEnt, LR_DEBUG_TEXT);
+	addRenderObject(gridRenderUser1, LR_DEBUG_TEXT);
+	addRenderObject(gridRenderUser2, LR_DEBUG_TEXT);
+
 	if (verbose) debugLog("Loading Scene");
 	if(!loadScene(sceneToLoad))
 	{
@@ -2747,7 +2737,9 @@ void Game::applyState()
 	}
 	if (verbose) debugLog("...Done");
 
-	dsq->continuity.worldMap.revealMap(sceneName);
+	// ----------------- SCENE IS LOADED BELOW HERE -------------------
+
+	dsq->continuity.setCurrentMap(sceneName);
 
 	if (verbose) debugLog("Adding Avatar");
 	addRenderObject(avatar, LR_ENTITIES);
@@ -2764,50 +2756,9 @@ void Game::applyState()
 	songLineRender = new SongLineRender();
 	addRenderObject(songLineRender, LR_HUD);
 
-	gridRender = new GridRender(OT_INVISIBLE);
-	gridRender->color = Vector(1, 0, 0);
-	addRenderObject(gridRender, LR_DEBUG_TEXT);
-	gridRender->alpha = 0;
-
-	gridRender2 = new GridRender(OT_HURT);
-	gridRender2->color = Vector(1, 1, 0);
-	addRenderObject(gridRender2, LR_DEBUG_TEXT);
-	gridRender2->alpha = 0;
-
-	gridRender3 = new GridRender(OT_INVISIBLEIN);
-	gridRender3->color = Vector(1, 0.5f, 0);
-	addRenderObject(gridRender3, LR_DEBUG_TEXT);
-	gridRender3->alpha = 0;
-
-	edgeRender = new GridRender(OT_BLACKINVIS);
-	edgeRender->color = Vector(0.3f, 0, 0.6f);
-	addRenderObject(edgeRender, LR_DEBUG_TEXT);
-	edgeRender->alpha = 0;
-
-	gridRenderEnt = new GridRender(OT_INVISIBLEENT);
-	gridRenderEnt->color = Vector(0, 1, 0.5);
-	addRenderObject(gridRenderEnt, LR_DEBUG_TEXT);
-	gridRenderEnt->alpha = 0;
-
-	gridRenderUser1 = new GridRender(OT_USER1);
-	addRenderObject(gridRenderUser1, LR_DEBUG_TEXT);
-	gridRenderUser1->color = Vector(1, 0, 1);
-	gridRenderUser1->alpha = 0;
-
-	gridRenderUser2 = new GridRender(OT_USER2);
-	addRenderObject(gridRenderUser2, LR_DEBUG_TEXT);
-	gridRenderUser2->color = Vector(1, 1, 1);
-	gridRenderUser2->alpha = 0;
-
 	waterSurfaceRender = new WaterSurfaceRender();
 	//waterSurfaceRender->setRenderPass(-1);
 	addRenderObject(waterSurfaceRender, LR_WATERSURFACE);
-
-	GridRender *blackRender = new GridRender(OT_BLACK);
-	blackRender->color = Vector(0, 0, 0);
-	//blackRender->alpha = 0;
-	blackRender->setBlendType(BLEND_DISABLED);
-	addRenderObject(blackRender, LR_ELEMENTS4);
 
 	miniMapRender = new MiniMapRender;
 	// position is set in minimaprender::onupdate
@@ -2820,14 +2771,9 @@ void Game::applyState()
 	timerText->followCamera = 1;
 	addRenderObject(timerText, LR_MINIMAP);
 
-	worldMapRender = 0;
-
-	if(dsq->mod.isActive() && dsq->mod.mapRevealMethod != REVEAL_UNSPECIFIED)
-		WorldMapRender::setRevealMethod(dsq->mod.mapRevealMethod);
-	else
-		WorldMapRender::setRevealMethod((WorldMapRevealMethod)dsq->user.video.worldMapRevealMethod);
-
-	worldMapRender = new WorldMapRender;
+	worldMapRender = new WorldMapRender(dsq->continuity.worldMap);
+	worldMapRender->init();
+	worldMapRender->setCurrentMap(sceneName.c_str());
 	addRenderObject(worldMapRender, LR_WORLDMAP);
 
 	sceneToLoad="";
@@ -2948,8 +2894,6 @@ void Game::applyState()
 
 	themenu->reset();
 
-	core->cacheRender();
-
 	cameraInterp.stop();
 
 	core->globalScale = dsq->continuity.zoom;
@@ -3000,7 +2944,7 @@ void Game::applyState()
 	}
 
 	if (dsq->continuity.getWorldType() != WT_NORMAL)
-		dsq->continuity.applyWorldEffects(dsq->continuity.getWorldType(), 0, musicchanged);
+		dsq->continuity.applyWorldEffects(dsq->continuity.getWorldType(), false);
 
 
 	if (verbose) debugLog("initAvatar");
@@ -3015,8 +2959,8 @@ void Game::applyState()
 
 	if (verbose) debugLog("paths init");
 
-	int pathSz = getNumPaths();
-	for (int i = 0; i < pathSz; i++)
+	size_t pathSz = getNumPaths();
+	for (size_t i = 0; i < pathSz; i++)
 		getPath(i)->init();
 
 	debugLog("Updating bgSfxLoop");
@@ -3481,11 +3425,12 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		data += "\n\n" + stringbank.get(2032) + "\n\n";
 		dsq->continuity.statsAndAchievements->appendStringData(data);
 
-		helpBG = new Quad;
+		helpBG = new PauseQuad;
+		helpBG->pauseLevel = 99;
 		//helpBG->color = 0;
 		helpBG->setTexture("brick");
+		helpBG->setRepeatScale(Vector(2, 2));
 		helpBG->repeatTextureToFill(true);
-		helpBG->repeatToFillScale = Vector(2, 2);
 		//helpBG->alphaMod = 0.75;
 		helpBG->autoWidth = AUTO_VIRTUALWIDTH;
 		helpBG->autoHeight = AUTO_VIRTUALHEIGHT;
@@ -3493,7 +3438,8 @@ void Game::toggleHelpScreen(bool on, const std::string &label)
 		helpBG->followCamera = 1;
 		addRenderObject(helpBG, LR_HELP);
 
-		helpBG2 = new Quad;
+		helpBG2 = new PauseQuad;
+		helpBG2->pauseLevel = 99;
 		helpBG2->color = 0;
 		helpBG2->alphaMod = 0.5;
 		helpBG2->setWidth(620);
@@ -3728,25 +3674,69 @@ void Game::playBurstSound(bool wallJump)
 	}
 }
 
+bool Game::collideLineSegmentVsLineSegment(const Vector& p0, const Vector& d0, const Vector& p1, const Vector& d1, Vector *vout)
+{
+    const Vector astart = p0;
+    const Vector aend = p0 + d0;
+    const Vector bstart = p1;
+    const Vector bend = p1 + d1;
+
+    const float denom = ((bend.y - bstart.y)*(aend.x - astart.x)) -
+        ((bend.x - bstart.x)*(aend.y - astart.y));
+
+    const float nume_a = ((bend.x - bstart.x)*(astart.y - bstart.y)) -
+        ((bend.y - bstart.y)*(astart.x - bstart.x));
+
+    const float nume_b = ((aend.x - astart.x)*(astart.y - bstart.y)) -
+        ((aend.y - astart.y)*(astart.x - bstart.x));
+
+    if(denom == 0.0f)
+    {
+        if(nume_a == 0.0f && nume_b == 0.0f)
+        {
+            if(vout)
+                *vout = astart + (aend * 0.5);
+            return true; // coincident
+        }
+        return false; // parallel
+    }
+
+    const float ua = nume_a / denom;
+    const float ub = nume_b / denom;
+
+    if(ua >= 0.0f && ua <= 1.0f && ub >= 0.0f && ub <= 1.0f)
+    {
+        if(vout)
+        {
+            *vout = astart + ua*(aend - astart);
+        }
+
+        return true; // intersecting
+    }
+
+    return false;
+}
+
 bool Game::collideCircleVsCircle(Entity *a, Entity *b)
 {
 	return (a->position - b->position).isLength2DIn(a->collideRadius + b->collideRadius);
 }
 
-bool Game::collideHairVsCircle(Entity *a, int num, const Vector &pos2, float radius, float perc, int *colSegment)
+bool Game::collideHairVsCircle(Entity *a, size_t num, const Vector &pos2, float radius, float perc, size_t *colSegment)
 {
 	if (perc == 0)
 		perc = 1;
 	bool c = false;
 	if (a && a->hair)
 	{
-		if (num == 0)
-			num = a->hair->hairNodes.size();
-		// HACK: minus 2
-		for (int i = 0; i < num; i++)
+		const std::vector<Vector>& pts = a->hair->_points;
+		if (num == 0 || num > pts.size())
+			num = pts.size();
+
+		const float hairwidth = a->hair->getHairWidth();
+		for (size_t i = 0; i < num; i++)
 		{
-			// + a->hair->position
-			c = ((a->hair->hairNodes[i].position) - pos2).isLength2DIn(a->hair->hairWidth*perc + radius);
+			c = ((pts[i]) - pos2).isLength2DIn(hairwidth*perc + radius);
 			if (c)
 			{
 				if (colSegment)
@@ -3904,7 +3894,7 @@ void Game::registerSporeDrop(const Vector &pos, int t)
 
 bool Game::isEntityCollideWithShot(Entity *e, Shot *shot)
 {
-	if (!shot->isHitEnts() || shot->firer == e)
+	if (!shot->hitEnts || shot->firer == e)
 	{
 		return false;
 	}
@@ -4045,7 +4035,16 @@ void Game::toggleGridRender()
 	float t = 0;
 	float a = 0;
 	if (gridRender->alpha == 0)
+	{
 		a = 0.5f;
+		gridRender->rebuildBuffersIfNecessary();
+		gridRender2->rebuildBuffersIfNecessary();
+		gridRender3->rebuildBuffersIfNecessary();
+		edgeRender->rebuildBuffersIfNecessary();
+		gridRenderEnt->rebuildBuffersIfNecessary();
+		gridRenderUser1->rebuildBuffersIfNecessary();
+		gridRenderUser2->rebuildBuffersIfNecessary();
+	}
 
 	gridRender->alpha.interpolateTo(a, t);
 	gridRender2->alpha.interpolateTo(a, t);
@@ -4054,6 +4053,34 @@ void Game::toggleGridRender()
 	gridRenderEnt->alpha.interpolateTo(a, t);
 	gridRenderUser1->alpha.interpolateTo(a, t);
 	gridRenderUser2->alpha.interpolateTo(a, t);
+}
+
+static void checkgridrender(GridRender *gr, ObsType obs)
+{
+	if(gr->getObs() & obs)
+	{
+		if(gr->alpha.x)
+			gr->rebuildBuffers();
+		else
+			gr->markForRebuild();
+	}
+}
+
+void Game::updateGridRender(ObsType obs)
+{
+	// This is normally not necessary, because black is only changed by the editor.
+	// Keeping it here possibly for future mod compat.
+	// It's also always shown, so we can immediately rebuild it
+	checkgridrender(blackRender, obs);
+
+	// These are usually not visible. Delay rebuild until they are actually shown.
+	checkgridrender(edgeRender, obs);
+	checkgridrender(gridRender, obs);
+	checkgridrender(gridRender2, obs);
+	checkgridrender(gridRender3, obs);
+	checkgridrender(gridRenderEnt, obs);
+	checkgridrender(gridRenderUser1, obs);
+	checkgridrender(gridRenderUser2, obs);
 }
 
 Vector Game::getCameraPositionFor(const Vector &pos)
@@ -4243,6 +4270,11 @@ bool Game::isControlHint()
 	return controlHint_bg->alpha.x != 0;
 }
 
+WorldMapTileContainer* Game::getCurrentWorldMapTile() const
+{
+	return worldMapRender ? worldMapRender->getCurrentTile() : NULL;
+}
+
 bool Game::trace(Vector start, Vector target)
 {
 	/*
@@ -4424,12 +4456,6 @@ void Game::update(float dt)
 	StateObject::update(dt);
 
 
-	for (ElementUpdateList::iterator e = elementUpdateList.begin(); e != elementUpdateList.end(); e++)
-	{
-		(*e)->update(dt);
-	}
-
-
 	size_t i = 0;
 	for (i = 0; i < getNumPaths(); i++)
 	{
@@ -4604,12 +4630,15 @@ void Game::update(float dt)
 
 void Game::setElementLayerVisible(int bgLayer, bool v)
 {
-	core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer)->visible = v;
+	RenderObjectLayer *rl = core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer);
+	if(rl)
+		rl->visible = v;
 }
 
 bool Game::isElementLayerVisible(int bgLayer)
 {
-	return core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer)->visible;
+	RenderObjectLayer *rl = core->getRenderObjectLayer(LR_ELEMENTS1+bgLayer);
+	return rl && rl->visible;
 }
 
 Shot *Game::fireShot(const std::string &bankShot, Entity *firer, Entity *target, const Vector &pos, const Vector &aim, bool playSfx)
@@ -4646,7 +4675,7 @@ Shot *Game::fireShot(const std::string &bankShot, Entity *firer, Entity *target,
 		s->fire(playSfx);
 
 
-		core->getTopStateData()->addRenderObject(s, LR_PROJECTILES);
+		core->getTopStateObject()->addRenderObject(s, LR_PROJECTILES);
 		s->init();
 	}
 
@@ -4669,57 +4698,6 @@ void Game::snapCam()
 {
 	if (cameraFollow)
 		warpCameraTo(*cameraFollow);
-}
-
-bool Game::loadElementTemplates(std::string pack, const unsigned char *usedIdx, size_t usedIdxLen)
-{
-	stringToLower(pack);
-
-	std::string fn;
-	if (dsq->mod.isActive())
-		fn = dsq->mod.getPath() + "tilesets/" + pack + ".txt";
-	else
-		fn = "data/tilesets/" + pack + ".txt";
-
-	if(!tileset.loadFile(fn.c_str(), usedIdx, usedIdxLen))
-	{
-		errorLog ("Could not load tileset [" + fn + "]");
-		return false;
-	}
-
-	// Aquarian alphabet letters
-	if(const CountedPtr<Texture> aqtex = dsq->getTexture("aquarian"))
-	{
-		const float cell = 64.0f/512.0f;
-		for (int i = 0; i < 27; i++)
-		{
-			ElementTemplate t;
-			t.idx = 1024+i;
-			t.tex = aqtex;
-			int x = i,y=0;
-			while (x >= 6)
-			{
-				x -= 6;
-				y++;
-			}
-
-			t.tu1 = x*cell;
-			t.tv1 = y*cell;
-			t.tu2 = t.tu1 + cell;
-			t.tv2 = t.tv1 + cell;
-
-			t.tv2 = 1 - t.tv2;
-			t.tv1 = 1 - t.tv1;
-			std::swap(t.tv1,t.tv2);
-
-			t.w = 512*cell;
-			t.h = 512*cell;
-
-			tileset.elementTemplates.push_back(t);
-		}
-	}
-
-	return true;
 }
 
 void Game::clearGrid(int v)
@@ -4791,16 +4769,11 @@ void Game::removeState()
 
 	core->particlesPaused = false;
 
-	elementUpdateList.clear();
-	elementInteractionList.clear();
-
 	dsq->setCursor(CURSOR_NORMAL);
 	dsq->darkLayer.toggle(0);
 	dsq->shakeCamera(0,0);
 	if (core->afterEffectManager)
 		core->afterEffectManager->clear();
-
-	dsq->getRenderObjectLayer(LR_BLACKGROUND)->update = true;
 
 	if (saveFile)
 	{
@@ -4826,7 +4799,7 @@ void Game::removeState()
 	clearPaths();
 
 	StateObject::removeState();
-	dsq->clearElements();
+	dsq->tilemgr.clearTiles();
 	dsq->clearEntities();
 	avatar = 0;
 	sceneEditor.shutdown();
@@ -4835,10 +4808,12 @@ void Game::removeState()
 	core->cameraPos = Vector(0,0);
 	sceneColor.stop();
 
-	controlHint_mouseLeft = controlHint_mouseRight = controlHint_mouseMiddle = controlHint_mouseBody = controlHint_bg = controlHint_image = 0;
+	controlHint_mouseLeft = controlHint_mouseRight = controlHint_mouseMiddle = controlHint_mouseBody = controlHint_image = 0;
+	controlHint_bg = 0;
 	controlHint_text = 0;
 
 	miniMapRender = 0;
+	blackRender = 0;
 	gridRender = 0;
 	gridRender2 = 0;
 	gridRender3 = 0;
@@ -4847,6 +4822,7 @@ void Game::removeState()
 	gridRenderUser1 = 0;
 	gridRenderUser2 = 0;
 	worldMapRender = 0;
+	waterSurfaceRender = 0;
 
 	clearObsRows();
 
@@ -4998,17 +4974,18 @@ bool Game::collideCircleWithGrid(const Vector& position, float r)
 
 void Game::learnedRecipe(Recipe *r, bool effects)
 {
-	if (nocasecmp(dsq->getTopStateData()->name,"Game")==0 && !applyingState)
+	// Don't show notifications while loading a save
+	if(applyingState || dsq->getTopStateObject() != this)
+		return;
+
+	std::ostringstream os;
+	os << stringbank.get(23) << " "  << r->resultDisplayName << " " << stringbank.get(24);
+	IngredientData *data = dsq->continuity.getIngredientDataByName(r->result);
+	if (data)
 	{
-		std::ostringstream os;
-		os << stringbank.get(23) << " "  << r->resultDisplayName << " " << stringbank.get(24);
-		IngredientData *data = dsq->continuity.getIngredientDataByName(r->result);
-		if (data)
+		if (effects)
 		{
-			if (effects)
-			{
-				setControlHint(os.str(), 0, 0, 0, 3, "ingredients/" + data->gfx);
-			}
+			setControlHint(os.str(), 0, 0, 0, 3, "ingredients/" + data->gfx);
 		}
 	}
 }
@@ -5045,4 +5022,10 @@ bool Game::isIgnoreAction(AquariaActions ac) const
 void Game::onContinuityReset()
 {
 	themenu->onContinuityReset();
+}
+
+void Game::onPrepareRender()
+{
+	if(waterSurfaceRender)
+		waterSurfaceRender->prepareRender();
 }

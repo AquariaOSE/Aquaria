@@ -249,7 +249,8 @@ void MiniMapRender::slide(int slide)
 		offset.interpolateTo(Vector(0, 0), 0.28f, 0, 0, 1);
 	break;
 	case 1:
-		offset.interpolateTo(Vector(0, getMiniMapHeight()+5-600), 0.28f, 0, 0, 1);
+		if(core->getVirtualOffX() < getMiniMapWidth() && core->getVirtualOffY() < getMiniMapHeight())
+			offset.interpolateTo(Vector(0, getMiniMapHeight()+5-600), 0.28f, 0, 0, 1);
 	break;
 	}
 }
@@ -294,7 +295,7 @@ void MiniMapRender::onUpdate(float dt)
 	RenderObject::onUpdate(dt);
 
 	position.x = core->getVirtualWidth() - core->getVirtualOffX() - getMiniMapWidth()*0.5f;
-	position.y = 600 - getMiniMapHeight()*0.5f;
+	position.y = 600 - getMiniMapHeight()*0.5f + core->getVirtualOffY();
 	position.z = 2.9f;
 
 	waterSin += dt * (bitSizeLookupPeriod / (2*PI));
@@ -375,7 +376,7 @@ void MiniMapRender::onUpdate(float dt)
 	_isCursorIn = false;
 	if (alpha.x == 1)
 	{
-		if (!game->isInGameMenu() && (!game->isPaused() || (game->isPaused() && game->worldMapRender->isOn())))
+		if (!game->isInGameMenu() && (!game->isPaused() || (game->isPaused() && game->isOnWorldMap())))
 		{
 			if (isCursorInButtons())
 			{
@@ -396,7 +397,7 @@ void MiniMapRender::onUpdate(float dt)
 
 					bool btn=false;
 
-					if (!game->worldMapRender->isOn())
+					if (!game->isOnWorldMap())
 					{
 						for (size_t i = 0; i < buttons.size(); i++)
 						{
@@ -420,20 +421,16 @@ void MiniMapRender::onUpdate(float dt)
 
 					if (!btn && !radarHide && (!dsq->mod.isActive() || dsq->mod.hasWorldMap()))
 					{
-						if (game->worldMapRender->isOn())
+						if (game->isOnWorldMap())
 						{
-							game->worldMapRender->toggle(false);
+							game->toggleWorldMap(false);
 							clickEffect(1);
 						}
 						else
 						{
 							if (doubleClickDelay > 0 && !core->isStateJumpPending())
 							{
-
-								if (dsq->continuity.gems.empty())
-									dsq->continuity.pickupGem("Naija-Token");
-
-								game->worldMapRender->toggle(true);
+								game->toggleWorldMap(true);
 
 								clickEffect(0);
 
@@ -480,7 +477,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 
 	if (alphaValue > 0)
 	{
-		texMinimapBtm->apply();
+		texMinimapBtm->apply(TEX_BORDER_CLAMP);
 
 		glBegin(GL_QUADS);
 			glColor4f(lightLevel, lightLevel, lightLevel, 1);
@@ -496,9 +493,9 @@ void MiniMapRender::onRender(const RenderState& rs) const
 
 		if (lightLevel > 0)
 		{
-			texWaterBit->apply();
+			texWaterBit->apply(TEX_BORDER_CLAMP);
 
-			glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+			rs.gpu.setBlend(BLEND_ADD);
 			glColor4f(0.1f, 0.2f, 0.9f, 0.4f*lightLevel);
 			bool curColorIsWater = true;
 
@@ -579,7 +576,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 					}
 				}
 			}
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+			rs.gpu.setBlend(BLEND_DEFAULT);
 		}
 	}
 
@@ -618,7 +615,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 	glColor4f(1,1,1, alphaValue);
 
 	const int hsz = 20;
-	texNaija->apply();
+	texNaija->apply(TEX_BORDER_CLAMP);
 
 	glBegin(GL_QUADS);
 		glTexCoord2f(0, 1);
@@ -633,7 +630,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 
 	glColor4f(1,1,1,1);
 
-	texMinimapTop->apply();
+	texMinimapTop->apply(TEX_BORDER_CLAMP);
 	glBegin(GL_QUADS);
 		glTexCoord2f(0, 1);
 		glVertex2f(-miniMapGuiSize, miniMapGuiSize);
@@ -659,9 +656,9 @@ void MiniMapRender::onRender(const RenderState& rs) const
 		healthBarColor.normalize2D();
 	}
 
-	texHealthBar->apply();
+	texHealthBar->apply(TEX_BORDER_CLAMP);
 
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	rs.gpu.setBlend(BLEND_DEFAULT);
 	glColor4f(healthBarColor.x, healthBarColor.y, healthBarColor.z, 0.6f);
 
 	glBegin(GL_QUADS);
@@ -682,7 +679,7 @@ void MiniMapRender::onRender(const RenderState& rs) const
 	glEnd();
 
 
-	glBlendFunc(GL_SRC_ALPHA,GL_ONE);
+	rs.gpu.setBlend(BLEND_ADD);
 
 	int jump = 0;
 
@@ -713,10 +710,10 @@ void MiniMapRender::onRender(const RenderState& rs) const
 	}
 	glEnd();
 
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	rs.gpu.setBlend(BLEND_DEFAULT);
 	glColor4f(1,1,1,1);
 
-	texMarker->apply();
+	texMarker->apply(TEX_BORDER_CLAMP);
 
 	const float x = healthLookupX[maxHealthSteps];
 	const float y = healthLookupY[maxHealthSteps];
@@ -731,10 +728,6 @@ void MiniMapRender::onRender(const RenderState& rs) const
 		glTexCoord2f(0, 0);
 		glVertex2f(x-healthMarkerSize, y-healthMarkerSize);
 	glEnd();
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glColor4f(1,1,1,1);
 }
 
 void MiniMapRender::renderIcon(const MinimapIcon *ico, const Vector& pos) const
@@ -758,7 +751,7 @@ void MiniMapRender::renderIcon(const MinimapIcon *ico, const Vector& pos) const
 	 	}
 	}
 
-	ico->tex->apply();
+	ico->tex->apply(TEX_BORDER_CLAMP);
 	const Vector c = ico->color;
 	const float a = ico->alpha.x * this->alpha.x;
 	glColor4f(c.x, c.y, c.z, a);

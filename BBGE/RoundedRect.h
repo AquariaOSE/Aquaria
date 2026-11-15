@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "RenderObject.h"
 #include "Event.h"
+#include "VertexBuffer.h"
 
 class TTFText;
 struct TTFFont;
@@ -31,42 +32,25 @@ struct TTFFont;
 class RoundedRect : public RenderObject
 {
 public:
-	RoundedRect();
+	RoundedRect(int w, int h, int radius);
 	void setWidthHeight(int w, int h, int radius);
 	void show();
 	void hide();
-	void setCanMove(bool on);
 	int getWidth() { return width; }
 	int getHeight() { return height; }
 	int getRadius() { return radius; }
 
 
 protected:
-	void onUpdate(float dt) OVERRIDE;
 	void onRender(const RenderState& rs) const OVERRIDE;
 
-	bool canMove;
-	static RoundedRect *moving;
+private:
+	void updateVBO();
+
 	int width, height, radius;
-	Vector d;
 
-};
+	DynamicGPUBuffer vbo, ibo;
 
-class RoundButton : public RenderObject
-{
-public:
-	RoundButton(const std::string &label, TTFFont *font);
-	void setWidthHeight(int w, int h, int radius);
-
-	EventPtr event;
-protected:
-	void onUpdate(float dt) OVERRIDE;
-	void onRender(const RenderState& rs) const OVERRIDE;
-
-	TTFText *label;
-	int width, height, radius;
-	bool mbd;
-	bool noNested;
 };
 
 #endif

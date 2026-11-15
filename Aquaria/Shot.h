@@ -114,15 +114,17 @@ public:
 	void setTarget(Entity *target);
 	void setTargetPoint(int pt);
 	float getDamage() const;
-	int getCollideRadius() const;
 	DamageType getDamageType() const;
 	const ShotData *shotData;
 	void updatePosition();
-	bool isHitEnts() const;
 	bool canHit(Entity *e, Bone *b);
 	bool isObstructed(float dt) const;
 	inline bool isActive() const { return !dead; }
 	inline const char *getName() const { return shotData ? shotData->name.c_str() : ""; }
+
+	int callVariadic(const char *func, lua_State *L, int nparams);
+	int messageVariadic(lua_State *L, int nparams);
+	void luaDebugMsg(const std::string &func, const std::string &msg);
 
 	float extraDamage;
 	float homingness;
@@ -130,6 +132,8 @@ public:
 	DamageType damageType;
 	bool checkDamageTarget;
 	bool alwaysMaxSpeed;
+	bool hitWalls;
+	bool hitEnts;
 
 protected:
 
@@ -140,16 +144,16 @@ protected:
 	ParticleEffect *emitter;
 
 	bool onHitWall(bool reflect);
-	void onEndOfLife();
+	void onEndOfLife() OVERRIDE;
 
 	bool dead;
 	bool fired;
 	bool enqueuedForDelete;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	bool updateScript;
 
 private:
-	unsigned int shotIdx;
+	size_t shotIdx;
 };
 
 #endif

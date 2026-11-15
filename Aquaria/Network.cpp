@@ -7,7 +7,7 @@
 #include <map>
 #include <set>
 #include <cassert>
-#include "SDL.h"
+#include <SDL.h>
 
 using namespace minihttp;
 
@@ -42,7 +42,7 @@ public:
 	virtual ~HttpDumpSocket() {}
 
 protected:
-	virtual void _OnClose()
+	virtual void _OnClose() OVERRIDE
 	{
 
 		minihttp::HttpSocket::_OnClose();
@@ -55,7 +55,7 @@ protected:
 			notifyRequests.push(RequestDataHolder(data));
 		}
 	}
-	virtual void _OnOpen()
+	virtual void _OnOpen() OVERRIDE
 	{
 
 		minihttp::HttpSocket::_OnOpen();
@@ -64,7 +64,7 @@ protected:
 		// TODO ??
 	}
 
-	virtual void _OnRequestDone()
+	virtual void _OnRequestDone() OVERRIDE
 	{
 		const Request& r = GetCurrentRequest();
 		RequestData *data = (RequestData*)(r.user);
@@ -82,12 +82,13 @@ protected:
 				data->fail = true;
 			}
 		}
+		const unsigned httpstatus = GetStatusCode();
 		data->_th_finished = true;
-		data->_th_aborted = (GetStatusCode() != minihttp::HTTP_OK);
+		data->_th_aborted = (httpstatus != minihttp::HTTP_OK);
 		notifyRequests.push(RequestDataHolder(data));
 	}
 
-	virtual void _OnRecv(void *buf, unsigned int size)
+	virtual void _OnRecv(void *buf, unsigned int size) OVERRIDE
 	{
 		if(!size)
 			return;

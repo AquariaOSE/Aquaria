@@ -5,8 +5,8 @@
 OPTION(AQUARIA_INTERNAL_FREETYPE "Always use included FreeType library" TRUE)
 if(AQUARIA_INTERNAL_FREETYPE)
     message(STATUS "Using internal copy of freetype2")
-    SET(FREETYPE2DIR ${CMAKE_CURRENT_SOURCE_DIR}/freetype2)
-    SET(FREETYPE2SRCDIR ${FREETYPE2DIR}/src)
+    SET(FREETYPE2DIR "${CMAKE_CURRENT_SOURCE_DIR}/freetype2")
+    SET(FREETYPE2SRCDIR "${FREETYPE2DIR}/src")
     set(FREETYPE_INCLUDE_DIRS "${FREETYPE2DIR}/include" CACHE INTERNAL "")
     SET(FREETYPE2_SRCS
         ${FREETYPE2SRCDIR}/base/ftsystem.c
@@ -50,25 +50,23 @@ if(AQUARIA_INTERNAL_FREETYPE)
         ${FREETYPE2SRCDIR}/psaux/psaux.c
         ${FREETYPE2SRCDIR}/psnames/psmodule.c
     )
+    
+    INCLUDE_DIRECTORIES("${FREETYPE2SRCDIR}")
+    INCLUDE_DIRECTORIES("${FREETYPE2DIR}/include/freetype/config")
+    ADD_DEFINITIONS(-DHAVE_FCNTTL_H)
+    ADD_DEFINITIONS(-DFT_CONFIG_OPTION_SYSTEM_ZLIB)
+    ADD_DEFINITIONS(-DFT2_BUILD_LIBRARY)
 
-    IF(MSVC)
-        SET_SOURCE_FILES_PROPERTIES(
-            ${FREETYPE2_SRCS}
-            PROPERTIES COMPILE_FLAGS "-DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT2_BUILD_LIBRARY -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H"
-        )
-    ELSE(MSVC)
+    IF(NOT MSVC)
         # FT2 seems to not be strict-aliasing safe, so disable that in GCC.
         CHECK_C_COMPILER_FLAG("-fno-strict-aliasing" COMPILER_HAS_NOSTRICTALIAS)
         IF(COMPILER_HAS_NOSTRICTALIAS)
-            SET(NOSTRICTALIAS "-fno-strict-aliasing")
-        ELSE(COMPILER_HAS_NOSTRICTALIAS)
-            SET(NOSTRICTALIAS "")
+            ADD_DEFINITIONS(-fno-strict-aliasing)
         ENDIF(COMPILER_HAS_NOSTRICTALIAS)
-        SET_SOURCE_FILES_PROPERTIES(
-            ${FREETYPE2_SRCS}
-            PROPERTIES COMPILE_FLAGS "-Wno-extended-offsetof -DFT_CONFIG_OPTION_SYSTEM_ZLIB -DFT_CONFIG_CONFIG_H='\"${FREETYPE2DIR}/include/freetype/config/ftconfig.h\"' -DFT2_BUILD_LIBRARY -DFT_CONFIG_MODULES_H='\"${FREETYPE2DIR}/include/freetype/config/ftmodule.h\"' -I${FREETYPE2SRCDIR} -I${FREETYPE2DIR}/include/freetype/config -DHAVE_FCNTL_H ${NOSTRICTALIAS}"
-        )
-    ENDIF(MSVC)
+        
+        ADD_DEFINITIONS(-DFT_CONFIG_CONFIG_H="${FREETYPE2DIR}/include/freetype/config/ftconfig.h")
+        ADD_DEFINITIONS(-DFT_CONFIG_MODULES_H="${FREETYPE2DIR}/include/freetype/config/ftmodule.h")
+    ENDIF(NOT MSVC)
 
     add_library(freetype ${FREETYPE2_SRCS})
 

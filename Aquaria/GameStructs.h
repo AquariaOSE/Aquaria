@@ -8,19 +8,6 @@
 
 class Path;
 
-struct ElementEffect
-{
-public:
-	int type;
-	int segsx, segsy;
-	float segs_dgox, segs_dgoy, segs_dgmx, segs_dgmy, segs_dgtm, segs_dgo;
-	float wavy_radius, wavy_min, wavy_max;
-	bool wavy_flip;
-	InterpolatedVector alpha;
-	InterpolatedVector color;
-	BlendType blendType;
-};
-
 struct EmoteData
 {
 	EmoteData()
@@ -34,13 +21,16 @@ struct EmoteData
 
 struct GemData
 {
-	GemData() { canMove=false; blink = false; }
+	GemData() { canMove=false; blink = false; global = false; isPlayer = false; id = -1; }
 	std::string name;
 	std::string userString;
 	std::string mapName;
 	Vector pos;
 	bool canMove;
-	bool blink; // not saved
+	bool blink; // not saved on older versions
+	bool global; // local gems use their parent container's coordinate system, global gems are placed directly on the map screen
+	bool isPlayer;
+	int id; // used to identify a gem via scripts
 };
 
 struct BeaconData
@@ -86,12 +76,14 @@ struct EatData
 
 struct PECue
 {
-	PECue(std::string name, Vector pos, float rot, float t)
-		: name(name), pos(pos), rot(rot), t(t) {}
+	PECue(std::string name, Vector pos, float rot, float t, int layer, float follow)
+		: name(name), pos(pos), rot(rot), t(t), layer(layer), follow(follow) {}
 	std::string name;
 	Vector pos;
 	float rot;
 	float t;
+	int layer;
+	float follow;
 };
 
 struct RecipeType
@@ -197,6 +189,16 @@ struct UnderWaterResult
 {
 	bool uw;
 	Path *waterbubble;
+};
+
+class ObsRow
+{
+public:
+	inline ObsRow(unsigned tx, unsigned ty, unsigned len)
+		: tx(tx), ty(ty), len(len) {}
+	inline ObsRow(const ObsRow& o)
+		: tx(o.tx), ty(o.ty), len(o.len) {}
+	const unsigned tx, ty, len;
 };
 
 

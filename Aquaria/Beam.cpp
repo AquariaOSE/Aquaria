@@ -27,11 +27,11 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 Beam::Beams Beam::beams;
 
-Beam::Beam(Vector pos, float angle) : Quad()
+Beam::Beam(Vector pos, float angle, unsigned maxrangeTiles) : Quad()
+	, gpubuf(GPUBUF_VERTEXBUF | GPUBUF_DYNAMIC)
 {
 	addType(SCO_BEAM);
 	cull = false;
-	trace();
 
 	this->angle = angle;
 	position = pos;
@@ -47,6 +47,9 @@ Beam::Beam(Vector pos, float angle) : Quad()
 	damageData.damage = 0.5f;
 
 	beamWidth = 16;
+	maxrange = maxrangeTiles;
+
+	trace();
 }
 
 void Beam::setBeamWidth(float w)
@@ -84,47 +87,64 @@ void Beam::trace()
 	float angle = MathFunctions::toRadians(this->angle);
 
 
-	Vector mov(sinf(angle), cosf(angle));
+	const Vector mov(sinf(angle), cosf(angle));
 	TileVector t(position);
 	Vector startTile(t.x, t.y);
 
-
-
-	int moves = 0;
-	while (!game->isObstructed(TileVector(startTile.x, startTile.y)))
+	unsigned moves = 0;
+	while (!game->isObstructed(TileVector((int)startTile.x, (int)startTile.y)))
 	{
 		startTile += mov;
 		moves++;
-		if (moves > 1000)
+		if (moves > maxrange)
 			break;
 	}
-	t = TileVector(startTile.x, startTile.y);
-	endPos = t.worldVector();
+	t = TileVector((int)startTile.x, (int)startTile.y);
+	Vector wend = t.worldVector();
+	endPos = position + mov * (wend - position).getLength2D();
 
-
-
-}
-
-void Beam::onRender(const RenderState& rs) const
-{
 
 	Vector diff = endPos - position;
 	Vector side = diff;
 
 	side.setLength2D(beamWidth*2);
-	Vector sideLeft = side.getPerpendicularLeft();
-	Vector sideRight = side.getPerpendicularRight();
+	const Vector L = side.getPerpendicularLeft(); // sides, base
+	const Vector R = side.getPerpendicularRight();
+	const Vector Le = L + diff; // sides, far end
+	const Vector Re = R + diff;
 
-	glBegin(GL_QUADS);
-		glTexCoord2f(0, 0);
-		glVertex2f(sideLeft.x, sideLeft.y);
-		glTexCoord2f(1, 0);
-		glVertex2f(sideLeft.x+diff.x, sideLeft.y+diff.y);
-		glTexCoord2f(1, 1);
-		glVertex2f(sideRight.x+diff.x, sideRight.y+diff.y);
-		glTexCoord2f(0, 1);
-		glVertex2f(sideRight.x, sideRight.y);
-	glEnd();
+	const size_t bytes = 4 * 4 * sizeof(float); // 4 vertices, each xyuv
+	do
+	{
+		float *p = (float*)gpubuf.beginWrite(GPUBUFTYPE_VEC2_TC, bytes, GPUACCESS_DEFAULT);
+
+		*p++ = L.x;
+		*p++ = L.y;
+		*p++ = 0;
+		*p++ = 0;
+
+		*p++ = Le.x;
+		*p++ = Le.y;
+		*p++ = 1;
+		*p++ = 0;
+
+		*p++ = R.x;
+		*p++ = R.y;
+		*p++ = 0;
+		*p++ = 1;
+
+		*p++ = Re.x;
+		*p++ = Re.y;
+		*p++ = 1;
+		*p++ = 1;
+	}
+	while(!gpubuf.commitWrite());
+}
+
+void Beam::onRender(const RenderState& rs) const
+{
+	gpubuf.apply();
+	core->getDefaultQuadGrid()->getIndexBuf().drawElements(GL_TRIANGLES, 6); // 6 verts = 2 tris
 }
 
 void Beam::onUpdate(float dt)

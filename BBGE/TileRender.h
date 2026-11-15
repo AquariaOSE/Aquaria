@@ -14,11 +14,12 @@ public:
 
 	TileRender(const TileStorage& tiles);
 	virtual ~TileRender();
-	virtual void onRender(const RenderState& rs) const;
+	virtual void onRender(const RenderState& rs) const OVERRIDE;
+	virtual void onUpdate(float dt) OVERRIDE;
 
 	bool renderBorders;
 
-private:
+	static Vector GetTagColor(int tag);
 };
 
 

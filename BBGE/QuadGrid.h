@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "RenderObject.h"
+#include "VertexBuffer.h"
 
 /*
 This class is an extension for Quad, where coordinates and UV coords can be set freely.
@@ -34,6 +35,7 @@ public:
 
     inline Point& operator()(size_t x, size_t y)
     {
+        dirty = true;
         return _points[y * _w + x];
     }
 
@@ -59,12 +61,17 @@ public:
 public:
     InterpolatedVector texOffset;
     int pauseLevel;
-
+    bool dirty;
 
 private:
     QuadGrid(size_t w, size_t h);
     const size_t _w, _h; // number of points in each direction (2x3 quads => 3x4 grid points)
+    void updateVBO();
+
+    DynamicGPUBuffer vbo, ibo;
+
     std::vector<Point> _points;
+    size_t _numtris;
 };
 
 

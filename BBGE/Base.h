@@ -33,9 +33,18 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #define compile_assert(pred) switch(0){case 0:case (pred):;}
 
-// C++11's override specifier is too useful not to use it if we have it
-#if (__cplusplus >= 201103L) || (defined(_MSC_VER) && (_MSC_VER+0 >= 1900))
-#define OVERRIDE override
+// C++11's override specifier is too useful not to use it if we have it.
+// However, clang warns about it when -Wc++98-compat is active. Silence this here.
+/*#if defined(__GNUC__) && (__cplusplus >= 201103L)
+#  define DO_PRAGMA(X) _Pragma(#X)
+#  define OVERRIDE DO_PRAGMA(GCC diagnostic push) DO_PRAGMA(GCC diagnostic ignored "-Wc++98-compat") override DO_PRAGMA(GCC diagnostic pop)
+#endif*/
+
+
+#ifndef OVERRIDE
+#  if (__cplusplus >= 201103L) || (defined(_MSC_VER) && (_MSC_VER+0 >= 1900))
+#    define OVERRIDE override
+#  endif
 #endif
 
 #ifndef OVERRIDE
@@ -72,7 +81,7 @@ namespace internal
 #pragma warning(disable:26812) // unscoped enum
 //#pragma warning(disable:4706) // assignment within conditional expression
 
-//#pragma warning(disable:4389) // signed/unsigned mismatch
+#pragma warning(disable:4389) // signed/unsigned mismatch
 
 //#pragma warning(disable:4189) // UqqqqSEFUL: local variable is initialized but not referenced
 #endif
@@ -87,7 +96,7 @@ namespace internal
 #include "OSFunctions.h"
 
 // --- Defined in RenderBase.cpp -- Declared here to avoid pulling in gl.h via RenderBase.h --
-void drawCircle(float radius, int stepSize);
+float *drawCircle(float *p, float radius, size_t vertices, const Vector& center = Vector(0, 0));
 unsigned generateEmptyTexture(int res);
 void sizePowerOf2Texture(int &v);
 // ----------------------
@@ -129,6 +138,7 @@ void stringToLower(std::string &s);
 void stringToLowerUserData(std::string &s);
 float sqr(float x);
 bool exists(const std::string &f, bool makeFatal = false, bool skipVFS = false);
+bool dirExistsOnDisk(const std::string &f);
 void errorLog(const std::string &s);
 void debugLog(const std::string &s);
 
@@ -152,8 +162,6 @@ int nocasecmp(const std::string &s1, const std::string &s2);
 bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius=1, Vector* closest=0);
 
 
-void drawCircle(float radius, int steps=1);
-
 std::string getPathInfoStr();
 void exit_error(const std::string &message);
 
@@ -169,7 +177,8 @@ int randAngle360();
 Vector randVector(float magnitude);
 std::string splitCamelCase(const std::string &input);
 std::string removeSpaces(const std::string &input);
-int randRange(int r1, int r2);
+int randRange(int r1, int r2); // from..to inclusive
+
 
 enum LerpType
 {
@@ -181,6 +190,11 @@ enum LerpType
 
 #define DOUBLE_CLICK_DELAY	0.5f
 
+
+inline float lerp(float v1, float v2, float t)
+{
+	return (v2-v1)*t+v1;
+}
 
 float lerp(float v1, float v2, float dt, int lerpType);
 

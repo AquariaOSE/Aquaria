@@ -59,8 +59,6 @@ public:
 	static bool loadModXML(tinyxml2::XMLDocument *d, std::string modName);
 	static ModType getTypeFromXML(tinyxml2::XMLElement *xml);
 
-	WorldMapRevealMethod mapRevealMethod;
-
 protected:
 	bool loadCompatScript();
 	bool shuttingDown;

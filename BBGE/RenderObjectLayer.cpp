@@ -30,13 +30,14 @@ RenderObjectLayer::RenderObjectLayer()
 	visible = true;
 	startPass = endPass = 0;
 	followCameraLock = FCL_NONE;
-	update = true;
 
 	const int size = renderObjects.size();
 	for (int i = 0; i < size; i++)
 		renderObjects[i] = 0;
 	objectCount = 0;
 	firstFreeIdx = 0;
+	preRender = NULL;
+	postRender = NULL;
 }
 
 RenderObjectLayer::~RenderObjectLayer()
@@ -210,24 +211,49 @@ void RenderObjectLayer::moveToBack(RenderObject *r)
 	}
 }
 
+void RenderObjectLayer::unloadDevice()
+{
+	const size_t sz = renderObjects.size();
+	for(size_t i = 0; i < sz; ++i)
+		if(RenderObject *ro = renderObjects[i])
+			ro->unloadDevice();
+}
+
 void RenderObjectLayer::reloadDevice()
 {
+	const size_t sz = renderObjects.size();
+	for(size_t i = 0; i < sz; ++i)
+		if(RenderObject *ro = renderObjects[i])
+			ro->reloadDevice();
 }
+
+void RenderObjectLayer::updateObjects(float dt) const
+{
+	const size_t sz = renderObjects.size();
+	for(size_t i = 0; i < sz; ++i)
+		if(RenderObject *ro = renderObjects[i])
+			ro->update(dt);
+}
+
 
 void RenderObjectLayer::prepareRender()
 {
 	toRender.clear();
 
-	size_t n = 0;
-	for (const RenderObject *robj = getFirst(); robj; robj = getNext())
-	{
-		++n;
-		if(robj->shouldTryToRender())
-			toRender.push_back(robj);
-	}
+	size_t n = 0, sz = renderObjects.size();
+	for(size_t i = 0; i < sz; ++i)
+		if(const RenderObject *ro = renderObjects[i])
+		{
+			++n;
+			if(ro->shouldTryToRender())
+				toRender.push_back(ro);
+		}
+
 	core->renderObjectCount += toRender.size();
 	toRender.push_back(NULL); // terminate
 	core->totalRenderObjectCount += n;
+
+	// TODO: set followCameraMult = (0,0) when followCamera == 0 ?
 
 	switch(followCameraLock)
 	{
@@ -238,35 +264,64 @@ void RenderObjectLayer::prepareRender()
 	}
 }
 
-void RenderObjectLayer::render() const
+void RenderObjectLayer::render(const RenderState& rs) const
 {
 	if(toRender.size() <= 1)
 		return;
 
 	size_t proc = 0;
-	CombinedRenderAndGPUState rs;
 
 	if (startPass == endPass)
 	{
-		rs.pass = RenderObject::RENDER_ALL;
+		assert(rs.pass == RenderObject::RENDER_ALL);
 		const RenderObject * const * rlist = &toRender[0]; // known to have at least one element
-		while(const RenderObject *ro = *rlist++)
+		const RenderObject *ro = *rlist++;
+		do
 			ro->render(rs);
+		while( (ro = *rlist++) );
 		proc += toRender.size() - 1;
 	}
 	else
 	{
+		RenderState rx(rs);
 		for (int pass = startPass; pass <= endPass; pass++)
 		{
-			rs.pass = pass;
+			rx.pass = pass;
 			const RenderObject * const * rlist = &toRender[0]; // known to have at least one element
 			while(const RenderObject *ro = *rlist++)
 				if(ro->isVisibleInPass(pass))
 				{
-					ro->render(rs);
+					ro->render(rx);
 					++proc;
 				}
 		}
 	}
 	core->processedRenderObjectCount += proc;
+}
+
+size_t RenderObjectLayer::clearTemporaryObjects()
+{
+	size_t n = renderObjects.size();
+	size_t removed = 0;
+	for(size_t i = 0; i < n; ++i)
+	{
+		if(RenderObject *ro = renderObjects[i])
+		{
+			if(ro->roflags & RO_TEMPORARY)
+			{
+				core->enqueueRenderObjectDeletion(ro);
+				ro->layer = LR_NONE; // Don't try to remove from RenderObjectLayer again
+				ro->setIdx(-1);
+				renderObjects[i] = NULL;
+				if(!removed)
+					firstFreeIdx = i;
+				++removed;
+			}
+		}
+	}
+
+	assert(objectCount >= removed);
+	objectCount -= removed;
+	assert(!renderObjects[firstFreeIdx]);
+	return removed;
 }

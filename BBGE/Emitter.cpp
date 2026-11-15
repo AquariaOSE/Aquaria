@@ -21,11 +21,50 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Particles.h"
 #include "RenderBase.h"
 
+
+SpawnParticleData::SpawnParticleData()
+{
+	suckIndex = -1;
+	suckStr = 0;
+
+	randomScale1 = 1;
+	randomScale2 = 1;
+	randomAlphaMod1 = 1;
+	randomAlphaMod2 = 1;
+	influenced = 0;
+	spawnLocal = false;
+	life = 1;
+	blendType = BLEND_DEFAULT;
+	scale = Vector(1,1,1);
+	width = 64;
+	height = 64;
+	color = Vector(1,1,1);
+	alpha = 1;
+	randomSpawnRadius = 0;
+
+	randomRotationRange = 0;
+	number = 1;
+
+	randomSpawnRadiusRange = 0;
+	randomSpawnMod = Vector(1,1);
+
+	randomVelocityMagnitude = 0;
+
+	copyParentRotation = 0;
+	justOne = false;
+	flipH = flipV = 0;
+	spawnTimeOffset = 0;
+	pauseLevel = 0;
+	copyParentFlip = 0;
+	inheritColor = false;
+	inheritAlpha = false;
+}
+
 Emitter::Emitter(ParticleEffect *pe) : Quad(), pe(pe)
 {
 	//HACK:
 	cull = false;
-	hasRot = false;
+	lastDTDifference = 0;
 }
 
 void Emitter::destroy()
@@ -40,7 +79,7 @@ void Emitter::destroy()
 
 }
 
-void Emitter::spawnParticle(float perc)
+Particle *Emitter::spawnParticle(const Vector& spawnpos)
 {
 	Particle *p = particleManager->getFreeParticle(this);
 
@@ -61,54 +100,42 @@ void Emitter::spawnParticle(float perc)
 
 	p->rot = data.rotation;
 
-	p->pos = lastSpawn + ((currentSpawn - lastSpawn) * perc);
+	p->pos = spawnpos;
 
-	int finalRadius = data.randomSpawnRadius;
-	if (data.randomSpawnRadiusRange > 0)
-		finalRadius += rand()%data.randomSpawnRadiusRange;
-
-	switch (data.spawnArea)
 	{
-	case SpawnParticleData::SPAWN_CIRCLE:
-	{
-		float a = rand()%360;
+		const float finalRadius = data.randomSpawnRadius + rng.f01() * data.randomSpawnRadiusRange;
+		const float a = randAngle();
 		p->pos += Vector(sinf(a)*finalRadius * data.randomSpawnMod.x, cosf(a)*finalRadius * data.randomSpawnMod.y);
 	}
-	break;
-	case SpawnParticleData::SPAWN_LINE:
-	{
-		if (rand()%2 == 0)
-			p->pos.x += finalRadius;
-		else
-			p->pos.x -= finalRadius;
-	}
-	break;
-	}
 
-	if (data.randomScale1 == 1 && data.randomScale1 == data.randomScale2)
 	{
-
+		const float sz = lerp(data.randomScale1, data.randomScale2, rng.f01());
+		p->scale *= sz;
+		if(InterpolatedVectorData *d = p->scale.data)
+		{
+			d->from *= sz;
+			d->target *= sz;
+			for(size_t i = 0; i < d->path.getNumPathNodes(); ++i)
+				d->path[i].value *= sz;
+		}
 	}
-	else
-	{
-		int r = rand()%(int(data.randomScale2*100) - int(data.randomScale1*100));
-		float sz = data.randomScale1 + float(r)/100.0f;
-		p->scale = Vector(sz,sz);
-	}
-
 
 	if (data.randomRotationRange > 0)
 	{
-		p->rot.z = rand()%int(data.randomRotationRange);
-		p->rot.ensureData();
-		p->rot.data->target.z += p->rot.z;
+		const float r = rng.f01() * data.randomRotationRange;
+		p->rot.z = r;
+		if(InterpolatedVectorData *d = p->rot.data)
+		{
+			d->target.z += r;
+			d->from.z += r;
+			for(size_t i = 0; i < d->path.getNumPathNodes(); ++i)
+				d->path[i].value.z += r;
+		}
 	}
-
-
 
 	if (data.randomVelocityMagnitude > 0)
 	{
-		float a = rand()%data.randomVelocityRange;
+		float a = randAngle();
 		Vector v = Vector(sinf(a)*data.randomVelocityMagnitude, cosf(a)*data.randomVelocityMagnitude);
 		p->vel += v;
 	}
@@ -117,6 +144,13 @@ void Emitter::spawnParticle(float perc)
 	{
 		p->rot.z = getAbsoluteRotation().z;
 	}
+
+	return p;
+}
+
+float Emitter::randAngle()
+{
+	return 2 * PI * rng.f01();
 }
 
 Vector Emitter::getSpawnPosition()
@@ -130,75 +164,67 @@ void Emitter::onUpdate(float dt)
 {
 	Quad::onUpdate(dt);
 
+	if(!(pe->isRunning() && core->particlesPaused <= data.pauseLevel))
+		return;
 
 
-	if (pe->isRunning() && core->particlesPaused <= data.pauseLevel)
+	if (data.spawnTimeOffset > 0)
 	{
+		data.spawnTimeOffset -= dt;
 		if (data.spawnTimeOffset > 0)
-		{
-			data.spawnTimeOffset -= dt;
-			if (data.spawnTimeOffset > 0)
-				return;
-		}
-
-		int spawnCount;
-		float spawnPerc;
-		if (data.justOne)
-		{
-			if (data.didOne)
-				spawnCount = 0;
-			else
-				spawnCount = data.justOne;
-			spawnPerc = 1;
-			data.didOne = 1;
-		}
-		else if (data.useSpawnRate)
-		{
-			spawnCount = 0;
-			spawnPerc = 1;
-			data.counter += dt;
-			while (data.counter > data.spawnRate.x)  // Faster than division
-			{
-				data.counter -= data.spawnRate.x;
-				spawnCount++;
-			}
-		}
-		else
-		{
-			float num = data.number.x * dt;
-			num += data.lastDTDifference;
-			spawnCount = int(num);
-			data.lastDTDifference = num - float(spawnCount);
-			if (spawnCount > 0)
-				spawnPerc = 1.0f / float(spawnCount);
-		}
-
-		if (spawnCount > 0)
-		{
-			// Avoid calling this until we know we actually need it for
-			// generating a particle (it has to apply the matrix chain,
-			// which is slow).
-			currentSpawn = getSpawnPosition();
-			if (lastSpawn.isZero())
-				lastSpawn = currentSpawn;
-
-			for (; spawnCount > 0; spawnCount--)
-			{
-				spawnParticle(spawnPerc);
-			}
-
-			lastSpawn = currentSpawn;
-		}
-
-		data.number.update(dt);
-		data.velocityMagnitude.update(dt);
-		data.spawnOffset.update(dt);
+			return;
+		lastSpawn = getSpawnPosition();
 	}
+
+	int spawnCount = 0;
+	float spawnPerc;
+	if (data.justOne)
+	{
+		if (!didOne)
+			spawnCount = data.justOne;
+		spawnPerc = 0; // Spawn all of them in the same spot
+		didOne = true;
+	}
+	else
+	{
+		float num = data.number.x * dt;
+		num += lastDTDifference;
+		spawnCount = int(num);
+		lastDTDifference = num - float(spawnCount);
+		if (spawnCount > 0)
+			spawnPerc = 1.0f / num;
+	}
+
+	if (spawnCount > 0)
+	{
+		// Avoid calling this until we know we actually need it for
+		// generating a particle (it has to apply the matrix chain,
+		// which is slow).
+		const Vector currentSpawn = getSpawnPosition();
+
+		// Given the last spawn position and the new spawn position, interpolate as many particles
+		// along the line between both positions. Start at current and move back to prev.
+		// For convenience, 0 is the current pos and 1 is the prev. pos.
+		float percAccu = 0;
+		for(int i = 0; i < spawnCount; ++i)
+		{
+			spawnParticle(lerp(currentSpawn, lastSpawn, percAccu));
+			// This is unlikely to reach 1 perfectly, which is good since what is currently 1
+			// was 0 in the previous iteration, and that is known to be hit perfectly.
+			// This way we usually don't end up placing 2 particles in the same spot.
+			percAccu += spawnPerc;
+		}
+
+		lastSpawn = currentSpawn;
+
+	}
+
+	data.number.update(dt);
 }
 
 void Emitter::start()
 {
-	data.didOne = 0;
+	didOne = false;
 	lastSpawn = getSpawnPosition();
 }
 
@@ -233,115 +259,41 @@ void Emitter::onRender(const RenderState& rs) const
 		core->setupRenderPositionAndScale();
 	}
 
-	float w2 = width*0.5f;
-	float h2 = height*0.5f;
-
 	if (texture)
-		texture->apply();
+		texture->apply(TEX_BORDER_CLAMP);
 
+	Vector colorMult = rs.color;
+	if(data.inheritColor)
+		colorMult *= pe->color;
+	float alphaMult = rs.alpha;
+	if(data.inheritAlpha)
+		alphaMult *= pe->alpha.x;
 
+	const RenderGrid * const rquad = core->getDefaultQuadGrid();
+	const bool flip = data.flipH != (data.copyParentFlip && pe->isfhr());
 
-	if (hasRot)
+	for (Particles::const_iterator i = particles.begin(); i != particles.end(); i++)
 	{
-		Vector colorMult = data.inheritColor ? pe->color : Vector(1, 1, 1);
-		float alphaMult = data.inheritAlpha ? pe->alpha.x : 1;
-		for (Particles::const_iterator i = particles.begin(); i != particles.end(); i++)
+		Particle *p = *i;
+		if (p->active)
 		{
-			Particle *p = *i;
-			if (p->active)
-			{
-				const float dx = w2 * p->scale.x;
-				const float dy = h2 * p->scale.y;
+			const Vector col = p->color * colorMult;
+			glColor4f(col.x, col.y, col.z, p->alpha.x * alphaMult);
 
-				Vector col = p->color * colorMult;
-				glColor4f(col.x, col.y, col.z, p->alpha.x * alphaMult);
+			glPushMatrix();
 
+				glTranslatef(p->pos.x, p->pos.y,0);
 
-				if (p->rot.z != 0 || p->rot.isInterpolating())
-				{
-					glPushMatrix();
+				glRotatef(p->rot.z, 0, 0, 1);
 
-						glTranslatef(p->pos.x, p->pos.y,0);
+				if (flip)
+					glRotatef(180, 0, 1, 0);
 
-						glRotatef(p->rot.z, 0, 0, 1);
+				glScalef(width * p->scale.x, height * p->scale.y, 0);
 
-						if (data.flipH || (data.copyParentFlip && (pe->isfh() || (pe->getParent() && pe->getParent()->isfh()))))
-						{
+				rquad->render(rs);
 
-							glRotatef(180, 0, 1, 0);
-						}
-
-
-
-						glBegin(GL_QUADS);
-							glTexCoord2f(0,1);
-							glVertex2f(-dx, +dy);
-
-							glTexCoord2f(1,1);
-							glVertex2f(+dx, +dy);
-
-							glTexCoord2f(1,0);
-							glVertex2f(+dx, -dy);
-
-							glTexCoord2f(0,0);
-							glVertex2f(-dx, -dy);
-						glEnd();
-
-					glPopMatrix();
-				}
-				else
-				{
-					const float x = p->pos.x;
-					const float y = p->pos.y;
-
-					glBegin(GL_QUADS);
-						glTexCoord2f(0,1);
-						glVertex2f(x-dx, y+dy);
-
-						glTexCoord2f(1,1);
-						glVertex2f(x+dx, y+dy);
-
-						glTexCoord2f(1,0);
-						glVertex2f(x+dx, y-dy);
-
-						glTexCoord2f(0,0);
-						glVertex2f(x-dx, y-dy);
-					glEnd();
-				}
-			}
+			glPopMatrix();
 		}
 	}
-	else
-	{
-		glBegin(GL_QUADS);
-		for (Particles::const_iterator i = particles.begin(); i != particles.end(); i++)
-		{
-			Particle *p = *i;
-			if (p->active)
-			{
-				const float x = p->pos.x;
-				const float y = p->pos.y;
-				const float dx = w2 * p->scale.x;
-				const float dy = h2 * p->scale.y;
-
-				glColor4f(p->color.x, p->color.y, p->color.z, p->alpha.x);
-
-				glTexCoord2f(0,1);
-				glVertex2f(x-dx, y+dy);
-
-				glTexCoord2f(1,1);
-				glVertex2f(x+dx, y+dy);
-
-				glTexCoord2f(1,0);
-				glVertex2f(x+dx, y-dy);
-
-				glTexCoord2f(0,0);
-				glVertex2f(x-dx, y-dy);
-			}
-		}
-		glEnd();
-	}
-
-
-
 }

@@ -22,8 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define BBGE_EVENT_H
 
 #include <stdlib.h>
-
-#include <list>
+#include "Base.h"
 
 
 class Event
@@ -43,7 +42,7 @@ public:
 	FunctionEvent(T *who,void (T::*func)(void)):
 		callee(who),callback(func){}
 
-	void act()
+	void act() OVERRIDE
 	{
 		(callee->*callback)();
 	}
@@ -124,51 +123,6 @@ public:
 protected:
 	int running;
 	float timer, time;
-};
-
-class EventPulser
-{
-public:
-	EventPulser();
-
-	void setInterval(float t);
-
-	void update(float dt);
-
-	float interval;
-	float time;
-
-	int times;
-
-	int randomVariance;
-
-	EventPtr e;
-};
-
-class EventTimer
-{
-public:
-	EventTimer(const EventPtr &p, float time);
-
-	void update(float dt);
-
-	EventPtr eventPtr;
-
-	Timer timer;
-};
-
-class EventQueue
-{
-public:
-	EventQueue();
-	void addEvent(const EventPtr &eventPtr, float t);
-	void update(float dt);
-	void clear();
-	int getSize();
-
-private:
-	typedef std::list<EventTimer> EventTimers;
-	EventTimers eventTimers;
 };
 
 #endif

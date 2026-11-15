@@ -31,9 +31,9 @@ class GameOver : public StateObject
 {
 public:
 	GameOver();
-	void applyState();
-	void removeState();
-	void update(float dt);
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
+	void update(float dt) OVERRIDE;
 
 	void onClick();
 	Quad *frame1, *frame2, *frame3;
@@ -45,9 +45,9 @@ class Intro2 : public StateObject
 {
 public:
 	Intro2();
-	void applyState();
-	void removeState();
-	void update(float dt);
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
+	void update(float dt) OVERRIDE;
 	void skipIntro();
 };
 
@@ -55,9 +55,9 @@ class BitBlotLogo : public StateObject
 {
 public:
 	BitBlotLogo();
-	void applyState();
-	void removeState();
-	void update(float dt);
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
+	void update(float dt) OVERRIDE;
 
 	void doShortBitBlot();
 	void getOut();
@@ -73,15 +73,15 @@ class ParticleEditor : public StateObject
 {
 public:
 	ParticleEditor();
-	void applyState();
-	void removeState();
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
 	ParticleEffect *emitter;
 	void load();
 	void start();
 	void stop();
 	void reload();
 	void goToTitle();
-	void update(float dt);
+	void update(float dt) OVERRIDE;
 	void toggleHair();
 	Quad *test;
 protected:
@@ -93,20 +93,20 @@ class Credits : public StateObject
 {
 public:
 	Credits();
-	void applyState();
-	void removeState();
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
 
-	void update(float dt);
+	void update(float dt) OVERRIDE;
 };
 
 class Nag : public StateObject
 {
 public:
 	Nag();
-	void applyState();
-	void removeState();
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
 
-	void update(float dt);
+	void update(float dt) OVERRIDE;
 
 	void onBuy();
 	void onExit();

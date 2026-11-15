@@ -36,8 +36,8 @@ class Texture;
 enum RenderObjectFlags
 {
 	RO_CLEAR			= 0x00,
-	RO_RENDERBORDERS	= 0x01,
-	RO_NEXT				= 0x02,
+	RO_TEMPORARY        = 0x01,  // Object is deleted when game state is changed
+	RO_RENDERBORDERS	= 0x02,
 	RO_MOTIONBLUR		= 0x04
 };
 
@@ -67,6 +67,7 @@ enum RenderBeforeParent
 	RBP_ON					= 1
 };
 
+
 struct MotionBlurFrame
 {
 	Vector position;
@@ -88,6 +89,7 @@ class RenderObject : public ScriptObject
 {
 public:
 	friend class Core;
+	friend class RenderObjectLayer;
 	RenderObject();
 	virtual ~RenderObject();
 	virtual void render(const RenderState& rs) const;
@@ -98,22 +100,20 @@ public:
 		onSetTexture();
 	}
 
-	void setStateDataObject(StateData *state);
 	bool setTexture(const std::string &name);
 
 	void toggleAlpha(float t = 0.2f);
 
 	virtual void update(float dt);
 	bool isDead() const {return _dead;}
-	bool isHidden() const {return _hidden || (parent && parent->isHidden());}
+
+	// This object and all its parents are rendered (not hidden, alpha and alphaMod > 0)
+	bool isVisibleInHierarchy() const;
+	// No parent blocks input to its children (see Panel::canReceiveInput())
+	bool isInputEnabledInHierarchy() const;
 
 	bool shouldTryToRender() const; // somewhat expensive
 	bool isVisibleInPass(int pass) const;
-
-	// Set whether the object is hidden.  If hidden, no updates (except
-	// lifetime checks) or render operations will be performed, and no
-	// child objects will be updated or rendered.
-	void setHidden(bool hidden) {_hidden = hidden;}
 
 	void setLife(float newlife)
 	{
@@ -168,15 +168,18 @@ public:
 
 	void addChild(RenderObject *r, ParentManaged pm, RenderBeforeParent rbp = RBP_NONE, ChildOrder order = CHILD_BACK);
 	void removeChild(RenderObject *r);
+	void clearParent() { parent = NULL; }
 
 	Vector getRealPosition() const;
 	Vector getRealScale() const;
 
-	StateData *getStateData() const;
-
 	// HACK: This is defined in RenderObject_inline.h because it needs
 	// the class Core definition.  --achurch
 	inline bool isOnScreen() const;
+	bool isRectPartiallyOnScreen() const;
+	bool isRectFullyOnScreen() const;
+	bool isCenterOnScreenWithMargin(const Vector& margin) const;
+
 
 	bool isCoordinateInRadius(const Vector &pos, float r) const;
 
@@ -187,7 +190,8 @@ public:
 	Vector getWorldPosition() const;
 	Vector getWorldCollidePosition(const Vector &vec=Vector(0,0,0)) const;
 
-	RenderObject *getTopParent() const;
+	RenderObject *getTopParent();
+	const RenderObject *getTopParent() const;
 
 	virtual void onAnimationKeyPassed(int key){}
 
@@ -206,7 +210,7 @@ public:
 
 	// Defined in RenderObject_inline.h
 	inline Vector getFollowCameraPosition() const;
-	inline Vector getFollowCameraPosition(const Vector& pos) const;
+	Vector getFollowCameraPosition(const Vector& pos) const;
 
 	void lookAt(const Vector &pos, float t, float minAngle, float maxAngle, float offset=0);
 	inline RenderObject *getParent() const {return parent;}
@@ -223,11 +227,11 @@ public:
 	static bool renderCollisionShape;
 	static bool renderPaths;
 	static size_t lastTextureApplied;
-	static bool lastTextureRepeat;
 
 	//--------------------------
 
 	// fields ordered by hotness
+	unsigned roflags;
 
 	// TODO: this should be a bitmask
 	bool fadeAlphaWithLife;
@@ -239,9 +243,9 @@ public:
 	bool useOldDT;
 	bool repeatTexture;
 	bool _dead;
-	bool _hidden;
 	bool _fv, _fh;
 	bool _markedForDelete;
+	bool neverFollowCamera;
 
 	unsigned char pm;  // unsigned char to save space
 
@@ -252,7 +256,7 @@ public:
 	InterpolatedVector scale;
 	InterpolatedVector color, alpha;
 	InterpolatedVector rotation;
-	InterpolatedVector offset, rotationOffset, internalOffset, beforeScaleOffset;
+	InterpolatedVector offset, rotationOffset, internalOffset;
 	InterpolatedVector velocity, gravity;
 
 	CountedPtr<Texture> texture;
@@ -298,6 +302,7 @@ protected:
 	virtual void onUpdate(float dt);
 	virtual void deathNotify(RenderObject *r);
 	virtual void onEndOfLife() {}
+	virtual bool childrenCanReceiveInput() const { return true; }
 
 	bool updateLife(float dt);
 
@@ -312,7 +317,6 @@ protected:
 	RenderObjectList deathNotifications;
 
 	size_t idx; // index in layer
-	StateData *stateData;
 	MotionBlurData *motionBlur;
 
 private:

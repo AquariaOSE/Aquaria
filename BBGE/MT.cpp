@@ -1,5 +1,5 @@
 #include "MT.h"
-#include "SDL.h"
+#include <SDL.h>
 
 
 // --------- Lockable ----------

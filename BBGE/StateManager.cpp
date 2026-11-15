@@ -21,7 +21,6 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "StateManager.h"
 #include "Core.h"
 
-StateManager *stateManager = 0;
 
 //========[ StateObject ]========//
 StateObject::StateObject() : ActionMapper()
@@ -41,17 +40,12 @@ void StateObject::removeState()
 {
 	clearActions();
 	clearCreatedEvents();
-
 }
 
 void StateObject::addRenderObject(RenderObject *renderObject, unsigned layer)
 {
-	stateManager->getState(name)->addRenderObject(renderObject, layer);
-}
-
-void StateObject::removeRenderObject(RenderObject *renderObject)
-{
-	stateManager->getState(name)->removeRenderObject(renderObject);
+	renderObject->roflags |= RO_TEMPORARY;
+	core->addRenderObject(renderObject, layer);
 }
 
 void StateObject::update(float dt)
@@ -59,76 +53,11 @@ void StateObject::update(float dt)
 	ActionMapper::onUpdate(dt);
 }
 
-//========[ STATEDATA ]========//
-StateData::StateData()
-{
-	stateObject = 0;
-}
-
-StateData::~StateData()
-{
-
-	for (size_t i = 0; i < renderObjects.size(); i++)
-	{
-		removeRenderObject (renderObjects[i]);
-		delete renderObjects[i];
-	}
-}
-
-void StateData::addRenderObject(RenderObject* renderObject, unsigned layer)
-{
-	core->addRenderObject(renderObject, layer);
-	renderObjects.push_back (renderObject);
-	renderObject->setStateDataObject(this);
-}
-
-void StateData::removeRenderObject(RenderObject *renderObject)
-{
-	core->enqueueRenderObjectDeletion(renderObject);
-
-	removeRenderObjectFromList(renderObject);
-}
-
-void StateData::removeRenderObjectFromList(RenderObject *renderObject)
-{
-	for (std::vector<RenderObject*>::iterator i = renderObjects.begin(); i != renderObjects.end(); )
-	{
-		if ((*i) == renderObject)
-		{
-			i = renderObjects.erase(i);
-		}
-		else
-		{
-			i ++;
-		}
-	}
-}
-
-// assume this only happens on render state end
-void StateData::eraseRenderObjects()
-{
-	// why clear garbage here?
-	//core->clearGarbage();
-
-	for (size_t i = 0; i < renderObjects.size(); i++)
-	{
-		RenderObject *r = renderObjects[i];
-		if (r && !r->isDead())
-		{
-			core->enqueueRenderObjectDeletion(renderObjects[i]);
-		}
-	}
-	renderObjects.clear();
-}
-
 //========[ STATEMANAGER ]========//
 
 StateManager::StateManager()
+	: currentState(NULL)
 {
-	stateManager = this;
-	stateChangeFlag = false;
-	enqueuedStateStage = -1;
-	statesTopIndex = -1;
 }
 
 StateManager::~StateManager()
@@ -136,29 +65,41 @@ StateManager::~StateManager()
 	clearStateObjects();
 }
 
-StateData *StateManager::getState (const std::string &state)
+StateObject *StateManager::getStateObject(const std::string &state)
 {
-	for (int i = 0; i <= statesTopIndex; i++) {
-		StateData *s = states[i];
-		if (s->name == state)
-			return s;
-	}
-
-	return 0;
-}
-
-void StateManager::removeState(std::string state)
-{
-	getState(state)->eraseRenderObjects();
+	StateObjectMap::iterator it = stateObjects.find(state);
+	return it != stateObjects.end() ? it->second : NULL;
 }
 
 void StateManager::jumpState (const std::string &state)
 {
 	if (canChangeState())
 	{
-		popAllStates();
-		pushState(state);
+		leaveState();
+		enterState(state);
 	}
+}
+
+void StateManager::enterState(const std::string& state)
+{
+	StateObject *newstate = getStateObject(state);
+	currentState = newstate;
+
+	if(newstate)
+		newstate->applyState();
+
+	this->applyState(state);
+	currentStateName = state;
+}
+
+void StateManager::leaveState()
+{
+	if(currentState)
+		currentState->removeState();
+	this->removeState(currentStateName);
+
+	currentState = NULL;
+	currentStateName.clear();
 }
 
 /*
@@ -171,14 +112,7 @@ void StateManager::enqueueJumpState (const std::string &state, bool force, bool 
 	if (force || canChangeState())
 	{
 		enqueuedJumpState = state;
-		if (staged)
-		{
-			enqueuedStateStage = 0;
-		}
-		else
-		{
-			enqueuedStateStage = -1;
-		}
+		stringToLower(enqueuedJumpState);
 	}
 }
 
@@ -187,144 +121,35 @@ bool StateManager::isStateJumpPending()
 	return !enqueuedJumpState.empty();
 }
 
-void StateManager::pushState(const std::string &s)
-{
-	std::string state = s;
-	stringToLower(state);
-
-	if (canChangeState())
-	{
-		if (states_full())
-		{
-			debugLog("state stack overflow!!");
-			return;
-		}
-		StateData *s = new StateData;
-		s->name = state;
-		states[++statesTopIndex] = s;
-
-		applyState(state);
-
-		if (stateObjects[state])
-		{
-			s->stateObject = stateObjects[state];
-			stateObjects[state]->applyState();
-		}
-
-		stateChangeFlag = true;
-	}
-}
-
-void StateManager::popAllStates()
-{
-	while (!states_empty())
-		popState();
-}
-
-void StateManager::popState()
-{
-	if (canChangeState() && !states_empty())
-	{
-		if (stateObjects[(*(states_top())).name])
-			stateObjects[(*(states_top())).name]->removeState();
-		//states_top()->eraseRenderObjects();
-		std::string n = (*(states_top())).name;
-		removeState(n);
-		delete states_top();
-		if (core->getNestedMains()==1)
-			core->clearGarbage();
-		statesTopIndex--;
-		stateChangeFlag = true;
-	}
-}
-
-std::string StateManager::getNameFromDerivedClassTypeName(const std::string &typeidName)
-{
-
-	return "";
-}
-
 void StateManager::registerStateObject(StateObject *stateObject, const std::string &name)
 {
+	stateObject->_statename = name;
+	stringToLower(stateObject->_statename);
 
+	StateObject *old = getStateObject(stateObject->_statename);
+	if(old)
+		delete old;
 
-	stateObject->name = name;
-	stringToLower(stateObject->name);
-
-
-	if (stateObject->name.empty())
-	{
-		exit_error("StateManager::registerStateObject - Empty name.");
-	}
-
-	if (!stateObjects[stateObject->name])
-		stateObjects[stateObject->name] = stateObject;
+	stateObjects[stateObject->_statename] = stateObject;
 
 }
-
-StateObject *StateManager::addStateInstance(StateObject *s)
-{
-	stateInstances.push_back(s);
-	return s;
-}
-
-void StateManager::clearStateInstances()
-{
-	for (size_t i = 0; i < stateInstances.size(); i++)
-	{
-		StateObject *obj = stateInstances[i];
-		delete obj;
-	}
-	stateInstances.clear();
-}
-
 
 void StateManager::clearStateObjects()
 {
-
+	for(StateObjectMap::iterator it = stateObjects.begin(); it != stateObjects.end(); ++it)
+		delete it->second;
 	stateObjects.clear();
 }
 
 void StateManager::onUpdate(float dt)
 {
-	for (int i = 0; i <= statesTopIndex; i++)
-	{
-		StateObject *obj = stateObjects[states[i]->name];
-		if (obj)
-			obj->update(dt);
-	}
+	if (currentState)
+		currentState->update(dt);
 
 	if (canChangeState() && !enqueuedJumpState.empty())
 	{
-		if (enqueuedStateStage == 0)
-		{
-			enqueuedStateStage = -1;
-			popAllStates();
-		}
-		else if (enqueuedStateStage == -1)
-		{
-			std::string copy = enqueuedJumpState;
-			enqueuedJumpState = "";
-			jumpState(copy);
-		}
+		std::string copy;
+		copy.swap(enqueuedJumpState);
+		jumpState(copy);
 	}
-}
-
-StateData *StateManager::getTopStateData()
-{
-	if (!states_empty())
-		return states_top();
-	else
-		return 0;
-}
-
-StateObject *StateManager::getTopStateObject()
-{
-	StateData *s = getTopStateData();
-	if (s)
-	{
-		return s->stateObject;
-	}
-	else
-		return 0;
 }

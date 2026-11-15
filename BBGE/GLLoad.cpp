@@ -23,8 +23,55 @@ bool void unload_all_glsyms() { return false; }
 #define GLAPIENTRY
 #endif
 
-#include <GL/glext.h>
+static const char *glDebugTypeToStr(unsigned e)
+{
+	switch(e)
+	{
+		case GL_DEBUG_TYPE_ERROR_ARB: return " ERR";
+		case GL_DEBUG_TYPE_DEPRECATED_BEHAVIOR_ARB: return "depr";
+		case GL_DEBUG_TYPE_UNDEFINED_BEHAVIOR_ARB: return " UB!";
+		case GL_DEBUG_TYPE_PORTABILITY_ARB: return "port";
+		case GL_DEBUG_TYPE_PERFORMANCE_ARB: return "perf";
+		case GL_DEBUG_TYPE_OTHER_ARB: return "othr";
+	}
+	return "unknown";
+}
+static const char *glDebugSeverityToStr(unsigned e)
+{
+	switch(e)
+	{
+		case GL_DEBUG_SEVERITY_HIGH_ARB: return "###";
+		case GL_DEBUG_SEVERITY_MEDIUM_ARB: return "+++";
+		case GL_DEBUG_SEVERITY_LOW_ARB: return "---";
+		//case GL_DEBUG_SEVERITY_NOTIFICATION: return "   ";
+	}
+	return "";
+}
 
+
+static void GLAPIENTRY debugCallback(GLenum source, GLenum type, GLuint id, GLenum severity, GLsizei length, const GLchar *message, const void *userParam)
+{
+	switch(severity)
+	{
+		case GL_DEBUG_SEVERITY_HIGH_ARB:
+		case GL_DEBUG_SEVERITY_MEDIUM_ARB:
+		//case GL_DEBUG_SEVERITY_LOW_ARB:
+		{
+			const char *ty = glDebugTypeToStr(type);
+			const char *sev = glDebugSeverityToStr(severity);
+
+			std::ostringstream os;
+			os << sev << " GL[" << ty << "]: " << message;
+			debugLog(os.str());
+		}
+		break;
+
+		/*case GL_DEBUG_SEVERITY_NOTIFICATION:
+			break;
+		default:
+			assert(false);*/
+	}
+}
 
 PFNGLGENERATEMIPMAPEXTPROC glGenerateMipmapEXT = NULL;
 
@@ -51,26 +98,33 @@ PFNGLUNIFORM3IVARBPROC           glUniform3ivARB            = NULL;
 PFNGLUNIFORM4IVARBPROC           glUniform4ivARB            = NULL;
 
 // GL_ARB_shader_objects and related
-PFNGLISRENDERBUFFEREXTPROC glIsRenderbufferEXT = NULL;
-PFNGLBINDRENDERBUFFEREXTPROC glBindRenderbufferEXT = NULL;
-PFNGLDELETERENDERBUFFERSEXTPROC glDeleteRenderbuffersEXT = NULL;
-PFNGLGENRENDERBUFFERSEXTPROC glGenRenderbuffersEXT = NULL;
-PFNGLRENDERBUFFERSTORAGEEXTPROC glRenderbufferStorageEXT = NULL;
-PFNGLGETRENDERBUFFERPARAMETERIVEXTPROC glGetRenderbufferParameterivEXT = NULL;
 PFNGLISFRAMEBUFFEREXTPROC glIsFramebufferEXT = NULL;
 PFNGLBINDFRAMEBUFFEREXTPROC glBindFramebufferEXT = NULL;
 PFNGLDELETEFRAMEBUFFERSEXTPROC glDeleteFramebuffersEXT = NULL;
 PFNGLGENFRAMEBUFFERSEXTPROC glGenFramebuffersEXT = NULL;
 PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC glCheckFramebufferStatusEXT = NULL;
-PFNGLFRAMEBUFFERTEXTURE1DEXTPROC glFramebufferTexture1DEXT = NULL;
 PFNGLFRAMEBUFFERTEXTURE2DEXTPROC glFramebufferTexture2DEXT = NULL;
-PFNGLFRAMEBUFFERTEXTURE3DEXTPROC glFramebufferTexture3DEXT = NULL;
-PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC glFramebufferRenderbufferEXT = NULL;
-PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC glGetFramebufferAttachmentParameterivEXT = NULL;
+PFNGLDRAWBUFFERSARBPROC glDrawBuffersARB = NULL;
+
+// ARB_vertex_buffer_object
+PFNGLGENBUFFERSARBPROC glGenBuffersARB = NULL;
+PFNGLDELETEBUFFERSARBPROC glDeleteBuffersARB = NULL;
+PFNGLBUFFERDATAARBPROC glBufferDataARB = NULL;
+PFNGLBUFFERSUBDATAARBPROC glBufferSubDataARB = NULL;
+PFNGLBINDBUFFERARBPROC glBindBufferARB = NULL;
+PFNGLMAPBUFFERARBPROC glMapBufferARB = NULL;
+PFNGLUNMAPBUFFERARBPROC glUnmapBufferARB = NULL;
+
+PFNGLCOPYIMAGESUBDATAEXTPROC glCopyImageSubDataEXT = NULL;
+
+PFNGLDEBUGMESSAGEINSERTARBPROC glDebugMessageInsertARB = NULL;
+
+PFNGLOBJECTLABELPROC glObjectLabel = NULL;
 
 // extern
 unsigned g_dbg_numRenderCalls = 0;
 bool g_has_GL_GENERATE_MIPMAP = false;
+bool g_has_GL_BUFFERS = false;
 
 
 #define GL_FUNC(ret,fn,params,call,rt) \
@@ -125,22 +179,17 @@ bool lookup_all_glsyms()
 		debugLog(os.str());
 	}
 	// framebuffer
-	glIsRenderbufferEXT = (PFNGLISRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glIsRenderbufferEXT");
-	glBindRenderbufferEXT = (PFNGLBINDRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glBindRenderbufferEXT");
-	glDeleteRenderbuffersEXT = (PFNGLDELETERENDERBUFFERSEXTPROC)SDL_GL_GetProcAddress("glDeleteRenderbuffersEXT");
-	glGenRenderbuffersEXT = (PFNGLGENRENDERBUFFERSEXTPROC)SDL_GL_GetProcAddress("glGenRenderbuffersEXT");
-	glRenderbufferStorageEXT = (PFNGLRENDERBUFFERSTORAGEEXTPROC)SDL_GL_GetProcAddress("glRenderbufferStorageEXT");
-	glGetRenderbufferParameterivEXT = (PFNGLGETRENDERBUFFERPARAMETERIVEXTPROC)SDL_GL_GetProcAddress("glGetRenderbufferParameterivEXT");
 	glIsFramebufferEXT = (PFNGLISFRAMEBUFFEREXTPROC)SDL_GL_GetProcAddress("glIsFramebufferEXT");
 	glBindFramebufferEXT = (PFNGLBINDFRAMEBUFFEREXTPROC)SDL_GL_GetProcAddress("glBindFramebufferEXT");
 	glDeleteFramebuffersEXT = (PFNGLDELETEFRAMEBUFFERSEXTPROC)SDL_GL_GetProcAddress("glDeleteFramebuffersEXT");
 	glGenFramebuffersEXT = (PFNGLGENFRAMEBUFFERSEXTPROC)SDL_GL_GetProcAddress("glGenFramebuffersEXT");
 	glCheckFramebufferStatusEXT = (PFNGLCHECKFRAMEBUFFERSTATUSEXTPROC)SDL_GL_GetProcAddress("glCheckFramebufferStatusEXT");
-	glFramebufferTexture1DEXT = (PFNGLFRAMEBUFFERTEXTURE1DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture1DEXT");
 	glFramebufferTexture2DEXT = (PFNGLFRAMEBUFFERTEXTURE2DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture2DEXT");
-	glFramebufferTexture3DEXT = (PFNGLFRAMEBUFFERTEXTURE3DEXTPROC)SDL_GL_GetProcAddress("glFramebufferTexture3DEXT");
-	glFramebufferRenderbufferEXT = (PFNGLFRAMEBUFFERRENDERBUFFEREXTPROC)SDL_GL_GetProcAddress("glFramebufferRenderbufferEXT");
-	glGetFramebufferAttachmentParameterivEXT = (PFNGLGETFRAMEBUFFERATTACHMENTPARAMETERIVEXTPROC)SDL_GL_GetProcAddress("glGetFramebufferAttachmentParameterivEXT");
+	glDrawBuffersARB          = (PFNGLDRAWBUFFERSARBPROC)SDL_GL_GetProcAddress("glDrawBuffersARB");
+
+	// GL 4.3+, but maybe available as an extension
+	glCopyImageSubDataEXT     = (PFNGLCOPYIMAGESUBDATAEXTPROC)SDL_GL_GetProcAddress("glCopyImageSubDataEXT");
+	glObjectLabel             = (PFNGLOBJECTLABELPROC)SDL_GL_GetProcAddress("glObjectLabel");
 
 	// shaders
 	glCreateProgramObjectARB  = (PFNGLCREATEPROGRAMOBJECTARBPROC)SDL_GL_GetProcAddress("glCreateProgramObjectARB");
@@ -164,6 +213,37 @@ bool lookup_all_glsyms()
 	glUniform3ivARB           = (PFNGLUNIFORM3IVARBPROC)SDL_GL_GetProcAddress("glUniform3ivARB");
 	glUniform4ivARB           = (PFNGLUNIFORM4IVARBPROC)SDL_GL_GetProcAddress("glUniform4ivARB");
 
+	// VBOs
+	glGenBuffersARB           = (PFNGLGENBUFFERSARBPROC)SDL_GL_GetProcAddress("glGenBuffersARB");
+	glDeleteBuffersARB        = (PFNGLDELETEBUFFERSARBPROC)SDL_GL_GetProcAddress("glDeleteBuffersARB");
+	glBufferDataARB           = (PFNGLBUFFERDATAARBPROC)SDL_GL_GetProcAddress("glBufferData");
+	glBufferSubDataARB        = (PFNGLBUFFERSUBDATAARBPROC)SDL_GL_GetProcAddress("glBufferSubData");
+	glBindBufferARB           = (PFNGLBINDBUFFERARBPROC)SDL_GL_GetProcAddress("glBindBufferARB");
+	glMapBufferARB            = (PFNGLMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glMapBufferARB");
+	glUnmapBufferARB          = (PFNGLUNMAPBUFFERARBPROC)SDL_GL_GetProcAddress("glUnmapBufferARB");
+
+
+//#ifndef NDEBUG
+	PFNGLDEBUGMESSAGECALLBACKARBPROC glDebugMessageCallbackARB = (PFNGLDEBUGMESSAGECALLBACKARBPROC)SDL_GL_GetProcAddress("glDebugMessageCallbackARB");
+	if(glDebugMessageCallbackARB)
+	{
+		glDebugMessageCallbackARB(debugCallback, NULL);
+#ifdef _DEBUG
+		glEnable(GL_DEBUG_OUTPUT_SYNCHRONOUS_ARB);
+#endif
+
+	PFNGLDEBUGMESSAGECONTROLARBPROC glDebugMessageControlARB = (PFNGLDEBUGMESSAGECONTROLARBPROC)SDL_GL_GetProcAddress("glDebugMessageControlARB");
+	if(glDebugMessageControlARB)
+		glDebugMessageControlARB(GL_DONT_CARE, GL_DONT_CARE, GL_DONT_CARE, 0, NULL, GL_TRUE);
+
+	glDebugMessageInsertARB = (PFNGLDEBUGMESSAGEINSERTARBPROC)SDL_GL_GetProcAddress("glDebugMessageInsertARB");
+	if(glDebugMessageInsertARB)
+		glDebugMessageInsertARB(GL_DEBUG_SOURCE_APPLICATION_ARB, GL_DEBUG_TYPE_OTHER_ARB, 0, GL_DEBUG_SEVERITY_HIGH_ARB, -1, "GL debug init");
+
+	}
+
+//#endif
+
 	return retval;
 }
 
@@ -180,22 +260,13 @@ void unload_all_glsyms()
 
 	// set these back to NULL and reload them upon reinit, otherwise they
 	//  might point to a bogus address when the shared library is reloaded.
-	glIsRenderbufferEXT = NULL;
-	glBindRenderbufferEXT = NULL;
-	glDeleteRenderbuffersEXT = NULL;
-	glGenRenderbuffersEXT = NULL;
-	glRenderbufferStorageEXT = NULL;
-	glGetRenderbufferParameterivEXT = NULL;
 	glIsFramebufferEXT = NULL;
 	glBindFramebufferEXT = NULL;
 	glDeleteFramebuffersEXT = NULL;
 	glGenFramebuffersEXT = NULL;
 	glCheckFramebufferStatusEXT = NULL;
-	glFramebufferTexture1DEXT = NULL;
 	glFramebufferTexture2DEXT = NULL;
-	glFramebufferTexture3DEXT = NULL;
-	glFramebufferRenderbufferEXT = NULL;
-	glGetFramebufferAttachmentParameterivEXT = NULL;
+	glDrawBuffersARB = NULL;
 
 	glCreateProgramObjectARB  = NULL;
 	glDeleteObjectARB         = NULL;
@@ -217,6 +288,18 @@ void unload_all_glsyms()
 	glUniform2ivARB           = NULL;
 	glUniform3ivARB           = NULL;
 	glUniform4ivARB           = NULL;
+
+	glGenBuffersARB           = NULL;
+	glDeleteBuffersARB        = NULL;
+	glBufferDataARB           = NULL;
+	glBufferSubDataARB        = NULL;
+	glBindBufferARB           = NULL;
+	glMapBufferARB            = NULL;
+	glUnmapBufferARB          = NULL;
+
+	glObjectLabel             = NULL;
+	glCopyImageSubDataEXT     = NULL;
+
 }
 
 #endif // BBGE_BUILD_OPENGL_STATIC

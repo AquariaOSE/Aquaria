@@ -35,22 +35,10 @@ AfterEffectManager::AfterEffectManager(int xDivs, int yDivs)
 {
 	active = false;
 	numEffects = 0;
-	bRenderGridPoints = true;
 	shaderPipeline.resize(10, 0);
-
-	drawGrid = 0;
 
 	this->xDivs = xDivs;
 	this->yDivs = yDivs;
-
-	if (xDivs != 0 && yDivs != 0)
-	{
-		drawGrid = new Vector * [xDivs];
-		for (int i = 0; i < xDivs; i++)
-		{
-			drawGrid[i] = new Vector [yDivs];
-		}
-	}
 
 	updateDevice();
 
@@ -66,15 +54,6 @@ void AfterEffectManager::loadShaders()
 
 AfterEffectManager::~AfterEffectManager()
 {
-	if (drawGrid)
-	{
-		int i;
-		for (i = 0; i < xDivs; i++)
-		{
-			delete[] drawGrid[i];
-		}
-		delete[] drawGrid;
-	}
 	deleteEffects();
 	deleteShaders();
 }
@@ -91,6 +70,19 @@ void AfterEffectManager::deleteEffects()
 	effects.clear();
 	numEffects=0;
 	openSpots.clear();
+}
+
+void AfterEffectManager::beginCapture()
+{
+	assert(core->frameBuffer.isInited());
+	core->frameBuffer.pushCapture(0);
+	glClearColor(0,0,0,0);
+	glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void AfterEffectManager::endCapture()
+{
+	core->frameBuffer.popCapture();
 }
 
 void AfterEffectManager::deleteShaders()
@@ -125,20 +117,21 @@ void AfterEffectManager::update(float dt)
 {
 	if (core->particlesPaused) return;
 
+	const size_t N = effects.size();
+
+	if(!N && !active)
+		return;
+
 	resetGrid();
 
-	if (core->frameBuffer.isInited())
-		active = true;
-	else
-		active = false;
-
-	for (size_t i = 0; i < effects.size(); i++)
+	bool isactive = false;
+	for (size_t i = 0; i < N; i++)
 	{
 		Effect *e = effects[i];
 		if (e)
 		{
-			active = true;
-			e->update(dt, drawGrid, xDivs, yDivs);
+			isactive = true;
+			e->update(dt, grid.array2d(), xDivs, yDivs);
 			if (e->done)
 			{
 				numEffects--;
@@ -146,19 +139,17 @@ void AfterEffectManager::update(float dt)
 			}
 		}
 	}
+
+	grid.updateVBO();
+
+	// FIXME: active if FBO is there and (effects exist or shaders exist)
+	active = isactive && core->frameBuffer.isInited();
 }
 
 
 void AfterEffectManager::resetGrid()
 {
-	for (int i = 0; i < xDivs; i++)
-	{
-		for (int j = 0; j < yDivs; j++)
-		{
-			drawGrid[i][j].x = i/(float)(xDivs-1);
-			drawGrid[i][j].y = j/(float)(yDivs-1);
-		}
-	}
+	grid.reset01();
 }
 
 void AfterEffectManager::destroyEffect(int id)
@@ -168,36 +159,32 @@ void AfterEffectManager::destroyEffect(int id)
 	openSpots.push_back(id);
 }
 
-void AfterEffectManager::render() const
+void AfterEffectManager::render(const RenderState& rs, unsigned fboPageWithImage) const
 {
 	assert(core->frameBuffer.isInited());
 
 	glPushMatrix();
 
-	glDisable (GL_ALPHA_TEST);
-	glDisable(GL_BLEND);
+	rs.gpu.setBlend(BLEND_DISABLED);
 
-	core->frameBuffer.endCapture();
 	glTranslatef(core->cameraPos.x, core->cameraPos.y, 0);
 	glScalef(core->invGlobalScale, core->invGlobalScale,0);
 
 	glColor4f(1,1,1,1);
-	renderGrid();
+	renderGrid(rs, fboPageWithImage);
 
 	glPopMatrix();
 }
 
-void AfterEffectManager::renderGrid() const
+void AfterEffectManager::renderGrid(const RenderState& rs, unsigned fbPage) const
 {
-
-	int firstShader = -1;
-	int lastShader = -1;
-	Shader *activeShader = 0;
+	size_t firstShader, lastShader;
+	Shader *activeShader = NULL;
 	for (size_t i = 0; i < shaderPipeline.size(); ++i)
 	{
 		if(shaderPipeline[i] && shaderPipeline[i]->isLoaded())
 		{
-			if(firstShader < 0)
+			if(!activeShader)
 			{
 				firstShader = i;
 				activeShader = shaderPipeline[i];
@@ -206,162 +193,92 @@ void AfterEffectManager::renderGrid() const
 		}
 	}
 
-	float percentX, percentY;
-	percentX = (float)screenWidth/(float)textureWidth;
-	percentY = (float)screenHeight/(float)textureHeight;
+	// Disable blending so we don't need to clear the framebuffers
+	rs.gpu.setBlend(BLEND_DISABLED);
 
 	int vw = core->getVirtualWidth();
 	int vh = core->getVirtualHeight();
 	int offx = -core->getVirtualOffX();
 	int offy = -core->getVirtualOffY();
 
-	core->frameBuffer.bindTexture();
+	const FrameBuffer * const fb = &core->frameBuffer;
+
+	// STARTING POINT: game image was just rendered into fb(0), use that as starting point
+	fb->bindTexture(fbPage);
 
 	if(activeShader)
 	{
-		activeShader->bind();
 		activeShader->setInt("tex", 0);
+		activeShader->bind();
 
+		// Unless this is the last pass, render to fb(1)
 		if(firstShader != lastShader)
-			backupBuffer.startCapture();
+			fb->pushCapture(1 - fbPage);
 	}
 
+	// verts are in 0..1, transform so that we cover the entire screen
+	glTranslatef(offx, offy, 0);
+	glScalef(vw, vh, 1);
 
-	for (int i = 0; i < (xDivs-1); i++)
+	if(active)
 	{
-		for (int j = 0; j < (yDivs-1); j++)
-		{
-			glBegin(GL_QUADS);
-
-				glTexCoord2f(i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
-
-
-				glVertex2f(offx + vw*drawGrid[i][j].x,		offy + vh*drawGrid[i][j].y);
-				glTexCoord2f(i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
-
-
-				glVertex2f(offx + vw*drawGrid[i][j+1].x,		offy + vh*drawGrid[i][j+1].y);
-				glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
-
-
-				glVertex2f(offx + vw*drawGrid[i+1][j+1].x,	offy + vh*drawGrid[i+1][j+1].y);
-				glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);
-
-
-				glVertex2f(offx + vw*drawGrid[i+1][j].x,		offy + vh*drawGrid[i+1][j].y);
-			glEnd();
-		}
+		grid.render(rs);
+		//renderGridPoints(rs);
 	}
+	else
+		core->blitQuad.render(rs);
 
 	if (activeShader)
+	{
 		activeShader->unbind();
 
-	if(firstShader != lastShader)
-	{
-		// From here on: secondary shader passes.
-		// We just outputted to the backup buffer...
-		const FrameBuffer *fbIn = &core->frameBuffer;
-		const FrameBuffer *fbOut = &backupBuffer;
-
-
-		for(int i = firstShader + 1; i <= lastShader; ++i)
+		if(firstShader != lastShader)
 		{
-			activeShader = shaderPipeline[i];
-			if(!(activeShader && activeShader->isLoaded()))
-				continue;
+			// From here on: secondary shader passes.
+			// We just outputted to the backup buffer...
 
-			// Swap and exchange framebuffers. The old output buffer serves as texture input for the other one
-			fbOut->endCapture();
-			std::swap(fbIn, fbOut);
-			fbIn->bindTexture();
+			unsigned pageOut = 1 - fbPage;
 
-			// If this is the last pass, do not render to a frame buffer again
-			if(i != lastShader)
-				fbOut->startCapture();
+			for(size_t i = firstShader + 1; i <= lastShader; ++i)
+			{
+				unsigned pageIn = 1 - pageOut;
+				activeShader = shaderPipeline[i];
+				if(!(activeShader && activeShader->isLoaded()))
+					continue;
 
-			activeShader->bind();
-			activeShader->setInt("tex", 0);
+				// Swap and exchange framebuffers. The old output buffer serves as texture input for the other one
+				pageOut = pageIn;
 
-			// note that offx, offy are negative here!
-			glBegin(GL_QUADS);
-				glTexCoord2f(0.0f, 0.0f);
-				glVertex3f(offx, vh+offy,  0.0f);
-				glTexCoord2f(percentX, 0.0f);
-				glVertex3f( vw+offx, vh+offy,  0.0f);
-				glTexCoord2f(percentX, percentY);
-				glVertex3f( vw+offx,  offy,  0.0f);
-				glTexCoord2f(0.0f, percentY);
-				glVertex3f(offx,  offy,  0.0f);
-			glEnd();
+				// If this is the last pass, do not render to a frame buffer again
+				if(i == lastShader)
+					fb->popCapture();
+				else
+					fb->replaceCapture(pageOut);
 
-			activeShader->unbind();
+				fb->bindTexture(pageIn);
+
+				activeShader->bind();
+				activeShader->setInt("tex", 0);
+
+				core->blitQuad.render(rs);
+
+				activeShader->unbind();
+			}
 		}
 	}
 
-
-	// uncomment to render grid points
-	/*
-	glBindTexture(GL_TEXTURE_2D, 0);
-	glPointSize(2);
-	glColor4f(1, 0, 0, 0.5);
-	for (int i = 0; i < (xDivs-1); i++)
-	{
-		for (int j = 0; j < (yDivs-1); j++)
-		{
-			glBegin(GL_POINTS);
-				//glColor3f(i/div, i/div, i/div);
-				glTexCoord2f(i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX,  1*percentY-(j)/(float)(yDivs-1)*percentY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,0);
-				glVertex2f(800*drawGrid[i][j].x,		600*drawGrid[i][j].y);
-				glTexCoord2f(i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,i/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,0,(float)(screenHeight/(yDivs-1))/16);
-				glVertex2f(800*drawGrid[i][j+1].x,		600*drawGrid[i][j+1].y);
-				glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j+1)/(float)(yDivs-1)*percentY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,(float)(screenHeight/(yDivs-1))/16);
-				glVertex2f(800*drawGrid[i+1][j+1].x,	600*drawGrid[i+1][j+1].y);
-				glTexCoord2f((i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);
-					//glMultiTexCoord2fARB(GL_TEXTURE0_ARB,(i+1)/(float)(xDivs-1)*percentX, 1*percentY-(j)/(float)(yDivs-1)*percentY);
-					//glMultiTexCoord2fARB(GL_TEXTURE1_ARB,(float)(screenWidth/(xDivs-1))/16,0);
-				glVertex2f(800*drawGrid[i+1][j].x,		600*drawGrid[i+1][j].y);
-			glEnd();
-		}
-	}
-	*/
-
-	//glDisable(GL_TEXTURE_2D);
 	RenderObject::lastTextureApplied = 0;
 	glBindTexture(GL_TEXTURE_2D, 0);
-
-	//bwShader.unbind();
-	//glActiveTextureARB(GL_TEXTURE0_ARB);
-	//glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-	//if (bRenderGridPoints)
-	//	renderGridPoints();
 }
 
-void AfterEffectManager::renderGridPoints() const
+void AfterEffectManager::renderGridPoints(const RenderState& rs) const
 {
-	glColor4f(0.0f,0.0f,0.0f,1.0f);
-	for (int i = 0; i < (xDivs); i++)
-	{
-		for (int j = 0; j < (yDivs); j++)
-		{
-		glBegin(GL_QUADS);
-			glVertex2f(screenWidth*drawGrid[i][j].x-3,	screenHeight*drawGrid[i][j].y-3);
-			glVertex2f(screenWidth*drawGrid[i][j].x-3,	screenHeight*drawGrid[i][j].y+3);
-			glVertex2f(screenWidth*drawGrid[i][j].x+3,	screenHeight*drawGrid[i][j].y+3);
-			glVertex2f(screenWidth*drawGrid[i][j].x+3,	screenHeight*drawGrid[i][j].y-3);
-		glEnd();
-		}
-	}
+	grid.renderDebugPoints(rs);
 }
 
 void AfterEffectManager::unloadDevice()
 {
-	backupBuffer.unloadDevice();
+	grid.dropBuffers();
 	unloadShaders();
 }
 
@@ -370,31 +287,20 @@ void AfterEffectManager::_updateScreenSize()
 	screenWidth = core->getWindowWidth();
 	screenHeight = core->getWindowHeight();
 
-	if (core->frameBuffer.isInited())
-	{
-		textureWidth = core->frameBuffer.getWidth();
-		textureHeight = core->frameBuffer.getHeight();
-	}
-	else
-	{
-		textureWidth = screenWidth;
-		sizePowerOf2Texture(textureWidth);
-		textureHeight = screenHeight;
-		sizePowerOf2Texture(textureHeight);
-	}
+	grid.setTexCoords(core->blitQuad.getTexCoords());
 }
 
 void AfterEffectManager::updateDevice()
 {
 	_updateScreenSize();
-	backupBuffer.init(-1, -1, true);
+	_initGrid();
 }
 
 void AfterEffectManager::reloadDevice()
 {
 	_updateScreenSize();
 
-	backupBuffer.reloadDevice();
+	_initGrid();
 
 	for (size_t i = 0; i < loadedShaders.size(); ++i)
 	{
@@ -428,69 +334,46 @@ void AfterEffectManager::addEffect(Effect *e)
 	}
 	numEffects++;
 
-	Vector base(0,0,0);
-
 	e->position.x /= screenWidth;
 	e->position.y /= screenHeight;
 }
 
 
-void ShockEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
+void ShockEffect::update(float dt, Array2d<Vector>& grid, int xDivs, int yDivs)
 {
 	dt *= timeMultiplier;
-	Effect::update(dt, drawGrid, xDivs, yDivs);
+	Effect::update(dt, grid, xDivs, yDivs);
 
-	centerPoint = position;
-	centerPoint -= ((core->screenCenter-originalCenter)*core->globalScale.x)/core->width;
+	const Vector centerPoint = position - ((core->screenCenter-originalCenter)*core->globalScale.x)/core->width;
 	amplitude-=dt*rate;
 	currentDistance+=dt*frequency;
 
-	float	distFromCamp = 4;
-	float adjWaveLength = waveLength/distFromCamp;
-	float adjAmplitude = amplitude/distFromCamp;
+	const float distFromCamp = 4;
+	const float adjWaveLength = waveLength/distFromCamp;
+	const float adjAmplitude = amplitude/distFromCamp;
+
+	const float invAdjVaveLen = -1.0f / adjWaveLength;
+	const float dist = currentDistance*adjWaveLength;
 
 	if (amplitude < 0)
 		done=true;
 
-	for (int i = 1; i < (xDivs-1); i++)
+	for (int y = 1; y < (yDivs-1); y++)
 	{
-		for (int j = 1; j < (yDivs-1); j++)
+		Vector *row = grid.row(y);
+		for (int x = 1; x < (xDivs-1); x++)
 		{
-			float xDist = (centerPoint.x - drawGrid[i][j].x)/.75;
-			float yDist = centerPoint.y - drawGrid[i][j].y;
+			float xDist = (centerPoint.x - row[x].x)/.75f; // factor for 4:3 internal resolution
+			float yDist = centerPoint.y - row[x].y;
 
 			float tDist = sqrtf(xDist*xDist+yDist*yDist);
 
-			if (tDist < currentDistance*adjWaveLength)
+			if (tDist < dist)
 			{
-				drawGrid[i][j].x += adjAmplitude*sinf(-tDist/adjWaveLength+currentDistance)*.75f;
-				drawGrid[i][j].y += adjAmplitude*cosf(-tDist/adjWaveLength+currentDistance);
+				const float a = tDist * invAdjVaveLen + currentDistance;
+				row[x].x += adjAmplitude*sinf(a)*.75f;
+				row[x].y += adjAmplitude*cosf(a);
 			}
-		}
-	}
-}
-
-
-RippleEffect::RippleEffect() : Effect()
-{
-	time = 0;
-}
-
-void RippleEffect::update(float dt, Vector ** drawGrid, int xDivs, int yDivs)
-{
-
-
-
-	time += dt*0.5f;
-	float amp = 0.002f;
-	for (int i = 0; i < (xDivs-1); i++)
-	{
-		for (int j = 0; j < (yDivs-1); j++)
-		{
-			float offset = i/float(xDivs) + (core->screenCenter.x/float(core->width)/2) +j/float(xDivs) + (core->screenCenter.y/float(core->height)/2);
-
-			drawGrid[i][j].x += sinf((time+offset)*7.5f)*(amp*0.5f);
-			drawGrid[i][j].y += cosf((time+offset)*7.5f)*amp;
 		}
 	}
 }
@@ -553,6 +436,14 @@ int AfterEffectManager::_insertShader(Shader *sh)
 	}
 	loadedShaders.push_back(sh);
 	return loadedShaders.size();
+}
+
+void AfterEffectManager::_initGrid()
+{
+	if(xDivs && yDivs)
+		grid.init(xDivs, yDivs);
+	else
+		grid.dropBuffers();
 }
 
 void AfterEffectManager::deleteShader(int handle)

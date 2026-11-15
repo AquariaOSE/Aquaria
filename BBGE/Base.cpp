@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include "Core.h"
 #include <assert.h>
 #include "OSFunctions.h"
+#include "Randomness.h"
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 #include "SDL_filesystem.h"
@@ -41,14 +42,17 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 int randAngle360()
 {
-	return rand()%360;
+	unsigned r = Randomness::getBits32();
+	return r%360;
 }
 
 int randRange(int n1, int n2)
 {
-	int r = rand()%(n2-1);
-	r += n1;
-	return r;
+	unsigned lo = std::min(n1, n2);
+	unsigned hi = std::max(n1, n2);
+	unsigned r = Randomness::getBits32();
+	r %= (hi - lo + 1u);
+	return r + lo;
 }
 
 std::string removeSpaces(const std::string &input)
@@ -260,6 +264,25 @@ bool exists(const std::string &f, bool makeFatal, bool skipVFS)
 	return e;
 }
 
+bool dirExistsOnDisk(const std::string &f)
+{
+#ifdef BBGE_BUILD_VFS
+	return ttvfs::IsDirectory(f.c_str());
+#elif _WIN32
+    DWORD dwFileAttr = GetFileAttributesA(s);
+    if(dwFileAttr == INVALID_FILE_ATTRIBUTES)
+        return false;
+    return !!(dwFileAttr & FILE_ATTRIBUTE_DIRECTORY);
+#else
+    if (!access(s, 0))
+    {
+        struct stat status;
+        stat( s, &status );
+        return status.st_mode & S_IFDIR;
+    }
+    return false;
+#endif
+}
 
 
 std::string getPathInfoStr()
@@ -290,9 +313,8 @@ void exit_error(const std::string &message)
 
 bool chance(int perc)
 {
-	if (perc == 100) return true;
-	if (perc == 0) return false;
-	return ((rand()%100) <= perc);
+	int r = Randomness::getBits32()%100;
+	return r < perc;
 }
 
 void errorLog(const std::string &s)
@@ -403,7 +425,8 @@ bool isTouchingLine(Vector lineStart, Vector lineEnd, Vector point, int radius, 
 
 Vector randVector(float mag)
 {
-	float angle = (rand() / (float)RAND_MAX) * 2.0f * PI;
+	float r = Randomness::getFloat01();
+	float angle = 2.0f * PI * r;
 	float x = sinf(angle), y = cosf(angle);
 	return Vector(x*mag, y*mag);
 }

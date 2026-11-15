@@ -28,6 +28,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 using namespace tinyxml2;
 
 const float moveDelay = 0.2f;
+static bool s_keyConfigInLoop = false;
 
 float AquariaGuiElement::guiMoveTimer = 0;
 AquariaGuiElement::GuiElements AquariaGuiElement::guiElements;
@@ -89,7 +90,7 @@ void AquariaGuiElement::setFocus(bool v)
 	if (v)
 	{
 		currentFocus = this;
-		if (dsq->getInputMode() == INPUT_JOYSTICK || dsq->getInputMode() == INPUT_KEYBOARD)
+		if (dsq->getInputMode() == INPUT_JOYSTICK)
 			core->setMousePosition(getGuiPosition());
 
 		AquariaGuiElement *gui=0, *guiThis = (AquariaGuiElement*)this;
@@ -104,6 +105,13 @@ void AquariaGuiElement::setFocus(bool v)
 	}
 	else if(this == currentFocus)
 		currentFocus = 0;
+}
+
+void AquariaGuiElement::focusByNavigation()
+{
+	setFocus(true);
+	if (dsq->getInputMode() == INPUT_KEYBOARD)
+		core->setMousePosition(getGuiPosition());
 }
 
 void AquariaGuiElement::updateMovement(float dt)
@@ -124,7 +132,7 @@ void AquariaGuiElement::updateMovement(float dt)
 					gui = FindClosestTo(this, getGuiPosition(), dir);
 				if (gui)
 				{
-					gui->setFocus(true);
+					gui->focusByNavigation();
 					guiMoveTimer = moveDelay;
 				}
 			}
@@ -139,7 +147,7 @@ AquariaGuiElement *AquariaGuiElement::FocusClosestToMouse(Direction dir)
 		AquariaGuiElement *gui = FindClosestTo(NULL, core->mouse.position, dir);
 		if (gui)
 		{
-			gui->setFocus(true);
+			gui->focusByNavigation();
 			guiMoveTimer = moveDelay;
 			return gui;
 		}
@@ -162,7 +170,7 @@ void AquariaGuiElement::UpdateGlobalFocus(float dt)
 Direction AquariaGuiElement::GetDirection()
 {
 	Direction dir = DIR_NONE;
-	
+
 	StateObject *obj = dsq->getTopStateObject(); // usually Game...
 	if (obj)
 	{
@@ -286,7 +294,7 @@ Vector AquariaGuiQuad::getGuiPosition()
 
 bool AquariaGuiQuad::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0 && alphaMod > 0 && renderQuad;
+	return renderQuad && isVisibleInHierarchy() && isInputEnabledInHierarchy();
 }
 
 void AquariaGuiQuad::update(float dt)
@@ -392,7 +400,7 @@ Vector AquariaSlider::getGuiPosition()
 
 bool AquariaSlider::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0 && alphaMod > 0;
+	return isVisibleInHierarchy() && isInputEnabledInHierarchy();
 }
 
 AquariaCheckBox::AquariaCheckBox()
@@ -426,7 +434,7 @@ Vector AquariaCheckBox::getGuiPosition()
 
 bool AquariaCheckBox::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0 && alphaMod > 0;
+	return isVisibleInHierarchy() && isInputEnabledInHierarchy();
 }
 
 
@@ -492,7 +500,7 @@ Vector AquariaKeyConfig::getGuiPosition()
 
 bool AquariaKeyConfig::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0 && alphaMod > 0;
+	return isVisibleInHierarchy() && isInputEnabledInHierarchy();
 }
 
 void AquariaKeyConfig::toggleEnterKey(int on)
@@ -517,9 +525,7 @@ void AquariaKeyConfig::toggleEnterKey(int on)
 
 void AquariaKeyConfig::onUpdate(float dt)
 {
-	static bool inLoop = false;
-
-	if (inLoop) return;
+	if (s_keyConfigInLoop) return;
 
 
 
@@ -535,7 +541,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 
 	ActionSet& as = dsq->user.control.actionSets[actionSetIndex];
 
-	inLoop = true;
+	s_keyConfigInLoop = true;
 
 	unsigned int *k = 0;
 
@@ -787,7 +793,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 		break;
 		case INPUTSET_JOY:
 		{
-			size_t ac = 0;
+			unsigned ac = 0;
 			bool clear = false;
 			bool abort = false;
 			if (core->getKeyState(KEY_DELETE) || core->getKeyState(KEY_BACKSPACE))
@@ -805,7 +811,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 				Joystick *j = core->getJoystick(as.joystickID);
 				if(j)
 				{
-					for (size_t i = 0; i < MAX_JOYSTICK_BTN; i++)
+					for (unsigned i = 0; i < MAX_JOYSTICK_BTN; i++)
 						if (j->getButton(i))
 						{
 							ac = JOY_BUTTON_0 + i;
@@ -815,7 +821,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 						}
 
 					if(!ac)
-						for(size_t i = 0; i < MAX_JOYSTICK_AXIS; ++i)
+						for(unsigned i = 0; i < MAX_JOYSTICK_AXIS; ++i)
 						{
 							float ax = j->getAxisUncalibrated(i);
 							if(fabsf(ax) > JOY_AXIS_THRESHOLD)
@@ -828,7 +834,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 						}
 
 					if(!ac)
-						for(size_t i = 0; i < MAX_JOYSTICK_HATS; ++i)
+						for(unsigned i = 0; i < MAX_JOYSTICK_HATS; ++i)
 						{
 							JoyHatDirection hd = j->getHat(i);
 							if(hd != JOY_HAT_DIR_CENTERED)
@@ -915,7 +921,7 @@ void AquariaKeyConfig::onUpdate(float dt)
 		keyDown = false;
 	}
 
-	inLoop = false;
+	s_keyConfigInLoop = false;
 }
 
 void AquariaKeyConfig::setActionSetIndex(size_t idx)
@@ -978,7 +984,7 @@ Vector AquariaMenuItem::getGuiPosition()
 
 bool AquariaMenuItem::isGuiVisible()
 {
-	return !isHidden() && alpha.x > 0 && alphaMod > 0;
+	return isVisibleInHierarchy() && isInputEnabledInHierarchy();
 }
 
 void AquariaMenuItem::useSound(const std::string &tex)

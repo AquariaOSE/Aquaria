@@ -362,7 +362,7 @@ void SchoolFish::onUpdate(float dt)
 
 		FlockEntity::onUpdate(dt);
 
-		if (game->isValidTarget(this, 0))
+		if (game->isValidTarget(this))
 			game->handleShotCollisions(this);
 
 

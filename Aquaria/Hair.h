@@ -21,41 +21,31 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #ifndef __hair__
 #define __hair__
 
-#include "../BBGE/Quad.h"
+#include "RenderObject.h"
+#include "RenderGrid.h"
+#include "SpineQuad.h"
 
-struct HairNode
-{
-	HairNode() : percent(0)
-	{}
-	float percent; // percent of how much force is affected on this node
-	Vector position; // position of the hair node
-	Vector defaultPosition; // default position of the hair node
-};
 
-class Hair : public RenderObject
+class Hair : public SpineQuad
 {
 public:
-	Hair(int nodes=40, float segmentLength=3, float width=18);
+	Hair(size_t nodes=40, float segmentLength=3, float width=18);
 
 	void exertForce(const Vector &force, float dt, int usePerc=0);
 	void exertNodeForce(size_t idx, const Vector &force, float dt, int usePerc=0);
 	void updatePositions();
-	void returnToDefaultPositions(float dt);
-	void setTextureFlip(bool flip) { _hairfh = flip; }
+	float getHairWidth() const;
+	void setHairWidth(float w);
 
-	float hairWidth;
+	void onUpdate(float dt) OVERRIDE;
 
-	std::vector<HairNode> hairNodes;
+	float segmentMinLength, segmentMaxLength;
 
 	void setHeadPosition(const Vector &pos);
 
-	void exertWave(float dt);
-	void exertGravityWave(float dt);
-	HairNode *getHairNode(int idx);
 protected:
-	float segmentLength;
-	void onRender(const RenderState& rs) const OVERRIDE;
-	bool _hairfh;
+	std::vector<float> percs; // percent of how much force is affected on this node
+
 };
 
 #endif

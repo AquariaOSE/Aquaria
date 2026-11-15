@@ -73,6 +73,8 @@ public:
 	bool call(const char *name, void *param1, bool param2, bool *ret1);
 	// boolean = function(pointer, pointer)
 	bool call(const char *name, void *param1, void *param2, bool *ret1);
+	// boolean = function(pointer, pointer, pointer,)
+	bool call(const char *name, void *param1, void *param2, void *param3, bool *ret1);
 	// string = function(string)
 	bool call(const char *name, const char *param, std::string *ret);
 	// string = function(string, string, string)

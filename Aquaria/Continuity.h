@@ -109,7 +109,7 @@ public:
 
 	WorldType getWorldType() { return worldType; }
 	void shiftWorlds();
-	void applyWorldEffects(WorldType type, bool transition, bool affectMusic);
+	void applyWorldEffects(WorldType type, bool transition);
 
 
 	//void setActivePet(int flag);
@@ -162,8 +162,10 @@ public:
 	typedef std::list<BeaconData> Beacons;
 	Beacons beacons;
 
-	GemData *pickupGem(std::string name, bool effects = true);
+	GemData *pickupGem(const std::string& name, bool effects = true);
 	void removeGemData(GemData *gemData);
+
+	void setCurrentMap(const std::string& mapname);
 
 
 	typedef std::vector<std::string> VoiceOversPlayed;
@@ -272,6 +274,8 @@ public:
 	std::vector<FoodSortOrder> sortByType, sortByHeal, sortByIngredients, sortByUnsort;
 
 	StatsAndAchievements *statsAndAchievements;
+
+	size_t maxEats;
 
 protected:
 	std::vector<EatData> eats;

@@ -10,9 +10,9 @@ class Intro : public StateObject
 {
 public:
 	Intro();
-	void applyState();
-	void removeState();
-	void update(float dt);
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
+	void update(float dt) OVERRIDE;
 
 	void endIntro();
 	bool waitQuit(float t);

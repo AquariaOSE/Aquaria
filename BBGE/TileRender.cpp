@@ -5,20 +5,38 @@
 #include "RenderGrid.h"
 #include "RenderObject.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+
+struct StaticData
+{
+	glm::mat4 fh, fv;
+	StaticData()
+		: fh(glm::rotate(glm::mat4(), 180.0f, glm::vec3(0,1,0)))
+		, fv(glm::rotate(glm::mat4(), 180.0f, glm::vec3(1,0,0)))
+	{
+	}
+};
+
+static const StaticData staticdata;
+
 
 TileRender::TileRender(const TileStorage& tiles)
 	: storage(tiles), renderBorders(false)
 {
+	this->cull = false;
+	this->neverFollowCamera = true;
 }
 
 TileRender::~TileRender()
 {
 }
 
+
 // shamelessly ripped from paint.net default palette
 static const Vector s_tagColors[] =
 {
-	/* 0 */ Vector(0.5f, 0.5f, 0.5f),
+	/* 0 */ Vector(1,1,1),
 	/* 1 */ Vector(1,0,0),
 	/* 2 */ Vector(1, 0.415686f, 0),
 	/* 3 */ Vector(1,0.847059f, 0),
@@ -39,45 +57,77 @@ static inline const Vector& getTagColor(int tag)
 
 }
 
+Vector TileRender::GetTagColor(int tag)
+{
+	return getTagColor(tag);
+}
+
 
 void TileRender::onRender(const RenderState& rs) const
 {
+	if(storage.tiles.empty())
+		return;
+
+	if(renderBorders)
+		glLineWidth(2);
+
+	RenderState rx(rs);
+
+	// FIXME: this is such a hack. remove this once we pass matrices explicitly
+	glm::mat4 originalMat;
+	glGetFloatv(GL_MODELVIEW_MATRIX, &originalMat[0][0]);
+
 	// prepare. get parallax scroll factors
 	const RenderObjectLayer& rl = core->renderObjectLayers[this->layer];
 	const Vector M = rl.followCameraMult; // affected by parallaxLock
 	const float F = rl.followCamera;
+	const bool parallax = rl.followCamera > 0;
 
 	// Formula from RenderObject::getFollowCameraPosition() and optimized for speed
 	const Vector C = core->screenCenter;
 	const Vector M1 = Vector(1,1) - M;
 	const Vector T = C * (1 - F);
 
-	unsigned lastTexRepeat = false;
 	unsigned lastTexId = 0;
+	unsigned lastRepeatFlag = -1;
 
-	const bool renderBorders = this->renderBorders;
-	//bool mustSetColor = false;
+	const bool renderExtras = renderBorders || RenderObject::renderCollisionShape;
+
+	const TileEffectData *prevEff = ((TileEffectData*)NULL)+1; // initial value is different from anything else
 
 	for(size_t i = 0; i < storage.tiles.size(); ++i)
 	{
 		const TileData& tile = storage.tiles[i];
-		if(tile.flags & TILEFLAG_HIDDEN)
+		if(tile.flags & (TILEFLAG_HIDDEN | TILEFLAG_EDITOR_HIDDEN))
 			continue;
 
-		const Vector tilepos(tile.x, tile.y);
-		const Vector tmp = T + (F * tilepos);
-		const Vector pos = tilepos * M1 + (tmp * M); // lerp, used to select whether to use original v or parallax-corrected v
+		Vector pos(tile.x, tile.y);
+		if(parallax)
+		{
+			const Vector tmp = T + (F * pos);
+			pos = pos * M1 + (tmp * M); // lerp, used to select whether to use original v or parallax-corrected v
+		}
 
-		ElementTemplate * const et = tile.et;
-		if(Texture * const tex = et->tex.content())
+		const ElementTemplate * const et = tile.et;
+		const float sw = et->w * tile.scalex;
+		const float sh = et->h * tile.scaley;
+
+		// adapted from RenderObject::isOnScreen()
+		{
+			const float cullRadiusSqr = ((sw*sw + sh*sh) * core->invGlobalScaleSqr) + core->cullRadiusSqr;
+			if ((pos - core->cullCenter).getSquaredLength2D() >= cullRadiusSqr)
+				continue;
+		}
+
+		if(const Texture * const tex = et->tex.content())
 		{
 			unsigned texid = tex->gltexid;
-			unsigned rep = tile.flags & TILEFLAG_REPEAT;
-			if(texid != lastTexId || rep != lastTexRepeat)
+			unsigned repflag = tile.flags & TILEFLAG_REPEAT;
+			if(texid != lastTexId || repflag != lastRepeatFlag)
 			{
 				lastTexId = texid;
-				lastTexRepeat = rep;
-				tex->apply(!!rep);
+				lastRepeatFlag = repflag;
+				tex->apply(repflag ? TEX_BORDER_WRAP : TEX_BORDER_CLAMP);
 			}
 		}
 		else
@@ -86,104 +136,99 @@ void TileRender::onRender(const RenderState& rs) const
 			glBindTexture(GL_TEXTURE_2D, 0); // unlikely
 		}
 
-		glPushMatrix();
-		glTranslatef(pos.x, pos.y, pos.z);
-
-		glRotatef(tile.rotation, 0, 0, 1);
-		if(tile.flags & TILEFLAG_FH) // TODO: This is not necessary! Since we have no children, flipped texcoords are fine
-			glRotatef(180, 0, 1, 0);
-
-		// this is only relevant in editor mode and is always 0 otherwise
-		glTranslatef(tile.beforeScaleOffsetX, tile.beforeScaleOffsetY, 0);
-
-		glScalef(tile.scalex * et->w, tile.scaley * et->h, 1);
-		//glScalef(tile.scalex * et->w, tile.scaley * et->h, 1); // TODO use this + fixed verts
-
-		BlendType blend = BLEND_DEFAULT;
 		float alpha = rs.alpha;
-		RenderGrid *grid = NULL;
 		const TileEffectData * const eff = tile.eff;
-		if(eff)
+		if(eff != prevEff) // effects between tiles are often shared so this works not only for NULL
 		{
-			grid = eff->grid;
-			alpha *= eff->alpha.x;
-			blend = eff->blend;
+			prevEff = eff;
+			BlendType blend = BLEND_DEFAULT;
+
+			if(eff)
+			{
+				alpha *= eff->alpha.x;
+				blend = eff->blend;
+			}
+
+			rs.gpu.setBlend(blend);
+			glColor4f(rs.color.x, rs.color.y, rs.color.z, alpha);
 		}
 
-		rs.gpu.setBlend(blend);
+		glm::mat4 m = glm::translate(originalMat, glm::vec3(pos.x, pos.y, pos.z));
 
-		// TODO: only need to do this when prev. tile had different alpha
-		glColor4f(rs.color.x, rs.color.y, rs.color.z, alpha);
+		// HACK: Due to a renderer bug in older versions, vertical flip is ignored
+		// when a grid-based tile effect is applied.
+		// Maps were designed with the bug present so we need to replicate it,
+		// otherwise things won't look correct.
+		unsigned effflag = tile.flags;
+		if(eff && eff->grid)
+			effflag &= ~TILEFLAG_FV;
 
-		const Vector upperLeftTextureCoordinates(et->tu1, et->tv1);
-		const Vector lowerRightTextureCoordinates(et->tu2, et->tv2);
+		float effrot = tile.rotation;
 
+		// both set? that's effectively a rotation by 180°
+		if ((effflag & (TILEFLAG_FH | TILEFLAG_FV)) == (TILEFLAG_FH | TILEFLAG_FV))
+			effrot += 180;
+
+		m = glm::rotate(m, effrot, glm::vec3(0,0,1));
+
+
+		switch(effflag & (TILEFLAG_FH | TILEFLAG_FV))
+		{
+			case TILEFLAG_FH:
+				m *= staticdata.fh;
+				break;
+
+			case TILEFLAG_FV:
+				m *= staticdata.fv;
+				break;
+
+			default: ; // both or none set, nothing to do
+		}
+
+		m = glm::scale(m, glm::vec3(sw, sh, 1));
+
+		glLoadMatrixf(&m[0][0]);
+
+
+		const RenderGrid *grid = tile.getGrid();
 		if(!grid)
+			grid = core->getDefaultQuadGrid();
+		rx.alpha = alpha;
+		grid->render(rx);
+
+
+		if(renderExtras)
 		{
-			const float _w2 = et->w * 0.5f;
-			const float _h2 = et->h * 0.5f;
-
-			glBegin(GL_QUADS);
-			{
-				glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-				glVertex2f(-_w2, +_h2);
-
-				glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-upperLeftTextureCoordinates.y);
-				glVertex2f(+_w2, +_h2);
-
-				glTexCoord2f(lowerRightTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-				glVertex2f(+_w2, -_h2);
-
-				glTexCoord2f(upperLeftTextureCoordinates.x, 1.0f-lowerRightTextureCoordinates.y);
-				glVertex2f(-_w2, -_h2);
-			}
-			glEnd();
-		}
-		else
-		{
-			RenderState rx(rs);
-			rx.alpha = alpha;
-			grid->render(rx, upperLeftTextureCoordinates, lowerRightTextureCoordinates);
-			if (RenderObject::renderCollisionShape)
-			{
-				glBindTexture(GL_TEXTURE_2D, 0);
-				grid->renderDebugPoints(rs);
-				lastTexId = 0;
-			}
-		}
-
-		if(renderBorders)
-		{
-			lastTexId = 0;
 			glBindTexture(GL_TEXTURE_2D, 0);
+			lastTexId = 0;
+			prevEff = ((TileEffectData*)NULL)+1;
 
-			float c = (tile.flags & TILEFLAG_SELECTED) ? 1.0f : 0.5f;
-			Vector color(c,c,c);
-			color *= getTagColor(tile.tag);
-			const float _w2 = et->w * 0.5f;
-			const float _h2 = et->h * 0.5f;
+			rs.gpu.setBlend(BLEND_DEFAULT);
 
-			glColor4f(color.x, color.y, color.z, 1.0f);
-			glPointSize(16);
-			glBegin(GL_POINTS);
-				glVertex2f(0,0);
-			glEnd();
+			if(grid != core->getDefaultQuadGrid() && RenderObject::renderCollisionShape)
+			{
+				grid->renderDebugPoints(rs);
+			}
 
-			glLineWidth(2);
-			glBegin(GL_LINE_STRIP);
-				glVertex2f(_w2, _h2);
-				glVertex2f(_w2, -_h2);
-				glVertex2f(-_w2, -_h2);
-				glVertex2f(-_w2, _h2);
-				glVertex2f(_w2, _h2);
-			glEnd();
+			if(renderBorders)
+			{
+				const float c = (tile.flags & TILEFLAG_SELECTED) ? 1.0f : 0.5f;
+				const Vector color = getTagColor(tile.tag) * c;
+				glColor4f(color.x, color.y, color.z, 1.0f);
+				core->getDefaultQuadBorderBuf()->apply();
+				glPointSize(16);
+				glDrawArrays(GL_POINTS, 4, 1);
+				glDrawArrays(GL_LINE_LOOP, 0, 4);
+			}
 		}
-
-
-		glPopMatrix();
 	}
 
+	glLoadMatrixf(&originalMat[0][0]);
 
 	RenderObject::lastTextureApplied = lastTexId;
-	RenderObject::lastTextureRepeat = !!lastTexRepeat;
+}
+
+void TileRender::onUpdate(float dt)
+{
+	//this->position = core->screenCenter;
 }

@@ -23,6 +23,9 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Base.h"
 #include "FrameBuffer.h"
+#include "VertexBuffer.h"
+
+struct RenderState;
 
 class DarkLayer
 {
@@ -30,25 +33,29 @@ public:
 	DarkLayer();
 	void init(int quality, bool useFrameBuffer=true);
 	void toggle(bool on);
-	void setLayers(int layer, int renderLayer);
-	void preRender();
-	void render() const;
-	int getLayer();
-	int getRenderLayer();
-	bool isUsed();
+	void setSrcLayer(int layer);
+	void preRender(); // call before rendering anything else. this is for render-to-texture mode
+	void beginCapture(); // call this + endCapture() when rendering the layer where dark layer objects are located
+	void endCapture();
+
+	void render(const RenderState& rs) const;
+	bool isUsed() const;
+	bool shouldRenderLayer(int lr) const;
 
 	void unloadDevice();
 	void reloadDevice();
 
+	int beginLayer;
+	int lastLayer; // inclusive
+
+protected:
 	bool useFrameBuffer;
 	FrameBuffer frameBuffer;
-protected:
-	float stretch;
 	int quality;
+	int layer;
 	bool active;
-	int layer, renderLayer;
 	unsigned texture;
-	unsigned format;
+	DynamicGPUBuffer vbo;
 };
 
 #endif

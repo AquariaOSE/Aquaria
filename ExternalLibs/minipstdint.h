@@ -8,7 +8,16 @@
 
 #include <limits.h>
 
-#if defined(_MSC_VER) && _MSC_VER < 1600
+#if (defined(__cplusplus) && (__cplusplus+0 > 201103L)) \
+|| (defined(_MSC_VER) && (_MSC_VER+0 > 1600)) \
+|| (defined(__STDC_VERSION__) && (__STDC_VERSION__+0 >= 199901L))
+#   if (defined(__cplusplus) && (__cplusplus+0 > 201103L))
+#       include <cstdint>
+#   endif
+#   include <stdint.h>
+
+#elif defined(_MSC_VER) // older MSVC
+
 #include "SDL_version.h"
 #if SDL_VERSION_ATLEAST(2, 0, 0) // AQUARIA HACK: Included SDL 1.2 includes define some of these, SDL does not. Avoid conflicts.
     typedef signed __int8     int8_t;
@@ -43,11 +52,29 @@
 #   define UINT32_C(v) ((uint32_t)v)
 #   define UINT64_C(v) (v ## UI64)
 #   define INT64_C(v) (v ## I64)
-#else
-#   ifdef __cplusplus
-#       include <cstdint>
-#   endif
-#   include <stdint.h>
+#elif 1
+   typedef __uint8_t  uint8_t;
+   typedef __int8_t   int8_t;
+   typedef __uint16_t uint16_t;
+   typedef __int16_t  int16_t;
+   typedef __uint32_t   uint32_t;
+   typedef __int32_t    int32_t;
+   typedef __uint64_t uint64_t;
+   typedef __int64_t  int64_t;
+#elif 0
+   typedef unsigned char  uint8_t;
+   typedef   signed char   int8_t;
+   typedef unsigned short uint16_t;
+   typedef   signed short  int16_t;
+   typedef unsigned int   uint32_t;
+   typedef   signed int    int32_t;
+   typedef unsigned long long uint64_t;
+   typedef   signed long long  int64_t;
+
+   // produce compile errors if the sizes aren't right
+   typedef char _pstdint_testsize16[sizeof(int16_t) == 2];
+   typedef char _pstdint_testsize32[sizeof(int32_t) == 4];
+   typedef char _pstdint_testsize64[sizeof(int64_t) == 8];
 #endif
 
 # if !defined (UINT64_MAX)

@@ -21,7 +21,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 
 #include "Joystick.h"
 #include "Core.h"
-#include "SDL.h"
+#include <SDL.h>
 
 unsigned Joystick::GetNumJoysticks()
 {
@@ -140,11 +140,11 @@ bool Joystick::init(int stick)
 
 		numHats = SDL_JoystickNumHats(sdl_joy);
 		numButtons = SDL_JoystickNumButtons(sdl_joy);
-		
+
 
 		return true;
 	}
-	
+
 	std::ostringstream os;
 	os << "Failed to init Joystick [" << stick << "]";
 	debugLog(os.str());

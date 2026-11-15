@@ -31,6 +31,7 @@ BmpFont::BmpFont()
 {
 	scale = 1;
 	loaded = false;
+	gltexid = 0;
 	overrideTexture = 0;
 	fontTopColor = Vector(1,1,1);
 	fontBtmColor = Vector(1,1,1);
@@ -38,12 +39,17 @@ BmpFont::BmpFont()
 
 BmpFont::~BmpFont()
 {
-	delete font;
 	destroy();
+	delete font;
 }
 
 void BmpFont::destroy()
 {
+	if(gltexid)
+	{
+		glDeleteTextures(1, &gltexid);
+		gltexid = 0;
+	}
 	if (loaded)
 	{
 		font->Destroy();
@@ -55,17 +61,14 @@ void BmpFont::destroy()
 
 void BmpFont::load(const std::string &file, float scale, bool loadTexture)
 {
-	if (loaded)
-		font->Destroy();
+	destroy();
 
 	this->scale = scale;
 
-	GLuint id=0;
-	glGenTextures(1, &id);
+	glGenTextures(1, &gltexid);
 
-	if (!font->Create(file.c_str(), id, loadTexture))
+	if (!font->Create(file.c_str(), gltexid, loadTexture))
 		return;
-
 
 	loaded = true;
 }
@@ -88,10 +91,6 @@ BitmapText::BitmapText(const BmpFont& bmpFont)
 
 }
 
-void BitmapText::autoKern()
-{
-}
-
 int BitmapText::getWidthOnScreen()
 {
 	return text.size()*(fontDrawSize/2);
@@ -102,7 +101,7 @@ void BitmapText::setAlign(Align align)
 	this->align = align;
 }
 
-std::string BitmapText::getText()
+const std::string& BitmapText::getText()
 {
 	return this->text;
 }
@@ -140,7 +139,7 @@ void BitmapText::formatText()
 	text = this->text;
 	lines.clear();
 	std::string currentLine;
-	int lastSpace = -1;
+	size_t lastSpace = size_t(-1);
 	float currentWidth = 0;
 	alignWidth = 0;
 	maxW = 0;
@@ -157,7 +156,7 @@ void BitmapText::formatText()
 				lastSpace = i;
 			}
 			lines.push_back(text.substr(0, lastSpace));
-			int tsz = text.size();
+			size_t tsz = text.size();
 			text = text.substr(lastSpace+1, tsz);
 			i = 0;
 			alignWidth = currentWidth;
@@ -179,23 +178,6 @@ void BitmapText::formatText()
 	{
 		lines.push_back(text);
 	}
-	colorIndices.clear();
-}
-
-void BitmapText::updateWordColoring()
-{
-	colorIndices.resize(lines.size());
-	for (size_t i = 0; i < colorIndices.size(); i++)
-	{
-		colorIndices[i].resize(lines[i].size());
-		for (size_t j = 0; j < colorIndices[i].size(); j++)
-		{
-			colorIndices[i][j] = Vector(1,1,1);
-		}
-	}
-
-
-
 }
 
 bool BitmapText::isEmpty()
@@ -255,22 +237,10 @@ void BitmapText::onUpdate(float dt)
 	}
 }
 
-Vector BitmapText::getColorIndex(size_t i, size_t j)
-{
-	Vector c(1,1,1);
-	if ( i < colorIndices.size() && j < colorIndices[i].size())
-	{
-		c = colorIndices[i][j];
-	}
-	return c;
-}
-
 void BitmapText::onRender(const RenderState& rs) const
 {
-	const Vector top = bmpFont.fontTopColor;
-	const Vector btm = bmpFont.fontBtmColor;
-	float top_color[3] = {top.x*color.x, top.y*color.y, top.z*color.z};
-	float bottom_color[3] = {btm.x*color.x, btm.y*color.y, btm.z*color.z};
+	const Vector top = bmpFont.fontTopColor * color;
+	const Vector btm = bmpFont.fontBtmColor * color;
 
 	glEnable(GL_TEXTURE_2D);
 
@@ -278,7 +248,7 @@ void BitmapText::onRender(const RenderState& rs) const
 	const glfont::GLFont * const font = bmpFont.font;
 	font->Begin();
 
-	if (bmpFont.overrideTexture) bmpFont.overrideTexture->apply();
+	if (bmpFont.overrideTexture) bmpFont.overrideTexture->apply(TEX_BORDER_CLAMP);
 
 	const float scale = bmpFont.scale;
 	float y=0;
@@ -304,7 +274,7 @@ void BitmapText::onRender(const RenderState& rs) const
 			float la = 1.0f-(scrollDelay/scrollSpeed);
 
 
-			font->DrawString(theLine, scale, x, y, top_color, bottom_color, alpha.x, la);
+			font->DrawString(theLine, scale, x, y, &top.x, &btm.x, alpha.x, la);
 			y += adj;
 		}
 	}
@@ -319,7 +289,7 @@ void BitmapText::onRender(const RenderState& rs) const
 				font->GetStringSize(lines[i], &sz);
 				x = -sz.first*0.5f*scale;
 			}
-			font->DrawString(lines[i], scale, x, y, top_color, bottom_color, alpha.x, 1);
+			font->DrawString(lines[i], scale, x, y, &top.x, &btm.x, alpha.x, 1);
 			y += adj;
 		}
 	}

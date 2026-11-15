@@ -115,11 +115,11 @@ void PathFinding::molestPath(VectorPath &path)
 		path.getPathNode(i)->value += newNormals[i];
 
 	// kill bowls
-	int start = 0;
-	int runs=0;
+	size_t start = 0;
+	size_t runs=0;
 	bool hadSuccess = false;
-	int lastSuccessNode = 0;
-	int adjust = 2;
+	size_t lastSuccessNode = 0;
+	const size_t adjust = 2;
 	sz=path.getNumPathNodes();
 
 	for (i = start; i < sz-1; i++)

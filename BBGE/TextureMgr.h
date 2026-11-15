@@ -16,7 +16,9 @@ public:
 
     typedef void (*ProgressCallback)(size_t done, void*);
 
-    std::vector<std::string> loadFromPaths;
+    void setLoadPaths(const char * const * paths, size_t n);
+    const std::string& getLoadPath(size_t idx) const;
+    const size_t getNumLoadPaths() const;
     size_t spawnThreads(size_t n);
     size_t getNumLoaded() const;
     Texture *getOrLoad(const std::string& name);
@@ -27,12 +29,22 @@ public:
     {
         KEEP,          // if already exists, keep unchanged
         KEEP_IF_SAME,  // load if we resolve to a different file than the texture that's already there, if any.
-        OVERWRITE,     // always overwrite
+        OVERWRITE      // always overwrite
     };
 
-    void loadBatch(Texture *pdst[], const std::string texnames[], size_t n, LoadMode mode = KEEP, ProgressCallback cb = 0, void *cbUD = 0);
+    size_t loadBatch(Texture *pdst[], const std::string texnames[], size_t n, LoadMode mode = KEEP, ProgressCallback cb = 0, void *cbUD = 0);
     Texture *load(const std::string& texname, LoadMode mode);
     void reloadAll(LoadMode mode);
+
+    enum ReloadResult
+    {
+        FILE_ERROR,
+        RELOADED_OK,
+        NOT_LOADED,
+    };
+
+    // reload a file from disk. Pass in FILE NAME. The function figures out the texture name.
+    ReloadResult reloadFile(const std::string& fn, LoadMode mode);
 
 private:
     typedef std::map<std::string, CountedPtr<Texture> > TexCache;
@@ -48,6 +60,8 @@ private:
 
     void th_loadFromFile(TexLoadTmp& tt) const;
     Texture *finalize(TexLoadTmp& tt);
+
+    std::vector<std::string> loadFromPaths;
 };
 
 #endif

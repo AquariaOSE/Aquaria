@@ -43,8 +43,8 @@ protected:
 	void applyAvoidance(Vector &accumulator);
 	void updateVelocity(Vector &accumulator);
 
-	void onEnterState(int action);
-	void onUpdate(float dt);
+	void onEnterState(int action) OVERRIDE;
+	void onUpdate(float dt) OVERRIDE;
 
 	float avoidTime;
 

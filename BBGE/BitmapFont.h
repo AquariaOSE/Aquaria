@@ -37,6 +37,7 @@ struct BmpFont
 	glfont::GLFont * const font;
 	float scale;
 	bool loaded;
+	unsigned gltexid;
 
 	Vector fontTopColor;
 	Vector fontBtmColor;
@@ -57,11 +58,8 @@ public:
 	void stopScrollingText();
 	bool isEmpty();
 	virtual void setAlign(Align align) OVERRIDE;
-	std::string getText();
+	const std::string& getText();
 	int getWidthOnScreen();
-	Vector getColorIndex(size_t i, size_t j);
-	void updateWordColoring();
-	void autoKern();
 	virtual float getHeight() const OVERRIDE;
 	void unloadDevice() OVERRIDE;
 	void reloadDevice() OVERRIDE;
@@ -85,8 +83,6 @@ protected:
 	void onRender(const RenderState& rs) const OVERRIDE;
 	typedef std::vector<std::string> Lines;
 	Lines lines;
-	typedef std::vector<Vector> ColorIndices;
-	std::vector<ColorIndices> colorIndices;
 	std::string text;
 	float textWidth;
 	float maxW;

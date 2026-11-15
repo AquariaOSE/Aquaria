@@ -13,6 +13,6 @@
 // the visited data will be lost if the file is loaded into such a build.
 // (Current builds will load either format regardless of whether or not
 // this is defined.)
-//#define AQUARIA_SAVE_MAPVIS_RAW
+#define AQUARIA_SAVE_MAPVIS_RAW
 
 #endif //__AQUARIA_COMPILE_CONFIG_H__

@@ -2,15 +2,16 @@
 #include "Base.h"
 
 
-void drawCircle(float radius, int stepSize)
+float *drawCircle(float *p, float radius, size_t vertices, const Vector& center)
 {
-	glBegin(GL_POLYGON);
-		for(int i=0;i < 360; i+=stepSize)
-		{
-			const float degInRad = i*(PI/180.0f);
-			glVertex3f(cosf(degInRad)*radius, sinf(degInRad)*radius,0.0);
-		}
-	glEnd();
+	const float step = (2 * PI) / float(vertices);
+	float a = 0;
+	for(size_t i = 0; i < vertices; ++i, a += step)
+	{
+		*p++ = center.x + cosf(a)*radius;
+		*p++ = center.y + sinf(a)*radius;
+	}
+	return p;
 }
 
 void sizePowerOf2Texture(int &v)
