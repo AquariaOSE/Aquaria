@@ -153,7 +153,7 @@ protected:
 	bool die;
 	bool waitForParticles;
 
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 	float effectLife, effectLifeCounter;
 	bool running;

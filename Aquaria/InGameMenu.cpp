@@ -95,7 +95,7 @@ protected:
 	int lastAmount;
 	IngredientData *lastIngredient;
 	Vector originalPosition;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	DebugFont *label;
 	bool inCookSlot;
 	IngredientData *ingredient;
@@ -115,7 +115,7 @@ protected:
 	bool wasSlot;
 	int petidx;
 	bool mouseDown;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 class TreasureSlot : public AquariaGuiQuad
@@ -129,7 +129,7 @@ protected:
 	int flag;
 	std::string treasureName, treasureDesc;
 	int index;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 class FoodHolder : public Quad
@@ -149,7 +149,7 @@ protected:
 	bool trash;
 	Quad *wok, *ing;
 	bool buttonDown;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 	Quad *lid;
 
@@ -167,7 +167,7 @@ public:
 	bool mbDown;
 protected:
 	Quad *glow;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 // ------------- Private class impls -------------------

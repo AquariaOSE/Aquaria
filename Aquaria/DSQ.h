@@ -76,7 +76,7 @@ const int VERSION_GM			= 6;
 class AquariaScreenTransition : public ScreenTransition
 {
 public:
-	void capture();
+	void capture() OVERRIDE;
 };
 
 struct SFXLoops
@@ -138,8 +138,8 @@ public:
 	DSQ(const std::string& fileSystem, const std::string& extraDataDir);
 	~DSQ();
 
-	void init();
-	void shutdown();
+	void init() OVERRIDE;
+	void shutdown() OVERRIDE;
 
 	void toggleBlackBars(bool on, float t=0);
 
@@ -163,7 +163,7 @@ public:
 
 	void nag(NagType type);
 
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDevice device) OVERRIDE;
 
 	void title(bool fadeMusic);
 
@@ -180,7 +180,7 @@ public:
 	SFXLoops loops;
 	SubtitlePlayer subtitlePlayer;
 
-	void onPlayedVoice(const std::string &name);
+	void onPlayedVoice(const std::string &name) OVERRIDE;
 
 	NagType nagType;
 
@@ -288,7 +288,7 @@ public:
 
 	UserSettings user, user_backup, user_bcontrol;
 
-	void prepScreen(bool t);
+	void prepScreen(bool t) OVERRIDE;
 	SaveSlotMode saveSlotMode;
 	bool inModSelector;
 
@@ -384,7 +384,7 @@ public:
 	bool canSkipCutscene();
 	bool isSkippingCutscene();
 
-	virtual void onBackgroundUpdate();
+	virtual void onBackgroundUpdate() OVERRIDE;
 
 	void resetLayerPasses();
 	bool isMiniMapCursorOkay();
@@ -413,13 +413,13 @@ protected:
 	float noEffectTimer;
 	void destroyFonts();
 
-	void onReloadResources();
+	void onReloadResources() OVERRIDE;
 
-	void unloadDevice();
-	void reloadDevice();
+	void unloadDevice() OVERRIDE;
+	void reloadDevice() OVERRIDE;
 
 	void onSwitchScreenMode();
-	virtual void onWindowResize(int w, int h);
+	virtual void onWindowResize(int w, int h) OVERRIDE;
 
 	void onPlayVoice();
 	void onStopVoice();
@@ -433,7 +433,7 @@ protected:
 	void updatepecue(float dt);
 	std::vector<PECue> pecue;
 
-	void onMouseInput();
+	void onMouseInput() OVERRIDE;
 	std::vector<std::string> voxQueue;
 
 	std::vector<std::string> consoleLines;
@@ -453,12 +453,12 @@ protected:
 	void onRender() OVERRIDE;
 	void onPrepareRender() OVERRIDE;
 
-	void modifyDt(float &dt);
+	void modifyDt(float &dt) OVERRIDE;
 
-	virtual void onJoystickAdded(int deviceID);
-	virtual void onJoystickRemoved(int instanceID);
+	virtual void onJoystickAdded(int deviceID) OVERRIDE;
+	virtual void onJoystickRemoved(int instanceID) OVERRIDE;
 
-	virtual void updateActionButtons();
+	virtual void updateActionButtons() OVERRIDE;
 
 public:
 	void fixupJoysticks();

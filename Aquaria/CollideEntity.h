@@ -31,10 +31,10 @@ public:
 	float bounceAmount;
 	float weight;
 	void updateMovement(float dt);
-	void entityDied(Entity *e);
+	void entityDied(Entity *e) OVERRIDE;
 protected:
 	virtual void onHitWall(){}
-	void onUpdateFrozen(float dt);
+	void onUpdateFrozen(float dt) OVERRIDE;
 
 	virtual void onBounce() {}
 	void bounce(float ba);

@@ -135,7 +135,7 @@ public:
 protected:
 	BeaconData *beaconData;
 
-	void onUpdate(float dt)
+	void onUpdate(float dt) OVERRIDE
 	{
 		Quad::onUpdate(dt);
 
@@ -233,7 +233,7 @@ public:
 		textBG->setWidthHeight(text->getActualWidth() + 20, 25, 10);
 	}
 
-	void destroy()
+	void destroy() OVERRIDE
 	{
 		if (textBG)
 		{
@@ -257,7 +257,7 @@ protected:
 
 	TTFText *text;
 	RoundedRect *textBG;
-	void onUpdate(float dt)
+	void onUpdate(float dt) OVERRIDE
 	{
 		Quad::onUpdate(dt);
 

@@ -50,7 +50,7 @@ public:
 	void toggle(bool on);
 	bool isOn();
 	void setProperTileColor(WorldMapTileContainer& wt);
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDevice device) OVERRIDE;
 	GemMover* addGem(GemData *gemData);
 	void refreshGem(const GemData *gemData);
 	bool removeGem(GemMover *gemMover);
@@ -74,7 +74,7 @@ protected:
 	WorldMapTileContainer *playerTile; // tile where the player is located
 	WorldMapTileContainer *selectedTile; // starts out == playerTile but changed on selection
 	bool on;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	bool mb, wasEditorSaveDown;
 	Vector lastMousePosition; // See FIXME in WorldMapRender.cpp  --achurch
 	void updateEditor();

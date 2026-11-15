@@ -12,11 +12,11 @@ public:
 	static Spores spores;
 	static void killAllSpores();
 	static bool isPositionClear(const Vector &position);
-	void destroy();
+	void destroy() OVERRIDE;
 protected:
-	void onEnterState(int state);
-	void onUpdate(float dt);
-	void onEndOfLife();
+	void onEnterState(int state) OVERRIDE;
+	void onUpdate(float dt) OVERRIDE;
+	void onEndOfLife() OVERRIDE;
 };
 
 

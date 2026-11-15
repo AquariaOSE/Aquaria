@@ -13,7 +13,7 @@ protected:
 	int radius;
 	float damage;
 	float pTimer;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	float poisonTime;
 	Entity *sourceEntity;
 };

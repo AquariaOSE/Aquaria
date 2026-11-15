@@ -13,7 +13,7 @@ class RecipeMenuEntry : public RenderObject
 public:
 	RecipeMenuEntry(Recipe *recipe);
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	Quad *result, *ing[3];
 	Quad *glow;
 	BitmapText *description;

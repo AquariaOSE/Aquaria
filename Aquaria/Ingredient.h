@@ -7,7 +7,7 @@ class Ingredient : public Entity
 {
 public:
 	Ingredient(const Vector &pos, IngredientData *data, int amount=1);
-	void destroy();
+	void destroy() OVERRIDE;
 	IngredientData *getIngredientData();
 
 	void eat(Entity *e);
@@ -18,7 +18,7 @@ protected:
 	bool used, gone;
 	float lifeSpan;
 	int amount;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 

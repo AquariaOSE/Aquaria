@@ -3388,7 +3388,7 @@ protected:
 	float timer;
 	float timeScale;
 	Vector startPos;
-	void onUpdate(float dt)
+	void onUpdate(float dt) OVERRIDE
 	{
 		Quad::onUpdate(dt);
 

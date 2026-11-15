@@ -7,7 +7,7 @@ class ManaBall : public Quad
 {
 public:
 	ManaBall(Vector pos, float a);
-	void destroy();
+	void destroy() OVERRIDE;
 	bool isUsed();
 	void use(Entity *entity);
 	ParticleEffect healEmitter;
@@ -15,7 +15,7 @@ protected:
 	float lifeSpan;
 	bool used;
 	float amount;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 #endif

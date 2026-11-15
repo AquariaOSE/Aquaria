@@ -116,7 +116,7 @@ public:
 protected:
 	InterpolatedVector *positionSnapTo;
 
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 class CollideQuad : public Quad

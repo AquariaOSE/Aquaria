@@ -144,12 +144,12 @@ protected:
 	ParticleEffect *emitter;
 
 	bool onHitWall(bool reflect);
-	void onEndOfLife();
+	void onEndOfLife() OVERRIDE;
 
 	bool dead;
 	bool fired;
 	bool enqueuedForDelete;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	bool updateScript;
 
 private:

@@ -31,9 +31,9 @@ class AnimationEditor : public StateObject
 
 public:
 	AnimationEditor();
-	void applyState();
-	void removeState();
-	void update(float dt);
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
+	void update(float dt) OVERRIDE;
 
 	void prevKey();
 	void nextKey();
@@ -108,7 +108,7 @@ public:
 
 	SkeletalKeyframe copyBuffer;
 
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDevice device) OVERRIDE;
 
 	void rebuildKeyframeWidgets();
 

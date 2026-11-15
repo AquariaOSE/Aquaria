@@ -113,9 +113,9 @@ class Game : public StateObject
 public:
 	Game();
 	~Game();
-	void applyState();
-	void removeState();
-	void update(float dt);
+	void applyState() OVERRIDE;
+	void removeState() OVERRIDE;
+	void update(float dt) OVERRIDE;
 
 
 	Avatar *avatar;
@@ -138,7 +138,7 @@ public:
 	void clearGrid(int v = 0);
 	void clearDynamicGrid(unsigned char maskbyte = OT_MASK_BLACK);
 
-	void action(int id, int state, int source, InputDevice device);
+	void action(int id, int state, int source, InputDevice device) OVERRIDE;
 
 	InGameMenu *getInGameMenu() { return themenu; }
 

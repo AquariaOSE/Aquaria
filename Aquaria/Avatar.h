@@ -79,14 +79,14 @@ public:
 	int note;
 	SongIcon *toIcon;
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 class SongIcon : public Quad
 {
 public:
 	SongIcon(size_t note, Avatar *owner);
-	void destroy();
+	void destroy() OVERRIDE;
 	size_t note;
 	void openNote();
 	void closeNote();
@@ -106,7 +106,7 @@ protected:
 	void *channel;
 	float delay, counter, minTime;
 	bool cursorIsIn;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 class AvatarState

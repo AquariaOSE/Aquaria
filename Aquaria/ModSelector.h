@@ -32,22 +32,22 @@ class BasicIcon : public AquariaMenuItem
 public:
 	BasicIcon();
 	std::string label;
-	virtual bool isGuiVisible();
-	virtual bool isCursorInMenuItem();
+	virtual bool isGuiVisible() OVERRIDE;
+	virtual bool isCursorInMenuItem() OVERRIDE;
 
 protected:
 	bool mouseDown;
 	Vector scaleNormal;
 	Vector scaleBig;
 	bool _isRecCall;
-	virtual void onUpdate(float dt);
+	virtual void onUpdate(float dt) OVERRIDE;
 	virtual void onClick();
 };
 
 class SubtitleIcon : public BasicIcon
 {
 protected:
-	virtual void onUpdate(float dt);
+	virtual void onUpdate(float dt) OVERRIDE;
 };
 
 class ModIcon : public SubtitleIcon
@@ -62,8 +62,8 @@ public:
 	ModType modType;
 
 protected:
-	virtual void onUpdate(float dt);
-	virtual void onClick();
+	virtual void onUpdate(float dt) OVERRIDE;
+	virtual void onClick() OVERRIDE;
 };
 
 class MenuIcon : public SubtitleIcon
@@ -77,7 +77,7 @@ public:
 
 protected:
 	int iconId;
-	virtual void onClick();
+	virtual void onClick() OVERRIDE;
 };
 
 #ifdef BBGE_BUILD_VFS
@@ -104,7 +104,7 @@ public:
 	bool hasUpdate;
 
 protected:
-	virtual void onClick();
+	virtual void onClick() OVERRIDE;
 };
 
 #endif // BBGE_BUILD_VFS
@@ -121,7 +121,7 @@ public:
 class MenuIconBar : public MenuBasicBar
 {
 public:
-	virtual void init();
+	virtual void init() OVERRIDE;
 	std::vector<MenuIcon*> icons;
 
 protected:
@@ -169,10 +169,10 @@ public:
 
 	void setSubText(const std::string& s);
 
-	virtual void action(int actionID, int state, int source, InputDevice device) {}
+	virtual void action(int actionID, int state, int source, InputDevice device) OVERRIDE {}
 
 protected:
-	virtual void onUpdate(float dt);
+	virtual void onUpdate(float dt) OVERRIDE;
 	MenuIconBar leftbar;
 	MenuBasicBar rightbar;
 	size_t currentPanel;

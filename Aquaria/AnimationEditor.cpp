@@ -60,7 +60,7 @@ public:
 	void shiftLeft();
 	void shiftRight();
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 static AnimationEditor *ae = 0;

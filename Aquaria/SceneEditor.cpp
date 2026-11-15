@@ -342,7 +342,7 @@ public:
 		selectedEntity.name = name;
 	}
 
-	void onUpdate(float dt)
+	void onUpdate(float dt) OVERRIDE
 	{
 		if (doubleClickTimer > 0)
 			doubleClickTimer -= dt;

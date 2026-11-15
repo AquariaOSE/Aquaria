@@ -108,7 +108,7 @@ protected:
 	std::vector<ParticleEffect*> emitters;
 	int minDist, maxDist, reverse;
 	std::vector<Bone*> segments;
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	DynamicGPUBuffer cmvbo; // for collision mask debug render only
 public:
 	std::vector<Vector> collisionMask;
@@ -260,7 +260,7 @@ public:
 
 	SkeletalSprite();
 	virtual ~SkeletalSprite();
-	virtual void destroy();
+	virtual void destroy() OVERRIDE;
 
 	void loadSkeletal(const std::string &fn);
 	bool saveSkeletal(const std::string &fn);
@@ -327,7 +327,7 @@ protected:
 	std::vector<AnimationLayer> animLayers;
 	Bone* initBone(int idx, std::string gfx, int pidx, bool rbp=false, std::string name="", float cr=0, bool fh=false, bool fv=false);
 	void deleteBones();
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 #endif

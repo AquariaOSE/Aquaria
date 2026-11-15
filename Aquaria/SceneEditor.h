@@ -53,7 +53,7 @@ enum EditorStates
 class SceneEditorMenuReceiver : public DebugButtonReceiver
 {
 public:
-	void buttonPress(DebugButton *db);
+	void buttonPress(DebugButton *db) OVERRIDE;
 };
 
 struct SelectedEntity
@@ -89,7 +89,7 @@ public:
 	void placeElement();
 	void flipElementHorz();
 	void flipElementVert();
-	virtual void action(int id, int state, int source, InputDevice device);
+	virtual void action(int id, int state, int source, InputDevice device) OVERRIDE;
 	void placeAvatar();
 
 	void executeButtonID(int bid);

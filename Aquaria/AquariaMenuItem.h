@@ -67,20 +67,20 @@ class AquariaGuiQuad : public Quad, public AquariaGuiElement
 {
 public:
 	AquariaGuiQuad();
-	void destroy();
-	Vector getGuiPosition();
-	bool isGuiVisible();
-	void update(float dt);
+	void destroy() OVERRIDE;
+	Vector getGuiPosition() OVERRIDE;
+	bool isGuiVisible() OVERRIDE;
+	void update(float dt) OVERRIDE;
 
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 class AquariaMenuItem : virtual public Quad, public ActionMapper, public AquariaGuiElement
 {
 public:
 	AquariaMenuItem();
-	void destroy();
+	void destroy() OVERRIDE;
 	void setLabel(const std::string &label);
 	EventPtr event;
 	BitmapText *font, *glowFont;
@@ -88,11 +88,11 @@ public:
 	bool useQuad(const std::string &tex);
 	void useGlow(const std::string &tex, int w, int h);
 	void useSound(const std::string &tex);
-	virtual void action(int actionID, int state, int source, InputDevice device) {}
+	virtual void action(int actionID, int state, int source, InputDevice device) OVERRIDE {}
 
 	virtual bool isCursorInMenuItem();
-	Vector getGuiPosition();
-	bool isGuiVisible();
+	Vector getGuiPosition() OVERRIDE;
+	bool isGuiVisible() OVERRIDE;
 	int shareAlpha;
 
 protected:
@@ -101,7 +101,7 @@ protected:
 	bool highlighted;
 	void toggleHighlight(bool v);
 	void onClick();
-	virtual void onUpdate(float dt);
+	virtual void onUpdate(float dt) OVERRIDE;
 	virtual void onToggleHighlight(bool on) {}
 };
 
@@ -115,14 +115,14 @@ public:
 	void hide();
 	void transition();
 
-	bool isGuiVisible();
+	bool isGuiVisible() OVERRIDE;
 
 	bool mbDown;
 
 	static std::string getSaveDescription(const tinyxml2::XMLDocument &doc);
 
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	bool selected;
 	static bool closed;
 	bool done;
@@ -139,13 +139,13 @@ class AquariaSlider : public Slider, public AquariaGuiElement
 {
 public:
 	AquariaSlider();
-	void destroy();
+	void destroy() OVERRIDE;
 
-	Vector getGuiPosition();
-	bool isGuiVisible();
+	Vector getGuiPosition() OVERRIDE;
+	bool isGuiVisible() OVERRIDE;
 	bool hadInput() {bool ret = _hadInput; _hadInput = false; return ret;}
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 	bool doSliderInput(float dt);  // Returns whether input was detected
 
 	float inputTimer, inputDelay;
@@ -156,22 +156,22 @@ class AquariaCheckBox : public CheckBox, public AquariaGuiElement
 {
 public:
 	AquariaCheckBox();
-	void destroy();
+	void destroy() OVERRIDE;
 
-	Vector getGuiPosition();
-	bool isGuiVisible();
+	Vector getGuiPosition() OVERRIDE;
+	bool isGuiVisible() OVERRIDE;
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 };
 
 class AquariaKeyConfig : public AquariaGuiElement, public RenderObject
 {
 public:
 	AquariaKeyConfig(const std::string &actionInputName, InputSetType type, int idx);
-	void destroy();
+	void destroy() OVERRIDE;
 
-	Vector getGuiPosition();
-	bool isGuiVisible();
+	Vector getGuiPosition() OVERRIDE;
+	bool isGuiVisible() OVERRIDE;
 
 	static AquariaKeyConfig *waitingForInput;
 
@@ -181,7 +181,7 @@ public:
 protected:
 	void toggleEnterKey(int on);
 
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 	bool keyDown;
 
@@ -204,7 +204,7 @@ public:
 	AquariaComboBoxItem(const std::string &str, size_t idx, AquariaComboBox *combo, Vector textscale);
 
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 	size_t index;
 	AquariaComboBox *combo;
@@ -229,7 +229,7 @@ public:
 	void doScroll(int dir);
 	bool isOpen() const { return isopen; }
 protected:
-	void onUpdate(float dt);
+	void onUpdate(float dt) OVERRIDE;
 
 	size_t numDrops;
 	bool mb, isopen;
@@ -268,9 +268,9 @@ public:
 
 protected:
 
-	virtual void action(int actionID, int state, int source, InputDevice device);
-	virtual void onUpdate(float dt);
-	virtual void onToggleHighlight(bool on);
+	virtual void action(int actionID, int state, int source, InputDevice device) OVERRIDE;
+	virtual void onUpdate(float dt) OVERRIDE;
+	virtual void onToggleHighlight(bool on) OVERRIDE;
 
 	std::string _texbase;
 	int pressed;

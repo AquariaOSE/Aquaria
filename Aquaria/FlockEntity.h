@@ -48,7 +48,7 @@ public:
 	};
 	void addToFlock(size_t id);
 	void removeFromFlock();
-	void destroy();
+	void destroy() OVERRIDE;
 
 	static void updateFlockData(void);
 

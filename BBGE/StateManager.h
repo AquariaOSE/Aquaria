@@ -45,7 +45,7 @@ public:
 
 	static void addRenderObject(RenderObject *renderObject, unsigned layer);
 
-	virtual void action(int actionID, int state, int source, InputDevice device) {}
+	virtual void action(int actionID, int state, int source, InputDevice device) OVERRIDE {}
 
 protected:
 	void registerState(StateObject *sb, const std::string &name);

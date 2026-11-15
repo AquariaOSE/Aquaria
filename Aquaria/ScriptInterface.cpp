@@ -11362,14 +11362,14 @@ public:
 	LuaXMLConverter(lua_State *lua) : L(lua) {}
 	virtual ~LuaXMLConverter() {}
 
-	virtual bool VisitEnter( const tinyxml2::XMLDocument& /*doc*/ )
+	virtual bool VisitEnter( const tinyxml2::XMLDocument& /*doc*/ ) OVERRIDE
 	{
 		lua_newtable(L);
 		indexes.push_back(0);
 		return true;
 	}
 
-	virtual bool VisitExit( const tinyxml2::XMLDocument& /*doc*/ )
+	virtual bool VisitExit( const tinyxml2::XMLDocument& /*doc*/ ) OVERRIDE
 	{
 		indexes.pop_back();
 		assert(indexes.empty());
@@ -11377,7 +11377,7 @@ public:
 		return true;
 	}
 
-	virtual bool VisitEnter( const tinyxml2::XMLElement& element, const tinyxml2::XMLAttribute *a)
+	virtual bool VisitEnter( const tinyxml2::XMLElement& element, const tinyxml2::XMLAttribute *a) OVERRIDE
 	{
 		lua_newtable(L);
 		indexes.push_back(0);
@@ -11404,7 +11404,7 @@ public:
 		return true;
 	}
 
-	virtual bool VisitExit( const tinyxml2::XMLElement& /*element*/ )
+	virtual bool VisitExit( const tinyxml2::XMLElement& /*element*/ ) OVERRIDE
 	{
 		indexes.pop_back();
 		lua_rawseti(L, -2, ++indexes.back());

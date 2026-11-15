@@ -192,9 +192,9 @@ public:
 	virtual ~CoreWindow();
 
 protected:
-	virtual void onEvent(const SDL_Event& ev);
-	virtual void onResize(unsigned w, unsigned h);
-	virtual void onQuit();
+	virtual void onEvent(const SDL_Event& ev) OVERRIDE;
+	virtual void onResize(unsigned w, unsigned h) OVERRIDE;
+	virtual void onQuit() OVERRIDE;
 };
 
 
@@ -259,7 +259,7 @@ public:
 	void setMouseConstraint(bool on);
 	void setMouseConstraintCircle(const Vector& pos, float mouseCircle);
 
-	virtual void action(int id, int state, int source, InputDevice device){}
+	virtual void action(int id, int state, int source, InputDevice device) OVERRIDE {}
 
 	void enqueueRenderObjectDeletion(RenderObject *object);
 	void clearGarbage();
@@ -509,7 +509,7 @@ protected:
 
 	int _lastEnumeratedDisplayIndex;
 
-	virtual void onUpdate(float dt);
+	virtual void onUpdate(float dt) OVERRIDE;
 	virtual void onRender(){}
 	virtual void onPrepareRender(){}
 

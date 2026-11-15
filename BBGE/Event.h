@@ -22,6 +22,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #define BBGE_EVENT_H
 
 #include <stdlib.h>
+#include "Base.h"
 
 
 class Event
@@ -41,7 +42,7 @@ public:
 	FunctionEvent(T *who,void (T::*func)(void)):
 		callee(who),callback(func){}
 
-	void act()
+	void act() OVERRIDE
 	{
 		(callee->*callback)();
 	}
