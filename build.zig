@@ -145,7 +145,7 @@ fn addAquaria(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.lan
         "ExternalLibs/freetype2/include",
         "ExternalLibs/freetype2/include/freetype/config",
         "ExternalLibs/freetype2/src",
-        "ExternalLibs/lua-5.1.4/src",
+        "ExternalLibs/lua-5.1.5/src",
         "ExternalLibs/libogg/include",
         "ExternalLibs/libvorbis/include",
         "ExternalLibs/tinyxml2",
@@ -176,7 +176,7 @@ fn addAquaria(b: *std.Build, target: std.Build.ResolvedTarget, optimize: std.lan
     mod.addCSourceFiles(.{ .root = b.path("ExternalLibs/libogg/src"), .files = &.{ "bitwise.c", "framing.c" }, .flags = ext_flags });
     mod.addCSourceFiles(.{ .root = b.path("ExternalLibs/libvorbis/lib"), .files = &vorbis_files, .flags = ext_flags });
     mod.addCSourceFiles(.{
-        .root = b.path("ExternalLibs/lua-5.1.4/src"),
+        .root = b.path("ExternalLibs/lua-5.1.5/src"),
         .files = &lua_files,
         .flags = switch (os) {
             .linux => &(common ++ [_][]const u8{"-DLUA_USE_LINUX"}),
