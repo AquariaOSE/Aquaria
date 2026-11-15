@@ -23,6 +23,7 @@ Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
 #include <SDL.h>
 #include <SDL_main.h>
 #include "Randomness.h"
+#include <time.h>
 
 #define B_STACKTRACE_IMPL
 #include "b_stacktrace.h"
@@ -56,6 +57,9 @@ static void onCrash()
 #ifdef _WIN32
 #include <DbgHelp.h>
 #pragma comment(lib, "DbgHelp.lib")
+#ifndef DBG_PRINTEXCEPTION_C
+#define DBG_PRINTEXCEPTION_C 0x40010006L
+#endif
 static LONG WINAPI UnhandledExceptionHandler(EXCEPTION_POINTERS* ep)
 {
 	DWORD code = ep->ExceptionRecord->ExceptionCode;

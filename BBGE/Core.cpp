@@ -317,7 +317,11 @@ Core::Core(const std::string &filesystem, const std::string& extraDataDir, int n
 	window = NULL;
 	sound = NULL;
 	_extraDataDir = extraDataDir;
+#if SDL_VERSION_ATLEAST(2,0,0)
 	sdlUserMouseEventID = SDL_RegisterEvents(1);
+#else
+	sdlUserMouseEventID = SDL_USEREVENT;
+#endif
 	_textureWatcherHandle = 0;
 
 	if (userDataSubFolder.empty())
@@ -1417,7 +1421,7 @@ struct TextInputMapping
 };
 
 // This is only used for SDL1, that doesn't have text input functionality
-static const TextInputMapping textInputMap[]
+static const TextInputMapping textInputMap[] =
 {
 	{ KEY_A,           'a', 'A' },
 	{ KEY_B,           'b', 'B' },
@@ -1467,7 +1471,11 @@ static const TextInputMapping textInputMap[]
 
 void Core::onEvent(const SDL_Event& event)
 {
+#if SDL_VERSION_ATLEAST(2,0,0)
 	lastEventTimestamp = event.common.timestamp;
+#else
+	lastEventTimestamp = SDL_GetTicks();
+#endif
 
 	const bool focus = window->hasFocus();
 	if(event.type == sdlUserMouseEventID)

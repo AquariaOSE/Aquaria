@@ -478,10 +478,12 @@ void AnimationEditor::resetScaleOrSave()
 		do
 			scale *= b->scale;
 		while( (b = dynamic_cast<Bone*>(b->getParent())) ); // don't want to get entity scale; that's what the anim editor uses for zooming
+#if SDL_VERSION_ATLEAST(2,0,0)
 		std::ostringstream os;
 		os << scale.x;
 		if(!SDL_SetClipboardText(os.str().c_str()))
 			notify("Scale copied to clipboard");
+#endif
 	}
 	else
 		getSelectedPageSprite()->scale = Vector(1,1);

@@ -1748,7 +1748,7 @@ static void EnumerateInnerModXMLCallback(const std::string &filename, void *para
 	if(fn.empty())
 		return;
 
-	assert(!(fn.back() == '/' || fn.back() == '\''));
+	assert(!(fn[fn.size()-1] == '/' || fn[fn.size()-1] == '\\'));
 
 	fn += "/mod-info.xml";
 	if(!exists(fn))
@@ -3029,7 +3029,7 @@ static void enterTextInput(TextInputEvent ti, const char *text)
 
 		case TEXTINP_BACKSPACE:
 			if(!s_inputText.empty())
-				s_inputText.pop_back(); // FIXME: do proper utf-8 erase?
+				s_inputText.resize(s_inputText.size() - 1); // FIXME: do proper utf-8 erase?
 			break;
 	}
 }

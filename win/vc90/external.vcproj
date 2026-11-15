@@ -42,8 +42,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;VFS_ENABLE_C_API=1"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.5\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_zip&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_PUTENV=1;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;AQUARIA_INTERNAL_FTGL=1;AQUARIA_INTERNAL_LUA=1;FTGL_LIBRARY_STATIC=1;AQUARIA_BUILD_CONSOLE=1;AQUARIA_BUILD_SCENEEDITOR=1;AQUARIA_ENABLE_DIR_WATCH=1;AQUARIA_ENABLE_CONSOLE_LOG=1;FT2_BUILD_LIBRARY;FT_CONFIG_OPTION_SYSTEM_ZLIB;AL_LIBTYPE_STATIC=1"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -116,16 +116,14 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;_HAS_EXCEPTIONS=0;VFS_ENABLE_C_API=1"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.5\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_zip&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_PUTENV=1;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;AQUARIA_INTERNAL_FTGL=1;AQUARIA_INTERNAL_LUA=1;FTGL_LIBRARY_STATIC=1;AQUARIA_BUILD_CONSOLE=1;AQUARIA_BUILD_SCENEEDITOR=1;AQUARIA_ENABLE_DIR_WATCH=1;FT2_BUILD_LIBRARY;FT_CONFIG_OPTION_SYSTEM_ZLIB;AL_LIBTYPE_STATIC=1"
 				StringPooling="true"
-				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="false"
 				EnableEnhancedInstructionSet="2"
 				FloatingPointModel="2"
-				RuntimeTypeInfo="false"
 				UsePrecompiledHeader="0"
 				WarningLevel="3"
 				DebugInformationFormat="3"
@@ -187,8 +185,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;VFS_ENABLE_C_API=1"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.5\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_zip&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_PUTENV=1;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;AQUARIA_INTERNAL_FTGL=1;AQUARIA_INTERNAL_LUA=1;FTGL_LIBRARY_STATIC=1;AQUARIA_BUILD_CONSOLE=1;AQUARIA_BUILD_SCENEEDITOR=1;AQUARIA_ENABLE_DIR_WATCH=1;AQUARIA_ENABLE_CONSOLE_LOG=1;FT2_BUILD_LIBRARY;FT_CONFIG_OPTION_SYSTEM_ZLIB"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -262,10 +260,9 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\gl&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\ExternalLibs\&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL\&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_FCNTL_H;FT_CONFIG_OPTION_SYSTEM_ZLIB;FTGL_LIBRARY_STATIC;FT2_BUILD_LIBRARY;GL_GLEXT_LEGACY=1;TIXML_USE_STL=1;HAVE_PUTENV=1;_HAS_EXCEPTIONS=0;VFS_ENABLE_C_API=1"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.5\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_zip&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_PUTENV=1;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;AQUARIA_INTERNAL_FTGL=1;AQUARIA_INTERNAL_LUA=1;FTGL_LIBRARY_STATIC=1;AQUARIA_BUILD_CONSOLE=1;AQUARIA_BUILD_SCENEEDITOR=1;AQUARIA_ENABLE_DIR_WATCH=1;FT2_BUILD_LIBRARY;FT_CONFIG_OPTION_SYSTEM_ZLIB"
 				StringPooling="true"
-				ExceptionHandling="0"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="0"
 				FloatingPointModel="2"
@@ -370,18 +367,18 @@
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Debug-SDL1.2|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						CompileAs="2"
 					/>
 				</FileConfiguration>
 				<FileConfiguration
 					Name="Release-SDL1.2|Win32"
+					ExcludedFromBuild="true"
 					>
 					<Tool
 						Name="VCCLCompilerTool"
-						CompileAs="2"
 					/>
 				</FileConfiguration>
 			</File>
@@ -393,19 +390,7 @@
 				Name="FTGL"
 				>
 				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTBitmapGlyph.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\..\ExternalLibs\FTGL\src\FTCharmap.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTContour.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTExtrdGlyph.cpp"
 					>
 				</File>
 				<File
@@ -414,26 +399,6 @@
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\FTGL\src\FTFont.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTGLBitmapFont.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTGLExtrdFont.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTGLOutlineFont.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTGLPixmapFont.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTGLPolygonFont.cpp"
 					>
 				</File>
 				<File
@@ -453,19 +418,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTOutlineGlyph.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTPixmapGlyph.cpp"
-					>
-				</File>
-				<File
 					RelativePath="..\..\ExternalLibs\FTGL\src\FTPoint.cpp"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\src\FTPolyGlyph.cpp"
 					>
 				</File>
 				<File
@@ -847,6 +800,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lapi.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lapi.h"
@@ -855,6 +840,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lauxlib.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lauxlib.h"
@@ -863,10 +880,74 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lbaselib.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lcode.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lcode.h"
@@ -875,10 +956,74 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ldblib.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ldebug.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ldebug.h"
@@ -887,6 +1032,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ldo.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ldo.h"
@@ -895,10 +1072,74 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ldump.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lfunc.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lfunc.h"
@@ -907,6 +1148,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lgc.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lgc.h"
@@ -915,14 +1188,110 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\linit.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\liolib.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\llex.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\llex.h"
@@ -935,10 +1304,74 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lmathlib.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lmem.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lmem.h"
@@ -947,10 +1380,74 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\loadlib.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lobject.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lobject.h"
@@ -959,6 +1456,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lopcodes.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lopcodes.h"
@@ -967,10 +1496,74 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\loslib.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lparser.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lparser.h"
@@ -979,6 +1572,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lstate.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lstate.h"
@@ -987,6 +1612,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lstring.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lstring.h"
@@ -995,10 +1652,74 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lstrlib.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ltable.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ltable.h"
@@ -1007,10 +1728,74 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ltablib.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ltm.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\ltm.h"
@@ -1031,6 +1816,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lundump.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lundump.h"
@@ -1039,6 +1856,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lvm.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lvm.h"
@@ -1047,6 +1896,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lzio.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\lzio.h"
@@ -1055,6 +1936,38 @@
 				<File
 					RelativePath="..\..\ExternalLibs\lua-5.1.5\src\print.c"
 					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release-SDL1.2|Win32"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+							CompileAs="2"
+						/>
+					</FileConfiguration>
 				</File>
 			</Filter>
 			<Filter
@@ -1074,6 +1987,14 @@
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\ttvfs\VFSBase.h"
+					>
+				</File>
+				<File
+					RelativePath="..\..\ExternalLibs\ttvfs\VFSDebug.cpp"
+					>
+				</File>
+				<File
+					RelativePath="..\..\ExternalLibs\ttvfs\VFSDebug.h"
 					>
 				</File>
 				<File
@@ -1247,23 +2168,11 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTBitmapGlyph.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\ExternalLibs\FTGL\include\FTCharmap.h"
 					>
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\FTGL\include\FTCharToGlyphIndexMap.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTContour.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTExtrdGlyph.h"
 					>
 				</File>
 				<File
@@ -1276,26 +2185,6 @@
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\FTGL\include\FTGL.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTGLBitmapFont.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTGLExtrdFont.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTGLOutlineFont.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTGLPixmapFont.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTGLPolygonFont.h"
 					>
 				</File>
 				<File
@@ -1315,23 +2204,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTList.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTOutlineGlyph.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTPixmapGlyph.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\ExternalLibs\FTGL\include\FTPoint.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTPolyGlyph.h"
 					>
 				</File>
 				<File
@@ -1346,22 +2219,10 @@
 					RelativePath="..\..\ExternalLibs\FTGL\include\FTVector.h"
 					>
 				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\FTGL\include\FTVectoriser.h"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="AL"
 				>
-				<File
-					RelativePath="..\..\ExternalLibs\AL\include\al.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\AL\include\alc.h"
-					>
-				</File>
 			</Filter>
 			<Filter
 				Name="libvorbis"
@@ -1455,15 +2316,7 @@
 					>
 				</File>
 				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_config_psp.h"
-					>
-				</File>
-				<File
 					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_config_windows.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_config_wiz.h"
 					>
 				</File>
 				<File
@@ -1608,54 +2461,6 @@
 				</File>
 				<File
 					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_syswm.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_assert.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_common.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_compare.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_crc32.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_font.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_fuzzer.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_harness.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_images.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_log.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_md5.h"
-					>
-				</File>
-				<File
-					RelativePath="..\..\ExternalLibs\SDL2\include\SDL_test_random.h"
 					>
 				</File>
 				<File

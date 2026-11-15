@@ -43,8 +43,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;FTGL_LIBRARY_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;BBGE_USE_GLM=1;AQUARIA_INTERNAL_FTGL=1"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.5\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_zip&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_PUTENV=1;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;AQUARIA_INTERNAL_FTGL=1;AQUARIA_INTERNAL_LUA=1;FTGL_LIBRARY_STATIC=1;AQUARIA_BUILD_CONSOLE=1;AQUARIA_BUILD_SCENEEDITOR=1;AQUARIA_ENABLE_DIR_WATCH=1;AQUARIA_ENABLE_CONSOLE_LOG=1"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -116,10 +116,9 @@
 				FavorSizeOrSpeed="1"
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;FTGL_LIBRARY_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;_HAS_EXCEPTIONS=0;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;BBGE_USE_GLM=1;AQUARIA_INTERNAL_FTGL=1"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.5\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_zip&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL2\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_PUTENV=1;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;AQUARIA_INTERNAL_FTGL=1;AQUARIA_INTERNAL_LUA=1;FTGL_LIBRARY_STATIC=1;AQUARIA_BUILD_CONSOLE=1;AQUARIA_BUILD_SCENEEDITOR=1;AQUARIA_ENABLE_DIR_WATCH=1"
 				StringPooling="true"
-				ExceptionHandling="0"
 				RuntimeLibrary="0"
 				BufferSecurityCheck="false"
 				EnableFunctionLevelLinking="false"
@@ -187,8 +186,8 @@
 				Name="VCCLCompilerTool"
 				AdditionalOptions="/MP"
 				Optimization="0"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
-				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;FTGL_LIBRARY_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;BBGE_USE_GLM=1;AQUARIA_INTERNAL_FTGL=1"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.5\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_zip&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;"
+				PreprocessorDefinitions="WIN32;_DEBUG;_CONSOLE;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_PUTENV=1;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;AQUARIA_INTERNAL_FTGL=1;AQUARIA_INTERNAL_LUA=1;FTGL_LIBRARY_STATIC=1;AQUARIA_BUILD_CONSOLE=1;AQUARIA_BUILD_SCENEEDITOR=1;AQUARIA_ENABLE_DIR_WATCH=1;AQUARIA_ENABLE_CONSOLE_LOG=1"
 				MinimalRebuild="false"
 				BasicRuntimeChecks="0"
 				RuntimeLibrary="3"
@@ -261,10 +260,9 @@
 				OmitFramePointers="true"
 				EnableFiberSafeOptimizations="true"
 				WholeProgramOptimization="true"
-				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\glpng&quot;;&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs\zlib&quot;;&quot;$(SolutionDir)\..\ExternalLibs\png&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lvpa\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;"
-				PreprocessorDefinitions="WIN32;NDEBUG;_CONSOLE;GL_GLEXT_LEGACY=1;HAVE_PUTENV=1;FTGL_LIBRARY_STATIC;_CRT_SECURE_NO_DEPRECATE;_CRT_SECURE_NO_WARNINGS;BBGE_BUILD_WINDOWS=1;_HAS_EXCEPTIONS=0;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;BBGE_USE_GLM=1;AQUARIA_INTERNAL_FTGL=1"
+				AdditionalIncludeDirectories="&quot;$(SolutionDir)\..\BBGE&quot;;&quot;$(SolutionDir)\..\ExternalLibs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\AL&quot;;&quot;$(SolutionDir)\..\ExternalLibs\FTGL\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\freetype2\include\freetype\config&quot;;&quot;$(SolutionDir)\..\ExternalLibs\lua-5.1.5\src&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libogg\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\libvorbis\include&quot;;&quot;$(SolutionDir)\..\ExternalLibs\tinyxml2&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_zip&quot;;&quot;$(SolutionDir)\..\ExternalLibs\ttvfs_cfileapi&quot;;&quot;$(SolutionDir)\..\ExternalLibs\SDL12\include&quot;"
+				PreprocessorDefinitions="WIN32;NDEBUG;_CRT_SECURE_NO_WARNINGS;_CRT_SECURE_NO_DEPRECATE;HAVE_PUTENV=1;BBGE_BUILD_WINDOWS=1;BBGE_BUILD_VFS=1;VFS_ENABLE_C_API=1;AQUARIA_INTERNAL_FTGL=1;AQUARIA_INTERNAL_LUA=1;FTGL_LIBRARY_STATIC=1;AQUARIA_BUILD_CONSOLE=1;AQUARIA_BUILD_SCENEEDITOR=1;AQUARIA_ENABLE_DIR_WATCH=1"
 				StringPooling="true"
-				ExceptionHandling="0"
 				BufferSecurityCheck="false"
 				EnableEnhancedInstructionSet="0"
 				FloatingPointModel="2"
@@ -390,6 +388,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\DataStructures.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\DataStructures.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\DebugFont.cpp"
 				>
 			</File>
@@ -398,15 +404,19 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\Effects.cpp"
+				RelativePath="..\..\BBGE\DirWatcher.cpp"
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\Effects.h"
+				RelativePath="..\..\BBGE\DirWatcher.h"
 				>
 			</File>
 			<File
 				RelativePath="..\..\BBGE\Emitter.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\EngineEnums.h"
 				>
 			</File>
 			<File
@@ -470,19 +480,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\Interpolators.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Interpolators.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\Joystick.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\..\BBGE\Joystick.h"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\LensFlare.cpp"
-				>
-			</File>
-			<File
-				RelativePath="..\..\BBGE\LensFlare.h"
 				>
 			</File>
 			<File
@@ -518,6 +528,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\Panel.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Panel.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\ParticleEffect.cpp"
 				>
 			</File>
@@ -546,6 +564,22 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\QuadGrid.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\QuadGrid.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Randomness.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Randomness.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\ReadXML.cpp"
 				>
 			</File>
@@ -570,6 +604,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\RenderGrid.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\RenderGrid.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\RenderObject.cpp"
 				>
 			</File>
@@ -586,7 +628,11 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\RenderRect.cpp"
+				RelativePath="..\..\BBGE\RenderState.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\RenderState.h"
 				>
 			</File>
 			<File
@@ -650,7 +696,27 @@
 				>
 			</File>
 			<File
-				RelativePath="..\..\BBGE\SpawnParticleData.cpp"
+				RelativePath="..\..\BBGE\SpineQuad.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\SpineQuad.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\SplineGrid.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\SplineGrid.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\SplineQuad.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\SplineQuad.h"
 				>
 			</File>
 			<File
@@ -670,6 +736,14 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\Strand.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Strand.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\StringBank.cpp"
 				>
 			</File>
@@ -686,6 +760,38 @@
 				>
 			</File>
 			<File
+				RelativePath="..\..\BBGE\TextureMgr.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\TextureMgr.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Tile.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Tile.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\TileRender.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\TileRender.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Tileset.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\Tileset.h"
+				>
+			</File>
+			<File
 				RelativePath="..\..\BBGE\TTFFont.cpp"
 				>
 			</File>
@@ -699,6 +805,14 @@
 			</File>
 			<File
 				RelativePath="..\..\BBGE\Vector.h"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\VertexBuffer.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\..\BBGE\VertexBuffer.h"
 				>
 			</File>
 			<File
@@ -723,10 +837,6 @@
 			Filter="h;hpp;hxx;hm;inl;inc;xsd"
 			UniqueIdentifier="{93995380-89BD-4b04-88EB-625FBE52EBFB}"
 			>
-			<File
-				RelativePath="..\..\BBGE\BBGECompileConfig.h"
-				>
-			</File>
 		</Filter>
 		<Filter
 			Name="Resource Files"

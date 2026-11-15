@@ -162,6 +162,11 @@ DMON_API_DECL void dmon_unwatch(dmon_watch_id id);
 #    ifdef _MSC_VER
 #        pragma intrinsic(_InterlockedExchange)
 #    endif
+#    if defined(_MSC_VER) && _MSC_VER < 1600
+typedef unsigned __int64 uint64_t;
+#    else
+#        include <stdint.h>
+#    endif
 #elif DMON_OS_LINUX
 #    ifndef __USE_MISC
 #        define __USE_MISC
