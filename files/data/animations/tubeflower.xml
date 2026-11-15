@@ -1,0 +1,27 @@
+<AnimationLayers>
+    <AnimationLayer/>
+    <AnimationLayer ignore="0 2 3 "/>
+</AnimationLayers>
+
+<Bones>
+    <Bone idx="0" gfx="" pidx="-1" name="Orb" fh="0" fv="0" gc="1" cr="0">
+        <Frame gfx="tubeflower/body1"/>
+        <Frame gfx="tubeflower/body2"/>
+    </Bone>
+</Bones>
+
+<Animations>
+    <Animation name="idle">
+        <Key cmd="0 AC_FRM_SHOW 0" e="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+    </Animation>
+    <Animation name="open">
+        <Key cmd="0 AC_FRM_SHOW 0" e="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+        <Key cmd="0 AC_FRM_SHOW 1" e="0.1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+        <Key e="0.8 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+    </Animation>
+    <Animation name="close">
+        <Key cmd="0 AC_FRM_SHOW 1" e="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+        <Key cmd="0 AC_FRM_SHOW 0" e="0.1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+        <Key e="0.8 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+    </Animation>
+</Animations>
