@@ -372,7 +372,7 @@ public:
 	 inline bool isNan() const
 	 {
 #ifdef BBGE_BUILD_WINDOWS
-		return _isnan(x) || _isnan(y) || _isnan(z);
+		 return std::isnan(x) || std::isnan(y) || std::isnan(z);
 #elif defined(BBGE_BUILD_UNIX)
 		 return std::isnan(x) || std::isnan(y) || std::isnan(z);
 #else

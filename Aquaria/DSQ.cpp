@@ -157,8 +157,8 @@ Vector savesz;
 	#define APPNAME "Aquaria"
 #endif
 
-DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir)
-: Core(fileSystem, extraDataDir, LR_MAX, APPNAME, PARTICLE_AMOUNT_DEFAULT, "Aquaria")
+DSQ::DSQ(const std::string& fileSystem, const std::string& extraDataDir, const std::string& appImageDir)
+: Core(fileSystem, extraDataDir, appImageDir, LR_MAX, APPNAME, PARTICLE_AMOUNT_DEFAULT, "Aquaria")
 {
 	dsq = this;
 

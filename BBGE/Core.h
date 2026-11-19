@@ -965,7 +965,7 @@ class Core : public ActionMapper, public StateManager
 public:
 
 	// init
-	Core(const std::string &filesystem, const std::string& extraDataDir, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
+	Core(const std::string &filesystem, const std::string& extraDataDir, const std::string& appImageDir, int numRenderLayers, const std::string &appName="BBGE", int particleSize=1024, std::string userDataSubFolder="");
 	void initPlatform(const std::string &filesystem);
 	~Core();
 
@@ -996,8 +996,7 @@ public:
 	std::string getPreferencesFolder();
 	std::string getUserDataFolder();
 
-	std::string adjustFilenameCase(const char *buf);
-	std::string adjustFilenameCase(const std::string &str) { return adjustFilenameCase(str.c_str()); };
+	std::string adjustFilenameCase(const std::string &str);
 
 	void resetCamera();
 
@@ -1400,6 +1399,8 @@ protected:
 
 	void setupFileAccess();
 	std::string _extraDataDir;
+    std::string _appImageDir;
+
 };
 
 extern Core *core;

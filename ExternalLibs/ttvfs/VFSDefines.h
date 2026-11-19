@@ -45,7 +45,7 @@ VFS_NAMESPACE_START
     typedef unsigned int           vfspos;
 #endif
 
-#if defined(_MSC_VER) || defined(__MINGW32__) || defined(__MINGW64__)
+#if defined(_MSC_VER)
 #    define VFS_STRICMP _stricmp
      static const vfspos npos = vfspos(-1i64);
 #else
